@@ -227,8 +227,10 @@ func createTestChange(repo *mockRepository, tenantID, userID int) *Change {
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
-	repo.changes[1] = c
-	repo.nextID = 2
+	// Use dynamic ID instead of hardcoded 1
+	c.ID = repo.nextID
+	repo.changes[c.ID] = c
+	repo.nextID++
 	return c
 }
 
@@ -253,7 +255,7 @@ func TestChangeController_ListChanges(t *testing.T) {
 		},
 		{
 			name:           "带分页参数",
-			queryParams:    "?page=1&page_size=10",
+			queryParams:    "?page=1&pageSize=10",
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
 		},
@@ -388,16 +390,22 @@ func TestChangeController_GetChange(t *testing.T) {
 			expectedCode:   common.SuccessCode,
 		},
 		{
-			name:           "获取不存在的变更",
-			changeID:       "999",
-			expectedStatus: http.StatusOK, // Handler returns 200 with error message
-			expectedCode:   common.SuccessCode,
+			name:           "无效的变更ID应返回400",
+			changeID:       "invalid",
+			expectedStatus: http.StatusBadRequest,
+			expectedCode:   common.ParamErrorCode,
 		},
 		{
-			name:           "无效的变更ID",
-			changeID:       "invalid",
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.SuccessCode,
+			name:           "非正数ID应返回400",
+			changeID:       "0",
+			expectedStatus: http.StatusBadRequest,
+			expectedCode:   common.ParamErrorCode,
+		},
+		{
+			name:           "获取不存在的变更应返回404",
+			changeID:       "999",
+			expectedStatus: http.StatusNotFound,
+			expectedCode:   common.NotFoundCode,
 		},
 	}
 
@@ -412,26 +420,9 @@ func TestChangeController_GetChange(t *testing.T) {
 			var response common.Response
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			require.NoError(t, err)
+			assert.Equal(t, tt.expectedCode, response.Code)
 		})
 	}
-}
-
-// TestChangeController_GetChange_NotFound tests 404 scenario
-func TestChangeController_GetChange_NotFound(t *testing.T) {
-	r, _, _ := setupTestHandler(t)
-
-	req, _ := http.NewRequest("GET", "/api/v1/changes/999", nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	// The handler returns 200 with error message for not found
-	assert.Equal(t, http.StatusOK, w.Code)
-
-	var response common.Response
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	require.NoError(t, err)
-	// For not found, the handler uses common.Fail with 404 status
-	assert.Contains(t, response.Message, "not found")
 }
 
 // TestChangeController_UpdateChange tests PUT /api/v1/changes/:id
@@ -460,13 +451,13 @@ func TestChangeController_UpdateChange(t *testing.T) {
 			expectedCode:   common.SuccessCode,
 		},
 		{
-			name:     "更新不存在的变更",
+			name:     "更新不存在的变更应返回404",
 			changeID: "999",
 			request: dto.UpdateChangeRequest{
 				Title: strPtr("不存在的变更"),
 			},
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.SuccessCode,
+			expectedStatus: http.StatusNotFound,
+			expectedCode:   common.NotFoundCode,
 		},
 	}
 
@@ -497,16 +488,25 @@ func TestChangeController_DeleteChange(t *testing.T) {
 		name           string
 		changeID       string
 		expectedStatus int
+		expectedCode   int
 	}{
 		{
 			name:           "成功删除变更",
 			changeID:       strconv.Itoa(change.ID),
 			expectedStatus: http.StatusOK,
+			expectedCode:   common.SuccessCode,
 		},
 		{
-			name:           "删除不存在的变更",
+			name:           "删除不存在的变更应返回500",
 			changeID:       "999",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusInternalServerError,
+			expectedCode:   common.InternalErrorCode,
+		},
+		{
+			name:           "无效ID应返回400",
+			changeID:       "invalid",
+			expectedStatus: http.StatusBadRequest,
+			expectedCode:   common.ParamErrorCode,
 		},
 	}
 
@@ -517,6 +517,11 @@ func TestChangeController_DeleteChange(t *testing.T) {
 			r.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.expectedStatus, w.Code)
+
+			var response common.Response
+			err := json.Unmarshal(w.Body.Bytes(), &response)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedCode, response.Code)
 		})
 	}
 }
@@ -580,8 +585,9 @@ func TestChangeController_SubmitChange(t *testing.T) {
 	var response common.Response
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
+	assert.Equal(t, common.SuccessCode, response.Code)
 
-	// Verify response
+	// Verify response data
 	if response.Code == common.SuccessCode {
 		data := response.Data.(map[string]interface{})
 		assert.Equal(t, "pending", data["status"])
@@ -595,8 +601,9 @@ func TestChangeController_AssignChange(t *testing.T) {
 	// Create test data
 	change := createTestChange(repo, 1, 1)
 
+	// Use camelCase field name as per API contract
 	assignReq := map[string]interface{}{
-		"assignee_id": 2,
+		"assigneeId": 2,
 	}
 	requestBody, err := json.Marshal(assignReq)
 	require.NoError(t, err)
@@ -608,6 +615,17 @@ func TestChangeController_AssignChange(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response common.Response
+	err = json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+	assert.Equal(t, common.SuccessCode, response.Code)
+
+	// Verify assignment was successful
+	if response.Code == common.SuccessCode {
+		data := response.Data.(map[string]interface{})
+		assert.Equal(t, float64(2), data["assigneeId"])
+	}
 }
 
 // TestChangeController_GetApprovalSummary tests GET /api/v1/changes/:id/approval-summary

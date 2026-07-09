@@ -1,7 +1,6 @@
 package sla
 
 import (
-	"net/http"
 	"strconv"
 	"time"
 
@@ -46,7 +45,7 @@ func toSLADefinitionDTO(s *SLADefinition) *dto.SLADefinitionResponse {
 func (h *Handler) CreateSLADefinition(c *gin.Context) {
 	var req dto.CreateSLADefinitionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
@@ -67,7 +66,7 @@ func (h *Handler) CreateSLADefinition(c *gin.Context) {
 
 	res, err := h.svc.CreateDefinition(c.Request.Context(), def)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "创建SLA定义失败: "+err.Error())
 		return
 	}
 
@@ -82,7 +81,7 @@ func (h *Handler) GetSLADefinition(c *gin.Context) {
 
 	res, err := h.svc.GetDefinition(c.Request.Context(), id, tenantIDVal.(int))
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "SLA Definition not found")
+		common.NotFound(c, "SLA Definition not found")
 		return
 	}
 
@@ -97,7 +96,7 @@ func (h *Handler) ListSLADefinitions(c *gin.Context) {
 
 	list, total, err := h.svc.ListDefinitions(c.Request.Context(), tenantIDVal.(int), page, size)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "查询SLA定义列表失败: "+err.Error())
 		return
 	}
 
@@ -122,13 +121,13 @@ func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 
 	var req dto.UpdateSLADefinitionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
 	existing, err := h.svc.GetDefinition(c.Request.Context(), id, tenantIDVal.(int))
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "SLA Definition not found")
+		common.NotFound(c, "SLA Definition not found")
 		return
 	}
 
@@ -145,7 +144,7 @@ func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 
 	res, err := h.svc.UpdateDefinition(c.Request.Context(), existing)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "更新SLA定义失败: "+err.Error())
 		return
 	}
 
@@ -159,7 +158,7 @@ func (h *Handler) DeleteSLADefinition(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 
 	if err := h.svc.DeleteDefinition(c.Request.Context(), id, tenantIDVal.(int)); err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "删除SLA定义失败: "+err.Error())
 		return
 	}
 
@@ -170,7 +169,7 @@ func (h *Handler) DeleteSLADefinition(c *gin.Context) {
 func (h *Handler) CreateAlertRule(c *gin.Context) {
 	var req dto.CreateSLAAlertRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -185,7 +184,7 @@ func (h *Handler) CreateAlertRule(c *gin.Context) {
 	}
 	res, err := h.svc.CreateAlertRule(c.Request.Context(), rule)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "创建SLA告警规则失败: "+err.Error())
 		return
 	}
 	common.Success(c, res)
@@ -201,7 +200,7 @@ func (h *Handler) ListAlertRules(c *gin.Context) {
 	}
 	res, err := h.svc.ListAlertRules(c.Request.Context(), tenantIDVal.(int), filters)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "查询SLA告警规则列表失败: "+err.Error())
 		return
 	}
 	common.Success(c, res)
@@ -215,7 +214,7 @@ func (h *Handler) GetAlertRule(c *gin.Context) {
 
 	res, err := h.svc.GetAlertRule(c.Request.Context(), id, tenantIDVal.(int))
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "SLA Alert Rule not found")
+		common.NotFound(c, "SLA Alert Rule not found")
 		return
 	}
 	common.Success(c, res)
@@ -229,13 +228,13 @@ func (h *Handler) UpdateAlertRule(c *gin.Context) {
 
 	var req dto.UpdateSLAAlertRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
 	existing, err := h.svc.GetAlertRule(c.Request.Context(), id, tenantIDVal.(int))
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "SLA Alert Rule not found")
+		common.NotFound(c, "SLA Alert Rule not found")
 		return
 	}
 
@@ -257,7 +256,7 @@ func (h *Handler) UpdateAlertRule(c *gin.Context) {
 
 	res, err := h.svc.UpdateAlertRule(c.Request.Context(), existing)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "更新SLA告警规则失败: "+err.Error())
 		return
 	}
 	common.Success(c, res)
@@ -270,7 +269,7 @@ func (h *Handler) DeleteAlertRule(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 
 	if err := h.svc.DeleteAlertRule(c.Request.Context(), id, tenantIDVal.(int)); err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "删除SLA告警规则失败: "+err.Error())
 		return
 	}
 	common.Success(c, nil)
@@ -290,7 +289,7 @@ func (h *Handler) GetSLAMetrics(c *gin.Context) {
 
 	res, err := h.svc.GetSLAMetrics(c.Request.Context(), tenantIDVal.(int), filters)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取SLA指标失败: "+err.Error())
 		return
 	}
 	common.Success(c, gin.H{
@@ -325,7 +324,7 @@ func (h *Handler) GetSLAViolations(c *gin.Context) {
 
 	res, total, err := h.svc.GetSLAViolations(c.Request.Context(), tenantIDVal.(int), page, size, filters)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "查询SLA违规记录失败: "+err.Error())
 		return
 	}
 	common.Success(c, gin.H{
@@ -347,13 +346,13 @@ func (h *Handler) UpdateViolationStatus(c *gin.Context) {
 		Notes      string `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
 	res, err := h.svc.UpdateSLAViolationStatus(c.Request.Context(), id, req.IsResolved, req.Notes, tenantIDVal.(int))
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "更新SLA违规状态失败: "+err.Error())
 		return
 	}
 	common.Success(c, res)
@@ -363,7 +362,7 @@ func (h *Handler) UpdateViolationStatus(c *gin.Context) {
 func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 	var req dto.SLAMonitoringRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -380,7 +379,7 @@ func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 
 	res, err := h.svc.GetSLAMonitoring(c.Request.Context(), tenantIDVal.(int), startTime, endTime)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取SLA监控数据失败: "+err.Error())
 		return
 	}
 	common.Success(c, res)
@@ -396,7 +395,7 @@ func (h *Handler) CheckSLACompliance(c *gin.Context) {
 
 	res, err := h.svc.CheckSLACompliance(c.Request.Context(), ticketID, tenantIDVal.(int))
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "检查SLA合规性失败: "+err.Error())
 		return
 	}
 	common.Success(c, res)
@@ -421,18 +420,18 @@ func (h *Handler) GetAlertHistory(c *gin.Context) {
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	size, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 
 	res, total, err := h.svc.GetAlertHistory(c.Request.Context(), tenantIDVal.(int), page, size, filters)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "查询告警历史失败: "+err.Error())
 		return
 	}
 	common.Success(c, gin.H{
 		"items":     res,
 		"total":     total,
 		"page":      page,
-		"page_size": size,
+		"pageSize": size,
 	})
 }
 
@@ -443,7 +442,7 @@ func (h *Handler) GetSLAStats(c *gin.Context) {
 
 	stats, err := h.svc.GetSLAStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取SLA统计失败: "+err.Error())
 		return
 	}
 
@@ -460,25 +459,25 @@ func (h *Handler) GetSLAComplianceReport(c *gin.Context) {
 	endDateStr := c.Query("end_date")
 
 	if startDateStr == "" || endDateStr == "" {
-		common.Fail(c, http.StatusBadRequest, "start_date and end_date are required")
+		common.ParamError(c, "start_date and end_date are required")
 		return
 	}
 
 	// Parse ISO 8601 timestamps
 	startDate, err := time.Parse(time.RFC3339, startDateStr)
 	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "invalid start_date format, use ISO 8601 (e.g., 2024-01-01T00:00:00Z)")
+		common.ParamError(c, "invalid start_date format, use ISO 8601 (e.g., 2024-01-01T00:00:00Z)")
 		return
 	}
 	endDate, err := time.Parse(time.RFC3339, endDateStr)
 	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "invalid end_date format, use ISO 8601 (e.g., 2024-01-31T23:59:59Z)")
+		common.ParamError(c, "invalid end_date format, use ISO 8601 (e.g., 2024-01-31T23:59:59Z)")
 		return
 	}
 
 	report, err := h.svc.GetComplianceReport(c.Request.Context(), tenantID, startDate, endDate)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "生成SLA合规报告失败: "+err.Error())
 		return
 	}
 

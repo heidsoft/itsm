@@ -1,7 +1,6 @@
 package knowledge
 
 import (
-	"net/http"
 	"strconv"
 
 	"itsm-backend/common"
@@ -44,29 +43,29 @@ func toArticleDTO(a *Article) *dto.KnowledgeArticleResponse {
 func (h *Handler) CreateArticle(c *gin.Context) {
 	var req dto.CreateKnowledgeArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
 		return
 	}
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		common.ParamError(c, "Tenant ID not found")
 		return
 	}
 	userIDVal, ok := c.Get("user_id")
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "User ID not found")
+		common.ParamError(c, "User ID not found")
 		return
 	}
 
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		common.ParamError(c, "Invalid tenant ID")
 		return
 	}
 	userID, ok := userIDVal.(int)
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Invalid user ID")
+		common.ParamError(c, "Invalid user ID")
 		return
 	}
 
@@ -81,7 +80,7 @@ func (h *Handler) CreateArticle(c *gin.Context) {
 
 	res, err := h.svc.CreateArticle(c.Request.Context(), article)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 
@@ -90,27 +89,25 @@ func (h *Handler) CreateArticle(c *gin.Context) {
 
 // GetArticle handles GET /api/v1/knowledge-articles/:id
 func (h *Handler) GetArticle(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid article ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		common.ParamError(c, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		common.ParamError(c, "Invalid tenant ID")
 		return
 	}
 
 	res, err := h.svc.GetArticle(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "Article not found")
+		common.NotFound(c, "Article not found")
 		return
 	}
 
@@ -120,25 +117,25 @@ func (h *Handler) GetArticle(c *gin.Context) {
 // ListArticles handles GET /api/v1/knowledge-articles
 func (h *Handler) ListArticles(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	category := c.Query("category")
 	search := c.Query("search")
 	status := c.Query("status")
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		common.ParamError(c, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		common.ParamError(c, "Invalid tenant ID")
 		return
 	}
 
 	list, total, err := h.svc.ListArticles(c.Request.Context(), tenantID, page, pageSize, category, search, status)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 
@@ -157,33 +154,31 @@ func (h *Handler) ListArticles(c *gin.Context) {
 
 // UpdateArticle handles PUT /api/v1/knowledge-articles/:id
 func (h *Handler) UpdateArticle(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid article ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		common.ParamError(c, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		common.ParamError(c, "Invalid tenant ID")
 		return
 	}
 
 	var req dto.UpdateKnowledgeArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
 		return
 	}
 
 	existing, err := h.svc.GetArticle(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "Article not found")
+		common.NotFound(c, "Article not found")
 		return
 	}
 
@@ -205,7 +200,7 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 
 	res, err := h.svc.UpdateArticle(c.Request.Context(), existing)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 
@@ -214,26 +209,24 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 
 // DeleteArticle handles DELETE /api/v1/knowledge-articles/:id
 func (h *Handler) DeleteArticle(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid article ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		common.ParamError(c, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		common.ParamError(c, "Invalid tenant ID")
 		return
 	}
 
 	if err := h.svc.DeleteArticle(c.Request.Context(), id, tenantID); err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 
@@ -267,18 +260,18 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 		Limit    int    `json:"limit"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "参数错误: "+err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		common.ParamError(c, "Tenant ID not found")
 		return
 	}
 	tenantIDInt, ok := tenantIDVal.(int)
 	if !ok || tenantIDInt == 0 {
-		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		common.ParamError(c, "Invalid tenant ID")
 		return
 	}
 
@@ -289,7 +282,7 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 
 	articles, total, err := h.svc.ListArticles(c.Request.Context(), tenantIDInt, 1, limit, req.Category, req.Query, "")
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, "搜索失败: "+err.Error())
+		common.InternalError(c, "搜索失败: "+err.Error())
 		return
 	}
 
@@ -336,18 +329,18 @@ func (h *Handler) GetRecentArticles(c *gin.Context) {
 func (h *Handler) GetCategories(c *gin.Context) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		common.ParamError(c, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		common.ParamError(c, "Invalid tenant ID")
 		return
 	}
 
 	list, err := h.svc.GetCategories(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 
@@ -358,18 +351,18 @@ func (h *Handler) GetCategories(c *gin.Context) {
 func (h *Handler) GetStats(c *gin.Context) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		common.ParamError(c, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		common.ParamError(c, "Invalid tenant ID")
 		return
 	}
 
 	stats, err := h.svc.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 

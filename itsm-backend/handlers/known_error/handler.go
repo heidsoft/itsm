@@ -2,7 +2,6 @@ package known_error
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 	"sync"
 
@@ -57,7 +56,7 @@ func (h *Handler) toResponse(ke *ent.KnownError) *dto.KEDBResponse {
 // ListKnownErrors handles GET /api/v1/known-errors
 func (h *Handler) ListKnownErrors(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 	status := c.Query("status")
 	category := c.Query("category")
 	severity := c.Query("severity")
@@ -106,7 +105,7 @@ func (h *Handler) ListKnownErrors(c *gin.Context) {
 		All(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to list known errors", "error", err)
-		common.Fail(c, http.StatusInternalServerError, "Failed to list known errors")
+		common.InternalError(c, "Failed to list known errors")
 		return
 	}
 
@@ -126,10 +125,8 @@ func (h *Handler) ListKnownErrors(c *gin.Context) {
 
 // GetKnownError handles GET /api/v1/known-errors/:id
 func (h *Handler) GetKnownError(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -146,11 +143,11 @@ func (h *Handler) GetKnownError(c *gin.Context) {
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, http.StatusNotFound, "Known error not found")
+			common.NotFound(c, "Known error not found")
 			return
 		}
 		h.logger.Warnw("Failed to get known error", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to get known error")
+		common.InternalError(c, "Failed to get known error")
 		return
 	}
 
@@ -161,7 +158,7 @@ func (h *Handler) GetKnownError(c *gin.Context) {
 func (h *Handler) CreateKnownError(c *gin.Context) {
 	var req dto.KEDBCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
@@ -203,7 +200,7 @@ func (h *Handler) CreateKnownError(c *gin.Context) {
 	ke, err := builder.Save(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to create known error", "error", err)
-		common.Fail(c, http.StatusInternalServerError, "Failed to create known error")
+		common.InternalError(c, "Failed to create known error")
 		return
 	}
 
@@ -212,10 +209,8 @@ func (h *Handler) CreateKnownError(c *gin.Context) {
 
 // UpdateKnownError handles PUT /api/v1/known-errors/:id
 func (h *Handler) UpdateKnownError(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -224,7 +219,7 @@ func (h *Handler) UpdateKnownError(c *gin.Context) {
 
 	var req dto.KEDBUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
 		return
 	}
 
@@ -239,11 +234,11 @@ func (h *Handler) UpdateKnownError(c *gin.Context) {
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, http.StatusNotFound, "Known error not found")
+			common.NotFound(c, "Known error not found")
 			return
 		}
 		h.logger.Warnw("Failed to get known error", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to get known error")
+		common.InternalError(c, "Failed to get known error")
 		return
 	}
 
@@ -290,7 +285,7 @@ func (h *Handler) UpdateKnownError(c *gin.Context) {
 	updated, err := update.Save(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to update known error", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to update known error")
+		common.InternalError(c, "Failed to update known error")
 		return
 	}
 
@@ -299,10 +294,8 @@ func (h *Handler) UpdateKnownError(c *gin.Context) {
 
 // DeleteKnownError handles DELETE /api/v1/known-errors/:id
 func (h *Handler) DeleteKnownError(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -312,7 +305,7 @@ func (h *Handler) DeleteKnownError(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// Verify exists
-	_, err = h.client.KnownError.Query().
+	_, err := h.client.KnownError.Query().
 		Where(
 			entknownerror.ID(id),
 			entknownerror.TenantID(tenantID),
@@ -320,11 +313,11 @@ func (h *Handler) DeleteKnownError(c *gin.Context) {
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, http.StatusNotFound, "Known error not found")
+			common.NotFound(c, "Known error not found")
 			return
 		}
 		h.logger.Warnw("Failed to get known error", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to get known error")
+		common.InternalError(c, "Failed to get known error")
 		return
 	}
 
@@ -334,7 +327,7 @@ func (h *Handler) DeleteKnownError(c *gin.Context) {
 		Exec(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to delete known error", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to delete known error")
+		common.InternalError(c, "Failed to delete known error")
 		return
 	}
 
@@ -439,7 +432,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 	if len(errs) > 0 {
 		h.logger.Errorw("GetStats: DB queries failed", "errors", errs)
-		common.Fail(c, http.StatusInternalServerError, "Failed to retrieve known error statistics")
+		common.Fail(c, 5001, "Failed to retrieve known error statistics")
 		return
 	}
 
@@ -460,7 +453,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 func (h *Handler) SearchKnownErrors(c *gin.Context) {
 	queryStr := c.Query("q")
 	if queryStr == "" {
-		common.Fail(c, http.StatusBadRequest, "Query parameter 'q' is required")
+		common.ParamError(c, "Query parameter 'q' is required")
 		return
 	}
 
@@ -484,7 +477,7 @@ func (h *Handler) SearchKnownErrors(c *gin.Context) {
 		All(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to search known errors", "error", err)
-		common.Fail(c, http.StatusInternalServerError, "Failed to search known errors")
+		common.InternalError(c, "Failed to search known errors")
 		return
 	}
 
@@ -512,7 +505,7 @@ func (h *Handler) GetCategories(c *gin.Context) {
 		All(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to get categories", "error", err)
-		common.Fail(c, http.StatusInternalServerError, "Failed to get categories")
+		common.InternalError(c, "Failed to get categories")
 		return
 	}
 
@@ -535,10 +528,8 @@ func (h *Handler) GetCategories(c *gin.Context) {
 // PromoteToKnownError handles POST /api/v1/known-errors/:id/promote
 // Promotes a draft to active known error status
 func (h *Handler) PromoteToKnownError(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -555,11 +546,11 @@ func (h *Handler) PromoteToKnownError(c *gin.Context) {
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, http.StatusNotFound, "Known error not found")
+			common.NotFound(c, "Known error not found")
 			return
 		}
 		h.logger.Warnw("Failed to get known error", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to get known error")
+		common.InternalError(c, "Failed to get known error")
 		return
 	}
 
@@ -569,7 +560,7 @@ func (h *Handler) PromoteToKnownError(c *gin.Context) {
 		Save(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to promote known error", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to promote known error")
+		common.InternalError(c, "Failed to promote known error")
 		return
 	}
 

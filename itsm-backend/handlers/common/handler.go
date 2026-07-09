@@ -1,7 +1,6 @@
 package common
 
 import (
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -42,13 +41,13 @@ func (h *Handler) Login(c *gin.Context) {
 		TenantCode string `json:"tenantCode"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
 	res, err := h.svc.Login(c.Request.Context(), req.Username, req.Password, req.TenantID, req.TenantCode)
 	if err != nil {
-		common.Fail(c, http.StatusUnauthorized, err.Error())
+		common.AuthFailed(c, err.Error())
 		return
 	}
 
@@ -73,13 +72,13 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		RefreshToken string `json:"refreshToken" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
 	res, err := h.svc.RefreshToken(c.Request.Context(), req.RefreshToken)
 	if err != nil {
-		common.Fail(c, http.StatusUnauthorized, err.Error())
+		common.AuthFailed(c, err.Error())
 		return
 	}
 
@@ -112,7 +111,7 @@ func (h *Handler) GetMe(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	u, err := h.svc.GetUser(c.Request.Context(), userID)
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "User not found")
+		common.NotFound(c, "User not found")
 		return
 	}
 	common.Success(c, u)
@@ -123,7 +122,7 @@ func (h *Handler) GetUserTenants(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	tenants, err := h.svc.GetUserTenants(c.Request.Context(), userID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取用户租户列表失败: "+err.Error())
 		return
 	}
 	common.Success(c, gin.H{"tenants": tenants})
@@ -133,7 +132,7 @@ func (h *Handler) ListUsers(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	users, err := h.svc.ListUsers(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取用户列表失败: "+err.Error())
 		return
 	}
 	common.Success(c, users)
@@ -145,7 +144,7 @@ func (h *Handler) GetDepartmentTree(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	tree, err := h.svc.GetDepartmentTree(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取部门树失败: "+err.Error())
 		return
 	}
 	common.Success(c, tree)
@@ -155,7 +154,7 @@ func (h *Handler) ListDepartments(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	deps, err := h.svc.ListDepartments(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取部门列表失败: "+err.Error())
 		return
 	}
 	common.Success(c, deps)
@@ -170,7 +169,7 @@ func (h *Handler) CreateDepartment(c *gin.Context) {
 		ParentID    int    `json:"parentId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
@@ -185,7 +184,7 @@ func (h *Handler) CreateDepartment(c *gin.Context) {
 	}
 	result, err := h.svc.CreateDepartment(c.Request.Context(), d)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "创建部门失败: "+err.Error())
 		return
 	}
 	common.Success(c, result)
@@ -194,7 +193,7 @@ func (h *Handler) CreateDepartment(c *gin.Context) {
 func (h *Handler) UpdateDepartment(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "invalid department id")
+		common.ParamError(c, "invalid department id")
 		return
 	}
 
@@ -206,7 +205,7 @@ func (h *Handler) UpdateDepartment(c *gin.Context) {
 		ParentID    int    `json:"parentId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
@@ -222,7 +221,7 @@ func (h *Handler) UpdateDepartment(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateDepartment(c.Request.Context(), d)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "更新部门失败: "+err.Error())
 		return
 	}
 	common.Success(c, result)
@@ -231,13 +230,13 @@ func (h *Handler) UpdateDepartment(c *gin.Context) {
 func (h *Handler) DeleteDepartment(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "invalid department id")
+		common.ParamError(c, "invalid department id")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if err := h.svc.DeleteDepartment(c.Request.Context(), id, tenantID); err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "删除部门失败: "+err.Error())
 		return
 	}
 	common.Success(c, nil)
@@ -249,7 +248,7 @@ func (h *Handler) ListTeams(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	teams, err := h.svc.ListTeams(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取团队列表失败: "+err.Error())
 		return
 	}
 	common.Success(c, teams)
@@ -263,7 +262,7 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 		ManagerID   int    `json:"managerId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
@@ -277,7 +276,7 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 	}
 	result, err := h.svc.CreateTeam(c.Request.Context(), t)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "创建团队失败: "+err.Error())
 		return
 	}
 	common.Success(c, result)
@@ -286,7 +285,7 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 func (h *Handler) UpdateTeam(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "invalid team id")
+		common.ParamError(c, "invalid team id")
 		return
 	}
 
@@ -297,7 +296,7 @@ func (h *Handler) UpdateTeam(c *gin.Context) {
 		ManagerID   int    `json:"managerId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
 
@@ -312,7 +311,7 @@ func (h *Handler) UpdateTeam(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateTeam(c.Request.Context(), t)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "更新团队失败: "+err.Error())
 		return
 	}
 	common.Success(c, result)
@@ -321,13 +320,13 @@ func (h *Handler) UpdateTeam(c *gin.Context) {
 func (h *Handler) DeleteTeam(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "invalid team id")
+		common.ParamError(c, "invalid team id")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if err := h.svc.DeleteTeam(c.Request.Context(), id, tenantID); err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "删除团队失败: "+err.Error())
 		return
 	}
 	common.Success(c, nil)
@@ -339,7 +338,7 @@ func (h *Handler) ListTags(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	tags, err := h.svc.ListTags(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取标签列表失败: "+err.Error())
 		return
 	}
 	common.Success(c, tags)
@@ -352,7 +351,7 @@ func (h *Handler) GetAuditLogs(c *gin.Context) {
 	userID, _ := strconv.Atoi(c.Query("user_id"))
 	logs, err := h.svc.GetAuditLogs(c.Request.Context(), tenantID, userID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取审计日志失败: "+err.Error())
 		return
 	}
 	common.Success(c, logs)

@@ -1,7 +1,6 @@
 package standard_change
 
 import (
-	"net/http"
 	"strconv"
 
 	"itsm-backend/common"
@@ -56,7 +55,7 @@ func toResponse(sc *ent.StandardChange) *dto.StandardChangeResponse {
 // ListStandardChanges handles GET /api/v1/standard-changes
 func (h *Handler) ListStandardChanges(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 	category := c.Query("category")
 	search := c.Query("search")
 	activeOnly := c.Query("active_only") == "true"
@@ -102,7 +101,7 @@ func (h *Handler) ListStandardChanges(c *gin.Context) {
 		All(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to list standard changes", "error", err)
-		common.Fail(c, http.StatusInternalServerError, "Failed to list standard changes")
+		common.InternalError(c, "Failed to list standard changes")
 		return
 	}
 
@@ -116,16 +115,14 @@ func (h *Handler) ListStandardChanges(c *gin.Context) {
 		"templates": templates,
 		"total":     total,
 		"page":      page,
-		"page_size": pageSize,
+		"pageSize": pageSize,
 	})
 }
 
 // GetStandardChange handles GET /api/v1/standard-changes/:id
 func (h *Handler) GetStandardChange(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -142,11 +139,11 @@ func (h *Handler) GetStandardChange(c *gin.Context) {
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, http.StatusNotFound, "Standard change template not found")
+			common.NotFound(c, "Standard change template not found")
 			return
 		}
 		h.logger.Warnw("Failed to get standard change", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to get standard change")
+		common.InternalError(c, "Failed to get standard change")
 		return
 	}
 
@@ -157,7 +154,7 @@ func (h *Handler) GetStandardChange(c *gin.Context) {
 func (h *Handler) CreateStandardChange(c *gin.Context) {
 	var req dto.CreateStandardChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
@@ -203,7 +200,7 @@ func (h *Handler) CreateStandardChange(c *gin.Context) {
 		Save(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to create standard change", "error", err)
-		common.Fail(c, http.StatusInternalServerError, "Failed to create standard change template")
+		common.InternalError(c, "Failed to create standard change template")
 		return
 	}
 
@@ -212,10 +209,8 @@ func (h *Handler) CreateStandardChange(c *gin.Context) {
 
 // UpdateStandardChange handles PUT /api/v1/standard-changes/:id
 func (h *Handler) UpdateStandardChange(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -224,7 +219,7 @@ func (h *Handler) UpdateStandardChange(c *gin.Context) {
 
 	var req dto.UpdateStandardChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
 		return
 	}
 
@@ -239,11 +234,11 @@ func (h *Handler) UpdateStandardChange(c *gin.Context) {
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, http.StatusNotFound, "Standard change template not found")
+			common.NotFound(c, "Standard change template not found")
 			return
 		}
 		h.logger.Warnw("Failed to get standard change", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to get standard change")
+		common.InternalError(c, "Failed to get standard change")
 		return
 	}
 
@@ -296,7 +291,7 @@ func (h *Handler) UpdateStandardChange(c *gin.Context) {
 	updated, err := update.Save(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to update standard change", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to update standard change template")
+		common.InternalError(c, "Failed to update standard change template")
 		return
 	}
 
@@ -305,10 +300,8 @@ func (h *Handler) UpdateStandardChange(c *gin.Context) {
 
 // DeleteStandardChange handles DELETE /api/v1/standard-changes/:id
 func (h *Handler) DeleteStandardChange(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -318,7 +311,7 @@ func (h *Handler) DeleteStandardChange(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// Verify exists
-	_, err = h.client.StandardChange.Query().
+	_, err := h.client.StandardChange.Query().
 		Where(
 			entstandardchange.ID(id),
 			entstandardchange.TenantID(tenantID),
@@ -326,11 +319,11 @@ func (h *Handler) DeleteStandardChange(c *gin.Context) {
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, http.StatusNotFound, "Standard change template not found")
+			common.NotFound(c, "Standard change template not found")
 			return
 		}
 		h.logger.Warnw("Failed to get standard change", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to get standard change")
+		common.InternalError(c, "Failed to get standard change")
 		return
 	}
 
@@ -341,7 +334,7 @@ func (h *Handler) DeleteStandardChange(c *gin.Context) {
 		Save(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to delete standard change", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to delete standard change template")
+		common.InternalError(c, "Failed to delete standard change template")
 		return
 	}
 
@@ -362,7 +355,7 @@ func (h *Handler) GetCategories(c *gin.Context) {
 		All(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to get categories", "error", err)
-		common.Fail(c, http.StatusInternalServerError, "Failed to get categories")
+		common.InternalError(c, "Failed to get categories")
 		return
 	}
 
@@ -385,10 +378,8 @@ func (h *Handler) GetCategories(c *gin.Context) {
 // InstantiateStandardChange handles POST /api/v1/standard-changes/:id/instantiate
 // Creates a new Change from a standard change template
 func (h *Handler) InstantiateStandardChange(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -416,11 +407,11 @@ func (h *Handler) InstantiateStandardChange(c *gin.Context) {
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, http.StatusNotFound, "Standard change template not found")
+			common.NotFound(c, "Standard change template not found")
 			return
 		}
 		h.logger.Warnw("Failed to get standard change template", "error", err, "id", id)
-		common.Fail(c, http.StatusInternalServerError, "Failed to get standard change template")
+		common.InternalError(c, "Failed to get standard change template")
 		return
 	}
 
@@ -454,7 +445,7 @@ func (h *Handler) InstantiateStandardChange(c *gin.Context) {
 		Save(ctx)
 	if err != nil {
 		h.logger.Warnw("Failed to create change from template", "error", err)
-		common.Fail(c, http.StatusInternalServerError, "Failed to create change from template")
+		common.InternalError(c, "Failed to create change from template")
 		return
 	}
 

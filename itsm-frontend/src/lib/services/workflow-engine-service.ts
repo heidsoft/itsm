@@ -3,6 +3,7 @@
  */
 
 import type { PaginatedResponse } from '@/types/api';
+import { httpClient } from '@/lib/api/http-client';
 
 // 工作流状态枚举
 export enum WorkflowStatus {
@@ -94,6 +95,7 @@ export interface UserTaskQueryParams {
 }
 
 // 工作流服务类
+// 注意：后端 BPMN 路由为 /api/v1/bpmn/process-definitions, /api/v1/bpmn/process-instances, /api/v1/workflow/tasks
 export class WorkflowEngineService {
   private readonly baseUrl = '/api/v1/bpmn';
 
@@ -101,21 +103,16 @@ export class WorkflowEngineService {
   async getWorkflowDefinitions(params?: WorkflowDefinitionQueryParams): Promise<PaginatedResponse<WorkflowDefinition>> {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
-    if (params?.pageSize) query.append('page_size', params.pageSize.toString());
+    if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
     if (params?.key) query.append('key', params.key);
     if (params?.category) query.append('category', params.category);
-
-    const response = await fetch(`${this.baseUrl}/process-definitions?${query.toString()}`);
-    if (!response.ok) throw new Error('Failed to fetch workflow definitions');
-    return response.json();
+    const endpoint = query.toString() ? `${this.baseUrl}/process-definitions?${query.toString()}` : `${this.baseUrl}/process-definitions`;
+    return httpClient.get<PaginatedResponse<WorkflowDefinition>>(endpoint);
   }
 
   async getWorkflowDefinition(key: string, version?: string): Promise<WorkflowDefinition> {
     const query = version ? `?version=${version}` : '';
-    const response = await fetch(`${this.baseUrl}/process-definitions/${key}${query}`);
-    if (!response.ok) throw new Error('Failed to fetch workflow definition');
-    const res = await response.json();
-    return res.data;
+    return httpClient.get<WorkflowDefinition>(`${this.baseUrl}/process-definitions/${key}${query}`);
   }
 
   async createWorkflowDefinition(data: {
@@ -126,14 +123,7 @@ export class WorkflowEngineService {
     bpmnXml: string;
     processVariables?: Record<string, any>;
   }): Promise<WorkflowDefinition> {
-    const response = await fetch(`${this.baseUrl}/process-definitions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to create workflow definition');
-    const res = await response.json();
-    return res.data;
+    return httpClient.post<WorkflowDefinition>(`${this.baseUrl}/process-definitions`, data);
   }
 
   async updateWorkflowDefinition(
@@ -141,40 +131,22 @@ export class WorkflowEngineService {
     version: string,
     data: Partial<WorkflowDefinition>
   ): Promise<WorkflowDefinition> {
-    const response = await fetch(`${this.baseUrl}/process-definitions/${key}?version=${version}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to update workflow definition');
-    const res = await response.json();
-    return res.data;
+    return httpClient.put<WorkflowDefinition>(`${this.baseUrl}/process-definitions/${key}?version=${version}`, data);
   }
 
   async setWorkflowDefinitionActive(key: string, version: string, active: boolean): Promise<void> {
-    const response = await fetch(
-      `${this.baseUrl}/process-definitions/${key}/active?version=${version}`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active }),
-      }
-    );
-    if (!response.ok) throw new Error('Failed to set workflow definition status');
+    return httpClient.put<void>(`${this.baseUrl}/process-definitions/${key}/active?version=${version}`, { active });
   }
 
   // 工作流实例管理
   async getWorkflowInstances(params?: WorkflowInstanceQueryParams): Promise<PaginatedResponse<WorkflowInstance>> {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
-    if (params?.pageSize) query.append('page_size', params.pageSize.toString());
-    if (params?.processDefinitionKey)
-      query.append('process_definition_key', params.processDefinitionKey);
+    if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
+    if (params?.processDefinitionKey) query.append('processDefinitionKey', params.processDefinitionKey);
     if (params?.status) query.append('status', params.status);
-
-    const response = await fetch(`${this.baseUrl}/process-instances?${query.toString()}`);
-    if (!response.ok) throw new Error('Failed to fetch workflow instances');
-    return response.json();
+    const endpoint = query.toString() ? `${this.baseUrl}/process-instances?${query.toString()}` : `${this.baseUrl}/process-instances`;
+    return httpClient.get<PaginatedResponse<WorkflowInstance>>(endpoint);
   }
 
   async startWorkflowInstance(
@@ -182,55 +154,33 @@ export class WorkflowEngineService {
     businessKey: string,
     variables?: Record<string, any>
   ): Promise<WorkflowInstance> {
-    const response = await fetch(`${this.baseUrl}/process-instances`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        processDefinitionKey: processDefinitionKey,
-        businessKey: businessKey,
-        variables: variables || {},
-      }),
+    return httpClient.post<WorkflowInstance>(`${this.baseUrl}/process-instances`, {
+      processDefinitionKey,
+      businessKey,
+      variables: variables || {},
     });
-    if (!response.ok) throw new Error('Failed to start workflow instance');
-    const res = await response.json();
-    return res.data;
   }
 
   async getWorkflowInstance(id: string): Promise<WorkflowInstance> {
-    const response = await fetch(`${this.baseUrl}/process-instances/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch workflow instance');
-    const res = await response.json();
-    return res.data;
+    return httpClient.get<WorkflowInstance>(`${this.baseUrl}/process-instances/${id}`);
   }
 
-  // 任务管理
+  // 任务管理 - 后端路由为 /api/v1/workflow/tasks
   async getUserTasks(params?: UserTaskQueryParams): Promise<PaginatedResponse<WorkflowTask>> {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.assignee) query.append('assignee', params.assignee);
     if (params?.status) query.append('status', params.status);
-
-    const response = await fetch(`${this.baseUrl}/tasks?${query.toString()}`);
-    if (!response.ok) throw new Error('Failed to fetch user tasks');
-    return response.json();
+    const endpoint = query.toString() ? `/api/v1/workflow/tasks?${query.toString()}` : '/api/v1/workflow/tasks';
+    return httpClient.get<PaginatedResponse<WorkflowTask>>(endpoint);
   }
 
   async completeTask(taskId: string, variables?: Record<string, any>): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/tasks/${taskId}/complete`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ variables }),
-    });
-    if (!response.ok) throw new Error('Failed to complete task');
+    return httpClient.put<void>(`/api/v1/workflow/tasks/${taskId}/complete`, { variables });
   }
 
   async assignTask(taskId: string, assignee: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/tasks/${taskId}/assign`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ assignee }),
-    });
-    if (!response.ok) throw new Error('Failed to assign task');
+    return httpClient.put<void>(`/api/v1/workflow/tasks/${taskId}/claim`, { assignee });
   }
 }
 

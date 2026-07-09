@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/service"
 	"itsm-backend/service/bpmn"
@@ -412,7 +413,10 @@ func (c *BPMNWorkflowController) ListProcessInstances(ctx *gin.Context) {
 	}
 
 	// 使用统一响应格式
-	listResponse := common.NewListResponse(instances, common.NewPaginationResponse(int(req.Page), int(req.PageSize), int64(total)))
+	listResponse := common.NewListResponse(
+		dto.ToBPMNProcessInstanceListResponse(instances),
+		common.NewPaginationResponse(int(req.Page), int(req.PageSize), int64(total)),
+	)
 	common.Success(ctx, listResponse)
 }
 
@@ -430,7 +434,7 @@ func (c *BPMNWorkflowController) GetProcessInstance(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, instance)
+	common.Success(ctx, dto.ToBPMNProcessInstanceResponse(instance))
 }
 
 // SetProcessInstanceVariables 设置流程实例变量

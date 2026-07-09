@@ -1,4 +1,12 @@
 /**
+ * @deprecated 此文件已废弃。请使用:
+ * - lib/api/http-client.ts (已集成 httpOnly cookie refresh)
+ * - lib/services/auth-service.ts (认证服务)
+ *
+ * 此文件保留用于向后兼容，不应在新代码中使用。
+ */
+
+/**
  * 企业级ITSM认证API示例
  * 展示如何安全地与后端进行认证交互
  */

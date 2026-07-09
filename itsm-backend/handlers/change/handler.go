@@ -1,7 +1,6 @@
 package change
 
 import (
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -54,7 +53,7 @@ func toDTO(c *Change) *dto.ChangeResponse {
 func (h *Handler) CreateChange(c *gin.Context) {
 	var req dto.CreateChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
@@ -83,7 +82,7 @@ func (h *Handler) CreateChange(c *gin.Context) {
 
 	res, err := h.svc.CreateChange(c.Request.Context(), changeEntity)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "创建变更失败: "+err.Error())
 		return
 	}
 
@@ -92,14 +91,16 @@ func (h *Handler) CreateChange(c *gin.Context) {
 
 // GetChange handles GET /api/v1/changes/:id
 func (h *Handler) GetChange(c *gin.Context) {
-	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
 	res, err := h.svc.GetChange(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "Change not found")
+		common.NotFound(c, "Change not found")
 		return
 	}
 
@@ -108,10 +109,8 @@ func (h *Handler) GetChange(c *gin.Context) {
 
 // GetApprovalSummary handles GET /api/v1/changes/:id/approval-summary
 func (h *Handler) GetApprovalSummary(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -119,7 +118,7 @@ func (h *Handler) GetApprovalSummary(c *gin.Context) {
 
 	summary, err := h.svc.GetApprovalSummary(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取审批摘要失败: "+err.Error())
 		return
 	}
 
@@ -128,16 +127,14 @@ func (h *Handler) GetApprovalSummary(c *gin.Context) {
 
 // GetRiskAssessment handles GET /api/v1/changes/:id/risk-assessment
 func (h *Handler) GetRiskAssessment(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
 	ra, err := h.svc.GetRisk(c.Request.Context(), id)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取风险评估失败: "+err.Error())
 		return
 	}
 
@@ -163,10 +160,8 @@ func (h *Handler) GetRiskAssessment(c *gin.Context) {
 
 // GetCMDBImpactSummary handles GET /api/v1/changes/:id/cmdb-impact
 func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -175,7 +170,7 @@ func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
 
 	summary, err := h.svc.GetCMDBImpactSummary(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取CMDB影响摘要失败: "+err.Error())
 		return
 	}
 
@@ -185,7 +180,7 @@ func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
 // ListChanges handles GET /api/v1/changes
 func (h *Handler) ListChanges(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	status := c.Query("status")
 	search := c.Query("search")
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -193,7 +188,7 @@ func (h *Handler) ListChanges(c *gin.Context) {
 
 	list, total, err := h.svc.ListChanges(c.Request.Context(), tenantID, page, pageSize, status, search)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "查询变更列表失败: "+err.Error())
 		return
 	}
 
@@ -206,27 +201,29 @@ func (h *Handler) ListChanges(c *gin.Context) {
 		"changes": dtos,
 		"total":   total,
 		"page":    page,
-		"size":    pageSize,
+		"pageSize": pageSize,
 	})
 }
 
 // UpdateChange handles PUT /api/v1/changes/:id
 func (h *Handler) UpdateChange(c *gin.Context) {
-	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
 	var req dto.UpdateChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
 	// First get existing
 	existing, err := h.svc.GetChange(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "Change not found")
+		common.NotFound(c, "Change not found")
 		return
 	}
 
@@ -270,7 +267,7 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 
 	res, err := h.svc.UpdateChange(c.Request.Context(), existing)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "更新变更失败: "+err.Error())
 		return
 	}
 
@@ -279,14 +276,16 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 
 // SubmitApproval handles POST /api/v1/changes/:id/approvals
 func (h *Handler) SubmitApproval(c *gin.Context) {
-	idStr := c.Param("id")
-	changeID, _ := strconv.Atoi(idStr)
+	changeID, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
 	var req dto.CreateChangeApprovalRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 	req.ChangeID = changeID
@@ -299,7 +298,7 @@ func (h *Handler) SubmitApproval(c *gin.Context) {
 
 	res, err := h.svc.SubmitApproval(c.Request.Context(), record, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "提交审批失败: "+err.Error())
 		return
 	}
 
@@ -308,8 +307,10 @@ func (h *Handler) SubmitApproval(c *gin.Context) {
 
 // SubmitChange handles POST /api/v1/changes/:id/submit
 func (h *Handler) SubmitChange(c *gin.Context) {
-	idStr := c.Param("id")
-	changeID, _ := strconv.Atoi(idStr)
+	changeID, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 	userIDVal, _ := c.Get("user_id")
@@ -317,13 +318,13 @@ func (h *Handler) SubmitChange(c *gin.Context) {
 
 	var req dto.SubmitChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
 	res, err := h.svc.SubmitChange(c.Request.Context(), changeID, tenantID, userID, &req)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "提交变更失败: "+err.Error())
 		return
 	}
 
@@ -336,7 +337,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 	tenantID := tenantIDVal.(int)
 	res, err := h.svc.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取统计信息失败: "+err.Error())
 		return
 	}
 	common.Success(c, res)
@@ -345,10 +346,8 @@ func (h *Handler) GetStats(c *gin.Context) {
 // TransitionStatus handles status transition actions
 // POST /api/v1/changes/:id/approve|reject|start|complete|rollback|cancel
 func (h *Handler) TransitionStatus(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -370,7 +369,7 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 	}
 	targetStatus, ok := statusMap[action]
 	if !ok {
-		common.Fail(c, http.StatusBadRequest, "Unknown action: "+action)
+		common.ParamError(c, "Unknown action: "+action)
 		return
 	}
 
@@ -382,7 +381,7 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 
 	res, err := h.svc.TransitionStatus(c.Request.Context(), id, tenantID, userID, targetStatus)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "状态转换失败: "+err.Error())
 		return
 	}
 	common.Success(c, toDTO(res))
@@ -390,10 +389,8 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 
 // AssignChange handles POST /api/v1/changes/:id/assign
 func (h *Handler) AssignChange(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -403,19 +400,19 @@ func (h *Handler) AssignChange(c *gin.Context) {
 		AssigneeID int `json:"assigneeId" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "assignee_id is required")
+		common.ParamError(c, "assignee_id is required")
 		return
 	}
 
 	existing, err := h.svc.GetChange(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "Change not found")
+		common.NotFound(c, "Change not found")
 		return
 	}
 	existing.AssigneeID = &req.AssigneeID
 	res, err := h.svc.UpdateChange(c.Request.Context(), existing)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "分配变更失败: "+err.Error())
 		return
 	}
 	common.Success(c, toDTO(res))
@@ -423,17 +420,15 @@ func (h *Handler) AssignChange(c *gin.Context) {
 
 // GetApprovals handles GET /api/v1/changes/:id/approvals
 func (h *Handler) GetApprovals(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 	history, err := h.svc.GetApprovalHistory(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取审批历史失败: "+err.Error())
 		return
 	}
 	common.Success(c, history)
@@ -441,17 +436,15 @@ func (h *Handler) GetApprovals(c *gin.Context) {
 
 // DeleteChange handles DELETE /api/v1/changes/:id
 func (h *Handler) DeleteChange(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
 	if err := h.svc.DeleteChange(c.Request.Context(), id, tenantID); err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "删除变更失败: "+err.Error())
 		return
 	}
 	common.Success(c, gin.H{"message": "deleted"})
@@ -461,7 +454,7 @@ func (h *Handler) DeleteChange(c *gin.Context) {
 func (h *Handler) GetCalendar(c *gin.Context) {
 	var req dto.ChangeCalendarRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid query parameters: "+err.Error())
+		common.ParamError(c, "Invalid query parameters: "+err.Error())
 		return
 	}
 
@@ -470,7 +463,7 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 
 	res, err := h.svc.GetCalendarView(c.Request.Context(), tenantID, req.StartDate, req.EndDate, req.Status)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 
@@ -481,10 +474,8 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 
 // CreatePIR handles POST /api/v1/changes/:id/pir
 func (h *Handler) CreatePIR(c *gin.Context) {
-	changeIDStr := c.Param("id")
-	changeID, err := strconv.Atoi(changeIDStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+	changeID, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -495,7 +486,7 @@ func (h *Handler) CreatePIR(c *gin.Context) {
 
 	var req dto.CreateChangePIRRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 	req.ChangeID = changeID
@@ -503,10 +494,10 @@ func (h *Handler) CreatePIR(c *gin.Context) {
 	pir, err := h.svc.CreatePIR(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		if strings.Contains(err.Error(), "已存在") {
-			common.Fail(c, http.StatusConflict, err.Error())
+			common.Conflict(c, err.Error(), nil)
 			return
 		}
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 
@@ -515,10 +506,8 @@ func (h *Handler) CreatePIR(c *gin.Context) {
 
 // GetPIR handles GET /api/v1/changes/:id/pir
 func (h *Handler) GetPIR(c *gin.Context) {
-	changeIDStr := c.Param("id")
-	changeID, err := strconv.Atoi(changeIDStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+	changeID, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -528,10 +517,10 @@ func (h *Handler) GetPIR(c *gin.Context) {
 	pir, err := h.svc.GetPIRByChange(c.Request.Context(), changeID, tenantID)
 	if err != nil {
 		if strings.Contains(err.Error(), "无PIR记录") {
-			common.Fail(c, http.StatusNotFound, err.Error())
+			common.NotFound(c, err.Error())
 			return
 		}
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 
@@ -541,7 +530,7 @@ func (h *Handler) GetPIR(c *gin.Context) {
 // ListPIRs handles GET /api/v1/changes/pirs
 func (h *Handler) ListPIRs(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	result := c.Query("result")
 
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -549,7 +538,7 @@ func (h *Handler) ListPIRs(c *gin.Context) {
 
 	pirs, err := h.svc.ListPIRs(c.Request.Context(), tenantID, page, pageSize, result)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 
@@ -558,10 +547,8 @@ func (h *Handler) ListPIRs(c *gin.Context) {
 
 // UpdatePIR handles PUT /api/v1/changes/pir/:id
 func (h *Handler) UpdatePIR(c *gin.Context) {
-	pirIDStr := c.Param("id")
-	pirID, err := strconv.Atoi(pirIDStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid PIR id")
+	pirID, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -570,17 +557,17 @@ func (h *Handler) UpdatePIR(c *gin.Context) {
 
 	var req dto.UpdateChangePIRRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
 	pir, err := h.svc.UpdatePIR(c.Request.Context(), pirID, &req, tenantID)
 	if err != nil {
 		if strings.Contains(err.Error(), "不存在") {
-			common.Fail(c, http.StatusNotFound, err.Error())
+			common.NotFound(c, err.Error())
 			return
 		}
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 
@@ -589,10 +576,8 @@ func (h *Handler) UpdatePIR(c *gin.Context) {
 
 // DeletePIR handles DELETE /api/v1/changes/pir/:id
 func (h *Handler) DeletePIR(c *gin.Context) {
-	pirIDStr := c.Param("id")
-	pirID, err := strconv.Atoi(pirIDStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid PIR id")
+	pirID, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -601,10 +586,10 @@ func (h *Handler) DeletePIR(c *gin.Context) {
 
 	if err := h.svc.DeletePIR(c.Request.Context(), pirID, tenantID); err != nil {
 		if strings.Contains(err.Error(), "不存在") {
-			common.Fail(c, http.StatusNotFound, err.Error())
+			common.NotFound(c, err.Error())
 			return
 		}
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 

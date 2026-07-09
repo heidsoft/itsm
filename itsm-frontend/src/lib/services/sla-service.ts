@@ -11,7 +11,7 @@
  */
 
 import type { PaginatedResponse } from '@/types/api';
-import { ApiResponse } from '@/types/api';
+import { httpClient } from '@/lib/api/http-client';
 
 // SLA状态枚举
 export enum SLAStatus {
@@ -258,44 +258,30 @@ export class SLAService {
 
   // SLA定义管理
   async getSLADefinitions(params?: SLAQueryParams): Promise<PaginatedResponse<SLADefinition>> {
-    const response = await fetch(
-      `${this.baseUrl}/definitions?${new URLSearchParams(params as Record<string, string>)}`
-    );
-    if (!response.ok) throw new Error('Failed to fetch SLA definitions');
-    return response.json();
+    const query = params
+      ? Object.entries(params)
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+          .join('&')
+      : '';
+    const endpoint = query ? `${this.baseUrl}/definitions?${query}` : `${this.baseUrl}/definitions`;
+    return httpClient.get<PaginatedResponse<SLADefinition>>(endpoint);
   }
 
   async getSLADefinition(id: number): Promise<SLADefinition> {
-    const response = await fetch(`${this.baseUrl}/definitions/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch SLA definition');
-    return response.json();
+    return httpClient.get<SLADefinition>(`${this.baseUrl}/definitions/${id}`);
   }
 
   async createSLADefinition(data: CreateSLARequest): Promise<SLADefinition> {
-    const response = await fetch(`${this.baseUrl}/definitions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to create SLA definition');
-    return response.json();
+    return httpClient.post<SLADefinition>(`${this.baseUrl}/definitions`, data);
   }
 
   async updateSLADefinition(id: number, data: UpdateSLARequest): Promise<SLADefinition> {
-    const response = await fetch(`${this.baseUrl}/definitions/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to update SLA definition');
-    return response.json();
+    return httpClient.put<SLADefinition>(`${this.baseUrl}/definitions/${id}`, data);
   }
 
   async deleteSLADefinition(id: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/definitions/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to delete SLA definition');
+    return httpClient.delete<void>(`${this.baseUrl}/definitions/${id}`);
   }
 
   // SLA实例管理
@@ -306,31 +292,26 @@ export class SLAService {
     slaDefinitionId?: number;
     assignedTo?: number;
   }): Promise<PaginatedResponse<SLAInstance>> {
-    const response = await fetch(`${this.baseUrl}/instances?${new URLSearchParams(params as Record<string, string>)}`);
-    if (!response.ok) throw new Error('Failed to fetch SLA instances');
-    return response.json();
+    const query = params
+      ? Object.entries(params)
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+          .join('&')
+      : '';
+    const endpoint = query ? `${this.baseUrl}/instances?${query}` : `${this.baseUrl}/instances`;
+    return httpClient.get<PaginatedResponse<SLAInstance>>(endpoint);
   }
 
   async getSLAInstance(id: number): Promise<SLAInstance> {
-    const response = await fetch(`${this.baseUrl}/instances/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch SLA instance');
-    return response.json();
+    return httpClient.get<SLAInstance>(`${this.baseUrl}/instances/${id}`);
   }
 
   async suspendSLAInstance(id: number, reason: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/instances/${id}/suspend`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason }),
-    });
-    if (!response.ok) throw new Error('Failed to suspend SLA instance');
+    return httpClient.post<void>(`${this.baseUrl}/instances/${id}/suspend`, { reason });
   }
 
   async resumeSLAInstance(id: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/instances/${id}/resume`, {
-      method: 'POST',
-    });
-    if (!response.ok) throw new Error('Failed to resume SLA instance');
+    return httpClient.post<void>(`${this.baseUrl}/instances/${id}/resume`);
   }
 
   // SLA统计和报告
@@ -339,9 +320,14 @@ export class SLAService {
     slaDefinitionId?: number;
     assignedTo?: number;
   }): Promise<SLAStats> {
-    const response = await fetch(`${this.baseUrl}/stats?${new URLSearchParams(params as Record<string, string>)}`);
-    if (!response.ok) throw new Error('Failed to fetch SLA stats');
-    return response.json();
+    const query = params
+      ? Object.entries(params)
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+          .join('&')
+      : '';
+    const endpoint = query ? `${this.baseUrl}/stats?${query}` : `${this.baseUrl}/stats`;
+    return httpClient.get<SLAStats>(endpoint);
   }
 
   async getSLAReport(params: {
@@ -350,45 +336,31 @@ export class SLAService {
     slaDefinitionId?: number;
     format?: 'pdf' | 'excel' | 'csv';
   }): Promise<SLAReport> {
-    const response = await fetch(`${this.baseUrl}/reports?${new URLSearchParams(params as unknown as Record<string, string>)}`);
-    if (!response.ok) throw new Error('Failed to fetch SLA report');
-    return response.json();
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+      .join('&');
+    return httpClient.get<SLAReport>(`${this.baseUrl}/reports?${query}`);
   }
 
   // 业务时间管理
   async getBusinessHours(): Promise<BusinessHours[]> {
-    const response = await fetch(`${this.baseUrl}/business-hours`);
-    if (!response.ok) throw new Error('Failed to fetch business hours');
-    return response.json();
+    return httpClient.get<BusinessHours[]>(`${this.baseUrl}/business-hours`);
   }
 
   async createBusinessHours(
     data: Omit<BusinessHours, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<BusinessHours> {
-    const response = await fetch(`${this.baseUrl}/business-hours`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to create business hours');
-    return response.json();
+    return httpClient.post<BusinessHours>(`${this.baseUrl}/business-hours`, data);
   }
 
   // 节假日管理
   async getHolidays(): Promise<Holiday[]> {
-    const response = await fetch(`${this.baseUrl}/holidays`);
-    if (!response.ok) throw new Error('Failed to fetch holidays');
-    return response.json();
+    return httpClient.get<Holiday[]>(`${this.baseUrl}/holidays`);
   }
 
   async createHoliday(data: Omit<Holiday, 'id' | 'createdAt' | 'updatedAt'>): Promise<Holiday> {
-    const response = await fetch(`${this.baseUrl}/holidays`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to create holiday');
-    return response.json();
+    return httpClient.post<Holiday>(`${this.baseUrl}/holidays`, data);
   }
 
   // SLA计算工具
@@ -417,19 +389,12 @@ export class SLAService {
 
   // SLA预警检查
   async checkSLAWarnings(): Promise<SLAInstance[]> {
-    const response = await fetch(`${this.baseUrl}/warnings`);
-    if (!response.ok) throw new Error('Failed to check SLA warnings');
-    return response.json();
+    return httpClient.get<SLAInstance[]>(`${this.baseUrl}/warnings`);
   }
 
   // SLA升级处理
   async processEscalation(slaInstanceId: number, level: EscalationLevel): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/instances/${slaInstanceId}/escalate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ level }),
-    });
-    if (!response.ok) throw new Error('Failed to process escalation');
+    return httpClient.post<void>(`${this.baseUrl}/instances/${slaInstanceId}/escalate`, { level });
   }
 }
 

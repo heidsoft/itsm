@@ -2,7 +2,6 @@ package cmdb
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -90,7 +89,7 @@ func toCloudResourceDTO(resource *CloudResource) *dto.CloudResourceResponse {
 func (h *Handler) CreateCI(c *gin.Context) {
 	var req dto.CreateCIRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
@@ -131,7 +130,7 @@ func (h *Handler) CreateCI(c *gin.Context) {
 
 	res, err := h.svc.CreateCI(c.Request.Context(), ci)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "创建配置项失败: "+err.Error())
 		return
 	}
 
@@ -142,7 +141,7 @@ func (h *Handler) CreateCI(c *gin.Context) {
 func (h *Handler) CreateCIItem(c *gin.Context) {
 	var req dto.CreateCIRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
@@ -183,7 +182,7 @@ func (h *Handler) CreateCIItem(c *gin.Context) {
 
 	res, err := h.svc.CreateCI(c.Request.Context(), ci)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "创建配置项失败: "+err.Error())
 		return
 	}
 
@@ -192,14 +191,16 @@ func (h *Handler) CreateCIItem(c *gin.Context) {
 
 // GetCI handles GET /api/v1/cmdb/cis/:id
 func (h *Handler) GetCI(c *gin.Context) {
-	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
 	res, err := h.svc.GetCI(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "Configuration Item not found")
+		common.NotFound(c, "Configuration Item not found")
 		return
 	}
 
@@ -209,7 +210,7 @@ func (h *Handler) GetCI(c *gin.Context) {
 // ListCIs handles GET /api/v1/cmdb/cis
 func (h *Handler) ListCIs(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	status := c.Query("status")
 	typeID, _ := strconv.Atoi(c.Query("ci_type_id"))
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -217,7 +218,7 @@ func (h *Handler) ListCIs(c *gin.Context) {
 
 	list, total, err := h.svc.ListCIs(c.Request.Context(), tenantID, page, pageSize, typeID, status, c.Query("search"))
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "查询配置项列表失败: "+err.Error())
 		return
 	}
 
@@ -230,26 +231,28 @@ func (h *Handler) ListCIs(c *gin.Context) {
 		"items": dtos,
 		"total": total,
 		"page":  page,
-		"size":  pageSize,
+		"pageSize": pageSize,
 	})
 }
 
 // UpdateCI handles PUT /api/v1/cmdb/cis/:id
 func (h *Handler) UpdateCI(c *gin.Context) {
-	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
 	var req dto.UpdateCIRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
 	existing, err := h.svc.GetCI(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "Configuration Item not found")
+		common.NotFound(c, "Configuration Item not found")
 		return
 	}
 
@@ -340,7 +343,7 @@ func (h *Handler) UpdateCI(c *gin.Context) {
 
 	res, err := h.svc.UpdateCI(c.Request.Context(), existing)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "更新配置项失败: "+err.Error())
 		return
 	}
 
@@ -349,13 +352,15 @@ func (h *Handler) UpdateCI(c *gin.Context) {
 
 // DeleteCI handles DELETE /api/v1/cmdb/cis/:id
 func (h *Handler) DeleteCI(c *gin.Context) {
-	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
 	if err := h.svc.DeleteCI(c.Request.Context(), id, tenantID); err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "删除配置项失败: "+err.Error())
 		return
 	}
 
@@ -369,7 +374,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 	res, err := h.svc.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取统计信息失败: "+err.Error())
 		return
 	}
 
@@ -383,7 +388,7 @@ func (h *Handler) ListTypes(c *gin.Context) {
 
 	list, err := h.svc.ListTypes(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "查询CI类型列表失败: "+err.Error())
 		return
 	}
 
@@ -394,7 +399,7 @@ func (h *Handler) ListTypes(c *gin.Context) {
 func (h *Handler) CreateType(c *gin.Context) {
 	var req dto.CreateCITypeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
@@ -418,7 +423,7 @@ func (h *Handler) CreateType(c *gin.Context) {
 
 	res, err := h.svc.CreateType(c.Request.Context(), ct)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "创建CI类型失败: "+err.Error())
 		return
 	}
 
@@ -427,20 +432,22 @@ func (h *Handler) CreateType(c *gin.Context) {
 
 // UpdateType handles PUT /api/v1/cmdb/types/:id
 func (h *Handler) UpdateType(c *gin.Context) {
-	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
 	var req dto.UpdateCITypeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 
 	existing, err := h.svc.GetType(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusNotFound, "CI Type not found")
+		common.NotFound(c, "CI Type not found")
 		return
 	}
 
@@ -456,7 +463,7 @@ func (h *Handler) UpdateType(c *gin.Context) {
 
 	res, err := h.svc.UpdateType(c.Request.Context(), existing)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "更新CI类型失败: "+err.Error())
 		return
 	}
 
@@ -465,25 +472,27 @@ func (h *Handler) UpdateType(c *gin.Context) {
 
 // DeleteType handles DELETE /api/v1/cmdb/types/:id
 func (h *Handler) DeleteType(c *gin.Context) {
-	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
 	// Check if there are CIs using this type
 	count, err := h.svc.CountCIsByType(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "检查CI关联失败: "+err.Error())
 		return
 	}
 
 	if count > 0 {
-		common.Fail(c, http.StatusBadRequest, fmt.Sprintf("Cannot delete CI type: %d CI(s) are using this type. Please migrate or delete those CIs first.", count))
+		common.ParamError(c, fmt.Sprintf("Cannot delete CI type: %d CI(s) are using this type. Please migrate or delete those CIs first.", count))
 		return
 	}
 
 	if err := h.svc.DeleteType(c.Request.Context(), id, tenantID); err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "删除CI类型失败: "+err.Error())
 		return
 	}
 
@@ -516,7 +525,7 @@ func (h *Handler) GetReconciliation(c *gin.Context) {
 
 	result, err := h.svc.GetReconciliation(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "获取对账信息失败: "+err.Error())
 		return
 	}
 
@@ -559,7 +568,7 @@ func (h *Handler) ListCloudServices(c *gin.Context) {
 
 	list, err := h.svc.ListCloudServices(c.Request.Context(), tenantID, provider)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "查询云服务列表失败: "+err.Error())
 		return
 	}
 
@@ -590,11 +599,11 @@ func (h *Handler) ListCloudServices(c *gin.Context) {
 func (h *Handler) CreateCloudService(c *gin.Context) {
 	var req dto.CloudServiceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}
 	if err := validateAttributeSchema(req.AttributeSchema); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.ParamError(c, err.Error())
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -623,7 +632,7 @@ func (h *Handler) CreateCloudService(c *gin.Context) {
 	}
 	res, err := h.svc.CreateCloudService(c.Request.Context(), cs)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "创建云服务失败: "+err.Error())
 		return
 	}
 	common.Success(c, &dto.CloudServiceResponse{
@@ -694,7 +703,7 @@ func (h *Handler) ListCloudAccounts(c *gin.Context) {
 
 	list, err := h.svc.ListCloudAccounts(c.Request.Context(), tenantID, provider)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, "查询云账号列表失败: "+err.Error())
 		return
 	}
 	resp := make([]*dto.CloudAccountResponse, 0, len(list))
@@ -718,7 +727,7 @@ func (h *Handler) ListCloudAccounts(c *gin.Context) {
 func (h *Handler) CreateCloudAccount(c *gin.Context) {
 	var req dto.CloudAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -738,7 +747,7 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 	}
 	res, err := h.svc.CreateCloudAccount(c.Request.Context(), ca)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, &dto.CloudAccountResponse{
@@ -765,7 +774,7 @@ func (h *Handler) ListCloudResources(c *gin.Context) {
 
 	list, err := h.svc.ListCloudResources(c.Request.Context(), tenantID, provider, serviceID, region)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	resp := make([]*dto.CloudResourceResponse, 0, len(list))
@@ -796,15 +805,13 @@ func (h *Handler) ListCloudResources(c *gin.Context) {
 func (h *Handler) GetCloudService(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 	result, err := h.svc.GetCloudService(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, &dto.CloudServiceResponse{
@@ -830,15 +837,13 @@ func (h *Handler) GetCloudService(c *gin.Context) {
 func (h *Handler) UpdateCloudService(c *gin.Context) {
 	var req dto.CloudServiceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 	isActive := true
@@ -861,7 +866,7 @@ func (h *Handler) UpdateCloudService(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateCloudService(c.Request.Context(), cs)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, &dto.CloudServiceResponse{
@@ -887,15 +892,13 @@ func (h *Handler) UpdateCloudService(c *gin.Context) {
 func (h *Handler) DeleteCloudService(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
-	err = h.svc.DeleteCloudService(c.Request.Context(), id, tenantID)
+	err := h.svc.DeleteCloudService(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, nil)
@@ -905,15 +908,13 @@ func (h *Handler) DeleteCloudService(c *gin.Context) {
 func (h *Handler) GetCloudAccount(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 	result, err := h.svc.GetCloudAccount(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, &dto.CloudAccountResponse{
@@ -934,15 +935,13 @@ func (h *Handler) GetCloudAccount(c *gin.Context) {
 func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 	var req dto.CloudAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 	isActive := true
@@ -961,7 +960,7 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateCloudAccount(c.Request.Context(), ca)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, &dto.CloudAccountResponse{
@@ -980,17 +979,16 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 
 // DeleteCloudAccount handles DELETE /api/v1/cmdb/cloud-accounts/:id
 func (h *Handler) DeleteCloudAccount(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
-	err = h.svc.DeleteCloudAccount(c.Request.Context(), id, tenantID)
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	err := h.svc.DeleteCloudAccount(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, nil)
@@ -998,17 +996,16 @@ func (h *Handler) DeleteCloudAccount(c *gin.Context) {
 
 // GetCloudResource handles GET /api/v1/cmdb/cloud-resources/:id
 func (h *Handler) GetCloudResource(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
 	result, err := h.svc.GetCloudResource(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
@@ -1029,7 +1026,7 @@ func (h *Handler) CreateCloudResource(c *gin.Context) {
 		LifecycleState string                 `json:"lifecycleState"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -1052,7 +1049,7 @@ func (h *Handler) CreateCloudResource(c *gin.Context) {
 	}
 	result, err := h.svc.CreateCloudResource(c.Request.Context(), cr)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
@@ -1073,17 +1070,16 @@ func (h *Handler) UpdateCloudResource(c *gin.Context) {
 		LifecycleState string                 `json:"lifecycleState"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
+		return
+	}
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
-		return
-	}
+
 	cr := &CloudResource{
 		ID:             id,
 		CloudAccountID: req.CloudAccountID,
@@ -1100,7 +1096,7 @@ func (h *Handler) UpdateCloudResource(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateCloudResource(c.Request.Context(), cr)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
@@ -1108,17 +1104,16 @@ func (h *Handler) UpdateCloudResource(c *gin.Context) {
 
 // DeleteCloudResource handles DELETE /api/v1/cmdb/cloud-resources/:id
 func (h *Handler) DeleteCloudResource(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
 		return
 	}
-	err = h.svc.DeleteCloudResource(c.Request.Context(), id, tenantID)
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	err := h.svc.DeleteCloudResource(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, nil)
@@ -1130,7 +1125,7 @@ func (h *Handler) ListRelationshipTypes(c *gin.Context) {
 	tenantID := tenantIDVal.(int)
 	list, err := h.svc.ListRelationshipTypes(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	resp := make([]*dto.RelationshipTypeResponse, 0, len(list))
@@ -1155,7 +1150,7 @@ func (h *Handler) ListDiscoverySources(c *gin.Context) {
 	tenantID := tenantIDVal.(int)
 	list, err := h.svc.ListDiscoverySources(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	resp := make([]*dto.DiscoverySourceResponse, 0, len(list))
@@ -1178,7 +1173,7 @@ func (h *Handler) ListDiscoverySources(c *gin.Context) {
 func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 	var req dto.DiscoverySourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -1198,7 +1193,7 @@ func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 	}
 	res, err := h.svc.CreateDiscoverySource(c.Request.Context(), ds)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, &dto.DiscoverySourceResponse{
@@ -1218,7 +1213,7 @@ func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 func (h *Handler) CreateDiscoveryJob(c *gin.Context) {
 	var req dto.DiscoveryJobRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		common.ParamError(c, "Invalid request body")
 		return
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -1232,7 +1227,7 @@ func (h *Handler) CreateDiscoveryJob(c *gin.Context) {
 	}
 	res, err := h.svc.CreateDiscoveryJob(c.Request.Context(), job)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	common.Success(c, &dto.DiscoveryJobResponse{
@@ -1251,10 +1246,10 @@ func (h *Handler) CreateDiscoveryJob(c *gin.Context) {
 func (h *Handler) ListDiscoveryResults(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
-	jobID, _ := strconv.Atoi(c.Query("job_id"))
+	jobID, _ := common.ParsePositiveIDFromQuery(c, "job_id")
 	list, err := h.svc.ListDiscoveryResults(c.Request.Context(), tenantID, jobID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.InternalError(c, err.Error())
 		return
 	}
 	resp := make([]*dto.DiscoveryResultResponse, 0, len(list))

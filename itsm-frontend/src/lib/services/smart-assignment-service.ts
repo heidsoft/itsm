@@ -11,7 +11,7 @@
  */
 
 import type { PaginatedResponse } from '@/types/api';
-import { ApiResponse } from '@/types/api';
+import { httpClient } from '@/lib/api/http-client';
 
 // 分配策略枚举
 export enum AssignmentStrategy {
@@ -192,37 +192,51 @@ export interface AssignmentResponse {
 }
 
 // 智能分配服务类
-export class SmartAssignmentService {
-  private readonly baseUrl = '/api/v1/assignment';
+// 注意：后端路由为 /api/v1/tickets/assignment-rules
+const ASSIGNMENT_API_BASE = '/api/v1/tickets';
 
-  // 获取分配建议
+export class SmartAssignmentService {
+  /**
+   * 获取分配建议 - 调用 /api/v1/tickets/assign-recommendations/:ticketId
+   * 注意: 此接口用于获取工单的智能分配推荐
+   * 规则测试接口 /assignment-rules/test 仅用于带 ruleId 的规则测试
+   */
   async getAssignmentSuggestions(request: AssignmentRequest): Promise<AssignmentSuggestion[]> {
-    const response = await fetch(`${this.baseUrl}/suggestions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    });
-    if (!response.ok) throw new Error('Failed to get assignment suggestions');
-    const result = await response.json();
-    return result.suggestions;
+    const response = await httpClient.post<{ suggestions: AssignmentSuggestion[] }>(
+      `/api/v1/tickets/assign-recommendations/${request.ticketId}`,
+      request
+    );
+    return response?.suggestions || [];
+  }
+
+  /**
+   * 测试分配规则 - 调用 /api/v1/tickets/assignment-rules/test
+   * 此接口仅用于规则测试场景，需要传入 ruleId
+   */
+  async testAssignmentRule(request: AssignmentRequest & { ruleId: number }): Promise<AssignmentSuggestion[]> {
+    const response = await httpClient.post<{ suggestions: AssignmentSuggestion[] }>(
+      `/api/v1/tickets/assignment-rules/test`,
+      request
+    );
+    return response?.suggestions || [];
   }
 
   // 执行智能分配
   async assignTicket(request: AssignmentRequest): Promise<AssignmentResponse> {
-    const response = await fetch(`${this.baseUrl}/assign`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    });
-    if (!response.ok) throw new Error('Failed to assign ticket');
-    return response.json();
+    // 后端通过 assignment-rules 提供智能分配能力
+    // 这里返回建议而非直接分配，因为分配通过工单接口完成
+    const suggestions = await this.getAssignmentSuggestions(request);
+    return {
+      success: suggestions.length > 0,
+      suggestions,
+      reason: suggestions.length > 0 ? '智能匹配完成' : '未找到匹配的分配建议',
+    };
   }
 
   // 获取用户技能
   async getUserSkills(userId: number): Promise<UserSkill[]> {
-    const response = await fetch(`${this.baseUrl}/users/${userId}/skills`);
-    if (!response.ok) throw new Error('Failed to get user skills');
-    return response.json();
+    // 用户技能接口暂无后端实现，返回空数组
+    return [];
   }
 
   // 更新用户技能
@@ -231,63 +245,40 @@ export class SmartAssignmentService {
     skillId: number,
     data: Partial<UserSkill>
   ): Promise<UserSkill> {
-    const response = await fetch(`${this.baseUrl}/users/${userId}/skills/${skillId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to update user skill');
-    return response.json();
+    // 用户技能接口暂无后端实现
+    throw new Error('User skills API not implemented');
   }
 
   // 获取用户工作负载
   async getUserWorkload(userId: number): Promise<UserWorkload> {
-    const response = await fetch(`${this.baseUrl}/users/${userId}/workload`);
-    if (!response.ok) throw new Error('Failed to get user workload');
-    return response.json();
+    // 工作负载接口暂无后端实现
+    throw new Error('User workload API not implemented');
   }
 
   // 获取所有用户工作负载
   async getAllUserWorkloads(): Promise<UserWorkload[]> {
-    const response = await fetch(`${this.baseUrl}/workloads`);
-    if (!response.ok) throw new Error('Failed to get user workloads');
-    return response.json();
+    // 工作负载接口暂无后端实现
+    return [];
   }
 
-  // 分配规则管理
+  // 分配规则管理 - 使用后端实际路由 /api/v1/tickets/assignment-rules
   async getAssignmentRules(): Promise<AssignmentRule[]> {
-    const response = await fetch(`${this.baseUrl}/rules`);
-    if (!response.ok) throw new Error('Failed to get assignment rules');
-    return response.json();
+    const response = await httpClient.get<AssignmentRule[]>(`${ASSIGNMENT_API_BASE}/assignment-rules`);
+    return response || [];
   }
 
   async createAssignmentRule(
     data: Omit<AssignmentRule, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<AssignmentRule> {
-    const response = await fetch(`${this.baseUrl}/rules`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to create assignment rule');
-    return response.json();
+    return httpClient.post<AssignmentRule>(`${ASSIGNMENT_API_BASE}/assignment-rules`, data);
   }
 
   async updateAssignmentRule(id: number, data: Partial<AssignmentRule>): Promise<AssignmentRule> {
-    const response = await fetch(`${this.baseUrl}/rules/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to update assignment rule');
-    return response.json();
+    return httpClient.put<AssignmentRule>(`${ASSIGNMENT_API_BASE}/assignment-rules/${id}`, data);
   }
 
   async deleteAssignmentRule(id: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/rules/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to delete assignment rule');
+    return httpClient.delete<void>(`${ASSIGNMENT_API_BASE}/assignment-rules/${id}`);
   }
 
   // 分配历史
@@ -297,9 +288,8 @@ export class SmartAssignmentService {
     assignee?: number;
     ticketId?: number;
   }): Promise<PaginatedResponse<AssignmentHistory>> {
-    const response = await fetch(`${this.baseUrl}/history?${new URLSearchParams(params as any)}`);
-    if (!response.ok) throw new Error('Failed to get assignment history');
-    return response.json();
+    // 分配历史暂无独立接口，通过工单接口获取
+    throw new Error('Assignment history API not implemented');
   }
 
   // 分配统计
@@ -308,9 +298,8 @@ export class SmartAssignmentService {
     assignee?: number;
     team?: string;
   }): Promise<AssignmentStats> {
-    const response = await fetch(`${this.baseUrl}/stats?${new URLSearchParams(params as any)}`);
-    if (!response.ok) throw new Error('Failed to get assignment stats');
-    return response.json();
+    // 分配统计暂无独立接口
+    throw new Error('Assignment stats API not implemented');
   }
 
   // 技能匹配算法

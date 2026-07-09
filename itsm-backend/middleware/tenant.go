@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"net/http"
 	"strings"
 	"time"
 
@@ -52,11 +51,7 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 		// 4) 若依然缺失，则报错
 		if tenantCode == "" && tenantEntity == nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    common.ParamErrorCode,
-				"message": "租户信息缺失",
-				"data":    nil,
-			})
+			common.Fail(c, common.ParamErrorCode, "租户信息缺失")
 			c.Abort()
 			return
 		}
@@ -67,11 +62,7 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 				Where(tenant.CodeEQ(tenantCode)).
 				First(c.Request.Context())
 			if err != nil {
-				c.JSON(http.StatusNotFound, gin.H{
-					"code":    common.NotFoundCode,
-					"message": "租户不存在",
-					"data":    nil,
-				})
+				common.NotFound(c, "租户不存在")
 				c.Abort()
 				return
 			}
@@ -86,22 +77,14 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		// 检查租户状态
 		if tenantEntity.Status != "active" {
-			c.JSON(http.StatusForbidden, gin.H{
-				"code":    common.ForbiddenCode,
-				"message": "租户已被暂停或过期",
-				"data":    nil,
-			})
+			common.Forbidden(c, "租户已被暂停或过期")
 			c.Abort()
 			return
 		}
 
 		// 检查租户是否过期
 		if !tenantEntity.ExpiresAt.IsZero() && tenantEntity.ExpiresAt.Before(time.Now()) {
-			c.JSON(http.StatusForbidden, gin.H{
-				"code":    common.ForbiddenCode,
-				"message": "租户已过期",
-				"data":    nil,
-			})
+			common.Forbidden(c, "租户已过期")
 			c.Abort()
 			return
 		}

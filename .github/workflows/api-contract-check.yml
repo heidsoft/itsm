@@ -1,0 +1,149 @@
+name: api-contract-check
+
+# Purpose:
+#   Validate API contract consistency between frontend and backend.
+#   Ensures all frontend API calls have corresponding backend route registrations.
+# Checks:
+#   - Frontend API paths vs Backend registered routes
+#   - Generate report of "frontend calls but backend not registered"
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'itsm-frontend/src/lib/**'
+      - 'itsm-backend/router/**'
+      - 'scripts/check-api-paths.js'
+      - '.github/workflows/api-contract-check.yml'
+  pull_request:
+    paths:
+      - 'itsm-frontend/src/lib/**'
+      - 'itsm-backend/router/**'
+      - 'scripts/check-api-paths.js'
+      - '.github/workflows/api-contract-check.yml'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  api-contract:
+    name: API Contract Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run API path check
+        id: check-api
+        run: |
+          cd /home/runner/work/itsm/itsm
+          echo "=== Running API Path Static Check ==="
+          node scripts/check-api-paths.js --verbose
+        continue-on-error: true
+
+      - name: Generate missing paths report
+        if: always()
+        run: |
+          cd /home/runner/work/itsm/itsm
+          echo "=== Generating Missing Paths Report ==="
+          node scripts/check-api-paths.js --json > api-path-report.json 2>&1 || true
+
+          if [ -f api-path-report.json ]; then
+            echo "=== Report Summary ==="
+            cat api-path-report.json | jq -r '
+              "Frontend Paths: \(.frontendPaths)
+               Backend Routes: \(.backendRoutes)
+               Matched: \(.matched)
+               Missing: \(.missing)"' 2>/dev/null || cat api-path-report.json
+          fi
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-path-report
+          path: api-path-report.json
+          retention-days: 7
+
+      - name: Fail if missing paths detected
+        run: |
+          cd /home/runner/work/itsm/itsm
+          if node scripts/check-api-paths.js 2>&1 | grep -q "Missing:"; then
+            echo "::error::Frontend API paths detected that are not registered in backend!"
+            echo "::error::Please fix the missing routes or update the frontend API calls."
+            exit 1
+          fi
+
+  api-field-naming:
+    name: API Field Naming Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Check for snake_case in frontend API calls
+        run: |
+          echo "=== Checking for snake_case in frontend API calls ==="
+          # Look for common snake_case patterns in frontend API files
+          SNAPE_CASE_PATTERNS=$(grep -rn --include="*.ts" --include="*.tsx" \
+            -E '(assignee_id|ticket_number|service_catalog_id|created_by|updated_by|page_size)' \
+            itsm-frontend/src/lib/api/ 2>/dev/null || true)
+
+          if [ -n "$SNAPE_CASE_PATTERNS" ]; then
+            echo "WARNING: Found snake_case field names in frontend API calls:"
+            echo "$SNAPE_CASE_PATTERNS"
+            echo "Consider using camelCase for API contracts."
+            # Don't fail the build, just warn - some legacy APIs may use snake_case
+          else
+            echo "No snake_case field names detected in frontend API calls."
+          fi
+
+  backend-route-registration:
+    name: Backend Route Registration Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: itsm-backend/go.mod
+          cache: true
+          cache-dependency-path: itsm-backend/go.sum
+
+      - name: Check router file exists
+        run: |
+          if [ ! -f itsm-backend/router/router.go ]; then
+            echo "::error::Backend router file not found: itsm-backend/router/router.go"
+            exit 1
+          fi
+          echo "Router file found."
+
+      - name: Count registered routes
+        run: |
+          echo "=== Backend Route Statistics ==="
+          ROUTE_COUNT=$(grep -cE '\.(GET|POST|PUT|DELETE|PATCH)\(' itsm-backend/router/router.go 2>/dev/null || echo "0")
+          echo "Total registered routes: $ROUTE_COUNT"
+
+          # Verify key modules have routes
+          echo ""
+          echo "=== Module Route Verification ==="
+          for module in ticket incident problem change service_catalog sla cmdb knowledge; do
+            MODULE_ROUTES=$(grep -cE "/api/v1/${module}" itsm-backend/router/router.go 2>/dev/null || echo "0")
+            echo "  ${module}: ${MODULE_ROUTES} routes"
+          done

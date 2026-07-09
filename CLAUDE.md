@@ -13,6 +13,30 @@ ITSM (IT Service Management) system with a Go/Gin backend and Next.js/TypeScript
 - SLA monitoring and escalation
 - AI-powered triage and summarization
 
+## Product Direction
+
+This project is building an enterprise-grade, open-source, AI-Native ITSM platform for the China market. The long-term benchmark is ServiceNow-class process capability, but with lighter private deployment, stronger local enterprise integration, and open extensibility.
+
+Core product goals:
+
+- Cover complete ITIL v3/v4 service management workflows: ticket, incident, problem, change, release, service request, service catalog, SLA, knowledge, and CMDB.
+- Make workflow customization a first-class capability through BPMN, process binding, form/config templates, and auditable task execution.
+- Build AI into the service management lifecycle instead of adding a chatbot beside it: triage, summarization, knowledge retrieval, impact analysis, workflow recommendation, audit review, and controlled tool invocation.
+- Prepare for Feishu, WeCom, DingTalk, Webhook, connector marketplace, skill marketplace, plugin marketplace, and CLI-driven operations.
+- Support private deployment, SaaS, and SaaS + MSP modes without forking the core data model.
+
+When making architecture choices, prefer enterprise correctness, auditability, tenant isolation, and extensibility over quick feature-only shortcuts.
+
+## Current Product Stage
+
+The repository is past v1.0 GA foundation work and is moving through v1.1 hardening:
+
+- v1.0 delivered ITIL core flows, BPMN workflow engine, CMDB v1, knowledge/RAG scaffold, SLA, RBAC, multi-tenant/MSP foundations, Docker Compose, GHCR images, and basic AI/connector scaffolding.
+- v1.1 focus is coverage backfill, controller splitting, connector marketplace v1, RBAC hardening, AI audit console, and integration test coverage.
+- v1.5+ focus is measurable AI evaluator, Feishu/DingTalk/WeCom production connectors, Skill registry, performance budgets, and stronger security scans.
+
+For new work, align with the roadmap rather than creating parallel mechanisms. If a feature overlaps with workflow, connector, AI skill, or marketplace direction, extend the existing extension point.
+
 ## Development Commands
 
 ### Frontend (itsm-frontend)
@@ -56,6 +80,14 @@ ADMIN_PASSWORD=admin123
 
 ## Architecture
 
+### System Boundaries
+
+- **itsm-backend** is the source of truth for domain rules, permissions, workflow execution, tenant isolation, audit logs, and integration contracts.
+- **itsm-frontend** is the operator/admin/user experience layer. It should not duplicate business rules that belong in backend services.
+- **itsm-ai-service / guidance_sidecar / RAG services** provide AI assistance and retrieval. They must remain observable and fail safely.
+- **itsm-agent / itsm-skill / itsm-cli** are future-facing extension surfaces. Do not hard-code behavior into the core app if it clearly belongs in a connector, skill, or CLI operation.
+- **connector marketplace** integrations must go through lifecycle, health check, config, permission, and audit boundaries instead of ad hoc HTTP calls from controllers.
+
 ### Backend Structure
 
 - **controller/** - HTTP handlers, receive requests, call services
@@ -90,6 +122,14 @@ All APIs return `{ code: number, message: string, data: any }`:
 - **AI Features**: `service/llm_gateway.go`, `service/triage_service.go`
 - **SLA**: `service/sla_monitor_service.go`, `service/escalation_service.go`
 
+### Domain Ownership
+
+- Ticket, incident, problem, change, release, and service request are separate business domains. Reuse shared helpers, but do not collapse their lifecycle rules into one generic ticket abstraction unless the existing code already does so.
+- BPMN/process execution is the orchestration layer. Approval chains, service catalog fulfillment, SLA escalation, and AI suggestions should integrate through workflow/process records where possible.
+- CMDB is not an asset table. Preserve CI type, CI instance, relationship, topology, discovery source, impact analysis, and reconciliation concepts.
+- Knowledge/RAG features must keep source attribution, versioning, and permission filtering. Do not return knowledge content across tenant or permission boundaries.
+- MSP and multi-tenant behavior must be considered for every new table, query, API, menu item, and background job.
+
 ## Important Patterns
 
 ### Backend
@@ -98,6 +138,11 @@ All APIs return `{ code: number, message: string, data: any }`:
 - Use `zap.S()` for logging, not `fmt.Println()`
 - Controllers call services, never access DB directly
 - Ent schemas in `ent/schema/*.go` generate CRUD
+- Keep controller methods thin: bind/validate request, call service, map DTO, return response.
+- Put transaction boundaries in service/domain layers, not in frontend or controller glue.
+- New domain tables must include tenant/account ownership fields where applicable and must be protected by tenant-aware queries.
+- Prefer idempotent seed/migration/init logic. Default initialization must create product templates/configuration, not fake customer business data.
+- Any high-risk action triggered by AI, connector, workflow automation, or bulk operation must create an audit record.
 
 ### Frontend
 
@@ -105,6 +150,53 @@ All APIs return `{ code: number, message: string, data: any }`:
 - API calls via `src/app/lib/api/*.ts` classes
 - Global state with Zustand in `src/app/lib/stores/`
 - Tailwind CSS for all styling
+- Treat backend API DTOs as the contract. Do not patch around backend field bugs in UI code without also fixing the DTO/mapper.
+- Keep operational screens dense and scannable: tables, filters, status, owners, timestamps, and actions should be easy to compare.
+- Prefer feature-local components/hooks under the route module for domain-specific UI; use shared components only when reuse is real.
+- User-facing enterprise workflows must show loading, empty, error, permission-denied, and success states.
+
+## AI-Native Engineering Rules
+
+- AI suggestions are decision support by default, not silent authority. For triage, impact analysis, workflow recommendation, and automation, keep confidence, prompt/template version, model/provider, accepted/rejected status, and operator feedback.
+- LLM calls must go through the LLM gateway or existing AI service abstraction. Do not call model providers directly from random controllers or frontend components.
+- Always provide deterministic fallback behavior for AI failure, timeout, low confidence, or disabled provider.
+- Prompts and skills should be versioned, testable, and auditable. Avoid burying large prompts in controller code.
+- RAG must respect tenant, RBAC, knowledge visibility, and article version state before retrieval and before final response.
+- Tool invocation by AI must pass explicit permission checks and produce audit logs.
+
+## Workflow And ITIL Rules
+
+- Workflow changes must preserve process definition, process instance, task, variable, execution history, and audit log integrity.
+- Do not introduce a second approval engine when BPMN/process binding can represent the behavior.
+- ITIL lifecycle transitions must be explicit and validated in services. Avoid frontend-only status transitions.
+- SLA timers and escalations must be computed from authoritative timestamps and policy bindings, not from UI-derived state.
+- Change management must preserve risk, CAB/approval, release window, implementation result, and PIR concepts.
+- Problem management must preserve root cause, workaround, known error, and linked incident relationships.
+
+## CMDB Rules
+
+- CI type/schema, CI instance, CI relationship, relationship type, discovery source, import/export task, saved view, topology, and impact analysis are separate concerns.
+- Every CI mutation should preserve history or auditability where the existing model supports it.
+- Discovery/import/reconciliation must be idempotent and source-aware. Avoid creating duplicate CIs from repeated discovery runs.
+- Relationship and topology APIs should enforce tenant isolation and permission checks.
+- Impact analysis should traverse CI relationships deliberately and protect against unbounded recursion.
+
+## Connector, Skill, And Plugin Rules
+
+- New enterprise integrations should be implemented as connectors with lifecycle states: installed, configured, enabled, health-checked, disabled/uninstalled where supported.
+- Connector secrets must never be returned to the frontend. Return masked metadata and health status only.
+- Feishu, WeCom, DingTalk, and Webhook integrations should share marketplace/lifecycle abstractions instead of one-off endpoint designs.
+- Skills should be declarative where possible: manifest, inputs, outputs, permissions, audit behavior, and evaluation hooks.
+- Plugins must not bypass RBAC, tenant isolation, audit logging, or API response contracts.
+- CLI operations should call stable backend APIs or documented service commands. Do not let CLI logic become a hidden business-rule fork.
+
+## Security And Compliance
+
+- Never commit real secrets, tokens, customer data, production database dumps, or unmasked connector credentials.
+- Authentication, RBAC, menu permissions, endpoint ACL, and tenant filters must be considered together. Hiding a menu is not authorization.
+- Cross-tenant access must fail closed. Add tests when touching tenant-scoped queries.
+- Logs must not expose passwords, JWTs, API keys, connector secrets, prompt secrets, or private ticket content unless explicitly designed as protected audit content.
+- File upload, import, connector callback, webhook, and AI tool invocation endpoints are high-risk surfaces and need validation, size limits, and audit logs.
 
 ## Configuration
 
@@ -122,6 +214,14 @@ All APIs return `{ code: number, message: string, data: any }`:
 
 - Backend: Table-driven tests with `stretchr/testify`, use `enttest.NewClient()` for DB
 - Frontend: Jest + React Testing Library, mock API calls
+
+### Verification Expectations
+
+- For backend service/controller changes, run the narrow package tests first, then `cd itsm-backend && go test ./...` when practical.
+- For frontend type/API/UI changes, run `cd itsm-frontend && npm run type-check` and the relevant Jest or Playwright test.
+- For contract changes, update backend DTOs/mappers, frontend API clients/types, and tests in the same change.
+- For workflow, CMDB, connector, AI, auth, tenant, or deployment changes, include at least one regression test or a documented manual verification path.
+- For production deployment changes, validate with explicit env file usage and health checks.
 
 ## API 响应规范
 
@@ -388,3 +488,18 @@ src/
 - ❌ `ticketService.go` → ✅ `ticket_service.go`
 - ❌ `ticket_list.tsx` → ✅ `TicketList.tsx`
 - ❌ `ticket-list-api.ts` → ✅ `ticketApi.ts` 或 `TicketApi.ts`
+
+## 工程要求摘要
+
+### 必须遵守的规则
+
+1. **DTO 返回**：Controller 必须返回 DTO，禁止返回 Ent 模型
+2. **字段命名**：后端 DTO 使用 camelCase，前端使用 camelCase
+3. **文件命名**：遵循上述命名规范（Go 用 snake_case，TypeScript 用 PascalCase/camelCase）
+4. **Mapper 转换**：DTO 层负责 snake_case → camelCase 转换
+5. **命名边界**：接口字段、数据库字段、文件名各自遵循本层规则，禁止相互污染
+6. **租户隔离**：新增查询、后台任务、导入导出、AI/RAG、连接器回调必须考虑 tenant/MSP 边界
+7. **审计优先**：AI 建议、流程流转、审批、连接器动作、批量操作、高风险变更必须可追踪
+8. **扩展优先**：流程、连接器、Skill、插件、CLI 方向已有扩展点时，优先扩展现有机制
+9. **测试闭环**：改业务规则必须配套服务层/接口层/前端契约验证，不能只靠手工点击
+10. **安全默认**：权限、密钥、日志、上传、Webhook、AI 工具调用默认按企业级高风险面处理

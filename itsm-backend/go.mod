@@ -3,6 +3,7 @@ module itsm-backend
 go 1.25.0
 
 // Replace itsm-backend imports to use local packages
+replace github.com/heidsoft/itsm/itsm-backend => ./
 replace itsm-backend => ./
 
 require (
@@ -15,6 +16,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
+	github.com/heidsoft/itsm/itsm-backend v0.0.0-00010101000000-000000000000
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.11.2
 	github.com/mattn/go-sqlite3 v1.14.34
