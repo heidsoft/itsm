@@ -33,8 +33,6 @@ export default function AppImage({
       onError={handleError}
       {...props}
       src={imgSrc}
-      // 自动启用 WebP 格式
-      format="webp"
     />
   );
 }

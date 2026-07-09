@@ -3,12 +3,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, Typography, Space, Button, Tabs, Badge, Alert } from 'antd';
 import { Search, Plus, LayoutGrid, Bell, BarChart3, Table } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import LazyLoadWrapper from '@/components/common/LazyLoadWrapper';
-const TicketList = dynamic(() => import('@/components/ticket/TicketList'), { ssr: false });
-const TicketKanban = dynamic(() => import('@/components/ticket/TicketKanban'), { ssr: false });
-const TicketAdvancedSearch = dynamic(() => import('@/components/ticket/TicketAdvancedSearch'), { ssr: false });
-import type { AdvancedSearchFilters } from '@/components/ticket/TicketAdvancedSearch';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import TicketList from '@/components/ticket/TicketList';
+import TicketKanban from '@/components/ticket/TicketKanban';
+import TicketAdvancedSearch, {
+  type AdvancedSearchFilters,
+} from '@/components/ticket/TicketAdvancedSearch';
 import type { TicketQueryFilters } from '@/lib/hooks/useTickets';
 import {
   saveFilters,
@@ -234,7 +235,7 @@ export default function TicketsPage() {
       {showAdvancedSearch && (
         <div className="bg-gray-50 border-b border-gray-200">
           <div className="w-full px-6 py-4">
-            <LazyLoadWrapper height={200}><TicketAdvancedSearch onSearch={handleAdvancedSearch} onReset={handleSearchReset} /></LazyLoadWrapper>
+            <TicketAdvancedSearch onSearch={handleAdvancedSearch} onReset={handleSearchReset} />
           </div>
         </div>
       )}
@@ -271,11 +272,11 @@ export default function TicketsPage() {
 
         {/* 标签页内容 */}
         {activeTab === 'list' && (
-          <LazyLoadWrapper height={600}><TicketList showHeader={false} pageSize={20} advancedFilters={advancedFilters} /></LazyLoadWrapper>
+          <TicketList showHeader={false} pageSize={20} advancedFilters={advancedFilters} />
         )}
 
         {activeTab === 'kanban' && (
-          <LazyLoadWrapper height={600}><TicketKanban onTicketSelect={ticket => router.push(`/tickets/${ticket.id}`)} /></LazyLoadWrapper>
+          <TicketKanban onTicketSelect={ticket => router.push(`/tickets/${ticket.id}`)} />
         )}
       </div>
 

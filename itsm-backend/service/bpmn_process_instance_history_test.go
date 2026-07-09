@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -75,12 +76,20 @@ func createBPMNHistoryInstance(t *testing.T, ctx context.Context, client *ent.Cl
 func createBPMNHistoryDefinition(t *testing.T, ctx context.Context, client *ent.Client, tenantID int, key string) *ent.ProcessDefinition {
 	t.Helper()
 
+	deployment, err := client.ProcessDeployment.Create().
+		SetDeploymentID(fmt.Sprintf("deploy-%s-tenant%d", key, tenantID)).
+		SetDeploymentName(key).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
 	definition, err := client.ProcessDefinition.Create().
 		SetKey(key).
 		SetName(key).
 		SetVersion("v1").
 		SetIsActive(true).
 		SetTenantID(tenantID).
+		SetDeploymentID(deployment.ID).
 		SetBpmnXML([]byte("<bpmn></bpmn>")).
 		Save(ctx)
 	require.NoError(t, err)

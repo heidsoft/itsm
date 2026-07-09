@@ -25,7 +25,6 @@ import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
 import { logger } from '@/lib/env';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
-import { useFormMemory } from '@/hooks/useFormMemory';
 
 const { Text, Title } = Typography;
 
@@ -33,13 +32,6 @@ const { Text, Title } = Typography;
  * 登录表单子组件
  * 使用 useSearchParams 读取 expired 参数，需要被 Suspense 包裹
  */
-
-  // 表单记忆功能，记住用户名
-  useFormMemory(form, {
-    storageKey: 'login-form',
-    excludeFields: ['password', 'rememberMe',], 
-    clearOnSubmit: false,
-  });
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();

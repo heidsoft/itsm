@@ -10,7 +10,7 @@ import {
   Code, Server, GitBranch, PlayCircle, Clock, FileText,
   Webhook, Settings, MessageSquare, Mail, AlertTriangle,
   Database, Link, Timer, MessageCircle, Radio, ChevronDown, ChevronRight,
-  Save, Undo, Redo, Info, Zap
+  Save, Undo, Redo, Info, Zap, Shield, Bell
 } from 'lucide-react';
 import { GroupAPI, type Group } from '@/lib/api/group-api';
 
@@ -316,7 +316,6 @@ export default function WorkflowNodeInspector({
     { label: 'Webhook', value: 'webhook' },
     { label: '系统内置服务', value: 'internal' },
     { label: '邮件发送', value: 'mail' }
-    { label: '自动抄送', value: 'cc' }
   ];
 
   // 定时类型选项

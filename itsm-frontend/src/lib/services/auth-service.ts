@@ -8,21 +8,20 @@ export class AuthService {
    */
   static async thirdPartyLogin(provider: string, code: string, state?: string | null): Promise<void> {
     const response = await fetch(`/api/auth/${provider}/callback`, {
-      method: POST,
+      method: 'POST',
       headers: {
-        Content-Type: application/json,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ code, state }),
     });
 
     if (!response.ok) {
-      throw new Error(登录失败);
+      throw new Error('登录失败');
     }
 
     const data = await response.json();
-    // 保存token到本地存储
-    localStorage.setItem(token, data.token);
-    localStorage.setItem(user, JSON.stringify(data.user));
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
   }
 
   private static getCookie(name: string): string | null {

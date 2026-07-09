@@ -254,7 +254,7 @@ const nodeCategories: { key: string; name: string; nodes: PaletteNode[] }[] = [
         category: 'task',
         description: '发送邮件',
         bpmnType: 'bpmn:ServiceTask'
-      }
+      },
       {
         id: "ccTask",
         name: "抄送任务",

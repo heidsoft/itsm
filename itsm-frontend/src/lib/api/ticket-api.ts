@@ -72,11 +72,6 @@ export class TicketApi {
   ): Promise<{
     success: boolean;
     message: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.post(`/api/v1/tickets/workflow/approve`, data);
   }
@@ -96,11 +91,6 @@ export class TicketApi {
       name: string;
       username: string;
     };
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.post(`/api/v1/tickets/${id}/comments`, { content });
   }
@@ -165,11 +155,6 @@ export class TicketApi {
 
   // Get subtasks (child tickets)
   static async getSubtasks(parentTicketId: number): Promise<Ticket[]> {
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
     const response = await httpClient.get<{ tickets?: Ticket[]; data?: Ticket[] }>(
       `/api/v1/tickets/${parentTicketId}/subtasks`
     );
@@ -214,11 +199,6 @@ export class TicketApi {
       timestamp: string;
       userId: number;
       details: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
     }>
   > {
     return httpClient.get(`/api/v1/tickets/${id}/activity`);
@@ -245,18 +225,8 @@ export class TicketApi {
       };
       createdAt: string;
       updatedAt: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
     }>;
     total: number;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.get(`/api/v1/tickets/${id}/comments`);
   }
@@ -289,11 +259,6 @@ export class TicketApi {
     };
     createdAt: string;
     updatedAt: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.post(`/api/v1/tickets/${id}/comments`, data);
   }
@@ -326,11 +291,6 @@ export class TicketApi {
     };
     createdAt: string;
     updatedAt: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.put(`/api/v1/tickets/${ticketId}/comments/${commentId}`, data);
   }
@@ -362,18 +322,8 @@ export class TicketApi {
         tenantId?: number;
       };
       createdAt: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
     }>;
     total: number;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.get(`/api/v1/tickets/${id}/attachments`);
   }
@@ -400,11 +350,6 @@ export class TicketApi {
       email: string;
     };
     createdAt: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     const formData = new FormData();
     formData.append('file', file);
@@ -437,11 +382,6 @@ export class TicketApi {
       action: string;
       label: string;
       requiresComment: boolean;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
     }>;
     workflowHistory: Array<{
       fromStatus: string;
@@ -450,47 +390,22 @@ export class TicketApi {
       performedAt: string;
       performedBy: number;
       comment?: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
     }>;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.get(`/api/v1/tickets/${id}/workflow/state`);
   }
 
   // Accept ticket (接单)
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   static async acceptTicket(ticketId: number): Promise<{ message: string }> {
     return httpClient.post(`/api/v1/tickets/workflow/accept`, { ticketId: ticketId });
   }
 
   // Reject ticket (驳回)
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   static async rejectTicket(ticketId: number, reason: string): Promise<{ message: string }> {
     return httpClient.post(`/api/v1/tickets/workflow/reject`, { ticketId: ticketId, reason });
   }
 
   // Withdraw ticket (撤回)
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   static async withdrawTicket(ticketId: number, reason?: string): Promise<{ message: string }> {
     return httpClient.post(`/api/v1/tickets/workflow/withdraw`, { ticketId: ticketId, reason });
   }
@@ -500,11 +415,6 @@ export class TicketApi {
     ticketId: number,
     toUserId: number,
     comment?: string
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   ): Promise<{ message: string }> {
     return httpClient.post(`/api/v1/tickets/workflow/forward`, {
       ticketId: ticketId,
@@ -518,11 +428,6 @@ export class TicketApi {
     ticketId: number,
     ccUserIds: number[],
     comment?: string
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   ): Promise<{ message: string }> {
     return httpClient.post(`/api/v1/tickets/workflow/cc`, {
       ticketId: ticketId,
@@ -532,11 +437,6 @@ export class TicketApi {
   }
 
   // Reopen ticket (重开)
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   static async reopenTicket(ticketId: number, reason?: string): Promise<{ message: string }> {
     return httpClient.post(`/api/v1/tickets/workflow/reopen`, { ticketId: ticketId, reason });
   }
@@ -559,11 +459,6 @@ export class TicketApi {
     startedAt?: string;
     completedAt?: string;
     comments?: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.put(`/api/v1/tickets/${ticketId}/workflow/${stepId}`, data);
   }
@@ -577,11 +472,6 @@ export class TicketApi {
     ticketId: number;
     tags: string[];
     message: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.post(`/api/v1/tickets/${id}/tags`, { tags });
   }
@@ -596,11 +486,6 @@ export class TicketApi {
     removedTags: string[];
     remainingTags: string[];
     message: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.request({
       method: 'DELETE',
@@ -623,11 +508,6 @@ export class TicketApi {
         id: number;
         name: string;
       };
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
     }>
   > {
     return httpClient.get(`/api/v1/tickets/${id}/history`);
@@ -650,11 +530,6 @@ export class TicketApi {
     resolved: number;
     highPriority: number;
     overdue: number;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.get('/api/v1/tickets/stats');
   }
@@ -700,18 +575,8 @@ export class TicketApi {
       content: Record<string, unknown>;
       createdAt: string;
       updatedAt: string;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
     }>;
     total: number;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.get('/api/v1/tickets/templates', params);
   }
@@ -732,11 +597,6 @@ export class TicketApi {
     isBreached: boolean;
     responseTimeRemaining: number | null;
     resolutionTimeRemaining: number | null;
-
-  // 抄送工单
-  ccTicket(id: number, data: { userIds: number[]; comment: string }) {
-    return httpClient.post(`/api/v1/tickets/${id}/cc`, data);
-  }
   }> {
     return httpClient.get(`/api/v1/tickets/${id}/sla`);
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FormInstance } from 'antd';
+import { useWatch } from 'antd/es/form/Form';
 
 interface UseFormMemoryOptions {
   /** 存储的键名，必须唯一 */
@@ -36,7 +37,8 @@ export function useFormMemory<T = any>(
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<T>;
         setSavedValues(parsed);
-        form.setFieldsValue(parsed);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        form.setFieldsValue(parsed as any);
       }
     } catch (e) {
       console.error('Failed to load saved form values:', e);
@@ -44,27 +46,21 @@ export function useFormMemory<T = any>(
   }, [form, storageKey]);
 
   // 自动保存表单值
+  const allValues = useWatch([], form);
+
   useEffect(() => {
-    if (!autoSave) return;
+    if (!autoSave || !allValues) return;
 
-    const handleValuesChange = (_: any, allValues: T) => {
-      try {
-        // 过滤排除字段
-        const filteredValues = { ...allValues };
-        excludeFields.forEach((field) => {
-          delete filteredValues[field as keyof T];
-        });
-
-        localStorage.setItem(storageKey, JSON.stringify(filteredValues));
-      } catch (e) {
-        console.error('Failed to save form values:', e);
-      }
-    };
-
-    // 监听表单值变化
-    const unsubscribe = form.onValuesChange(handleValuesChange);
-    return () => unsubscribe();
-  }, [form, autoSave, excludeFields, storageKey]);
+    try {
+      const filteredValues = { ...allValues } as Partial<T>;
+      excludeFields.forEach((field) => {
+        delete filteredValues[field as keyof T];
+      });
+      localStorage.setItem(storageKey, JSON.stringify(filteredValues));
+    } catch (e) {
+      console.error('Failed to save form values:', e);
+    }
+  }, [allValues, autoSave, excludeFields, storageKey]);
 
   // 清除保存的表单值
   const clearSavedValues = () => {
