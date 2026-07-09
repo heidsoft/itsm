@@ -133,9 +133,10 @@ type ForwardTicketRequest struct {
 
 // CCTicketRequest 抄送请求
 type CCTicketRequest struct {
-	TicketID int    `json:"ticketId"`
-	CCUsers  []int  `json:"ccUsers" binding:"required,min=1"`
-	Comment  string `json:"comment"`
+	TicketID       int      `json:"ticketId"`
+	CCUsers        []int    `json:"ccUsers" binding:"required,min=1"`
+	Comment        string   `json:"comment"`
+	NotifyChannels []string `json:"notifyChannels"`
 }
 
 // ApproveTicketRequest 审批请求
@@ -161,6 +162,26 @@ type TicketCC struct {
 	AddedBy  WorkflowUserInfo `json:"addedBy"`
 	AddedAt  time.Time        `json:"addedAt"`
 	IsActive bool             `json:"isActive"`
+}
+
+// TicketCCRecordResponse 抄送记录响应
+type TicketCCRecordResponse struct {
+	ID           int              `json:"id"`
+	TicketID     int              `json:"ticketId"`
+	TicketNumber string           `json:"ticketNumber"`
+	Title        string           `json:"title"`
+	Status       string           `json:"status"`
+	Priority     string           `json:"priority"`
+	User         WorkflowUserInfo `json:"user"`
+	AddedBy      WorkflowUserInfo `json:"addedBy"`
+	AddedAt      time.Time        `json:"addedAt"`
+	IsActive     bool             `json:"isActive"`
+}
+
+// TicketCCListResponse 抄送记录列表响应
+type TicketCCListResponse struct {
+	Records []TicketCCRecordResponse `json:"records"`
+	Total   int                      `json:"total"`
 }
 
 // TicketWorkflowStats 工单流转统计

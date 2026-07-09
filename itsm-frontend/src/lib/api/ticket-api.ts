@@ -427,13 +427,51 @@ export class TicketApi {
   static async ccTicket(
     ticketId: number,
     ccUserIds: number[],
-    comment?: string
+    comment?: string,
+    notifyChannels?: string[]
   ): Promise<{ message: string }> {
     return httpClient.post(`/api/v1/tickets/workflow/cc`, {
       ticketId: ticketId,
-      ccUserIds: ccUserIds,
+      ccUsers: ccUserIds,
       comment,
+      notifyChannels,
     });
+  }
+
+  static async getMyCCRecords(): Promise<{
+    records: Array<{
+      id: number;
+      ticketId: number;
+      ticketNumber: string;
+      title: string;
+      status: string;
+      priority: string;
+      user: { id: number; name: string; username: string; email: string };
+      addedBy: { id: number; name: string; username: string; email: string };
+      addedAt: string;
+      isActive: boolean;
+    }>;
+    total: number;
+  }> {
+    return httpClient.get(`/api/v1/tickets/cc/my`);
+  }
+
+  static async getTicketCCRecords(ticketId: number): Promise<{
+    records: Array<{
+      id: number;
+      ticketId: number;
+      ticketNumber: string;
+      title: string;
+      status: string;
+      priority: string;
+      user: { id: number; name: string; username: string; email: string };
+      addedBy: { id: number; name: string; username: string; email: string };
+      addedAt: string;
+      isActive: boolean;
+    }>;
+    total: number;
+  }> {
+    return httpClient.get(`/api/v1/tickets/${ticketId}/cc`);
   }
 
   // Reopen ticket (重开)

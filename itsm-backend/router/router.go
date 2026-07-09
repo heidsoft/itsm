@@ -499,6 +499,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tickets.GET("/overdue", middleware.RequirePermission("ticket", "read"), config.TicketController.GetOverdueTickets)
 			tickets.POST("/export", middleware.RequirePermission("ticket", "export"), config.TicketController.ExportTickets)
 			tickets.POST("/batch-delete", middleware.RequirePermission("ticket", "delete"), config.TicketController.BatchDeleteTickets)
+			if config.TicketWorkflowController != nil {
+				tickets.GET("/cc/my", config.TicketWorkflowController.ListMyCCRecords)
+			}
 
 			// 工单模板
 			tickets.GET("/templates", config.TicketController.GetTicketTemplates)
@@ -597,6 +600,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/workflow/resolve", config.TicketWorkflowController.ResolveTicket)
 				tickets.POST("/workflow/close", config.TicketWorkflowController.CloseTicket)
 				tickets.POST("/workflow/reopen", config.TicketWorkflowController.ReopenTicket)
+				tickets.GET("/:id/cc", config.TicketWorkflowController.ListTicketCCRecords)
 				tickets.GET("/:id/workflow/state", config.TicketWorkflowController.GetTicketWorkflowState)
 				tickets.GET("/:id/workflow-history", config.TicketWorkflowController.GetTicketWorkflowHistory)
 				tickets.GET("/:id/workflow_records", config.TicketWorkflowController.GetTicketWorkflowHistory)

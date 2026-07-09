@@ -195,6 +195,59 @@ func (tc *TicketWorkflowController) CCTicket(c *gin.Context) {
 	common.Success(c, gin.H{"message": "抄送成功"})
 }
 
+// ListMyCCRecords 获取当前用户收到的抄送记录
+// @Summary 获取我的抄送
+// @Description 返回当前用户收到的工单抄送记录
+// @Tags 工单流转
+// @Produce json
+// @Success 200 {object} common.Response{data=dto.TicketCCListResponse}
+// @Router /api/v1/tickets/cc/my [get]
+func (tc *TicketWorkflowController) ListMyCCRecords(c *gin.Context) {
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
+
+	resp, err := tc.workflowService.ListMyCCRecords(c.Request.Context(), userID, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to list my CC records", "error", err, "user_id", userID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, resp)
+}
+
+// ListTicketCCRecords 获取工单抄送记录
+// @Summary 获取工单抄送记录
+// @Description 返回指定工单的抄送记录
+// @Tags 工单流转
+// @Produce json
+// @Param id path int true "工单ID"
+// @Success 200 {object} common.Response{data=dto.TicketCCListResponse}
+// @Router /api/v1/tickets/:id/cc [get]
+func (tc *TicketWorkflowController) ListTicketCCRecords(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
+
+	resp, err := tc.workflowService.ListTicketCCRecords(c.Request.Context(), ticketID, userID, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to list ticket CC records", "error", err, "ticket_id", ticketID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, resp)
+}
+
 // ApproveTicket 审批工单
 // @Summary 审批工单
 // @Description 审批工单（通过/拒绝/委派）

@@ -175,7 +175,11 @@ export default function WorkflowNodeInspector({
   const isSendTask = nodeType === 'SendTask';
   const isReceiveTask = nodeType === 'ReceiveTask';
   const isMailTask = nodeType === 'ServiceTask' && (selection.businessObject?.type as string) === 'mail';
-  const isCCTask = nodeType === 'ServiceTask' && (selection.businessObject?.type as string) === 'cc' || (selection.businessObject?.implementation as string) === 'cc' || (selection.businessObject?.operationRef as string) === 'cc_handler';
+  const isCCTask =
+    nodeType === 'ServiceTask' &&
+    ((selection.businessObject?.type as string) === 'cc' ||
+      (selection.businessObject?.implementation as string) === 'cc_handler' ||
+      (selection.businessObject?.operationRef as string) === 'cc_handler');
   const isExclusiveGateway = nodeType === 'ExclusiveGateway';
   const isInclusiveGateway = nodeType === 'InclusiveGateway';
   const isParallelGateway = nodeType === 'ParallelGateway';
@@ -253,6 +257,7 @@ export default function WorkflowNodeInspector({
   const currentCCRoleIds = (bo.ccRoleIds as string) || '';
   const currentCCVariable = (bo.ccVariable as string) || '';
   const currentCCNotify = (bo.ccNotify as boolean) ?? true;
+  const currentNotifyChannels = parseCsv((bo.notifyChannels as string) || 'in_app');
 
 
   // 网关/序列流属性
@@ -298,6 +303,21 @@ export default function WorkflowNodeInspector({
     value: u.username,
   }));
 
+  const ccUserOptions = users.map(u => ({
+    label: `${u.name || u.username || `User#${u.id}`}${u.department ? ` (${u.department})` : ''}`,
+    value: String(u.id),
+  }));
+
+  const ccGroupOptions = groups.map(g => ({
+    label: g.name,
+    value: String(g.id),
+  }));
+
+  const ccRoleOptions = roles.map(r => ({
+    label: `${r.name}${r.code ? ` (${r.code})` : ''}`,
+    value: String(r.id),
+  }));
+
   // 脚本语言选项
   const scriptFormatOptions = [
     { label: 'JavaScript', value: 'javascript' },
@@ -315,7 +335,18 @@ export default function WorkflowNodeInspector({
     { label: '表达式', value: 'expression' },
     { label: 'Webhook', value: 'webhook' },
     { label: '系统内置服务', value: 'internal' },
-    { label: '邮件发送', value: 'mail' }
+    { label: '邮件发送', value: 'mail' },
+    { label: '自动抄送', value: 'cc_handler' }
+  ];
+
+  const notifyChannelOptions = [
+    { label: '站内信', value: 'in_app' },
+    { label: '邮件', value: 'email' },
+    { label: '短信', value: 'sms' },
+    { label: '飞书', value: 'feishu' },
+    { label: '钉钉', value: 'dingtalk' },
+    { label: '企业微信', value: 'wecom' },
+    { label: 'Webhook', value: 'webhook' }
   ];
 
   // 定时类型选项
@@ -625,7 +656,7 @@ export default function WorkflowNodeInspector({
         )}
 
         {/* 服务任务配置 */}
-        {isServiceTask && !isMailTask && (
+        {isServiceTask && !isMailTask && !isCCTask && (
           <>
             <Divider className="my-2" />
 
@@ -724,13 +755,19 @@ export default function WorkflowNodeInspector({
               <div className="mt-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <User className="w-3.5 h-3.5 mr-1" />
-                  抄送人ID
+                  抄送人
                 </Text>
-                <Input
-                  value={currentCCUserIds}
-                  onChange={e => apply({ ccUserIds: e.target.value })}
-                  placeholder="多个用户ID用逗号分隔，支持变量如 ${applyUserId}"
+                <Select
+                  mode="multiple"
+                  value={parseCsv(currentCCUserIds)}
+                  onChange={values => apply({ ccUserIds: toCsv(values) })}
+                  placeholder="请选择抄送用户"
+                  className="w-full"
                   size="small"
+                  loading={loadingUsers}
+                  options={ccUserOptions}
+                  showSearch
+                  optionFilterProp="label"
                 />
               </div>
             )}
@@ -739,13 +776,19 @@ export default function WorkflowNodeInspector({
               <div className="mt-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <Users className="w-3.5 h-3.5 mr-1" />
-                  用户组ID
+                  用户组
                 </Text>
-                <Input
-                  value={currentCCGroupIds}
-                  onChange={e => apply({ ccGroupIds: e.target.value })}
-                  placeholder="多个用户组ID用逗号分隔，支持变量如 ${deptId}"
+                <Select
+                  mode="multiple"
+                  value={parseCsv(currentCCGroupIds)}
+                  onChange={values => apply({ ccGroupIds: toCsv(values) })}
+                  placeholder="请选择用户组"
+                  className="w-full"
                   size="small"
+                  loading={loadingGroups}
+                  options={ccGroupOptions}
+                  showSearch
+                  optionFilterProp="label"
                 />
               </div>
             )}
@@ -754,13 +797,19 @@ export default function WorkflowNodeInspector({
               <div className="mt-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <Shield className="w-3.5 h-3.5 mr-1" />
-                  角色ID
+                  角色
                 </Text>
-                <Input
-                  value={currentCCRoleIds}
-                  onChange={e => apply({ ccRoleIds: e.target.value })}
-                  placeholder="多个角色ID用逗号分隔，支持变量如 ${roleId}"
+                <Select
+                  mode="multiple"
+                  value={parseCsv(currentCCRoleIds)}
+                  onChange={values => apply({ ccRoleIds: toCsv(values) })}
+                  placeholder="请选择角色"
+                  className="w-full"
                   size="small"
+                  loading={loadingRoles}
+                  options={ccRoleOptions}
+                  showSearch
+                  optionFilterProp="label"
                 />
               </div>
             )}
@@ -792,6 +841,24 @@ export default function WorkflowNodeInspector({
                 unCheckedChildren="关闭"
               />
             </div>
+
+            {currentCCNotify && (
+              <div className="mt-2">
+                <Text strong className="text-sm flex items-center mb-2">
+                  <MessageCircle className="w-3.5 h-3.5 mr-1" />
+                  通知渠道
+                </Text>
+                <Select
+                  mode="multiple"
+                  value={currentNotifyChannels}
+                  onChange={values => apply({ notifyChannels: toCsv(values) })}
+                  placeholder="请选择通知渠道"
+                  className="w-full"
+                  size="small"
+                  options={notifyChannelOptions}
+                />
+              </div>
+            )}
           </>
         )}
 

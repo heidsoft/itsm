@@ -52,6 +52,7 @@ func (h *CCTaskHandler) Execute(ctx context.Context, task *ent.ProcessTask, vari
 	ccRoleIds := GetStringFromVars(variables, "ccRoleIds")
 	ccVariable := GetStringFromVars(variables, "ccVariable")
 	ccNotify := GetBoolFromVars(variables, "ccNotify", true)
+	notifyChannels := parseNotifyChannels(GetStringFromVars(variables, "notifyChannels"))
 	addedBy := GetIntFromVars(variables, "addedBy")
 	tenantID := GetIntFromVars(variables, "tenant_id")
 
@@ -99,7 +100,8 @@ func (h *CCTaskHandler) Execute(ctx context.Context, task *ent.ProcessTask, vari
 		exists, err := h.client.TicketCC.Query().
 			Where(ticketcc.TicketID(ticketID),
 				ticketcc.UserID(ccUserID),
-				ticketcc.TenantID(tenantID)).
+				ticketcc.TenantID(tenantID),
+				ticketcc.IsActive(true)).
 			Exist(ctx)
 		if err != nil {
 			h.logger.Warnw("Failed to check CC existence", "error", err, "user_id", ccUserID)
@@ -124,22 +126,7 @@ func (h *CCTaskHandler) Execute(ctx context.Context, task *ent.ProcessTask, vari
 
 	// 发送通知给抄送人
 	if ccNotify && len(addedUsers) > 0 {
-		for _, userID := range addedUsers {
-			h.logger.Infow("Sending CC notification to user", "user_id", userID, "ticket_id", ticketID)
-			// 调用通知服务发送通知
-			// TODO: 实际项目中这里调用通知服务，支持多渠道通知
-			/*
-			err := notificationService.SendCCNotification(ctx, &dto.CCNotificationRequest{
-				TicketID: ticketID,
-				UserID: userID,
-				AddedBy: addedBy,
-				TenantID: tenantID,
-			})
-			if err != nil {
-				h.logger.Warnw("Failed to send CC notification", "error", err, "user_id", userID)
-			}
-			*/
-		}
+		h.createCCNotifications(ctx, ticketID, addedUsers, notifyChannels, tenantID)
 	}
 
 	return &dto.ServiceTaskResult{
@@ -271,6 +258,77 @@ func (h *CCTaskHandler) getUserIDsFromRoles(ctx context.Context, roleIds []int, 
 		return nil, fmt.Errorf("查询角色成员失败: %w", err)
 	}
 	return users, nil
+}
+
+func parseNotifyChannels(value string) []string {
+	if value == "" {
+		return []string{"in_app"}
+	}
+	allowed := map[string]struct{}{
+		"in_app":   {},
+		"email":    {},
+		"sms":      {},
+		"feishu":   {},
+		"dingtalk": {},
+		"wecom":    {},
+		"webhook":  {},
+	}
+	seen := map[string]struct{}{}
+	channels := []string{}
+	for _, part := range strings.Split(value, ",") {
+		channel := strings.TrimSpace(part)
+		if _, ok := allowed[channel]; !ok {
+			continue
+		}
+		if _, exists := seen[channel]; exists {
+			continue
+		}
+		seen[channel] = struct{}{}
+		channels = append(channels, channel)
+	}
+	if len(channels) == 0 {
+		return []string{"in_app"}
+	}
+	return channels
+}
+
+func (h *CCTaskHandler) createCCNotifications(ctx context.Context, ticketID int, userIDs []int, channels []string, tenantID int) {
+	ticketEntity, err := h.client.Ticket.Get(ctx, ticketID)
+	if err != nil {
+		h.logger.Warnw("Failed to get ticket for CC notification", "error", err, "ticket_id", ticketID)
+		return
+	}
+	now := time.Now()
+	content := fmt.Sprintf("工单 %s「%s」已抄送给你", ticketEntity.TicketNumber, ticketEntity.Title)
+	for _, userID := range userIDs {
+		for _, channel := range channels {
+			create := h.client.TicketNotification.Create().
+				SetTicketID(ticketID).
+				SetUserID(userID).
+				SetType("cc").
+				SetChannel(channel).
+				SetContent(content).
+				SetTenantID(tenantID).
+				SetStatus("pending")
+			if channel == "in_app" {
+				create.SetStatus("sent").SetSentAt(now)
+			}
+			if _, err := create.Save(ctx); err != nil {
+				h.logger.Warnw("Failed to create BPMN CC notification", "error", err, "ticket_id", ticketID, "user_id", userID, "channel", channel)
+			}
+		}
+		if _, err := h.client.Notification.Create().
+			SetTitle("工单抄送").
+			SetMessage(content).
+			SetType("info").
+			SetUserID(userID).
+			SetTenantID(tenantID).
+			SetActionURL(fmt.Sprintf("/tickets/%d", ticketID)).
+			SetActionText("查看工单").
+			Save(ctx); err != nil {
+			h.logger.Warnw("Failed to create BPMN unified CC notification", "error", err, "ticket_id", ticketID, "user_id", userID)
+		}
+	}
 }
 
 // Validate 验证配置

@@ -98,10 +98,19 @@ func (e *BPMNUserTask) GetType() string { return "UserTask" }
 type BPMNServiceTask struct {
 	ID                 string `xml:"id,attr"`
 	Name               string `xml:"name,attr"`
+	Type               string `xml:"type,attr"`
+	OperationRef       string `xml:"operationRef,attr"`
 	Implementation     string `xml:"implementation,attr"`
 	Class              string `xml:"class,attr"`
 	Expression         string `xml:"expression,attr"`
 	DelegateExpression string `xml:"delegateExpression,attr"`
+	CCType             string `xml:"ccType,attr"`
+	CCUserIDs          string `xml:"ccUserIds,attr"`
+	CCGroupIDs         string `xml:"ccGroupIds,attr"`
+	CCRoleIDs          string `xml:"ccRoleIds,attr"`
+	CCVariable         string `xml:"ccVariable,attr"`
+	CCNotify           string `xml:"ccNotify,attr"`
+	NotifyChannels     string `xml:"notifyChannels,attr"`
 }
 
 // GetID 获取ID

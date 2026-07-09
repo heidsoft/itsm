@@ -18,6 +18,7 @@ import {
   Trash2,
   Check,
   XIcon,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -90,9 +91,11 @@ const TicketDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [ccModalVisible, setCCModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [ccing, setCCing] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
@@ -107,6 +110,7 @@ const TicketDetailPage: React.FC = () => {
   } | null>(null);
   const [assignForm] = Form.useForm();
   const [editForm] = Form.useForm();
+  const [ccForm] = Form.useForm();
 
   const ticketId = parseInt(params.ticketId as string);
 
@@ -192,6 +196,30 @@ const TicketDetailPage: React.FC = () => {
       handleError(error, 'approveTicket', '批准失败');
     } finally {
       setApproving(false);
+    }
+  };
+
+  const handleCCSubmit = async (values: {
+    ccUsers: number[];
+    comment?: string;
+    notifyChannels?: string[];
+  }) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(
+        ticketId,
+        values.ccUsers,
+        values.comment,
+        values.notifyChannels || ['in_app']
+      );
+      antMessage.success('抄送成功');
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      fetchTicket();
+    } catch (error) {
+      handleError(error, 'ccTicket', '抄送失败');
+    } finally {
+      setCCing(false);
     }
   };
 
@@ -526,6 +554,14 @@ const TicketDetailPage: React.FC = () => {
             >
               编辑
             </Button>
+            <Button
+              icon={<Users size={16} />}
+              onClick={() => setCCModalVisible(true)}
+              disabled={isTicketFinal}
+              title={isTicketFinal ? '工单已结束，无法抄送' : ''}
+            >
+              抄送
+            </Button>
             <Button danger icon={<Trash2 size={16} />} onClick={handleDeleteClick}>
               删除
             </Button>
@@ -717,6 +753,82 @@ const TicketDetailPage: React.FC = () => {
                 </Button>
                 <Button type="primary" htmlType="submit" icon={<Save />}>
                   保存修改
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* CC Modal */}
+        <Modal
+          title={
+            <Space>
+              <Users className="w-5 h-5 text-blue-600" />
+              抄送工单
+            </Space>
+          }
+          open={ccModalVisible}
+          onCancel={() => {
+            setCCModalVisible(false);
+            ccForm.resetFields();
+          }}
+          footer={null}
+          width={520}
+        >
+          <Form
+            form={ccForm}
+            layout="vertical"
+            initialValues={{ notifyChannels: ['in_app'] }}
+            onFinish={handleCCSubmit}
+          >
+            <Form.Item
+              label="抄送给"
+              name="ccUsers"
+              rules={[{ required: true, message: '请选择抄送人' }]}
+            >
+              <Select
+                mode="multiple"
+                placeholder="请选择抄送人"
+                loading={loadingUsers}
+                showSearch
+                optionFilterProp="label"
+                options={users.map(user => ({
+                  value: user.id,
+                  label: `${user.name || user.username}${user.department ? ` (${user.department})` : ''}`,
+                }))}
+              />
+            </Form.Item>
+            <Form.Item label="通知渠道" name="notifyChannels">
+              <Select
+                mode="multiple"
+                placeholder="请选择通知渠道"
+                options={[
+                  { value: 'in_app', label: '站内信' },
+                  { value: 'email', label: '邮件' },
+                  { value: 'sms', label: '短信' },
+                  { value: 'feishu', label: '飞书' },
+                  { value: 'dingtalk', label: '钉钉' },
+                  { value: 'wecom', label: '企业微信' },
+                  { value: 'webhook', label: 'Webhook' },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item label="备注" name="comment">
+              <TextArea rows={3} placeholder="请输入抄送备注（可选）" maxLength={500} showCount />
+            </Form.Item>
+            <Form.Item className="mb-0">
+              <Space className="w-full justify-end">
+                <Button
+                  icon={<X />}
+                  onClick={() => {
+                    setCCModalVisible(false);
+                    ccForm.resetFields();
+                  }}
+                >
+                  取消
+                </Button>
+                <Button type="primary" htmlType="submit" icon={<Users />} loading={ccing}>
+                  确认抄送
                 </Button>
               </Space>
             </Form.Item>

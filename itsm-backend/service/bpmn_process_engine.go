@@ -464,6 +464,8 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.P
 			serviceRef = serviceTask.Class
 		} else if serviceTask.DelegateExpression != "" {
 			serviceRef = serviceTask.DelegateExpression
+		} else if serviceTask.OperationRef != "" {
+			serviceRef = serviceTask.OperationRef
 		}
 
 		// 查找并执行 Callback
@@ -475,7 +477,8 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.P
 			}
 			if handler != nil {
 				e.logger.Infow("执行 ServiceTask 回调", "serviceRef", serviceRef, "elementID", elementID)
-				if _, err := handler.Execute(ctx, nil, instance.Variables); err != nil {
+				taskVariables := mergeServiceTaskVariables(instance.Variables, serviceTask)
+				if _, err := handler.Execute(ctx, nil, taskVariables); err != nil {
 					return fmt.Errorf("ServiceTask %s 执行失败: %w", serviceRef, err)
 				}
 			} else {
@@ -487,6 +490,44 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.P
 	}
 
 	return e.executeStep(ctx, instance, process, elementID, instance.Variables)
+}
+
+func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *BPMNServiceTask) map[string]interface{} {
+	variables := make(map[string]interface{}, len(instanceVariables)+12)
+	for key, value := range instanceVariables {
+		variables[key] = value
+	}
+	if task == nil {
+		return variables
+	}
+	if task.Type != "" {
+		variables["type"] = task.Type
+	}
+	if task.OperationRef != "" {
+		variables["operationRef"] = task.OperationRef
+	}
+	if task.CCType != "" {
+		variables["ccType"] = task.CCType
+	}
+	if task.CCUserIDs != "" {
+		variables["ccUserIds"] = task.CCUserIDs
+	}
+	if task.CCGroupIDs != "" {
+		variables["ccGroupIds"] = task.CCGroupIDs
+	}
+	if task.CCRoleIDs != "" {
+		variables["ccRoleIds"] = task.CCRoleIDs
+	}
+	if task.CCVariable != "" {
+		variables["ccVariable"] = task.CCVariable
+	}
+	if task.CCNotify != "" {
+		variables["ccNotify"] = task.CCNotify
+	}
+	if task.NotifyChannels != "" {
+		variables["notifyChannels"] = task.NotifyChannels
+	}
+	return variables
 }
 
 func (e *CustomProcessEngine) createUserTask(ctx context.Context, instance *ent.ProcessInstance, task *BPMNUserTask) error {
