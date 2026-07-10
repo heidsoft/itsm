@@ -820,7 +820,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 		}
 		if config.IncidentController != nil && config.CMDBController != nil {
-			tenant.(*gin.RouterGroup).GET("/incidents/configuration-items", middleware.RequirePermission("cmdb_ci", "read"), config.CMDBController.ListCIs)
+			tenant.GET("/incidents/configuration-items", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCIs)
 		}
 
 		// ==================== Service Catalog & Requests (DDD) ====================

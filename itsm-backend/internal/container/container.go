@@ -3,7 +3,9 @@
 package container
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 
 	"itsm-backend/config"
 	"itsm-backend/ent"
@@ -87,6 +89,9 @@ func (c *Container) initCoreServices() {
 	)
 	if c.sequenceService != nil {
 		c.logger.Info("Redis sequence service initialized")
+		// 注入DB查询函数：Redis初始化时从DB同步序列起点
+		c.sequenceService.SetDBQueryFunc(c.queryMaxTicketSeqFromDB)
+		c.logger.Info("DB sequence sync function registered for Redis initialization")
 	} else {
 		c.logger.Warn("Redis sequence service not available, using database fallback")
 	}
@@ -203,4 +208,40 @@ func (c *Container) NewTicketServiceWithDeps(
 		AutomationRuleService: automationSvc,
 		SLAService:            slaSvc,
 	})
+}
+
+// queryMaxTicketSeqFromDB 从DB查询指定key对应的最大工单序列号
+// key格式: "sequence:ticket:tenantId:YYYYMM" → 提取tenantId和年月，查询MAX(ticket_number)
+// 返回值可直接作为Redis序列的起点
+func (c *Container) queryMaxTicketSeqFromDB(key string) (int64, error) {
+	// 解析key: sequence:ticket:tenantId:YYYYMM
+	var tenantID int
+	var year, month int
+	n, err := fmt.Sscanf(key, "sequence:ticket:%d:%04d%02d", &tenantID, &year, &month)
+	if err != nil || n != 3 {
+		return 0, fmt.Errorf("invalid sequence key format: %s", key)
+	}
+
+	prefix := fmt.Sprintf("TKT-%04d%02d-", year, month)
+	query := `SELECT ticket_number FROM tickets WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1`
+	var maxTicketNum string
+	err = c.db.QueryRowContext(context.Background(), query, tenantID, prefix+"%").Scan(&maxTicketNum)
+	if err == sql.ErrNoRows || maxTicketNum == "" {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, fmt.Errorf("query max ticket number failed: %w", err)
+	}
+
+	// 解析末尾数字
+	idx := len(maxTicketNum) - 1
+	for idx >= 0 && maxTicketNum[idx] != '-' {
+		idx--
+	}
+	if idx < 0 {
+		return 0, fmt.Errorf("invalid ticket number format: %s", maxTicketNum)
+	}
+	var seq int64
+	fmt.Sscanf(maxTicketNum[idx+1:], "%d", &seq)
+	return seq, nil
 }
