@@ -669,6 +669,73 @@ func CalculateHealthScore(t *TenantHealth) float64 {
 
 ---
 
+## 第七部分：v1.1 多租户与 MSP 加固（2026-Q3）
+
+前面的章节描述了多租户与 MSP 的设计意图，下面这部分说明 v1.1 实际落到代码里的加固点。开发者按文章对照仓库时，下表是真实可执行的对应关系。
+
+### 7.1 信任模型与中间件分层
+
+`middleware/tenant.go` 把租户识别收敛到三条来源（JWT claims.tenant_id / `X-Tenant-Code` / subdomain / path），每条来源都必须做 status / expires 校验；当 JWT 带 tenant_id 时，最终结果必须与之相等，否则拒绝。`X-Tenant-ID` 头被刻意忽略（历史修复确认），不要把它加回来。
+
+`SwitchTenant` 在 `service/auth_service.go` 里拆成三条路径：
+
+- **native**：用户从自己 home tenant 切到另一个自己有权访问的 tenant；
+- **super_admin**：平台管理员的全局切换；
+- **msp_cross**：MSP 员工凭 `msp_role` + 有效 `MSPAllocation` 切到客户租户，三路径互不干扰。
+
+### 7.2 MSP 访问控制重构
+
+`middleware/msp_middleware.go`（485 行）按职责拆成 4 个文件：
+
+- `msp_gate.go`：`mspEnabled` 全局门 + `SetMSPEnabled` / `IsMSPEnabled` / `ApplyDeploymentMode`；
+- `msp_context.go`：`MSPContext` 结构 + 上下文读写；
+- `msp_rbac.go`：`RequireMSPAccess` / `RequireMSPManager` / `ValidateCustomerTenantHeader` / `RequireMSPPermission`；
+- `msp_middleware.go`：保留 `MSPMiddleware(client)` 主流程 + `MSPFilterByCustomer` 查询过滤。
+
+admin 角色不再自动获得 MSP 访问权；MSP 身份判定改为"租户类型为 msp_provider 且 msp_role 非空"。`GetMSPContextFromGin` 与 `GetMSPContext` 重复定义已去重。
+
+### 7.3 部署模式 Gate
+
+`middleware.ApplyDeploymentMode(mode)` 把 `DEPLOYMENT_MODE` env 映射到 `mspEnabled`：
+
+- `private`：MSP 路由族（`/api/v1/msp/*`）整族返回 404，避免私有化部署意外暴露客户管理面；
+- `saas` / `saas_msp` / 空 / 未知值：MSP 保持开启，typo 不会悄悄关掉 MSP。
+
+`main.go` 启动时在 `NewApplication` 之前调用，避免 router 注册完后才生效。
+
+### 7.4 MSP 客户校验
+
+`service/MSPAccessValidator` 是 service 层的分配校验入口，提供三个方法：
+
+- `ValidateCustomerAccess(mspUserID, customerTenantID)`：检查分配是否有效；
+- `GetAllowedCustomerIDs(mspUserID)`：返回该 MSP 员工当前所有有效分配的客户租户；
+- `FilterByMSPAllocation(mspUserID, tenantIDs)`：把候选租户 ID 收敛到分配列表内。
+
+`middleware.ResolveRequestTenantID(c)` 把这一切打包成 controller 一行调用：返回有效租户 ID（普通用户 home tenant / MSP 用户锁定客户 / 未授权客户返回 `ErrMSPCustomerDenied`）。`incident_controller.go` / `cmdb_controller.go` / `knowledge_controller.go` 已经全部从 `middleware.GetTenantID` 切到本地 `resolveTenantID(ctx)` 包装，MSP 用户在普通工单/事件/CMDB/知识路由上的越权读被 fail-closed 拦住。
+
+### 7.5 租户软删除与审计
+
+`TenantService.DeleteTenant` 改为 `UpdateOneID status="deleted"`，租户记录保留但不再参与路由与分配校验。`tenant_controller.go` 五个写动作（创建 / 状态切换 / 更新 / 删除）现在打结构化审计日志，便于事后追溯。
+
+### 7.6 跨租户枚举回归
+
+`tests/rbac/cross_tenant_test.go` 现在覆盖四个域：
+
+- `TestCrossTenantUserList`：admin 用户列表的 RBAC 边界（5 sub-tests）；
+- `TestCrossTenantEnumeration`：user listing 的 status-code 同形（5 sub-tests）；
+- `TestCrossTenantTicketEnumeration`：ticket 域（3 sub-tests）；
+- `TestCrossTenantCIEnumeration`：CMDB 影响分析入口（3 sub-tests）；
+- `TestCrossTenantKnowledgeEnumeration`：知识库 / RAG 高风险面（3 sub-tests）。
+
+每域三个断言：同租户读得到 / 跨租户读不到 / 跨租户命中与不存在 ID 必须返回同一种 not-found，避免状态码 oracle。
+
+### 7.7 待办（v1.5+）
+
+- 配额与计费：当前 schema 有 plan / quota 字段但没有 enforcement 路径；
+- 租户级 Redis keyspace：`tenant:{tid}:...` 命名空间约定尚需落地；
+- 租户生命周期 event bus：创建 / 暂停 / 删除 / 配额变更目前没有事件流，CMDB discovery、connector 安装、SLA 模板这些下游无法自动反应；
+- CMDB 影响分析 tenant 边界保护：递归遍历 CI 关系时如果 tenant filter 漏一处就是泄漏，需要专门的递归深度 + 租户边界测试。
+
 ## 总结
 
 多租户架构是MSP服务商的核心技术能力。
