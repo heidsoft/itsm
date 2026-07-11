@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/tenant"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type TenantContext struct {
@@ -19,90 +20,166 @@ type TenantContext struct {
 
 const TenantContextKey = "tenant_context"
 
-// TenantMiddleware 租户中间件
+// TenantTrustConfig controls whether X-Tenant-Code / Subdomain / Path may override
+// the tenant context when JWT claims are missing or different.
+//
+// Default policy refuses all header overrides. Header-based overrides are only
+// honored for SuperAdmin roles, and the resolved tenant must match the JWT
+// claims.tenant_id whenever one is present.
+type TenantTrustConfig struct {
+	// AllowHeaderOverride allows any caller to drive the tenant context via X-Tenant-Code.
+	// Production should keep this false; opening it requires audit + alerting.
+	AllowHeaderOverride bool
+	// SuperAdminRoles still may drive X-Tenant-Code override when AllowHeaderOverride=false,
+	// for break-glass operations that must be audited.
+	SuperAdminRoles []string
+}
+
+// TrustConfig is the process-level security policy for tenant resolution.
+// Tests may mutate it; production code should treat it as read-only.
+var TrustConfig = TenantTrustConfig{
+	AllowHeaderOverride: false,
+	SuperAdminRoles:     []string{"super_admin"},
+}
+
+func isSuperAdmin(c *gin.Context) bool {
+	role, _ := c.Get("role")
+	s, _ := role.(string)
+	if s == "" {
+		return false
+	}
+	for _, r := range TrustConfig.SuperAdminRoles {
+		if r == s {
+			return true
+		}
+	}
+	return false
+}
+
+// TenantMiddleware resolves the tenant context for the incoming request.
+//
+// Source priority:
+//  1. JWT claims.tenant_id (strong, always enforced when present)
+//  2. X-Tenant-Code header (allowed only for SuperAdmin, otherwise rejected)
+//  3. Host subdomain (e.g. acme.itsm.example.com -> acme)
+//  4. Path param :tenant
+//
+// The resolved tenant entity must pass status and expiry checks regardless of
+// the source, and must equal the JWT tenant when the request carries one.
 func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 优先从头部读取租户代码
-		tenantCode := c.GetHeader("X-Tenant-Code")
 		var tenantEntity *ent.Tenant
 		var err error
-		// 1) 如果没有提供租户代码，尝试从 JWT 的 tenant_id 获取（不信任请求头）
-		if tenantCode == "" {
-			claimedTenantID := c.GetInt("tenant_id")
-			if claimedTenantID <= 0 {
-				// 不再从 X-Tenant-ID 请求头获取，防止租户绕过
-				// JWT 中的 tenant_id 是唯一的可信来源
+		var source string
+
+		// 1) JWT claims.tenant_id is the strongest source.
+		claimsTenantID := c.GetInt("tenant_id")
+		if claimsTenantID > 0 {
+			tenantEntity, err = client.Tenant.Get(c.Request.Context(), claimsTenantID)
+			if err != nil {
+				zap.S().Warnw("jwt tenant_id not found",
+					"jwt_tenant_id", claimsTenantID,
+					"user_id", c.GetInt("user_id"),
+				)
 			}
-			if claimedTenantID > 0 {
-				tenantEntity, err = client.Tenant.Get(c.Request.Context(), claimedTenantID)
-				if err == nil {
-					tenantCode = tenantEntity.Code
+			if tenantEntity != nil {
+				source = "jwt"
+			}
+		}
+
+		// 2) Header takes effect only when JWT did not produce a tenant AND the
+		// caller is allowed to override. Default: refuse plain header overrides.
+		if tenantEntity == nil {
+			headerCode := c.GetHeader("X-Tenant-Code")
+			if headerCode != "" {
+				if !TrustConfig.AllowHeaderOverride && !isSuperAdmin(c) {
+					common.Fail(c, common.AuthFailedCode, "X-Tenant-Code 不可信，请通过 JWT 登录")
+					c.Abort()
+					return
+				}
+				tenantEntity, err = client.Tenant.
+					Query().
+					Where(tenant.CodeEQ(headerCode)).
+					First(c.Request.Context())
+				if tenantEntity != nil {
+					source = "header"
 				}
 			}
 		}
-		// 2) 如果仍未获取到，尝试从子域名提取
-		if tenantCode == "" {
-			host := c.Request.Host
-			tenantCode = extractTenantFromHost(host)
+
+		// 3) Subdomain: only when no JWT and no header produced a tenant.
+		if tenantEntity == nil {
+			if code := extractTenantFromHost(c.Request.Host); code != "" {
+				tenantEntity, err = client.Tenant.
+					Query().
+					Where(tenant.CodeEQ(code)).
+					First(c.Request.Context())
+				if tenantEntity != nil {
+					source = "subdomain"
+				}
+			}
 		}
-		// 3) 如果仍未获取到，尝试从路径参数获取
-		if tenantCode == "" {
-			tenantCode = c.Param("tenant")
+
+		// 4) Path parameter :tenant (e.g. /api/v1/tenants/{tenant}/...).
+		if tenantEntity == nil {
+			if code := c.Param("tenant"); code != "" {
+				tenantEntity, err = client.Tenant.
+					Query().
+					Where(tenant.CodeEQ(code)).
+					First(c.Request.Context())
+				if tenantEntity != nil {
+					source = "path"
+				}
+			}
 		}
-		// 4) 若依然缺失，则报错
-		if tenantCode == "" && tenantEntity == nil {
+
+		if tenantEntity == nil {
 			common.Fail(c, common.ParamErrorCode, "租户信息缺失")
 			c.Abort()
 			return
 		}
-		// 按租户代码查询（若之前未通过 ID 查询到）
-		if tenantEntity == nil {
-			tenantEntity, err = client.Tenant.
-				Query().
-				Where(tenant.CodeEQ(tenantCode)).
-				First(c.Request.Context())
-			if err != nil {
-				common.NotFound(c, "租户不存在")
-				c.Abort()
-				return
-			}
-		}
 
-		claimedTenantID := c.GetInt("tenant_id")
-		if claimedTenantID > 0 && claimedTenantID != tenantEntity.ID {
+		// 5) Header/Subdomain/Path must never disagree with JWT.tenant_id.
+		if claimsTenantID > 0 && tenantEntity.ID != claimsTenantID {
+			zap.S().Warnw("tenant mismatch rejected",
+				"resolved_tenant_id", tenantEntity.ID,
+				"jwt_tenant_id", claimsTenantID,
+				"source", source,
+				"user_id", c.GetInt("user_id"),
+			)
 			common.Fail(c, common.AuthFailedCode, "租户不匹配")
 			c.Abort()
 			return
 		}
 
-		// 检查租户状态
+		// 6) Status/expiry checks run for every source, including JWT-derived ones.
+		// This closes the suspended-tenant-with-live-jwt bypass.
 		if tenantEntity.Status != "active" {
 			common.Forbidden(c, "租户已被暂停或过期")
 			c.Abort()
 			return
 		}
-
-		// 检查租户是否过期
 		if !tenantEntity.ExpiresAt.IsZero() && tenantEntity.ExpiresAt.Before(time.Now()) {
 			common.Forbidden(c, "租户已过期")
 			c.Abort()
 			return
 		}
 
-		// 设置租户上下文
 		tenantCtx := &TenantContext{
 			TenantID: tenantEntity.ID,
 			Tenant:   tenantEntity,
 		}
 		c.Set(TenantContextKey, tenantCtx)
 		c.Set("tenant_id", tenantEntity.ID)
+		c.Set("tenant_source", source)
 
 		c.Next()
 	}
 }
 
-// extractTenantFromHost 从主机名提取租户代码
-// 例如：tenant1.itsm.example.com -> tenant1
+// extractTenantFromHost parses the leading subdomain of the Host header,
+// e.g. tenant1.itsm.example.com -> tenant1. Returns "" when the host is too
+// short to be a tenant subdomain.
 func extractTenantFromHost(host string) string {
 	parts := strings.Split(host, ".")
 	if len(parts) >= 3 {
@@ -111,7 +188,8 @@ func extractTenantFromHost(host string) string {
 	return ""
 }
 
-// GetTenantContext 获取租户上下文
+// GetTenantContext returns the per-request TenantContext. The bool reports
+// whether the middleware actually ran for this request.
 func GetTenantContext(c *gin.Context) (*TenantContext, bool) {
 	value, exists := c.Get(TenantContextKey)
 	if !exists {
@@ -121,7 +199,8 @@ func GetTenantContext(c *gin.Context) (*TenantContext, bool) {
 	return tenantCtx, ok
 }
 
-// GetTenantID 获取租户ID
+// GetTenantID returns the tenant id stamped by the middleware, or an error if
+// the middleware never ran (e.g. unauthenticated public route).
 func GetTenantID(c *gin.Context) (int, error) {
 	tenantCtx, exists := GetTenantContext(c)
 	if !exists {
@@ -130,16 +209,14 @@ func GetTenantID(c *gin.Context) (int, error) {
 	return tenantCtx.TenantID, nil
 }
 
-// GetUserID 获取用户ID
+// GetUserID returns the user id stamped by AuthMiddleware.
 func GetUserID(c *gin.Context) (int, error) {
 	userID, exists := c.Get("user_id")
 	if !exists {
 		return 0, errors.New("用户ID不存在")
 	}
-
 	if id, ok := userID.(int); ok {
 		return id, nil
 	}
-
 	return 0, errors.New("用户ID类型错误")
 }

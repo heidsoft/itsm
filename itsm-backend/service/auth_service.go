@@ -12,6 +12,8 @@ import (
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
+	"itsm-backend/ent/mspallocation"
+	"itsm-backend/pkg/tenantmode"
 	"itsm-backend/middleware"
 
 	"go.uber.org/zap"
@@ -299,26 +301,74 @@ func (s *AuthService) GetUserTenants(ctx context.Context, userID int) (*dto.User
 
 // SwitchTenant 切换租户
 func (s *AuthService) SwitchTenant(ctx context.Context, userID, tenantID int) (*dto.LoginResponse, error) {
-	// 验证用户是否有权限访问该租户
-	userEntity, err := s.client.User.Query().
-		Where(
-			user.IDEQ(userID),
-			user.TenantIDEQ(tenantID),
-		).
-		First(ctx)
+	// 授权检查覆盖三条路径:
+	//   1) native — 调用者原生租户就是目标租户(user.tenant_id == tenantID)
+	//   2) super_admin — 平台超管跨租户运维
+	//   3) msp_cross — MSP 服务商员工凭 msp_role + 有效 MSPAllocation 切换到客户租户
+	// 任何不属于上述三类的请求一律拒绝,避免租户水平越权。
+	userEntity, err := s.client.User.Get(ctx, userID)
 	if err != nil {
-		s.logger.Warnw("User has no access to tenant", "user_id", userID, "tenant_id", tenantID, "error", err)
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("用户不存在")
+		}
+		s.logger.Errorw("Failed to load user for tenant switch", "user_id", userID, "error", err)
 		return nil, fmt.Errorf("无权限访问该租户")
 	}
 
-	// 查询租户信息
+	nativeSwitch := userEntity.TenantID == tenantID
+	superAdmin := userEntity.Role == "super_admin"
+
+	mspAllowed := false
+	if !nativeSwitch && !superAdmin && string(userEntity.MspRole) != "" {
+		// 仅当用户原生租户是 msp_provider 时,MSP 跨租户授权才有意义。
+		origin, oerr := s.client.Tenant.Get(ctx, userEntity.TenantID)
+		if oerr == nil && tenantmode.IsMSPProviderTenantType(string(origin.Type)) {
+			target, terr := s.client.Tenant.Get(ctx, tenantID)
+			if terr == nil && tenantmode.IsCustomerTenantType(string(target.Type)) {
+				count, qerr := s.client.MSPAllocation.Query().
+					Where(
+						mspallocation.MspUserIDEQ(userID),
+						mspallocation.CustomerTenantIDEQ(tenantID),
+						mspallocation.DeassignedAtIsNil(),
+					).
+					Count(ctx)
+				if qerr == nil && count > 0 {
+					mspAllowed = true
+				}
+			}
+		}
+	}
+
+	if !nativeSwitch && !superAdmin && !mspAllowed {
+		s.logger.Warnw("Switch tenant denied",
+			"user_id", userID,
+			"tenant_id", tenantID,
+			"native_switch", nativeSwitch,
+			"super_admin", superAdmin,
+			"msp_role", string(userEntity.MspRole),
+		)
+		return nil, fmt.Errorf("无权限访问该租户")
+	}
+
+	// 查询目标租户,共享原有 token 生成路径。
 	tenantEntity, err := s.client.Tenant.Get(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get tenant", "tenant_id", tenantID, "error", err)
 		return nil, fmt.Errorf("租户不存在")
 	}
 
-	// 生成新的access token（使用数据库角色）
+	// 即便调用者具备权限,目标租户本身也必须在 active 且未过期。
+	if tenantEntity.Status != "active" {
+		s.logger.Warnw("Switch tenant rejected: tenant inactive",
+			"user_id", userID, "tenant_id", tenantID, "status", tenantEntity.Status)
+		return nil, fmt.Errorf("租户已被暂停")
+	}
+	if !tenantEntity.ExpiresAt.IsZero() && tenantEntity.ExpiresAt.Before(time.Now()) {
+		s.logger.Warnw("Switch tenant rejected: tenant expired",
+			"user_id", userID, "tenant_id", tenantID, "expires_at", tenantEntity.ExpiresAt)
+		return nil, fmt.Errorf("租户已过期")
+	}
+
 	accessToken, err := middleware.GenerateAccessToken(
 		userEntity.ID,
 		userEntity.Username,
