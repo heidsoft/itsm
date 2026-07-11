@@ -431,10 +431,11 @@ func TestTenantService_DeleteTenant_Success(t *testing.T) {
 	err = service.DeleteTenant(ctx, tenant.ID)
 	require.NoError(t, err)
 
-	// 验证已删除
-	_, err = service.GetTenant(ctx, tenant.ID)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "租户不存在")
+	// 软删除：记录保留但 status="deleted",便于审计追溯。
+	got, err := service.GetTenant(ctx, tenant.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "deleted", got.Status,
+		"软删除后记录必须保留且 status=deleted,不能从数据库消失")
 }
 
 func TestTenantService_DeleteTenant_NotFound(t *testing.T) {
