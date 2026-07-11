@@ -128,7 +128,11 @@ graphify-out/cache/
 .playwright-cli/
 
 # Python / Test
-tests/
+# 注释：tests/ 目录本身需要被跟踪,只有 ephemeral 测试产物应该被忽略。
+# 之前的全局忽略会导致 itm-backend/tests/rbac 等回归测试无法入仓。
+itsm-backend/tests/**/test-results/
+itsm-backend/tests/**/coverage/
+itsm-backend/tests/**/tmp/
 itsm-frontend/tests/e2e/venv/
 itsm-backend/memory/venv/
 itsm-backend/.pytest_cache/
@@ -153,7 +157,7 @@ itsm-*-darwin-*
 itsm-*-windows-*
 
 # Python / Test
-tests/
+# 重复:见上,只允许 ephemeral 测试产物被忽略。
 itsm-frontend/tests/e2e/venv/
 __pycache__/
 *.pyc
