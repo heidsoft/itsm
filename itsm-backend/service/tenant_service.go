@@ -231,6 +231,8 @@ func (s *TenantService) UpdateTenant(ctx context.Context, tenantID int, req *dto
 }
 
 // DeleteTenant 删除租户
+// 安全约束：走软删除以保留审计痕迹，状态置为 deleted。下游数据由后台清理任务接管，
+// 业务要求 上层调用在执行前必须确保租户已处于无活跃用户的状态，否则拒绝。
 func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
 	// 检查租户是否存在
 	exists, err := s.client.Tenant.Query().
@@ -256,13 +258,19 @@ func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
 		return fmt.Errorf("租户下还有用户，无法删除")
 	}
 
-	err = s.client.Tenant.DeleteOneID(tenantID).Exec(ctx)
+	err = s.client.Tenant.UpdateOneID(tenantID).
+		SetStatus("deleted").
+		SetUpdatedAt(time.Now()).
+		Exec(ctx)
 	if err != nil {
-		s.logger.Errorf("删除租户失败: %v", err)
+		s.logger.Errorf("软删除租户失败: %v", err)
 		return fmt.Errorf("删除租户失败: %w", err)
 	}
 
-	s.logger.Infof("成功删除租户: %d", tenantID)
+	s.logger.Infow("tenant soft-deleted",
+		"tenant_id", tenantID,
+		"action", "tenant.delete",
+	)
 	return nil
 }
 

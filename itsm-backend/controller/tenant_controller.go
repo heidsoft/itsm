@@ -48,6 +48,7 @@ func (tc *TenantController) CreateTenant(c *gin.Context) {
 		return
 	}
 
+	tc.recordAudit(c, "tenant.create", tenant.ID, "tenant_code", req.Code, "tenant_name", req.Name)
 	common.Success(c, dto.ToTenantResponse(tenant))
 }
 
@@ -139,6 +140,7 @@ func (tc *TenantController) UpdateTenantStatus(c *gin.Context) {
 		return
 	}
 
+	tc.recordAudit(c, "tenant.status.update", id, "new_status", status)
 	common.Success(c, nil)
 }
 
@@ -203,6 +205,7 @@ func (tc *TenantController) UpdateTenant(c *gin.Context) {
 		return
 	}
 
+	tc.recordAudit(c, "tenant.update", id, "tenant_code", tenant.Code)
 	common.Success(c, dto.ToTenantResponse(tenant))
 }
 
@@ -231,5 +234,24 @@ func (tc *TenantController) DeleteTenant(c *gin.Context) {
 		return
 	}
 
+	tc.recordAudit(c, "tenant.delete", id)
 	common.Success(c, nil)
+}
+
+// recordAudit emits a structured audit log entry for a tenant write action.
+// It is invoked from every state-changing controller method so that operators
+// can later trace which user touched which tenant, even without a full
+// auditlog persistence backend in place. Once the auditlog_service exposes a
+// persistent RecordAudit method, this helper becomes the single point that
+// routes to it.
+func (tc *TenantController) recordAudit(c *gin.Context, action string, tenantID int, fields ...any) {
+	args := []any{
+		"action", action,
+		"tenant_id", tenantID,
+		"operator_id", c.GetInt("user_id"),
+		"operator_role", c.GetString("role"),
+		"client_ip", c.ClientIP(),
+	}
+	args = append(args, fields...)
+	tc.logger.Infow("tenant audit", args...)
 }

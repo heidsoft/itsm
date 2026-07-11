@@ -61,3 +61,18 @@ func TestTenantController_ListTenants(t *testing.T) {
 		})
 	}
 }
+func TestTenantController_RecordAudit_DoesNotPanic(t *testing.T) {
+	logger := zaptest.NewLogger(t).Sugar()
+	tc := NewTenantController(nil, logger)
+
+	w := httptest.NewRecorder()
+	c2, _ := gin.CreateTestContext(w)
+	c2.Set("user_id", 42)
+	c2.Set("role", "super_admin")
+	c2.Request = httptest.NewRequest(http.MethodPost, "/api/v1/admin/tenants", nil)
+
+	require.NotPanics(t, func() {
+		tc.recordAudit(c2, "tenant.create", 7, "tenant_code", "acme")
+	})
+}
+
