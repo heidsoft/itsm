@@ -13,3 +13,22 @@ func SetMSPEnabled(b bool) { mspEnabled = b }
 // health endpoint to surface a warning when a non-MSP deployment accidentally
 // exposes the routes.
 func IsMSPEnabled() bool { return mspEnabled }
+
+// ApplyDeploymentMode wires mspEnabled based on the deployment mode env value.
+// Must be called before NewApplication so the router registration sees the
+// final state. Known modes:
+//
+//   - "private": MSP routes are not exposed (mspEnabled = false)
+//   - "saas", "saas_msp", or empty: MSP routes are exposed (mspEnabled = true)
+//   - any other value: treated like the SaaS default so a typo never silently
+//     turns MSP off
+//
+// Keeping this in middleware (not main.go) means the policy is unit-testable
+// without booting the binary.
+func ApplyDeploymentMode(mode string) {
+	if mode == "private" {
+		SetMSPEnabled(false)
+		return
+	}
+	SetMSPEnabled(true)
+}

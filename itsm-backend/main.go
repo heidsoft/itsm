@@ -19,10 +19,7 @@ import (
 func main() {
 	// 部署模式 gating:private 部署时关掉 /api/v1/msp/* 路由族。
 	// 在 NewApplication 之前完成,确保 router 注册到的 msp 路径在请求进入时 404。
-	switch os.Getenv("DEPLOYMENT_MODE") {
-	case "private":
-		middleware.SetMSPEnabled(false)
-	}
+	middleware.ApplyDeploymentMode(os.Getenv("DEPLOYMENT_MODE"))
 
 	if os.Getenv("ITSM_BOOTSTRAP_ONLY") == "true" {
 		boot.RunInitialization()
