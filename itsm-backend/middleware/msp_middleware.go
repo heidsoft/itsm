@@ -19,6 +19,21 @@ import (
 // MSPContextKey MSP 上下文键名
 const MSPContextKey = "msp_context"
 
+// mspEnabled gates the entire /api/v1/msp/* route family. The bootstrap layer
+// sets it based on cfg.Deployment.Mode so that private deployments have
+// MSP endpoints return 404 even if a route is registered.
+var mspEnabled = true
+
+// SetMSPEnabled toggles the gate. main.go wires this from the deployment mode
+// env var before NewApplication runs.
+func SetMSPEnabled(b bool) { mspEnabled = b }
+
+// IsMSPEnabled reports the current gate state. Useful for tests and for the
+// health endpoint to surface a warning when a non-MSP deployment accidentally
+// exposes the routes.
+func IsMSPEnabled() bool { return mspEnabled }
+
+
 // MSPRoleManager MSP经理角色
 const MSPRoleManager = "provider_admin"
 
@@ -44,6 +59,14 @@ func GetMSPContext(c *gin.Context) (*MSPContext, bool) {
 // MSPMiddleware MSP 访问控制中间件
 func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if !mspEnabled {
+			c.JSON(http.StatusNotFound, gin.H{
+				"code":    http.StatusNotFound,
+				"message": "MSP routes are disabled in this deployment mode",
+			})
+			c.Abort()
+			return
+		}
 		// 1. 从上下文中获取当前用户 ID (由 AuthMiddleware 设置)
 		userIDVal, exists := c.Get("user_id")
 		if !exists {
