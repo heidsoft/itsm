@@ -64,10 +64,24 @@ func NewCMDBController(
 // @Param search query string false "搜索关键词（名称）"
 // @Success 200 {object} common.Response{data=dto.CITypeListResponse}
 // @Router /api/v1/cmdb/ci-types [get]
+
+func (c *CMDBController) resolveTenantID(ctx *gin.Context) (int, bool) {
+	tenantID, err := middleware.ResolveRequestTenantID(ctx)
+	if err == nil && tenantID != 0 {
+		return tenantID, true
+	}
+	c.logger.Warnw("Failed to resolve tenant ID", "error", err)
+	if middleware.AbortIfTenantError(ctx, err) {
+		return 0, false
+	}
+	common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	return 0, false
+}
+
+
 func (c *CMDBController) ListCITypes(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -95,9 +109,8 @@ func (c *CMDBController) ListCITypes(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CITypeResponse}
 // @Router /api/v1/cmdb/ci-types/{id} [get]
 func (c *CMDBController) GetCIType(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -133,9 +146,8 @@ func (c *CMDBController) GetCIType(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CITypeResponse}
 // @Router /api/v1/cmdb/ci-types [post]
 func (c *CMDBController) CreateCIType(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -166,9 +178,8 @@ func (c *CMDBController) CreateCIType(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CITypeResponse}
 // @Router /api/v1/cmdb/ci-types/{id} [put]
 func (c *CMDBController) UpdateCIType(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -205,9 +216,8 @@ func (c *CMDBController) UpdateCIType(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/cmdb/ci-types/{id} [delete]
 func (c *CMDBController) DeleteCIType(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -240,9 +250,8 @@ func (c *CMDBController) DeleteCIType(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=[]dto.CIAttributeDefinitionResponse}
 // @Router /api/v1/cmdb/ci-types/{id}/attributes [get]
 func (c *CMDBController) ListCIAttributeDefinitions(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -273,9 +282,8 @@ func (c *CMDBController) ListCIAttributeDefinitions(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIAttributeDefinitionResponse}
 // @Router /api/v1/cmdb/attributes/{id} [get]
 func (c *CMDBController) GetCIAttributeDefinition(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -311,9 +319,8 @@ func (c *CMDBController) GetCIAttributeDefinition(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIAttributeDefinitionResponse}
 // @Router /api/v1/cmdb/attributes [post]
 func (c *CMDBController) CreateCIAttributeDefinition(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -344,9 +351,8 @@ func (c *CMDBController) CreateCIAttributeDefinition(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIAttributeDefinitionResponse}
 // @Router /api/v1/cmdb/attributes/{id} [put]
 func (c *CMDBController) UpdateCIAttributeDefinition(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -383,9 +389,8 @@ func (c *CMDBController) UpdateCIAttributeDefinition(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/cmdb/attributes/{id} [delete]
 func (c *CMDBController) DeleteCIAttributeDefinition(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -429,9 +434,8 @@ func (c *CMDBController) DeleteCIAttributeDefinition(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIListResponse}
 // @Router /api/v1/cmdb/cis [get]
 func (c *CMDBController) ListCIs(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -462,9 +466,8 @@ func (c *CMDBController) ListCIs(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Router /api/v1/cmdb/cis/{id} [get]
 func (c *CMDBController) GetCI(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -502,9 +505,8 @@ func (c *CMDBController) GetCI(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Router /api/v1/cmdb/cis [post]
 func (c *CMDBController) CreateCI(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -543,9 +545,8 @@ func (c *CMDBController) CreateCI(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Router /api/v1/cmdb/cis/{id} [put]
 func (c *CMDBController) UpdateCI(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -582,9 +583,8 @@ func (c *CMDBController) UpdateCI(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/cmdb/cis/{id} [delete]
 func (c *CMDBController) DeleteCI(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -614,9 +614,8 @@ func (c *CMDBController) DeleteCI(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIStatsResponse}
 // @Router /api/v1/cmdb/cis/stats [get]
 func (c *CMDBController) GetCIStats(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -644,9 +643,8 @@ func (c *CMDBController) GetCIStats(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIRelationshipListResponse}
 // @Router /api/v1/cmdb/relationships [get]
 func (c *CMDBController) ListCIRelationships(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -681,9 +679,8 @@ func (c *CMDBController) ListCIRelationships(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIRelationshipResponse}
 // @Router /api/v1/cmdb/relationships/{id} [get]
 func (c *CMDBController) GetCIRelationship(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -720,9 +717,8 @@ func (c *CMDBController) GetCIRelationship(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=[]dto.CIRelationshipResponse}
 // @Router /api/v1/cmdb/cis/{id}/relationships [get]
 func (c *CMDBController) ListCIRelationshipsByCIID(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -755,9 +751,8 @@ func (c *CMDBController) ListCIRelationshipsByCIID(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIRelationshipResponse}
 // @Router /api/v1/cmdb/relationships [post]
 func (c *CMDBController) CreateCIRelationship(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -788,9 +783,8 @@ func (c *CMDBController) CreateCIRelationship(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIRelationshipResponse}
 // @Router /api/v1/cmdb/relationships/{id} [put]
 func (c *CMDBController) UpdateCIRelationship(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -827,9 +821,8 @@ func (c *CMDBController) UpdateCIRelationship(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/cmdb/relationships/{id} [delete]
 func (c *CMDBController) DeleteCIRelationship(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -875,6 +868,27 @@ func (c *CMDBController) ListRelationshipTypes(ctx *gin.Context) {
 	})
 }
 
+// GetCITopology 获取统一的 CI 拓扑图
+func (c *CMDBController) GetCITopology(ctx *gin.Context) {
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
+		return
+	}
+	ciID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		return
+	}
+	depth, _ := strconv.Atoi(ctx.DefaultQuery("depth", "3"))
+	result, err := c.ciRelationshipService.GetCITopology(ctx.Request.Context(), ciID, tenantID, depth)
+	if err != nil {
+		c.logger.Errorw("Get CI topology failed", "error", err, "ci_id", ciID, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取CI拓扑失败: "+err.Error())
+		return
+	}
+	common.Success(ctx, result)
+}
+
 // GetCIImpactAnalysis 获取CI影响分析
 // @Summary 获取CI影响分析
 // @Description 分析指定CI故障时可能影响的其他CI
@@ -886,9 +900,8 @@ func (c *CMDBController) ListRelationshipTypes(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIImpactAnalysisResponse}
 // @Router /api/v1/cmdb/cis/{id}/impact-analysis [get]
 func (c *CMDBController) GetCIImpactAnalysis(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -928,9 +941,8 @@ func (c *CMDBController) GetCIImpactAnalysis(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CITagListResponse}
 // @Router /api/v1/cmdb/tags [get]
 func (c *CMDBController) ListCITags(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -958,9 +970,8 @@ func (c *CMDBController) ListCITags(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CITagResponse}
 // @Router /api/v1/cmdb/tags/{id} [get]
 func (c *CMDBController) GetCITag(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -996,9 +1007,8 @@ func (c *CMDBController) GetCITag(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CITagResponse}
 // @Router /api/v1/cmdb/tags [post]
 func (c *CMDBController) CreateCITag(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1029,9 +1039,8 @@ func (c *CMDBController) CreateCITag(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CITagResponse}
 // @Router /api/v1/cmdb/tags/{id} [put]
 func (c *CMDBController) UpdateCITag(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1068,9 +1077,8 @@ func (c *CMDBController) UpdateCITag(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/cmdb/tags/{id} [delete]
 func (c *CMDBController) DeleteCITag(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1102,9 +1110,8 @@ func (c *CMDBController) DeleteCITag(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Router /api/v1/cmdb/cis/{id}/tags [post]
 func (c *CMDBController) AddTagsToCI(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1142,9 +1149,8 @@ func (c *CMDBController) AddTagsToCI(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Router /api/v1/cmdb/cis/{id}/tags [delete]
 func (c *CMDBController) RemoveTagsFromCI(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1185,9 +1191,8 @@ func (c *CMDBController) RemoveTagsFromCI(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIHistoryListResponse}
 // @Router /api/v1/cmdb/cis/{id}/history [get]
 func (c *CMDBController) GetCIHistory(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1222,9 +1227,8 @@ func (c *CMDBController) GetCIHistory(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Router /api/v1/cmdb/cis/{id}/revert [post]
 func (c *CMDBController) RevertCIVersion(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1269,9 +1273,8 @@ func (c *CMDBController) RevertCIVersion(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.BatchOperationResponse}
 // @Router /api/v1/cmdb/cis/batch [post]
 func (c *CMDBController) BatchCreateCI(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1307,9 +1310,8 @@ func (c *CMDBController) BatchCreateCI(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.BatchOperationResponse}
 // @Router /api/v1/cmdb/cis/batch [put]
 func (c *CMDBController) BatchUpdateCI(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1345,9 +1347,8 @@ func (c *CMDBController) BatchUpdateCI(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.BatchOperationResponse}
 // @Router /api/v1/cmdb/cis/batch [delete]
 func (c *CMDBController) BatchDeleteCI(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1385,9 +1386,8 @@ func (c *CMDBController) BatchDeleteCI(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ListResponse[dto.CIResponse]}
 // @Router /api/v1/cmdb/cis/search [post]
 func (c *CMDBController) SearchCI(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1427,9 +1427,8 @@ func (c *CMDBController) SearchCI(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CISavedView}
 // @Router /api/v1/cmdb/views [post]
 func (c *CMDBController) CreateSavedView(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1464,9 +1463,8 @@ func (c *CMDBController) CreateSavedView(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ListResponse[dto.CISavedView]}
 // @Router /api/v1/cmdb/views [get]
 func (c *CMDBController) ListSavedViews(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1495,9 +1493,8 @@ func (c *CMDBController) ListSavedViews(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CISavedView}
 // @Router /api/v1/cmdb/views/{id} [get]
 func (c *CMDBController) GetSavedView(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1529,9 +1526,8 @@ func (c *CMDBController) GetSavedView(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CISavedView}
 // @Router /api/v1/cmdb/views/{id} [put]
 func (c *CMDBController) UpdateSavedView(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1569,9 +1565,8 @@ func (c *CMDBController) UpdateSavedView(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/cmdb/views/{id} [delete]
 func (c *CMDBController) DeleteSavedView(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1605,9 +1600,8 @@ func (c *CMDBController) DeleteSavedView(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ImportCIResult}
 // @Router /api/v1/cmdb/import [post]
 func (c *CMDBController) CreateImportTask(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1640,9 +1634,8 @@ func (c *CMDBController) CreateImportTask(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ImportCIResult}
 // @Router /api/v1/cmdb/import/{task_id} [get]
 func (c *CMDBController) GetImportTaskStatus(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1673,9 +1666,8 @@ func (c *CMDBController) GetImportTaskStatus(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ListResponse[dto.ImportCIResult]}
 // @Router /api/v1/cmdb/import [get]
 func (c *CMDBController) ListImportTasks(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1702,9 +1694,8 @@ func (c *CMDBController) ListImportTasks(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ExportCIResult}
 // @Router /api/v1/cmdb/export [post]
 func (c *CMDBController) CreateExportTask(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1737,9 +1728,8 @@ func (c *CMDBController) CreateExportTask(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ExportCIResult}
 // @Router /api/v1/cmdb/export/{task_id} [get]
 func (c *CMDBController) GetExportTaskStatus(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1770,9 +1760,8 @@ func (c *CMDBController) GetExportTaskStatus(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ListResponse[dto.ExportCIResult]}
 // @Router /api/v1/cmdb/export [get]
 func (c *CMDBController) ListExportTasks(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1803,9 +1792,8 @@ func (c *CMDBController) ListExportTasks(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Router /api/v1/cmdb/cis/{id}/lifecycle [put]
 func (c *CMDBController) UpdateLifecycleStatus(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1846,9 +1834,8 @@ func (c *CMDBController) UpdateLifecycleStatus(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.BatchOperationResponse}
 // @Router /api/v1/cmdb/cis/batch/lifecycle [put]
 func (c *CMDBController) BatchUpdateLifecycleStatus(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1885,9 +1872,8 @@ func (c *CMDBController) BatchUpdateLifecycleStatus(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=[]map[string]interface{}}
 // @Router /api/v1/cmdb/cis/{id}/lifecycle/history [get]
 func (c *CMDBController) GetLifecycleHistory(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -34,6 +35,20 @@ func NewKnowledgeController(knowledgeService *service.KnowledgeService, logger *
 // @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
 // @Failure 400 {object} common.Response
 // @Router /api/v1/knowledge-articles [post]
+
+func (kc *KnowledgeController) resolveTenantID(c *gin.Context) (int, bool) {
+	tenantID, err := middleware.ResolveRequestTenantID(c)
+	if err == nil && tenantID != 0 {
+		return tenantID, true
+	}
+	kc.logger.Warnw("Failed to resolve tenant ID", "error", err)
+	if middleware.AbortIfTenantError(c, err) {
+		return 0, false
+	}
+	common.Fail(c, 1001, "租户上下文不存在")
+	return 0, false
+}
+
 func (kc *KnowledgeController) CreateArticle(c *gin.Context) {
 	var req dto.CreateKnowledgeArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -42,13 +57,10 @@ func (kc *KnowledgeController) CreateArticle(c *gin.Context) {
 		return
 	}
 
-	// 从上下文获取租户ID和用户信息（与中间件键名保持一致）
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 	userId, _ := c.Get("user_id")
 
 	article, err := kc.knowledgeService.CreateArticle(c.Request.Context(), &req, tenantID, userId.(int))
@@ -79,12 +91,10 @@ func (kc *KnowledgeController) GetArticle(c *gin.Context) {
 		return
 	}
 
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	article, err := kc.knowledgeService.GetArticle(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -133,12 +143,10 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 		req.PageSize = 10
 	}
 
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	articles, total, err := kc.knowledgeService.ListArticles(c.Request.Context(), &req, tenantID)
 	if err != nil {
@@ -192,12 +200,10 @@ func (kc *KnowledgeController) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	article, err := kc.knowledgeService.UpdateArticle(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
@@ -227,12 +233,10 @@ func (kc *KnowledgeController) DeleteArticle(c *gin.Context) {
 		return
 	}
 
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	err = kc.knowledgeService.DeleteArticle(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -254,12 +258,10 @@ func (kc *KnowledgeController) DeleteArticle(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Router /api/v1/knowledge-articles/categories [get]
 func (kc *KnowledgeController) GetCategories(c *gin.Context) {
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	categories, err := kc.knowledgeService.GetCategories(c.Request.Context(), tenantID)
 	if err != nil {
@@ -299,12 +301,10 @@ func (kc *KnowledgeController) ListVersions(c *gin.Context) {
 		req.PageSize = 20
 	}
 
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	versions, total, err := kc.knowledgeService.ListVersions(c.Request.Context(), id, tenantID, req.Page, req.PageSize)
 	if err != nil {
@@ -367,12 +367,10 @@ func (kc *KnowledgeController) GetVersion(c *gin.Context) {
 		return
 	}
 
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	versionEntity, err := kc.knowledgeService.GetVersion(c.Request.Context(), id, version, tenantID)
 	if err != nil {
@@ -424,12 +422,10 @@ func (kc *KnowledgeController) RestoreVersion(c *gin.Context) {
 		return
 	}
 
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	userId, _ := c.Get("user_id")
 
@@ -462,12 +458,10 @@ func (kc *KnowledgeController) GetSession(c *gin.Context) {
 		return
 	}
 
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	userId, _ := c.Get("user_id")
 
@@ -511,12 +505,10 @@ func (kc *KnowledgeController) CreateOrJoinSession(c *gin.Context) {
 		return
 	}
 
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	userId, _ := c.Get("user_id")
 
@@ -582,12 +574,10 @@ func (kc *KnowledgeController) GetParticipants(c *gin.Context) {
 		return
 	}
 
-	tenantIDValue, exists := c.Get("tenant_id")
-	if !exists || tenantIDValue == nil {
-		common.Fail(c, 1001, "租户上下文不存在")
+	tenantID, ok := kc.resolveTenantID(c)
+	if !ok {
 		return
 	}
-	tenantID := tenantIDValue.(int)
 
 	sessions, err := kc.knowledgeService.ListParticipants(c.Request.Context(), id, tenantID)
 	if err != nil {
