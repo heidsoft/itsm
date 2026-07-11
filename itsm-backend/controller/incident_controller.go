@@ -56,6 +56,20 @@ func NewIncidentController(
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents [post]
+
+func (c *IncidentController) resolveTenantID(ctx *gin.Context) (int, bool) {
+	tenantID, err := middleware.ResolveRequestTenantID(ctx)
+	if err == nil {
+		return tenantID, true
+	}
+	c.logger.Errorw("Failed to resolve tenant ID", "error", err)
+	if middleware.AbortIfTenantError(ctx, err) {
+		return 0, false
+	}
+	common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	return 0, false
+}
+
 func (c *IncidentController) CreateIncident(ctx *gin.Context) {
 	var req dto.CreateIncidentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -64,10 +78,8 @@ func (c *IncidentController) CreateIncident(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -107,9 +119,8 @@ func (c *IncidentController) GetIncident(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	response, err := c.incidentService.GetIncident(ctx.Request.Context(), id, tenantID)
@@ -183,10 +194,8 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 		}
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -241,9 +250,8 @@ func (c *IncidentController) UpdateIncident(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	response, err := c.incidentService.UpdateIncident(ctx.Request.Context(), id, &req, tenantID)
@@ -290,9 +298,8 @@ func (c *IncidentController) DeleteIncident(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	err = c.incidentService.DeleteIncident(ctx.Request.Context(), id, tenantID)
@@ -329,9 +336,8 @@ func (c *IncidentController) EscalateIncident(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	response, err := c.incidentService.EscalateIncident(ctx.Request.Context(), &req, tenantID)
@@ -367,9 +373,8 @@ func (c *IncidentController) GetIncidentMonitoring(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	response, err := c.monitoringService.GenerateIncidentReport(ctx.Request.Context(), &req, tenantID)
@@ -401,9 +406,8 @@ func (c *IncidentController) AnalyzeIncidentImpact(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	analysis, err := c.monitoringService.AnalyzeIncidentImpact(ctx.Request.Context(), id, tenantID)
@@ -439,10 +443,8 @@ func (c *IncidentController) GetIncidentEvents(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -475,10 +477,8 @@ func (c *IncidentController) GetIncidentAlerts(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -511,9 +511,8 @@ func (c *IncidentController) GetIncidentMetrics(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	metrics, err := c.incidentService.GetIncidentMetrics(ctx.Request.Context(), id, tenantID)
@@ -535,10 +534,8 @@ func (c *IncidentController) GetIncidentMetrics(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/stats [get]
 func (c *IncidentController) GetIncidentStats(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -571,9 +568,8 @@ func (c *IncidentController) CreateIncidentEvent(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	response, err := c.incidentService.CreateIncidentEvent(ctx.Request.Context(), &req, tenantID)
@@ -605,9 +601,8 @@ func (c *IncidentController) CreateIncidentAlert(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	response, err := c.alertingService.CreateIncidentAlert(ctx.Request.Context(), &req, tenantID)
@@ -769,10 +764,8 @@ func (c *IncidentController) AcknowledgeAlert(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -816,7 +809,10 @@ func (c *IncidentController) ResolveAlert(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := middleware.GetTenantID(ctx)
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
+		return
+	}
 	err = c.alertingService.ResolveAlert(ctx.Request.Context(), id, userID, tenantID)
 	if err != nil {
 		if err.Error() == "alert not found" {
@@ -846,9 +842,8 @@ func (c *IncidentController) GetActiveAlerts(ctx *gin.Context) {
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(ctx.DefaultQuery("size", "10"))
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	alerts, total, err := c.alertingService.GetActiveAlerts(ctx.Request.Context(), tenantID, page, size)
@@ -898,9 +893,8 @@ func (c *IncidentController) GetAlertStatistics(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 	statistics, err := c.alertingService.GetAlertStatistics(ctx.Request.Context(), tenantID, startTime, endTime)
@@ -973,10 +967,8 @@ func (c *IncidentController) GetRootCause(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1025,10 +1017,8 @@ func (c *IncidentController) UpdateRootCause(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1067,10 +1057,8 @@ func (c *IncidentController) GetImpactAssessment(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1119,10 +1107,8 @@ func (c *IncidentController) UpdateImpactAssessment(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1161,10 +1147,8 @@ func (c *IncidentController) GetClassification(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1217,10 +1201,8 @@ func (c *IncidentController) UpdateClassification(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1262,10 +1244,8 @@ func (c *IncidentController) GetIncidentComments(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -1361,10 +1341,8 @@ func (c *IncidentController) CreateIncidentComment(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
