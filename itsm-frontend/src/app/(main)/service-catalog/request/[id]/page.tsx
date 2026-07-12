@@ -166,17 +166,17 @@ export default function ServiceCatalogRequestPage() {
             <Form.Item name="quantity" label="数量" initialValue={1}>
               <Input type="number" min={1} max={100} />
             </Form.Item>
-            <Form.Item name="expected_at" label="期望交付时间">
+            <Form.Item name="expectedAt" label="期望交付时间">
               <DatePicker showTime style={{ width: '100%' }} />
             </Form.Item>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="cost_center" label="成本中心">
+            <Form.Item name="costCenter" label="成本中心">
               <Input placeholder="例如 CC-1001" />
             </Form.Item>
             <Form.Item
-              name="data_classification"
+              name="dataClassification"
               label="数据分级"
               initialValue="internal"
             >
@@ -191,14 +191,14 @@ export default function ServiceCatalogRequestPage() {
             </Form.Item>
           </div>
 
-          <Form.Item name="needs_public_ip" valuePropName="checked">
+          <Form.Item name="needsPublicIp" valuePropName="checked">
             <Checkbox>需要公网 IP</Checkbox>
           </Form.Item>
 
           <Form.Item
-            name="source_ip_whitelist"
+            name="sourceIpWhitelist"
             label="来源 IP 白名单（多个以英文逗号分隔）"
-            dependencies={['needs_public_ip']}
+            dependencies={['needsPublicIp']}
           >
             <Input placeholder="例如 1.2.3.4, 10.0.0.0/8" />
           </Form.Item>
@@ -206,7 +206,7 @@ export default function ServiceCatalogRequestPage() {
           <Divider />
 
           <Form.Item
-            name="expire_at"
+            name="expireAt"
             label="资源过期时间（到期自动回收）"
             extra="若不填写，则按服务目录默认策略"
           >
@@ -218,7 +218,7 @@ export default function ServiceCatalogRequestPage() {
           </Form.Item>
 
           <Form.Item
-            name="compliance_ack"
+            name="complianceAck"
             valuePropName="checked"
             rules={[
               {

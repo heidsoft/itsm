@@ -94,7 +94,9 @@ export interface ImpactAnalysisItem {
 
 // 影响分析响应
 export interface ImpactAnalysisResponse {
+  sourceCiId: number;
   targetCi: TopologyNode;
+  graph: TopologyGraph;
   upstreamImpact: ImpactAnalysisItem[];
   downstreamImpact: ImpactAnalysisItem[];
   criticalDependencies: ImpactAnalysisItem[];
@@ -102,6 +104,7 @@ export interface ImpactAnalysisResponse {
   affectedIncidents: AffectedIncident[];
   riskLevel: 'critical' | 'high' | 'medium' | 'low';
   summary: string;
+  totalImpacted: number;
 }
 
 // 受影响工单
@@ -155,7 +158,10 @@ export interface RelationshipTypeInfo {
 export const CIRelationshipAPI = {
   // 获取关系类型列表
   async getRelationshipTypes(): Promise<RelationshipTypeInfo[]> {
-    return httpClient.get('/api/v1/configuration-items/relationship-types');
+	const response = await httpClient.get<RelationshipTypeInfo[] | { types: RelationshipTypeInfo[] }>(
+	  '/api/v1/configuration-items/relationship-types'
+	);
+	return Array.isArray(response) ? response : response.types ?? [];
   },
 
   // 创建关系
@@ -163,9 +169,8 @@ export const CIRelationshipAPI = {
     return httpClient.post('/api/v1/configuration-items/relationships', data);
   },
 
-  // 更新关系（后端暂无此路由，预留）
   async updateRelationship(id: number, data: UpdateRelationshipRequest): Promise<CIRelationship> {
-    return httpClient.patch(`/api/v1/configuration-items/relationships/${id}`, data);
+	return httpClient.put(`/api/v1/configuration-items/relationships/${id}`, data);
   },
 
   // 删除关系
@@ -188,15 +193,11 @@ export const CIRelationshipAPI = {
     totalOutgoing: number;
     totalIncoming: number;
   }> {
-    const params = new URLSearchParams();
-    params.append('ci_id', String(ciId));
-    if (options?.relationshipType) params.append('relationship_type', options.relationshipType);
-    if (options?.activeOnly) params.append('active_only', 'true');
-
-    const list: CIRelationship[] = await httpClient.get(
-      `/api/v1/configuration-items/relationships?${params.toString()}`
-    );
-    const arr = Array.isArray(list) ? list : [];
+	const list = await httpClient.get<CIRelationship[]>(
+	  `/api/v1/configuration-items/${ciId}/relationships`,
+	  options?.relationshipType ? { relationshipType: options.relationshipType } : undefined
+	);
+	const arr = Array.isArray(list) ? list : [];
     const outgoing = arr.filter(r => r.sourceCiId === ciId);
     const incoming = arr.filter(r => r.targetCiId === ciId);
     return {
@@ -242,8 +243,8 @@ export const CIRelationshipAPI = {
   // 获取可用的目标CI列表（通过 getCIs 搜索）
   async getAvailableCIs(ciId: number, search?: string): Promise<TopologyNode[]> {
     const { CMDBApi } = await import('./cmdb-api');
-    const result = await CMDBApi.getCIs(search ? { ciType: undefined, status: undefined } : undefined);
-    const items = result.items ?? result.cis ?? [];
+	const result = await CMDBApi.getCIs({ search, size: 200 });
+	const items = result.items ?? [];
     const filtered = items.filter((ci: any) => ci.id !== ciId);
     return filtered.map((ci: any) => ({
       id: ci.id,

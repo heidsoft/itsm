@@ -15,6 +15,12 @@ type bpmnTenantIDKey struct{}
 // packages that store values under the same context.
 var BPMNTenantIDContextKey = bpmnTenantIDKey{}
 
+type bpmnUserIDKey struct{}
+
+// BPMNUserIDContextKey carries the authenticated actor into workflow services.
+// It must only be populated from trusted authentication middleware.
+var BPMNUserIDContextKey = bpmnUserIDKey{}
+
 // ServiceTaskHandlerInterface 服务任务处理器接口
 // 定义所有服务任务处理器需要实现的方法
 type ServiceTaskHandlerInterface interface {

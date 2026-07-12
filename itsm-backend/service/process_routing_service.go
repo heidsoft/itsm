@@ -215,16 +215,96 @@ func (s *ProcessRoutingService) evaluateConditions(conditions map[string]interfa
 			continue
 		}
 
-		actual, exists := variables[key]
+		actual, exists := routingLookupValue(variables, key)
 		if !exists {
+			if operators, ok := expected.(map[string]interface{}); ok {
+				if want, hasExists := operators["exists"].(bool); hasExists && !want {
+					continue
+				}
+			}
 			return false
 		}
-		// Simple equality check - can be extended for complex expressions
-		if fmt.Sprintf("%v", actual) != fmt.Sprintf("%v", expected) {
+		if operators, ok := expected.(map[string]interface{}); ok {
+			if !routingMatchesOperators(actual, operators) {
+				return false
+			}
+			continue
+		}
+		if !routingEqual(actual, expected) {
 			return false
 		}
 	}
 	return true
+}
+
+func routingLookupValue(values map[string]interface{}, path string) (interface{}, bool) {
+	var current interface{} = values
+	for _, part := range strings.Split(path, ".") {
+		object, ok := current.(map[string]interface{})
+		if !ok {
+			return nil, false
+		}
+		current, ok = object[part]
+		if !ok {
+			return nil, false
+		}
+	}
+	return current, true
+}
+
+func routingMatchesOperators(actual interface{}, operators map[string]interface{}) bool {
+	for operator, expected := range operators {
+		switch operator {
+		case "eq":
+			if !routingEqual(actual, expected) {
+				return false
+			}
+		case "ne":
+			if routingEqual(actual, expected) {
+				return false
+			}
+		case "in", "notIn":
+			items, ok := expected.([]interface{})
+			if !ok {
+				return false
+			}
+			found := false
+			for _, item := range items {
+				if routingEqual(actual, item) {
+					found = true
+					break
+				}
+			}
+			if (operator == "in" && !found) || (operator == "notIn" && found) {
+				return false
+			}
+		case "gt", "gte", "lt", "lte":
+			a, aok := routingValueToFloat64(actual)
+			b, bok := routingValueToFloat64(expected)
+			if !aok || !bok {
+				return false
+			}
+			if operator == "gt" && !(a > b) || operator == "gte" && !(a >= b) || operator == "lt" && !(a < b) || operator == "lte" && !(a <= b) {
+				return false
+			}
+		case "exists":
+			if want, ok := expected.(bool); !ok || !want {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+func routingEqual(actual, expected interface{}) bool {
+	if a, ok := routingValueToFloat64(actual); ok {
+		if b, ok := routingValueToFloat64(expected); ok {
+			return a == b
+		}
+	}
+	return fmt.Sprint(actual) == fmt.Sprint(expected)
 }
 
 func (s *ProcessRoutingService) compareNumericCondition(actualValue, expectedValue interface{}, compare func(actual, threshold float64) bool) bool {

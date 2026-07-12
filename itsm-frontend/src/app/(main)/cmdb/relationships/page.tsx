@@ -26,11 +26,11 @@ export default function RelationshipsPage() {
       setLoading(true);
       try {
         const response = await CMDBApi.getCIs({ limit: 200 });
-        const items = response?.items ?? response?.cis ?? [];
+		const items = response?.items ?? [];
         const options = items.map((item) => ({
           id: item.id,
           name: item.name,
-          type: item.ciType ?? item.ciType ?? (item as any).type ?? '配置项',
+		  type: item.type || '配置项',
         }));
         if (!mounted) return;
         setCis(options);

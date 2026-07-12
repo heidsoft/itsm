@@ -117,7 +117,7 @@ export default function CloudAccountPage() {
     try {
       const values = await editForm.validateFields();
       // 使用 CloudAccount ID 进行更新
-      await CMDBApi.updateCI(editingAccount.id, {
+	  await CMDBApi.updateCloudAccount(editingAccount.id, {
         ...values,
       });
       message.success('云账号已更新');
@@ -147,7 +147,7 @@ export default function CloudAccountPage() {
   const handleToggleStatus = async (record: CloudAccount) => {
     try {
       // 调用更新接口切换状态
-      await CMDBApi.updateCI(record.id, {
+	  await CMDBApi.updateCloudAccount(record.id, {
         isActive: !record.isActive,
       });
       message.success(record.isActive ? '云账号已停用' : '云账号已启用');

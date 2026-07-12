@@ -14,7 +14,6 @@ export const CMDB_KEYS = {
   ciDetail: (id: string) => [...CMDB_KEYS.cis(), 'detail', id] as const,
   ciRelationships: (id: string) => [...CMDB_KEYS.cis(), 'relationships', id] as const,
   ciChanges: (id: string) => [...CMDB_KEYS.cis(), 'changes', id] as const,
-  ciHealth: (id: string) => [...CMDB_KEYS.cis(), 'health', id] as const,
   graph: (query: GraphQuery) => [...CMDB_KEYS.all, 'graph', query] as const,
   impactAnalysis: (ciId: string) => [...CMDB_KEYS.all, 'impact-analysis', ciId] as const,
   ciTypes: () => [...CMDB_KEYS.all, 'ci-types'] as const,
@@ -94,15 +93,6 @@ export function useCIChangeHistoryQuery(
     queryFn: () => CMDBApi.getCIChangeHistory(Number(ciId), params),
     enabled: enabled && !!ciId,
     staleTime: 60000,
-  });
-}
-
-export function useCIHealthQuery(ciId: string, enabled = true) {
-  return useQuery({
-    queryKey: CMDB_KEYS.ciHealth(ciId),
-    queryFn: () => CMDBApi.getCIHealth(ciId),
-    enabled: enabled && !!ciId,
-    staleTime: 300000,
   });
 }
 
@@ -233,7 +223,6 @@ const CMDBHooks = {
   useImpactAnalysisQuery,
   useCITypesQuery,
   useCIChangeHistoryQuery,
-  useCIHealthQuery,
   useCMDBStatsQuery,
   useDiscoveryRulesQuery,
   useDiscoveryHistoryQuery,

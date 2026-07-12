@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 )
 
@@ -20,11 +21,11 @@ type ToolDefinition struct {
 type ToolRegistry struct {
 	rag      *RAGService
 	incident *IncidentService
-	cmdb     *CMDBService
+	cmdb     *ConfigurationItemService
 	client   *ent.Client
 }
 
-func NewToolRegistry(rag *RAGService, incident *IncidentService, cmdb *CMDBService, client *ent.Client) *ToolRegistry {
+func NewToolRegistry(rag *RAGService, incident *IncidentService, cmdb *ConfigurationItemService, client *ent.Client) *ToolRegistry {
 	return &ToolRegistry{rag: rag, incident: incident, cmdb: cmdb, client: client}
 }
 
@@ -157,9 +158,12 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		if v, ok := args["offset"].(float64); ok {
 			offset = int(v)
 		}
-		req := &ListCIsRequest{Limit: limit, Offset: offset}
-		items, _, err := t.cmdb.ListCIs(ctx, req)
-		return items, err
+		page := offset/limit + 1
+		result, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: page, Size: limit})
+		if err != nil {
+			return nil, err
+		}
+		return result.Items, nil
 	case "create_ticket":
 		return nil, fmt.Errorf("tool %s requires approval and is not implemented", name)
 	case "update_ticket":

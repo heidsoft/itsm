@@ -121,13 +121,41 @@ export interface UserTaskListResponse {
   pageSize: number;
 }
 
-export interface ClaimTaskRequest {
-  userId: number;
-}
-
 export interface CompleteTaskRequest {
   variables?: Record<string, unknown>;
   comment?: string;
+}
+
+export interface SubmitApprovalDecisionRequest {
+  action: 'approve' | 'reject';
+  comment?: string;
+  variables?: Record<string, unknown>;
+}
+
+export interface ProcessApprovalDecision {
+  id: number;
+  processInstanceId: number;
+  processInstanceKey: string;
+  processTaskId: number;
+  taskId: string;
+  processDefinitionKey: string;
+  nodeKey: string;
+  businessType?: string;
+  businessId?: string;
+  actorId: number;
+  actorName?: string;
+  action: 'approve' | 'reject' | 'delegate' | 'transfer' | 'add_approver' | 'withdraw' | 'timeout' | 'system_decision';
+  decision: string;
+  comment?: string;
+  variablesSnapshot?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface LegacyApprovalMigrationResult {
+  workflowId: number;
+  processDefinitionKey: string;
+  bpmnXml?: string;
+  skipped: boolean;
 }
 
 export interface AssignTaskRequest {
@@ -252,6 +280,14 @@ export interface ChangeLogListResponse {
 
 export class BPMNWorkflowApi {
   private static readonly baseUrl = '/api/v1/bpmn';
+
+  static async migrateLegacyApprovalWorkflow(workflowId: number, dryRun = true): Promise<LegacyApprovalMigrationResult> {
+    const res = await httpClient.post<{ data?: LegacyApprovalMigrationResult } | LegacyApprovalMigrationResult>(
+      `/api/v1/approval-workflows/${workflowId}/migrate-to-bpmn?dryRun=${dryRun}`,
+      {}
+    );
+    return (res as { data?: LegacyApprovalMigrationResult }).data ?? (res as LegacyApprovalMigrationResult);
+  }
 
   // ==================== 流程定义管理 ====================
 
@@ -505,10 +541,10 @@ export class BPMNWorkflowApi {
   /**
    * 签收任务
    */
-  static async claimTask(id: string, data: ClaimTaskRequest): Promise<void> {
+  static async claimTask(id: string): Promise<void> {
     await httpClient.post(
       `${this.baseUrl}/tasks/${encodeURIComponent(id)}/claim`,
-      data
+      {}
     );
   }
 
@@ -530,6 +566,24 @@ export class BPMNWorkflowApi {
       `${this.baseUrl}/tasks/${encodeURIComponent(id)}/complete`,
       data ?? {}
     );
+  }
+
+  /** 提交结构化审批决策。审批人身份由登录上下文确定。 */
+  static async submitApprovalDecision(
+    id: string,
+    data: SubmitApprovalDecisionRequest
+  ): Promise<void> {
+    await httpClient.post(
+      `${this.baseUrl}/tasks/${encodeURIComponent(id)}/decisions`,
+      data
+    );
+  }
+
+  static async getApprovalHistory(processInstanceKey: string): Promise<ProcessApprovalDecision[]> {
+    const res = await httpClient.get<{ data?: ProcessApprovalDecision[] } | ProcessApprovalDecision[]>(
+      `${this.baseUrl}/process-instances/${encodeURIComponent(processInstanceKey)}/approval-history`
+    );
+    return (res as { data?: ProcessApprovalDecision[] }).data ?? (res as ProcessApprovalDecision[]);
   }
 
   /**

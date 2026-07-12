@@ -152,9 +152,11 @@ type ImpactAnalysisItem struct {
 	AffectedCount    int                `json:"affectedCount"` // 受影响的工单/事件数量
 }
 
-// ImpactAnalysisResponse 影响分析响应
-type ImpactAnalysisResponse struct {
+// CIImpactAnalysisResponse 影响分析响应。拓扑与影响分析共用 TopologyNode、TopologyEdge 和 TopologyGraph。
+type CIImpactAnalysisResponse struct {
+	SourceCIID           int                  `json:"sourceCiId"`
 	TargetCI             *TopologyNode        `json:"targetCi"`
+	Graph                *TopologyGraph       `json:"graph"`
 	UpstreamImpact       []ImpactAnalysisItem `json:"upstreamImpact"`
 	DownstreamImpact     []ImpactAnalysisItem `json:"downstreamImpact"`
 	CriticalDependencies []ImpactAnalysisItem `json:"criticalDependencies"`
@@ -162,7 +164,11 @@ type ImpactAnalysisResponse struct {
 	AffectedIncidents    []AffectedIncident   `json:"affectedIncidents"`
 	RiskLevel            string               `json:"riskLevel"`
 	Summary              string               `json:"summary"`
+	TotalImpacted        int                  `json:"totalImpacted"`
 }
+
+// ImpactAnalysisResponse 保留类型别名，避免内部调用方产生第二套响应结构。
+type ImpactAnalysisResponse = CIImpactAnalysisResponse
 
 // AffectedTicket 受影响的工单
 type AffectedTicket struct {

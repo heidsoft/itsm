@@ -70,6 +70,7 @@ import (
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/permissiondefinition"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/processapprovaldecision"
 	"itsm-backend/ent/processauditlog"
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
@@ -255,6 +256,8 @@ type Client struct {
 	PermissionDefinition *PermissionDefinitionClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
+	// ProcessApprovalDecision is the client for interacting with the ProcessApprovalDecision builders.
+	ProcessApprovalDecision *ProcessApprovalDecisionClient
 	// ProcessAuditLog is the client for interacting with the ProcessAuditLog builders.
 	ProcessAuditLog *ProcessAuditLogClient
 	// ProcessBinding is the client for interacting with the ProcessBinding builders.
@@ -435,6 +438,7 @@ func (c *Client) init() {
 	c.Permission = NewPermissionClient(c.config)
 	c.PermissionDefinition = NewPermissionDefinitionClient(c.config)
 	c.Problem = NewProblemClient(c.config)
+	c.ProcessApprovalDecision = NewProcessApprovalDecisionClient(c.config)
 	c.ProcessAuditLog = NewProcessAuditLogClient(c.config)
 	c.ProcessBinding = NewProcessBindingClient(c.config)
 	c.ProcessDefinition = NewProcessDefinitionClient(c.config)
@@ -641,6 +645,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Permission:                  NewPermissionClient(cfg),
 		PermissionDefinition:        NewPermissionDefinitionClient(cfg),
 		Problem:                     NewProblemClient(cfg),
+		ProcessApprovalDecision:     NewProcessApprovalDecisionClient(cfg),
 		ProcessAuditLog:             NewProcessAuditLogClient(cfg),
 		ProcessBinding:              NewProcessBindingClient(cfg),
 		ProcessDefinition:           NewProcessDefinitionClient(cfg),
@@ -774,6 +779,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Permission:                  NewPermissionClient(cfg),
 		PermissionDefinition:        NewPermissionDefinitionClient(cfg),
 		Problem:                     NewProblemClient(cfg),
+		ProcessApprovalDecision:     NewProcessApprovalDecisionClient(cfg),
 		ProcessAuditLog:             NewProcessAuditLogClient(cfg),
 		ProcessBinding:              NewProcessBindingClient(cfg),
 		ProcessDefinition:           NewProcessDefinitionClient(cfg),
@@ -872,13 +878,13 @@ func (c *Client) Use(hooks ...Hook) {
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
 		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
-		c.PermissionDefinition, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
-		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
-		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
-		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
-		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
+		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
+		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
 		c.ServiceRequestApproval, c.StandardChange, c.Survey, c.SurveyResponse,
 		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
 		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
@@ -909,13 +915,13 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
 		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
-		c.PermissionDefinition, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
-		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
-		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
-		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
-		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
+		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
+		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
 		c.ServiceRequestApproval, c.StandardChange, c.Survey, c.SurveyResponse,
 		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
 		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
@@ -1049,6 +1055,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.PermissionDefinition.mutate(ctx, m)
 	case *ProblemMutation:
 		return c.Problem.mutate(ctx, m)
+	case *ProcessApprovalDecisionMutation:
+		return c.ProcessApprovalDecision.mutate(ctx, m)
 	case *ProcessAuditLogMutation:
 		return c.ProcessAuditLog.mutate(ctx, m)
 	case *ProcessBindingMutation:
@@ -10387,6 +10395,139 @@ func (c *ProblemClient) mutate(ctx context.Context, m *ProblemMutation) (Value, 
 	}
 }
 
+// ProcessApprovalDecisionClient is a client for the ProcessApprovalDecision schema.
+type ProcessApprovalDecisionClient struct {
+	config
+}
+
+// NewProcessApprovalDecisionClient returns a client for the ProcessApprovalDecision from the given config.
+func NewProcessApprovalDecisionClient(c config) *ProcessApprovalDecisionClient {
+	return &ProcessApprovalDecisionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `processapprovaldecision.Hooks(f(g(h())))`.
+func (c *ProcessApprovalDecisionClient) Use(hooks ...Hook) {
+	c.hooks.ProcessApprovalDecision = append(c.hooks.ProcessApprovalDecision, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `processapprovaldecision.Intercept(f(g(h())))`.
+func (c *ProcessApprovalDecisionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProcessApprovalDecision = append(c.inters.ProcessApprovalDecision, interceptors...)
+}
+
+// Create returns a builder for creating a ProcessApprovalDecision entity.
+func (c *ProcessApprovalDecisionClient) Create() *ProcessApprovalDecisionCreate {
+	mutation := newProcessApprovalDecisionMutation(c.config, OpCreate)
+	return &ProcessApprovalDecisionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProcessApprovalDecision entities.
+func (c *ProcessApprovalDecisionClient) CreateBulk(builders ...*ProcessApprovalDecisionCreate) *ProcessApprovalDecisionCreateBulk {
+	return &ProcessApprovalDecisionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProcessApprovalDecisionClient) MapCreateBulk(slice any, setFunc func(*ProcessApprovalDecisionCreate, int)) *ProcessApprovalDecisionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProcessApprovalDecisionCreateBulk{err: fmt.Errorf("calling to ProcessApprovalDecisionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProcessApprovalDecisionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProcessApprovalDecisionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProcessApprovalDecision.
+func (c *ProcessApprovalDecisionClient) Update() *ProcessApprovalDecisionUpdate {
+	mutation := newProcessApprovalDecisionMutation(c.config, OpUpdate)
+	return &ProcessApprovalDecisionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProcessApprovalDecisionClient) UpdateOne(_m *ProcessApprovalDecision) *ProcessApprovalDecisionUpdateOne {
+	mutation := newProcessApprovalDecisionMutation(c.config, OpUpdateOne, withProcessApprovalDecision(_m))
+	return &ProcessApprovalDecisionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProcessApprovalDecisionClient) UpdateOneID(id int) *ProcessApprovalDecisionUpdateOne {
+	mutation := newProcessApprovalDecisionMutation(c.config, OpUpdateOne, withProcessApprovalDecisionID(id))
+	return &ProcessApprovalDecisionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProcessApprovalDecision.
+func (c *ProcessApprovalDecisionClient) Delete() *ProcessApprovalDecisionDelete {
+	mutation := newProcessApprovalDecisionMutation(c.config, OpDelete)
+	return &ProcessApprovalDecisionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProcessApprovalDecisionClient) DeleteOne(_m *ProcessApprovalDecision) *ProcessApprovalDecisionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProcessApprovalDecisionClient) DeleteOneID(id int) *ProcessApprovalDecisionDeleteOne {
+	builder := c.Delete().Where(processapprovaldecision.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProcessApprovalDecisionDeleteOne{builder}
+}
+
+// Query returns a query builder for ProcessApprovalDecision.
+func (c *ProcessApprovalDecisionClient) Query() *ProcessApprovalDecisionQuery {
+	return &ProcessApprovalDecisionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProcessApprovalDecision},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProcessApprovalDecision entity by its id.
+func (c *ProcessApprovalDecisionClient) Get(ctx context.Context, id int) (*ProcessApprovalDecision, error) {
+	return c.Query().Where(processapprovaldecision.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProcessApprovalDecisionClient) GetX(ctx context.Context, id int) *ProcessApprovalDecision {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProcessApprovalDecisionClient) Hooks() []Hook {
+	return c.hooks.ProcessApprovalDecision
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProcessApprovalDecisionClient) Interceptors() []Interceptor {
+	return c.inters.ProcessApprovalDecision
+}
+
+func (c *ProcessApprovalDecisionClient) mutate(ctx context.Context, m *ProcessApprovalDecisionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProcessApprovalDecisionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProcessApprovalDecisionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProcessApprovalDecisionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProcessApprovalDecisionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProcessApprovalDecision mutation op: %q", m.Op())
+	}
+}
+
 // ProcessAuditLogClient is a client for the ProcessAuditLog schema.
 type ProcessAuditLogClient struct {
 	config
@@ -19429,18 +19570,19 @@ type (
 		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
 		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
 		Notification, NotificationPreference, PasswordResetToken, Permission,
-		PermissionDefinition, Problem, ProcessAuditLog, ProcessBinding,
-		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
-		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
-		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
-		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
-		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceRequest,
-		ServiceRequestApproval, StandardChange, Survey, SurveyResponse, SystemConfig,
-		Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
-		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
-		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
+		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
+		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
+		ServiceCatalogItem, ServiceRequest, ServiceRequestApproval, StandardChange,
+		Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant, TenantInstallation,
+		Ticket, TicketApproval, TicketAssignmentRule, TicketAttachment,
+		TicketAutomationRule, TicketCC, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketView,
+		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
+		WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
@@ -19455,17 +19597,18 @@ type (
 		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
 		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
 		Notification, NotificationPreference, PasswordResetToken, Permission,
-		PermissionDefinition, Problem, ProcessAuditLog, ProcessBinding,
-		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
-		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
-		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
-		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
-		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceRequest,
-		ServiceRequestApproval, StandardChange, Survey, SurveyResponse, SystemConfig,
-		Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
-		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
-		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
+		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
+		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
+		ServiceCatalogItem, ServiceRequest, ServiceRequestApproval, StandardChange,
+		Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant, TenantInstallation,
+		Ticket, TicketApproval, TicketAssignmentRule, TicketAttachment,
+		TicketAutomationRule, TicketCC, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketView,
+		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
+		WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )

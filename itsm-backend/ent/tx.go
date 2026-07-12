@@ -130,6 +130,8 @@ type Tx struct {
 	PermissionDefinition *PermissionDefinitionClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
+	// ProcessApprovalDecision is the client for interacting with the ProcessApprovalDecision builders.
+	ProcessApprovalDecision *ProcessApprovalDecisionClient
 	// ProcessAuditLog is the client for interacting with the ProcessAuditLog builders.
 	ProcessAuditLog *ProcessAuditLogClient
 	// ProcessBinding is the client for interacting with the ProcessBinding builders.
@@ -430,6 +432,7 @@ func (tx *Tx) init() {
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.PermissionDefinition = NewPermissionDefinitionClient(tx.config)
 	tx.Problem = NewProblemClient(tx.config)
+	tx.ProcessApprovalDecision = NewProcessApprovalDecisionClient(tx.config)
 	tx.ProcessAuditLog = NewProcessAuditLogClient(tx.config)
 	tx.ProcessBinding = NewProcessBindingClient(tx.config)
 	tx.ProcessDefinition = NewProcessDefinitionClient(tx.config)

@@ -41,7 +41,7 @@ const CreateCIPage: React.FC = () => {
   useEffect(() => {
     const loadTypes = async () => {
       try {
-        const res = await CMDBApi.getTypes();
+		const res = await CMDBApi.getCITypes();
         setTypes(res || []);
       } catch {
         message.error(t('cmdb.loadCITypesFailed'));

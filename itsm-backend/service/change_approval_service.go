@@ -115,9 +115,24 @@ func (s *ChangeApprovalService) UpdateChangeApproval(ctx context.Context, approv
 		s.logger.Warnw("Failed to get approver info", "error", err, "user_id", approverID)
 	}
 
-	// 如果审批通过，更新变更状态
-	if req.Status == dto.ChangeApprovalStatusApproved {
-		// 检查是否所有必需审批都已完成
+	// 将审批决定同步回审批链。
+	// 修复：此前审批只写入 change_approvals 历史表，change_approval_chains 的状态从未被更新，
+	// 导致 checkAndUpdateChangeStatus 永远统计不到已批准节点，变更状态无法流转到 approved。
+	if req.Status == dto.ChangeApprovalStatusApproved || req.Status == dto.ChangeApprovalStatusRejected {
+		chainStatus := "approved"
+		if req.Status == dto.ChangeApprovalStatusRejected {
+			chainStatus = "rejected"
+		}
+		if _, serr := s.rawDB.ExecContext(ctx,
+			`UPDATE change_approval_chains SET status = $1 WHERE change_id = $2 AND approver_id = $3 AND status = 'pending'`,
+			chainStatus, changeID, approverID,
+		); serr != nil {
+			s.logger.Warnw("Failed to sync approval chain status", "error", serr, "change_id", changeID, "approver_id", approverID)
+		}
+	}
+
+	// 根据审批决定重新计算并更新变更状态（批准或驳回都需重算）
+	if req.Status == dto.ChangeApprovalStatusApproved || req.Status == dto.ChangeApprovalStatusRejected {
 		if err := s.checkAndUpdateChangeStatus(ctx, changeID, tenantID); err != nil {
 			s.logger.Warnw("Failed to update change status", "error", err, "change_id", changeID)
 		}
@@ -141,10 +156,13 @@ func (s *ChangeApprovalService) UpdateChangeApproval(ctx context.Context, approv
 
 // CreateChangeApprovalWorkflow 创建变更审批工作流
 func (s *ChangeApprovalService) CreateChangeApprovalWorkflow(ctx context.Context, req *dto.ChangeApprovalWorkflowRequest, tenantID int) error {
-	// 验证变更是否存在
-	_, err := s.client.Change.Get(ctx, req.ChangeID)
+	// 验证变更是否存在且属于当前租户（防止跨租户销毁他人审批链，C1 修复）
+	change, err := s.client.Change.Get(ctx, req.ChangeID)
 	if err != nil {
 		return fmt.Errorf("change not found: %w", err)
+	}
+	if change.TenantID != tenantID {
+		return fmt.Errorf("change does not belong to current tenant")
 	}
 
 	// 开始事务
@@ -644,23 +662,40 @@ func (s *ChangeApprovalService) ExecuteChangeRollback(ctx context.Context, chang
 	return response, nil
 }
 
-// checkAndUpdateChangeStatus 检查并更新变更状态
+// checkAndUpdateChangeStatus 根据审批链重新计算并更新变更状态。
+// 规则：
+//   - 任一「必需」审批人驳回 -> 变更整体驳回(rejected)
+//   - 全部「必需」审批人都已批准 -> 变更批准(approved)
+//   - 否则保持现状（仍有待审批节点）
 func (s *ChangeApprovalService) checkAndUpdateChangeStatus(ctx context.Context, changeID, tenantID int) error {
-	// 检查是否所有必需审批都已完成
 	query := `
-		SELECT COUNT(*) as total_required, 
-		       COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count
-		FROM change_approval_chains 
+		SELECT COUNT(*) as total_required,
+		       COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
+		       COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_count
+		FROM change_approval_chains
 		WHERE change_id = $1 AND is_required = true
 	`
 
-	var totalRequired, approvedCount int
-	err := s.rawDB.QueryRowContext(ctx, query, changeID).Scan(&totalRequired, &approvedCount)
+	var totalRequired, approvedCount, rejectedCount int
+	err := s.rawDB.QueryRowContext(ctx, query, changeID).Scan(&totalRequired, &approvedCount, &rejectedCount)
 	if err != nil {
 		return fmt.Errorf("failed to check approval status: %w", err)
 	}
 
-	// 如果所有必需审批都已完成，更新变更状态为已批准
+	// 任一必需审批人驳回，整体驳回
+	if rejectedCount > 0 {
+		_, err = s.client.Change.Update().
+			Where(change.ID(changeID)).
+			SetStatus(string(dto.ChangeStatusRejected)).
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to update change status: %w", err)
+		}
+		s.logger.Infow("Change status updated to rejected", "change_id", changeID)
+		return nil
+	}
+
+	// 所有必需审批人都已批准，更新变更状态为已批准
 	if totalRequired > 0 && totalRequired == approvedCount {
 		_, err = s.client.Change.Update().
 			Where(change.ID(changeID)).

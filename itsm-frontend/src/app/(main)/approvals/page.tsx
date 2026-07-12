@@ -180,12 +180,12 @@ export default function ApprovalsCenterPage() {
     try {
       // 并行请求所有待审批数据
       const [ticketsResp, changesResp, srResp] = await Promise.all([
-        httpClient.get<{ items: any[]; total: number }>('/api/v1/tickets?status=pending&page=1&page_size=20').catch(() => ({ items: [], total: 0 })),
-        httpClient.get<{ items: any[]; total: number }>('/api/v1/changes?status=pending&page=1&page_size=20').catch(() => ({ items: [], total: 0 })),
-        httpClient.get<{ items: any[]; total: number }>('/api/v1/service-requests?status=pending&page=1&page_size=20').catch(() => ({ items: [], total: 0 })),
+        httpClient.get<{ tickets?: any[]; total: number }>('/api/v1/tickets?status=pending&page=1&page_size=20').catch(() => ({ tickets: [], total: 0 })),
+        httpClient.get<{ changes?: any[]; total: number }>('/api/v1/changes?status=pending&page=1&page_size=20').catch(() => ({ changes: [], total: 0 })),
+        httpClient.get<{ items?: any[]; total: number }>('/api/v1/service-requests?status=pending&page=1&page_size=20').catch(() => ({ items: [], total: 0 })),
       ]);
 
-      setTickets((ticketsResp.items || []).map((t: any) => ({
+      setTickets((ticketsResp.tickets || []).map((t: any) => ({
         id: t.id,
         type: 'ticket' as const,
         title: t.title || `工单 #${t.id}`,
@@ -199,7 +199,7 @@ export default function ApprovalsCenterPage() {
         detail: t,
       })));
 
-      setChanges((changesResp.items || []).map((c: any) => ({
+      setChanges((changesResp.changes || []).map((c: any) => ({
         id: c.id,
         type: 'change' as const,
         title: c.title || `变更 #${c.id}`,

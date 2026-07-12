@@ -32,6 +32,7 @@ import {
   Bug
 } from 'lucide-react';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
+import itsmModdleDescriptor from './itsm-moddle-descriptor';
 import gridModule from 'diagram-js/lib/features/grid-snapping';
 
 
@@ -141,6 +142,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       const modeler = new BpmnModeler({
         container: containerRef.current,
         additionalModules,
+        moddleExtensions: { itsm: itsmModdleDescriptor },
         grid: {
           size: 10,
           visible: showGrid

@@ -75,14 +75,22 @@ func (e *BPMNEndEvent) GetType() string { return "EndEvent" }
 
 // BPMNUserTask 用户任务
 type BPMNUserTask struct {
-	ID              string `xml:"id,attr"`
-	Name            string `xml:"name,attr"`
-	Assignee        string `xml:"assignee,attr"`
-	CandidateUsers  string `xml:"candidateUsers,attr"`
-	CandidateGroups string `xml:"candidateGroups,attr"`
-	Priority        int    `xml:"priority,attr"`
-	FormKey         string `xml:"formKey,attr"`
-	DueDate         string `xml:"dueDate,attr"`
+	ID                      string `xml:"id,attr"`
+	Name                    string `xml:"name,attr"`
+	Assignee                string `xml:"assignee,attr"`
+	CandidateUsers          string `xml:"candidateUsers,attr"`
+	CandidateGroups         string `xml:"candidateGroups,attr"`
+	Priority                int    `xml:"priority,attr"`
+	FormKey                 string `xml:"formKey,attr"`
+	DueDate                 string `xml:"dueDate,attr"`
+	TaskPurpose             string `xml:"taskPurpose,attr"`
+	ApprovalMode            string `xml:"approvalMode,attr"`
+	ApprovalThreshold       int    `xml:"approvalThreshold,attr"`
+	RejectStrategy          string `xml:"rejectStrategy,attr"`
+	TimeoutAction           string `xml:"timeoutAction,attr"`
+	AllowDelegate           bool   `xml:"allowDelegate,attr"`
+	AllowAddApprover        bool   `xml:"allowAddApprover,attr"`
+	CommentRequiredOnReject bool   `xml:"commentRequiredOnReject,attr"`
 }
 
 // GetID 获取ID

@@ -74,7 +74,7 @@ export default function TopologyPage() {
   const loadCIList = useCallback(async () => {
     try {
       const result = await CMDBApi.getCIs({});
-      const items = result.items || result.cis || [];
+	  const items = result.items || [];
       setCIList(items.map((ci: any) => ({ id: ci.id, name: ci.name, type: ci.ciType || ci.type })));
     } catch (error) { console.error('Failed to load CI list:', error); }
   }, []);

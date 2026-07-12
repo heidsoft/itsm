@@ -2,11 +2,27 @@ package knowledge
 
 import (
 	"context"
+	"sort"
 	"strings"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
 )
+
+// defaultCategories provides baseline knowledge-base categories so the category
+// dropdown is never empty for a freshly provisioned tenant. The list is always
+// merged with whatever distinct categories already exist in the article table,
+// so adding more categories later does not lose them.
+var defaultCategories = []string{
+	"故障排查",
+	"操作指南",
+	"最佳实践",
+	"变更发布",
+	"安全合规",
+	"常见问题",
+	"工单模板",
+	"流程说明",
+}
 
 type EntRepository struct {
 	client *ent.Client
@@ -128,10 +144,41 @@ func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error 
 }
 
 func (r *EntRepository) GetCategories(ctx context.Context, tenantID int) ([]string, error) {
-	return r.client.KnowledgeArticle.Query().
+	existing, err := r.client.KnowledgeArticle.Query().
 		Where(knowledgearticle.TenantID(tenantID)).
 		GroupBy(knowledgearticle.FieldCategory).
 		Strings(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Merge defaults with whatever already exists, then dedupe and sort.
+	seen := make(map[string]struct{}, len(existing)+len(defaultCategories))
+	merged := make([]string, 0, len(existing)+len(defaultCategories))
+	for _, c := range defaultCategories {
+		c = strings.TrimSpace(c)
+		if c == "" {
+			continue
+		}
+		if _, ok := seen[c]; ok {
+			continue
+		}
+		seen[c] = struct{}{}
+		merged = append(merged, c)
+	}
+	for _, c := range existing {
+		c = strings.TrimSpace(c)
+		if c == "" {
+			continue
+		}
+		if _, ok := seen[c]; ok {
+			continue
+		}
+		seen[c] = struct{}{}
+		merged = append(merged, c)
+	}
+	sort.Slice(merged, func(i, j int) bool { return merged[i] < merged[j] })
+	return merged, nil
 }
 
 func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, error) {

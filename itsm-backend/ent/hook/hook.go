@@ -716,6 +716,18 @@ func (f ProblemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProblemMutation", m)
 }
 
+// The ProcessApprovalDecisionFunc type is an adapter to allow the use of ordinary
+// function as ProcessApprovalDecision mutator.
+type ProcessApprovalDecisionFunc func(context.Context, *ent.ProcessApprovalDecisionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessApprovalDecisionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessApprovalDecisionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessApprovalDecisionMutation", m)
+}
+
 // The ProcessAuditLogFunc type is an adapter to allow the use of ordinary
 // function as ProcessAuditLog mutator.
 type ProcessAuditLogFunc func(context.Context, *ent.ProcessAuditLogMutation) (ent.Value, error)

@@ -55,6 +55,21 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 		targetTenantID = req.TenantID
 	}
 
+	// 角色越权防护（C3 修复）：调用者不能分配高于自身权限的角色
+	callerRole := c.GetString("role")
+	if strings.TrimSpace(req.Role) != "" {
+		targetRole := normalizeRole(req.Role)
+		if roleRank(targetRole) > roleRank(callerRole) {
+			common.Forbidden(c, "无权限分配高于自身角色的用户角色")
+			return
+		}
+		// 跨租户创建用户仅允许 super_admin（MSP 场景）
+		if targetTenantID != tenantID && callerRole != "super_admin" {
+			common.Forbidden(c, "无权限跨租户创建用户")
+			return
+		}
+	}
+
 	user, err := uc.userService.CreateUser(c.Request.Context(), &req, targetTenantID)
 	if err != nil {
 		uc.logger.Errorf("创建用户失败: %v", err)
@@ -191,6 +206,15 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 	if tenantID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
+	}
+
+	// 角色越权防护（C3 修复）
+	callerRole := c.GetString("role")
+	if strings.TrimSpace(req.Role) != "" {
+		if roleRank(normalizeRole(req.Role)) > roleRank(callerRole) {
+			common.Forbidden(c, "无权限分配高于自身角色的用户角色")
+			return
+		}
 	}
 
 	user, err := uc.userService.UpdateUser(c.Request.Context(), id, &req, tenantID)
@@ -462,4 +486,31 @@ func (uc *UserController) SearchUsers(c *gin.Context) {
 	}
 
 	common.Success(c, users)
+}
+
+// roleRank 返回角色权限层级，数值越大权限越高
+func roleRank(role string) int {
+	switch strings.ToLower(strings.TrimSpace(role)) {
+	case "super_admin":
+		return 5
+	case "admin":
+		return 4
+	case "manager":
+		return 3
+	case "agent":
+		return 2
+	case "end_user", "user", "":
+		return 1
+	default:
+		return 0
+	}
+}
+
+// normalizeRole 将前端传入的角色归一化（user -> end_user）
+func normalizeRole(role string) string {
+	r := strings.ToLower(strings.TrimSpace(role))
+	if r == "user" {
+		return "end_user"
+	}
+	return r
 }

@@ -224,6 +224,14 @@ export default function WorkflowNodeInspector({
   const currentFormKey = (bo.formKey as string) || '';
   const currentDueDate = (bo.dueDate as string) || '';
   const currentFollowUpDate = (bo.followUpDate as string) || '';
+  const currentTaskPurpose = (bo.taskPurpose as string) || 'work';
+  const currentApprovalMode = (bo.approvalMode as string) || 'single';
+  const currentApprovalThreshold = Number(bo.approvalThreshold || 1);
+  const currentRejectStrategy = (bo.rejectStrategy as string) || 'terminate';
+  const currentTimeoutAction = (bo.timeoutAction as string) || 'notify';
+  const currentAllowDelegate = (bo.allowDelegate as boolean) ?? false;
+  const currentAllowAddApprover = (bo.allowAddApprover as boolean) ?? false;
+  const currentCommentRequiredOnReject = (bo.commentRequiredOnReject as boolean) ?? true;
 
   // 服务任务属性
   const currentImplementation = (bo.implementation as string) || '';
@@ -458,6 +466,48 @@ export default function WorkflowNodeInspector({
         {isUserTask && (
           <>
             <Divider className="my-2" />
+
+            <div className="mb-3 p-3 border border-blue-100 rounded-lg bg-blue-50/50">
+              <Text strong className="text-sm flex items-center mb-2">
+                <Shield className="w-3.5 h-3.5 mr-1" />审批语义
+              </Text>
+              <Select
+                value={currentTaskPurpose}
+                onChange={value => apply({ taskPurpose: value })}
+                options={[{ label: '普通人工任务', value: 'work' }, { label: '审批任务', value: 'approval' }]}
+                className="w-full" size="small"
+              />
+              {currentTaskPurpose === 'approval' && (
+                <Space orientation="vertical" className="w-full mt-2" size="small">
+                  <Select
+                    value={currentApprovalMode}
+                    onChange={value => apply({ approvalMode: value })}
+                    options={[
+                      { label: '单人审批', value: 'single' }, { label: '任一通过', value: 'any' },
+                      { label: '全部通过', value: 'all' }, { label: '比例/阈值通过', value: 'threshold' },
+                      { label: '顺序会签', value: 'sequential' },
+                    ]}
+                    className="w-full" size="small"
+                  />
+                  {currentApprovalMode === 'threshold' && (
+                    <Input type="number" min={1} value={currentApprovalThreshold}
+                      onChange={e => apply({ approvalThreshold: Number(e.target.value || 1) })}
+                      addonBefore="通过人数" size="small" />
+                  )}
+                  <Select value={currentRejectStrategy} onChange={value => apply({ rejectStrategy: value })}
+                    options={[{ label: '终止流程', value: 'terminate' }, { label: '退回发起人', value: 'to_requester' }, { label: '进入拒绝分支', value: 'gateway' }]}
+                    className="w-full" size="small" />
+                  <Select value={currentTimeoutAction} onChange={value => apply({ timeoutAction: value })}
+                    options={[{ label: '仅提醒', value: 'notify' }, { label: '升级审批', value: 'escalate' }, { label: '自动拒绝', value: 'auto_reject' }]}
+                    className="w-full" size="small" />
+                  <Space wrap>
+                    <Switch size="small" checked={currentAllowDelegate} onChange={v => apply({ allowDelegate: v })} />委托
+                    <Switch size="small" checked={currentAllowAddApprover} onChange={v => apply({ allowAddApprover: v })} />加签
+                    <Switch size="small" checked={currentCommentRequiredOnReject} onChange={v => apply({ commentRequiredOnReject: v })} />拒绝意见必填
+                  </Space>
+                </Space>
+              )}
+            </div>
 
             {/* 快捷操作栏 */}
             <div className="mb-3 p-2 bg-blue-50 rounded-lg">

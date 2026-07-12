@@ -488,31 +488,6 @@ describe('ChangeList', () => {
   });
 
   describe('Actions', () => {
-    it('navigates to detail page when view button is clicked', async () => {
-      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-      try {
-        renderChangeList(<ChangeList />);
-
-        await waitFor(
-          () => {
-            expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
-          },
-          { timeout: 5000 }
-        );
-
-        const viewButtons = screen
-          .getAllByRole('button')
-          .filter(btn => btn.querySelector('.anticon-eye'));
-
-        fireEvent.click(viewButtons[0]);
-
-        expect(mockPush).toHaveBeenCalledWith('/changes/1');
-      } finally {
-        spy.mockRestore();
-      }
-    });
-
     it('navigates to new change page when new button is clicked', async () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 

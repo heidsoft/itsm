@@ -7,6 +7,26 @@ import (
 )
 
 // BPMNProcessInstanceResponse BPMN流程实例响应（camelCase JSON，供前端使用）
+//
+// 字段说明:
+//   - ID: 数据库主键 UUID
+//   - InstanceID: 流程实例唯一标识（用于外部引用）
+//   - BusinessKey: 业务键（如工单号），用于关联业务实体
+//   - ProcessDefinitionKey: 流程定义键（如 incident_workflow）
+//   - ProcessDefinitionID: 流程定义版本ID
+//   - Status: 实例状态（pending/running/completed/terminated/suspended）
+//   - CurrentActivityID: 当前活动节点ID
+//   - CurrentActivityName: 当前活动节点名称
+//   - Variables: 流程变量（JSON对象）
+//   - StartTime: 开始时间
+//   - EndTime: 结束时间（完成后填充）
+//   - SuspendedTime: 挂起时间（暂停时填充）
+//   - SuspendedReason: 挂起原因
+//   - TenantID: 租户ID（多租户隔离）
+//   - Version: 流程版本号
+//   - Initiator: 发起人用户名
+//   - ParentProcessInstanceID: 父流程实例ID（用于子流程）
+//   - RootProcessInstanceID: 根流程实例ID（用于嵌套子流程追溯）
 type BPMNProcessInstanceResponse struct {
 	ID                    string                 `json:"id"`
 	InstanceID            string                 `json:"instanceId"`

@@ -273,9 +273,104 @@ func (s *CIRelationshipService) DeleteCIRelationship(ctx context.Context, id, te
 }
 
 // GetCIImpactAnalysis 获取CI影响分析
+const maxCIImpactAnalysisDepth = 10
+
+func topologyNodeFromCI(ci *ent.ConfigurationItem) dto.TopologyNode {
+	return dto.TopologyNode{
+		ID: ci.ID, Name: ci.Name, Type: ci.CiType, TypeName: ci.CiType,
+		Status: ci.Status, Criticality: ci.Criticality, Attributes: ci.Attributes,
+	}
+}
+
+func topologyEdgeFromRelationship(rel *ent.CIRelationship) dto.TopologyEdge {
+	return dto.TopologyEdge{
+		ID: rel.ID, Source: rel.SourceCiID, Target: rel.TargetCiID,
+		RelationshipType: rel.RelationshipType, RelationshipLabel: rel.RelationshipType,
+		Strength: string(rel.Strength), ImpactLevel: string(rel.ImpactLevel),
+	}
+}
+
+// GetCITopology 返回统一的图结构，并对租户、深度和环路做强制约束。
+func (s *CIRelationshipService) GetCITopology(ctx context.Context, ciID, tenantID, maxDepth int) (*dto.TopologyGraph, error) {
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("tenant ID is required")
+	}
+	if maxDepth <= 0 {
+		maxDepth = 3
+	}
+	if maxDepth > maxCIImpactAnalysisDepth {
+		maxDepth = maxCIImpactAnalysisDepth
+	}
+	root, err := s.client.ConfigurationItem.Query().
+		Where(configurationitem.IDEQ(ciID), configurationitem.TenantIDEQ(tenantID)).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get topology root CI: %w", err)
+	}
+
+	nodes := map[int]dto.TopologyNode{root.ID: topologyNodeFromCI(root)}
+	edges := make(map[int]dto.TopologyEdge)
+	visited := map[int]bool{root.ID: true}
+	frontier := []int{root.ID}
+	for depth := 0; depth < maxDepth && len(frontier) > 0; depth++ {
+		relations, err := s.client.CIRelationship.Query().Where(
+			cirelationship.TenantIDEQ(tenantID), cirelationship.IsActiveEQ(true),
+			cirelationship.Or(cirelationship.SourceCiIDIn(frontier...), cirelationship.TargetCiIDIn(frontier...)),
+		).All(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to query topology relationships: %w", err)
+		}
+		nextIDs := make([]int, 0)
+		for _, rel := range relations {
+			edges[rel.ID] = topologyEdgeFromRelationship(rel)
+			for _, id := range []int{rel.SourceCiID, rel.TargetCiID} {
+				if !visited[id] {
+					visited[id] = true
+					nextIDs = append(nextIDs, id)
+				}
+			}
+		}
+		if len(nextIDs) == 0 {
+			break
+		}
+		cis, err := s.client.ConfigurationItem.Query().
+			Where(configurationitem.IDIn(nextIDs...), configurationitem.TenantIDEQ(tenantID)).All(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to query topology CIs: %w", err)
+		}
+		frontier = frontier[:0]
+		for _, ci := range cis {
+			nodes[ci.ID] = topologyNodeFromCI(ci)
+			frontier = append(frontier, ci.ID)
+		}
+	}
+
+	graph := &dto.TopologyGraph{RootCIID: ciID, Depth: maxDepth}
+	for _, node := range nodes {
+		graph.Nodes = append(graph.Nodes, node)
+	}
+	for _, edge := range edges {
+		if _, sourceOK := nodes[edge.Source]; sourceOK {
+			if _, targetOK := nodes[edge.Target]; targetOK {
+				graph.Edges = append(graph.Edges, edge)
+			}
+		}
+	}
+	graph.TotalNodes, graph.TotalEdges = len(graph.Nodes), len(graph.Edges)
+	return graph, nil
+}
+
 func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, tenantID int, maxDepth int) (*dto.CIImpactAnalysisResponse, error) {
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("tenant ID is required")
+	}
+	if maxDepth <= 0 {
+		maxDepth = 3
+	}
+	if maxDepth > maxCIImpactAnalysisDepth {
+		maxDepth = maxCIImpactAnalysisDepth
+	}
 	// 检查CI是否存在
-	_, err := s.client.ConfigurationItem.Query().
+	root, err := s.client.ConfigurationItem.Query().
 		Where(configurationitem.IDEQ(ciID), configurationitem.TenantIDEQ(tenantID)).
 		First(ctx)
 	if err != nil {
@@ -286,79 +381,113 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 		return nil, fmt.Errorf("failed to get CI: %w", err)
 	}
 
-	// 使用广度优先搜索遍历影响链
-	visited := make(map[int]bool)
+	// 使用按层广度优先搜索遍历影响链。每层批量读取关系和 CI，避免逐节点 N+1 查询。
+	visited := map[int]bool{ciID: true}
 	queue := []struct {
 		ciID  int
 		depth int
 		path  []int
 	}{{ciID: ciID, depth: 0, path: []int{ciID}}}
 
-	impactedCIs := []*dto.ImpactedCI{}
+	impactedCIs := make([]dto.ImpactAnalysisItem, 0)
+	impactEdges := make([]dto.TopologyEdge, 0)
+	impactNodes := []dto.TopologyNode{topologyNodeFromCI(root)}
 
 	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
-
-		if visited[current.ciID] {
-			continue
+		currentDepth := queue[0].depth
+		frontier := make([]int, 0)
+		paths := make(map[int][]int)
+		for len(queue) > 0 && queue[0].depth == currentDepth {
+			item := queue[0]
+			queue = queue[1:]
+			frontier = append(frontier, item.ciID)
+			paths[item.ciID] = item.path
 		}
-		visited[current.ciID] = true
-
-		// 如果不是根节点，加入影响列表
-		if current.depth > 0 {
-			ci, err := s.client.ConfigurationItem.Query().
-				Where(configurationitem.IDEQ(current.ciID), configurationitem.TenantIDEQ(tenantID)).
-				First(ctx)
-			if err != nil {
-				s.logger.Warnw("Failed to get impacted CI", "error", err, "ci_id", current.ciID)
-				continue
-			}
-			impactedCIs = append(impactedCIs, &dto.ImpactedCI{
-				CI:    dto.ToCIResponse(ci),
-				Depth: current.depth,
-				Path:  current.path,
-			})
-		}
-
-		// 如果达到最大深度，停止遍历
-		if current.depth >= maxDepth {
+		if currentDepth >= maxDepth {
 			continue
 		}
 
-		// 查找所有直接受影响的CI（当前CI是源，关系类型是影响类）
 		relations, err := s.client.CIRelationship.Query().
 			Where(
-				cirelationship.SourceCiIDEQ(current.ciID),
+				cirelationship.SourceCiIDIn(frontier...),
 				cirelationship.TenantIDEQ(tenantID),
 				cirelationship.IsActiveEQ(true),
 				cirelationship.RelationshipTypeIn("impacts", "depends_on", "uses"),
 			).
-			WithTargetCi().
 			All(ctx)
 		if err != nil {
-			s.logger.Errorw("Failed to get outgoing impact relations", "error", err, "ci_id", current.ciID)
-			continue
+			return nil, fmt.Errorf("failed to query impact relationships: %w", err)
 		}
 
-		// 将受影响的CI加入队列
+		nextPaths := make(map[int][]int)
 		for _, rel := range relations {
+			impactEdges = append(impactEdges, topologyEdgeFromRelationship(rel))
 			if !visited[rel.TargetCiID] {
-				newPath := make([]int, len(current.path))
-				copy(newPath, current.path)
+				visited[rel.TargetCiID] = true
+				newPath := append([]int(nil), paths[rel.SourceCiID]...)
 				newPath = append(newPath, rel.TargetCiID)
-				queue = append(queue, struct {
-					ciID  int
-					depth int
-					path  []int
-				}{ciID: rel.TargetCiID, depth: current.depth + 1, path: newPath})
+				nextPaths[rel.TargetCiID] = newPath
 			}
+		}
+
+		nextIDs := make([]int, 0, len(nextPaths))
+		for id := range nextPaths {
+			nextIDs = append(nextIDs, id)
+		}
+		if len(nextIDs) == 0 {
+			continue
+		}
+		cis, err := s.client.ConfigurationItem.Query().
+			Where(configurationitem.IDIn(nextIDs...), configurationitem.TenantIDEQ(tenantID)).
+			All(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to query impacted CIs: %w", err)
+		}
+		for _, ci := range cis {
+			path := nextPaths[ci.ID]
+			impactNodes = append(impactNodes, topologyNodeFromCI(ci))
+			impactedCIs = append(impactedCIs, dto.ImpactAnalysisItem{
+				CIID: ci.ID, CIName: ci.Name, CIT: ci.CiType, Distance: currentDepth + 1,
+				Direction: "downstream", Relationship: "impact path", ImpactLevel: impactLevelForCI(ci),
+			})
+			queue = append(queue, struct {
+				ciID  int
+				depth int
+				path  []int
+			}{ciID: ci.ID, depth: currentDepth + 1, path: path})
 		}
 	}
 
+	graph := &dto.TopologyGraph{Nodes: impactNodes, Edges: impactEdges, RootCIID: ciID, Depth: maxDepth}
+	graph.TotalNodes, graph.TotalEdges = len(graph.Nodes), len(graph.Edges)
+	riskLevel := "low"
+	if len(impactedCIs) >= 10 {
+		riskLevel = "critical"
+	} else if len(impactedCIs) >= 5 {
+		riskLevel = "high"
+	} else if len(impactedCIs) > 0 {
+		riskLevel = "medium"
+	}
 	return &dto.CIImpactAnalysisResponse{
-		SourceCIID:    ciID,
-		ImpactedCIs:   impactedCIs,
-		TotalImpacted: len(impactedCIs),
+		SourceCIID: ciID, TargetCI: ptrTopologyNode(topologyNodeFromCI(root)), Graph: graph,
+		UpstreamImpact: []dto.ImpactAnalysisItem{}, DownstreamImpact: impactedCIs,
+		CriticalDependencies: []dto.ImpactAnalysisItem{}, AffectedTickets: []dto.AffectedTicket{},
+		AffectedIncidents: []dto.AffectedIncident{}, RiskLevel: riskLevel,
+		Summary: fmt.Sprintf("%d configuration items may be impacted", len(impactedCIs)), TotalImpacted: len(impactedCIs),
 	}, nil
+}
+
+func ptrTopologyNode(node dto.TopologyNode) *dto.TopologyNode { return &node }
+
+func impactLevelForCI(ci *ent.ConfigurationItem) dto.ImpactLevel {
+	switch ci.Criticality {
+	case "critical":
+		return dto.ImpactCritical
+	case "high":
+		return dto.ImpactHigh
+	case "medium":
+		return dto.ImpactMedium
+	default:
+		return dto.ImpactLow
+	}
 }

@@ -438,16 +438,10 @@ export class WorkflowApi {
     // Backend expects key in path. Assuming id passed here is key.
     // Also backend needs version parameter. We default to 1.0.0 or need to fetch it.
     const ver = version || '1.0.0';
-    const response = await httpClient.put<{
-      code: number;
-      message: string;
-      data: WorkflowDefinition;
-    }>(`/api/v1/bpmn/process-definitions/${id}?version=${ver}`, payload);
-
-    if (response?.code !== 0) {
-      throw new Error(response?.message || '更新工作流失败');
-    }
-    return response?.data;
+	return httpClient.put<WorkflowDefinition>(
+	  `/api/v1/bpmn/process-definitions/${encodeURIComponent(id)}?version=${encodeURIComponent(ver)}`,
+	  payload
+	);
   }
 
   /**
@@ -601,6 +595,16 @@ export class WorkflowApi {
       bpmnXml: item.bpmnXml,
     })) as WorkflowDefinition[];
   }
+
+	static async createWorkflowVersion(data: {
+	  processDefinitionKey: string;
+	  name: string;
+	  description?: string;
+	  bpmnXml: string;
+	  changeLog?: string;
+	}): Promise<unknown> {
+	  return httpClient.post('/api/v1/bpmn/versions', data);
+	}
 
   /**
    * 发布新版本

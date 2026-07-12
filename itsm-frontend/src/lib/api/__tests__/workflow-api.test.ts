@@ -144,6 +144,34 @@ describe('WorkflowApi', () => {
     });
   });
 
+	describe('workflow persistence', () => {
+	  it('returns the already-unwrapped definition after update', async () => {
+		const updated = { id: '12', code: 'incident_flow', name: 'Incident Flow', version: 2 };
+		(httpClient.put as jest.Mock).mockResolvedValueOnce(updated);
+
+		await expect(
+		  WorkflowApi.updateWorkflow('incident_flow', { name: 'Incident Flow' }, '2')
+		).resolves.toBe(updated);
+		expect(httpClient.put).toHaveBeenCalledWith(
+		  '/api/v1/bpmn/process-definitions/incident_flow?version=2',
+		  expect.objectContaining({ name: 'Incident Flow' })
+		);
+	  });
+
+	  it('persists a new version through the backend version endpoint', async () => {
+		(httpClient.post as jest.Mock).mockResolvedValueOnce({ version: 2 });
+		const payload = {
+		  processDefinitionKey: 'incident_flow',
+		  name: 'Incident Flow',
+		  bpmnXml: '<definitions />',
+		  changeLog: '创建新版本',
+		};
+
+		await WorkflowApi.createWorkflowVersion(payload);
+		expect(httpClient.post).toHaveBeenCalledWith('/api/v1/bpmn/versions', payload);
+	  });
+	});
+
   describe('listWorkflowInstances', () => {
     it('should fetch workflow instances', async () => {
       const mockData = [

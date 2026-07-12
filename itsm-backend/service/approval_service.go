@@ -30,6 +30,15 @@ func NewApprovalService(client *ent.Client, logger *zap.SugaredLogger) *Approval
 	}
 }
 
+func (s *ApprovalService) MigrateWorkflowToBPMN(ctx context.Context, workflowID, tenantID int, dryRun bool) (*LegacyApprovalMigrationResult, error) {
+	workflow, err := s.client.ApprovalWorkflow.Query().
+		Where(approvalworkflow.ID(workflowID), approvalworkflow.TenantID(tenantID)).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("legacy approval workflow not found: %w", err)
+	}
+	return NewLegacyApprovalMigrationService(s.client).Migrate(ctx, workflow, dryRun)
+}
+
 // CreateWorkflow 创建审批工作流
 func (s *ApprovalService) CreateWorkflow(ctx context.Context, req *dto.CreateApprovalWorkflowRequest, tenantID int) (*dto.ApprovalWorkflowResponse, error) {
 	s.logger.Infow("Creating approval workflow", "name", req.Name, "tenant_id", tenantID)
@@ -280,6 +289,14 @@ func (s *ApprovalService) GetApprovalRecords(ctx context.Context, req *dto.GetAp
 func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, userID int, action string, comment string, delegateToUserID *int, tenantID int) error {
 	s.logger.Infow("Submitting approval", "record_id", recordID, "user_id", userID, "action", action, "tenant_id", tenantID)
 
+	// 先校验 action 合法性，确保"invalid action"错误能在 workflow 检查之前准确返回
+	switch action {
+	case "approve", "reject", "delegate":
+		// 合法
+	default:
+		return fmt.Errorf("invalid action: %s", action)
+	}
+
 	// 获取审批记录
 	approvalRecord, err := s.client.ApprovalRecord.Query().
 		Where(
@@ -290,6 +307,16 @@ func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, user
 		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("approval record not found or already processed: %w", err)
+	}
+
+	// 顺序审批校验（H1 修复）：仅允许审批当前最低待审批级别，防止越级审批
+	minLevel, err := s.minPendingLevel(ctx, approvalRecord.WorkflowID, approvalRecord.TicketID, tenantID)
+	if err != nil {
+		return fmt.Errorf("failed to determine approval order: %w", err)
+	}
+	if approvalRecord.CurrentLevel > minLevel {
+		s.logger.Warnw("Approval out of order", "record_level", approvalRecord.CurrentLevel, "min_pending_level", minLevel)
+		return fmt.Errorf("请先完成前序级别（第 %d 级）的审批", minLevel)
 	}
 
 	// 权限检查：验证用户是否是该审批记录的指定审批人
@@ -367,6 +394,31 @@ func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, user
 	return nil
 }
 
+// minPendingLevel 返回该工单在当前工作流下的最小待审批级别
+func (s *ApprovalService) minPendingLevel(ctx context.Context, workflowID, ticketID, tenantID int) (int, error) {
+	records, err := s.client.ApprovalRecord.Query().
+		Where(
+			approvalrecord.WorkflowIDEQ(workflowID),
+			approvalrecord.TicketIDEQ(ticketID),
+			approvalrecord.TenantIDEQ(tenantID),
+			approvalrecord.StatusEQ("pending"),
+		).
+		All(ctx)
+	if err != nil {
+		return 0, err
+	}
+	if len(records) == 0 {
+		return 0, nil
+	}
+	min := records[0].CurrentLevel
+	for _, r := range records {
+		if r.CurrentLevel < min {
+			min = r.CurrentLevel
+		}
+	}
+	return min, nil
+}
+
 // handleApprovalApproved 处理审批通过
 func (s *ApprovalService) handleApprovalApproved(ctx context.Context, record *ent.ApprovalRecord) error {
 	// 检查该工单在该工作流下是否还有待审批项
@@ -438,8 +490,8 @@ func (s *ApprovalService) handleApprovalRejected(ctx context.Context, record *en
 func (s *ApprovalService) canPerformAction(workflow *ent.ApprovalWorkflow, level int, action string) bool {
 	configs := mapsToNodesUnsafe(workflow.Nodes)
 	if len(configs) == 0 {
-		// 如果没有节点配置，默认允许所有操作
-		return true
+		// 如果没有节点配置，默认拒绝所有操作（H2 修复：缺配置不再默认放行）
+		return false
 	}
 
 	// 查找当前级别的节点配置
@@ -456,7 +508,7 @@ func (s *ApprovalService) canPerformAction(workflow *ent.ApprovalWorkflow, level
 		}
 	}
 
-	return true // 未找到节点配置时默认允许
+	return false // 未找到对应级别节点时默认拒绝（H2 修复）
 }
 
 // handleApprovalDelegated 处理审批委托

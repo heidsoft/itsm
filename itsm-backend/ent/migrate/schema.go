@@ -2156,6 +2156,57 @@ var (
 			},
 		},
 	}
+	// ProcessApprovalDecisionsColumns holds the columns for the "process_approval_decisions" table.
+	ProcessApprovalDecisionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "process_instance_id", Type: field.TypeInt},
+		{Name: "process_task_id", Type: field.TypeInt},
+		{Name: "process_instance_key", Type: field.TypeString},
+		{Name: "task_id", Type: field.TypeString},
+		{Name: "process_definition_key", Type: field.TypeString},
+		{Name: "node_key", Type: field.TypeString},
+		{Name: "business_type", Type: field.TypeString, Nullable: true},
+		{Name: "business_id", Type: field.TypeString, Nullable: true},
+		{Name: "actor_id", Type: field.TypeInt},
+		{Name: "actor_name", Type: field.TypeString, Nullable: true},
+		{Name: "action", Type: field.TypeString},
+		{Name: "decision", Type: field.TypeString},
+		{Name: "comment", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "delegated_from", Type: field.TypeInt, Nullable: true},
+		{Name: "variables_snapshot", Type: field.TypeJSON, Nullable: true},
+		{Name: "client_ip", Type: field.TypeString, Nullable: true},
+		{Name: "user_agent", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// ProcessApprovalDecisionsTable holds the schema information for the "process_approval_decisions" table.
+	ProcessApprovalDecisionsTable = &schema.Table{
+		Name:       "process_approval_decisions",
+		Columns:    ProcessApprovalDecisionsColumns,
+		PrimaryKey: []*schema.Column{ProcessApprovalDecisionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processapprovaldecision_tenant_id_process_task_id",
+				Unique:  true,
+				Columns: []*schema.Column{ProcessApprovalDecisionsColumns[18], ProcessApprovalDecisionsColumns[2]},
+			},
+			{
+				Name:    "processapprovaldecision_tenant_id_process_instance_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessApprovalDecisionsColumns[18], ProcessApprovalDecisionsColumns[1], ProcessApprovalDecisionsColumns[19]},
+			},
+			{
+				Name:    "processapprovaldecision_tenant_id_business_type_business_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessApprovalDecisionsColumns[18], ProcessApprovalDecisionsColumns[7], ProcessApprovalDecisionsColumns[8]},
+			},
+			{
+				Name:    "processapprovaldecision_tenant_id_actor_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessApprovalDecisionsColumns[18], ProcessApprovalDecisionsColumns[9], ProcessApprovalDecisionsColumns[19]},
+			},
+		},
+	}
 	// ProcessAuditLogsColumns holds the columns for the "process_audit_logs" table.
 	ProcessAuditLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -4917,6 +4968,7 @@ var (
 		PermissionsTable,
 		PermissionDefinitionsTable,
 		ProblemsTable,
+		ProcessApprovalDecisionsTable,
 		ProcessAuditLogsTable,
 		ProcessBindingsTable,
 		ProcessDefinitionsTable,

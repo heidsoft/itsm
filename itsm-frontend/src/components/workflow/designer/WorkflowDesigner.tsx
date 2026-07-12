@@ -276,13 +276,13 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         }
       }
 
-      const workflowData: WorkflowDefinition = {
-        id: response.key || response.id,
+	  const workflowData: WorkflowDefinition = {
+		id: response.code || response.key || response.id,
         name: response.name || '未命名工作流',
         description: response.description || '',
         version: (response.version || '1').toString(),
         category: response.category || response.type || 'general',
-        status: response.isActive ? 'active' : 'inactive',
+		status: response.status === 'active' || response.isActive ? 'active' : 'inactive',
         xml: xmlContent,
         createdAt: response.createdAt || response.createdAt || new Date().toISOString(),
         updatedAt: response.updatedAt || response.updatedAt || new Date().toISOString(),
@@ -489,8 +489,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           tenantId,
         } as any)) as any;
 
-        updateWorkflow({
-          id: response.key || response.id,
+		updateWorkflow({
+		  id: response.code || response.key || response.id,
           version: response.version || '1.0.0',
           status: 'draft',
         });
@@ -591,7 +591,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         }
 
         const newVersion = response.version || '1.0.0';
-        const newKey = response.key || response.id;
+		const newKey = response.code || response.key || response.id;
 
         if (!newKey) {
           throw new Error('创建工作流失败：未获取到工作流ID');
@@ -660,18 +660,14 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     if (!workflow) return;
 
     try {
-      const newVersion: WorkflowVersion = {
-        id: `version-${Date.now()}`,
-        version: `${parseFloat(workflow.version) + 0.1}`.slice(0, 3),
-        status: 'draft',
-        createdAt: new Date().toISOString(),
-        createdBy: '当前用户',
-        changeLog: '创建新版本',
-        xml: currentXML,
-      };
-
-      setWorkflowVersions([...workflowVersions, newVersion]);
-      updateWorkflow({ version: newVersion.version });
+	  await WorkflowAPI.createWorkflowVersion({
+		processDefinitionKey: workflow.id,
+		name: workflow.name,
+		description: workflow.description,
+		bpmnXml: currentXML,
+		changeLog: '创建新版本',
+	  });
+	  await loadWorkflowVersions(workflow.id);
 
       message.success('新版本创建成功');
       setShowVersionModal(false);

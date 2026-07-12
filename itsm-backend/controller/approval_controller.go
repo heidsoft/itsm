@@ -27,6 +27,26 @@ type ApprovalController struct {
 	approvalService *service.ApprovalService
 }
 
+func (c *ApprovalController) MigrateWorkflowToBPMN(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的工作流ID")
+		return
+	}
+	tenantID, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
+		return
+	}
+	dryRun := ctx.Query("dryRun") == "true"
+	result, err := c.approvalService.MigrateWorkflowToBPMN(ctx.Request.Context(), id, tenantID, dryRun)
+	if err != nil {
+		common.InternalError(ctx, "迁移审批工作流失败: "+err.Error())
+		return
+	}
+	common.Success(ctx, result)
+}
+
 // NewApprovalController 创建审批流程控制器实例
 func NewApprovalController(approvalService *service.ApprovalService) *ApprovalController {
 	return &ApprovalController{

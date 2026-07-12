@@ -99,7 +99,7 @@ const CIList: React.FC = () => {
         status: currentFilters.status,
       });
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;
-      setData((resp as any).items ?? (resp as any).cis ?? [] as any);
+	  setData(resp.items ?? []);
       setTotal(resp.total ?? 0);
     } catch (error) {
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;

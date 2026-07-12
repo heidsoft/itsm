@@ -94,7 +94,7 @@ export default function ServiceCatalogPage() {
       try {
         setOptionsLoading(true);
         const [types, services] = await Promise.all([
-          CMDBApi.getTypes(),
+		  CMDBApi.getCITypes(),
           CMDBApi.getCloudServices(),
         ]);
         setCiTypes(types || []);

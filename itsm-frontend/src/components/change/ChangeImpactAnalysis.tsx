@@ -86,9 +86,9 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
       setSystemLoading(true);
       try {
         const result = await CMDBApi.getCIs({ limit: 200, offset: 0 });
-        const items = result.items ?? result.cis ?? [];
+		const items = result.items ?? [];
         const mapped: SystemItem[] = items.map(ci => {
-          const ciType = ci.ciType ?? ci.ciType ?? '配置项';
+		  const ciType = ci.type || '配置项';
           const criticality =
             ci.criticality === 'high' || ci.criticality === 'medium' || ci.criticality === 'low'
               ? ci.criticality

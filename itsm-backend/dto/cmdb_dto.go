@@ -421,64 +421,6 @@ type ReconciliationResponse struct {
 	UnlinkedCIs      []*CIResponse            `json:"unlinkedCIs"`
 }
 
-// ---- 以下为从 service/cmdb_service.go 迁移过来的内部服务请求/响应体 ----
-// 保留 snake_case json 标签风格，供 CMDBService 内部使用
-
-// CMDBCreateCIRequest service 层创建配置项请求（内部使用）
-type CMDBCreateCIRequest struct {
-	Name        string `json:"name"`
-	CiType      string `json:"ciType"`
-	CiTypeID    int    `json:"ciTypeId"`
-	Status      string `json:"status"`
-	Environment string `json:"environment"`
-	Criticality string `json:"criticality"`
-	TenantID    int    `json:"tenantId,omitempty"`
-	// 生命周期管理
-	LifecycleStatus string     `json:"lifecycleStatus,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
-	EffectiveAt     *time.Time `json:"effectiveAt,omitempty"`
-	ExpireAt        *time.Time `json:"expireAt,omitempty"`
-	// Type is optional; will be set from CIType if not provided
-	Type            string                  `json:"type,omitempty"`
-	AssetTag        *string                 `json:"assetTag,omitempty"`
-	SerialNumber    *string                 `json:"serialNumber,omitempty"`
-	Location        *string                 `json:"location,omitempty"`
-	AssignedTo      *string                 `json:"assignedTo,omitempty"`
-	OwnedBy         *string                 `json:"ownedBy,omitempty"`
-	DiscoverySource *string                 `json:"discoverySource,omitempty"`
-	Attributes      *map[string]interface{} `json:"attributes,omitempty"`
-}
-
-// CMDBListCIsRequest service 层查询配置项列表请求（内部使用）
-type CMDBListCIsRequest struct {
-	TenantID int `json:"tenantId,omitempty"`
-	// 生命周期管理
-	LifecycleStatus string     `json:"lifecycleStatus,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
-	EffectiveAt     *time.Time `json:"effectiveAt,omitempty"`
-	ExpireAt        *time.Time `json:"expireAt,omitempty"`
-	// Type is optional; will be set from CIType if not provided
-	Type        string `json:"type,omitempty"`
-	CiType      string `json:"ciType,omitempty"`
-	Status      string `json:"status,omitempty"`
-	Environment string `json:"environment,omitempty"`
-	Offset      int    `json:"offset"`
-	Limit       int    `json:"limit"`
-}
-
-// CMDBCreateRelationshipRequest service 层创建 CI 关系请求（内部使用）
-type CMDBCreateRelationshipRequest struct {
-	SourceCIID  int     `json:"sourceCiId"`
-	TargetCIID  int     `json:"targetCiId"`
-	Type        string  `json:"type"`
-	Description *string `json:"description,omitempty"`
-	TenantID    int     `json:"tenantId,omitempty"`
-}
-
-// CMDBUpdateRelationshipRequest service 层更新 CI 关系请求（内部使用）
-type CMDBUpdateRelationshipRequest struct {
-	Type        string  `json:"type,omitempty"`
-	Description *string `json:"description,omitempty"`
-}
-
 // CIHistoryResponse CI历史记录响应
 type CIHistoryResponse struct {
 	ID            int                    `json:"id"`

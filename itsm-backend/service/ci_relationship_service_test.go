@@ -129,3 +129,90 @@ func TestListAllCIRelationships_NormalizesPagination(t *testing.T) {
 		t.Fatalf("TotalPages = %d, want 0", result.TotalPages)
 	}
 }
+
+func TestGetCIImpactAnalysis_TraversesByDepthAndStopsCycles(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_impact_depth?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Impact Tenant", "impact-tenant", "impact.example.com")
+	if err != nil {
+		t.Fatalf("create tenant: %v", err)
+	}
+	ciType, err := createTestCIType(ctx, client, tenant.ID, "impact-server")
+	if err != nil {
+		t.Fatalf("create CI type: %v", err)
+	}
+	root, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "root")
+	if err != nil {
+		t.Fatalf("create root CI: %v", err)
+	}
+	level1, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "level-1")
+	if err != nil {
+		t.Fatalf("create level-1 CI: %v", err)
+	}
+	level2, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "level-2")
+	if err != nil {
+		t.Fatalf("create level-2 CI: %v", err)
+	}
+
+	for _, edge := range [][2]int{{root.ID, level1.ID}, {level1.ID, level2.ID}, {level2.ID, root.ID}} {
+		client.CIRelationship.Create().
+			SetRelationshipType("impacts").
+			SetSourceCiID(edge[0]).
+			SetTargetCiID(edge[1]).
+			SetTenantID(tenant.ID).
+			SaveX(ctx)
+	}
+
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	result, err := svc.GetCIImpactAnalysis(ctx, root.ID, tenant.ID, 2)
+	if err != nil {
+		t.Fatalf("GetCIImpactAnalysis failed: %v", err)
+	}
+	if result.TotalImpacted != 2 {
+		t.Fatalf("TotalImpacted = %d, want 2", result.TotalImpacted)
+	}
+	level2Distance := 0
+	for _, impacted := range result.DownstreamImpact {
+		if impacted.CIID == level2.ID {
+			level2Distance = impacted.Distance
+		}
+	}
+	if level2Distance != 2 {
+		t.Fatalf("level-2 distance = %d, want 2", level2Distance)
+	}
+	if result.Graph == nil || result.Graph.TotalNodes != 3 {
+		t.Fatalf("impact graph = %#v, want 3 nodes", result.Graph)
+	}
+}
+
+func TestGetCITopology_UsesUnifiedGraphContract(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_topology_graph?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant, _ := createCMDBTestTenant(ctx, client, "Topology Tenant", "topology-tenant", "topology.example.com")
+	ciType, _ := createTestCIType(ctx, client, tenant.ID, "server")
+	root, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "root")
+	child, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "child")
+	client.CIRelationship.Create().SetRelationshipType("depends_on").SetSourceCiID(root.ID).
+		SetTargetCiID(child.ID).SetTenantID(tenant.ID).SaveX(ctx)
+
+	result, err := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar()).GetCITopology(ctx, root.ID, tenant.ID, 1)
+	if err != nil {
+		t.Fatalf("GetCITopology failed: %v", err)
+	}
+	if result.RootCIID != root.ID || result.TotalNodes != 2 || result.TotalEdges != 1 {
+		t.Fatalf("unexpected topology graph: %#v", result)
+	}
+}
+
+func TestGetCIImpactAnalysis_RequiresTenant(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_impact_tenant?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	if _, err := svc.GetCIImpactAnalysis(context.Background(), 1, 0, 3); err == nil {
+		t.Fatal("expected missing tenant ID to be rejected")
+	}
+}

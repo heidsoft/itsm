@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { message } from 'antd';
 
 // React ErrorBoundary 错误信息类型
@@ -122,10 +122,24 @@ const reportError = (error: AppError, config: ErrorHandlerConfig) => {
 
 // 自定义错误处理Hook
 export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
-  const mergedConfig = { ...defaultConfig, ...config };
+  // Use a ref to keep the latest merged config without invalidating the
+  // stable callback identity. Callers commonly put `handleError` in a
+  // useEffect dependency array; if `handleError` is regenerated every render
+  // (because default `{}` config is a new object reference each call), the
+  // effect re-runs forever -> "Maximum update depth exceeded".
+  const mergedConfigRef = useRef<ErrorHandlerConfig>({ ...defaultConfig, ...config });
+  mergedConfigRef.current = useMemo(
+    () => ({ ...defaultConfig, ...config }),
+    // Re-create only when callers memoize `config` themselves; otherwise accept
+    // a no-op shallow comparison by serializing. This is a small cost for stability.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(config)]
+  );
 
+  // Stable handleError — identity does not change between renders.
   const handleError = useCallback(
     (error: unknown, context?: string, customMessage?: string) => {
+      const mergedConfig = mergedConfigRef.current;
       const appError: AppError = {
         code: error instanceof Error ? (error as any).code : undefined,
         message: customMessage || getUserFriendlyMessage(error),
@@ -148,7 +162,7 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
 
       return appError;
     },
-    [mergedConfig]
+    []
   );
 
   // 处理异步操作错误

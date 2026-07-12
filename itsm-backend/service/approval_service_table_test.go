@@ -112,10 +112,10 @@ func TestCanPerformAction_TableDriven(t *testing.T) {
 		action      string
 		want        bool
 	}{
-		// 空节点 → 所有操作默认允许
-		{"empty_nodes approve", "empty_nodes", 1, "approve", true},
-		{"empty_nodes reject", "empty_nodes", 1, "reject", true},
-		{"empty_nodes delegate", "empty_nodes", 1, "delegate", true},
+		// 空节点 → 缺配置默认拒绝（H2 修复：fail-closed，避免无节点配置被绕过）
+		{"empty_nodes approve", "empty_nodes", 1, "approve", false},
+		{"empty_nodes reject", "empty_nodes", 1, "reject", false},
+		{"empty_nodes delegate", "empty_nodes", 1, "delegate", false},
 
 		// Level1: allow_reject=true, allow_delegate=false
 		{"reject_yes approve", "level1_reject_yes_delegate_no", 1, "approve", true},
@@ -135,10 +135,10 @@ func TestCanPerformAction_TableDriven(t *testing.T) {
 		{"multi L2 reject", "multi_level", 2, "reject", false},
 		{"multi L2 delegate", "multi_level", 2, "delegate", true},
 
-		// 找不到对应的 level → 默认允许
-		{"level_not_found approve", "level1_reject_yes_delegate_no", 99, "approve", true},
-		{"level_not_found reject", "level1_reject_yes_delegate_no", 99, "reject", true},
-		{"level_not_found delegate", "level1_reject_yes_delegate_no", 99, "delegate", true},
+		// 找不到对应的 level → 缺配置默认拒绝（H2 修复：fail-closed）
+		{"level_not_found approve", "level1_reject_yes_delegate_no", 99, "approve", false},
+		{"level_not_found reject", "level1_reject_yes_delegate_no", 99, "reject", false},
+		{"level_not_found delegate", "level1_reject_yes_delegate_no", 99, "delegate", false},
 
 		// 带 optional fields 的节点
 		{"optional_fields approve", "with_optional_fields", 1, "approve", true},

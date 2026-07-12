@@ -142,28 +142,37 @@ port_in_use() {
 # Usage: dc <compose_args...>
 dc() {
     # Auto-detect docker compose command (supports v1 and v2)
+    local cmd
     if command -v docker-compose &>/dev/null; then
-        DOCKER_COMPOSE_CMD="docker-compose"
+        cmd="docker-compose"
     else
-        DOCKER_COMPOSE_CMD="docker compose"
+        cmd="docker compose"
     fi
 
     if [[ "${VERBOSE:-false}" == "true" ]]; then
-        "$DOCKER_COMPOSE_CMD" "$@"
-    else
-        "$DOCKER_COMPOSE_CMD" "$@" 2>&1 | {
-            # Filter to show only named steps and errors
-            local last_line=""
-            while IFS= read -r line; do
-                if echo "$line" | grep -qiE "^(#|ERROR|WARN|Container|Creating|Starting|Stopping|Built|=>)" \
-                    || echo "$line" | grep -qiE "(DONE|CACHED|FAIL)" \
-                    || [[ -z "$last_line" ]]; then
-                    echo "$line"
-                fi
-                last_line="$line"
-            done
-        }
+        "$cmd" "$@"
+        return $?
     fi
+
+    # Quiet mode: capture docker's REAL exit code, then filter output for display.
+    # NOTE: piping docker output straight into a filter (while-read) previously
+    # masked docker's exit code (the pipeline returned the filter's 0), so
+    # build/validation failures were silently swallowed. We capture rc first.
+    local out rc
+    out=$("$cmd" "$@" 2>&1); rc=$?
+
+    # Filter to show only named steps and errors
+    local last_line=""
+    while IFS= read -r line; do
+        if echo "$line" | grep -qiE "^(#|ERROR|WARN|Container|Creating|Starting|Stopping|Built|=>)" \
+            || echo "$line" | grep -qiE "(DONE|CACHED|FAIL)" \
+            || [[ -z "$last_line" ]]; then
+            echo "$line"
+        fi
+        last_line="$line"
+    done <<< "$out"
+
+    return $rc
 }
 
 # ============================================================

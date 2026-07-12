@@ -166,7 +166,6 @@ func NewApplication() *Application {
 	// 审批服务
 	approvalService := service.NewApprovalService(client, sugar)
 
-	cmdbService := service.NewCMDBService(client)
 	// problemService and changeService removed - using Handlers with domain services instead
 
 	// Release & Asset Management Services
@@ -234,7 +233,7 @@ func NewApplication() *Application {
 	// LLM/Embedding/VectorStore
 
 	// AI Tools
-	toolRegistry := service.NewToolRegistry(ragService, incidentService, cmdbService, client)
+	toolRegistry := service.NewToolRegistry(ragService, incidentService, configurationItemService, client)
 	toolQueue := service.NewToolQueue(client, toolRegistry, 100, sugar)
 
 	ticketController := controller.NewTicketController(ticketService, ticketDependencyService, database.GetRawDB(), sugar)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -41,6 +42,9 @@ func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
 	if tenantID > 0 {
 		reqCtx = context.WithValue(reqCtx, bpmn.BPMNTenantIDContextKey, tenantID)
 	}
+	if userID := ctx.GetInt("user_id"); userID > 0 {
+		reqCtx = context.WithValue(reqCtx, bpmn.BPMNUserIDContextKey, userID)
+	}
 	return reqCtx, tenantID, true
 }
 
@@ -62,6 +66,7 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 		bpmn.POST("/process-instances", c.StartProcess)
 		bpmn.GET("/process-instances", c.ListProcessInstances)
 		bpmn.GET("/process-instances/:id", c.GetProcessInstance)
+		bpmn.GET("/process-instances/:id/approval-history", c.GetApprovalHistory)
 		bpmn.PUT("/process-instances/:id/variables", c.SetProcessInstanceVariables)
 		bpmn.PUT("/process-instances/:id/suspend", c.SuspendProcess)
 		bpmn.PUT("/process-instances/:id/resume", c.ResumeProcess)
@@ -73,6 +78,7 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 		bpmn.PUT("/tasks/:id/assign", c.AssignTask)
 		bpmn.PUT("/tasks/:id/claim", c.ClaimTask)
 		bpmn.PUT("/tasks/:id/complete", c.CompleteTask)
+		bpmn.POST("/tasks/:id/decisions", c.SubmitTaskDecision)
 		bpmn.PUT("/tasks/:id/cancel", c.CancelTask)
 		bpmn.PUT("/tasks/:id/variables", c.SetTaskVariables)
 
@@ -97,6 +103,60 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 		bpmn.GET("/process-definitions/changelogs/:id", c.GetVersionChangeLogsByID)
 		bpmn.GET("/process-definitions/:key/changelogs", c.GetVersionChangeLogs)
 	}
+}
+
+func (c *BPMNWorkflowController) GetApprovalHistory(ctx *gin.Context) {
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
+	decisions, err := c.processEngine.TaskService().ListApprovalDecisions(workflowCtx, ctx.Param("id"))
+	if err != nil {
+		common.InternalError(ctx, "查询审批历史失败: "+err.Error())
+		return
+	}
+	common.Success(ctx, dto.ToProcessApprovalDecisionResponseList(decisions))
+}
+
+// SubmitTaskDecision records an explicit approval decision and advances the BPMN task.
+func (c *BPMNWorkflowController) SubmitTaskDecision(ctx *gin.Context) {
+	taskID := ctx.Param("id")
+	var req struct {
+		Action    string                 `json:"action" binding:"required,oneof=approve reject"`
+		Comment   string                 `json:"comment"`
+		Variables map[string]interface{} `json:"variables"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+	if req.Action == "reject" && strings.TrimSpace(req.Comment) == "" {
+		common.Fail(ctx, common.ParamErrorCode, "拒绝审批时必须填写意见")
+		return
+	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
+	variables := req.Variables
+	if variables == nil {
+		variables = make(map[string]interface{})
+	}
+	variables["approvalAction"] = req.Action
+	variables["approvalResult"] = map[string]string{"approve": "approved", "reject": "rejected"}[req.Action]
+	variables["approvalComment"] = strings.TrimSpace(req.Comment)
+
+	var err error
+	if id, parseErr := strconv.Atoi(taskID); parseErr == nil {
+		err = c.processEngine.TaskService().CompleteTaskByID(workflowCtx, id, variables)
+	} else {
+		err = c.processEngine.TaskService().CompleteTask(workflowCtx, taskID, variables)
+	}
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "提交审批决策失败: "+err.Error())
+		return
+	}
+	common.SuccessWithMessage(ctx, "审批决策提交成功", nil)
 }
 
 // CreateProcessDefinition 创建流程定义
@@ -645,14 +705,6 @@ func (c *BPMNWorkflowController) ClaimTask(ctx *gin.Context) {
 	if !exists {
 		common.AuthFailed(ctx, "未授权访问")
 		return
-	}
-
-	var req struct {
-		UserID int `json:"userId"`
-	}
-	// 如果请求中提供了user_id则使用，否则使用当前登录用户
-	if err := ctx.ShouldBindJSON(&req); err == nil && req.UserID > 0 {
-		userID = req.UserID
 	}
 
 	// 尝试解析为数字ID

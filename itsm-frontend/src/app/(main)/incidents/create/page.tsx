@@ -5,7 +5,7 @@ import { Button, Card, Form, Input, Select, Upload, Space, Row, Col, message, Ta
 import { ArrowLeft, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { IncidentAPI } from '@/lib/api/incident-api';
-import type { ConfigurationItem } from '@/lib/api/cmdb-api';
+import type { ConfigurationItem } from '@/types/biz/cmdb';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { User } from '@/lib/api/user-api';
 import { UserApi } from '@/lib/api/user-api';
@@ -282,7 +282,7 @@ export default function CreateIncidentPage() {
                                     onClose={() => handleRemoveCI(ci.id)}
                                     color="blue"
                                   >
-                                    {ci.name} ({ci.ciType || ci.ciType || 'CI'})
+									{ci.name} ({ci.type || 'CI'})
                                   </Tag>
                                 ))}
                               </div>
@@ -309,7 +309,7 @@ export default function CreateIncidentPage() {
                                     >
                                       <div>
                                         <div className="font-medium">{ci.name}</div>
-                                        <div className="text-xs text-gray-500">{ci.ciType || 'CI'} - {ciStatusNameMap[ci.status] || ci.status}</div>
+										<div className="text-xs text-gray-500">{ci.type || 'CI'} - {ciStatusNameMap[ci.status] || ci.status}</div>
                                       </div>
                                       {selectedCIs.find(item => item.id === ci.id) && (
                                         <Tag color="green">已选择</Tag>

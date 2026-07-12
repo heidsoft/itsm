@@ -43,7 +43,7 @@ const EditCIPage: React.FC = () => {
   useEffect(() => {
     const loadTypes = async () => {
       try {
-        const res = await CMDBApi.getTypes();
+		const res = await CMDBApi.getCITypes();
         setTypes(res || []);
       } catch {
         message.error('加载资产类型失败');

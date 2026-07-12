@@ -66,20 +66,6 @@ type CIStatsResponse struct {
 	CriticalityDistribution map[string]int `json:"criticalityDistribution"`
 }
 
-// ImpactedCI 受影响的配置项。
-type ImpactedCI struct {
-	CI    *CIResponse `json:"ci"`
-	Depth int         `json:"depth"`
-	Path  []int       `json:"path"`
-}
-
-// CIImpactAnalysisResponse 配置项影响分析响应。
-type CIImpactAnalysisResponse struct {
-	SourceCIID    int           `json:"sourceCiId"`
-	ImpactedCIs   []*ImpactedCI `json:"impactedCis"`
-	TotalImpacted int           `json:"totalImpacted"`
-}
-
 // CIRelationshipListResponse CI关系列表响应。
 type CIRelationshipListResponse struct {
 	Items      []*CIRelationshipResponse `json:"items"`

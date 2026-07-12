@@ -62,6 +62,7 @@ import (
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/permissiondefinition"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/processapprovaldecision"
 	"itsm-backend/ent/processauditlog"
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
@@ -1996,6 +1997,44 @@ func init() {
 	problem.DefaultUpdatedAt = problemDescUpdatedAt.Default.(func() time.Time)
 	// problem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	problem.UpdateDefaultUpdatedAt = problemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	processapprovaldecisionFields := schema.ProcessApprovalDecision{}.Fields()
+	_ = processapprovaldecisionFields
+	// processapprovaldecisionDescProcessInstanceID is the schema descriptor for process_instance_id field.
+	processapprovaldecisionDescProcessInstanceID := processapprovaldecisionFields[0].Descriptor()
+	// processapprovaldecision.ProcessInstanceIDValidator is a validator for the "process_instance_id" field. It is called by the builders before save.
+	processapprovaldecision.ProcessInstanceIDValidator = processapprovaldecisionDescProcessInstanceID.Validators[0].(func(int) error)
+	// processapprovaldecisionDescProcessTaskID is the schema descriptor for process_task_id field.
+	processapprovaldecisionDescProcessTaskID := processapprovaldecisionFields[1].Descriptor()
+	// processapprovaldecision.ProcessTaskIDValidator is a validator for the "process_task_id" field. It is called by the builders before save.
+	processapprovaldecision.ProcessTaskIDValidator = processapprovaldecisionDescProcessTaskID.Validators[0].(func(int) error)
+	// processapprovaldecisionDescProcessInstanceKey is the schema descriptor for process_instance_key field.
+	processapprovaldecisionDescProcessInstanceKey := processapprovaldecisionFields[2].Descriptor()
+	// processapprovaldecision.ProcessInstanceKeyValidator is a validator for the "process_instance_key" field. It is called by the builders before save.
+	processapprovaldecision.ProcessInstanceKeyValidator = processapprovaldecisionDescProcessInstanceKey.Validators[0].(func(string) error)
+	// processapprovaldecisionDescTaskID is the schema descriptor for task_id field.
+	processapprovaldecisionDescTaskID := processapprovaldecisionFields[3].Descriptor()
+	// processapprovaldecision.TaskIDValidator is a validator for the "task_id" field. It is called by the builders before save.
+	processapprovaldecision.TaskIDValidator = processapprovaldecisionDescTaskID.Validators[0].(func(string) error)
+	// processapprovaldecisionDescProcessDefinitionKey is the schema descriptor for process_definition_key field.
+	processapprovaldecisionDescProcessDefinitionKey := processapprovaldecisionFields[4].Descriptor()
+	// processapprovaldecision.ProcessDefinitionKeyValidator is a validator for the "process_definition_key" field. It is called by the builders before save.
+	processapprovaldecision.ProcessDefinitionKeyValidator = processapprovaldecisionDescProcessDefinitionKey.Validators[0].(func(string) error)
+	// processapprovaldecisionDescNodeKey is the schema descriptor for node_key field.
+	processapprovaldecisionDescNodeKey := processapprovaldecisionFields[5].Descriptor()
+	// processapprovaldecision.NodeKeyValidator is a validator for the "node_key" field. It is called by the builders before save.
+	processapprovaldecision.NodeKeyValidator = processapprovaldecisionDescNodeKey.Validators[0].(func(string) error)
+	// processapprovaldecisionDescActorID is the schema descriptor for actor_id field.
+	processapprovaldecisionDescActorID := processapprovaldecisionFields[8].Descriptor()
+	// processapprovaldecision.ActorIDValidator is a validator for the "actor_id" field. It is called by the builders before save.
+	processapprovaldecision.ActorIDValidator = processapprovaldecisionDescActorID.Validators[0].(func(int) error)
+	// processapprovaldecisionDescTenantID is the schema descriptor for tenant_id field.
+	processapprovaldecisionDescTenantID := processapprovaldecisionFields[17].Descriptor()
+	// processapprovaldecision.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	processapprovaldecision.TenantIDValidator = processapprovaldecisionDescTenantID.Validators[0].(func(int) error)
+	// processapprovaldecisionDescCreatedAt is the schema descriptor for created_at field.
+	processapprovaldecisionDescCreatedAt := processapprovaldecisionFields[18].Descriptor()
+	// processapprovaldecision.DefaultCreatedAt holds the default value on creation for the created_at field.
+	processapprovaldecision.DefaultCreatedAt = processapprovaldecisionDescCreatedAt.Default.(func() time.Time)
 	processauditlogFields := schema.ProcessAuditLog{}.Fields()
 	_ = processauditlogFields
 	// processauditlogDescProcessInstanceID is the schema descriptor for process_instance_id field.

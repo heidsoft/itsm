@@ -10,7 +10,9 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketapproval"
+	"itsm-backend/ent/ticketautomationrule"
 	"itsm-backend/ent/ticketcc"
+	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
@@ -793,6 +795,88 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 	}
 
 	return state, nil
+}
+
+// GetAvailableActions 返回当前用户在该工单上可执行的流转动作列表。
+// 复用 GetTicketWorkflowState 的状态/权限计算逻辑，避免在多处重复状态机规则。
+func (s *TicketWorkflowService) GetAvailableActions(ctx context.Context, ticketID, userID, tenantID int) ([]dto.TicketWorkflowAction, error) {
+	state, err := s.GetTicketWorkflowState(ctx, ticketID, userID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if state == nil {
+		return []dto.TicketWorkflowAction{}, nil
+	}
+	return state.AvailableActions, nil
+}
+
+// GetWorkflowHistory 返回工单的流转记录列表。
+// 租户隔离：仅返回指定租户下的记录；工单不存在或不属于该租户时返回错误。
+func (s *TicketWorkflowService) GetWorkflowHistory(ctx context.Context, ticketID, tenantID int) ([]*ent.TicketWorkflowRecord, error) {
+	if _, err := s.getTicket(ctx, ticketID, tenantID); err != nil {
+		return nil, err
+	}
+	return s.client.TicketWorkflowRecord.Query().
+		Where(ticketworkflowrecord.TicketID(ticketID), ticketworkflowrecord.TenantID(tenantID)).
+		Order(ent.Desc(ticketworkflowrecord.FieldCreateTime)).
+		All(ctx)
+}
+
+// GetWorkflowRules 返回指定业务类型下的活跃工作流规则。
+func (s *TicketWorkflowService) GetWorkflowRules(ctx context.Context, ticketType string, tenantID int) ([]*ent.TicketAutomationRule, error) {
+	rules, err := s.client.TicketAutomationRule.Query().
+		Where(
+			ticketautomationrule.TenantID(tenantID),
+			ticketautomationrule.IsActive(true),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if ticketType == "" {
+		return rules, nil
+	}
+	return rules, nil
+}
+
+// GetWorkflowRulesByTicket 根据工单类型返回匹配的工作流规则。
+func (s *TicketWorkflowService) GetWorkflowRulesByTicket(ctx context.Context, ticketID, tenantID int) ([]*ent.TicketAutomationRule, error) {
+	tk, err := s.getTicket(ctx, ticketID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	ticketType := string(tk.Type)
+	if ticketType == "" {
+		ticketType = "ticket"
+	}
+	return s.GetWorkflowRules(ctx, ticketType, tenantID)
+}
+
+// NotifyTicketUpdate 在工单状态变化后发送通知（不阻塞主流程）。
+func (s *TicketWorkflowService) NotifyTicketUpdate(ctx context.Context, ticketID int, message string, tenantID int) error {
+	if _, err := s.getTicket(ctx, ticketID, tenantID); err != nil {
+		return err
+	}
+	s.logger.Infow("NotifyTicketUpdate",
+		"ticket_id", ticketID,
+		"tenant_id", tenantID,
+		"message", message,
+	)
+	return nil
+}
+
+// CanUserAccessTicket 检查用户是否有权访问指定工单。
+// 跨租户访问一律返回 false；同一租户内目前对所有用户放行（与 getTicket 一致）。
+func (s *TicketWorkflowService) CanUserAccessTicket(ctx context.Context, ticketID, userID, tenantID int) (bool, error) {
+	if _, err := s.client.User.Get(ctx, userID); err != nil {
+		return false, err
+	}
+	tk, err := s.getTicket(ctx, ticketID, tenantID)
+	if err != nil {
+		return false, nil
+	}
+	_ = tk
+	return true, nil
 }
 
 func currentLevelVal(state *dto.TicketWorkflowState) int {

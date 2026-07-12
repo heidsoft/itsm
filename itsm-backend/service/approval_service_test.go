@@ -630,7 +630,18 @@ func TestApprovalService_SubmitApproval_Delegate_CreatesNewPendingRecord(t *test
 		SetName("Workflow").
 		SetIsActive(true).
 		SetTenantID(testTenant.ID).
-		SetNodes([]map[string]interface{}{}).
+		SetNodes([]map[string]interface{}{
+			{
+				"level":         1,
+				"name":          "L1",
+				"allowReject":   true,
+				"allowDelegate": true,
+				"approverIds":   []interface{}{approver.ID},
+				"approvalMode":  "any",
+				"approverType":  "user",
+				"rejectAction":  "end",
+			},
+		}).
 		Save(ctx)
 	require.NoError(t, err)
 

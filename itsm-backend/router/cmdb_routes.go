@@ -25,6 +25,9 @@ func SetupCMDBRoutes(
 		configurationItems.DELETE("/types/:id", middleware.RequirePermission("cmdb_ci_type", "delete"), cmdbController.DeleteCIType)
 		configurationItems.GET("/relationships", middleware.RequirePermission("cmdb_relationship", "read"), cmdbController.ListCIRelationships)
 		configurationItems.POST("/relationships", middleware.RequirePermission("cmdb_relationship", "write"), cmdbController.CreateCIRelationship)
+		configurationItems.GET("/relationships/:id", middleware.RequirePermission("cmdb_relationship", "read"), cmdbController.GetCIRelationship)
+		configurationItems.PUT("/relationships/:id", middleware.RequirePermission("cmdb_relationship", "write"), cmdbController.UpdateCIRelationship)
+		configurationItems.DELETE("/relationships/:id", middleware.RequirePermission("cmdb_relationship", "delete"), cmdbController.DeleteCIRelationship)
 		configurationItems.GET("/relationship-types", middleware.RequirePermission("cmdb_relationship", "read"), cmdbController.ListRelationshipTypes)
 		configurationItems.GET("", cmdbController.ListCIs)
 		configurationItems.POST("", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.CreateCI)
@@ -32,6 +35,7 @@ func SetupCMDBRoutes(
 		configurationItems.PUT("/:id", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.UpdateCI)
 		configurationItems.DELETE("/:id", middleware.RequirePermission("cmdb_ci", "delete"), cmdbController.DeleteCI)
 		configurationItems.GET("/:id/relationships", cmdbController.ListCIRelationshipsByCIID)
+		configurationItems.GET("/:id/topology", cmdbController.GetCITopology)
 		configurationItems.GET("/:id/impact-analysis", cmdbController.GetCIImpactAnalysis)
 		configurationItems.GET("/:id/change-history", cmdbController.GetCIHistory)
 		configurationItems.GET("/:id/history", cmdbController.GetCIHistory)
@@ -148,6 +152,7 @@ func SetupCMDBRoutes(
 
 			// 关系查询
 			cis.GET("/:id/relationships", cmdbController.ListCIRelationshipsByCIID)
+			cis.GET("/:id/topology", cmdbController.GetCITopology)
 
 			// 影响分析
 			cis.GET("/:id/impact-analysis", cmdbController.GetCIImpactAnalysis)
@@ -217,6 +222,16 @@ func SetupCMDBRoutes(
 			cloudResources.POST("", middleware.RequirePermission("cmdb_cloud_resource", "write"), config.CMDBHandler.CreateCloudResource)
 			cloudResources.PUT("/:id", middleware.RequirePermission("cmdb_cloud_resource", "write"), config.CMDBHandler.UpdateCloudResource)
 			cloudResources.DELETE("/:id", middleware.RequirePermission("cmdb_cloud_resource", "delete"), config.CMDBHandler.DeleteCloudResource)
+		}
+
+		// ------------------------------ 发现相关路由 ------------------------------
+		discovery := cmdb.Group("/discovery")
+		discovery.Use(middleware.RequirePermission("cmdb", "read"))
+		{
+			discovery.GET("/sources", config.CMDBHandler.ListDiscoverySources)
+			discovery.POST("/sources", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoverySource)
+			discovery.POST("/jobs", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoveryJob)
+			discovery.GET("/results", config.CMDBHandler.ListDiscoveryResults)
 		}
 
 		// ------------------------------ 对账相关路由 ------------------------------

@@ -63,6 +63,7 @@ func Fail(c *gin.Context, code int, message string) {
 		Code:    code,
 		Message: message,
 	})
+	c.Abort()
 }
 
 // FailWithData 失败响应（带数据）
@@ -88,6 +89,7 @@ func FailWithData(c *gin.Context, code int, message string, data interface{}) {
 		Message: message,
 		Data:    data,
 	})
+	c.Abort()
 }
 
 // Conflict 版本冲突响应

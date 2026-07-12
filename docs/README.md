@@ -35,6 +35,7 @@
 
 ## 测试与评审
 
+- [模块功能复盘与改善迭代计划](./review/module-function-retrospective-2026-07-10.md)
 - [角色视角测试方案](./testing/role-based-product-test-plan.md)
 - [浏览器 E2E 测试报告](./review/browser-e2e-test-report-2026-06-18.md)
 - [深度业务测试报告](./review/deep-business-test-report-2026-06-18.md)

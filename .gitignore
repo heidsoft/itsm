@@ -113,10 +113,15 @@ server.log
 *apikey*
 *secret*
 *password*
-# Exception: the passwordresettoken migration package is generated source code,
-# not a secret. Re-include it so the backend compiles in CI.
+# Exception: passwordresettoken is generated ent/migration source code, NOT a
+# secret. Re-include it (package dir + generated *.go files in both migrations/
+# and ent/) so the backend compiles in CI.
 !itsm-backend/migrations/passwordresettoken/
 !itsm-backend/migrations/passwordresettoken/**
+!itsm-backend/migrations/passwordresettoken*.go
+!itsm-backend/ent/passwordresettoken/
+!itsm-backend/ent/passwordresettoken/**
+!itsm-backend/ent/passwordresettoken*.go
 *.key
 credentials*
 

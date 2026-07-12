@@ -139,15 +139,12 @@ export function CSDMHub() {
   const load = React.useCallback(async () => {
     setState(prev => ({ ...prev, loading: true }));
     try {
-      const [
-        stats,
-        ciTypes,
-        cloudAccounts,
-        cloudServices,
-        discoverySources,
-        cloudResources,
-        reconciliation,
-      ] = await Promise.all([
+      // Use Promise.allSettled so that a single failing endpoint (e.g. cloud accounts
+      // / reconciliation when not yet wired in dev) does not block the dashboard
+      // counts. Previously a `Promise.all` would short-circuit on the first rejection
+      // and the catch block only flipped `loading` off without ever calling setState
+      // for counts — leaving the UI stuck at zero.
+      const results = await Promise.allSettled([
         CMDBApi.getCMDBStats(),
         CMDBApi.getCITypes(),
         CMDBApi.getCloudAccounts(),
@@ -156,14 +153,27 @@ export function CSDMHub() {
         CMDBApi.getCloudResources(),
         CMDBApi.getReconciliationResults(),
       ]);
-
+  
+      const pick = <T,>(idx: number, fallback: T): T => {
+        const r = results[idx];
+        return r && r.status === 'fulfilled' ? ((r as PromiseFulfilledResult<T>).value as T) : fallback;
+      };
+  
+      const stats = pick(0, {});
+      const ciTypes = pick(1, []);
+      const cloudAccounts = pick(2, []);
+      const cloudServices = pick(3, []);
+      const discoverySources = pick(4, []);
+      const cloudResources = pick(5, []);
+      const reconciliation = pick(6, {});
+  
       const statsData = (stats as any)?.data ?? stats;
       const reconData = (reconciliation as any)?.data ?? reconciliation;
       const summary = (reconData as any)?.summary ?? {};
       const unboundResources = normalizeList<Record<string, unknown>>((reconData as any)?.unboundResources ?? (reconData as any)?.unboundResources);
       const orphanCIs = normalizeList<Record<string, unknown>>((reconData as any)?.orphanCIs ?? (reconData as any)?.orphanCis);
       const unlinkedCIs = normalizeList<Record<string, unknown>>((reconData as any)?.unlinkedCIs ?? (reconData as any)?.unlinkedCis);
-
+  
       setState({
         loading: false,
         lastSyncedAt: new Date().toISOString(),

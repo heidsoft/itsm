@@ -180,6 +180,14 @@ func (h *Handler) CreateStandardChange(c *gin.Context) {
 		category = "general"
 	}
 
+	// expected_duration: when omitted the JSON zero value (0) would be set
+	// explicitly and override the schema default (30). Apply the default for
+	// any non-positive value so templates keep a sane estimated duration.
+	expectedDuration := req.ExpectedDuration
+	if expectedDuration <= 0 {
+		expectedDuration = 30
+	}
+
 	sc, err := h.client.StandardChange.Create().
 		SetTitle(req.Title).
 		SetDescription(req.Description).
@@ -189,7 +197,7 @@ func (h *Handler) CreateStandardChange(c *gin.Context) {
 		SetCategory(category).
 		SetRiskLevel(riskLevel).
 		SetImpactScope(impactScope).
-		SetExpectedDuration(req.ExpectedDuration).
+		SetExpectedDuration(expectedDuration).
 		SetApprovalRequired(req.ApprovalRequired).
 		SetAffectedCis(req.AffectedCis).
 		SetPrerequisites(req.Prerequisites).
