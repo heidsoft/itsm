@@ -12,8 +12,6 @@ on:
 env:
   DOCKER_BUILDKIT: "1"
   REGISTRY: "ghcr.io"
-  GOPROXY: "https://goproxy.cn,direct"
-  NPM_REGISTRY: "https://registry.npmmirror.com"
 
 jobs:
   publish:
@@ -30,13 +28,13 @@ jobs:
             dockerfile: Dockerfile.prod
             target: runtime
             args: |
-              GOPROXY=${{ env.GOPROXY }}
+              GOPROXY=https://goproxy.cn,direct
           - service: frontend
             context: itsm-frontend
             dockerfile: Dockerfile
             target: production
             args: |
-              NPM_REGISTRY=${{ env.NPM_REGISTRY }}
+              NPM_REGISTRY=https://registry.npmmirror.com
               NEXT_PUBLIC_ENABLE_AI=true
           - service: ai-service
             context: itsm-ai-service
