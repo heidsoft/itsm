@@ -1,106 +1,101 @@
-# ============================================
-# Stage 1: Dependencies Installation
-# ============================================
+# syntax=docker/dockerfile:1.7
+#
+# ITSM Frontend — multi-stage Next.js build
+#
+# Stages:
+#   deps       — install dependencies (cached)
+#   builder    — next build (standalone output)
+#   production — minimal runtime server (non-root)
+#   runner     — dev server with hot reload (local only)
+#
+# Optimizations:
+#   - Pinned node:22-alpine
+#   - BuildKit cache mount for npm (~/.npm)
+#   - production stage runs as the built-in "node" user (no root)
+#   - production stage ships ONLY the standalone bundle + static + public
+#     (devDependencies never reach the final image)
+
+# ============================================================
+# Stage 1: Dependencies
+# ============================================================
 FROM node:22-alpine AS deps
 
 WORKDIR /app
 
-# Clear proxy settings to avoid Docker Desktop proxy interference
-ARG HTTP_PROXY=
-ARG HTTPS_PROXY=
-ARG http_proxy=
-ARG https_proxy=
-ARG NO_PROXY=localhost,127.0.0.1
-ARG no_proxy=localhost,127.0.0.1
-
-ARG NPM_REGISTRY
-
-# eslint v10 (bumped by dependabot) declares peer ranges that
-# eslint-config-next@15.x does not yet satisfy; npm's strict
-# resolution rejects the install. Setting NPM_CONFIG_LEGACY_PEER_DEPS
-# is the documented escape hatch and applies to every npm ci / npm
-# install / npx invocation in this image. Once eslint-config-next
-# supports eslint v10, this can be removed.
+# eslint v10 peer-range escape hatch (mirrors prior Dockerfile behavior).
 ENV NPM_CONFIG_LEGACY_PEER_DEPS=true
 
-# Use configurable npm registry (defaults to official registry, override with build arg for China: --build-arg NPM_REGISTRY=https://registry.npmmirror.com)
-RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org}
+ARG NPM_REGISTRY
+RUN npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org}
 
-# Copy package files first for caching
 COPY package.json package-lock.json ./
 
-# Install dependencies (without --ignore-scripts so postinstall hooks run)
-RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    npm ci --prefer-offline || npm install
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
 
-# ============================================
-# Stage 2: Build Next.js application (production)
-# ============================================
+# ============================================================
+# Stage 2: Build
+# ============================================================
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
 ARG ITSM_BACKEND_URL=http://itsm-backend:8090
 ARG NPM_REGISTRY
-ARG HTTP_PROXY=
-ARG HTTPS_PROXY=
-ARG http_proxy=
-ARG https_proxy=
-ARG NO_PROXY=localhost,127.0.0.1
-ARG no_proxy=localhost,127.0.0.1
+ARG NEXT_PUBLIC_ENABLE_AI=true
 
-RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org}
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    ITSM_BACKEND_URL=${ITSM_BACKEND_URL} \
+    NEXT_PUBLIC_ENABLE_AI=${NEXT_PUBLIC_ENABLE_AI}
 
-# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV ITSM_BACKEND_URL=${ITSM_BACKEND_URL}
-
-RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
+RUN --mount=type=cache,target=/root/.npm \
     npm run build
 
-# ============================================
-# Stage 3a: Production runner
-# ============================================
+# ============================================================
+# Stage 3a: Production runtime
+# ============================================================
 FROM node:22-alpine AS production
 
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-ENV ITSM_BACKEND_URL=http://itsm-backend:8090
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0" \
+    ITSM_BACKEND_URL=http://itsm-backend:8090 \
+    NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Standalone bundle embeds only the modules it needs; no node_modules copied.
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+
+# Next writes a small on-disk cache at runtime; make it writable by "node".
+RUN mkdir -p .next/cache && chown -R node:node .next
+
+USER node
 
 EXPOSE 3000
 
 CMD ["node", "server.js"]
 
-# ============================================
-# Stage 3b: Development runner
-# ============================================
+# ============================================================
+# Stage 3b: Development runtime (hot reload)
+# ============================================================
 FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-# Copy everything from deps (node_modules ready) + source
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN mkdir -p .next && chmod 755 .next
-
-ENV NODE_ENV=development
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-ENV ITSM_BACKEND_URL=http://host.docker.internal:8090
+ENV NODE_ENV=development \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0" \
+    ITSM_BACKEND_URL=http://host.docker.internal:8090
 
 EXPOSE 3000
 

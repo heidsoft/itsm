@@ -73,6 +73,10 @@ ifndef VERSION
 endif
 	./scripts/release.sh $(VERSION)
 
+# Build images
+build-images:      ## Build all service images (VERSION=... REGISTRY=... make build-images)
+	./scripts/build-images.sh $(VERSION) $(REGISTRY)
+
 # Database
 db-migrate:         ## Run database migrations
 	cd itsm-backend && go run -tags migrate main.go
@@ -94,5 +98,5 @@ logs-postgres:      ## View postgres logs
         prod-init prod-start prod-stop prod-deploy prod-status prod-health prod-logs \
         prod-restart prod-rollback prod-backup prod-down \
         db-migrate db-seed \
-        release \
+        release build-images \
         logs-backend logs-frontend logs-postgres

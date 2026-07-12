@@ -1,73 +1,78 @@
-# Build stage
-FROM golang:alpine AS builder
+# syntax=docker/dockerfile:1.7
+#
+# ITSM Backend — development image (multi-stage)
+#
+# Optimizations vs. the previous version:
+#   - Pinned base image (golang:1.25-alpine) instead of floating "golang:alpine"
+#   - BuildKit cache mounts for go modules + build cache (repeat builds are fast)
+#   - trimpath + "-s -w" linker flags to shrink the binary
+#   - Static, non-root runtime on a pinned alpine:3.20
+#   - Only the binary + runtime assets (config.yaml, migrations, config/seed) ship
+#
+# NOTE: dev builds intentionally keep debug symbols off-net but the base image
+# matches the prod toolchain so dev/prod behavior stays aligned.
 
-WORKDIR /app
+# ============================================================
+# Stage 1: Build
+# ============================================================
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
 
-# 接收构建参数（禁用代理确保直连）
-ARG HTTP_PROXY=
-ARG HTTPS_PROXY=
-ARG http_proxy=
-ARG https_proxy=
-ARG no_proxy=localhost,127.0.0.1
+WORKDIR /src
 
-# 安装 git（go mod download 需要）
-# Must unset proxy before apk since apk respects HTTP_PROXY env var
-RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    apk add --no-cache git ca-certificates
-
-# Go module proxy - configurable via build arg for international users
-# Default: goproxy.cn for China region, use GOPROXY=https://proxy.golang.org,direct for other regions
-ARG GOPROXY
-ENV GOPROXY=${GOPROXY:-https://goproxy.cn,direct}
-
-# Enable module checksum verification (security)
+# Region-tunable module proxy (China default; override for overseas CI).
+ARG GOPROXY=https://goproxy.cn,direct
 ARG GOSUMDB=sum.golang.org
-ENV GOSUMDB=${GOSUMDB}
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
 
-# Copy go mod files
+ENV CGO_ENABLED=0 \
+    GOOS=${TARGETOS} \
+    GOARCH=${TARGETARCH} \
+    GOPROXY=${GOPROXY} \
+    GOSUMDB=${GOSUMDB} \
+    GOFLAGS=-p=2 \
+    GOMAXPROCS=2 \
+    GOGC=50 \
+    GOMEMLIMIT=2GiB
+
+# ca-certificates for any TLS module fetches; git for go mod download.
+RUN apk add --no-cache ca-certificates git
+
+# Cache module download across builds.
 COPY go.mod go.sum ./
-
-# go mod download - use goproxy.cn mirror
-RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
     go mod download
 
-# Copy source code
-COPY . ./
+# Build (sources copied after deps so the dep layer stays cached).
+COPY . .
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go build -trimpath -ldflags="-s -w" -o /out/main ./main.go
 
-# Build the application
-# Unset proxy vars and use goproxy.cn for dependencies
-# Use -p=2 to limit parallel compilations and avoid OOM with large ent packages
-RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    CGO_ENABLED=0 GOOS=linux go build -p=2 -o main .
-
-# Final stage
-FROM alpine:latest
+# ============================================================
+# Stage 2: Runtime
+# ============================================================
+FROM alpine:3.20
 
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup -g 1000 -S appgroup && \
-    adduser -u 1000 -S appuser -G appgroup
+# Non-root user + required directories.
+RUN addgroup -S app && adduser -S -G app app \
+    && mkdir -p /app/logs /app/uploads /app/temp /app/config \
+    && chown -R app:app /app
 
-# Copy binary from builder
-COPY --from=builder /app/main .
-COPY --from=builder /app/config.yaml .
-COPY --from=builder /app/migrations ./migrations
-COPY --from=builder /app/config/seed ./config/seed
+# ca-certificates already ship with alpine; copy only what runtime needs.
+COPY --from=builder --chown=app:app /out/main ./main
+COPY --chown=app:app config.yaml ./
+COPY --chown=app:app migrations ./migrations
+COPY --chown=app:app config/seed ./config/seed
 
-# Create required directories
-RUN mkdir -p /app/logs /app/uploads /app/temp && \
-    chown -R appuser:appgroup /app
+USER app
 
-# Switch to non-root user
-USER appuser
-
-# Expose port
 EXPOSE 8090
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8090/api/v1/health || exit 1
 
-# Run the application
 CMD ["./main"]

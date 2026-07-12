@@ -1,10 +1,27 @@
-FROM --platform=$BUILDPLATFORM golang:alpine AS builder
+# syntax=docker/dockerfile:1.7
+#
+# ITSM Backend — production image (multi-stage)
+#
+# Optimizations vs. the previous version:
+#   - Pinned base images (golang:1.25-alpine, alpine:3.20)
+#   - BuildKit cache mounts for go modules + build cache
+#   - Cross-platform build via TARGETOS/TARGETARCH
+#   - trimpath + "-s -w" to strip debug info and shrink the binary
+#   - Memory guards (GOGC/GOMEMLIMIT) kept for large ent packages
+#   - Static, non-root runtime (user "app", chown on COPY)
+
+# ============================================================
+# Stage 1: Build
+# ============================================================
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
 
 WORKDIR /src
 
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
-ARG GOPROXY=https://proxy.golang.org,direct
+# Default to the China mirror; overseas CI can override:
+#   --build-arg GOPROXY=https://proxy.golang.org,direct
+ARG GOPROXY=https://goproxy.cn,direct
 ARG GOSUMDB=sum.golang.org
 
 ENV CGO_ENABLED=0 \
@@ -12,27 +29,26 @@ ENV CGO_ENABLED=0 \
     GOARCH=${TARGETARCH} \
     GOPROXY=${GOPROXY} \
     GOSUMDB=${GOSUMDB} \
-    GOFLAGS=-p=1 \
-    GOMAXPROCS=1 \
-    GOGC=20 \
-    GOMEMLIMIT=1GiB \
-    HTTP_PROXY= \
-    HTTPS_PROXY= \
-    http_proxy= \
-    https_proxy= \
-    ALL_PROXY= \
-    all_proxy= \
-    NO_PROXY=localhost,127.0.0.1 \
-    no_proxy=localhost,127.0.0.1
+    GOFLAGS=-p=2 \
+    GOMAXPROCS=2 \
+    GOGC=50 \
+    GOMEMLIMIT=2GiB
+
+RUN apk add --no-cache ca-certificates git
 
 COPY go.mod go.sum ./
-RUN env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go mod download
 
 COPY . .
-
-RUN env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy \
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -ldflags="-s -w" -o /out/main ./main.go
 
+# ============================================================
+# Stage 2: Runtime
+# ============================================================
 FROM alpine:3.20
 
 WORKDIR /app
@@ -42,7 +58,7 @@ RUN addgroup -S app && adduser -S -G app app \
     && chown -R app:app /app
 
 COPY --from=builder --chown=app:app /out/main ./main
-COPY --chown=app:app config.yaml .
+COPY --chown=app:app config.yaml ./
 COPY --chown=app:app migrations ./migrations
 COPY --chown=app:app config/seed ./config/seed
 

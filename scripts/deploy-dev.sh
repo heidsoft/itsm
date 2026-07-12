@@ -37,6 +37,10 @@
 
 set -euo pipefail
 
+# Enable BuildKit so the multi-stage Dockerfiles can use cache mounts +
+# inline layer caching (faster, smaller rebuilds).
+export DOCKER_BUILDKIT=1
+
 # ============================================================
 # Bootstrap: load shared library
 # ============================================================
@@ -594,10 +598,10 @@ cmd_doctor() {
     # Docker Compose
     echo ""
     echo -e "${BOLD}Docker Compose${NC}"
-    if docker compose version &>/dev/null 2>&1; then
-        log_success "Docker Compose v2 available"
+    if dc version &>/dev/null 2>&1; then
+        log_success "Docker Compose available (v1/v2 auto-detected)"
     else
-        log_error "Docker Compose v2 not available"
+        log_error "Docker Compose not available (need docker-compose v1 or 'docker compose' v2 plugin)"
         issues=$((issues + 1))
     fi
 

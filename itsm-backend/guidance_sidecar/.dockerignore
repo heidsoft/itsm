@@ -1,0 +1,14 @@
+# Build context exclusions for guidance_sidecar
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.env
+.env.*
+*.log
+*.md
+Dockerfile
+.dockerignore

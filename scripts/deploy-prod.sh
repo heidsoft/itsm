@@ -37,6 +37,10 @@
 
 set -euo pipefail
 
+# Enable BuildKit so the multi-stage Dockerfiles can use cache mounts +
+# inline layer caching (faster, smaller rebuilds).
+export DOCKER_BUILDKIT=1
+
 # ============================================================
 # Bootstrap: load shared library
 # ============================================================
@@ -222,7 +226,7 @@ preflight_checks() {
     fi
 
     # Docker Compose
-    if ! docker compose version &>/dev/null 2>&1; then
+    if ! dc version &>/dev/null 2>&1; then
         log_error "Docker Compose v2 not available"; errors=$((errors + 1))
     else
         log_success "Docker Compose v2 available"
@@ -263,7 +267,7 @@ preflight_checks() {
             errors=$((errors + 1))
         fi
 
-        if ! docker compose --env-file "$ENV_FILE" -f "$COMPOSE_PROD" config >/dev/null; then
+        if ! dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" config >/dev/null; then
             log_error "docker-compose.prod.yml validation failed"
             errors=$((errors + 1))
         else
@@ -348,9 +352,9 @@ build_images() {
         run echo "Would build itsm-backend:prod"
     else
         if [[ "$VERBOSE" == "true" ]]; then
-            docker compose --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build itsm-backend
+            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build --build-arg BUILDKIT_INLINE_CACHE=1 itsm-backend
         else
-            docker compose --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build itsm-backend 2>&1 | tail -5
+            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build --build-arg BUILDKIT_INLINE_CACHE=1 itsm-backend 2>&1 | tail -5
         fi
     fi
     timer_end "$start" "Backend image build"
@@ -363,9 +367,9 @@ build_images() {
         run echo "Would build itsm-frontend:prod"
     else
         if [[ "$VERBOSE" == "true" ]]; then
-            docker compose --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build itsm-frontend
+            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build --build-arg BUILDKIT_INLINE_CACHE=1 itsm-frontend
         else
-            docker compose --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build itsm-frontend 2>&1 | tail -5
+            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build --build-arg BUILDKIT_INLINE_CACHE=1 itsm-frontend 2>&1 | tail -5
         fi
     fi
     timer_end "$start" "Frontend image build"

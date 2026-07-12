@@ -1,5 +1,6 @@
 .git
 .gitignore
+.github
 .idea
 .vscode
 logs
@@ -17,3 +18,8 @@ dist
 build
 vendor
 .DS_Store
+# Speed up build context; not needed to compile the binary
+**/*_test.go
+docs
+*.md
+LICENSE

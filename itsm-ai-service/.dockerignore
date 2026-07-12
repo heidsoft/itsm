@@ -1,0 +1,17 @@
+# Build context exclusions for itsm-ai-service
+.git
+.gitignore
+.github
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.env
+.env.*
+*.log
+tests
+docs
+*.md
+Dockerfile
+.dockerignore
