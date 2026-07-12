@@ -113,6 +113,10 @@ server.log
 *apikey*
 *secret*
 *password*
+# Exception: the passwordresettoken migration package is generated source code,
+# not a secret. Re-include it so the backend compiles in CI.
+!itsm-backend/migrations/passwordresettoken/
+!itsm-backend/migrations/passwordresettoken/**
 *.key
 credentials*
 
