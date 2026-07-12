@@ -256,12 +256,16 @@ export const getAntdTheme = (isDark: boolean) => {
   };
 };
 
-// 主题配置组件
+// 主题配置组件属性
 interface ThemeConfigProps {
   children: ReactNode;
 }
 
+// 主题配置组件：仅作为 theme → antd 主题的应用边界占位，
+// 真正注入 antd ConfigProvider 的逻辑由 AntdProvider 完成。
+// 这里必须透传 children，否则会丢掉 layout 中后续的整棵子树导致页面空白。
 export const ThemeConfig: React.FC<ThemeConfigProps> = ({ children }) => {
+  return <>{children}</>;
 };
 
 // CSS 变量生成器
