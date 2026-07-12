@@ -60,22 +60,26 @@ jobs:
           - service: backend
             context: itsm-backend
             dockerfile: Dockerfile.prod
+            target: runtime
             args: |
               GOPROXY=${{ env.GOPROXY }}
           - service: frontend
             context: itsm-frontend
             dockerfile: Dockerfile
+            target: production
             args: |
               NPM_REGISTRY=${{ env.NPM_REGISTRY }}
               NEXT_PUBLIC_ENABLE_AI=true
           - service: ai-service
             context: itsm-ai-service
             dockerfile: Dockerfile
+            target: runtime
             args: |
               TORCH_INDEX=https://download.pytorch.org/whl/cpu
           - service: guidance_sidecar
             context: itsm-backend/guidance_sidecar
             dockerfile: Dockerfile
+            target: runtime
             args: |
               TORCH_INDEX=https://download.pytorch.org/whl/cpu
     steps:
@@ -86,7 +90,7 @@ jobs:
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.context }}/${{ matrix.dockerfile }}
-          target: ${{ matrix.service == 'frontend' && 'production' || '' }}
+          target: ${{ matrix.target }}
           build-args: ${{ matrix.args }}
           push: false
           cache-from: type=gha
