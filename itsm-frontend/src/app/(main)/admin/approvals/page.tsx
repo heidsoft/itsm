@@ -406,7 +406,7 @@ export default function ApprovalManagement() {
           </Form.Item>
           <Form.Item
             label="工单类型"
-            name="ticket_type"
+            name="ticketType"
           >
             <Select
               placeholder="选择工单类型"
@@ -442,7 +442,7 @@ export default function ApprovalManagement() {
           </Form.Item>
           <Form.Item
             label="关联BPMN工作流"
-            name="workflow_id"
+            name="workflowId"
             tooltip="选择关联的BPMN工作流，用于自动化流程编排"
           >
             <Select
@@ -458,7 +458,7 @@ export default function ApprovalManagement() {
           </Form.Item>
           <Form.Item
             label="状态"
-            name="is_active"
+            name="isActive"
             valuePropName="checked"
           >
             <Switch checkedChildren="启用" unCheckedChildren="禁用" defaultChecked />

@@ -449,7 +449,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           <Col xs={24}>
             <Form.Item
               label="回滚风险评估"
-              name="rollback_risk_assessment"
+              name="rollbackRiskAssessment"
               rules={[{ required: true, message: '请进行风险评估' }]}
             >
               <TextArea

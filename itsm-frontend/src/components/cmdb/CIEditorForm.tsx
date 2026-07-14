@@ -72,7 +72,7 @@ export function CIEditorForm({
 
         <Form.Item
           label="资产类型"
-          name="ci_type_id"
+          name="ciTypeId"
           rules={[{ required: true, message: '请选择资产类型' }]}
         >
           <Select
@@ -106,7 +106,7 @@ export function CIEditorForm({
       </Form.Item>
 
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <Form.Item label="序列号" name="serial_number">
+        <Form.Item label="序列号" name="serialNumber">
           <Input placeholder="请输入序列号（可选）" />
         </Form.Item>
         <Form.Item label="型号" name="model">
@@ -118,19 +118,19 @@ export function CIEditorForm({
         <Form.Item label="位置" name="location">
           <Input placeholder="请输入位置（可选）" />
         </Form.Item>
-        <Form.Item label="资产标签" name="asset_tag">
+        <Form.Item label="资产标签" name="assetTag">
           <Input placeholder="请输入资产标签（可选）" />
         </Form.Item>
         <Form.Item label="重要性" name="criticality">
           <Select placeholder="请选择重要性" allowClear options={criticalityOptions} />
         </Form.Item>
-        <Form.Item label="分配给" name="assigned_to">
+        <Form.Item label="分配给" name="assignedTo">
           <Input placeholder="请输入分配人（可选）" />
         </Form.Item>
-        <Form.Item label="拥有者" name="owned_by">
+        <Form.Item label="拥有者" name="ownedBy">
           <Input placeholder="请输入拥有者（可选）" />
         </Form.Item>
-        <Form.Item label="发现源" name="discovery_source">
+        <Form.Item label="发现源" name="discoverySource">
           <Input placeholder="请输入发现源（可选）" />
         </Form.Item>
       </div>
@@ -150,7 +150,7 @@ export function CIEditorForm({
               <Form.Item
                 key={field.key}
                 label={field.label || field.key}
-                name={['custom_attributes', field.key]}
+                name={['customAttributes', field.key]}
                 rules={
                   field.required
                     ? [{ required: true, message: `请选择${field.label || field.key}` }]
@@ -178,11 +178,11 @@ export function CIEditorForm({
       <Divider>云资源信息</Divider>
 
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <Form.Item label="云厂商" name="cloud_provider">
+        <Form.Item label="云厂商" name="cloudProvider">
           <Select placeholder="请选择云厂商" allowClear options={cloudProviderOptions} />
         </Form.Item>
 
-        <Form.Item label="云资源引用" name="cloud_resource_ref_id" className="xl:col-span-2">
+        <Form.Item label="云资源引用" name="cloudResourceRefId" className="xl:col-span-2">
           <Select
             placeholder="请选择云资源（可选）"
             allowClear
@@ -194,22 +194,22 @@ export function CIEditorForm({
           />
         </Form.Item>
 
-        <Form.Item label="云账号 ID" name="cloud_account_id">
+        <Form.Item label="云账号 ID" name="cloudAccountId">
           <Input placeholder="请输入云账号 ID（可选）" />
         </Form.Item>
-        <Form.Item label="Region" name="cloud_region">
+        <Form.Item label="Region" name="cloudRegion">
           <Input placeholder="请输入 Region（可选）" />
         </Form.Item>
-        <Form.Item label="Zone" name="cloud_zone">
+        <Form.Item label="Zone" name="cloudZone">
           <Input placeholder="请输入 Zone（可选）" />
         </Form.Item>
-        <Form.Item label="云资源 ID" name="cloud_resource_id">
+        <Form.Item label="云资源 ID" name="cloudResourceId">
           <Input placeholder="请输入云资源 ID（可选）" />
         </Form.Item>
-        <Form.Item label="云资源类型" name="cloud_resource_type">
+        <Form.Item label="云资源类型" name="cloudResourceType">
           <Input placeholder="请输入云资源类型（可选）" />
         </Form.Item>
-        <Form.Item label="同步状态" name="cloud_sync_status">
+        <Form.Item label="同步状态" name="cloudSyncStatus">
           <Select placeholder="请选择同步状态" allowClear options={cloudSyncStatusOptions} />
         </Form.Item>
       </div>
@@ -225,7 +225,7 @@ export function CIEditorForm({
               <Form.Item
                 key={field.key}
                 label={field.label || field.key}
-                name={['cloud_metadata', field.key]}
+                name={['cloudMetadata', field.key]}
                 rules={
                   field.required
                     ? [{ required: true, message: `请输入${field.label || field.key}` }]

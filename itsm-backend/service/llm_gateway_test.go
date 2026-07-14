@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 
 // MockLLMProvider 模拟 LLM Provider
 type MockLLMProvider struct {
+	mu          sync.Mutex
 	ShouldError bool
 	ErrorMsg    string
 	Response    string
@@ -21,28 +23,46 @@ type MockLLMProvider struct {
 }
 
 func (m *MockLLMProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+	m.mu.Lock()
 	m.CallCount++
+	m.mu.Unlock()
 	if m.ShouldError {
 		return "", errors.New(m.ErrorMsg)
 	}
 	return m.Response, nil
 }
 
+func (m *MockLLMProvider) Calls() int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.CallCount
+}
+
 // MockTokenLimiter 模拟 Token Limiter
 type MockTokenLimiter struct {
+	mu          sync.Mutex
 	ShouldAllow bool
 	CheckCount  int
 	LastTokens  int
 }
 
 func (m *MockTokenLimiter) Allow(nTokens int) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.CheckCount++
 	m.LastTokens = nTokens
 	return m.ShouldAllow
 }
 
+func (m *MockTokenLimiter) Snapshot() (checkCount, lastTokens int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.CheckCount, m.LastTokens
+}
+
 // MockObserver 模拟 Observer
 type MockObserver struct {
+	mu      sync.Mutex
 	Records []Observation
 }
 
@@ -55,6 +75,8 @@ type Observation struct {
 }
 
 func (m *MockObserver) Observe(provider string, model string, tokens int, latency time.Duration, err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Records = append(m.Records, Observation{
 		Provider: provider,
 		Model:    model,
@@ -62,6 +84,12 @@ func (m *MockObserver) Observe(provider string, model string, tokens int, latenc
 		Latency:  latency,
 		Err:      err,
 	})
+}
+
+func (m *MockObserver) Snapshot() []Observation {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return append([]Observation(nil), m.Records...)
 }
 
 // ==================== LLMGateway 基本测试 ====================
@@ -92,11 +120,13 @@ func TestLLMGateway_Chat_Success(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, "Hello, world!", resp)
-	assert.Equal(t, 1, provider.CallCount)
-	assert.Equal(t, 1, limiter.CheckCount)
-	assert.Len(t, observer.Records, 1)
-	assert.Equal(t, "openai", observer.Records[0].Provider)
-	assert.Equal(t, "gpt-4", observer.Records[0].Model)
+	assert.Equal(t, 1, provider.Calls())
+	checkCount, _ := limiter.Snapshot()
+	assert.Equal(t, 1, checkCount)
+	records := observer.Snapshot()
+	assert.Len(t, records, 1)
+	assert.Equal(t, "openai", records[0].Provider)
+	assert.Equal(t, "gpt-4", records[0].Model)
 }
 
 func TestLLMGateway_Chat_ProviderError(t *testing.T) {
@@ -120,8 +150,9 @@ func TestLLMGateway_Chat_ProviderError(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "API error")
 	assert.Empty(t, resp)
-	assert.Len(t, observer.Records, 1)
-	assert.NotNil(t, observer.Records[0].Err)
+	records := observer.Snapshot()
+	assert.Len(t, records, 1)
+	assert.NotNil(t, records[0].Err)
 }
 
 func TestLLMGateway_Chat_RateLimited(t *testing.T) {
@@ -147,8 +178,8 @@ func TestLLMGateway_Chat_RateLimited(t *testing.T) {
 	// 验证返回的是 RateLimitError
 	var rateLimitErr *RateLimitError
 	assert.ErrorAs(t, err, &rateLimitErr)
-	assert.Equal(t, 0, provider.CallCount) // provider 不应被调用
-	assert.Len(t, observer.Records, 1)
+	assert.Equal(t, 0, provider.Calls()) // provider 不应被调用
+	assert.Len(t, observer.Snapshot(), 1)
 }
 
 func TestLLMGateway_Chat_NilLimiter(t *testing.T) {
@@ -168,7 +199,7 @@ func TestLLMGateway_Chat_NilLimiter(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, "Hello", resp)
-	assert.Equal(t, 1, provider.CallCount)
+	assert.Equal(t, 1, provider.Calls())
 }
 
 func TestLLMGateway_Chat_NilObserver(t *testing.T) {
@@ -220,7 +251,8 @@ func TestLLMGateway_Chat_TokenCalculation(t *testing.T) {
 	// "What is 2+2?" = 13 字符 ≈ 3 tokens
 	// "4" = 1 字符 ≈ 0 tokens
 	// 总计约 10 tokens
-	assert.GreaterOrEqual(t, limiter.LastTokens, 7)
+	_, lastTokens := limiter.Snapshot()
+	assert.GreaterOrEqual(t, lastTokens, 7)
 }
 
 // ==================== Token Limiter 测试 ====================
@@ -250,8 +282,8 @@ func TestFixedWindowLimiter_ZeroCapacity(t *testing.T) {
 	limiter := NewFixedWindowLimiter(0)
 
 	// capacity=0 时，Allow(0) 返回 true，Allow(1) 返回 false
-	assert.True(t, limiter.Allow(0))   // 0 <= 0
-	assert.False(t, limiter.Allow(1))  // 1 > 0
+	assert.True(t, limiter.Allow(0))  // 0 <= 0
+	assert.False(t, limiter.Allow(1)) // 1 > 0
 }
 
 // ==================== NoopObserver 测试 ====================
@@ -285,9 +317,9 @@ func TestRateLimitError_Is(t *testing.T) {
 
 func TestLLMGateway_TokenEstimation(t *testing.T) {
 	testCases := []struct {
-		name        string
-		messages    []LLMMessage
-		expectedGt  int // 至少应该有这么多 tokens
+		name       string
+		messages   []LLMMessage
+		expectedGt int // 至少应该有这么多 tokens
 	}{
 		{
 			name: "空消息",
@@ -339,7 +371,8 @@ func TestLLMGateway_TokenEstimation(t *testing.T) {
 			_, err := gateway.Chat(context.Background(), "model", tt.messages)
 			require.NoError(t, err)
 
-			assert.GreaterOrEqual(t, limiter.LastTokens, tt.expectedGt)
+			_, lastTokens := limiter.Snapshot()
+			assert.GreaterOrEqual(t, lastTokens, tt.expectedGt)
 		})
 	}
 }
@@ -376,7 +409,7 @@ func TestLLMGateway_ConcurrentCalls(t *testing.T) {
 		<-done
 	}
 
-	assert.Equal(t, 10, provider.CallCount)
+	assert.Equal(t, 10, provider.Calls())
 }
 
 // ==================== 错误处理边界测试 ====================
@@ -393,7 +426,7 @@ func TestLLMGateway_EmptyMessages(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, "ok", resp)
-	assert.Equal(t, 1, provider.CallCount)
+	assert.Equal(t, 1, provider.Calls())
 }
 
 func TestLLMGateway_LongContent(t *testing.T) {
@@ -417,7 +450,8 @@ func TestLLMGateway_LongContent(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, "ok", resp)
-	assert.Greater(t, limiter.LastTokens, 2000) // 10000 / 4 = 2500
+	_, lastTokens := limiter.Snapshot()
+	assert.Greater(t, lastTokens, 2000) // 10000 / 4 = 2500
 }
 
 func TestLLMGateway_UnicodeContent(t *testing.T) {

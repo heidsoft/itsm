@@ -37,7 +37,6 @@ export function useFormMemory<T = any>(
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<T>;
         setSavedValues(parsed);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         form.setFieldsValue(parsed as any);
       }
     } catch (e) {

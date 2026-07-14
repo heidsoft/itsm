@@ -350,12 +350,9 @@ build_images() {
     local start; start=$(timer_start)
     if $DRY_RUN; then
         run echo "Would build itsm-backend:prod"
-    else
-        if [[ "$VERBOSE" == "true" ]]; then
-            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build --build-arg BUILDKIT_INLINE_CACHE=1 itsm-backend
-        else
-            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build --build-arg BUILDKIT_INLINE_CACHE=1 itsm-backend 2>&1 | tail -5
-        fi
+    elif ! dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build --build-arg BUILDKIT_INLINE_CACHE=1 itsm-backend; then
+        log_error "Backend image build failed"
+        return 1
     fi
     timer_end "$start" "Backend image build"
     log_success "Backend image built"
@@ -365,12 +362,9 @@ build_images() {
     start=$(timer_start)
     if $DRY_RUN; then
         run echo "Would build itsm-frontend:prod"
-    else
-        if [[ "$VERBOSE" == "true" ]]; then
-            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build --build-arg BUILDKIT_INLINE_CACHE=1 itsm-frontend
-        else
-            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build --build-arg BUILDKIT_INLINE_CACHE=1 itsm-frontend 2>&1 | tail -5
-        fi
+    elif ! dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" build --build-arg BUILDKIT_INLINE_CACHE=1 itsm-frontend; then
+        log_error "Frontend image build failed"
+        return 1
     fi
     timer_end "$start" "Frontend image build"
     log_success "Frontend image built"

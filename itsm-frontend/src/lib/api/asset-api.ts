@@ -122,6 +122,7 @@ export interface LicenseRequest {
   description?: string;
   vendor?: string;
   licenseType?: LicenseType;
+  licenseKey?: string;
   totalQuantity?: number;
   assetId?: number;
   purchaseDate?: string;

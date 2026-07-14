@@ -132,7 +132,6 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
     () => ({ ...defaultConfig, ...config }),
     // Re-create only when callers memoize `config` themselves; otherwise accept
     // a no-op shallow comparison by serializing. This is a small cost for stability.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(config)]
   );
 

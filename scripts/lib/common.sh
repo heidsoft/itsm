@@ -142,15 +142,15 @@ port_in_use() {
 # Usage: dc <compose_args...>
 dc() {
     # Auto-detect docker compose command (supports v1 and v2)
-    local cmd
+    local -a cmd
     if command -v docker-compose &>/dev/null; then
-        cmd="docker-compose"
+        cmd=(docker-compose)
     else
-        cmd="docker compose"
+        cmd=(docker compose)
     fi
 
     if [[ "${VERBOSE:-false}" == "true" ]]; then
-        "$cmd" "$@"
+        "${cmd[@]}" "$@"
         return $?
     fi
 
@@ -159,7 +159,7 @@ dc() {
     # masked docker's exit code (the pipeline returned the filter's 0), so
     # build/validation failures were silently swallowed. We capture rc first.
     local out rc
-    out=$("$cmd" "$@" 2>&1); rc=$?
+    out=$("${cmd[@]}" "$@" 2>&1); rc=$?
 
     # Filter to show only named steps and errors
     local last_line=""

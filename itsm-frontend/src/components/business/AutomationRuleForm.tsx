@@ -187,7 +187,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="is_active" label="启用状态" valuePropName="checked">
+            <Form.Item name="isActive" label="启用状态" valuePropName="checked">
               <Switch checkedChildren="启用" unCheckedChildren="禁用" />
             </Form.Item>
           </Col>

@@ -91,10 +91,12 @@ export class ServiceCatalogApi {
 
    
   private static toServiceRequest(raw: any): any {
-    const catalogId = raw?.catalogId ?? raw?.catalogId ?? raw?.serviceId;
-    const requesterId = raw?.requesterId ?? raw?.requesterId ?? raw?.requestedBy;
-    const createdAt = raw?.createdAt ?? raw?.createdAt;
-    const updatedAt = raw?.updatedAt ?? raw?.updatedAt;
+    // Bug 修复：清理重复的 `raw?.field ?? raw?.field` fallback 表达式。
+    // 这是复制粘贴残留，不会引发运行时错误，但会误导阅读并掩盖潜在缺陷。
+    const catalogId = raw?.catalogId ?? raw?.serviceId;
+    const requesterId = raw?.requesterId ?? raw?.requestedBy;
+    const createdAt = raw?.createdAt;
+    const updatedAt = raw?.updatedAt;
     const catalog = raw?.catalog || {
       id: catalogId,
       name: raw?.serviceName || raw?.title || (catalogId ? `服务 #${catalogId}` : '未知服务'),
@@ -120,15 +122,15 @@ export class ServiceCatalogApi {
       catalogId,
       requesterId,
       ciId: raw?.ciId,
-      formData: raw?.formData ?? raw?.formData ?? {},
-      costCenter: raw?.costCenter ?? raw?.costCenter,
-      dataClassification: raw?.dataClassification ?? raw?.dataClassification,
+      formData: raw?.formData ?? {},
+      costCenter: raw?.costCenter,
+      dataClassification: raw?.dataClassification,
       needsPublicIp: raw?.needsPublicIp ?? raw?.needsPublicIP,
       sourceIpWhitelist: raw?.sourceIpWhitelist ?? raw?.sourceIPWhitelist,
-      complianceAck: raw?.complianceAck ?? raw?.complianceAck,
-      currentLevel: raw?.currentLevel ?? raw?.currentLevel,
-      totalLevels: raw?.totalLevels ?? raw?.totalLevels,
-      expireAt: raw?.expireAt ?? raw?.expireAt,
+      complianceAck: raw?.complianceAck,
+      currentLevel: raw?.currentLevel,
+      totalLevels: raw?.totalLevels,
+      expireAt: raw?.expireAt,
       createdAt,
       updatedAt,
     };

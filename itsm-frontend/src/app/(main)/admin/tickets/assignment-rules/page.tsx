@@ -361,7 +361,7 @@ export default function AssignmentRulesPage() {
             <Form.Item name="priority" label="优先级" tooltip="数字越大越先执行">
               <InputNumber min={1} max={100} style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item name="is_active" label="启用状态" valuePropName="checked">
+            <Form.Item name="isActive" label="启用状态" valuePropName="checked">
               <Switch checkedChildren="启用" unCheckedChildren="禁用" />
             </Form.Item>
           </div>

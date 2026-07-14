@@ -171,9 +171,11 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	}
 
 	// 异步发送通知（如果分配了处理人）
+	// 注意：必须使用 context.Background()，不能复用请求 ctx。
+	// 否则 HTTP 响应返回后 ctx 立即取消，异步任务会失败（context canceled）。
 	if s.notificationSvc != nil && tkt.AssigneeID != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// 获取 ent.Ticket 用于通知（临时方案）
 			// 理想情况下应该传递领域模型
@@ -185,9 +187,10 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	}
 
 	// 异步执行自动化规则
+	// 同样使用独立 ctx，避免请求生命周期结束导致异步任务中断。
 	if s.automationRuleSvc != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 30*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 			if err := s.automationRuleSvc.ExecuteRulesForTicket(ctx2, tkt.ID, tenantID); err != nil {
 				s.logger.Warnw("Automation rules failed", "error", err)
@@ -197,9 +200,10 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	// 异步触发 BPMN 流程（V1 兼容语义）
 	// 这是 V1 缺失的 Phase 1 #1 缺陷修复：V2 必须让工单进入 BPMN 引擎
+	// 使用独立 ctx，否则控制器响应后 workflow 触发立即被取消。
 	if s.processTriggerSvc != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 30*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 			if err := s.triggerWorkflowForTicket(ctx2, tkt, tenantID, workflowDefinitionKey); err != nil {
 				s.logger.Warnw("Workflow trigger failed", "error", err, "ticket_id", tkt.ID)
@@ -210,9 +214,10 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	s.logger.Infow("Ticket created", "ticket_id", tkt.ID, "ticket_number", tkt.TicketNumber)
 
 	// 异步同步工单到飞书
+	// 必须使用独立 ctx，否则飞书同步在响应返回后立即失败。
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, ok := s.connectorManager.Get(tenantID, "feishu")

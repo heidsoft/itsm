@@ -300,7 +300,7 @@ export default function CloudResourcePage() {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="service_id" className="!mb-0">
+          <Form.Item name="serviceId" className="!mb-0">
             <Select
               placeholder="云服务"
               style={{ width: 180 }}

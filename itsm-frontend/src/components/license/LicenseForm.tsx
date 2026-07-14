@@ -59,6 +59,7 @@ const LicenseForm: React.FC = () => {
     description?: string;
     vendor?: string;
     licenseType?: LicenseType;
+    licenseKey?: string;
     totalQuantity?: number;
     assetId?: number;
     purchaseDate?: Dayjs;
@@ -77,6 +78,7 @@ const LicenseForm: React.FC = () => {
         description: values.description,
         vendor: values.vendor,
         licenseType: values.licenseType,
+        licenseKey: values.licenseKey,
         totalQuantity: values.totalQuantity,
         assetId: values.assetId,
         purchaseDate: values.purchaseDate?.toISOString(),
@@ -139,7 +141,7 @@ const LicenseForm: React.FC = () => {
           <Input placeholder="例如: Microsoft" />
         </Form.Item>
 
-        <Form.Item name="license_type" label="许可证类型">
+        <Form.Item name="licenseType" label="许可证类型">
           <Select>
             <Option value="perpetual">永久 (Perpetual)</Option>
             <Option value="subscription">订阅 (Subscription)</Option>
@@ -149,41 +151,41 @@ const LicenseForm: React.FC = () => {
           </Select>
         </Form.Item>
 
-        <Form.Item name="license_key" label="许可证密钥">
+        <Form.Item name="licenseKey" label="许可证密钥">
           <TextArea rows={2} placeholder="许可证密钥" />
         </Form.Item>
 
         <Divider>数量与使用</Divider>
 
-        <Form.Item name="total_quantity" label="总数量">
+        <Form.Item name="totalQuantity" label="总数量">
           <InputNumber min={1} style={{ width: '100%' }} />
         </Form.Item>
 
         <Divider>采购与财务</Divider>
 
-        <Form.Item name="purchase_date" label="采购日期">
+        <Form.Item name="purchaseDate" label="采购日期">
           <DatePicker style={{ width: '100%' }} placeholder="选择采购日期" />
         </Form.Item>
 
-        <Form.Item name="purchase_price" label="采购价格">
+        <Form.Item name="purchasePrice" label="采购价格">
           <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="采购价格" />
         </Form.Item>
 
-        <Form.Item name="expiry_date" label="到期日期">
+        <Form.Item name="expiryDate" label="到期日期">
           <DatePicker style={{ width: '100%' }} placeholder="选择到期日期" />
         </Form.Item>
 
-        <Form.Item name="renewal_cost" label="续费成本">
+        <Form.Item name="renewalCost" label="续费成本">
           <Input placeholder="续费成本" />
         </Form.Item>
 
         <Divider>支持信息</Divider>
 
-        <Form.Item name="support_vendor" label="支持供应商">
+        <Form.Item name="supportVendor" label="支持供应商">
           <Input placeholder="支持供应商" />
         </Form.Item>
 
-        <Form.Item name="support_contact" label="支持联系方式">
+        <Form.Item name="supportContact" label="支持联系方式">
           <Input placeholder="支持联系方式" />
         </Form.Item>
 

@@ -69,6 +69,11 @@ export default function CreateIncidentPage() {
   }, []);
 
   // CI配置项搜索
+  // Bug 修复：原先依赖列表里包含 handleError，由于该 hook 每次 render
+  // 都会返回新的函数引用（即使内部逻辑不变），导致 effect 反复触发
+  // setCISearchResults → 重渲染 → 新 handleError → 再次触发 effect 的
+  // 死循环（Maximum update depth exceeded）。现在仅依赖搜索词，
+  // handleError 在内部使用即可；useErrorHandler 也已使用 useCallback 稳定引用。
   useEffect(() => {
     if (ciSearchTerm.trim()) {
       const fetchCIs = async () => {
@@ -89,7 +94,7 @@ export default function CreateIncidentPage() {
     } else {
       setCISearchResults([]);
     }
-  }, [ciSearchTerm, handleError]);
+  }, [ciSearchTerm]);
 
   const handleAddCI = (ci: ConfigurationItem) => {
     if (!selectedCIs.find(item => item.id === ci.id)) {

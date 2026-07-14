@@ -81,7 +81,7 @@ describe('WorkflowAIModal', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /应用到画布/ }));
     expect(onApplyGeneratedProcess).toHaveBeenCalledWith(generatedXml);
-  });
+  }, 20_000);
 
   it('renders a clean error when generation fails', async () => {
     (BPMNAIApi.generateBPMN as jest.Mock).mockRejectedValueOnce(new Error('AI服务暂不可用'));

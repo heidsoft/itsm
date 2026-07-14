@@ -218,10 +218,13 @@ class TicketService {
     return {
       total: response.total ?? 0,
       open: response.open ?? 0,
-      inProgress: response.inProgress ?? response.inProgress ?? 0,
+      // Bug 修复：之前写成 response.inProgress ?? response.inProgress ?? 0
+      // 重复 fallback 字段名相同，是复制粘贴残留。会导致运行时虽然
+      // 不会报错，但阅读时极易误导且如果 inProgress 缺失也没真正回退到 0 以外的来源。
+      inProgress: response.inProgress ?? 0,
       resolved: response.resolved ?? 0,
       pending: response.pending ?? 0,
-      highPriority: response.highPriority ?? response.highPriority ?? 0,
+      highPriority: response.highPriority ?? 0,
       overdue: response.overdue ?? 0,
     };
   }

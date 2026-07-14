@@ -325,20 +325,20 @@ export default function CloudAccountPage() {
             </Select>
           </Form.Item>
           <Form.Item
-            name="account_id"
+            name="accountId"
             label="账号ID"
             rules={[{ required: true, message: '请输入账号ID' }]}
           >
             <Input placeholder="例如 1234567890123456" />
           </Form.Item>
           <Form.Item
-            name="account_name"
+            name="accountName"
             label="账号名称"
             rules={[{ required: true, message: '请输入账号名称' }]}
           >
             <Input placeholder="例如 生产账号" />
           </Form.Item>
-          <Form.Item name="credential_ref" label="凭据引用">
+          <Form.Item name="credentialRef" label="凭据引用">
             <Input placeholder="例如 aliyun-prod-credential" />
           </Form.Item>
         </Form>
@@ -371,23 +371,23 @@ export default function CloudAccountPage() {
             </Select>
           </Form.Item>
           <Form.Item
-            name="account_id"
+            name="accountId"
             label="账号ID"
             rules={[{ required: true, message: '请输入账号ID' }]}
           >
             <Input placeholder="例如 1234567890123456" disabled />
           </Form.Item>
           <Form.Item
-            name="account_name"
+            name="accountName"
             label="账号名称"
             rules={[{ required: true, message: '请输入账号名称' }]}
           >
             <Input placeholder="例如 生产账号" />
           </Form.Item>
-          <Form.Item name="credential_ref" label="凭据引用">
+          <Form.Item name="credentialRef" label="凭据引用">
             <Input placeholder="例如 aliyun-prod-credential" />
           </Form.Item>
-          <Form.Item name="is_active" label="状态" valuePropName="checked">
+          <Form.Item name="isActive" label="状态" valuePropName="checked">
             <Switch checkedChildren="启用" unCheckedChildren="停用" />
           </Form.Item>
         </Form>

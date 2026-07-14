@@ -10,7 +10,7 @@
 #
 # Optimizations:
 #   - Pinned node:22-alpine
-#   - BuildKit cache mount for npm (~/.npm)
+#   - BuildKit cache mount for pnpm's content-addressable store
 #   - production stage runs as the built-in "node" user (no root)
 #   - production stage ships ONLY the standalone bundle + static + public
 #     (devDependencies never reach the final image)
@@ -26,12 +26,14 @@ WORKDIR /app
 ENV NPM_CONFIG_LEGACY_PEER_DEPS=true
 
 ARG NPM_REGISTRY
-RUN npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org}
+RUN npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org} \
+    && npm install -g pnpm@9.0.0 \
+    && pnpm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org}
 
 COPY package.json package-lock.json ./
 
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --prefer-offline
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --ignore-scripts --no-frozen-lockfile
 
 # ============================================================
 # Stage 2: Build
@@ -53,7 +55,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 RUN --mount=type=cache,target=/root/.npm \
-    npm run build
+    NEXT_DISABLE_TURBOPACK=1 ./node_modules/.bin/next build \
+    && test -f .next/standalone/server.js
 
 # ============================================================
 # Stage 3a: Production runtime

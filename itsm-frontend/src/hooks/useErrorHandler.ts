@@ -4,7 +4,7 @@
  */
 import { App } from 'antd';
 import { AxiosError } from 'axios';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 interface ErrorHandlerOptions {
   /** 错误时执行的回调（如重置 loading 状态） */
@@ -79,60 +79,80 @@ export const getErrorMessage = (
 export const useErrorHandler = () => {
   const { message } = App.useApp();
 
-  const handleError = (error: unknown, options: ErrorHandlerOptions = {}) => {
-    const { onError, customMessage, showMessage = true } = options;
+  // Bug 修复：使用 useCallback 稳定函数引用，避免在依赖了该 hook 的
+  // useEffect 中触发 setState → re-render → setState 死循环。
+  // 同时把 App.message 抽到稳定依赖，避免因 message context 变化导致引用抖动。
+  const messageApi = message;
 
-    // 1. 记录日志
-    console.error('Error occurred:', error);
+  const handleError = useCallback(
+    (error: unknown, options: ErrorHandlerOptions = {}) => {
+      const { onError, customMessage, showMessage = true } = options;
 
-    // 2. 执行回调
-    onError?.();
+      // 1. 记录日志
+      console.error('Error occurred:', error);
 
-    // 3. 显示用户提示
-    if (showMessage) {
-      const errorMsg = customMessage || getErrorMessage(error);
-      message.error(errorMsg);
-    }
-  };
+      // 2. 执行回调
+      onError?.();
+
+      // 3. 显示用户提示
+      if (showMessage) {
+        const errorMsg = customMessage || getErrorMessage(error);
+        messageApi.error(errorMsg);
+      }
+    },
+    [messageApi]
+  );
 
   /**
    * 仅记录日志，不显示用户提示（静默失败）
    * 用于预期内的错误，如网络超时重试
    */
-  const silentError = (error: unknown, onError?: () => void) => {
+  const silentError = useCallback((error: unknown, onError?: () => void) => {
     console.warn('Silent error:', error);
     onError?.();
-  };
+  }, []);
 
   /**
    * 成功提示
    */
-  const handleSuccess = (msg: string = '操作成功') => {
-    message.success(msg);
-  };
+  const handleSuccess = useCallback(
+    (msg: string = '操作成功') => {
+      messageApi.success(msg);
+    },
+    [messageApi]
+  );
 
   /**
    * 警告提示
    */
-  const handleWarning = (msg: string) => {
-    message.warning(msg);
-  };
+  const handleWarning = useCallback(
+    (msg: string) => {
+      messageApi.warning(msg);
+    },
+    [messageApi]
+  );
 
   /**
    * 信息提示
    */
-  const handleInfo = (msg: string) => {
-    message.info(msg);
-  };
+  const handleInfo = useCallback(
+    (msg: string) => {
+      messageApi.info(msg);
+    },
+    [messageApi]
+  );
 
-  return {
-    handleError,
-    silentError,
-    handleSuccess,
-    handleWarning,
-    handleInfo,
-    getErrorMessage,
-  };
+  return useMemo(
+    () => ({
+      handleError,
+      silentError,
+      handleSuccess,
+      handleWarning,
+      handleInfo,
+      getErrorMessage,
+    }),
+    [handleError, silentError, handleSuccess, handleWarning, handleInfo]
+  );
 };
 
 /**

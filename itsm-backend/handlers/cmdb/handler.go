@@ -769,7 +769,12 @@ func (h *Handler) ListCloudResources(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 	provider := c.Query("provider")
-	serviceID, _ := strconv.Atoi(c.Query("service_id"))
+	// Bug 修复：使用 camelCase serviceId 保持与 API 字段命名约定一致（AGENTS.md）。
+	// 同时兼容旧的 snake_case service_id 查询参数，避免破坏现有调用方。
+	serviceID, _ := strconv.Atoi(c.Query("serviceId"))
+	if serviceID == 0 {
+		serviceID, _ = strconv.Atoi(c.Query("service_id"))
+	}
 	region := c.Query("region")
 
 	list, err := h.svc.ListCloudResources(c.Request.Context(), tenantID, provider, serviceID, region)

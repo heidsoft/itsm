@@ -21,5 +21,8 @@ vendor
 # Speed up build context; not needed to compile the binary
 **/*_test.go
 docs
+!docs/
+docs/*
+!docs/docs.go
 *.md
 LICENSE

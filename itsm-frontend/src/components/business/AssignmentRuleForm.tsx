@@ -130,7 +130,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name="is_active" label="启用状态" valuePropName="checked">
+          <Form.Item name="isActive" label="启用状态" valuePropName="checked">
             <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
         </Col>

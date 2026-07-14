@@ -751,7 +751,7 @@ const ServiceCatalogManagement = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="delivery_time" label="交付时间">
+              <Form.Item name="deliveryTime" label="交付时间">
                 <Input placeholder="例如：1-3个工作日" />
               </Form.Item>
             </Col>
