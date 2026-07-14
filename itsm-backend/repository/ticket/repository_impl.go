@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -48,6 +49,14 @@ func NewEntRepository(client *ent.Client, logger *zap.SugaredLogger) *EntReposit
 
 // SetSequenceService 设置序列服务（用于 Redis 工单号生成）
 func (r *EntRepository) SetSequenceService(seqSvc SequenceProvider) {
+	// A typed nil pointer stored in an interface is not equal to nil. Redis
+	// initialization returns (*SequenceService)(nil) when unavailable; without
+	// this guard the repository attempts to call it and panics instead of using
+	// the database sequence fallback.
+	if seqSvc == nil || (reflect.ValueOf(seqSvc).Kind() == reflect.Ptr && reflect.ValueOf(seqSvc).IsNil()) {
+		r.sequenceService = nil
+		return
+	}
 	r.sequenceService = seqSvc
 }
 

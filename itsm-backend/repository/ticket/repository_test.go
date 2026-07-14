@@ -30,6 +30,26 @@ func (s *stubSequenceProvider) GetNextSequenceWithExpiry(_ context.Context, _ st
 	return value, nil
 }
 
+func TestRepository_SetSequenceService_TypedNilUsesDatabaseFallback(t *testing.T) {
+	fx := newRepoFixture(t)
+	defer fx.client.Close()
+
+	repo := fx.repo.(*EntRepository)
+	var unavailableSequenceService *stubSequenceProvider
+	repo.SetSequenceService(unavailableSequenceService)
+	require.Nil(t, repo.sequenceService)
+
+	tkt, err := repo.Create(fx.ctx, &CreateParams{
+		Title:       "Database fallback ticket",
+		Description: "Redis is unavailable",
+		Priority:    PriorityMedium,
+		Type:        TypeIncident,
+		RequesterID: fx.user.ID,
+	}, fx.tenant.ID)
+	require.NoError(t, err)
+	assert.NotEmpty(t, tkt.TicketNumber)
+}
+
 // repoFixture sets up an in-memory SQLite repo for testing.
 type repoFixture struct {
 	ctx    context.Context
