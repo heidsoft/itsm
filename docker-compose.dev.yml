@@ -272,7 +272,7 @@ services:
     networks:
       - itsm-dev-network
     restart: unless-stopped
-    profiles: [ "dev" ]
+    profiles: [ "ai" ]
     # 首次启动后需要拉取模型:
     # docker exec itsm-ollama-dev ollama pull llama2
 
@@ -289,7 +289,7 @@ services:
     networks:
       - itsm-dev-network
     restart: unless-stopped
-    profiles: [ "dev" ]
+    profiles: [ "monitoring" ]
 
   # Grafana（监控面板，可选）
   grafana:
@@ -306,7 +306,7 @@ services:
     networks:
       - itsm-dev-network
     restart: unless-stopped
-    profiles: [ "dev" ]
+    profiles: [ "monitoring" ]
 
 volumes:
   postgres_dev_data:
