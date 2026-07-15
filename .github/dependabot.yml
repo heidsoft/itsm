@@ -11,7 +11,7 @@ version: 2
 # New (v1.0.x hotfix):
 #   - groups:        collect patch/minor updates into one PR per ecosystem
 #                    so reviewers see one PR instead of 30.
-#   - auto-merge:    handled by `.github/workflows/dependabot-auto-merge.yml`
+#   - merge policy:  all updates require normal CI and maintainer review
 #                    which only auto-merges when:
 #                      * update is patch-level,
 #                      * PR title carries the `dependencies` label,

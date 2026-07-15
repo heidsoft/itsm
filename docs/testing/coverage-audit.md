@@ -95,7 +95,7 @@
 | v1.5 (2026-Q4) | 3 个月内 | **55%** | service/approver + eventbus + cache 工具层 |
 | v2.0 (2027-Q2) | 6 个月内 | **70%** | controller 全部 + 集成测试 + 边界分支 |
 
-> `coverage-diff.yml` 已经在 PR 级强制 **新代码 ≥60%**，保护新增代码不拖后腿。
+> `backend-ci.yml` 会生成并上传后端覆盖率报告；当前不设置脱离实际基线的增量覆盖率硬门槛。
 
 ---
 
@@ -124,6 +124,6 @@ go tool cover -func=/tmp/cov.out | tail -1
 ## 七、维护约定
 
 - 任何 PR 触碰 service/* 或 controller/*，必须同步在 `*_test.go` 补至少 1 个用例。
-- CI 已通过 `coverage-diff.yml` 强制 **新代码 ≥60%**。
+- CI 通过 `backend-ci.yml` 持续生成覆盖率报告，并要求新增关键业务规则配套回归测试。
 - 每次 Sprint 末重跑本审计，更新本文档的「零覆盖包清单」。
 - 当零覆盖包数 < 10 时，将审计频率从「每周」降为「每月」。

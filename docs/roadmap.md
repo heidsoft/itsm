@@ -107,7 +107,7 @@ Concretely that means:
 ### Quality
 
 - [ ] **Incremental coverage gate** (60% on new/modified lines) — already
-      landed via `coverage-diff.yml`.
+      is tracked through backend CI coverage artifacts and regression tests.
 - [ ] **Dependabot auto-merge** — patch-level updates auto-merge after
       green CI (handled in v1.0.x hotfix).
 

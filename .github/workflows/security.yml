@@ -31,7 +31,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version-file: itsm-backend/go.mod
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
@@ -81,21 +81,12 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: |
-          cd itsm-frontend
-          npm config set registry https://registry.npmjs.org
-          # Patch eslint to ^9 (same reason as frontend-ci / release):
-          # eslint v10 from dependabot breaks --legacy-peer-deps install
-          # when npm tries to validate eslint-config-next@15.x peer range.
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.devDependencies.eslint='^9.0.0';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
-          npm install --package-lock-only --legacy-peer-deps --no-audit --ignore-scripts
-          npm ci --legacy-peer-deps
+        working-directory: itsm-frontend
+        run: npm ci --legacy-peer-deps
 
       - name: Audit
-        run: |
-          cd itsm-frontend
-          npm config set registry https://registry.npmjs.org
-          npm audit --omit=dev --audit-level=critical
+        working-directory: itsm-frontend
+        run: npm audit --omit=dev --audit-level=critical
 
   secrets-scan:
     name: Secret Detection

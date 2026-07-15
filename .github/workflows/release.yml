@@ -75,54 +75,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: itsm-frontend/package-lock.json
 
-      - name: Patch eslint version for release build
-        working-directory: ./itsm-frontend
-        # eslint v10 was bumped by dependabot but eslint-config-next@15.x has
-        # not caught up yet: it still passes the removed `useEslintrc` /
-        # `extensions` options into ESLint, causing build to fail with
-        #   `ESLint: Invalid Options: - Unknown options: useEslintrc, extensions
-        #    - 'extensions' has been removed.`
-        # Patch package.json in-place to pin eslint to ^9 for this release
-        # build ONLY; the change is in the runner's working tree and is never
-        # committed back. Once eslint-config-next supports eslint v10, drop
-        # this step and let dependabot drive the upgrade.
-        run: |
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.devDependencies.eslint='^9.0.0';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
-
-      - name: Sync lockfile with patched package.json
-        working-directory: ./itsm-frontend
-        # `npm ci` requires package.json and package-lock.json to be in sync.
-        # Since we just patched package.json, regenerate the lockfile entry
-        # for eslint (and its dependents) without touching node_modules yet.
-        # --legacy-peer-deps is required because eslint-config-next@15.x's
-        # peer range only covers eslint v7-v9.
-        run: npm install --package-lock-only --legacy-peer-deps --no-audit --ignore-scripts
-
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        # eslint v10 (from dependabot) is not yet supported by eslint-config-next@15.x;
-        # use --legacy-peer-deps to accept the peer range and let build continue.
-        # Track: https://github.com/vercel/next.js/issues/new
         run: npm ci --legacy-peer-deps
-
-      - name: Ensure peer dependency hoisting for recharts
-        working-directory: ./itsm-frontend
-        # recharts@3.x declares `react-is` as a peerDependency. With
-        # `--legacy-peer-deps` npm does not always auto-hoist peer deps to the
-        # top-level node_modules, and Next.js's barrel-optimization path
-        # (./node_modules/recharts/es6/util/ReactUtils.js) then fails to
-        # resolve `react-is`. Install it explicitly as a release-only safety
-        # net; --no-save keeps package.json/package-lock.json untouched.
-        run: npm install --no-save --legacy-peer-deps --no-audit --ignore-scripts react-is@^19
 
       - name: Build
         working-directory: ./itsm-frontend
-        # eslint is pinned to v9 by the "Patch eslint version for release build"
-        # step above, so the project's `eslint.ignoreDuringBuilds: false` P0
-        # policy in next.config.ts stays in effect and the build surfaces
-        # lint errors normally (we do NOT set NEXT_DISABLE_ESLINT here, since
-        # Next.js 15 ignores it). Once eslint-config-next supports eslint v10,
-        # drop the patch step.
         run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8090

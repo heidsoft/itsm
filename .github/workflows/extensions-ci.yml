@@ -1,0 +1,81 @@
+name: extensions-ci
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'itsm-agent/**'
+      - 'itsm-cli/**'
+      - 'itsm-skill/**'
+      - '.github/workflows/extensions-ci.yml'
+  pull_request:
+    paths:
+      - 'itsm-agent/**'
+      - 'itsm-cli/**'
+      - 'itsm-skill/**'
+      - '.github/workflows/extensions-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: extensions-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  agent:
+    name: Agent · Go
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: itsm-agent/go.mod
+          cache-dependency-path: itsm-agent/go.sum
+      - name: Verify agent
+        working-directory: itsm-agent
+        run: |
+          gofmt_files=$(gofmt -l .)
+          test -z "$gofmt_files" || { echo "$gofmt_files"; exit 1; }
+          go vet ./...
+          go test ./...
+          go build -o itsm-agent ./main.go
+          ./itsm-agent --version
+          go mod verify
+
+  cli:
+    name: CLI · TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: itsm-cli/package-lock.json
+      - name: Verify CLI
+        working-directory: itsm-cli
+        run: |
+          npm ci --legacy-peer-deps --no-audit --ignore-scripts
+          npm run typecheck
+          npm run build
+          test -f dist/index.js
+
+  skill:
+    name: Skill · Manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Verify skill package
+        working-directory: itsm-skill
+        run: |
+          node -e "const p=require('./package.json'); if (!p.name || !p.version || !Array.isArray(p.openclaw?.skills) || !p.openclaw.skills.length) process.exit(1)"
+          node --check index.js
+          node -e "const p=require('./package.json'); if (!p.license) process.exit(1)"

@@ -1,404 +1,87 @@
 name: ga-gate
 
-# Purpose:
-#   v1.0 GA 准入门禁：4 项必过检查，全部通过才允许合入 main。
-#   任何失败 → PR 阻塞，main 分支保护要求此 workflow 通过。
-# Gates:
-#   G1 - 后端测试：go test ./... 全绿，coverage ≥ 1% (v1.0 floor; 70% 是 v2.0 目标)
-#   G2 - 前端构建：type-check + build 全绿
-#   G3 - Docker Compose 健康检查：/api/v1/health 返回 200
-#   G4 - 端到端 API 烟测：smoke-test.sh + 11 个核心接口
-# Override:
-#   - 在 PR 标题中加 [skip-ga-gate] 可跳过（仅限紧急 hotfix）
-#   - workflow_dispatch 触发可在 UI 中选择 gate subset
-
+# Integration gate only. Unit, lint and build checks live in backend-ci and
+# frontend-ci; this workflow proves the assembled core stack can boot and serve.
 on:
   pull_request:
     branches: [main, develop]
+    paths:
+      - 'itsm-backend/**'
+      - 'itsm-frontend/**'
+      - 'docker-compose.dev.yml'
+      - 'scripts/smoke-test.sh'
+      - '.github/workflows/ga-gate.yml'
   push:
     branches: [main]
+    paths:
+      - 'itsm-backend/**'
+      - 'itsm-frontend/**'
+      - 'docker-compose.dev.yml'
+      - 'scripts/smoke-test.sh'
+      - '.github/workflows/ga-gate.yml'
   workflow_dispatch:
-    inputs:
-      skip_compose:
-        description: '跳过 G3 Docker Compose（本地无 docker 时）'
-        required: false
-        default: 'false'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
-      skip_e2e:
-        description: '跳过 G4 E2E 烟测（紧急合入时）'
-        required: false
-        default: 'false'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
+
+permissions:
+  contents: read
 
 concurrency:
   group: ga-gate-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  GOPROXY: "https://proxy.golang.org,direct"
-  GOSUMDB: "sum.golang.org"
-  NEXT_TELEMETRY_DISABLED: 1
-  CI: true
-
 jobs:
-  # ============================================================
-  # G1: 后端测试
-  # ============================================================
-  g1-backend-test:
-    name: G1 · Backend Test
+  ga-approved:
+    name: GA Gate · Approved
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: itsm
-          POSTGRES_PASSWORD: itsm_password_2026
-          POSTGRES_DB: itsm_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U itsm -d itsm_test"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    timeout-minutes: 25
     env:
-      # PostgreSQL is reachable on localhost:5432 (service container
-      # maps host port to guest 5432). The healthcheck above ensures
-      # readiness before any step that connects to the database.
-      PGHOST: localhost
-      PGPORT: 5432
-      PGUSER: itsm
-      PGPASSWORD: itsm_password_2026
-      PGDATABASE: itsm_test
+      DEPLOYMENT_MODE: private
+      MAX_RETRIES: '120'
+      RETRY_INTERVAL: '3'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: itsm-backend/go.mod
-          cache: true
-          cache-dependency-path: itsm-backend/go.sum
+      - name: Validate Compose configuration
+        run: docker compose -f docker-compose.dev.yml --profile dev config --quiet
 
-      - name: Wait for PostgreSQL
+      - name: Start core stack
+        run: >-
+          docker compose -f docker-compose.dev.yml --profile dev
+          up -d --build postgres redis minio itsm-init itsm-backend itsm-frontend
+
+      - name: Wait for backend and frontend
         run: |
-          for i in $(seq 1 30); do
-            if pg_isready -h localhost -p 5432 -U itsm; then
-              echo "PostgreSQL is ready"
+          for attempt in $(seq 1 60); do
+            backend_status=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8090/api/v1/health || true)
+            frontend_status=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/health || true)
+            if [ "$backend_status" = '200' ] && [ "$frontend_status" = '200' ]; then
+              echo "Core stack ready after ${attempt} attempts"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... attempt $i"
-            sleep 2
+            sleep 5
           done
-          echo "::error::PostgreSQL did not become ready in 60s"
+          echo '::error::Core stack did not become healthy in time'
           exit 1
 
-      - name: Warm up Go build cache
-        # Without pre-building, `go test ./...` sometimes reports
-        #   migrations/client.go:59:2: module itsm-backend@latest found,
-        #   but does not contain package migrations/passwordresettoken
-        # even though `go build` succeeds locally. Running `go build`
-        # first populates the cache and makes the test loader happy.
-        # We also `go vet` against ./... up-front so staticanalysis-style
-        # packages (ent migrations included) are scanned once before go test
-        # walks the graph again.
-        #
-        # The migrations subdirectory is built separately first because the
-        # ent generator emits `migrations/<schema>.go` alongside
-        # `migrations/<schema>/`, and the loader resolves the dir first when
-        # the file has not been seen yet. Building it explicitly warms the
-        # package map so subsequent `./...` walks do not regress.
-        #
-        # All three warm-up commands are tolerated (`|| true`) because the
-        # cold-cache false-positive "module itsm-backend@latest found ...
-        # but does not contain package migrations/<schema>" can still
-        # surface here. The actual `go test ./...` step below drives the
-        # real compilation and will surface any genuine compile error.
-        working-directory: ./itsm-backend
-        run: |
-          go build ./migrations/... 2>&1 | tail -3 || true
-          go build ./... 2>&1 | tail -5 || true
-          go vet ./... 2>&1 | tail -5 || true
-
-      - name: Run migrations
-        working-directory: ./itsm-backend
-        run: |
-          PGPASSWORD=itsm_password_2026 psql -h localhost -U itsm -d itsm_test -f migrations/20260501_enable_rbac_from_db.sql || true
-          echo "Migrations applied (or already current)"
-
-      - name: Run go test
-        working-directory: ./itsm-backend
-        # Exclude ent-generated `migrations` packages from `go test`:
-        # - They contain no _test.go files of their own (verified via
-        #   `find itsm-backend/migrations -name '*_test.go' -type f`
-        #   returning zero hits), so skipping them loses zero coverage.
-        # - On a cold cache, the Go loader emits a false-positive
-        #   "module itsm-backend@latest found ... but does not contain
-        #   package migrations/<schema>" against `migrations/client.go`,
-        #   which trips `go test` setup and fails the whole run even
-        #   though `go build ./migrations/<schema>` succeeds locally.
-        # The staticcheck step in backend-ci already excludes
-        # ./migrations/... for the same reason; this is the test
-        # counterpart of that policy.
-        #
-        # Coverage policy (v1.0 GA):
-        #   Current measured coverage is ~2% overall, with the highest
-        #   single-package coverage at 69.2% (connector/marketplace).
-        #   The headline 70% gate is unrealistic for v1.0 GA — most
-        #   service/controller packages have no unit tests yet.
-        #   We therefore gate on a "no regression" floor of 1% (any
-        #   non-zero drop below current baseline fails the gate) and
-        #   emit the real number as ::warning:: so it is visible in
-        #   the run summary and can be tightened in v1.1.
-        #   TODO(v1.1): backfill unit tests for service/* and
-        #   controller/* packages and re-tighten this threshold to 40%,
-        #   then 70% by v2.0.
-        run: |
-          TESTABLE_PKGS=$(go list ./... 2>/dev/null \
-            | grep -vE '^itsm-backend/migrations$|^itsm-backend/migrations/hook$|^itsm-backend/migrations/enttest$|^itsm-backend/migrations/predicate$')
-          go test $TESTABLE_PKGS -coverprofile=coverage.out -covermode=set
-          if [ -f coverage.out ]; then
-            coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | tr -d '%')
-            echo "Backend coverage: ${coverage}%"
-            # v1.0 GA floor: 1% — prevents regression, tracks real number.
-            # Will be raised to 40% (v1.1) then 70% (v2.0) as tests land.
-            if (( $(echo "$coverage < 1" | bc -l) )); then
-              echo "::error::Coverage ${coverage}% regressed below 1% v1.0 floor"
-              exit 1
-            fi
-            if (( $(echo "$coverage < 70" | bc -l) )); then
-              echo "::warning::Coverage ${coverage}% is below the long-term 70% target (v1.0 GA floor = 1%). See TODO(v1.1) in this workflow."
-            fi
-          fi
-
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: g1-backend-coverage
-          path: itsm-backend/coverage.out
-          retention-days: 7
-
-  # ============================================================
-  # G2: 前端构建
-  # ============================================================
-  g2-frontend-build:
-    name: G2 · Frontend Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: itsm-frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: ./itsm-frontend
-        # Patch eslint to ^9 (dependabot bumped to ^10 but eslint-config-next@15.x
-        # still passes removed options into ESLint). Working tree only.
-        run: |
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.devDependencies.eslint='^9.0.0';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
-          npm install --package-lock-only --legacy-peer-deps --no-audit --ignore-scripts
-          npm ci --legacy-peer-deps
-          npm install --no-save --legacy-peer-deps react-is@^19
-
-      - name: Type check
-        working-directory: ./itsm-frontend
-        run: npm run type-check
-
-      - name: Build
-        working-directory: ./itsm-frontend
-        run: npm run build
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:8090
-          NODE_OPTIONS: --max-old-space-size=4096
-
-      - name: Verify standalone output
-        run: |
-          if [ ! -d "itsm-frontend/.next/standalone" ]; then
-            echo "::error::Standalone build output not found"
-            exit 1
-          fi
-
-  # ============================================================
-  # G3: Docker Compose 健康检查
-  # ============================================================
-  g3-compose-health:
-    name: G3 · Compose Health
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Bring up stack
-        run: |
-          DEPLOYMENT_MODE=private docker compose up -d --build
-          echo "Waiting for backend to be ready..."
-          for i in {1..30}; do
-            if curl -sf http://localhost:8090/api/v1/health > /dev/null 2>&1; then
-              echo "Backend ready after ${i} attempts"
-              break
-            fi
-            sleep 5
-          done
-
-      - name: Health check
-        run: |
-          status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8090/api/v1/health)
-          if [ "$status" != "200" ]; then
-            echo "::error::Health check returned $status, expected 200"
-            docker compose logs --tail=50 backend
-            exit 1
-          fi
-          echo "Health check passed: 200"
-
-      - name: GA readiness check
-        run: |
-          ga=$(curl -s http://localhost:8090/api/v1/readiness/ga)
-          echo "GA readiness: $ga"
-          if ! echo "$ga" | grep -q "ga_candidate"; then
-            echo "::warning::GA readiness did not return ga_candidate"
-          fi
-
-      - name: Tear down
-        if: always()
-        run: docker compose down -v
-
-  # ============================================================
-  # G4: 端到端 API 烟测
-  # ============================================================
-  g4-e2e-smoke:
-    name: G4 · E2E Smoke
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [g3-compose-health]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Bring up stack
-        run: |
-          DEPLOYMENT_MODE=private docker compose up -d --build
-          for i in {1..30}; do
-            if curl -sf http://localhost:8090/api/v1/health > /dev/null 2>&1; then
-              break
-            fi
-            sleep 5
-          done
-
-      - name: Run smoke test
-        env:
-          # The default in scripts/smoke-test.sh is MAX_RETRIES=30 with
-          # RETRY_INTERVAL=2s (≈60s total). On a cold G4 run the backend
-          # container may take longer than that to start and serve the
-          # /health endpoint, so we widen the wait budget to ~6 min.
-          MAX_RETRIES: 120
-          RETRY_INTERVAL: 3
+      - name: Run API smoke tests
         run: |
           chmod +x scripts/smoke-test.sh
           ./scripts/smoke-test.sh
 
-      - name: Test 11 core APIs
-        run: |
-          set +e
-          echo "=== G4.1: Login ==="
-          token=$(curl -sf -X POST http://localhost:8090/api/v1/auth/login \
-            -H "Content-Type: application/json" \
-            -d '{"username":"admin","password":"admin123"}' | jq -r '.data.access_token // .data.token // empty')
-          if [ -z "$token" ] || [ "$token" = "null" ]; then
-            echo "::error::Login failed"
-            exit 1
-          fi
-          echo "Token acquired: ${token:0:20}..."
+      - name: Upload failure logs
+        if: failure()
+        run: >-
+          docker compose -f docker-compose.dev.yml --profile dev logs
+          --no-color --tail=200 > ga-gate-compose.log
 
-          echo "=== G4.2: Tickets ==="
-          curl -sf -H "Authorization: Bearer $token" \
-            http://localhost:8090/api/v1/tickets?page=1&size=5 > /dev/null || { echo "::error::Tickets list failed"; exit 1; }
-
-          echo "=== G4.3: Incidents ==="
-          curl -sf -H "Authorization: Bearer $token" \
-            http://localhost:8090/api/v1/incidents?page=1&size=5 > /dev/null || echo "::warning::Incidents endpoint may not exist yet"
-
-          echo "=== G4.4: Changes ==="
-          curl -sf -H "Authorization: Bearer $token" \
-            http://localhost:8090/api/v1/changes?page=1&size=5 > /dev/null || echo "::warning::Changes endpoint may not exist yet"
-
-          echo "=== G4.5: Service Requests ==="
-          curl -sf -H "Authorization: Bearer $token" \
-            http://localhost:8090/api/v1/service-requests?page=1&size=5 > /dev/null || echo "::warning::Service-requests endpoint may not exist yet"
-
-          echo "=== G4.6: Knowledge ==="
-          curl -sf -H "Authorization: Bearer $token" \
-            "http://localhost:8090/api/v1/knowledge/search?keyword=test" > /dev/null || echo "::warning::Knowledge search endpoint may not exist yet"
-
-          echo "=== G4.7: CMDB ==="
-          curl -sf -H "Authorization: Bearer $token" \
-            http://localhost:8090/api/v1/cmdb/cis?page=1&size=5 > /dev/null || echo "::warning::CMDB endpoint may not exist yet"
-
-          echo "=== G4.8: SLA Alerts ==="
-          curl -sf -H "Authorization: Bearer $token" \
-            http://localhost:8090/api/v1/sla/alerts > /dev/null || echo "::warning::SLA alerts endpoint may not exist yet"
-
-          echo "=== G4.9: Connector lifecycle ==="
-          curl -sf -H "Authorization: Bearer $token" \
-            http://localhost:8090/api/v1/connectors/lifecycle > /dev/null || echo "::warning::Connector lifecycle endpoint may not exist yet"
-
-          echo "=== G4.10: AI Triage (mock) ==="
-          curl -sf -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
-            -d '{"scenario":"ticket_triage","input_ref":"ticket:test","prompt_version":"v1","model":"mock","confidence":0.5,"suggestion":{},"accepted":true}' \
-            http://localhost:8090/api/v1/ai/audit > /dev/null || echo "::warning::AI audit endpoint may not exist yet"
-
-          echo "=== G4.11: RBAC negative test ==="
-          # 普通用户 token 不存在，但 admin 应能访问 /admin/users
-          status=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $token" \
-            http://localhost:8090/api/v1/admin/users)
-          if [ "$status" != "200" ]; then
-            echo "::warning::Admin users endpoint returned $status (expected 200 for admin token)"
-          fi
-
-          echo "=== G4 PASSED: 11 core API smoke tests complete ==="
+      - name: Save failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ga-gate-compose-logs
+          path: ga-gate-compose.log
+          retention-days: 7
 
       - name: Tear down
         if: always()
-        run: docker compose down -v
-
-  # ============================================================
-  # Aggregate: 任一门禁失败则整体失败
-  # ============================================================
-  ga-approved:
-    name: GA Gate · Approved
-    runs-on: ubuntu-latest
-    needs:
-      - g1-backend-test
-      - g2-frontend-build
-      - g3-compose-health
-      - g4-e2e-smoke
-    if: always()
-    steps:
-      - name: Check all gates
-        run: |
-          if [ "${{ needs.g1-backend-test.result }}" != "success" ] || \
-             [ "${{ needs.g2-frontend-build.result }}" != "success" ] || \
-             [ "${{ needs.g3-compose-health.result }}" != "success" ] || \
-             [ "${{ needs.g4-e2e-smoke.result }}" != "success" ]; then
-            echo "::error::GA gate failed. See job results above."
-            echo "G1 (backend-test): ${{ needs.g1-backend-test.result }}"
-            echo "G2 (frontend-build): ${{ needs.g2-frontend-build.result }}"
-            echo "G3 (compose-health): ${{ needs.g3-compose-health.result }}"
-            echo "G4 (e2e-smoke): ${{ needs.g4-e2e-smoke.result }}"
-            exit 1
-          fi
-          echo "✅ All 4 GA gates passed. Safe to merge."
+        run: docker compose -f docker-compose.dev.yml --profile dev down -v --remove-orphans

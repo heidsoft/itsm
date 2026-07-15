@@ -1,6 +1,6 @@
 # Label Schema
 
-> **目的**：统一 Issue / PR 标签语义，让 labeler 自动分类、过滤、统计成为可能。
+> **目的**：统一 Issue / PR 标签语义，便于维护者分类、过滤和统计。
 >
 > **生效范围**：itsm-backend、itsm-frontend、itsm-cli、itsm-skill、itsm-agent、itsm-ai-service、itsm-rag、docs。
 >
@@ -12,25 +12,25 @@
 
 | 类别 | 命名空间 | 数量 | 来源 | 用途 |
 |:---|:---|---:|:---|:---|
-| 业务域（Area） | `area/*` | 13 | `.github/labeler.yml`（自动） | 标识修改的文件/模块 |
-| 改动类型（Kind） | `kind/*` | 8 | labeler workflow（自动） | 标识 PR 性质 |
+| 业务域（Area） | `area/*` | 13 | 维护者手动 | 标识修改的文件/模块 |
+| 改动类型（Kind） | `kind/*` | 8 | 维护者手动 | 标识 PR 性质 |
 | 优先级（Priority） | `priority/*` | 4 | 维护者手动 | 标识优先级 |
-| 状态（Status） | `status/*` | 7 | labeler + 维护者 | 标识生命周期状态 |
-| 大小（Size） | `size/*` | 4 | labeler workflow（自动） | 标识 PR 代码规模 |
-| 兼容性 | `breaking-change` | 1 | labeler workflow（自动） | 标识破坏性变更 |
+| 状态（Status） | `status/*` | 7 | 维护者手动 | 标识生命周期状态 |
+| 大小（Size） | `size/*` | 4 | 维护者手动 | 标识 PR 代码规模 |
+| 兼容性 | `breaking-change` | 1 | 维护者手动 | 标识破坏性变更 |
 | 依赖 | `dependencies` | 1 | dependabot 自动 | Dependabot PR 专用 |
 | 受托人 | `needs-triage`、`needs-review`、`needs-design`、`needs-docs` | 4 | 维护者手动 | 标识待处理维度 |
 | 安全 | `security` | 1 | 维护者手动 | 安全相关 |
-| 贡献者 | `first-time-contributor` | 1 | welcome.yml 自动 | 新人识别 |
-| Pin | `pinned` | 1 | 维护者手动 | 防止 stale |
+| 贡献者 | `first-time-contributor` | 1 | 维护者手动 | 新人识别 |
+| Pin | `pinned` | 1 | 维护者手动 | 标识需长期保留的问题 |
 
 **总计：43 个标签**
 
 ---
 
-## 2. area/* — 业务域（自动）
+## 2. area/* — 业务域
 
-由 `.github/labeler.yml` 根据改动文件路径自动应用。
+由维护者根据改动文件路径应用。
 
 | 标签 | 触发条件 | 责任人 |
 |:---|:---|:---|
@@ -52,9 +52,9 @@
 
 ---
 
-## 3. kind/* — 改动类型（自动）
+## 3. kind/* — 改动类型
 
-由 labeler workflow 通过 PR title 前缀 + 文件改动模式识别。
+维护者可根据 PR title 前缀和改动内容识别。
 
 | 标签 | 标题前缀 / 模式 | 示例 |
 |:---|:---|:---|
@@ -220,24 +220,18 @@ epic                #5319E7  Tracks a multi-PR feature
 
 ### PR
 
-- `area/*`、`kind/*`、`size/*` **全部由 labeler 自动应用**，无需手动添加
+- `area/*`、`kind/*`、`size/*` 由维护者在 review 时按需添加
 - `breaking-change` 一旦出现，必须在 PR 描述中说明：
   - 受影响的 API / 配置
   - 升级路径（migration script / 文档）
   - 影响范围（哪些版本会中招）
-- 包含 `kind/dependencies` 的 PR 默认由 [dependabot-auto-merge](../.github/workflows/dependabot-auto-merge.yml) 自动合并（patch 级、CI 全绿、无 veto）
-
-### Stale 豁免
-
-由 `.github/workflows/stale.yml` 配置，以下标签豁免 stale 关闭：
-
-`pinned`, `security`, `priority/p0`, `priority/p1`, `epic`, `needs-triage`, `needs-design`, `in-progress`
+- 包含 `kind/dependencies` 的 PR 必须通过正常 CI 并由维护者审核，不自动合并
 
 ---
 
 ## 10. 维护
 
-- 任何新增 label 必须：更新本文档 + 更新 `scripts/init-labels.sh` + 更新 `.github/labeler.yml`（如适用）
+- 任何新增 label 必须同步更新本文档和 `scripts/init-labels.sh`
 - 删除未使用 label 前需在 Discussions 公示 1 周
 - 季度 review：维护者集中讨论标签语义是否需要调整
 

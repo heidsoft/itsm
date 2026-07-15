@@ -23,6 +23,13 @@ on:
       - '.github/workflows/api-contract-check.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: api-contract-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   NODE_VERSION: '22'
 
@@ -43,15 +50,12 @@ jobs:
       - name: Run API path check
         id: check-api
         run: |
-          cd /home/runner/work/itsm/itsm
           echo "=== Running API Path Static Check ==="
           node scripts/check-api-paths.js --verbose
-        continue-on-error: true
 
       - name: Generate missing paths report
         if: always()
         run: |
-          cd /home/runner/work/itsm/itsm
           echo "=== Generating Missing Paths Report ==="
           node scripts/check-api-paths.js --json > api-path-report.json 2>&1 || true
 
@@ -71,15 +75,6 @@ jobs:
           name: api-path-report
           path: api-path-report.json
           retention-days: 7
-
-      - name: Fail if missing paths detected
-        run: |
-          cd /home/runner/work/itsm/itsm
-          if node scripts/check-api-paths.js 2>&1 | grep -q "Missing:"; then
-            echo "::error::Frontend API paths detected that are not registered in backend!"
-            echo "::error::Please fix the missing routes or update the frontend API calls."
-            exit 1
-          fi
 
   api-field-naming:
     name: API Field Naming Check

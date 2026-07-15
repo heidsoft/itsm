@@ -108,9 +108,9 @@
 
 - **`.github/workflows/ci.yml`**：push/PR 到 `main` 触发。
   - `backend-test`：Go 单测。
-  - `frontend-check`：ESLint + TypeScript 类型检查。
+  - `frontend-ci`：ESLint、TypeScript、Jest 与生产构建。
   - `docker-build`：用 Buildx + **GitHub Actions 缓存（gha）** 构建全部 4 个镜像（多阶段 + 缓存挂载），验证 Dockerfile 可构建（不推送）。
-- **`.github/workflows/publish.yml`**：打 `v*` tag（或手动触发）时，登录 GHCR，跨 `linux/amd64,linux/arm64` 构建并推送 `itsm-<svc>:<version>` 与 `:latest`。
+- **`.github/workflows/release.yml`**：打 `v*` tag 时创建 Release 产物并发布后端、前端 GHCR 镜像。
 
 这让“本地脚本”升级为**可复现的云端流水线**，镜像构建与本地 `build-images.sh` 共用同一套多阶段 Dockerfile。
 
