@@ -10,6 +10,7 @@ import { test as base, expect } from '@playwright/test';
  * 执行登录并返回认证后的页面
  */
 export async function loginAndReturn(page: Page, username: string = 'admin', password: string = 'admin123') {
+  const appURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
   // 清除之前的认证状态
   await page.context().clearCookies();
 
@@ -25,14 +26,14 @@ export async function loginAndReturn(page: Page, username: string = 'admin', pas
 
   const loginJson = await loginResponse.json();
   const data = loginJson.data || {};
-  const accessToken = data.access_token;
-  const refreshToken = data.refresh_token;
+  const accessToken = data.accessToken || data.access_token;
+  const refreshToken = data.refreshToken || data.refresh_token;
   const user = data.user || {};
   if (!accessToken) {
     throw new Error('登录失败: 响应中缺少 access_token');
   }
 
-  const tenantId = Number(user.tenant_id || user.tenantId || 1);
+  const tenantId = Number(user.tenantId || user.tenant_id || 1);
   const tenant = {
     id: tenantId,
     name: '默认租户',
@@ -47,7 +48,7 @@ export async function loginAndReturn(page: Page, username: string = 'admin', pas
     {
       name: 'auth-token',
       value: accessToken,
-      url: 'http://localhost:3000',
+      url: appURL,
       httpOnly: false,
       sameSite: 'Lax',
       expires: Math.floor(Date.now() / 1000) + 900,
@@ -55,7 +56,7 @@ export async function loginAndReturn(page: Page, username: string = 'admin', pas
     {
       name: 'access_token',
       value: accessToken,
-      url: 'http://localhost:3000',
+      url: appURL,
       httpOnly: true,
       sameSite: 'Lax',
       expires: Math.floor(Date.now() / 1000) + 900,
@@ -65,7 +66,7 @@ export async function loginAndReturn(page: Page, username: string = 'admin', pas
           {
             name: 'refresh_token',
             value: refreshToken,
-            url: 'http://localhost:3000',
+            url: appURL,
             httpOnly: true,
             sameSite: 'Lax' as const,
             expires: Math.floor(Date.now() / 1000) + 604800,
@@ -112,6 +113,8 @@ export async function loginAndReturn(page: Page, username: string = 'admin', pas
     },
     { token: accessToken, currentUser: user, currentTenant: tenant }
   );
+
+  await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
   return page;
 }

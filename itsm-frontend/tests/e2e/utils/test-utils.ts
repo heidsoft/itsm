@@ -5,6 +5,7 @@
 
 import type { Page} from '@playwright/test';
 import { expect } from '@playwright/test';
+import { loginAndReturn } from '../auth-utils';
 
 // Test user credentials from seed data (see itsm-backend/pkg/seeder/seeder.go)
 export const TEST_USERS = {
@@ -38,91 +39,14 @@ export type TestUserRole = keyof typeof TEST_USERS;
  */
 export async function loginAs(page: Page, role: TestUserRole): Promise<void> {
   const user = TEST_USERS[role];
-
-  // Navigate to login page
-  await page.goto('/login');
-  await page.waitForLoadState('domcontentloaded');
-
-  // Wait for form inputs - Ant Design style
-  await page.waitForSelector('input.ant-input', { timeout: 15000 });
-
-  // Fill in login form - Ant Design uses input.ant-input
-  const inputs = page.locator('input.ant-input');
-  await inputs.nth(0).fill(user.username);
-  await inputs.nth(1).fill(user.password);
-
-  // Submit form - only click the submit button
-  await page.locator('button[type="submit"]').click();
-
-  // Playwright glob patterns do not support a reliable "not login" route match.
-  // Treat login as successful when the app leaves /login and the authenticated
-  // shell is visible; otherwise surface the login error instead of burning the
-  // whole test timeout.
-  await Promise.race([
-    page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 }),
-    page.locator('.ant-menu, [class*="sidebar"], nav').first().waitFor({ state: 'visible', timeout: 15000 }),
-  ]).catch(async () => {
-    const errorText = await page
-      .locator('.ant-message-error, .ant-alert-error, [role="alert"]')
-      .first()
-      .textContent({ timeout: 1000 })
-      .catch(() => '');
-    throw new Error(`Login failed for ${role}${errorText ? `: ${errorText}` : ''}`);
-  });
+  await loginAndReturn(page, user.username, user.password);
 }
 
 /**
  * Login via API (more reliable for E2E tests)
  */
 export async function loginViaApi(page: Page, role: TestUserRole): Promise<void> {
-  const user = TEST_USERS[role];
-  const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
-
-  // Get CSRF token first
-  const csrfResponse = await page.request.get(`${apiUrl}/api/v1/auth/csrf`, {
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-  });
-
-  let csrfToken = '';
-  if (csrfResponse.ok()) {
-    const csrfData = await csrfResponse.json();
-    csrfToken = csrfData.token || '';
-  }
-
-  // Perform login
-  const loginResponse = await page.request.post(`${apiUrl}/api/v1/auth/login`, {
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': csrfToken,
-      'X-Requested-With': 'XMLHttpRequest',
-    },
-    data: {
-      username: user.username,
-      password: user.password,
-    },
-  });
-
-  if (!loginResponse.ok()) {
-    const errorData = await loginResponse.json();
-    throw new Error(`Login failed for ${role}: ${errorData.message || loginResponse.statusText()}`);
-  }
-
-  const loginData = await loginResponse.json();
-
-  // Set auth token in storage
-  if (loginData.data?.access_token) {
-    await page.request.get(baseUrl); // Initialize context
-    await page.evaluate((token) => {
-      localStorage.setItem('access_token', token);
-      localStorage.setItem('auth_token', token);
-      document.cookie = `auth-token=${token}; path=/; max-age=900`;
-    }, loginData.data.access_token);
-  }
-
-  // Navigate to dashboard
-  await page.goto('/dashboard');
-  await page.waitForLoadState('networkidle');
+  await loginAs(page, role);
 }
 
 /**

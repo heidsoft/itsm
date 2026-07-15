@@ -14,7 +14,7 @@ export class ChangePage extends BasePage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`${this.baseUrl}${this.url}`);
+    await this.page.goto(`${this.baseUrl}${this.url}`, { waitUntil: 'domcontentloaded' });
     await this.changeTable.waitFor({ state: 'visible' }).catch(() => {});
   }
 
@@ -25,8 +25,7 @@ export class ChangePage extends BasePage {
     rollbackPlan?: string;
   }): Promise<number> {
     // 直接导航到创建页面
-    await this.page.goto(`${this.baseUrl}/changes/create`);
-    await this.page.waitForLoadState('networkidle');
+    await this.page.goto(`${this.baseUrl}/changes/new`, { waitUntil: 'domcontentloaded' });
 
     // 填写标题
     const titleInput = this.page.locator('input[id*="title"], input[name*="title"], input[placeholder*="标题"]').first();
