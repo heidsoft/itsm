@@ -14,6 +14,7 @@ import (
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -400,7 +401,7 @@ func (s *IncidentService) AssignIncident(ctx context.Context, id int, assigneeID
 	s.logger.Infow("Assigning incident", "id", id, "assignee_id", assigneeID, "tenant_id", tenantID)
 
 	// 获取当前事件
-	incidentEntity, err := s.client.Incident.Query().
+	_, err := s.client.Incident.Query().
 		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
 		Only(ctx)
 	if err != nil {
@@ -410,8 +411,22 @@ func (s *IncidentService) AssignIncident(ctx context.Context, id int, assigneeID
 		return nil, fmt.Errorf("failed to get incident: %w", err)
 	}
 
+	assigneeExists, err := s.client.User.Query().
+		Where(
+			user.IDEQ(assigneeID),
+			user.TenantIDEQ(tenantID),
+			user.ActiveEQ(true),
+		).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate assignee: %w", err)
+	}
+	if !assigneeExists {
+		return nil, fmt.Errorf("assignee not found or inactive")
+	}
+
 	// 更新分配人
-	_, err = s.client.Incident.UpdateOneID(id).
+	updatedIncident, err := s.client.Incident.UpdateOneID(id).
 		Where(incident.TenantIDEQ(tenantID)).
 		SetAssigneeID(assigneeID).
 		SetUpdatedAt(time.Now()).
@@ -434,7 +449,7 @@ func (s *IncidentService) AssignIncident(ctx context.Context, id int, assigneeID
 	}, tenantID)
 
 	s.logger.Infow("Incident assigned successfully", "id", id, "assignee_id", assigneeID)
-	return s.toIncidentResponse(incidentEntity), nil
+	return s.toIncidentResponse(updatedIncident), nil
 }
 
 // DeleteIncident deletes an incident with cascade cleanup of related data.

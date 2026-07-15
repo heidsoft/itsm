@@ -701,3 +701,62 @@ func TestApprovalService_SubmitApproval_Delegate_CreatesNewPendingRecord(t *test
 	}
 	assert.Equal(t, 1, pendingCount)
 }
+
+func TestApprovalService_SubmitApproval_RollsBackWhenDelegationFails(t *testing.T) {
+	client, approvalService, ctx := setupApprovalTest(t)
+	defer client.Close()
+
+	tenant, err := createApprovalTestTenant(ctx, client, "rollback")
+	require.NoError(t, err)
+	approver, err := createApprovalTestUser(ctx, client, tenant.ID, "rollback")
+	require.NoError(t, err)
+
+	workflow, err := client.ApprovalWorkflow.Create().
+		SetName("Rollback Workflow").
+		SetIsActive(true).
+		SetTenantID(tenant.ID).
+		SetNodes([]map[string]interface{}{{
+			"level": 1, "name": "L1", "approverType": "user",
+			"approverIds": []interface{}{approver.ID}, "approvalMode": "any", "allowDelegate": true,
+		}}).
+		Save(ctx)
+	require.NoError(t, err)
+
+	ticketEntity, err := client.Ticket.Create().
+		SetTitle("Rollback ticket").
+		SetDescription("desc").
+		SetPriority("medium").
+		SetType("ticket").
+		SetStatus("open").
+		SetTicketNumber("TKT-ROLLBACK-001").
+		SetTenantID(tenant.ID).
+		SetRequesterID(approver.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	record, err := client.ApprovalRecord.Create().
+		SetTicketID(ticketEntity.ID).
+		SetTicketNumber(ticketEntity.TicketNumber).
+		SetTicketTitle(ticketEntity.Title).
+		SetWorkflowID(workflow.ID).
+		SetWorkflowName(workflow.Name).
+		SetCurrentLevel(1).
+		SetTotalLevels(1).
+		SetApproverID(approver.ID).
+		SetApproverName(approver.Name).
+		SetStepOrder(1).
+		SetStatus("pending").
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	missingDelegateID := 999999
+	err = approvalService.SubmitApproval(ctx, record.ID, approver.ID, "delegate", "", &missingDelegateID, tenant.ID)
+	require.Error(t, err)
+
+	unchanged, err := client.ApprovalRecord.Get(ctx, record.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "pending", unchanged.Status)
+	assert.Empty(t, unchanged.Action)
+	assert.True(t, unchanged.ProcessedAt.IsZero())
+}

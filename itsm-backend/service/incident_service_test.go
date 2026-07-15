@@ -207,6 +207,51 @@ func TestIncidentService_GetIncident_TenantMismatch(t *testing.T) {
 	assert.Contains(t, err.Error(), "incident not found")
 }
 
+func TestIncidentService_AssignIncident_ValidatesAssigneeAndReturnsUpdatedIncident(t *testing.T) {
+	client, incidentService, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	tenant, err := createIncidentTestTenant(ctx, client, "assign")
+	require.NoError(t, err)
+	reporter, err := createIncidentTestUser(ctx, client, tenant.ID, "assign-reporter")
+	require.NoError(t, err)
+	assignee, err := createIncidentTestUser(ctx, client, tenant.ID, "assign-agent")
+	require.NoError(t, err)
+
+	incidentEntity, err := client.Incident.Create().
+		SetTitle("Assign incident").
+		SetDescription("desc").
+		SetStatus("new").
+		SetPriority("high").
+		SetSeverity("medium").
+		SetIncidentNumber("INC-ASSIGN-001").
+		SetReporterID(reporter.ID).
+		SetTenantID(tenant.ID).
+		SetDetectedAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
+
+	response, err := incidentService.AssignIncident(ctx, incidentEntity.ID, assignee.ID, tenant.ID)
+	require.NoError(t, err)
+	require.NotNil(t, response.AssigneeID)
+	assert.Equal(t, assignee.ID, *response.AssigneeID)
+	assert.Equal(t, incidentEntity.Version+1, response.Version)
+
+	otherTenant, err := createIncidentTestTenant(ctx, client, "assign-other")
+	require.NoError(t, err)
+	otherUser, err := createIncidentTestUser(ctx, client, otherTenant.ID, "assign-other")
+	require.NoError(t, err)
+	_, err = incidentService.AssignIncident(ctx, incidentEntity.ID, otherUser.ID, tenant.ID)
+	require.ErrorContains(t, err, "assignee not found or inactive")
+
+	inactive, err := createIncidentTestUser(ctx, client, tenant.ID, "assign-inactive")
+	require.NoError(t, err)
+	_, err = inactive.Update().SetActive(false).Save(ctx)
+	require.NoError(t, err)
+	_, err = incidentService.AssignIncident(ctx, incidentEntity.ID, inactive.ID, tenant.ID)
+	require.ErrorContains(t, err, "assignee not found or inactive")
+}
+
 // ==================== 列出事件测试 ====================
 
 func TestIncidentService_ListIncidents_Pagination(t *testing.T) {
