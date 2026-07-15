@@ -125,67 +125,14 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
         pageSize: 100,
       });
 
-      if (data && data.items && data.items.length > 0) {
-        setWorkflows(data.items);
-        if (workflowId) {
-          const workflow = data.items.find(w => w.id === workflowId);
-          if (workflow) {
-            setCurrentWorkflow(workflow);
-          }
-        }
-        return;
-      }
-
-      // 如果API返回空，使用模拟数据
-      const mockWorkflows: ApprovalWorkflow[] = [
-        {
-          id: 1,
-          name: '标准工单审批流程',
-          description: '适用于一般工单的标准审批流程',
-          ticketType: 'service_request',
-          nodes: [
-            {
-              id: 'node1',
-              level: 1,
-              name: '直属主管审批',
-              approverType: 'role',
-              approverIds: [1],
-              approverNames: ['直属主管'],
-              approvalMode: 'any',
-              timeoutHours: 24,
-              allowReject: true,
-              allowDelegate: true,
-              rejectAction: 'end',
-            },
-            {
-              id: 'node2',
-              level: 2,
-              name: '部门经理审批',
-              approverType: 'role',
-              approverIds: [2],
-              approverNames: ['部门经理'],
-              approvalMode: 'any',
-              timeoutHours: 48,
-              allowReject: true,
-              allowDelegate: false,
-              rejectAction: 'return',
-              returnToLevel: 1,
-            },
-          ],
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-      setWorkflows(mockWorkflows);
-
-      if (workflowId) {
-        const workflow = mockWorkflows.find(w => w.id === workflowId);
-        if (workflow) {
-          setCurrentWorkflow(workflow);
-        }
-      }
+      const loadedWorkflows = data?.items ?? [];
+      setWorkflows(loadedWorkflows);
+      setCurrentWorkflow(
+        workflowId ? loadedWorkflows.find(workflow => workflow.id === workflowId) ?? null : null
+      );
     } catch (error) {
+      setWorkflows([]);
+      setCurrentWorkflow(null);
       antMessage.error('加载审批工作流失败');
     } finally {
       setLoading(false);
@@ -204,30 +151,9 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
         pageSize: 100,
       });
 
-      if (data && data.items && data.items.length > 0) {
-        setApprovalRecords(data.items);
-        return;
-      }
-
-      // 如果API返回空，使用模拟数据
-      const mockRecords: ApprovalRecord[] = [
-        {
-          id: 1,
-          ticketId: ticket.id,
-          ticketNumber: ticket.ticketNumber || `T-${ticket.id}`,
-          ticketTitle: ticket.title,
-          workflowId: 1,
-          workflowName: '标准工单审批流程',
-          currentLevel: 1,
-          totalLevels: 2,
-          approverId: 1,
-          approverName: '张三',
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        },
-      ];
-      setApprovalRecords(mockRecords);
+      setApprovalRecords(data?.items ?? []);
     } catch (error) {
+      setApprovalRecords([]);
       antMessage.error('加载审批记录失败');
     }
   }, [ticket]);

@@ -109,9 +109,6 @@ const TicketTemplatePage: React.FC = () => {
   const [formFields, setFormFields] = useState<FormField[]>([]);
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
 
-  // 模拟数据（作为备用）
-  const mockTemplates: TicketTemplate[] = [];
-
   // 加载模板数据
   const loadTemplates = async () => {
     try {
@@ -127,9 +124,8 @@ const TicketTemplatePage: React.FC = () => {
       setTemplates(response.templates || []);
     } catch (error) {
       console.error('加载模板失败:', error);
-      // 如果API调用失败，使用模拟数据作为备用
-      setTemplates(mockTemplates);
-      setError('加载模板数据失败，使用本地数据');
+      setTemplates([]);
+      setError('加载模板数据失败，请检查服务连接后重试');
     } finally {
       setLoading(false);
     }
