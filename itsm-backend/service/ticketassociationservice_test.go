@@ -76,6 +76,59 @@ func TestTicketAssociationService_RejectsCrossTenantConfigurationItemAssociation
 	assert.Empty(t, items)
 }
 
+func TestTicketAssociationService_MaintainsBidirectionalRelatedTickets(t *testing.T) {
+	ctx := context.Background()
+	client := enttest.Open(t, "sqlite3", "file:ticketassoc-related?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	tenant := createTicketAssociationTenant(t, ctx, client, "related")
+	user := createTicketAssociationUser(t, ctx, client, tenant.ID, "related-user")
+	ticketA := createTicketAssociationTicket(t, ctx, client, tenant.ID, user.ID, "TKT-REL-001")
+	ticketB := createTicketAssociationTicket(t, ctx, client, tenant.ID, user.ID, "TKT-REL-002")
+	ticketC := createTicketAssociationTicket(t, ctx, client, tenant.ID, user.ID, "TKT-REL-003")
+	service := NewTicketAssociationService(client)
+
+	require.NoError(t, service.UpdateTicketAssociations(ctx, ticketA.ID, &UpdateAssociationsRequest{RelatedIDs: []int{ticketB.ID}}))
+	relatedToB, err := service.GetRelatedTickets(ctx, ticketB.ID)
+	require.NoError(t, err)
+	require.Len(t, relatedToB, 1)
+	assert.Equal(t, ticketA.ID, relatedToB[0].ID)
+
+	require.NoError(t, service.UpdateTicketAssociations(ctx, ticketA.ID, &UpdateAssociationsRequest{RelatedIDs: []int{ticketC.ID}}))
+	relatedToB, err = service.GetRelatedTickets(ctx, ticketB.ID)
+	require.NoError(t, err)
+	assert.Empty(t, relatedToB)
+	relatedToC, err := service.GetRelatedTickets(ctx, ticketC.ID)
+	require.NoError(t, err)
+	require.Len(t, relatedToC, 1)
+	assert.Equal(t, ticketA.ID, relatedToC[0].ID)
+}
+
+func TestTicketAssociationService_RejectsInvalidParentRelationships(t *testing.T) {
+	ctx := context.Background()
+	client := enttest.Open(t, "sqlite3", "file:ticketassoc-parent?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	tenant := createTicketAssociationTenant(t, ctx, client, "parent")
+	otherTenant := createTicketAssociationTenant(t, ctx, client, "parent-other")
+	user := createTicketAssociationUser(t, ctx, client, tenant.ID, "parent-user")
+	otherUser := createTicketAssociationUser(t, ctx, client, otherTenant.ID, "parent-other-user")
+	ticketA := createTicketAssociationTicket(t, ctx, client, tenant.ID, user.ID, "TKT-PARENT-001")
+	ticketB := createTicketAssociationTicket(t, ctx, client, tenant.ID, user.ID, "TKT-PARENT-002")
+	foreignTicket := createTicketAssociationTicket(t, ctx, client, otherTenant.ID, otherUser.ID, "TKT-PARENT-003")
+	service := NewTicketAssociationService(client)
+
+	err := service.UpdateTicketAssociations(ctx, ticketA.ID, &UpdateAssociationsRequest{ParentID: &ticketA.ID})
+	require.ErrorContains(t, err, "自己的父工单")
+
+	err = service.UpdateTicketAssociations(ctx, ticketA.ID, &UpdateAssociationsRequest{ParentID: &foreignTicket.ID})
+	require.ErrorContains(t, err, "父工单不存在")
+
+	require.NoError(t, service.UpdateTicketAssociations(ctx, ticketB.ID, &UpdateAssociationsRequest{ParentID: &ticketA.ID}))
+	err = service.UpdateTicketAssociations(ctx, ticketA.ID, &UpdateAssociationsRequest{ParentID: &ticketB.ID})
+	require.ErrorContains(t, err, "不能形成循环")
+}
+
 func createTicketAssociationTenant(t *testing.T, ctx context.Context, client *ent.Client, code string) *ent.Tenant {
 	t.Helper()
 	tenant, err := client.Tenant.Create().

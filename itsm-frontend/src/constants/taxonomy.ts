@@ -255,8 +255,10 @@ export enum ChangeStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
+  SCHEDULED = 'scheduled',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
+  FAILED = 'failed',
   ROLLED_BACK = 'rolled_back',
   CANCELLED = 'cancelled',
 }
@@ -286,6 +288,11 @@ export const ChangeStatusConfig: Record<ChangeStatus, {
     color: 'red',
     badgeStatus: 'error',
   },
+  [ChangeStatus.SCHEDULED]: {
+    label: '已排期',
+    color: 'cyan',
+    badgeStatus: 'processing',
+  },
   [ChangeStatus.IN_PROGRESS]: {
     label: '实施中',
     color: 'cyan',
@@ -295,6 +302,11 @@ export const ChangeStatusConfig: Record<ChangeStatus, {
     label: '已完成',
     color: 'green',
     badgeStatus: 'success',
+  },
+  [ChangeStatus.FAILED]: {
+    label: '实施失败',
+    color: 'red',
+    badgeStatus: 'error',
   },
   [ChangeStatus.ROLLED_BACK]: {
     label: '已回滚',

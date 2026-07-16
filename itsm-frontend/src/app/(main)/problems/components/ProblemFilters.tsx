@@ -64,7 +64,7 @@ export const ProblemFilters: React.FC<ProblemFiltersProps> = ({
                   待处理
                 </div>
               </Option>
-              <Option value={ProblemStatus.IN_PROGRESS}>
+              <Option value={ProblemStatus.INVESTIGATING}>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   处理中

@@ -18,7 +18,7 @@ func TestIsValidTicketStatusTransition(t *testing.T) {
 		{"new to open", common.TicketStatusNew, common.TicketStatusOpen, true},
 		{"new to assigned", common.TicketStatusNew, common.TicketStatusAssigned, true},
 		{"open to in_progress", common.TicketStatusOpen, common.TicketStatusInProgress, true},
-		{"open to resolved", common.TicketStatusOpen, common.TicketStatusResolved, false}, // 需要先in_progress
+		{"open to resolved", common.TicketStatusOpen, common.TicketStatusResolved, true},
 		{"in_progress to resolved", common.TicketStatusInProgress, common.TicketStatusResolved, true},
 		{"resolved to closed", common.TicketStatusResolved, common.TicketStatusClosed, true},
 

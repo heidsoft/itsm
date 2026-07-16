@@ -26,6 +26,13 @@ export interface ServiceRequest {
   complianceAck?: boolean;
   currentLevel?: number;
   totalLevels?: number;
+  version: number;
+  processorId?: number;
+  approvedAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  completionNote?: string;
+  lastError?: string;
   createdAt: string;
   catalog?: {
     id: number;

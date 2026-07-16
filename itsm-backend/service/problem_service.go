@@ -3,12 +3,15 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -41,6 +44,18 @@ func (s *ProblemService) SetProcessTriggerService(triggerService ProcessTriggerS
 // CreateProblem 创建问题
 func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProblemRequest, createdBy, tenantID int) (*dto.ProblemResponse, error) {
 	s.logger.Infow("Creating problem", "title", req.Title, "tenant_id", tenantID, "created_by", createdBy)
+	if err := validateProblemInput(req.Title, req.Priority); err != nil {
+		return nil, err
+	}
+	creatorExists, err := s.client.User.Query().
+		Where(user.IDEQ(createdBy), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("验证问题创建人失败: %w", err)
+	}
+	if !creatorExists {
+		return nil, fmt.Errorf("问题创建人不存在或不可用")
+	}
 
 	problem, err := s.client.Problem.Create().
 		SetTitle(req.Title).
@@ -79,7 +94,7 @@ func (s *ProblemService) GetProblem(ctx context.Context, id int, tenantID int) (
 	s.logger.Infow("Getting problem", "id", id, "tenant_id", tenantID)
 
 	problem, err := s.client.Problem.Query().
-		Where(problem.ID(id), problem.TenantID(tenantID)).
+		Where(problem.ID(id), problem.TenantID(tenantID), problem.DeletedAtIsNil()).
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -135,6 +150,9 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 	if pageSize <= 0 {
 		pageSize = 10
 	}
+	if pageSize > 200 {
+		pageSize = 200
+	}
 
 	problems, err := query.
 		Offset((page - 1) * pageSize).
@@ -162,7 +180,7 @@ func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.Upd
 
 	// 检查问题是否存在
 	existing, err := s.client.Problem.Query().
-		Where(problem.ID(id), problem.TenantID(tenantID)).
+		Where(problem.ID(id), problem.TenantID(tenantID), problem.DeletedAtIsNil()).
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -183,6 +201,9 @@ func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.Upd
 		update.SetDescription(*req.Description)
 	}
 	if req.Priority != nil {
+		if !isValidProblemPriorityValue(*req.Priority) {
+			return nil, fmt.Errorf("invalid problem priority: %s", *req.Priority)
+		}
 		update.SetPriority(*req.Priority)
 	}
 	if req.Status != nil {
@@ -227,7 +248,7 @@ func (s *ProblemService) DeleteProblem(ctx context.Context, id int, tenantID int
 
 	// 使用软删除
 	_, err := s.client.Problem.UpdateOneID(id).
-		Where(problem.TenantID(tenantID)).
+		Where(problem.TenantID(tenantID), problem.DeletedAtIsNil()).
 		SetDeletedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
@@ -241,34 +262,37 @@ func (s *ProblemService) DeleteProblem(ctx context.Context, id int, tenantID int
 
 // GetProblemStats 获取问题统计
 func (s *ProblemService) GetProblemStats(ctx context.Context, tenantID int) (*dto.ProblemStatsResponse, error) {
-	query := s.client.Problem.Query().Where(problem.TenantID(tenantID))
-
-	total, err := query.Count(ctx)
+	count := func(predicates ...predicate.Problem) (int, error) {
+		return s.client.Problem.Query().
+			Where(append([]predicate.Problem{problem.TenantIDEQ(tenantID), problem.DeletedAtIsNil()}, predicates...)...).
+			Count(ctx)
+	}
+	total, err := count()
 	if err != nil {
 		return nil, err
 	}
 
-	open, err := query.Where(problem.StatusEQ("open")).Count(ctx)
+	open, err := count(problem.StatusEQ("open"))
 	if err != nil {
 		return nil, err
 	}
 
-	inProgress, err := query.Where(problem.StatusEQ("in_progress")).Count(ctx)
+	inProgress, err := count(problem.StatusIn("investigating", "in_progress"))
 	if err != nil {
 		return nil, err
 	}
 
-	resolved, err := query.Where(problem.StatusEQ("resolved")).Count(ctx)
+	resolved, err := count(problem.StatusEQ("resolved"))
 	if err != nil {
 		return nil, err
 	}
 
-	closed, err := query.Where(problem.StatusEQ("closed")).Count(ctx)
+	closed, err := count(problem.StatusEQ("closed"))
 	if err != nil {
 		return nil, err
 	}
 
-	highPriority, err := query.Where(problem.PriorityEQ("high")).Count(ctx)
+	highPriority, err := count(problem.PriorityIn("high", "critical"))
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +413,7 @@ func (s *ProblemService) mapProcessStatus(status string) dto.ProcessStatus {
 // isValidProblemStatusTransition checks problem status transitions
 // state machine:
 //
-//	new           -> investigating, identified, resolved, closed
+//	open          -> investigating, identified, resolved, closed
 //	investigating -> identified, resolved, closed
 //	identified    -> resolved, closed, investigating
 //	resolved      -> closed, investigating (reopen)
@@ -399,15 +423,16 @@ func isValidProblemStatusTransition(currentStatus, newStatus string) bool {
 		return true
 	}
 	validTransitions := map[string][]string{
-		"new":           {"investigating", "identified", "resolved", "closed"},
+		"open":          {"investigating", "identified", "resolved", "closed"},
 		"investigating": {"identified", "resolved", "closed"},
 		"identified":    {"resolved", "closed", "investigating"},
 		"resolved":      {"closed", "investigating"},
 		"closed":        {},
+		"in_progress":   {"identified", "resolved", "closed"},
 	}
 	allowed, ok := validTransitions[currentStatus]
 	if !ok {
-		return true
+		return false
 	}
 	for _, st := range allowed {
 		if st == newStatus {
@@ -417,13 +442,44 @@ func isValidProblemStatusTransition(currentStatus, newStatus string) bool {
 	return false
 }
 
+func validateProblemInput(title, priority string) error {
+	if strings.TrimSpace(title) == "" {
+		return fmt.Errorf("问题标题不能为空")
+	}
+	if !isValidProblemPriorityValue(priority) {
+		return fmt.Errorf("invalid problem priority: %s", priority)
+	}
+	return nil
+}
+
+func isValidProblemPriorityValue(priority string) bool {
+	switch priority {
+	case "low", "medium", "high", "critical":
+		return true
+	default:
+		return false
+	}
+}
+
 // CreateKnownErrorFromProblem 从问题创建已知错误
 func (s *ProblemService) CreateKnownErrorFromProblem(ctx context.Context, problemID int, createdBy int, req *dto.KEDBCreateRequest) (*dto.KEDBResponse, error) {
 	s.logger.Infow("Creating known error from problem", "problemID", problemID, "createdBy", createdBy)
+	if s.knownErrorService == nil {
+		return nil, fmt.Errorf("known error service is not configured")
+	}
+	creator, err := s.client.User.Query().
+		Where(user.IDEQ(createdBy), user.ActiveEQ(true)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("creator not found")
+		}
+		return nil, fmt.Errorf("failed to validate creator: %w", err)
+	}
 
 	// 获取问题
 	problem, err := s.client.Problem.Query().
-		Where(problem.IDEQ(problemID)).
+		Where(problem.IDEQ(problemID), problem.TenantIDEQ(creator.TenantID), problem.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -511,9 +567,12 @@ func (s *ProblemService) CreateKnownErrorFromProblem(ctx context.Context, proble
 	}
 
 	// 关联已知错误到问题
-	err = s.knownErrorService.LinkKnownErrorToProblem(ctx, knownError.ID, problemID)
+	err = s.knownErrorService.LinkKnownErrorToProblem(ctx, knownError.ID, problemID, problem.TenantID)
 	if err != nil {
-		s.logger.Warnw("Failed to link known error to problem", "knownErrorID", knownError.ID, "problemID", problemID, "error", err)
+		if deleteErr := s.client.KnownError.DeleteOneID(knownError.ID).Exec(ctx); deleteErr != nil {
+			s.logger.Errorw("Failed to compensate orphan known error", "knownErrorID", knownError.ID, "error", deleteErr)
+		}
+		return nil, fmt.Errorf("failed to link known error to problem: %w", err)
 	}
 
 	// 转换为响应

@@ -30,6 +30,8 @@ type Repository interface {
 	Delete(ctx context.Context, tenantID int, id int) error
 	Count(ctx context.Context, tenantID int, filters ListFilters) (int, error)
 	CountByCategory(ctx context.Context, tenantID int) (map[string]int, error)
+	NameExists(ctx context.Context, tenantID int, name string, excludeID int) (bool, error)
+	ValidateReferences(ctx context.Context, tenantID, ciTypeID, cloudServiceID int) error
 }
 
 // ListFilters defines available filters for listing catalogs

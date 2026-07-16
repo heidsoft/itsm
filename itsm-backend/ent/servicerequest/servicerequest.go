@@ -63,10 +63,14 @@ const (
 	FieldCompletionNote = "completion_note"
 	// FieldLastError holds the string denoting the last_error field in the database.
 	FieldLastError = "last_error"
+	// FieldVersion holds the string denoting the version field in the database.
+	FieldVersion = "version"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// Table holds the table name of the servicerequest in the database.
 	Table = "service_requests"
 )
@@ -99,8 +103,10 @@ var Columns = []string{
 	FieldCompletedAt,
 	FieldCompletionNote,
 	FieldLastError,
+	FieldVersion,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldDeletedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -132,6 +138,10 @@ var (
 	DefaultCurrentLevel int
 	// DefaultTotalLevels holds the default value on creation for the "total_levels" field.
 	DefaultTotalLevels int
+	// DefaultVersion holds the default value on creation for the "version" field.
+	DefaultVersion int
+	// VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	VersionValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -258,6 +268,11 @@ func ByLastError(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastError, opts...).ToFunc()
 }
 
+// ByVersion orders the results by the version field.
+func ByVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVersion, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -266,4 +281,9 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }

@@ -86,6 +86,7 @@ func TestChangeService_CreateChange_Success(t *testing.T) {
 	assert.Equal(t, dto.ChangeType(req.Type), response.Type)
 	assert.Equal(t, dto.ChangePriority(req.Priority), response.Priority)
 	assert.Equal(t, testUser.ID, response.CreatedBy)
+	assert.Nil(t, response.AssigneeID)
 	assert.NotEmpty(t, response.CreatedAt)
 }
 
@@ -98,6 +99,10 @@ func TestChangeService_CreateChange_WithAffectedCIs(t *testing.T) {
 
 	testUser, err := createChangeTestUser(ctx, client, testTenant.ID, "ci")
 	require.NoError(t, err)
+	ciType := createTicketAssociationCIType(t, ctx, client, testTenant.ID, "change-ci")
+	createTicketAssociationCI(t, ctx, client, testTenant.ID, ciType.ID, "CI-001", "CHANGE-CI-001")
+	createTicketAssociationCI(t, ctx, client, testTenant.ID, ciType.ID, "CI-002", "CHANGE-CI-002")
+	createTicketAssociationCI(t, ctx, client, testTenant.ID, ciType.ID, "CI-003", "CHANGE-CI-003")
 
 	req := &dto.CreateChangeRequest{
 		Title:         "网络设备配置变更",
@@ -148,6 +153,63 @@ func TestChangeService_CreateChange_EmergencyChange(t *testing.T) {
 	assert.NotNil(t, response)
 	assert.Equal(t, dto.ChangeTypeEmergency, response.Type)
 	assert.Equal(t, dto.ChangePriorityCritical, response.Priority)
+}
+
+func TestChangeService_CreateChangeRejectsCrossTenantReferences(t *testing.T) {
+	client, service, ctx := setupChangeTest(t)
+	defer client.Close()
+	tenantA, err := createChangeTestTenant(ctx, client, "ref-a")
+	require.NoError(t, err)
+	tenantB, err := createChangeTestTenant(ctx, client, "ref-b")
+	require.NoError(t, err)
+	userA, err := createChangeTestUser(ctx, client, tenantA.ID, "ref-a")
+	require.NoError(t, err)
+	userB, err := createChangeTestUser(ctx, client, tenantB.ID, "ref-b")
+	require.NoError(t, err)
+	ciType := createTicketAssociationCIType(t, ctx, client, tenantB.ID, "foreign-change-ci")
+	createTicketAssociationCI(t, ctx, client, tenantB.ID, ciType.ID, "foreign-server", "FOREIGN-CHANGE-CI")
+	foreignTicket := createTicketAssociationTicket(t, ctx, client, tenantB.ID, userB.ID, "TKT-FOREIGN-CHANGE")
+
+	base := dto.CreateChangeRequest{
+		Title: "Cross tenant", Type: "normal", Priority: "medium", ImpactScope: "medium", RiskLevel: "medium",
+	}
+	base.AffectedCIs = []string{"foreign-server"}
+	_, err = service.CreateChange(ctx, &base, userA.ID, tenantA.ID)
+	require.ErrorContains(t, err, "配置项不存在")
+	base.AffectedCIs = nil
+	base.RelatedTickets = []string{foreignTicket.TicketNumber}
+	_, err = service.CreateChange(ctx, &base, userA.ID, tenantA.ID)
+	require.ErrorContains(t, err, "相关工单不存在")
+	count, err := client.Change.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, count)
+}
+
+func TestChangeService_StatusTimestampsAndRollback(t *testing.T) {
+	client, service, ctx := setupChangeTest(t)
+	defer client.Close()
+	tenant, err := createChangeTestTenant(ctx, client, "timestamps")
+	require.NoError(t, err)
+	user, err := createChangeTestUser(ctx, client, tenant.ID, "timestamps")
+	require.NoError(t, err)
+	entity, err := client.Change.Create().
+		SetTitle("Timestamp change").SetType("normal").SetStatus("approved").SetPriority("medium").
+		SetImpactScope("medium").SetRiskLevel("medium").SetCreatedBy(user.ID).SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	require.NoError(t, service.UpdateChangeStatus(ctx, entity.ID, dto.ChangeStatusScheduled, tenant.ID))
+	require.NoError(t, service.UpdateChangeStatus(ctx, entity.ID, dto.ChangeStatusInProgress, tenant.ID))
+	started, err := client.Change.Get(ctx, entity.ID)
+	require.NoError(t, err)
+	assert.False(t, started.ActualStartDate.IsZero())
+	require.NoError(t, service.UpdateChangeStatus(ctx, entity.ID, dto.ChangeStatusFailed, tenant.ID))
+	require.NoError(t, service.UpdateChangeStatus(ctx, entity.ID, dto.ChangeStatusRolledBack, tenant.ID))
+	rolledBack, err := client.Change.Get(ctx, entity.ID)
+	require.NoError(t, err)
+	assert.Equal(t, string(dto.ChangeStatusRolledBack), rolledBack.Status)
+	assert.False(t, rolledBack.ActualEndDate.IsZero())
+
+	_, err = service.UpdateChange(ctx, entity.ID, &dto.UpdateChangeRequest{}, tenant.ID)
+	require.ErrorContains(t, err, "只有草稿")
 }
 
 // ==================== 获取变更测试 ====================
@@ -381,7 +443,7 @@ func TestChangeService_UpdateChange_StatusTransition(t *testing.T) {
 		// 验证状态已更新
 		response, err := service.GetChange(ctx, testChange.ID, testTenant.ID)
 		require.NoError(t, err)
-		assert.Equal(t, dto.ChangeStatus("submitted"), response.Status)
+		assert.Equal(t, dto.ChangeStatusPending, response.Status)
 	})
 
 	t.Run("submitted -> approved", func(t *testing.T) {
@@ -512,7 +574,7 @@ func TestChangeService_SubmitChange_Success(t *testing.T) {
 	require.NoError(t, err, "获取变更应该成功")
 
 	// 验证状态已变为 submitted
-	assert.Equal(t, dto.ChangeStatus("submitted"), response.Status, "状态应已更新为 submitted")
+	assert.Equal(t, dto.ChangeStatusPending, response.Status, "API 应将持久化 submitted 映射为 pending")
 	assert.Equal(t, testChange.ID, response.ID, "变更ID应保持不变")
 	assert.Equal(t, testChange.Title, response.Title, "变更标题应保持不变")
 }

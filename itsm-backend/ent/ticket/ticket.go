@@ -86,6 +86,8 @@ const (
 	EdgeAttachments = "attachments"
 	// EdgeTags holds the string denoting the tags edge name in mutations.
 	EdgeTags = "tags"
+	// EdgeRelatedTickets holds the string denoting the related_tickets edge name in mutations.
+	EdgeRelatedTickets = "related_tickets"
 	// EdgeApprovalRecords holds the string denoting the approval_records edge name in mutations.
 	EdgeApprovalRecords = "approval_records"
 	// EdgeApprovals holds the string denoting the approvals edge name in mutations.
@@ -133,6 +135,8 @@ const (
 	TagsInverseTable = "ticket_tags"
 	// TagsColumn is the table column denoting the tags relation/edge.
 	TagsColumn = "ticket_tags"
+	// RelatedTicketsTable is the table that holds the related_tickets relation/edge. The primary key declared below.
+	RelatedTicketsTable = "ticket_related_tickets"
 	// ApprovalRecordsTable is the table that holds the approval_records relation/edge.
 	ApprovalRecordsTable = "approval_records"
 	// ApprovalRecordsInverseTable is the table name for the ApprovalRecord entity.
@@ -268,6 +272,9 @@ var ForeignKeys = []string{
 }
 
 var (
+	// RelatedTicketsPrimaryKey and RelatedTicketsColumn2 are the table columns denoting the
+	// primary key for the related_tickets relation (M2M).
+	RelatedTicketsPrimaryKey = []string{"ticket_id", "related_ticket_id"}
 	// CategoryPrimaryKey and CategoryColumn2 are the table columns denoting the
 	// primary key for the category relation (M2M).
 	CategoryPrimaryKey = []string{"ticket_category_id", "ticket_id"}
@@ -534,6 +541,20 @@ func ByTags(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByRelatedTicketsCount orders the results by related_tickets count.
+func ByRelatedTicketsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRelatedTicketsStep(), opts...)
+	}
+}
+
+// ByRelatedTickets orders the results by related_tickets terms.
+func ByRelatedTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRelatedTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByApprovalRecordsCount orders the results by approval_records count.
 func ByApprovalRecordsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -706,6 +727,13 @@ func newTagsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TagsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, TagsTable, TagsColumn),
+	)
+}
+func newRelatedTicketsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, RelatedTicketsTable, RelatedTicketsPrimaryKey...),
 	)
 }
 func newApprovalRecordsStep() *sqlgraph.Step {

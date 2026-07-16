@@ -61,6 +61,7 @@ type Ticket struct {
 	SLAResolutionDeadline *time.Time
 	FirstResponseAt       *time.Time
 	ResolvedAt            *time.Time
+	ClosedAt              *time.Time
 	Resolution            *string
 	Rating                *int
 	RatingComment         *string
@@ -173,28 +174,33 @@ func (e *StateError) Error() string {
 
 // FilterParams 工单查询过滤参数
 type FilterParams struct {
-	Status       *Status
-	Priority     *Priority
-	Type         *Type
-	RequesterID  *int
-	AssigneeID   *int
-	CategoryID   *int
-	DepartmentID *int
-	Keyword      string
-	DateFrom     *time.Time
-	DateTo       *time.Time
+	Status         *Status
+	Priority       *Priority
+	Type           *Type
+	RequesterID    *int
+	AssigneeID     *int
+	CategoryID     *int
+	DepartmentID   *int
+	ParentTicketID *int
+	IsOverdue      bool
+	Keyword        string
+	DateFrom       *time.Time
+	DateTo         *time.Time
 }
 
 // CreateParams 工单创建参数
 type CreateParams struct {
-	Title       string
-	Description string
-	Type        Type
-	Priority    Priority
-	RequesterID int
-	AssigneeID  *int
-	CategoryID  *int
-	Tags        []string
+	Title          string
+	Description    string
+	Type           Type
+	Priority       Priority
+	RequesterID    int
+	AssigneeID     *int
+	CategoryID     *int
+	TemplateID     *int
+	ParentTicketID *int
+	TagIDs         []int
+	Tags           []string
 }
 
 // UpdateParams 工单更新参数
@@ -202,8 +208,12 @@ type UpdateParams struct {
 	Title       *string
 	Description *string
 	Status      *Status
+	Type        *Type
 	Priority    *Priority
 	AssigneeID  *int
+	CategoryID  *int
+	ReplaceTags bool
+	TagIDs      []int
 	Resolution  *string
 	Version     int // 乐观锁版本号
 }

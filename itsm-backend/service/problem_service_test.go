@@ -10,6 +10,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/knownerror"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -293,7 +294,7 @@ func TestProblemService_UpdateProblem_StatusTransition(t *testing.T) {
 	testUser, err := createProblemTestUser(ctx, client, testTenant.ID, "status")
 	require.NoError(t, err)
 
-	t.Run("open -> in_progress", func(t *testing.T) {
+	t.Run("open -> investigating", func(t *testing.T) {
 		testProblem, err := client.Problem.Create().
 			SetTitle("Status Test").
 			SetDescription("Test").
@@ -304,7 +305,7 @@ func TestProblemService_UpdateProblem_StatusTransition(t *testing.T) {
 			Save(ctx)
 		require.NoError(t, err)
 
-		newStatus := "in_progress"
+		newStatus := "investigating"
 		response, err := service.UpdateProblem(ctx, testProblem.ID, &dto.UpdateProblemRequest{
 			Status: &newStatus,
 		}, testTenant.ID)
@@ -419,4 +420,40 @@ func TestProblemService_GetProblemStats(t *testing.T) {
 
 	totalExpected := 3 + 2 + 4 + 1 // 10
 	assert.Equal(t, totalExpected, stats.Total)
+}
+
+func TestProblemService_CreateKnownErrorFromProblemTenantIsolation(t *testing.T) {
+	client, service, ctx := setupProblemTest(t)
+	defer client.Close()
+	tenantA, err := createProblemTestTenant(ctx, client, "kedb-a")
+	require.NoError(t, err)
+	tenantB, err := createProblemTestTenant(ctx, client, "kedb-b")
+	require.NoError(t, err)
+	userA, err := createProblemTestUser(ctx, client, tenantA.ID, "kedb-a")
+	require.NoError(t, err)
+	userB, err := createProblemTestUser(ctx, client, tenantB.ID, "kedb-b")
+	require.NoError(t, err)
+	p, err := client.Problem.Create().
+		SetTitle("Known database issue").
+		SetDescription("Repeated database connection exhaustion").
+		SetPriority("high").
+		SetRootCause("Connection pool leak").
+		SetCreatedBy(userA.ID).
+		SetTenantID(tenantA.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	service.SetKnownErrorService(NewKnownErrorService(client, service.logger))
+
+	_, err = service.CreateKnownErrorFromProblem(ctx, p.ID, userB.ID, nil)
+	require.ErrorContains(t, err, "problem not found")
+	count, err := client.KnownError.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, count)
+
+	response, err := service.CreateKnownErrorFromProblem(ctx, p.ID, userA.ID, nil)
+	require.NoError(t, err)
+	assert.Equal(t, tenantA.ID, response.TenantID)
+	linked, err := client.KnownError.Query().Where(knownerror.IDEQ(response.ID)).QueryProblem().Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, p.ID, linked.ID)
 }

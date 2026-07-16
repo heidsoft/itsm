@@ -23,21 +23,6 @@ func NewTicketAssociationService(client *ent.Client) *TicketAssociationService {
 	}
 }
 
-// CreateTicketRequest 创建工单请求
-type CreateTicketRequest struct {
-	Title        string                 `json:"title"`
-	Description  string                 `json:"description"`
-	Priority     string                 `json:"priority"`
-	CategoryID   *int                   `json:"categoryId,omitempty"`
-	TemplateID   *int                   `json:"templateId,omitempty"`
-	ParentID     *int                   `json:"parentId,omitempty"`
-	RelatedIDs   []int                  `json:"relatedIds,omitempty"`
-	TagIDs       []int                  `json:"tagIds,omitempty"`
-	TenantID     int                    `json:"tenantId"`
-	AssignedTo   *int                   `json:"assignedTo,omitempty"`
-	CustomFields map[string]interface{} `json:"customFields,omitempty"`
-}
-
 // TicketResponse 工单响应
 type TicketResponse struct {
 	ID           int                    `json:"id"`
@@ -57,94 +42,11 @@ type TicketResponse struct {
 	UpdatedAt    time.Time              `json:"updatedAt"`
 }
 
-// CreateTicket 创建工单
-func (s *TicketAssociationService) CreateTicket(ctx context.Context, req *CreateTicketRequest) (*TicketResponse, error) {
-	// 验证父工单是否存在
-	if req.ParentID != nil {
-		parentExists, err := s.client.Ticket.Query().
-			Where(ticket.ID(*req.ParentID)).
-			Exist(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("验证父工单失败: %w", err)
-		}
-		if !parentExists {
-			return nil, fmt.Errorf("父工单不存在")
-		}
-	}
-
-	// 验证关联工单是否存在
-	if len(req.RelatedIDs) > 0 {
-		relatedExists, err := s.client.Ticket.Query().
-			Where(ticket.IDIn(req.RelatedIDs...)).
-			Exist(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("验证关联工单失败: %w", err)
-		}
-		if !relatedExists {
-			return nil, fmt.Errorf("关联工单不存在")
-		}
-	}
-
-	// 验证标签是否存在
-	if len(req.TagIDs) > 0 {
-		tagsExist, err := s.client.TicketTag.Query().
-			Where(tickettag.IDIn(req.TagIDs...)).
-			Exist(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("验证标签失败: %w", err)
-		}
-		if !tagsExist {
-			return nil, fmt.Errorf("标签不存在")
-		}
-	}
-
-	// 创建工单
-	ticketCreate := s.client.Ticket.Create().
-		SetTitle(req.Title).
-		SetDescription(req.Description).
-		SetPriority(req.Priority).
-		SetStatus("open").
-		SetTenantID(req.TenantID)
-
-	if req.CategoryID != nil {
-		ticketCreate.SetCategoryID(*req.CategoryID)
-	}
-	if req.TemplateID != nil {
-		ticketCreate.SetTemplateID(*req.TemplateID)
-	}
-	if req.ParentID != nil {
-		ticketCreate.SetParentTicketID(*req.ParentID)
-	}
-	if req.AssignedTo != nil {
-		ticketCreate.SetAssigneeID(*req.AssignedTo)
-	}
-
-	ticketEntity, err := ticketCreate.Save(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("创建工单失败: %w", err)
-	}
-
-	// 添加标签关联
-	if len(req.TagIDs) > 0 {
-		_, err = ticketEntity.Update().
-			AddTagIDs(req.TagIDs...).
-			Save(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("添加标签失败: %w", err)
-		}
-	}
-
-	// 添加关联工单（RelatedTickets 边暂未在 ent schema 中定义，跳过）
-	// TODO: 在 ent/schema/ticket.go 中添加 related_tickets 自关联边后恢复
-	_ = req.RelatedIDs
-
-	return s.buildTicketResponse(ticketEntity), nil
-}
-
 // GetTicketWithAssociations 获取工单及其关联信息
 func (s *TicketAssociationService) GetTicketWithAssociations(ctx context.Context, ticketID int) (*TicketResponse, error) {
 	ticketEntity, err := s.client.Ticket.Query().
 		WithTags().
+		WithRelatedTickets().
 		Where(ticket.ID(ticketID)).
 		Only(ctx)
 	if err != nil {
@@ -188,75 +90,151 @@ func (s *TicketAssociationService) GetTicketHierarchy(ctx context.Context, ticke
 
 // UpdateTicketAssociations 更新工单关联关系
 func (s *TicketAssociationService) UpdateTicketAssociations(ctx context.Context, ticketID int, req *UpdateAssociationsRequest) error {
-	// 验证工单是否存在
-	_, err := s.client.Ticket.Query().
-		Where(ticket.ID(ticketID)).
+	ticketEntity, err := s.client.Ticket.Query().
+		Where(ticket.ID(ticketID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("工单不存在: %w", err)
 	}
 
-	update := s.client.Ticket.UpdateOneID(ticketID)
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("启动工单关联事务失败: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	txClient := tx.Client()
+	update := txClient.Ticket.UpdateOneID(ticketID).
+		Where(ticket.TenantIDEQ(ticketEntity.TenantID), ticket.DeletedAtIsNil())
 
-	// 更新父工单
 	if req.ParentID != nil {
 		if *req.ParentID == 0 {
-			// 设置为null
 			update.SetNillableParentTicketID(nil)
 		} else {
-			// 验证父工单是否存在
-			parentExists, err := s.client.Ticket.Query().
-				Where(ticket.ID(*req.ParentID)).
-				Exist(ctx)
-			if err != nil {
-				return fmt.Errorf("验证父工单失败: %w", err)
-			}
-			if !parentExists {
-				return fmt.Errorf("父工单不存在")
+			if err := validateParentAssignment(ctx, txClient, ticketEntity, *req.ParentID); err != nil {
+				return err
 			}
 			update.SetParentTicketID(*req.ParentID)
 		}
 	}
 
-	// 更新标签
 	if req.TagIDs != nil {
-		// 先清除现有标签
-		_, err = s.client.Ticket.UpdateOneID(ticketID).
-			ClearTags().
-			Save(ctx)
+		tagIDs := uniqueIDs(req.TagIDs)
+		if len(tagIDs) > 0 {
+			count, err := txClient.TicketTag.Query().
+				Where(tickettag.IDIn(tagIDs...), tickettag.TenantIDEQ(ticketEntity.TenantID), tickettag.IsActiveEQ(true)).
+				Count(ctx)
+			if err != nil {
+				return fmt.Errorf("验证标签失败: %w", err)
+			}
+			if count != len(tagIDs) {
+				return fmt.Errorf("标签不存在或不可用")
+			}
+		}
+		update.ClearTags()
+		if len(tagIDs) > 0 {
+			update.AddTagIDs(tagIDs...)
+		}
+	}
+
+	if req.RelatedIDs != nil {
+		ids := uniqueIDs(req.RelatedIDs)
+		for _, relatedID := range ids {
+			if relatedID == ticketID {
+				return fmt.Errorf("工单不能关联自身")
+			}
+		}
+		count, err := txClient.Ticket.Query().
+			Where(ticket.IDIn(ids...), ticket.TenantIDEQ(ticketEntity.TenantID), ticket.DeletedAtIsNil()).
+			Count(ctx)
 		if err != nil {
-			return fmt.Errorf("清除标签失败: %w", err)
+			return fmt.Errorf("验证关联工单失败: %w", err)
+		}
+		if count != len(ids) {
+			return fmt.Errorf("关联工单不存在")
+		}
+		currentRelated, err := txClient.Ticket.Query().
+			Where(ticket.ID(ticketID)).
+			QueryRelatedTickets().
+			Where(ticket.TenantIDEQ(ticketEntity.TenantID)).
+			All(ctx)
+		if err != nil {
+			return fmt.Errorf("查询现有关联工单失败: %w", err)
+		}
+		for _, related := range currentRelated {
+			if err := txClient.Ticket.UpdateOneID(related.ID).
+				Where(ticket.TenantIDEQ(ticketEntity.TenantID)).
+				RemoveRelatedTicketIDs(ticketID).
+				Exec(ctx); err != nil {
+				return fmt.Errorf("清除反向工单关联失败: %w", err)
+			}
 		}
 
-		// 添加新标签
-		if len(req.TagIDs) > 0 {
-			_, err = s.client.Ticket.UpdateOneID(ticketID).
-				AddTagIDs(req.TagIDs...).
-				Save(ctx)
-			if err != nil {
-				return fmt.Errorf("添加标签失败: %w", err)
+		update.ClearRelatedTickets()
+		if len(ids) > 0 {
+			update.AddRelatedTicketIDs(ids...)
+			for _, relatedID := range ids {
+				if err := txClient.Ticket.UpdateOneID(relatedID).
+					Where(ticket.TenantIDEQ(ticketEntity.TenantID), ticket.DeletedAtIsNil()).
+					AddRelatedTicketIDs(ticketID).
+					Exec(ctx); err != nil {
+					return fmt.Errorf("写入反向工单关联失败: %w", err)
+				}
 			}
 		}
 	}
 
-	// 更新关联工单（RelatedTickets 边暂未在 ent schema 中定义，跳过）
-	// TODO: 在 ent/schema/ticket.go 中添加 related_tickets 自关联边后恢复
-	_ = req.RelatedIDs
+	if _, err := update.Save(ctx); err != nil {
+		return fmt.Errorf("更新工单关联失败: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("提交工单关联事务失败: %w", err)
+	}
+	return nil
+}
 
+func validateParentAssignment(ctx context.Context, client *ent.Client, child *ent.Ticket, parentID int) error {
+	if parentID == child.ID {
+		return fmt.Errorf("工单不能作为自己的父工单")
+	}
+	visited := map[int]struct{}{child.ID: {}}
+	currentID := parentID
+	for currentID != 0 {
+		if _, exists := visited[currentID]; exists {
+			return fmt.Errorf("父工单关系不能形成循环")
+		}
+		visited[currentID] = struct{}{}
+		parent, err := client.Ticket.Query().
+			Where(ticket.ID(currentID), ticket.TenantIDEQ(child.TenantID), ticket.DeletedAtIsNil()).
+			Only(ctx)
+		if err != nil {
+			return fmt.Errorf("父工单不存在")
+		}
+		currentID = parent.ParentTicketID
+	}
 	return nil
 }
 
 // GetRelatedTickets 获取关联工单
-// TODO: RelatedTickets 边暂未在 ent schema 中定义，当前返回空列表
 func (s *TicketAssociationService) GetRelatedTickets(ctx context.Context, ticketID int) ([]*TicketResponse, error) {
-	_, err := s.client.Ticket.Query().
+	ticketEntity, err := s.client.Ticket.Query().
 		Where(ticket.ID(ticketID)).
 		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取工单失败: %w", err)
 	}
 
-	return []*TicketResponse{}, nil
+	related, err := ticketEntity.QueryRelatedTickets().
+		Where(ticket.TenantIDEQ(ticketEntity.TenantID), ticket.DeletedAtIsNil()).
+		WithTags().
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取关联工单失败: %w", err)
+	}
+	responses := make([]*TicketResponse, len(related))
+	for i, item := range related {
+		responses[i] = s.buildTicketResponse(item)
+	}
+	return responses, nil
 }
 
 // GetTicketDependencies 获取工单依赖关系
@@ -340,10 +318,27 @@ func (s *TicketAssociationService) buildTicketResponse(ticket *ent.Ticket) *Tick
 		}
 	}
 
-	// 处理关联工单（RelatedTickets 边暂未在 ent schema 中定义）
-	// TODO: 在 ent/schema/ticket.go 中添加 related_tickets 自关联边后恢复
+	if ticket.Edges.RelatedTickets != nil {
+		response.RelatedIDs = make([]int, len(ticket.Edges.RelatedTickets))
+		for i, related := range ticket.Edges.RelatedTickets {
+			response.RelatedIDs[i] = related.ID
+		}
+	}
 
 	return response
+}
+
+func uniqueIDs(ids []int) []int {
+	seen := make(map[int]struct{}, len(ids))
+	result := make([]int, 0, len(ids))
+	for _, id := range ids {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		result = append(result, id)
+	}
+	return result
 }
 
 // getParentChain 获取父工单链

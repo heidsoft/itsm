@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -173,8 +174,7 @@ func TestHandler_Get_InvalidID(t *testing.T) {
 func TestHandler_Get_NotFound(t *testing.T) {
 	r, _, _ := scSetup(t)
 	resp := scDoReq(t, r, "GET", "/api/v1/service-catalogs/999999", nil)
-	// repo 返回错误 → handler 透传 5001
-	assert.Equal(t, common.InternalErrorCode, resp.Code, "body=%s", mustSC(resp))
+	assert.Equal(t, common.NotFoundErrorCode, resp.Code, "body=%s", mustSC(resp))
 }
 
 func TestHandler_Update_Success(t *testing.T) {
@@ -206,9 +206,56 @@ func TestHandler_Delete_Success(t *testing.T) {
 	del := scDoReq(t, r, "DELETE", "/api/v1/service-catalogs/"+strconv.Itoa(id), nil)
 	require.Equal(t, common.SuccessCode, del.Code, "body=%s", mustSC(del))
 
-	// 删除后再次查询应失败
+	// 删除采用归档禁用，保留目录历史
 	after := scDoReq(t, r, "GET", "/api/v1/service-catalogs/"+strconv.Itoa(id), nil)
-	assert.Equal(t, common.InternalErrorCode, after.Code, "body=%s", mustSC(after))
+	require.Equal(t, common.SuccessCode, after.Code, "body=%s", mustSC(after))
+	assert.Equal(t, "disabled", after.Data.(map[string]interface{})["status"])
+	search := scDoReq(t, r, "GET", "/api/v1/service-catalogs/search?q=DelCat", nil)
+	require.Equal(t, common.SuccessCode, search.Code)
+	assert.Zero(t, int(search.Data.(map[string]interface{})["total"].(float64)))
+}
+
+func TestHandler_CreateRejectsDuplicateNameAndInvalidDeliveryTime(t *testing.T) {
+	r, _, _ := scSetup(t)
+	name := "Duplicate-" + scUID()
+	first := scDoReq(t, r, "POST", "/api/v1/service-catalogs", dto.CreateServiceCatalogRequest{
+		Name: name, Category: "hardware",
+	})
+	require.Equal(t, common.SuccessCode, first.Code)
+	duplicate := scDoReq(t, r, "POST", "/api/v1/service-catalogs", dto.CreateServiceCatalogRequest{
+		Name: strings.ToUpper(name), Category: "hardware",
+	})
+	assert.Equal(t, common.ConflictCode, duplicate.Code)
+	invalid := scDoReq(t, r, "POST", "/api/v1/service-catalogs", dto.CreateServiceCatalogRequest{
+		Name: "Invalid Delivery " + scUID(), Category: "hardware", DeliveryTime: "tomorrow",
+	})
+	assert.Equal(t, common.ParamErrorCode, invalid.Code)
+}
+
+func TestHandler_CreateValidatesReferencedTenantResources(t *testing.T) {
+	r, client, tenantID := scSetup(t)
+	ctx := context.Background()
+	otherTenant, err := client.Tenant.Create().
+		SetName("Other SC Tenant").SetCode("OTHER-" + scUID()).SetDomain("other-sc.test").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+	localType, err := client.CIType.Create().SetName("Local Type").SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
+	foreignType, err := client.CIType.Create().SetName("Foreign Type").SetTenantID(otherTenant.ID).Save(ctx)
+	require.NoError(t, err)
+	foreignCloud, err := client.CloudService.Create().
+		SetProvider("aliyun").SetServiceCode("ecs").SetServiceName("ECS").
+		SetResourceTypeCode("instance").SetResourceTypeName("Instance").SetTenantID(otherTenant.ID).Save(ctx)
+	require.NoError(t, err)
+
+	foreignCI := scDoReq(t, r, "POST", "/api/v1/service-catalogs", dto.CreateServiceCatalogRequest{
+		Name: "Foreign CI " + scUID(), Category: "cloud", CITypeID: foreignType.ID,
+	})
+	assert.Equal(t, common.ParamErrorCode, foreignCI.Code)
+	foreignCloudResp := scDoReq(t, r, "POST", "/api/v1/service-catalogs", dto.CreateServiceCatalogRequest{
+		Name: "Foreign Cloud " + scUID(), Category: "cloud",
+		CITypeID: localType.ID, CloudServiceID: foreignCloud.ID,
+	})
+	assert.Equal(t, common.ParamErrorCode, foreignCloudResp.Code)
 }
 
 func TestHandler_Search(t *testing.T) {

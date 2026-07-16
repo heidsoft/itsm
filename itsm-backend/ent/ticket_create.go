@@ -509,6 +509,21 @@ func (_c *TicketCreate) AddTags(v ...*TicketTag) *TicketCreate {
 	return _c.AddTagIDs(ids...)
 }
 
+// AddRelatedTicketIDs adds the "related_tickets" edge to the Ticket entity by IDs.
+func (_c *TicketCreate) AddRelatedTicketIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddRelatedTicketIDs(ids...)
+	return _c
+}
+
+// AddRelatedTickets adds the "related_tickets" edges to the Ticket entity.
+func (_c *TicketCreate) AddRelatedTickets(v ...*Ticket) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRelatedTicketIDs(ids...)
+}
+
 // AddApprovalRecordIDs adds the "approval_records" edge to the ApprovalRecord entity by IDs.
 func (_c *TicketCreate) AddApprovalRecordIDs(ids ...int) *TicketCreate {
 	_c.mutation.AddApprovalRecordIDs(ids...)
@@ -993,6 +1008,22 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tickettag.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RelatedTicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   ticket.RelatedTicketsTable,
+			Columns: ticket.RelatedTicketsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

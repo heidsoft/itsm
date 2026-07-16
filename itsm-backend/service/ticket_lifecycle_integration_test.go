@@ -70,12 +70,13 @@ func TestTicketLifecycle_CompleteFlow(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, common.TicketStatusResolved, resolved.Status)
 	assert.NotNil(t, resolved.ResolvedAt)
+	assert.Equal(t, "问题已修复", resolved.Resolution)
 
 	// 4. 关闭工单 (closed)
 	closed, err := service.CloseTicket(ctx, ticketEntity.ID, "客户确认满意", tenant.ID, user.ID)
 	require.NoError(t, err)
 	assert.Equal(t, common.TicketStatusClosed, closed.Status)
-	// Note: ClosedAt may be nil depending on service implementation
+	assert.NotNil(t, closed.ClosedAt)
 }
 
 func TestTicketLifecycle_Escalate(t *testing.T) {
@@ -103,7 +104,8 @@ func TestTicketLifecycle_Escalate(t *testing.T) {
 	// 升级工单
 	escalated, err := service.EscalateTicket(ctx, ticketEntity.ID, "需要高级别支持", tenant.ID, user.ID)
 	require.NoError(t, err)
-	assert.Equal(t, "escalated", escalated.Status)
+	assert.Equal(t, common.TicketStatusOpen, escalated.Status)
+	assert.Equal(t, "critical", escalated.Priority)
 }
 
 func TestTicketLifecycle_InvalidStatusTransition(t *testing.T) {
@@ -150,9 +152,9 @@ func TestTicketLifecycle_StatusTransition_TableDriven(t *testing.T) {
 		// 已知的有效转换
 		{"open → in_progress", common.TicketStatusOpen, common.TicketStatusInProgress, true},
 		{"open → pending", common.TicketStatusOpen, common.TicketStatusPending, true},
-		{"open → closed", common.TicketStatusOpen, common.TicketStatusClosed, true},
+		{"open → closed", common.TicketStatusOpen, common.TicketStatusClosed, false},
 		{"in_progress → pending", common.TicketStatusInProgress, common.TicketStatusPending, true},
-		{"in_progress → open", common.TicketStatusInProgress, common.TicketStatusOpen, true},
+		{"in_progress → open", common.TicketStatusInProgress, common.TicketStatusOpen, false},
 		{"pending → in_progress", common.TicketStatusPending, common.TicketStatusInProgress, true},
 		{"resolved → closed", common.TicketStatusResolved, common.TicketStatusClosed, true},
 		{"resolved → open", common.TicketStatusResolved, common.TicketStatusOpen, true},

@@ -608,10 +608,10 @@ func TestTicketLifecycleService_IsValidStatusTransition_TableDriven(t *testing.T
 	}{
 		// 有效转换 - 基于实际 service 行为
 		{"open to in_progress", "open", "in_progress", true},
-		{"open to closed", "open", "closed", true},
+		{"open to closed", "open", "closed", false},
 		{"open to cancelled", "open", "cancelled", true},
 		{"in_progress to resolved", "in_progress", "resolved", true},
-		{"in_progress to open", "in_progress", "open", true},
+		{"in_progress to open", "in_progress", "open", false},
 		{"resolved to closed", "resolved", "closed", true},
 		{"resolved to open", "resolved", "open", true},
 		{"resolved to in_progress", "resolved", "in_progress", true}, // 可以重新打开
@@ -621,7 +621,7 @@ func TestTicketLifecycleService_IsValidStatusTransition_TableDriven(t *testing.T
 		{"closed to in_progress", "closed", "in_progress", false},
 		{"cancelled to open", "cancelled", "open", false},
 		{"cancelled to resolved", "cancelled", "resolved", false},
-		{"open to resolved", "open", "resolved", false}, // 需要先 in_progress
+		{"open to resolved", "open", "resolved", true},
 	}
 
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")

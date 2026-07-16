@@ -381,6 +381,20 @@ func (_c *IncidentCreate) SetNillableUpdatedAt(v *time.Time) *IncidentCreate {
 	return _c
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *IncidentCreate) SetDeletedAt(v time.Time) *IncidentCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableDeletedAt(v *time.Time) *IncidentCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
+	}
+	return _c
+}
+
 // AddRelatedIncidentIDs adds the "related_incidents" edge to the Incident entity by IDs.
 func (_c *IncidentCreate) AddRelatedIncidentIDs(ids ...int) *IncidentCreate {
 	_c.mutation.AddRelatedIncidentIDs(ids...)
@@ -820,6 +834,10 @@ func (_c *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(incident.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(incident.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
 	}
 	if nodes := _c.mutation.RelatedIncidentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

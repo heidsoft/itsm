@@ -1433,6 +1433,7 @@ var (
 		{Name: "version", Type: field.TypeInt, Default: 1},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 	}
 	// IncidentsTable holds the schema information for the "incidents" table.
 	IncidentsTable = &schema.Table{
@@ -3446,8 +3447,10 @@ var (
 		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
 		{Name: "completion_note", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "version", Type: field.TypeInt, Default: 1},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 	}
 	// ServiceRequestsTable holds the schema information for the "service_requests" table.
 	ServiceRequestsTable = &schema.Table{
@@ -3458,17 +3461,17 @@ var (
 			{
 				Name:    "servicerequest_tenant_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[26]},
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[27]},
 			},
 			{
 				Name:    "servicerequest_tenant_id_requester_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[4], ServiceRequestsColumns[26]},
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[4], ServiceRequestsColumns[27]},
 			},
 			{
 				Name:    "servicerequest_tenant_id_status_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[5], ServiceRequestsColumns[26]},
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[5], ServiceRequestsColumns[27]},
 			},
 			{
 				Name:    "servicerequest_tenant_id_ci_id",
@@ -4807,6 +4810,31 @@ var (
 			},
 		},
 	}
+	// TicketRelatedTicketsColumns holds the columns for the "ticket_related_tickets" table.
+	TicketRelatedTicketsColumns = []*schema.Column{
+		{Name: "ticket_id", Type: field.TypeInt},
+		{Name: "related_ticket_id", Type: field.TypeInt},
+	}
+	// TicketRelatedTicketsTable holds the schema information for the "ticket_related_tickets" table.
+	TicketRelatedTicketsTable = &schema.Table{
+		Name:       "ticket_related_tickets",
+		Columns:    TicketRelatedTicketsColumns,
+		PrimaryKey: []*schema.Column{TicketRelatedTicketsColumns[0], TicketRelatedTicketsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ticket_related_tickets_ticket_id",
+				Columns:    []*schema.Column{TicketRelatedTicketsColumns[0]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "ticket_related_tickets_related_ticket_id",
+				Columns:    []*schema.Column{TicketRelatedTicketsColumns[1]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// TicketCategoryTicketsColumns holds the columns for the "ticket_category_tickets" table.
 	TicketCategoryTicketsColumns = []*schema.Column{
 		{Name: "ticket_category_id", Type: field.TypeInt},
@@ -5035,6 +5063,7 @@ var (
 		ProblemChangesTable,
 		ProjectTagsTable,
 		TeamTagsTable,
+		TicketRelatedTicketsTable,
 		TicketCategoryTicketsTable,
 		UserRolesTable,
 		UserArticleSessionsTable,
@@ -5158,6 +5187,8 @@ func init() {
 	ProjectTagsTable.ForeignKeys[1].RefTable = TagsTable
 	TeamTagsTable.ForeignKeys[0].RefTable = TeamsTable
 	TeamTagsTable.ForeignKeys[1].RefTable = TagsTable
+	TicketRelatedTicketsTable.ForeignKeys[0].RefTable = TicketsTable
+	TicketRelatedTicketsTable.ForeignKeys[1].RefTable = TicketsTable
 	TicketCategoryTicketsTable.ForeignKeys[0].RefTable = TicketCategoriesTable
 	TicketCategoryTicketsTable.ForeignKeys[1].RefTable = TicketsTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable

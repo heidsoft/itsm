@@ -10,11 +10,11 @@ func TestIsValidProblemStatusTransition(t *testing.T) {
 		want    bool
 	}{
 		// Valid: same status
-		{"same_new", "new", "new", true},
+		{"same_open", "open", "open", true},
 
 		// Valid forward transitions
-		{"new_to_investigating", "new", "investigating", true},
-		{"new_to_identified", "new", "identified", true},
+		{"open_to_investigating", "open", "investigating", true},
+		{"open_to_identified", "open", "identified", true},
 		{"investigating_to_identified", "investigating", "identified", true},
 		{"investigating_to_resolved", "investigating", "resolved", true},
 		{"identified_to_resolved", "identified", "resolved", true},
@@ -25,13 +25,13 @@ func TestIsValidProblemStatusTransition(t *testing.T) {
 		{"identified_to_investigating", "identified", "investigating", true},
 
 		// INVALID: cannot leave terminal closed
-		{"closed_to_new", "closed", "new", false},
+		{"closed_to_open", "closed", "open", false},
 		{"closed_to_investigating", "closed", "investigating", false},
 		{"closed_to_resolved", "closed", "resolved", false},
 		{"closed_to_identified", "closed", "identified", false},
 
-		// Unknown: permissive for legacy data
-		{"unknown_legacy", "legacy", "resolved", true},
+		// Unknown states fail closed.
+		{"unknown_legacy", "legacy", "resolved", false},
 	}
 
 	for _, tc := range tests {

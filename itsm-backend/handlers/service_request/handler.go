@@ -16,6 +16,31 @@ type Handler struct {
 	service *Service
 }
 
+func failServiceRequest(c *gin.Context, err error) {
+	if appErr, ok := common.AsAppError(err); ok {
+		switch appErr.Code {
+		case common.ErrCodeBadRequest, common.ErrCodeValidation:
+			common.Fail(c, common.ParamErrorCode, appErr.Message)
+		case common.ErrCodeUnauthorized:
+			common.Fail(c, common.UnauthorizedCode, appErr.Message)
+		case common.ErrCodeForbidden:
+			common.Fail(c, common.ForbiddenErrorCode, appErr.Message)
+		case common.ErrCodeNotFound:
+			common.Fail(c, common.NotFoundErrorCode, appErr.Message)
+		case common.ErrCodeConflict:
+			common.Fail(c, common.ConflictCode, appErr.Error())
+		default:
+			common.Fail(c, common.InternalErrorCode, appErr.Message)
+		}
+		return
+	}
+	if ent.IsNotFound(err) {
+		common.Fail(c, common.NotFoundErrorCode, "Service request not found")
+		return
+	}
+	common.Fail(c, common.InternalErrorCode, err.Error())
+}
+
 func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
@@ -41,7 +66,15 @@ func (h *Handler) toDTO(req *ServiceRequest, approvals []*ServiceRequestApproval
 		ComplianceAck:      req.ComplianceAck,
 		CurrentLevel:       req.CurrentLevel,
 		TotalLevels:        req.TotalLevels,
+		Version:            req.Version,
+		ProcessorID:        req.ProcessorID,
+		ApprovedAt:         req.ApprovedAt,
+		StartedAt:          req.StartedAt,
+		CompletedAt:        req.CompletedAt,
+		CompletionNote:     req.CompletionNote,
+		LastError:          req.LastError,
 		CreatedAt:          req.CreatedAt,
+		UpdatedAt:          req.UpdatedAt,
 	}
 	if req.ExpireAt != nil {
 		t := *req.ExpireAt
@@ -117,8 +150,7 @@ func (h *Handler) Create(c *gin.Context) {
 
 	created, err := h.service.Create(c.Request.Context(), tenantID.(int), userID.(int), req.CatalogID, domainReq)
 	if err != nil {
-		// Error mapping could be improved
-		common.Fail(c, 5001, err.Error())
+		failServiceRequest(c, err)
 		return
 	}
 
@@ -233,7 +265,7 @@ func (h *Handler) ApplyApproval(c *gin.Context) {
 
 	res, approvals, err := h.service.ApplyApproval(c.Request.Context(), id, tenantID.(int), userID.(int), req.Action, req.Comment, roleStr, deptStr)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		failServiceRequest(c, err)
 		return
 	}
 
@@ -260,7 +292,7 @@ func (h *Handler) ListPending(c *gin.Context) {
 
 	list, total, err := h.service.ListPendingApprovals(c.Request.Context(), tenantID.(int), userID.(int), roleStr, req.Page, req.Size)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		failServiceRequest(c, err)
 		return
 	}
 
@@ -311,23 +343,23 @@ func (h *Handler) Update(c *gin.Context) {
 		FormData:           req.FormData,
 		CostCenter:         req.CostCenter,
 		DataClassification: req.DataClassification,
-		NeedsPublicIP:      req.NeedsPublicIP,
+		NeedsPublicIPSet:   req.NeedsPublicIP != nil,
 		SourceIPWhitelist:  req.SourceIPWhitelist,
-		ComplianceAck:      req.ComplianceAck,
+		ComplianceAckSet:   req.ComplianceAck != nil,
 		ExpireAt:           req.ExpireAt,
 	}
+	if req.NeedsPublicIP != nil {
+		domainReq.NeedsPublicIP = *req.NeedsPublicIP
+	}
+	if req.ComplianceAck != nil {
+		domainReq.ComplianceAck = *req.ComplianceAck
+	}
 
-	updated, err := h.service.Update(c.Request.Context(), id, tenantID.(int), domainReq)
+	userID := c.GetInt("user_id")
+	role := c.GetString("role")
+	updated, err := h.service.Update(c.Request.Context(), id, tenantID.(int), userID, role, domainReq)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			common.Fail(c, 404, "Service request not found")
-		} else if appErr, ok := common.AsAppError(err); ok && appErr.Code == common.ErrCodeNotFound {
-			common.Fail(c, 404, "Service request not found")
-		} else if common.IsAppError(err) {
-			common.Fail(c, 5001, err.Error())
-		} else {
-			common.Fail(c, 5001, err.Error())
-		}
+		failServiceRequest(c, err)
 		return
 	}
 
@@ -360,14 +392,10 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateStatus(c.Request.Context(), id, tenantID.(int), status); err != nil {
-		if ent.IsNotFound(err) {
-			common.Fail(c, 404, "Service request not found")
-		} else if appErr, ok := common.AsAppError(err); ok && appErr.Code == common.ErrCodeNotFound {
-			common.Fail(c, 404, "Service request not found")
-		} else {
-			common.Fail(c, 5001, err.Error())
-		}
+	userID := c.GetInt("user_id")
+	role := c.GetString("role")
+	if err := h.service.UpdateStatus(c.Request.Context(), id, tenantID.(int), userID, role, status); err != nil {
+		failServiceRequest(c, err)
 		return
 	}
 
@@ -393,17 +421,9 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	err = h.service.Delete(c.Request.Context(), id, tenantID.(int))
+	err = h.service.Delete(c.Request.Context(), id, tenantID.(int), c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		if ent.IsNotFound(err) {
-			common.Fail(c, 404, "Service request not found")
-		} else if appErr, ok := common.AsAppError(err); ok && appErr.Code == common.ErrCodeNotFound {
-			common.Fail(c, 404, "Service request not found")
-		} else if common.IsAppError(err) {
-			common.Fail(c, 5001, err.Error())
-		} else {
-			common.Fail(c, 5001, err.Error())
-		}
+		failServiceRequest(c, err)
 		return
 	}
 

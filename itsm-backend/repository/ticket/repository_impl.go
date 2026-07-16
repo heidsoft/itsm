@@ -89,6 +89,15 @@ func (r *EntRepository) Create(ctx context.Context, params *CreateParams, tenant
 		if params.CategoryID != nil {
 			builder.SetCategoryID(*params.CategoryID)
 		}
+		if params.TemplateID != nil {
+			builder.SetTemplateID(*params.TemplateID)
+		}
+		if params.ParentTicketID != nil {
+			builder.SetParentTicketID(*params.ParentTicketID)
+		}
+		if len(params.TagIDs) > 0 {
+			builder.AddTagIDs(params.TagIDs...)
+		}
 
 		entity, err := builder.Save(ctx)
 		if err == nil {
@@ -135,6 +144,7 @@ func (r *EntRepository) GetByNumber(ctx context.Context, ticketNumber string, te
 		Where(
 			ticket.TicketNumber(ticketNumber),
 			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
 		).
 		Only(ctx)
 	if err != nil {
@@ -161,6 +171,7 @@ func (r *EntRepository) Update(ctx context.Context, id int, params *UpdateParams
 	}
 
 	builder := r.Client().Ticket.UpdateOneID(id).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(params.Version)).
 		SetVersion(current.Version + 1) // 版本号递增
 
 	if params.Title != nil {
@@ -171,6 +182,17 @@ func (r *EntRepository) Update(ctx context.Context, id int, params *UpdateParams
 	}
 	if params.Status != nil {
 		builder.SetStatus(string(*params.Status))
+		switch *params.Status {
+		case StatusResolved:
+			builder.SetResolvedAt(time.Now()).ClearClosedAt()
+		case StatusClosed:
+			builder.SetClosedAt(time.Now())
+		case StatusNew, StatusOpen, StatusInProgress, StatusPending:
+			builder.ClearResolvedAt().ClearClosedAt()
+		}
+	}
+	if params.Type != nil {
+		builder.SetType(string(*params.Type))
 	}
 	if params.Priority != nil {
 		builder.SetPriority(string(*params.Priority))
@@ -178,28 +200,49 @@ func (r *EntRepository) Update(ctx context.Context, id int, params *UpdateParams
 	if params.AssigneeID != nil {
 		builder.SetAssigneeID(*params.AssigneeID)
 	}
+	if params.CategoryID != nil {
+		if *params.CategoryID == 0 {
+			builder.ClearCategoryID()
+		} else {
+			builder.SetCategoryID(*params.CategoryID)
+		}
+	}
+	if params.ReplaceTags {
+		builder.ClearTags()
+		if len(params.TagIDs) > 0 {
+			builder.AddTagIDs(params.TagIDs...)
+		}
+	}
 	if params.Resolution != nil {
 		builder.SetResolution(*params.Resolution)
 	}
 
 	entity, err := builder.Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("version conflict or ticket no longer exists")
+		}
 		return nil, fmt.Errorf("update ticket: %w", err)
 	}
 
 	return toDomainModel(entity), nil
 }
 
-// Delete 删除工单
+// Delete 软删除工单，保留审计和关联记录。
 func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error {
-	_, err := r.Client().Ticket.Delete().
+	affected, err := r.Client().Ticket.Update().
 		Where(
 			ticket.ID(id),
 			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
 		).
-		Exec(ctx)
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("delete ticket: %w", err)
+	}
+	if affected == 0 {
+		return fmt.Errorf("ticket not found")
 	}
 	return nil
 }
@@ -207,7 +250,7 @@ func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error 
 // List 列表查询工单
 func (r *EntRepository) List(ctx context.Context, tenantID int, filters *FilterParams, pagination *base.QueryParams) (*base.ListResult[Ticket], error) {
 	query := r.Client().Ticket.Query().
-		Where(ticket.TenantID(tenantID))
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil())
 
 	// 应用过滤条件
 	if filters != nil {
@@ -228,6 +271,16 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters *FilterP
 		}
 		if filters.CategoryID != nil {
 			query = query.Where(ticket.CategoryID(*filters.CategoryID))
+		}
+		if filters.ParentTicketID != nil {
+			query = query.Where(ticket.ParentTicketID(*filters.ParentTicketID))
+		}
+		if filters.IsOverdue {
+			query = query.Where(
+				ticket.SLAResolutionDeadlineNotNil(),
+				ticket.SLAResolutionDeadlineLT(time.Now()),
+				ticket.StatusNotIn(string(StatusResolved), string(StatusClosed), string(StatusCancelled)),
+			)
 		}
 		if filters.Keyword != "" {
 			query = query.Where(ticket.Or(
@@ -283,14 +336,19 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters *FilterP
 	return result, nil
 }
 
-// BatchDelete 批量删除工单
+// BatchDelete 批量软删除工单。
 func (r *EntRepository) BatchDelete(ctx context.Context, ids []int, tenantID int) error {
-	_, err := r.Client().Ticket.Delete().
+	if len(ids) == 0 {
+		return nil
+	}
+	_, err := r.Client().Ticket.Update().
 		Where(
 			ticket.IDIn(ids...),
 			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
 		).
-		Exec(ctx)
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("batch delete tickets: %w", err)
 	}
@@ -303,6 +361,7 @@ func (r *EntRepository) Exists(ctx context.Context, id int, tenantID int) (bool,
 		Where(
 			ticket.ID(id),
 			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
 		).
 		Exist(ctx)
 }
@@ -313,6 +372,7 @@ func (r *EntRepository) FindByAssignee(ctx context.Context, assigneeID int, tena
 		Where(
 			ticket.AssigneeID(assigneeID),
 			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
 			ticket.StatusNotIn(string(StatusClosed), string(StatusCancelled)),
 		).
 		Order(ent.Desc(ticket.FieldCreatedAt)).
@@ -330,6 +390,7 @@ func (r *EntRepository) FindByRequester(ctx context.Context, requesterID int, te
 		Where(
 			ticket.RequesterID(requesterID),
 			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
 		).
 		Order(ent.Desc(ticket.FieldCreatedAt)).
 		All(ctx)
@@ -346,6 +407,7 @@ func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticke
 	entities, err := r.Client().Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
 			ticket.StatusNotIn(string(StatusClosed), string(StatusCancelled), string(StatusResolved)),
 			ticket.SLAResolutionDeadlineLT(now),
 		).
@@ -368,7 +430,7 @@ func (r *EntRepository) CountByStatus(ctx context.Context, tenantID int) (map[St
 
 	var results []statusCount
 	err := r.Client().Ticket.Query().
-		Where(ticket.TenantID(tenantID)).
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		GroupBy(ticket.FieldStatus).
 		Aggregate(ent.Count()).
 		Scan(ctx, &results)
@@ -393,7 +455,7 @@ func (r *EntRepository) CountByPriority(ctx context.Context, tenantID int) (map[
 
 	var results []priorityCount
 	err := r.Client().Ticket.Query().
-		Where(ticket.TenantID(tenantID)).
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		GroupBy(ticket.FieldPriority).
 		Aggregate(ent.Count()).
 		Scan(ctx, &results)
@@ -555,35 +617,34 @@ func uniqueFallbackSuffix() string {
 
 // UpdateStatus 更新工单状态
 func (r *EntRepository) UpdateStatus(ctx context.Context, id int, status Status, tenantID int) (*Ticket, error) {
-	entity, err := r.Client().Ticket.UpdateOneID(id).
-		Where(ticket.TenantID(tenantID)).
-		SetStatus(string(status)).
-		Save(ctx)
+	current, err := r.GetByID(ctx, id, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("update ticket status: %w", err)
+		return nil, err
 	}
-
-	return toDomainModel(entity), nil
+	return r.Update(ctx, id, &UpdateParams{Status: &status, Version: current.Version}, tenantID)
 }
 
 // AssignTicket 分配工单
 func (r *EntRepository) AssignTicket(ctx context.Context, id int, assigneeID int, tenantID int) (*Ticket, error) {
-	entity, err := r.Client().Ticket.UpdateOneID(id).
-		Where(ticket.TenantID(tenantID)).
-		SetAssigneeID(assigneeID).
-		SetStatus(string(StatusOpen)).
-		Save(ctx)
+	current, err := r.GetByID(ctx, id, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("assign ticket: %w", err)
+		return nil, err
 	}
-
-	return toDomainModel(entity), nil
+	if err := current.Assign(assigneeID); err != nil {
+		return nil, err
+	}
+	status := current.Status
+	return r.Update(ctx, id, &UpdateParams{
+		AssigneeID: &assigneeID,
+		Status:     &status,
+		Version:    current.Version,
+	}, tenantID)
 }
 
 // UpdateSLADeadlines 更新 SLA 截止时间
 func (r *EntRepository) UpdateSLADeadlines(ctx context.Context, id int, responseDeadline, resolutionDeadline *time.Time, slaDefinitionID *int, tenantID int) error {
 	builder := r.Client().Ticket.UpdateOneID(id).
-		Where(ticket.TenantID(tenantID))
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil())
 
 	if responseDeadline != nil {
 		builder.SetSLAResponseDeadline(*responseDeadline)
@@ -607,7 +668,7 @@ func (r *EntRepository) UpdateSLADeadlines(ctx context.Context, id int, response
 func (r *EntRepository) MarkFirstResponse(ctx context.Context, id int, tenantID int) error {
 	now := time.Now()
 	_, err := r.Client().Ticket.UpdateOneID(id).
-		Where(ticket.TenantID(tenantID)).
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		SetFirstResponseAt(now).
 		Save(ctx)
 	if err != nil {
@@ -622,6 +683,7 @@ func (r *EntRepository) GetVersion(ctx context.Context, id int, tenantID int) (i
 		Where(
 			ticket.ID(id),
 			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
 		).
 		Select(ticket.FieldVersion).
 		Only(ctx)
@@ -688,6 +750,12 @@ func toDomainModel(e *ent.Ticket) *Ticket {
 	}
 	if !e.ResolvedAt.IsZero() {
 		t.ResolvedAt = &e.ResolvedAt
+	}
+	if e.Resolution != "" {
+		t.Resolution = &e.Resolution
+	}
+	if e.ClosedAt != nil {
+		t.ClosedAt = e.ClosedAt
 	}
 	if e.DeletedAt != nil {
 		t.DeletedAt = e.DeletedAt

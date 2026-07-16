@@ -750,6 +750,21 @@ func (_u *TicketUpdate) AddTags(v ...*TicketTag) *TicketUpdate {
 	return _u.AddTagIDs(ids...)
 }
 
+// AddRelatedTicketIDs adds the "related_tickets" edge to the Ticket entity by IDs.
+func (_u *TicketUpdate) AddRelatedTicketIDs(ids ...int) *TicketUpdate {
+	_u.mutation.AddRelatedTicketIDs(ids...)
+	return _u
+}
+
+// AddRelatedTickets adds the "related_tickets" edges to the Ticket entity.
+func (_u *TicketUpdate) AddRelatedTickets(v ...*Ticket) *TicketUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRelatedTicketIDs(ids...)
+}
+
 // AddApprovalRecordIDs adds the "approval_records" edge to the ApprovalRecord entity by IDs.
 func (_u *TicketUpdate) AddApprovalRecordIDs(ids ...int) *TicketUpdate {
 	_u.mutation.AddApprovalRecordIDs(ids...)
@@ -976,6 +991,27 @@ func (_u *TicketUpdate) RemoveTags(v ...*TicketTag) *TicketUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveTagIDs(ids...)
+}
+
+// ClearRelatedTickets clears all "related_tickets" edges to the Ticket entity.
+func (_u *TicketUpdate) ClearRelatedTickets() *TicketUpdate {
+	_u.mutation.ClearRelatedTickets()
+	return _u
+}
+
+// RemoveRelatedTicketIDs removes the "related_tickets" edge to Ticket entities by IDs.
+func (_u *TicketUpdate) RemoveRelatedTicketIDs(ids ...int) *TicketUpdate {
+	_u.mutation.RemoveRelatedTicketIDs(ids...)
+	return _u
+}
+
+// RemoveRelatedTickets removes "related_tickets" edges to Ticket entities.
+func (_u *TicketUpdate) RemoveRelatedTickets(v ...*Ticket) *TicketUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRelatedTicketIDs(ids...)
 }
 
 // ClearApprovalRecords clears all "approval_records" edges to the ApprovalRecord entity.
@@ -1603,6 +1639,51 @@ func (_u *TicketUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tickettag.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RelatedTicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   ticket.RelatedTicketsTable,
+			Columns: ticket.RelatedTicketsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRelatedTicketsIDs(); len(nodes) > 0 && !_u.mutation.RelatedTicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   ticket.RelatedTicketsTable,
+			Columns: ticket.RelatedTicketsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RelatedTicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   ticket.RelatedTicketsTable,
+			Columns: ticket.RelatedTicketsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -2846,6 +2927,21 @@ func (_u *TicketUpdateOne) AddTags(v ...*TicketTag) *TicketUpdateOne {
 	return _u.AddTagIDs(ids...)
 }
 
+// AddRelatedTicketIDs adds the "related_tickets" edge to the Ticket entity by IDs.
+func (_u *TicketUpdateOne) AddRelatedTicketIDs(ids ...int) *TicketUpdateOne {
+	_u.mutation.AddRelatedTicketIDs(ids...)
+	return _u
+}
+
+// AddRelatedTickets adds the "related_tickets" edges to the Ticket entity.
+func (_u *TicketUpdateOne) AddRelatedTickets(v ...*Ticket) *TicketUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRelatedTicketIDs(ids...)
+}
+
 // AddApprovalRecordIDs adds the "approval_records" edge to the ApprovalRecord entity by IDs.
 func (_u *TicketUpdateOne) AddApprovalRecordIDs(ids ...int) *TicketUpdateOne {
 	_u.mutation.AddApprovalRecordIDs(ids...)
@@ -3072,6 +3168,27 @@ func (_u *TicketUpdateOne) RemoveTags(v ...*TicketTag) *TicketUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveTagIDs(ids...)
+}
+
+// ClearRelatedTickets clears all "related_tickets" edges to the Ticket entity.
+func (_u *TicketUpdateOne) ClearRelatedTickets() *TicketUpdateOne {
+	_u.mutation.ClearRelatedTickets()
+	return _u
+}
+
+// RemoveRelatedTicketIDs removes the "related_tickets" edge to Ticket entities by IDs.
+func (_u *TicketUpdateOne) RemoveRelatedTicketIDs(ids ...int) *TicketUpdateOne {
+	_u.mutation.RemoveRelatedTicketIDs(ids...)
+	return _u
+}
+
+// RemoveRelatedTickets removes "related_tickets" edges to Ticket entities.
+func (_u *TicketUpdateOne) RemoveRelatedTickets(v ...*Ticket) *TicketUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRelatedTicketIDs(ids...)
 }
 
 // ClearApprovalRecords clears all "approval_records" edges to the ApprovalRecord entity.
@@ -3729,6 +3846,51 @@ func (_u *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tickettag.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RelatedTicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   ticket.RelatedTicketsTable,
+			Columns: ticket.RelatedTicketsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRelatedTicketsIDs(); len(nodes) > 0 && !_u.mutation.RelatedTicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   ticket.RelatedTicketsTable,
+			Columns: ticket.RelatedTicketsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RelatedTicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   ticket.RelatedTicketsTable,
+			Columns: ticket.RelatedTicketsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

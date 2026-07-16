@@ -2,8 +2,11 @@ package service_catalog
 
 import (
 	"context"
+	"fmt"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/citype"
+	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/servicecatalog"
 )
 
@@ -24,6 +27,7 @@ func (r *EntRepository) Create(ctx context.Context, catalog *ServiceCatalog) (*S
 		SetDescription(catalog.Description).
 		SetDeliveryTime(catalog.DeliveryTime).
 		SetStatus(catalog.Status).
+		SetIsActive(catalog.Status == "enabled").
 		SetTenantID(catalog.TenantID)
 	if catalog.CITypeID > 0 {
 		entFunc = entFunc.SetCiTypeID(catalog.CITypeID)
@@ -98,7 +102,8 @@ func (r *EntRepository) Update(ctx context.Context, tenantID int, catalog *Servi
 		SetCategory(catalog.Category).
 		SetDescription(catalog.Description).
 		SetDeliveryTime(catalog.DeliveryTime).
-		SetStatus(catalog.Status)
+		SetStatus(catalog.Status).
+		SetIsActive(catalog.Status == "enabled")
 	if catalog.CITypeID > 0 {
 		update = update.SetCiTypeID(catalog.CITypeID)
 	}
@@ -114,9 +119,46 @@ func (r *EntRepository) Update(ctx context.Context, tenantID int, catalog *Servi
 }
 
 func (r *EntRepository) Delete(ctx context.Context, tenantID int, id int) error {
-	return r.client.ServiceCatalog.DeleteOneID(id).
+	return r.client.ServiceCatalog.UpdateOneID(id).
 		Where(servicecatalog.TenantID(tenantID)).
+		SetStatus("disabled").
+		SetIsActive(false).
 		Exec(ctx)
+}
+
+func (r *EntRepository) NameExists(ctx context.Context, tenantID int, name string, excludeID int) (bool, error) {
+	query := r.client.ServiceCatalog.Query().
+		Where(servicecatalog.TenantIDEQ(tenantID), servicecatalog.NameEqualFold(name))
+	if excludeID > 0 {
+		query = query.Where(servicecatalog.IDNEQ(excludeID))
+	}
+	return query.Exist(ctx)
+}
+
+func (r *EntRepository) ValidateReferences(ctx context.Context, tenantID, ciTypeID, cloudServiceID int) error {
+	if ciTypeID > 0 {
+		exists, err := r.client.CIType.Query().
+			Where(citype.IDEQ(ciTypeID), citype.TenantIDEQ(tenantID), citype.IsActiveEQ(true)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to validate CI type: %w", err)
+		}
+		if !exists {
+			return fmt.Errorf("CI type not found or inactive")
+		}
+	}
+	if cloudServiceID > 0 {
+		exists, err := r.client.CloudService.Query().
+			Where(cloudservice.IDEQ(cloudServiceID), cloudservice.TenantIDEQ(tenantID), cloudservice.IsActiveEQ(true)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to validate cloud service: %w", err)
+		}
+		if !exists {
+			return fmt.Errorf("cloud service not found or inactive")
+		}
+	}
+	return nil
 }
 
 func (r *EntRepository) Count(ctx context.Context, tenantID int, filters ListFilters) (int, error) {

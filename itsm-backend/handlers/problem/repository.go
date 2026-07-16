@@ -13,6 +13,6 @@ type Repository interface {
 	Update(ctx context.Context, p *Problem) (*Problem, error)
 	Delete(ctx context.Context, id int, tenantID int) error
 	GetStats(ctx context.Context, tenantID int) (*ProblemStats, error)
-	AddAssociations(ctx context.Context, problemID int, relatedType string, relatedIDs []int) error
-	RemoveAssociation(ctx context.Context, problemID int, relatedType string, relatedID int) error
+	AddAssociations(ctx context.Context, tenantID, problemID int, relatedType string, relatedIDs []int) error
+	RemoveAssociation(ctx context.Context, tenantID, problemID int, relatedType string, relatedID int) error
 }

@@ -2009,6 +2009,29 @@ func HasTagsWith(preds ...predicate.TicketTag) predicate.Ticket {
 	})
 }
 
+// HasRelatedTickets applies the HasEdge predicate on the "related_tickets" edge.
+func HasRelatedTickets() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, RelatedTicketsTable, RelatedTicketsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRelatedTicketsWith applies the HasEdge predicate on the "related_tickets" edge with a given conditions (other predicates).
+func HasRelatedTicketsWith(preds ...predicate.Ticket) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newRelatedTicketsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasApprovalRecords applies the HasEdge predicate on the "approval_records" edge.
 func HasApprovalRecords() predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {

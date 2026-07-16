@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	entuser "itsm-backend/ent/user"
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/service_catalog"
 
@@ -100,7 +102,18 @@ func srSetup(t *testing.T) (*gin.Engine, *ent.Client, int, int, int) {
 	svc := NewService(repo, scRepo, cmdbRepo, logger)
 	h := NewHandler(svc)
 
-	uid := 1001
+	user, err := client.User.Create().
+		SetUsername("sr-user-" + srUID()).
+		SetEmail("sr-" + srUID() + "@example.com").
+		SetName("SR User").
+		SetPasswordHash("hash").
+		SetRole("manager").
+		SetDepartment("IT").
+		SetActive(true).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	uid := user.ID
 	r := gin.New()
 	r.Use(srAuth(tenant.ID, uid))
 	r.POST("/api/v1/service-requests", h.Create)
@@ -155,7 +168,7 @@ func TestServiceRequestHandler_Create_CatalogNotFound(t *testing.T) {
 	// 不存在的 catalog → service 返回 NotFound → handler 映射 5001
 	req := dto.CreateServiceRequestRequest{CatalogID: 999999, Title: "X", ComplianceAck: true}
 	resp := srDoReq(t, r, "POST", "/api/v1/service-requests", req)
-	assert.EqualValues(t, 5001, resp.Code, "body=%s", srStr(resp))
+	assert.EqualValues(t, common.NotFoundErrorCode, resp.Code, "body=%s", srStr(resp))
 }
 
 func TestServiceRequestHandler_Create_MissingComplianceAck(t *testing.T) {
@@ -163,7 +176,39 @@ func TestServiceRequestHandler_Create_MissingComplianceAck(t *testing.T) {
 	// ComplianceAck=false → service 返回 BadRequest → handler 映射 5001
 	req := dto.CreateServiceRequestRequest{CatalogID: catID, Title: "X"}
 	resp := srDoReq(t, r, "POST", "/api/v1/service-requests", req)
-	assert.EqualValues(t, 5001, resp.Code, "body=%s", srStr(resp))
+	assert.EqualValues(t, common.ParamErrorCode, resp.Code, "body=%s", srStr(resp))
+}
+
+func TestServiceRequestCreateDefersNewCIUntilProvisioning(t *testing.T) {
+	dsn := "file:" + filepath.Join(t.TempDir(), "sr_deferred_ci.db") + "?_fk=1"
+	client := enttest.Open(t, "sqlite3", dsn)
+	defer client.Close()
+	ctx := context.Background()
+	logger := zaptest.NewLogger(t).Sugar()
+	tenant, err := client.Tenant.Create().
+		SetName("Deferred CI Tenant").SetCode("DEFER-" + srUID()).SetDomain("defer.test").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+	user, err := client.User.Create().
+		SetUsername("defer-" + srUID()).SetEmail("defer-" + srUID() + "@example.com").SetName("Requester").
+		SetPasswordHash("hash").SetRole("agent").SetDepartment("IT").SetActive(true).SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	ciType, err := client.CIType.Create().SetName("Virtual Machine").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	scRepo := service_catalog.NewEntRepository(client)
+	catalog, err := service_catalog.NewService(scRepo, logger).
+		Create(ctx, "VM Request", "infrastructure", "Provision VM", 24, tenant.ID, "enabled", ciType.ID, 0)
+	require.NoError(t, err)
+	service := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), logger)
+	expireAt := time.Now().Add(30 * 24 * time.Hour)
+
+	created, err := service.Create(ctx, tenant.ID, user.ID, catalog.ID, &ServiceRequest{
+		Title: "Production VM", ComplianceAck: true, DataClassification: "internal", ExpireAt: &expireAt,
+	})
+	require.NoError(t, err)
+	assert.Zero(t, created.CiID)
+	ciCount, err := client.ConfigurationItem.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, ciCount, "request submission must not create an active CI before approval")
 }
 
 func TestServiceRequestHandler_Get_Success(t *testing.T) {
@@ -197,12 +242,29 @@ func TestServiceRequestHandler_List(t *testing.T) {
 	assert.Contains(t, data, "total")
 }
 
-func TestServiceRequestHandler_UpdateStatus(t *testing.T) {
+func TestServiceRequestHandler_PartialUpdatePreservesBooleanFields(t *testing.T) {
+	r, _, _, _, catID := srSetup(t)
+	create := srDoReq(t, r, "POST", "/api/v1/service-requests", dto.CreateServiceRequestRequest{
+		CatalogID: catID, Title: "Public endpoint", ComplianceAck: true,
+		NeedsPublicIP: true, SourceIPWhitelist: []string{"10.0.0.1"},
+	})
+	require.Equal(t, common.SuccessCode, create.Code, "body=%s", srStr(create))
+	id := int(create.Data.(map[string]interface{})["id"].(float64))
+
+	update := srDoReq(t, r, "PUT", "/api/v1/service-requests/"+strconv.Itoa(id),
+		dto.UpdateServiceRequestRequest{Title: "Renamed endpoint"})
+	require.Equal(t, common.SuccessCode, update.Code, "body=%s", srStr(update))
+	data := update.Data.(map[string]interface{})
+	assert.Equal(t, true, data["needsPublicIp"])
+	assert.Equal(t, true, data["complianceAck"])
+}
+
+func TestServiceRequestHandler_UpdateStatusCannotBypassApproval(t *testing.T) {
 	r, _, _, _, catID := srSetup(t)
 	id := srCreateOne(t, r, catID)
 	req := dto.UpdateServiceRequestStatusRequest{Status: "approved"} // 归一化为 security_approved
 	resp := srDoReq(t, r, "PUT", "/api/v1/service-requests/"+strconv.Itoa(id)+"/status", req)
-	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", srStr(resp))
+	assert.EqualValues(t, common.ConflictCode, resp.Code, "body=%s", srStr(resp))
 }
 
 func TestServiceRequestHandler_UpdateStatus_MissingStatus(t *testing.T) {
@@ -214,13 +276,19 @@ func TestServiceRequestHandler_UpdateStatus_MissingStatus(t *testing.T) {
 }
 
 func TestServiceRequestHandler_Delete(t *testing.T) {
-	r, _, _, _, catID := srSetup(t)
+	r, client, _, _, catID := srSetup(t)
 	id := srCreateOne(t, r, catID)
 	resp := srDoReq(t, r, "DELETE", "/api/v1/service-requests/"+strconv.Itoa(id), nil)
 	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", srStr(resp))
 	// 删除后再查应 404
 	resp2 := srDoReq(t, r, "GET", "/api/v1/service-requests/"+strconv.Itoa(id), nil)
 	assert.EqualValues(t, 404, resp2.Code, "body=%s", srStr(resp2))
+	stored, err := client.ServiceRequest.Get(context.Background(), id)
+	require.NoError(t, err)
+	require.NotNil(t, stored.DeletedAt)
+	approvalCount, err := client.ServiceRequestApproval.Query().Count(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 3, approvalCount, "soft deletion must preserve approval audit records")
 }
 
 // --- ApplyApproval（审批动作）路径 ---
@@ -228,6 +296,21 @@ func TestServiceRequestHandler_Delete(t *testing.T) {
 // srAuthRole 与 srAuth 类似，但允许指定角色/部门，用于覆盖审批权限分支。
 func srAuthRole(tid, uid int, role, dept string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		c.Set("tenant_id", tid)
+		c.Set("user_id", uid)
+		c.Set("role", role)
+		c.Set("department", dept)
+		c.Next()
+	}
+}
+
+func srAuthRoleActors(tid, requesterID, actorID int, role, dept string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		uid := actorID
+		if c.Request.Method == http.MethodPost &&
+			strings.HasSuffix(c.Request.URL.Path, "/service-requests") {
+			uid = requesterID
+		}
 		c.Set("tenant_id", tid)
 		c.Set("user_id", uid)
 		c.Set("role", role)
@@ -258,11 +341,36 @@ func srSetupRole(t *testing.T, role, dept string) (*gin.Engine, int, int, int) {
 	cmdbRepo := cmdb.NewEntRepository(client)
 	svc := NewService(repo, scRepo, cmdbRepo, logger)
 	h := NewHandler(svc)
-	uid := 1001
+	requester, err := client.User.Create().
+		SetUsername("sr-requester-" + srUID()).
+		SetEmail("sr-requester-" + srUID() + "@example.com").
+		SetName("SR Requester").
+		SetPasswordHash("hash").
+		SetRole("agent").
+		SetDepartment(dept).
+		SetActive(true).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	user, err := client.User.Create().
+		SetUsername("sr-role-user-" + srUID()).
+		SetEmail("sr-role-" + srUID() + "@example.com").
+		SetName("SR Role User").
+		SetPasswordHash("hash").
+		SetRole(entuser.Role(role)).
+		SetDepartment(dept).
+		SetActive(true).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	uid := user.ID
 	r := gin.New()
-	r.Use(srAuthRole(tenant.ID, uid, role, dept))
+	r.Use(srAuthRoleActors(tenant.ID, requester.ID, uid, role, dept))
 	r.POST("/api/v1/service-requests", h.Create)
 	r.POST("/api/v1/service-requests/:id/approval", h.ApplyApproval)
+	r.PUT("/api/v1/service-requests/:id", h.Update)
+	r.PUT("/api/v1/service-requests/:id/status", h.UpdateStatus)
+	r.DELETE("/api/v1/service-requests/:id", h.Delete)
 	return r, tenant.ID, uid, cat.ID
 }
 
@@ -316,7 +424,7 @@ func TestServiceRequestHandler_ApplyApproval_RejectRequiresComment(t *testing.T)
 	// reject 但 comment 为空 → service 返回 BadRequest → handler 映射 5001
 	resp := srDoReq(t, r, "POST", "/api/v1/service-requests/"+strconv.Itoa(id)+"/approval",
 		dto.ServiceRequestApprovalActionRequest{Action: "reject", Comment: ""})
-	assert.EqualValues(t, 5001, resp.Code, "body=%s", srStr(resp))
+	assert.EqualValues(t, common.ParamErrorCode, resp.Code, "body=%s", srStr(resp))
 }
 
 func TestServiceRequestHandler_ApplyApproval_Reject(t *testing.T) {
@@ -344,7 +452,48 @@ func TestServiceRequestHandler_ApplyApproval_PermissionDenied(t *testing.T) {
 		dto.ServiceRequestApprovalActionRequest{Action: "approve"})
 	// 注意：handler 目前把 service 错误统一映射为 5001；
 	// 权限错误理想应返回 2003(Forbidden)，此处先钉住当前行为，作为后续优化点。
-	assert.EqualValues(t, 5001, resp.Code, "body=%s", srStr(resp))
+	assert.EqualValues(t, common.ForbiddenErrorCode, resp.Code, "body=%s", srStr(resp))
+}
+
+func TestServiceRequestHandler_RequesterCannotSelfApprove(t *testing.T) {
+	r, _, _, _, catID := srSetup(t)
+	id := srCreateOne(t, r, catID)
+	resp := srDoReq(t, r, "POST", "/api/v1/service-requests/"+strconv.Itoa(id)+"/approval",
+		dto.ServiceRequestApprovalActionRequest{Action: "approve"})
+	assert.EqualValues(t, common.ForbiddenErrorCode, resp.Code, "body=%s", srStr(resp))
+}
+
+func TestServiceRequestPendingApprovalsAreDepartmentScopedAndUnknownRoleDenied(t *testing.T) {
+	_, client, tenantID, managerID, catID := srSetup(t)
+	ctx := context.Background()
+	logger := zaptest.NewLogger(t).Sugar()
+	scRepo := service_catalog.NewEntRepository(client)
+	service := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), logger)
+	itRequester, err := client.User.Create().
+		SetUsername("it-requester-" + srUID()).SetEmail("it-" + srUID() + "@example.com").SetName("IT Requester").
+		SetPasswordHash("hash").SetRole("agent").SetDepartment("IT").SetActive(true).SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
+	hrRequester, err := client.User.Create().
+		SetUsername("hr-requester-" + srUID()).SetEmail("hr-" + srUID() + "@example.com").SetName("HR Requester").
+		SetPasswordHash("hash").SetRole("agent").SetDepartment("HR").SetActive(true).SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
+	expireAt := time.Now().Add(30 * 24 * time.Hour)
+	for _, requesterID := range []int{itRequester.ID, hrRequester.ID} {
+		_, err = service.Create(ctx, tenantID, requesterID, catID, &ServiceRequest{
+			Title: "Department scoped request", ComplianceAck: true,
+			DataClassification: "internal", ExpireAt: &expireAt,
+		})
+		require.NoError(t, err)
+	}
+
+	pending, total, err := service.ListPendingApprovals(ctx, tenantID, managerID, "manager", 1, 10)
+	require.NoError(t, err)
+	assert.Equal(t, 1, total)
+	require.Len(t, pending, 1)
+	assert.Equal(t, itRequester.ID, pending[0].RequesterID)
+
+	_, _, err = service.ListPendingApprovals(ctx, tenantID, managerID, "viewer", 1, 10)
+	require.Error(t, err)
 }
 
 func TestServiceRequestHandler_ApplyApproval_FullProgression(t *testing.T) {
@@ -369,9 +518,39 @@ func TestServiceRequestHandler_ApplyApproval_FullProgression(t *testing.T) {
 		dto.ServiceRequestApprovalActionRequest{Action: "approve"})
 	require.Equal(t, common.SuccessCode, resp3.Code, "L3 body=%s", srStr(resp3))
 	assert.Equal(t, "security_approved", resp3.Data.(map[string]interface{})["status"])
+	assert.EqualValues(t, 3, resp3.Data.(map[string]interface{})["currentLevel"])
 
 	// 超量审批：3 级已批完，无待审 → 冲突错误 → handler 映射 5001
 	resp4 := srDoReq(t, r, "POST", "/api/v1/service-requests/"+strconv.Itoa(id)+"/approval",
 		dto.ServiceRequestApprovalActionRequest{Action: "approve"})
-	assert.EqualValues(t, 5001, resp4.Code, "L4 body=%s", srStr(resp4))
+	assert.EqualValues(t, common.ConflictCode, resp4.Code, "L4 body=%s", srStr(resp4))
+}
+
+func TestServiceRequestHandler_OperationalLifecycleAfterApproval(t *testing.T) {
+	r, _, _, catID := srSetupRole(t, "admin", "IT")
+	id := srCreateOne(t, r, catID)
+	for i := 0; i < 3; i++ {
+		resp := srDoReq(t, r, "POST", "/api/v1/service-requests/"+strconv.Itoa(id)+"/approval",
+			dto.ServiceRequestApprovalActionRequest{Action: "approve"})
+		require.Equal(t, common.SuccessCode, resp.Code, "approval %d: %s", i+1, srStr(resp))
+	}
+
+	provisioning := srDoReq(t, r, "PUT", "/api/v1/service-requests/"+strconv.Itoa(id)+"/status",
+		dto.UpdateServiceRequestStatusRequest{Status: "in_progress"})
+	require.Equal(t, common.SuccessCode, provisioning.Code, "body=%s", srStr(provisioning))
+	assert.Equal(t, "provisioning", provisioning.Data.(map[string]interface{})["status"])
+	assert.NotNil(t, provisioning.Data.(map[string]interface{})["processorId"])
+	assert.NotNil(t, provisioning.Data.(map[string]interface{})["startedAt"])
+
+	delivered := srDoReq(t, r, "PUT", "/api/v1/service-requests/"+strconv.Itoa(id)+"/status",
+		dto.UpdateServiceRequestStatusRequest{Status: "completed"})
+	require.Equal(t, common.SuccessCode, delivered.Code, "body=%s", srStr(delivered))
+	assert.Equal(t, "delivered", delivered.Data.(map[string]interface{})["status"])
+	assert.NotNil(t, delivered.Data.(map[string]interface{})["completedAt"])
+
+	edit := srDoReq(t, r, "PUT", "/api/v1/service-requests/"+strconv.Itoa(id),
+		dto.UpdateServiceRequestRequest{Title: "must not change"})
+	assert.EqualValues(t, common.ConflictCode, edit.Code)
+	deleteResp := srDoReq(t, r, "DELETE", "/api/v1/service-requests/"+strconv.Itoa(id), nil)
+	assert.EqualValues(t, common.ConflictCode, deleteResp.Code)
 }

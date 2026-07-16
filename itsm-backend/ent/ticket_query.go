@@ -40,6 +40,7 @@ type TicketQuery struct {
 	withComments          *TicketCommentQuery
 	withAttachments       *TicketAttachmentQuery
 	withTags              *TicketTagQuery
+	withRelatedTickets    *TicketQuery
 	withApprovalRecords   *ApprovalRecordQuery
 	withApprovals         *TicketApprovalQuery
 	withWorkflowRecords   *TicketWorkflowRecordQuery
@@ -148,6 +149,28 @@ func (_q *TicketQuery) QueryTags() *TicketTagQuery {
 			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
 			sqlgraph.To(tickettag.Table, tickettag.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ticket.TagsTable, ticket.TagsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRelatedTickets chains the current query on the "related_tickets" edge.
+func (_q *TicketQuery) QueryRelatedTickets() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, ticket.RelatedTicketsTable, ticket.RelatedTicketsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -614,6 +637,7 @@ func (_q *TicketQuery) Clone() *TicketQuery {
 		withComments:          _q.withComments.Clone(),
 		withAttachments:       _q.withAttachments.Clone(),
 		withTags:              _q.withTags.Clone(),
+		withRelatedTickets:    _q.withRelatedTickets.Clone(),
 		withApprovalRecords:   _q.withApprovalRecords.Clone(),
 		withApprovals:         _q.withApprovals.Clone(),
 		withWorkflowRecords:   _q.withWorkflowRecords.Clone(),
@@ -662,6 +686,17 @@ func (_q *TicketQuery) WithTags(opts ...func(*TicketTagQuery)) *TicketQuery {
 		opt(query)
 	}
 	_q.withTags = query
+	return _q
+}
+
+// WithRelatedTickets tells the query-builder to eager-load the nodes that are connected to
+// the "related_tickets" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithRelatedTickets(opts ...func(*TicketQuery)) *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withRelatedTickets = query
 	return _q
 }
 
@@ -876,10 +911,11 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		nodes       = []*Ticket{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [15]bool{
+		loadedTypes = [16]bool{
 			_q.withComments != nil,
 			_q.withAttachments != nil,
 			_q.withTags != nil,
+			_q.withRelatedTickets != nil,
 			_q.withApprovalRecords != nil,
 			_q.withApprovals != nil,
 			_q.withWorkflowRecords != nil,
@@ -933,6 +969,13 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		if err := _q.loadTags(ctx, query, nodes,
 			func(n *Ticket) { n.Edges.Tags = []*TicketTag{} },
 			func(n *Ticket, e *TicketTag) { n.Edges.Tags = append(n.Edges.Tags, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withRelatedTickets; query != nil {
+		if err := _q.loadRelatedTickets(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.RelatedTickets = []*Ticket{} },
+			func(n *Ticket, e *Ticket) { n.Edges.RelatedTickets = append(n.Edges.RelatedTickets, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1111,6 +1154,67 @@ func (_q *TicketQuery) loadTags(ctx context.Context, query *TicketTagQuery, node
 			return fmt.Errorf(`unexpected referenced foreign-key "ticket_tags" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (_q *TicketQuery) loadRelatedTickets(ctx context.Context, query *TicketQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Ticket)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Ticket)
+	nids := make(map[int]map[*Ticket]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(ticket.RelatedTicketsTable)
+		s.Join(joinT).On(s.C(ticket.FieldID), joinT.C(ticket.RelatedTicketsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(ticket.RelatedTicketsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(ticket.RelatedTicketsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Ticket]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Ticket](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "related_tickets" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

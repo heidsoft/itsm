@@ -772,7 +772,7 @@ func (c *IncidentController) AcknowledgeAlert(ctx *gin.Context) {
 	err = c.alertingService.AcknowledgeAlert(ctx.Request.Context(), id, userID, tenantID)
 	if err != nil {
 		if err.Error() == "alert not found" {
-			common.Fail(ctx, common.ParamErrorCode, "告警不存在")
+			common.Fail(ctx, common.NotFoundErrorCode, "告警不存在")
 			return
 		}
 		c.logger.Errorw("Failed to acknowledge alert", "error", err, "id", id)
@@ -816,7 +816,7 @@ func (c *IncidentController) ResolveAlert(ctx *gin.Context) {
 	err = c.alertingService.ResolveAlert(ctx.Request.Context(), id, userID, tenantID)
 	if err != nil {
 		if err.Error() == "alert not found" {
-			common.Fail(ctx, common.ParamErrorCode, "告警不存在")
+			common.Fail(ctx, common.NotFoundErrorCode, "告警不存在")
 			return
 		}
 		c.logger.Errorw("Failed to resolve alert", "error", err, "id", id)
@@ -841,6 +841,15 @@ func (c *IncidentController) ResolveAlert(ctx *gin.Context) {
 func (c *IncidentController) GetActiveAlerts(ctx *gin.Context) {
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(ctx.DefaultQuery("size", "10"))
+	if page < 1 {
+		page = 1
+	}
+	if size < 1 {
+		size = 10
+	}
+	if size > 100 {
+		size = 100
+	}
 
 	tenantID, ok := c.resolveTenantID(ctx)
 	if !ok {
@@ -892,6 +901,10 @@ func (c *IncidentController) GetAlertStatistics(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "结束时间格式无效")
 		return
 	}
+	if endTime.Before(startTime) {
+		common.Fail(ctx, common.ParamErrorCode, "结束时间不能早于开始时间")
+		return
+	}
 
 	tenantID, ok := c.resolveTenantID(ctx)
 	if !ok {
@@ -938,14 +951,17 @@ func (c *IncidentController) ConvertToProblem(ctx *gin.Context) {
 		return
 	}
 
-	problem, err := c.rootCauseAnalysisService.CreateProblemFromIncident(ctx.Request.Context(), incidentID, userID)
+	tenantID := ctx.GetInt("tenant_id")
+	problem, err := c.rootCauseAnalysisService.CreateProblemFromIncident(
+		ctx.Request.Context(), incidentID, userID, tenantID, &req,
+	)
 	if err != nil {
 		c.logger.Errorw("Failed to convert incident to problem", "error", err, "incident_id", incidentID)
 		common.Fail(ctx, common.InternalErrorCode, "转换失败: "+err.Error())
 		return
 	}
 
-	common.Success(ctx, problem)
+	common.Success(ctx, dto.ToProblemResponse(problem))
 }
 
 // GetRootCause 获取根因分析

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -51,9 +52,13 @@ func (s *TicketLifecycleService) SetNotificationService(notificationService *Tic
 
 // ResolveTicket 解决工单
 func (s *TicketLifecycleService) ResolveTicket(ctx context.Context, ticketID int, resolution string, tenantID int, resolvedBy int) (*ent.Ticket, error) {
+	resolution = strings.TrimSpace(resolution)
+	if resolution == "" {
+		return nil, fmt.Errorf("解决方案不能为空")
+	}
 	// 验证工单存在
 	t, err := s.client.Ticket.Query().
-		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
+		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to find ticket", "ticketID", ticketID, "error", err)
@@ -66,9 +71,13 @@ func (s *TicketLifecycleService) ResolveTicket(ctx context.Context, ticketID int
 	}
 
 	// 更新工单状态为已解决
-	updatedTicket, err := s.client.Ticket.UpdateOne(t).
+	updatedTicket, err := s.client.Ticket.UpdateOneID(ticketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(t.Version)).
 		SetStatus(common.TicketStatusResolved).
+		SetResolution(resolution).
 		SetResolvedAt(time.Now()).
+		ClearClosedAt().
+		SetVersion(t.Version + 1).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to resolve ticket", "ticketID", ticketID, "error", err)
@@ -95,22 +104,28 @@ func (s *TicketLifecycleService) ResolveTicket(ctx context.Context, ticketID int
 func (s *TicketLifecycleService) CloseTicket(ctx context.Context, ticketID int, feedback string, tenantID int, closedBy int) (*ent.Ticket, error) {
 	// 验证工单存在
 	t, err := s.client.Ticket.Query().
-		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
+		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to find ticket", "ticketID", ticketID, "error", err)
 		return nil, err
 	}
 
-	// 只有已解决或已关闭的工单才能被关闭
-	if t.Status != common.TicketStatusResolved && t.Status != common.TicketStatusClosed {
+	// 关闭是从 resolved 到 closed 的单向转换；closed 是终态。
+	if t.Status != common.TicketStatusResolved {
 		return nil, ErrInvalidTicketStatus
 	}
 
 	// 更新工单状态为已关闭
-	updatedTicket, err := s.client.Ticket.UpdateOne(t).
+	update := s.client.Ticket.UpdateOneID(ticketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(t.Version)).
 		SetStatus(common.TicketStatusClosed).
-		Save(ctx)
+		SetClosedAt(time.Now()).
+		SetVersion(t.Version + 1)
+	if strings.TrimSpace(feedback) != "" {
+		update.SetRatingComment(strings.TrimSpace(feedback))
+	}
+	updatedTicket, err := update.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to close ticket", "ticketID", ticketID, "error", err)
 		return nil, err
@@ -131,11 +146,18 @@ func (s *TicketLifecycleService) CloseTicket(ctx context.Context, ticketID int, 
 func (s *TicketLifecycleService) EscalateTicket(ctx context.Context, ticketID int, reason string, tenantID int, escalatedBy int) (*ent.Ticket, error) {
 	// 验证工单存在
 	t, err := s.client.Ticket.Query().
-		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
+		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to find ticket", "ticketID", ticketID, "error", err)
 		return nil, err
+	}
+
+	if t.Status == common.TicketStatusClosed || t.Status == common.TicketStatusCancelled {
+		return nil, ErrInvalidTicketStatus
+	}
+	if strings.TrimSpace(reason) == "" {
+		return nil, fmt.Errorf("升级原因不能为空")
 	}
 
 	// 计算升级后的优先级
@@ -145,9 +167,10 @@ func (s *TicketLifecycleService) EscalateTicket(ctx context.Context, ticketID in
 	newAssigneeID := s.getEscalationAssignee(newPriority, tenantID)
 
 	// 构建更新操作
-	update := s.client.Ticket.UpdateOne(t).
+	update := s.client.Ticket.UpdateOneID(ticketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(t.Version)).
 		SetPriority(newPriority).
-		SetStatus("escalated")
+		SetVersion(t.Version + 1)
 
 	// 如果获取到了新的处理人，则分配给他
 	if newAssigneeID > 0 {
@@ -183,7 +206,7 @@ func (s *TicketLifecycleService) EscalateTicket(ctx context.Context, ticketID in
 func (s *TicketLifecycleService) UpdateTicketStatus(ctx context.Context, ticketID int, status string, tenantID int, operatorID int) (*ent.Ticket, error) {
 	// 验证工单存在
 	t, err := s.client.Ticket.Query().
-		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
+		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to find ticket", "ticketID", ticketID, "error", err)
@@ -194,14 +217,24 @@ func (s *TicketLifecycleService) UpdateTicketStatus(ctx context.Context, ticketI
 	if !s.isValidStatusTransition(t.Status, status) {
 		return nil, ErrInvalidTicketStatus
 	}
+	if status == common.TicketStatusResolved && strings.TrimSpace(t.Resolution) == "" {
+		return nil, fmt.Errorf("解决工单必须通过 ResolveTicket 提交解决方案")
+	}
 
 	// 构建更新操作
-	update := s.client.Ticket.UpdateOne(t).SetStatus(status)
+	update := s.client.Ticket.UpdateOneID(ticketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(t.Version)).
+		SetStatus(status).
+		SetVersion(t.Version + 1)
 
 	// 根据新状态设置相关时间
 	switch status {
 	case common.TicketStatusResolved:
-		update = update.SetResolvedAt(time.Now())
+		update.SetResolvedAt(time.Now()).ClearClosedAt()
+	case common.TicketStatusClosed:
+		update.SetClosedAt(time.Now())
+	case common.TicketStatusOpen, common.TicketStatusInProgress, common.TicketStatusPending:
+		update.ClearResolvedAt().ClearClosedAt()
 	}
 
 	updatedTicket, err := update.Save(ctx)
@@ -260,7 +293,7 @@ func (s *TicketLifecycleService) CancelWorkflow(ctx context.Context, ticketID in
 func (s *TicketLifecycleService) SyncTicketStatusWithWorkflow(ctx context.Context, ticketID int, tenantID int) error {
 	// 获取工单
 	t, err := s.client.Ticket.Query().
-		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
+		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to find ticket", "ticketID", ticketID, "error", err)
@@ -288,9 +321,19 @@ func (s *TicketLifecycleService) SyncTicketStatusWithWorkflow(ctx context.Contex
 	// 根据流程状态更新工单状态
 	newStatus := s.mapProcessStatus(instance.Status)
 	if newStatus != "" && newStatus != t.Status {
-		_, err = s.client.Ticket.UpdateOne(t).
+		if !IsValidTicketStatusTransition(t.Status, newStatus) {
+			return fmt.Errorf("workflow status would violate ticket lifecycle: %s -> %s", t.Status, newStatus)
+		}
+		update := s.client.Ticket.UpdateOneID(ticketID).
+			Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(t.Version)).
 			SetStatus(newStatus).
-			Save(ctx)
+			SetVersion(t.Version + 1)
+		if newStatus == common.TicketStatusResolved {
+			update.SetResolvedAt(time.Now()).ClearClosedAt()
+		} else if newStatus == common.TicketStatusClosed {
+			update.SetClosedAt(time.Now())
+		}
+		_, err = update.Save(ctx)
 		if err != nil {
 			s.logger.Errorw("Failed to sync ticket status", "ticketID", ticketID, "error", err)
 			return err
@@ -320,13 +363,13 @@ func (s *TicketLifecycleService) mapProcessStatus(status string) string {
 func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
 	validTransitions := map[string][]string{
 		common.TicketStatusNew:        {common.TicketStatusOpen, common.TicketStatusAssigned, common.TicketStatusInProgress, common.TicketStatusCancelled},
-		common.TicketStatusAssigned:   {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusClosed, common.TicketStatusCancelled},
-		common.TicketStatusOpen:       {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusClosed, common.TicketStatusCancelled},
-		common.TicketStatusInProgress: {common.TicketStatusResolved, common.TicketStatusPending, common.TicketStatusOpen, common.TicketStatusCancelled},
+		common.TicketStatusAssigned:   {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusResolved, common.TicketStatusCancelled},
+		common.TicketStatusOpen:       {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusResolved, common.TicketStatusCancelled},
+		common.TicketStatusInProgress: {common.TicketStatusResolved, common.TicketStatusPending, common.TicketStatusCancelled},
 		common.TicketStatusPending:    {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusOpen, common.TicketStatusCancelled},
-		common.TicketStatusResolved:   {common.TicketStatusClosed, common.TicketStatusInProgress, common.TicketStatusOpen, common.TicketStatusCancelled},
-		common.TicketStatusClosed:     {common.TicketStatusCancelled}, // 已关闭的工单只能转为取消
-		common.TicketStatusCancelled:  {},                             // 已取消的工单不能转换到其他状态
+		common.TicketStatusResolved:   {common.TicketStatusClosed, common.TicketStatusInProgress, common.TicketStatusOpen},
+		common.TicketStatusClosed:     {},
+		common.TicketStatusCancelled:  {},
 		common.TicketStatusApproved:   {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusClosed},
 		common.TicketStatusRejected:   {common.TicketStatusOpen, common.TicketStatusCancelled},
 	}

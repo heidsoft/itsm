@@ -3,13 +3,17 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -42,13 +46,23 @@ func (s *ChangeService) SetApprovalService(approvalSvc *ApprovalService) {
 
 // CreateChange 创建变更
 func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeRequest, createdBy, tenantID int) (*dto.ChangeResponse, error) {
-	// 创建变更记录
+	if err := s.validateCreateChange(ctx, req, createdBy, tenantID); err != nil {
+		return nil, err
+	}
+	affectedCIs := uniqueNonEmptyStrings(req.AffectedCIs)
+	relatedTickets := uniqueNonEmptyStrings(req.RelatedTickets)
+	initialStatus := dto.ChangeStatusDraft
+	if req.Type == string(dto.ChangeTypeStandard) && req.RiskLevel == string(dto.ChangeRiskLow) &&
+		strings.TrimSpace(req.ImplementationPlan) != "" && strings.TrimSpace(req.RollbackPlan) != "" {
+		initialStatus = dto.ChangeStatusApproved
+	}
+
 	changeEntity, err := s.client.Change.Create().
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetJustification(req.Justification).
 		SetType(req.Type).
-		SetStatus(string(dto.ChangeStatusDraft)).
+		SetStatus(string(initialStatus)).
 		SetPriority(req.Priority).
 		SetImpactScope(req.ImpactScope).
 		SetRiskLevel(req.RiskLevel).
@@ -58,18 +72,12 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		SetRollbackPlan(req.RollbackPlan).
 		SetNillablePlannedStartDate(req.PlannedStartDate).
 		SetNillablePlannedEndDate(req.PlannedEndDate).
+		SetAffectedCis(affectedCIs).
+		SetRelatedTickets(relatedTickets).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create change", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to create change: %w", err)
-	}
-
-	// 设置受影响的配置项
-	if len(req.AffectedCIs) > 0 {
-		_, err = changeEntity.Update().SetAffectedCis(req.AffectedCIs).Save(ctx)
-		if err != nil {
-			s.logger.Warnw("Failed to set affected CIs", "error", err, "change_id", changeEntity.ID)
-		}
 	}
 
 	// 构建响应（先填充实体数据，状态后续可能更新）
@@ -85,36 +93,21 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		RiskLevel:          dto.ChangeRisk(changeEntity.RiskLevel),
 		CreatedBy:          changeEntity.CreatedBy,
 		TenantID:           changeEntity.TenantID,
-		PlannedStartDate:   &changeEntity.PlannedStartDate,
-		PlannedEndDate:     &changeEntity.PlannedEndDate,
+		PlannedStartDate:   optionalTime(changeEntity.PlannedStartDate),
+		PlannedEndDate:     optionalTime(changeEntity.PlannedEndDate),
 		ImplementationPlan: changeEntity.ImplementationPlan,
 		RollbackPlan:       changeEntity.RollbackPlan,
 		CreatedAt:          changeEntity.CreatedAt,
 		UpdatedAt:          changeEntity.UpdatedAt,
 	}
 
-	// 根据ITIL变更类型自动处理初始状态
-	switch req.Type {
-	case string(dto.ChangeTypeStandard):
-		// 标准变更：如果满足预授权条件（低风险、有完整的实施和回滚计划），自动批准
-		if req.RiskLevel == string(dto.ChangeRiskLow) && req.ImplementationPlan != "" && req.RollbackPlan != "" {
-			_, err = changeEntity.Update().
-				SetStatus(string(dto.ChangeStatusApproved)).
-				Save(ctx)
-			if err != nil {
-				s.logger.Warnw("Failed to auto-approve standard change", "error", err, "change_id", changeEntity.ID)
-			} else {
-				s.logger.Infow("Standard change auto-approved per ITIL standard", "change_id", changeEntity.ID, "tenant_id", tenantID)
-				response.Status = dto.ChangeStatusApproved
-			}
-		}
-	case string(dto.ChangeTypeEmergency):
+	if req.Type == string(dto.ChangeTypeEmergency) {
 		// 紧急变更：记录特殊标记，后续走ECAB快速审批流程
 		s.logger.Infow("Emergency change created per ITIL standard - requires ECAB approval", "change_id", changeEntity.ID, "tenant_id", tenantID)
 	}
 
 	// 获取创建人信息
-	creator, err := s.client.User.Get(ctx, createdBy)
+	creator, err := s.client.User.Query().Where(user.IDEQ(createdBy), user.TenantIDEQ(tenantID)).Only(ctx)
 	if err != nil {
 		s.logger.Warnw("Failed to get creator info", "error", err, "user_id", createdBy)
 	}
@@ -148,6 +141,128 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 	return response, nil
 }
 
+func (s *ChangeService) validateCreateChange(ctx context.Context, req *dto.CreateChangeRequest, createdBy, tenantID int) error {
+	if strings.TrimSpace(req.Title) == "" {
+		return fmt.Errorf("变更标题不能为空")
+	}
+	if !isValidChangeType(req.Type) {
+		return fmt.Errorf("无效的变更类型: %s", req.Type)
+	}
+	if !isValidChangePriority(req.Priority) || !isValidChangeImpact(req.ImpactScope) || !isValidChangeRisk(req.RiskLevel) {
+		return fmt.Errorf("变更优先级、影响范围或风险等级无效")
+	}
+	if req.PlannedStartDate != nil && req.PlannedEndDate != nil && !req.PlannedStartDate.Before(*req.PlannedEndDate) {
+		return fmt.Errorf("计划结束时间必须晚于计划开始时间")
+	}
+	creatorExists, err := s.client.User.Query().
+		Where(user.IDEQ(createdBy), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("验证变更创建人失败: %w", err)
+	}
+	if !creatorExists {
+		return fmt.Errorf("变更创建人不存在或不可用")
+	}
+	if err := s.validateChangeReferences(ctx, req.AffectedCIs, req.RelatedTickets, tenantID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *ChangeService) validateChangeReferences(ctx context.Context, affectedCIs, relatedTickets []string, tenantID int) error {
+	ciNames := uniqueNonEmptyStrings(affectedCIs)
+	if len(ciNames) > 0 {
+		items, err := s.client.ConfigurationItem.Query().
+			Where(configurationitem.TenantIDEQ(tenantID), configurationitem.NameIn(ciNames...)).
+			Select(configurationitem.FieldName).All(ctx)
+		if err != nil {
+			return fmt.Errorf("验证受影响配置项失败: %w", err)
+		}
+		found := make(map[string]struct{}, len(items))
+		for _, item := range items {
+			found[item.Name] = struct{}{}
+		}
+		for _, name := range ciNames {
+			if _, ok := found[name]; !ok {
+				return fmt.Errorf("受影响配置项不存在: %s", name)
+			}
+		}
+	}
+	ticketNumbers := uniqueNonEmptyStrings(relatedTickets)
+	if len(ticketNumbers) > 0 {
+		count, err := s.client.Ticket.Query().
+			Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.TicketNumberIn(ticketNumbers...)).Count(ctx)
+		if err != nil {
+			return fmt.Errorf("验证相关工单失败: %w", err)
+		}
+		if count != len(ticketNumbers) {
+			return fmt.Errorf("相关工单不存在或不属于当前租户")
+		}
+	}
+	return nil
+}
+
+func isValidChangeType(value string) bool {
+	return value == string(dto.ChangeTypeNormal) || value == string(dto.ChangeTypeStandard) || value == string(dto.ChangeTypeEmergency)
+}
+
+func isValidChangePriority(value string) bool {
+	return value == string(dto.ChangePriorityLow) || value == string(dto.ChangePriorityMedium) || value == string(dto.ChangePriorityHigh) || value == string(dto.ChangePriorityCritical)
+}
+
+func isValidChangeImpact(value string) bool {
+	return value == string(dto.ChangeImpactLow) || value == string(dto.ChangeImpactMedium) || value == string(dto.ChangeImpactHigh)
+}
+
+func isValidChangeRisk(value string) bool {
+	return value == string(dto.ChangeRiskLow) || value == string(dto.ChangeRiskMedium) || value == string(dto.ChangeRiskHigh)
+}
+
+func uniqueNonEmptyStrings(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		result = append(result, value)
+	}
+	return result
+}
+
+func optionalTime(value time.Time) *time.Time {
+	if value.IsZero() {
+		return nil
+	}
+	return &value
+}
+
+func optionalInt(value int) *int {
+	if value == 0 {
+		return nil
+	}
+	return &value
+}
+
+// API 使用 pending 表达待审批，持久化层和 BPMN 流程统一使用 submitted。
+func persistedChangeStatus(status string) string {
+	if status == string(dto.ChangeStatusPending) {
+		return common.ChangeStatusSubmitted
+	}
+	return status
+}
+
+func apiChangeStatus(status string) dto.ChangeStatus {
+	if status == common.ChangeStatusSubmitted {
+		return dto.ChangeStatusPending
+	}
+	return dto.ChangeStatus(status)
+}
+
 // GetChange 获取变更详情
 func (s *ChangeService) GetChange(ctx context.Context, id int, tenantID int) (*dto.ChangeResponse, error) {
 	changeEntity, err := s.client.Change.Query().
@@ -160,9 +275,8 @@ func (s *ChangeService) GetChange(ctx context.Context, id int, tenantID int) (*d
 		s.logger.Errorw("Failed to get change", "error", err, "change_id", id, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to get change: %w", err)
 	}
-
 	// 获取创建人信息
-	creator, err := s.client.User.Get(ctx, changeEntity.CreatedBy)
+	creator, err := s.client.User.Query().Where(user.IDEQ(changeEntity.CreatedBy), user.TenantIDEQ(tenantID)).Only(ctx)
 	if err != nil {
 		s.logger.Warnw("Failed to get creator info", "error", err, "user_id", changeEntity.CreatedBy)
 	}
@@ -170,32 +284,36 @@ func (s *ChangeService) GetChange(ctx context.Context, id int, tenantID int) (*d
 	// 获取处理人信息
 	var assigneeName *string
 	if changeEntity.AssigneeID > 0 {
-		assignee, err := s.client.User.Get(ctx, changeEntity.AssigneeID)
+		assignee, err := s.client.User.Query().Where(user.IDEQ(changeEntity.AssigneeID), user.TenantIDEQ(tenantID)).Only(ctx)
 		if err == nil {
 			assigneeName = &assignee.Name
 		}
 	}
 
 	// 构建响应
+	createdByName := ""
+	if creator != nil {
+		createdByName = creator.Name
+	}
 	response := &dto.ChangeResponse{
 		ID:                 changeEntity.ID,
 		Title:              changeEntity.Title,
 		Description:        changeEntity.Description,
 		Justification:      changeEntity.Justification,
 		Type:               dto.ChangeType(changeEntity.Type),
-		Status:             dto.ChangeStatus(changeEntity.Status),
+		Status:             apiChangeStatus(changeEntity.Status),
 		Priority:           dto.ChangePriority(changeEntity.Priority),
 		ImpactScope:        dto.ChangeImpact(changeEntity.ImpactScope),
 		RiskLevel:          dto.ChangeRisk(changeEntity.RiskLevel),
-		AssigneeID:         &changeEntity.AssigneeID,
+		AssigneeID:         optionalInt(changeEntity.AssigneeID),
 		AssigneeName:       assigneeName,
 		CreatedBy:          changeEntity.CreatedBy,
-		CreatedByName:      creator.Name,
+		CreatedByName:      createdByName,
 		TenantID:           changeEntity.TenantID,
-		PlannedStartDate:   &changeEntity.PlannedStartDate,
-		PlannedEndDate:     &changeEntity.PlannedEndDate,
-		ActualStartDate:    &changeEntity.ActualStartDate,
-		ActualEndDate:      &changeEntity.ActualEndDate,
+		PlannedStartDate:   optionalTime(changeEntity.PlannedStartDate),
+		PlannedEndDate:     optionalTime(changeEntity.PlannedEndDate),
+		ActualStartDate:    optionalTime(changeEntity.ActualStartDate),
+		ActualEndDate:      optionalTime(changeEntity.ActualEndDate),
 		ImplementationPlan: changeEntity.ImplementationPlan,
 		RollbackPlan:       changeEntity.RollbackPlan,
 		CreatedAt:          changeEntity.CreatedAt,
@@ -217,11 +335,20 @@ func (s *ChangeService) GetChange(ctx context.Context, id int, tenantID int) (*d
 
 // ListChanges 获取变更列表
 func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pageSize int, status, search string) (*dto.ChangeListResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 20
+	}
+	if pageSize > 200 {
+		pageSize = 200
+	}
 	query := s.client.Change.Query().Where(change.TenantID(tenantID))
 
 	// 状态筛选
 	if status != "" && status != "全部" {
-		query = query.Where(change.Status(status))
+		query = query.Where(change.Status(persistedChangeStatus(status)))
 	}
 
 	// 搜索筛选
@@ -256,7 +383,7 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 	var changeResponses []dto.ChangeResponse
 	for _, changeEntity := range changes {
 		// 获取创建人信息
-		creator, err := s.client.User.Get(ctx, changeEntity.CreatedBy)
+		creator, err := s.client.User.Query().Where(user.IDEQ(changeEntity.CreatedBy), user.TenantIDEQ(tenantID)).Only(ctx)
 		if err != nil {
 			s.logger.Warnw("Failed to get creator info", "error", err, "user_id", changeEntity.CreatedBy)
 		}
@@ -264,31 +391,35 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 		// 获取处理人信息
 		var assigneeName *string
 		if changeEntity.AssigneeID > 0 {
-			assignee, err := s.client.User.Get(ctx, changeEntity.AssigneeID)
+			assignee, err := s.client.User.Query().Where(user.IDEQ(changeEntity.AssigneeID), user.TenantIDEQ(tenantID)).Only(ctx)
 			if err == nil {
 				assigneeName = &assignee.Name
 			}
 		}
 
+		createdByName := ""
+		if creator != nil {
+			createdByName = creator.Name
+		}
 		response := dto.ChangeResponse{
 			ID:                 changeEntity.ID,
 			Title:              changeEntity.Title,
 			Description:        changeEntity.Description,
 			Justification:      changeEntity.Justification,
 			Type:               dto.ChangeType(changeEntity.Type),
-			Status:             dto.ChangeStatus(changeEntity.Status),
+			Status:             apiChangeStatus(changeEntity.Status),
 			Priority:           dto.ChangePriority(changeEntity.Priority),
 			ImpactScope:        dto.ChangeImpact(changeEntity.ImpactScope),
 			RiskLevel:          dto.ChangeRisk(changeEntity.RiskLevel),
-			AssigneeID:         &changeEntity.AssigneeID,
+			AssigneeID:         optionalInt(changeEntity.AssigneeID),
 			AssigneeName:       assigneeName,
 			CreatedBy:          changeEntity.CreatedBy,
-			CreatedByName:      creator.Name,
+			CreatedByName:      createdByName,
 			TenantID:           changeEntity.TenantID,
-			PlannedStartDate:   &changeEntity.PlannedStartDate,
-			PlannedEndDate:     &changeEntity.PlannedEndDate,
-			ActualStartDate:    &changeEntity.ActualStartDate,
-			ActualEndDate:      &changeEntity.ActualEndDate,
+			PlannedStartDate:   optionalTime(changeEntity.PlannedStartDate),
+			PlannedEndDate:     optionalTime(changeEntity.PlannedEndDate),
+			ActualStartDate:    optionalTime(changeEntity.ActualStartDate),
+			ActualEndDate:      optionalTime(changeEntity.ActualEndDate),
 			ImplementationPlan: changeEntity.ImplementationPlan,
 			RollbackPlan:       changeEntity.RollbackPlan,
 			CreatedAt:          changeEntity.CreatedAt,
@@ -334,6 +465,34 @@ func (s *ChangeService) UpdateChange(ctx context.Context, id int, req *dto.Updat
 		s.logger.Errorw("Failed to get change for update", "error", err, "change_id", id, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to get change: %w", err)
 	}
+	if changeEntity.Status != string(dto.ChangeStatusDraft) {
+		return nil, fmt.Errorf("只有草稿状态的变更可以修改")
+	}
+	if req.Type != nil && !isValidChangeType(string(*req.Type)) {
+		return nil, fmt.Errorf("无效的变更类型: %s", *req.Type)
+	}
+	if req.Priority != nil && !isValidChangePriority(string(*req.Priority)) {
+		return nil, fmt.Errorf("无效的变更优先级: %s", *req.Priority)
+	}
+	if req.ImpactScope != nil && !isValidChangeImpact(string(*req.ImpactScope)) {
+		return nil, fmt.Errorf("无效的影响范围: %s", *req.ImpactScope)
+	}
+	if req.RiskLevel != nil && !isValidChangeRisk(string(*req.RiskLevel)) {
+		return nil, fmt.Errorf("无效的风险等级: %s", *req.RiskLevel)
+	}
+	plannedStart, plannedEnd := changeEntity.PlannedStartDate, changeEntity.PlannedEndDate
+	if req.PlannedStartDate != nil {
+		plannedStart = *req.PlannedStartDate
+	}
+	if req.PlannedEndDate != nil {
+		plannedEnd = *req.PlannedEndDate
+	}
+	if !plannedStart.IsZero() && !plannedEnd.IsZero() && !plannedStart.Before(plannedEnd) {
+		return nil, fmt.Errorf("计划结束时间必须晚于计划开始时间")
+	}
+	if err := s.validateChangeReferences(ctx, req.AffectedCIs, req.RelatedTickets, tenantID); err != nil {
+		return nil, err
+	}
 
 	// 构建更新字段
 	update := changeEntity.Update()
@@ -374,12 +533,12 @@ func (s *ChangeService) UpdateChange(ctx context.Context, id int, req *dto.Updat
 
 	// 更新受影响的配置项
 	if req.AffectedCIs != nil {
-		update.SetAffectedCis(req.AffectedCIs)
+		update.SetAffectedCis(uniqueNonEmptyStrings(req.AffectedCIs))
 	}
 
 	// 更新相关工单
 	if req.RelatedTickets != nil {
-		update.SetRelatedTickets(req.RelatedTickets)
+		update.SetRelatedTickets(uniqueNonEmptyStrings(req.RelatedTickets))
 	}
 
 	// 执行更新
@@ -395,24 +554,28 @@ func (s *ChangeService) UpdateChange(ctx context.Context, id int, req *dto.Updat
 
 // DeleteChange 删除变更
 func (s *ChangeService) DeleteChange(ctx context.Context, id int, tenantID int) error {
-	// 检查变更是否存在
-	exists, err := s.client.Change.Query().
+	changeEntity, err := s.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
-		Exist(ctx)
+		Only(ctx)
 	if err != nil {
-		s.logger.Errorw("Failed to check change existence", "error", err, "change_id", id, "tenant_id", tenantID)
-		return fmt.Errorf("failed to check change existence: %w", err)
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("change not found")
+		}
+		return fmt.Errorf("failed to get change: %w", err)
+	}
+	if changeEntity.Status != string(dto.ChangeStatusDraft) && changeEntity.Status != string(dto.ChangeStatusCancelled) {
+		return fmt.Errorf("只有草稿或已取消的变更可以删除")
 	}
 
-	if !exists {
-		return fmt.Errorf("change not found")
-	}
-
-	// 删除变更
-	err = s.client.Change.DeleteOneID(id).Exec(ctx)
+	deleted, err := s.client.Change.Delete().
+		Where(change.IDEQ(id), change.TenantIDEQ(tenantID)).
+		Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to delete change", "error", err, "change_id", id, "tenant_id", tenantID)
 		return fmt.Errorf("failed to delete change: %w", err)
+	}
+	if deleted != 1 {
+		return fmt.Errorf("change not found")
 	}
 
 	s.logger.Infow("Change deleted successfully", "change_id", id, "tenant_id", tenantID)
@@ -421,88 +584,41 @@ func (s *ChangeService) DeleteChange(ctx context.Context, id int, tenantID int) 
 
 // GetChangeStats 获取变更统计
 func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.ChangeStatsResponse, error) {
-	// 获取总变更数
-	total, err := s.client.Change.Query().Where(change.TenantID(tenantID)).Count(ctx)
+	rows, err := s.client.Change.Query().Where(change.TenantID(tenantID)).All(ctx)
 	if err != nil {
-		s.logger.Errorw("Failed to count total changes", "error", err, "tenant_id", tenantID)
-		return nil, fmt.Errorf("failed to count total changes: %w", err)
+		return nil, fmt.Errorf("failed to query change statistics: %w", err)
 	}
-
-	// 获取各状态的变更数
-	stats := &dto.ChangeStatsResponse{Total: total}
-
-	// 待审批 - draft/submitted 状态是待审批前的状态
-	// pending 和 submitted 是实际待审批状态
-	draftOrSubmitted, err := s.client.Change.Query().
-		Where(change.TenantID(tenantID), change.StatusIn(string(dto.ChangeStatusDraft), "submitted")).
-		Count(ctx)
-	if err == nil {
-		stats.Pending = draftOrSubmitted
+	stats := &dto.ChangeStatsResponse{Total: len(rows)}
+	for _, item := range rows {
+		switch item.Status {
+		case string(dto.ChangeStatusDraft), string(dto.ChangeStatusPending), common.ChangeStatusSubmitted:
+			stats.Pending++
+		case string(dto.ChangeStatusApproved):
+			stats.Approved++
+		case string(dto.ChangeStatusScheduled):
+			stats.Scheduled++
+		case string(dto.ChangeStatusInProgress):
+			stats.InProgress++
+		case string(dto.ChangeStatusCompleted):
+			stats.Completed++
+		case string(dto.ChangeStatusFailed):
+			stats.Failed++
+		case string(dto.ChangeStatusRolledBack):
+			stats.RolledBack++
+		case string(dto.ChangeStatusRejected):
+			stats.Rejected++
+		case string(dto.ChangeStatusCancelled):
+			stats.Cancelled++
+		default:
+			return nil, fmt.Errorf("unknown change status %q for change %d", item.Status, item.ID)
+		}
 	}
-
-	// 已批准
-	approved, err := s.client.Change.Query().
-		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusApproved))).
-		Count(ctx)
-	if err == nil {
-		stats.Approved = approved
-	}
-
-	// 实施中 - 包含 in_progress 和 scheduled
-	inProgress, err := s.client.Change.Query().
-		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusInProgress))).
-		Count(ctx)
-	if err == nil {
-		stats.InProgress = inProgress
-	}
-
-	// 已完成
-	completed, err := s.client.Change.Query().
-		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusCompleted))).
-		Count(ctx)
-	if err == nil {
-		stats.Completed = completed
-	}
-
-	// 已回滚
-	rolledBack, err := s.client.Change.Query().
-		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusRolledBack))).
-		Count(ctx)
-	if err == nil {
-		stats.RolledBack = rolledBack
-	}
-
-	// 已拒绝
-	rejected, err := s.client.Change.Query().
-		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusRejected))).
-		Count(ctx)
-	if err == nil {
-		stats.Rejected = rejected
-	}
-
-	// 已取消
-	cancelled, err := s.client.Change.Query().
-		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusCancelled))).
-		Count(ctx)
-	if err == nil {
-		stats.Cancelled = cancelled
-	}
-
-	// 验证：确保各状态之和等于总数
-	calculatedTotal := stats.Pending + stats.Approved + stats.InProgress + stats.Completed +
-		stats.RolledBack + stats.Rejected + stats.Cancelled
-	if calculatedTotal != total {
-		s.logger.Warnw("Change stats sum mismatch",
-			"total", total,
-			"calculated_sum", calculatedTotal,
-			"tenant_id", tenantID)
-	}
-
 	return stats, nil
 }
 
 // UpdateChangeStatus 更新变更状态
 func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status dto.ChangeStatus, tenantID int) error {
+	persistedStatus := persistedChangeStatus(string(status))
 	// 获取当前变更状态，验证租户所有权
 	changeEntity, err := s.client.Change.Query().
 		Where(
@@ -518,18 +634,25 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 	}
 
 	// 验证状态转换
-	if !isValidChangeStatusTransition(changeEntity.Status, string(status), changeEntity.Type) {
+	if !isValidChangeStatusTransition(changeEntity.Status, persistedStatus, changeEntity.Type) {
 		return fmt.Errorf("invalid status transition from '%s' to '%s'", changeEntity.Status, status)
 	}
 
 	// 使用租户过滤进行更新，防止跨租户更新
-	result, err := s.client.Change.Update().
+	update := s.client.Change.Update().
 		Where(
 			change.ID(id),
 			change.TenantID(tenantID),
 		).
-		SetStatus(string(status)).
-		Save(ctx)
+		SetStatus(persistedStatus)
+	now := time.Now()
+	if status == dto.ChangeStatusInProgress && changeEntity.ActualStartDate.IsZero() {
+		update.SetActualStartDate(now)
+	}
+	if status == dto.ChangeStatusCompleted || status == dto.ChangeStatusFailed || status == dto.ChangeStatusRolledBack {
+		update.SetActualEndDate(now)
+	}
+	result, err := update.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update change status", "error", err, "change_id", id, "status", status, "tenant_id", tenantID)
 		return fmt.Errorf("failed to update change status: %w", err)
@@ -559,9 +682,10 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 func isValidChangeStatusTransition(currentStatus, newStatus, changeType string) bool {
 	// 基础转换规则（适用于所有变更类型）
 	baseTransitions := map[string][]string{
-		common.ChangeStatusRejected:  {}, // 被拒绝后不允许转换
-		common.ChangeStatusCompleted: {}, // 已完成不允许转换
-		common.ChangeStatusCancelled: {}, // 已取消不允许转换
+		common.ChangeStatusRejected:        {}, // 被拒绝后不允许转换
+		common.ChangeStatusCompleted:       {}, // 已完成不允许转换
+		common.ChangeStatusCancelled:       {}, // 已取消不允许转换
+		string(dto.ChangeStatusRolledBack): {},
 	}
 
 	// 不同变更类型的特殊转换规则
@@ -574,8 +698,8 @@ func isValidChangeStatusTransition(currentStatus, newStatus, changeType string) 
 			common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
 			common.ChangeStatusApproved:   {common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
 			common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
-			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
+			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
 		}
 	case string(dto.ChangeTypeEmergency):
 		// 紧急变更：可以跳过多个步骤，快速实施
@@ -583,8 +707,8 @@ func isValidChangeStatusTransition(currentStatus, newStatus, changeType string) 
 			common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
 			common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
 			common.ChangeStatusApproved:   {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
-			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
+			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
 		}
 	default: // 普通变更：严格的ITIL流程
 		typeSpecificTransitions = map[string][]string{
@@ -592,8 +716,8 @@ func isValidChangeStatusTransition(currentStatus, newStatus, changeType string) 
 			common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
 			common.ChangeStatusApproved:   {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
 			common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
-			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
+			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
 		}
 	}
 
@@ -608,8 +732,8 @@ func isValidChangeStatusTransition(currentStatus, newStatus, changeType string) 
 
 	allowed, ok := validTransitions[currentStatus]
 	if !ok {
-		// 未知状态，允许转换（保守策略）
-		return true
+		// 未知状态必须失败关闭，避免绕过变更生命周期约束。
+		return false
 	}
 
 	for _, status := range allowed {
@@ -749,21 +873,13 @@ func (s *ChangeService) GetCalendarView(ctx context.Context, tenantID int, start
 	query := s.client.Change.Query().
 		Where(
 			change.TenantID(tenantID),
-			change.Or(
-				change.And(
-					change.PlannedStartDateGTE(start),
-					change.PlannedStartDateLTE(end),
-				),
-				change.And(
-					change.PlannedEndDateGTE(start),
-					change.PlannedEndDateLTE(end),
-				),
-			),
+			change.PlannedStartDateLTE(end),
+			change.PlannedEndDateGTE(start),
 		)
 
 	// 状态过滤
 	if status != "" {
-		query = query.Where(change.Status(status))
+		query = query.Where(change.Status(persistedChangeStatus(status)))
 	}
 
 	// 获取变更列表
@@ -779,7 +895,7 @@ func (s *ChangeService) GetCalendarView(ctx context.Context, tenantID int, start
 			ID:           c.ID,
 			Title:        c.Title,
 			ChangeNumber: fmt.Sprintf("C-%d", c.ID),
-			Status:       c.Status,
+			Status:       string(apiChangeStatus(c.Status)),
 			RiskLevel:    c.RiskLevel,
 			Category:     string(c.Type),
 			PlannedStart: c.PlannedStartDate,
@@ -788,9 +904,9 @@ func (s *ChangeService) GetCalendarView(ctx context.Context, tenantID int, start
 
 		// 获取处理人姓名
 		if c.AssigneeID > 0 {
-			user, err := s.client.User.Get(ctx, c.AssigneeID)
+			assignee, err := s.client.User.Query().Where(user.IDEQ(c.AssigneeID), user.TenantIDEQ(tenantID)).Only(ctx)
 			if err == nil {
-				item.AssigneeName = user.Name
+				item.AssigneeName = assignee.Name
 			}
 		}
 

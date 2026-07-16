@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"itsm-backend/dto"
@@ -137,40 +138,43 @@ func (s *IncidentMonitoringService) createIncidentMetricFromPrometheus(ctx conte
 		return fmt.Errorf("metric name not found")
 	}
 
-	// 查找相关的事件
-	incidents, err := s.client.Incident.Query().
-		Where(
-			incident.TenantIDEQ(tenantID),
-			incident.StatusIn("new", "in_progress"),
-		).
-		All(ctx)
+	metricValue, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		return fmt.Errorf("failed to get incidents: %w", err)
+		return fmt.Errorf("invalid metric value %q: %w", value, err)
 	}
-
-	// 为每个事件创建指标记录
-	for _, incidentEntity := range incidents {
-		_, err := s.client.IncidentMetric.Create().
-			SetIncidentID(incidentEntity.ID).
-			SetMetricType("prometheus").
-			SetMetricName(metricName).
-			SetMetricValue(parseFloatValue(value)).
-			SetMeasuredAt(time.Unix(int64(timestamp), 0)).
-			SetTags(metric).
-			SetMetadata(map[string]interface{}{
-				"source": "prometheus",
-				"query":  "prometheus_query",
-			}).
-			SetTenantID(tenantID).
-			SetCreatedAt(time.Now()).
-			SetUpdatedAt(time.Now()).
-			Save(ctx)
-		if err != nil {
-			s.logger.Errorw("Failed to create incident metric", "error", err, "incident_id", incidentEntity.ID)
+	query := s.client.Incident.Query().
+		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil())
+	if rawID := metric["incident_id"]; rawID != "" {
+		incidentID, err := strconv.Atoi(rawID)
+		if err != nil || incidentID <= 0 {
+			return fmt.Errorf("invalid incident_id metric label: %q", rawID)
 		}
+		query = query.Where(incident.IDEQ(incidentID))
+	} else if incidentNumber := metric["incident_number"]; incidentNumber != "" {
+		query = query.Where(incident.IncidentNumberEQ(incidentNumber))
+	} else {
+		return fmt.Errorf("metric must include incident_id or incident_number label")
 	}
-
-	return nil
+	incidentEntity, err := query.Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("referenced incident not found")
+		}
+		return fmt.Errorf("failed to resolve incident: %w", err)
+	}
+	_, err = s.client.IncidentMetric.Create().
+		SetIncidentID(incidentEntity.ID).
+		SetMetricType("prometheus").
+		SetMetricName(metricName).
+		SetMetricValue(metricValue).
+		SetMeasuredAt(time.Unix(int64(timestamp), 0)).
+		SetTags(metric).
+		SetMetadata(map[string]interface{}{"source": "prometheus"}).
+		SetTenantID(tenantID).
+		SetCreatedAt(time.Now()).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+	return err
 }
 
 // CreateGrafanaDashboard 创建Grafana仪表板
@@ -248,6 +252,7 @@ func (s *IncidentMonitoringService) AnalyzeIncidentImpact(ctx context.Context, i
 		Where(
 			incident.IDEQ(incidentID),
 			incident.TenantIDEQ(tenantID),
+			incident.DeletedAtIsNil(),
 		).
 		Only(ctx)
 	if err != nil {
@@ -322,11 +327,18 @@ func (s *IncidentMonitoringService) AnalyzeIncidentImpact(ctx context.Context, i
 
 	// 更新事件的影响分析
 	_, err = s.client.Incident.UpdateOneID(incidentID).
+		Where(
+			incident.TenantIDEQ(tenantID),
+			incident.DeletedAtIsNil(),
+			incident.VersionEQ(incidentEntity.Version),
+		).
 		SetImpactAnalysis(impactAnalysis).
 		SetUpdatedAt(time.Now()).
+		AddVersion(1).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update incident impact analysis", "error", err)
+		return nil, fmt.Errorf("failed to persist impact analysis: %w", err)
 	}
 
 	return impactAnalysis, nil
@@ -413,11 +425,15 @@ func (s *IncidentMonitoringService) GenerateIncidentReport(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("invalid end_time format: %w", err)
 	}
+	if endTime.Before(startTime) {
+		return nil, fmt.Errorf("end time must not be before start time")
+	}
 
 	// 构建查询
 	query := s.client.Incident.Query().
 		Where(
 			incident.TenantIDEQ(tenantID),
+			incident.DeletedAtIsNil(),
 			incident.CreatedAtGTE(startTime),
 			incident.CreatedAtLTE(endTime),
 		)
@@ -502,7 +518,7 @@ func (s *IncidentMonitoringService) calculateIncidentStats(incidents []*ent.Inci
 
 	for _, incident := range incidents {
 		switch incident.Status {
-		case "new", "in_progress":
+		case "new", "acknowledged", "assigned", "triaged", "in_progress", "on_hold", "escalated":
 			stats.OpenIncidents++
 		case "resolved":
 			stats.ResolvedIncidents++
@@ -518,7 +534,7 @@ func (s *IncidentMonitoringService) calculateIncidentStats(incidents []*ent.Inci
 		if incident.Severity == "critical" {
 			stats.CriticalIncidents++
 		}
-		if incident.Priority == "high" || incident.Priority == "urgent" {
+		if incident.Priority == "high" || incident.Priority == "critical" {
 			stats.HighPriorityIncidents++
 		}
 		if incident.EscalationLevel > 0 {
@@ -606,23 +622,29 @@ func (s *IncidentMonitoringService) getIncidentAlerts(ctx context.Context, incid
 	responses := make([]dto.IncidentAlertResponse, len(alerts))
 	for i, alert := range alerts {
 		responses[i] = dto.IncidentAlertResponse{
-			ID:             alert.ID,
-			IncidentID:     alert.IncidentID,
-			AlertType:      alert.AlertType,
-			AlertName:      alert.AlertName,
-			Message:        alert.Message,
-			Severity:       alert.Severity,
-			Status:         alert.Status,
-			Channels:       alert.Channels,
-			Recipients:     alert.Recipients,
-			TriggeredAt:    alert.TriggeredAt,
-			AcknowledgedAt: &alert.AcknowledgedAt,
-			ResolvedAt:     &alert.ResolvedAt,
-			AcknowledgedBy: &alert.AcknowledgedBy,
-			Metadata:       alert.Metadata,
-			TenantID:       alert.TenantID,
-			CreatedAt:      alert.CreatedAt,
-			UpdatedAt:      alert.UpdatedAt,
+			ID:          alert.ID,
+			IncidentID:  alert.IncidentID,
+			AlertType:   alert.AlertType,
+			AlertName:   alert.AlertName,
+			Message:     alert.Message,
+			Severity:    alert.Severity,
+			Status:      alert.Status,
+			Channels:    alert.Channels,
+			Recipients:  alert.Recipients,
+			TriggeredAt: alert.TriggeredAt,
+			Metadata:    alert.Metadata,
+			TenantID:    alert.TenantID,
+			CreatedAt:   alert.CreatedAt,
+			UpdatedAt:   alert.UpdatedAt,
+		}
+		if !alert.AcknowledgedAt.IsZero() {
+			responses[i].AcknowledgedAt = &alert.AcknowledgedAt
+		}
+		if !alert.ResolvedAt.IsZero() {
+			responses[i].ResolvedAt = &alert.ResolvedAt
+		}
+		if alert.AcknowledgedBy > 0 {
+			responses[i].AcknowledgedBy = &alert.AcknowledgedBy
 		}
 	}
 
@@ -651,40 +673,45 @@ func (s *IncidentMonitoringService) convertIncidentsToResponse(incidents []*ent.
 		}
 
 		responses[i] = dto.IncidentResponse{
-			ID:                  incident.ID,
-			Title:               incident.Title,
-			Description:         incident.Description,
-			Status:              incident.Status,
-			Priority:            incident.Priority,
-			Severity:            incident.Severity,
-			IncidentNumber:      incident.IncidentNumber,
-			ReporterID:          incident.ReporterID,
-			AssigneeID:          &incident.AssigneeID,
-			ConfigurationItemID: &incident.ConfigurationItemID,
-			Category:            incident.Category,
-			Subcategory:         incident.Subcategory,
-			ImpactAnalysis:      impactAnalysis,
-			RootCause:           rootCause,
-			ResolutionSteps:     resolutionSteps,
-			DetectedAt:          incident.DetectedAt,
-			ResolvedAt:          &incident.ResolvedAt,
-			ClosedAt:            &incident.ClosedAt,
-			EscalatedAt:         &incident.EscalatedAt,
-			EscalationLevel:     incident.EscalationLevel,
-			IsAutomated:         incident.IsAutomated,
-			Source:              incident.Source,
-			Metadata:            incident.Metadata,
-			TenantID:            incident.TenantID,
-			CreatedAt:           incident.CreatedAt,
-			UpdatedAt:           incident.UpdatedAt,
+			ID:              incident.ID,
+			Title:           incident.Title,
+			Description:     incident.Description,
+			Status:          incident.Status,
+			Priority:        incident.Priority,
+			Severity:        incident.Severity,
+			IncidentNumber:  incident.IncidentNumber,
+			ReporterID:      incident.ReporterID,
+			Category:        incident.Category,
+			Subcategory:     incident.Subcategory,
+			ImpactAnalysis:  impactAnalysis,
+			RootCause:       rootCause,
+			ResolutionSteps: resolutionSteps,
+			DetectedAt:      incident.DetectedAt,
+			EscalationLevel: incident.EscalationLevel,
+			IsAutomated:     incident.IsAutomated,
+			Source:          incident.Source,
+			Metadata:        incident.Metadata,
+			TenantID:        incident.TenantID,
+			CreatedAt:       incident.CreatedAt,
+			UpdatedAt:       incident.UpdatedAt,
+		}
+		if incident.AssigneeID > 0 {
+			responses[i].AssigneeID = &incident.AssigneeID
+		}
+		if incident.ConfigurationItemID > 0 {
+			responses[i].ConfigurationItemID = &incident.ConfigurationItemID
+		}
+		if !incident.ResolvedAt.IsZero() {
+			responses[i].ResolvedAt = &incident.ResolvedAt
+		}
+		if !incident.ClosedAt.IsZero() {
+			responses[i].ClosedAt = &incident.ClosedAt
+		}
+		if !incident.EscalatedAt.IsZero() {
+			responses[i].EscalatedAt = &incident.EscalatedAt
 		}
 	}
 	return responses
 }
 
 // parseFloatValue 解析浮点数值
-func parseFloatValue(value string) float64 {
-	var result float64
-	fmt.Sscanf(value, "%f", &result)
-	return result
-}

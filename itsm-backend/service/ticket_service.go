@@ -16,7 +16,11 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/processinstance"
 	entTicket "itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketcategory"
 	entTicketComment "itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/tickettag"
+	"itsm-backend/ent/tickettemplate"
+	"itsm-backend/ent/user"
 	"itsm-backend/repository/base"
 	"itsm-backend/repository/ticket"
 
@@ -112,6 +116,17 @@ func (s *TicketService) SetProcessResolver(r *ProcessResolver) {
 // CreateTicket 创建工单
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ticket.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
+	if strings.TrimSpace(req.Title) == "" {
+		return nil, fmt.Errorf("title不能为空")
+	}
+	switch ticket.Priority(req.Priority) {
+	case ticket.PriorityLow, ticket.PriorityMedium, ticket.PriorityHigh, ticket.PriorityUrgent, ticket.PriorityCritical:
+	default:
+		return nil, fmt.Errorf("无效的工单优先级: %s", req.Priority)
+	}
+	if err := s.validateCreateTicketReferences(ctx, req, tenantID); err != nil {
+		return nil, err
+	}
 
 	ticketType := normalizeCreateTicketType(req.Type, req.FormFields)
 	assigneeID := req.AssigneeID
@@ -120,11 +135,14 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	// 转换 DTO 到领域参数
 	params := &ticket.CreateParams{
-		Title:       req.Title,
-		Description: req.Description,
-		Type:        ticketType,
-		Priority:    ticket.Priority(req.Priority),
-		RequesterID: req.RequesterID,
+		Title:          req.Title,
+		Description:    req.Description,
+		Type:           ticketType,
+		Priority:       ticket.Priority(req.Priority),
+		RequesterID:    req.RequesterID,
+		TemplateID:     req.TemplateID,
+		ParentTicketID: req.ParentTicketID,
+		TagIDs:         uniqueIDs(req.TagIDs),
 	}
 
 	if assigneeID != 0 {
@@ -251,6 +269,83 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	}
 
 	return tkt, nil
+}
+
+func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) error {
+	// Mock-backed unit tests may intentionally construct the service without an
+	// Ent client. Production wiring and integration tests always provide it.
+	if s.client == nil {
+		return nil
+	}
+	if req.RequesterID <= 0 {
+		return fmt.Errorf("requesterId必须为当前租户中的有效用户")
+	}
+	requesterExists, err := s.client.User.Query().
+		Where(user.IDEQ(req.RequesterID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("验证申请人失败: %w", err)
+	}
+	if !requesterExists {
+		return fmt.Errorf("申请人不存在或不可用")
+	}
+	if req.AssigneeID > 0 {
+		assigneeExists, err := s.client.User.Query().
+			Where(user.IDEQ(req.AssigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("验证处理人失败: %w", err)
+		}
+		if !assigneeExists {
+			return fmt.Errorf("处理人不存在或不可用")
+		}
+	}
+	if req.CategoryID != nil {
+		categoryExists, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.IDEQ(*req.CategoryID), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("验证工单分类失败: %w", err)
+		}
+		if !categoryExists {
+			return fmt.Errorf("工单分类不存在或不可用")
+		}
+	}
+	if req.TemplateID != nil {
+		templateExists, err := s.client.TicketTemplate.Query().
+			Where(tickettemplate.IDEQ(*req.TemplateID), tickettemplate.TenantIDEQ(tenantID), tickettemplate.IsActiveEQ(true)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("验证工单模板失败: %w", err)
+		}
+		if !templateExists {
+			return fmt.Errorf("工单模板不存在或不可用")
+		}
+	}
+	if req.ParentTicketID != nil {
+		parentExists, err := s.client.Ticket.Query().
+			Where(entTicket.IDEQ(*req.ParentTicketID), entTicket.TenantIDEQ(tenantID), entTicket.DeletedAtIsNil()).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("验证父工单失败: %w", err)
+		}
+		if !parentExists {
+			return fmt.Errorf("父工单不存在")
+		}
+	}
+	tagIDs := uniqueIDs(req.TagIDs)
+	if len(tagIDs) > 0 {
+		count, err := s.client.TicketTag.Query().
+			Where(tickettag.IDIn(tagIDs...), tickettag.TenantIDEQ(tenantID), tickettag.IsActiveEQ(true)).
+			Count(ctx)
+		if err != nil {
+			return fmt.Errorf("验证工单标签失败: %w", err)
+		}
+		if count != len(tagIDs) {
+			return fmt.Errorf("工单标签不存在或不可用")
+		}
+	}
+	return nil
 }
 
 func normalizeCreateTicketType(reqType string, formFields ...map[string]interface{}) ticket.Type {
@@ -458,7 +553,7 @@ func (s *TicketService) GetTicket(ctx context.Context, id int, tenantID int) (*t
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, ok := s.connectorManager.Get(tenantID, "feishu")
@@ -518,10 +613,17 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 			}
 		}
 	}
+	if req.Status == string(ticket.StatusResolved) && strings.TrimSpace(req.Resolution) == "" &&
+		(current.Resolution == nil || strings.TrimSpace(*current.Resolution) == "") {
+		return nil, fmt.Errorf("解决工单时必须填写解决方案")
+	}
 
 	// 转换更新参数
 	params := &ticket.UpdateParams{
-		Version: current.Version, // 乐观锁
+		Version: current.Version,
+	}
+	if req.Version > 0 {
+		params.Version = req.Version
 	}
 
 	if req.Title != "" {
@@ -534,12 +636,70 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 		status := ticket.Status(req.Status)
 		params.Status = &status
 	}
+	if req.Type != "" {
+		if req.Type != "ticket" && !isSupportedTicketType(req.Type) {
+			return nil, fmt.Errorf("无效的工单类型: %s", req.Type)
+		}
+		ticketType := normalizeCreateTicketType(req.Type)
+		params.Type = &ticketType
+	}
 	if req.Priority != "" {
 		priority := ticket.Priority(req.Priority)
 		params.Priority = &priority
 	}
 	if req.AssigneeID != 0 {
+		if s.client != nil {
+			assigneeExists, err := s.client.User.Query().
+				Where(user.IDEQ(req.AssigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+				Exist(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("验证处理人失败: %w", err)
+			}
+			if !assigneeExists {
+				return nil, fmt.Errorf("处理人不存在或不可用")
+			}
+		}
 		params.AssigneeID = &req.AssigneeID
+	}
+	categoryID := req.CategoryID
+	if categoryID == nil && strings.TrimSpace(req.Category) != "" {
+		if s.client == nil {
+			return nil, fmt.Errorf("无法解析工单分类")
+		}
+		category, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.NameEQ(strings.TrimSpace(req.Category)), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
+			Only(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("工单分类不存在或不可用")
+		}
+		categoryID = &category.ID
+	}
+	if categoryID != nil {
+		if *categoryID != 0 && s.client != nil {
+			exists, err := s.client.TicketCategory.Query().
+				Where(ticketcategory.IDEQ(*categoryID), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
+				Exist(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("验证工单分类失败: %w", err)
+			}
+			if !exists {
+				return nil, fmt.Errorf("工单分类不存在或不可用")
+			}
+		}
+		params.CategoryID = categoryID
+	}
+	if req.Tags != nil {
+		params.ReplaceTags = true
+		if len(req.Tags) > 0 {
+			if s.client == nil {
+				return nil, fmt.Errorf("无法解析工单标签")
+			}
+			tagIDs, err := NewTicketTagService(s.client).ResolveTagIDsByNames(ctx, req.Tags, tenantID, true)
+			if err != nil {
+				return nil, fmt.Errorf("解析工单标签失败: %w", err)
+			}
+			params.TagIDs = tagIDs
+		}
 	}
 	if req.Resolution != "" {
 		params.Resolution = &req.Resolution
@@ -557,7 +717,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, ok := s.connectorManager.Get(tenantID, "feishu")
@@ -616,6 +776,17 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 	if req.AssigneeID != nil {
 		filters.AssigneeID = req.AssigneeID
 	}
+	if req.Type != "" {
+		ticketType := ticket.Type(req.Type)
+		filters.Type = &ticketType
+	}
+	if req.CategoryID != nil {
+		filters.CategoryID = req.CategoryID
+	}
+	if req.ParentTicketID != nil {
+		filters.ParentTicketID = req.ParentTicketID
+	}
+	filters.IsOverdue = req.IsOverdue
 	if req.Keyword != "" {
 		filters.Keyword = req.Keyword
 	}
@@ -658,8 +829,30 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 // AssignTicket 分配工单
 func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assigneeID int, tenantID int) (*ticket.Ticket, error) {
 	s.logger.Infow("Assigning ticket", "ticket_id", ticketID, "assignee_id", assigneeID)
-
-	updated, err := s.repo.AssignTicket(ctx, ticketID, assigneeID, tenantID)
+	current, err := s.repo.GetByID(ctx, ticketID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if err := current.Assign(assigneeID); err != nil {
+		return nil, err
+	}
+	if s.client != nil {
+		exists, err := s.client.User.Query().
+			Where(user.IDEQ(assigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+			Exist(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("验证处理人失败: %w", err)
+		}
+		if !exists {
+			return nil, fmt.Errorf("处理人不存在或不可用")
+		}
+	}
+	status := current.Status
+	updated, err := s.repo.Update(ctx, ticketID, &ticket.UpdateParams{
+		AssigneeID: &assigneeID,
+		Status:     &status,
+		Version:    current.Version,
+	}, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -667,7 +860,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 	// 发送通知
 	if s.notificationSvc != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			if err := s.notificationSvc.NotifyTicketAssigned(ctx2, ticketID, assigneeID, tenantID); err != nil {
 				s.logger.Warnw("Assignment notification failed", "error", err)
@@ -678,7 +871,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, ok := s.connectorManager.Get(tenantID, "feishu")
@@ -717,6 +910,10 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 // ResolveTicket 解决工单
 func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolution string, tenantID int) (*ticket.Ticket, error) {
 	s.logger.Infow("Resolving ticket", "ticket_id", ticketID)
+	resolution = strings.TrimSpace(resolution)
+	if resolution == "" {
+		return nil, fmt.Errorf("解决方案不能为空")
+	}
 
 	// 获取工单
 	tkt, err := s.repo.GetByID(ctx, ticketID, tenantID)
@@ -732,8 +929,12 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 		}
 	}
 
-	// 更新状态
-	updated, err := s.repo.UpdateStatus(ctx, ticketID, ticket.StatusResolved, tenantID)
+	status := ticket.StatusResolved
+	updated, err := s.repo.Update(ctx, ticketID, &ticket.UpdateParams{
+		Status:     &status,
+		Resolution: &resolution,
+		Version:    tkt.Version,
+	}, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -743,7 +944,7 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, ok := s.connectorManager.Get(tenantID, "feishu")
@@ -797,19 +998,13 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, tenantID 
 		}
 	}
 
-	// 如果有 feedback，写入 Resolution 字段
-	if feedback != "" {
-		f := feedback
-		if _, err := s.repo.Update(ctx, ticketID, &ticket.UpdateParams{
-			Version:    tkt.Version,
-			Resolution: &f,
-		}, tenantID); err != nil {
-			s.logger.Warnw("Failed to set feedback resolution", "error", err)
-		}
+	status := ticket.StatusClosed
+	params := &ticket.UpdateParams{Status: &status, Version: tkt.Version}
+	if strings.TrimSpace(feedback) != "" {
+		feedback = strings.TrimSpace(feedback)
+		params.Resolution = &feedback
 	}
-
-	// 更新状态
-	updated, err := s.repo.UpdateStatus(ctx, ticketID, ticket.StatusClosed, tenantID)
+	updated, err := s.repo.Update(ctx, ticketID, params, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -819,7 +1014,7 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, tenantID 
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, ok := s.connectorManager.Get(tenantID, "feishu")
@@ -908,6 +1103,20 @@ func (s *TicketService) toTicketResponse(t *ticket.Ticket) *dto.TicketResponse {
 	if t.CategoryID != nil {
 		resp.CategoryID = *t.CategoryID
 	}
+	if t.DepartmentID != nil {
+		resp.DepartmentID = *t.DepartmentID
+	}
+	if t.ParentTicketID != nil {
+		resp.ParentTicketID = *t.ParentTicketID
+	}
+	if t.Resolution != nil {
+		resp.Resolution = *t.Resolution
+	}
+	resp.ResolvedAt = t.ResolvedAt
+	resp.ClosedAt = t.ClosedAt
+	resp.FirstResponseAt = t.FirstResponseAt
+	resp.SLAResponseDeadline = t.SLAResponseDeadline
+	resp.SLAResolutionDeadline = t.SLAResolutionDeadline
 
 	return resp
 }
@@ -939,6 +1148,10 @@ func (s *TicketService) toEntTicket(t *ticket.Ticket) *ent.Ticket {
 	if t.Resolution != nil {
 		entTicket.Resolution = *t.Resolution
 	}
+	if t.ResolvedAt != nil {
+		entTicket.ResolvedAt = *t.ResolvedAt
+	}
+	entTicket.ClosedAt = t.ClosedAt
 	return entTicket
 }
 
@@ -955,6 +1168,9 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 
 	if !IsValidTicketStatusTransition(string(current.Status), status) {
 		return nil, fmt.Errorf("invalid status transition: %s -> %s", current.Status, status)
+	}
+	if status == string(ticket.StatusResolved) && (current.Resolution == nil || strings.TrimSpace(*current.Resolution) == "") {
+		return nil, fmt.Errorf("解决工单必须通过 ResolveTicket 提交解决方案")
 	}
 
 	updated, err := s.repo.UpdateStatus(ctx, ticketID, ticket.Status(status), tenantID)
@@ -979,7 +1195,7 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, ok := s.connectorManager.Get(tenantID, "feishu")
@@ -1136,7 +1352,7 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 
 	if s.notificationSvc != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			_ = s.notificationSvc.NotifyTicketAssigned(ctx2, ticketID, newAssignee, tenantID)
 		}()
@@ -1147,7 +1363,7 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, ok := s.connectorManager.Get(tenantID, "feishu")
@@ -1936,7 +2152,7 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, ok := s.connectorManager.Get(customerTenantID, "feishu")

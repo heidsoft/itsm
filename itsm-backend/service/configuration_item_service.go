@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -12,6 +11,7 @@ import (
 	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/configurationitemhistory"
 
 	"go.uber.org/zap"
 )
@@ -1383,8 +1383,15 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 		return dto.ToCIResponse(ci), nil
 	}
 
-	// 更新状态
-	updatedCI, err := s.client.ConfigurationItem.UpdateOne(ci).
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("启动生命周期事务失败: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// 状态变更和审计记录必须原子提交。
+	updatedCI, err := tx.Client().ConfigurationItem.UpdateOneID(ci.ID).
+		Where(configurationitem.TenantIDEQ(tenantID)).
 		SetLifecycleStatus(status).
 		Save(ctx)
 	if err != nil {
@@ -1392,19 +1399,19 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 		return nil, fmt.Errorf("更新生命周期状态失败: %w", err)
 	}
 
-	// 记录变更历史
-	// LifecycleHistory 字段尚未在 ent schema 中定义，暂时跳过写入历史记录
-	// TODO: 在 ent/schema/configurationitem.go 中添加 lifecycle_history 字段后恢复
-	_ = time.Now() // keep time import
-
-	// 记录到CI变更历史
-	_ = s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "update", remark, ci, updatedCI)
+	txHistoryService := NewCIHistoryService(tx.Client(), s.logger)
+	if err := txHistoryService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "lifecycle_update", remark, ci, updatedCI); err != nil {
+		return nil, fmt.Errorf("记录生命周期审计失败: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交生命周期事务失败: %w", err)
+	}
 
 	s.logger.Infow("CI lifecycle status updated", "ci_id", id, "old_status", ci.LifecycleStatus, "new_status", status, "tenant_id", tenantID)
 
 	// 重新加载CI完整信息
 	fullCI, err := s.client.ConfigurationItem.Query().
-		Where(configurationitem.ID(id)).
+		Where(configurationitem.ID(id), configurationitem.TenantID(tenantID)).
 		WithOutgoingRelations().
 		WithIncomingRelations().
 		WithTags().
@@ -1443,7 +1450,6 @@ func (s *ConfigurationItemService) BatchUpdateLifecycleStatus(ctx context.Contex
 }
 
 // GetLifecycleHistory 获取CI生命周期变更历史
-// TODO: ent schema 添加 lifecycle_history 字段后完整实现
 func (s *ConfigurationItemService) GetLifecycleHistory(ctx context.Context, id int, tenantID int) ([]map[string]interface{}, error) {
 	_, err := s.client.ConfigurationItem.Query().
 		Where(
@@ -1459,6 +1465,31 @@ func (s *ConfigurationItemService) GetLifecycleHistory(ctx context.Context, id i
 		return nil, fmt.Errorf("获取生命周期历史失败: %w", err)
 	}
 
-	// LifecycleHistory 字段尚未在 ent schema 中定义，返回空列表
-	return []map[string]interface{}{}, nil
+	histories, err := s.client.ConfigurationItemHistory.Query().
+		Where(
+			configurationitemhistory.CiIDEQ(id),
+			configurationitemhistory.TenantIDEQ(tenantID),
+			configurationitemhistory.OperationEQ("lifecycle_update"),
+		).
+		Order(ent.Desc(configurationitemhistory.FieldVersion)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取生命周期历史失败: %w", err)
+	}
+
+	result := make([]map[string]interface{}, 0, len(histories))
+	for _, history := range histories {
+		result = append(result, map[string]interface{}{
+			"id":           history.ID,
+			"ciId":         history.CiID,
+			"version":      history.Version,
+			"oldStatus":    history.Before["lifecycle_status"],
+			"newStatus":    history.After["lifecycle_status"],
+			"operatorId":   history.OperatorID,
+			"operatorName": history.OperatorName,
+			"remark":       history.Remark,
+			"createdAt":    history.CreatedAt,
+		})
+	}
+	return result, nil
 }

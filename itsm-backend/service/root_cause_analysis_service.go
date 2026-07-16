@@ -3,9 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/incident"
+	"itsm-backend/ent/user"
 )
 
 // RootCauseAnalysisService 根因分析服务
@@ -131,35 +135,83 @@ func (s *RootCauseAnalysisService) MatchKnownErrors(ctx context.Context, tenantI
 }
 
 // CreateProblemFromIncident 从事件创建问题
-func (s *RootCauseAnalysisService) CreateProblemFromIncident(ctx context.Context, incidentID int, createdBy int) (*ent.Problem, error) {
-	incident, err := s.client.Incident.Get(ctx, incidentID)
+func (s *RootCauseAnalysisService) CreateProblemFromIncident(
+	ctx context.Context,
+	incidentID, createdBy, tenantID int,
+	req *dto.ConvertIncidentToProblemRequest,
+) (*ent.Problem, error) {
+	creatorExists, err := s.client.User.Query().
+		Where(user.IDEQ(createdBy), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+		Exist(ctx)
 	if err != nil {
+		return nil, fmt.Errorf("failed to validate problem creator: %w", err)
+	}
+	if !creatorExists {
+		return nil, fmt.Errorf("problem creator not found or inactive")
+	}
+	incidentEntity, err := s.client.Incident.Query().
+		Where(incident.IDEQ(incidentID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("incident not found")
+		}
 		return nil, err
 	}
 
-	// 创建问题
-	newProblem, err := s.client.Problem.Create().
-		SetTitle(fmt.Sprintf("问题-%s", incident.Title)).
-		SetDescription(incident.Description).
-		SetPriority(incident.Priority).
-		SetCategory(incident.Category).
+	title := fmt.Sprintf("问题-%s", incidentEntity.Title)
+	description := incidentEntity.Description
+	rootCause := ""
+	if req != nil {
+		if strings.TrimSpace(req.Title) != "" {
+			title = strings.TrimSpace(req.Title)
+		}
+		if strings.TrimSpace(req.Description) != "" {
+			description = strings.TrimSpace(req.Description)
+		}
+		rootCause = strings.TrimSpace(req.RootCause)
+	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start conversion transaction: %w", err)
+	}
+	rollback := func(cause error) (*ent.Problem, error) {
+		_ = tx.Rollback()
+		return nil, cause
+	}
+	newProblem, err := tx.Problem.Create().
+		SetTitle(title).
+		SetDescription(description).
+		SetPriority(incidentEntity.Priority).
+		SetCategory(incidentEntity.Category).
+		SetRootCause(rootCause).
 		SetStatus("open").
 		SetCreatedBy(createdBy).
-		SetTenantID(incident.TenantID).
+		SetTenantID(tenantID).
+		AddIncidentIDs(incidentID).
 		Save(ctx)
 	if err != nil {
-		return nil, err
+		return rollback(err)
 	}
 
-	// 记录关联
-	_, err = s.client.IncidentEvent.Create().
+	_, err = tx.IncidentEvent.Create().
 		SetIncidentID(incidentID).
 		SetEventType("problem_linked").
+		SetEventName("关联问题").
 		SetDescription(fmt.Sprintf("已关联到问题 #%d", newProblem.ID)).
+		SetStatus("active").
+		SetSeverity("info").
+		SetSource("system").
+		SetUserID(createdBy).
+		SetOccurredAt(time.Now()).
+		SetTenantID(tenantID).
 		SetCreatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return nil, err
+		return rollback(err)
+	}
+	if err := tx.Commit(); err != nil {
+		return rollback(err)
 	}
 
 	return newProblem, nil

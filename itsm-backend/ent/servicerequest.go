@@ -68,10 +68,14 @@ type ServiceRequest struct {
 	CompletionNote string `json:"completion_note,omitempty"`
 	// 最近一次错误信息
 	LastError string `json:"last_error,omitempty"`
+	// 乐观锁版本
+	Version int `json:"version,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// 软删除时间
+	DeletedAt    *time.Time `json:"deleted_at,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -84,11 +88,11 @@ func (*ServiceRequest) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case servicerequest.FieldNeedsPublicIP, servicerequest.FieldComplianceAck:
 			values[i] = new(sql.NullBool)
-		case servicerequest.FieldID, servicerequest.FieldTenantID, servicerequest.FieldCatalogID, servicerequest.FieldCiID, servicerequest.FieldRequesterID, servicerequest.FieldCurrentLevel, servicerequest.FieldTotalLevels, servicerequest.FieldProcessorID:
+		case servicerequest.FieldID, servicerequest.FieldTenantID, servicerequest.FieldCatalogID, servicerequest.FieldCiID, servicerequest.FieldRequesterID, servicerequest.FieldCurrentLevel, servicerequest.FieldTotalLevels, servicerequest.FieldProcessorID, servicerequest.FieldVersion:
 			values[i] = new(sql.NullInt64)
 		case servicerequest.FieldStatus, servicerequest.FieldTitle, servicerequest.FieldReason, servicerequest.FieldCostCenter, servicerequest.FieldDataClassification, servicerequest.FieldCurrentApprover, servicerequest.FieldApproverComment, servicerequest.FieldCompletionNote, servicerequest.FieldLastError:
 			values[i] = new(sql.NullString)
-		case servicerequest.FieldExpireAt, servicerequest.FieldApprovedAt, servicerequest.FieldStartedAt, servicerequest.FieldCompletedAt, servicerequest.FieldCreatedAt, servicerequest.FieldUpdatedAt:
+		case servicerequest.FieldExpireAt, servicerequest.FieldApprovedAt, servicerequest.FieldStartedAt, servicerequest.FieldCompletedAt, servicerequest.FieldCreatedAt, servicerequest.FieldUpdatedAt, servicerequest.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -267,6 +271,12 @@ func (_m *ServiceRequest) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.LastError = value.String
 			}
+		case servicerequest.FieldVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				_m.Version = int(value.Int64)
+			}
 		case servicerequest.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -278,6 +288,13 @@ func (_m *ServiceRequest) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
+			}
+		case servicerequest.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				_m.DeletedAt = new(time.Time)
+				*_m.DeletedAt = value.Time
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -390,11 +407,19 @@ func (_m *ServiceRequest) String() string {
 	builder.WriteString("last_error=")
 	builder.WriteString(_m.LastError)
 	builder.WriteString(", ")
+	builder.WriteString("version=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Version))
+	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	if v := _m.DeletedAt; v != nil {
+		builder.WriteString("deleted_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

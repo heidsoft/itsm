@@ -7,6 +7,8 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/problem"
 
 	"go.uber.org/zap"
 )
@@ -217,9 +219,27 @@ func (s *KnownErrorService) MatchKnownErrorBySymptoms(ctx context.Context, tenan
 }
 
 // LinkKnownErrorToProblem 关联已知错误到问题
-func (s *KnownErrorService) LinkKnownErrorToProblem(ctx context.Context, knownErrorID, problemID int) error {
-	_, err := s.client.KnownError.UpdateOneID(knownErrorID).Save(ctx)
-	return err
+func (s *KnownErrorService) LinkKnownErrorToProblem(ctx context.Context, knownErrorID, problemID, tenantID int) error {
+	problemExists, err := s.client.Problem.Query().
+		Where(problem.IDEQ(problemID), problem.TenantIDEQ(tenantID), problem.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return err
+	}
+	if !problemExists {
+		return fmt.Errorf("problem not found")
+	}
+	updated, err := s.client.KnownError.Update().
+		Where(knownerror.IDEQ(knownErrorID), knownerror.TenantIDEQ(tenantID)).
+		AddProblemIDs(problemID).
+		Save(ctx)
+	if err != nil {
+		return err
+	}
+	if updated != 1 {
+		return fmt.Errorf("known error not found")
+	}
+	return nil
 }
 
 // CreateKnowledgeArticleFromKnownError 从已知错误创建知识库文章

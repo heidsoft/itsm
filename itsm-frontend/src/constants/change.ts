@@ -67,8 +67,10 @@ export const ChangeStatusLabels: Record<ChangeStatus, string> = {
   [ChangeStatus.PENDING]: '待审批',
   [ChangeStatus.APPROVED]: '已批准',
   [ChangeStatus.REJECTED]: '已拒绝',
+  [ChangeStatus.SCHEDULED]: '已排期',
   [ChangeStatus.IN_PROGRESS]: '实施中',
   [ChangeStatus.COMPLETED]: '已完成',
+  [ChangeStatus.FAILED]: '实施失败',
   [ChangeStatus.ROLLED_BACK]: '已回滚',
   [ChangeStatus.CANCELLED]: '已取消',
 };

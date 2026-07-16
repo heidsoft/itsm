@@ -131,6 +131,10 @@ func (Incident) Fields() []ent.Field {
 			Comment("更新时间").
 			Default(time.Now).
 			UpdateDefault(time.Now),
+		field.Time("deleted_at").
+			Comment("软删除时间").
+			Optional().
+			Nillable(),
 	}
 }
 

@@ -21,7 +21,7 @@ import (
 
 type ticketFixture struct {
 	ctx     context.Context
-	client  interface{ Close() error }
+	client  *ent.Client
 	svc     *TicketService
 	tenant  interface{ GetID() int }
 	user    interface{ GetID() int }
@@ -140,6 +140,13 @@ func (f *ticketFixture) makeTicket(t *testing.T, name string, status ticket.Stat
 		require.NoError(t, err)
 		_, err = f.svc.ResolveTicket(f.ctx, tkt.ID, "auto", tenantID)
 		require.NoError(t, err)
+	case ticket.StatusClosed:
+		_, err := f.svc.UpdateTicketStatus(f.ctx, tkt.ID, string(ticket.StatusOpen), tenantID, userID)
+		require.NoError(t, err)
+		_, err = f.svc.ResolveTicket(f.ctx, tkt.ID, "auto", tenantID)
+		require.NoError(t, err)
+		_, err = f.svc.CloseTicket(f.ctx, tkt.ID, tenantID, "confirmed")
+		require.NoError(t, err)
 	}
 	_ = ticket.StatusResolved // 引用避免 unused
 
@@ -229,6 +236,15 @@ func TestTicketService_ResolveTicket(t *testing.T) {
 		updated, err := fx.svc.ResolveTicket(fx.ctx, id, "fixed", tenantID)
 		require.NoError(t, err)
 		assert.Equal(t, ticket.StatusResolved, updated.Status)
+		require.NotNil(t, updated.Resolution)
+		assert.Equal(t, "fixed", *updated.Resolution)
+		assert.NotNil(t, updated.ResolvedAt)
+	})
+
+	t.Run("解决方案为空时拒绝 resolve", func(t *testing.T) {
+		id := fx.makeTicket(t, "r-empty", ticket.StatusOpen)
+		_, err := fx.svc.ResolveTicket(fx.ctx, id, "   ", fx.tenantID())
+		require.ErrorContains(t, err, "解决方案不能为空")
 	})
 
 	t.Run("in_progress 状态可以 resolve", func(t *testing.T) {
@@ -270,9 +286,9 @@ func TestTicketService_CloseTicket(t *testing.T) {
 		updated, err := fx.svc.CloseTicket(fx.ctx, id, tenantID, "user confirmed")
 		require.NoError(t, err)
 		assert.Equal(t, ticket.StatusClosed, updated.Status)
-		// Resolution 字段可能被 SetFeedback 设置也可能不被设置
-		// （源码使用 tkt.Version 在 Update 中可能因乐观锁失败），
-		// 这里仅验证 status 已转为 closed
+		require.NotNil(t, updated.Resolution)
+		assert.Equal(t, "user confirmed", *updated.Resolution)
+		assert.NotNil(t, updated.ClosedAt)
 	})
 
 	t.Run("空 feedback 也可以 close（resolved 状态）", func(t *testing.T) {
@@ -319,6 +335,25 @@ func TestTicketService_AssignTicket(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, updated.AssigneeID)
 		assert.Equal(t, agentID, *updated.AssigneeID)
+		assert.Equal(t, ticket.StatusOpen, updated.Status)
+	})
+
+	t.Run("终态工单不能重新分配", func(t *testing.T) {
+		id := fx.makeTicket(t, "a-closed", ticket.StatusClosed)
+		_, err := fx.svc.AssignTicket(fx.ctx, id, fx.agentID(), fx.tenantID())
+		require.Error(t, err)
+	})
+
+	t.Run("不能分配给其他租户用户", func(t *testing.T) {
+		otherTenant, err := fx.client.Tenant.Create().SetName("Other").SetCode("assign-other").SetDomain("assign-other.test").SetStatus("active").Save(fx.ctx)
+		require.NoError(t, err)
+		foreignAgent, err := fx.client.User.Create().
+			SetUsername("foreign-agent").SetEmail("foreign-agent@test.com").SetName("Foreign Agent").
+			SetPasswordHash("h").SetRole("agent").SetActive(true).SetTenantID(otherTenant.ID).Save(fx.ctx)
+		require.NoError(t, err)
+		id := fx.makeTicket(t, "a-foreign", ticket.StatusOpen)
+		_, err = fx.svc.AssignTicket(fx.ctx, id, foreignAgent.ID, fx.tenantID())
+		require.ErrorContains(t, err, "处理人不存在")
 	})
 }
 
@@ -516,7 +551,7 @@ func TestTicketService_BatchDeleteTickets_TenantIsolation(t *testing.T) {
 	defer fx.client.Close()
 
 	// 创建第二个租户（直接用 ent client）
-	client := fx.client.(*ent.Client)
+	client := fx.client
 	tenant2, err := client.Tenant.Create().
 		SetName("Other Tenant").
 		SetCode("other").

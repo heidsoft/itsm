@@ -16123,6 +16123,22 @@ func (c *TicketClient) QueryTags(_m *Ticket) *TicketTagQuery {
 	return query
 }
 
+// QueryRelatedTickets queries the related_tickets edge of a Ticket.
+func (c *TicketClient) QueryRelatedTickets(_m *Ticket) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, ticket.RelatedTicketsTable, ticket.RelatedTicketsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryApprovalRecords queries the approval_records edge of a Ticket.
 func (c *TicketClient) QueryApprovalRecords(_m *Ticket) *ApprovalRecordQuery {
 	query := (&ApprovalRecordClient{config: c.config}).Query()

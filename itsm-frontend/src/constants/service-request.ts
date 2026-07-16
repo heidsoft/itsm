@@ -8,9 +8,11 @@ export enum ServiceRequestStatus {
   MANAGER_APPROVED = 'manager_approved', // 经理已审批
   IT_APPROVED = 'it_approved', // IT已审批
   SECURITY_APPROVED = 'security_approved', // 安全部门已审批
+  PROVISIONING = 'provisioning', // 履约中
+  DELIVERED = 'delivered', // 已交付
+  FAILED = 'failed', // 履约失败
   REJECTED = 'rejected', // 已拒绝
   CANCELLED = 'cancelled', // 已取消
-  COMPLETED = 'completed', // 已完成
 }
 
 // 审批状态枚举

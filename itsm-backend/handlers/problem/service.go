@@ -2,6 +2,9 @@ package problem
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -19,6 +22,14 @@ func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, tenantID int, p *Problem) (*Problem, error) {
+	if strings.TrimSpace(p.Title) == "" {
+		return nil, fmt.Errorf("problem title is required")
+	}
+	if !isValidProblemPriority(p.Priority) {
+		return nil, fmt.Errorf("invalid problem priority: %s", p.Priority)
+	}
+	p.Title = strings.TrimSpace(p.Title)
+	p.Status = "open"
 	p.TenantID = tenantID
 	return s.repo.Create(ctx, p)
 }
@@ -31,12 +42,19 @@ func (s *Service) GetWithAssociations(ctx context.Context, id int, tenantID int)
 	return s.repo.GetWithAssociations(ctx, id, tenantID)
 }
 
-func (s *Service) AddAssociations(ctx context.Context, problemID int, relatedType string, relatedIDs []int) error {
-	return s.repo.AddAssociations(ctx, problemID, relatedType, relatedIDs)
+func (s *Service) AddAssociations(ctx context.Context, tenantID, problemID int, relatedType string, relatedIDs []int) error {
+	relatedIDs = uniquePositiveIDs(relatedIDs)
+	if len(relatedIDs) == 0 {
+		return fmt.Errorf("at least one related id is required")
+	}
+	return s.repo.AddAssociations(ctx, tenantID, problemID, relatedType, relatedIDs)
 }
 
-func (s *Service) RemoveAssociation(ctx context.Context, problemID int, relatedType string, relatedID int) error {
-	return s.repo.RemoveAssociation(ctx, problemID, relatedType, relatedID)
+func (s *Service) RemoveAssociation(ctx context.Context, tenantID, problemID int, relatedType string, relatedID int) error {
+	if relatedID <= 0 {
+		return fmt.Errorf("invalid related id")
+	}
+	return s.repo.RemoveAssociation(ctx, tenantID, problemID, relatedType, relatedID)
 }
 
 func (s *Service) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*Problem, int, error) {
@@ -59,9 +77,26 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem) 
 		existing.Description = p.Description
 	}
 	if p.Status != "" {
+		if !isValidProblemStatusTransition(existing.Status, p.Status) {
+			return nil, fmt.Errorf("invalid problem status transition: %s -> %s", existing.Status, p.Status)
+		}
 		existing.Status = p.Status
+		now := time.Now()
+		switch p.Status {
+		case "resolved":
+			existing.ResolvedAt = &now
+			existing.ClosedAt = nil
+		case "closed":
+			existing.ClosedAt = &now
+		case "investigating":
+			existing.ResolvedAt = nil
+			existing.ClosedAt = nil
+		}
 	}
 	if p.Priority != "" {
+		if !isValidProblemPriority(p.Priority) {
+			return nil, fmt.Errorf("invalid problem priority: %s", p.Priority)
+		}
 		existing.Priority = p.Priority
 	}
 	if p.Category != "" {
@@ -78,6 +113,52 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem) 
 	}
 
 	return s.repo.Update(ctx, existing)
+}
+
+func isValidProblemPriority(priority string) bool {
+	switch priority {
+	case "low", "medium", "high", "critical":
+		return true
+	default:
+		return false
+	}
+}
+
+func isValidProblemStatusTransition(current, next string) bool {
+	if current == next {
+		return true
+	}
+	transitions := map[string]map[string]struct{}{
+		"open":          {"investigating": {}, "identified": {}, "resolved": {}, "closed": {}},
+		"investigating": {"identified": {}, "resolved": {}, "closed": {}},
+		"identified":    {"investigating": {}, "resolved": {}, "closed": {}},
+		"resolved":      {"investigating": {}, "closed": {}},
+		"closed":        {},
+		// 兼容存量 in_progress 数据，仅允许进入规范状态。
+		"in_progress": {"identified": {}, "resolved": {}, "closed": {}},
+	}
+	allowed, ok := transitions[current]
+	if !ok {
+		return false
+	}
+	_, ok = allowed[next]
+	return ok
+}
+
+func uniquePositiveIDs(ids []int) []int {
+	seen := make(map[int]struct{}, len(ids))
+	result := make([]int, 0, len(ids))
+	for _, id := range ids {
+		if id <= 0 {
+			continue
+		}
+		if _, exists := seen[id]; exists {
+			continue
+		}
+		seen[id] = struct{}{}
+		result = append(result, id)
+	}
+	return result
 }
 
 func (s *Service) Delete(ctx context.Context, id int, tenantID int) error {

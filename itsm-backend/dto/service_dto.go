@@ -25,8 +25,8 @@ type CreateServiceRequestRequest struct {
 
 	CostCenter         string     `json:"costCenter" binding:"omitempty,max=100"`
 	DataClassification string     `json:"dataClassification" binding:"omitempty,oneof=public internal confidential restricted"`
-	NeedsPublicIP      bool       `json:"needsPublicIP"`
-	SourceIPWhitelist  []string   `json:"sourceIPWhitelist" binding:"omitempty"`
+	NeedsPublicIP      bool       `json:"needsPublicIp"`
+	SourceIPWhitelist  []string   `json:"sourceIpWhitelist" binding:"omitempty"`
 	ExpireAt           *time.Time `json:"expireAt" binding:"omitempty"`
 	ComplianceAck      bool       `json:"complianceAck"`
 }
@@ -44,10 +44,10 @@ type UpdateServiceRequestRequest struct {
 
 	CostCenter         string     `json:"costCenter" binding:"omitempty,max=100"`
 	DataClassification string     `json:"dataClassification" binding:"omitempty,oneof=public internal confidential restricted"`
-	NeedsPublicIP      bool       `json:"needsPublicIP"`
-	SourceIPWhitelist  []string   `json:"sourceIPWhitelist" binding:"omitempty"`
+	NeedsPublicIP      *bool      `json:"needsPublicIp"`
+	SourceIPWhitelist  []string   `json:"sourceIpWhitelist" binding:"omitempty"`
 	ExpireAt           *time.Time `json:"expireAt" binding:"omitempty"`
-	ComplianceAck      bool       `json:"complianceAck"`
+	ComplianceAck      *bool      `json:"complianceAck"`
 }
 
 // GetServiceCatalogsRequest 获取服务目录请求
@@ -93,15 +93,22 @@ type ServiceRequestResponse struct {
 
 	CostCenter         string     `json:"costCenter,omitempty"`
 	DataClassification string     `json:"dataClassification,omitempty"`
-	NeedsPublicIP      bool       `json:"needsPublicIP"`
-	SourceIPWhitelist  []string   `json:"sourceIPWhitelist,omitempty"`
+	NeedsPublicIP      bool       `json:"needsPublicIp"`
+	SourceIPWhitelist  []string   `json:"sourceIpWhitelist,omitempty"`
 	ExpireAt           *time.Time `json:"expireAt,omitempty"`
 	ComplianceAck      bool       `json:"complianceAck"`
 
-	CurrentLevel int       `json:"currentLevel"`
-	TotalLevels  int       `json:"totalLevels"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
+	CurrentLevel   int        `json:"currentLevel"`
+	TotalLevels    int        `json:"totalLevels"`
+	Version        int        `json:"version"`
+	ProcessorID    *int       `json:"processorId,omitempty"`
+	ApprovedAt     *time.Time `json:"approvedAt,omitempty"`
+	StartedAt      *time.Time `json:"startedAt,omitempty"`
+	CompletedAt    *time.Time `json:"completedAt,omitempty"`
+	CompletionNote string     `json:"completionNote,omitempty"`
+	LastError      string     `json:"lastError,omitempty"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
 
 	Approvals []ServiceRequestApprovalResponse `json:"approvals,omitempty"`
 	Catalog   *ServiceCatalogResponse          `json:"catalog,omitempty"`

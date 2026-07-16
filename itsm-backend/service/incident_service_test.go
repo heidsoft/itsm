@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
+	"itsm-backend/ent/problem"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -82,6 +83,8 @@ func TestIncidentService_CreateIncident_Success(t *testing.T) {
 	assert.Equal(t, req.Priority, response.Priority)
 	assert.Equal(t, req.Severity, response.Severity)
 	assert.Equal(t, "new", response.Status)
+	assert.Nil(t, response.AssigneeID)
+	assert.Nil(t, response.ConfigurationItemID)
 	assert.NotEmpty(t, response.IncidentNumber)
 	assert.Contains(t, response.IncidentNumber, "INC-")
 	assert.Equal(t, testTenant.ID, response.TenantID)
@@ -125,6 +128,30 @@ func TestIncidentService_CreateIncident_WithOptionalFields(t *testing.T) {
 	assert.Equal(t, "security", response.Category)
 	assert.NotNil(t, response.AssigneeID)
 	assert.Equal(t, assignee.ID, *response.AssigneeID)
+}
+
+func TestIncidentService_CreateIncidentRejectsCrossTenantAssigneeAtomically(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenantA, err := createIncidentTestTenant(ctx, client, "create-boundary-a")
+	require.NoError(t, err)
+	tenantB, err := createIncidentTestTenant(ctx, client, "create-boundary-b")
+	require.NoError(t, err)
+	reporter, err := createIncidentTestUser(ctx, client, tenantA.ID, "create-boundary-a")
+	require.NoError(t, err)
+	foreignAssignee, err := createIncidentTestUser(ctx, client, tenantB.ID, "create-boundary-b")
+	require.NoError(t, err)
+
+	_, err = service.CreateIncident(ctx, &dto.CreateIncidentRequest{
+		Title: "Cross tenant assignment", AssigneeID: &foreignAssignee.ID,
+	}, tenantA.ID, reporter.ID)
+	require.ErrorContains(t, err, "assignee not found or inactive")
+	count, err := client.Incident.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, count)
+	eventCount, err := client.IncidentEvent.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, eventCount)
 }
 
 // ==================== 获取事件测试 ====================
@@ -641,6 +668,121 @@ func TestIncidentService_UpdateIncident_StatusTransition(t *testing.T) {
 	})
 }
 
+func TestIncidentService_DedicatedLifecyclePersistsAuditAndTimestamps(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenant, err := createIncidentTestTenant(ctx, client, "dedicated-lifecycle")
+	require.NoError(t, err)
+	user, err := createIncidentTestUser(ctx, client, tenant.ID, "dedicated-lifecycle")
+	require.NoError(t, err)
+	entity, err := client.Incident.Create().
+		SetTitle("Lifecycle incident").
+		SetStatus("in_progress").
+		SetPriority("high").
+		SetSeverity("high").
+		SetIncidentNumber("INC-LIFECYCLE-001").
+		SetReporterID(user.ID).
+		SetTenantID(tenant.ID).
+		SetDetectedAt(time.Now().Add(-time.Hour)).
+		Save(ctx)
+	require.NoError(t, err)
+
+	require.NoError(t, service.ResolveIncident(ctx, entity.ID, user.ID, tenant.ID, "Restarted affected service", "Memory leak"))
+	resolved, err := client.Incident.Get(ctx, entity.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "resolved", resolved.Status)
+	assert.False(t, resolved.ResolvedAt.IsZero())
+	assert.Equal(t, "Memory leak", resolved.RootCause["rootCause"])
+	require.NotEmpty(t, resolved.ResolutionSteps)
+	assert.Equal(t, entity.Version+1, resolved.Version)
+
+	require.NoError(t, service.CloseIncident(ctx, entity.ID, user.ID, tenant.ID, "Observed stable for 30 minutes"))
+	closed, err := client.Incident.Get(ctx, entity.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "closed", closed.Status)
+	assert.False(t, closed.ClosedAt.IsZero())
+	assert.Equal(t, resolved.Version+1, closed.Version)
+	events, err := client.IncidentEvent.Query().Where(incidentevent.IncidentIDEQ(entity.ID)).All(ctx)
+	require.NoError(t, err)
+	assert.Len(t, events, 2)
+}
+
+func TestIncidentService_ResolveRequiresResolutionAndStatusMachineFailsClosed(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenant, err := createIncidentTestTenant(ctx, client, "resolution-required")
+	require.NoError(t, err)
+	user, err := createIncidentTestUser(ctx, client, tenant.ID, "resolution-required")
+	require.NoError(t, err)
+	entity, err := client.Incident.Create().
+		SetTitle("Resolution required").
+		SetStatus("in_progress").
+		SetPriority("medium").
+		SetSeverity("medium").
+		SetIncidentNumber("INC-RESOLUTION-REQUIRED").
+		SetReporterID(user.ID).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	err = service.ResolveIncident(ctx, entity.ID, user.ID, tenant.ID, "  ", "")
+	require.ErrorContains(t, err, "resolution is required")
+	assert.False(t, isValidIncidentStatusTransition("legacy", "resolved"))
+	assert.False(t, isValidIncidentStatusTransition("in_progress", "closed"))
+}
+
+func TestRootCauseAnalysisService_ConvertIncidentToProblemTransactionAndTenantIsolation(t *testing.T) {
+	client, _, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenantA, err := createIncidentTestTenant(ctx, client, "convert-a")
+	require.NoError(t, err)
+	tenantB, err := createIncidentTestTenant(ctx, client, "convert-b")
+	require.NoError(t, err)
+	userA, err := createIncidentTestUser(ctx, client, tenantA.ID, "convert-a")
+	require.NoError(t, err)
+	userB, err := createIncidentTestUser(ctx, client, tenantB.ID, "convert-b")
+	require.NoError(t, err)
+	incidentEntity, err := client.Incident.Create().
+		SetTitle("Repeated API outage").
+		SetDescription("API repeatedly becomes unavailable").
+		SetStatus("resolved").
+		SetPriority("critical").
+		SetSeverity("critical").
+		SetCategory("application").
+		SetIncidentNumber("INC-CONVERT-001").
+		SetReporterID(userA.ID).
+		SetTenantID(tenantA.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	rootCauseService := NewRootCauseAnalysisService(client)
+
+	_, err = rootCauseService.CreateProblemFromIncident(
+		ctx, incidentEntity.ID, userB.ID, tenantB.ID, &dto.ConvertIncidentToProblemRequest{},
+	)
+	require.ErrorContains(t, err, "incident not found")
+	count, err := client.Problem.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, count)
+
+	created, err := rootCauseService.CreateProblemFromIncident(
+		ctx, incidentEntity.ID, userA.ID, tenantA.ID,
+		&dto.ConvertIncidentToProblemRequest{
+			Title: "API stability problem", Description: "Recurring API availability degradation", RootCause: "Connection exhaustion",
+		},
+	)
+	require.NoError(t, err)
+	assert.Equal(t, tenantA.ID, created.TenantID)
+	assert.Equal(t, "API stability problem", created.Title)
+	assert.Equal(t, "Connection exhaustion", created.RootCause)
+	linkedIncident, err := client.Problem.Query().Where(problem.IDEQ(created.ID)).QueryIncidents().Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, incidentEntity.ID, linkedIncident.ID)
+	events, err := client.IncidentEvent.Query().Where(incidentevent.IncidentIDEQ(incidentEntity.ID)).All(ctx)
+	require.NoError(t, err)
+	require.Len(t, events, 1)
+	assert.Equal(t, tenantA.ID, events[0].TenantID)
+}
+
 // ==================== 删除事件测试 ====================
 
 func TestIncidentService_DeleteIncident_Success(t *testing.T) {
@@ -683,17 +825,19 @@ func TestIncidentService_DeleteIncident_Success(t *testing.T) {
 	err = service.DeleteIncident(ctx, testIncident.ID, testTenant.ID)
 	require.NoError(t, err)
 
-	// 验证已删除
-	_, err = client.Incident.Get(ctx, testIncident.ID)
-	require.Error(t, err)
-	assert.True(t, ent.IsNotFound(err))
+	// 验证已软删除，标准查询不可见但审计数据仍保留
+	stored, err := client.Incident.Get(ctx, testIncident.ID)
+	require.NoError(t, err)
+	require.NotNil(t, stored.DeletedAt)
+	_, err = service.GetIncident(ctx, testIncident.ID, testTenant.ID)
+	require.ErrorContains(t, err, "incident not found")
 
-	// 验证关联的事件记录也被删除
+	// 审计事件必须保留
 	events, err := client.IncidentEvent.Query().
 		Where(incidentevent.IncidentIDEQ(testIncident.ID)).
 		All(ctx)
 	require.NoError(t, err)
-	assert.Empty(t, events)
+	assert.Len(t, events, 1)
 }
 
 func TestIncidentService_DeleteIncident_NotFound(t *testing.T) {

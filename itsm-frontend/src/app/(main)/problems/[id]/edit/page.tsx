@@ -119,7 +119,7 @@ export default function ProblemEditPage() {
               >
                 <Select placeholder="请选择状态">
                   <Option value="open">待处理</Option>
-                  <Option value="in_progress">处理中</Option>
+                  <Option value="investigating">调查中</Option>
                   <Option value="resolved">已解决</Option>
                   <Option value="closed">已关闭</Option>
                 </Select>

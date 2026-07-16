@@ -10,8 +10,10 @@ export type ChangeStatus =
   | 'pending'
   | 'approved'
   | 'rejected'
+  | 'scheduled'
   | 'in_progress'
   | 'completed'
+  | 'failed'
   | 'rolled_back'
   | 'cancelled';
 

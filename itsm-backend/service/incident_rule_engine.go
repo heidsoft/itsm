@@ -7,8 +7,9 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/incident"
+	incidentpkg "itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentrule"
+	"itsm-backend/ent/incidentruleexecution"
 
 	"go.uber.org/zap"
 )
@@ -249,6 +250,21 @@ func (a *MetricCollectionAction) Execute(ctx context.Context, incident *ent.Inci
 // ExecuteRule 执行规则
 func (e *IncidentRuleEngine) ExecuteRule(ctx context.Context, rule *ent.IncidentRule, incident *ent.Incident, tenantID int) error {
 	e.logger.Infow("Executing incident rule", "rule_id", rule.ID, "incident_id", incident.ID)
+	if rule.TenantID != tenantID || incident.TenantID != tenantID {
+		return fmt.Errorf("rule or incident does not belong to current tenant")
+	}
+	if !rule.IsActive {
+		return fmt.Errorf("incident rule is disabled")
+	}
+	activeIncident, err := e.client.Incident.Query().
+		Where(incidentpkg.IDEQ(incident.ID), incidentpkg.TenantIDEQ(tenantID), incidentpkg.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to validate incident: %w", err)
+	}
+	if !activeIncident {
+		return fmt.Errorf("incident not found")
+	}
 
 	// 记录规则执行开始
 	execution, err := e.client.IncidentRuleExecution.Create().
@@ -273,7 +289,7 @@ func (e *IncidentRuleEngine) ExecuteRule(ctx context.Context, rule *ent.Incident
 	conditions, err := e.parseConditions(rule.Conditions)
 	if err != nil {
 		e.logger.Errorw("Failed to parse rule conditions", "error", err)
-		e.updateExecutionStatus(ctx, execution.ID, "failed", fmt.Sprintf("Failed to parse conditions: %v", err))
+		e.updateExecutionStatus(ctx, execution.ID, tenantID, "failed", fmt.Sprintf("Failed to parse conditions: %v", err))
 		return err
 	}
 
@@ -283,7 +299,7 @@ func (e *IncidentRuleEngine) ExecuteRule(ctx context.Context, rule *ent.Incident
 		met, err := condition.Evaluate(ctx, incident)
 		if err != nil {
 			e.logger.Errorw("Failed to evaluate condition", "error", err)
-			e.updateExecutionStatus(ctx, execution.ID, "failed", fmt.Sprintf("Failed to evaluate condition: %v", err))
+			e.updateExecutionStatus(ctx, execution.ID, tenantID, "failed", fmt.Sprintf("Failed to evaluate condition: %v", err))
 			return err
 		}
 		if !met {
@@ -294,7 +310,7 @@ func (e *IncidentRuleEngine) ExecuteRule(ctx context.Context, rule *ent.Incident
 
 	if !allConditionsMet {
 		e.logger.Infow("Rule conditions not met", "rule_id", rule.ID, "incident_id", incident.ID)
-		e.updateExecutionStatus(ctx, execution.ID, "skipped", "Rule conditions not met")
+		e.updateExecutionStatus(ctx, execution.ID, tenantID, "skipped", "Rule conditions not met")
 		return nil
 	}
 
@@ -302,11 +318,12 @@ func (e *IncidentRuleEngine) ExecuteRule(ctx context.Context, rule *ent.Incident
 	actions, err := e.parseActions(rule.Actions)
 	if err != nil {
 		e.logger.Errorw("Failed to parse rule actions", "error", err)
-		e.updateExecutionStatus(ctx, execution.ID, "failed", fmt.Sprintf("Failed to parse actions: %v", err))
+		e.updateExecutionStatus(ctx, execution.ID, tenantID, "failed", fmt.Sprintf("Failed to parse actions: %v", err))
 		return err
 	}
 
 	var executionResults []map[string]interface{}
+	var firstActionErr error
 	for i, action := range actions {
 		e.logger.Infow("Executing action", "rule_id", rule.ID, "action_index", i)
 
@@ -320,6 +337,9 @@ func (e *IncidentRuleEngine) ExecuteRule(ctx context.Context, rule *ent.Incident
 		if err != nil {
 			e.logger.Errorw("Failed to execute action", "error", err, "action_index", i)
 			result["error"] = err.Error()
+			if firstActionErr == nil {
+				firstActionErr = err
+			}
 		}
 
 		executionResults = append(executionResults, result)
@@ -332,20 +352,30 @@ func (e *IncidentRuleEngine) ExecuteRule(ctx context.Context, rule *ent.Incident
 		"results":          executionResults,
 	}
 
-	err = e.updateExecutionStatus(ctx, execution.ID, "completed", "Rule executed successfully", outputData)
+	executionStatus := "completed"
+	executionResult := "Rule executed successfully"
+	if firstActionErr != nil {
+		executionStatus = "failed"
+		executionResult = "One or more rule actions failed"
+	}
+	err = e.updateExecutionStatus(ctx, execution.ID, tenantID, executionStatus, executionResult, outputData)
 	if err != nil {
 		e.logger.Errorw("Failed to update execution status", "error", err)
 	}
 
 	// 更新规则统计
-	_, err = e.client.IncidentRule.UpdateOneID(rule.ID).
-		SetExecutionCount(rule.ExecutionCount + 1).
+	_, err = e.client.IncidentRule.Update().
+		Where(incidentrule.IDEQ(rule.ID), incidentrule.TenantIDEQ(tenantID)).
+		AddExecutionCount(1).
 		SetLastExecutedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		e.logger.Errorw("Failed to update rule statistics", "error", err)
 	}
 
+	if firstActionErr != nil {
+		return fmt.Errorf("incident rule action failed: %w", firstActionErr)
+	}
 	e.logger.Infow("Rule executed successfully", "rule_id", rule.ID, "incident_id", incident.ID)
 	return nil
 }
@@ -357,8 +387,9 @@ func (e *IncidentRuleEngine) ExecuteRulesForIncident(ctx context.Context, incide
 	// 获取事件
 	incidentEntity, err := e.client.Incident.Query().
 		Where(
-			incident.IDEQ(incidentID),
-			incident.TenantIDEQ(tenantID),
+			incidentpkg.IDEQ(incidentID),
+			incidentpkg.TenantIDEQ(tenantID),
+			incidentpkg.DeletedAtIsNil(),
 		).
 		Only(ctx)
 	if err != nil {
@@ -381,14 +412,17 @@ func (e *IncidentRuleEngine) ExecuteRulesForIncident(ctx context.Context, incide
 	}
 
 	// 执行每个规则
+	var failedRules int
 	for _, rule := range rules {
 		err := e.ExecuteRule(ctx, rule, incidentEntity, tenantID)
 		if err != nil {
+			failedRules++
 			e.logger.Errorw("Failed to execute rule", "error", err, "rule_id", rule.ID)
-			// 继续执行其他规则，不中断
 		}
 	}
-
+	if failedRules > 0 {
+		return fmt.Errorf("%d incident rules failed", failedRules)
+	}
 	return nil
 }
 
@@ -411,8 +445,9 @@ func (e *IncidentRuleEngine) ExecuteRulesForAllIncidents(ctx context.Context, te
 	// 获取所有需要处理的事件
 	incidents, err := e.client.Incident.Query().
 		Where(
-			incident.TenantIDEQ(tenantID),
-			incident.StatusIn("new", "in_progress"),
+			incidentpkg.TenantIDEQ(tenantID),
+			incidentpkg.DeletedAtIsNil(),
+			incidentpkg.StatusIn("new", "acknowledged", "assigned", "triaged", "in_progress", "on_hold", "escalated"),
 		).
 		All(ctx)
 	if err != nil {
@@ -423,10 +458,12 @@ func (e *IncidentRuleEngine) ExecuteRulesForAllIncidents(ctx context.Context, te
 	e.logger.Infow("Processing incidents", "count", len(incidents))
 
 	// 为每个事件执行规则
+	var failedExecutions int
 	for _, incidentEntity := range incidents {
 		for _, rule := range rules {
 			err := e.ExecuteRule(ctx, rule, incidentEntity, tenantID)
 			if err != nil {
+				failedExecutions++
 				e.logger.Errorw("Failed to execute rule", "error", err,
 					"rule_id", rule.ID, "incident_id", incidentEntity.ID)
 				// 继续执行其他规则，不中断
@@ -435,6 +472,9 @@ func (e *IncidentRuleEngine) ExecuteRulesForAllIncidents(ctx context.Context, te
 	}
 
 	e.logger.Infow("Batch rule execution completed", "incidents_processed", len(incidents))
+	if failedExecutions > 0 {
+		return fmt.Errorf("%d incident rule executions failed", failedExecutions)
+	}
 	return nil
 }
 
@@ -445,29 +485,41 @@ func (e *IncidentRuleEngine) parseConditions(conditions map[string]interface{}) 
 	for conditionType, conditionData := range conditions {
 		switch conditionType {
 		case "priority":
-			if priorities, ok := conditionData.([]string); ok {
-				parsedConditions = append(parsedConditions, &PriorityCondition{Priorities: priorities})
+			priorities, err := toStringSlice(conditionData)
+			if err != nil {
+				return nil, fmt.Errorf("invalid priority condition: %w", err)
 			}
+			parsedConditions = append(parsedConditions, &PriorityCondition{Priorities: priorities})
 		case "severity":
-			if severities, ok := conditionData.([]string); ok {
-				parsedConditions = append(parsedConditions, &SeverityCondition{Severities: severities})
+			severities, err := toStringSlice(conditionData)
+			if err != nil {
+				return nil, fmt.Errorf("invalid severity condition: %w", err)
 			}
+			parsedConditions = append(parsedConditions, &SeverityCondition{Severities: severities})
 		case "status":
-			if statuses, ok := conditionData.([]string); ok {
-				parsedConditions = append(parsedConditions, &StatusCondition{Statuses: statuses})
+			statuses, err := toStringSlice(conditionData)
+			if err != nil {
+				return nil, fmt.Errorf("invalid status condition: %w", err)
 			}
+			parsedConditions = append(parsedConditions, &StatusCondition{Statuses: statuses})
 		case "category":
-			if categories, ok := conditionData.([]string); ok {
-				parsedConditions = append(parsedConditions, &CategoryCondition{Categories: categories})
+			categories, err := toStringSlice(conditionData)
+			if err != nil {
+				return nil, fmt.Errorf("invalid category condition: %w", err)
 			}
+			parsedConditions = append(parsedConditions, &CategoryCondition{Categories: categories})
 		case "time":
-			if timeData, ok := conditionData.(map[string]interface{}); ok {
-				condition, err := e.parseTimeCondition(timeData)
-				if err != nil {
-					return nil, err
-				}
-				parsedConditions = append(parsedConditions, condition)
+			timeData, ok := conditionData.(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("invalid time condition")
 			}
+			condition, err := e.parseTimeCondition(timeData)
+			if err != nil {
+				return nil, err
+			}
+			parsedConditions = append(parsedConditions, condition)
+		default:
+			return nil, fmt.Errorf("unsupported condition type: %s", conditionType)
 		}
 	}
 
@@ -544,6 +596,8 @@ func (e *IncidentRuleEngine) parseActions(actions []map[string]interface{}) ([]R
 				return nil, err
 			}
 			parsedActions = append(parsedActions, action)
+		default:
+			return nil, fmt.Errorf("unsupported action type: %s", actionType)
 		}
 	}
 
@@ -552,13 +606,13 @@ func (e *IncidentRuleEngine) parseActions(actions []map[string]interface{}) ([]R
 
 // parseEscalationAction 解析升级动作
 func (e *IncidentRuleEngine) parseEscalationAction(actionData map[string]interface{}) (*EscalationAction, error) {
-	level, ok := actionData["level"].(int)
+	level, ok := toInt(actionData["level"])
 	if !ok {
 		return nil, fmt.Errorf("escalation level is required")
 	}
 
 	reason, _ := actionData["reason"].(string)
-	notifyUsers, _ := actionData["notify_users"].([]int)
+	notifyUsers, _ := toIntSlice(actionData["notify_users"])
 	autoAssign, _ := actionData["auto_assign"].(bool)
 
 	return &EscalationAction{
@@ -566,13 +620,15 @@ func (e *IncidentRuleEngine) parseEscalationAction(actionData map[string]interfa
 		Reason:      reason,
 		NotifyUsers: notifyUsers,
 		AutoAssign:  autoAssign,
+		client:      e.client,
+		logger:      e.logger,
 	}, nil
 }
 
 // parseNotificationAction 解析通知动作
 func (e *IncidentRuleEngine) parseNotificationAction(actionData map[string]interface{}) (*NotificationAction, error) {
-	channels, _ := actionData["channels"].([]string)
-	recipients, _ := actionData["recipients"].([]string)
+	channels, _ := toStringSlice(actionData["channels"])
+	recipients, _ := toStringSlice(actionData["recipients"])
 	message, _ := actionData["message"].(string)
 	severity, _ := actionData["severity"].(string)
 
@@ -594,12 +650,14 @@ func (e *IncidentRuleEngine) parseNotificationAction(actionData map[string]inter
 		Recipients: recipients,
 		Message:    message,
 		Severity:   severity,
+		client:     e.client,
+		logger:     e.logger,
 	}, nil
 }
 
 // parseAssignmentAction 解析分配动作
 func (e *IncidentRuleEngine) parseAssignmentAction(actionData map[string]interface{}) (*AssignmentAction, error) {
-	assigneeID, ok := actionData["assignee_id"].(int)
+	assigneeID, ok := toInt(actionData["assignee_id"])
 	if !ok {
 		return nil, fmt.Errorf("assignee_id is required for assignment action")
 	}
@@ -609,6 +667,8 @@ func (e *IncidentRuleEngine) parseAssignmentAction(actionData map[string]interfa
 	return &AssignmentAction{
 		AssigneeID: assigneeID,
 		Reason:     reason,
+		client:     e.client,
+		logger:     e.logger,
 	}, nil
 }
 
@@ -624,6 +684,8 @@ func (e *IncidentRuleEngine) parseStatusChangeAction(actionData map[string]inter
 	return &StatusChangeAction{
 		Status: status,
 		Reason: reason,
+		client: e.client,
+		logger: e.logger,
 	}, nil
 }
 
@@ -645,7 +707,7 @@ func (e *IncidentRuleEngine) parseMetricCollectionAction(actionData map[string]i
 	}
 
 	unit, _ := actionData["unit"].(string)
-	tags, _ := actionData["tags"].(map[string]string)
+	tags := toStringMap(actionData["tags"])
 
 	return &MetricCollectionAction{
 		MetricType:  metricType,
@@ -653,12 +715,84 @@ func (e *IncidentRuleEngine) parseMetricCollectionAction(actionData map[string]i
 		MetricValue: metricValue,
 		Unit:        unit,
 		Tags:        tags,
+		client:      e.client,
+		logger:      e.logger,
 	}, nil
 }
 
+func toInt(value interface{}) (int, bool) {
+	switch typed := value.(type) {
+	case int:
+		return typed, true
+	case int64:
+		return int(typed), true
+	case float64:
+		if typed == float64(int(typed)) {
+			return int(typed), true
+		}
+	}
+	return 0, false
+}
+
+func toStringSlice(value interface{}) ([]string, error) {
+	switch typed := value.(type) {
+	case nil:
+		return nil, nil
+	case []string:
+		return typed, nil
+	case []interface{}:
+		result := make([]string, 0, len(typed))
+		for _, item := range typed {
+			text, ok := item.(string)
+			if !ok {
+				return nil, fmt.Errorf("expected string array")
+			}
+			result = append(result, text)
+		}
+		return result, nil
+	default:
+		return nil, fmt.Errorf("expected string array")
+	}
+}
+
+func toIntSlice(value interface{}) ([]int, error) {
+	items, ok := value.([]interface{})
+	if !ok {
+		if typed, ok := value.([]int); ok {
+			return typed, nil
+		}
+		return nil, nil
+	}
+	result := make([]int, 0, len(items))
+	for _, item := range items {
+		value, ok := toInt(item)
+		if !ok {
+			return nil, fmt.Errorf("expected integer array")
+		}
+		result = append(result, value)
+	}
+	return result, nil
+}
+
+func toStringMap(value interface{}) map[string]string {
+	if typed, ok := value.(map[string]string); ok {
+		return typed
+	}
+	result := make(map[string]string)
+	if typed, ok := value.(map[string]interface{}); ok {
+		for key, item := range typed {
+			if text, ok := item.(string); ok {
+				result[key] = text
+			}
+		}
+	}
+	return result
+}
+
 // updateExecutionStatus 更新执行状态
-func (e *IncidentRuleEngine) updateExecutionStatus(ctx context.Context, executionID int, status, result string, outputData ...map[string]interface{}) error {
+func (e *IncidentRuleEngine) updateExecutionStatus(ctx context.Context, executionID, tenantID int, status, result string, outputData ...map[string]interface{}) error {
 	updateQuery := e.client.IncidentRuleExecution.UpdateOneID(executionID).
+		Where(incidentruleexecution.TenantIDEQ(tenantID), incidentruleexecution.StatusEQ("running")).
 		SetStatus(status).
 		SetResult(result).
 		SetCompletedAt(time.Now()).

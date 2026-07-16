@@ -322,6 +322,20 @@ func (_c *ServiceRequestCreate) SetNillableLastError(v *string) *ServiceRequestC
 	return _c
 }
 
+// SetVersion sets the "version" field.
+func (_c *ServiceRequestCreate) SetVersion(v int) *ServiceRequestCreate {
+	_c.mutation.SetVersion(v)
+	return _c
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_c *ServiceRequestCreate) SetNillableVersion(v *int) *ServiceRequestCreate {
+	if v != nil {
+		_c.SetVersion(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *ServiceRequestCreate) SetCreatedAt(v time.Time) *ServiceRequestCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -346,6 +360,20 @@ func (_c *ServiceRequestCreate) SetUpdatedAt(v time.Time) *ServiceRequestCreate 
 func (_c *ServiceRequestCreate) SetNillableUpdatedAt(v *time.Time) *ServiceRequestCreate {
 	if v != nil {
 		_c.SetUpdatedAt(*v)
+	}
+	return _c
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *ServiceRequestCreate) SetDeletedAt(v time.Time) *ServiceRequestCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *ServiceRequestCreate) SetNillableDeletedAt(v *time.Time) *ServiceRequestCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
 	}
 	return _c
 }
@@ -409,6 +437,10 @@ func (_c *ServiceRequestCreate) defaults() {
 		v := servicerequest.DefaultTotalLevels
 		_c.mutation.SetTotalLevels(v)
 	}
+	if _, ok := _c.mutation.Version(); !ok {
+		v := servicerequest.DefaultVersion
+		_c.mutation.SetVersion(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := servicerequest.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -462,6 +494,14 @@ func (_c *ServiceRequestCreate) check() error {
 	}
 	if _, ok := _c.mutation.TotalLevels(); !ok {
 		return &ValidationError{Name: "total_levels", err: errors.New(`ent: missing required field "ServiceRequest.total_levels"`)}
+	}
+	if _, ok := _c.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "ServiceRequest.version"`)}
+	}
+	if v, ok := _c.mutation.Version(); ok {
+		if err := servicerequest.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.version": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ServiceRequest.created_at"`)}
@@ -595,6 +635,10 @@ func (_c *ServiceRequestCreate) createSpec() (*ServiceRequest, *sqlgraph.CreateS
 		_spec.SetField(servicerequest.FieldLastError, field.TypeString, value)
 		_node.LastError = value
 	}
+	if value, ok := _c.mutation.Version(); ok {
+		_spec.SetField(servicerequest.FieldVersion, field.TypeInt, value)
+		_node.Version = value
+	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(servicerequest.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -602,6 +646,10 @@ func (_c *ServiceRequestCreate) createSpec() (*ServiceRequest, *sqlgraph.CreateS
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(servicerequest.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(servicerequest.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
 	}
 	return _node, _spec
 }

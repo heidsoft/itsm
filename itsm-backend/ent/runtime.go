@@ -3081,12 +3081,18 @@ func init() {
 	servicerequestDescTotalLevels := servicerequestFields[15].Descriptor()
 	// servicerequest.DefaultTotalLevels holds the default value on creation for the total_levels field.
 	servicerequest.DefaultTotalLevels = servicerequestDescTotalLevels.Default.(int)
+	// servicerequestDescVersion is the schema descriptor for version field.
+	servicerequestDescVersion := servicerequestFields[25].Descriptor()
+	// servicerequest.DefaultVersion holds the default value on creation for the version field.
+	servicerequest.DefaultVersion = servicerequestDescVersion.Default.(int)
+	// servicerequest.VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	servicerequest.VersionValidator = servicerequestDescVersion.Validators[0].(func(int) error)
 	// servicerequestDescCreatedAt is the schema descriptor for created_at field.
-	servicerequestDescCreatedAt := servicerequestFields[25].Descriptor()
+	servicerequestDescCreatedAt := servicerequestFields[26].Descriptor()
 	// servicerequest.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servicerequest.DefaultCreatedAt = servicerequestDescCreatedAt.Default.(func() time.Time)
 	// servicerequestDescUpdatedAt is the schema descriptor for updated_at field.
-	servicerequestDescUpdatedAt := servicerequestFields[26].Descriptor()
+	servicerequestDescUpdatedAt := servicerequestFields[27].Descriptor()
 	// servicerequest.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	servicerequest.DefaultUpdatedAt = servicerequestDescUpdatedAt.Default.(func() time.Time)
 	// servicerequest.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

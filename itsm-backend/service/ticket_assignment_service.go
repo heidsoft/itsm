@@ -74,10 +74,13 @@ type RoutingRule struct {
 // AssignTicket 智能分配工单
 func (s *TicketAssignmentService) AssignTicket(ctx context.Context, req *AssignmentRequest) (*AssignmentResponse, error) {
 	// 1. 验证工单是否存在
-	_, err := s.client.Ticket.Get(ctx, req.TicketID)
+	ticketEntity, err := s.client.Ticket.Query().
+		Where(ticket.IDEQ(req.TicketID), ticket.TenantIDEQ(req.TenantID), ticket.DeletedAtIsNil()).
+		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取工单失败: %w", err)
 	}
+	_ = ticketEntity
 
 	// 2. 如果指定了首选用户，直接分配
 	if req.PreferredUser != nil {
@@ -135,7 +138,7 @@ func (s *TicketAssignmentService) autoAssignTicket(ctx context.Context, req *Ass
 		AssignmentType: "auto",
 		Reason:         fmt.Sprintf("基于技能匹配和工作负载自动分配，评分: %.2f", bestUser.Score),
 		Score:          bestUser.Score,
-		Alternatives:   s.getAlternativeUserIDs(availableUsers[1:5]), // 前5个备选
+		Alternatives:   s.getAlternativeUserIDs(availableUsers[1:min(len(availableUsers), 5)]),
 	}, nil
 }
 
@@ -410,17 +413,16 @@ func (s *TicketAssignmentService) checkUserCategoryAccess(ctx context.Context, u
 // assignToSpecificUser 分配给指定用户
 func (s *TicketAssignmentService) assignToSpecificUser(ctx context.Context, req *AssignmentRequest, userID int) (*AssignmentResponse, error) {
 	// 检查用户是否存在且可用
-	userEntity, err := s.client.User.Get(ctx, userID)
+	_, err := s.client.User.Query().
+		Where(user.IDEQ(userID), user.TenantIDEQ(req.TenantID), user.ActiveEQ(true)).
+		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("用户不存在: %w", err)
 	}
 
-	if !userEntity.Active {
-		return nil, fmt.Errorf("用户状态不可用: 非活跃状态")
-	}
-
 	// 执行分配
 	err = s.client.Ticket.UpdateOneID(req.TicketID).
+		Where(ticket.TenantIDEQ(req.TenantID), ticket.DeletedAtIsNil()).
 		SetAssigneeID(userID).
 		Exec(ctx)
 	if err != nil {

@@ -318,6 +318,21 @@ func TestRepository_Update_NotFound(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestRepository_Update_RejectsStaleVersion(t *testing.T) {
+	fx := newRepoFixture(t)
+	defer fx.client.Close()
+	created, err := fx.repo.Create(fx.ctx, &CreateParams{
+		Title: "Original", Priority: PriorityMedium, Type: TypeIncident, RequesterID: fx.user.ID,
+	}, fx.tenant.ID)
+	require.NoError(t, err)
+	title := "Must not overwrite"
+	_, err = fx.repo.Update(fx.ctx, created.ID, &UpdateParams{Title: &title, Version: created.Version + 1}, fx.tenant.ID)
+	require.ErrorContains(t, err, "version conflict")
+	unchanged, err := fx.repo.GetByID(fx.ctx, created.ID, fx.tenant.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "Original", unchanged.Title)
+}
+
 // =====================================================================
 // Delete
 // =====================================================================
@@ -421,6 +436,36 @@ func TestRepository_List_TenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 0, result.Total)
 	assert.Len(t, result.Data, 0)
+}
+
+func TestRepository_List_ParentTypeAndOverdueFilters(t *testing.T) {
+	fx := newRepoFixture(t)
+	defer fx.client.Close()
+	parent, err := fx.repo.Create(fx.ctx, &CreateParams{
+		Title: "Parent", Priority: PriorityMedium, Type: TypeIncident, RequesterID: fx.user.ID,
+	}, fx.tenant.ID)
+	require.NoError(t, err)
+	overdue, err := fx.repo.Create(fx.ctx, &CreateParams{
+		Title: "Overdue problem", Priority: PriorityHigh, Type: TypeProblem, RequesterID: fx.user.ID, ParentTicketID: &parent.ID,
+	}, fx.tenant.ID)
+	require.NoError(t, err)
+	resolved, err := fx.repo.Create(fx.ctx, &CreateParams{
+		Title: "Resolved problem", Priority: PriorityHigh, Type: TypeProblem, RequesterID: fx.user.ID, ParentTicketID: &parent.ID,
+	}, fx.tenant.ID)
+	require.NoError(t, err)
+	past := time.Now().Add(-time.Hour)
+	_, err = fx.client.Ticket.UpdateOneID(overdue.ID).SetSLAResolutionDeadline(past).Save(fx.ctx)
+	require.NoError(t, err)
+	_, err = fx.client.Ticket.UpdateOneID(resolved.ID).SetSLAResolutionDeadline(past).SetStatus(string(StatusResolved)).Save(fx.ctx)
+	require.NoError(t, err)
+
+	problemType := TypeProblem
+	result, err := fx.repo.List(fx.ctx, fx.tenant.ID, &FilterParams{
+		Type: &problemType, ParentTicketID: &parent.ID, IsOverdue: true,
+	}, &base.QueryParams{})
+	require.NoError(t, err)
+	require.Len(t, result.Data, 1)
+	assert.Equal(t, overdue.ID, result.Data[0].ID)
 }
 
 // =====================================================================

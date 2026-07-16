@@ -19,15 +19,15 @@ type CreateTicketRequest struct {
 	Description           string                 `json:"description" binding:"required,min=0,max=5000"`
 	Priority              string                 `json:"priority" binding:"required,oneof=low medium high critical urgent"`
 	Type                  string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"` // 工单类型
-	TypeID                string                 `json:"typeId,omitempty"`                                                              
-	Category              string                 `json:"category"`                                                                      // 分类名称（可选，前端传入）
-	CategoryID            *int                   `json:"categoryId,omitempty"`                                                          // 分类ID（优先使用）
-	TemplateID            *int                   `json:"templateId,omitempty"`                                                          // 模板ID
-	RequesterID           int                    `json:"requesterId" binding:"omitempty"`                                               // 从认证上下文中获取，前端可不传
+	TypeID                string                 `json:"typeId,omitempty"`
+	Category              string                 `json:"category"`                        // 分类名称（可选，前端传入）
+	CategoryID            *int                   `json:"categoryId,omitempty"`            // 分类ID（优先使用）
+	TemplateID            *int                   `json:"templateId,omitempty"`            // 模板ID
+	RequesterID           int                    `json:"requesterId" binding:"omitempty"` // 从认证上下文中获取，前端可不传
 	AssigneeID            int                    `json:"assigneeId"`
 	ParentTicketID        *int                   `json:"parentTicketId,omitempty"`
 	TagIDs                []int                  `json:"tagIds,omitempty"` // 标签ID列表
-	Tags                  []string               `json:"tags"`             
+	Tags                  []string               `json:"tags"`
 	FormFields            map[string]interface{} `json:"formFields"`
 	Attachments           []string               `json:"attachments"`
 	WorkflowDefinitionKey string                 `json:"workflowDefinitionKey"` // 工作流定义Key（可选，优先级高于自动选择）
@@ -41,6 +41,7 @@ type UpdateTicketRequest struct {
 	Status      string                 `json:"status" binding:"omitempty,oneof=new open assigned in_progress pending resolved closed cancelled approved rejected"`
 	Type        string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"`
 	Category    string                 `json:"category" binding:"omitempty"`
+	CategoryID  *int                   `json:"categoryId,omitempty"`
 	AssigneeID  int                    `json:"assigneeId"`
 	RequesterID int                    `json:"requesterId"` // 创建人ID
 	Tags        []string               `json:"tags"`
@@ -48,7 +49,7 @@ type UpdateTicketRequest struct {
 	FormFields  map[string]interface{} `json:"formFields"`
 	UserID      int                    `json:"userId" binding:"omitempty"` // 操作用户ID (后端自动填充)
 	Version     int                    `json:"version"`                    // 版本号（乐观锁）
-	Force       bool                   `json:"force"`                      // 是否强制更新（忽略版本检查）
+	Force       bool                   `json:"-"`                          // 仅限内部受信调用，禁止客户端绕过乐观锁
 }
 
 // ListTicketsRequest 获取工单列表请求

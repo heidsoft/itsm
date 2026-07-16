@@ -211,6 +211,7 @@ func NewApplication() *Application {
 
 	// 控制器依赖
 	incidentRuleEngine := service.NewIncidentRuleEngine(client, sugar)
+	incidentService.SetRuleEngine(incidentRuleEngine)
 	incidentMonitoringService := service.NewIncidentMonitoringService(client, sugar)
 	incidentAlertingService := service.NewIncidentAlertingService(client, sugar)
 	ticketDependencyService := service.NewTicketDependencyService(client, sugar)

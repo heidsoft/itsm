@@ -19,11 +19,20 @@ type ServiceRequest struct {
 	CostCenter         string
 	DataClassification string
 	NeedsPublicIP      bool
+	NeedsPublicIPSet   bool
 	SourceIPWhitelist  []string
 	ExpireAt           *time.Time
 	ComplianceAck      bool
+	ComplianceAckSet   bool
 	CurrentLevel       int
 	TotalLevels        int
+	Version            int
+	ProcessorID        *int
+	ApprovedAt         *time.Time
+	StartedAt          *time.Time
+	CompletedAt        *time.Time
+	CompletionNote     string
+	LastError          string
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 }
@@ -58,12 +67,12 @@ type ListFilters struct {
 // Repository defines the interface for data persistence
 type Repository interface {
 	Create(ctx context.Context, req *ServiceRequest, approvals []*ServiceRequestApproval) (*ServiceRequest, error)
-	Get(ctx context.Context, id int) (*ServiceRequest, error)
-	GetWithApprovals(ctx context.Context, id int) (*ServiceRequest, []*ServiceRequestApproval, error)
+	Get(ctx context.Context, id, tenantID int) (*ServiceRequest, error)
+	GetWithApprovals(ctx context.Context, id, tenantID int) (*ServiceRequest, []*ServiceRequestApproval, error)
 	List(ctx context.Context, tenantID int, filters ListFilters) ([]*ServiceRequest, int, error)
-	UpdateStatus(ctx context.Context, id int, status string) error
+	UpdateStatus(ctx context.Context, req *ServiceRequest, status string, actorID int) error
 	Update(ctx context.Context, req *ServiceRequest) error
-	Delete(ctx context.Context, id int) error
+	Delete(ctx context.Context, req *ServiceRequest) error
 
 	// Approval related
 	GetApproval(ctx context.Context, requestID int, level int) (*ServiceRequestApproval, error)
@@ -71,5 +80,6 @@ type Repository interface {
 	UpdateRequestAndApproval(ctx context.Context, req *ServiceRequest, approval *ServiceRequestApproval) error
 
 	// Pending approvals for approver
-	ListPendingApprovals(ctx context.Context, tenantID int, targetLevel int, requiredStatus string, page, size int) ([]*ServiceRequest, int, error)
+	ListPendingApprovals(ctx context.Context, tenantID int, targetLevel int, requiredStatus, requesterDept string, page, size int) ([]*ServiceRequest, int, error)
+	GetUserContext(ctx context.Context, userID, tenantID int) (department, name string, err error)
 }

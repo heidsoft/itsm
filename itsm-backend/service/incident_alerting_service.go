@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"net/smtp"
 	"os"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/user"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -66,8 +68,7 @@ func (c *EmailChannel) Send(ctx context.Context, alert *dto.IncidentAlertRespons
 	if os.Getenv("GIN_MODE") == "release" || os.Getenv("ENABLE_EMAIL_SENDING") == "true" {
 		if err := smtp.SendMail(addr, auth, c.fromEmail, alert.Recipients, msg); err != nil {
 			c.logger.Errorw("Failed to send email via SMTP", "error", err)
-			// 降级为模拟，以免阻塞流程（实际生产中应返回错误）
-			time.Sleep(100 * time.Millisecond)
+			return fmt.Errorf("failed to send email via SMTP: %w", err)
 		} else {
 			c.logger.Infow("Email sent via SMTP successfully")
 		}
@@ -99,12 +100,11 @@ type SMSChannel struct {
 
 func (c *SMSChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending SMS alert", "alert_id", alert.ID, "recipients", alert.Recipients)
-
-	// 这里应该实现真实的短信发送逻辑
-	// 模拟短信发送
+	if os.Getenv("GIN_MODE") == "release" {
+		return fmt.Errorf("SMS alert provider is not implemented; use a managed connector")
+	}
 	time.Sleep(200 * time.Millisecond)
-
-	c.logger.Infow("SMS alert sent successfully", "alert_id", alert.ID)
+	c.logger.Infow("SMS alert simulated in non-production environment", "alert_id", alert.ID)
 	return nil
 }
 
@@ -125,12 +125,11 @@ type SlackChannel struct {
 
 func (c *SlackChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending Slack alert", "alert_id", alert.ID, "channel", c.channel)
-
-	// 这里应该实现真实的Slack发送逻辑
-	// 模拟Slack发送
+	if os.Getenv("GIN_MODE") == "release" {
+		return fmt.Errorf("Slack alert delivery must use the connector lifecycle")
+	}
 	time.Sleep(150 * time.Millisecond)
-
-	c.logger.Infow("Slack alert sent successfully", "alert_id", alert.ID)
+	c.logger.Infow("Slack alert simulated in non-production environment", "alert_id", alert.ID)
 	return nil
 }
 
@@ -152,12 +151,11 @@ type WebhookChannel struct {
 
 func (c *WebhookChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending webhook alert", "alert_id", alert.ID, "url", c.url)
-
-	// 这里应该实现真实的Webhook发送逻辑
-	// 模拟Webhook发送
+	if os.Getenv("GIN_MODE") == "release" {
+		return fmt.Errorf("webhook alert delivery must use the connector lifecycle")
+	}
 	time.Sleep(100 * time.Millisecond)
-
-	c.logger.Infow("Webhook alert sent successfully", "alert_id", alert.ID)
+	c.logger.Infow("Webhook alert simulated in non-production environment", "alert_id", alert.ID)
 	return nil
 }
 
@@ -172,6 +170,13 @@ func (c *WebhookChannel) IsEnabled() bool {
 // CreateIncidentAlert 创建事件告警
 func (s *IncidentAlertingService) CreateIncidentAlert(ctx context.Context, req *dto.CreateIncidentAlertRequest, tenantID int) (*dto.IncidentAlertResponse, error) {
 	s.logger.Infow("Creating incident alert", "incident_id", req.IncidentID, "type", req.AlertType)
+	if err := s.validateAlertRequest(ctx, req, tenantID); err != nil {
+		return nil, err
+	}
+	triggeredAt := time.Now()
+	if req.TriggeredAt != nil {
+		triggeredAt = *req.TriggeredAt
+	}
 
 	// 创建告警记录
 	alert, err := s.client.IncidentAlert.Create().
@@ -183,7 +188,7 @@ func (s *IncidentAlertingService) CreateIncidentAlert(ctx context.Context, req *
 		SetStatus("active").
 		SetChannels(req.Channels).
 		SetRecipients(req.Recipients).
-		SetTriggeredAt(time.Now()).
+		SetTriggeredAt(triggeredAt).
 		SetMetadata(req.Metadata).
 		SetTenantID(tenantID).
 		SetCreatedAt(time.Now()).
@@ -199,6 +204,36 @@ func (s *IncidentAlertingService) CreateIncidentAlert(ctx context.Context, req *
 
 	s.logger.Infow("Incident alert created successfully", "id", alert.ID)
 	return s.toIncidentAlertResponse(alert), nil
+}
+
+func (s *IncidentAlertingService) validateAlertRequest(ctx context.Context, req *dto.CreateIncidentAlertRequest, tenantID int) error {
+	if req.IncidentID <= 0 {
+		return fmt.Errorf("incident id is required")
+	}
+	exists, err := s.client.Incident.Query().
+		Where(incident.IDEQ(req.IncidentID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to validate incident: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("incident not found")
+	}
+	if strings.TrimSpace(req.AlertType) == "" || strings.TrimSpace(req.AlertName) == "" || strings.TrimSpace(req.Message) == "" {
+		return fmt.Errorf("alert type, name, and message are required")
+	}
+	switch req.Severity {
+	case "", "low", "medium", "high", "critical":
+	default:
+		return fmt.Errorf("invalid alert severity: %s", req.Severity)
+	}
+	allowedChannels := map[string]struct{}{"email": {}, "sms": {}, "slack": {}, "webhook": {}, "in_app": {}}
+	for _, channel := range req.Channels {
+		if _, ok := allowedChannels[channel]; !ok {
+			return fmt.Errorf("unsupported alert channel: %s", channel)
+		}
+	}
+	return nil
 }
 
 // sendAlertNotifications 发送告警通知
@@ -344,35 +379,43 @@ func (s *IncidentAlertingService) getAlertChannels(channelNames []string) []Aler
 
 // createSystemNotification 创建系统通知记录
 func (s *IncidentAlertingService) createSystemNotification(ctx context.Context, alert *ent.IncidentAlert, tenantID int) {
-	// 尝试从 context 获取 userID，如果不存在则使用系统默认ID (0 或 -1)
-	userID := 0
-	if v := ctx.Value("user_id"); v != nil {
-		if id, ok := v.(int); ok {
-			userID = id
-		}
-	}
-
-	_, err := s.client.Notification.Create().
-		SetTitle(alert.AlertName).
-		SetMessage(alert.Message).
-		SetType("incident_alert").
-		SetUserID(userID).
-		SetTenantID(tenantID).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
+	recipients, err := s.client.User.Query().
+		Where(
+			user.TenantIDEQ(tenantID),
+			user.ActiveEQ(true),
+			user.RoleIn(user.RoleAdmin, user.RoleSuperAdmin),
+		).
+		All(ctx)
 	if err != nil {
-		s.logger.Errorw("Failed to create system notification", "error", err)
+		s.logger.Errorw("Failed to resolve in-app alert recipients", "error", err)
+		return
+	}
+	for _, recipient := range recipients {
+		_, err := s.client.Notification.Create().
+			SetTitle(alert.AlertName).
+			SetMessage(alert.Message).
+			SetType("incident_alert").
+			SetUserID(recipient.ID).
+			SetTenantID(tenantID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.logger.Errorw("Failed to create system notification", "error", err, "user_id", recipient.ID)
+		}
 	}
 }
 
 // AcknowledgeAlert 确认告警
 func (s *IncidentAlertingService) AcknowledgeAlert(ctx context.Context, alertID int, userID int, tenantID int) error {
 	s.logger.Infow("Acknowledging alert", "alert_id", alertID, "user_id", userID)
+	if err := s.validateAlertActor(ctx, userID, tenantID); err != nil {
+		return err
+	}
 
 	now := time.Now()
 	alert, err := s.client.IncidentAlert.UpdateOneID(alertID).
-		Where(incidentalert.TenantIDEQ(tenantID)).
+		Where(incidentalert.TenantIDEQ(tenantID), incidentalert.StatusEQ("active")).
 		SetStatus("acknowledged").
 		SetAcknowledgedAt(now).
 		SetAcknowledgedBy(userID).
@@ -387,7 +430,7 @@ func (s *IncidentAlertingService) AcknowledgeAlert(ctx context.Context, alertID 
 	}
 
 	// 记录确认活动
-	s.createAlertEvent(ctx, alert, "acknowledged", fmt.Sprintf("告警已被用户 %d 确认", userID), tenantID)
+	s.createAlertEvent(ctx, alert, "acknowledged", fmt.Sprintf("告警已被用户 %d 确认", userID), userID, tenantID)
 
 	s.logger.Infow("Alert acknowledged successfully", "alert_id", alertID)
 	return nil
@@ -396,10 +439,13 @@ func (s *IncidentAlertingService) AcknowledgeAlert(ctx context.Context, alertID 
 // ResolveAlert 解决告警
 func (s *IncidentAlertingService) ResolveAlert(ctx context.Context, alertID int, userID int, tenantID int) error {
 	s.logger.Infow("Resolving alert", "alert_id", alertID, "user_id", userID)
+	if err := s.validateAlertActor(ctx, userID, tenantID); err != nil {
+		return err
+	}
 
 	now := time.Now()
 	alert, err := s.client.IncidentAlert.UpdateOneID(alertID).
-		Where(incidentalert.TenantIDEQ(tenantID)).
+		Where(incidentalert.TenantIDEQ(tenantID), incidentalert.StatusIn("active", "acknowledged")).
 		SetStatus("resolved").
 		SetResolvedAt(now).
 		SetUpdatedAt(now).
@@ -413,23 +459,56 @@ func (s *IncidentAlertingService) ResolveAlert(ctx context.Context, alertID int,
 	}
 
 	// 记录解决活动
-	s.createAlertEvent(ctx, alert, "resolved", fmt.Sprintf("告警已被用户 %d 解决", userID), tenantID)
+	s.createAlertEvent(ctx, alert, "resolved", fmt.Sprintf("告警已被用户 %d 解决", userID), userID, tenantID)
 
 	s.logger.Infow("Alert resolved successfully", "alert_id", alertID)
 	return nil
 }
 
 // createAlertEvent 创建告警活动记录
-func (s *IncidentAlertingService) createAlertEvent(ctx context.Context, alert *ent.IncidentAlert, eventType, description string, tenantID int) {
-	// 这里应该创建告警事件记录，简化实现
-	s.logger.Infow("Alert event created",
-		"alert_id", alert.ID,
-		"event_type", eventType,
-		"description", description)
+func (s *IncidentAlertingService) createAlertEvent(ctx context.Context, alert *ent.IncidentAlert, eventType, description string, userID, tenantID int) {
+	_, err := s.client.IncidentEvent.Create().
+		SetIncidentID(alert.IncidentID).
+		SetEventType("alert_" + eventType).
+		SetEventName("告警" + eventType).
+		SetDescription(description).
+		SetStatus("active").
+		SetSeverity(alert.Severity).
+		SetSource("user").
+		SetUserID(userID).
+		SetOccurredAt(time.Now()).
+		SetTenantID(tenantID).
+		SetData(map[string]interface{}{"alertId": alert.ID}).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to create alert audit event", "error", err, "alert_id", alert.ID)
+	}
+}
+
+func (s *IncidentAlertingService) validateAlertActor(ctx context.Context, userID, tenantID int) error {
+	exists, err := s.client.User.Query().
+		Where(user.IDEQ(userID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to validate alert actor: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("alert actor not found or inactive")
+	}
+	return nil
 }
 
 // GetActiveAlerts 获取活跃告警
 func (s *IncidentAlertingService) GetActiveAlerts(ctx context.Context, tenantID int, page, size int) ([]*dto.IncidentAlertResponse, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if size < 1 {
+		size = 10
+	}
+	if size > 100 {
+		size = 100
+	}
 	query := s.client.IncidentAlert.Query().
 		Where(
 			incidentalert.TenantIDEQ(tenantID),
@@ -465,6 +544,9 @@ func (s *IncidentAlertingService) GetActiveAlerts(ctx context.Context, tenantID 
 // GetAlertStatistics 获取告警统计
 func (s *IncidentAlertingService) GetAlertStatistics(ctx context.Context, tenantID int, startTime, endTime time.Time) (map[string]interface{}, error) {
 	s.logger.Infow("Getting alert statistics", "tenant_id", tenantID, "start_time", startTime, "end_time", endTime)
+	if endTime.Before(startTime) {
+		return nil, fmt.Errorf("end time must not be before start time")
+	}
 
 	// 获取告警总数
 	totalAlerts, err := s.client.IncidentAlert.Query().
@@ -526,8 +608,9 @@ func (s *IncidentAlertingService) GetAlertStatistics(ctx context.Context, tenant
 		recentAlerts, err := s.client.IncidentAlert.Query().
 			Where(
 				incidentalert.TenantIDEQ(tenantID),
-				incidentalert.StatusEQ("acknowledged"),
 				incidentalert.TriggeredAtGTE(startTime),
+				incidentalert.TriggeredAtLTE(endTime),
+				incidentalert.AcknowledgedAtNotNil(),
 			).
 			Limit(100).
 			Select(incidentalert.FieldTriggeredAt, incidentalert.FieldAcknowledgedAt).
@@ -582,6 +665,7 @@ func (s *IncidentAlertingService) ProcessEscalationAlerts(ctx context.Context, i
 		Where(
 			incident.IDEQ(incidentID),
 			incident.TenantIDEQ(tenantID),
+			incident.DeletedAtIsNil(),
 		).
 		Only(ctx)
 	if err != nil {
@@ -645,7 +729,7 @@ func (s *IncidentAlertingService) ProcessEscalationAlerts(ctx context.Context, i
 }
 
 // ProcessThresholdAlerts 处理阈值告警
-func (s *IncidentAlertingService) ProcessThresholdAlerts(ctx context.Context, metricType string, metricValue float64, threshold float64, tenantID int) error {
+func (s *IncidentAlertingService) ProcessThresholdAlerts(ctx context.Context, incidentID int, metricType string, metricValue float64, threshold float64, tenantID int) error {
 	s.logger.Infow("Processing threshold alerts", "metric_type", metricType, "value", metricValue, "threshold", threshold)
 
 	// 检查是否超过阈值
@@ -657,7 +741,7 @@ func (s *IncidentAlertingService) ProcessThresholdAlerts(ctx context.Context, me
 	alertMessage := fmt.Sprintf("指标 %s 当前值 %.2f 超过阈值 %.2f", metricType, metricValue, threshold)
 
 	_, err := s.CreateIncidentAlert(ctx, &dto.CreateIncidentAlertRequest{
-		IncidentID: 0, // 阈值告警可能不关联特定事件
+		IncidentID: incidentID,
 		AlertType:  "threshold",
 		AlertName:  "阈值告警",
 		Message:    alertMessage,
@@ -689,6 +773,7 @@ func (s *IncidentAlertingService) ProcessSLAViolationAlerts(ctx context.Context,
 		Where(
 			incident.IDEQ(incidentID),
 			incident.TenantIDEQ(tenantID),
+			incident.DeletedAtIsNil(),
 		).
 		Only(ctx)
 	if err != nil {

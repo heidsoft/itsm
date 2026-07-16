@@ -9,6 +9,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	entTicket "itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/user"
 
@@ -94,16 +95,16 @@ func TestTicketService_CreateTicket(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "无效的优先级（当前系统不验证优先级值）",
+			name: "无效的优先级",
 			request: &dto.CreateTicketRequest{
 				Title:       "标题",
 				Description: "描述",
-				Priority:    "invalid", // 当前系统不验证优先级值，会创建成功
+				Priority:    "invalid",
 				Category:    "incident",
 				RequesterID: testUser.ID,
 			},
 			tenantID:      testTenant.ID,
-			expectedError: false, // 系统当前不验证优先级值
+			expectedError: true,
 		},
 	}
 
@@ -195,6 +196,76 @@ func TestTicketService_CreateTicketTypeMapping(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, defaulted)
 	assert.Equal(t, "incident", string(defaulted.Type))
+}
+
+func TestTicketService_CreateTicketPersistsAssociations(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ticket_create_associations?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant := createTicketAssociationTenant(t, ctx, client, "create-associations")
+	requester := createTicketAssociationUser(t, ctx, client, tenant.ID, "create-requester")
+	assignee := createTicketAssociationUser(t, ctx, client, tenant.ID, "create-assignee")
+	category, err := client.TicketCategory.Create().
+		SetName("Hardware").SetCode("create-hardware").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	template, err := client.TicketTemplate.Create().
+		SetName("Hardware template").SetCategory("hardware").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	tag, err := client.TicketTag.Create().
+		SetName("urgent-device").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	service := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	parent, err := service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "Parent ticket", Description: "parent", Priority: "medium", RequesterID: requester.ID,
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	created, err := service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title:          "Child ticket",
+		Description:    "child",
+		Priority:       "high",
+		RequesterID:    requester.ID,
+		AssigneeID:     assignee.ID,
+		CategoryID:     &category.ID,
+		TemplateID:     &template.ID,
+		ParentTicketID: &parent.ID,
+		TagIDs:         []int{tag.ID, tag.ID},
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	entity, err := client.Ticket.Query().Where(entTicket.IDEQ(created.ID)).WithTags().Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, parent.ID, entity.ParentTicketID)
+	assert.Equal(t, template.ID, entity.TemplateID)
+	assert.Equal(t, category.ID, entity.CategoryID)
+	assert.Equal(t, assignee.ID, entity.AssigneeID)
+	require.Len(t, entity.Edges.Tags, 1)
+	assert.Equal(t, tag.ID, entity.Edges.Tags[0].ID)
+}
+
+func TestTicketService_CreateTicketRejectsCrossTenantReferences(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ticket_create_cross_tenant?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenantA := createTicketAssociationTenant(t, ctx, client, "create-tenant-a")
+	tenantB := createTicketAssociationTenant(t, ctx, client, "create-tenant-b")
+	userA := createTicketAssociationUser(t, ctx, client, tenantA.ID, "create-user-a")
+	userB := createTicketAssociationUser(t, ctx, client, tenantB.ID, "create-user-b")
+	service := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	foreignParent, err := service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "Foreign parent", Description: "foreign", Priority: "medium", RequesterID: userB.ID,
+	}, tenantB.ID)
+	require.NoError(t, err)
+
+	_, err = service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "Invalid requester", Description: "invalid", Priority: "medium", RequesterID: userB.ID,
+	}, tenantA.ID)
+	require.ErrorContains(t, err, "申请人不存在")
+
+	_, err = service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "Invalid parent", Description: "invalid", Priority: "medium", RequesterID: userA.ID, ParentTicketID: &foreignParent.ID,
+	}, tenantA.ID)
+	require.ErrorContains(t, err, "父工单不存在")
 }
 
 func TestTicketService_GetTicketStatsCountsNewAsPending(t *testing.T) {
@@ -551,6 +622,49 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 	}
 }
 
+func TestTicketService_UpdateTicketPersistsTypeCategoryAndTags(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ticket_update_contract?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant := createTicketAssociationTenant(t, ctx, client, "update-contract")
+	otherTenant := createTicketAssociationTenant(t, ctx, client, "update-contract-other")
+	user := createTicketAssociationUser(t, ctx, client, tenant.ID, "update-contract-user")
+	category, err := client.TicketCategory.Create().SetName("Software").SetCode("update-software").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	foreignCategory, err := client.TicketCategory.Create().SetName("Foreign").SetCode("update-foreign").SetTenantID(otherTenant.ID).Save(ctx)
+	require.NoError(t, err)
+	service := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	created, err := service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "Update contract", Description: "before", Priority: "medium", RequesterID: user.ID,
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	updated, err := service.UpdateTicket(ctx, created.ID, &dto.UpdateTicketRequest{
+		Type: "problem", CategoryID: &category.ID, Tags: []string{"backend", "backend", "customer"}, Version: created.Version,
+	}, tenant.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "problem", string(updated.Type))
+	entity, err := client.Ticket.Query().Where(entTicket.IDEQ(created.ID)).WithTags().Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, category.ID, entity.CategoryID)
+	require.Len(t, entity.Edges.Tags, 2)
+
+	zero := 0
+	cleared, err := service.UpdateTicket(ctx, created.ID, &dto.UpdateTicketRequest{
+		CategoryID: &zero, Tags: []string{}, Version: updated.Version,
+	}, tenant.ID)
+	require.NoError(t, err)
+	assert.Nil(t, cleared.CategoryID)
+	entity, err = client.Ticket.Query().Where(entTicket.IDEQ(created.ID)).WithTags().Only(ctx)
+	require.NoError(t, err)
+	assert.Empty(t, entity.Edges.Tags)
+
+	_, err = service.UpdateTicket(ctx, created.ID, &dto.UpdateTicketRequest{
+		CategoryID: &foreignCategory.ID, Version: cleared.Version,
+	}, tenant.ID)
+	require.ErrorContains(t, err, "工单分类不存在")
+}
+
 func TestTicketService_DeleteTicket(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
@@ -604,10 +718,10 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "工单不存在（V2 静默返回 nil，符合 SQL DELETE 语义）",
+			name:          "工单不存在",
 			ticketID:      99999,
 			tenantID:      testTenant.ID,
-			expectedError: false,
+			expectedError: true,
 		},
 	}
 
@@ -620,10 +734,12 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 
-				// 验证工单已被删除
-				_, err := client.Ticket.Get(ctx, tt.ticketID)
+				// 对业务查询不可见，但底层记录保留用于审计。
+				_, err := ticketService.GetTicket(ctx, tt.ticketID, tt.tenantID)
 				assert.Error(t, err)
-				assert.True(t, ent.IsNotFound(err))
+				raw, err := client.Ticket.Get(ctx, tt.ticketID)
+				require.NoError(t, err)
+				assert.NotNil(t, raw.DeletedAt)
 			}
 		})
 	}
@@ -703,9 +819,9 @@ func TestTicketService_DeleteTicket_CascadeTenantIsolation(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	// Tenant 2 tries to delete tenant 1's ticket - V2 不会报错（DELETE 静默语义）
+	// Tenant 2 tries to delete tenant 1's ticket.
 	err = ticketService.DeleteTicket(ctx, ticket1.ID, tenant2.ID)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	// Verify ticket still exists (未被删除，跨租户隔离仍然有效)
 	_, err = client.Ticket.Get(ctx, ticket1.ID)

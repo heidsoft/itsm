@@ -512,6 +512,27 @@ func (_u *ServiceRequestUpdate) ClearLastError() *ServiceRequestUpdate {
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *ServiceRequestUpdate) SetVersion(v int) *ServiceRequestUpdate {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *ServiceRequestUpdate) SetNillableVersion(v *int) *ServiceRequestUpdate {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *ServiceRequestUpdate) AddVersion(v int) *ServiceRequestUpdate {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *ServiceRequestUpdate) SetCreatedAt(v time.Time) *ServiceRequestUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -529,6 +550,26 @@ func (_u *ServiceRequestUpdate) SetNillableCreatedAt(v *time.Time) *ServiceReque
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *ServiceRequestUpdate) SetUpdatedAt(v time.Time) *ServiceRequestUpdate {
 	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *ServiceRequestUpdate) SetDeletedAt(v time.Time) *ServiceRequestUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *ServiceRequestUpdate) SetNillableDeletedAt(v *time.Time) *ServiceRequestUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *ServiceRequestUpdate) ClearDeletedAt() *ServiceRequestUpdate {
+	_u.mutation.ClearDeletedAt()
 	return _u
 }
 
@@ -588,6 +629,11 @@ func (_u *ServiceRequestUpdate) check() error {
 	if v, ok := _u.mutation.RequesterID(); ok {
 		if err := servicerequest.RequesterIDValidator(v); err != nil {
 			return &ValidationError{Name: "requester_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.requester_id": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Version(); ok {
+		if err := servicerequest.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.version": %w`, err)}
 		}
 	}
 	return nil
@@ -759,11 +805,23 @@ func (_u *ServiceRequestUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if _u.mutation.LastErrorCleared() {
 		_spec.ClearField(servicerequest.FieldLastError, field.TypeString)
 	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(servicerequest.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(servicerequest.FieldVersion, field.TypeInt, value)
+	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(servicerequest.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(servicerequest.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(servicerequest.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(servicerequest.FieldDeletedAt, field.TypeTime)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -1268,6 +1326,27 @@ func (_u *ServiceRequestUpdateOne) ClearLastError() *ServiceRequestUpdateOne {
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *ServiceRequestUpdateOne) SetVersion(v int) *ServiceRequestUpdateOne {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *ServiceRequestUpdateOne) SetNillableVersion(v *int) *ServiceRequestUpdateOne {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *ServiceRequestUpdateOne) AddVersion(v int) *ServiceRequestUpdateOne {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *ServiceRequestUpdateOne) SetCreatedAt(v time.Time) *ServiceRequestUpdateOne {
 	_u.mutation.SetCreatedAt(v)
@@ -1285,6 +1364,26 @@ func (_u *ServiceRequestUpdateOne) SetNillableCreatedAt(v *time.Time) *ServiceRe
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *ServiceRequestUpdateOne) SetUpdatedAt(v time.Time) *ServiceRequestUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *ServiceRequestUpdateOne) SetDeletedAt(v time.Time) *ServiceRequestUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *ServiceRequestUpdateOne) SetNillableDeletedAt(v *time.Time) *ServiceRequestUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *ServiceRequestUpdateOne) ClearDeletedAt() *ServiceRequestUpdateOne {
+	_u.mutation.ClearDeletedAt()
 	return _u
 }
 
@@ -1357,6 +1456,11 @@ func (_u *ServiceRequestUpdateOne) check() error {
 	if v, ok := _u.mutation.RequesterID(); ok {
 		if err := servicerequest.RequesterIDValidator(v); err != nil {
 			return &ValidationError{Name: "requester_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.requester_id": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Version(); ok {
+		if err := servicerequest.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.version": %w`, err)}
 		}
 	}
 	return nil
@@ -1545,11 +1649,23 @@ func (_u *ServiceRequestUpdateOne) sqlSave(ctx context.Context) (_node *ServiceR
 	if _u.mutation.LastErrorCleared() {
 		_spec.ClearField(servicerequest.FieldLastError, field.TypeString)
 	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(servicerequest.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(servicerequest.FieldVersion, field.TypeInt, value)
+	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(servicerequest.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(servicerequest.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(servicerequest.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(servicerequest.FieldDeletedAt, field.TypeTime)
 	}
 	_node = &ServiceRequest{config: _u.config}
 	_spec.Assign = _node.assignValues

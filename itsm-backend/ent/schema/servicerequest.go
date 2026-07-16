@@ -48,10 +48,12 @@ func (ServiceRequest) Fields() []ent.Field {
 
 		// 错误信息
 		field.Text("last_error").Comment("最近一次错误信息").Optional(),
+		field.Int("version").Comment("乐观锁版本").Default(1).Positive(),
 
 		// 时间戳
 		field.Time("created_at").Comment("创建时间").Default(time.Now),
 		field.Time("updated_at").Comment("更新时间").Default(time.Now).UpdateDefault(time.Now),
+		field.Time("deleted_at").Comment("软删除时间").Optional().Nillable(),
 	}
 }
 func (ServiceRequest) Edges() []ent.Edge { return nil }

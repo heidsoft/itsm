@@ -19,6 +19,8 @@ type Problem struct {
 	TenantID    int
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	ResolvedAt  *time.Time
+	ClosedAt    *time.Time
 	// 关联数据 (eager-loaded)
 	Tickets   []*AssociatedItem
 	Incidents []*AssociatedItem

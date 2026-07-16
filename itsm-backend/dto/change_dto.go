@@ -10,8 +10,10 @@ const (
 	ChangeStatusPending    ChangeStatus = "pending"     // 待审批
 	ChangeStatusApproved   ChangeStatus = "approved"    // 已批准
 	ChangeStatusRejected   ChangeStatus = "rejected"    // 已拒绝
+	ChangeStatusScheduled  ChangeStatus = "scheduled"   // 已排期
 	ChangeStatusInProgress ChangeStatus = "in_progress" // 实施中
 	ChangeStatusCompleted  ChangeStatus = "completed"   // 已完成
+	ChangeStatusFailed     ChangeStatus = "failed"      // 实施失败
 	ChangeStatusRolledBack ChangeStatus = "rolled_back" // 已回滚
 	ChangeStatusCancelled  ChangeStatus = "cancelled"   // 已取消
 )
@@ -67,6 +69,7 @@ type CreateChangeRequest struct {
 	ImplementationPlan string     `json:"implementationPlan"`       // 实施计划
 	RollbackPlan       string     `json:"rollbackPlan"`             // 回滚计划
 	AffectedCIs        []string   `json:"affectedCis"`              // 受影响的配置项
+	RelatedTickets     []string   `json:"relatedTickets"`           // 相关工单编号
 }
 
 // UpdateChangeRequest 更新变更请求
@@ -127,8 +130,10 @@ type ChangeStatsResponse struct {
 	Total      int `json:"total"`      // 总变更数
 	Pending    int `json:"pending"`    // 待审批
 	Approved   int `json:"approved"`   // 已批准
+	Scheduled  int `json:"scheduled"`  // 已排期
 	InProgress int `json:"inProgress"` // 实施中
 	Completed  int `json:"completed"`  // 已完成
+	Failed     int `json:"failed"`     // 实施失败
 	RolledBack int `json:"rolledBack"` // 已回滚
 	Rejected   int `json:"rejected"`   // 已拒绝
 	Cancelled  int `json:"cancelled"`  // 已取消

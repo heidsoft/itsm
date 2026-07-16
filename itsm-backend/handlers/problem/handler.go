@@ -203,7 +203,7 @@ func (h *Handler) AddAssociation(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AddAssociations(c.Request.Context(), id, req.RelatedType, req.RelatedIDs); err != nil {
+	if err := h.service.AddAssociations(c.Request.Context(), tenantID.(int), id, req.RelatedType, req.RelatedIDs); err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
@@ -237,7 +237,7 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RemoveAssociation(c.Request.Context(), id, req.RelatedType, req.RelatedID); err != nil {
+	if err := h.service.RemoveAssociation(c.Request.Context(), tenantID.(int), id, req.RelatedType, req.RelatedID); err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
@@ -298,11 +298,19 @@ func (h *Handler) List(c *gin.Context) {
 		dtoProblems = append(dtoProblems, item)
 	}
 
+	page, pageSize := req.Page, req.PageSize
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
 	common.Success(c, &dto.ListProblemsResponse{
-		Problems: dtoProblems,
-		Total:    total,
-		Page:     req.Page,
-		PageSize: req.PageSize,
+		Problems:   dtoProblems,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: (total + pageSize - 1) / pageSize,
 	})
 }
 

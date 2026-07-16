@@ -5,6 +5,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,6 +13,27 @@ import (
 // Handler handles HTTP requests for Service Catalog
 type Handler struct {
 	service *Service
+}
+
+func failServiceCatalog(c *gin.Context, err error) {
+	if appErr, ok := common.AsAppError(err); ok {
+		switch appErr.Code {
+		case common.ErrCodeBadRequest, common.ErrCodeValidation:
+			common.Fail(c, common.ParamErrorCode, appErr.Message)
+		case common.ErrCodeConflict:
+			common.Fail(c, common.ConflictCode, appErr.Error())
+		case common.ErrCodeNotFound:
+			common.Fail(c, common.NotFoundErrorCode, appErr.Message)
+		default:
+			common.Fail(c, common.InternalErrorCode, appErr.Message)
+		}
+		return
+	}
+	if ent.IsNotFound(err) {
+		common.Fail(c, common.NotFoundErrorCode, "服务目录不存在")
+		return
+	}
+	common.Fail(c, common.InternalErrorCode, err.Error())
 }
 
 // NewHandler creates a new Handler
@@ -38,6 +60,15 @@ func (h *Handler) List(c *gin.Context) {
 		Status:   req.Status,
 		Page:     req.Page,
 		Size:     req.Size,
+	}
+	if filters.Page < 1 {
+		filters.Page = 1
+	}
+	if filters.Size < 1 {
+		filters.Size = 10
+	}
+	if filters.Size > 100 {
+		filters.Size = 100
 	}
 
 	catalogs, total, err := h.service.List(c.Request.Context(), tenantID, filters)
@@ -75,7 +106,7 @@ func (h *Handler) Get(c *gin.Context) {
 
 	catalog, err := h.service.Get(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		failServiceCatalog(c, err)
 		return
 	}
 
@@ -103,9 +134,12 @@ func (h *Handler) Create(c *gin.Context) {
 
 	deliveryTime := 0
 	if req.DeliveryTime != "" {
-		if val, err := strconv.Atoi(req.DeliveryTime); err == nil {
-			deliveryTime = val
+		val, parseErr := strconv.Atoi(req.DeliveryTime)
+		if parseErr != nil || val <= 0 {
+			common.Fail(c, common.ParamErrorCode, "deliveryTime 必须为正整数天数")
+			return
 		}
+		deliveryTime = val
 	}
 
 	catalog, err := h.service.Create(
@@ -120,7 +154,7 @@ func (h *Handler) Create(c *gin.Context) {
 		req.CloudServiceID,
 	)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		failServiceCatalog(c, err)
 		return
 	}
 
@@ -141,10 +175,6 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 	normalizeUpdateServiceCatalogRequest(&req)
-	if req.CloudServiceID > 0 && req.CITypeID == 0 {
-		common.Fail(c, 1001, "关联云服务时必须选择CI类型")
-		return
-	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
@@ -154,9 +184,12 @@ func (h *Handler) Update(c *gin.Context) {
 
 	deliveryTime := 0
 	if req.DeliveryTime != "" {
-		if val, err := strconv.Atoi(req.DeliveryTime); err == nil {
-			deliveryTime = val
+		val, parseErr := strconv.Atoi(req.DeliveryTime)
+		if parseErr != nil || val <= 0 {
+			common.Fail(c, common.ParamErrorCode, "deliveryTime 必须为正整数天数")
+			return
 		}
+		deliveryTime = val
 	}
 
 	_, err = h.service.Update(
@@ -172,14 +205,14 @@ func (h *Handler) Update(c *gin.Context) {
 		req.CloudServiceID,
 	)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		failServiceCatalog(c, err)
 		return
 	}
 
 	// Fetch updated to return full object
 	updated, err := h.service.Get(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		failServiceCatalog(c, err)
 		return
 	}
 
@@ -213,7 +246,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	}
 
 	if err := h.service.Delete(c.Request.Context(), tenantID, id); err != nil {
-		common.Fail(c, 5001, err.Error())
+		failServiceCatalog(c, err)
 		return
 	}
 

@@ -164,14 +164,14 @@ func TestTicketLifecycleService_CloseTicket(t *testing.T) {
 			expectedStatus: "closed",
 		},
 		{
-			name:           "成功关闭已关闭的工单",
+			name:           "不能重复关闭已关闭的工单",
 			setupStatus:    "closed",
 			ticketTitle:    "测试工单2",
 			tenantID:       testTenant.ID,
 			closedBy:       testUser.ID,
 			feedback:       "满意",
-			expectedError:  false,
-			expectedStatus: "closed",
+			expectedError:  true,
+			expectedStatus: "",
 		},
 		{
 			name:           "无法关闭开放状态的工单",
@@ -208,6 +208,7 @@ func TestTicketLifecycleService_CloseTicket(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, updatedTicket)
 				assert.Equal(t, tt.expectedStatus, updatedTicket.Status)
+				assert.NotNil(t, updatedTicket.ClosedAt)
 			}
 		})
 	}
@@ -272,13 +273,13 @@ func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
 			expectedStatus: "in_progress",
 		},
 		{
-			name:           "成功更新状态 in_progress -> resolved",
+			name:           "缺少解决方案时不能直接更新为 resolved",
 			ticketID:       testTicket.ID,
 			newStatus:      "resolved",
 			tenantID:       testTenant.ID,
 			operatorID:     testUser.ID,
-			expectedError:  false,
-			expectedStatus: "resolved",
+			expectedError:  true,
+			expectedStatus: "",
 		},
 		{
 			name:           "无效状态转换 closed -> open",
@@ -454,10 +455,10 @@ func TestTicketLifecycleService_isValidStatusTransition(t *testing.T) {
 	}{
 		{"open", "in_progress", true},
 		{"open", "pending", true},
-		{"open", "closed", true},
+		{"open", "closed", false},
 		{"in_progress", "resolved", true},
 		{"in_progress", "pending", true},
-		{"in_progress", "open", true},
+		{"in_progress", "open", false},
 		{"pending", "in_progress", true},
 		{"pending", "resolved", true},
 		{"pending", "open", true},
@@ -465,7 +466,7 @@ func TestTicketLifecycleService_isValidStatusTransition(t *testing.T) {
 		{"resolved", "open", true},
 		{"closed", "open", false},
 		{"closed", "in_progress", false},
-		{"open", "resolved", false},
+		{"open", "resolved", true},
 		{"unknown", "open", false},
 	}
 

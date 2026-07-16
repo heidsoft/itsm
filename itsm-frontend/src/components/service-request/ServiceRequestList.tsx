@@ -21,7 +21,9 @@ const statusColors: Record<string, string> = {
   [ServiceRequestStatus.MANAGER_APPROVED]: 'cyan',
   [ServiceRequestStatus.IT_APPROVED]: 'geekblue',
   [ServiceRequestStatus.SECURITY_APPROVED]: 'purple',
-  [ServiceRequestStatus.COMPLETED]: 'green',
+  [ServiceRequestStatus.PROVISIONING]: 'processing',
+  [ServiceRequestStatus.DELIVERED]: 'green',
+  [ServiceRequestStatus.FAILED]: 'red',
   [ServiceRequestStatus.REJECTED]: 'red',
   [ServiceRequestStatus.CANCELLED]: 'default',
 };
