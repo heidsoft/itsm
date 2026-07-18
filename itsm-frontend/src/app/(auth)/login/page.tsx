@@ -9,7 +9,6 @@ import {
   Typography,
   Space,
   Alert,
-  Divider,
   ConfigProvider,
   Form,
   Input,
@@ -89,7 +88,7 @@ function LoginForm() {
       </div>
 
       {/* 默认账号提示：开发环境使用 admin/admin123，生产环境必须修改 */}
-      {process.env.NODE_ENV !== 'production' && (
+      {process.env.NODE_ENV === 'development' && (
         <Alert
           title='开发环境默认账号'
           description={
@@ -202,31 +201,6 @@ function LoginForm() {
           </Button>
         </Form.Item>
       </Form>
-
-      {/* 默认凭据提示 */}
-      <Alert
-        title='默认管理员账户'
-        description='admin / admin123（请及时修改密码）'
-        type='info'
-        className='mb-5'
-        showIcon
-      />
-
-      <Divider className='my-5'>
-        <Text className='text-gray-400 text-xs'>{t('auth.login.or')}</Text>
-      </Divider>
-
-      {/* SSO 登录按钮已隐藏 — 开源版本暂不支持 SSO */}
-      {false && (
-        <Button
-          size='middle'
-          className='w-full h-10 rounded-md text-sm'
-          disabled={loading}
-          icon={<Shield size={14} />}
-        >
-          {t('auth.login.ssoLogin')}
-        </Button>
-      )}
 
       <div className='text-center mt-5'>
         <Text className='text-gray-400 text-xs'>

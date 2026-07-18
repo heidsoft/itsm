@@ -18,6 +18,9 @@ import { Plus, Pencil, Trash2, RefreshCw, Briefcase } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type { Project } from '@/lib/services/project-service';
 import { projectService } from '@/lib/services/project-service';
+import { departmentService } from '@/lib/services/department-service';
+import type { Department } from '@/lib/services/department-service';
+import { UserApi } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n';
 
 const { RangePicker } = DatePicker;
@@ -25,10 +28,13 @@ const { RangePicker } = DatePicker;
 export default function ProjectsPage() {
   const { t } = useI18n();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [fetching, setFetching] = useState(false);
+  const [departmentOptions, setDepartmentOptions] = useState<{ label: string; value: number }[]>([]);
+  const [userOptions, setUserOptions] = useState<{ label: string; value: number }[]>([]);
 
   const fetchProjects = async () => {
     setFetching(true);
@@ -43,8 +49,42 @@ export default function ProjectsPage() {
     }
   };
 
+  const flattenDepartments = (list: Department[]): { label: string; value: number }[] => {
+    const result: { label: string; value: number }[] = [];
+    list.forEach(d => {
+      result.push({ label: d.name, value: d.id });
+      if (d.children) result.push(...flattenDepartments(d.children));
+    });
+    return result;
+  };
+
+  const fetchDepartmentOptions = async () => {
+    try {
+      const tree = await departmentService.getDepartmentTree();
+      setDepartmentOptions(flattenDepartments(tree));
+    } catch (error) {
+      console.error('Failed to fetch departments:', error);
+    }
+  };
+
+  const fetchUserOptions = async () => {
+    try {
+      const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
+      setUserOptions(
+        response.users.map(user => ({
+          label: user.name || user.username,
+          value: user.id,
+        }))
+      );
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  };
+
   useEffect(() => {
     fetchProjects();
+    fetchDepartmentOptions();
+    fetchUserOptions();
   }, []);
 
   const columns = [
@@ -110,6 +150,7 @@ export default function ProjectsPage() {
   ];
 
   const handleEdit = (record: Project) => {
+    setEditingProject(record);
     form.setFieldsValue(record);
     setIsModalVisible(true);
   };
@@ -135,10 +176,16 @@ export default function ProjectsPage() {
       const values = await form.validateFields();
       setLoading(true);
 
-      await projectService.createProject(values);
+      // 编辑/新建分支，避免修改时走 create 导致重复记录
+      if (editingProject) {
+        await projectService.updateProject(editingProject.id, values);
+      } else {
+        await projectService.createProject(values);
+      }
 
       message.success(t('common.saveSuccess'));
       setIsModalVisible(false);
+      setEditingProject(null);
       form.resetFields();
       fetchProjects();
     } catch (error) {
@@ -163,7 +210,11 @@ export default function ProjectsPage() {
           key="create"
           type="primary"
           icon={<Plus />}
-          onClick={() => setIsModalVisible(true)}
+          onClick={() => {
+            setEditingProject(null);
+            form.resetFields();
+            setIsModalVisible(true);
+          }}
         >
           新建项目
         </Button>,
@@ -175,7 +226,10 @@ export default function ProjectsPage() {
         title="新建/编辑项目"
         open={isModalVisible}
         onOk={handleOk}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setEditingProject(null);
+        }}
         confirmLoading={loading}
         width={600}
       >
@@ -195,11 +249,11 @@ export default function ProjectsPage() {
             <Input placeholder="请输入项目代码" />
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="department_id" label="所属部门">
-              <Select placeholder="请选择部门" options={[{ value: 1, label: '研发中心' }]} />
+            <Form.Item name="departmentId" label="所属部门">
+              <Select placeholder="请选择部门" options={departmentOptions} />
             </Form.Item>
-            <Form.Item name="manager_id" label="负责人">
-              <Select placeholder="请选择负责人" options={[{ value: 1, label: '管理员' }]} />
+            <Form.Item name="managerId" label="负责人">
+              <Select placeholder="请选择负责人" options={userOptions} />
             </Form.Item>
           </div>
           <Form.Item name="description" label="描述">

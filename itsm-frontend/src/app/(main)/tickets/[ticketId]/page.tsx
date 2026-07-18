@@ -34,6 +34,7 @@ import {
   Form,
   Select,
   Input,
+  Tabs,
 } from 'antd';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
@@ -45,6 +46,24 @@ import {
   getAllowedTransitions,
   isFinalStatus,
 } from '@/lib/utils/workflow-state-machine';
+import {
+  CommentPanel,
+  AttachmentPanel,
+  HistoryTimeline,
+  ApprovalWorkflowPanel,
+  ticketCommentAdapter,
+  ticketAttachmentAdapter,
+  fetchAuditLogHistory,
+} from '@/components/business/detail-tabs';
+import { RelationPanel } from '@/components/ticket-relations/RelationPanel';
+import {
+  MessageSquare,
+  Paperclip,
+  History as HistoryIcon,
+  GitBranch,
+  Link2,
+  Info,
+} from 'lucide-react';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -886,7 +905,156 @@ const TicketDetailPage: React.FC = () => {
           </Space>
         </Modal>
       </Card>
+
+      {/* 详情 Tabs（评论/附件/审批/历史/关联） */}
+      <TicketDetailTabs
+        ticketId={ticketId}
+        ticketNumber={ticket.ticketNumber}
+        ticketType={ticket.type as string | undefined}
+        ticketPriority={ticket.priority as string | undefined}
+        currentUserId={currentUser?.id}
+        isTicketFinal={isTicketFinal}
+        onRefresh={fetchTicket}
+      />
     </div>
+  );
+};
+
+// ==================== 详情 Tabs 子组件 ====================
+
+interface TicketDetailTabsProps {
+  ticketId: number;
+  ticketNumber?: string;
+  ticketType?: string;
+  ticketPriority?: string;
+  currentUserId?: number;
+  isTicketFinal: boolean;
+  onRefresh: () => void;
+}
+
+const TicketDetailTabs: React.FC<TicketDetailTabsProps> = ({
+  ticketId,
+  ticketNumber,
+  ticketType,
+  ticketPriority,
+  currentUserId,
+  isTicketFinal,
+  onRefresh,
+}) => {
+  const items = [
+    {
+      key: 'comments',
+      label: (
+        <span>
+          <MessageSquare size={14} className="inline mr-1" />
+          评论
+        </span>
+      ),
+      children: (
+        <CommentPanel
+          targetType="ticket"
+          targetId={ticketId}
+          adapter={ticketCommentAdapter}
+          currentUserId={currentUserId}
+          formatDateTime={formatDateTime}
+        />
+      ),
+    },
+    {
+      key: 'attachments',
+      label: (
+        <span>
+          <Paperclip size={14} className="inline mr-1" />
+          附件
+        </span>
+      ),
+      children: (
+        <AttachmentPanel
+          targetType="ticket"
+          targetId={ticketId}
+          adapter={ticketAttachmentAdapter}
+          currentUserId={currentUserId}
+          formatDateTime={formatDateTime}
+        />
+      ),
+    },
+    {
+      key: 'approvals',
+      label: (
+        <span>
+          <GitBranch size={14} className="inline mr-1" />
+          审批链
+        </span>
+      ),
+      children: (
+        <ApprovalWorkflowPanel
+          ticketId={ticketId}
+          ticketType={ticketType}
+          priority={ticketPriority}
+          currentUserId={currentUserId}
+          isTicketFinal={isTicketFinal}
+          onRefresh={onRefresh}
+          formatDateTime={formatDateTime}
+        />
+      ),
+    },
+    {
+      key: 'history',
+      label: (
+        <span>
+          <HistoryIcon size={14} className="inline mr-1" />
+          历史
+        </span>
+      ),
+      children: (
+        <HistoryTimeline
+          targetType="ticket"
+          targetId={ticketId}
+          fetchHistory={async (id) => {
+            const list = await TicketApi.getTicketHistory(Number(id));
+            const arr = Array.isArray(list) ? list : [];
+            return arr.map((raw) => {
+              const r = raw as unknown as Record<string, unknown>;
+              return {
+                id: Number(r.id ?? 0),
+                createdAt: String(r.changedAt ?? r.createdAt ?? ''),
+                user: (r.user as { name?: string; username?: string }) ?? undefined,
+                fieldName: r.fieldName as string | undefined,
+                oldValue: r.oldValue as string | undefined,
+                newValue: r.newValue as string | undefined,
+                changeReason: r.changeReason as string | undefined,
+              };
+            });
+          }}
+          fetchAuditLog={fetchAuditLogHistory}
+          formatDateTime={formatDateTime}
+        />
+      ),
+    },
+    {
+      key: 'relations',
+      label: (
+        <span>
+          <Link2 size={14} className="inline mr-1" />
+          关联
+        </span>
+      ),
+      children: (
+        <div className="p-6">
+          <RelationPanel ticketId={ticketId} ticketNumber={ticketNumber || String(ticketId)} />
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <Card className="mt-4 rounded-lg shadow-sm border border-gray-200">
+      <div className="flex items-center gap-2 mb-2 px-2 pt-2 text-gray-500 text-sm">
+        <Info size={14} />
+        协作、审批与历史
+      </div>
+      <Tabs items={items} defaultActiveKey="comments" />
+    </Card>
   );
 };
 

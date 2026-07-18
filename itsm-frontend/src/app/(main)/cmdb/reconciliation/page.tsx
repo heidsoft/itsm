@@ -150,7 +150,7 @@ export default function ReconciliationPage() {
         <Space>
           <Button
             type="link"
-            onClick={() => router.push(`/cmdb/cis/create?cloud_resource_ref_id=${record.id}`)}
+            onClick={() => router.push(`/cmdb/cis/create?cloudResourceRefId=${record.id}`)}
           >
             新建CI
           </Button>

@@ -462,7 +462,7 @@ export default function KnownErrorsPage() {
           <Form.Item name="symptoms" label="症状描述">
             <TextArea rows={2} placeholder="请输入症状描述" />
           </Form.Item>
-          <Form.Item name="root_cause" label="根本原因">
+          <Form.Item name="rootCause" label="根本原因">
             <TextArea rows={2} placeholder="请输入根本原因" />
           </Form.Item>
           <Form.Item name="workaround" label="临时解决方案">
@@ -500,14 +500,14 @@ export default function KnownErrorsPage() {
               </Col>
             )}
           </Row>
-          <Form.Item name="affected_products" label="受影响的产品/服务">
+          <Form.Item name="affectedProducts" label="受影响的产品/服务">
             <Select
               mode="tags"
               placeholder="输入后按回车添加"
               style={{ width: '100%' }}
             />
           </Form.Item>
-          <Form.Item name="affected_cis" label="受影响的配置项">
+          <Form.Item name="affectedCis" label="受影响的配置项">
             <Select
               mode="tags"
               placeholder="输入后按回车添加"

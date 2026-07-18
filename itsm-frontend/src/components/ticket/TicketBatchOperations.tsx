@@ -347,10 +347,10 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
             <Form.Item label="通知内容" name="notification" rules={[{ required: true }]}>
               <TextArea rows={4} placeholder="输入通知内容" />
             </Form.Item>
-            <Form.Item name="notify_assignee" valuePropName="checked" initialValue={true}>
+            <Form.Item name="notifyAssignee" valuePropName="checked" initialValue={true}>
               <Checkbox>通知处理人</Checkbox>
             </Form.Item>
-            <Form.Item name="notify_reporter" valuePropName="checked">
+            <Form.Item name="notifyReporter" valuePropName="checked">
               <Checkbox>通知报告人</Checkbox>
             </Form.Item>
           </>

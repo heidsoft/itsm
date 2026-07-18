@@ -40,6 +40,7 @@ import {
 } from 'antd';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import { BatchActionBar, type BatchAction } from '@/components/business/BatchActionBar';
 import type {
   ServiceItem,
   CreateServiceItemRequest,
@@ -629,39 +630,32 @@ const ServiceCatalogManagement = () => {
         </Row>
       </Card>
 
-      {/* 批量操作工具栏 */}
-      {selectedRowKeys.length > 0 && (
-        <Card className="enterprise-card mb-4">
-          <Row justify="space-between" align="middle">
-            <Col>
-              <Text>已选择 {selectedRowKeys.length} 个服务目录</Text>
-            </Col>
-            <Col>
-              <Space>
-                <Button size="small" onClick={() => handleBatchStatusChange('published')}>
-                  批量发布
-                </Button>
-                <Button size="small" onClick={() => handleBatchStatusChange('retired')}>
-                  批量停用
-                </Button>
-                <Popconfirm
-                  title="确定要删除选中的服务目录吗？"
-                  onConfirm={handleBatchDelete}
-                  okText="确定"
-                  cancelText="取消"
-                >
-                  <Button size="small" danger>
-                    批量删除
-                  </Button>
-                </Popconfirm>
-                <Button size="small" onClick={() => setSelectedRowKeys([])}>
-                  取消选择
-                </Button>
-              </Space>
-            </Col>
-          </Row>
-        </Card>
-      )}
+      {/* 批量操作工具栏（统一 BatchActionBar） */}
+      <BatchActionBar
+        selectedCount={selectedRowKeys.length}
+        itemLabel="服务目录"
+        onClear={() => setSelectedRowKeys([])}
+        actions={[
+          {
+            key: 'publish',
+            label: '批量发布',
+            type: 'primary',
+            onClick: () => handleBatchStatusChange('published'),
+          },
+          {
+            key: 'retire',
+            label: '批量停用',
+            onClick: () => handleBatchStatusChange('retired'),
+          },
+          {
+            key: 'delete',
+            label: '批量删除',
+            danger: true,
+            confirmTitle: `确定删除选中的 ${selectedRowKeys.length} 个服务目录？此操作不可撤销`,
+            onClick: handleBatchDelete,
+          } as BatchAction,
+        ]}
+      />
 
       {/* 服务目录表格 */}
       <Card className="enterprise-card">

@@ -53,6 +53,7 @@ import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview } from '@/components/ui/StatsOverview';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { WorkflowType, CreateWorkflowRequest, UpdateWorkflowRequest } from '@/types/workflow';
+import { BatchActionBar } from '@/components/business/BatchActionBar';
 
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
@@ -1039,38 +1040,38 @@ const WorkflowManagementPage = () => {
         }
       />
 
-      {/* 批量操作工具栏 */}
-      {selectedRowKeys.length > 0 && (
-        <Card className="enterprise-card mb-4">
-          <Alert
-            message={
-              <Space>
-                <span>{t('workflow.selectedWorkflows', { count: selectedRowKeys.length })}</span>
-                <Button size="small" onClick={() => setSelectedRowKeys([])}>
-                  {t('workflow.cancelSelection')}
-                </Button>
-              </Space>
-            }
-            type="info"
-            action={
-              <Space>
-                <Button size="small" type="primary" onClick={handleBatchActivate}>
-                  {t('workflow.batchActivate')}
-                </Button>
-                <Button size="small" onClick={handleBatchStop}>
-                  {t('workflow.batchDeactivate')}
-                </Button>
-                <Button size="small" onClick={handleBatchExport}>
-                  {t('workflow.batchExport')}
-                </Button>
-                <Button size="small" danger onClick={handleBatchDelete}>
-                  {t('workflow.batchDelete')}
-                </Button>
-              </Space>
-            }
-          />
-        </Card>
-      )}
+      {/* 批量操作工具栏（统一 BatchActionBar） */}
+      <BatchActionBar
+        selectedCount={selectedRowKeys.length}
+        itemLabel={t('workflow.workflowItem') || '工作流'}
+        leftExtra={t('workflow.selectedWorkflows', { count: selectedRowKeys.length })}
+        onClear={() => setSelectedRowKeys([])}
+        actions={[
+          {
+            key: 'activate',
+            label: t('workflow.batchActivate'),
+            type: 'primary',
+            onClick: handleBatchActivate,
+          },
+          {
+            key: 'stop',
+            label: t('workflow.batchDeactivate'),
+            onClick: handleBatchStop,
+          },
+          {
+            key: 'export',
+            label: t('workflow.batchExport'),
+            onClick: handleBatchExport,
+          },
+          {
+            key: 'delete',
+            label: t('workflow.batchDelete'),
+            danger: true,
+            // 已有 Modal.confirm 二次确认，工具栏无需再次弹 Popconfirm
+            onClick: handleBatchDelete,
+          },
+        ]}
+      />
 
       {/* 工作流表格 */}
       <Card className="enterprise-card">

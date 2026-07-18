@@ -1,8 +1,21 @@
 'use client';
 
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, App, Tooltip } from 'antd';
+import {
+  Breadcrumb,
+  Button,
+  Card,
+  Form,
+  Input,
+  Modal,
+  Select,
+  Space,
+  Table,
+  Tag,
+  App,
+  Tooltip,
+} from 'antd';
 import { Search, Plus, Eye, RotateCcw, Link } from 'lucide-react';
 import dayjs from 'dayjs';
 
@@ -54,6 +67,7 @@ export default function CloudResourcePage() {
   const [bindSubmitting, setBindSubmitting] = useState(false);
   const [selectedRow, setSelectedRow] = useState<CloudResource | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const isMountedRef = useRef(true);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
 
   const provider = Form.useWatch('provider', form);
@@ -63,21 +77,19 @@ export default function CloudResourcePage() {
   }, [services]);
 
   const loadServices = async () => {
-    const isMounted = true;
     try {
       const list = await CMDBApi.getCloudServices();
-      if (isMounted) {
+      if (isMountedRef.current) {
         setServices(list || []);
       }
     } catch (error) {
-      if (isMounted) {
+      if (isMountedRef.current) {
         message.error('加载云服务目录失败');
       }
     }
   };
 
   const loadResources = async (page = 1, pageSize = 10) => {
-    const isMounted = true;
     setLoading(true);
     try {
       const values = form.getFieldsValue();
@@ -88,13 +100,13 @@ export default function CloudResourcePage() {
         offset: (page - 1) * pageSize,
         limit: pageSize,
       });
-      if (isMounted) {
+      if (isMountedRef.current) {
         // API 返回兼容处理：可能是数组或 { items, total } 格式
-        type ApiListResponse = CloudResource[] | { items?: CloudResource[]; data?: CloudResource[]; total?: number };
+        type ApiListResponse =
+          | CloudResource[]
+          | { items?: CloudResource[]; data?: CloudResource[]; total?: number };
         const response = list as ApiListResponse;
-        const items = Array.isArray(response)
-          ? response
-          : (response.items || response.data || []);
+        const items = Array.isArray(response) ? response : response.items || response.data || [];
         const totalCount = Array.isArray(response)
           ? items.length
           : (response.total ?? items.length);
@@ -102,11 +114,11 @@ export default function CloudResourcePage() {
         setTotal(totalCount);
       }
     } catch (error) {
-      if (isMounted) {
+      if (isMountedRef.current) {
         message.error('加载云资源失败');
       }
     } finally {
-      if (isMounted) {
+      if (isMountedRef.current) {
         setLoading(false);
       }
     }
@@ -125,11 +137,11 @@ export default function CloudResourcePage() {
   };
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
     loadServices();
     loadResources();
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
   }, []);
 
@@ -140,25 +152,25 @@ export default function CloudResourcePage() {
       width: 100,
       render: (value: string) => {
         const provider = providerOptions.find(p => p.value === value);
-        return <Tag color="blue">{provider?.label || value || '-'}</Tag>;
+        return <Tag color='blue'>{provider?.label || value || '-'}</Tag>;
       },
     },
     {
       title: '服务',
       width: 140,
       render: (_: unknown, record: CloudResource) => {
-        const serviceId = record.serviceId ?? record.serviceId;
+        const serviceId = record.serviceId;
         const service = serviceMap.get(serviceId);
-        return service?.serviceName ?? service?.serviceName ?? '-';
+        return service?.serviceName || '-';
       },
     },
     {
       title: '资源类型',
       width: 120,
       render: (_: unknown, record: CloudResource) => {
-        const serviceId = record.serviceId ?? record.serviceId;
+        const serviceId = record.serviceId;
         const service = serviceMap.get(serviceId);
-        return service?.resourceTypeName ?? service?.resourceTypeName ?? '-';
+        return service?.resourceTypeName || '-';
       },
     },
     {
@@ -191,16 +203,14 @@ export default function CloudResourcePage() {
       dataIndex: 'status',
       width: 100,
       render: (value?: string) => (
-        <Tag color={statusColors[value || ''] || 'default'}>
-          {value || '未知'}
-        </Tag>
+        <Tag color={statusColors[value || ''] || 'default'}>{value || '未知'}</Tag>
       ),
     },
     {
       title: '最近发现',
       width: 150,
       render: (_: unknown, record: CloudResource) => {
-        const value = record.lastSeenAt ?? record.lastSeenAt;
+        const value = record.lastSeenAt;
         return value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-';
       },
     },
@@ -210,24 +220,24 @@ export default function CloudResourcePage() {
       width: 160,
       render: (_: unknown, record: CloudResource) => (
         <Space>
-          <Tooltip title="查看详情">
+          <Tooltip title='查看详情'>
             <Button
-              type="text"
+              type='text'
               icon={<Eye />}
               onClick={() => handleViewDetail(record)}
-              size="small"
+              size='small'
             />
           </Tooltip>
           <Button
-            type="link"
-            size="small"
-            onClick={() => router.push(`/cmdb/cis/create?cloud_resource_ref_id=${record.id}`)}
+            type='link'
+            size='small'
+            onClick={() => router.push(`/cmdb/cis/create?cloudResourceRefId=${record.id}`)}
           >
             新建CI
           </Button>
           <Button
-            type="link"
-            size="small"
+            type='link'
+            size='small'
             onClick={() => {
               setBinding(record);
               bindForm.resetFields();
@@ -245,16 +255,16 @@ export default function CloudResourcePage() {
     if (!binding) return;
     try {
       const values = await bindForm.validateFields();
-      const service = serviceMap.get(binding.serviceId ?? binding.serviceId);
+      const service = serviceMap.get(binding.serviceId);
       setBindSubmitting(true);
       await CMDBApi.updateCI(values.ciId, {
         cloudResourceRefId: binding.id,
         cloudProvider: service?.provider,
-        cloudAccountId: String(binding.cloudAccountId ?? binding.cloudAccountId),
+        cloudAccountId: String(binding.cloudAccountId),
         cloudRegion: binding.region,
         cloudZone: binding.zone,
-        cloudResourceId: binding.resourceId ?? binding.resourceId,
-        cloudResourceType: service?.resourceTypeCode ?? service?.resourceTypeCode,
+        cloudResourceId: binding.resourceId,
+        cloudResourceType: service?.resourceTypeCode,
         cloudMetadata: binding.metadata,
         cloudSyncStatus: 'success',
       });
@@ -273,9 +283,9 @@ export default function CloudResourcePage() {
 
   return (
     <Card>
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold">云资源列表</h1>
-        <p className="text-gray-500 mt-1">查看已发现的云资源，并将资源新建或绑定为 CMDB 配置项。</p>
+      <div className='mb-4'>
+        <h1 className='text-2xl font-bold'>云资源列表</h1>
+        <p className='text-gray-500 mt-1'>查看已发现的云资源，并将资源新建或绑定为 CMDB 配置项。</p>
       </div>
 
       <Breadcrumb
@@ -289,10 +299,10 @@ export default function CloudResourcePage() {
       />
 
       {/* 搜索工具栏 */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Form form={form} layout="inline" className="flex-wrap gap-2">
-          <Form.Item name="provider" className="!mb-0">
-            <Select placeholder="云厂商" style={{ width: 140 }} allowClear>
+      <div className='mb-4 flex flex-wrap items-center gap-3'>
+        <Form form={form} layout='inline' className='flex-wrap gap-2'>
+          <Form.Item name='provider' className='!mb-0'>
+            <Select placeholder='云厂商' style={{ width: 140 }} allowClear>
               {providerOptions.map(item => (
                 <Option key={item.value} value={item.value}>
                   {item.label}
@@ -300,13 +310,13 @@ export default function CloudResourcePage() {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="serviceId" className="!mb-0">
+          <Form.Item name='serviceId' className='!mb-0'>
             <Select
-              placeholder="云服务"
+              placeholder='云服务'
               style={{ width: 180 }}
               allowClear
               showSearch
-              optionFilterProp="label"
+              optionFilterProp='label'
             >
               {services
                 .filter(service => !provider || service.provider === provider)
@@ -316,32 +326,38 @@ export default function CloudResourcePage() {
                     value={service.id}
                     label={`${service.serviceName} (${service.resourceTypeName})`}
                   >
-                    {service.serviceName ?? service.serviceName} ({service.resourceTypeName ?? service.resourceTypeName})
+                    {service.serviceName} ({service.resourceTypeName})
                   </Option>
                 ))}
             </Select>
           </Form.Item>
-          <Form.Item name="region" className="!mb-0">
-            <Input placeholder="Region" style={{ width: 120 }} allowClear />
+          <Form.Item name='region' className='!mb-0'>
+            <Input placeholder='Region' style={{ width: 120 }} allowClear />
           </Form.Item>
-          <Form.Item className="!mb-0">
+          <Form.Item className='!mb-0'>
             <Space>
-              <Button type="primary" icon={<Search />} onClick={() => loadResources(1, pagination.pageSize)}>
+              <Button
+                type='primary'
+                icon={<Search />}
+                onClick={() => loadResources(1, pagination.pageSize)}
+              >
                 查询
               </Button>
-              <Button icon={<RotateCcw />} onClick={() => loadResources(pagination.current, pagination.pageSize)} loading={loading}>
+              <Button
+                icon={<RotateCcw />}
+                onClick={() => loadResources(pagination.current, pagination.pageSize)}
+                loading={loading}
+              >
                 刷新
               </Button>
             </Space>
           </Form.Item>
         </Form>
-        <span className="ml-auto text-sm text-gray-500">
-          共 {total} 条资源
-        </span>
+        <span className='ml-auto text-sm text-gray-500'>共 {total} 条资源</span>
       </div>
 
       <Table
-        rowKey="id"
+        rowKey='id'
         loading={loading}
         dataSource={resources}
         columns={columns as unknown as React.ComponentProps<typeof Table>['columns']}
@@ -360,27 +376,30 @@ export default function CloudResourcePage() {
 
       {/* 绑定已有配置项模态框 */}
       <Modal
-        title="绑定已有配置项"
+        title='绑定已有配置项'
         open={Boolean(binding)}
         onCancel={() => setBinding(null)}
         onOk={handleBindExisting}
         confirmLoading={bindSubmitting}
         width={480}
       >
-        <Form form={bindForm} layout="vertical">
+        <Form form={bindForm} layout='vertical'>
           <Form.Item
-            name="ci_id"
-            label="配置项ID"
+            name='ciId'
+            label='配置项ID'
             rules={[{ required: true, message: '请输入配置项ID' }]}
           >
-            <Input placeholder="请输入已存在的配置项ID" />
+            <Input placeholder='请输入已存在的配置项ID' />
           </Form.Item>
           {binding && (
-            <div className="p-3 bg-gray-50 rounded text-sm text-gray-600">
-              <div className="font-medium mb-1">将绑定资源：</div>
-              <div>{binding.resourceName || binding.resourceName || binding.resourceId || binding.resourceId}</div>
-              <div className="text-gray-400 mt-1">
-                {providerOptions.find(p => p.value === (binding as any).provider)?.label} / {binding.region} / {binding.zone}
+            <div className='p-3 bg-gray-50 rounded text-sm text-gray-600'>
+              <div className='font-medium mb-1'>将绑定资源：</div>
+              <div>
+                {binding.resourceName || binding.resourceId}
+              </div>
+              <div className='text-gray-400 mt-1'>
+                {providerOptions.find(p => p.value === (binding as any).provider)?.label} /{' '}
+                {binding.region} / {binding.zone}
               </div>
             </div>
           )}
@@ -389,23 +408,23 @@ export default function CloudResourcePage() {
 
       {/* 资源详情模态框 */}
       <Modal
-        title="云资源详情"
+        title='云资源详情'
         open={detailOpen}
         onCancel={() => {
           setDetailOpen(false);
           setSelectedRow(null);
         }}
         footer={[
-          <Button key="close" onClick={() => setDetailOpen(false)}>
+          <Button key='close' onClick={() => setDetailOpen(false)}>
             关闭
           </Button>,
           <Button
-            key="create"
-            type="primary"
+            key='create'
+            type='primary'
             icon={<Plus />}
             onClick={() => {
               if (selectedRow) {
-                router.push(`/cmdb/cis/create?cloud_resource_ref_id=${selectedRow.id}`);
+                router.push(`/cmdb/cis/create?cloudResourceRefId=${selectedRow.id}`);
               }
             }}
           >
@@ -415,41 +434,51 @@ export default function CloudResourcePage() {
         width={560}
       >
         {selectedRow && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+          <div className='space-y-3'>
+            <div className='grid grid-cols-2 gap-3'>
               <div>
-                <div className="text-sm text-gray-500">云厂商</div>
-                <div>{providerOptions.find(p => p.value === (selectedRow as any).provider)?.label || (selectedRow as any).provider || '-'}</div>
+                <div className='text-sm text-gray-500'>云厂商</div>
+                <div>
+                  {providerOptions.find(p => p.value === (selectedRow as any).provider)?.label ||
+                    (selectedRow as any).provider ||
+                    '-'}
+                </div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">服务类型</div>
-                <div>{serviceMap.get(selectedRow.serviceId ?? selectedRow.serviceId)?.serviceName || '-'}</div>
+                <div className='text-sm text-gray-500'>服务类型</div>
+                <div>{serviceMap.get(selectedRow.serviceId)?.serviceName || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">资源ID</div>
-                <div className="font-mono text-sm">{selectedRow.resourceId || selectedRow.resourceId || '-'}</div>
+                <div className='text-sm text-gray-500'>资源ID</div>
+                <div className='font-mono text-sm'>{selectedRow.resourceId || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">资源名称</div>
-                <div>{selectedRow.resourceName || selectedRow.resourceName || '-'}</div>
+                <div className='text-sm text-gray-500'>资源名称</div>
+                <div>{selectedRow.resourceName || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">Region</div>
+                <div className='text-sm text-gray-500'>Region</div>
                 <div>{selectedRow.region || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">Zone</div>
+                <div className='text-sm text-gray-500'>Zone</div>
                 <div>{selectedRow.zone || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">状态</div>
+                <div className='text-sm text-gray-500'>状态</div>
                 <Tag color={statusColors[selectedRow.status || ''] || 'default'}>
-                  {cloudResourceStatusTextMap[selectedRow.status || ''] || selectedRow.status || '未知'}
+                  {cloudResourceStatusTextMap[selectedRow.status || ''] ||
+                    selectedRow.status ||
+                    '未知'}
                 </Tag>
               </div>
               <div>
-                <div className="text-sm text-gray-500">最近发现</div>
-                <div>{selectedRow.lastSeenAt ? dayjs(selectedRow.lastSeenAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</div>
+                <div className='text-sm text-gray-500'>最近发现</div>
+                <div>
+                  {selectedRow.lastSeenAt
+                    ? dayjs(selectedRow.lastSeenAt).format('YYYY-MM-DD HH:mm:ss')
+                    : '-'}
+                </div>
               </div>
             </div>
           </div>

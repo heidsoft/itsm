@@ -221,6 +221,7 @@ export class ChangeApi {
     status?: ChangeStatus;
     type?: ChangeType;
     priority?: ChangePriority;
+    risk?: string;
     search?: string;
   }): Promise<ChangeListResponse> {
     return httpClient.get<ChangeListResponse>('/api/v1/changes', params);

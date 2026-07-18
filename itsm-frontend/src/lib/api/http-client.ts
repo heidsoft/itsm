@@ -354,11 +354,13 @@ class HttpClient {
       // 自动转换响应数据 key 为 camelCase
       return toCamelCase(responseData.data) as T;
     } catch (error: unknown) {
+      // AbortError 是正常的中止请求，不记录错误日志
+      if (error instanceof Error && error.name === 'AbortError') {
+        logger.debug('Request aborted (page navigation)');
+        return null as T;
+      }
       logger.error('Request failed:', error);
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new Error('请求超时，请稍后重试');
-        }
         if (error.message.includes('fetch')) {
           throw new Error('无法连接到服务器，请检查网络连接和后端服务是否运行');
         }

@@ -102,7 +102,7 @@ export default function ApprovalsCenterPage() {
   });
   const [approving, setApproving] = useState<{ id: string; action: 'approve' | 'reject' } | null>(null);
 
-  // 批量审批处理
+  // 批量审批处理 — 实际逐项调用后端审批接口，避免伪造成功
   const handleBatchApprove = async () => {
     if (selectedItems.length === 0) return;
     Modal.confirm({
@@ -111,9 +111,7 @@ export default function ApprovalsCenterPage() {
       okText: '确认批准',
       cancelText: '取消',
       onOk: async () => {
-        message.success(`已批准 ${selectedItems.length} 项`);
-        setSelectedItems([]);
-        load();
+        await runBatch('approve');
       },
     });
   };
@@ -127,29 +125,110 @@ export default function ApprovalsCenterPage() {
       okType: 'danger',
       cancelText: '取消',
       onOk: async () => {
-        message.success(`已拒绝 ${selectedItems.length} 项`);
-        setSelectedItems([]);
-        load();
+        await runBatch('reject');
       },
     });
   };
 
-  // 单项快速审批
+  // 共用：按类型映射到对应审批接口，逐项调用，统计成功/失败 (#3修复)
+  const runBatch = async (action: 'approve' | 'reject') => {
+    // 根据类型和动作构建正确的API请求
+    const getRequestParams = (item: EnhancedPendingItem, action: 'approve' | 'reject') => {
+      const status = action === 'approve' ? 'approved' : 'rejected';
+      const actionStr = action;
+      switch (item.type) {
+        case 'ticket':
+          return {
+            url: `/api/v1/tickets/workflow/approve`,
+            body: { ticketId: item.id, action: actionStr, approvalId: item.detail?.approvalId || 0, comment: '' }
+          };
+        case 'change':
+          return {
+            url: `/api/v1/changes/${item.id}/${actionStr}`,
+            body: {}
+          };
+        case 'service_request':
+          return {
+            url: `/api/v1/service-requests/${item.id}/approval`,
+            body: { action: actionStr, status, comment: '' }
+          };
+        case 'incident':
+          return {
+            // 事件使用状态转换而非审批
+            url: action === 'approve' 
+              ? `/api/v1/incidents/${item.id}/acknowledge`
+              : `/api/v1/incidents/${item.id}/resolve`,
+            body: {}
+          };
+        default:
+          return null;
+      }
+    };
+
+    let success = 0;
+    let failed = 0;
+    setLoading(true);
+    try {
+      for (const item of selectedItems) {
+        const req = getRequestParams(item, action);
+        if (!req) {
+          failed += 1;
+          continue;
+        }
+        try {
+          await httpClient.post(req.url, req.body);
+          success += 1;
+        } catch (err) {
+          failed += 1;
+        }
+      }
+      if (failed === 0) {
+        message.success(`已${action === 'approve' ? '批准' : '拒绝'} ${success} 项`);
+      } else {
+        message.error(`完成 ${success} 项，失败 ${failed} 项`);
+      }
+      setSelectedItems([]);
+      load();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 单项快速审批 - #3修复: 使用正确的后端API端点
   const handleQuickApprove = async (item: EnhancedPendingItem) => {
     setApproving({ id: String(item.id), action: 'approve' });
     try {
-      // 根据类型调用不同的审批API
-      const apiMap: Record<string, string> = {
-        ticket: `/api/v1/tickets/${item.id}/approve`,
-        change: `/api/v1/changes/${item.id}/approve`,
-        serviceRequest: `/api/v1/service-requests/${item.id}/approve`,
-        incident: `/api/v1/incidents/${item.id}/approve`,
+      // 根据类型调用不同的审批API（修正端点路径）
+      const endpoints: Record<PendingItem['type'], { url: string; body: any }> = {
+        ticket: {
+          // 工单使用统一的workflow/approve接口，需要ticketId和action
+          url: `/api/v1/tickets/workflow/approve`,
+          body: { ticketId: item.id, action: 'approve', approvalId: item.detail?.approvalId || 0, comment: '' }
+        },
+        change: {
+          // 变更直接用/:id/approve端点
+          url: `/api/v1/changes/${item.id}/approve`,
+          body: {}
+        },
+        service_request: {
+          // 服务请求使用/:id/approval端点
+          url: `/api/v1/service-requests/${item.id}/approval`,
+          body: { action: 'approve', status: 'approved', comment: '' }
+        },
+        incident: {
+          // 事件使用acknowledged状态转换（事件没有传统审批流程）
+          url: `/api/v1/incidents/${item.id}/acknowledge`,
+          body: {}
+        }
       };
-      await httpClient.post(apiMap[item.type], {});
+      const endpoint = endpoints[item.type];
+      if (!endpoint) throw new Error(`未知的审批类型: ${item.type}`);
+      await httpClient.post(endpoint.url, endpoint.body);
       message.success('审批通过');
       load();
     } catch (e) {
-      message.error('操作失败');
+      const msg = e instanceof Error ? e.message : '操作失败';
+      message.error(msg);
     } finally {
       setApproving(null);
     }
@@ -158,17 +237,33 @@ export default function ApprovalsCenterPage() {
   const handleQuickReject = async (item: EnhancedPendingItem) => {
     setApproving({ id: String(item.id), action: 'reject' });
     try {
-      const apiMap: Record<string, string> = {
-        ticket: `/api/v1/tickets/${item.id}/reject`,
-        change: `/api/v1/changes/${item.id}/reject`,
-        serviceRequest: `/api/v1/service-requests/${item.id}/reject`,
-        incident: `/api/v1/incidents/${item.id}/reject`,
+      const endpoints: Record<PendingItem['type'], { url: string; body: any }> = {
+        ticket: {
+          url: `/api/v1/tickets/workflow/approve`,
+          body: { ticketId: item.id, action: 'reject', approvalId: item.detail?.approvalId || 0, comment: '' }
+        },
+        change: {
+          url: `/api/v1/changes/${item.id}/reject`,
+          body: {}
+        },
+        service_request: {
+          url: `/api/v1/service-requests/${item.id}/approval`,
+          body: { action: 'reject', status: 'rejected', comment: '' }
+        },
+        incident: {
+          // 事件使用resolve状态转换
+          url: `/api/v1/incidents/${item.id}/resolve`,
+          body: {}
+        }
       };
-      await httpClient.post(apiMap[item.type], {});
+      const endpoint = endpoints[item.type];
+      if (!endpoint) throw new Error(`未知的审批类型: ${item.type}`);
+      await httpClient.post(endpoint.url, endpoint.body);
       message.success('已拒绝');
       load();
     } catch (e) {
-      message.error('操作失败');
+      const msg = e instanceof Error ? e.message : '操作失败';
+      message.error(msg);
     } finally {
       setApproving(null);
     }

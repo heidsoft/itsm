@@ -196,7 +196,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
           <Col xs={24} md={8}>
             <Form.Item
               label="图表类型"
-              name="chart_type"
+              name="chartType"
               rules={[{ required: true, message: '请选择图表类型' }]}
             >
               <Select placeholder="选择图表类型" style={{ width: '100%' }}>
@@ -214,7 +214,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 
           {/* 分组字段 */}
           <Col xs={24} md={8}>
-            <Form.Item label="分组字段（可选）" name="group_by">
+            <Form.Item label="分组字段（可选）" name="groupBy">
               <Select placeholder="选择分组字段" allowClear style={{ width: '100%' }}>
                 {dimensionOptions.map(option => (
                   <Option key={option.value} value={option.value}>
@@ -232,7 +232,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
                 <Form.Item name="page" noStyle>
                   <InputNumber placeholder="页码" min={1} style={{ width: '50%' }} />
                 </Form.Item>
-                <Form.Item name="page_size" noStyle>
+                <Form.Item name="pageSize" noStyle>
                   <InputNumber placeholder="每页数量" min={1} style={{ width: '50%' }} />
                 </Form.Item>
               </Space.Compact>

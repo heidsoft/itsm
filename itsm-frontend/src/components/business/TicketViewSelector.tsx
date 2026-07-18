@@ -304,7 +304,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
           <Form.Item name="description" label="描述">
             <TextArea rows={3} placeholder="视图描述（可选）" />
           </Form.Item>
-          <Form.Item name="is_shared" valuePropName="checked">
+          <Form.Item name="isShared" valuePropName="checked">
             <Switch checkedChildren="共享" unCheckedChildren="私有" />
             <div style={{ marginTop: 8, color: '#999', fontSize: 12 }}>
               共享后，团队成员可以看到并使用此视图
@@ -337,7 +337,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
           <Form.Item name="description" label="描述">
             <TextArea rows={3} />
           </Form.Item>
-          <Form.Item name="is_shared" valuePropName="checked">
+          <Form.Item name="isShared" valuePropName="checked">
             <Switch checkedChildren="共享" unCheckedChildren="私有" />
             <div style={{ marginTop: 8, color: '#999', fontSize: 12 }}>
               共享后，团队成员可以看到并使用此视图

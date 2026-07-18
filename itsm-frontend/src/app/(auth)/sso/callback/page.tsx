@@ -30,6 +30,7 @@ function SSOCallbackContent() {
       try {
         const code = searchParams.get('code');
         const state = searchParams.get('state');
+        const provider = searchParams.get('provider') || 'default';
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
 
@@ -48,50 +49,67 @@ function SSOCallbackContent() {
           return;
         }
 
-        logger.info('处理SSO回调:', { state });
+        logger.info('处理SSO回调:', { state, provider });
 
-        // 模拟SSO回调处理
-        // 实际应调用后端 /api/v1/auth/sso/callback 端点
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // ⚠️ 安全修复：禁止在前端硬编码任何 SSO 用户、token、tenantId、permissions。
+        // 必须由后端 /api/v1/auth/sso/callback 基于 OAuth/SAML code 进行真实校验后下发会话。
+        // 在开源版本尚未对接 SSO 提供商时，此路由必须显示"SSO 暂未启用"并禁止本地登录。
+        const ssoCallbackResponse = await fetch(
+          `${API_BASE_URL}/api/v1/auth/sso/callback?provider=${encodeURIComponent(provider)}`,
+          {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, state }),
+          }
+        );
 
-        // 模拟获取用户信息和token
-        const mockUser = {
-          id: 100,
-          username: 'sso_user',
-          name: 'SSO 用户',
-          email: 'sso@example.com',
-          role: 'admin',
-          department: 'IT部门',
+        if (!ssoCallbackResponse.ok) {
+          throw new Error(
+            ssoCallbackResponse.status === 404 || ssoCallbackResponse.status === 501
+              ? 'SSO 登录暂未启用，请使用账号密码登录'
+              : 'SSO 登录失败，请稍后重试'
+          );
+        }
+
+        const ssoCallbackData = await ssoCallbackResponse.json();
+        if (ssoCallbackData?.code !== 0 || !ssoCallbackData?.data) {
+          throw new Error(ssoCallbackData?.message || 'SSO 登录失败');
+        }
+
+        const { user, tenant, accessToken } = ssoCallbackData.data as {
+          user: {
+            id: number;
+            username: string;
+            role?: string;
+            email?: string;
+            name?: string;
+            tenantId?: number;
+            department?: string;
+            permissions?: string[];
+          };
+          tenant: Tenant;
+          accessToken: string;
         };
 
-        const mockAccessToken = 'sso_mock_token_' + Date.now();
+        // 后端 SSO 响应里 email/name 可能缺失，这里兜底默认值
+        const safeUser = {
+          id: user.id,
+          username: user.username,
+          email: user.email ?? '',
+          name: user.name ?? user.username,
+          tenantId: user.tenantId,
+          role: user.role,
+          department: user.department,
+          permissions: user.permissions,
+        };
 
-        // 存储token
-        AuthService.setTokens(mockAccessToken, 'mock_refresh_token');
+        // 设置 auth-token cookie 供 middleware 路由守卫使用（与 AuthService.login 保持一致）
+        if (typeof window !== 'undefined' && accessToken) {
+          document.cookie = `auth-token=${accessToken}; path=/; SameSite=Lax`;
+        }
 
-        // 更新store状态
-        login(
-          {
-            id: mockUser.id,
-            username: mockUser.username,
-            role: mockUser.role,
-            email: mockUser.email,
-            name: mockUser.name,
-            tenantId: 1,
-            department: mockUser.department,
-            permissions: ['admin', 'ticket.*', 'incident.*', 'change.*', 'problem.*'],
-          },
-          mockAccessToken,
-          {
-            id: 1,
-            name: '默认租户',
-            code: 'default',
-            type: 'standard',
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          } as Tenant
-        );
+        login(safeUser, accessToken, tenant);
 
         setStatus('success');
         message.success('SSO登录成功');

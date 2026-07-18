@@ -231,7 +231,7 @@ const LicenseList: React.FC = () => {
             <Button
               type="text"
               icon={<Pencil />}
-              onClick={() => router.push(`/licenses/${record.id}`)}
+              onClick={() => router.push(`/licenses/${record.id}/edit`)}
               aria-label={`编辑许可证 ${record.name || '详情'}`}
             />
           </Tooltip>
@@ -304,7 +304,7 @@ const LicenseList: React.FC = () => {
               <Option value="depleted">已耗尽</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="license_type" label="类型">
+          <Form.Item name="licenseType" label="类型">
             <Select
               placeholder="选择类型"
               allowClear

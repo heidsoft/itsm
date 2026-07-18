@@ -662,7 +662,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         >
           <Form form={form} layout="vertical" onFinish={handleEscalateSubmit}>
             <Form.Item
-              name="escalation_level"
+              name="escalationLevel"
               label="升级级别"
               rules={[{ required: true, message: '请选择升级级别' }]}
             >
@@ -680,7 +680,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             >
               <Input.TextArea rows={3} placeholder="请输入升级原因" />
             </Form.Item>
-            <Form.Item name="auto_assign" label="自动分配">
+            <Form.Item name="autoAssign" label="自动分配">
               <Select placeholder="是否自动分配给上级">
                 <Select.Option value={true}>是</Select.Option>
                 <Select.Option value={false}>否</Select.Option>

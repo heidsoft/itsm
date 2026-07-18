@@ -36,7 +36,6 @@ import { ticketService } from '@/lib/services/ticket-service';
 
 const { Option } = Select;
 const { Text, Title } = Typography;
-const { TabPane } = Tabs;
 
 const TicketDashboardPage = () => {
   const [loading, setLoading] = useState(false);
@@ -528,26 +527,26 @@ const TicketDashboardPage = () => {
       ) : (
         <div>
           <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-6">
-            <TabPane tab="概览" key="overview">
+            <Tabs.TabPane tab="概览" key="overview">
               {renderOverviewCards()}
               {renderSLAMetrics()}
               {renderRecentActivities()}
-            </TabPane>
+            </Tabs.TabPane>
 
-            <TabPane tab="团队表现" key="performance">
+            <Tabs.TabPane tab="团队表现" key="performance">
               {renderTeamPerformance()}
               {renderTrends()}
-            </TabPane>
+            </Tabs.TabPane>
 
-            <TabPane tab="SLA监控" key="sla">
+            <Tabs.TabPane tab="SLA监控" key="sla">
               {renderSLAMetrics()}
               {renderAdvancedMetrics()}
-            </TabPane>
+            </Tabs.TabPane>
 
-            <TabPane tab="趋势分析" key="trends">
+            <Tabs.TabPane tab="趋势分析" key="trends">
               {renderTrends()}
               {renderAdvancedMetrics()}
-            </TabPane>
+            </Tabs.TabPane>
           </Tabs>
         </div>
       )}

@@ -177,7 +177,7 @@ const AssetForm: React.FC = () => {
         <Divider>基本信息</Divider>
 
         <Form.Item
-          name="asset_number"
+          name="assetNumber"
           label={
             <Tooltip title={fieldHelps.assetNumber}>
               <span>资产编号</span>
@@ -250,7 +250,7 @@ const AssetForm: React.FC = () => {
         <Divider>硬件信息</Divider>
 
         <Form.Item
-          name="serial_number"
+          name="serialNumber"
           label={
             <Tooltip title={fieldHelps.serialNumber}>
               <span>序列号</span>
@@ -277,7 +277,7 @@ const AssetForm: React.FC = () => {
         <Divider>采购与财务</Divider>
 
         <Form.Item
-          name="purchase_date"
+          name="purchaseDate"
           label={
             <Tooltip title={fieldHelps.purchaseDate}>
               <span>采购日期</span>
@@ -289,7 +289,7 @@ const AssetForm: React.FC = () => {
         </Form.Item>
 
         <Form.Item
-          name="purchase_price"
+          name="purchasePrice"
           label={
             <Tooltip title={fieldHelps.purchasePrice}>
               <span>采购价格</span>
@@ -302,7 +302,7 @@ const AssetForm: React.FC = () => {
         </Form.Item>
 
         <Form.Item
-          name="warranty_expiry"
+          name="warrantyExpiry"
           label={
             <Tooltip title={fieldHelps.warrantyExpiry}>
               <span>保修期到期</span>
@@ -314,7 +314,7 @@ const AssetForm: React.FC = () => {
         </Form.Item>
 
         <Form.Item
-          name="support_expiry"
+          name="supportExpiry"
           label={
             <Tooltip title={fieldHelps.supportExpiry}>
               <span>支持期到期</span>

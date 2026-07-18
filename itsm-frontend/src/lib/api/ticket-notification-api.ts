@@ -104,6 +104,23 @@ export class TicketNotificationApi {
     return httpClient.put('/api/v1/notifications/read-all', {});
   }
 
+  // 删除单条通知
+  static async deleteNotification(notificationId: number): Promise<void> {
+    return httpClient.delete(`/api/v1/notifications/${notificationId}`);
+  }
+
+  // 创建通知（仅管理员）
+  static async createNotification(payload: {
+    type?: string;
+    title: string;
+    content: string;
+    userId?: number;
+    level?: 'info' | 'warning' | 'error' | 'success';
+    metadata?: Record<string, unknown>;
+  }): Promise<unknown> {
+    return httpClient.post('/api/v1/notifications', payload);
+  }
+
   // 获取用户通知偏好
   static async getNotificationPreferences(): Promise<NotificationPreferencesResponse> {
     return httpClient.get<NotificationPreferencesResponse>('/api/v1/notification-preferences');

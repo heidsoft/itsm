@@ -186,7 +186,11 @@ export default function StandardChangesPage() {
       fetchCategories();
     } catch (error) {
       console.error('Failed to submit:', error);
-      message.error(editingTemplate ? (t('common.updateFailed') || '更新失败') : (t('common.createFailed') || '创建失败'));
+      message.error(
+        editingTemplate
+          ? t('common.updateFailed') || '更新失败'
+          : t('common.createFailed') || '创建失败'
+      );
     }
   };
 
@@ -199,7 +203,7 @@ export default function StandardChangesPage() {
         <div>
           <Text strong>{text}</Text>
           {record.description && (
-            <Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
+            <Text type='secondary' style={{ display: 'block', fontSize: 12 }}>
               {record.description.slice(0, 50)}...
             </Text>
           )}
@@ -249,11 +253,11 @@ export default function StandardChangesPage() {
       width: 100,
       render: (required: boolean) =>
         required ? (
-          <Tag icon={<AlertCircle size={12} />} color="orange">
+          <Tag icon={<AlertCircle size={12} />} color='orange'>
             需审批
           </Tag>
         ) : (
-          <Tag icon={<CheckCircle size={12} />} color="green">
+          <Tag icon={<CheckCircle size={12} />} color='green'>
             免审批
           </Tag>
         ),
@@ -264,24 +268,24 @@ export default function StandardChangesPage() {
       width: 180,
       render: (_: unknown, record: StandardChange) => (
         <Space>
-          <Tooltip title="从模板创建变更">
+          <Tooltip title='从模板创建变更'>
             <Button
-              type="link"
+              type='link'
               icon={<PlayCircle size={14} />}
               onClick={() => handleInstantiate(record)}
             />
           </Tooltip>
-          <Tooltip title="编辑">
-            <Button type="link" icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
+          <Tooltip title='编辑'>
+            <Button type='link' icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
           </Tooltip>
           <Popconfirm
-            title="确定要删除此模板吗？"
+            title='确定要删除此模板吗？'
             onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
+            okText='确定'
+            cancelText='取消'
           >
-            <Tooltip title="删除">
-              <Button type="link" danger icon={<Delete size={14} />} />
+            <Tooltip title='删除'>
+              <Button type='link' danger icon={<Delete size={14} />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -290,23 +294,23 @@ export default function StandardChangesPage() {
   ];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-full">
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+    <div className='p-6 bg-gray-50 min-h-full'>
+      <div className='mb-6'>
+        <div className='flex items-center justify-between mb-4'>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">标准变更库</h1>
-            <p className="text-gray-500 mt-1">管理预批准的标准变更模板</p>
+            <h1 className='text-2xl font-bold text-gray-800'>标准变更库</h1>
+            <p className='text-gray-500 mt-1'>管理预批准的标准变更模板</p>
           </div>
-          <Button type="primary" icon={<Plus size={16} />} onClick={handleCreate}>
+          <Button type='primary' icon={<Plus size={16} />} onClick={handleCreate}>
             新建模板
           </Button>
         </div>
 
         <Card>
-          <Row gutter={16} className="mb-4">
+          <Row gutter={16} className='mb-4'>
             <Col span={8}>
               <Input
-                placeholder="搜索模板名称或描述..."
+                placeholder='搜索模板名称或描述...'
                 prefix={<Search size={14} />}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -315,7 +319,7 @@ export default function StandardChangesPage() {
             </Col>
             <Col span={6}>
               <Select
-                placeholder="选择分类"
+                placeholder='选择分类'
                 style={{ width: '100%' }}
                 allowClear
                 value={category || undefined}
@@ -332,7 +336,7 @@ export default function StandardChangesPage() {
               </Select>
             </Col>
             <Col span={4}>
-              <Button type="primary" onClick={handleSearch}>
+              <Button type='primary' onClick={handleSearch}>
                 搜索
               </Button>
             </Col>
@@ -341,7 +345,7 @@ export default function StandardChangesPage() {
           <Table
             columns={columns}
             dataSource={templates}
-            rowKey="id"
+            rowKey='id'
             loading={loading}
             pagination={{
               current: page,
@@ -364,7 +368,7 @@ export default function StandardChangesPage() {
                       <span>
                         暂无标准变更模板
                         <br />
-                        <Button type="link" onClick={handleCreate}>
+                        <Button type='link' onClick={handleCreate}>
                           点击创建第一个模板
                         </Button>
                       </span>
@@ -387,89 +391,93 @@ export default function StandardChangesPage() {
         onOk={handleSubmit}
         width={700}
         okText={editingTemplate ? '更新' : '创建'}
-        cancelText="取消"
+        cancelText='取消'
       >
-        <Form form={form} layout="vertical" className="mt-4">
+        <Form form={form} layout='vertical' className='mt-4'>
           <Form.Item
-            name="title"
-            label="模板名称"
+            name='title'
+            label='模板名称'
             rules={[{ required: true, message: '请输入模板名称' }]}
           >
-            <Input placeholder="例如：服务器重启流程" />
+            <Input placeholder='例如：服务器重启流程' />
           </Form.Item>
 
-          <Form.Item name="description" label="模板描述">
-            <Input.TextArea rows={2} placeholder="简要描述此模板的用途..." />
+          <Form.Item name='description' label='模板描述'>
+            <Input.TextArea rows={2} placeholder='简要描述此模板的用途...' />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="category" label="分类" initialValue="general">
+              <Form.Item name='category' label='分类' initialValue='general'>
                 <Select>
-                  <Select.Option value="server">服务器</Select.Option>
-                  <Select.Option value="network">网络</Select.Option>
-                  <Select.Option value="database">数据库</Select.Option>
-                  <Select.Option value="application">应用</Select.Option>
-                  <Select.Option value="security">安全</Select.Option>
-                  <Select.Option value="general">通用</Select.Option>
+                  <Select.Option value='server'>服务器</Select.Option>
+                  <Select.Option value='network'>网络</Select.Option>
+                  <Select.Option value='database'>数据库</Select.Option>
+                  <Select.Option value='application'>应用</Select.Option>
+                  <Select.Option value='security'>安全</Select.Option>
+                  <Select.Option value='general'>通用</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="expected_duration" label="预计工期（分钟）" initialValue={30}>
-                <Input type="number" min={1} />
+              <Form.Item name='expectedDuration' label='预计工期（分钟）' initialValue={30}>
+                <Input type='number' min={1} />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="risk_level" label="风险等级" initialValue="low">
+              <Form.Item name='riskLevel' label='风险等级' initialValue='low'>
                 <Select>
-                  <Select.Option value="low">低</Select.Option>
-                  <Select.Option value="medium">中</Select.Option>
-                  <Select.Option value="high">高</Select.Option>
+                  <Select.Option value='low'>低</Select.Option>
+                  <Select.Option value='medium'>中</Select.Option>
+                  <Select.Option value='high'>高</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="impact_scope" label="影响范围" initialValue="low">
+              <Form.Item name='impactScope' label='影响范围' initialValue='low'>
                 <Select>
-                  <Select.Option value="low">低</Select.Option>
-                  <Select.Option value="medium">中</Select.Option>
-                  <Select.Option value="high">高</Select.Option>
+                  <Select.Option value='low'>低</Select.Option>
+                  <Select.Option value='medium'>中</Select.Option>
+                  <Select.Option value='high'>高</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item
-            name="implementation_plan"
-            label="实施计划步骤"
+            name='implementationPlan'
+            label='实施计划步骤'
             rules={[{ required: true, message: '请输入实施计划步骤' }]}
           >
-            <Input.TextArea rows={4} placeholder="详细描述实施步骤..." />
+            <Input.TextArea rows={4} placeholder='详细描述实施步骤...' />
           </Form.Item>
 
           <Form.Item
-            name="rollback_plan"
-            label="回滚计划"
+            name='rollbackPlan'
+            label='回滚计划'
             rules={[{ required: true, message: '请输入回滚计划' }]}
           >
-            <Input.TextArea rows={3} placeholder="详细描述回滚步骤..." />
+            <Input.TextArea rows={3} placeholder='详细描述回滚步骤...' />
           </Form.Item>
 
-          <Form.Item name="approval_required" label="是否需要审批" valuePropName="checked" initialValue={false}>
-            <Input type="checkbox" />
+          <Form.Item
+            name='approvalRequired'
+            label='是否需要审批'
+            valuePropName='checked'
+            initialValue={false}
+          >
+            <Input type='checkbox' />
           </Form.Item>
 
-          <Form.Item name="prerequisites" label="前置条件">
-            <Select mode="tags" placeholder="输入前置条件，按回车添加">
-            </Select>
+          <Form.Item name='prerequisites' label='前置条件'>
+            <Select mode='tags' placeholder='输入前置条件，按回车添加'></Select>
           </Form.Item>
 
-          <Form.Item name="remarks" label="备注">
-            <Input.TextArea rows={2} placeholder="其他备注信息..." />
+          <Form.Item name='remarks' label='备注'>
+            <Input.TextArea rows={2} placeholder='其他备注信息...' />
           </Form.Item>
         </Form>
       </Modal>
@@ -480,37 +488,37 @@ export default function StandardChangesPage() {
         open={instantiateModalVisible}
         onCancel={() => setInstantiateModalVisible(false)}
         onOk={handleInstantiateSubmit}
-        okText="创建变更"
-        cancelText="取消"
+        okText='创建变更'
+        cancelText='取消'
       >
         {selectedTemplate && (
-          <div className="mt-4">
-            <Descriptions column={2} size="small" className="mb-4">
-              <Descriptions.Item label="分类">
+          <div className='mt-4'>
+            <Descriptions column={2} size='small' className='mb-4'>
+              <Descriptions.Item label='分类'>
                 <Tag>{selectedTemplate.category}</Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="风险等级">
+              <Descriptions.Item label='风险等级'>
                 <Tag color={RISK_COLORS[selectedTemplate.riskLevel]}>
                   {ChangeRiskLabels[selectedTemplate.riskLevel as keyof typeof ChangeRiskLabels]}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="预计工期">
+              <Descriptions.Item label='预计工期'>
                 {selectedTemplate.expectedDuration}分钟
               </Descriptions.Item>
-              <Descriptions.Item label="免审批">
+              <Descriptions.Item label='免审批'>
                 {selectedTemplate.approvalRequired ? '否' : '是'}
               </Descriptions.Item>
             </Descriptions>
 
-            <Form form={instantiateForm} layout="vertical">
-              <Form.Item name="title" label="变更标题" initialValue={selectedTemplate.title}>
+            <Form form={instantiateForm} layout='vertical'>
+              <Form.Item name='title' label='变更标题' initialValue={selectedTemplate.title}>
                 <Input />
               </Form.Item>
-              <Form.Item name="planned_start_date" label="计划开始时间">
-                <DatePicker showTime style={{ width: '100%' }} placeholder="选择计划开始时间" />
+              <Form.Item name='plannedStartDate' label='计划开始时间'>
+                <DatePicker showTime style={{ width: '100%' }} placeholder='选择计划开始时间' />
               </Form.Item>
-              <Form.Item name="planned_end_date" label="计划结束时间">
-                <DatePicker showTime style={{ width: '100%' }} placeholder="选择计划结束时间" />
+              <Form.Item name='plannedEndDate' label='计划结束时间'>
+                <DatePicker showTime style={{ width: '100%' }} placeholder='选择计划结束时间' />
               </Form.Item>
             </Form>
           </div>

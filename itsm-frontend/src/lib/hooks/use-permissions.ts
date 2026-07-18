@@ -4,79 +4,78 @@ import type { RoutePermission } from '../router/route-config';
 
 /**
  * 根据角色获取权限列表
+ * #6修复: 添加缺失的角色映射，对齐后端角色
  */
 const getRolePermissions = (role: string): RoutePermission[] => {
+  // 角色名称规范化（支持多种格式）
+  const normalizedRole = role?.toLowerCase?.() || role || '';
+
+  // 基础权限 - 所有人都有的基本权限
+  const basePermissions: RoutePermission[] = [
+    { resource: 'ticket', action: 'read' },
+    { resource: 'incident', action: 'read' },
+    { resource: 'knowledge', action: 'read' },
+    { resource: 'cmdb', action: 'read' },
+  ];
+
+  // 超级管理员权限 - 拥有所有权限
+  const superAdminPermissions: RoutePermission[] = [
+    { resource: 'ticket', action: 'read' },
+    { resource: 'ticket', action: 'create' },
+    { resource: 'ticket', action: 'update' },
+    { resource: 'ticket', action: 'delete' },
+    { resource: 'ticket', action: 'assign' },
+    { resource: 'ticket', action: 'escalate' },
+    { resource: 'ticket', action: 'resolve' },
+    { resource: 'ticket', action: 'close' },
+    { resource: 'ticket', action: 'reopen' },
+    { resource: 'ticket', action: 'export' },
+    { resource: 'incident', action: 'read' },
+    { resource: 'incident', action: 'create' },
+    { resource: 'incident', action: 'update' },
+    { resource: 'incident', action: 'delete' },
+    { resource: 'incident', action: 'assign' },
+    { resource: 'incident', action: 'escalate' },
+    { resource: 'incident', action: 'resolve' },
+    { resource: 'incident', action: 'close' },
+    { resource: 'incident', action: 'declare_major' },
+    { resource: 'problem', action: 'read' },
+    { resource: 'problem', action: 'create' },
+    { resource: 'problem', action: 'update' },
+    { resource: 'problem', action: 'delete' },
+    { resource: 'change', action: 'read' },
+    { resource: 'change', action: 'create' },
+    { resource: 'change', action: 'update' },
+    { resource: 'change', action: 'delete' },
+    { resource: 'change', action: 'approve' },
+    { resource: 'change', action: 'reject' },
+    { resource: 'change', action: 'review' },
+    { resource: 'knowledge', action: 'read' },
+    { resource: 'knowledge', action: 'create' },
+    { resource: 'knowledge', action: 'update' },
+    { resource: 'knowledge', action: 'delete' },
+    { resource: 'cmdb', action: 'read' },
+    { resource: 'cmdb', action: 'create' },
+    { resource: 'cmdb', action: 'update' },
+    { resource: 'cmdb', action: 'delete' },
+    { resource: 'user', action: 'read' },
+    { resource: 'user', action: 'create' },
+    { resource: 'user', action: 'update' },
+    { resource: 'user', action: 'delete' },
+    { resource: 'user', action: 'manage' },
+    { resource: 'report', action: 'read' },
+    { resource: 'report', action: 'create' },
+    { resource: 'report', action: 'export' },
+  ];
+
   const rolePermissionMap: Record<string, RoutePermission[]> = {
-    superAdmin: [
-      { resource: 'ticket', action: 'read' },
-      { resource: 'ticket', action: 'create' },
-      { resource: 'ticket', action: 'update' },
-      { resource: 'ticket', action: 'delete' },
-      { resource: 'ticket', action: 'assign' },
-      { resource: 'ticket', action: 'escalate' },
-      { resource: 'ticket', action: 'resolve' },
-      { resource: 'ticket', action: 'close' },
-      { resource: 'ticket', action: 'reopen' },
-      { resource: 'ticket', action: 'batch_delete' },
-      { resource: 'ticket', action: 'export' },
-      { resource: 'incident', action: 'read' },
-      { resource: 'incident', action: 'create' },
-      { resource: 'incident', action: 'update' },
-      { resource: 'incident', action: 'delete' },
-      { resource: 'incident', action: 'assign' },
-      { resource: 'incident', action: 'escalate' },
-      { resource: 'incident', action: 'resolve' },
-      { resource: 'incident', action: 'close' },
-      { resource: 'incident', action: 'declare_major' },
-      { resource: 'problem', action: 'read' },
-      { resource: 'problem', action: 'create' },
-      { resource: 'problem', action: 'update' },
-      { resource: 'problem', action: 'delete' },
-      { resource: 'problem', action: 'assign' },
-      { resource: 'problem', action: 'resolve' },
-      { resource: 'problem', action: 'close' },
-      { resource: 'change', action: 'read' },
-      { resource: 'change', action: 'create' },
-      { resource: 'change', action: 'update' },
-      { resource: 'change', action: 'delete' },
-      { resource: 'change', action: 'approve' },
-      { resource: 'change', action: 'reject' },
-      { resource: 'change', action: 'implement' },
-      { resource: 'change', action: 'review' },
-      { resource: 'knowledge', action: 'read' },
-      { resource: 'knowledge', action: 'create' },
-      { resource: 'knowledge', action: 'update' },
-      { resource: 'knowledge', action: 'delete' },
-      { resource: 'knowledge', action: 'publish' },
-      { resource: 'knowledge', action: 'archive' },
-      { resource: 'cmdb', action: 'read' },
-      { resource: 'cmdb', action: 'create' },
-      { resource: 'cmdb', action: 'update' },
-      { resource: 'cmdb', action: 'delete' },
-      { resource: 'cmdb', action: 'manage' },
-      { resource: 'cmdb', action: 'import' },
-      { resource: 'cmdb', action: 'export' },
-      { resource: 'user', action: 'read' },
-      { resource: 'user', action: 'create' },
-      { resource: 'user', action: 'update' },
-      { resource: 'user', action: 'delete' },
-      { resource: 'user', action: 'manage' },
-      { resource: 'user', action: 'reset_password' },
-      { resource: 'role', action: 'read' },
-      { resource: 'role', action: 'create' },
-      { resource: 'role', action: 'update' },
-      { resource: 'role', action: 'delete' },
-      { resource: 'role', action: 'manage' },
-      { resource: 'system', action: 'read' },
-      { resource: 'system', action: 'update' },
-      { resource: 'system', action: 'manage' },
-      { resource: 'system', action: 'view_logs' },
-      { resource: 'system', action: 'backup' },
-      { resource: 'report', action: 'read' },
-      { resource: 'report', action: 'export' },
-      { resource: 'report', action: 'create' },
-      { resource: 'report', action: 'schedule' },
-    ],
+    // 兼容各种角色命名格式
+    super_admin: superAdminPermissions,
+    superadmin: superAdminPermissions,
+    superAdmin: superAdminPermissions,
+    sysadmin: superAdminPermissions,
+    system_admin: superAdminPermissions,
+
     admin: [
       { resource: 'ticket', action: 'read' },
       { resource: 'ticket', action: 'create' },
@@ -125,53 +124,21 @@ const getRolePermissions = (role: string): RoutePermission[] => {
       { resource: 'report', action: 'export' },
       { resource: 'report', action: 'create' },
     ],
-    manager: [
+
+    // technician角色 - 相当于agent但更专业
+    technician: [
       { resource: 'ticket', action: 'read' },
       { resource: 'ticket', action: 'create' },
       { resource: 'ticket', action: 'update' },
+      { resource: 'ticket', action: 'resolve' },
+      { resource: 'ticket', action: 'close' },
       { resource: 'ticket', action: 'assign' },
-      { resource: 'ticket', action: 'escalate' },
-      { resource: 'ticket', action: 'resolve' },
-      { resource: 'ticket', action: 'close' },
-      { resource: 'ticket', action: 'export' },
       { resource: 'incident', action: 'read' },
       { resource: 'incident', action: 'create' },
       { resource: 'incident', action: 'update' },
+      { resource: 'incident', action: 'resolve' },
+      { resource: 'incident', action: 'close' },
       { resource: 'incident', action: 'assign' },
-      { resource: 'incident', action: 'escalate' },
-      { resource: 'incident', action: 'resolve' },
-      { resource: 'incident', action: 'close' },
-      { resource: 'problem', action: 'read' },
-      { resource: 'problem', action: 'create' },
-      { resource: 'problem', action: 'update' },
-      { resource: 'problem', action: 'assign' },
-      { resource: 'problem', action: 'resolve' },
-      { resource: 'problem', action: 'close' },
-      { resource: 'change', action: 'read' },
-      { resource: 'change', action: 'create' },
-      { resource: 'change', action: 'update' },
-      { resource: 'change', action: 'approve' },
-      { resource: 'change', action: 'review' },
-      { resource: 'knowledge', action: 'read' },
-      { resource: 'knowledge', action: 'create' },
-      { resource: 'knowledge', action: 'update' },
-      { resource: 'cmdb', action: 'read' },
-      { resource: 'cmdb', action: 'create' },
-      { resource: 'cmdb', action: 'update' },
-      { resource: 'report', action: 'read' },
-      { resource: 'report', action: 'export' },
-    ],
-    agent: [
-      { resource: 'ticket', action: 'read' },
-      { resource: 'ticket', action: 'create' },
-      { resource: 'ticket', action: 'update' },
-      { resource: 'ticket', action: 'resolve' },
-      { resource: 'ticket', action: 'close' },
-      { resource: 'incident', action: 'read' },
-      { resource: 'incident', action: 'create' },
-      { resource: 'incident', action: 'update' },
-      { resource: 'incident', action: 'resolve' },
-      { resource: 'incident', action: 'close' },
       { resource: 'problem', action: 'read' },
       { resource: 'problem', action: 'create' },
       { resource: 'problem', action: 'update' },
@@ -182,9 +149,10 @@ const getRolePermissions = (role: string): RoutePermission[] => {
       { resource: 'knowledge', action: 'create' },
       { resource: 'knowledge', action: 'update' },
       { resource: 'cmdb', action: 'read' },
-      { resource: 'report', action: 'read' },
     ],
-    user: [
+
+    // end_user - 普通用户权限
+    end_user: [
       { resource: 'ticket', action: 'read' },
       { resource: 'ticket', action: 'create' },
       { resource: 'incident', action: 'read' },
@@ -192,9 +160,20 @@ const getRolePermissions = (role: string): RoutePermission[] => {
       { resource: 'knowledge', action: 'read' },
       { resource: 'cmdb', action: 'read' },
     ],
+
+    // 未知角色返回基础权限，避免锁死
+    _default: basePermissions,
   };
 
-  return rolePermissionMap[role] || [];
+  // 查找匹配的权限配置
+  const permissions = rolePermissionMap[normalizedRole] || rolePermissionMap[normalizedRole.replace('_', '')];
+
+  // 如果没有匹配的权限配置，返回基础权限（避免锁死）
+  if (!permissions) {
+    return basePermissions;
+  }
+
+  return permissions;
 };
 
 /**
@@ -597,5 +576,7 @@ export const ROLES = {
   ADMIN: 'admin',
   MANAGER: 'manager',
   AGENT: 'agent',
+  TECHNICIAN: 'technician',
+  END_USER: 'end_user',
   USER: 'user',
 } as const;

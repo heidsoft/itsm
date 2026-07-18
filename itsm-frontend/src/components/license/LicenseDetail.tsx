@@ -19,12 +19,14 @@ import {
   message,
   Typography,
 } from 'antd';
-import { ArrowLeft, User, Key } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Key } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import type { License } from '@/lib/api/asset-api';
 import { AssetApi } from '@/lib/api/asset-api';
+import type { User as UserType } from '@/lib/api/user-api';
+import { UserApi } from '@/lib/api/user-api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -59,6 +61,8 @@ const LicenseDetail: React.FC = () => {
   const [license, setLicense] = useState<License | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -75,6 +79,19 @@ const LicenseDetail: React.FC = () => {
       console.error('Failed to load license:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await UserApi.getUsers({ pageSize: 100 });
+      setUsers(response.users || []);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      message.error('加载用户列表失败');
+    } finally {
+      setUsersLoading(false);
     }
   };
 
@@ -233,7 +250,7 @@ const LicenseDetail: React.FC = () => {
         <Card title="授权用户">
           <Space wrap>
             {license.users.map((userId, index) => (
-              <Tag key={index} icon={<User />}>
+              <Tag key={index} icon={<UserIcon />}>
                 {license.userNames?.[index] || `用户 ${userId}`}
               </Tag>
             ))}
@@ -253,11 +270,17 @@ const LicenseDetail: React.FC = () => {
 
       <Card>
         <Space>
-          <Button type="primary" onClick={() => router.push(`/licenses/${license.id}`)}>
+          <Button type="primary" onClick={() => router.push(`/licenses/${license.id}/edit`)}>
             编辑
           </Button>
           {license.status === 'active' && license.availableQuantity > 0 && (
-            <Button icon={<User />} onClick={() => setAssignModalVisible(true)}>
+            <Button
+              icon={<UserIcon />}
+              onClick={() => {
+                loadUsers();
+                setAssignModalVisible(true);
+              }}
+            >
               分配给用户
             </Button>
           )}
@@ -280,10 +303,15 @@ const LicenseDetail: React.FC = () => {
           value={selectedUsers}
           onChange={setSelectedUsers}
           maxCount={license.availableQuantity}
+          optionFilterProp="children"
+          loading={usersLoading}
+          notFoundContent={usersLoading ? '加载中...' : '暂无用户'}
         >
-          {/* 这里需要添加用户列表 */}
-          <Option value={1}>用户1</Option>
-          <Option value={2}>用户2</Option>
+          {users.map((user) => (
+            <Option key={user.id} value={user.id}>
+              {user.name || user.username}
+            </Option>
+          ))}
         </Select>
       </Modal>
     </Space>

@@ -162,7 +162,7 @@ const CreateProblemPageContent = () => {
 
           <Form.Item
             label="根本原因分析 (RCA)"
-            name="root_cause"
+            name="rootCause"
             rules={[
               { required: true, message: '请输入根本原因分析' },
               { min: 10, max: 5000, message: '内容长度应在10-5000字符之间' },

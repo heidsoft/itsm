@@ -78,12 +78,12 @@ export class TicketApprovalApi {
       if (params.page) queryParams.page = params.page;
       if (params.pageSize) queryParams.pageSize = params.pageSize;
     }
-    return httpClient.get('/api/tickets/approval/workflows', queryParams);
+    return httpClient.get('/api/v1/tickets/approval-workflows', queryParams);
   }
 
   // 创建审批工作流
   static async createWorkflow(data: Partial<ApprovalWorkflow>): Promise<ApprovalWorkflow> {
-    return httpClient.post<ApprovalWorkflow>('/api/tickets/approval/workflows', data);
+    return httpClient.post<ApprovalWorkflow>('/api/v1/tickets/approval-workflows', data);
   }
 
   // 更新审批工作流
@@ -91,12 +91,12 @@ export class TicketApprovalApi {
     id: number,
     data: Partial<ApprovalWorkflow>
   ): Promise<ApprovalWorkflow> {
-    return httpClient.put<ApprovalWorkflow>(`/api/tickets/approval/workflows/${id}`, data);
+    return httpClient.put<ApprovalWorkflow>(`/api/v1/tickets/approval-workflows/${id}`, data);
   }
 
   // 删除审批工作流
   static async deleteWorkflow(id: number): Promise<void> {
-    return httpClient.delete(`/api/tickets/approval/workflows/${id}`);
+    return httpClient.delete(`/api/v1/tickets/approval-workflows/${id}`);
   }
 
   // 获取审批记录
@@ -120,7 +120,7 @@ export class TicketApprovalApi {
       if (params.page) queryParams.page = params.page;
       if (params.pageSize) queryParams.pageSize = params.pageSize;
     }
-    return httpClient.get('/api/tickets/approval/records', queryParams);
+    return httpClient.get('/api/v1/tickets/approval/records', queryParams);
   }
 
   // 提交审批
@@ -131,6 +131,6 @@ export class TicketApprovalApi {
     comment: string;
     delegateToUserId?: number;
   }): Promise<void> {
-    return httpClient.post('/api/tickets/approval/submit', data);
+    return httpClient.post('/api/v1/tickets/workflow/approve', data);
   }
 }

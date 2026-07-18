@@ -92,7 +92,7 @@ export default function NewKnowledgeArticlePage() {
           </Form.Item>
 
           <Form.Item
-            name="category_id"
+            name="categoryId"
             label="分类"
             rules={[{ required: true, message: '请选择分类' }]}
           >

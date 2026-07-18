@@ -25,6 +25,7 @@ import { useI18n } from '@/lib/i18n';
 export default function TeamsPage() {
   const { t } = useI18n();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -123,6 +124,7 @@ export default function TeamsPage() {
   ];
 
   const handleEdit = (record: Team) => {
+    setEditingTeam(record);
     form.setFieldsValue(record);
     setIsModalVisible(true);
   };
@@ -148,10 +150,16 @@ export default function TeamsPage() {
       const values = await form.validateFields();
       setLoading(true);
 
-      await teamService.createTeam(values);
+      // 编辑/新建分支，避免修改时走 create 导致重复记录
+      if (editingTeam) {
+        await teamService.updateTeam(editingTeam.id, values);
+      } else {
+        await teamService.createTeam(values);
+      }
 
       message.success(t('common.saveSuccess'));
       setIsModalVisible(false);
+      setEditingTeam(null);
       form.resetFields();
       fetchTeams();
     } catch (error) {
@@ -183,6 +191,7 @@ export default function TeamsPage() {
           type="primary"
           icon={<Plus />}
           onClick={() => {
+            setEditingTeam(null);
             form.resetFields();
             setIsModalVisible(true);
           }}
@@ -194,10 +203,14 @@ export default function TeamsPage() {
       <Table columns={columns} dataSource={teams} rowKey="id" loading={fetching} />
 
       <Modal
-        title={t('enterprise.teams.createOrEdit')}
+        title={editingTeam ? t('enterprise.teams.editTitle') : t('enterprise.teams.createOrEdit')}
         open={isModalVisible}
         onOk={handleOk}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setEditingTeam(null);
+          form.resetFields();
+        }}
         confirmLoading={loading}
       >
         <Form form={form} layout="vertical">
@@ -225,7 +238,7 @@ export default function TeamsPage() {
           >
             <Input placeholder={t('common.inputPlaceholder') + t('enterprise.teams.teamCode')} />
           </Form.Item>
-          <Form.Item name="manager_id" label={t('enterprise.teams.manager')}>
+          <Form.Item name="managerId" label={t('enterprise.teams.manager')}>
             <Select
               placeholder={t('common.selectPlaceholder') + t('enterprise.teams.manager')}
               options={users}

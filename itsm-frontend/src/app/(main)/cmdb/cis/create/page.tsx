@@ -73,7 +73,7 @@ const CreateCIPage: React.FC = () => {
 
   useEffect(() => {
     if (!cloudResources.length || !cloudServices.length) return;
-    const resourceRefId = searchParams.get('cloud_resource_ref_id');
+    const resourceRefId = searchParams.get('cloudResourceRefId');
     if (!resourceRefId) return;
     const parsed = Number(resourceRefId);
     if (Number.isNaN(parsed)) return;

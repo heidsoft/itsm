@@ -84,7 +84,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
 
   // 计算风险分数
   useEffect(() => {
-    const riskLevel = form.getFieldValue('risk_level') as ChangeRisk;
+    const riskLevel = form.getFieldValue('riskLevel') as ChangeRisk;
     const factorsCount = riskFactors.length;
 
     let score = 0;
@@ -173,7 +173,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
           <Col xs={24} lg={8}>
             <Form.Item
               label="风险等级"
-              name="risk_level"
+              name="riskLevel"
               rules={[{ required: true, message: '请选择风险等级' }]}
             >
               <Select placeholder="选择风险等级" onChange={() => setRiskFactors([])}>
@@ -216,7 +216,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
           <Col xs={24} lg={16}>
             <Form.Item
               label="风险描述"
-              name="risk_description"
+              name="riskDescription"
               rules={[{ required: true, message: '请描述风险内容' }]}
             >
               <TextArea
@@ -232,7 +232,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
           <Col xs={24}>
             <Form.Item
               label="影响分析"
-              name="impact_analysis"
+              name="impactAnalysis"
               rules={[{ required: true, message: '请进行影响分析' }]}
             >
               <TextArea
@@ -270,7 +270,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="风险责任人"
-              name="risk_owner"
+              name="riskOwner"
               rules={[{ required: true, message: '请指定风险责任人' }]}
             >
               <Input placeholder="输入风险责任人姓名" prefix={<Users className="w-4 h-4" />} />
@@ -281,7 +281,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="缓解措施"
-              name="mitigation_measures"
+              name="mitigationMeasures"
               rules={[{ required: true, message: '请制定缓解措施' }]}
             >
               <TextArea
@@ -297,7 +297,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="应急计划"
-              name="contingency_plan"
+              name="contingencyPlan"
               rules={[{ required: true, message: '请制定应急计划' }]}
             >
               <TextArea

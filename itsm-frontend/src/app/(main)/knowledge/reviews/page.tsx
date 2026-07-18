@@ -20,6 +20,7 @@ import { Pencil, Eye, Clock, MessageSquare, AlertCircle, CheckCircle, XCircle } 
 import { useRouter } from 'next/navigation';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
+import { ArticleStatus } from '@/types/knowledge-base';
 import type { ReviewArticleRequest } from '@/types/knowledge-base';
 
 // 本地定义的类型以匹配API响应
@@ -45,13 +46,24 @@ import type { ColumnsType } from 'antd/es/table';
 const { Text, Paragraph } = Typography;
 
 // 状态标签映射
+// 状态值统一使用 ArticleStatus 枚举，避免前端多处出现 snake_case/camelCase 不一致
 const statusTagMap: Record<string, { color: string; text: string; icon?: React.ReactNode }> = {
-  draft: { color: 'default', text: '草稿' },
-  pendingReview: { color: 'orange', text: '待审核', icon: <Clock /> },
-  approved: { color: 'green', text: '已发布', icon: <CheckCircle /> },
+  [ArticleStatus.DRAFT]: { color: 'default', text: '草稿' },
+  [ArticleStatus.UNDER_REVIEW]: { color: 'orange', text: '待审核', icon: <Clock /> },
+  [ArticleStatus.PUBLISHED]: { color: 'green', text: '已发布', icon: <CheckCircle /> },
   rejected: { color: 'red', text: '已拒绝', icon: <XCircle /> },
-  archived: { color: 'default', text: '已归档' },
+  [ArticleStatus.ARCHIVED]: { color: 'default', text: '已归档' },
 };
+
+// 同时兼容 snake_case 历史值（部分后端/种子数据可能仍返回下划线形态）
+const PENDING_REVIEW_ALIASES = new Set<string>([
+  ArticleStatus.UNDER_REVIEW,
+  'pending_review',
+  'pendingReview',
+]);
+
+const isPendingReview = (status?: string): boolean =>
+  typeof status === 'string' && PENDING_REVIEW_ALIASES.has(status);
 
 export default function KnowledgeReviewListPage() {
   const router = useRouter();
@@ -76,13 +88,13 @@ export default function KnowledgeReviewListPage() {
       const response = await KnowledgeBaseApi.getArticles({
         page,
         pageSize,
-        status: statusFilter as any,
+        status: statusFilter as unknown as ArticleStatus,
       });
-      // 过滤出待审核的文章（如果选择了状态）或所有需要审核的文章
+      // 过滤出待审核的文章（兼容下划线/驼峰两种历史取值）
       const items = (response.articles || []) as unknown as ArticleItem[];
-      const pendingReview = items.filter(a => a.status === 'pending_review');
+      const pendingReview = items.filter(a => isPendingReview(a.status));
 
-      if (statusFilter === 'pending_review' || !statusFilter) {
+      if (isPendingReview(statusFilter) || !statusFilter) {
         setArticles(pendingReview);
         setTotal(pendingReview.length);
       } else {
@@ -189,7 +201,7 @@ export default function KnowledgeReviewListPage() {
           >
             查看
           </Button>
-          {record.status === 'pending_review' && (
+          {isPendingReview(record.status) && (
             <>
               <Button
                 type="link"
@@ -221,11 +233,11 @@ export default function KnowledgeReviewListPage() {
     },
   ];
 
-  const statusOptions = [
-    { value: 'pending_review', label: '待审核' },
-    { value: 'approved', label: '已发布' },
+  const statusOptions: Array<{ value: ArticleStatus | string; label: string }> = [
+    { value: ArticleStatus.UNDER_REVIEW, label: '待审核' },
+    { value: ArticleStatus.PUBLISHED, label: '已发布' },
     { value: 'rejected', label: '已拒绝' },
-    { value: 'draft', label: '草稿' },
+    { value: ArticleStatus.DRAFT, label: '草稿' },
   ];
 
   return (
@@ -268,7 +280,7 @@ export default function KnowledgeReviewListPage() {
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
-              statusFilter === 'pending_review' || !statusFilter
+              isPendingReview(statusFilter) || !statusFilter
                 ? '暂没有待审核的文章'
                 : '没有找到符合条件的文章'
             }
@@ -288,7 +300,7 @@ export default function KnowledgeReviewListPage() {
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
             关闭
           </Button>,
-          selectedArticle?.status === 'pending_review' && (
+          selectedArticle?.status && isPendingReview(selectedArticle.status) && (
             <Button
               key="reject"
               danger
@@ -302,7 +314,7 @@ export default function KnowledgeReviewListPage() {
               拒绝
             </Button>
           ),
-          selectedArticle?.status === 'pending_review' && (
+          selectedArticle?.status && isPendingReview(selectedArticle.status) && (
             <Button
               key="approve"
               type="primary"

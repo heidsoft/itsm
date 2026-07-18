@@ -34,9 +34,6 @@ import {
   Delete,
   Copy,
   Eye,
-  Settings,
-  Shield,
-  Zap,
   Workflow,
   RefreshCw,
   Search,
@@ -44,6 +41,7 @@ import {
   Star,
   Tag as TagIcon,
 } from 'lucide-react';
+import { TicketApi } from '@/lib/api/ticket-api';
 // AppLayout is handled by layout.tsx
 
 const { Option } = Select;
@@ -98,196 +96,31 @@ interface CustomField {
   order: number;
 }
 
-// Template category data
+// Template category metadata (used for the filter dropdown)
 const templateCategories = [
   {
     key: 'incident',
     label: 'Incident Management',
     icon: <AlertTriangle size={16} />,
     color: 'red',
-    templates: [
-      {
-        id: 1,
-        name: 'System Login Issue',
-        description: 'User cannot login to system, technical support needed',
-        type: 'incident',
-        category: 'System Access',
-        priority: 'high',
-        estimatedTime: '2 hours',
-        sla: '4 hours',
-        slaType: 'hours',
-        impact: 'individual',
-        urgency: 'medium',
-        businessValue: 'medium',
-        source: 'web',
-        autoAssign: true,
-        requiresApproval: false,
-        approvalLevel: 'none',
-        customFields: [
-          {
-            id: 'cf1',
-            name: 'error_message',
-            type: 'textarea',
-            label: 'Error Message',
-            required: true,
-            placeholder: 'Please describe the specific error message',
-            helpText:
-              'Please provide complete error information, including error codes and screenshots',
-            order: 1,
-          },
-          {
-            id: 'cf2',
-            name: 'browser_info',
-            type: 'text',
-            label: 'Browser Information',
-            required: false,
-            placeholder: 'Chrome 120.0.0.0',
-            helpText: 'Browser version and operating system used',
-            order: 2,
-          },
-        ],
-        tags: ['login', 'authentication', 'system access'],
-        isActive: true,
-        isPublic: true,
-        createdBy: 'System Administrator',
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-15',
-        usageCount: 156,
-        rating: 4.5,
-        version: '1.2',
-        icon: <Shield size={20} />,
-        color: 'red',
-      },
-      {
-        id: 2,
-        name: 'Printer Malfunction',
-        description: 'Office printer not working properly',
-        type: 'incident',
-        category: 'Hardware Equipment',
-        priority: 'medium',
-        estimatedTime: '1 hour',
-        sla: '2 hours',
-        slaType: 'hours',
-        impact: 'department',
-        urgency: 'high',
-        businessValue: 'high',
-        source: 'phone',
-        autoAssign: true,
-        requiresApproval: false,
-        approvalLevel: 'none',
-        customFields: [
-          {
-            id: 'cf3',
-            name: 'printer_model',
-            type: 'text',
-            label: 'Printer Model',
-            required: true,
-            placeholder: 'HP LaserJet Pro M404n',
-            helpText: 'Printer brand and model',
-            order: 1,
-          },
-          {
-            id: 'cf4',
-            name: 'error_code',
-            type: 'text',
-            label: 'Error Code',
-            required: false,
-            placeholder: 'E-01',
-            helpText: 'Error code displayed by printer',
-            order: 2,
-          },
-        ],
-        tags: ['printer', 'hardware', 'equipment failure'],
-        isActive: true,
-        isPublic: true,
-        createdBy: 'System Administrator',
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-10',
-        usageCount: 89,
-        rating: 4.2,
-        version: '1.1',
-        icon: <Settings size={20} />,
-        color: 'orange',
-      },
-    ],
   },
   {
-    key:'serviceRequest',
+    key: 'serviceRequest',
     label: 'Service Request',
     icon: <FileText size={16} />,
     color: 'blue',
-    templates: [
-      {
-        id: 3,
-        name: 'Software Installation Request',
-        description: 'Need to install new office software',
-        type: 'service_request',
-        category: 'Software Service',
-        priority: 'low',
-        estimatedTime: '30 minutes',
-        sla: '24 hours',
-        slaType: 'business_hours',
-        impact: 'individual',
-        urgency: 'low',
-        businessValue: 'medium',
-        source: 'web',
-        autoAssign: false,
-        requiresApproval: true,
-        approvalLevel: 'manager',
-        customFields: [
-          {
-            id: 'cf5',
-            name: 'software_name',
-            type: 'text',
-            label: 'Software Name',
-            required: true,
-            placeholder: 'Adobe Photoshop',
-            helpText: 'Name and version of software to be installed',
-            order: 1,
-          },
-          {
-            id: 'cf6',
-            name: 'license_type',
-            type: 'select',
-            label: 'License Type',
-            required: true,
-            options: [
-              'Free Version',
-              'Standard Version',
-              'Professional Version',
-              'Enterprise Version',
-            ],
-            helpText: 'Software license type',
-            order: 2,
-          },
-        ],
-        tags: ['software installation', 'license', 'office software'],
-        isActive: true,
-        isPublic: true,
-        createdBy: 'System Administrator',
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-20',
-        usageCount: 234,
-        rating: 4.6,
-        version: '1.3',
-        icon: <Zap size={20} />,
-        color: 'blue',
-      },
-    ],
   },
   {
     key: 'problem',
     label: 'Problem Management',
     icon: <BookOpen size={16} />,
     color: 'orange',
-    templates: [],
   },
   {
     key: 'change',
     label: 'Change Management',
     icon: <Workflow size={16} />,
     color: 'purple',
-    templates: [],
   },
 ];
 
@@ -305,7 +138,6 @@ const TicketTemplatesPage = () => {
     setLoading(true);
     try {
       // 调用实际API
-      const { default: TicketApi } = await import('@/lib/api/ticket-api');
       const response = await TicketApi.getTemplates({
         page: 1,
         pageSize: 100,
@@ -363,12 +195,9 @@ const TicketTemplatesPage = () => {
 
       setTemplates(apiTemplates);
     } catch (error) {
-      console.error('Failed to load templates, using local data:', error);
-      // API失败时使用本地静态数据作为fallback
-      const localTemplates = templateCategories
-        .filter(cat => selectedCategory === 'all' || cat.key === selectedCategory)
-        .flatMap(cat => cat.templates);
-      setTemplates(localTemplates as TicketTemplate[]);
+      console.error('Failed to load templates:', error);
+      message.error('加载模板列表失败，请稍后重试');
+      setTemplates([]);
     } finally {
       setLoading(false);
     }
@@ -390,22 +219,41 @@ const TicketTemplatesPage = () => {
 
   const handleDeleteTemplate = async (id: number) => {
     try {
+      await TicketApi.deleteTemplate(id);
       setTemplates(prev => prev.filter(t => t.id !== id));
-      message.success('Template deleted successfully');
+      message.success('模板删除成功');
     } catch (error) {
-      message.error('Delete failed');
+      console.error('Delete template failed:', error);
+      message.error('删除失败，请稍后重试');
     }
   };
 
-  const handleCopyTemplate = (template: TicketTemplate) => {
-    const newTemplate = {
-      ...template,
-      id: Date.now(),
-      name: `${template.name} - Copy`,
-      version: '1.0',
-    };
-    setTemplates(prev => [...prev, newTemplate]);
-    message.success('Template copied successfully');
+  const handleCopyTemplate = async (template: TicketTemplate) => {
+    try {
+      const formFields: Record<string, unknown> = {
+        type: template.type,
+        priority: template.priority,
+        source: template.source,
+        autoAssign: template.autoAssign,
+        requiresApproval: template.requiresApproval,
+        slaType: template.slaType,
+        approvalLevel: template.approvalLevel,
+        tags: template.tags,
+      };
+      await TicketApi.createTemplate({
+        name: `${template.name} - Copy`,
+        description: template.description,
+        category: template.category,
+        priority: template.priority,
+        formFields,
+        isActive: template.isActive,
+      });
+      message.success('模板复制成功');
+      loadTemplates();
+    } catch (error) {
+      console.error('Copy template failed:', error);
+      message.error('复制失败，请稍后重试');
+    }
   };
 
   const filteredTemplates = templates.filter(template => {
@@ -771,7 +619,46 @@ const TicketTemplatesPage = () => {
         footer={null}
         width={1000}
       >
-        <Form layout="vertical" initialValues={editingTemplate || {}}>
+        <Form
+          layout="vertical"
+          initialValues={editingTemplate || {}}
+          onFinish={async values => {
+            try {
+              // 把表单字段映射到后端 dto.TicketTemplate
+              const formFields: Record<string, unknown> = {
+                type: values.type,
+                priority: values.priority,
+                source: values.source,
+                autoAssign: values.autoAssign,
+                requiresApproval: values.requiresApproval,
+                slaType: values.slaType,
+                approvalLevel: values.approvalLevel,
+                tags: values.tags || [],
+              };
+              const payload = {
+                name: values.name,
+                description: values.description,
+                category: values.category,
+                priority: values.priority,
+                formFields,
+                isActive: values.isActive ?? true,
+              };
+              if (editingTemplate) {
+                await TicketApi.updateTemplate(editingTemplate.id, payload);
+                message.success('模板更新成功');
+              } else {
+                await TicketApi.createTemplate(payload);
+                message.success('模板创建成功');
+              }
+              setModalVisible(false);
+              setEditingTemplate(null);
+              loadTemplates();
+            } catch (err) {
+              console.error('Save template failed:', err);
+              message.error('保存失败，请稍后重试');
+            }
+          }}
+        >
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item

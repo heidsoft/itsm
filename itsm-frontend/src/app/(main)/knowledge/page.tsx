@@ -310,7 +310,7 @@ export default function KnowledgePage() {
           }
         >
           {aiSearchError && (
-            <Alert title={aiSearchError} type="warning" showIcon className="mb-4" />
+            <Alert message={aiSearchError} type="warning" showIcon className="mb-4" />
           )}
           {aiSearchResults.length > 0 ? (
             <div className="space-y-3">

@@ -6,11 +6,13 @@ import { Plus, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import { useI18n } from '@/lib/i18n';
+import type { Ticket, TicketListResponse } from '@/lib/api/api-config';
 
 type ImprovementStatus = '进行中' | '待评估' | '已完成';
 
 interface Improvement {
   id: string;
+  ticketId: number;
   title: string;
   status: ImprovementStatus;
   owner: string;
@@ -41,10 +43,11 @@ const ImprovementListPage = () => {
     setLoading(true);
     try {
       const { TicketApi } = await import('@/lib/api/ticket-api');
-      const response: any = await TicketApi.getTickets({ type: 'improvement', page: 1, size: 100 });
+      const response: TicketListResponse = await TicketApi.getTickets({ type: 'improvement', page: 1, size: 100 });
 
-      const mappedImprovements: Improvement[] = response.tickets.map((ticket: any) => ({
+      const mappedImprovements: Improvement[] = response.tickets.map((ticket: Ticket) => ({
         id: ticket.ticketNumber || `IMP-${ticket.id}`,
+        ticketId: ticket.id,
         title: ticket.title,
         status: mapStatus(ticket.status),
         owner: ticket.assignee?.name || '未分配',
@@ -86,8 +89,8 @@ const ImprovementListPage = () => {
       dataIndex: 'id',
       key: 'id',
       width: 120,
-      render: (id: string) => (
-        <Button type="link" onClick={() => router.push(`/improvements/${id}`)}>
+      render: (id: string, record: Improvement) => (
+        <Button type="link" onClick={() => router.push(`/tickets/${record.ticketId}`)}>
           {id}
         </Button>
       ),
@@ -140,7 +143,7 @@ const ImprovementListPage = () => {
             <Button
               type="primary"
               icon={<Plus />}
-              onClick={() => router.push('/improvements/new')}
+              onClick={() => router.push('/tickets/create?type=improvement')}
             >
               新建改进计划
             </Button>
@@ -167,7 +170,7 @@ const ImprovementListPage = () => {
         {/* 改进计划列表 */}
         {filteredImprovements.length === 0 && !loading ? (
           <Empty description="暂无改进计划">
-            <Button type="primary" onClick={() => router.push('/improvements/new')}>
+            <Button type="primary" onClick={() => router.push('/tickets/create?type=improvement')}>
               创建第一个改进计划
             </Button>
           </Empty>

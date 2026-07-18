@@ -619,6 +619,50 @@ export class TicketApi {
     return httpClient.get('/api/v1/tickets/templates', params);
   }
 
+  // Create ticket template
+  static async createTemplate(payload: {
+    name: string;
+    description?: string;
+    category?: string;
+    priority?: string;
+    formFields?: Record<string, unknown>;
+    fields?: Array<Record<string, unknown>>;
+    workflowSteps?: Array<Record<string, unknown>>;
+    isActive?: boolean;
+  }): Promise<unknown> {
+    return httpClient.post('/api/v1/tickets/templates', payload);
+  }
+
+  // Update ticket template
+  static async updateTemplate(
+    id: number | string,
+    payload: {
+      name?: string;
+      description?: string;
+      category?: string;
+      priority?: string;
+      formFields?: Record<string, unknown>;
+      fields?: Array<Record<string, unknown>>;
+      workflowSteps?: Array<Record<string, unknown>>;
+      isActive?: boolean;
+    }
+  ): Promise<unknown> {
+    return httpClient.put(`/api/v1/tickets/templates/${id}`, payload);
+  }
+
+  // Delete ticket template
+  static async deleteTemplate(id: number | string): Promise<void> {
+    return httpClient.delete(`/api/v1/tickets/templates/${id}`);
+  }
+
+  // Update template status
+  static async updateTemplateStatus(
+    id: number | string,
+    isActive: boolean
+  ): Promise<unknown> {
+    return httpClient.patch(`/api/v1/tickets/templates/${id}/status`, { isActive });
+  }
+
   // Get ticket SLA info
   static async getTicketSLA(id: number): Promise<{
     ticketId: number;

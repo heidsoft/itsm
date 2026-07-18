@@ -734,7 +734,7 @@ const TicketTemplatePage: React.FC = () => {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="assignee_group" label="默认处理组">
+                  <Form.Item name="assigneeGroup" label="默认处理组">
                     <Select placeholder="选择处理组" allowClear>
                       <Option value="一线支持">一线支持</Option>
                       <Option value="系统维护组">系统维护组</Option>
@@ -745,7 +745,7 @@ const TicketTemplatePage: React.FC = () => {
                 </Col>
               </Row>
 
-              <Form.Item name="is_active" label="启用状态" valuePropName="checked">
+              <Form.Item name="isActive" label="启用状态" valuePropName="checked">
                 <Switch />
               </Form.Item>
 

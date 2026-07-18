@@ -11,6 +11,7 @@ export interface SLADefinition {
   resolutionTime: number;
   availabilityTarget?: number;
   availability?: number;
+  complianceRate?: number;
   isActive?: boolean;
   tenantId?: number;
   createdAt?: string;

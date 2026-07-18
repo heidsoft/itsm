@@ -28,25 +28,23 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-import type {
-  DashboardMetrics} from '@/lib/api/bpmn-dashboard-api';
-import BPMNDashboardApi, {
-  ProcessStat,
-  TaskStat,
-  TrendPoint,
-} from '@/lib/api/bpmn-dashboard-api';
+import type { DashboardMetrics } from '@/lib/api/bpmn-dashboard-api';
+import BPMNDashboardApi, { ProcessStat, TaskStat, TrendPoint } from '@/lib/api/bpmn-dashboard-api';
+import { useAuthStore } from '@/lib/store/auth-store';
 import { useI18n } from '@/lib/i18n';
 
 const { RangePicker } = DatePicker;
 
 export default function BPMNDashboardPage() {
   const { t } = useI18n();
+  const currentTenant = useAuthStore(s => s.currentTenant);
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs().subtract(7, 'day'), dayjs()]);
 
-  // 默认租户ID
-  const tenantId = 1;
+  // 优先使用当前登录租户；未登录时回退到默认 1
+  // TODO: 待接入用户/租户选择器后移除硬编码回退值，避免未登录态误指向租户 1
+  const tenantId = currentTenant?.id ?? 1;
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -94,28 +92,28 @@ export default function BPMNDashboardPage() {
   const topProcessColumns = [
     {
       title: t('workflow.processKey') || '流程Key',
-      dataIndex:'processDefinitionKey',
-      key:'processDefinitionKey',
+      dataIndex: 'processDefinitionKey',
+      key: 'processDefinitionKey',
     },
     {
       title: t('workflow.totalInstances') || '总实例数',
-      dataIndex:'totalInstances',
-      key:'totalInstances',
+      dataIndex: 'totalInstances',
+      key: 'totalInstances',
     },
     {
       title: t('workflow.running') || '进行中',
-      dataIndex:'runningInstances',
-      key:'runningInstances',
+      dataIndex: 'runningInstances',
+      key: 'runningInstances',
     },
     {
       title: t('workflow.completed') || '已完成',
-      dataIndex:'completedInstances',
-      key:'completedInstances',
+      dataIndex: 'completedInstances',
+      key: 'completedInstances',
     },
     {
       title: t('workflow.avgDuration') || '平均耗时(分钟)',
-      dataIndex:'avgDurationMinutes',
-      key:'avgDurationMinutes',
+      dataIndex: 'avgDurationMinutes',
+      key: 'avgDurationMinutes',
       render: (val: number) => val?.toFixed(1) || '-',
     },
   ];
@@ -142,17 +140,17 @@ export default function BPMNDashboardPage() {
 
   if (loading && !metrics) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <Spin size="large" />
+      <div className='flex items-center justify-center h-96'>
+        <Spin size='large' />
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className='p-6 space-y-6'>
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">
+      <div className='flex justify-between items-center'>
+        <h1 className='text-2xl font-bold'>
           {t('workflow.bpmnDashboard.title') || 'BPMN流程监控仪表盘'}
         </h1>
         <Space>
@@ -243,11 +241,11 @@ export default function BPMNDashboardPage() {
                 />
               </Col>
             </Row>
-            <div className="mt-4 text-center">
+            <div className='mt-4 text-center'>
               <Statistic
                 title={t('workflow.bpmnDashboard.healthScore') || '健康度评分'}
                 value={metrics?.processHealth?.healthScore || 0}
-                suffix="/100"
+                suffix='/100'
                 styles={{
                   content: { color: getHealthColor(metrics?.processHealth?.healthScore || 0) },
                 }}
@@ -257,10 +255,10 @@ export default function BPMNDashboardPage() {
         </Col>
         <Col xs={24} lg={12}>
           <Card title={t('workflow.bpmnDashboard.slaCompliance') || 'SLA合规率'}>
-            <div className="text-center py-8">
+            <div className='text-center py-8'>
               <Statistic
                 value={metrics?.slaComplianceRate || 0}
-                suffix="%"
+                suffix='%'
                 styles={{
                   content: {
                     fontSize: 48,
@@ -273,7 +271,7 @@ export default function BPMNDashboardPage() {
                   },
                 }}
               />
-              <p className="text-gray-500 mt-2">
+              <p className='text-gray-500 mt-2'>
                 {t('workflow.bpmnDashboard.slaComplianceRate') || 'SLA合规率'}
               </p>
             </div>
@@ -288,8 +286,8 @@ export default function BPMNDashboardPage() {
             <Table
               dataSource={metrics?.topProcesses || []}
               columns={topProcessColumns}
-              rowKey="processDefinitionKey"
-              size="small"
+              rowKey='processDefinitionKey'
+              size='small'
               pagination={false}
             />
           </Card>
@@ -299,8 +297,8 @@ export default function BPMNDashboardPage() {
             <Table
               dataSource={metrics?.taskDistribution || []}
               columns={taskDistColumns}
-              rowKey="status"
-              size="small"
+              rowKey='status'
+              size='small'
               pagination={false}
             />
           </Card>
@@ -309,7 +307,7 @@ export default function BPMNDashboardPage() {
 
       {/* Trend Chart Placeholder */}
       <Card title={t('workflow.bpmnDashboard.trend') || '流程趋势'}>
-        <div className="h-48 flex items-center justify-center text-gray-400">
+        <div className='h-48 flex items-center justify-center text-gray-400'>
           <Space>
             <TrendingUp size={24} />
             <span>{t('workflow.bpmnDashboard.trendChart') || '趋势图表（待开发）'}</span>

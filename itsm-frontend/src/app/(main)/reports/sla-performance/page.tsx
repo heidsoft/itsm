@@ -1,32 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { App, Button, Card, Col, Empty, Progress, Row, Skeleton, Spin, Statistic, Typography } from 'antd';
+import { Clock, RotateCcw, CheckCircle, XCircle } from 'lucide-react';
 import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Spin,
-  message,
-  Statistic,
-  Button,
-  Progress,
-  Space,
-} from 'antd';
-import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts';
-import { Clock, RotateCcw, CheckCircle, XCircle } from 'lucide-react';
+import dayjs from 'dayjs';
+
+import { SLAApi } from '@/lib/api/sla-api';
 
 const { Title, Text } = Typography;
 
@@ -43,61 +35,125 @@ interface SLAData {
   compliance: number;
 }
 
+const DEFAULT_RANGE_DAYS = 30;
+
 const SLAPerformanceReport = () => {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [slaData, setSLAData] = useState<SLAData[]>([]);
+  const [overallRate, setOverallRate] = useState<number>(0);
+  const [totalMet, setTotalMet] = useState<number>(0);
+  const [totalBreached, setTotalBreached] = useState<number>(0);
+  const [hasData, setHasData] = useState<boolean>(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
+    setHasData(false);
     try {
-      // 模拟SLA性能数据 - 实际项目中应调用真实API
-      const data: SLAData[] = [
-        { name: '事件响应', met: 95, breached: 5, compliance: 95 },
-        { name: '请求处理', met: 98, breached: 2, compliance: 98 },
-        { name: '问题解决', met: 88, breached: 12, compliance: 88 },
-        { name: '变更实施', met: 92, breached: 8, compliance: 92 },
-        { name: '服务可用性', met: 99, breached: 1, compliance: 99 },
-      ];
+      const endDate = dayjs().format('YYYY-MM-DD');
+      const startDate = dayjs().subtract(DEFAULT_RANGE_DAYS, 'day').format('YYYY-MM-DD');
 
-      setSLAData(data);
+      // 并行获取 SLA 总体合规率和按类型分布
+      const [complianceReport, stats, definitions] = await Promise.allSettled([
+        SLAApi.getSLAComplianceReport({ startDate, endDate }),
+        SLAApi.getSLAStats(),
+        SLAApi.getSLADefinitions({ page: 1, size: 50 }),
+      ]);
+
+      const report =
+        complianceReport.status === 'fulfilled' ? complianceReport.value : null;
+      const statsValue = stats.status === 'fulfilled' ? stats.value : null;
+
+      const totalMetCount = report?.metSla ?? statsValue?.totalDefinitions ?? 0;
+      const totalBreachedCount = report?.violatedSla ?? statsValue?.openViolations ?? 0;
+      const compliance = report?.complianceRate ?? statsValue?.overallComplianceRate ?? 0;
+
+      setTotalMet(totalMetCount);
+      setTotalBreached(totalBreachedCount);
+      setOverallRate(compliance);
+
+      // 按 SLA 定义构建分布数据；没有定义时回退到总体数据
+      if (
+        definitions.status === 'fulfilled' &&
+        Array.isArray(definitions.value?.items) &&
+        definitions.value.items.length > 0
+      ) {
+        const items = definitions.value.items;
+        const perDefinitionRate = totalMetCount + totalBreachedCount > 0
+          ? compliance
+          : 0;
+        const list: SLAData[] = items.slice(0, 6).map(def => {
+          const rate = def.complianceRate ?? perDefinitionRate;
+          const breached = 100 - rate;
+          return {
+            name: def.name || `SLA-${def.id}`,
+            met: Math.round(rate),
+            breached: Math.round(breached),
+            compliance: Math.round(rate),
+          };
+        });
+        setSLAData(list);
+        setHasData(true);
+      } else if (totalMetCount + totalBreachedCount > 0 || compliance > 0) {
+        // 没有 SLA 定义列表时使用总体数据单条记录
+        const met = Math.round(compliance);
+        setSLAData([
+          {
+            name: 'SLA 总体合规',
+            met,
+            breached: 100 - met,
+            compliance: met,
+          },
+        ]);
+        setHasData(true);
+      } else {
+        setSLAData([]);
+        setHasData(false);
+      }
     } catch (error) {
       console.error('加载SLA性能数据失败:', error);
       message.error('加载数据失败');
-
-      setSLAData([
-        { name: '事件响应', met: 95, breached: 5, compliance: 95 },
-        { name: '请求处理', met: 98, breached: 2, compliance: 98 },
-        { name: '问题解决', met: 88, breached: 12, compliance: 88 },
-        { name: '变更实施', met: 92, breached: 8, compliance: 92 },
-        { name: '服务可用性', met: 99, breached: 1, compliance: 99 },
-      ]);
+      setSLAData([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [message]);
 
   useEffect(() => {
     loadData();
-  }, []);
-
-  const totalMet = slaData.reduce((sum, d) => sum + d.met, 0);
-  const totalBreached = slaData.reduce((sum, d) => sum + d.breached, 0);
-  const avgCompliance =
-    slaData.length > 0 ? slaData.reduce((sum, d) => sum + d.compliance, 0) / slaData.length : 0;
+  }, [loadData]);
 
   const pieData = [
     { name: '达标', value: totalMet, color: COLORS.met },
     { name: '违规', value: totalBreached, color: COLORS.breached },
   ];
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipPayloadEntry {
+    color?: string;
+    name?: string;
+    value?: number | string;
+  }
+
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: TooltipPayloadEntry[];
+    label?: string | number;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-800 mb-2">{`SLA类型: ${label}`}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {`${entry.name}: ${entry.value}%`}
+          <p className="font-semibold text-gray-800 mb-2">{`SLA类型: ${label ?? ''}`}</p>
+          {payload.map((entry, index) => (
+            <p
+              key={`${entry.name ?? 'item'}-${index}`}
+              className="text-sm"
+              style={{ color: entry.color }}
+            >
+              {`${entry.name ?? ''}: ${entry.value ?? 0}%`}
             </p>
           ))}
         </div>
@@ -106,10 +162,167 @@ const SLAPerformanceReport = () => {
     return null;
   };
 
-  const getComplianceStatus = (compliance: number) => {
+  const getComplianceStatus = (compliance: number): 'success' | 'warning' | 'danger' => {
     if (compliance >= 95) return 'success';
-    if (compliance >= 85) return 'normal';
-    return 'exception';
+    if (compliance >= 85) return 'warning';
+    return 'danger';
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="space-y-4">
+          <Row gutter={[16, 16]}>
+            {[0, 1, 2].map(i => (
+              <Col xs={24} sm={8} key={`skeleton-${i}`}>
+                <Card>
+                  <Skeleton active />
+                </Card>
+              </Col>
+            ))}
+          </Row>
+          <Skeleton active paragraph={{ rows: 6 }} />
+        </div>
+      );
+    }
+
+    if (!hasData || slaData.length === 0) {
+      return (
+        <Card>
+          <Empty description="暂无SLA性能数据" />
+        </Card>
+      );
+    }
+
+    const totalForPie = totalMet + totalBreached;
+
+    return (
+      <>
+        {/* 统计卡片 */}
+        <Row gutter={[16, 16]} className="mb-6">
+          <Col xs={24} sm={8}>
+            <Card>
+              <Statistic
+                title="平均合规率"
+                value={overallRate}
+                suffix="%"
+                styles={{
+                  content: {
+                    color:
+                      overallRate >= 95
+                        ? COLORS.met
+                        : overallRate >= 85
+                          ? COLORS.warning
+                          : COLORS.breached,
+                  },
+                }}
+                prefix={<CheckCircle />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card>
+              <Statistic
+                title="达标次数"
+                value={totalMet}
+                styles={{ content: { color: COLORS.met } }}
+                prefix={<CheckCircle />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card>
+              <Statistic
+                title="违规次数"
+                value={totalBreached}
+                styles={{ content: { color: COLORS.breached } }}
+                prefix={<XCircle />}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        {/* 图表区域 */}
+        <Row gutter={[16, 16]} className="mb-6">
+          <Col xs={24} lg={16}>
+            <Card title="各类型SLA达成情况">
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={slaData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Bar dataKey="met" name="达标" stackId="a" fill={COLORS.met} />
+                  <Bar dataKey="breached" name="违规" stackId="a" fill={COLORS.breached} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
+          <Col xs={24} lg={8}>
+            <Card title="总体达标率">
+              <div className="text-center py-8">
+                <div className="text-5xl font-bold mb-4" style={{ color: COLORS.met }}>
+                  {totalForPie > 0 ? ((totalMet / totalForPie) * 100).toFixed(1) : '0.0'}%
+                </div>
+                <Text type="secondary">SLA总体达标率</Text>
+                <Progress
+                  percent={totalForPie > 0 ? (totalMet / totalForPie) * 100 : 0}
+                  strokeColor={COLORS.met}
+                  showInfo={false}
+                  className="mt-4"
+                />
+              </div>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* 合规率详情 */}
+        <Card title="各SLA合规率详情">
+          <Row gutter={[16, 16]}>
+            {slaData.map((sla, index) => (
+              <Col xs={24} sm={12} md={8} key={`${sla.name}-${index}`}>
+                <Card size="small" className="h-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <Text strong>{sla.name}</Text>
+                    <Text type={getComplianceStatus(sla.compliance)} strong>
+                      {sla.compliance}%
+                    </Text>
+                  </div>
+                  <Progress
+                    percent={sla.compliance}
+                    strokeColor={
+                      sla.compliance >= 95
+                        ? COLORS.met
+                        : sla.compliance >= 85
+                          ? COLORS.warning
+                          : COLORS.breached
+                    }
+                    showInfo={false}
+                  />
+                  <div className="flex justify-between mt-2 text-sm text-gray-500">
+                    <span>
+                      <CheckCircle
+                        className="inline mr-1"
+                        style={{ color: COLORS.met }}
+                      />
+                      {sla.met}%
+                    </span>
+                    <span>
+                      <XCircle
+                        className="inline mr-1"
+                        style={{ color: COLORS.breached }}
+                      />
+                      {sla.breached}%
+                    </span>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </Card>
+      </>
+    );
   };
 
   return (
@@ -126,144 +339,14 @@ const SLAPerformanceReport = () => {
             <Text className="text-gray-600">SLA合规率监控</Text>
           </Col>
           <Col>
-            <Button icon={<RotateCcw />} onClick={loadData}>
+            <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
               刷新数据
             </Button>
           </Col>
         </Row>
       </Card>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Spin size="large" description="加载报表数据..." />
-        </div>
-      ) : (
-        <>
-          {/* 统计卡片 */}
-          <Row gutter={[16, 16]} className="mb-6">
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="平均合规率"
-                  value={avgCompliance}
-                  suffix="%"
-                  styles={{
-                    content: {
-                      color:
-                        avgCompliance >= 95
-                          ? '#52c41a'
-                          : avgCompliance >= 85
-                            ? '#faad14'
-                            : '#ff4d4f',
-                    },
-                  }}
-                  prefix={<CheckCircle />}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="达标次数"
-                  value={totalMet}
-                  styles={{ content: { color: COLORS.met } }}
-                  prefix={<CheckCircle />}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="违规次数"
-                  value={totalBreached}
-                  styles={{ content: { color: COLORS.breached } }}
-                  prefix={<XCircle />}
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          {/* 图表区域 */}
-          <Row gutter={[16, 16]} className="mb-6">
-            <Col xs={24} lg={16}>
-              <Card title="各类型SLA达成情况">
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={slaData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar dataKey="met" name="达标" stackId="a" fill={COLORS.met} />
-                    <Bar dataKey="breached" name="违规" stackId="a" fill={COLORS.breached} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Card>
-            </Col>
-            <Col xs={24} lg={8}>
-              <Card title="总体达标率">
-                <div className="text-center py-8">
-                  <div className="text-5xl font-bold mb-4" style={{ color: COLORS.met }}>
-                    {((totalMet / (totalMet + totalBreached)) * 100).toFixed(1)}%
-                  </div>
-                  <Text type="secondary">SLA总体达标率</Text>
-                  <Progress
-                    percent={(totalMet / (totalMet + totalBreached)) * 100}
-                    strokeColor={COLORS.met}
-                    showInfo={false}
-                    className="mt-4"
-                  />
-                </div>
-              </Card>
-            </Col>
-          </Row>
-
-          {/* 合规率详情 */}
-          <Card title="各SLA合规率详情">
-            <Row gutter={[16, 16]}>
-              {slaData.map((sla, index) => (
-                <Col xs={24} sm={12} md={8} key={index}>
-                  <Card size="small" className="h-full">
-                    <div className="flex items-center justify-between mb-4">
-                      <Text strong>{sla.name}</Text>
-                      <Text type={getComplianceStatus(sla.compliance) as any} strong>
-                        {sla.compliance}%
-                      </Text>
-                    </div>
-                    <Progress
-                      percent={sla.compliance}
-                      strokeColor={
-                        sla.compliance >= 95
-                          ? COLORS.met
-                          : sla.compliance >= 85
-                            ? COLORS.warning
-                            : COLORS.breached
-                      }
-                      showInfo={false}
-                    />
-                    <div className="flex justify-between mt-2 text-sm text-gray-500">
-                      <span>
-                        <CheckCircle
-                          className="inline mr-1"
-                          style={{ color: COLORS.met }}
-                        />
-                        {sla.met}%
-                      </span>
-                      <span>
-                        <XCircle
-                          className="inline mr-1"
-                          style={{ color: COLORS.breached }}
-                        />
-                        {sla.breached}%
-                      </span>
-                    </div>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </Card>
-        </>
-      )}
+      {renderContent()}
     </div>
   );
 };

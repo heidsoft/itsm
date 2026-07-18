@@ -231,34 +231,58 @@ const WorkflowManagement = () => {
     }
   };
 
-  // 处理工作流复制
-  const handleDuplicate = (workflow: Workflow) => {
-    const newWorkflow: Workflow = {
-      ...workflow,
-      id: Math.max(...workflows.map(w => w.id)) + 1,
-      name: `${workflow.name} (副本)`,
-      status: WORKFLOW_STATUS.DRAFT,
-      version: 'v1.0',
-      createdAt: new Date().toLocaleString('zh-CN'),
-      lastModified: new Date().toLocaleString('zh-CN'),
-      activeInstances: 0,
-      completedInstances: 0,
-    };
-    setWorkflows(prev => [newWorkflow, ...prev]);
-    message.success('工作流已复制');
+  // 处理工作流复制（调用真实 API 创建副本）
+  const handleDuplicate = async (workflow: Workflow) => {
+    try {
+      setLoading(true);
+      await WorkflowAPI.createWorkflow({
+        code: `${workflow.name}-copy-${Date.now()}`,
+        name: `${workflow.name} (副本)`,
+        description: workflow.description,
+        type: (workflow.type as 'approval') || 'approval',
+        status: 'draft',
+      } as never);
+      message.success('工作流已复制');
+      loadWorkflows();
+    } catch (error) {
+      console.error('Failed to duplicate workflow:', error);
+      message.error('复制工作流失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // 处理工作流删除
-  const handleDelete = (workflowId: number) => {
-    setWorkflows(prev => prev.filter(w => w.id !== workflowId));
-    message.success('工作流已删除');
+  // 处理工作流删除（调用真实 API）
+  const handleDelete = async (workflowId: number) => {
+    try {
+      setLoading(true);
+      await WorkflowAPI.deleteWorkflow(String(workflowId));
+      message.success('工作流已删除');
+      loadWorkflows();
+    } catch (error) {
+      console.error('Failed to delete workflow:', error);
+      message.error('删除工作流失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // 批量删除
-  const handleBatchDelete = () => {
-    setWorkflows(prev => prev.filter(workflow => !selectedRowKeys.includes(workflow.id)));
-    setSelectedRowKeys([]);
-    message.success(`已删除 ${selectedRowKeys.length} 个工作流`);
+  // 批量删除（循环调用真实 API）
+  const handleBatchDelete = async () => {
+    try {
+      setLoading(true);
+      await Promise.all(
+        selectedRowKeys.map(id => WorkflowAPI.deleteWorkflow(String(id)))
+      );
+      message.success(`已删除 ${selectedRowKeys.length} 个工作流`);
+      setSelectedRowKeys([]);
+      loadWorkflows();
+    } catch (error) {
+      console.error('Failed to batch delete workflows:', error);
+      message.error('批量删除失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 查看详情
@@ -267,51 +291,39 @@ const WorkflowManagement = () => {
     setShowDetailModal(true);
   };
 
-  // 保存工作流
+  // 保存工作流（创建或更新走真实 API）
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       if (selectedWorkflow) {
         // 编辑
-        setWorkflows(prev =>
-          prev.map(workflow =>
-            workflow.id === selectedWorkflow.id
-              ? {
-                  ...workflow,
-                  ...values,
-                  lastModified: new Date().toLocaleString('zh-CN'),
-                }
-              : workflow
-          )
-        );
+        await WorkflowAPI.updateWorkflow(String(selectedWorkflow.id), {
+          name: values.name,
+          description: values.description,
+          category: values.type,
+        } as never);
         message.success('工作流更新成功');
       } else {
         // 新建
-        const newWorkflow: Workflow = {
-          id: Math.max(...workflows.map(w => w.id)) + 1,
-          ...values,
-          status: WORKFLOW_STATUS.DRAFT,
-          version: 'v1.0',
-          createdBy: '当前用户',
-          createdAt: new Date().toLocaleString('zh-CN'),
-          lastModified: new Date().toLocaleString('zh-CN'),
-          stepsCount: 0,
-          activeInstances: 0,
-          completedInstances: 0,
-        };
-        setWorkflows(prev => [newWorkflow, ...prev]);
+        await WorkflowAPI.createWorkflow({
+          code: values.name,
+          name: values.name,
+          description: values.description,
+          type: (values.type as 'approval') || 'approval',
+          status: 'draft',
+        } as never);
         message.success('工作流创建成功');
       }
 
       setShowCreateModal(false);
       setSelectedWorkflow(null);
       form.resetFields();
+      loadWorkflows();
     } catch (error) {
-      message.error('保存失败，请检查必填项');
+      console.error('Failed to save workflow:', error);
+      message.error('保存失败，请检查必填项或后端可用性');
     } finally {
       setLoading(false);
     }

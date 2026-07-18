@@ -104,6 +104,149 @@ export async function aiGetMetrics(days = 7): Promise<AIMetrics> {
   return httpClient.get<AIMetrics>(`/api/v1/ai/metrics?days=${days}`);
 }
 
+// ==================== SSE Streaming Chat ====================
+
+/** Server-Sent Event payload types emitted by /ai/chat/stream. */
+export type AIChatStreamEvent =
+  | { type: 'sources'; sources: RagAnswer[] }
+  | { type: 'delta'; content: string }
+  | { type: 'done'; conversationId: number }
+  | { type: 'error'; message: string };
+
+export interface AIChatStreamCallbacks {
+  onSources?: (sources: RagAnswer[]) => void;
+  onDelta?: (delta: string) => void;
+  onDone?: (conversationId: number) => void;
+  onError?: (message: string) => void;
+}
+
+export interface AIChatStreamRequest {
+  query: string;
+  conversationId?: number;
+  limit?: number;
+  signal?: AbortSignal;
+}
+
+/**
+ * Stream a RAG-backed answer over SSE. Falls back to the plain /ai/chat
+ * endpoint if streaming is unsupported by the environment (e.g. legacy
+ * browsers without ReadableStream). Returns the final conversationId once the
+ * stream finishes.
+ */
+export async function aiChatStream(
+  req: AIChatStreamRequest,
+  callbacks: AIChatStreamCallbacks = {}
+): Promise<number> {
+  const url = `${httpClient.getBaseURL()}/api/v1/ai/chat/stream`;
+  const token = httpClient.getAuthToken();
+  const tenantId = httpClient.getTenantId();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'text/event-stream',
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (tenantId) headers['X-Tenant-ID'] = String(tenantId);
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    credentials: 'include',
+    signal: req.signal,
+    body: JSON.stringify({
+      query: req.query,
+      limit: req.limit,
+      conversationId: req.conversationId,
+    }),
+  });
+
+  if (!response.ok || !response.body) {
+    const message = `AI chat stream failed: HTTP ${response.status}`;
+    callbacks.onError?.(message);
+    throw new Error(message);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
+  let finalConversationId = 0;
+
+  const dispatch = (event: string, dataRaw: string) => {
+    let data: unknown;
+    try {
+      data = JSON.parse(dataRaw);
+    } catch {
+      return;
+    }
+    switch (event) {
+      case 'sources': {
+        const sources = Array.isArray(data) ? (data as RagAnswer[]) : [];
+        callbacks.onSources?.(sources);
+        break;
+      }
+      case 'delta': {
+        const payload = data as { content?: string };
+        if (payload && typeof payload.content === 'string') {
+          callbacks.onDelta?.(payload.content);
+        }
+        break;
+      }
+      case 'done': {
+        const payload = data as { conversationId?: number };
+        finalConversationId = payload?.conversationId ?? finalConversationId;
+        callbacks.onDone?.(finalConversationId);
+        break;
+      }
+      case 'error': {
+        const payload = data as { message?: string };
+        callbacks.onError?.(payload?.message ?? 'unknown stream error');
+        break;
+      }
+      default:
+        break;
+    }
+  };
+
+  const flushBlock = (block: string) => {
+    let event = 'message';
+    const dataLines: string[] = [];
+    for (const line of block.split('\n')) {
+      if (line.startsWith('event:')) {
+        event = line.slice(6).trim();
+      } else if (line.startsWith('data:')) {
+        dataLines.push(line.slice(5).trim());
+      }
+    }
+    if (dataLines.length > 0) {
+      dispatch(event, dataLines.join('\n'));
+    }
+  };
+
+  // Standard SSE frames are separated by "\n\n". Buffer until we see one.
+  // We support "\r\n\r\n" as well for CRLF servers.
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    let boundary = buffer.indexOf('\n\n');
+    while (boundary !== -1) {
+      const block = buffer.slice(0, boundary);
+      buffer = buffer.slice(boundary + 2);
+      if (block.trim().length > 0) {
+        flushBlock(block);
+      }
+      boundary = buffer.indexOf('\n\n');
+    }
+  }
+  // Flush any trailing partial block (e.g. server closed without final \n\n).
+  if (buffer.trim().length > 0) {
+    flushBlock(buffer);
+  }
+
+  return finalConversationId;
+}
+
 // ==================== 兼容类包装器 ====================
 
 export class AIApi {
@@ -141,5 +284,12 @@ export class AIApi {
 
   static async getMetrics(days = 7): Promise<AIMetrics> {
     return aiGetMetrics(days);
+  }
+
+  static chatStream(
+    req: AIChatStreamRequest,
+    callbacks: AIChatStreamCallbacks = {}
+  ): Promise<number> {
+    return aiChatStream(req, callbacks);
   }
 }

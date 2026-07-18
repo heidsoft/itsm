@@ -14,6 +14,7 @@ export default function DepartmentsPage() {
   const { message, modal } = App.useApp();
   const { t } = useI18n();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -104,6 +105,7 @@ export default function DepartmentsPage() {
   ];
 
   const handleEdit = (record: Department) => {
+    setEditingDepartment(record);
     form.setFieldsValue(record);
     setIsModalVisible(true);
   };
@@ -129,15 +131,16 @@ export default function DepartmentsPage() {
       const values = await form.validateFields();
       setLoading(true);
 
-      // If editing, we need the ID. But currently form doesn't have it.
-      // We should store current editing record or use a hidden field.
-      // For simplicity, let's assume create for now or check how to handle edit.
-      // Actually, handleEdit sets values.
-
-      await departmentService.createDepartment(values);
+      // 编辑/新建分支，避免修改时走 create 导致重复记录
+      if (editingDepartment) {
+        await departmentService.updateDepartment(editingDepartment.id, values);
+      } else {
+        await departmentService.createDepartment(values);
+      }
 
       message.success(t('common.saveSuccess'));
       setIsModalVisible(false);
+      setEditingDepartment(null);
       form.resetFields();
       fetchDepartments();
     } catch (error) {
@@ -169,6 +172,7 @@ export default function DepartmentsPage() {
           type="primary"
           icon={<Plus />}
           onClick={() => {
+            setEditingDepartment(null);
             form.resetFields();
             setIsModalVisible(true);
           }}
@@ -187,10 +191,14 @@ export default function DepartmentsPage() {
       />
 
       <Modal
-        title={t('departments.createOrEdit')}
+        title={editingDepartment ? t('departments.editTitle') : t('departments.createOrEdit')}
         open={isModalVisible}
         onOk={handleOk}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setEditingDepartment(null);
+          form.resetFields();
+        }}
         confirmLoading={loading}
       >
         <Form form={form} layout="vertical">
@@ -218,7 +226,7 @@ export default function DepartmentsPage() {
           >
             <Input placeholder={t('common.inputPlaceholder') + t('departments.departmentCode')} />
           </Form.Item>
-          <Form.Item name="parent_id" label={t('departments.parentDepartment')}>
+          <Form.Item name="parentId" label={t('departments.parentDepartment')}>
             <TreeSelect
               treeData={treeData}
               placeholder={t('common.selectPlaceholder') + t('departments.parentDepartment')}
@@ -227,7 +235,7 @@ export default function DepartmentsPage() {
               treeDefaultExpandAll
             />
           </Form.Item>
-          <Form.Item name="manager_id" label={t('departments.manager')}>
+          <Form.Item name="managerId" label={t('departments.manager')}>
             <Select
               placeholder={t('common.selectPlaceholder') + t('departments.manager')}
               options={users}

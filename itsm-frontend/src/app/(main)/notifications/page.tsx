@@ -313,24 +313,34 @@ export default function NotificationsPage() {
   const handleDeleteNotification = useCallback(
     async (notificationId: number) => {
       try {
-        // 这里需要添加删除 API
+        await TicketNotificationApi.deleteNotification(notificationId);
         message.success(t('notifications.delete'));
         loadNotifications();
       } catch (error) {
         message.error(t('notifications.loadFailed'));
+        console.error('Failed to delete notification:', error);
       }
     },
     [t, loadNotifications]
   );
 
-  // 清空所有通知
+  // 清空所有通知（获取全部通知后逐条删除）
   const handleClearAll = useCallback(async () => {
     try {
-      // 这里需要添加清空 API
+      // 获取所有通知（含已读与未读），逐条删除
+      const response = await TicketNotificationApi.getUserNotifications({
+        page: 1,
+        pageSize: 200,
+      });
+      const allItems = response.notifications || [];
+      await Promise.all(
+        allItems.map(item => TicketNotificationApi.deleteNotification(item.id))
+      );
       message.success(t('notifications.clearAll'));
       loadNotifications();
     } catch (error) {
       message.error(t('notifications.loadFailed'));
+      console.error('Failed to clear all notifications:', error);
     }
   }, [t, loadNotifications]);
 

@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, LayoutGrid, RefreshCw, Plug } from 'lucide-react'
 import { PageContainer } from '@/app/components/PageContainer';
 import type { Application, Microservice } from '@/lib/services/application-service';
 import { applicationService } from '@/lib/services/application-service';
+import { projectService } from '@/lib/services/project-service';
 import { useI18n } from '@/lib/i18n';
 
 const { TabPane } = Tabs;
@@ -15,11 +16,13 @@ export default function ApplicationsPage() {
   const [activeTab, setActiveTab] = useState('applications');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalType, setModalType] = useState<'application' | 'microservice'>('application');
+  const [editingRecord, setEditingRecord] = useState<ApplicationRecord | MicroserviceRecord | null>(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [microservices, setMicroservices] = useState<Microservice[]>([]);
   const [fetching, setFetching] = useState(false);
+  const [projectOptions, setProjectOptions] = useState<{ label: string; value: number }[]>([]);
 
   const fetchData = async () => {
     setFetching(true);
@@ -45,6 +48,10 @@ export default function ApplicationsPage() {
 
   useEffect(() => {
     fetchData();
+    projectService
+      .listProjects()
+      .then(data => setProjectOptions(data.map(p => ({ label: p.name, value: p.id }))))
+      .catch(error => console.error('Failed to fetch projects:', error));
   }, []);
 
   const appColumns = [
@@ -153,6 +160,7 @@ export default function ApplicationsPage() {
 
   const handleCreate = () => {
     setModalType(activeTab === 'applications' ? 'application' : 'microservice');
+    setEditingRecord(null);
     form.resetFields();
     setIsModalVisible(true);
   };
@@ -169,6 +177,7 @@ type RecordData = ApplicationRecord | MicroserviceRecord;
 
 const handleEdit = (record: RecordData, type: 'application' | 'microservice') => {
   setModalType(type);
+  setEditingRecord(record);
   form.setFieldsValue(record);
   setIsModalVisible(true);
 };
@@ -198,14 +207,24 @@ const handleDelete = (record: RecordData) => {
       const values = await form.validateFields();
       setLoading(true);
 
+      // 根据是否存在 editingRecord 决定走新增还是更新；避免“修改却走 create”导致数据污染
       if (modalType === 'application') {
-        await applicationService.createApplication(values);
+        if (editingRecord) {
+          await applicationService.updateApplication(editingRecord.id, values);
+        } else {
+          await applicationService.createApplication(values);
+        }
       } else {
-        await applicationService.createMicroservice(values);
+        if (editingRecord) {
+          await applicationService.updateMicroservice(editingRecord.id, values);
+        } else {
+          await applicationService.createMicroservice(values);
+        }
       }
 
       message.success(t('common.saveSuccess'));
       setIsModalVisible(false);
+      setEditingRecord(null);
       form.resetFields();
       fetchData();
     } catch (error) {
@@ -241,10 +260,13 @@ const handleDelete = (record: RecordData) => {
       </Tabs>
 
       <Modal
-        title={modalType === 'application' ? '新建/编辑应用' : '新建/编辑微服务'}
+        title={modalType === 'application' ? (editingRecord ? '编辑应用' : '新建应用') : (editingRecord ? '编辑微服务' : '新建微服务')}
         open={isModalVisible}
         onOk={handleOk}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setEditingRecord(null);
+        }}
         confirmLoading={loading}
         width={600}
       >
@@ -258,8 +280,8 @@ const handleDelete = (record: RecordData) => {
 
           {modalType === 'application' ? (
             <>
-              <Form.Item name="project_id" label="所属项目">
-                <Select placeholder="请选择项目" options={[{ label: 'ITSM 系统重构', value: 1 }]} />
+              <Form.Item name="projectId" label="所属项目">
+                <Select placeholder="请选择项目" options={projectOptions} />
               </Form.Item>
               <Form.Item name="type" label="应用类型">
                 <Select
@@ -275,7 +297,7 @@ const handleDelete = (record: RecordData) => {
           ) : (
             <>
               <Form.Item
-                name="application_id"
+                name="applicationId"
                 label="所属应用"
                 rules={[{ required: true, message: '请选择所属应用' }]}
               >

@@ -480,7 +480,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
               <Option value="closed">已关闭</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="assignee_id" label="处理人">
+          <Form.Item name="assigneeId" label="处理人">
             <Select placeholder="请选择处理人" allowClear loading={loadingUsers}>
               {users.map(user => (
                 <Option key={user.id} value={user.id}>

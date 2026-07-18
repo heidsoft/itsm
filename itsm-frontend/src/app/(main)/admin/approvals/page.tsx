@@ -172,10 +172,10 @@ export default function ApprovalManagement() {
     form.setFieldsValue({
       name: record.name,
       description: record.description,
-      ticketType: record.ticketType || record.ticketType,
+      ticketType: record.ticketType,
       priority: record.priority,
-      isActive: record.isActive ?? record.isActive,
-      workflowId: record.workflowId || record.workflowId,
+      isActive: record.isActive ?? true,
+      workflowId: record.workflowId,
       nodes: record.nodes?.length ? record.nodes : [defaultApprovalNode()],
     });
     setShowModal(true);
@@ -604,17 +604,17 @@ function normalizeNodes(nodes: ApprovalNode[]): ApprovalNode[] {
     return {
       ...defaultApprovalNode(index + 1),
       ...node,
-      approverType: node.approverType || node.approverType || 'role',
+      approverType: node.approverType || 'role',
       approverIds: approverIds
-      .map(id => Number(id))
-      .filter(id => Number.isInteger(id) && id > 0),
-      assigneeType: node.assigneeType || node.assigneeType,
-      assigneeValue: node.assigneeValue || node.assigneeValue,
-      approvalMode: node.approvalMode || node.approvalMode || 'any',
-      timeoutHours: node.timeoutHours || node.timeoutHours,
-      allowReject: node.allowReject ?? node.allowReject ?? true,
-      allowDelegate: node.allowDelegate ?? node.allowDelegate ?? false,
-      rejectAction: node.rejectAction || node.rejectAction || 'end',
+        .map(id => Number(id))
+        .filter(id => Number.isInteger(id) && id > 0),
+      assigneeType: node.assigneeType,
+      assigneeValue: node.assigneeValue,
+      approvalMode: node.approvalMode || 'any',
+      timeoutHours: node.timeoutHours,
+      allowReject: node.allowReject ?? true,
+      allowDelegate: node.allowDelegate ?? false,
+      rejectAction: node.rejectAction || 'end',
       level: Number(node.level || index + 1),
     };
   });

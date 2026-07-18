@@ -40,121 +40,94 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { RoleAPI } from '@/lib/api/role-api';
 import { UserApi } from '@/lib/api/user-api';
+import type { PermissionCatalogItem } from '@/lib/api/api-config';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// 权限模块定义
-const PERMISSION_MODULES = {
-  DASHBOARD: 'dashboard',
-  TICKETS: 'ticket',
-  INCIDENTS: 'incident',
-  PROBLEMS: 'problem',
-  CHANGES: 'change',
-  SERVICE_CATALOG: 'service_catalog',
-  SERVICE_REQUEST: 'service_request',
-  KNOWLEDGE_BASE: 'knowledge',
-  CMDB: 'cmdb',
-  ASSETS: 'asset',
-  RELEASES: 'release',
-  REPORTS: 'report',
-  ADMIN: 'admin',
-  USERS: 'user',
-  ROLES: 'role',
-  GROUPS: 'groups',
-  ORG: 'org',
-  WORKFLOWS: 'bpmn',
-  SYSTEM_CONFIG: 'system_config',
-  AI: 'ai',
-} as const;
+// 展示层映射：资源代码 -> 中文模块名（后端 permission_definition 未存中文时兜底）
+// 后端拉取的 permission.name 若为空或与代码相同，则使用此表；否则优先展示后端 name
+const RESOURCE_LABELS: Record<string, string> = {
+  dashboard: '仪表盘',
+  ticket: '工单管理',
+  ticket_category: '工单分类',
+  incident: '事件管理',
+  problem: '问题管理',
+  change: '变更管理',
+  service_catalog: '服务目录',
+  service_request: '服务请求',
+  knowledge: '知识库',
+  cmdb: 'CMDB',
+  asset: '资产管理',
+  license: '许可证管理',
+  release: '发布管理',
+  report: '报表分析',
+  admin: '系统管理',
+  user: '用户管理',
+  role: '角色管理',
+  groups: '用户组管理',
+  org: '组织架构',
+  bpmn: '工作流管理',
+  workflow: '工作流实例',
+  system_config: '系统配置',
+  ai: 'AI 能力',
+};
 
-// 权限操作类型
-const PERMISSION_ACTIONS = {
-  VIEW: 'view',
-  READ: 'read',
-  CREATE: 'create',
-  WRITE: 'write',
-  UPDATE: 'update',
-  DELETE: 'delete',
-  MANAGE: 'manage',
-  APPROVE: 'approve',
-  ASSIGN: 'assign',
-  EXPORT: 'export',
-  IMPORT: 'import',
-  ALL: 'all',
-} as const;
+// 展示层映射：动作代码 -> 中文标签
+const ACTION_LABELS: Record<string, string> = {
+  view: '查看',
+  read: '读取',
+  create: '创建',
+  write: '写入',
+  update: '编辑',
+  delete: '删除',
+  manage: '管理',
+  approve: '审批',
+  assign: '分配',
+  all: '全部',
+  export: '导出',
+  import: '导入',
+};
 
-// 权限定义
-const PERMISSIONS = [
-  { module: PERMISSION_MODULES.DASHBOARD, name: '仪表盘', permissions: ['view'] },
-  {
-    module: PERMISSION_MODULES.TICKETS,
-    name: '工单管理',
-    permissions: ['view', 'create', 'update', 'delete'],
-  },
-  {
-    module: PERMISSION_MODULES.INCIDENTS,
-    name: '事件管理',
-    permissions: ['view', 'create', 'update', 'delete'],
-  },
-  {
-    module: PERMISSION_MODULES.PROBLEMS,
-    name: '问题管理',
-    permissions: ['view', 'create', 'update', 'delete'],
-  },
-  {
-    module: PERMISSION_MODULES.CHANGES,
-    name: '变更管理',
-    permissions: ['view', 'create', 'update', 'delete'],
-  },
-  {
-    module: PERMISSION_MODULES.SERVICE_CATALOG,
-    name: '服务目录',
-    permissions: ['read', 'write', 'delete'],
-  },
-  {
-    module: PERMISSION_MODULES.SERVICE_REQUEST,
-    name: '服务请求',
-    permissions: ['read', 'write', 'delete', 'approve'],
-  },
-  {
-    module: PERMISSION_MODULES.KNOWLEDGE_BASE,
-    name: '知识库',
-    permissions: ['read', 'write', 'delete'],
-  },
-  { module: PERMISSION_MODULES.CMDB, name: 'CMDB', permissions: ['read', 'write', 'delete'] },
-  { module: PERMISSION_MODULES.ASSETS, name: '资产管理', permissions: ['read', 'write', 'delete'] },
-  { module: PERMISSION_MODULES.RELEASES, name: '发布管理', permissions: ['read', 'write', 'delete'] },
-  { module: PERMISSION_MODULES.REPORTS, name: '报表分析', permissions: ['read', 'view', 'export'] },
-  { module: PERMISSION_MODULES.ADMIN, name: '系统管理', permissions: ['read', 'write', 'all'] },
-  {
-    module: PERMISSION_MODULES.USERS,
-    name: '用户管理',
-    permissions: ['read', 'write', 'delete', 'manage'],
-  },
-  {
-    module: PERMISSION_MODULES.ROLES,
-    name: '角色管理',
-    permissions: ['read', 'write', 'delete', 'manage'],
-  },
-  {
-    module: PERMISSION_MODULES.GROUPS,
-    name: '用户组管理',
-    permissions: ['read', 'write', 'delete'],
-  },
-  {
-    module: PERMISSION_MODULES.ORG,
-    name: '组织架构',
-    permissions: ['read', 'write'],
-  },
-  {
-    module: PERMISSION_MODULES.WORKFLOWS,
-    name: '工作流管理',
-    permissions: ['read', 'write', 'delete'],
-  },
-  { module: PERMISSION_MODULES.SYSTEM_CONFIG, name: '系统配置', permissions: ['read', 'write', 'update'] },
-  { module: PERMISSION_MODULES.AI, name: 'AI 能力', permissions: ['read', 'write'] },
-];
+// 按 resource 分组的权限模块，从后端 permission catalog 动态派生
+interface PermissionModule {
+  resource: string;
+  label: string;
+  actions: string[]; // 该资源下可用的操作代码，按 catalog 顺序去重
+}
+
+/**
+ * 从后端权限目录（PermissionCatalogItem[]）派生前端权限矩阵。
+ * - 按 resource 分组
+ * - 每组内按 catalog 出现顺序保留 action，去重
+ * - resource 展示名优先取 catalog 中 name 字段，缺失时兜底到 RESOURCE_LABELS，再兜底到 resource 代码
+ */
+function derivePermissionModules(catalog: PermissionCatalogItem[]): PermissionModule[] {
+  const grouped = new Map<string, { label: string; actions: string[] }>();
+  for (const item of catalog) {
+    const resource = item.resource || '';
+    const action = item.action || '';
+    if (!resource || !action) continue;
+    let bucket = grouped.get(resource);
+    if (!bucket) {
+      // name 若与 code 相同，视为无中文，走 RESOURCE_LABELS 兜底
+      const backendName = item.name && item.name !== item.code ? item.name : undefined;
+      bucket = {
+        label: backendName || RESOURCE_LABELS[resource] || resource,
+        actions: [],
+      };
+      grouped.set(resource, bucket);
+    }
+    if (!bucket.actions.includes(action)) {
+      bucket.actions.push(action);
+    }
+  }
+  return Array.from(grouped.entries()).map(([resource, { label, actions }]) => ({
+    resource,
+    label,
+    actions,
+  }));
+}
 
 export default function RoleManagement() {
   interface RoleItem {
@@ -180,6 +153,11 @@ export default function RoleManagement() {
     totalUsers: 0,
   });
   const [availablePermissions, setAvailablePermissions] = useState<string[]>([]);
+  // 从后端 permission catalog 动态派生的权限模块矩阵
+  const [permissionModules, setPermissionModules] = useState<PermissionModule[]>([]);
+  const [permissionCatalog, setPermissionCatalog] = useState<PermissionCatalogItem[]>([]);
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const [permissionsError, setPermissionsError] = useState<string | null>(null);
 
   // 加载角色数据
   const loadRoles = async () => {
@@ -218,20 +196,27 @@ export default function RoleManagement() {
     }
   };
 
-  // 加载权限列表
+  // 加载权限目录（动态派生模块矩阵）
   const loadPermissions = async () => {
+    setPermissionsLoading(true);
+    setPermissionsError(null);
     try {
-      const permissions = await RoleAPI.getPermissions();
-      setAvailablePermissions(permissions);
+      const catalog = await RoleAPI.getPermissionCatalog();
+      setPermissionCatalog(catalog);
+      setAvailablePermissions(catalog.map(p => p.code));
+      const modules = derivePermissionModules(catalog);
+      setPermissionModules(modules);
+      if (modules.length === 0) {
+        setPermissionsError('后端未返回任何权限定义，请先点击"初始化默认权限"');
+      }
     } catch (error) {
-      // 使用默认权限列表
-      const defaultPermissions: string[] = [];
-      Object.values(PERMISSION_MODULES).forEach(module => {
-        Object.values(PERMISSION_ACTIONS).forEach(action => {
-          defaultPermissions.push(`${module}:${action}`);
-        });
-      });
-      setAvailablePermissions(defaultPermissions);
+      console.error('Failed to load permission catalog:', error);
+      setPermissionCatalog([]);
+      setAvailablePermissions([]);
+      setPermissionModules([]);
+      setPermissionsError('加载权限目录失败，请检查后端服务');
+    } finally {
+      setPermissionsLoading(false);
     }
   };
 
@@ -247,13 +232,13 @@ export default function RoleManagement() {
     try {
       const values = await form.validateFields();
 
-      // 构建权限编码列表
+      // 构建权限编码列表（遍历后端返回的权限矩阵，而非硬编码）
       const permissionCodes: string[] = [];
-      Object.values(PERMISSION_MODULES).forEach(module => {
-        Object.values(PERMISSION_ACTIONS).forEach(action => {
-          const fieldName = `${module}_${action}`;
+      permissionModules.forEach(({ resource, actions }) => {
+        actions.forEach(action => {
+          const fieldName = `${resource}_${action}`;
           if (values[fieldName]) {
-            permissionCodes.push(`${module}:${action}`);
+            permissionCodes.push(`${resource}:${action}`);
           }
         });
       });
@@ -280,7 +265,11 @@ export default function RoleManagement() {
       // 分配权限（使用专用接口）
       if (permissionCodes.length > 0) {
         try {
-          const catalog = await RoleAPI.getPermissionCatalog();
+          // 优先使用已加载的 catalog，避免重复请求
+          const catalog =
+            permissionCatalog.length > 0
+              ? permissionCatalog
+              : await RoleAPI.getPermissionCatalog();
           const codeToId = new Map(catalog.map(p => [p.code, p.id]));
           const permissionIds = permissionCodes
             .map(code => codeToId.get(code))
@@ -331,11 +320,11 @@ export default function RoleManagement() {
   };
 
   // 处理权限全选
-  const handleSelectAllModule = (module: string, checked: boolean) => {
+  const handleSelectAllModule = (resource: string, checked: boolean) => {
     const modulePermissions: Record<string, boolean> = {};
-    const moduleConfig = PERMISSIONS.find(p => p.module === module);
-    (moduleConfig?.permissions || []).forEach(action => {
-      modulePermissions[`${module}_${action}`] = checked;
+    const moduleConfig = permissionModules.find(p => p.resource === resource);
+    (moduleConfig?.actions || []).forEach(action => {
+      modulePermissions[`${resource}_${action}`] = checked;
     });
     form.setFieldsValue(modulePermissions);
   };
@@ -400,11 +389,11 @@ export default function RoleManagement() {
                   status: record.status !== 'inactive',
                 };
 
-                // 设置权限值
-                Object.values(PERMISSION_MODULES).forEach(module => {
-                  Object.values(PERMISSION_ACTIONS).forEach(action => {
-                    const permission = `${module}:${action}`;
-                    formValues[`${module}_${action}`] = record.permissions.includes(permission);
+                // 设置权限值（基于后端返回的动态矩阵，而非硬编码）
+                permissionModules.forEach(({ resource, actions }) => {
+                  actions.forEach(action => {
+                    const permission = `${resource}:${action}`;
+                    formValues[`${resource}_${action}`] = record.permissions.includes(permission);
                   });
                 });
 
@@ -434,55 +423,57 @@ export default function RoleManagement() {
     <div className="space-y-6">
       <Alert
         message="权限说明"
-        description="为角色分配相应的权限，控制用户可以访问的功能模块和操作。"
+        description="权限矩阵由后端权限目录动态生成。为角色分配相应的权限，控制用户可以访问的功能模块和操作。"
         type="info"
         showIcon
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.entries(PERMISSION_MODULES).map(([key, module]) => {
-          const moduleConfig = PERMISSIONS.find(p => p.module === module);
-          if (!moduleConfig) return null;
+      {permissionsError && (
+        <Alert
+          message={permissionsError}
+          type="warning"
+          showIcon
+          action={
+            <Button size="small" type="link" onClick={handleInitPermissions} loading={loading}>
+              初始化默认权限
+            </Button>
+          }
+        />
+      )}
 
-          return (
+      {permissionsLoading ? (
+        <div className="text-center py-8 text-gray-500">正在加载权限目录…</div>
+      ) : permissionModules.length === 0 && !permissionsError ? (
+        <div className="text-center py-8 text-gray-500">暂无权限定义</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {permissionModules.map(({ resource, label, actions }) => (
             <Card
-              key={key}
+              key={resource}
               size="small"
               title={
                 <div className="flex items-center">
                   <Shield className="w-4 h-4 mr-2" />
-                  {moduleConfig.name}
+                  {label}
+                  <Text type="secondary" className="ml-2 text-xs">
+                    {resource}
+                  </Text>
                 </div>
               }
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">全选</span>
-                  <Checkbox onChange={e => handleSelectAllModule(module, e.target.checked)} />
+                  <Checkbox onChange={e => handleSelectAllModule(resource, e.target.checked)} />
                 </div>
                 <Divider className="my-2" />
                 <div className="grid grid-cols-2 gap-2">
-                  {moduleConfig.permissions.map(action => {
-                    const actionLabel =
-                      {
-                        view: '查看',
-                        create: '创建',
-                        update: '编辑',
-                        write: '写入',
-                        read: '读取',
-                        delete: '删除',
-                        manage: '管理',
-                        approve: '审批',
-                        assign: '分配',
-                        all: '全部',
-                        export: '导出',
-                        import: '导入',
-                      }[action] || action;
-
+                  {actions.map(action => {
+                    const actionLabel = ACTION_LABELS[action] || action;
                     return (
                       <div key={action} className="flex items-center">
                         <Form.Item
-                          name={`${module}_${action}`}
+                          name={`${resource}_${action}`}
                           valuePropName="checked"
                           className="mb-0"
                         >
@@ -496,9 +487,9 @@ export default function RoleManagement() {
                 </div>
               </div>
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 

@@ -1,5 +1,10 @@
 /**
  * 知识库 API 服务
+ *
+ * 端点路径规范：
+ * - 所有路径统一为 /api/v1/knowledge/articles 风格
+ * - 分类/标签/搜索/推荐/统计挂在 /api/v1/knowledge/* 命名空间下
+ * - 历史 /api/v1/knowledge-articles 由后端 router 兼容转发，但前端不再使用
  */
 
 import { httpClient } from './http-client';
@@ -24,111 +29,73 @@ import type {
   ImageUploadResult,
 } from '@/types/knowledge-base';
 
+// 统一路径前缀：文章路径、命名空间路径分离，避免散落的字符串拼接
+const ARTICLES_PREFIX = '/api/v1/knowledge/articles';
+const KNOWLEDGE_PREFIX = '/api/v1/knowledge';
+
 export class KnowledgeBaseApi {
   // ==================== 文章管理 ====================
 
-  /**
-   * 获取文章列表
-   * 后端路由结构：/api/v1/knowledge/articles（保持与 stats 等其它 API 一致）
-   * 说明：早期代码误用 /api/v1/knowledge-articles，与 stats 等接口前缀不一致，
-   * 修正后统一走 /api/v1/knowledge/articles 系列。
-   */
   static async getArticles(query?: ArticleQuery): Promise<{
     articles: KnowledgeArticle[];
     total: number;
   }> {
-    return httpClient.get('/api/v1/knowledge/articles', query);
+    return httpClient.get(`${ARTICLES_PREFIX}`, query);
   }
 
-  /**
-   * 获取单个文章
-   */
   static async getArticle(id: string): Promise<KnowledgeArticle> {
-    return httpClient.get(`/api/v1/knowledge-articles/${id}`);
+    return httpClient.get(`${ARTICLES_PREFIX}/${id}`);
   }
 
-  /**
-   * 通过slug获取文章
-   */
   static async getArticleBySlug(slug: string): Promise<KnowledgeArticle> {
-    return httpClient.get(`/api/v1/knowledge-articles/slug/${slug}`);
+    return httpClient.get(`${ARTICLES_PREFIX}/slug/${slug}`);
   }
 
-  /**
-   * 创建文章
-   */
   static async createArticle(request: CreateArticleRequest): Promise<KnowledgeArticle> {
-    return httpClient.post('/api/v1/knowledge-articles', request);
+    return httpClient.post(`${ARTICLES_PREFIX}`, request);
   }
 
-  /**
-   * 更新文章
-   */
   static async updateArticle(id: string, request: UpdateArticleRequest): Promise<KnowledgeArticle> {
-    return httpClient.put(`/api/v1/knowledge-articles/${id}`, request);
+    return httpClient.put(`${ARTICLES_PREFIX}/${id}`, request);
   }
 
-  /**
-   * 删除文章
-   */
   static async deleteArticle(id: string): Promise<void> {
-    return httpClient.delete(`/api/v1/knowledge-articles/${id}`);
+    return httpClient.delete(`${ARTICLES_PREFIX}/${id}`);
   }
 
-  /**
-   * 发布文章
-   */
   static async publishArticle(
     id: string,
     request?: PublishArticleRequest
   ): Promise<KnowledgeArticle> {
-    return httpClient.post(`/api/v1/knowledge-articles/${id}/publish`, request);
+    return httpClient.post(`${ARTICLES_PREFIX}/${id}/publish`, request);
   }
 
-  /**
-   * 归档文章
-   */
   static async archiveArticle(id: string): Promise<KnowledgeArticle> {
-    return httpClient.post(`/api/v1/knowledge-articles/${id}/archive`);
+    return httpClient.post(`${ARTICLES_PREFIX}/${id}/archive`);
   }
 
-  /**
-   * 复制文章
-   */
   static async cloneArticle(id: string, title: string): Promise<KnowledgeArticle> {
-    return httpClient.post(`/api/v1/knowledge-articles/${id}/clone`, {
+    return httpClient.post(`${ARTICLES_PREFIX}/${id}/clone`, {
       title,
     });
   }
 
-  /**
-   * 批量操作
-   */
   static async batchOperation(
     operation: BatchArticleOperation
   ): Promise<{ success: number; failed: number }> {
-    return httpClient.post('/api/v1/knowledge-articles/batch', operation);
+    return httpClient.post(`${ARTICLES_PREFIX}/batch`, operation);
   }
 
   // ==================== 版本控制 ====================
 
-  /**
-   * 获取文章版本历史
-   */
   static async getArticleVersions(articleId: string): Promise<ArticleVersion[]> {
-    return httpClient.get(`/api/v1/knowledge-articles/${articleId}/versions`);
+    return httpClient.get(`${ARTICLES_PREFIX}/${articleId}/versions`);
   }
 
-  /**
-   * 恢复到指定版本
-   */
   static async restoreVersion(articleId: string, version: number): Promise<KnowledgeArticle> {
-    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/versions/${version}/restore`);
+    return httpClient.post(`${ARTICLES_PREFIX}/${articleId}/versions/${version}/restore`);
   }
 
-  /**
-   * 比较版本
-   */
   static async compareVersions(
     articleId: string,
     fromVersion: number,
@@ -140,7 +107,7 @@ export class KnowledgeBaseApi {
       content: string;
     }>;
   }> {
-    return httpClient.get(`/api/v1/knowledge-articles/${articleId}/versions/compare`, {
+    return httpClient.get(`${ARTICLES_PREFIX}/${articleId}/versions/compare`, {
       from: fromVersion,
       to: toVersion,
     });
@@ -148,60 +115,39 @@ export class KnowledgeBaseApi {
 
   // ==================== 分类和标签 ====================
 
-  /**
-   * 获取分类列表
-   */
   static async getCategories(): Promise<KnowledgeCategory[]> {
-    return httpClient.get('/api/v1/knowledge-articles/categories');
+    return httpClient.get(`${KNOWLEDGE_PREFIX}/categories`);
   }
 
-  /**
-   * 创建分类
-   */
   static async createCategory(
     category: Omit<KnowledgeCategory, 'id' | 'level' | 'articleCount' | 'createdAt' | 'updatedAt'>
   ): Promise<KnowledgeCategory> {
-    return httpClient.post('/api/v1/knowledge-articles/categories', category);
+    return httpClient.post(`${KNOWLEDGE_PREFIX}/categories`, category);
   }
 
-  /**
-   * 更新分类
-   */
   static async updateCategory(
     id: string,
     category: Partial<KnowledgeCategory>
   ): Promise<KnowledgeCategory> {
-    return httpClient.put(`/api/v1/knowledge-articles/categories/${id}`, category);
+    return httpClient.put(`${KNOWLEDGE_PREFIX}/categories/${id}`, category);
   }
 
-  /**
-   * 删除分类
-   */
   static async deleteCategory(id: string): Promise<void> {
-    return httpClient.delete(`/api/v1/knowledge-articles/categories/${id}`);
+    return httpClient.delete(`${KNOWLEDGE_PREFIX}/categories/${id}`);
   }
 
-  /**
-   * 获取标签列表
-   */
   static async getTags(): Promise<KnowledgeTag[]> {
-    return httpClient.get('/api/v1/knowledge-articles/tags');
+    return httpClient.get(`${KNOWLEDGE_PREFIX}/tags`);
   }
 
-  /**
-   * 创建标签
-   */
   static async createTag(
     tag: Omit<KnowledgeTag, 'id' | 'articleCount' | 'createdAt'>
   ): Promise<KnowledgeTag> {
-    return httpClient.post('/api/v1/knowledge-articles/tags', tag);
+    return httpClient.post(`${KNOWLEDGE_PREFIX}/tags`, tag);
   }
 
   // ==================== 评论和反馈 ====================
 
-  /**
-   * 获取文章评论
-   */
   static async getComments(
     articleId: string,
     params?: {
@@ -212,190 +158,130 @@ export class KnowledgeBaseApi {
     comments: ArticleComment[];
     total: number;
   }> {
-    return httpClient.get(`/api/v1/knowledge-articles/${articleId}/comments`, params);
+    return httpClient.get(`${ARTICLES_PREFIX}/${articleId}/comments`, params);
   }
 
-  /**
-   * 添加评论
-   */
   static async addComment(
     articleId: string,
     content: string,
     parentId?: string
   ): Promise<ArticleComment> {
-    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/comments`, {
+    return httpClient.post(`${ARTICLES_PREFIX}/${articleId}/comments`, {
       content,
       parentId,
     });
   }
 
-  /**
-   * 删除评论
-   */
   static async deleteComment(commentId: string): Promise<void> {
-    return httpClient.delete(`/api/v1/knowledge-articles/comments/${commentId}`);
+    return httpClient.delete(`${ARTICLES_PREFIX}/comments/${commentId}`);
   }
 
-  /**
-   * 标记评论有用
-   */
   static async markCommentHelpful(commentId: string, helpful: boolean): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge-articles/comments/${commentId}/helpful`, {
+    return httpClient.post(`${ARTICLES_PREFIX}/comments/${commentId}/helpful`, {
       helpful,
     });
   }
 
-  /**
-   * 提交反馈
-   */
   static async submitFeedback(
     articleId: string,
     feedback: Omit<ArticleFeedback, 'id' | 'userId' | 'userName' | 'createdAt'>
   ): Promise<ArticleFeedback> {
-    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/feedback`, feedback);
+    return httpClient.post(`${ARTICLES_PREFIX}/${articleId}/feedback`, feedback);
   }
 
   // ==================== 互动 ====================
 
-  /**
-   * 点赞文章
-   */
   static async likeArticle(articleId: string): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/like`);
+    return httpClient.post(`${ARTICLES_PREFIX}/${articleId}/like`);
   }
 
-  /**
-   * 取消点赞
-   */
   static async unlikeArticle(articleId: string): Promise<void> {
-    return httpClient.delete(`/api/v1/knowledge-articles/${articleId}/like`);
+    return httpClient.delete(`${ARTICLES_PREFIX}/${articleId}/like`);
   }
 
-  /**
-   * 收藏文章
-   */
   static async bookmarkArticle(articleId: string): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/bookmark`);
+    return httpClient.post(`${ARTICLES_PREFIX}/${articleId}/bookmark`);
   }
 
-  /**
-   * 取消收藏
-   */
   static async unbookmarkArticle(articleId: string): Promise<void> {
-    return httpClient.delete(`/api/v1/knowledge-articles/${articleId}/bookmark`);
+    return httpClient.delete(`${ARTICLES_PREFIX}/${articleId}/bookmark`);
   }
 
-  /**
-   * 分享文章
-   */
   static async shareArticle(articleId: string, platform: string): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/share`, {
+    return httpClient.post(`${ARTICLES_PREFIX}/${articleId}/share`, {
       platform,
     });
   }
 
-  /**
-   * 记录浏览
-   */
   static async recordView(articleId: string): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/view`);
+    return httpClient.post(`${ARTICLES_PREFIX}/${articleId}/view`);
   }
 
   // ==================== 搜索和推荐 ====================
 
-  /**
-   * 搜索文章
-   */
   static async search(request: KnowledgeSearchRequest): Promise<KnowledgeSearchResult> {
-    return httpClient.post('/api/v1/knowledge-articles/search', request);
+    return httpClient.post(`${KNOWLEDGE_PREFIX}/search`, request);
   }
 
-  /**
-   * 获取推荐文章
-   */
   static async getRecommendations(articleId?: string, limit = 5): Promise<ArticleRecommendation[]> {
-    return httpClient.get('/api/v1/knowledge-articles/recommendations', {
+    return httpClient.get(`${KNOWLEDGE_PREFIX}/recommendations`, {
       articleId,
       limit,
     });
   }
 
-  /**
-   * 获取热门文章
-   */
   static async getPopularArticles(params?: {
     categoryId?: string;
     period?: 'day' | 'week' | 'month';
     limit?: number;
   }): Promise<KnowledgeArticle[]> {
-    return httpClient.get('/api/v1/knowledge-articles/popular', params);
+    return httpClient.get(`${KNOWLEDGE_PREFIX}/popular`, params);
   }
 
-  /**
-   * 获取最新文章
-   */
   static async getRecentArticles(params?: {
     categoryId?: string;
     limit?: number;
   }): Promise<KnowledgeArticle[]> {
-    return httpClient.get('/api/v1/knowledge-articles/recent', params);
+    return httpClient.get(`${KNOWLEDGE_PREFIX}/recent`, params);
   }
 
   // ==================== 富文本编辑器 ====================
 
-  /**
-   * 上传图片
-   */
   static async uploadImage(file: File): Promise<ImageUploadResult> {
     const formData = new FormData();
     formData.append('image', file);
-    return httpClient.post('/api/v1/knowledge-articles/upload/image', formData, {
+    return httpClient.post(`${ARTICLES_PREFIX}/upload/image`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   }
 
-  /**
-   * 自动保存草稿
-   */
   static async autoSaveDraft(articleId: string, content: string): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/autosave`, {
+    return httpClient.post(`${ARTICLES_PREFIX}/${articleId}/autosave`, {
       content,
     });
   }
 
   // ==================== 审核 ====================
 
-  /**
-   * 提交审核
-   */
   static async submitForReview(articleId: string, reviewerId?: number): Promise<KnowledgeArticle> {
-    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/review`, {
+    return httpClient.post(`${ARTICLES_PREFIX}/${articleId}/review`, {
       reviewerId,
     });
   }
 
-  /**
-   * 审核文章
-   */
   static async reviewArticle(
     articleId: string,
     request: ReviewArticleRequest
   ): Promise<KnowledgeArticle> {
-    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/review/decision`, request);
+    return httpClient.post(`${ARTICLES_PREFIX}/${articleId}/review/decision`, request);
   }
 
   // ==================== 统计和分析 ====================
 
-  /**
-   * 获取知识库统计
-   */
   static async getStats(): Promise<KnowledgeBaseStats> {
-    return httpClient.get('/api/v1/knowledge/stats');
+    return httpClient.get(`${KNOWLEDGE_PREFIX}/stats`);
   }
 
-  /**
-   * 获取文章分析
-   */
   static async getArticleAnalytics(
     articleId: string,
     params?: {
@@ -403,12 +289,9 @@ export class KnowledgeBaseApi {
       endDate?: string;
     }
   ): Promise<ArticleAnalytics> {
-    return httpClient.get(`/api/v1/knowledge-articles/${articleId}/analytics`, params);
+    return httpClient.get(`${ARTICLES_PREFIX}/${articleId}/analytics`, params);
   }
 
-  /**
-   * 导出知识库
-   */
   static async exportKnowledgeBase(params: {
     format: 'pdf' | 'html' | 'markdown';
     categoryId?: string;
@@ -416,7 +299,7 @@ export class KnowledgeBaseApi {
   }): Promise<Blob> {
     const response = await httpClient.request({
       method: 'POST',
-      url: '/api/v1/knowledge-articles/export',
+      url: `${ARTICLES_PREFIX}/export`,
       data: params,
       responseType: 'blob',
     });

@@ -167,7 +167,7 @@ export default function ProblemEditPage() {
 
           <Row gutter={24}>
             <Col span={24}>
-              <Form.Item name="root_cause" label="根本原因分析">
+              <Form.Item name="rootCause" label="根本原因分析">
                 <TextArea rows={4} placeholder="请详细描述问题的根本原因" />
               </Form.Item>
             </Col>

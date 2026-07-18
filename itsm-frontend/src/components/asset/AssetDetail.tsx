@@ -20,12 +20,14 @@ import {
   message,
   Typography,
 } from 'antd';
-import { ArrowLeft, User, Monitor, MapPin } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Monitor, MapPin } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import type { Asset } from '@/lib/api/asset-api';
 import { AssetApi } from '@/lib/api/asset-api';
+import type { User as UserType } from '@/lib/api/user-api';
+import { UserApi } from '@/lib/api/user-api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -60,6 +62,8 @@ const AssetDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [asset, setAsset] = useState<Asset | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -77,6 +81,19 @@ const AssetDetail: React.FC = () => {
       message.error('加载资产详情失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await UserApi.getUsers({ pageSize: 100 });
+      setUsers(response.users || []);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      message.error('加载用户列表失败');
+    } finally {
+      setUsersLoading(false);
     }
   };
 
@@ -225,11 +242,17 @@ const AssetDetail: React.FC = () => {
 
       <Card>
         <Space>
-          <Button type="primary" onClick={() => router.push(`/assets/${asset.id}`)}>
+          <Button type="primary" onClick={() => router.push(`/assets/${asset.id}/edit`)}>
             编辑
           </Button>
           {asset.status === 'available' && (
-            <Button icon={<User />} onClick={() => setAssignModalVisible(true)}>
+            <Button
+              icon={<UserIcon />}
+              onClick={() => {
+                loadUsers();
+                setAssignModalVisible(true);
+              }}
+            >
               分配资产
             </Button>
           )}
@@ -249,13 +272,22 @@ const AssetDetail: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="assigned_to"
+            name="assignedTo"
             label="分配给用户"
             rules={[{ required: true, message: '请选择用户' }]}
           >
-            <Select placeholder="选择用户" showSearch>
-              {/* 这里需要添加用户列表 */}
-              <Option value={1}>用户1</Option>
+            <Select
+              placeholder="选择用户"
+              showSearch
+              optionFilterProp="children"
+              loading={usersLoading}
+              notFoundContent={usersLoading ? '加载中...' : '暂无用户'}
+            >
+              {users.map((user) => (
+                <Option key={user.id} value={user.id}>
+                  {user.name || user.username}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
         </Form>

@@ -238,7 +238,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
             <Button
               type="text"
               icon={<Pencil />}
-              onClick={() => router.push(`/assets/${record.id}`)}
+              onClick={() => router.push(`/assets/${record.id}/edit`)}
               aria-label={`编辑资产 ${record.name || record.assetNumber}`}
             />
           </Tooltip>

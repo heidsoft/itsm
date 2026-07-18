@@ -329,7 +329,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
         >
           <Form.Item
             label="接收人"
-            name="user_ids"
+            name="userIds"
             rules={[{ required: true, message: '请选择接收人' }]}
           >
             <UserSelect mode="multiple" placeholder="请选择接收人" />
