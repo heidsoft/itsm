@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
@@ -16,6 +17,7 @@ type Service struct {
 	repo               Repository
 	logger             *zap.SugaredLogger
 	rag                *service.RAGService
+	llmGateway         *service.LLMGateway
 	tools              *service.ToolRegistry
 	queue              *service.ToolQueue
 	analytics          *service.AnalyticsService
@@ -52,6 +54,12 @@ func NewService(
 		rca:                rca,
 		aiTelemetryService: aiTelemetryService,
 	}
+}
+
+// SetLLMGateway wires an optional LLM gateway for streaming answers.
+// Kept as a setter to avoid churning existing NewService call sites.
+func (s *Service) SetLLMGateway(gateway *service.LLMGateway) {
+	s.llmGateway = gateway
 }
 
 // Tool Methods
@@ -167,6 +175,79 @@ func (s *Service) Chat(ctx context.Context, tenantID, userID int, query string, 
 	}
 
 	return items, convID, nil
+}
+
+// ChatStream streams a RAG answer through onDelta while emitting sources
+// separately via onSources. It also persists the resulting conversation and
+// messages after the stream completes so history is preserved.
+func (s *Service) ChatStream(
+	ctx context.Context,
+	tenantID, userID int,
+	query string,
+	limit int,
+	convID int,
+	onSources func([]map[string]any),
+	onDelta func(string),
+) (int, string, error) {
+	s.logger.Infow("AI ChatStream", "query", query, "tenantID", tenantID, "convID", convID)
+
+	if s.rag == nil {
+		return 0, "", fmt.Errorf("RAG service not initialized")
+	}
+
+	var (
+		captured strings.Builder
+		sources  []map[string]any
+	)
+
+	wrappedSources := func(items []map[string]any) {
+		sources = items
+		if onSources != nil {
+			onSources(items)
+		}
+	}
+	wrappedDelta := func(delta string) {
+		captured.WriteString(delta)
+		if onDelta != nil {
+			onDelta(delta)
+		}
+	}
+
+	if err := s.rag.AskWithLLMStream(ctx, tenantID, query, s.llmGateway, limit, wrappedSources, wrappedDelta); err != nil {
+		return 0, "", err
+	}
+
+	// Persist conversation and messages after the stream completes so we don't
+	// leave partial messages if the client disconnects mid-stream.
+	if convID == 0 {
+		conv, err := s.repo.CreateConversation(ctx, &Conversation{
+			Title:    "AI 对话",
+			UserID:   userID,
+			TenantID: tenantID,
+		})
+		if err == nil && conv != nil {
+			convID = conv.ID
+		}
+	}
+	if convID != 0 {
+		_, _ = s.repo.CreateMessage(ctx, &Message{
+			ConversationID: convID,
+			Role:           "user",
+			Content:        query,
+		})
+		payload := map[string]any{
+			"answer":  captured.String(),
+			"sources": sources,
+		}
+		buf, _ := json.Marshal(payload)
+		_, _ = s.repo.CreateMessage(ctx, &Message{
+			ConversationID: convID,
+			Role:           "assistant",
+			Content:        string(buf),
+		})
+	}
+
+	return convID, captured.String(), nil
 }
 
 // Root Cause Analysis

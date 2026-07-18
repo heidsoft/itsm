@@ -298,10 +298,85 @@ func (e *WorkflowEngine) evaluateApprovalCondition(condition WorkflowCondition, 
 	return approvalStatus == condition.Value
 }
 
-// compareValues 比较值
+// compareValues 比较两个任意类型的值
+// 支持 operator: equals / not_equals / greater_than / less_than /
+//                greater_than_or_equals / less_than_or_equals / contains / not_contains
+// 数值：float64 归一（int / int64 / float64 全部走 float 比较）
+// 字符串：字典序比较
+// 其他：仅支持 equals / not_equals（走 fmt.Sprintf 归一）
 func (e *WorkflowEngine) compareValues(a, b interface{}, operator string) bool {
-	// 实现类型安全的比较逻辑
-	// 这里简化处理，实际应该根据类型进行适当的比较
+	// 归一化为可比较的形式
+	toFloat := func(v interface{}) (float64, bool) {
+		switch x := v.(type) {
+		case float64:
+			return x, true
+		case float32:
+			return float64(x), true
+		case int:
+			return float64(x), true
+		case int32:
+			return float64(x), true
+		case int64:
+			return float64(x), true
+		case uint:
+			return float64(x), true
+		case uint32:
+			return float64(x), true
+		case uint64:
+			return float64(x), true
+		case json.Number:
+			f, err := x.Float64()
+			return f, err == nil
+		default:
+			return 0, false
+		}
+	}
+	toStr := func(v interface{}) string {
+		if s, ok := v.(string); ok {
+			return s
+		}
+		return fmt.Sprintf("%v", v)
+	}
+
+	// 优先数值比较
+	if fa, oka := toFloat(a); oka {
+		if fb, okb := toFloat(b); okb {
+			switch operator {
+			case "equals":
+				return fa == fb
+			case "not_equals":
+				return fa != fb
+			case "greater_than":
+				return fa > fb
+			case "less_than":
+				return fa < fb
+			case "greater_than_or_equals", "gte":
+				return fa >= fb
+			case "less_than_or_equals", "lte":
+				return fa <= fb
+			}
+		}
+	}
+
+	sa, sb := toStr(a), toStr(b)
+	switch operator {
+	case "equals":
+		return sa == sb
+	case "not_equals":
+		return sa != sb
+	case "greater_than":
+		return sa > sb
+	case "less_than":
+		return sa < sb
+	case "greater_than_or_equals", "gte":
+		return sa >= sb
+	case "less_than_or_equals", "lte":
+		return sa <= sb
+	case "contains":
+		return containsSubstring(sa, sb)
+	case "not_contains":
+		return !containsSubstring(sa, sb)
+	}
 	return false
 }
 

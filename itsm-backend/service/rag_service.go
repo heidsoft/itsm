@@ -310,6 +310,85 @@ func (r *RAGService) AskWithLLM(ctx context.Context, tenantID int, query string,
 	return strings.TrimSpace(response), nil
 }
 
+// AskWithLLMStream performs RAG and streams the LLM answer. It first retrieves
+// relevant documents (returned as sources so the caller can render citations),
+// then streams the generated answer through onDelta. If gateway is nil or the
+// LLM call fails, the function falls back to concatenating snippets so the
+// caller still has something to display.
+func (r *RAGService) AskWithLLMStream(
+	ctx context.Context,
+	tenantID int,
+	query string,
+	gateway *LLMGateway,
+	maxResults int,
+	onSources func(sources []map[string]any),
+	onDelta func(delta string),
+) error {
+	if maxResults <= 0 {
+		maxResults = 5
+	}
+	if onDelta == nil {
+		onDelta = func(string) {}
+	}
+	if onSources == nil {
+		onSources = func([]map[string]any) {}
+	}
+
+	docs, err := r.Ask(ctx, tenantID, query, maxResults)
+	if err != nil {
+		return fmt.Errorf("retrieval failed: %w", err)
+	}
+
+	// Emit sources first so the UI can show citations while the answer streams.
+	onSources(docs)
+
+	if len(docs) == 0 {
+		onDelta("未在知识库中找到相关内容。请尝试换一个关键词或补充上下文。")
+		return nil
+	}
+
+	// Fallback path when there is no LLM gateway: return concatenated snippets.
+	if gateway == nil {
+		var b strings.Builder
+		b.WriteString("知识库检索结果如下：\n\n")
+		for i, doc := range docs {
+			b.WriteString(fmt.Sprintf("【%d】%v\n", i+1, doc["title"]))
+			if snip, ok := doc["snippet"].(string); ok && snip != "" {
+				b.WriteString(snip)
+				b.WriteString("\n\n")
+			}
+		}
+		onDelta(b.String())
+		return nil
+	}
+
+	var contextBuilder strings.Builder
+	contextBuilder.WriteString("基于以下知识库内容回答用户问题：\n\n")
+	for i, doc := range docs {
+		contextBuilder.WriteString(fmt.Sprintf("【文档%d】%v\n", i+1, doc["title"]))
+		contextBuilder.WriteString(fmt.Sprintf("内容：%v\n\n", doc["snippet"]))
+	}
+
+	prompt := fmt.Sprintf(`%s
+用户问题：%s
+
+请根据以上知识库内容，用简洁专业的中文回答用户问题。
+如果知识库内容没有直接相关的信息，请说明"未在知识库中找到相关答案"。
+可以在回答末尾用【文档X】形式引用来源，但不要重复输出文档全文。
+
+回答：`, contextBuilder.String(), query)
+
+	messages := []LLMMessage{
+		{Role: "system", Content: "你是IT服务管理知识库助手，基于检索到的知识回答用户问题。"},
+		{Role: "user", Content: prompt},
+	}
+
+	if err := gateway.ChatStream(ctx, "", messages, onDelta); err != nil {
+		return fmt.Errorf("LLM stream failed: %w", err)
+	}
+	return nil
+}
+
 // IndexArticle adds a knowledge article to the vector store
 func (r *RAGService) IndexArticle(ctx context.Context, tenantID int, articleID int, title, content string) error {
 	if !r.useVector || r.embedder == nil {

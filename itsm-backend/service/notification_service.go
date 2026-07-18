@@ -25,10 +25,16 @@ func NewNotificationService(client *ent.Client) *NotificationService {
 
 // CreateNotification 创建通知
 func (s *NotificationService) CreateNotification(ctx context.Context, req *dto.CreateNotificationRequest) (*dto.Notification, error) {
-	// 验证用户是否存在
-	_, err := s.client.User.Query().Where(user.ID(req.UserID)).Only(ctx)
+	// 验证用户是否存在，且必须属于同一租户（防止越权给别租户 user 发通知）
+	if req.TenantID <= 0 {
+		return nil, fmt.Errorf("tenant_id 不能为空")
+	}
+	_, err := s.client.User.Query().
+		Where(user.ID(req.UserID)).
+		Where(user.TenantID(req.TenantID)).
+		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("用户不存在: %w", err)
+		return nil, fmt.Errorf("用户不存在或不属于当前租户: %w", err)
 	}
 
 	// 创建通知

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 
@@ -161,6 +162,12 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 		c.Set(TenantContextKey, tenantCtx)
 		c.Set("tenant_id", tenantEntity.ID)
 		c.Set("tenant_source", source)
+
+		// R1.1: 同步把 tenant_id 注入到 request.Context，供 RLS 层 / service 层
+		// 使用（gin.Context 的 c.Set 只对 controller 可见，Ent/DB 只能从 ctx 取）。
+		c.Request = c.Request.WithContext(
+			tenantctx.WithTenantID(c.Request.Context(), tenantEntity.ID),
+		)
 
 		c.Next()
 	}

@@ -44,8 +44,8 @@ func (s *Service) GetChange(ctx context.Context, id int, tenantID int) (*Change,
 	return s.repo.Get(ctx, id, tenantID)
 }
 
-func (s *Service) ListChanges(ctx context.Context, tenantID int, page, size int, status, search string) ([]*Change, int, error) {
-	return s.repo.List(ctx, tenantID, page, size, status, search)
+func (s *Service) ListChanges(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string) ([]*Change, int, error) {
+	return s.repo.List(ctx, tenantID, page, size, status, search, riskLevel)
 }
 
 func (s *Service) UpdateChange(ctx context.Context, c *Change) (*Change, error) {
@@ -325,8 +325,8 @@ func (s *Service) AssessRisk(ctx context.Context, ra *RiskAssessment) (*RiskAsse
 	return s.repo.CreateRiskAssessment(ctx, ra)
 }
 
-func (s *Service) GetRisk(ctx context.Context, changeID int) (*RiskAssessment, error) {
-	return s.repo.GetRiskAssessment(ctx, changeID)
+func (s *Service) GetRisk(ctx context.Context, changeID int, tenantID int) (*RiskAssessment, error) {
+	return s.repo.GetRiskAssessment(ctx, changeID, tenantID)
 }
 
 func (s *Service) GetCMDBImpactSummary(ctx context.Context, changeID, tenantID int) (*dto.ChangeCMDBImpactSummary, error) {

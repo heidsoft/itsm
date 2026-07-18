@@ -219,6 +219,19 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *dto.RefreshTokenReq
 		return nil, fmt.Errorf("刷新令牌无效")
 	}
 
+	// 检查 refresh token 是否已被拉黑（token rotation 后旧 token 立即失效）
+	if s.tokenBlacklist != nil {
+		blacklisted, chkErr := s.tokenBlacklist.IsRefreshBlacklisted(req.RefreshToken)
+		if chkErr != nil {
+			s.logger.Warnw("Failed to check refresh blacklist, denying by default", "error", chkErr)
+			return nil, fmt.Errorf("刷新令牌校验失败")
+		}
+		if blacklisted {
+			s.logger.Warnw("Refresh token replay detected", "user_id", claims.UserID)
+			return nil, fmt.Errorf("刷新令牌已失效，请重新登录")
+		}
+	}
+
 	// 获取用户信息
 	userEntity, err := s.client.User.Get(ctx, claims.UserID)
 	if err != nil {
@@ -255,6 +268,14 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *dto.RefreshTokenReq
 	if err != nil {
 		s.logger.Errorw("Failed to generate new refresh token", "user_id", userEntity.ID, "error", err)
 		return nil, fmt.Errorf("生成刷新令牌失败")
+	}
+
+	// 旧 refresh token 加入黑名单（TTL = 剩余有效期），彻底阻断 replay
+	if s.tokenBlacklist != nil && claims.ExpiresAt != nil {
+		if bErr := s.tokenBlacklist.AddRefreshToBlacklist(req.RefreshToken, claims.ExpiresAt.Time); bErr != nil {
+			// 拉黑失败不阻断本次刷新，但记录告警：可能存在短暂 replay 窗口
+			s.logger.Warnw("Failed to blacklist old refresh token", "user_id", userEntity.ID, "error", bErr)
+		}
 	}
 
 	s.logger.Infow("Token refreshed successfully with rotation", "user_id", userEntity.ID)

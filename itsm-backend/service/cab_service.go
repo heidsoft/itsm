@@ -252,8 +252,10 @@ func (s *CABService) ApproveCABChange(ctx context.Context, req *dto.CABApprovalR
 	}
 
 	// 更新审批状态
+	// currentUserID = req.ApproverID：CAB 场景已在上方校验成员身份，且 req.ApproverID 就是当前操作人，
+	// 传入即可保持 UpdateChangeApproval 内的身份校验路径一致
 	return s.changeApprovalServ.UpdateChangeApproval(ctx, req.ApprovalID, &dto.UpdateChangeApprovalRequest{
 		Status:  req.Status,
 		Comment: &req.Comment,
-	}, tenantID)
+	}, tenantID, req.ApproverID)
 }

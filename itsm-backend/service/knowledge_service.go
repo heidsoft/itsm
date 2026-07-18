@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
@@ -50,6 +51,9 @@ func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKn
 	if strings.TrimSpace(req.Content) == "" {
 		return nil, fmt.Errorf("内容不能为空")
 	}
+	// XSS 消毒：Title 走 strict（纯文本），Content 走 UGC（保留常见富文本，剥离 script/on*/javascript:）
+	req.Title = common.SanitizeText(req.Title)
+	req.Content = common.SanitizeHTML(req.Content)
 	req.Category = strings.TrimSpace(req.Category)
 	if err := validateKnowledgeCategory(req.Category); err != nil {
 		return nil, err
@@ -147,10 +151,12 @@ func (ks *KnowledgeService) UpdateArticle(ctx context.Context, id int, req *dto.
 		Where(knowledgearticle.TenantID(tenantID))
 
 	if req.Title != nil {
-		update = update.SetTitle(*req.Title)
+		cleaned := common.SanitizeText(*req.Title)
+		update = update.SetTitle(cleaned)
 	}
 	if req.Content != nil {
-		update = update.SetContent(*req.Content)
+		cleaned := common.SanitizeHTML(*req.Content)
+		update = update.SetContent(cleaned)
 	}
 	if req.Category != nil {
 		category := strings.TrimSpace(*req.Category)

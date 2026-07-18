@@ -90,14 +90,19 @@ func (m *mockRepository) Get(ctx context.Context, id int, tenantID int) (*Change
 	return c, nil
 }
 
-func (m *mockRepository) List(ctx context.Context, tenantID int, page, size int, status, search string) ([]*Change, int, error) {
+func (m *mockRepository) List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string) ([]*Change, int, error) {
 	var result []*Change
 	for _, c := range m.changes {
-		if c.TenantID == tenantID {
-			if status == "" || c.Status == status {
-				result = append(result, c)
-			}
+		if c.TenantID != tenantID {
+			continue
 		}
+		if status != "" && c.Status != status {
+			continue
+		}
+		if riskLevel != "" && c.RiskLevel != riskLevel {
+			continue
+		}
+		result = append(result, c)
 	}
 	return result, len(result), nil
 }
@@ -187,9 +192,12 @@ func (m *mockRepository) CreateRiskAssessment(ctx context.Context, ra *RiskAsses
 	return ra, nil
 }
 
-func (m *mockRepository) GetRiskAssessment(ctx context.Context, changeID int) (*RiskAssessment, error) {
+func (m *mockRepository) GetRiskAssessment(ctx context.Context, changeID int, tenantID int) (*RiskAssessment, error) {
 	ra, ok := m.riskAssess[changeID]
 	if !ok {
+		return nil, nil
+	}
+	if ra.TenantID != 0 && ra.TenantID != tenantID {
 		return nil, nil
 	}
 	return ra, nil
@@ -262,6 +270,18 @@ func TestChangeController_ListChanges(t *testing.T) {
 		{
 			name:           "按状态筛选",
 			queryParams:    "?status=draft",
+			expectedStatus: http.StatusOK,
+			expectedCode:   common.SuccessCode,
+		},
+		{
+			name:           "按风险等级筛选(snake_case)",
+			queryParams:    "?risk_level=low",
+			expectedStatus: http.StatusOK,
+			expectedCode:   common.SuccessCode,
+		},
+		{
+			name:           "按风险等级筛选(camelCase)",
+			queryParams:    "?riskLevel=low",
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
 		},

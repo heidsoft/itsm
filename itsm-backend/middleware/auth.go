@@ -57,16 +57,24 @@ func GenerateAccessToken(userID int, username, role string, tenantID int, jwtSec
 
 // 生成Refresh Token
 func GenerateRefreshToken(userID int, jwtSecret string, expireTime time.Duration) (string, error) {
+	// jti 用于 refresh token 黑名单唯一标识；带随机后缀避免同一秒重复
+	jti := fmt.Sprintf("rt-%d-%d-%d", userID, time.Now().UnixNano(), randSeq6())
 	claims := Claims{
 		UserID:    userID,
 		TokenType: "refresh",
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        jti,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expireTime)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(jwtSecret))
+}
+
+// randSeq6 生成 6 位数值序列，仅用于 jti 增加熵，非密码学安全用途
+func randSeq6() int64 {
+	return time.Now().UnixNano() % 1000000
 }
 
 // AuthMiddleware JWT认证中间件
@@ -169,6 +177,18 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 
 		// 提取用户信息
 		if claims, ok := token.Claims.(*Claims); ok {
+			// H4 修复：检查TokenType，必须是access类型
+			if claims.TokenType != "access" {
+				zap.S().Warnw(
+					"AuthMiddleware: invalid token type",
+					"path", c.Request.URL.Path,
+					"token_type", claims.TokenType,
+				)
+				common.Fail(c, common.AuthFailedCode, "无效的token类型，请使用access token")
+				c.Abort()
+				return
+			}
+
 			c.Set("user_id", claims.UserID)
 			c.Set("username", claims.Username)
 			c.Set("role", claims.Role)

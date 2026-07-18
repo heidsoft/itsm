@@ -59,6 +59,7 @@ type ApprovalRecord struct {
 type RiskAssessment struct {
 	ID                 int
 	ChangeID           int
+	TenantID           int
 	RiskLevel          string
 	RiskDescription    string
 	ImpactAnalysis     string

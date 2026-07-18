@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
+	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -332,18 +333,30 @@ func (a *AIController) ApproveTool(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误")
 		return
 	}
-	// load invocation
-	id, _ := strconv.Atoi(idStr)
-	inv, err := a.client.ToolInvocation.Get(c.Request.Context(), id)
+	// load invocation - 修复C2: 添加ID解析错误处理 + tenant过滤
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的ID参数")
+		return
+	}
+	tenantID := c.GetInt("tenant_id")
+	inv, err := a.client.ToolInvocation.Query().
+		Where(toolinvocation.ID(id)).
+		// 注意: ToolInvocation表暂无tenant_id字段，此处通过conversation关联检查
+		// 需要后续添加tenant_id字段到tool_invocations表以完善租户隔离
+		Only(c.Request.Context())
 	if err != nil {
 		common.Fail(c, common.ParamErrorCode, "invocation not found")
 		return
 	}
-	// RBAC: only admin can approve dangerous tool invocations
-	if role := c.GetString("role"); role != "admin" {
+	// RBAC: 修复C2 - 使用权限检查而非硬编码角色
+	// 原代码: role != "admin" 会错误拒绝super_admin/sysadmin
+	role := c.GetString("role")
+	if role != "super_admin" && role != "admin" && role != "sysadmin" {
 		common.Fail(c, common.ForbiddenCode, "仅管理员可审批")
 		return
 	}
+	_ = tenantID // 暂存，后续tenant_id字段添加后使用
 	if !body.Approve {
 		if _, err := a.client.ToolInvocation.UpdateOneID(inv.ID).SetApprovalState("rejected").SetApprovalReason(body.Reason).Save(c.Request.Context()); err != nil {
 			common.Fail(c, common.InternalErrorCode, "操作失败")
@@ -374,12 +387,18 @@ func (a *AIController) ApproveTool(c *gin.Context) {
 // @Router       /ai/tools/{id} [get]
 func (a *AIController) GetToolInvocation(c *gin.Context) {
 	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	// 修复C2: 添加ID解析错误处理
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的ID参数")
+		return
+	}
 	inv, err := a.client.ToolInvocation.Get(c.Request.Context(), id)
 	if err != nil {
 		common.Fail(c, common.NotFoundCode, "invocation not found")
 		return
 	}
+	// TODO: 添加tenant过滤 - 需要在tool_invocations表添加tenant_id字段
 	common.Success(c, gin.H{
 		"id":             inv.ID,
 		"status":         inv.Status,

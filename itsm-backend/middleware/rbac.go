@@ -137,6 +137,10 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "license", Action: "read"},
 		{Resource: "license", Action: "write"},
 		{Resource: "license", Action: "delete"},
+		// Report 权限
+		{Resource: "report", Action: "read"},
+		// MSP 权限
+		{Resource: "msp", Action: "read"},
 	},
 	"manager": {
 		{Resource: "ticket", Action: "read"},
@@ -154,6 +158,10 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "service_request", Action: "write"},
 		{Resource: "change", Action: "read"},
 		{Resource: "problem", Action: "read"},
+		// SLA 权限
+		{Resource: "sla", Action: "read"},
+		// Report 权限
+		{Resource: "report", Action: "read"},
 		// BPMN Workflow permissions
 		{Resource: "bpmn", Action: "read"},
 		{Resource: "bpmn", Action: "write"},

@@ -39,6 +39,7 @@ func newChangeApprovalServiceForTest(t *testing.T) (*ChangeApprovalService, *sql
 		CREATE TABLE IF NOT EXISTS change_approval_chains (
 			id BIGSERIAL PRIMARY KEY,
 			change_id BIGINT NOT NULL,
+			tenant_id BIGINT NOT NULL DEFAULT 0,
 			level INT NOT NULL,
 			approver_id BIGINT NOT NULL,
 			role TEXT DEFAULT 'approver',
@@ -77,11 +78,11 @@ func TestChangeApprovalChainAdvancesToApproved(t *testing.T) {
 	ch := createChange(t, svc.client, "pending_approval")
 
 	_, err := db.ExecContext(ctx,
-		`INSERT INTO change_approval_chains (change_id, level, approver_id, role, status, is_required, created_at) VALUES ($1,$2,$3,$4,$5,$6,NOW())`,
+		`INSERT INTO change_approval_chains (change_id, tenant_id, level, approver_id, role, status, is_required, created_at) VALUES ($1,1,$2,$3,$4,$5,$6,NOW())`,
 		ch.ID, 1, approverA.ID, "approver", "pending", true)
 	require.NoError(t, err)
 	_, err = db.ExecContext(ctx,
-		`INSERT INTO change_approval_chains (change_id, level, approver_id, role, status, is_required, created_at) VALUES ($1,$2,$3,$4,$5,$6,NOW())`,
+		`INSERT INTO change_approval_chains (change_id, tenant_id, level, approver_id, role, status, is_required, created_at) VALUES ($1,1,$2,$3,$4,$5,$6,NOW())`,
 		ch.ID, 2, approverB.ID, "approver", "pending", true)
 	require.NoError(t, err)
 
@@ -97,7 +98,7 @@ func TestChangeApprovalChainAdvancesToApproved(t *testing.T) {
 	_, err = svc.UpdateChangeApproval(ctx, histA, &dto.UpdateChangeApprovalRequest{
 		Status:  dto.ChangeApprovalStatusApproved,
 		Comment: capStrPtr("lgtm"),
-	}, 1)
+	}, 1, approverA.ID)
 	require.NoError(t, err)
 
 	assertChainStatus(t, db, ch.ID, approverA.ID, "approved")
@@ -108,7 +109,7 @@ func TestChangeApprovalChainAdvancesToApproved(t *testing.T) {
 	_, err = svc.UpdateChangeApproval(ctx, histB, &dto.UpdateChangeApprovalRequest{
 		Status:  dto.ChangeApprovalStatusApproved,
 		Comment: capStrPtr("lgtm"),
-	}, 1)
+	}, 1, approverB.ID)
 	require.NoError(t, err)
 
 	assertChainStatus(t, db, ch.ID, approverB.ID, "approved")
@@ -125,11 +126,11 @@ func TestChangeApprovalChainRejection(t *testing.T) {
 	ch := createChange(t, svc.client, "pending_approval")
 
 	_, err := db.ExecContext(ctx,
-		`INSERT INTO change_approval_chains (change_id, level, approver_id, role, status, is_required, created_at) VALUES ($1,$2,$3,$4,$5,$6,NOW())`,
+		`INSERT INTO change_approval_chains (change_id, tenant_id, level, approver_id, role, status, is_required, created_at) VALUES ($1,1,$2,$3,$4,$5,$6,NOW())`,
 		ch.ID, 1, approverA.ID, "approver", "pending", true)
 	require.NoError(t, err)
 	_, err = db.ExecContext(ctx,
-		`INSERT INTO change_approval_chains (change_id, level, approver_id, role, status, is_required, created_at) VALUES ($1,$2,$3,$4,$5,$6,NOW())`,
+		`INSERT INTO change_approval_chains (change_id, tenant_id, level, approver_id, role, status, is_required, created_at) VALUES ($1,1,$2,$3,$4,$5,$6,NOW())`,
 		ch.ID, 2, approverB.ID, "approver", "pending", true)
 	require.NoError(t, err)
 
@@ -145,7 +146,7 @@ func TestChangeApprovalChainRejection(t *testing.T) {
 	_, err = svc.UpdateChangeApproval(ctx, histA, &dto.UpdateChangeApprovalRequest{
 		Status:  dto.ChangeApprovalStatusApproved,
 		Comment: capStrPtr("ok"),
-	}, 1)
+	}, 1, approverA.ID)
 	require.NoError(t, err)
 	assertChangeStatus(t, svc, ch.ID, "pending_approval")
 
@@ -153,7 +154,7 @@ func TestChangeApprovalChainRejection(t *testing.T) {
 	_, err = svc.UpdateChangeApproval(ctx, histB, &dto.UpdateChangeApprovalRequest{
 		Status:  dto.ChangeApprovalStatusRejected,
 		Comment: capStrPtr("nope"),
-	}, 1)
+	}, 1, approverB.ID)
 	require.NoError(t, err)
 
 	assertChainStatus(t, db, ch.ID, approverB.ID, "rejected")
@@ -190,4 +191,60 @@ func assertChangeStatus(t *testing.T, svc *ChangeApprovalService, changeID int, 
 	ch, err := svc.client.Change.Get(context.Background(), changeID)
 	require.NoError(t, err)
 	assert.Equal(t, expect, ch.Status)
+}
+
+// TestCreateChangeApprovalWorkflowRejectsCrossTenantChange 阶段 A 验收：
+// tenant B 的用户不能对 tenant A 的变更创建/覆盖审批链，防止 C1 类越权。
+func TestCreateChangeApprovalWorkflowRejectsCrossTenantChange(t *testing.T) {
+	ctx := context.Background()
+	svc, _ := newChangeApprovalServiceForTest(t)
+
+	// 创建 tenant A (id=1) 下的变更
+	ch, err := svc.client.Change.Create().
+		SetTitle("cross tenant target").
+		SetTenantID(1).
+		SetStatus("pending_approval").
+		SetType("normal").
+		SetPriority("medium").
+		Save(ctx)
+	require.NoError(t, err)
+
+	approver := createUser(t, svc.client, "approver_cross")
+
+	// tenant B (id=2) 尝试覆盖 tenant A 的审批链 -> 应被拒绝
+	err = svc.CreateChangeApprovalWorkflow(ctx, &dto.ChangeApprovalWorkflowRequest{
+		ChangeID: ch.ID,
+		ApprovalChain: []dto.ChangeApprovalChainItem{
+			{Level: 1, ApproverID: approver.ID, Role: "approver", IsRequired: true},
+		},
+	}, 2)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not belong to current tenant")
+}
+
+// TestCreateChangeApprovalWorkflowRejectsCrossTenantApprover 阶段 A 验收：
+// 即使变更属于当前租户，也不能指定其他租户的用户作为审批人（防止 User.Get 枚举跨租户 ID）。
+func TestCreateChangeApprovalWorkflowRejectsCrossTenantApprover(t *testing.T) {
+	ctx := context.Background()
+	svc, _ := newChangeApprovalServiceForTest(t)
+
+	// tenant 1 的变更
+	ch := createChange(t, svc.client, "pending_approval")
+
+	// tenant 2 的用户
+	otherTenantUser, err := svc.client.User.Create().
+		SetName("foreign_approver").
+		SetTenantID(2).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// tenant 1 尝试用 tenant 2 的用户当审批人 -> 应被拒绝
+	err = svc.CreateChangeApprovalWorkflow(ctx, &dto.ChangeApprovalWorkflowRequest{
+		ChangeID: ch.ID,
+		ApprovalChain: []dto.ChangeApprovalChainItem{
+			{Level: 1, ApproverID: otherTenantUser.ID, Role: "approver", IsRequired: true},
+		},
+	}, 1)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not found in tenant")
 }

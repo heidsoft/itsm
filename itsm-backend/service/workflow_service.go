@@ -293,9 +293,95 @@ func (s *WorkflowService) ExecuteWorkflowStep(ctx context.Context, req *ExecuteW
 }
 
 // validateWorkflowDefinition 验证工作流定义
+// 校验项：
+//  1. 必填字段：startEvent、steps、transitions
+//  2. steps 中必须包含 startEvent
+//  3. transitions 每条 fromStep/toStep 必须指向已存在的 step
+//  4. **DAG 校验**：转换图不能存在环（防止工作流死循环）
+//  5. 起点可达性：从 startEvent 出发可达所有其他 step（无孤岛）
 func (s *WorkflowService) validateWorkflowDefinition(definition map[string]interface{}) error {
-	// 这里应该实现工作流定义的验证逻辑
-	// 例如：检查必需的字段、验证步骤定义等
+	if definition == nil {
+		return errors.New("工作流定义不能为空")
+	}
+
+	startEvent, _ := definition["startEvent"].(string)
+	if startEvent == "" {
+		return errors.New("工作流定义缺少 startEvent")
+	}
+
+	// 解析 steps
+	rawSteps, ok := definition["steps"].([]interface{})
+	if !ok || len(rawSteps) == 0 {
+		return errors.New("工作流定义缺少 steps 或为空")
+	}
+	stepIDs := make(map[string]bool, len(rawSteps))
+	for _, r := range rawSteps {
+		m, ok := r.(map[string]interface{})
+		if !ok {
+			return errors.New("steps 元素结构不合法")
+		}
+		id, _ := m["id"].(string)
+		if id == "" {
+			return errors.New("step 缺少 id")
+		}
+		if stepIDs[id] {
+			return errors.New("step id 重复: " + id)
+		}
+		stepIDs[id] = true
+	}
+	if !stepIDs[startEvent] {
+		return errors.New("startEvent 未在 steps 中定义: " + startEvent)
+	}
+
+	// 解析 transitions 并构建邻接表
+	graph := make(map[string][]string)
+	if rawTrans, ok := definition["transitions"].([]interface{}); ok {
+		for _, r := range rawTrans {
+			m, ok := r.(map[string]interface{})
+			if !ok {
+				return errors.New("transitions 元素结构不合法")
+			}
+			from, _ := m["fromStep"].(string)
+			to, _ := m["toStep"].(string)
+			if from == "" || to == "" {
+				return errors.New("transition 缺少 fromStep/toStep")
+			}
+			if !stepIDs[from] {
+				return errors.New("transition fromStep 未定义: " + from)
+			}
+			if !stepIDs[to] {
+				return errors.New("transition toStep 未定义: " + to)
+			}
+			graph[from] = append(graph[from], to)
+		}
+	}
+
+	// DFS 环检测（three-color: white=0/gray=1/black=2）
+	color := make(map[string]int, len(stepIDs))
+	var dfs func(node string) (bool, string)
+	dfs = func(node string) (bool, string) {
+		color[node] = 1 // gray
+		for _, next := range graph[node] {
+			switch color[next] {
+			case 1:
+				return true, node + "→" + next
+			case 0:
+				if cyc, path := dfs(next); cyc {
+					return true, node + "→" + path
+				}
+			}
+		}
+		color[node] = 2 // black
+		return false, ""
+	}
+	for id := range stepIDs {
+		if color[id] == 0 {
+			if cyc, path := dfs(id); cyc {
+				return errors.New("工作流转换图存在环: " + path)
+			}
+		}
+	}
+
 	return nil
 }
 

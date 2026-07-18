@@ -108,6 +108,77 @@ func (h *Handler) Chat(c *gin.Context) {
 	})
 }
 
+// ChatStream handles POST /api/v1/ai/chat/stream and emits Server-Sent Events.
+// Events:
+//   - event: sources        data: [{objectType,id,title,snippet,score,...}]
+//   - event: delta          data: {"content": "..."}
+//   - event: done           data: {"conversationId": <id>}
+//   - event: error          data: {"message": "..."}
+func (h *Handler) ChatStream(c *gin.Context) {
+	var req struct {
+		Query          string `json:"query" binding:"required"`
+		Limit          int    `json:"limit"`
+		ConversationID int    `json:"conversationId"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	userID := c.GetInt("user_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	// SSE headers. Nginx-friendly: X-Accel-Buffering:no disables proxy buffering.
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+	c.Writer.Header().Set("X-Accel-Buffering", "no")
+	c.Writer.WriteHeader(http.StatusOK)
+
+	flusher, ok := c.Writer.(http.Flusher)
+	if !ok {
+		// Streaming not supported: fall back to a normal chat response so the
+		// client still gets an answer.
+		answers, convID, err := h.svc.Chat(c.Request.Context(), tenantID, userID, req.Query, req.Limit, req.ConversationID)
+		if err != nil {
+			common.Fail(c, common.InternalErrorCode, err.Error())
+			return
+		}
+		common.Success(c, gin.H{"answers": answers, "conversation_id": convID})
+		return
+	}
+
+	writeEvent := func(event string, payload interface{}) {
+		buf, err := json.Marshal(payload)
+		if err != nil {
+			return
+		}
+		// Multi-line data payloads must be prefixed on each line, but json.Marshal
+		// produces a single line, so a single data: prefix is sufficient.
+		_, _ = fmt.Fprintf(c.Writer, "event: %s\ndata: %s\n\n", event, string(buf))
+		flusher.Flush()
+	}
+
+	onSources := func(items []map[string]any) {
+		writeEvent("sources", items)
+	}
+	onDelta := func(delta string) {
+		writeEvent("delta", map[string]string{"content": delta})
+	}
+
+	convID, _, err := h.svc.ChatStream(c.Request.Context(), tenantID, userID, req.Query, req.Limit, req.ConversationID, onSources, onDelta)
+	if err != nil {
+		h.svc.logger.Warnw("AI ChatStream 失败", "error", err, "tenantID", tenantID)
+		writeEvent("error", map[string]string{"message": err.Error()})
+		return
+	}
+	writeEvent("done", map[string]int{"conversationId": convID})
+}
+
 // GetDeepAnalytics handles POST /api/v1/ai/analytics
 func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 	var req dto.DeepAnalyticsRequest

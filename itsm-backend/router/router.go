@@ -1090,6 +1090,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			aiGrp := tenant.(*gin.RouterGroup).Group("/ai")
 			{
 				aiGrp.POST("/chat", middleware.RequirePermission("ai", "read"), config.AIHandler.Chat)
+				aiGrp.POST("/chat/stream", middleware.RequirePermission("ai", "read"), config.AIHandler.ChatStream)
 				aiGrp.POST("/analytics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetDeepAnalytics)
 				aiGrp.POST("/predictions", middleware.RequirePermission("ai", "read"), config.AIHandler.GetTrendPrediction)
 				aiGrp.POST("/tickets/:id/analyze", middleware.RequirePermission("ai", "read"), config.AIHandler.AnalyzeTicket)
@@ -1139,6 +1140,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					users.GET("", middleware.RequirePermission("user", "read"), config.UserController.ListUsers)
 					users.POST("", middleware.RequirePermission("user", "write"), config.UserController.CreateUser)
 					users.GET("/profile", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe) // 获取当前用户信息（需认证）
+					users.GET("/me", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe)      // alias of /profile
 					users.GET("/:id", middleware.RequirePermission("user", "read"), config.UserController.GetUser)
 					users.PUT("/:id", middleware.RequirePermission("user", "write"), config.UserController.UpdateUser)
 					users.DELETE("/:id", middleware.RequirePermission("user", "delete"), config.UserController.DeleteUser)

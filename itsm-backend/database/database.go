@@ -10,17 +10,27 @@ import (
 	"log"
 	"time" // Go标准库，用于时间处理
 
-	"itsm-backend/config" // 自定义配置包
-	"itsm-backend/ent"    // Ent ORM生成的代码包
+	"itsm-backend/config"       // 自定义配置包
+	"itsm-backend/database/rls" // RLS driver 装饰器
+	"itsm-backend/ent"          // Ent ORM生成的代码包
 
 	entsql "entgo.io/ent/dialect/sql" // Ent ORM的SQL方言包
 	_ "github.com/lib/pq"             // PostgreSQL驱动，下划线表示只导入init函数
+	"go.uber.org/zap"
 )
 
 var rawDB *sql.DB
 
+// rlsDriver 保存最后一次初始化的 RLS 装饰器实例，供 /internal/rls-stats
+// 等诊断端点读取运行时统计。为 nil 表示未启用 RLS 或未初始化。
+var rlsDriver *rls.Driver
+
 // GetRawDB returns the underlying *sql.DB for raw SQL operations (e.g., pgvector)
 func GetRawDB() *sql.DB { return rawDB }
+
+// GetRLSDriver 返回当前进程使用的 RLS 装饰器（可能为 nil）。
+// 用于运维/诊断端点导出 Stats()。
+func GetRLSDriver() *rls.Driver { return rlsDriver }
 
 // InitDB initializes a raw database connection without Ent-specific setup
 // Used for migrations and other operations that don't need Ent ORM
@@ -183,6 +193,48 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 	// ent.Driver(drv) 设置数据库驱动
 	rawDB = db
 	return ent.NewClient(ent.Driver(drv)), nil
+}
+
+// InitDatabaseWithRLS 与 InitDatabase 行为完全一致，但在返回 Ent Client 之前
+// 用 RLS 装饰器包裹 SQL Driver。
+//
+// 三档行为（由 rlsCfg.Mode 决定）：
+//   - off      (默认)：装饰器为 no-op，零开销、零风险，行为等同 InitDatabase
+//   - shadow   ：审计每次查询，warn 缺少 tenant 的调用点；不改变 SQL 语义
+//   - enforce  ：审计计数 + 依赖 middleware / AcquireConn 在 conn 上 SET 变量
+//
+// 说明：本函数**不**主动执行 SET LOCAL/SESSION。变量注入由 middleware 与
+// 显式 rls.AcquireConn 负责，装饰器只是插入观测点。这么设计的原因：
+//   1. 一次 request 可能触发多次 Ent 查询，共享同一 *sql.Conn。若在装饰器
+//      内每查询前后 SET+RESET，连接来回换值成本高且易出错。
+//   2. SET LOCAL 只在事务内生效；Ent 大多数查询是 autocommit，事务边界由
+//      业务逻辑控制，装饰器无法感知。
+//   3. 装饰器保持无副作用，可以在 R2A 阶段以 shadow 模式安全上线。
+func InitDatabaseWithRLS(cfg *config.DatabaseConfig, rlsCfg *config.RLSConfig, logger *zap.SugaredLogger) (*ent.Client, error) {
+	// 复用 InitDatabase 完整逻辑（连接池、pgvector、schema 兼容修复等）
+	client, err := InitDatabase(cfg)
+	if err != nil {
+		return nil, err
+	}
+	if rlsCfg == nil || rlsCfg.Mode == "" || rlsCfg.Mode == string(rls.ModeOff) {
+		if logger != nil {
+			logger.Infow("rls: driver mode=off (default, pass-through)")
+		}
+		rlsDriver = nil
+		return client, nil
+	}
+
+	// 装饰：把底层 entsql driver 换成 RLS 装饰器
+	innerDrv := entsql.OpenDB("postgres", rawDB)
+	deco := rls.From(innerDrv, rlsCfg.Mode, logger)
+	rlsDriver = deco
+	if logger != nil {
+		logger.Infow("rls: driver installed",
+			"mode", string(deco.Mode()),
+			"tenant_var", rlsCfg.TenantVarName,
+		)
+	}
+	return ent.NewClient(ent.Driver(deco)), nil
 }
 
 func normalizeMarketplaceItemDefaults(ctx context.Context, db *sql.DB) error {

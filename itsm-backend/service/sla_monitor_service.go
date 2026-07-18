@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/sladefinition"
@@ -191,13 +192,14 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 // createViolation 创建SLA违规记录
 // 注意: 已在调用方检查重复，此处不再检查
 func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, violationType string, deadline time.Time, slaDefMap map[int]string) error {
-	// 计算超时时间（分钟）
-	var exceededMinutes float64
-	if violationType == "response_time" {
-		exceededMinutes = time.Since(t.CreatedAt).Minutes() - deadline.Sub(t.CreatedAt).Minutes()
-	} else {
-		exceededMinutes = time.Since(t.CreatedAt).Minutes() - deadline.Sub(t.CreatedAt).Minutes()
+	// 计算超时时间（分钟）：从 deadline 到当前时间的差值
+	// response_time / resolution_time 的差异在于 deadline 语义不同，
+	// 由调用方决定传入哪种 deadline；这里的超时时间计算逻辑一致。
+	exceededMinutes := time.Since(deadline).Minutes()
+	if exceededMinutes < 0 {
+		exceededMinutes = 0
 	}
+	_ = violationType // 保留以便日志中区分
 
 	// 描述信息
 	description := fmt.Sprintf("工单 %s 违反SLA (%s): 超过截止时间 %.1f 分钟",
@@ -437,12 +439,20 @@ type SLAComplianceStat struct {
 
 // StartSLAWatcher 启动SLA定时检查任务
 // interval: 检查间隔，默认5分钟
+//
+// RLS 说明：本 watcher 需扫描全租户 tenant 表并逐租户 CheckSLAViolations。
+// 顶层 loop 用 SystemContext 豁免（枚举 tenant 是跨租户操作），
+// 但每个租户的实际 SLA 检查会用 WithTenantID(ctx, tenant.ID) 收窄到该租户。
 func (s *SLAMonitorService) StartSLAWatcher(ctx context.Context, interval time.Duration) {
 	if interval == 0 {
 		interval = 5 * time.Minute // 默认5分钟检查一次
 	}
 
 	s.logger.Infow("Starting SLA watcher", "interval", interval.String())
+
+	// RLS：顶层 goroutine 明确标注为 system operation
+	ctx = tenantctx.SystemContext(ctx, "sla_monitor:watch",
+		"scan all tenants for SLA violations at tick interval")
 
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -453,7 +463,7 @@ func (s *SLAMonitorService) StartSLAWatcher(ctx context.Context, interval time.D
 			s.logger.Info("SLA watcher stopped")
 			return
 		case <-ticker.C:
-			// 获取所有租户并检查SLA
+			// 获取所有租户并检查SLA（bypass 已生效，可跨租户查 tenants）
 			tenants, err := s.client.Tenant.Query().All(ctx)
 			if err != nil {
 				s.logger.Errorw("Failed to query tenants", "error", err)
@@ -461,7 +471,9 @@ func (s *SLAMonitorService) StartSLAWatcher(ctx context.Context, interval time.D
 			}
 
 			for _, tenant := range tenants {
-				if _, err := s.CheckSLAViolations(ctx, tenant.ID); err != nil {
+				// RLS：切到具体租户上下文，走 policy 正常过滤
+				tenantCtx := tenantctx.WithTenantID(ctx, tenant.ID)
+				if _, err := s.CheckSLAViolations(tenantCtx, tenant.ID); err != nil {
 					s.logger.Errorw("Failed to check SLA violations", "tenant_id", tenant.ID, "error", err)
 				}
 			}
@@ -472,14 +484,20 @@ func (s *SLAMonitorService) StartSLAWatcher(ctx context.Context, interval time.D
 }
 
 // CheckAllTenantsSLA 检查所有租户的SLA（用于定时任务调用）
+//
+// RLS 说明：入口是跨租户操作，必须 system-bypass。逐租户执行时切回 tenant 上下文。
 func (s *SLAMonitorService) CheckAllTenantsSLA(ctx context.Context) error {
+	ctx = tenantctx.SystemContext(ctx, "sla_monitor:check_all",
+		"one-shot SLA violation scan across all tenants")
+
 	tenants, err := s.client.Tenant.Query().All(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to query tenants: %w", err)
 	}
 
 	for _, tenant := range tenants {
-		if _, err := s.CheckSLAViolations(ctx, tenant.ID); err != nil {
+		tenantCtx := tenantctx.WithTenantID(ctx, tenant.ID)
+		if _, err := s.CheckSLAViolations(tenantCtx, tenant.ID); err != nil {
 			s.logger.Errorw("Failed to check SLA violations", "tenant_id", tenant.ID, "error", err)
 		}
 	}

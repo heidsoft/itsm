@@ -89,11 +89,14 @@ func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Change,
 	return toDomain(ec), nil
 }
 
-func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, status, search string) ([]*Change, int, error) {
+func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string) ([]*Change, int, error) {
 	q := r.client.Change.Query().Where(change.TenantID(tenantID))
 
 	if status != "" && status != "全部" {
 		q = q.Where(change.Status(status))
+	}
+	if riskLevel != "" && riskLevel != "全部" {
+		q = q.Where(change.RiskLevel(riskLevel))
 	}
 	if search != "" {
 		q = q.Where(change.Or(
@@ -354,16 +357,16 @@ func (r *EntRepository) DeleteApprovalChain(ctx context.Context, changeID int) e
 func (r *EntRepository) CreateRiskAssessment(ctx context.Context, ra *RiskAssessment) (*RiskAssessment, error) {
 	query := `
 		INSERT INTO change_risk_assessments (
-			change_id, risk_level, risk_description, impact_analysis, 
+			change_id, tenant_id, risk_level, risk_description, impact_analysis,
 			mitigation_measures, contingency_plan, risk_owner, risk_review_date,
 			created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id, created_at
 	`
 	now := time.Now()
 	err := r.db.QueryRowContext(ctx, query,
-		ra.ChangeID, ra.RiskLevel, ra.RiskDescription, ra.ImpactAnalysis,
+		ra.ChangeID, ra.TenantID, ra.RiskLevel, ra.RiskDescription, ra.ImpactAnalysis,
 		ra.MitigationMeasures, ra.ContingencyPlan, ra.RiskOwner, ra.RiskReviewDate,
 		now, now).
 		Scan(&ra.ID, &ra.CreatedAt)
@@ -374,18 +377,18 @@ func (r *EntRepository) CreateRiskAssessment(ctx context.Context, ra *RiskAssess
 	return ra, nil
 }
 
-func (r *EntRepository) GetRiskAssessment(ctx context.Context, changeID int) (*RiskAssessment, error) {
+func (r *EntRepository) GetRiskAssessment(ctx context.Context, changeID int, tenantID int) (*RiskAssessment, error) {
 	query := `
-		SELECT id, risk_level, risk_description, impact_analysis,
+		SELECT id, tenant_id, risk_level, risk_description, impact_analysis,
 		       mitigation_measures, contingency_plan, risk_owner, risk_review_date,
 		       created_at, updated_at
 		FROM change_risk_assessments 
-		WHERE change_id = $1
+		WHERE change_id = $1 AND tenant_id = $2
 	`
 	var ra RiskAssessment
 	var riskReviewDate sql.NullTime
-	err := r.db.QueryRowContext(ctx, query, changeID).Scan(
-		&ra.ID, &ra.RiskLevel, &ra.RiskDescription, &ra.ImpactAnalysis,
+	err := r.db.QueryRowContext(ctx, query, changeID, tenantID).Scan(
+		&ra.ID, &ra.TenantID, &ra.RiskLevel, &ra.RiskDescription, &ra.ImpactAnalysis,
 		&ra.MitigationMeasures, &ra.ContingencyPlan, &ra.RiskOwner, &riskReviewDate,
 		&ra.CreatedAt, &ra.UpdatedAt,
 	)

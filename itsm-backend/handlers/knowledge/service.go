@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go.uber.org/zap"
+	"itsm-backend/common"
 	"itsm-backend/dto"
 )
 
@@ -20,6 +21,9 @@ func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
 }
 
 func (s *Service) CreateArticle(ctx context.Context, a *Article) (*Article, error) {
+	// XSS 消毒：Title 走 strict（纯文本），Content 走 UGC（保留富文本白名单，剥离 script/on*/javascript:）
+	a.Title = common.SanitizeText(a.Title)
+	a.Content = common.SanitizeHTML(a.Content)
 	s.logger.Infow("Creating Knowledge Article", "title", a.Title, "category", a.Category)
 	return s.repo.Create(ctx, a)
 }
@@ -33,6 +37,9 @@ func (s *Service) ListArticles(ctx context.Context, tenantID int, page, size int
 }
 
 func (s *Service) UpdateArticle(ctx context.Context, a *Article) (*Article, error) {
+	// XSS 消毒
+	a.Title = common.SanitizeText(a.Title)
+	a.Content = common.SanitizeHTML(a.Content)
 	s.logger.Infow("Updating Knowledge Article", "id", a.ID, "title", a.Title)
 	return s.repo.Update(ctx, a)
 }

@@ -24,6 +24,25 @@ type Config struct {
 	Redis      RedisConfig      `mapstructure:"redis"`
 	Security   SecurityConfig   `mapstructure:"security"`
 	Deployment DeploymentConfig `mapstructure:"deployment"`
+	RLS        RLSConfig        `mapstructure:"rls"`
+}
+
+// RLSConfig 控制 PostgreSQL Row-Level Security 的启用档位。
+//
+// Mode:
+//   - "off"     : 默认。中间件仍会向 request.Context 注入 tenant_id，
+//                 但不 SET SESSION 变量，也不启用 policy。零风险。
+//   - "shadow"  : 每次 request 走 rls.AcquireConn 设 SESSION 变量，
+//                 但 policy 未启用 → 数据库不拦截，只观察是否有 ctx
+//                 缺失情况；不影响任何业务。
+//   - "enforce" : SESSION 变量 + policy 同时生效，数据库层强制隔离。
+//                 需先在 shadow 模式下把所有缺失点补齐。
+//
+// TenantVarName: PostgreSQL 用于承载 tenant_id 的 GUC 变量名，默认
+// "app.current_tenant"，与 policy 中的 current_setting() 保持一致。
+type RLSConfig struct {
+	Mode          string `mapstructure:"mode"`
+	TenantVarName string `mapstructure:"tenant_var_name"`
 }
 
 type DeploymentConfig struct {
@@ -56,6 +75,36 @@ type DatabaseConfig struct {
 	Password string `mapstructure:"password"`
 	DBName   string `mapstructure:"dbname"`
 	SSLMode  string `mapstructure:"sslmode"`
+
+	// AppRoleUser / AppRolePassword: 应用请求路径使用的低权角色
+	// （不带 BYPASSRLS，走 policy 过滤）。留空时降级为使用 User/Password。
+	// 用于 R2 灰度：切 enforce 前先切到 itsm_app。
+	AppRoleUser     string `mapstructure:"app_role_user"`
+	AppRolePassword string `mapstructure:"app_role_password"`
+
+	// AdminRoleUser / AdminRolePassword: 后台任务 / 迁移 / seed 使用的
+	// BYPASSRLS 角色。留空时降级为使用 User/Password（假定 User 已具备
+	// superuser，例如 dev 环境的 itsm_user）。
+	AdminRoleUser     string `mapstructure:"admin_role_user"`
+	AdminRolePassword string `mapstructure:"admin_role_password"`
+}
+
+// AppDSN 返回应用请求路径的连接串（低权角色，走 RLS policy）。
+// 若未配置 AppRoleUser，则回落至默认 User。
+func (d *DatabaseConfig) AppDSN() (user, password string) {
+	if d.AppRoleUser != "" {
+		return d.AppRoleUser, d.AppRolePassword
+	}
+	return d.User, d.Password
+}
+
+// AdminDSN 返回后台任务 / 迁移路径的连接串（BYPASSRLS 角色）。
+// 若未配置 AdminRoleUser，则回落至默认 User（要求 User 是 superuser）。
+func (d *DatabaseConfig) AdminDSN() (user, password string) {
+	if d.AdminRoleUser != "" {
+		return d.AdminRoleUser, d.AdminRolePassword
+	}
+	return d.User, d.Password
 }
 
 type ServerConfig struct {
@@ -208,6 +257,11 @@ func LoadConfig() (*Config, error) {
 	// 后备: 如果环境变量直接设置了 ITSM_XXX，则使用它
 	config.JWT.Secret = getEnvWithDefault("JWT_SECRET", config.JWT.Secret)
 	config.Database.Password = getEnvWithDefault("DB_PASSWORD", config.Database.Password)
+	// RLS 双角色 DSN（可选）：留空则回落至默认 DB_USER/DB_PASSWORD
+	config.Database.AppRoleUser = getEnvWithDefault("DB_APP_ROLE_USER", config.Database.AppRoleUser)
+	config.Database.AppRolePassword = getEnvWithDefault("DB_APP_ROLE_PASSWORD", config.Database.AppRolePassword)
+	config.Database.AdminRoleUser = getEnvWithDefault("DB_ADMIN_ROLE_USER", config.Database.AdminRoleUser)
+	config.Database.AdminRolePassword = getEnvWithDefault("DB_ADMIN_ROLE_PASSWORD", config.Database.AdminRolePassword)
 	config.Server.Mode = getEnvWithDefault("SERVER_MODE", config.Server.Mode)
 	config.Log.Level = getEnvWithDefault("LOG_LEVEL", config.Log.Level)
 	config.Log.Path = getEnvWithDefault("LOG_PATH", config.Log.Path)
@@ -218,6 +272,16 @@ func LoadConfig() (*Config, error) {
 	config.Deployment.Mode = getEnvWithDefault("DEPLOYMENT_MODE", config.Deployment.Mode)
 	config.Deployment.AutoMigrate = getEnvBoolWithDefault("ITSM_AUTO_MIGRATE", config.Deployment.AutoMigrate)
 	config.Deployment.AutoSeed = getEnvBoolWithDefault("ITSM_AUTO_SEED", config.Deployment.AutoSeed)
+
+	// RLS 三档开关，默认 off（零风险）。
+	config.RLS.Mode = getEnvWithDefault("RLS_MODE", config.RLS.Mode)
+	if config.RLS.Mode == "" {
+		config.RLS.Mode = "off"
+	}
+	config.RLS.TenantVarName = getEnvWithDefault("RLS_TENANT_VAR_NAME", config.RLS.TenantVarName)
+	if config.RLS.TenantVarName == "" {
+		config.RLS.TenantVarName = "app.current_tenant"
+	}
 
 	if config.JWT.Secret == "" {
 		secretBytes := make([]byte, 32)

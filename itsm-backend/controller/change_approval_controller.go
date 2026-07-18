@@ -86,8 +86,10 @@ func (c *ChangeApprovalController) UpdateChangeApproval(ctx *gin.Context) {
 
 	// 从上下文获取租户ID
 	tenantID := ctx.GetInt("tenant_id")
+	// 从上下文获取当前用户 ID（用于身份校验，防越权代人审批）
+	currentUserID := ctx.GetInt("user_id")
 
-	response, err := c.changeApprovalService.UpdateChangeApproval(ctx, approvalID, &req, tenantID)
+	response, err := c.changeApprovalService.UpdateChangeApproval(ctx, approvalID, &req, tenantID, currentUserID)
 	if err != nil {
 		c.logger.Errorw("Failed to update change approval", "error", err, "approval_id", approvalID)
 		common.Fail(ctx, common.InternalErrorCode, "更新变更审批失败: "+err.Error())

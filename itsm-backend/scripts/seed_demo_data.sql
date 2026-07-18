@@ -1,0 +1,45 @@
+-- ITSM Demo Seed Data
+-- Usage: docker exec -i itsm-postgres-dev psql -U itsm_user -d itsm < scripts/seed_demo_data.sql
+-- Or: psql -h localhost -p 5432 -U itsm_user -d itsm -f scripts/seed_demo_data.sql
+
+-- Projects (tenant_id=1)
+INSERT INTO projects (id, name, code, description, manager_id, start_date, end_date, status, tenant_id, created_at, updated_at)
+VALUES 
+    (1, 'ITSM 平台建设', 'PRJ001', '企业IT服务管理平台一期建设', 1, '2026-01-01', '2026-12-31', 'active', 1, NOW(), NOW()),
+    (2, '智能运维中心', 'PRJ002', 'AI驱动的智能运维平台', 1, '2026-03-01', '2027-02-28', 'planning', 1, NOW(), NOW()),
+    (3, '数据中台项目', 'PRJ003', '企业数据中台搭建', 1, '2025-06-01', '2026-06-30', 'completed', 1, NOW(), NOW())
+ON CONFLICT (code) DO NOTHING;
+
+-- Applications (tenant_id=1, owner_id=1)
+INSERT INTO applications (id, name, code, description, type, status, owner_id, tenant_id, project_id, created_at, updated_at)
+VALUES 
+    (1, 'ITSM 门户', 'APP001', 'IT服务管理用户门户', 'web', 'active', 1, 1, 1, NOW(), NOW()),
+    (2, '移动端 App', 'APP002', 'iOS/Android 移动客户端', 'mobile', 'active', 1, 1, 1, NOW(), NOW()),
+    (3, 'API 网关', 'APP003', '统一API网关服务', 'api', 'active', 1, 1, 2, NOW(), NOW()),
+    (4, '工单系统', 'APP004', 'IT运维工单处理系统', 'web', 'active', 1, 1, 1, NOW(), NOW()),
+    (5, '知识库', 'APP005', 'IT知识库管理', 'web', 'active', 1, 1, 1, NOW(), NOW())
+ON CONFLICT (code) DO NOTHING;
+
+-- Marketplace Items (global - no tenant_id)
+-- capabilities/required_permissions as string[] (JSON array), not object
+INSERT INTO marketplace_items (id, name, type, title, provider, description, long_description, icon_url, screenshots, tags, rating, install_count, latest_version, min_system_version, status, is_official, is_free, price, category, capabilities, required_permissions, config_schema, author_id, author_name, homepage, repository, license, created_at, updated_at)
+VALUES 
+    (1, 'ServiceNow Connector', 'integration', 'ServiceNow 集成连接器', 'ITSM Team', '与 ServiceNow 系统双向同步工单数据', '支持工单、变更、配置项的自动同步，提供可视化映射配置', 'https://example.com/icons/servicenow.png', '[]'::jsonb, '["integration", "servicenow", "sync"]'::jsonb, 4.5, 1250, '2.1.0', 'v1.0.0', 'published', true, false, 9999.00, 'integration', '["sync", "bidirectional", "auto_map"]'::jsonb, '["read_tickets", "write_tickets"]'::jsonb, '{"api_url": "", "api_key": ""}'::jsonb, 1, 'ITSM Team', 'https://example.com/servicenow', 'https://github.com/itsm/servicenow-connector', 'MIT', NOW(), NOW()),
+    (2, 'Slack 通知', 'notification', 'Slack 消息通知', 'ITSM Team', '工单状态变更实时推送到 Slack 频道', '支持自定义通知规则，按角色/类型/状态触发，支持富文本消息', 'https://example.com/icons/slack.png', '[]'::jsonb, '["notification", "slack", "alert"]'::jsonb, 4.8, 2340, '1.5.0', 'v1.0.0', 'published', true, true, 0, 'notification', '["webhook", "rich_text", "channel_routing"]'::jsonb, '[]'::jsonb, '{"webhook_url": "", "channels": []}'::jsonb, 1, 'ITSM Team', 'https://example.com/slack', 'https://github.com/itsm/slack-notification', 'MIT', NOW(), NOW()),
+    (3, 'Jira 同步', 'integration', 'Jira 问题同步', 'Community', '与 Jira Software 同步问题跟踪', '支持项目映射、状态映射、字段映射，适合研发工单管理', 'https://example.com/icons/jira.png', '[]'::jsonb, '["jira", "integration", "development"]'::jsonb, 4.2, 890, '1.2.0', 'v1.0.0', 'published', false, true, 0, 'integration', '["sync", "project_mapping"]'::jsonb, '["read_issues"]'::jsonb, '{"jira_url": "", "project_key": ""}'::jsonb, 2, 'Community', 'https://example.com/jira', 'https://github.com/community/jira-sync', 'Apache-2.0', NOW(), NOW()),
+    (4, '企业微信通知', 'notification', '企微消息通知', 'ITSM Team', '企业微信消息通知集成', '支持工作通知、群机器人、审批消息推送', 'https://example.com/icons/wecom.png', '[]'::jsonb, '["wecom", "notification", "enterprise"]'::jsonb, 4.6, 1560, '1.3.0', 'v1.0.0', 'published', true, true, 0, 'notification', '["work_notification", "robot", "miniapp"]'::jsonb, '[]'::jsonb, '{"corp_id": "", "agent_id": ""}'::jsonb, 1, 'ITSM Team', 'https://example.com/wecom', 'https://github.com/itsm/wecom-notification', 'MIT', NOW(), NOW()),
+    (5, 'SLA 报表导出', 'report', 'SLA 报表导出', 'ITSM Team', '定期导出 SLA 执行报表', '支持 PDF/Excel 格式，自定义时间范围和维度', 'https://example.com/icons/report.png', '[]'::jsonb, '["report", "sla", "export"]'::jsonb, 4.3, 420, '1.0.0', 'v1.0.0', 'published', true, true, 0, 'report', '["pdf_export", "excel_export"]'::jsonb, '[]'::jsonb, '{}'::jsonb, 1, 'ITSM Team', 'https://example.com/sla-report', 'https://github.com/itsm/sla-report', 'MIT', NOW(), NOW()),
+    (6, 'AI 智能分派', 'ai', 'AI 智能工单分派', 'ITSM Team', '基于历史数据训练模型自动分派工单', '使用机器学习算法分析工单内容，自动推荐最合适的处理人或处理组', 'https://example.com/icons/ai.png', '[]'::jsonb, '["ai", "machine-learning", "routing"]'::jsonb, 4.7, 680, '1.0.0', 'v2.0.0', 'published', true, false, 19999.00, 'ai', '["auto_route", "ml_model", "retrain"]'::jsonb, '["read_tickets", "write_assignments"]'::jsonb, '{}'::jsonb, 1, 'ITSM Team', 'https://example.com/ai-routing', 'https://github.com/itsm/ai-routing', 'Proprietary', NOW(), NOW())
+ON CONFLICT DO NOTHING;
+
+-- Improvement type tickets: NOT seeded via SQL (ticket_number auto-generated by service)
+-- Use API to create: POST /api/v1/tickets with type="incident" (backend doesn't support 'improvement' type)
+-- Frontend uses type='improvement' but backend validation rejects it - this is a product gap
+-- See: https://github.com/itsm/itsm-backend/issues/xxxx (create improvement type)
+-- Workaround: improvements are created as 'incident' type via API
+
+-- Verify counts
+SELECT 'projects' as tbl, count(*) as cnt FROM projects WHERE tenant_id=1
+UNION ALL SELECT 'applications', count(*) FROM applications WHERE tenant_id=1
+UNION ALL SELECT 'marketplace_items', count(*) FROM marketplace_items
+UNION ALL SELECT 'improvement_tickets', count(*) FROM tickets WHERE type='improvement';

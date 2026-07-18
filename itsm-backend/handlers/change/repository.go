@@ -9,7 +9,7 @@ type Repository interface {
 	// Change CRUD
 	Create(ctx context.Context, c *Change) (*Change, error)
 	Get(ctx context.Context, id int, tenantID int) (*Change, error)
-	List(ctx context.Context, tenantID int, page, size int, status, search string) ([]*Change, int, error)
+	List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string) ([]*Change, int, error)
 	Update(ctx context.Context, c *Change) (*Change, error)
 	Delete(ctx context.Context, id int, tenantID int) error
 	GetStats(ctx context.Context, tenantID int) (*Stats, error)
@@ -26,7 +26,7 @@ type Repository interface {
 
 	// Risk Assessment
 	CreateRiskAssessment(ctx context.Context, ra *RiskAssessment) (*RiskAssessment, error)
-	GetRiskAssessment(ctx context.Context, changeID int) (*RiskAssessment, error)
+	GetRiskAssessment(ctx context.Context, changeID int, tenantID int) (*RiskAssessment, error)
 
 	// Tenant validation
 	ValidateApproverBelongsToTenant(ctx context.Context, approverID, tenantID int) (bool, error)

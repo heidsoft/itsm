@@ -267,7 +267,7 @@ func (s *RootCauseService) performAIAnalysis(ticketEntity *ent.Ticket) ([]dto.Ti
 			Description string  `json:"description"`
 			Confidence  float64 `json:"confidence"`
 			Category    string  `json:"category"`
-		} `json:"rootCauses"`
+		} `json:"root_causes"`
 	}
 
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {

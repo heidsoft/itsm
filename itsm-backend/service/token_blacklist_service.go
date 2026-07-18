@@ -69,6 +69,36 @@ func (s *TokenBlacklistService) AddToBlacklist(tokenString string, expiresAt tim
 	return nil
 }
 
+// AddRefreshToBlacklist 将 refresh token 加入独立黑名单（key=refresh:blacklist:<token>）
+// 用于 token rotation 场景：refresh 一次后，旧 refresh 立即拉黑，防 replay。
+// 不做 parseToken（refresh claims 只有 userID/TokenType，简化路径）
+func (s *TokenBlacklistService) AddRefreshToBlacklist(tokenString string, expiresAt time.Time) error {
+	ctx := context.Background()
+	ttl := time.Until(expiresAt)
+	if ttl <= 0 {
+		// 已过期就没必要入黑名单
+		return nil
+	}
+	key := "refresh:blacklist:" + tokenString
+	if err := s.redisClient.Set(ctx, key, "1", ttl).Err(); err != nil {
+		s.logger.Errorw("Failed to blacklist refresh token", "error", err)
+		return fmt.Errorf("failed to blacklist refresh token: %w", err)
+	}
+	return nil
+}
+
+// IsRefreshBlacklisted 检查 refresh token 是否已被拉黑
+func (s *TokenBlacklistService) IsRefreshBlacklisted(tokenString string) (bool, error) {
+	ctx := context.Background()
+	key := "refresh:blacklist:" + tokenString
+	exists, err := s.redisClient.Exists(ctx, key).Result()
+	if err != nil {
+		s.logger.Errorw("Failed to check refresh blacklist", "error", err)
+		return false, fmt.Errorf("failed to check refresh blacklist: %w", err)
+	}
+	return exists > 0, nil
+}
+
 // IsBlacklisted 检查Token是否在黑名单中
 func (s *TokenBlacklistService) IsBlacklisted(tokenString string) (bool, error) {
 	ctx := context.Background()

@@ -353,6 +353,18 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 			}
 
 			e.logger.Infow("Long pending ticket notification sent", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
+
+			// H3 修复：发送通知后创建alert history记录，避免重复发送
+			if _, err := e.client.SLAAlertHistory.Create().
+				SetTicketID(t.ID).
+				SetTicketNumber(t.TicketNumber).
+				SetTicketTitle(t.Title).
+				SetAlertLevel("long_pending").
+				SetTenantID(tenantID).
+				SetAlertRuleName(fmt.Sprintf("工单 #%s 已超过24小时未解决", t.TicketNumber)).
+				Save(ctx); err != nil {
+				e.logger.Errorw("Failed to create alert history", "ticket_id", t.ID, "error", err)
+			}
 		}
 	}
 
@@ -426,6 +438,18 @@ func (e *EscalationService) processUnassignedTickets(ctx context.Context, tenant
 			}
 
 			e.logger.Infow("Unassigned ticket notification sent", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
+
+			// H3 修复：发送通知后创建alert history记录，避免重复发送
+			if _, err := e.client.SLAAlertHistory.Create().
+				SetTicketID(t.ID).
+				SetTicketNumber(t.TicketNumber).
+				SetTicketTitle(t.Title).
+				SetAlertLevel("unassigned").
+				SetTenantID(tenantID).
+				SetAlertRuleName(fmt.Sprintf("工单 #%s 已超过2小时未分配", t.TicketNumber)).
+				Save(ctx); err != nil {
+				e.logger.Errorw("Failed to create alert history for unassigned", "ticket_id", t.ID, "error", err)
+			}
 		}
 	}
 

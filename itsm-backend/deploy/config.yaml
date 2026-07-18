@@ -17,5 +17,15 @@ server:
 redis:
   url: "redis://redis:6379"
 
+# LLM 配置 —— token_cap 用作 LLMGateway 每次请求的 rune-token 上限（≈ 字符数 / 4）
+# 未配置时代码走默认 4000（对 GPT-4-32k / GPT-4o 偏保守），生产建议 = 目标模型 context * 0.75
+# 参考：GPT-3.5-16k → 3000-4000；GPT-4o-mini 128k → 8000；GPT-4-32k → 6000
+llm:
+  provider: "${LLM_PROVIDER:openai}"
+  model: "${LLM_MODEL:gpt-4o-mini}"
+  api_key: "${LLM_API_KEY:}"
+  endpoint: "${LLM_ENDPOINT:}"
+  token_cap: 8000
+
 log:
   level: info

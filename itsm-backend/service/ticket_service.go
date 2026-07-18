@@ -367,7 +367,7 @@ func normalizeCreateTicketType(reqType string, formFields ...map[string]interfac
 
 func isSupportedTicketType(value string) bool {
 	switch ticket.Type(value) {
-	case ticket.TypeIncident, ticket.TypeProblem, ticket.TypeChange, ticket.TypeServiceRequest:
+	case ticket.TypeIncident, ticket.TypeProblem, ticket.TypeChange, ticket.TypeServiceRequest, "improvement", "ticket":
 		return true
 	default:
 		return false

@@ -4,6 +4,7 @@ go 1.25.0
 
 // Replace itsm-backend imports to use local packages
 replace github.com/heidsoft/itsm/itsm-backend => ./
+
 replace itsm-backend => ./
 
 require (
@@ -20,6 +21,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.11.2
 	github.com/mattn/go-sqlite3 v1.14.34
+	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/nitram509/lib-bpmn-engine v0.2.4
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
@@ -48,6 +50,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/antonmedv/expr v1.9.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/bwmarrin/snowflake v0.3.0 // indirect
@@ -73,6 +76,7 @@ require (
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/gorilla/css v1.0.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.18.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect

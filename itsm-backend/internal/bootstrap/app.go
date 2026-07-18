@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/config"
 	"itsm-backend/connector"
 	_ "itsm-backend/connector/builtin/console"
@@ -75,8 +76,8 @@ func NewApplication() *Application {
 	// 3. 初始化权限配置（数据库优先，不存在时使用硬编码权限）
 	middleware.PermissionConfig.Mode = middleware.PermissionConfigModeFallback
 
-	// 3. 初始化数据库连接
-	client, err := database.InitDatabase(&cfg.Database)
+	// 3. 初始化数据库连接（带 RLS 装饰器，默认 off 模式=透明）
+	client, err := database.InitDatabaseWithRLS(&cfg.Database, &cfg.RLS, sugar)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -192,7 +193,15 @@ func NewApplication() *Application {
 	// Create LLM Gateway for AI services
 	llmConfig := service.LoadLLMConfig()
 	llmProvider := service.NewProviderFromConfig(llmConfig)
-	llmGateway := service.NewLLMGateway(llmProvider, nil, nil, llmConfig.Provider)
+	// Token limiter guards against runaway prompt cost. Default 4000 rune-tokens/request
+	// (roughly matches most model context windows). Override via llm.token_cap.
+	tokenCap := llmConfig.TokenCap
+	if tokenCap <= 0 {
+		tokenCap = 4000
+	}
+	llmLimiter := service.NewFixedWindowLimiter(tokenCap)
+	sugar.Infow("LLM token limiter wired", "capacity_runes_per_request", tokenCap)
+	llmGateway := service.NewLLMGateway(llmProvider, llmLimiter, nil, llmConfig.Provider)
 
 	vectorStore := service.NewVectorStore(database.GetRawDB())
 	ragService := service.NewRAGServiceWithAutoConfig(client, vectorStore, embedder, sugar)
@@ -418,11 +427,28 @@ func NewApplication() *Application {
 	// AI Domain
 	aiRepo := ai.NewEntRepository(client)
 	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, slaForecastSkill, triageService, rootCauseService, aiTelemetryService)
+	aiServiceDomain.SetLLMGateway(llmGateway)
 	aiHandler := ai.NewHandler(aiServiceDomain)
 
 	// Common Domain
 	commonRepo := domainCommon.NewEntRepository(client)
 	commonServiceDomain := domainCommon.NewService(commonRepo, cfg.JWT.Secret, sugar, client)
+	// 注入 Redis 客户端（如果可用），启用 refresh token 黑名单
+	if cfg.Redis.Host != "" {
+		commonRedis := redis.NewClient(&redis.Options{
+			Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
+			Password: cfg.Redis.Password,
+			DB:       cfg.Redis.DB,
+		})
+		pingCtx, pingCancel := context.WithTimeout(context.Background(), 2*time.Second)
+		if err := commonRedis.Ping(pingCtx).Err(); err != nil {
+			sugar.Warnw("common domain redis ping failed; refresh token blacklist disabled", "error", err)
+		} else {
+			commonServiceDomain.SetRedis(commonRedis)
+			sugar.Info("refresh token blacklist enabled via redis")
+		}
+		pingCancel()
+	}
 	commonHandler := domainCommon.NewHandler(commonServiceDomain)
 
 	// Role Handler (in-memory for now)
@@ -636,7 +662,9 @@ func NewApplication() *Application {
 }
 
 func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.SugaredLogger) error {
-	ctx := context.Background()
+	// RLS：schema 创建 / seed / DDL 属于跨租户操作，必须显式声明 system bypass
+	ctx := tenantctx.SystemContext(context.Background(), "bootstrap:initialize_storage",
+		"schema migration and default seed at process boot")
 
 	if cfg.Deployment.AutoMigrate {
 		if err := client.Schema.Create(ctx); err != nil {
@@ -651,6 +679,7 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 			CREATE TABLE IF NOT EXISTS change_approvals (
 				id SERIAL PRIMARY KEY,
 				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+				tenant_id INT NOT NULL DEFAULT 0,
 				approver_id INT NOT NULL,
 				status TEXT NOT NULL DEFAULT 'pending',
 				comment TEXT,
@@ -661,6 +690,7 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 			CREATE TABLE IF NOT EXISTS change_approval_chains (
 				id SERIAL PRIMARY KEY,
 				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+				tenant_id INT NOT NULL DEFAULT 0,
 				level INT NOT NULL,
 				approver_id INT NOT NULL,
 				role TEXT DEFAULT 'approver',
@@ -668,8 +698,104 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 				is_required BOOLEAN DEFAULT true,
 				created_at TIMESTAMP NOT NULL DEFAULT NOW()
 			);
+			CREATE TABLE IF NOT EXISTS change_risk_assessments (
+				id SERIAL PRIMARY KEY,
+				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+				tenant_id INT NOT NULL DEFAULT 0,
+				risk_level TEXT NOT NULL DEFAULT 'medium',
+				risk_description TEXT,
+				impact_analysis TEXT,
+				mitigation_measures TEXT,
+				contingency_plan TEXT,
+				risk_owner TEXT,
+				risk_review_date TIMESTAMP,
+				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+			);
+			CREATE TABLE IF NOT EXISTS change_rollback_plans (
+				id SERIAL PRIMARY KEY,
+				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+				tenant_id INT NOT NULL DEFAULT 0,
+				trigger_conditions JSONB,
+				rollback_steps JSONB,
+				responsible TEXT,
+				estimated_time INT,
+				communication_plan TEXT,
+				test_plan TEXT,
+				approval_required BOOLEAN DEFAULT false,
+				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+			);
+			CREATE TABLE IF NOT EXISTS change_rollback_executions (
+				id SERIAL PRIMARY KEY,
+				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+				tenant_id INT NOT NULL DEFAULT 0,
+				rollback_plan_id INT NOT NULL REFERENCES change_rollback_plans(id) ON DELETE CASCADE,
+				trigger_reason TEXT,
+				initiated_by INT,
+				status TEXT NOT NULL DEFAULT 'initiated',
+				start_time TIMESTAMP,
+				end_time TIMESTAMP,
+				result TEXT,
+				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+			);
+			CREATE TABLE IF NOT EXISTS change_implementation_plans (
+				id SERIAL PRIMARY KEY,
+				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+				tenant_id INT NOT NULL DEFAULT 0,
+				phase TEXT,
+				description TEXT,
+				tasks JSONB,
+				responsible TEXT,
+				start_date TIMESTAMP,
+				end_date TIMESTAMP,
+				prerequisites JSONB,
+				dependencies JSONB,
+				success_criteria TEXT,
+				status TEXT NOT NULL DEFAULT 'pending',
+				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+			);
+			-- 兼容旧库：如果表已存在但缺 tenant_id 列，补上并从 changes 回填
+			ALTER TABLE change_approvals       ADD COLUMN IF NOT EXISTS tenant_id INT NOT NULL DEFAULT 0;
+			ALTER TABLE change_approval_chains ADD COLUMN IF NOT EXISTS tenant_id INT NOT NULL DEFAULT 0;
+			ALTER TABLE change_rollback_plans      ADD COLUMN IF NOT EXISTS tenant_id INT NOT NULL DEFAULT 0;
+			ALTER TABLE change_rollback_executions ADD COLUMN IF NOT EXISTS tenant_id INT NOT NULL DEFAULT 0;
+			ALTER TABLE change_implementation_plans ADD COLUMN IF NOT EXISTS tenant_id INT NOT NULL DEFAULT 0;
+			UPDATE change_approvals ca
+				SET tenant_id = c.tenant_id
+				FROM changes c
+				WHERE ca.change_id = c.id AND ca.tenant_id = 0;
+			UPDATE change_approval_chains cac
+				SET tenant_id = c.tenant_id
+				FROM changes c
+				WHERE cac.change_id = c.id AND cac.tenant_id = 0;
+			UPDATE change_rollback_plans crp
+				SET tenant_id = c.tenant_id
+				FROM changes c
+				WHERE crp.change_id = c.id AND crp.tenant_id = 0;
+			UPDATE change_rollback_executions cre
+				SET tenant_id = c.tenant_id
+				FROM changes c
+				WHERE cre.change_id = c.id AND cre.tenant_id = 0;
+			UPDATE change_implementation_plans cip
+				SET tenant_id = c.tenant_id
+				FROM changes c
+				WHERE cip.change_id = c.id AND cip.tenant_id = 0;
 			CREATE INDEX IF NOT EXISTS idx_change_approvals_change_id ON change_approvals(change_id);
+			CREATE INDEX IF NOT EXISTS idx_change_approvals_tenant_id ON change_approvals(tenant_id);
 			CREATE INDEX IF NOT EXISTS idx_change_approval_chains_change_id ON change_approval_chains(change_id);
+			CREATE INDEX IF NOT EXISTS idx_change_approval_chains_tenant_id ON change_approval_chains(tenant_id);
+			CREATE INDEX IF NOT EXISTS idx_change_risk_assessments_change_id ON change_risk_assessments(change_id);
+			CREATE INDEX IF NOT EXISTS idx_change_risk_assessments_tenant_id ON change_risk_assessments(tenant_id);
+			CREATE INDEX IF NOT EXISTS idx_change_rollback_plans_change_id ON change_rollback_plans(change_id);
+			CREATE INDEX IF NOT EXISTS idx_change_rollback_plans_tenant_id ON change_rollback_plans(tenant_id);
+			CREATE INDEX IF NOT EXISTS idx_change_rollback_executions_change_id ON change_rollback_executions(change_id);
+			CREATE INDEX IF NOT EXISTS idx_change_rollback_executions_tenant_id ON change_rollback_executions(tenant_id);
+			CREATE INDEX IF NOT EXISTS idx_change_rollback_executions_plan_id ON change_rollback_executions(rollback_plan_id);
+			CREATE INDEX IF NOT EXISTS idx_change_implementation_plans_change_id ON change_implementation_plans(change_id);
+			CREATE INDEX IF NOT EXISTS idx_change_implementation_plans_tenant_id ON change_implementation_plans(tenant_id);
 		`)
 		if err != nil {
 			sugar.Warnw("failed to create change approval tables (non-fatal)", "error", err)
@@ -697,7 +823,7 @@ func RunInitialization() {
 	}()
 
 	sugar := logger.Sugar()
-	client, err := database.InitDatabase(&cfg.Database)
+	client, err := database.InitDatabaseWithRLS(&cfg.Database, &cfg.RLS, sugar)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

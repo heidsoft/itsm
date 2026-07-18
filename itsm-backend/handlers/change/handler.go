@@ -131,8 +131,10 @@ func (h *Handler) GetRiskAssessment(c *gin.Context) {
 	if !ok {
 		return
 	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID, _ := tenantIDVal.(int)
 
-	ra, err := h.svc.GetRisk(c.Request.Context(), id)
+	ra, err := h.svc.GetRisk(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.InternalError(c, "获取风险评估失败: "+err.Error())
 		return
@@ -183,10 +185,15 @@ func (h *Handler) ListChanges(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	status := c.Query("status")
 	search := c.Query("search")
+	// 支持 risk_level 与 riskLevel 两种命名，前端一般发 camelCase
+	riskLevel := c.Query("risk_level")
+	if riskLevel == "" {
+		riskLevel = c.Query("riskLevel")
+	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
-	list, total, err := h.svc.ListChanges(c.Request.Context(), tenantID, page, pageSize, status, search)
+	list, total, err := h.svc.ListChanges(c.Request.Context(), tenantID, page, pageSize, status, search, riskLevel)
 	if err != nil {
 		common.InternalError(c, "查询变更列表失败: "+err.Error())
 		return
@@ -198,9 +205,9 @@ func (h *Handler) ListChanges(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"changes": dtos,
-		"total":   total,
-		"page":    page,
+		"changes":  dtos,
+		"total":    total,
+		"page":     page,
 		"pageSize": pageSize,
 	})
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 	"itsm-backend/ent/workflowtask"
 
@@ -448,9 +449,18 @@ func (was *WorkflowAutomationService) sortAutoEscalationRulesByPriority(rules []
 }
 
 // 启动自动升级检查定时器
+//
+// RLS 说明：入参已明确 tenantID，说明调用方已知目标租户。将 tenantID 注入 ctx
+// 让 RLS policy 正常收窄到该租户，不使用 SystemBypass。
+//
+// goroutine 生命周期：ticker 在 goroutine 内部创建 + defer Stop，防止
+// 外部 ctx 从未 cancel 时 ticker 依旧被 GC root 引用，永久泄漏。
 func (was *WorkflowAutomationService) StartAutoEscalationTimer(ctx context.Context, tenantID int) {
-	ticker := time.NewTicker(5 * time.Minute) // 每5分钟检查一次
+	// RLS：把 tenantID 注入 ctx，policy 会按此租户过滤
+	ctx = tenantctx.WithTenantID(ctx, tenantID)
 	go func() {
+		ticker := time.NewTicker(5 * time.Minute) // 每5分钟检查一次
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C:
@@ -458,7 +468,6 @@ func (was *WorkflowAutomationService) StartAutoEscalationTimer(ctx context.Conte
 					was.logger.Errorw("Auto escalation check failed", "error", err, "tenant_id", tenantID)
 				}
 			case <-ctx.Done():
-				ticker.Stop()
 				return
 			}
 		}

@@ -70,6 +70,23 @@ func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *d
 			req.SourceCIID, req.TargetCIID, req.RelationshipType)
 	}
 
+	// 环检测：若 targetCI 已存在通向 sourceCI 的有向路径，则本次插入会形成环
+	// 语义：CI 关系图应是 DAG（拓扑）。对同类型关系（如 depends_on 全局）单独判环。
+	// 实现：从 targetCIID 出发做 DFS，看是否可达 sourceCIID。
+	if req.SourceCIID == req.TargetCIID {
+		return nil, fmt.Errorf("relationship would form self-loop: source and target CI are identical")
+	}
+	cyclic, cycleErr := s.wouldCreateCycle(ctx, tenantID, req.SourceCIID, req.TargetCIID, string(req.RelationshipType))
+	if cycleErr != nil {
+		s.logger.Errorw("cycle detection failed", "error", cycleErr,
+			"source_ci_id", req.SourceCIID, "target_ci_id", req.TargetCIID)
+		return nil, fmt.Errorf("failed to detect cycle: %w", cycleErr)
+	}
+	if cyclic {
+		return nil, fmt.Errorf("relationship would create a cycle in CI dependency graph (source=%d target=%d type=%s)",
+			req.SourceCIID, req.TargetCIID, req.RelationshipType)
+	}
+
 	// 创建关系
 	create := s.client.CIRelationship.Create().
 		SetRelationshipType(string(req.RelationshipType)).
@@ -490,4 +507,45 @@ func impactLevelForCI(ci *ent.ConfigurationItem) dto.ImpactLevel {
 	default:
 		return dto.ImpactLow
 	}
+}
+
+// wouldCreateCycle 检测新增 source→target 边是否会导致 CI 关系图形成环。
+// 算法：从 target 出发做有向 DFS，若能到达 source，即添加后回到 source 形成环。
+// 只对同 tenant 内、is_active=true 的关系进行遍历。
+// 关系类型语义：depends_on/contains/parent_of 等有明确层级方向；relates_to 等弱关系仍视为有向。
+// 复杂度：O(V+E)，深度上限 512 兜底防脏数据死循环。
+func (s *CIRelationshipService) wouldCreateCycle(ctx context.Context, tenantID, sourceID, targetID int, _ string) (bool, error) {
+	const maxDepth = 512
+	visited := make(map[int]bool)
+	stack := []int{targetID}
+	depth := 0
+	for len(stack) > 0 {
+		if depth++; depth > maxDepth {
+			return false, fmt.Errorf("cycle detection exceeded max depth %d (possible corrupted graph)", maxDepth)
+		}
+		cur := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		if cur == sourceID {
+			return true, nil
+		}
+		if visited[cur] {
+			continue
+		}
+		visited[cur] = true
+
+		// 出边：cur → next
+		nexts, err := s.client.CIRelationship.Query().
+			Where(
+				cirelationship.SourceCiIDEQ(cur),
+				cirelationship.TenantIDEQ(tenantID),
+				cirelationship.IsActiveEQ(true),
+			).
+			Select(cirelationship.FieldTargetCiID).
+			Ints(ctx)
+		if err != nil {
+			return false, fmt.Errorf("query outgoing edges of ci=%d: %w", cur, err)
+		}
+		stack = append(stack, nexts...)
+	}
+	return false, nil
 }

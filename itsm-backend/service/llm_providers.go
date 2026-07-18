@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -61,6 +62,52 @@ func (p *OpenAIProvider) Chat(ctx context.Context, model string, messages []LLMM
 	}
 
 	return resp.Choices[0].Message.Content, nil
+}
+
+// ChatStream streams tokens from OpenAI. It satisfies StreamingLLMProvider so
+// that LLMGateway.ChatStream can deliver real-time deltas to the client.
+func (p *OpenAIProvider) ChatStream(ctx context.Context, model string, messages []LLMMessage, callback func(string)) error {
+	if model != "" {
+		p.model = model
+	}
+	if callback == nil {
+		callback = func(string) {}
+	}
+
+	msgs := make([]openai.ChatCompletionMessage, len(messages))
+	for i, m := range messages {
+		msgs[i] = openai.ChatCompletionMessage{
+			Role:    m.Role,
+			Content: m.Content,
+		}
+	}
+
+	stream, err := p.client.CreateChatCompletionStream(ctx, openai.ChatCompletionRequest{
+		Model:       p.model,
+		Messages:    msgs,
+		MaxTokens:   p.maxTokens,
+		Temperature: 0.3,
+	})
+	if err != nil {
+		return fmt.Errorf("OpenAI stream error: %w", err)
+	}
+	defer stream.Close()
+
+	for {
+		chunk, err := stream.Recv()
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return nil
+		}
+		if len(chunk.Choices) > 0 {
+			delta := chunk.Choices[0].Delta.Content
+			if delta != "" {
+				callback(delta)
+			}
+		}
+	}
 }
 
 // StreamingOpenAIProvider supports streaming responses
