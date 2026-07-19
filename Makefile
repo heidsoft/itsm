@@ -94,9 +94,13 @@ logs-frontend:     ## View frontend logs
 logs-postgres:      ## View postgres logs
 	./scripts/deploy-dev.sh logs postgres
 
+check-contracts:    ## Validate cross-file API, deployment, Docker, and docs contracts
+	node scripts/check-engineering-contracts.js
+	node scripts/check-api-paths.js
+
 .PHONY: dev-init dev-start dev-stop dev-logs dev-restart dev-status dev-health dev-doctor dev-clean \
         prod-init prod-start prod-stop prod-deploy prod-status prod-health prod-logs \
         prod-restart prod-rollback prod-backup prod-down \
         db-migrate db-seed \
         release build-images \
-        logs-backend logs-frontend logs-postgres
+        logs-backend logs-frontend logs-postgres check-contracts

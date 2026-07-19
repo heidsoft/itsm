@@ -45,6 +45,7 @@ npm test -- --runInBand && npm run build
 
 cd ..
 node scripts/test-coverage-guard.js --base HEAD~1 --head HEAD
+make check-contracts
 ```
 
 ## 前端 API 构建约定
@@ -53,3 +54,15 @@ node scripts/test-coverage-guard.js --base HEAD~1 --head HEAD
 - API client 路径已包含 `/api/v1/*`，浏览器通过同源 Nginx 转发。
 - Next.js 服务端访问后端使用 `ITSM_BACKEND_URL`，不将容器主机名或开发机地址嵌入浏览器产物。
 - 仅在不经反向代理的本机开发中，才设置 `NEXT_PUBLIC_API_URL=http://localhost:8090`。
+
+## 可执行工程约束
+
+`scripts/check-engineering-contracts.js` 是跨文件约定的单一检查入口，当前覆盖：
+
+- 浏览器 API 默认同源，CI 和 Release 不得嵌入开发机后端地址。
+- `.env.prod.example` 与 Next.js server-side 后端地址保持分层。
+- 前端 Docker 构建不得携带 `.env.local` 等本机环境文件。
+- Compose 使用后端真实读取的 CORS 变量和 IPv4 健康检查。
+- MkDocs 依赖必须通过 `requirements-docs.txt` 可复现安装。
+
+本地运行 `make check-contracts`；PR 中由 `api-contract-check / Engineering Contract Guard` 自动执行。新增跨文件规则时，必须同时增加 guard 的失败测试。

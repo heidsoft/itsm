@@ -14,12 +14,30 @@ on:
       - 'itsm-frontend/src/lib/**'
       - 'itsm-backend/router/**'
       - 'scripts/check-api-paths.js'
+      - 'scripts/check-engineering-contracts.js'
+      - 'scripts/__tests__/check-engineering-contracts.test.js'
+      - 'docker-compose.prod.yml'
+      - '.env.prod.example'
+      - 'requirements-docs.txt'
+      - 'itsm-frontend/.dockerignore'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/docs.yml'
       - '.github/workflows/api-contract-check.yml'
   pull_request:
     paths:
       - 'itsm-frontend/src/lib/**'
       - 'itsm-backend/router/**'
       - 'scripts/check-api-paths.js'
+      - 'scripts/check-engineering-contracts.js'
+      - 'scripts/__tests__/check-engineering-contracts.test.js'
+      - 'docker-compose.prod.yml'
+      - '.env.prod.example'
+      - 'requirements-docs.txt'
+      - 'itsm-frontend/.dockerignore'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/docs.yml'
       - '.github/workflows/api-contract-check.yml'
   workflow_dispatch:
 
@@ -34,6 +52,25 @@ env:
   NODE_VERSION: '22'
 
 jobs:
+  engineering-contracts:
+    name: Engineering Contract Guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Test contract guard
+        run: node --test scripts/__tests__/check-engineering-contracts.test.js
+
+      - name: Enforce repository contracts
+        run: node scripts/check-engineering-contracts.js
+
   api-contract:
     name: API Contract Check
     runs-on: ubuntu-latest
