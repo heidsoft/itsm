@@ -68,8 +68,8 @@ git clone https://github.com/heidsoft/itsm.git
 cd itsm
 
 # 2. 启动（默认 private 模式）
-cp .env.dev.example .env
-docker compose -f docker-compose.dev.yml up -d --build
+cp .env.dev.example .env.dev
+docker compose -f docker-compose.dev.yml --env-file .env.dev --profile dev up -d --build
 
 # 3. 访问
 # 前端：http://localhost:3000
@@ -95,15 +95,15 @@ npm run dev  # http://localhost:3000
 ```bash
 # 1. 修改环境变量
 cp .env.prod.example .env.prod
-# 必须修改：POSTGRES_PASSWORD / JWT_SECRET / ADMIN_PASSWORD
+# 必须修改：DB_PASSWORD / REDIS_PASSWORD / JWT_SECRET / ADMIN_PASSWORD
 # ⚠️ 生产环境会自动检测默认密码并拒绝启动
 
 # 2. 部署
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
 # 3. 验证
-curl http://localhost:8090/api/v1/health  # 期望 200
-curl http://localhost:8090/api/v1/readiness/ga  # 期望 ga_candidate
+curl http://localhost/health  # 通过 Nginx 验证整体链路，期望 200
+curl http://localhost:8090/api/v1/readiness/ga  # 验证后端就绪度
 ```
 
 ## 文档索引
@@ -130,7 +130,8 @@ cd itsm-backend && go test ./...
 cd itsm-frontend && npm run type-check && npm run build
 
 # G3: Docker Compose 健康检查
-docker compose up -d && curl -sf http://localhost:8090/api/v1/health
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+curl -sf http://localhost/health
 
 # G4: 端到端 API 烟测
 ./scripts/smoke-test.sh

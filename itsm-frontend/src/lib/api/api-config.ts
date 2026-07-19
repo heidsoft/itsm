@@ -1,9 +1,7 @@
-// API 基础配置
-// 优先使用 NEXT_PUBLIC_API_URL（浏览器可访问），其次使用 ITSM_BACKEND_URL（服务端），最后回退到 localhost:8090
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.ITSM_BACKEND_URL ||
-  'http://localhost:8090';
+// Browser requests default to same-origin so production traffic goes through the
+// reverse proxy. Server-side requests are redirected to ITSM_BACKEND_URL by
+// HttpClient without exposing the container hostname to the browser bundle.
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 export const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 export const API_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
 

@@ -50,7 +50,8 @@ jobs:
       - name: Production build
         working-directory: itsm-frontend
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8090
+          # Empty means browser requests stay on the deployment origin and use /api/v1/*.
+          NEXT_PUBLIC_API_URL: ''
           NODE_OPTIONS: --max-old-space-size=4096
         run: npm run build
       - name: Verify standalone output

@@ -1,8 +1,8 @@
 site_name: ITSM
 site_description: AI-Native IT Service Management — Tickets, Incidents, Problems, Changes, CMDB, Knowledge, BPMN, SLA, AI Triage
 site_author: ITSM Contributors
-repo_url: https://github.com/itsm/itsm
-repo_name: itsm/itsm
+repo_url: https://github.com/heidsoft/itsm
+repo_name: heidsoft/itsm
 edit_uri: edit/main/docs/
 copyright: Copyright © 2024-present ITSM Contributors. Licensed under Apache 2.0.
 
@@ -51,7 +51,7 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/itsm/itsm
+      link: https://github.com/heidsoft/itsm
       name: GitHub
   generator: false
 

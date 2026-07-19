@@ -466,18 +466,18 @@ func (r *EntRepository) GetSLAMonitoring(ctx context.Context, tenantID int, star
 	}
 
 	// Calculate compliance rate
-	var complianceRate float64
+	complianceRate := 1.0
 	if totalViolations > 0 {
-		complianceRate = float64(totalViolations-resolvedViolations) / float64(totalViolations)
+		complianceRate = float64(resolvedViolations) / float64(totalViolations)
 	}
 
 	return map[string]interface{}{
-		"total_violations":    totalViolations,
-		"resolved_violations": resolvedViolations,
-		"active_violations":   totalViolations - resolvedViolations,
-		"compliance_rate":     complianceRate,
-		"active_slas":         activeSLAs,
-		"active_alert_rules":  alertRules,
+		"totalViolations":    totalViolations,
+		"resolvedViolations": resolvedViolations,
+		"activeViolations":   totalViolations - resolvedViolations,
+		"complianceRate":     complianceRate,
+		"activeSlas":         activeSLAs,
+		"activeAlertRules":   alertRules,
 	}, nil
 }
 

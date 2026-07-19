@@ -53,7 +53,7 @@ func setupSLAHandler(t *testing.T) (*gin.Engine, *ent.Client, int) {
 	uid := slaUniqueID()
 	tenant, err := client.Tenant.Create().
 		SetName("SLA Tenant").
-		SetCode("SLA"+uid).
+		SetCode("SLA" + uid).
 		SetDomain("sla.com").
 		SetStatus("active").
 		Save(ctx)
@@ -72,6 +72,7 @@ func setupSLAHandler(t *testing.T) (*gin.Engine, *ent.Client, int) {
 	r.PUT("/api/v1/sla/definitions/:id", h.UpdateSLADefinition)
 	r.DELETE("/api/v1/sla/definitions/:id", h.DeleteSLADefinition)
 	r.GET("/api/v1/sla/stats", h.GetSLAStats)
+	r.POST("/api/v1/sla/monitor", h.GetSLAMonitoring)
 	return r, client, tenant.ID
 }
 
@@ -145,6 +146,22 @@ func TestSLAHandler_GetStats(t *testing.T) {
 	r, _, _ := setupSLAHandler(t)
 	resp := doSLAReq(t, r, "GET", "/api/v1/sla/stats", nil, false)
 	assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+}
+
+func TestSLAHandler_GetMonitoringUsesCamelCaseContract(t *testing.T) {
+	r, _, _ := setupSLAHandler(t)
+	resp := doSLAReq(t, r, "POST", "/api/v1/sla/monitor", dto.SLAMonitoringRequest{
+		StartTime: "30d",
+		EndTime:   "now",
+	}, false)
+	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+	data := resp.Data.(map[string]interface{})
+	assert.Contains(t, data, "totalViolations")
+	assert.Contains(t, data, "resolvedViolations")
+	assert.Contains(t, data, "activeViolations")
+	assert.Contains(t, data, "complianceRate")
+	assert.Equal(t, float64(1), data["complianceRate"])
+	assert.NotContains(t, data, "total_violations")
 }
 
 // ---- 简易请求助手（sla 包内独立实现）----

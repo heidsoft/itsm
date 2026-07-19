@@ -226,53 +226,37 @@ export class SLAApi {
     if (params?.slaDefinitionId) requestBody.slaDefinitionId = String(params.slaDefinitionId);
 
     const response = await httpClient.post<{
-      totalTickets: number;
-      violatedTickets: number;
-      atRiskTickets?: number;
-      complianceRate?: number;
-      averageResponseTime?: number;
-      averageResolutionTime?: number;
-      responseTimeCompliance?: number;
-      resolutionTimeCompliance?: number;
-      alerts?: Array<{
-        id: string;
-        ticketId: number;
-        ticketNumber: string;
-        ticketTitle: string;
-        priority: string;
-        alertLevel: string;
-        timeRemaining: number;
-        slaDefinition: string;
-        createdAt: string;
-      }>;
-    }>('/api/v1/sla/monitoring', requestBody);
+      totalViolations: number;
+      resolvedViolations: number;
+      activeViolations: number;
+      complianceRate: number;
+      activeSlas: number;
+      activeAlertRules: number;
+    }>('/api/v1/sla/monitor', requestBody);
 
+    const totalViolations = response.totalViolations ?? 0;
+    const activeViolations = response.activeViolations ?? 0;
+    const resolvedViolations = response.resolvedViolations ?? 0;
     const violationRate =
-      response.totalTickets > 0 ? (response.violatedTickets / response.totalTickets) * 100 : 0;
-    const compliantTickets = response.totalTickets - response.violatedTickets;
-
-    // 使用后端返回的风险工单数，如果没有则估算
-    const atRiskTickets = response.atRiskTickets ?? Math.floor(response.totalTickets * 0.15);
+      totalViolations > 0 ? (activeViolations / totalViolations) * 100 : 0;
 
     return {
-      complianceRate:
-        response.complianceRate ??
-        (response.totalTickets > 0 ? (compliantTickets / response.totalTickets) * 100 : 0),
+      complianceRate: (response.complianceRate ?? 0) * 100,
       violationRate: violationRate,
-      totalTickets: response.totalTickets,
-      compliantTickets: compliantTickets,
-      violatedTickets: response.violatedTickets,
-      atRiskTickets: atRiskTickets,
-      averageResponseTime: response.averageResponseTime ?? 0,
-      averageResolutionTime: response.averageResolutionTime ?? 0,
-      responseTimeCompliance: response.responseTimeCompliance ?? 0,
-      resolutionTimeCompliance: response.resolutionTimeCompliance ?? 0,
-      alerts: response.alerts ?? [],
+      totalTickets: totalViolations,
+      compliantTickets: resolvedViolations,
+      violatedTickets: activeViolations,
+      atRiskTickets: activeViolations,
+      averageResponseTime: 0,
+      averageResolutionTime: 0,
+      responseTimeCompliance: 0,
+      resolutionTimeCompliance: 0,
+      alerts: [],
     };
   }
 
   // 获取SLA性能指标
-  // 由于 /sla/metrics 返回空数据，改用 /sla/monitoring 获取
+  // 由于 /sla/metrics 返回空数据，改用 /sla/monitor 获取
   static async getSLAMetrics(params?: {
     period?: 'day' | 'week' | 'month' | 'quarter';
     serviceType?: string;
@@ -306,7 +290,7 @@ export class SLAApi {
         alertLevel?: 'warning' | 'critical' | 'severe';
         createdAt?: string;
       }>;
-    }>('/api/v1/sla/monitoring', {});
+    }>('/api/v1/sla/monitor', {});
 
     return {
       responseTimeAvg: monitoring.averageResponseTime || 0,
@@ -341,18 +325,18 @@ export class SLAApi {
         alertLevel?: 'warning' | 'critical' | 'severe';
         createdAt?: string;
       }>;
-    }>('/api/v1/sla/monitoring', {});
+    }>('/api/v1/sla/monitor', {});
 
     // 如果有 alerts 则使用，否则返回空数组
     if (monitoring.alerts && Array.isArray(monitoring.alerts)) {
       return monitoring.alerts.map((item) => ({
-        ticketId: item.ticketId || item.ticketId || 0,
-        ticketTitle: item.ticketTitle || item.ticketTitle || `Ticket #${item.ticketId || item.ticketId || 0}`,
+        ticketId: item.ticketId ?? 0,
+        ticketTitle: item.ticketTitle || `Ticket #${item.ticketId ?? 0}`,
         priority: item.priority || 'medium',
-        slaDefinition: item.slaDefinition || item.slaDefinition || 'SLA',
-        timeRemaining: item.timeRemaining || item.timeRemaining || 0,
-        alertLevel: item.alertLevel || item.alertLevel || 'warning',
-        createdAt: item.createdAt || item.createdAt || new Date().toISOString(),
+        slaDefinition: item.slaDefinition || 'SLA',
+        timeRemaining: item.timeRemaining ?? 0,
+        alertLevel: item.alertLevel || 'warning',
+        createdAt: item.createdAt ?? new Date().toISOString(),
       }));
     }
 

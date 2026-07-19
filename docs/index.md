@@ -2,7 +2,7 @@
 
 > **一句话**：一个面向 2026+ 工程师的开源 ITSM — 票务/事件/问题/变更、CMDB、知识库、BPMN 工作流、SLA、AI Triage，全部内建。
 
-[English Version](../README.md) | [中文首页](README.zh-CN.md) · [GitHub 仓库](https://github.com/itsm/itsm) · [在线文档](https://itsm.github.io/itsm) · [变更日志](../CHANGELOG.md)
+[项目 README](https://github.com/heidsoft/itsm#readme) · [中文 README](https://github.com/heidsoft/itsm/blob/main/README.zh-CN.md) · [GitHub 仓库](https://github.com/heidsoft/itsm) · [变更日志](https://github.com/heidsoft/itsm/blob/main/CHANGELOG.md)
 
 ---
 
@@ -76,15 +76,15 @@
 
 ```bash
 # 1. 克隆
-git clone https://github.com/itsm/itsm.git
+git clone https://github.com/heidsoft/itsm.git
 cd itsm
 
 # 2. 配置环境变量
-cp .env.example .env
-# 编辑 .env，至少修改 DB_PASSWORD 和 JWT_SECRET
+cp .env.dev.example .env.dev
+# 编辑 .env.dev，仅用于本地开发
 
 # 3. 一键启动（dev 模式）
-docker compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml --env-file .env.dev --profile dev up -d --build
 
 # 4. 访问
 #   前端  http://localhost:3000
@@ -100,12 +100,12 @@ docker compose -f docker-compose.dev.yml up -d
 
 | 维度 | 现状 | 目标 | 进度 |
 |:---|:---|:---|:---:|
-| 后端代码覆盖率 | **13.6%**（service+controller 子集）| 70% | 🟡 19% |
-| 前端测试覆盖 | ~10% | 60% | 🟡 17% |
-| CI 工作流 | 12 个 | 12+ | ✅ |
-| GitHub 标签 | 43 个（自动） | 标准化 | ✅ |
-| 文档站点 | MkDocs | 持续维护 | ✅ |
-| 依赖自动合并 | patch 级 | Dependabot | ✅ |
+| 核心代码 CI | 后端、前端分层验证 | 持续加固 | ✅ |
+| API 契约 | 路径静态校验 + 前端契约测试 | 扩大运行时覆盖 | 🟡 |
+| 组装验证 | Compose GA Gate + API 烟测 | 补充角色 E2E | 🟡 |
+| 安全扫描 | gosec、Trivy、npm audit、TruffleHog | 持续治理 | ✅ |
+| 文档站点 | MkDocs 构建 + GitHub Pages | 持续维护 | ✅ |
+| 依赖治理 | Dependabot 周更新，人工审核合并 | 保持 | ✅ |
 
 详见 [Roadmap](roadmap.md) 和 [覆盖审计](testing/coverage-audit.md)。
 
@@ -116,17 +116,17 @@ docker compose -f docker-compose.dev.yml up -d
 欢迎 PR！流程：
 
 1. Fork → 创建分支
-2. 阅读 [CONTRIBUTING.md](https://github.com/itsm/itsm/blob/main/CONTRIBUTING.md)
-3. 提交 PR（CI 会自动检查：构建、lint、覆盖率、新代码 ≥60%）
+2. 阅读 [CONTRIBUTING.md](https://github.com/heidsoft/itsm/blob/main/CONTRIBUTING.md)
+3. 提交 PR（CI 会按变更路径执行构建、lint、测试、契约与集成检查）
 4. 等待 review（首次贡献者会被自动欢迎 🎉）
 
-详细规则见 [贡献指南](contributing/index.md)。
+详细规则见 [贡献指南](contributing.md)。
 
 ---
 
 ## 📜 许可证
 
-Apache License 2.0 — 见 [LICENSE](https://github.com/itsm/itsm/blob/main/LICENSE)。
+Apache License 2.0 — 见 [LICENSE](https://github.com/heidsoft/itsm/blob/main/LICENSE)。
 
 ## 🙏 致谢
 

@@ -50,10 +50,13 @@
 |:---|:---|:---|
 | [backend-ci](../.github/workflows/backend-ci.yml) | 后端格式、静态分析、构建、测试、Go module 校验 | 后端代码或 workflow 变化 |
 | [frontend-ci](../.github/workflows/frontend-ci.yml) | 前端 lint、类型检查、单测、Next.js standalone 构建 | 前端代码或 workflow 变化 |
+| [api-contract-check](../.github/workflows/api-contract-check.yml) | 前后端 API 路径与字段命名静态校验 | API client、router 或 workflow 变化 |
+| [test-coverage-guard](../.github/workflows/test-coverage-guard.yml) | 校验受管源码变更有对应测试 | 受管前后端源码变化 |
+| [GA Gate](../.github/workflows/ga-gate.yml) | 启动核心 Compose 栈并执行健康检查与 API 烟测 | 核心应用或编排变化 |
 | [Security Scan](../.github/workflows/security.yml) | gosec、Trivy、npm audit、TruffleHog | main/develop、PR、每周定时、手动 |
 | [Build & Release](../.github/workflows/release.yml) | 多平台后端二进制、前端产物、GitHub Release、GHCR 镜像 | `v*` tag |
 
-已删除的 `ITSM GA Readiness` workflow 与前后端 CI 大量重复，且 E2E 步骤失败不阻断，不适合作为有效门禁。GA 检查保留在 [v1.0 GA 收口验收指南](./v1-ga-readiness.md) 和 `docs/scripts/smoke-api.sh` 中，需要时手动或后续接入独立 smoke workflow。
+CI 按后端、前端、契约、集成、安全和发布分层。`ga-gate` 只验证组装后的核心栈，不重复执行前后端单元测试。
 
 ## 文档维护原则
 

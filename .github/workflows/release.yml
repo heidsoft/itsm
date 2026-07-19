@@ -83,7 +83,8 @@ jobs:
         working-directory: ./itsm-frontend
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8090
+          # Public artifacts must not embed a developer-machine backend URL.
+          NEXT_PUBLIC_API_URL: ''
           NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Verify standalone output

@@ -1,0 +1,139 @@
+name: test-coverage-guard
+
+# Purpose:
+#   Enforce the rule: "source X changed ⇒ test X must change".
+#
+#   This guards against the class of regressions where production code evolves
+#   but the corresponding test does not — a pattern that hides real bugs behind
+#   tautological or loosely-coupled tests (e.g. `expect.stringContaining('/api/v1')`).
+#
+#   See scripts/test-coverage-guard.js for the underlying logic and exemption list.
+#
+# Triggers:
+#   - PRs and pushes that touch itsm-frontend/src/lib/** or
+#     itsm-backend/controller|service/*.go (excluding *_test.go).
+#   - Changes to scripts/test-coverage-guard.js or this workflow itself.
+#
+# Behavior:
+#   - On PR: base = origin/<base_ref>, head = HEAD (the PR branch tip).
+#   - On push to main/develop: base = origin/<branch>~1, head = HEAD.
+#   - Forks: tests the PR base ref explicitly; for shallow clones uses
+#     --base ${{ github.event.pull_request.base.sha }} when available.
+#   - Exit code 1 fails the check (hard guard).
+#   - Per-file opt-out is supported via `// test-coverage-guard: skip`.
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'itsm-frontend/src/lib/**'
+      - 'itsm-backend/controller/**'
+      - 'itsm-backend/service/**'
+      - 'scripts/test-coverage-guard.js'
+      - '.github/workflows/test-coverage-guard.yml'
+  pull_request:
+    paths:
+      - 'itsm-frontend/src/lib/**'
+      - 'itsm-backend/controller/**'
+      - 'itsm-backend/service/**'
+      - 'scripts/test-coverage-guard.js'
+      - '.github/workflows/test-coverage-guard.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-coverage-guard-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  guard:
+    name: Source/Test Coverage Guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # We need at least 2 commits to compute a diff against a base ref.
+          # For forks the default shallow checkout hides the base, so fetch
+          # what we need explicitly when the PR base ref is set.
+          fetch-depth: 50
+
+      - name: Determine base ref
+        id: base
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_REF="${{ github.event.pull_request.base.ref }}"
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            # For forks, origin/<base_ref> may not exist locally; try the SHA first.
+            if git rev-parse --verify "$BASE_SHA" >/dev/null 2>&1; then
+              echo "base=$BASE_SHA" >> "$GITHUB_OUTPUT"
+            elif git rev-parse --verify "origin/$BASE_REF" >/dev/null 2>&1; then
+              echo "base=origin/$BASE_REF" >> "$GITHUB_OUTPUT"
+            else
+              # Last resort: merge-base with the configured default branch.
+              git fetch --depth=50 origin "$BASE_REF" || true
+              if git rev-parse --verify "origin/$BASE_REF" >/dev/null 2>&1; then
+                echo "base=origin/$BASE_REF" >> "$GITHUB_OUTPUT"
+              else
+                echo "::error::Cannot resolve PR base ref $BASE_REF (sha=$BASE_SHA)"
+                exit 1
+              fi
+            fi
+          else
+            # Push to main/develop: compare against the previous commit on the
+            # same branch. If origin/<branch> is reachable, prefer it for a
+            # cleaner diff (excludes local-only commits).
+            BRANCH="${GITHUB_REF#refs/heads/}"
+            if git rev-parse --verify "origin/$BRANCH~1" >/dev/null 2>&1; then
+              echo "base=origin/$BRANCH~1" >> "$GITHUB_OUTPUT"
+            else
+              echo "base=HEAD~1" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+          echo "Resolved base: $(cat "$GITHUB_OUTPUT" | tr -d '\r' | grep '^base=' | cut -d= -f2-)"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run guard
+        id: guard
+        # The script exits 1 when a source file changed without a test file;
+        # that becomes the workflow status. Exit 2 surfaces as a job failure
+        # with the script's stderr message.
+        run: |
+          set -euo pipefail
+          BASE_REF="${{ steps.base.outputs.base }}"
+          echo "=== Running test-coverage-guard against $BASE_REF..HEAD ==="
+          node scripts/test-coverage-guard.js --base "$BASE_REF" --head HEAD
+
+      - name: Generate JSON report on failure
+        if: failure()
+        run: |
+          set -euo pipefail
+          BASE_REF="${{ steps.base.outputs.base }}"
+          echo "=== Generating JSON diagnostic for reviewers ==="
+          node scripts/test-coverage-guard.js \
+            --base "$BASE_REF" --head HEAD --json > test-coverage-guard.json || true
+          if [ -s test-coverage-guard.json ]; then
+            echo "::group::Missing test updates (JSON)"
+            cat test-coverage-guard.json
+            echo "::endgroup::"
+          fi
+
+      - name: Upload guard report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-coverage-guard-report
+          path: test-coverage-guard.json
+          if-no-files-found: error
+          retention-days: 7

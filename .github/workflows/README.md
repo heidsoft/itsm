@@ -9,6 +9,7 @@
 | [`backend-ci.yml`](./backend-ci.yml) | 后端 push / PR | Go 格式、静态检查、构建、测试和依赖校验 |
 | [`frontend-ci.yml`](./frontend-ci.yml) | 前端 push / PR | 单次安装后执行 ESLint、类型检查、Jest 和生产构建 |
 | [`api-contract-check.yml`](./api-contract-check.yml) | API/路由变更 | 前后端路径与字段契约静态检查 |
+| [`test-coverage-guard.yml`](./test-coverage-guard.yml) | 源代码变更 | 强制「源码 X 改动 ⇒ 测试 X 必动」规则 |
 | [`ga-gate.yml`](./ga-gate.yml) | 核心应用 push / PR | 启动核心 Compose 栈并执行健康检查和 API 烟测 |
 | [`extensions-ci.yml`](./extensions-ci.yml) | Agent/CLI/Skill 变更 | 验证三个扩展模块 |
 | [`docs.yml`](./docs.yml) | 文档变更 | 构建 MkDocs；main 分支部署 GitHub Pages |
@@ -30,6 +31,7 @@
 - `backend-ci / Lint`、`backend-ci / Build`、`backend-ci / Test`（后端变更）
 - `frontend-ci / Frontend`（前端变更）
 - `api-contract-check / API Contract Check`（API 契约变更）
+- `test-coverage-guard / Source/Test Coverage Guard`（源代码变更）
 - `ga-gate / GA Gate · Approved`（核心应用变更）
 
 删除旧 workflow 后，应同步移除分支保护中已经不存在的 required check 名称。
@@ -42,5 +44,12 @@ cd ../itsm-frontend && npm run lint:check && npm run type-check
 npm test -- --runInBand && npm run build
 
 cd ..
-docker compose -f docker-compose.dev.yml --profile dev config --quiet
+node scripts/test-coverage-guard.js --base HEAD~1 --head HEAD
 ```
+
+## 前端 API 构建约定
+
+- CI、Release 和标准 Nginx 部署保持 `NEXT_PUBLIC_API_URL` 为空。
+- API client 路径已包含 `/api/v1/*`，浏览器通过同源 Nginx 转发。
+- Next.js 服务端访问后端使用 `ITSM_BACKEND_URL`，不将容器主机名或开发机地址嵌入浏览器产物。
+- 仅在不经反向代理的本机开发中，才设置 `NEXT_PUBLIC_API_URL=http://localhost:8090`。

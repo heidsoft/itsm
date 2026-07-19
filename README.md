@@ -10,6 +10,8 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-yellowgreen?style=flat)](LICENSE)
 [![Backend CI](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml)
+[![API Contract](https://github.com/heidsoft/itsm/actions/workflows/api-contract-check.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/api-contract-check.yml)
+[![GA Gate](https://github.com/heidsoft/itsm/actions/workflows/ga-gate.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/ga-gate.yml)
 [![AI-Native](https://img.shields.io/badge/AI-Native-FF6B6B?style=flat&logo=openai)](https://openai.com)
 [![Stars](https://img.shields.io/github/stars/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/stargazers)
 [![Forks](https://img.shields.io/github/forks/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/network)
@@ -546,6 +548,15 @@ make prod-logs
 ```
 
 测试目录、分层策略和 E2E 使用方式见[测试指南](./docs/testing/README.md)。
+
+### CI/CD 与发布约定
+
+- PR 按路径触发后端、前端、API 契约、测试覆盖与 GA 集成门禁。
+- 生产镜像和 Release 仅由不可变 `v*` tag 发布，容器镜像推送到 GHCR。
+- 前端发布产物使用同源 `/api/v1/*`；标准 Nginx 部署不设置公开 API base URL。
+- 生产 Compose 始终显式传入 `--env-file .env.prod`，并通过 `http://localhost/health` 验证 Nginx 到后端的整体链路。
+
+流水线职责、分支保护检查和本地等价命令见 [GitHub Actions 说明](./.github/workflows/README.md)。
 
 ---
 

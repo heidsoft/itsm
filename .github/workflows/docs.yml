@@ -4,19 +4,23 @@ on:
   pull_request:
     paths:
       - 'README.md'
+      - 'README.zh-CN.md'
       - 'docs/**'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
       - '.markdownlint.json'
       - '.github/workflows/docs.yml'
+      - '.github/workflows/README.md'
   push:
     branches: [main]
     paths:
       - 'README.md'
+      - 'README.zh-CN.md'
       - 'docs/**'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
       - '.github/workflows/docs.yml'
+      - '.github/workflows/README.md'
   workflow_dispatch:
 
 permissions:
@@ -39,9 +43,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install documentation tools
-        run: |
-          pip install mkdocs==1.6.1 mkdocs-material==9.6.12 \
-            pymdown-extensions==10.14.3 mkdocs-static-i18n==1.3.0
+        run: pip install --requirement requirements-docs.txt
       - name: Build documentation
         run: mkdocs build
       - name: Upload Pages artifact
