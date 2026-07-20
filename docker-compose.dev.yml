@@ -151,7 +151,9 @@ services:
       - SERVER_ENV=development
       - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
       - ADMIN_PASSWORD=admin123
-      - ITSM_AUTO_MIGRATE=false
+      # 恢复 AUTO_MIGRATE=true：dev 环境每次重启自动同步 schema（防 R2A 后 deleted_at/version 遗漏回归）
+      # 生产仍靠独立 itsm-init 容器完成，backend 保持 false（见 docker-compose.yml）
+      - ITSM_AUTO_MIGRATE=true
       - ITSM_AUTO_SEED=false
 
       # JWT 配置
