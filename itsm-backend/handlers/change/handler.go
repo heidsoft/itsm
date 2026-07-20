@@ -347,7 +347,28 @@ func (h *Handler) GetStats(c *gin.Context) {
 		common.InternalError(c, "获取统计信息失败: "+err.Error())
 		return
 	}
-	common.Success(c, res)
+	// Map domain stats -> DTO so the response shape stays governed by dto.ChangeStatsResponse
+	// (Project rule: Controller must return DTO, never the domain struct directly.)
+	common.Success(c, toStatsDTO(res))
+}
+
+// toStatsDTO maps the change.Stats domain struct to dto.ChangeStatsResponse.
+func toStatsDTO(s *Stats) *dto.ChangeStatsResponse {
+	if s == nil {
+		return &dto.ChangeStatsResponse{}
+	}
+	return &dto.ChangeStatsResponse{
+		Total:      s.Total,
+		Pending:    s.Pending,
+		Approved:   s.Approved,
+		Scheduled:  s.Scheduled,
+		InProgress: s.InProgress,
+		Completed:  s.Completed,
+		Failed:     s.Failed,
+		RolledBack: s.RolledBack,
+		Rejected:   s.Rejected,
+		Cancelled:  s.Cancelled,
+	}
 }
 
 // TransitionStatus handles status transition actions

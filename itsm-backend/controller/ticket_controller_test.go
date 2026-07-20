@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -23,27 +24,41 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
+// setupTestTicketController wires the ticket controller with a middleware that
+// injects tenant_id and user_id from headers (X-Test-Tenant, X-Test-User),
+// defaulting to 1. To simulate a missing tenant or user, send 0.
 func setupTestTicketController(t *testing.T) (*gin.Engine, *ent.Client, *TicketController) {
 	gin.SetMode(gin.TestMode)
 
-	// 创建内存数据库
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 
-	// 创建 logger
 	logger := zaptest.NewLogger(t).Sugar()
 
-	// 创建服务
 	ticketService := service.NewTicketServiceForTest(client, logger)
 	var ticketDependencyService *service.TicketDependencyService
 
-	// 创建控制器
 	ticketController := NewTicketController(ticketService, ticketDependencyService, nil, logger)
 
-	// 创建路由
 	r := gin.New()
 	r.Use(gin.Recovery())
+	r.Use(func(c *gin.Context) {
+		tenantID := 1
+		if h := c.GetHeader("X-Test-Tenant"); h != "" {
+			if v, err := strconv.Atoi(h); err == nil {
+				tenantID = v
+			}
+		}
+		userID := 1
+		if h := c.GetHeader("X-Test-User"); h != "" {
+			if v, err := strconv.Atoi(h); err == nil {
+				userID = v
+			}
+		}
+		c.Set("tenant_id", tenantID)
+		c.Set("user_id", userID)
+		c.Next()
+	})
 
-	// 注册路由
 	r.POST("/api/v1/tickets", ticketController.CreateTicket)
 	r.GET("/api/v1/tickets", ticketController.ListTickets)
 	r.GET("/api/v1/tickets/:id", ticketController.GetTicket)
@@ -57,7 +72,6 @@ func createTestTenantAndUserForTicket(t *testing.T, client *ent.Client) (*ent.Te
 	ctx := context.Background()
 	uniqueID := uniqueTestID()
 
-	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
 		SetCode("TEST" + uniqueID).
@@ -66,7 +80,6 @@ func createTestTenantAndUserForTicket(t *testing.T, client *ent.Client) (*ent.Te
 		Save(ctx)
 	require.NoError(t, err)
 
-	// 创建测试用户
 	user, err := client.User.Create().
 		SetUsername("testuser" + uniqueID).
 		SetEmail("test" + uniqueID + "@example.com").
@@ -83,18 +96,39 @@ func createTestTenantAndUserForTicket(t *testing.T, client *ent.Client) (*ent.Te
 	return tenant, user
 }
 
+// apiResp decodes the standard {code,message,data} envelope without coupling
+// to a specific success DTO shape.
+type apiResp struct {
+	Code    int             `json:"code"`
+	Message string          `json:"message"`
+	Data    json.RawMessage `json:"data"`
+}
+
+// doJSONRequest runs a request through the router and decodes the envelope. It
+// fails the test if the body cannot be parsed. The HTTP status is returned so
+// individual cases can assert both code + status if needed. (Renamed from
+// doRequest to avoid collision with bpmn_workflow_controller_test.go.)
+func doJSONRequest(t *testing.T, r http.Handler, req *http.Request) (apiResp, int) {
+	t.Helper()
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	var resp apiResp
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp), "body=%s", w.Body.String())
+	return resp, w.Code
+}
+
 func TestTicketController_CreateTicket(t *testing.T) {
-	_, client, _ := setupTestTicketController(t)
+	r, client, _ := setupTestTicketController(t)
 	defer client.Close()
 
 	tenant, user := createTestTenantAndUserForTicket(t, client)
 
 	tests := []struct {
-		name           string
-		request        dto.CreateTicketRequest
-		expectedStatus int
-		expectedCode   int
-		setupContext   func(c *gin.Context)
+		name         string
+		request      dto.CreateTicketRequest
+		tenantHeader string // "" uses middleware default (1); "0" simulates missing
+		userHeader   string
+		expectedCode int
 	}{
 		{
 			name: "成功创建工单",
@@ -107,13 +141,9 @@ func TestTicketController_CreateTicket(t *testing.T) {
 					"category": "hardware",
 				},
 			},
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.SuccessCode,
-			setupContext: func(c *gin.Context) {
-				t.Logf("Setting tenant_id: %d, user_id: %d", tenant.ID, user.ID)
-				c.Set("tenant_id", tenant.ID)
-				c.Set("user_id", user.ID)
-			},
+			tenantHeader: strconv.Itoa(tenant.ID),
+			userHeader:   strconv.Itoa(user.ID),
+			expectedCode: common.SuccessCode,
 		},
 		{
 			name: "标题为空",
@@ -123,12 +153,9 @@ func TestTicketController_CreateTicket(t *testing.T) {
 				Priority:    "medium",
 				Category:    "incident",
 			},
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.ParamErrorCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("tenant_id", tenant.ID)
-				c.Set("user_id", user.ID)
-			},
+			tenantHeader: strconv.Itoa(tenant.ID),
+			userHeader:   strconv.Itoa(user.ID),
+			expectedCode: common.ParamErrorCode,
 		},
 		{
 			name: "描述为空",
@@ -138,12 +165,9 @@ func TestTicketController_CreateTicket(t *testing.T) {
 				Priority:    "medium",
 				Category:    "incident",
 			},
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.ParamErrorCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("tenant_id", tenant.ID)
-				c.Set("user_id", user.ID)
-			},
+			tenantHeader: strconv.Itoa(tenant.ID),
+			userHeader:   strconv.Itoa(user.ID),
+			expectedCode: common.ParamErrorCode,
 		},
 		{
 			name: "缺少租户ID",
@@ -153,11 +177,9 @@ func TestTicketController_CreateTicket(t *testing.T) {
 				Priority:    "medium",
 				Category:    "incident",
 			},
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.ParamErrorCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("user_id", user.ID)
-			},
+			tenantHeader: "0",
+			userHeader:   strconv.Itoa(user.ID),
+			expectedCode: common.ParamErrorCode,
 		},
 		{
 			name: "缺少用户ID",
@@ -167,54 +189,33 @@ func TestTicketController_CreateTicket(t *testing.T) {
 				Priority:    "medium",
 				Category:    "incident",
 			},
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.ParamErrorCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("tenant_id", tenant.ID)
-			},
+			tenantHeader: strconv.Itoa(tenant.ID),
+			userHeader:   "0",
+			expectedCode: common.ParamErrorCode,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 准备请求数据
-			requestBody, err := json.Marshal(tt.request)
+			body, err := json.Marshal(tt.request)
 			require.NoError(t, err)
 
-			// 创建请求
-			req, err := http.NewRequest("POST", "/api/v1/tickets", bytes.NewBuffer(requestBody))
+			req, err := http.NewRequest("POST", "/api/v1/tickets", bytes.NewReader(body))
 			require.NoError(t, err)
 			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("X-Test-Tenant", tt.tenantHeader)
+			req.Header.Set("X-Test-User", tt.userHeader)
 
-			// 直接调用控制器方法
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request = req
+			resp, _ := doJSONRequest(t, r, req)
+			assert.Equal(t, tt.expectedCode, resp.Code, "message=%s", resp.Message)
 
-			// 设置上下文
-			if tt.setupContext != nil {
-				tt.setupContext(c)
+			// For success cases, the data envelope must contain a created ticket.
+			if tt.expectedCode == common.SuccessCode {
+				var created dto.TicketResponse
+				require.NoError(t, json.Unmarshal(resp.Data, &created), "data=%s", string(resp.Data))
+				assert.NotEmpty(t, created.ID, "created ticket should have an ID")
+				assert.Equal(t, tt.request.Title, created.Title)
 			}
-
-			// 直接调用控制器
-			ticketService := service.NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
-			controller := NewTicketController(ticketService, nil, nil, zaptest.NewLogger(t).Sugar())
-			controller.CreateTicket(c)
-
-			// 验证响应
-			var response common.Response
-			err = json.Unmarshal(w.Body.Bytes(), &response)
-			// 如果无法解析响应，至少检查状态码
-			if err != nil {
-				// 可能是因为上下文未正确设置
-				t.Logf("Response body: %s", w.Body.String())
-				return
-			}
-
-			if response.Code != tt.expectedCode {
-				t.Logf("Expected code: %d, Got: %d, Message: %s", tt.expectedCode, response.Code, response.Message)
-			}
-			assert.Equal(t, tt.expectedCode, response.Code)
 		})
 	}
 }
@@ -225,7 +226,6 @@ func TestTicketController_GetTicket(t *testing.T) {
 
 	tenant, user := createTestTenantAndUserForTicket(t, client)
 
-	// 先创建一个工单
 	ctx := context.Background()
 	ticket, err := client.Ticket.Create().
 		SetTicketNumber("TKT-001").
@@ -239,29 +239,24 @@ func TestTicketController_GetTicket(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name           string
-		ticketID       string
-		expectedStatus int
-		expectedCode   int
-		setupContext   func(c *gin.Context)
+		name         string
+		ticketID     string
+		expectedCode int
 	}{
 		{
-			name:           "成功获取工单",
-			ticketID:       "1", // SQLite 自增 ID
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.SuccessCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("tenant_id", tenant.ID)
-			},
+			name:         "成功获取工单",
+			ticketID:     strconv.Itoa(ticket.ID),
+			expectedCode: common.SuccessCode,
 		},
 		{
-			name:           "无效的工单ID",
-			ticketID:       "invalid",
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.ParamErrorCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("tenant_id", tenant.ID)
-			},
+			name:         "无效的工单ID",
+			ticketID:     "invalid",
+			expectedCode: common.ParamErrorCode,
+		},
+		{
+			name:         "不存在的工单ID",
+			ticketID:     "999999",
+			expectedCode: common.NotFoundCode,
 		},
 	}
 
@@ -269,20 +264,12 @@ func TestTicketController_GetTicket(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req, err := http.NewRequest("GET", "/api/v1/tickets/"+tt.ticketID, nil)
 			require.NoError(t, err)
+			req.Header.Set("X-Test-Tenant", strconv.Itoa(tenant.ID))
 
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request = req
-
-			if tt.setupContext != nil {
-				tt.setupContext(c)
-			}
-
-			r.ServeHTTP(w, req)
+			resp, _ := doJSONRequest(t, r, req)
+			assert.Equal(t, tt.expectedCode, resp.Code, "message=%s", resp.Message)
 		})
 	}
-
-	_ = ticket // 使用 ticket 变量
 }
 
 func TestTicketController_ListTickets(t *testing.T) {
@@ -291,14 +278,13 @@ func TestTicketController_ListTickets(t *testing.T) {
 
 	tenant, user := createTestTenantAndUserForTicket(t, client)
 
-	// 创建一些测试工单
 	ctx := context.Background()
 	uniqueID := uniqueTestID()
 	for i := 0; i < 3; i++ {
 		_, err := client.Ticket.Create().
 			SetTicketNumber(fmt.Sprintf("TKT-%s-%03d", uniqueID, i+1)).
-			SetTitle("测试工单 " + string(rune('A'+i))).
-			SetDescription("描述 " + string(rune('A'+i))).
+			SetTitle(fmt.Sprintf("测试工单 %c", 'A'+i)).
+			SetDescription(fmt.Sprintf("描述 %c", 'A'+i)).
 			SetPriority("medium").
 			SetStatus("open").
 			SetRequesterID(user.ID).
@@ -308,29 +294,19 @@ func TestTicketController_ListTickets(t *testing.T) {
 	}
 
 	tests := []struct {
-		name           string
-		queryParams    string
-		expectedStatus int
-		expectedCode   int
-		setupContext   func(c *gin.Context)
+		name         string
+		queryParams  string
+		expectedCode int
 	}{
 		{
-			name:           "成功获取工单列表",
-			queryParams:    "",
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.SuccessCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("tenant_id", tenant.ID)
-			},
+			name:         "成功获取工单列表",
+			queryParams:  "",
+			expectedCode: common.SuccessCode,
 		},
 		{
-			name:           "带分页参数",
-			queryParams:    "page=1&page_size=10",
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.SuccessCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("tenant_id", tenant.ID)
-			},
+			name:         "带分页参数",
+			queryParams:  "page=1&pageSize=10",
+			expectedCode: common.SuccessCode,
 		},
 	}
 
@@ -343,16 +319,16 @@ func TestTicketController_ListTickets(t *testing.T) {
 
 			req, err := http.NewRequest("GET", path, nil)
 			require.NoError(t, err)
+			req.Header.Set("X-Test-Tenant", strconv.Itoa(tenant.ID))
 
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request = req
+			resp, _ := doJSONRequest(t, r, req)
+			assert.Equal(t, tt.expectedCode, resp.Code, "message=%s", resp.Message)
 
-			if tt.setupContext != nil {
-				tt.setupContext(c)
-			}
-
-			r.ServeHTTP(w, req)
+			// Verify the data is a paginated list, not an error envelope.
+			var listResp dto.ListTicketsResponse
+			require.NoError(t, json.Unmarshal(resp.Data, &listResp), "data=%s", string(resp.Data))
+			assert.GreaterOrEqual(t, listResp.Total, 3, "should list all 3 seeded tickets")
+			assert.GreaterOrEqual(t, len(listResp.Tickets), 3, "items slice should match total")
 		})
 	}
 }
@@ -363,7 +339,6 @@ func TestTicketController_UpdateTicket(t *testing.T) {
 
 	tenant, user := createTestTenantAndUserForTicket(t, client)
 
-	// 创建一个工单
 	ctx := context.Background()
 	ticket, err := client.Ticket.Create().
 		SetTicketNumber("TKT-002").
@@ -377,61 +352,60 @@ func TestTicketController_UpdateTicket(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name           string
-		ticketID       int
-		request        dto.UpdateTicketRequest
-		expectedStatus int
-		expectedCode   int
-		setupContext   func(c *gin.Context)
+		name         string
+		ticketID     string
+		request      dto.UpdateTicketRequest
+		expectedCode int
 	}{
 		{
 			name:     "成功更新工单",
-			ticketID: ticket.ID,
+			ticketID: strconv.Itoa(ticket.ID),
 			request: dto.UpdateTicketRequest{
 				Title:       "更新后的标题",
-				Description: "更新后的描述",
+				Description: "更新后的详细描述内容足够长以通过校验",
 				Priority:    "high",
 			},
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.SuccessCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("tenant_id", tenant.ID)
-				c.Set("user_id", user.ID)
-			},
+			expectedCode: common.SuccessCode,
 		},
 		{
-			name:     "无效的工单ID",
-			ticketID: 99999,
+			name:     "无效的工单ID格式",
+			ticketID: "abc",
 			request: dto.UpdateTicketRequest{
 				Title: "更新后的标题",
 			},
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.InternalErrorCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("tenant_id", tenant.ID)
-				c.Set("user_id", user.ID)
+			expectedCode: common.ParamErrorCode,
+		},
+		{
+			name:     "工单不存在",
+			ticketID: "99999",
+			request: dto.UpdateTicketRequest{
+				Title: "更新后的标题",
 			},
+			expectedCode: common.NotFoundCode,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			requestBody, err := json.Marshal(tt.request)
+			body, err := json.Marshal(tt.request)
 			require.NoError(t, err)
 
-			req, err := http.NewRequest("PUT", "/api/v1/tickets/"+string(rune('0'+tt.ticketID)), bytes.NewBuffer(requestBody))
+			req, err := http.NewRequest("PUT", "/api/v1/tickets/"+tt.ticketID, bytes.NewReader(body))
 			require.NoError(t, err)
 			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("X-Test-Tenant", strconv.Itoa(tenant.ID))
+			req.Header.Set("X-Test-User", strconv.Itoa(user.ID))
 
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request = req
+			resp, _ := doJSONRequest(t, r, req)
+			assert.Equal(t, tt.expectedCode, resp.Code, "message=%s", resp.Message)
 
-			if tt.setupContext != nil {
-				tt.setupContext(c)
+			// For success cases, the returned ticket should reflect the update.
+			if tt.expectedCode == common.SuccessCode {
+				var updated dto.TicketResponse
+				require.NoError(t, json.Unmarshal(resp.Data, &updated), "data=%s", string(resp.Data))
+				assert.Equal(t, tt.request.Title, updated.Title)
+				assert.Equal(t, tt.request.Priority, updated.Priority)
 			}
-
-			r.ServeHTTP(w, req)
 		})
 	}
 }
@@ -442,7 +416,6 @@ func TestTicketController_DeleteTicket(t *testing.T) {
 
 	tenant, user := createTestTenantAndUserForTicket(t, client)
 
-	// 创建一个工单
 	ctx := context.Background()
 	ticket, err := client.Ticket.Create().
 		SetTicketNumber("TKT-003").
@@ -456,38 +429,33 @@ func TestTicketController_DeleteTicket(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name           string
-		ticketID       int
-		expectedStatus int
-		expectedCode   int
-		setupContext   func(c *gin.Context)
+		name         string
+		ticketID     string
+		expectedCode int
 	}{
 		{
-			name:           "成功删除工单",
-			ticketID:       ticket.ID,
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.SuccessCode,
-			setupContext: func(c *gin.Context) {
-				c.Set("tenant_id", tenant.ID)
-				c.Set("user_id", user.ID)
-			},
+			name:         "成功删除工单",
+			ticketID:     strconv.Itoa(ticket.ID),
+			expectedCode: common.SuccessCode,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("DELETE", "/api/v1/tickets/"+string(rune('0'+tt.ticketID)), nil)
+			req, err := http.NewRequest("DELETE", "/api/v1/tickets/"+tt.ticketID, nil)
 			require.NoError(t, err)
+			req.Header.Set("X-Test-Tenant", strconv.Itoa(tenant.ID))
+			req.Header.Set("X-Test-User", strconv.Itoa(user.ID))
 
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request = req
+			resp, _ := doJSONRequest(t, r, req)
+			assert.Equal(t, tt.expectedCode, resp.Code, "message=%s", resp.Message)
 
-			if tt.setupContext != nil {
-				tt.setupContext(c)
-			}
-
-			r.ServeHTTP(w, req)
+			// Verify deletion: a follow-up GET should return NotFoundCode.
+			verifyReq, err := http.NewRequest("GET", "/api/v1/tickets/"+tt.ticketID, nil)
+			require.NoError(t, err)
+			verifyReq.Header.Set("X-Test-Tenant", strconv.Itoa(tenant.ID))
+			verifyResp, _ := doJSONRequest(t, r, verifyReq)
+			assert.Equal(t, common.NotFoundCode, verifyResp.Code, "deleted ticket should 404")
 		})
 	}
 }

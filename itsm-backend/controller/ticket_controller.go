@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -153,6 +154,12 @@ func (tc *TicketController) UpdateTicket(c *gin.Context) {
 				"currentVersion": conflictErr.CurrentVersion,
 				"serverVersion":  conflictErr.ServerVersion,
 			})
+			return
+		}
+		// 工单不存在应映射到 404，与 GetTicket 保持一致
+		if strings.Contains(err.Error(), "ticket not found") {
+			tc.logger.Warnw("Ticket not found for update", "ticket_id", ticketID, "tenant_id", tenantID)
+			common.Fail(c, common.NotFoundCode, "工单不存在")
 			return
 		}
 		tc.logger.Errorw("Failed to update ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)

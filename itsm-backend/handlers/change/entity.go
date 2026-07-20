@@ -71,19 +71,21 @@ type RiskAssessment struct {
 	UpdatedAt          time.Time
 }
 
-// Stats represents change statistics
+// Stats represents change statistics.
+// Field names and JSON tags mirror dto.ChangeStatsResponse so callers can either
+// consume the domain struct directly or map it through the DTO. Status values
+// follow the canonical set defined in dto.ChangeStatus (draft, pending, approved,
+// scheduled, in_progress, completed, failed, rolled_back, rejected, cancelled).
 type Stats struct {
-	Total        int `json:"total"`
-	Draft        int `json:"draft"`
-	Review       int `json:"review"`
-	Pending      int `json:"pending"`
-	Approved     int `json:"approved"`
-	Scheduled    int `json:"scheduled"`
-	Implementing int `json:"implementing"`
-	Implemented  int `json:"implemented"`
-	Completed    int `json:"completed"`
-	RolledBack   int `json:"rolledBack"`
-	Rejected     int `json:"rejected"`
-	Cancelled    int `json:"cancelled"`
-	InProgress   int `json:"inProgress"` // Computed: Scheduled + Implementing
+	Total      int `json:"total"`
+	Draft      int `json:"draft"`
+	Pending    int `json:"pending"`
+	Approved   int `json:"approved"`
+	Scheduled  int `json:"scheduled"`
+	InProgress int `json:"inProgress"`
+	Completed  int `json:"completed"`
+	Failed     int `json:"failed"`
+	RolledBack int `json:"rolledBack"`
+	Rejected   int `json:"rejected"`
+	Cancelled  int `json:"cancelled"`
 }

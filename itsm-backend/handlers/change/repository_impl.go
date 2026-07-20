@@ -200,20 +200,21 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 		switch status {
 		case "draft":
 			stats.Draft = count
-		case "review":
-			stats.Review = count
 		case "pending":
-			stats.Pending = count
+			stats.Pending += count
+		case "pending_review":
+			// pending_review is a seed-data alias for pending (changes awaiting approval)
+			stats.Pending += count
 		case "approved":
 			stats.Approved = count
 		case "scheduled":
 			stats.Scheduled = count
-		case "implementing":
-			stats.Implementing = count
-		case "implemented":
-			stats.Implemented = count
+		case "in_progress":
+			stats.InProgress = count
 		case "completed":
 			stats.Completed = count
+		case "failed":
+			stats.Failed = count
 		case "rolled_back":
 			stats.RolledBack = count
 		case "rejected":
@@ -226,11 +227,11 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 		return nil, err
 	}
 
-	// Map to frontend-compatible structure
-	// pending = changes awaiting approval
-	// inProgress = scheduled + implementing
-	// completed = completed + implemented
-	stats.InProgress = stats.Scheduled + stats.Implementing
+	// InProgress reflects changes actively being implemented (status='in_progress').
+	// Scheduled is reported separately so the frontend can distinguish "已排期" from "实施中".
+	// (The previous implementation summed Scheduled + Implementing, but Implementing was
+	// never written anywhere — see canonical statuses in dto.ChangeStatus and the
+	// isValidChangeStatusTransition table.)
 
 	return stats, nil
 }

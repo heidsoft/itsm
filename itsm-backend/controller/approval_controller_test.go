@@ -42,9 +42,36 @@ func setupTestApprovalController(t *testing.T) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
 
-	// 注册路由
-	r.GET("/api/v1/approvals/workflows", approvalController.ListWorkflows)
-	r.POST("/api/v1/approvals/workflows", approvalController.CreateWorkflow)
+	// Tenant context injection: every request gets tenant_id=1 unless
+	// X-Test-Tenant header overrides it. Required because controllers read
+	// tenant_id via getIntFromContext, and ServeHTTP builds its own context
+	// (c.Set on a separate context is not visible).
+	r.Use(func(c *gin.Context) {
+		tenantID := 1
+		if h := c.GetHeader("X-Test-Tenant"); h != "" {
+			if v, err := strconv.Atoi(h); err == nil {
+				tenantID = v
+			}
+		}
+		userID := 1
+		if h := c.GetHeader("X-Test-User"); h != "" {
+			if v, err := strconv.Atoi(h); err == nil {
+				userID = v
+			}
+		}
+		c.Set("tenant_id", tenantID)
+		c.Set("user_id", userID)
+		c.Next()
+	})
+
+	// 注册路由 - mirror router.go L564-572 exactly. The legacy /approvals
+	// group exists in router.go but the canonical contract is /approval-workflows.
+	r.GET("/api/v1/approval-workflows", approvalController.ListWorkflows)
+	r.POST("/api/v1/approval-workflows", approvalController.CreateWorkflow)
+	r.GET("/api/v1/approval-workflows/:id", approvalController.GetWorkflow)
+	r.PUT("/api/v1/approval-workflows/:id", approvalController.UpdateWorkflow)
+	r.PATCH("/api/v1/approval-workflows/:id", approvalController.PatchWorkflow)
+	r.DELETE("/api/v1/approval-workflows/:id", approvalController.DeleteWorkflow)
 
 	return r
 }
@@ -62,7 +89,7 @@ func TestApprovalController_ListWorkflows(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("GET", "/api/v1/approvals/workflows", nil)
+			req, err := http.NewRequest("GET", "/api/v1/approval-workflows", nil)
 			require.NoError(t, err)
 
 			w := httptest.NewRecorder()
@@ -71,6 +98,13 @@ func TestApprovalController_ListWorkflows(t *testing.T) {
 			c.Set("tenant_id", 1)
 
 			r.ServeHTTP(w, req)
+			assert.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+			var resp struct {
+				Code int         `json:"code"`
+				Data interface{} `json:"data"`
+			}
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+			assert.Equal(t, 0, resp.Code, "expected success code, got %d", resp.Code)
 		})
 	}
 }
@@ -88,8 +122,10 @@ func TestApprovalController_CreateWorkflow(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("POST", "/api/v1/approvals/workflows", nil)
+			body := []byte(`{"name":"test","ticketType":"incident","priority":"high","isActive":true,"nodes":[{"level":1,"name":"主管审批","approverType":"role","approverIds":[1],"approvalMode":"any","allowReject":true,"allowDelegate":false,"rejectAction":"end"}]}`)
+			req, err := http.NewRequest("POST", "/api/v1/approval-workflows", bytes.NewReader(body))
 			require.NoError(t, err)
+			req.Header.Set("Content-Type", "application/json")
 
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
@@ -97,6 +133,13 @@ func TestApprovalController_CreateWorkflow(t *testing.T) {
 			c.Set("tenant_id", 1)
 
 			r.ServeHTTP(w, req)
+			assert.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+			var resp struct {
+				Code int         `json:"code"`
+				Data interface{} `json:"data"`
+			}
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+			assert.Equal(t, 0, resp.Code, "expected success code, got %d", resp.Code)
 		})
 	}
 }
