@@ -13,8 +13,6 @@ import {
   Form,
   message,
   App,
-  Row,
-  Col,
   Dropdown,
 } from 'antd';
 import { Search as SearchIcon, Filter, Plus, Save, Pencil, Eye, Settings, Share2, MoreHorizontal } from 'lucide-react';
@@ -79,6 +77,8 @@ export interface UnifiedKanbanBoardProps<T> {
   onItemEdit?: (item: T) => void;
   /** 状态变更处理函数（拖拽） */
   onItemStatusChange?: (itemId: string | number, newStatus: string) => Promise<void>;
+  /** Permission/policy guard for a status transition. */
+  canItemStatusChange?: (item: T, newStatus: string) => boolean;
   /** 是否启用拖拽 */
   enableDrag?: boolean;
   /** 是否显示工具栏 */
@@ -259,6 +259,7 @@ export function UnifiedKanbanBoard<T>({
   onItemClick,
   onItemEdit,
   onItemStatusChange,
+  canItemStatusChange,
   enableDrag = true,
   showToolbar = true,
   columnConfigs,
@@ -272,6 +273,8 @@ export function UnifiedKanbanBoard<T>({
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
+  const [draggedItem, setDraggedItem] = useState<T | null>(null);
+  const [updatingItemId, setUpdatingItemId] = useState<string | number | null>(null);
 
   // 必需属性检查
   if (!getItemTitle) {
@@ -321,6 +324,12 @@ export function UnifiedKanbanBoard<T>({
     }));
   }, [filteredItems, columnConfigs, getItemStatus]);
 
+  const minimumColumnWidth = 300;
+  const columnGap = 16;
+  const minimumBoardWidth =
+    columnsData.length * minimumColumnWidth +
+    Math.max(columnsData.length - 1, 0) * columnGap;
+
   // 状态处理
   const handleItemClick = useCallback(
     (item: T) => {
@@ -336,6 +345,39 @@ export function UnifiedKanbanBoard<T>({
     [onItemEdit]
   );
 
+  const handleDrop = useCallback(
+    async (newStatus: string) => {
+      const item = draggedItem;
+      setDraggedItem(null);
+      if (!item || !enableDrag || !onItemStatusChange) return;
+      if (getItemStatus(item) === newStatus) return;
+      if (canItemStatusChange && !canItemStatusChange(item, newStatus)) {
+        antMessage.warning('您没有执行此状态变更的权限');
+        return;
+      }
+
+      const itemId = getItemId(item);
+      setUpdatingItemId(itemId);
+      try {
+        await onItemStatusChange(itemId, newStatus);
+        antMessage.success('状态已更新');
+      } catch (cause) {
+        antMessage.error(cause instanceof Error ? cause.message : '状态更新失败');
+      } finally {
+        setUpdatingItemId(null);
+      }
+    },
+    [
+      antMessage,
+      canItemStatusChange,
+      draggedItem,
+      enableDrag,
+      getItemId,
+      getItemStatus,
+      onItemStatusChange,
+    ]
+  );
+
   // 渲染卡片
   const renderCard = useCallback(
     (item: T, column: KanbanColumnConfig<T>) => {
@@ -349,7 +391,7 @@ export function UnifiedKanbanBoard<T>({
           item={item}
           column={column}
           onClick={() => handleItemClick(item)}
-          onEdit={() => handleItemEdit(item)}
+          onEdit={onItemEdit ? () => handleItemEdit(item) : undefined}
           getItemTitle={getItemTitle}
           getItemNumber={getItemNumber}
           getItemDescription={getItemDescription}
@@ -367,6 +409,7 @@ export function UnifiedKanbanBoard<T>({
       getItemId,
       handleItemClick,
       handleItemEdit,
+      onItemEdit,
       getItemTitle,
       getItemNumber,
       getItemDescription,
@@ -460,37 +503,78 @@ export function UnifiedKanbanBoard<T>({
         </div>
       )}
 
-      {/* 看板区域 */}
-      <Row gutter={[16, 0]}>
-        {columnsData.map(column => (
-          <Col key={column.key} span={4}>
-            <Card
-              title={
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div
-                      className="w-2 h-2 rounded-full mr-2"
-                      style={{ backgroundColor: column.color }}
-                    />
-                    <span className="font-medium text-gray-900">{column.title}</span>
-                  </div>
-                  <Badge count={column.items.length} style={{ backgroundColor: column.color }} />
-                </div>
-              }
-              size="small"
-              className="h-full"
-              style={{ minHeight: '600px' }}
+      {/* 宽屏自适应填充；空间不足时保留横向滚动，避免压缩业务卡片。 */}
+      <div className="w-full overflow-x-auto pb-4">
+        <div
+          className="grid gap-4"
+          data-testid="kanban-grid"
+          style={{
+            minHeight: '400px',
+            minWidth: `${minimumBoardWidth}px`,
+            gridTemplateColumns: `repeat(${columnsData.length}, minmax(${minimumColumnWidth}px, 1fr))`,
+          }}
+        >
+          {columnsData.map(column => (
+            <div
+              key={column.key}
+              className="min-w-0 rounded-lg bg-gray-50 p-4"
+              data-testid={`kanban-column-${column.key}`}
+              onDragOver={event => {
+                if (enableDrag && onItemStatusChange) event.preventDefault();
+              }}
+              onDrop={event => {
+                event.preventDefault();
+                void handleDrop(column.key);
+              }}
             >
-              <div className="space-y-2">
-                {column.items.map(item => renderCard(item, column))}
+              {/* 列标题 */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: column.color }}
+                  />
+                  <span className="font-semibold text-gray-900 text-sm">{column.title}</span>
+                </div>
+                <Badge
+                  count={column.items.length}
+                  style={{
+                    backgroundColor: column.color,
+                    fontSize: '12px',
+                    lineHeight: '16px',
+                  }}
+                />
+              </div>
+
+              {/* 卡片列表 */}
+              <div className="space-y-2 min-h-[200px]">
+                {column.items.map(item => {
+                  const itemId = getItemId(item);
+                  const draggable = enableDrag && Boolean(onItemStatusChange);
+                  return (
+                    <div
+                      key={itemId}
+                      draggable={draggable && updatingItemId !== itemId}
+                      aria-busy={updatingItemId === itemId}
+                      data-testid={`kanban-item-${itemId}`}
+                      onDragStart={() => setDraggedItem(item)}
+                      onDragEnd={() => setDraggedItem(null)}
+                      className={updatingItemId === itemId ? 'opacity-60 pointer-events-none' : ''}
+                    >
+                      {renderCard(item, column)}
+                    </div>
+                  );
+                })}
                 {column.items.length === 0 && (
-                  <div className="text-center text-slate-500 py-8 text-sm">暂无数据</div>
+                  <div className="text-center text-slate-400 py-8 text-xs">
+                    暂无数据
+                  </div>
                 )}
               </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

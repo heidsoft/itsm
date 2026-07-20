@@ -300,6 +300,7 @@ export default function IncidentsPage() {
         {
           label: '平均解决时间',
           value: Math.round((metrics.avgResolutionTime || 0) / 60),
+          suffix: '分钟',
           color: '#52c41a',
           icon: <span className="text-2xl">⏱️</span>,
         },
@@ -349,7 +350,7 @@ export default function IncidentsPage() {
       getItemStatus={(incident: Incident) => incident.status}
       getItemTitle={(incident: Incident) => incident.title || `事件 #${incident.id}`}
       getItemNumber={(incident: Incident) =>
-        incident.incidentNumber || incident.incidentNumber || String(incident.id)
+        incident.incidentNumber || String(incident.id)
       }
       getItemDescription={(incident: Incident) => incident.description || ''}
       getItemPriority={(incident: Incident) =>
@@ -360,12 +361,12 @@ export default function IncidentsPage() {
           ? { name: incident.assignee.name || incident.assigneeName || '未分配' }
           : null
       }
-      getItemCreatedAt={(incident: Incident) => incident.createdAt || incident.createdAt}
-      getItemUpdatedAt={(incident: Incident) => incident.updatedAt || incident.updatedAt}
+      getItemCreatedAt={(incident: Incident) => incident.createdAt}
+      getItemUpdatedAt={(incident: Incident) => incident.updatedAt}
       onItemClick={handleView}
       onItemEdit={handleEdit}
       columnConfigs={KANBAN_COLUMNS}
-      searchPlaceholder="搜索事件ID、标题或描述..."
+      showToolbar={false}  // 禁用内置工具栏，使用 BusinessPageTemplate 的统一搜索/筛选
       priorityOptions={[
         { value: 'critical', label: '紧急', color: 'red' },
         { value: 'high', label: '高', color: 'orange' },

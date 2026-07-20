@@ -265,6 +265,7 @@ export default function ChangesPage() {
       onItemClick={(change: Change) => router.push(`/changes/${change.id}`)}
       onItemEdit={(change: Change) => router.push(`/changes/${change.id}/edit`)}
       columnConfigs={KANBAN_COLUMNS}
+      showToolbar={false}
       searchPlaceholder="搜索变更标题或描述..."
       priorityOptions={[
         { value: 'critical', label: '紧急', color: 'red' },

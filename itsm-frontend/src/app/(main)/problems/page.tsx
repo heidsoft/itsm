@@ -264,6 +264,7 @@ export default function ProblemListPage() {
       onItemClick={(problem: Problem) => router.push(`/problems/${problem.id}`)}
       onItemEdit={(problem: Problem) => router.push(`/problems/${problem.id}/edit`)}
       columnConfigs={KANBAN_COLUMNS}
+      showToolbar={false}
       searchPlaceholder="搜索问题标题或描述..."
       priorityOptions={[
         { value: 'critical', label: '紧急', color: 'red' },

@@ -11,8 +11,6 @@ import {
   message,
   Empty,
   Typography,
-  Row,
-  Col,
   Dropdown,
   type MenuProps,
 } from 'antd';
@@ -41,6 +39,7 @@ const { Title, Text } = Typography;
 export interface PageStats {
   label: string;
   value: number;
+  suffix?: React.ReactNode;
   color?: string;
   icon?: React.ReactNode;
 }
@@ -142,25 +141,36 @@ export interface BusinessPageTemplateProps {
 const StatsCard: React.FC<PageStats & { loading?: boolean }> = ({
   label,
   value,
+  suffix,
   color = '#1890ff',
   icon,
   loading,
 }) => (
   <Card
     size="small"
-    className="rounded-lg shadow-sm hover:shadow-md transition-shadow"
+    className="h-full rounded-lg shadow-sm transition-shadow hover:shadow-md"
     loading={loading}
+    aria-label={`${label}统计`}
   >
-    <div className="flex items-center justify-between">
-      <div>
-        <Text type="secondary" className="text-xs">
+    <div className="flex min-h-20 items-center justify-between gap-4">
+      <div className="min-w-0">
+        <Text type="secondary" className="block truncate text-sm">
           {label}
         </Text>
-        <div className="text-2xl font-bold" style={{ color }}>
+        <div className="mt-1 flex items-baseline gap-1 text-2xl font-semibold leading-none" style={{ color }}>
           {typeof value === 'number' ? value.toLocaleString() : value}
+          {suffix && <span className="text-xs font-normal text-slate-500">{suffix}</span>}
         </div>
       </div>
-      {icon && <div style={{ color }}>{icon}</div>}
+      {icon && (
+        <div
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+          style={{ color, backgroundColor: `${color}14` }}
+          aria-hidden="true"
+        >
+          {icon}
+        </div>
+      )}
     </div>
   </Card>
 );
@@ -322,7 +332,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
                   type="primary"
                   icon={primaryAction.icon || <Plus />}
                   onClick={primaryAction.onClick}
-                  size="large"
+                  size="small"
                 >
                   {primaryAction.label}
                 </Button>
@@ -339,11 +349,13 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
 
           {/* 统计卡片行 */}
           {stats && stats.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-0">
-              {stats.map((stat, index) => (
-                <Col key={index} span={6}>
-                  <StatsCard {...stat} loading={statsLoading} />
-                </Col>
+            <div
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+              role="group"
+              aria-label="页面统计"
+            >
+              {stats.map(stat => (
+                <StatsCard key={stat.label} {...stat} loading={statsLoading} />
               ))}
             </div>
           )}
@@ -418,7 +430,10 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
         )}
 
         {/* 内容区域 */}
-        <Card className="rounded-lg shadow-sm">
+        <Card
+          className="rounded-lg shadow-sm"
+          styles={{ body: { padding: activeView === 'kanban' ? 16 : 24 } }}
+        >
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-gray-400">加载中...</div>
@@ -457,7 +472,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
 
       {/* ====== 快捷浮动按钮 ====== */}
       {primaryAction && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-6 right-6 z-50 md:hidden">
           <Button
             type="primary"
             shape="circle"
