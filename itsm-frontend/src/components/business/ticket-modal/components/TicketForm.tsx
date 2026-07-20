@@ -3,14 +3,13 @@
  * 使用自定义 hooks 和拆分的步骤组件
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Form, Steps, Button, Input, Select, DatePicker, Row, Col, Avatar } from 'antd';
 import { Plus, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 import { useTicketForm } from '../hooks/useTicketForm';
-import type { TicketFormProps, User, TicketTemplate } from '../types';
-import { TICKET_FORM_STEPS } from '../utils/ticket-form-utils';
+import type { TicketFormProps, User, TicketFormValues } from '../types';
 import { TicketFormStep1 } from './TicketFormStep1';
 import { TicketFormStep2 } from './TicketFormStep2';
 import { TicketFormStep3 } from './TicketFormStep3';
@@ -104,8 +103,8 @@ TicketForm.displayName = 'TicketForm';
 
 // 编辑模式表单组件（提取为内部组件）
 interface EditingFormProps {
-  form: any;
-  onSubmit: (values: any) => void;
+  form: TicketFormProps['form'];
+  onSubmit: (values: TicketFormValues) => void | Promise<void>;
   loading: boolean;
   userList: User[];
 }
@@ -179,7 +178,7 @@ const EditingForm: React.FC<EditingFormProps> = ({
 
       <Row gutter={24}>
         <Col span={12}>
-          <Form.Item label="处理人" name="assignee_id">
+          <Form.Item label="处理人" name="assigneeId">
             <Select placeholder="请选择处理人" allowClear size="large">
               {userList.map(user => (
                 <Select.Option key={user.id} value={user.id}>
@@ -199,7 +198,7 @@ const EditingForm: React.FC<EditingFormProps> = ({
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item label="预计完成时间" name="estimated_time">
+          <Form.Item label="预计完成时间" name="estimatedTime">
             <DatePicker
               showTime
               placeholder="请选择预计完成时间"

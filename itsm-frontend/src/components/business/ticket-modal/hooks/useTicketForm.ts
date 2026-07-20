@@ -3,68 +3,21 @@
  * 管理分步表单的状态和逻辑
  */
 
-import { useState, useCallback, useMemo } from 'react';
-import type { FormInstance } from 'antd/es/form';
-import type { TicketFormValues, UseTicketFormReturn, UseTicketFormConfig, User, TicketTemplate } from '../types';
+import { useState, useCallback } from 'react';
+import type { UseTicketFormReturn, UseTicketFormConfig } from '../types';
 import { TICKET_FORM_STEPS } from '../utils/ticket-form-utils';
-import { TicketType, TicketPriority } from '@/lib/services/ticket-service';
-import { submitTicket, updateTicket } from '../services/ticket-modal-service';
+import { useTicketModalData } from './useTicketModalData';
 
 export const useTicketForm = ({
   form,
   onSubmit,
-  loading = false,
-  isEditing = false,
+  loading: _loading = false,
+  isEditing: _isEditing = false,
 }: UseTicketFormConfig): UseTicketFormReturn => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Record<string, any>>({});
 
-  // 模拟用户列表（实际应从 API 获取）
-  const userList: User[] = useMemo(
-    () => [
-      { id: 1, name: 'Alice', role: 'IT Support', avatar: 'A' },
-      { id: 2, name: 'Bob', role: 'Network Admin', avatar: 'B' },
-      { id: 3, name: 'Charlie', role: 'Service Desk', avatar: 'C' },
-    ],
-    []
-  );
-
-  // 模拟模板数据（实际应从 API 获取）
-  const ticketTemplates: TicketTemplate[] = useMemo(
-    () => [
-      {
-        id: 1,
-        name: 'System Login Issue',
-        type: TicketType.INCIDENT,
-        category: 'System Access',
-        priority: TicketPriority.MEDIUM,
-        description: 'User unable to login to system, technical support needed',
-        estimatedTime: '2 hours',
-        sla: '4 hours',
-      },
-      {
-        id: 2,
-        name: 'Printer Malfunction',
-        type: TicketType.INCIDENT,
-        category: 'Hardware Equipment',
-        priority: TicketPriority.HIGH,
-        description: 'Office printer not working properly',
-        estimatedTime: '1 hour',
-        sla: '2 hours',
-      },
-      {
-        id: 3,
-        name: 'Software Installation Request',
-        type: TicketType.SERVICE_REQUEST,
-        category: 'Software Services',
-        priority: TicketPriority.LOW,
-        description: 'Need to install new office software',
-        estimatedTime: '30 minutes',
-        sla: '4 hours',
-      },
-    ],
-    []
-  );
+  const { users: userList, templates: ticketTemplates } = useTicketModalData();
 
   /**
    * 获取当前步骤需要验证的字段
@@ -118,14 +71,8 @@ export const useTicketForm = ({
     try {
       const values = { ...formData, ...form.getFieldsValue() };
 
-      // 调用 API
-      if (isEditing) {
-        await updateTicket(values.id as number, values);
-      } else {
-        await submitTicket(values);
-      }
-
-      // 调用外部 onSubmit
+      // Persistence belongs to the feature container/caller. This hook only
+      // coordinates form state and awaits the controlled submit callback.
       await onSubmit(values);
 
       // 重置表单
@@ -136,7 +83,7 @@ export const useTicketForm = ({
       console.error('Submit failed:', error);
       throw error;
     }
-  }, [formData, form, isEditing, onSubmit]);
+  }, [formData, form, onSubmit]);
 
   /**
    * 重置表单

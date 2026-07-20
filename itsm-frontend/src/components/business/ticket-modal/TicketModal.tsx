@@ -4,23 +4,19 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Button, Input, Select, message, App } from 'antd';
+import { Modal, Form, Button, Input, Select, message } from 'antd';
 import { Plus, Edit, BookOpen, Save } from 'lucide-react';
 import type { Ticket } from '@/lib/services/ticket-service';
 import { useI18n } from '@/lib/i18n';
 
 import { TicketForm } from './components/TicketForm';
 import { TemplateCard } from './components/TemplateCard';
-import type { TicketModalProps, TicketTemplateModalProps, TicketTemplate, User } from './types';
-import { MOCK_TICKET_TEMPLATES, MOCK_USER_LIST } from './utils/ticket-form-utils';
-
-// 注意：这里使用模拟数据，实际应该通过 API 或 props 传入
+import type { TicketModalProps, TicketTemplateModalProps, TicketTemplate } from './types';
 
 export const TicketModal: React.FC<TicketModalProps> = React.memo(
   ({ visible, editingTicket, onCancel, onSubmit, loading = false }) => {
     const { t } = useI18n();
     const [form] = Form.useForm();
-    const { message } = App.useApp();
 
     // 当编辑工单时，初始化表单数据
     useEffect(() => {
@@ -40,8 +36,8 @@ export const TicketModal: React.FC<TicketModalProps> = React.memo(
       }
     }, [visible, editingTicket, form]);
 
-    const handleSubmit = (values: any) => {
-      onSubmit(values);
+    const handleSubmit = async (values: Parameters<TicketModalProps['onSubmit']>[0]) => {
+      await onSubmit(values);
       form.resetFields();
     };
 
@@ -94,7 +90,7 @@ TicketModal.displayName = 'TicketModal';
 
 export const TicketTemplateModal: React.FC<TicketTemplateModalProps> = React.memo(
   ({ visible, onCancel }) => {
-    const [templates, setTemplates] = useState<TicketTemplate[]>(MOCK_TICKET_TEMPLATES);
+    const [templates, setTemplates] = useState<TicketTemplate[]>([]);
     const [editingTemplate, setEditingTemplate] = useState<TicketTemplate | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
     const [templateForm] = Form.useForm();

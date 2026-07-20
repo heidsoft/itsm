@@ -136,7 +136,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
             id: i.id,
             title: i.title,
             status: i.status,
-            number: i.incidentNumber || i.incidentNumber,
+            number: i.incidentNumber,
             type: 'incident' as const,
           }));
           break;
@@ -147,7 +147,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
             id: c.id,
             title: c.title,
             status: c.status,
-            number: c.changeNumber || c.changeNumber,
+            number: c.changeNumber,
             type: 'change' as const,
           }));
           break;

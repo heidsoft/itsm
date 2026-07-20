@@ -61,18 +61,18 @@ type RawEffectiveConfig = Partial<EffectiveConfig> & {
 function normalizeDomainConfig(config: RawDomainConfig): DomainConfig {
   return {
     id: config.id || 0,
-    configKey: config.configKey || config.configKey || '',
-    configType: config.configType || config.configType || '',
-    configValue: config.configValue || config.configValue || {},
-    inheritMode: config.inheritMode || config.inheritMode || 'inherit',
-    tenantId: config.tenantId ?? config.tenantId ?? 0,
-    departmentId: config.departmentId ?? config.departmentId ?? 0,
-    teamId: config.teamId ?? config.teamId ?? 0,
+    configKey: config.configKey || '',
+    configType: config.configType || '',
+    configValue: config.configValue || {},
+    inheritMode: config.inheritMode || 'inherit',
+    tenantId: config.tenantId ?? 0,
+    departmentId: config.departmentId ?? 0,
+    teamId: config.teamId ?? 0,
     version: config.version ?? 1,
-    isActive: config.isActive ?? config.isActive ?? true,
+    isActive: config.isActive ?? true,
     description: config.description,
-    createdAt: config.createdAt || config.createdAt,
-    updatedAt: config.updatedAt || config.updatedAt,
+    createdAt: config.createdAt,
+    updatedAt: config.updatedAt,
   };
 }
 
@@ -82,7 +82,7 @@ function normalizeEffectiveConfig(config: RawEffectiveConfig | null | undefined)
     key: config.key || '',
     value: config.value || {},
     source: config.source || '',
-    inheritMode: config.inheritMode || config.inheritMode || '',
+    inheritMode: config.inheritMode || '',
     version: config.version ?? 0,
   };
 }

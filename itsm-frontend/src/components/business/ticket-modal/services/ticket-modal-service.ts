@@ -12,10 +12,10 @@ import { TemplateApi } from '@/lib/api/template-api';
  * 提交工单
  */
 export const submitTicket = async (values: TicketFormValues): Promise<any> => {
+  const { attachments: _attachments, estimatedTime: _estimatedTime, ...ticketValues } = values;
   const payload = {
-    ...values,
-    type: values.type,
-    estimatedTime: values.estimatedTime || undefined,
+    ...ticketValues,
+    type: ticketValues.type,
   };
 
   return await ticketService.createTicket(payload);
@@ -28,9 +28,9 @@ export const updateTicket = async (
   ticketId: number,
   values: TicketFormValues
 ): Promise<any> => {
+  const { attachments: _attachments, estimatedTime: _estimatedTime, ...ticketValues } = values;
   const payload = {
-    ...values,
-    estimatedTime: values.estimatedTime || undefined,
+    ...ticketValues,
   };
 
   return await ticketService.updateTicket(ticketId, payload);

@@ -48,11 +48,11 @@ class DepartmentService {
       name: department.name || '',
       code: department.code || '',
       description: department.description,
-      managerId: department.managerId ?? department.managerId,
-      parentId: department.parentId ?? department.parentId,
+      managerId: department.managerId,
+      parentId: department.parentId,
       children: department.children?.map(child => this.normalizeDepartment(child)),
-      createdAt: department.createdAt || department.createdAt,
-      updatedAt: department.updatedAt || department.updatedAt,
+      createdAt: department.createdAt,
+      updatedAt: department.updatedAt,
     };
   }
 

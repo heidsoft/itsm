@@ -179,9 +179,9 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     setEscalating(true);
     try {
       await IncidentAPI.escalateIncident(data.id, {
-        escalationLevel: values.escalationLevel || values.escalationLevel,
+        escalationLevel: values.escalationLevel,
         reason: values.reason,
-        autoAssign: values.autoAssign || values.autoAssign,
+        autoAssign: values.autoAssign,
       });
       message.success('事件升级成功');
       setEscalateModalVisible(false);

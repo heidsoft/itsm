@@ -3,16 +3,17 @@
  */
 
 import React from 'react';
-import { Modal,Descriptions, Tag, Space, Button, message } from 'antd';
+import { Modal, Descriptions, Tag, Space, Button } from 'antd';
 import type { SLAViolation } from '../types';
-import { SLAApi } from '@/lib/api/sla-api';
 
 interface SLAViolationDetailModalProps {
   violation: SLAViolation | null;
   visible: boolean;
   onClose: () => void;
-  onResolve: () => void;
-  onAcknowledge: () => void;
+  canManage?: boolean;
+  actionLoading?: boolean;
+  onResolve: (violation: SLAViolation) => void | Promise<void>;
+  onAcknowledge: (violation: SLAViolation) => void | Promise<void>;
 }
 
 export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = ({
@@ -21,29 +22,9 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
   onClose,
   onResolve,
   onAcknowledge,
+  canManage = false,
+  actionLoading = false,
 }) => {
-  const handleResolve = async () => {
-    if (!violation) return;
-    try {
-      await SLAApi.updateSLAViolationStatus(violation.id, true, '手动解决');
-      message.success('已标记为已解决');
-      onResolve();
-    } catch (error) {
-      message.error('操作失败');
-    }
-  };
-
-  const handleAcknowledge = async () => {
-    if (!violation) return;
-    try {
-      await SLAApi.updateSLAViolationStatus(violation.id, false, '已确认违规');
-      message.success('已确认违规');
-      onAcknowledge();
-    } catch (error) {
-      message.error('操作失败');
-    }
-  };
-
   if (!violation) return null;
 
   const severityColors: Record<string, string> = {
@@ -60,10 +41,10 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
       onCancel={onClose}
       footer={
         <Space>
-          {violation.status === 'open' && (
+          {canManage && violation.status === 'open' && (
             <>
-              <Button onClick={handleAcknowledge}>确认</Button>
-              <Button type="primary" danger onClick={handleResolve}>
+              <Button loading={actionLoading} onClick={() => void onAcknowledge(violation)}>确认</Button>
+              <Button type="primary" danger loading={actionLoading} onClick={() => void onResolve(violation)}>
                 解决
               </Button>
             </>
@@ -73,7 +54,7 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
       }
       width={700}
     >
-      <Descriptions bordered column={2}>
+      <Descriptions bordered column={1}>
         <Descriptions.Item label="ID">{violation.id}</Descriptions.Item>
         <Descriptions.Item label="工单ID">{violation.ticketId}</Descriptions.Item>
         <Descriptions.Item label="SLA定义ID">{violation.slaDefId}</Descriptions.Item>
@@ -95,7 +76,7 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
           {new Date(violation.actualTime).toLocaleString()}
         </Descriptions.Item>
         <Descriptions.Item label="延迟分钟数">{violation.delayMinutes} 分钟</Descriptions.Item>
-        <Descriptions.Item label="描述" span={2}>
+        <Descriptions.Item label="描述">
           {violation.description || '-'}
         </Descriptions.Item>
         <Descriptions.Item label="创建时间">

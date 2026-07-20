@@ -50,6 +50,8 @@ import {
   Copy,
 } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
+import { TicketNotificationApi } from '@/lib/api/ticket-notification-api';
+import { PRODUCT_CAPABILITIES } from '@/config/product-capabilities';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -167,139 +169,38 @@ const NotificationCenter: React.FC<{
   const loadData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100 });
+      const loadedNotifications: Notification[] = (response.notifications ?? []).map(item => ({
+        id: item.id,
+        title: item.type,
+        message: item.content,
+        type: item.type === 'sla_warning' ? 'warning' : 'info',
+        channel: item.channel,
+        status: item.status,
+        recipient: item.user?.name || item.user?.username || String(item.userId),
+        sentAt: item.sentAt,
+        readAt: item.readAt,
+        createdAt: item.createdAt,
+      }));
 
-      // 模拟通知数据
-      const mockNotifications: Notification[] = [
-        {
-          id: 1,
-          title: '工单分配通知',
-          message: '您有一个新的工单被分配：网络连接异常',
-          type: 'info',
-          channel: 'in_app',
-          status: 'read',
-          recipient: '张三',
-          sentAt: '2024-01-15T10:30:00Z',
-          readAt: '2024-01-15T10:35:00Z',
-          createdAt: '2024-01-15T10:30:00Z',
-          templateId: 1,
-        },
-        {
-          id: 2,
-          title: 'SLA预警通知',
-          message: '工单T-2024-001即将超时，请及时处理',
-          type: 'warning',
-          channel: 'email',
-          status: 'sent',
-          recipient: '李四',
-          sentAt: '2024-01-15T09:00:00Z',
-          createdAt: '2024-01-15T09:00:00Z',
-          templateId: 2,
-        },
-        {
-          id: 3,
-          title: '系统维护通知',
-          message: '系统将于今晚22:00-24:00进行维护',
-          type: 'info',
-          channel: 'sms',
-          status: 'sent',
-          recipient: '王五',
-          sentAt: '2024-01-15T08:00:00Z',
-          createdAt: '2024-01-15T08:00:00Z',
-          templateId: 3,
-        },
-      ];
+      setNotifications(loadedNotifications);
+      setTemplates([]);
+      setChannels([]);
 
-      const mockTemplates: NotificationTemplate[] = [
-        {
-          id: 1,
-          name: '工单分配通知',
-          description: '当工单被分配给用户时发送的通知',
-          type: 'info',
-          channels: ['in_app', 'email'],
-          subject: '工单分配通知',
-          content: '您有一个新的工单被分配：{{ticket_title}}，优先级：{{priority}}',
-          variables: ['ticket_title', 'priority'],
-          isActive: true,
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-        },
-        {
-          id: 2,
-          name: 'SLA预警通知',
-          description: '当工单即将超时时发送的预警通知',
-          type: 'warning',
-          channels: ['email', 'sms'],
-          subject: 'SLA预警通知',
-          content: '工单{{ticket_id}}即将超时，剩余时间：{{remaining_time}}',
-          variables: ['ticket_id', 'remaining_time'],
-          isActive: true,
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-        },
-      ];
-
-      const mockChannels: NotificationChannel[] = [
-        {
-          id: 'email',
-          name: '邮件通知',
-          type: 'email',
-          config: {
-            smtpServer: 'smtp.company.com',
-            smtpPort: 587,
-            username: 'notifications@company.com',
-          },
-          isActive: true,
-          status: 'connected',
-          lastUsed: '2024-01-15T10:30:00Z',
-        },
-        {
-          id: 'sms',
-          name: '短信通知',
-          type: 'sms',
-          config: {
-            provider: '阿里云',
-            apiKey: '***',
-            templateId: 'SMS_123456',
-          },
-          isActive: true,
-          status: 'connected',
-          lastUsed: '2024-01-15T09:00:00Z',
-        },
-        {
-          id: 'webhook',
-          name: 'Webhook通知',
-          type: 'webhook',
-          config: {
-            url: 'https://api.company.com/webhook',
-            method: 'POST',
-            headers: { Authorization: 'Bearer ***' },
-          },
-          isActive: false,
-          status: 'disconnected',
-        },
-      ];
-
-      setNotifications(mockNotifications);
-      setTemplates(mockTemplates);
-      setChannels(mockChannels);
-
-      // 计算统计数据
-      const total = mockNotifications.length;
-      const unread = mockNotifications.filter(n => n.status === 'pending').length;
-      const sentToday = mockNotifications.filter(
+      const total = response.total ?? loadedNotifications.length;
+      const unread = loadedNotifications.filter(n => n.status !== 'read').length;
+      const sentToday = loadedNotifications.filter(
         n => n.sentAt && new Date(n.sentAt).toDateString() === new Date().toDateString()
       ).length;
-      const failedToday = mockNotifications.filter(n => n.status === 'failed').length;
+      const failedToday = loadedNotifications.filter(n => n.status === 'failed').length;
 
       setStats({
         total,
         unread,
-        sentToday: sentToday,
-        failedToday: failedToday,
-        deliveryRate: 95.5,
-        avgResponseTime: 2.3,
+        sentToday,
+        failedToday,
+        deliveryRate: total > 0 ? ((total - failedToday) / total) * 100 : 0,
+        avgResponseTime: 0,
       });
     } catch (error) {
       message.error('加载数据失败');
@@ -310,8 +211,7 @@ const NotificationCenter: React.FC<{
 
   const handleMarkRead = async (id: number) => {
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await TicketNotificationApi.markNotificationRead(id);
 
       setNotifications(prev =>
         prev.map(n =>
@@ -327,8 +227,7 @@ const NotificationCenter: React.FC<{
 
   const handleMarkAllRead = async () => {
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await TicketNotificationApi.markAllNotificationsRead();
 
       setNotifications(prev =>
         prev.map(n => ({ ...n, status: 'read' as const, readAt: new Date().toISOString() }))
@@ -342,8 +241,7 @@ const NotificationCenter: React.FC<{
 
   const handleDeleteNotification = async (id: number) => {
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await TicketNotificationApi.deleteNotification(id);
 
       setNotifications(prev => prev.filter(n => n.id !== id));
       message.success('删除成功');
@@ -881,7 +779,7 @@ const NotificationCenter: React.FC<{
           </div>
         </TabPane>
 
-        <TabPane tab="通知模板" key="templates">
+        {PRODUCT_CAPABILITIES.notificationTemplateManagement && <TabPane tab="通知模板" key="templates">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <Title level={5}>通知模板管理</Title>
@@ -906,9 +804,9 @@ const NotificationCenter: React.FC<{
               scroll={{ x: 'max-content' }}
             />
           </div>
-        </TabPane>
+        </TabPane>}
 
-        <TabPane tab="通知通道" key="channels">
+        {PRODUCT_CAPABILITIES.notificationChannelManagement && <TabPane tab="通知通道" key="channels">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <Title level={5}>通知通道配置</Title>
@@ -933,11 +831,11 @@ const NotificationCenter: React.FC<{
               scroll={{ x: 'max-content' }}
             />
           </div>
-        </TabPane>
+        </TabPane>}
       </Tabs>
 
       {/* 模板编辑模态框 */}
-      <Modal
+      {PRODUCT_CAPABILITIES.notificationTemplateManagement && <Modal
         title={selectedTemplate ? '编辑模板' : '新建模板'}
         open={showTemplateModal}
         onOk={handleSaveTemplate}
@@ -1019,10 +917,10 @@ const NotificationCenter: React.FC<{
             <Switch />
           </Form.Item>
         </Form>
-      </Modal>
+      </Modal>}
 
       {/* 通道配置模态框 */}
-      <Modal
+      {PRODUCT_CAPABILITIES.notificationChannelManagement && <Modal
         title={selectedChannel ? '配置通道' : '添加通道'}
         open={showChannelModal}
         onOk={handleSaveChannel}
@@ -1094,7 +992,7 @@ const NotificationCenter: React.FC<{
             <Input.Password placeholder="请输入密码" />
           </Form.Item>
         </Form>
-      </Modal>
+      </Modal>}
     </Drawer>
   );
 };

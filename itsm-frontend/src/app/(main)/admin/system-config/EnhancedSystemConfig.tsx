@@ -206,7 +206,7 @@ export default function EnhancedSystemConfiguration() {
         const cpu = status.cpu || {};
         const memory = status.memory || {};
         const disk = status.disk || {};
-        const startTime = status.startTime || status.startTime || status.startedAt || status.startedAt;
+        const startTime = status.startTime || status.startedAt;
         const uptime = status.uptime || status.upTime;
 
         setSystemStats({

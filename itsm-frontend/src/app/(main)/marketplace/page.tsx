@@ -83,13 +83,13 @@ const MarketplacePage = () => {
           type: (it.type || 'plugin') as MarketplaceItem['type'],
           provider: it.provider || '',
           description: it.description || '',
-          iconUrl: it.iconUrl || it.iconUrl || '',
+          iconUrl: it.iconUrl || '',
           rating: typeof it.rating === 'number' ? it.rating : 0,
-          installCount: it.installCount ?? it.installCount ?? 0,
+          installCount: it.installCount ?? 0,
           category: it.category || '未分类',
           tags: Array.isArray(it.tags) ? it.tags : [],
-          isOfficial: Boolean(it.isOfficial ?? it.isOfficial),
-          latestVersion: it.latestVersion || it.latestVersion || '1.0.0',
+          isOfficial: Boolean(it.isOfficial),
+          latestVersion: it.latestVersion || '1.0.0',
         }));
         setItems(normalized);
       } catch (error: any) {

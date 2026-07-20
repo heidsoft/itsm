@@ -2,6 +2,13 @@ import type { ApprovalWorkflow } from '@/lib/api/ticket-approval-api';
 import { TicketApprovalApi } from '@/lib/api/ticket-approval-api';
 import { httpClient } from '@/lib/api/http-client';
 
+// Path contract: these are the routes the backend actually registers
+// (see itsm-backend/router/router.go L564). If a frontend URL diverges from
+// this list, the test must fail — never mirror the SUT bug.
+const APPROVAL_WORKFLOWS_PATH = '/api/v1/approval-workflows';
+const APPROVAL_RECORDS_PATH = '/api/v1/tickets/approval/records';
+const SUBMIT_APPROVAL_PATH = '/api/v1/tickets/workflow/approve';
+
 // Mock httpClient methods directly
 jest.mock('@/lib/api/http-client', () => ({
   httpClient: {
@@ -55,10 +62,9 @@ describe('TicketApprovalApi', () => {
 
       const result = await TicketApprovalApi.getWorkflows({ ticketType: 'incident' });
 
-      expect(httpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/tickets/approval/workflows'),
-        expect.any(Object)
-      );
+      // Assert exact path against contract. StringContains would let the SUT
+      // define its own (possibly wrong) path — that is the bug we just fixed.
+      expect(httpClient.get).toHaveBeenCalledWith(APPROVAL_WORKFLOWS_PATH, expect.any(Object));
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].name).toBe('技术审批流程');
@@ -105,10 +111,7 @@ describe('TicketApprovalApi', () => {
 
       const result = await TicketApprovalApi.createWorkflow(workflowData);
 
-      expect(httpClient.post).toHaveBeenCalledWith(
-        expect.stringContaining('/api/tickets/approval/workflows'),
-        expect.any(Object)
-      );
+      expect(httpClient.post).toHaveBeenCalledWith(APPROVAL_WORKFLOWS_PATH, expect.any(Object));
 
       expect(result.id).toBe(1);
       expect(result.name).toBe('新审批流程');
@@ -126,10 +129,7 @@ describe('TicketApprovalApi', () => {
         comment: '审批通过',
       });
 
-      expect(httpClient.post).toHaveBeenCalledWith(
-        expect.stringContaining('/api/tickets/approval/submit'),
-        expect.any(Object)
-      );
+      expect(httpClient.post).toHaveBeenCalledWith(SUBMIT_APPROVAL_PATH, expect.any(Object));
     });
 
     it('should handle rejection action', async () => {
@@ -185,10 +185,7 @@ describe('TicketApprovalApi', () => {
 
       const result = await TicketApprovalApi.getApprovalRecords({ ticketId: 100 });
 
-      expect(httpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/tickets/approval/records'),
-        expect.any(Object)
-      );
+      expect(httpClient.get).toHaveBeenCalledWith(APPROVAL_RECORDS_PATH, expect.any(Object));
 
       expect(result).toHaveProperty('items');
       expect(Array.isArray(result.items)).toBe(true);
@@ -209,7 +206,7 @@ describe('TicketApprovalApi', () => {
 
       // httpClient.get receives (endpoint, paramsObj) where params include status
       expect(httpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/tickets/approval/records'),
+        APPROVAL_RECORDS_PATH,
         expect.objectContaining({ status: 'pending' })
       );
     });

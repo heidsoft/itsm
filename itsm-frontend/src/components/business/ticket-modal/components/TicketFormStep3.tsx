@@ -23,7 +23,7 @@ export const TicketFormStep3: React.FC<TicketFormStep3Props> = ({ form, userList
       />
       <Row gutter={24}>
         <Col span={12}>
-          <Form.Item label="指定处理人" name="assignee_id" extra="留空将由系统智能分配">
+          <Form.Item label="指定处理人" name="assigneeId" extra="留空将由系统智能分配">
             <Select placeholder="请选择处理人（可选）" allowClear size="large">
               {userList.map(user => (
                 <Select.Option key={user.id} value={user.id}>
@@ -43,7 +43,7 @@ export const TicketFormStep3: React.FC<TicketFormStep3Props> = ({ form, userList
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item label="预计完成时间" name="estimated_time" extra="可选，用于SLA计算">
+          <Form.Item label="预计完成时间" name="estimatedTime" extra="可选，用于SLA计算">
             <DatePicker
               showTime
               placeholder="请选择预计完成时间（可选）"

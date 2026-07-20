@@ -41,9 +41,9 @@ class TeamService {
       name: team.name || '',
       code: team.code || '',
       description: team.description,
-      managerId: team.managerId ?? team.managerId,
-      createdAt: team.createdAt || team.createdAt,
-      updatedAt: team.updatedAt || team.updatedAt,
+      managerId: team.managerId,
+      createdAt: team.createdAt,
+      updatedAt: team.updatedAt,
       edges: team.edges,
     };
   }

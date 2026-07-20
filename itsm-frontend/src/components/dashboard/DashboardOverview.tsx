@@ -203,8 +203,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           role: u.role || 'end_user',
           status: u.active ? 'active' : 'inactive',
           tenantId: u.tenantId || 1,
-          createdAt: u.createdAt || u.createdAt || new Date().toISOString(),
-          updatedAt: u.updatedAt || u.updatedAt || new Date().toISOString(),
+          createdAt: u.createdAt || new Date().toISOString(),
+          updatedAt: u.updatedAt || new Date().toISOString(),
           permissions: [],
           groups: [],
           preferences: {

@@ -286,11 +286,11 @@ export default function ApprovalsCenterPage() {
         title: t.title || `工单 #${t.id}`,
         status: t.status,
         priority: t.priority,
-        createdAt: t.createdAt || t.createdAt,
+        createdAt: t.createdAt,
         url: `/tickets/${t.id}`,
-        requester: t.requesterName || t.requesterName,
+        requester: t.requesterName,
         description: t.description,
-        assigneeName: t.assigneeName || t.assigneeName,
+        assigneeName: t.assigneeName,
         detail: t,
       })));
 
@@ -300,11 +300,11 @@ export default function ApprovalsCenterPage() {
         title: c.title || `变更 #${c.id}`,
         status: c.status,
         priority: c.priority,
-        createdAt: c.scheduledStart || c.createdAt || c.createdAt,
+        createdAt: c.scheduledStart || c.createdAt,
         url: `/changes/${c.id}`,
-        requester: c.requesterName || c.requesterName,
+        requester: c.requesterName,
         description: c.description,
-        assigneeName: c.assigneeName || c.assigneeName,
+        assigneeName: c.assigneeName,
         detail: c,
       })));
 
@@ -314,11 +314,11 @@ export default function ApprovalsCenterPage() {
         title: s.title || `服务请求 #${s.id}`,
         status: s.status,
         priority: s.priority,
-        createdAt: s.createdAt || s.createdAt,
+        createdAt: s.createdAt,
         url: `/service-requests/${s.id}`,
-        requester: s.requesterName || s.requesterName,
+        requester: s.requesterName,
         description: s.description,
-        assigneeName: s.assigneeName || s.assigneeName,
+        assigneeName: s.assigneeName,
         detail: s,
       })));
     } catch (e) {

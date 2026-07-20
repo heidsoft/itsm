@@ -57,11 +57,11 @@ const { RangePicker } = DatePicker;
 
 const normalizeNotification = (notification: TicketNotification): TicketNotification => ({
   ...notification,
-  createdAt: notification.createdAt || notification.createdAt,
-  readAt: notification.readAt || notification.readAt,
-  sentAt: notification.sentAt || notification.sentAt,
-  ticketId: notification.ticketId || notification.ticketId,
-  userId: notification.userId || notification.userId,
+  createdAt: notification.createdAt,
+  readAt: notification.readAt,
+  sentAt: notification.sentAt,
+  ticketId: notification.ticketId,
+  userId: notification.userId,
 });
 
 // 通知事件类型配置

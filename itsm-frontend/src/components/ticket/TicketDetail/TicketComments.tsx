@@ -186,7 +186,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                       </AntTag>
                     )}
                     <Text type="secondary" className="text-sm">
-                      {formatDateTime(comment.createdAt || comment.createdAt || '')}
+                      {formatDateTime(comment.createdAt || '')}
                     </Text>
                     {comment.updatedAt && comment.createdAt && comment.updatedAt !== comment.createdAt && (
                       <Text type="secondary" className="text-xs">

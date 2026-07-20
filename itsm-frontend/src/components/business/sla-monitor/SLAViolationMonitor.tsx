@@ -5,8 +5,7 @@
 
 import React, { useEffect } from 'react';
 import { Card, Button, message, Space } from 'antd';
-import { AlertTriangle, Settings, RefreshCw } from 'lucide-react';
-import dayjs from 'dayjs';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 import { useSLAViolations } from './hooks/useSLAViolations';
 import { useSLAStatisticsFrom } from './hooks/useSLAStatistics';
@@ -16,11 +15,13 @@ import { SLAFilterPanel } from './components/SLAFilterPanel';
 import { SLATable } from './components/SLATable';
 import { SLAChartPanel } from './components/SLAChartPanel';
 import { SLAViolationDetailModal } from './components/SLAViolationDetailModal';
-import type { SLAViolationMonitorProps, SLAViolation, SLAFilters } from './types';
+import type { SLAViolationMonitorProps, SLAViolation } from './types';
+import { acknowledgeSLAViolation, resolveSLAViolation } from './services/sla-monitor-service';
 
 export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
   autoRefresh = true,
   refreshInterval = 30000,
+  canManage = false,
   onViolationUpdate,
 }) => {
   const {
@@ -31,7 +32,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
     refresh,
     selectedRowKeys,
     selectRow,
-  } = useSLAViolations({}, autoRefresh);
+  } = useSLAViolations({}, false);
 
   const { stats } = useSLAStatisticsFrom(filteredViolations);
 
@@ -39,15 +40,15 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
 
   const [selectedViolation, setSelectedViolation] = React.useState<SLAViolation | null>(null);
   const [detailVisible, setDetailVisible] = React.useState(false);
+  const [actionLoading, setActionLoading] = React.useState(false);
 
   // 自动刷新
   useEffect(() => {
     if (autoRefresh) {
       startAutoRefresh(refreshInterval, refresh);
+    } else {
+      void refresh();
     }
-    return () => {
-      // cleanup handled by hook
-    };
   }, [autoRefresh, refreshInterval, refresh, startAutoRefresh]);
 
   const handleView = (violation: SLAViolation) => {
@@ -55,17 +56,34 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
     setDetailVisible(true);
   };
 
-  const handleResolve = async () => {
-    // 刷新列表
-    await refresh();
-    setDetailVisible(false);
-    message.success('操作成功');
+  const handleResolve = async (violation: SLAViolation) => {
+    setActionLoading(true);
+    try {
+      await resolveSLAViolation(violation.id);
+      await refresh();
+      setDetailVisible(false);
+      message.success('已标记为已解决');
+      onViolationUpdate?.(violation);
+    } catch (cause) {
+      message.error(cause instanceof Error ? cause.message : '解决 SLA 违规失败');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleAcknowledge = async () => {
-    await refresh();
-    setDetailVisible(false);
-    message.success('已确认');
+  const handleAcknowledge = async (violation: SLAViolation) => {
+    setActionLoading(true);
+    try {
+      await acknowledgeSLAViolation(violation.id);
+      await refresh();
+      setDetailVisible(false);
+      message.success('已确认');
+      onViolationUpdate?.(violation);
+    } catch (cause) {
+      message.error(cause instanceof Error ? cause.message : '确认 SLA 违规失败');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleRefresh = async () => {
@@ -107,8 +125,8 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
             selectedRowKeys={selectedRowKeys}
             onRowSelect={selectRow}
             onView={handleView}
-            onResolve={handleResolve}
-            onAcknowledge={handleAcknowledge}
+            onResolve={violation => void handleResolve(violation)}
+            onAcknowledge={violation => void handleAcknowledge(violation)}
           />
 
           <div style={{ marginTop: 16 }}>
@@ -123,6 +141,8 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
         onClose={() => setDetailVisible(false)}
         onResolve={handleResolve}
         onAcknowledge={handleAcknowledge}
+        canManage={canManage}
+        actionLoading={actionLoading}
       />
     </div>
   );

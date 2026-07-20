@@ -284,8 +284,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         category: response.category || response.type || 'general',
 		status: response.status === 'active' || response.isActive ? 'active' : 'inactive',
         xml: xmlContent,
-        createdAt: response.createdAt || response.createdAt || new Date().toISOString(),
-        updatedAt: response.updatedAt || response.updatedAt || new Date().toISOString(),
+        createdAt: response.createdAt || new Date().toISOString(),
+        updatedAt: response.updatedAt || new Date().toISOString(),
         createdBy: '系统',
         tags: [],
         approvalConfig: approvalConfig,
@@ -317,9 +317,9 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         id: version.id || version.key || `version-${index}`,
         version: String(version.version ?? '1.0.0'),
         status: version.status || (version.isActive ? 'active' : 'draft'),
-        createdAt: version.createdAt || version.createdAt || new Date().toISOString(),
-        createdBy: version.createdBy || version.createdBy || '系统',
-        changeLog: version.changeLog || version.changeLog || '',
+        createdAt: version.createdAt || new Date().toISOString(),
+        createdBy: version.createdBy || '系统',
+        changeLog: version.changeLog || '',
         xml: version.bpmnXml || '',
       }));
       setWorkflowVersions(normalized);
@@ -334,14 +334,14 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       const response = (await WorkflowAPI.getProcessDefinition(key)) as any;
       if (response) {
         setApprovalConfig({
-          requireApproval: response.requireApproval ?? response.requireApproval ?? true,
-          approvalType: response.approvalType || response.approvalType || 'sequential',
+          requireApproval: response.requireApproval ?? true,
+          approvalType: response.approvalType || 'sequential',
           approvers: response.approvers || [],
-          autoApproveRoles: response.autoApproveRoles || response.autoApproveRoles || [],
-          escalationRules: response.escalationRules || response.escalationRules || [],
+          autoApproveRoles: response.autoApproveRoles || [],
+          escalationRules: response.escalationRules || [],
         });
 
-        const slaConfig = response.slaConfig || response.slaConfig;
+        const slaConfig = response.slaConfig;
         if (slaConfig && workflow) {
           setWorkflow({
             ...workflow,

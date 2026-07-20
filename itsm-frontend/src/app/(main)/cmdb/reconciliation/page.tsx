@@ -106,7 +106,7 @@ export default function ReconciliationPage() {
       title: '资源名称',
       width: 180,
       render: (_: unknown, record: CloudResource) =>
-        record.resourceName || record.resourceName || record.resourceId || record.resourceId,
+        record.resourceName || record.resourceId,
     },
     {
       title: '资源ID',

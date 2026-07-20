@@ -25,9 +25,9 @@ const NOTIFICATION_PAGE_SIZE = 10;
 
 const normalizeNotification = (notification: TicketNotification): TicketNotification => ({
   ...notification,
-  createdAt: notification.createdAt || notification.createdAt,
-  readAt: notification.readAt || notification.readAt,
-  sentAt: notification.sentAt || notification.sentAt,
+  createdAt: notification.createdAt,
+  readAt: notification.readAt,
+  sentAt: notification.sentAt,
 });
 
 interface HeaderProps {

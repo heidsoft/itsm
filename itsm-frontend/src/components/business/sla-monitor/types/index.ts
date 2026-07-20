@@ -12,6 +12,7 @@ import type dayjs from 'dayjs';
 export interface SLAViolationMonitorProps {
   autoRefresh?: boolean;
   refreshInterval?: number;
+  canManage?: boolean;
   onViolationUpdate?: (violation: SLAViolation) => void;
 }
 
@@ -45,8 +46,10 @@ export interface SLAViolationDetailModalProps {
   violation: SLAViolation | null;
   visible: boolean;
   onClose: () => void;
-  onResolve: () => void;
-  onAcknowledge: () => void;
+  canManage?: boolean;
+  actionLoading?: boolean;
+  onResolve: (violation: SLAViolation) => void | Promise<void>;
+  onAcknowledge: (violation: SLAViolation) => void | Promise<void>;
 }
 
 export interface SLAAlertRulesPanelProps {

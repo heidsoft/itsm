@@ -123,10 +123,10 @@ export interface ListAssignmentRulesResponse {
 
 function normalizeRecommendation(item: RawAssignRecommendation): AssignRecommendation {
   return {
-    userId: item.userId ?? item.userId ?? 0,
-    userName: item.userName ?? item.userName ?? item.name ?? item.username ?? `用户 ${item.userId ?? item.userId ?? ''}`.trim(),
-    userEmail: item.userEmail ?? item.userEmail,
-    userAvatar: item.userAvatar ?? item.userAvatar,
+    userId: item.userId ?? 0,
+    userName: item.userName ?? item.name ?? item.username ?? `用户${item.userId ?? ''}`.trim(),
+    userEmail: item.userEmail,
+    userAvatar: item.userAvatar,
     score: item.score ?? 0,
     reason: item.reason ?? '',
     factors: item.factors ?? {

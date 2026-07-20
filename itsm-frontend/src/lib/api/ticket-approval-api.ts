@@ -78,12 +78,14 @@ export class TicketApprovalApi {
       if (params.page) queryParams.page = params.page;
       if (params.pageSize) queryParams.pageSize = params.pageSize;
     }
-    return httpClient.get('/api/v1/tickets/approval-workflows', queryParams);
+    // Backend registers /api/v1/approval-workflows (router.go L564).
+    // The previous /api/v1/tickets/approval-workflows path never existed on the backend.
+    return httpClient.get('/api/v1/approval-workflows', queryParams);
   }
 
   // 创建审批工作流
   static async createWorkflow(data: Partial<ApprovalWorkflow>): Promise<ApprovalWorkflow> {
-    return httpClient.post<ApprovalWorkflow>('/api/v1/tickets/approval-workflows', data);
+    return httpClient.post<ApprovalWorkflow>('/api/v1/approval-workflows', data);
   }
 
   // 更新审批工作流
@@ -91,12 +93,12 @@ export class TicketApprovalApi {
     id: number,
     data: Partial<ApprovalWorkflow>
   ): Promise<ApprovalWorkflow> {
-    return httpClient.put<ApprovalWorkflow>(`/api/v1/tickets/approval-workflows/${id}`, data);
+    return httpClient.put<ApprovalWorkflow>(`/api/v1/approval-workflows/${id}`, data);
   }
 
   // 删除审批工作流
   static async deleteWorkflow(id: number): Promise<void> {
-    return httpClient.delete(`/api/v1/tickets/approval-workflows/${id}`);
+    return httpClient.delete(`/api/v1/approval-workflows/${id}`);
   }
 
   // 获取审批记录

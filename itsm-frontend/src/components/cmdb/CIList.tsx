@@ -193,7 +193,7 @@ const CIList: React.FC = () => {
         item.status,
         item.model || '',
         item.vendor || '',
-        item.updatedAt || item.updatedAt || '',
+        item.updatedAt || '',
       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
     ].join('\n');
 

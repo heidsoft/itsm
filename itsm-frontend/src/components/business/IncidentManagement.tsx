@@ -550,7 +550,7 @@ const IncidentDetailDrawer: React.FC<{
 
   return (
     <Drawer
-      title={`事件详情 - ${incident.incidentNumber || incident.incidentNumber}`}
+      title={`事件详情 - ${incident.incidentNumber}`}
       styles={{ wrapper: { width: 800 } }}
       open={visible}
       onClose={onClose}
@@ -633,7 +633,7 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
             <div className="mb-4">
               <Text strong>事件编号</Text>
               <div className="mt-1">
-                <Text code>{incident.incidentNumber || incident.incidentNumber}</Text>
+                <Text code>{incident.incidentNumber}</Text>
               </div>
             </div>
           </Col>
@@ -701,22 +701,22 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
               </div>
             </div>
           </Col>
-          {incident.resolvedAt || incident.resolvedAt && (
+          {incident.resolvedAt && (
             <Col span={12}>
               <div className="mb-4">
                 <Text strong>解决时间</Text>
                 <div className="mt-1">
-                  <Text>{dayjs(incident.resolvedAt || incident.resolvedAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                  <Text>{dayjs(incident.resolvedAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
                 </div>
               </div>
             </Col>
           )}
-          {incident.closedAt || incident.closedAt && (
+          {incident.closedAt && (
             <Col span={12}>
               <div className="mb-4">
                 <Text strong>关闭时间</Text>
                 <div className="mt-1">
-                  <Text>{dayjs(incident.closedAt || incident.closedAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                  <Text>{dayjs(incident.closedAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
                 </div>
               </div>
             </Col>
@@ -725,7 +725,7 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
       </Card>
 
       {/* 升级信息 */}
-      {(incident.escalationLevel ?? incident.escalationLevel ?? 0) > 0 && (
+      {(incident.escalationLevel ?? 0) > 0 && (
         <Card title="升级信息">
           <Row gutter={[16, 16]}>
             <Col span={12}>
@@ -733,18 +733,18 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
                 <Text strong>升级级别</Text>
                 <div className="mt-1">
                   <Badge
-                    count={incident.escalationLevel ?? incident.escalationLevel ?? 0}
+                    count={incident.escalationLevel ?? 0}
                     style={{ backgroundColor: '#f50' }}
                   />
                 </div>
               </div>
             </Col>
-            {incident.escalatedAt || incident.escalatedAt && (
+            {incident.escalatedAt && (
               <Col span={12}>
                 <div className="mb-4">
                   <Text strong>升级时间</Text>
                   <div className="mt-1">
-                    <Text>{dayjs(incident.escalatedAt || incident.escalatedAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                    <Text>{dayjs(incident.escalatedAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
                   </div>
                 </div>
               </Col>

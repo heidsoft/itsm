@@ -600,14 +600,12 @@ function defaultApprovalNode(level = 1): ApprovalNode {
 
 function normalizeNodes(nodes: ApprovalNode[]): ApprovalNode[] {
   return nodes.map((node, index) => {
-    const approverIds = node.approverIds || node.approverIds || [];
+    const approverIds = (node.approverIds || []).map(id => Number(id)).filter(id => Number.isInteger(id) && id > 0);
     return {
       ...defaultApprovalNode(index + 1),
       ...node,
       approverType: node.approverType || 'role',
-      approverIds: approverIds
-        .map(id => Number(id))
-        .filter(id => Number.isInteger(id) && id > 0),
+      approverIds,
       assigneeType: node.assigneeType,
       assigneeValue: node.assigneeValue,
       approvalMode: node.approvalMode || 'any',
@@ -623,8 +621,8 @@ function normalizeNodes(nodes: ApprovalNode[]): ApprovalNode[] {
 function normalizeWorkflow(workflow: ApprovalWorkflow): ApprovalWorkflow {
   return {
     ...workflow,
-    ticketType: workflow.ticketType || workflow.ticketType,
-    isActive: workflow.isActive ?? workflow.isActive ?? false,
+    ticketType: workflow.ticketType,
+    isActive: workflow.isActive ?? false,
     nodes: workflow.nodes ? normalizeNodes(workflow.nodes) : [],
   };
 }

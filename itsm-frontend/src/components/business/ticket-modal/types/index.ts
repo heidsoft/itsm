@@ -2,7 +2,8 @@
  * Ticket Modal 相关类型定义
  */
 
-import type { FC, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import type { FormInstance } from 'antd';
 import type { Ticket, TicketStatus, TicketPriority, TicketType } from '@/lib/services/ticket-service';
 
 // ============ Props 类型 ============
@@ -11,7 +12,7 @@ export interface TicketModalProps {
   visible: boolean;
   editingTicket: Ticket | null;
   onCancel: () => void;
-  onSubmit: (values: TicketFormValues) => void;
+  onSubmit: (values: TicketFormValues) => void | Promise<void>;
   loading?: boolean;
 }
 
@@ -21,8 +22,8 @@ export interface TicketTemplateModalProps {
 }
 
 export interface TicketFormProps {
-  form: any; // Ant Design Form instance
-  onSubmit: (values: TicketFormValues) => void;
+  form: FormInstance<TicketFormValues>;
+  onSubmit: (values: TicketFormValues) => void | Promise<void>;
   loading?: boolean;
   isEditing?: boolean;
 }
@@ -37,7 +38,7 @@ export interface TicketFormValues {
   priority: TicketPriority;
   assigneeId?: number;
   estimatedTime?: string; // 或使用 dayjs.Dayjs 类型
-  attachments?: any[];
+  attachments?: File[];
 }
 
 export interface TicketFormData {
@@ -68,8 +69,8 @@ export interface StepConfig {
 export interface User {
   id: number;
   name: string;
-  role: string;
-  avatar: string;
+  role?: string;
+  avatar?: string;
 }
 
 // ============ 工单模板类型 ============
@@ -77,12 +78,12 @@ export interface User {
 export interface TicketTemplate {
   id: number;
   name: string;
-  type: TicketType;
+  type?: TicketType;
   category: string;
-  priority: TicketPriority;
+  priority?: TicketPriority;
   description: string;
-  estimatedTime: string;
-  sla: string;
+  estimatedTime?: string;
+  sla?: string;
 }
 
 // ============ 工具函数返回类型 ============
@@ -102,8 +103,8 @@ export interface UseTicketFormReturn {
 }
 
 export interface UseTicketFormConfig {
-  form: any;
-  onSubmit: (values: TicketFormValues) => void;
+  form: FormInstance<TicketFormValues>;
+  onSubmit: (values: TicketFormValues) => void | Promise<void>;
   loading?: boolean;
   isEditing?: boolean;
 }

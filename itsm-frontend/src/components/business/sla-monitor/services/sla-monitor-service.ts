@@ -26,16 +26,6 @@ export const fetchSLAViolations = async (params?: {
 };
 
 /**
- * 获取单个违规详情（通过列表查找）
- */
-export const fetchSLAViolation = async (id: number): Promise<SLAViolation> => {
-  const violations = await fetchSLAViolations();
-  const violation = violations.find(v => v.id === id);
-  if (!violation) throw new Error('Violation not found');
-  return violation;
-};
-
-/**
  * 解决 SLA 违规
  */
 export const resolveSLAViolation = async (violationId: number): Promise<void> => {
