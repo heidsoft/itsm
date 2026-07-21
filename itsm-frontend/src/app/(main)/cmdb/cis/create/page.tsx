@@ -56,12 +56,28 @@ const CreateCIPage: React.FC = () => {
     const loadCloudData = async () => {
       setCloudLoading(true);
       try {
-        const [resources, services] = await Promise.all([
+        // Use Promise.allSettled so that a single failing endpoint does not block
+        // the entire CI form. Previously a Promise.all would short-circuit on the first
+        // rejection, leaving the UI stuck in loading state.
+        const results = await Promise.allSettled([
           CMDBApi.getCloudResources(),
           CMDBApi.getCloudServices(),
         ]);
-        setCloudResources(extractCloudDataList<CloudResource>(resources));
-        setCloudServices(extractCloudDataList<CloudService>(services));
+
+        const resourcesResult = results[0];
+        const servicesResult = results[1];
+
+        if (resourcesResult.status === 'fulfilled') {
+          setCloudResources(extractCloudDataList<CloudResource>(resourcesResult.value));
+        }
+        if (servicesResult.status === 'fulfilled') {
+          setCloudServices(extractCloudDataList<CloudService>(servicesResult.value));
+        }
+
+        // Show error message if both failed
+        if (resourcesResult.status === 'rejected' && servicesResult.status === 'rejected') {
+          message.error(t('cmdb.loadCloudResourcesFailed'));
+        }
       } catch {
         message.error(t('cmdb.loadCloudResourcesFailed'));
       } finally {
