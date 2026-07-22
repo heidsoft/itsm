@@ -13,7 +13,7 @@
 # ============================================================
 # Stage 1: Build
 # ============================================================
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.25 AS builder
 
 WORKDIR /src
 
@@ -34,7 +34,7 @@ ENV CGO_ENABLED=0 \
     GOGC=50 \
     GOMEMLIMIT=2GiB
 
-RUN apk add --no-cache ca-certificates git
+RUN apt-get update && apt-get install -y ca-certificates git
 
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
@@ -49,11 +49,13 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 # ============================================================
 # Stage 2: Runtime
 # ============================================================
-FROM alpine:3.20 AS runtime
+FROM mirror.gcr.io/library/debian:bookworm-slim AS runtime
 
 WORKDIR /app
 
-RUN addgroup -S app && adduser -S -G app app \
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -r app && useradd -r -g app app \
     && mkdir -p /app/logs /app/uploads /app/temp \
     && chown -R app:app /app
 
@@ -65,7 +67,7 @@ COPY --chown=app:app config/seed ./config/seed
 EXPOSE 8090
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8090/api/v1/health || exit 1
+    CMD curl -f http://localhost:8090/api/v1/health || exit 1
 
 USER app
 CMD ["./main"]
