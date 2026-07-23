@@ -178,6 +178,60 @@ func (rc *ReleaseController) UpdateReleaseStatus(c *gin.Context) {
 	common.Success(c, release)
 }
 
+// ApproveRelease 批准发布并进入排期状态
+func (rc *ReleaseController) ApproveRelease(c *gin.Context) {
+	rc.updateReleaseActionStatus(c, string(dto.ReleaseStatusScheduled), "")
+}
+
+// RejectRelease 拒绝发布
+func (rc *ReleaseController) RejectRelease(c *gin.Context) {
+	var req struct {
+		Reason string `json:"reason" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.BadRequestCode, "拒绝原因不能为空")
+		return
+	}
+	rc.updateReleaseActionStatus(c, string(dto.ReleaseStatusCancelled), req.Reason)
+}
+
+// RollbackRelease 回滚发布
+func (rc *ReleaseController) RollbackRelease(c *gin.Context) {
+	var req struct {
+		Reason string `json:"reason" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.BadRequestCode, "回滚原因不能为空")
+		return
+	}
+	rc.updateReleaseActionStatus(c, string(dto.ReleaseStatusRolledBack), req.Reason)
+}
+
+func (rc *ReleaseController) updateReleaseActionStatus(c *gin.Context, status, reason string) {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+	releaseID, err := strconv.Atoi(c.Param("id"))
+	if err != nil || releaseID <= 0 {
+		common.Fail(c, common.BadRequestCode, "无效的发布ID")
+		return
+	}
+	release, err := rc.releaseService.UpdateReleaseStatus(c.Request.Context(), releaseID, tenantID, status)
+	if err != nil {
+		rc.logger.Errorw("Release action failed", "error", err, "release_id", releaseID, "status", status)
+		common.Fail(c, common.InternalErrorCode, "更新发布状态失败: "+err.Error())
+		return
+	}
+	if release == nil {
+		common.Fail(c, common.NotFoundCode, "发布不存在")
+		return
+	}
+	rc.logger.Infow("Release action completed", "release_id", releaseID, "tenant_id", tenantID, "status", status, "reason", reason)
+	common.Success(c, release)
+}
+
 // DeleteRelease 删除发布
 func (rc *ReleaseController) DeleteRelease(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)

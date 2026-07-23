@@ -926,6 +926,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				// 风险评估（同时支持 /risk 和 /risk-assessment 两个路径）
 				changes.GET("/:id/risk-assessment", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
 				changes.GET("/:id/risk", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
+				changes.PUT("/:id/risk", middleware.RequirePermission("change", "write"), config.ChangeHandler.UpdateRisk)
 				changes.GET("/:id/cmdb-impact", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetCMDBImpactSummary)
 				// 日历视图
 				changes.GET("/calendar", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetCalendar)
@@ -948,6 +949,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				releases.GET("/:id", middleware.RequirePermission("release", "read"), config.ReleaseController.GetRelease)
 				releases.PUT("/:id", middleware.RequirePermission("release", "write"), config.ReleaseController.UpdateRelease)
 				releases.PUT("/:id/status", middleware.RequirePermission("release", "write"), config.ReleaseController.UpdateReleaseStatus)
+				releases.POST("/:id/approve", middleware.RequirePermission("release", "write"), config.ReleaseController.ApproveRelease)
+				releases.POST("/:id/reject", middleware.RequirePermission("release", "write"), config.ReleaseController.RejectRelease)
+				releases.POST("/:id/rollback", middleware.RequirePermission("release", "write"), config.ReleaseController.RollbackRelease)
 				releases.DELETE("/:id", middleware.RequirePermission("release", "delete"), config.ReleaseController.DeleteRelease)
 			}
 		}

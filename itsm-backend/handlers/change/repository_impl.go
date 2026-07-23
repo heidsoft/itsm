@@ -468,6 +468,26 @@ func (r *EntRepository) GetRiskAssessment(ctx context.Context, changeID int, ten
 	return &ra, nil
 }
 
+func (r *EntRepository) UpdateRiskAssessment(ctx context.Context, ra *RiskAssessment) (*RiskAssessment, error) {
+	query := `
+		UPDATE change_risk_assessments
+		SET risk_level = $1, risk_description = $2, impact_analysis = $3,
+		    mitigation_measures = $4, contingency_plan = $5, risk_owner = $6,
+		    risk_review_date = $7, updated_at = $8
+		WHERE change_id = $9 AND tenant_id = $10
+		RETURNING id, created_at, updated_at
+	`
+	err := r.db.QueryRowContext(ctx, query,
+		ra.RiskLevel, ra.RiskDescription, ra.ImpactAnalysis,
+		ra.MitigationMeasures, ra.ContingencyPlan, ra.RiskOwner,
+		ra.RiskReviewDate, time.Now(), ra.ChangeID, ra.TenantID,
+	).Scan(&ra.ID, &ra.CreatedAt, &ra.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return ra, nil
+}
+
 // ValidateApproverBelongsToTenant validates that an approver belongs to the specified tenant
 func (r *EntRepository) ValidateApproverBelongsToTenant(ctx context.Context, approverID, tenantID int) (bool, error) {
 	exists, err := r.client.User.Query().

@@ -383,6 +383,10 @@ export class ChangeApi {
 
   // 更新风险评估
   static async updateRiskAssessment(id: number, data: RiskAssessmentData): Promise<void> {
+    return this.updateRisk(id, data);
+  }
+
+  static async updateRisk(id: number, data: RiskAssessmentData): Promise<void> {
     return httpClient.put(`/api/v1/changes/${id}/risk`, data);
   }
 

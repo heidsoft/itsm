@@ -329,6 +329,21 @@ func (s *Service) GetRisk(ctx context.Context, changeID int, tenantID int) (*Ris
 	return s.repo.GetRiskAssessment(ctx, changeID, tenantID)
 }
 
+func (s *Service) UpdateRisk(ctx context.Context, ra *RiskAssessment) (*RiskAssessment, error) {
+	changeEntity, err := s.repo.Get(ctx, ra.ChangeID, ra.TenantID)
+	if err != nil || changeEntity == nil {
+		return nil, fmt.Errorf("change not found")
+	}
+	existing, err := s.repo.GetRiskAssessment(ctx, ra.ChangeID, ra.TenantID)
+	if err != nil {
+		return nil, err
+	}
+	if existing == nil {
+		return s.repo.CreateRiskAssessment(ctx, ra)
+	}
+	return s.repo.UpdateRiskAssessment(ctx, ra)
+}
+
 func (s *Service) GetCMDBImpactSummary(ctx context.Context, changeID, tenantID int) (*dto.ChangeCMDBImpactSummary, error) {
 	if s.entClient == nil {
 		return nil, fmt.Errorf("CMDB impact summary unavailable")

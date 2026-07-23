@@ -168,6 +168,55 @@ func (h *Handler) GetRiskAssessment(c *gin.Context) {
 	})
 }
 
+// UpdateRisk handles PUT /api/v1/changes/:id/risk
+func (h *Handler) UpdateRisk(c *gin.Context) {
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+	var req dto.ChangeRiskAssessment
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamError(c, "Invalid request body: "+err.Error())
+		return
+	}
+	if req.RiskLevel != dto.ChangeRiskLow &&
+		req.RiskLevel != dto.ChangeRiskMedium &&
+		req.RiskLevel != dto.ChangeRiskHigh {
+		common.ParamError(c, "Invalid risk level")
+		return
+	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID, _ := tenantIDVal.(int)
+	assessment, err := h.svc.UpdateRisk(c.Request.Context(), &RiskAssessment{
+		ChangeID:           id,
+		TenantID:           tenantID,
+		RiskLevel:          string(req.RiskLevel),
+		RiskDescription:    req.RiskDescription,
+		ImpactAnalysis:     req.ImpactAnalysis,
+		MitigationMeasures: req.MitigationMeasures,
+		ContingencyPlan:    req.ContingencyPlan,
+		RiskOwner:          req.RiskOwner,
+		RiskReviewDate:     req.RiskReviewDate,
+	})
+	if err != nil {
+		common.InternalError(c, "更新风险评估失败: "+err.Error())
+		return
+	}
+	common.Success(c, dto.ChangeRiskAssessment{
+		ID:                 assessment.ID,
+		ChangeID:           assessment.ChangeID,
+		RiskLevel:          dto.ChangeRisk(assessment.RiskLevel),
+		RiskDescription:    assessment.RiskDescription,
+		ImpactAnalysis:     assessment.ImpactAnalysis,
+		MitigationMeasures: assessment.MitigationMeasures,
+		ContingencyPlan:    assessment.ContingencyPlan,
+		RiskOwner:          assessment.RiskOwner,
+		RiskReviewDate:     assessment.RiskReviewDate,
+		CreatedAt:          assessment.CreatedAt,
+		UpdatedAt:          assessment.UpdatedAt,
+	})
+}
+
 // GetCMDBImpactSummary handles GET /api/v1/changes/:id/cmdb-impact
 func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")

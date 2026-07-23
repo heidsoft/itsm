@@ -141,6 +141,18 @@ export class ReleaseApi {
     return httpClient.put<Release>(`/api/v1/releases/${id}/status`, { status });
   }
 
+  static async approveRelease(id: number): Promise<Release> {
+    return httpClient.post<Release>(`/api/v1/releases/${id}/approve`);
+  }
+
+  static async rejectRelease(id: number, reason: string): Promise<Release> {
+    return httpClient.post<Release>(`/api/v1/releases/${id}/reject`, { reason });
+  }
+
+  static async rollbackRelease(id: number, reason: string): Promise<Release> {
+    return httpClient.post<Release>(`/api/v1/releases/${id}/rollback`, { reason });
+  }
+
   // 获取发布统计
   static async getReleaseStats(): Promise<ReleaseStatsResponse> {
     return httpClient.get<ReleaseStatsResponse>('/api/v1/releases/stats');

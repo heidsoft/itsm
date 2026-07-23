@@ -167,7 +167,7 @@ const ChangeDetail: React.FC = () => {
   const handleSaveRiskAssessment = async (data: any) => {
     if (!id) return;
     try {
-      await ChangeApi.updateRiskAssessment(Number(id), data);
+      await ChangeApi.updateRisk(Number(id), data);
       message.success('风险评估保存成功');
       loadRiskAssessment();
     } catch (error) {
