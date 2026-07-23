@@ -56,7 +56,6 @@ export const ChartPlaceholder: React.FC<ChartPlaceholderProps> = ({
         <div className="text-lg font-medium mb-1">{title}</div>
         <div className="text-sm mb-2">{getTypeText()}</div>
         {description && <div className="text-xs text-gray-400">{description}</div>}
-        <div className="text-xs text-gray-400 mt-2">图表组件暂未实现，显示占位符</div>
       </div>
     </div>
   );

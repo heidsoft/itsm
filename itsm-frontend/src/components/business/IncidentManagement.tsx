@@ -1276,7 +1276,10 @@ const IncidentMonitoringPanel: React.FC<{
           {/* 趋势图表 */}
           <Card title="事件趋势">
             <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-              <Text type="secondary">图表组件待实现</Text>
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="暂无事件趋势数据"
+              />
             </div>
           </Card>
 
