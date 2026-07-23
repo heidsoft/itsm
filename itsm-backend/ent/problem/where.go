@@ -85,6 +85,16 @@ func RootCause(v string) predicate.Problem {
 	return predicate.Problem(sql.FieldEQ(FieldRootCause, v))
 }
 
+// Workaround applies equality check predicate on the "workaround" field. It's identical to WorkaroundEQ.
+func Workaround(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldWorkaround, v))
+}
+
+// Resolution applies equality check predicate on the "resolution" field. It's identical to ResolutionEQ.
+func Resolution(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldResolution, v))
+}
+
 // Impact applies equality check predicate on the "impact" field. It's identical to ImpactEQ.
 func Impact(v string) predicate.Problem {
 	return predicate.Problem(sql.FieldEQ(FieldImpact, v))
@@ -548,6 +558,156 @@ func RootCauseEqualFold(v string) predicate.Problem {
 // RootCauseContainsFold applies the ContainsFold predicate on the "root_cause" field.
 func RootCauseContainsFold(v string) predicate.Problem {
 	return predicate.Problem(sql.FieldContainsFold(FieldRootCause, v))
+}
+
+// WorkaroundEQ applies the EQ predicate on the "workaround" field.
+func WorkaroundEQ(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldWorkaround, v))
+}
+
+// WorkaroundNEQ applies the NEQ predicate on the "workaround" field.
+func WorkaroundNEQ(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldNEQ(FieldWorkaround, v))
+}
+
+// WorkaroundIn applies the In predicate on the "workaround" field.
+func WorkaroundIn(vs ...string) predicate.Problem {
+	return predicate.Problem(sql.FieldIn(FieldWorkaround, vs...))
+}
+
+// WorkaroundNotIn applies the NotIn predicate on the "workaround" field.
+func WorkaroundNotIn(vs ...string) predicate.Problem {
+	return predicate.Problem(sql.FieldNotIn(FieldWorkaround, vs...))
+}
+
+// WorkaroundGT applies the GT predicate on the "workaround" field.
+func WorkaroundGT(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldGT(FieldWorkaround, v))
+}
+
+// WorkaroundGTE applies the GTE predicate on the "workaround" field.
+func WorkaroundGTE(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldGTE(FieldWorkaround, v))
+}
+
+// WorkaroundLT applies the LT predicate on the "workaround" field.
+func WorkaroundLT(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldLT(FieldWorkaround, v))
+}
+
+// WorkaroundLTE applies the LTE predicate on the "workaround" field.
+func WorkaroundLTE(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldLTE(FieldWorkaround, v))
+}
+
+// WorkaroundContains applies the Contains predicate on the "workaround" field.
+func WorkaroundContains(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldContains(FieldWorkaround, v))
+}
+
+// WorkaroundHasPrefix applies the HasPrefix predicate on the "workaround" field.
+func WorkaroundHasPrefix(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldHasPrefix(FieldWorkaround, v))
+}
+
+// WorkaroundHasSuffix applies the HasSuffix predicate on the "workaround" field.
+func WorkaroundHasSuffix(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldHasSuffix(FieldWorkaround, v))
+}
+
+// WorkaroundIsNil applies the IsNil predicate on the "workaround" field.
+func WorkaroundIsNil() predicate.Problem {
+	return predicate.Problem(sql.FieldIsNull(FieldWorkaround))
+}
+
+// WorkaroundNotNil applies the NotNil predicate on the "workaround" field.
+func WorkaroundNotNil() predicate.Problem {
+	return predicate.Problem(sql.FieldNotNull(FieldWorkaround))
+}
+
+// WorkaroundEqualFold applies the EqualFold predicate on the "workaround" field.
+func WorkaroundEqualFold(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldEqualFold(FieldWorkaround, v))
+}
+
+// WorkaroundContainsFold applies the ContainsFold predicate on the "workaround" field.
+func WorkaroundContainsFold(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldContainsFold(FieldWorkaround, v))
+}
+
+// ResolutionEQ applies the EQ predicate on the "resolution" field.
+func ResolutionEQ(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldResolution, v))
+}
+
+// ResolutionNEQ applies the NEQ predicate on the "resolution" field.
+func ResolutionNEQ(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldNEQ(FieldResolution, v))
+}
+
+// ResolutionIn applies the In predicate on the "resolution" field.
+func ResolutionIn(vs ...string) predicate.Problem {
+	return predicate.Problem(sql.FieldIn(FieldResolution, vs...))
+}
+
+// ResolutionNotIn applies the NotIn predicate on the "resolution" field.
+func ResolutionNotIn(vs ...string) predicate.Problem {
+	return predicate.Problem(sql.FieldNotIn(FieldResolution, vs...))
+}
+
+// ResolutionGT applies the GT predicate on the "resolution" field.
+func ResolutionGT(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldGT(FieldResolution, v))
+}
+
+// ResolutionGTE applies the GTE predicate on the "resolution" field.
+func ResolutionGTE(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldGTE(FieldResolution, v))
+}
+
+// ResolutionLT applies the LT predicate on the "resolution" field.
+func ResolutionLT(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldLT(FieldResolution, v))
+}
+
+// ResolutionLTE applies the LTE predicate on the "resolution" field.
+func ResolutionLTE(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldLTE(FieldResolution, v))
+}
+
+// ResolutionContains applies the Contains predicate on the "resolution" field.
+func ResolutionContains(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldContains(FieldResolution, v))
+}
+
+// ResolutionHasPrefix applies the HasPrefix predicate on the "resolution" field.
+func ResolutionHasPrefix(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldHasPrefix(FieldResolution, v))
+}
+
+// ResolutionHasSuffix applies the HasSuffix predicate on the "resolution" field.
+func ResolutionHasSuffix(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldHasSuffix(FieldResolution, v))
+}
+
+// ResolutionIsNil applies the IsNil predicate on the "resolution" field.
+func ResolutionIsNil() predicate.Problem {
+	return predicate.Problem(sql.FieldIsNull(FieldResolution))
+}
+
+// ResolutionNotNil applies the NotNil predicate on the "resolution" field.
+func ResolutionNotNil() predicate.Problem {
+	return predicate.Problem(sql.FieldNotNull(FieldResolution))
+}
+
+// ResolutionEqualFold applies the EqualFold predicate on the "resolution" field.
+func ResolutionEqualFold(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldEqualFold(FieldResolution, v))
+}
+
+// ResolutionContainsFold applies the ContainsFold predicate on the "resolution" field.
+func ResolutionContainsFold(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldContainsFold(FieldResolution, v))
 }
 
 // ImpactEQ applies the EQ predicate on the "impact" field.

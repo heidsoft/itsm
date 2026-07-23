@@ -101,6 +101,7 @@ import type { Ticket as BaseTicket } from './types';
 
 export interface Ticket extends BaseTicket {
   tenantId?: number;
+  templateId?: number;
   tenant?: Tenant;
   // 扩展字段
   subcategory?: string;
@@ -225,6 +226,7 @@ export interface GetTicketsParams {
   status?: string;
   priority?: string;
   tenantId?: number;
+  templateId?: number;
 }
 
 // 服务目录相关接口（添加租户支持）

@@ -275,6 +275,9 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters *FilterP
 		if filters.ParentTicketID != nil {
 			query = query.Where(ticket.ParentTicketID(*filters.ParentTicketID))
 		}
+		if filters.TemplateID != nil {
+			query = query.Where(ticket.TemplateID(*filters.TemplateID))
+		}
 		if filters.IsOverdue {
 			query = query.Where(
 				ticket.SLAResolutionDeadlineNotNil(),

@@ -786,6 +786,9 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 	if req.ParentTicketID != nil {
 		filters.ParentTicketID = req.ParentTicketID
 	}
+	if req.TemplateID != nil {
+		filters.TemplateID = req.TemplateID
+	}
 	filters.IsOverdue = req.IsOverdue
 	if req.Keyword != "" {
 		filters.Keyword = req.Keyword
@@ -1109,6 +1112,7 @@ func (s *TicketService) toTicketResponse(t *ticket.Ticket) *dto.TicketResponse {
 	if t.ParentTicketID != nil {
 		resp.ParentTicketID = *t.ParentTicketID
 	}
+	resp.TemplateID = t.TemplateID
 	if t.Resolution != nil {
 		resp.Resolution = *t.Resolution
 	}

@@ -64,6 +64,7 @@ type ListTicketsRequest struct {
 	AssigneeID     *int       `json:"assigneeId" form:"assigneeId"`   // 处理人ID（可选）
 	RequesterID    *int       `json:"requesterId" form:"requesterId"` // 创建人ID（可选）
 	ParentTicketID *int       `json:"parentTicketId" form:"parentTicketId"`
+	TemplateID     *int       `json:"templateId" form:"templateId"`
 	Keyword        string     `json:"keyword" form:"keyword"`
 	DateFrom       *time.Time `json:"dateFrom" form:"dateFrom"` // 创建时间起始
 	DateTo         *time.Time `json:"dateTo" form:"dateTo"`     // 创建时间截止
@@ -87,6 +88,7 @@ type TicketResponse struct {
 	CategoryID            int            `json:"categoryId,omitempty"`
 	DepartmentID          int            `json:"departmentId,omitempty"`
 	ParentTicketID        int            `json:"parentTicketId,omitempty"`
+	TemplateID            *int           `json:"templateId,omitempty"`
 	Version               int            `json:"version"`
 	CreatedAt             time.Time      `json:"createdAt"`
 	UpdatedAt             time.Time      `json:"updatedAt"`

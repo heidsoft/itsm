@@ -26,6 +26,10 @@ const (
 	FieldCategory = "category"
 	// FieldRootCause holds the string denoting the root_cause field in the database.
 	FieldRootCause = "root_cause"
+	// FieldWorkaround holds the string denoting the workaround field in the database.
+	FieldWorkaround = "workaround"
+	// FieldResolution holds the string denoting the resolution field in the database.
+	FieldResolution = "resolution"
 	// FieldImpact holds the string denoting the impact field in the database.
 	FieldImpact = "impact"
 	// FieldAssigneeID holds the string denoting the assignee_id field in the database.
@@ -80,6 +84,8 @@ var Columns = []string{
 	FieldPriority,
 	FieldCategory,
 	FieldRootCause,
+	FieldWorkaround,
+	FieldResolution,
 	FieldImpact,
 	FieldAssigneeID,
 	FieldCreatedBy,
@@ -176,6 +182,16 @@ func ByCategory(opts ...sql.OrderTermOption) OrderOption {
 // ByRootCause orders the results by the root_cause field.
 func ByRootCause(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRootCause, opts...).ToFunc()
+}
+
+// ByWorkaround orders the results by the workaround field.
+func ByWorkaround(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkaround, opts...).ToFunc()
+}
+
+// ByResolution orders the results by the resolution field.
+func ByResolution(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolution, opts...).ToFunc()
 }
 
 // ByImpact orders the results by the impact field.

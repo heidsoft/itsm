@@ -99,6 +99,34 @@ func (_c *ProblemCreate) SetNillableRootCause(v *string) *ProblemCreate {
 	return _c
 }
 
+// SetWorkaround sets the "workaround" field.
+func (_c *ProblemCreate) SetWorkaround(v string) *ProblemCreate {
+	_c.mutation.SetWorkaround(v)
+	return _c
+}
+
+// SetNillableWorkaround sets the "workaround" field if the given value is not nil.
+func (_c *ProblemCreate) SetNillableWorkaround(v *string) *ProblemCreate {
+	if v != nil {
+		_c.SetWorkaround(*v)
+	}
+	return _c
+}
+
+// SetResolution sets the "resolution" field.
+func (_c *ProblemCreate) SetResolution(v string) *ProblemCreate {
+	_c.mutation.SetResolution(v)
+	return _c
+}
+
+// SetNillableResolution sets the "resolution" field if the given value is not nil.
+func (_c *ProblemCreate) SetNillableResolution(v *string) *ProblemCreate {
+	if v != nil {
+		_c.SetResolution(*v)
+	}
+	return _c
+}
+
 // SetImpact sets the "impact" field.
 func (_c *ProblemCreate) SetImpact(v string) *ProblemCreate {
 	_c.mutation.SetImpact(v)
@@ -394,6 +422,14 @@ func (_c *ProblemCreate) createSpec() (*Problem, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.RootCause(); ok {
 		_spec.SetField(problem.FieldRootCause, field.TypeString, value)
 		_node.RootCause = value
+	}
+	if value, ok := _c.mutation.Workaround(); ok {
+		_spec.SetField(problem.FieldWorkaround, field.TypeString, value)
+		_node.Workaround = value
+	}
+	if value, ok := _c.mutation.Resolution(); ok {
+		_spec.SetField(problem.FieldResolution, field.TypeString, value)
+		_node.Resolution = value
 	}
 	if value, ok := _c.mutation.Impact(); ok {
 		_spec.SetField(problem.FieldImpact, field.TypeString, value)

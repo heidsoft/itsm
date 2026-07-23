@@ -619,6 +619,22 @@ export class TicketApi {
     return httpClient.get('/api/v1/tickets/templates', params);
   }
 
+  static async getTemplate(id: number | string): Promise<{
+    id: number;
+    name: string;
+    description: string;
+    category: string;
+    priority: string;
+    fields?: Array<Record<string, unknown>>;
+    formFields: Record<string, unknown>;
+    workflowSteps?: Array<Record<string, unknown>>;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }> {
+    return httpClient.get(`/api/v1/tickets/templates/${id}`);
+  }
+
   // Create ticket template
   static async createTemplate(payload: {
     name: string;

@@ -29,6 +29,10 @@ type Problem struct {
 	Category string `json:"category,omitempty"`
 	// 根本原因
 	RootCause string `json:"root_cause,omitempty"`
+	// 临时解决方案
+	Workaround string `json:"workaround,omitempty"`
+	// 最终解决方案
+	Resolution string `json:"resolution,omitempty"`
 	// 影响范围
 	Impact string `json:"impact,omitempty"`
 	// 处理人ID
@@ -101,7 +105,7 @@ func (*Problem) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case problem.FieldID, problem.FieldAssigneeID, problem.FieldCreatedBy, problem.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case problem.FieldTitle, problem.FieldDescription, problem.FieldStatus, problem.FieldPriority, problem.FieldCategory, problem.FieldRootCause, problem.FieldImpact:
+		case problem.FieldTitle, problem.FieldDescription, problem.FieldStatus, problem.FieldPriority, problem.FieldCategory, problem.FieldRootCause, problem.FieldWorkaround, problem.FieldResolution, problem.FieldImpact:
 			values[i] = new(sql.NullString)
 		case problem.FieldCreatedAt, problem.FieldUpdatedAt, problem.FieldResolvedAt, problem.FieldClosedAt, problem.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -163,6 +167,18 @@ func (_m *Problem) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field root_cause", values[i])
 			} else if value.Valid {
 				_m.RootCause = value.String
+			}
+		case problem.FieldWorkaround:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field workaround", values[i])
+			} else if value.Valid {
+				_m.Workaround = value.String
+			}
+		case problem.FieldResolution:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resolution", values[i])
+			} else if value.Valid {
+				_m.Resolution = value.String
 			}
 		case problem.FieldImpact:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -296,6 +312,12 @@ func (_m *Problem) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("root_cause=")
 	builder.WriteString(_m.RootCause)
+	builder.WriteString(", ")
+	builder.WriteString("workaround=")
+	builder.WriteString(_m.Workaround)
+	builder.WriteString(", ")
+	builder.WriteString("resolution=")
+	builder.WriteString(_m.Resolution)
 	builder.WriteString(", ")
 	builder.WriteString("impact=")
 	builder.WriteString(_m.Impact)

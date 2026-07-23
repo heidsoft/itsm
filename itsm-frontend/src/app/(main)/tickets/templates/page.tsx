@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   Button,
@@ -125,6 +126,7 @@ const templateCategories = [
 ];
 
 const TicketTemplatesPage = () => {
+  const router = useRouter();
   const [templates, setTemplates] = useState<TicketTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -275,6 +277,14 @@ const TicketTemplatesPage = () => {
       hoverable
       className="h-full"
       actions={[
+        <Tooltip title="View template" key="view">
+          <Button
+            type="text"
+            icon={<Eye size={16} />}
+            onClick={() => router.push(`/tickets/templates/${template.id}`)}
+            aria-label="查看模板详情"
+          />
+        </Tooltip>,
         <Tooltip title="Edit template" key="edit">
           <Button
             type="text"
@@ -413,6 +423,12 @@ const TicketTemplatesPage = () => {
             </Tag>
           </div>
           <Space>
+            <Button
+              type="text"
+              icon={<Eye size={16} />}
+              onClick={() => router.push(`/tickets/templates/${template.id}`)}
+              aria-label="查看模板详情"
+            />
             <Button
               type="text"
               icon={<Edit size={16} />}

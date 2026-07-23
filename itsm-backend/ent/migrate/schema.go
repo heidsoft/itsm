@@ -2133,6 +2133,8 @@ var (
 		{Name: "priority", Type: field.TypeString, Default: "medium"},
 		{Name: "category", Type: field.TypeString, Nullable: true},
 		{Name: "root_cause", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "workaround", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "resolution", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "impact", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
 		{Name: "created_by", Type: field.TypeInt},
@@ -2152,7 +2154,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "problems_known_errors_problem",
-				Columns:    []*schema.Column{ProblemsColumns[16]},
+				Columns:    []*schema.Column{ProblemsColumns[18]},
 				RefColumns: []*schema.Column{KnownErrorsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

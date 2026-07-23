@@ -182,6 +182,7 @@ type FilterParams struct {
 	CategoryID     *int
 	DepartmentID   *int
 	ParentTicketID *int
+	TemplateID     *int
 	IsOverdue      bool
 	Keyword        string
 	DateFrom       *time.Time

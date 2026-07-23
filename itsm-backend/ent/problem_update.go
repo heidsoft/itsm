@@ -133,6 +133,46 @@ func (_u *ProblemUpdate) ClearRootCause() *ProblemUpdate {
 	return _u
 }
 
+// SetWorkaround sets the "workaround" field.
+func (_u *ProblemUpdate) SetWorkaround(v string) *ProblemUpdate {
+	_u.mutation.SetWorkaround(v)
+	return _u
+}
+
+// SetNillableWorkaround sets the "workaround" field if the given value is not nil.
+func (_u *ProblemUpdate) SetNillableWorkaround(v *string) *ProblemUpdate {
+	if v != nil {
+		_u.SetWorkaround(*v)
+	}
+	return _u
+}
+
+// ClearWorkaround clears the value of the "workaround" field.
+func (_u *ProblemUpdate) ClearWorkaround() *ProblemUpdate {
+	_u.mutation.ClearWorkaround()
+	return _u
+}
+
+// SetResolution sets the "resolution" field.
+func (_u *ProblemUpdate) SetResolution(v string) *ProblemUpdate {
+	_u.mutation.SetResolution(v)
+	return _u
+}
+
+// SetNillableResolution sets the "resolution" field if the given value is not nil.
+func (_u *ProblemUpdate) SetNillableResolution(v *string) *ProblemUpdate {
+	if v != nil {
+		_u.SetResolution(*v)
+	}
+	return _u
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (_u *ProblemUpdate) ClearResolution() *ProblemUpdate {
+	_u.mutation.ClearResolution()
+	return _u
+}
+
 // SetImpact sets the "impact" field.
 func (_u *ProblemUpdate) SetImpact(v string) *ProblemUpdate {
 	_u.mutation.SetImpact(v)
@@ -510,6 +550,18 @@ func (_u *ProblemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.RootCauseCleared() {
 		_spec.ClearField(problem.FieldRootCause, field.TypeString)
 	}
+	if value, ok := _u.mutation.Workaround(); ok {
+		_spec.SetField(problem.FieldWorkaround, field.TypeString, value)
+	}
+	if _u.mutation.WorkaroundCleared() {
+		_spec.ClearField(problem.FieldWorkaround, field.TypeString)
+	}
+	if value, ok := _u.mutation.Resolution(); ok {
+		_spec.SetField(problem.FieldResolution, field.TypeString, value)
+	}
+	if _u.mutation.ResolutionCleared() {
+		_spec.ClearField(problem.FieldResolution, field.TypeString)
+	}
 	if value, ok := _u.mutation.Impact(); ok {
 		_spec.SetField(problem.FieldImpact, field.TypeString, value)
 	}
@@ -815,6 +867,46 @@ func (_u *ProblemUpdateOne) SetNillableRootCause(v *string) *ProblemUpdateOne {
 // ClearRootCause clears the value of the "root_cause" field.
 func (_u *ProblemUpdateOne) ClearRootCause() *ProblemUpdateOne {
 	_u.mutation.ClearRootCause()
+	return _u
+}
+
+// SetWorkaround sets the "workaround" field.
+func (_u *ProblemUpdateOne) SetWorkaround(v string) *ProblemUpdateOne {
+	_u.mutation.SetWorkaround(v)
+	return _u
+}
+
+// SetNillableWorkaround sets the "workaround" field if the given value is not nil.
+func (_u *ProblemUpdateOne) SetNillableWorkaround(v *string) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetWorkaround(*v)
+	}
+	return _u
+}
+
+// ClearWorkaround clears the value of the "workaround" field.
+func (_u *ProblemUpdateOne) ClearWorkaround() *ProblemUpdateOne {
+	_u.mutation.ClearWorkaround()
+	return _u
+}
+
+// SetResolution sets the "resolution" field.
+func (_u *ProblemUpdateOne) SetResolution(v string) *ProblemUpdateOne {
+	_u.mutation.SetResolution(v)
+	return _u
+}
+
+// SetNillableResolution sets the "resolution" field if the given value is not nil.
+func (_u *ProblemUpdateOne) SetNillableResolution(v *string) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetResolution(*v)
+	}
+	return _u
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (_u *ProblemUpdateOne) ClearResolution() *ProblemUpdateOne {
+	_u.mutation.ClearResolution()
 	return _u
 }
 
@@ -1224,6 +1316,18 @@ func (_u *ProblemUpdateOne) sqlSave(ctx context.Context) (_node *Problem, err er
 	}
 	if _u.mutation.RootCauseCleared() {
 		_spec.ClearField(problem.FieldRootCause, field.TypeString)
+	}
+	if value, ok := _u.mutation.Workaround(); ok {
+		_spec.SetField(problem.FieldWorkaround, field.TypeString, value)
+	}
+	if _u.mutation.WorkaroundCleared() {
+		_spec.ClearField(problem.FieldWorkaround, field.TypeString)
+	}
+	if value, ok := _u.mutation.Resolution(); ok {
+		_spec.SetField(problem.FieldResolution, field.TypeString, value)
+	}
+	if _u.mutation.ResolutionCleared() {
+		_spec.ClearField(problem.FieldResolution, field.TypeString)
 	}
 	if value, ok := _u.mutation.Impact(); ok {
 		_spec.SetField(problem.FieldImpact, field.TypeString, value)
