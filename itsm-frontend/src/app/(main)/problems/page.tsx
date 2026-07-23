@@ -2,8 +2,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Space, message, Pagination, Select } from 'antd';
-import { Plus, Search, RotateCcw, Download, Filter, Bug, AlertCircle, Search as SearchIcon, CheckCircle } from 'lucide-react';
-import { LayoutGrid } from 'lucide-react';
+import {
+  Plus,
+  RotateCcw,
+  Download,
+  Bug,
+  CircleAlert,
+  ScanSearch,
+  CircleCheckBig,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   BusinessPageTemplate,
@@ -178,25 +185,25 @@ export default function ProblemListPage() {
       label: '总问题数',
       value: stats.total,
       color: '#1890ff',
-      icon: <Bug className="w-5 h-5" />,
+      icon: <Bug size={20} strokeWidth={1.8} />,
     },
     {
       label: '待处理',
       value: stats.open,
       color: '#ff4d4f',
-      icon: <AlertCircle className="w-5 h-5" />,
+      icon: <CircleAlert size={20} strokeWidth={1.8} />,
     },
     {
       label: '调查中',
       value: stats.inProgress,
       color: '#fa8c16',
-      icon: <SearchIcon className="w-5 h-5" />,
+      icon: <ScanSearch size={20} strokeWidth={1.8} />,
     },
     {
       label: '已解决',
       value: stats.resolved,
       color: '#52c41a',
-      icon: <CheckCircle className="w-5 h-5" />,
+      icon: <CircleCheckBig size={20} strokeWidth={1.8} />,
     },
   ];
 
