@@ -2,8 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Space, message, Pagination, Select, Card, Empty } from 'antd';
-import { Plus, Search, RotateCcw, Download, Calendar } from 'lucide-react';
-import { LayoutGrid } from 'lucide-react';
+import {
+  Calendar,
+  CheckCircle2,
+  ClipboardList,
+  Clock,
+  Download,
+  LayoutGrid,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Search,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   BusinessPageTemplate,
@@ -181,25 +191,25 @@ export default function ChangesPage() {
       label: '总变更数',
       value: stats.total,
       color: '#1890ff',
-      icon: <span className="text-2xl">📋</span>,
+      icon: <ClipboardList size={20} strokeWidth={1.8} />,
     },
     {
       label: '待审批',
       value: stats.pending,
       color: '#fa8c16',
-      icon: <span className="text-2xl">⏳</span>,
+      icon: <Clock size={20} strokeWidth={1.8} />,
     },
     {
       label: '进行中',
       value: stats.inProgress,
       color: '#1890ff',
-      icon: <span className="text-2xl">🔄</span>,
+      icon: <RefreshCw size={20} strokeWidth={1.8} />,
     },
     {
       label: '已完成',
       value: stats.completed,
       color: '#52c41a',
-      icon: <span className="text-2xl">✅</span>,
+      icon: <CheckCircle2 size={20} strokeWidth={1.8} />,
     },
   ];
 
