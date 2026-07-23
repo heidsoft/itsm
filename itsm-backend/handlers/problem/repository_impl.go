@@ -33,6 +33,8 @@ func (r *EntRepository) toDomain(e *ent.Problem) *Problem {
 		Priority:    e.Priority,
 		Category:    e.Category,
 		RootCause:   e.RootCause,
+		Workaround:  e.Workaround,
+		Resolution:  e.Resolution,
 		Impact:      e.Impact,
 		CreatedBy:   e.CreatedBy,
 		TenantID:    e.TenantID,
@@ -190,6 +192,8 @@ func (r *EntRepository) Create(ctx context.Context, p *Problem) (*Problem, error
 		SetPriority(p.Priority).
 		SetCategory(p.Category).
 		SetRootCause(p.RootCause).
+		SetWorkaround(p.Workaround).
+		SetResolution(p.Resolution).
 		SetImpact(p.Impact).
 		SetCreatedBy(p.CreatedBy).
 		SetTenantID(p.TenantID).
@@ -297,6 +301,8 @@ func (r *EntRepository) Update(ctx context.Context, p *Problem) (*Problem, error
 		SetPriority(p.Priority).
 		SetCategory(p.Category).
 		SetRootCause(p.RootCause).
+		SetWorkaround(p.Workaround).
+		SetResolution(p.Resolution).
 		SetImpact(p.Impact).
 		SetUpdatedAt(time.Now())
 

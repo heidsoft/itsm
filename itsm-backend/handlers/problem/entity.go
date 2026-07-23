@@ -13,6 +13,8 @@ type Problem struct {
 	Priority    string
 	Category    string
 	RootCause   string
+	Workaround  string
+	Resolution  string
 	Impact      string
 	AssigneeID  *int
 	CreatedBy   int

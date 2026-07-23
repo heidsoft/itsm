@@ -2,6 +2,7 @@ package problem
 
 import (
 	"strconv"
+	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -31,6 +32,8 @@ func (h *Handler) toDTO(p *Problem) *dto.ProblemResponse {
 		Priority:    p.Priority,
 		Category:    p.Category,
 		RootCause:   p.RootCause,
+		Workaround:  p.Workaround,
+		Resolution:  p.Resolution,
 		Impact:      p.Impact,
 		CreatedBy:   p.CreatedBy,
 		TenantID:    p.TenantID,
@@ -359,6 +362,90 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
+	common.Success(c, h.toDTO(updated))
+}
+
+func (h *Handler) InvestigateProblem(c *gin.Context) {
+	id, tenantID, ok := problemRequestContext(c)
+	if !ok {
+		return
+	}
+	updated, err := h.service.InvestigateProblem(c.Request.Context(), tenantID, id)
+	h.respondProblemMutation(c, updated, err)
+}
+
+func (h *Handler) UpdateRootCause(c *gin.Context) {
+	id, tenantID, ok := problemRequestContext(c)
+	if !ok {
+		return
+	}
+	var req dto.UpdateProblemRootCauseRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, err.Error())
+		return
+	}
+	updated, err := h.service.UpdateRootCause(c.Request.Context(), tenantID, id, req.RootCause)
+	h.respondProblemMutation(c, updated, err)
+}
+
+func (h *Handler) UpdateSolution(c *gin.Context) {
+	id, tenantID, ok := problemRequestContext(c)
+	if !ok {
+		return
+	}
+	var req dto.UpdateProblemResolutionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, err.Error())
+		return
+	}
+	resolution := req.Resolution
+	if resolution == "" {
+		resolution = req.Solution
+	}
+	updated, err := h.service.UpdateSolution(c.Request.Context(), tenantID, id, req.Workaround, resolution)
+	h.respondProblemMutation(c, updated, err)
+}
+
+func (h *Handler) CloseProblem(c *gin.Context) {
+	id, tenantID, ok := problemRequestContext(c)
+	if !ok {
+		return
+	}
+	var req dto.CloseProblemRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, err.Error())
+		return
+	}
+	updated, err := h.service.CloseProblem(c.Request.Context(), tenantID, id, req.Resolution)
+	h.respondProblemMutation(c, updated, err)
+}
+
+func problemRequestContext(c *gin.Context) (int, int, bool) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return 0, 0, false
+	}
+	tenantValue, exists := c.Get("tenant_id")
+	tenantID, valid := tenantValue.(int)
+	if !exists || !valid || tenantID <= 0 {
+		common.Fail(c, common.AuthErrorCode, "invalid tenant context")
+		return 0, 0, false
+	}
+	return id, tenantID, true
+}
+
+func (h *Handler) respondProblemMutation(c *gin.Context, updated *Problem, err error) {
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
+		} else if strings.Contains(err.Error(), "required") {
+			common.Fail(c, common.ParamErrorCode, err.Error())
+		} else {
+			common.Fail(c, common.InternalErrorCode, err.Error())
+		}
+		return
+	}
 	common.Success(c, h.toDTO(updated))
 }
 

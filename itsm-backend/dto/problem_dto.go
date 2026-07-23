@@ -24,6 +24,23 @@ type UpdateProblemRequest struct {
 	Impact      *string `json:"impact" binding:"omitempty"`
 }
 
+// UpdateProblemRootCauseRequest 记录问题根因。
+type UpdateProblemRootCauseRequest struct {
+	RootCause string `json:"rootCause" binding:"required"`
+}
+
+// UpdateProblemResolutionRequest 记录问题的临时或最终解决方案。
+type UpdateProblemResolutionRequest struct {
+	Solution   string `json:"solution"`
+	Workaround string `json:"workaround"`
+	Resolution string `json:"resolution"`
+}
+
+// CloseProblemRequest 关闭问题时可同时记录最终解决方案。
+type CloseProblemRequest struct {
+	Resolution string `json:"resolution"`
+}
+
 // ListProblemsRequest 获取问题列表请求
 type ListProblemsRequest struct {
 	Page      int        `json:"page" form:"page"`
@@ -47,6 +64,8 @@ type ProblemResponse struct {
 	Priority    string    `json:"priority"`
 	Category    string    `json:"category"`
 	RootCause   string    `json:"rootCause"`
+	Workaround  string    `json:"workaround"`
+	Resolution  string    `json:"resolution"`
 	Impact      string    `json:"impact"`
 	AssigneeID  *int      `json:"assigneeId,omitempty"`
 	CreatedBy   int       `json:"createdBy"`

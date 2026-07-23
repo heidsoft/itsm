@@ -34,6 +34,12 @@ func (Problem) Fields() []ent.Field {
 		field.Text("root_cause").
 			Comment("根本原因").
 			Optional(),
+		field.Text("workaround").
+			Comment("临时解决方案").
+			Optional(),
+		field.Text("resolution").
+			Comment("最终解决方案").
+			Optional(),
 		field.Text("impact").
 			Comment("影响范围").
 			Optional(),
