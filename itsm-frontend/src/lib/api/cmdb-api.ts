@@ -206,6 +206,14 @@ export class CMDBApi {
     return httpClient.post(`${CMDB_BASE}/cloud-services`, data);
   }
 
+  static async updateCloudService(id: string | number, data: Record<string, unknown>): Promise<CloudService> {
+    return httpClient.put(`${CMDB_BASE}/cloud-services/${id}`, data);
+  }
+
+  static async deleteCloudService(id: string | number): Promise<void> {
+    return httpClient.delete(`${CMDB_BASE}/cloud-services/${id}`);
+  }
+
   static async getCloudAccounts(): Promise<CloudAccount[]> {
     return httpClient.get(`${CMDB_BASE}/cloud-accounts`);
   }
