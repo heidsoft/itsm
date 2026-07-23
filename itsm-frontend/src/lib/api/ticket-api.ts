@@ -592,7 +592,7 @@ export class TicketApi {
     action: string,
     data?: Record<string, unknown>
   ): Promise<void> {
-    return httpClient.put('/api/v1/tickets/batch-assign', {
+    return httpClient.post('/api/v1/tickets/batch-assign', {
       ticketIds: ticketIds,
       action,
       data,

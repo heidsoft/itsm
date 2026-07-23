@@ -479,15 +479,12 @@ export class IncidentAPI {
     }
   }
 
-  /**
-   * 删除事件评论
-   * 后端: DELETE /api/v1/incidents/:id/comments/:commentId
-   */
+  /** 删除事件评论（后端暂未提供该 API） */
   static async deleteIncidentComment(
-    incidentId: number,
-    commentId: number
+    _incidentId: number,
+    _commentId: number
   ): Promise<void> {
-    await httpClient.delete(`/api/v1/incidents/${incidentId}/comments/${commentId}`);
+    throw new Error('事件评论删除功能开发中');
   }
 
   /**
