@@ -56,6 +56,9 @@ export default function IncidentsPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>();
+  const [priorityFilter, setPriorityFilter] = useState<string>();
+  const [sourceFilter, setSourceFilter] = useState<string>();
   const [activeView, setActiveView] = useState<'list' | 'kanban'>('list');
 
   // 统计数据
@@ -79,6 +82,9 @@ export default function IncidentsPage() {
         page,
         pageSize,
         search: searchKeyword || undefined,
+        status: statusFilter,
+        priority: priorityFilter,
+        source: sourceFilter,
       });
       const items = response.incidents || response.data || [];
 
@@ -113,7 +119,7 @@ export default function IncidentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, searchKeyword, t]);
+  }, [page, pageSize, searchKeyword, statusFilter, priorityFilter, sourceFilter, t]);
 
   const fetchStats = useCallback(async () => {
     setStatsLoading(true);
@@ -144,6 +150,16 @@ export default function IncidentsPage() {
     setSearchKeyword(value);
     setPage(1);
   }, []);
+
+  const handleFilterChange = useCallback(
+    (status?: string, priority?: string, source?: string) => {
+      setStatusFilter(status);
+      setPriorityFilter(priority);
+      setSourceFilter(source);
+      setPage(1);
+    },
+    [],
+  );
 
   const handleView = useCallback(
     (incident: Incident) => {
@@ -408,7 +424,16 @@ export default function IncidentsPage() {
       filters={{
         visible: filtersVisible,
         onToggle: () => setFiltersVisible(!filtersVisible),
-        content: <IncidentFilters />,
+        content: (
+          <IncidentFilters
+            loading={loading}
+            status={statusFilter}
+            priority={priorityFilter}
+            source={sourceFilter}
+            onFilterChange={handleFilterChange}
+            onRefresh={handleRefresh}
+          />
+        ),
       }}
 
       // 视图切换

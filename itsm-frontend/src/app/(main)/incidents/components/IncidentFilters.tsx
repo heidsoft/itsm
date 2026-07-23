@@ -11,13 +11,19 @@ const { Option } = Select;
 interface IncidentFiltersProps {
   loading?: boolean;
   onSearch?: (value: string) => void;
-  onFilterChange?: (key: string, value: string) => void;
+  status?: string;
+  priority?: string;
+  source?: string;
+  onFilterChange?: (status?: string, priority?: string, source?: string) => void;
   onRefresh?: () => void;
 }
 
 export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
   loading,
   onSearch,
+  status,
+  priority,
+  source,
   onFilterChange,
   onRefresh,
 }) => {
@@ -54,7 +60,8 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 placeholder={t('incidents.selectStatus')}
                 size="large"
                 allowClear
-                onChange={value => onFilterChange?.('status', value)}
+                value={status}
+                onChange={value => onFilterChange?.(value, priority, source)}
                 className="w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
               >
                 <Option value="new">
@@ -109,7 +116,8 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 placeholder={t('incidents.selectPriority')}
                 size="large"
                 allowClear
-                onChange={value => onFilterChange?.('priority', value)}
+                value={priority}
+                onChange={value => onFilterChange?.(status, value, source)}
                 className="w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
               >
                 <Option value="low">
@@ -146,7 +154,8 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 placeholder={t('incidents.selectSource')}
                 size="large"
                 allowClear
-                onChange={value => onFilterChange?.('source', value)}
+                value={source}
+                onChange={value => onFilterChange?.(status, priority, value)}
                 className="w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
               >
                 <Option value="email">📧 {t('incidents.sourceEmail')}</Option>
