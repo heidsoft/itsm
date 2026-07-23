@@ -14,6 +14,7 @@ import {
   Select,
   Spin,
   Alert,
+  Empty,
 } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -25,7 +26,6 @@ import {
   XCircle,
   BarChart3,
   RefreshCw,
-  TrendingUp,
 } from 'lucide-react';
 
 import type { DashboardMetrics } from '@/lib/api/bpmn-dashboard-api';
@@ -305,13 +305,9 @@ export default function BPMNDashboardPage() {
         </Col>
       </Row>
 
-      {/* Trend Chart Placeholder */}
       <Card title={t('workflow.bpmnDashboard.trend') || '流程趋势'}>
-        <div className='h-48 flex items-center justify-center text-gray-400'>
-          <Space>
-            <TrendingUp size={24} />
-            <span>{t('workflow.bpmnDashboard.trendChart') || '趋势图表（待开发）'}</span>
-          </Space>
+        <div className='h-48 flex items-center justify-center'>
+          <Empty description='暂无流程趋势数据' />
         </div>
       </Card>
     </div>
