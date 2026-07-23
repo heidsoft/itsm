@@ -207,6 +207,49 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 	common.Success(c, toArticleDTO(res))
 }
 
+// PublishArticle handles POST /api/v1/knowledge/articles/:id/publish
+func (h *Handler) PublishArticle(c *gin.Context) {
+	h.setArticlePublished(c, true)
+}
+
+// UnpublishArticle handles POST /api/v1/knowledge/articles/:id/unpublish
+func (h *Handler) UnpublishArticle(c *gin.Context) {
+	h.setArticlePublished(c, false)
+}
+
+func (h *Handler) setArticlePublished(c *gin.Context, published bool) {
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.ParamError(c, "Tenant ID not found")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok {
+		common.ParamError(c, "Invalid tenant ID")
+		return
+	}
+
+	article, err := h.svc.GetArticle(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.NotFound(c, "Article not found")
+		return
+	}
+
+	article.IsPublished = published
+	res, err := h.svc.UpdateArticle(c.Request.Context(), article)
+	if err != nil {
+		common.InternalError(c, err.Error())
+		return
+	}
+
+	common.Success(c, toArticleDTO(res))
+}
+
 // DeleteArticle handles DELETE /api/v1/knowledge-articles/:id
 func (h *Handler) DeleteArticle(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")

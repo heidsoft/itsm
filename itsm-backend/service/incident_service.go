@@ -1352,6 +1352,39 @@ func (s *IncidentService) CloseIncident(ctx context.Context, id, userID, tenantI
 	return eventErr
 }
 
+// ReopenIncident 将已解决或已关闭的事件重新流转到 in_progress
+func (s *IncidentService) ReopenIncident(ctx context.Context, id, userID, tenantID int) error {
+	incidentEntity, err := s.client.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+
+	if incidentEntity.Status != common.IncidentStatusResolved && incidentEntity.Status != common.IncidentStatusClosed {
+		return fmt.Errorf("only resolved or closed incidents can be reopened")
+	}
+
+	now := time.Now()
+	err = s.client.Incident.UpdateOneID(id).
+		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil(), incident.VersionEQ(incidentEntity.Version)).
+		SetStatus(common.IncidentStatusInProgress).
+		ClearResolvedAt().
+		ClearClosedAt().
+		SetUpdatedAt(now).
+		AddVersion(1).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	_, eventErr := s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+		IncidentID: id, EventType: "reopen", EventName: "事件重新打开",
+		Description: fmt.Sprintf("事件由用户 %d 重新打开", userID), Status: "active", Severity: "info",
+		UserID: &userID, Source: "user",
+	}, tenantID)
+	return eventErr
+}
+
 func (s *IncidentService) GetIncidentStats(ctx context.Context, tenantID int) (*dto.IncidentStatsResponse, error) {
 	s.logger.Infow("Getting incident stats", "tenant_id", tenantID)
 

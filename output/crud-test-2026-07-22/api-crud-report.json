@@ -1,0 +1,669 @@
+{
+  "summary": {
+    "total": 66,
+    "pass": 62,
+    "fail": 4
+  },
+  "details": [
+    {
+      "module": "Tickets",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/tickets?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Tickets",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/tickets",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Tickets",
+      "action": "READ",
+      "method": "GET",
+      "path": "/tickets/12",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Tickets",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/tickets/12",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Tickets",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/tickets/12",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Incidents",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/incidents?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Incidents",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/incidents",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Incidents",
+      "action": "READ",
+      "method": "GET",
+      "path": "/incidents/9",
+      "http": 200,
+      "api_code": 0,
+      "msg": "获取事件成功",
+      "ok": true
+    },
+    {
+      "module": "Incidents",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/incidents/9",
+      "http": 200,
+      "api_code": 0,
+      "msg": "更新事件成功",
+      "ok": true
+    },
+    {
+      "module": "Incidents",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/incidents/9",
+      "http": 200,
+      "api_code": 0,
+      "msg": "删除事件成功",
+      "ok": true
+    },
+    {
+      "module": "Problems",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/problems?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Problems",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/problems",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Problems",
+      "action": "READ",
+      "method": "GET",
+      "path": "/problems/3",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Problems",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/problems/3",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Problems",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/problems/3",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Changes",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/changes?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Changes",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/changes",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Changes",
+      "action": "READ",
+      "method": "GET",
+      "path": "/changes/6",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Changes",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/changes/6",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Changes",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/changes/6",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "CMDB-CIs",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/cmdb/cis?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "CMDB-CIs",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/cmdb/cis",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "CMDB-CIs",
+      "action": "READ",
+      "method": "GET",
+      "path": "/cmdb/cis/6",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "CMDB-CIs",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/cmdb/cis/6",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "CMDB-CIs",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/cmdb/cis/6",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Knowledge",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/knowledge/articles?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Knowledge",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/knowledge/articles",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Knowledge",
+      "action": "READ",
+      "method": "GET",
+      "path": "/knowledge/articles/7",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Knowledge",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/knowledge/articles/7",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Knowledge",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/knowledge/articles/7",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "ServiceCatalog",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/service-catalogs?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "ServiceCatalog",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/service-catalogs",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "ServiceCatalog",
+      "action": "READ",
+      "method": "GET",
+      "path": "/service-catalogs/26",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "ServiceCatalog",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/service-catalogs/26",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "ServiceCatalog",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/service-catalogs/26",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Users",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/users?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Users",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/users",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Users",
+      "action": "READ",
+      "method": "GET",
+      "path": "/users/9",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Users",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/users/9",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Users",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/users/9",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Roles",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/roles?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Roles",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/roles",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Roles",
+      "action": "READ",
+      "method": "GET",
+      "path": "/roles/23",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Roles",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/roles/23",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Roles",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/roles/23",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Groups",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/groups?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Groups",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/groups",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Groups",
+      "action": "READ",
+      "method": "GET",
+      "path": "/groups/3",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Groups",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/groups/3",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Groups",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/groups/3",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Departments",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/departments?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Departments",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/org/departments",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Departments",
+      "action": "READ",
+      "method": "GET",
+      "path": "/departments/15",
+      "http": 404,
+      "api_code": null,
+      "msg": "",
+      "ok": false
+    },
+    {
+      "module": "Departments",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/org/departments/15",
+      "http": 500,
+      "api_code": 5001,
+      "msg": "更新部门失败: ent: validator failed for field \"Department.name\": value is less than the required length",
+      "ok": false
+    },
+    {
+      "module": "Departments",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/org/departments/15",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Teams",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/teams?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Teams",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/org/teams",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Teams",
+      "action": "READ",
+      "method": "GET",
+      "path": "/teams/19",
+      "http": 404,
+      "api_code": null,
+      "msg": "",
+      "ok": false
+    },
+    {
+      "module": "Teams",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/org/teams/19",
+      "http": 500,
+      "api_code": 5001,
+      "msg": "更新团队失败: ent: validator failed for field \"Team.name\": value is less than the required length",
+      "ok": false
+    },
+    {
+      "module": "Teams",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/org/teams/19",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "SLA-Definitions",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/sla/definitions?page=1&pageSize=5",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "SLA-Definitions",
+      "action": "CREATE",
+      "method": "POST",
+      "path": "/sla/definitions",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "SLA-Definitions",
+      "action": "READ",
+      "method": "GET",
+      "path": "/sla/definitions/11",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "SLA-Definitions",
+      "action": "UPDATE",
+      "method": "PUT",
+      "path": "/sla/definitions/11",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "SLA-Definitions",
+      "action": "DELETE",
+      "method": "DELETE",
+      "path": "/sla/definitions/11",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    },
+    {
+      "module": "Workflows-BPMN",
+      "action": "LIST",
+      "method": "GET",
+      "path": "/bpmn/process-definitions",
+      "http": 200,
+      "api_code": 0,
+      "msg": "success",
+      "ok": true
+    }
+  ]
+}

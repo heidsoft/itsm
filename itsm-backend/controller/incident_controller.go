@@ -704,6 +704,29 @@ func (c *IncidentController) CloseIncident(ctx *gin.Context) {
 	common.Success(ctx, gin.H{"message": "事件已关闭"})
 }
 
+// ReopenIncident 重新打开事件
+// @Summary 重新打开事件
+// @Description 将已解决或已关闭的事件重新打开并流转到 in_progress
+// @Tags 事件管理
+// @Produce json
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/incidents/:id/reopen [post]
+func (c *IncidentController) ReopenIncident(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+	userID := ctx.GetInt("user_id")
+	tenantID := ctx.GetInt("tenant_id")
+	if err := c.incidentService.ReopenIncident(ctx.Request.Context(), id, userID, tenantID); err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(ctx, gin.H{"message": "事件已重新打开"})
+}
+
 // AssignIncident 分配事件
 // @Summary 分配事件
 // @Description 将事件分配给指定处理人

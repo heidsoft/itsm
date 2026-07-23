@@ -91,6 +91,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [resolveModalVisible, setResolveModalVisible] = useState(false);
   const [escalating, setEscalating] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const [reopening, setReopening] = useState(false);
   const [form] = Form.useForm();
   const [resolveForm] = Form.useForm();
 
@@ -223,6 +224,21 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       handleError(error, 'resolveIncident', '解决失败');
     } finally {
       setResolving(false);
+    }
+  };
+
+  const handleReopen = async () => {
+    if (!data) return;
+
+    setReopening(true);
+    try {
+      await IncidentAPI.reopenIncident(data.id);
+      message.success('事件已重新打开');
+      loadData();
+    } catch (error) {
+      handleError(error, 'reopenIncident', '重新打开失败');
+    } finally {
+      setReopening(false);
     }
   };
 
@@ -421,7 +437,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               <Button icon={<ArrowUp />} onClick={handleEscalate} loading={escalating}>
                 升级
               </Button>
-              {data.status !== IncidentStatus.RESOLVED && (
+              {data.status !== IncidentStatus.RESOLVED && data.status !== IncidentStatus.CLOSED && (
                 <Button
                   type="primary"
                   icon={<CheckCircle />}
@@ -429,6 +445,11 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                   loading={resolving}
                 >
                   解决
+                </Button>
+              )}
+              {(data.status === IncidentStatus.RESOLVED || data.status === IncidentStatus.CLOSED) && (
+                <Button onClick={handleReopen} loading={reopening}>
+                  重新打开
                 </Button>
               )}
             </Space>

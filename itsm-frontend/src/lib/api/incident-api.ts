@@ -464,6 +464,16 @@ export class IncidentAPI {
   }
 
   /**
+   * 重新打开事件
+   * 将已解决或已关闭的事件恢复为处理中
+   * 后端: POST /api/v1/incidents/:id/reopen
+   */
+  static async reopenIncident(id: number): Promise<Incident> {
+    const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/reopen`, {});
+    return response;
+  }
+
+  /**
    * 获取事件评论列表
    * 后端: GET /api/v1/incidents/:id/comments
    */

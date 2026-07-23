@@ -64,10 +64,14 @@ export class KnowledgeBaseApi {
   }
 
   static async publishArticle(
-    id: string,
+    id: number | string,
     request?: PublishArticleRequest
   ): Promise<KnowledgeArticle> {
     return httpClient.post(`${ARTICLES_PREFIX}/${id}/publish`, request);
+  }
+
+  static async unpublishArticle(id: number | string): Promise<KnowledgeArticle> {
+    return httpClient.post(`${ARTICLES_PREFIX}/${id}/unpublish`);
   }
 
   static async archiveArticle(id: string): Promise<KnowledgeArticle> {
