@@ -932,6 +932,7 @@ var (
 		{Name: "cloud_sync_time", Type: field.TypeTime, Nullable: true},
 		{Name: "cloud_sync_status", Type: field.TypeString, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "version", Type: field.TypeInt, Default: 1},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "lifecycle_status", Type: field.TypeString, Default: "online"},
@@ -948,13 +949,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "configuration_items_ci_types_cis",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[35]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[36]},
 				RefColumns: []*schema.Column{CiTypesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "configuration_items_cloud_resources_cis",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[36]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[37]},
 				RefColumns: []*schema.Column{CloudResourcesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -968,7 +969,7 @@ var (
 			{
 				Name:    "configurationitem_ci_type_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[35]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[36]},
 			},
 			{
 				Name:    "configurationitem_status",

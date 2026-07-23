@@ -1,154 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="664" failures="0" errors="0" time="21.169">
-  <testsuite name="src/components/cmdb/ci-detail/__tests__/CIRelationshipsTab.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:34" time="7.531" tests="5">
-    <testcase classname="CIRelationshipsTab" name="应该正确渲染组件" time="1.491">
-    </testcase>
-    <testcase classname="CIRelationshipsTab" name="应该传递正确的 ciId 和 ciName 给子组件" time="0.439">
-    </testcase>
-    <testcase classname="CIRelationshipsTab" name="应该接收必需的 props" time="0.424">
-    </testcase>
-    <testcase classname="CIRelationshipsTab" name="onRefresh 函数应该被传递" time="0.363">
-    </testcase>
-    <testcase classname="CIRelationshipsTab" name="应该处理空状态" time="0.389">
+<testsuites name="jest tests" tests="691" failures="0" errors="0" time="34.681">
+  <testsuite name="src/components/layout/__tests__/BusinessPageTemplate.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:14" time="10.124" tests="1">
+    <testcase classname="BusinessPageTemplate statistics" name="renders each statistic as a full grid item with an optional unit" time="1.871">
     </testcase>
   </testsuite>
-  <testsuite name="src/components/cmdb/ci-detail/__tests__/CIChangeHistoryTab.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:34" time="7.938" tests="11">
-    <testcase classname="CIChangeHistoryTab" name="应该显示变更历史标题" time="0.638">
+  <testsuite name="src/components/business/advanced-reporting/__tests__/AdvancedReportingView.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:14" time="11.713" tests="2">
+    <testcase classname="AdvancedReportingView" name="shows a retry action when loading fails" time="2.319">
     </testcase>
-    <testcase classname="CIChangeHistoryTab" name="应该显示加载按钮" time="0.812">
-    </testcase>
-    <testcase classname="CIChangeHistoryTab" name="点击加载按钮应调用 onLoad" time="0.747">
-    </testcase>
-    <testcase classname="CIChangeHistoryTab" name="应该显示所有变更记录" time="0.126">
-    </testcase>
-    <testcase classname="CIChangeHistoryTab" name="应该显示操作方法标签" time="0.133">
-    </testcase>
-    <testcase classname="CIChangeHistoryTab" name="应该显示变更描述" time="0.115">
-    </testcase>
-    <testcase classname="CIChangeHistoryTab" name="应该显示操作人" time="0.132">
-    </testcase>
-    <testcase classname="CIChangeHistoryTab" name="应该显示时间" time="0.122">
-    </testcase>
-    <testcase classname="CIChangeHistoryTab" name="加载状态应显示加载指示器" time="0.465">
-    </testcase>
-    <testcase classname="CIChangeHistoryTab" name="没有变更历史应显示空状态" time="0.138">
-    </testcase>
-    <testcase classname="CIChangeHistoryTab" name="changeHistory 为 null 应显示空状态" time="0.104">
+    <testcase classname="AdvancedReportingView" name="delegates navigation instead of executing an unsupported report action" time="1.341">
     </testcase>
   </testsuite>
-  <testsuite name="src/components/cmdb/ci-detail/__tests__/CIImpactAnalysisTab.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:34" time="9.346" tests="11">
-    <testcase classname="CIImpactAnalysisTab" name="应该显示风险等级" time="0.711">
+  <testsuite name="src/components/business/sla-monitor/__tests__/SLAViolationDetailModal.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:14" time="12.509" tests="2">
+    <testcase classname="SLAViolationDetailModal" name="hides mutating actions without write permission" time="1.902">
     </testcase>
-    <testcase classname="CIImpactAnalysisTab" name="应该显示分析摘要" time="0.219">
-    </testcase>
-    <testcase classname="CIImpactAnalysisTab" name="应该显示上游影响标签" time="0.226">
-    </testcase>
-    <testcase classname="CIImpactAnalysisTab" name="应该显示下游影响标签" time="0.16">
-    </testcase>
-    <testcase classname="CIImpactAnalysisTab" name="应该显示关联工单标签" time="0.164">
-    </testcase>
-    <testcase classname="CIImpactAnalysisTab" name="应该显示关联事件标签" time="0.164">
-    </testcase>
-    <testcase classname="CIImpactAnalysisTab" name="应该显示分析按钮" time="0.901">
-    </testcase>
-    <testcase classname="CIImpactAnalysisTab" name="点击分析按钮应调用 onAnalyze" time="1.094">
-    </testcase>
-    <testcase classname="CIImpactAnalysisTab" name="加载状态应显示加载指示器" time="1.003">
-    </testcase>
-    <testcase classname="CIImpactAnalysisTab" name="没有影响分析数据应显示空状态" time="0.079">
-    </testcase>
-    <testcase classname="CIImpactAnalysisTab" name="应该显示 CI影响分析 标题" time="0.213">
+    <testcase classname="SLAViolationDetailModal" name="emits controlled actions when permission is granted" time="2.751">
     </testcase>
   </testsuite>
-  <testsuite name="src/components/cmdb/ci-detail/__tests__/CIDetail.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:42" time="2.937" tests="4">
-    <testcase classname="CIDetail" name="应该正确渲染 CI 名称" time="0.509">
+  <testsuite name="src/components/layout/__tests__/ErrorBoundary.test.tsx" errors="0" failures="0" skipped="7" timestamp="2026-07-22T23:31:14" time="17.313" tests="39">
+    <testcase classname="Layout ErrorBoundary › 基本功能" name="正常渲染子组件（无错误时）" time="0.101">
     </testcase>
-    <testcase classname="CIDetail" name="应该显示 CI 状态" time="0.265">
+    <testcase classname="Layout ErrorBoundary › 基本功能" name="渲染多个子组件" time="0.014">
     </testcase>
-    <testcase classname="CIDetail" name="应该包含标签页导航" time="0.276">
+    <testcase classname="Layout ErrorBoundary › 错误捕获" name="捕获子组件渲染错误并显示错误 UI" time="0.787">
     </testcase>
-    <testcase classname="CIDetail" name="应该显示返回按钮" time="0.255">
+    <testcase classname="Layout ErrorBoundary › 错误捕获" name="显示默认错误消息" time="0.263">
     </testcase>
-  </testsuite>
-  <testsuite name="src/components/workflow/__tests__/BPMNDesigner.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:42" time="2.972" tests="7">
-    <testcase classname="BPMNDesigner" name="should render toolbar container" time="0.351">
+    <testcase classname="Layout ErrorBoundary › 错误捕获" name="显示错误详情标题" time="0.245">
     </testcase>
-    <testcase classname="BPMNDesigner" name="should render zoom controls section" time="0.179">
+    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="显示刷新页面按钮" time="0.209">
     </testcase>
-    <testcase classname="BPMNDesigner" name="should call onSave when save is triggered" time="0.141">
+    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="显示返回首页按钮" time="0.181">
     </testcase>
-    <testcase classname="BPMNDesigner" name="should call onDeploy when deploy is triggered" time="0.153">
+    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="显示报告问题按钮" time="0.173">
     </testcase>
-    <testcase classname="BPMNDesigner" name="should accept custom height prop" time="0.308">
+    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="点击刷新页面按钮调用 location.reload" time="1.43">
     </testcase>
-    <testcase classname="BPMNDesigner" name="should have a main container" time="0.147">
+    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="点击返回首页按钮跳转到 dashboard" time="1.291">
     </testcase>
-    <testcase classname="BPMNDesigner" name="should render with flex layout" time="0.131">
+    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="点击报告问题按钮不抛出错误" time="1.307">
     </testcase>
-  </testsuite>
-  <testsuite name="src/components/layout/__tests__/ErrorBoundary.test.tsx" errors="0" failures="0" skipped="7" timestamp="2026-07-17T14:33:34" time="11.136" tests="39">
-    <testcase classname="Layout ErrorBoundary › 基本功能" name="正常渲染子组件（无错误时）" time="0.054">
+    <testcase classname="Layout ErrorBoundary › 自定义配置" name="使用自定义 fallback 组件" time="0.007">
     </testcase>
-    <testcase classname="Layout ErrorBoundary › 基本功能" name="渲染多个子组件" time="0.012">
+    <testcase classname="Layout ErrorBoundary › 自定义配置" name="调用 onError 回调函数" time="0.154">
     </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误捕获" name="捕获子组件渲染错误并显示错误 UI" time="0.435">
+    <testcase classname="Layout ErrorBoundary › 自定义配置" name="onError 回调接收错误和错误信息" time="0.154">
     </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误捕获" name="显示默认错误消息" time="0.159">
+    <testcase classname="Layout ErrorBoundary › 错误详情显示" name="显示错误消息" time="0.176">
     </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误捕获" name="显示错误详情标题" time="0.14">
+    <testcase classname="Layout ErrorBoundary › 错误详情显示" name="开发环境显示堆栈跟踪详情" time="0.179">
     </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="显示刷新页面按钮" time="0.125">
+    <testcase classname="Layout ErrorBoundary › 错误详情显示" name="生产环境不显示堆栈跟踪详情" time="0.18">
     </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="显示返回首页按钮" time="0.138">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="显示报告问题按钮" time="0.119">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="点击刷新页面按钮调用 location.reload" time="0.892">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="点击返回首页按钮跳转到 dashboard" time="0.712">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误操作按钮" name="点击报告问题按钮不抛出错误" time="1.232">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 自定义配置" name="使用自定义 fallback 组件" time="0.009">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 自定义配置" name="调用 onError 回调函数" time="0.25">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 自定义配置" name="onError 回调接收错误和错误信息" time="0.219">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误详情显示" name="显示错误消息" time="0.132">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误详情显示" name="开发环境显示堆栈跟踪详情" time="0.158">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误详情显示" name="生产环境不显示堆栈跟踪详情" time="0.141">
-    </testcase>
-    <testcase classname="Layout ErrorBoundary › 错误报告内容" name="错误报告包含错误信息" time="0.89">
+    <testcase classname="Layout ErrorBoundary › 错误报告内容" name="错误报告包含错误信息" time="1.289">
     </testcase>
     <testcase classname="Layout ErrorBoundary › 组件生命周期" name="组件卸载时清理事件监听器" time="0">
       <skipped/>
     </testcase>
-    <testcase classname="useErrorHandler Hook" name="注册全局错误处理器" time="0.008">
+    <testcase classname="useErrorHandler Hook" name="注册全局错误处理器" time="0.006">
     </testcase>
-    <testcase classname="useErrorHandler Hook" name="清理全局错误处理器" time="0.006">
+    <testcase classname="useErrorHandler Hook" name="清理全局错误处理器" time="0.004">
     </testcase>
-    <testcase classname="useErrorHandler Hook" name="捕获全局错误并记录到控制台" time="0.005">
+    <testcase classname="useErrorHandler Hook" name="捕获全局错误并记录到控制台" time="0.006">
     </testcase>
     <testcase classname="useErrorHandler Hook" name="捕获未处理的 Promise rejection" time="0">
       <skipped/>
     </testcase>
-    <testcase classname="SimpleErrorFallback Component" name="渲染错误消息" time="0.046">
+    <testcase classname="SimpleErrorFallback Component" name="渲染错误消息" time="0.059">
     </testcase>
-    <testcase classname="SimpleErrorFallback Component" name="无错误时显示 Unknown error" time="0.043">
+    <testcase classname="SimpleErrorFallback Component" name="无错误时显示 Unknown error" time="0.053">
     </testcase>
     <testcase classname="SimpleErrorFallback Component" name="显示错误图标" time="0">
       <skipped/>
     </testcase>
-    <testcase classname="SimpleErrorFallback Component" name="点击刷新按钮重新加载页面" time="0.352">
+    <testcase classname="SimpleErrorFallback Component" name="点击刷新按钮重新加载页面" time="0.538">
     </testcase>
-    <testcase classname="SimpleErrorFallback Component" name="应用正确的样式" time="0.046">
+    <testcase classname="SimpleErrorFallback Component" name="应用正确的样式" time="0.085">
     </testcase>
-    <testcase classname="嵌套 ErrorBoundary" name="内层错误被内层 ErrorBoundary 捕获" time="0.106">
+    <testcase classname="嵌套 ErrorBoundary" name="内层错误被内层 ErrorBoundary 捕获" time="0.128">
     </testcase>
-    <testcase classname="嵌套 ErrorBoundary" name="外层 ErrorBoundary 捕获传播的错误" time="0.11">
+    <testcase classname="嵌套 ErrorBoundary" name="外层 ErrorBoundary 捕获传播的错误" time="0.176">
     </testcase>
     <testcase classname="异步错误处理" name="捕获 useEffect 中的异步错误" time="0">
       <skipped/>
@@ -162,106 +92,560 @@
     <testcase classname="错误状态管理" name="子组件变化不自动重置错误状态" time="0">
       <skipped/>
     </testcase>
-    <testcase classname="性能和边界情况" name="处理空子组件" time="0.003">
+    <testcase classname="性能和边界情况" name="处理空子组件" time="0.002">
     </testcase>
-    <testcase classname="性能和边界情况" name="处理 null 子组件" time="0.003">
+    <testcase classname="性能和边界情况" name="处理 null 子组件" time="0.002">
     </testcase>
     <testcase classname="性能和边界情况" name="处理 undefined 子组件" time="0.003">
     </testcase>
-    <testcase classname="性能和边界情况" name="处理大量子组件" time="0.032">
+    <testcase classname="性能和边界情况" name="处理大量子组件" time="0.046">
     </testcase>
-    <testcase classname="性能和边界情况" name="错误消息包含特殊字符" time="0.098">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/components/cmdb/ci-detail/__tests__/CIBasicInfo.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:44" time="1.813" tests="9">
-    <testcase classname="CIBasicInfo" name="应该显示 CI 基本信息字段" time="0.205">
-    </testcase>
-    <testcase classname="CIBasicInfo" name="应该显示云相关信息" time="0.112">
-    </testcase>
-    <testcase classname="CIBasicInfo" name="应该显示时间信息" time="0.09">
-    </testcase>
-    <testcase classname="CIBasicInfo" name="应该显示描述" time="0.083">
-    </testcase>
-    <testcase classname="CIBasicInfo" name="应该显示所属租户" time="0.096">
-    </testcase>
-    <testcase classname="CIBasicInfo" name="应该处理可选字段为空值" time="0.086">
-    </testcase>
-    <testcase classname="CIBasicInfo" name="应该显示资产分类" time="0.091">
-    </testcase>
-    <testcase classname="CIBasicInfo" name="应该显示标签和重要性" time="0.077">
-    </testcase>
-    <testcase classname="CIBasicInfo" name="应该显示发现源和数据来源" time="0.087">
+    <testcase classname="性能和边界情况" name="错误消息包含特殊字符" time="0.158">
     </testcase>
   </testsuite>
-  <testsuite name="src/components/ui/StatCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:45" time="1.308" tests="9">
-    <testcase classname="StatCard" name="应该正确渲染标题和数值" time="0.12">
+  <testsuite name="src/components/cmdb/ci-detail/__tests__/CIImpactAnalysisTab.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:25" time="7.476" tests="11">
+    <testcase classname="CIImpactAnalysisTab" name="应该显示风险等级" time="0.722">
     </testcase>
-    <testcase classname="StatCard › Props" name="应该支持自定义颜色" time="0.059">
+    <testcase classname="CIImpactAnalysisTab" name="应该显示分析摘要" time="0.345">
     </testcase>
-    <testcase classname="StatCard › Props" name="应该显示图标" time="0.051">
+    <testcase classname="CIImpactAnalysisTab" name="应该显示上游影响标签" time="0.301">
     </testcase>
-    <testcase classname="StatCard › Props" name="应该显示前缀和后缀" time="0.063">
+    <testcase classname="CIImpactAnalysisTab" name="应该显示下游影响标签" time="0.341">
     </testcase>
-    <testcase classname="StatCard › 加载状态" name="应该显示加载状态" time="0.078">
+    <testcase classname="CIImpactAnalysisTab" name="应该显示关联工单标签" time="0.288">
     </testcase>
-    <testcase classname="StatCard › 可访问性" name="应该有正确的结构" time="0.046">
+    <testcase classname="CIImpactAnalysisTab" name="应该显示关联事件标签" time="0.258">
     </testcase>
-    <testcase classname="StatCard › 边界情况" name="应该处理0值" time="0.049">
+    <testcase classname="CIImpactAnalysisTab" name="应该显示分析按钮" time="1.357">
     </testcase>
-    <testcase classname="StatCard › 边界情况" name="应该处理大数值" time="0.042">
+    <testcase classname="CIImpactAnalysisTab" name="点击分析按钮应调用 onAnalyze" time="1.454">
     </testcase>
-    <testcase classname="StatCard › 边界情况" name="应该处理负数" time="0.044">
+    <testcase classname="CIImpactAnalysisTab" name="加载状态应显示加载指示器" time="0.78">
     </testcase>
-  </testsuite>
-  <testsuite name="src/components/ui/__tests__/LoadingSpinner.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:45" time="1.058" tests="5">
-    <testcase classname="LoadingSpinner" name="renders without crashing" time="0.099">
+    <testcase classname="CIImpactAnalysisTab" name="没有影响分析数据应显示空状态" time="0.077">
     </testcase>
-    <testcase classname="LoadingSpinner" name="displays loading indicator" time="0.038">
-    </testcase>
-    <testcase classname="LoadingSpinner" name="applies custom className without error" time="0.032">
-    </testcase>
-    <testcase classname="LoadingSpinner" name="renders with custom size" time="0.034">
-    </testcase>
-    <testcase classname="LoadingSpinner" name="renders with default large size" time="0.041">
+    <testcase classname="CIImpactAnalysisTab" name="应该显示 CI影响分析 标题" time="0.25">
     </testcase>
   </testsuite>
-  <testsuite name="src/components/ui/LoadingSpinner.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:46" time="1.059" tests="4">
-    <testcase classname="LoadingSpinner" name="应该正确渲染" time="0.145">
+  <testsuite name="src/components/cmdb/ci-detail/__tests__/CIChangeHistoryTab.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:26" time="6.263" tests="11">
+    <testcase classname="CIChangeHistoryTab" name="应该显示变更历史标题" time="0.627">
     </testcase>
-    <testcase classname="LoadingSpinner" name="应该支持不同尺寸" time="0.036">
+    <testcase classname="CIChangeHistoryTab" name="应该显示加载按钮" time="0.979">
     </testcase>
-    <testcase classname="LoadingSpinner" name="应该支持自定义提示文本" time="0.028">
+    <testcase classname="CIChangeHistoryTab" name="点击加载按钮应调用 onLoad" time="1.309">
     </testcase>
-    <testcase classname="LoadingSpinner" name="应该有正确的ARIA标签" time="0.037">
+    <testcase classname="CIChangeHistoryTab" name="应该显示所有变更记录" time="0.26">
     </testcase>
-  </testsuite>
-  <testsuite name="src/components/workflow/__tests__/WorkflowNodeInspector.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:34" time="12.546" tests="7">
-    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="renders the 审批语义 panel for UserTask nodes with default taskPurpose=work" time="1.103">
+    <testcase classname="CIChangeHistoryTab" name="应该显示操作方法标签" time="0.234">
     </testcase>
-    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="shows the approval sub-panel when taskPurpose is approval" time="0.643">
+    <testcase classname="CIChangeHistoryTab" name="应该显示变更描述" time="0.22">
     </testcase>
-    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="reveals the approvalThreshold input when approvalMode is threshold" time="0.607">
+    <testcase classname="CIChangeHistoryTab" name="应该显示操作人" time="0.238">
     </testcase>
-    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="hides the approvalThreshold input for non-threshold approval modes" time="0.552">
+    <testcase classname="CIChangeHistoryTab" name="应该显示时间" time="0.232">
     </testcase>
-    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="writes the right moddle key for every approval control" time="4.729">
+    <testcase classname="CIChangeHistoryTab" name="加载状态应显示加载指示器" time="0.657">
     </testcase>
-    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="does not render the 审批语义 panel for non-UserTask nodes" time="0.226">
+    <testcase classname="CIChangeHistoryTab" name="没有变更历史应显示空状态" time="0.091">
     </testcase>
-    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="renders empty-state when no selection is provided" time="0.141">
+    <testcase classname="CIChangeHistoryTab" name="changeHistory 为 null 应显示空状态" time="0.066">
     </testcase>
   </testsuite>
-  <testsuite name="src/components/business/sla-monitor/__tests__/SLAStatisticsCards.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:46" time="1.398" tests="4">
-    <testcase classname="SLAStatisticsCards" name="应该渲染组件" time="0.232">
+  <testsuite name="src/components/cmdb/ci-detail/__tests__/CIRelationshipsTab.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:27" time="5.885" tests="5">
+    <testcase classname="CIRelationshipsTab" name="应该正确渲染组件" time="1.841">
     </testcase>
-    <testcase classname="SLAStatisticsCards" name="应该显示统计数据" time="0.113">
+    <testcase classname="CIRelationshipsTab" name="应该传递正确的 ciId 和 ciName 给子组件" time="0.689">
     </testcase>
-    <testcase classname="SLAStatisticsCards" name="应该显示严重统计" time="0.088">
+    <testcase classname="CIRelationshipsTab" name="应该接收必需的 props" time="0.611">
     </testcase>
-    <testcase classname="SLAStatisticsCards" name="应该显示加载状态" time="0.074">
+    <testcase classname="CIRelationshipsTab" name="onRefresh 函数应该被传递" time="0.587">
+    </testcase>
+    <testcase classname="CIRelationshipsTab" name="应该处理空状态" time="0.554">
     </testcase>
   </testsuite>
-  <testsuite name="src/app/(auth)/login/__tests__/page.test.tsx" errors="0" failures="0" skipped="6" timestamp="2026-07-17T14:33:47" time="0.298" tests="7">
+  <testsuite name="src/components/workflow/__tests__/WorkflowNodeInspector.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:14" time="18.921" tests="7">
+    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="renders the 审批语义 panel for UserTask nodes with default taskPurpose=work" time="1.797">
+    </testcase>
+    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="shows the approval sub-panel when taskPurpose is approval" time="1.005">
+    </testcase>
+    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="reveals the approvalThreshold input when approvalMode is threshold" time="0.896">
+    </testcase>
+    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="hides the approvalThreshold input for non-threshold approval modes" time="0.935">
+    </testcase>
+    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="writes the right moddle key for every approval control" time="5.906">
+    </testcase>
+    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="does not render the 审批语义 panel for non-UserTask nodes" time="0.299">
+    </testcase>
+    <testcase classname="WorkflowNodeInspector — 审批语义 panel" name="renders empty-state when no selection is provided" time="0.167">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/__tests__/api-contract.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:32" time="3.731" tests="3">
+    <testcase classname="API contract: frontend ↔ backend routes" name="extracts at least 100 backend routes (sanity)" time="0.021">
+    </testcase>
+    <testcase classname="API contract: frontend ↔ backend routes" name="every frontend API path matches a backend route (0 mismatches)" time="0.002">
+    </testcase>
+    <testcase classname="API contract: frontend ↔ backend routes" name="keeps every disabled API contract explicit and exercised by the audit" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/cmdb/ci-detail/__tests__/CIDetail.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:32" time="3.3" tests="4">
+    <testcase classname="CIDetail" name="应该正确渲染 CI 名称" time="0.654">
+    </testcase>
+    <testcase classname="CIDetail" name="应该显示 CI 状态" time="0.497">
+    </testcase>
+    <testcase classname="CIDetail" name="应该包含标签页导航" time="0.397">
+    </testcase>
+    <testcase classname="CIDetail" name="应该显示返回按钮" time="0.343">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/business/__tests__/UnifiedKanbanBoard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:33" time="2.641" tests="5">
+    <testcase classname="UnifiedKanbanBoard" name="fills the available width while preserving a usable minimum column width" time="0.513">
+    </testcase>
+    <testcase classname="UnifiedKanbanBoard" name="does not advertise draggable behavior without a status-change handler" time="0.172">
+    </testcase>
+    <testcase classname="UnifiedKanbanBoard" name="submits a controlled status transition after drop" time="0.217">
+    </testcase>
+    <testcase classname="UnifiedKanbanBoard" name="blocks transitions rejected by the permission policy" time="0.2">
+    </testcase>
+    <testcase classname="UnifiedKanbanBoard" name="keeps the controlled item in its original column when persistence fails" time="0.198">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/workflow/__tests__/BPMNDesigner.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:33" time="3.347" tests="7">
+    <testcase classname="BPMNDesigner" name="should render toolbar container" time="0.451">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should render zoom controls section" time="0.286">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should call onSave when save is triggered" time="0.219">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should call onDeploy when deploy is triggered" time="0.228">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should accept custom height prop" time="0.452">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should have a main container" time="0.203">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should render with flex layout" time="0.2">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/cmdb/ci-detail/__tests__/CIBasicInfo.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:33" time="2.635" tests="9">
+    <testcase classname="CIBasicInfo" name="应该显示 CI 基本信息字段" time="0.268">
+    </testcase>
+    <testcase classname="CIBasicInfo" name="应该显示云相关信息" time="0.182">
+    </testcase>
+    <testcase classname="CIBasicInfo" name="应该显示时间信息" time="0.14">
+    </testcase>
+    <testcase classname="CIBasicInfo" name="应该显示描述" time="0.123">
+    </testcase>
+    <testcase classname="CIBasicInfo" name="应该显示所属租户" time="0.139">
+    </testcase>
+    <testcase classname="CIBasicInfo" name="应该处理可选字段为空值" time="0.12">
+    </testcase>
+    <testcase classname="CIBasicInfo" name="应该显示资产分类" time="0.139">
+    </testcase>
+    <testcase classname="CIBasicInfo" name="应该显示标签和重要性" time="0.133">
+    </testcase>
+    <testcase classname="CIBasicInfo" name="应该显示发现源和数据来源" time="0.11">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/common/__tests__/ErrorBoundary.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:14" time="22.562" tests="35">
+    <testcase classname="ErrorBoundary › 基本功能" name="正常渲染子组件（无错误时）" time="0.101">
+    </testcase>
+    <testcase classname="ErrorBoundary › 基本功能" name="渲染多个子组件" time="0.031">
+    </testcase>
+    <testcase classname="ErrorBoundary › 错误捕获" name="捕获子组件渲染错误并显示错误 UI" time="0.697">
+    </testcase>
+    <testcase classname="ErrorBoundary › 错误捕获" name="显示默认错误消息" time="0.217">
+    </testcase>
+    <testcase classname="ErrorBoundary › 错误操作按钮" name="显示重试按钮" time="1.71">
+    </testcase>
+    <testcase classname="ErrorBoundary › 错误操作按钮" name="显示返回首页按钮" time="0.142">
+    </testcase>
+    <testcase classname="ErrorBoundary › 错误操作按钮" name="显示报告问题按钮" time="0.14">
+    </testcase>
+    <testcase classname="ErrorBoundary › 错误操作按钮" name="点击重试按钮重置错误状态" time="1.544">
+    </testcase>
+    <testcase classname="ErrorBoundary › 错误操作按钮" name="点击返回首页按钮跳转首页" time="1.373">
+    </testcase>
+    <testcase classname="ErrorBoundary › 错误操作按钮" name="点击报告问题按钮复制错误信息到剪贴板" time="1.404">
+    </testcase>
+    <testcase classname="ErrorBoundary › 自定义配置" name="使用自定义 fallback 组件" time="0.009">
+    </testcase>
+    <testcase classname="ErrorBoundary › 自定义配置" name="调用 onError 回调函数" time="0.151">
+    </testcase>
+    <testcase classname="ErrorBoundary › 自定义配置" name="showDetails 为 true 时显示错误详情" time="0.154">
+    </testcase>
+    <testcase classname="ErrorBoundary › 自定义配置" name="showDetails 为 false 时不显示错误详情" time="0.148">
+    </testcase>
+    <testcase classname="ErrorBoundary › resetOnPropsChange 功能" name="resetOnPropsChange 为 true 时，props 变化重置错误状态" time="0.152">
+    </testcase>
+    <testcase classname="ErrorBoundary › resetOnPropsChange 功能" name="resetOnPropsChange 为 false 时，props 变化不重置错误状态" time="0.159">
+    </testcase>
+    <testcase classname="ErrorBoundary › resetOnPropsChange 功能" name="仅 children 变化不触发重置" time="0.142">
+    </testcase>
+    <testcase classname="ErrorBoundary › withErrorBoundary HOC" name="包装组件并添加错误边界" time="0.004">
+    </testcase>
+    <testcase classname="ErrorBoundary › withErrorBoundary HOC" name="HOC 设置自定义 displayName" time="0.003">
+    </testcase>
+    <testcase classname="ErrorBoundary › useErrorBoundary Hook" name="提供 captureError 和 resetError 函数" time="0.006">
+    </testcase>
+    <testcase classname="ErrorBoundary › useErrorBoundary Hook" name="captureError 后抛出错误" time="0.138">
+    </testcase>
+    <testcase classname="ErrorBoundary › 组件生命周期" name="组件卸载时清理定时器" time="0.142">
+    </testcase>
+    <testcase classname="ErrorBoundary › 错误 ID 生成" name="生成错误 ID" time="1.249">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 基本功能" name="正常渲染子组件" time="0.003">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 基本功能" name="捕获错误并显示错误 UI" time="0.11">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="显示重试按钮" time="0.133">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="显示返回首页按钮" time="0.109">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="显示报告问题按钮" time="0.134">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="点击重试按钮重置错误状态" time="1.413">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="点击返回首页按钮跳转到 dashboard" time="1.392">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="点击报告问题按钮复制错误信息到剪贴板" time="1.205">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 自定义配置" name="使用自定义 fallback" time="0.005">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 自定义配置" name="调用 onError 回调" time="0.14">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › 错误计数" name="多次错误增加错误计数" time="0.155">
+    </testcase>
+    <testcase classname="GlobalErrorBoundary › withErrorBoundary HOC" name="包装组件" time="0.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/business/ticket-modal/__tests__/TicketModalContainer.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:36" time="1.801" tests="2">
+    <testcase classname="TicketModalContainer" name="owns persistence and creates a ticket exactly once" time="0.309">
+    </testcase>
+    <testcase classname="TicketModalContainer" name="does not report success when persistence fails" time="0.235">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/app/(main)/admin/approval-chains/components/__tests__/ApprovalChainStats.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:36" time="2.334" tests="5">
+    <testcase classname="ApprovalChainStatsCards" name="should render all stat cards correctly" time="0.4">
+    </testcase>
+    <testcase classname="ApprovalChainStatsCards" name="should show loading state" time="0.178">
+    </testcase>
+    <testcase classname="ApprovalChainStatsCards" name="should display correct icons" time="0.169">
+    </testcase>
+    <testcase classname="ApprovalChainStatsCards" name="should handle zero values" time="0.175">
+    </testcase>
+    <testcase classname="ApprovalChainStatsCards" name="should handle large numbers" time="0.158">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/change/__tests__/ChangeStatusBadge.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:36" time="2.199" tests="21">
+    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders draft status correctly" time="0.123">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders pending status correctly" time="0.06">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders approved status correctly" time="0.048">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders rejected status correctly" time="0.049">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders in_progress status correctly" time="0.048">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders completed status correctly" time="0.049">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders rolled_back status correctly" time="0.053">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders cancelled status correctly" time="0.045">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › showText prop tests" name="renders text by default" time="0.046">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › showText prop tests" name="hides text when showText is false" time="0.004">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › showText prop tests" name="shows text when showText is true" time="0.026">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › unknown status handling" name="renders unknown status with the status value as label" time="0.046">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › unknown status handling" name="renders empty string status with default fallback" time="0.05">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for draft status" time="0.041">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for pending status" time="0.043">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for approved status" time="0.045">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for rejected status" time="0.046">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for in_progress status" time="0.052">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for completed status" time="0.028">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for rolled_back status" time="0.04">
+    </testcase>
+    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for cancelled status" time="0.042">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/ui/StatCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:36" time="2.116" tests="9">
+    <testcase classname="StatCard" name="应该正确渲染标题和数值" time="0.163">
+    </testcase>
+    <testcase classname="StatCard › Props" name="应该支持自定义颜色" time="0.088">
+    </testcase>
+    <testcase classname="StatCard › Props" name="应该显示图标" time="0.104">
+    </testcase>
+    <testcase classname="StatCard › Props" name="应该显示前缀和后缀" time="0.067">
+    </testcase>
+    <testcase classname="StatCard › 加载状态" name="应该显示加载状态" time="0.141">
+    </testcase>
+    <testcase classname="StatCard › 可访问性" name="应该有正确的结构" time="0.086">
+    </testcase>
+    <testcase classname="StatCard › 边界情况" name="应该处理0值" time="0.06">
+    </testcase>
+    <testcase classname="StatCard › 边界情况" name="应该处理大数值" time="0.063">
+    </testcase>
+    <testcase classname="StatCard › 边界情况" name="应该处理负数" time="0.092">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/business/sla-monitor/__tests__/SLAStatisticsCards.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:36" time="2.07" tests="4">
+    <testcase classname="SLAStatisticsCards" name="应该渲染组件" time="0.346">
+    </testcase>
+    <testcase classname="SLAStatisticsCards" name="应该显示统计数据" time="0.158">
+    </testcase>
+    <testcase classname="SLAStatisticsCards" name="应该显示严重统计" time="0.17">
+    </testcase>
+    <testcase classname="SLAStatisticsCards" name="应该显示加载状态" time="0.127">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/ui/__tests__/LoadingSpinner.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:37" time="1.713" tests="5">
+    <testcase classname="LoadingSpinner" name="renders without crashing" time="0.208">
+    </testcase>
+    <testcase classname="LoadingSpinner" name="displays loading indicator" time="0.045">
+    </testcase>
+    <testcase classname="LoadingSpinner" name="applies custom className without error" time="0.053">
+    </testcase>
+    <testcase classname="LoadingSpinner" name="renders with custom size" time="0.05">
+    </testcase>
+    <testcase classname="LoadingSpinner" name="renders with default large size" time="0.044">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/store/__tests__/auth-store.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:38" time="0.69" tests="26">
+    <testcase classname="useAuthStore › 初始状态" name="应为未认证状态" time="0.052">
+    </testcase>
+    <testcase classname="useAuthStore › login" name="应正确设置用户信息" time="0.028">
+    </testcase>
+    <testcase classname="useAuthStore › login" name="登录时无租户应设置 currentTenant 为 null" time="0.006">
+    </testcase>
+    <testcase classname="useAuthStore › logout" name="应清除所有认证状态" time="0.009">
+    </testcase>
+    <testcase classname="useAuthStore › updateUser" name="应更新用户信息" time="0.008">
+    </testcase>
+    <testcase classname="useAuthStore › updateUser" name="用户未登录时 updateUser 应不报错" time="0.024">
+    </testcase>
+    <testcase classname="useAuthStore › setLoading" name="应设置 loading 状态" time="0.009">
+    </testcase>
+    <testcase classname="useAuthStore › setCurrentTenant" name="应设置当前租户" time="0.007">
+    </testcase>
+    <testcase classname="useAuthStore › clearTenant" name="应清除租户" time="0.009">
+    </testcase>
+    <testcase classname="useAuthStore › hasPermission" name="用户有权限时应返回 true" time="0.025">
+    </testcase>
+    <testcase classname="useAuthStore › hasPermission" name="用户无权限时应返回 false" time="0.008">
+    </testcase>
+    <testcase classname="useAuthStore › hasPermission" name="用户为 null 时应返回 false" time="0.007">
+    </testcase>
+    <testcase classname="useAuthStore › hasRole" name="用户有角色时应返回 true" time="0.007">
+    </testcase>
+    <testcase classname="useAuthStore › hasRole" name="用户角色不匹配时应返回 false" time="0.008">
+    </testcase>
+    <testcase classname="useAuthStore › isAdmin" name="admin 角色应返回 true" time="0.024">
+    </testcase>
+    <testcase classname="useAuthStore › isAdmin" name="super_admin 角色应返回 true" time="0.005">
+    </testcase>
+    <testcase classname="useAuthStore › isAdmin" name="普通用户应返回 false" time="0.005">
+    </testcase>
+    <testcase classname="useTenantStore › 初始状态" name="应有初始空状态" time="0.009">
+    </testcase>
+    <testcase classname="useTenantStore › setTenants" name="应设置租户列表" time="0.025">
+    </testcase>
+    <testcase classname="useTenantStore › addTenant" name="应添加租户到列表" time="0.006">
+    </testcase>
+    <testcase classname="useTenantStore › updateTenant" name="应更新指定租户" time="0.006">
+    </testcase>
+    <testcase classname="useTenantStore › removeTenant" name="应从列表中移除租户" time="0.006">
+    </testcase>
+    <testcase classname="useTenantStore › setLoading / setError" name="应正确设置 loading 状态" time="0.009">
+    </testcase>
+    <testcase classname="useTenantStore › setLoading / setError" name="应正确设置 error 状态" time="0.024">
+    </testcase>
+    <testcase classname="权限常量" name="PERMISSIONS 应包含所有预期权限" time="0.005">
+    </testcase>
+    <testcase classname="权限常量" name="ROLES 应包含所有预期角色" time="0.007">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/__tests__/api-integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:38" time="1.698" tests="19">
+    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should fetch tickets successfully" time="0.012">
+    </testcase>
+    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should handle API error responses" time="0.18">
+    </testcase>
+    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should handle network errors" time="0.008">
+    </testcase>
+    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should include query parameters correctly" time="0.005">
+    </testcase>
+    <testcase classname="API Integration Tests › TicketApi › createTicket" name="should create ticket successfully" time="0.005">
+    </testcase>
+    <testcase classname="API Integration Tests › TicketApi › createTicket" name="should handle validation errors" time="0.026">
+    </testcase>
+    <testcase classname="API Integration Tests › DashboardAPI › getDashboardConfig" name="should fetch dashboard config successfully" time="0.004">
+    </testcase>
+    <testcase classname="API Integration Tests › DashboardAPI › getTicketStats" name="should fetch ticket statistics successfully" time="0.006">
+    </testcase>
+    <testcase classname="API Integration Tests › Error Handling" name="should handle HTTP error status codes" time="0.006">
+    </testcase>
+    <testcase classname="API Integration Tests › Error Handling" name="should handle malformed JSON responses" time="0.005">
+    </testcase>
+    <testcase classname="API Integration Tests › Error Handling" name="should handle timeout errors" time="0.145">
+    </testcase>
+    <testcase classname="API Integration Tests › Error Handling" name="should handle CORS errors" time="0.004">
+    </testcase>
+    <testcase classname="API Integration Tests › Authentication Integration" name="should include authorization header when token exists" time="0.003">
+    </testcase>
+    <testcase classname="API Integration Tests › Authentication Integration" name="should handle token expiration" time="0.006">
+    </testcase>
+    <testcase classname="API Integration Tests › Authentication Integration" name="should handle unauthorized access" time="0.038">
+    </testcase>
+    <testcase classname="API Integration Tests › Performance and Caching" name="should handle concurrent requests" time="0.003">
+    </testcase>
+    <testcase classname="API Integration Tests › Performance and Caching" name="should handle large response payloads" time="0.028">
+    </testcase>
+    <testcase classname="API Integration Tests › Data Validation" name="should handle missing response fields" time="0.002">
+    </testcase>
+    <testcase classname="API Integration Tests › Data Validation" name="should validate response data structure" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/app/(main)/reports/__tests__/page.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:38" time="1.596" tests="1">
+    <testcase classname="ReportsPage" name="renders only the supported read-only report directory" time="0.18">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/ui/LoadingSpinner.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:38" time="1.658" tests="4">
+    <testcase classname="LoadingSpinner" name="应该正确渲染" time="0.128">
+    </testcase>
+    <testcase classname="LoadingSpinner" name="应该支持不同尺寸" time="0.07">
+    </testcase>
+    <testcase classname="LoadingSpinner" name="应该支持自定义提示文本" time="0.048">
+    </testcase>
+    <testcase classname="LoadingSpinner" name="应该有正确的ARIA标签" time="0.066">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/api/__tests__/http-client.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:39" time="0.665" tests="19">
+    <testcase classname="httpClient › base configuration" name="defaults to same-origin when no public API URL is configured" time="0.025">
+    </testcase>
+    <testcase classname="httpClient › base configuration" name="returns null token when no cookie is set" time="0.002">
+    </testcase>
+    <testcase classname="httpClient › base configuration" name="setToken populates the in-memory token; clearToken clears it" time="0.003">
+    </testcase>
+    <testcase classname="httpClient › get" name="sends a GET request to the full URL" time="0.009">
+    </testcase>
+    <testcase classname="httpClient › get" name="serializes query params and drops undefined/null" time="0.005">
+    </testcase>
+    <testcase classname="httpClient › get" name="returns camelCase data when backend sends snake_case" time="0.003">
+    </testcase>
+    <testcase classname="httpClient › post" name="sends a POST with JSON body and returns response data" time="0.004">
+    </testcase>
+    <testcase classname="httpClient › post" name="throws on non-zero backend code with the backend message" time="0.231">
+    </testcase>
+    <testcase classname="httpClient › post" name="throws with HTTP status when response.ok is false" time="0.008">
+    </testcase>
+    <testcase classname="httpClient › post" name="tolerates a missing code field (BPMN controllers do not always set one)" time="0.003">
+    </testcase>
+    <testcase classname="httpClient › put / patch / delete" name="put uses PUT method and JSON body" time="0.004">
+    </testcase>
+    <testcase classname="httpClient › put / patch / delete" name="patch uses PATCH method" time="0.004">
+    </testcase>
+    <testcase classname="httpClient › put / patch / delete" name="delete uses DELETE method and accepts an optional body" time="0.003">
+    </testcase>
+    <testcase classname="httpClient › headers" name="adds CSRF token to mutating requests only" time="0.019">
+    </testcase>
+    <testcase classname="httpClient › headers" name="adds Bearer token from cookie when present" time="0.002">
+    </testcase>
+    <testcase classname="httpClient › headers" name="adds tenant headers when TenantContext is populated" time="0.004">
+    </testcase>
+    <testcase classname="httpClient › headers" name="does not add tenant headers when TenantContext is empty" time="0.003">
+    </testcase>
+    <testcase classname="httpClient › getPaginated" name="flattens nested filters into filters[key]=value" time="0.005">
+    </testcase>
+    <testcase classname="httpClient › batchOperation" name="wraps the data array under operation/data" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/api/__tests__/change-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:39" time="0.632" tests="23">
+    <testcase classname="ChangeApi › getChanges" name="should fetch changes successfully" time="0.03">
+    </testcase>
+    <testcase classname="ChangeApi › getChanges" name="should handle empty change list" time="0.002">
+    </testcase>
+    <testcase classname="ChangeApi › getChanges" name="should pass query parameters correctly" time="0.004">
+    </testcase>
+    <testcase classname="ChangeApi › getChanges" name="should handle API error response" time="0.122">
+    </testcase>
+    <testcase classname="ChangeApi › getChange" name="should fetch single change successfully" time="0.02">
+    </testcase>
+    <testcase classname="ChangeApi › getChange" name="should handle change not found" time="0.004">
+    </testcase>
+    <testcase classname="ChangeApi › createChange" name="should create change successfully" time="0.003">
+    </testcase>
+    <testcase classname="ChangeApi › updateChange" name="should update change successfully" time="0.003">
+    </testcase>
+    <testcase classname="ChangeApi › deleteChange" name="should delete change successfully" time="0.003">
+    </testcase>
+    <testcase classname="ChangeApi › submitForApproval" name="should submit change for approval" time="0.004">
+    </testcase>
+    <testcase classname="ChangeApi › approveChange" name="should approve change" time="0.031">
+    </testcase>
+    <testcase classname="ChangeApi › rejectChange" name="should reject change" time="0.002">
+    </testcase>
+    <testcase classname="ChangeApi › getChangeStats" name="should fetch change statistics" time="0.002">
+    </testcase>
+    <testcase classname="ChangeApi › startImplementation" name="should start implementation" time="0.002">
+    </testcase>
+    <testcase classname="ChangeApi › completeImplementation" name="should complete implementation" time="0.003">
+    </testcase>
+    <testcase classname="ChangeApi › rollbackChange" name="should rollback change with reason" time="0.002">
+    </testcase>
+    <testcase classname="ChangeApi › cancelChange" name="should cancel change" time="0.003">
+    </testcase>
+    <testcase classname="ChangeApi › assignChange" name="should assign change to user" time="0.003">
+    </testcase>
+    <testcase classname="ChangeApi › getChangeApprovals" name="should fetch approval history" time="0.002">
+    </testcase>
+    <testcase classname="ChangeApi › getImpactAnalysis" name="should fetch impact analysis" time="0.003">
+    </testcase>
+    <testcase classname="ChangeApi › getRiskAssessment" name="should fetch risk assessment" time="0.007">
+    </testcase>
+    <testcase classname="ChangeApi › batchUpdateChanges" name="should batch update changes" time="0.003">
+    </testcase>
+    <testcase classname="ChangeApi › getApprovalSummary (deprecated alias)" name="should call getChangeApprovals internally" time="0.02">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/api/__tests__/ticket-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:38" time="1.554" tests="13">
+    <testcase classname="TicketApi › getTickets" name="should fetch tickets successfully" time="0.009">
+    </testcase>
+    <testcase classname="TicketApi › getTickets" name="should handle empty ticket list" time="0.003">
+    </testcase>
+    <testcase classname="TicketApi › getTickets" name="should pass query parameters correctly" time="0.005">
+    </testcase>
+    <testcase classname="TicketApi › getTickets" name="should handle API error response" time="0.194">
+    </testcase>
+    <testcase classname="TicketApi › getTicket" name="should fetch single ticket successfully" time="0.004">
+    </testcase>
+    <testcase classname="TicketApi › getTicket" name="should handle ticket not found" time="0.047">
+    </testcase>
+    <testcase classname="TicketApi › createTicket" name="should create ticket successfully" time="0.004">
+    </testcase>
+    <testcase classname="TicketApi › createTicket" name="should validate required fields" time="0.022">
+    </testcase>
+    <testcase classname="TicketApi › updateTicket" name="should update ticket successfully" time="0.003">
+    </testcase>
+    <testcase classname="TicketApi › deleteTicket" name="should delete ticket successfully" time="0.003">
+    </testcase>
+    <testcase classname="TicketApi › updateTicketStatus" name="should update ticket status successfully" time="0.002">
+    </testcase>
+    <testcase classname="TicketApi › assignTicket" name="should assign ticket to user" time="0.002">
+    </testcase>
+    <testcase classname="TicketApi › addComment" name="should add comment to ticket" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/app/(auth)/login/__tests__/page.test.tsx" errors="0" failures="0" skipped="6" timestamp="2026-07-22T23:31:39" time="0.54" tests="7">
     <testcase classname="LoginPage › 渲染测试" name="应该渲染登录表单的所有必需元素" time="0">
       <skipped/>
     </testcase>
@@ -283,640 +667,116 @@
     <testcase classname="LoginPage › Auth Error Code" name="should have AUTH_FAILED code" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/__tests__/api-integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:46" time="1.148" tests="19">
-    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should fetch tickets successfully" time="0.008">
+  <testsuite name="src/lib/services/__tests__/auth-service.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.432" tests="30">
+    <testcase classname="AuthService › Token Management › setTokens" name="should set tokens without throwing" time="0.003">
     </testcase>
-    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should handle API error responses" time="0.078">
+    <testcase classname="AuthService › Token Management › getAccessToken" name="should return null when no token exists" time="0.002">
     </testcase>
-    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should handle network errors" time="0.008">
+    <testcase classname="AuthService › Token Management › getAccessToken" name="should return access token from cookie" time="0.002">
     </testcase>
-    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should include query parameters correctly" time="0.004">
+    <testcase classname="AuthService › Token Management › getRefreshToken" name="should return null when no token exists" time="0.002">
     </testcase>
-    <testcase classname="API Integration Tests › TicketApi › createTicket" name="should create ticket successfully" time="0.004">
+    <testcase classname="AuthService › Token Management › getRefreshToken" name="should return refresh token from cookie" time="0.002">
     </testcase>
-    <testcase classname="API Integration Tests › TicketApi › createTicket" name="should handle validation errors" time="0.009">
+    <testcase classname="AuthService › Token Management › getToken" name="should return token (backward compatible)" time="0.001">
     </testcase>
-    <testcase classname="API Integration Tests › DashboardAPI › getDashboardConfig" name="should fetch dashboard config successfully" time="0.004">
+    <testcase classname="AuthService › Authentication Status › getCurrentUser" name="should return current user from store" time="0.002">
     </testcase>
-    <testcase classname="API Integration Tests › DashboardAPI › getTicketStats" name="should fetch ticket statistics successfully" time="0.002">
+    <testcase classname="AuthService › Authentication Status › isAuthenticated" name="should return true when store has authenticated status" time="0.019">
     </testcase>
-    <testcase classname="API Integration Tests › Error Handling" name="should handle HTTP error status codes" time="0.007">
+    <testcase classname="AuthService › Authentication Status › isAuthenticated" name="should return true when access token exists in cookie" time="0.002">
     </testcase>
-    <testcase classname="API Integration Tests › Error Handling" name="should handle malformed JSON responses" time="0.006">
+    <testcase classname="AuthService › Login Functionality › login" name="should login successfully with valid credentials" time="0.005">
     </testcase>
-    <testcase classname="API Integration Tests › Error Handling" name="should handle timeout errors" time="0.11">
+    <testcase classname="AuthService › Login Functionality › login" name="should return false on login failure" time="0.05">
     </testcase>
-    <testcase classname="API Integration Tests › Error Handling" name="should handle CORS errors" time="0.007">
+    <testcase classname="AuthService › Login Functionality › login" name="should handle network errors gracefully" time="0.015">
     </testcase>
-    <testcase classname="API Integration Tests › Authentication Integration" name="should include authorization header when token exists" time="0.002">
+    <testcase classname="AuthService › Third Party Login" name="should handle third party login successfully" time="0.004">
     </testcase>
-    <testcase classname="API Integration Tests › Authentication Integration" name="should handle token expiration" time="0.011">
+    <testcase classname="AuthService › Third Party Login" name="should throw error on failed third party login" time="0.002">
     </testcase>
-    <testcase classname="API Integration Tests › Authentication Integration" name="should handle unauthorized access" time="0.033">
+    <testcase classname="AuthService › Registration" name="should register user successfully" time="0.002">
     </testcase>
-    <testcase classname="API Integration Tests › Performance and Caching" name="should handle concurrent requests" time="0.003">
+    <testcase classname="AuthService › Registration" name="should return false on registration failure" time="0.02">
     </testcase>
-    <testcase classname="API Integration Tests › Performance and Caching" name="should handle large response payloads" time="0.01">
+    <testcase classname="AuthService › Password Reset › forgotPassword" name="should send password reset email successfully" time="0.002">
     </testcase>
-    <testcase classname="API Integration Tests › Data Validation" name="should handle missing response fields" time="0.002">
+    <testcase classname="AuthService › Password Reset › forgotPassword" name="should return false on forgot password failure" time="0.003">
     </testcase>
-    <testcase classname="API Integration Tests › Data Validation" name="should validate response data structure" time="0.001">
+    <testcase classname="AuthService › Password Reset › resetPassword" name="should reset password successfully" time="0.001">
     </testcase>
-  </testsuite>
-  <testsuite name="src/lib/api/__tests__/ticket-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:47" time="1.068" tests="13">
-    <testcase classname="TicketApi › getTickets" name="should fetch tickets successfully" time="0.01">
+    <testcase classname="AuthService › Password Reset › resetPassword" name="should return false on reset password failure" time="0.003">
     </testcase>
-    <testcase classname="TicketApi › getTickets" name="should handle empty ticket list" time="0.003">
+    <testcase classname="AuthService › Password Reset › validateResetToken" name="should validate reset token successfully" time="0.002">
     </testcase>
-    <testcase classname="TicketApi › getTickets" name="should pass query parameters correctly" time="0.004">
+    <testcase classname="AuthService › Password Reset › validateResetToken" name="should return false for invalid token" time="0.003">
     </testcase>
-    <testcase classname="TicketApi › getTickets" name="should handle API error response" time="0.167">
+    <testcase classname="AuthService › Token Refresh" name="should refresh token successfully" time="0.001">
     </testcase>
-    <testcase classname="TicketApi › getTicket" name="should fetch single ticket successfully" time="0.003">
+    <testcase classname="AuthService › Token Refresh" name="should return false when no refresh token exists" time="0.002">
     </testcase>
-    <testcase classname="TicketApi › getTicket" name="should handle ticket not found" time="0.015">
+    <testcase classname="AuthService › Token Refresh" name="should return false on refresh failure" time="0.005">
     </testcase>
-    <testcase classname="TicketApi › createTicket" name="should create ticket successfully" time="0.004">
+    <testcase classname="AuthService › Logout" name="should logout successfully" time="0.003">
     </testcase>
-    <testcase classname="TicketApi › createTicket" name="should validate required fields" time="0.017">
+    <testcase classname="AuthService › Logout" name="should handle logout network error gracefully" time="0.002">
     </testcase>
-    <testcase classname="TicketApi › updateTicket" name="should update ticket successfully" time="0.003">
+    <testcase classname="AuthService › Clear Tokens" name="should clear tokens and logout" time="0.001">
     </testcase>
-    <testcase classname="TicketApi › deleteTicket" name="should delete ticket successfully" time="0.003">
+    <testcase classname="AuthService › Cookie Helper" name="getCookie should return null in non-browser environment" time="0.002">
     </testcase>
-    <testcase classname="TicketApi › updateTicketStatus" name="should update ticket status successfully" time="0.003">
-    </testcase>
-    <testcase classname="TicketApi › assignTicket" name="should assign ticket to user" time="0.002">
-    </testcase>
-    <testcase classname="TicketApi › addComment" name="should add comment to ticket" time="0.002">
+    <testcase classname="AuthService › Cookie Helper" name="getCookie should return cookie value when exists" time="0.019">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/store/__tests__/auth-store.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:47" time="0.469" tests="26">
-    <testcase classname="useAuthStore › 初始状态" name="应为未认证状态" time="0.033">
-    </testcase>
-    <testcase classname="useAuthStore › login" name="应正确设置用户信息" time="0.01">
-    </testcase>
-    <testcase classname="useAuthStore › login" name="登录时无租户应设置 currentTenant 为 null" time="0.008">
-    </testcase>
-    <testcase classname="useAuthStore › logout" name="应清除所有认证状态" time="0.009">
-    </testcase>
-    <testcase classname="useAuthStore › updateUser" name="应更新用户信息" time="0.009">
-    </testcase>
-    <testcase classname="useAuthStore › updateUser" name="用户未登录时 updateUser 应不报错" time="0.008">
-    </testcase>
-    <testcase classname="useAuthStore › setLoading" name="应设置 loading 状态" time="0.008">
-    </testcase>
-    <testcase classname="useAuthStore › setCurrentTenant" name="应设置当前租户" time="0.007">
-    </testcase>
-    <testcase classname="useAuthStore › clearTenant" name="应清除租户" time="0.008">
-    </testcase>
-    <testcase classname="useAuthStore › hasPermission" name="用户有权限时应返回 true" time="0.008">
-    </testcase>
-    <testcase classname="useAuthStore › hasPermission" name="用户无权限时应返回 false" time="0.01">
-    </testcase>
-    <testcase classname="useAuthStore › hasPermission" name="用户为 null 时应返回 false" time="0.006">
-    </testcase>
-    <testcase classname="useAuthStore › hasRole" name="用户有角色时应返回 true" time="0.008">
-    </testcase>
-    <testcase classname="useAuthStore › hasRole" name="用户角色不匹配时应返回 false" time="0.009">
-    </testcase>
-    <testcase classname="useAuthStore › isAdmin" name="admin 角色应返回 true" time="0.009">
-    </testcase>
-    <testcase classname="useAuthStore › isAdmin" name="super_admin 角色应返回 true" time="0.006">
-    </testcase>
-    <testcase classname="useAuthStore › isAdmin" name="普通用户应返回 false" time="0.006">
-    </testcase>
-    <testcase classname="useTenantStore › 初始状态" name="应有初始空状态" time="0.007">
-    </testcase>
-    <testcase classname="useTenantStore › setTenants" name="应设置租户列表" time="0.007">
-    </testcase>
-    <testcase classname="useTenantStore › addTenant" name="应添加租户到列表" time="0.008">
-    </testcase>
-    <testcase classname="useTenantStore › updateTenant" name="应更新指定租户" time="0.008">
-    </testcase>
-    <testcase classname="useTenantStore › removeTenant" name="应从列表中移除租户" time="0.008">
-    </testcase>
-    <testcase classname="useTenantStore › setLoading / setError" name="应正确设置 loading 状态" time="0.008">
-    </testcase>
-    <testcase classname="useTenantStore › setLoading / setError" name="应正确设置 error 状态" time="0.007">
-    </testcase>
-    <testcase classname="权限常量" name="PERMISSIONS 应包含所有预期权限" time="0.007">
-    </testcase>
-    <testcase classname="权限常量" name="ROLES 应包含所有预期角色" time="0.019">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/lib/api/__tests__/change-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:48" time="0.338" tests="23">
-    <testcase classname="ChangeApi › getChanges" name="should fetch changes successfully" time="0.008">
-    </testcase>
-    <testcase classname="ChangeApi › getChanges" name="should handle empty change list" time="0.003">
-    </testcase>
-    <testcase classname="ChangeApi › getChanges" name="should pass query parameters correctly" time="0.003">
-    </testcase>
-    <testcase classname="ChangeApi › getChanges" name="should handle API error response" time="0.06">
-    </testcase>
-    <testcase classname="ChangeApi › getChange" name="should fetch single change successfully" time="0.003">
-    </testcase>
-    <testcase classname="ChangeApi › getChange" name="should handle change not found" time="0.009">
-    </testcase>
-    <testcase classname="ChangeApi › createChange" name="should create change successfully" time="0.003">
-    </testcase>
-    <testcase classname="ChangeApi › updateChange" name="should update change successfully" time="0.002">
-    </testcase>
-    <testcase classname="ChangeApi › deleteChange" name="should delete change successfully" time="0.003">
-    </testcase>
-    <testcase classname="ChangeApi › submitForApproval" name="should submit change for approval" time="0.018">
-    </testcase>
-    <testcase classname="ChangeApi › approveChange" name="should approve change" time="0.002">
-    </testcase>
-    <testcase classname="ChangeApi › rejectChange" name="should reject change" time="0.003">
-    </testcase>
-    <testcase classname="ChangeApi › getChangeStats" name="should fetch change statistics" time="0.002">
-    </testcase>
-    <testcase classname="ChangeApi › startImplementation" name="should start implementation" time="0.002">
-    </testcase>
-    <testcase classname="ChangeApi › completeImplementation" name="should complete implementation" time="0.002">
-    </testcase>
-    <testcase classname="ChangeApi › rollbackChange" name="should rollback change with reason" time="0.004">
-    </testcase>
-    <testcase classname="ChangeApi › cancelChange" name="should cancel change" time="0.003">
-    </testcase>
-    <testcase classname="ChangeApi › assignChange" name="should assign change to user" time="0.002">
-    </testcase>
-    <testcase classname="ChangeApi › getChangeApprovals" name="should fetch approval history" time="0.003">
-    </testcase>
-    <testcase classname="ChangeApi › getImpactAnalysis" name="should fetch impact analysis" time="0.002">
-    </testcase>
-    <testcase classname="ChangeApi › getRiskAssessment" name="should fetch risk assessment" time="0.002">
-    </testcase>
-    <testcase classname="ChangeApi › batchUpdateChanges" name="should batch update changes" time="0.004">
-    </testcase>
-    <testcase classname="ChangeApi › getApprovalSummary (deprecated alias)" name="should call getChangeApprovals internally" time="0.003">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/app/(main)/admin/approval-chains/components/__tests__/ApprovalChainStats.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:46" time="1.56" tests="5">
-    <testcase classname="ApprovalChainStatsCards" name="should render all stat cards correctly" time="0.294">
-    </testcase>
-    <testcase classname="ApprovalChainStatsCards" name="should show loading state" time="0.11">
-    </testcase>
-    <testcase classname="ApprovalChainStatsCards" name="should display correct icons" time="0.115">
-    </testcase>
-    <testcase classname="ApprovalChainStatsCards" name="should handle zero values" time="0.129">
-    </testcase>
-    <testcase classname="ApprovalChainStatsCards" name="should handle large numbers" time="0.124">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/lib/__tests__/security.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:48" time="0.359" tests="57">
-    <testcase classname="xssProtection › escapeHtml" name="should escape HTML special characters" time="0.002">
-    </testcase>
-    <testcase classname="xssProtection › escapeHtml" name="should escape ampersands" time="0.001">
-    </testcase>
-    <testcase classname="xssProtection › escapeHtml" name="should escape single quotes" time="0.002">
-    </testcase>
-    <testcase classname="xssProtection › escapeHtml" name="should escape forward slashes" time="0.01">
-    </testcase>
-    <testcase classname="xssProtection › escapeHtml" name="should return unchanged string without special characters" time="0.001">
-    </testcase>
-    <testcase classname="xssProtection › unescapeHtml" name="should unescape HTML entities" time="0.001">
-    </testcase>
-    <testcase classname="xssProtection › unescapeHtml" name="should unescape ampersands" time="0.002">
-    </testcase>
-    <testcase classname="xssProtection › unescapeHtml" name="should unescape quotes" time="0.001">
-    </testcase>
-    <testcase classname="xssProtection › unescapeHtml" name="should unescape hex entities" time="0.001">
-    </testcase>
-    <testcase classname="xssProtection › stripHtml" name="should remove all HTML tags" time="0.002">
-    </testcase>
-    <testcase classname="xssProtection › stripHtml" name="should return original string if no tags" time="0.001">
-    </testcase>
-    <testcase classname="xssProtection › stripHtml" name="should handle nested tags" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › sanitizeInput" name="should trim whitespace" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › sanitizeInput" name="should remove potentially dangerous characters" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › sanitizeInput" name="should limit length to 1000 characters" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › isValidEmail" name="should validate correct email formats" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › isValidEmail" name="should reject invalid email formats" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › isValidEmail" name="should reject emails over 254 characters" time="0.002">
-    </testcase>
-    <testcase classname="inputSanitization › isValidUrl" name="should validate correct HTTP/HTTPS URLs" time="0.003">
-    </testcase>
-    <testcase classname="inputSanitization › isValidUrl" name="should reject invalid URLs" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › isValidFileType" name="should validate allowed file extensions" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › isValidFileType" name="should reject disallowed file extensions" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › isValidFileType" name="should handle files without extension" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › isValidFileSize" name="should validate file sizes under limit" time="0.001">
-    </testcase>
-    <testcase classname="inputSanitization › isValidFileSize" name="should reject file sizes over limit" time="0.002">
-    </testcase>
-    <testcase classname="passwordSecurity › checkPasswordStrength" name="should score weak passwords low" time="0.002">
-    </testcase>
-    <testcase classname="passwordSecurity › checkPasswordStrength" name="should score strong passwords high" time="0.003">
-    </testcase>
-    <testcase classname="passwordSecurity › checkPasswordStrength" name="should reject common passwords" time="0.003">
-    </testcase>
-    <testcase classname="passwordSecurity › checkPasswordStrength" name="should require minimum 8 characters" time="0.001">
-    </testcase>
-    <testcase classname="passwordSecurity › generateRandomPassword" name="should generate password of specified length" time="0.002">
-    </testcase>
-    <testcase classname="passwordSecurity › generateRandomPassword" name="should generate different passwords each time" time="0.001">
-    </testcase>
-    <testcase classname="sessionSecurity › isSessionExpired" name="should return true for expired sessions" time="0.001">
-    </testcase>
-    <testcase classname="sessionSecurity › isSessionExpired" name="should return false for valid sessions" time="0.001">
-    </testcase>
-    <testcase classname="sessionSecurity › generateSessionId" name="should generate 32-character hex string" time="0.001">
-    </testcase>
-    <testcase classname="sessionSecurity › generateSessionId" name="should generate unique session IDs" time="0.001">
-    </testcase>
-    <testcase classname="contentSecurity › validateContentType" name="should validate allowed content types" time="0.001">
-    </testcase>
-    <testcase classname="contentSecurity › validateContentType" name="should reject disallowed content types" time="0.002">
-    </testcase>
-    <testcase classname="contentSecurity › containsMaliciousScript" name="should detect script tags" time="0.001">
-    </testcase>
-    <testcase classname="contentSecurity › containsMaliciousScript" name="should detect javascript: URLs" time="0.001">
-    </testcase>
-    <testcase classname="contentSecurity › containsMaliciousScript" name="should detect event handlers" time="0.001">
-    </testcase>
-    <testcase classname="contentSecurity › containsMaliciousScript" name="should return false for safe content" time="0.001">
-    </testcase>
-    <testcase classname="contentSecurity › sanitizeContent" name="should remove script tags" time="0.017">
-    </testcase>
-    <testcase classname="contentSecurity › sanitizeContent" name="should remove javascript: URLs" time="0.009">
-    </testcase>
-    <testcase classname="networkSecurity › isHttps" name="should detect HTTPS protocol" time="0.002">
-    </testcase>
-    <testcase classname="networkSecurity › isHttps" name="should detect HTTP protocol" time="0.001">
-    </testcase>
-    <testcase classname="networkSecurity › validateOrigin" name="should validate allowed origins" time="0.001">
-    </testcase>
-    <testcase classname="networkSecurity › validateOrigin" name="should reject disallowed origins" time="0.001">
-    </testcase>
-    <testcase classname="networkSecurity › getSecureHeaders" name="should return secure headers" time="0.002">
-    </testcase>
-    <testcase classname="networkSecurity › getSecureHeaders" name="should omit CSRF token if not provided" time="0.001">
-    </testcase>
-    <testcase classname="encryption › base64Encode" name="should encode text to base64" time="0.001">
-    </testcase>
-    <testcase classname="encryption › base64Encode" name="should handle unicode characters" time="0.001">
-    </testcase>
-    <testcase classname="encryption › base64Decode" name="should decode base64 to text" time="0.002">
-    </testcase>
-    <testcase classname="encryption › base64Decode" name="should handle unicode characters" time="0.001">
-    </testcase>
-    <testcase classname="encryption › obfuscate and deobfuscate" name="should obfuscate and deobfuscate text" time="0.003">
-    </testcase>
-    <testcase classname="encryption › obfuscate and deobfuscate" name="should produce different obfuscations with different keys" time="0.001">
-    </testcase>
-    <testcase classname="securityConfig" name="should have default values" time="0.002">
-    </testcase>
-    <testcase classname="securityConfig" name="should get and set configuration values" time="0.001">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/lib/api/__tests__/api-client.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:48" time="0.205" tests="30">
-    <testcase classname="ApiClient › Basic Configuration" name="should have correct API base URL" time="0.002">
-    </testcase>
-    <testcase classname="ApiClient › Basic Configuration" name="should handle request timeout" time="0.002">
-    </testcase>
-    <testcase classname="ApiClient › Basic Configuration" name="should support JSON content type" time="0.002">
-    </testcase>
-    <testcase classname="ApiClient › Request Headers" name="should include authorization header when token exists" time="0.002">
-    </testcase>
-    <testcase classname="ApiClient › Request Headers" name="should handle missing token gracefully" time="0.001">
-    </testcase>
-    <testcase classname="ApiClient › Response Handling" name="should handle success response" time="0.001">
-    </testcase>
-    <testcase classname="ApiClient › Response Handling" name="should handle error response" time="0.002">
-    </testcase>
-    <testcase classname="ApiClient › Response Handling" name="should parse pagination response" time="0.002">
-    </testcase>
-    <testcase classname="ApiClient › Error Codes" name="should identify auth error" time="0.002">
-    </testcase>
-    <testcase classname="ApiClient › Error Codes" name="should identify param error" time="0.001">
-    </testcase>
-    <testcase classname="ApiClient › Error Codes" name="should identify internal error" time="0.002">
-    </testcase>
-    <testcase classname="API Endpoint Validation › Ticket Endpoints" name="should construct correct ticket list URL" time="0.001">
-    </testcase>
-    <testcase classname="API Endpoint Validation › Ticket Endpoints" name="should construct correct ticket detail URL" time="0.002">
-    </testcase>
-    <testcase classname="API Endpoint Validation › Ticket Endpoints" name="should support query parameters" time="0.002">
-    </testcase>
-    <testcase classname="API Endpoint Validation › Incident Endpoints" name="should construct correct incident list URL" time="0.002">
-    </testcase>
-    <testcase classname="API Endpoint Validation › Incident Endpoints" name="should construct correct incident detail URL" time="0.001">
-    </testcase>
-    <testcase classname="API Endpoint Validation › Auth Endpoints" name="should construct login URL" time="0.002">
-    </testcase>
-    <testcase classname="API Endpoint Validation › Auth Endpoints" name="should construct logout URL" time="0.001">
-    </testcase>
-    <testcase classname="API Endpoint Validation › Auth Endpoints" name="should construct refresh token URL" time="0.002">
-    </testcase>
-    <testcase classname="HTTP Methods › GET Requests" name="should use GET for list operations" time="0.001">
-    </testcase>
-    <testcase classname="HTTP Methods › GET Requests" name="should use GET for detail operations" time="0.001">
-    </testcase>
-    <testcase classname="HTTP Methods › POST Requests" name="should use POST for create operations" time="0.001">
-    </testcase>
-    <testcase classname="HTTP Methods › POST Requests" name="should use POST for login" time="0.002">
-    </testcase>
-    <testcase classname="HTTP Methods › PUT/PATCH Requests" name="should use PUT for update operations" time="0.001">
-    </testcase>
-    <testcase classname="HTTP Methods › PUT/PATCH Requests" name="should use PATCH for partial updates" time="0.001">
-    </testcase>
-    <testcase classname="HTTP Methods › DELETE Requests" name="should use DELETE for delete operations" time="0.001">
-    </testcase>
-    <testcase classname="Request/Response DTOs › Ticket DTOs" name="should have correct CreateTicketRequest structure" time="0.002">
-    </testcase>
-    <testcase classname="Request/Response DTOs › Ticket DTOs" name="should have correct TicketResponse structure" time="0.002">
-    </testcase>
-    <testcase classname="Request/Response DTOs › User DTOs" name="should have correct UserResponse structure" time="0.002">
-    </testcase>
-    <testcase classname="Request/Response DTOs › Pagination DTOs" name="should have correct ListResponse structure" time="0.002">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/lib/store/__tests__/layout-store.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:48" time="0.347" tests="31">
-    <testcase classname="LayoutStore › Initial State" name="should have correct initial collapsed state" time="0.002">
-    </testcase>
-    <testcase classname="LayoutStore › Initial State" name="should have default selected keys" time="0.002">
-    </testcase>
-    <testcase classname="LayoutStore › Initial State" name="should have default open keys" time="0.001">
-    </testcase>
-    <testcase classname="LayoutStore › Sidebar State" name="should toggle sidebar collapsed state" time="0.002">
-    </testcase>
-    <testcase classname="LayoutStore › Sidebar State" name="should handle mobile sidebar" time="0.001">
-    </testcase>
-    <testcase classname="LayoutStore › Breadcrumb State" name="should manage breadcrumb items" time="0.002">
-    </testcase>
-    <testcase classname="LayoutStore › Breadcrumb State" name="should handle empty breadcrumbs" time="0.001">
-    </testcase>
-    <testcase classname="LayoutStore › Tab State" name="should manage tabs" time="0.002">
-    </testcase>
-    <testcase classname="LayoutStore › Tab State" name="should handle active tab" time="0.001">
-    </testcase>
-    <testcase classname="LayoutStore › Tab State" name="should add new tab" time="0.001">
-    </testcase>
-    <testcase classname="LayoutStore › Tab State" name="should remove tab" time="0.001">
-    </testcase>
-    <testcase classname="LayoutStore › Theme State" name="should handle light theme" time="0.001">
-    </testcase>
-    <testcase classname="LayoutStore › Theme State" name="should handle dark theme" time="0.001">
-    </testcase>
-    <testcase classname="LayoutStore › Theme State" name="should toggle theme" time="0.001">
-    </testcase>
-    <testcase classname="LayoutStore › Loading State" name="should manage global loading state" time="0.001">
-    </testcase>
-    <testcase classname="LayoutStore › Loading State" name="should track specific loading states" time="0.002">
-    </testcase>
-    <testcase classname="LayoutStore › Notification State" name="should manage unread count" time="0.002">
-    </testcase>
-    <testcase classname="LayoutStore › Notification State" name="should handle notifications array" time="0.003">
-    </testcase>
-    <testcase classname="Layout Actions › Toggle Sidebar" name="should toggle collapsed state" time="0.001">
-    </testcase>
-    <testcase classname="Layout Actions › Set Breadcrumbs" name="should set breadcrumbs" time="0.002">
-    </testcase>
-    <testcase classname="Layout Actions › Select Tab" name="should select active tab" time="0.001">
-    </testcase>
-    <testcase classname="Layout Actions › Set Theme" name="should set theme" time="0.002">
-    </testcase>
-    <testcase classname="Layout Actions › Set Loading" name="should set loading state" time="0.001">
-    </testcase>
-    <testcase classname="Layout Actions › Add Notification" name="should add notification" time="0.002">
-    </testcase>
-    <testcase classname="Layout Actions › Mark Notification Read" name="should mark notification as read" time="0.001">
-    </testcase>
-    <testcase classname="useLayoutStore › 初始状态" name="初始 collapsed 应为 false" time="0.011">
-    </testcase>
-    <testcase classname="useLayoutStore › toggleCollapsed" name="应从 false 切换到 true" time="0.005">
-    </testcase>
-    <testcase classname="useLayoutStore › toggleCollapsed" name="应从 true 切换到 false" time="0.004">
-    </testcase>
-    <testcase classname="useLayoutStore › setCollapsed" name="应设置 collapsed 为 true" time="0.005">
-    </testcase>
-    <testcase classname="useLayoutStore › setCollapsed" name="应设置 collapsed 为 false" time="0.005">
-    </testcase>
-    <testcase classname="useLayoutStore › 多消费者同步" name="状态变化应同步到所有消费者" time="0.087">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/lib/__tests__/auth-token-refresh.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:48" time="0.448" tests="26">
-    <testcase classname="Auth Token Refresh Mechanism › AuthService.refreshToken()" name="should return false when no refresh token cookie exists" time="0.004">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService.refreshToken()" name="should successfully refresh token when refresh cookie exists" time="0.003">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService.refreshToken()" name="should handle refresh API failure" time="0.054">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService.refreshToken()" name="should clear tokens when refresh fails" time="0.011">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › setTokens()" name="should be a no-op (tokens stored in httpOnly cookies by backend)" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › getAccessToken()" name="should return null (httpOnly cookies not readable from JS)" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › getRefreshToken()" name="should return null when no cookie exists" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › getRefreshToken()" name="should return token value when cookie exists" time="0.001">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › clearTokens()" name="should call logout from auth store" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › isAuthenticated()" name="should return true when auth store says authenticated" time="0.001">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › isAuthenticated()" name="should return true when access_token cookie exists" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › isAuthenticated()" name="should return false when no auth state or cookie" time="0.001">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › HttpClient.refreshTokenInternal()" name="should return false when no refresh token exists" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › HttpClient.refreshTokenInternal()" name="should handle refresh API failure" time="0.001">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › HttpClient.refreshTokenInternal()" name="should handle network error" time="0.023">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › getAccessToken()" name="should return null (httpOnly cookies not readable from JS)" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › getRefreshToken()" name="should return null (httpOnly cookies not readable from JS)" time="0.001">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › clearAuthStorage()" name="should clear tenant and legacy keys from localStorage" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › isAuthenticated()" name="should return true when auth cookie exists" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › isAuthenticated()" name="should return true when access_token cookie exists" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › isAuthenticated()" name="should return false when no auth cookie" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › setAccessToken / setRefreshToken" name="should be no-op (tokens set by backend via httpOnly cookies)" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Edge Cases" name="should handle SSR environment (window undefined)" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Edge Cases" name="should handle malformed JWT payload" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Integration Scenarios" name="should complete full auth flow: login → token refresh → API call" time="0.002">
-    </testcase>
-    <testcase classname="Auth Token Refresh Mechanism › Integration Scenarios" name="should handle session timeout after multiple failed refresh attempts" time="0.007">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/components/change/__tests__/ChangeStatusBadge.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:47" time="1.533" tests="21">
-    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders draft status correctly" time="0.077">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders pending status correctly" time="0.056">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders approved status correctly" time="0.046">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders rejected status correctly" time="0.033">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders in_progress status correctly" time="0.03">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders completed status correctly" time="0.036">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders rolled_back status correctly" time="0.037">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › 状态渲染测试" name="renders cancelled status correctly" time="0.027">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › showText prop tests" name="renders text by default" time="0.027">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › showText prop tests" name="hides text when showText is false" time="0.003">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › showText prop tests" name="shows text when showText is true" time="0.026">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › unknown status handling" name="renders unknown status with the status value as label" time="0.025">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › unknown status handling" name="renders empty string status with default fallback" time="0.029">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for draft status" time="0.029">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for pending status" time="0.028">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for approved status" time="0.023">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for rejected status" time="0.027">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for in_progress status" time="0.03">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for completed status" time="0.096">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for rolled_back status" time="0.043">
-    </testcase>
-    <testcase classname="ChangeStatusBadge › color mapping tests" name="applies correct color for cancelled status" time="0.031">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/lib/__tests__/env.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:48" time="0.298" tests="31">
-    <testcase classname="Environment Utilities › getEnvironment" name="should be defined" time="0.003">
-    </testcase>
-    <testcase classname="Environment Utilities › getEnvironment" name="should be a function" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › getEnvironment" name="should return a valid environment" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › env" name="should be defined" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › env" name="should have isDevelopment property" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › env" name="should have isProduction property" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › env" name="should have isTest property" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › env" name="should have features object" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › env" name="should have api object" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › env" name="should have app object" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › logger" name="should be defined" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › logger" name="should have debug function" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › logger" name="should have info function" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › logger" name="should have warn function" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › logger" name="should have error function" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › logger" name="should have performance function" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › logger" name="should have security function" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › performance" name="should be defined" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › performance" name="should have start function" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › performance" name="should have end function" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › performance" name="should have measure function" time="0.007">
-    </testcase>
-    <testcase classname="Environment Utilities › performance" name="should have measureAsync function" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › errorHandler" name="should be defined" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › errorHandler" name="should have handleApiError function" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › errorHandler" name="should have handleValidationError function" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › errorHandler" name="should have handleNetworkError function" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › devTools" name="should be defined" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › devTools" name="should have onlyInDev function" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › devTools" name="should have debugInfo function" time="0.001">
-    </testcase>
-    <testcase classname="Environment Utilities › devTools" name="should have mark function" time="0.002">
-    </testcase>
-    <testcase classname="Environment Utilities › devTools" name="should have measure function" time="0.001">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/lib/__tests__/validation.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:48" time="0.343" tests="53">
-    <testcase classname="validators › required" name="should return false for null" time="0.002">
+  <testsuite name="src/lib/__tests__/validation.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.393" tests="53">
+    <testcase classname="validators › required" name="should return false for null" time="0.02">
     </testcase>
     <testcase classname="validators › required" name="should return false for undefined" time="0.001">
     </testcase>
-    <testcase classname="validators › required" name="should return false for empty string" time="0.002">
+    <testcase classname="validators › required" name="should return false for empty string" time="0.001">
     </testcase>
-    <testcase classname="validators › required" name="should return false for whitespace-only string" time="0.001">
+    <testcase classname="validators › required" name="should return false for whitespace-only string" time="0">
     </testcase>
     <testcase classname="validators › required" name="should return true for non-empty string" time="0.001">
     </testcase>
-    <testcase classname="validators › required" name="should return true for number" time="0.001">
+    <testcase classname="validators › required" name="should return true for number" time="0.002">
     </testcase>
-    <testcase classname="validators › required" name="should return false for empty array" time="0.002">
+    <testcase classname="validators › required" name="should return false for empty array" time="0.001">
     </testcase>
     <testcase classname="validators › required" name="should return true for non-empty array" time="0.001">
     </testcase>
-    <testcase classname="validators › required" name="should return true for object" time="0.001">
+    <testcase classname="validators › required" name="should return true for object" time="0.002">
     </testcase>
     <testcase classname="validators › email" name="should return true for valid email" time="0.001">
     </testcase>
-    <testcase classname="validators › email" name="should return true for email with subdomain" time="0.002">
+    <testcase classname="validators › email" name="should return true for email with subdomain" time="0.001">
     </testcase>
     <testcase classname="validators › email" name="should return false for email without @" time="0.001">
     </testcase>
     <testcase classname="validators › email" name="should return false for email without domain" time="0.001">
     </testcase>
-    <testcase classname="validators › email" name="should return false for email without username" time="0.001">
+    <testcase classname="validators › email" name="should return false for email without username" time="0.01">
     </testcase>
-    <testcase classname="validators › email" name="should return false for email with spaces" time="0.002">
+    <testcase classname="validators › email" name="should return false for email with spaces" time="0.001">
     </testcase>
-    <testcase classname="validators › phone" name="should return true for valid China mobile numbers" time="0.001">
+    <testcase classname="validators › phone" name="should return true for valid China mobile numbers" time="0.002">
     </testcase>
-    <testcase classname="validators › phone" name="should return false for invalid phone numbers" time="0.002">
+    <testcase classname="validators › phone" name="should return false for invalid phone numbers" time="0.019">
     </testcase>
     <testcase classname="validators › minLength" name="should return true for string at minimum length" time="0.002">
     </testcase>
-    <testcase classname="validators › minLength" name="should return true for string longer than minimum" time="0.001">
+    <testcase classname="validators › minLength" name="should return true for string longer than minimum" time="0.002">
     </testcase>
     <testcase classname="validators › minLength" name="should return false for string shorter than minimum" time="0.001">
     </testcase>
-    <testcase classname="validators › maxLength" name="should return true for string at maximum length" time="0">
+    <testcase classname="validators › maxLength" name="should return true for string at maximum length" time="0.002">
     </testcase>
-    <testcase classname="validators › maxLength" name="should return true for string shorter than maximum" time="0.001">
+    <testcase classname="validators › maxLength" name="should return true for string shorter than maximum" time="0.002">
     </testcase>
     <testcase classname="validators › maxLength" name="should return false for string longer than maximum" time="0.001">
     </testcase>
-    <testcase classname="validators › minValue" name="should return true for number at minimum value" time="0.001">
+    <testcase classname="validators › minValue" name="should return true for number at minimum value" time="0.002">
     </testcase>
     <testcase classname="validators › minValue" name="should return true for number greater than minimum" time="0.002">
     </testcase>
@@ -924,39 +784,39 @@
     </testcase>
     <testcase classname="validators › maxValue" name="should return true for number at maximum value" time="0.001">
     </testcase>
-    <testcase classname="validators › maxValue" name="should return true for number less than maximum" time="0.002">
+    <testcase classname="validators › maxValue" name="should return true for number less than maximum" time="0.001">
     </testcase>
     <testcase classname="validators › maxValue" name="should return false for number greater than maximum" time="0.001">
     </testcase>
     <testcase classname="validators › url" name="should return true for valid URL" time="0.004">
     </testcase>
-    <testcase classname="validators › url" name="should return false for invalid URL" time="0.001">
+    <testcase classname="validators › url" name="should return false for invalid URL" time="0.002">
     </testcase>
     <testcase classname="validators › url" name="should return true for ftp URL" time="0.002">
     </testcase>
     <testcase classname="validators › number" name="should return true for numeric string" time="0.002">
     </testcase>
-    <testcase classname="validators › number" name="should return false for non-numeric string" time="0.001">
+    <testcase classname="validators › number" name="should return false for non-numeric string" time="0.019">
     </testcase>
     <testcase classname="validators › number" name="should return true for empty string (Number(&quot;&quot;) === 0)" time="0.001">
     </testcase>
-    <testcase classname="validators › integer" name="should return true for integer string" time="0.002">
+    <testcase classname="validators › integer" name="should return true for integer string" time="0.001">
     </testcase>
     <testcase classname="validators › integer" name="should return false for decimal string" time="0.001">
     </testcase>
-    <testcase classname="validators › positive" name="should return true for positive numbers" time="0.002">
+    <testcase classname="validators › positive" name="should return true for positive numbers" time="0.001">
     </testcase>
     <testcase classname="validators › positive" name="should return false for zero" time="0.001">
     </testcase>
     <testcase classname="validators › positive" name="should return false for negative numbers" time="0.001">
     </testcase>
-    <testcase classname="validators › nonNegative" name="should return true for positive numbers" time="0.002">
+    <testcase classname="validators › nonNegative" name="should return true for positive numbers" time="0.001">
     </testcase>
     <testcase classname="validators › nonNegative" name="should return true for zero" time="0.001">
     </testcase>
-    <testcase classname="validators › nonNegative" name="should return false for negative numbers" time="0.002">
+    <testcase classname="validators › nonNegative" name="should return false for negative numbers" time="0.001">
     </testcase>
-    <testcase classname="validators › date" name="should return true for valid date string" time="0.001">
+    <testcase classname="validators › date" name="should return true for valid date string" time="0.002">
     </testcase>
     <testcase classname="validators › date" name="should return false for invalid date string" time="0.001">
     </testcase>
@@ -977,220 +837,230 @@
     <testcase classname="Validator class" name="should remove specific field rules" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/permissions/__tests__/permissions.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.189" tests="20">
-    <testcase classname="parsePermissions" name="should parse permission strings into a Set" time="0.003">
+  <testsuite name="src/lib/__tests__/auth-token-refresh.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.442" tests="26">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService.refreshToken()" name="should return false when no refresh token cookie exists" time="0.004">
     </testcase>
-    <testcase classname="parsePermissions" name="should return empty Set for empty array" time="0.001">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService.refreshToken()" name="should successfully refresh token when refresh cookie exists" time="0.002">
     </testcase>
-    <testcase classname="hasWildcardPermission" name="should return true for &quot;*&quot; wildcard" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService.refreshToken()" name="should handle refresh API failure" time="0.052">
     </testcase>
-    <testcase classname="hasWildcardPermission" name="should return true for &quot;*:*&quot; wildcard" time="0.001">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService.refreshToken()" name="should clear tokens when refresh fails" time="0.004">
     </testcase>
-    <testcase classname="hasWildcardPermission" name="should return false for non-wildcard permissions" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › setTokens()" name="should be a no-op (tokens stored in httpOnly cookies by backend)" time="0.001">
     </testcase>
-    <testcase classname="hasWildcardPermission" name="should return false for empty Set" time="0.001">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › getAccessToken()" name="should return null (httpOnly cookies not readable from JS)" time="0.001">
     </testcase>
-    <testcase classname="matchesPermission › exact match" name="should return true when permission matches exactly" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › getRefreshToken()" name="should return null when no cookie exists" time="0.001">
     </testcase>
-    <testcase classname="matchesPermission › exact match" name="should return false when permission does not match" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › getRefreshToken()" name="should return token value when cookie exists" time="0.001">
     </testcase>
-    <testcase classname="matchesPermission › wildcard match" name="should match &quot;*&quot; wildcard for any permission" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › clearTokens()" name="should call logout from auth store" time="0.001">
     </testcase>
-    <testcase classname="matchesPermission › wildcard match" name="should match &quot;*:*&quot; wildcard for any permission" time="0.001">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › isAuthenticated()" name="should return true when auth store says authenticated" time="0.001">
     </testcase>
-    <testcase classname="matchesPermission › wildcard match" name="should match resource wildcard &quot;resource:*&quot;" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › isAuthenticated()" name="should return true when access_token cookie exists" time="0.001">
     </testcase>
-    <testcase classname="matchesPermission › wildcard match" name="should match action wildcard &quot;*:action&quot;" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › AuthService Token Management › isAuthenticated()" name="should return false when no auth state or cookie" time="0.001">
     </testcase>
-    <testcase classname="hasAllPermissions" name="should return true when all permissions are present" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › HttpClient.refreshTokenInternal()" name="should return false when no refresh token exists" time="0.002">
     </testcase>
-    <testcase classname="hasAllPermissions" name="should return false when any permission is missing" time="0.001">
+    <testcase classname="Auth Token Refresh Mechanism › HttpClient.refreshTokenInternal()" name="should handle refresh API failure" time="0.001">
     </testcase>
-    <testcase classname="hasAllPermissions" name="should return true for empty required array" time="0.001">
+    <testcase classname="Auth Token Refresh Mechanism › HttpClient.refreshTokenInternal()" name="should handle network error" time="0.004">
     </testcase>
-    <testcase classname="hasAllPermissions" name="should work with wildcard permissions" time="0.001">
+    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › getAccessToken()" name="should return null (httpOnly cookies not readable from JS)" time="0.002">
     </testcase>
-    <testcase classname="hasAnyPermission" name="should return true when any permission is present" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › getRefreshToken()" name="should return null (httpOnly cookies not readable from JS)" time="0.001">
     </testcase>
-    <testcase classname="hasAnyPermission" name="should return false when no permissions are present" time="0.001">
+    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › clearAuthStorage()" name="should clear tenant and legacy keys from localStorage" time="0.019">
     </testcase>
-    <testcase classname="hasAnyPermission" name="should return false for empty required array" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › isAuthenticated()" name="should return true when auth cookie exists" time="0.001">
     </testcase>
-    <testcase classname="hasAnyPermission" name="should work with wildcard permissions" time="0.001">
+    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › isAuthenticated()" name="should return true when access_token cookie exists" time="0.002">
     </testcase>
-  </testsuite>
-  <testsuite name="src/lib/services/__tests__/notification-ws.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.184" tests="7">
-    <testcase classname="NotificationWSService › onNotification" name="should register notification callback" time="0.003">
+    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › isAuthenticated()" name="should return false when no auth cookie" time="0.001">
     </testcase>
-    <testcase classname="NotificationWSService › onNotification" name="should receive notifications" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › Token Storage Functions › setAccessToken / setRefreshToken" name="should be no-op (tokens set by backend via httpOnly cookies)" time="0.001">
     </testcase>
-    <testcase classname="NotificationWSService › onConnectionChange" name="should register connection change callback" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › Edge Cases" name="should handle SSR environment (window undefined)" time="0.002">
     </testcase>
-    <testcase classname="NotificationWSService › disconnect" name="should disconnect WebSocket" time="0.001">
+    <testcase classname="Auth Token Refresh Mechanism › Edge Cases" name="should handle malformed JWT payload" time="0.002">
     </testcase>
-    <testcase classname="NotificationWSService › disconnect" name="should reset state" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › Integration Scenarios" name="should complete full auth flow: login → token refresh → API call" time="0.003">
     </testcase>
-    <testcase classname="NotificationWSService › isConnected" name="should return false when not connected" time="0.001">
-    </testcase>
-    <testcase classname="notificationWS singleton" name="should export a singleton instance" time="0.002">
+    <testcase classname="Auth Token Refresh Mechanism › Integration Scenarios" name="should handle session timeout after multiple failed refresh attempts" time="0.004">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/__tests__/api-config.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.189" tests="21">
-    <testcase classname="API Configuration › API_BASE_URL" name="should be defined" time="0.002">
+  <testsuite name="src/lib/__tests__/security.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.495" tests="57">
+    <testcase classname="xssProtection › escapeHtml" name="should escape HTML special characters" time="0.003">
     </testcase>
-    <testcase classname="API Configuration › API_BASE_URL" name="should be a string" time="0.001">
+    <testcase classname="xssProtection › escapeHtml" name="should escape ampersands" time="0.013">
     </testcase>
-    <testcase classname="API Configuration › API_VERSION" name="should be defined" time="0.001">
+    <testcase classname="xssProtection › escapeHtml" name="should escape single quotes" time="0.002">
     </testcase>
-    <testcase classname="API Configuration › API_VERSION" name="should be v1 by default" time="0.001">
+    <testcase classname="xssProtection › escapeHtml" name="should escape forward slashes" time="0.001">
     </testcase>
-    <testcase classname="API Configuration › API_TIMEOUT" name="should be defined" time="0.001">
+    <testcase classname="xssProtection › escapeHtml" name="should return unchanged string without special characters" time="0.001">
     </testcase>
-    <testcase classname="API Configuration › API_TIMEOUT" name="should be a number" time="0.001">
+    <testcase classname="xssProtection › unescapeHtml" name="should unescape HTML entities" time="0.002">
     </testcase>
-    <testcase classname="API Configuration › API_TIMEOUT" name="should be positive" time="0.002">
+    <testcase classname="xssProtection › unescapeHtml" name="should unescape ampersands" time="0.002">
     </testcase>
-    <testcase classname="API Configuration › API_TIMEOUT" name="should be 30000 by default" time="0.002">
+    <testcase classname="xssProtection › unescapeHtml" name="should unescape quotes" time="0.001">
     </testcase>
-    <testcase classname="API Configuration › API_ERROR_CODES" name="should be defined" time="0.001">
+    <testcase classname="xssProtection › unescapeHtml" name="should unescape hex entities" time="0.019">
     </testcase>
-    <testcase classname="API Configuration › API_ERROR_CODES" name="should have SUCCESS code" time="0.001">
+    <testcase classname="xssProtection › stripHtml" name="should remove all HTML tags" time="0.001">
     </testcase>
-    <testcase classname="API Configuration › API_ERROR_CODES" name="should have PARAM_ERROR code" time="0.001">
+    <testcase classname="xssProtection › stripHtml" name="should return original string if no tags" time="0.002">
     </testcase>
-    <testcase classname="API Configuration › API_ERROR_CODES" name="should have AUTH_FAILED code" time="0.001">
+    <testcase classname="xssProtection › stripHtml" name="should handle nested tags" time="0.002">
     </testcase>
-    <testcase classname="API Configuration › API_ERROR_CODES" name="should have FORBIDDEN code" time="0.001">
+    <testcase classname="inputSanitization › sanitizeInput" name="should trim whitespace" time="0.002">
     </testcase>
-    <testcase classname="API Configuration › API_ERROR_CODES" name="should have NOT_FOUND code" time="0.001">
+    <testcase classname="inputSanitization › sanitizeInput" name="should remove potentially dangerous characters" time="0.001">
     </testcase>
-    <testcase classname="API Configuration › API_ERROR_CODES" name="should have INTERNAL_ERROR code" time="0.001">
+    <testcase classname="inputSanitization › sanitizeInput" name="should limit length to 1000 characters" time="0.002">
     </testcase>
-    <testcase classname="ApiResponse Interface" name="should accept valid response structure" time="0.002">
+    <testcase classname="inputSanitization › isValidEmail" name="should validate correct email formats" time="0.002">
     </testcase>
-    <testcase classname="ApiResponse Interface" name="should accept error response structure" time="0.001">
+    <testcase classname="inputSanitization › isValidEmail" name="should reject invalid email formats" time="0.001">
     </testcase>
-    <testcase classname="PaginationRequest Interface" name="should accept valid pagination request" time="0.002">
+    <testcase classname="inputSanitization › isValidEmail" name="should reject emails over 254 characters" time="0.001">
     </testcase>
-    <testcase classname="PaginationRequest Interface" name="should accept undefined values" time="0.001">
+    <testcase classname="inputSanitization › isValidUrl" name="should validate correct HTTP/HTTPS URLs" time="0.002">
     </testcase>
-    <testcase classname="PaginationResponse Interface" name="should accept valid pagination response" time="0.008">
+    <testcase classname="inputSanitization › isValidUrl" name="should reject invalid URLs" time="0.003">
     </testcase>
-    <testcase classname="PaginationResponse Interface" name="should handle empty items" time="0.001">
+    <testcase classname="inputSanitization › isValidFileType" name="should validate allowed file extensions" time="0.002">
+    </testcase>
+    <testcase classname="inputSanitization › isValidFileType" name="should reject disallowed file extensions" time="0.002">
+    </testcase>
+    <testcase classname="inputSanitization › isValidFileType" name="should handle files without extension" time="0.001">
+    </testcase>
+    <testcase classname="inputSanitization › isValidFileSize" name="should validate file sizes under limit" time="0.002">
+    </testcase>
+    <testcase classname="inputSanitization › isValidFileSize" name="should reject file sizes over limit" time="0.001">
+    </testcase>
+    <testcase classname="passwordSecurity › checkPasswordStrength" name="should score weak passwords low" time="0.003">
+    </testcase>
+    <testcase classname="passwordSecurity › checkPasswordStrength" name="should score strong passwords high" time="0.019">
+    </testcase>
+    <testcase classname="passwordSecurity › checkPasswordStrength" name="should reject common passwords" time="0.002">
+    </testcase>
+    <testcase classname="passwordSecurity › checkPasswordStrength" name="should require minimum 8 characters" time="0.002">
+    </testcase>
+    <testcase classname="passwordSecurity › generateRandomPassword" name="should generate password of specified length" time="0.002">
+    </testcase>
+    <testcase classname="passwordSecurity › generateRandomPassword" name="should generate different passwords each time" time="0.002">
+    </testcase>
+    <testcase classname="sessionSecurity › isSessionExpired" name="should return true for expired sessions" time="0.001">
+    </testcase>
+    <testcase classname="sessionSecurity › isSessionExpired" name="should return false for valid sessions" time="0.001">
+    </testcase>
+    <testcase classname="sessionSecurity › generateSessionId" name="should generate 32-character hex string" time="0.003">
+    </testcase>
+    <testcase classname="sessionSecurity › generateSessionId" name="should generate unique session IDs" time="0.001">
+    </testcase>
+    <testcase classname="contentSecurity › validateContentType" name="should validate allowed content types" time="0.001">
+    </testcase>
+    <testcase classname="contentSecurity › validateContentType" name="should reject disallowed content types" time="0.001">
+    </testcase>
+    <testcase classname="contentSecurity › containsMaliciousScript" name="should detect script tags" time="0.001">
+    </testcase>
+    <testcase classname="contentSecurity › containsMaliciousScript" name="should detect javascript: URLs" time="0.002">
+    </testcase>
+    <testcase classname="contentSecurity › containsMaliciousScript" name="should detect event handlers" time="0.002">
+    </testcase>
+    <testcase classname="contentSecurity › containsMaliciousScript" name="should return false for safe content" time="0.001">
+    </testcase>
+    <testcase classname="contentSecurity › sanitizeContent" name="should remove script tags" time="0.038">
+    </testcase>
+    <testcase classname="contentSecurity › sanitizeContent" name="should remove javascript: URLs" time="0.009">
+    </testcase>
+    <testcase classname="networkSecurity › isHttps" name="should detect HTTPS protocol" time="0.002">
+    </testcase>
+    <testcase classname="networkSecurity › isHttps" name="should detect HTTP protocol" time="0.002">
+    </testcase>
+    <testcase classname="networkSecurity › validateOrigin" name="should validate allowed origins" time="0.001">
+    </testcase>
+    <testcase classname="networkSecurity › validateOrigin" name="should reject disallowed origins" time="0.002">
+    </testcase>
+    <testcase classname="networkSecurity › getSecureHeaders" name="should return secure headers" time="0.002">
+    </testcase>
+    <testcase classname="networkSecurity › getSecureHeaders" name="should omit CSRF token if not provided" time="0.002">
+    </testcase>
+    <testcase classname="encryption › base64Encode" name="should encode text to base64" time="0.018">
+    </testcase>
+    <testcase classname="encryption › base64Encode" name="should handle unicode characters" time="0.001">
+    </testcase>
+    <testcase classname="encryption › base64Decode" name="should decode base64 to text" time="0.002">
+    </testcase>
+    <testcase classname="encryption › base64Decode" name="should handle unicode characters" time="0.002">
+    </testcase>
+    <testcase classname="encryption › obfuscate and deobfuscate" name="should obfuscate and deobfuscate text" time="0.003">
+    </testcase>
+    <testcase classname="encryption › obfuscate and deobfuscate" name="should produce different obfuscations with different keys" time="0.001">
+    </testcase>
+    <testcase classname="securityConfig" name="should have default values" time="0.001">
+    </testcase>
+    <testcase classname="securityConfig" name="should get and set configuration values" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/services/__tests__/auth-service.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:48" time="0.3" tests="8">
-    <testcase classname="AuthService › getCurrentUser" name="should return current user from store" time="0.002">
+  <testsuite name="src/lib/services/__tests__/ticket-service.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.719" tests="24">
+    <testcase classname="ticketService › CRUD" name="getTickets calls GET /api/v1/tickets with query params" time="0.035">
     </testcase>
-    <testcase classname="AuthService › isAuthenticated" name="should return authentication status" time="0.003">
+    <testcase classname="ticketService › CRUD" name="getTicket calls GET /api/v1/tickets/:id" time="0.004">
     </testcase>
-    <testcase classname="AuthService › getAccessToken" name="should return access token" time="0.002">
+    <testcase classname="ticketService › CRUD" name="createTicket calls POST /api/v1/tickets with the body" time="0.005">
     </testcase>
-    <testcase classname="AuthService › getRefreshToken" name="should return refresh token" time="0.001">
+    <testcase classname="ticketService › CRUD" name="updateTicket calls PUT /api/v1/tickets/:id with the body" time="0.004">
     </testcase>
-    <testcase classname="AuthService › getToken" name="should return token (backward compatible)" time="0.002">
+    <testcase classname="ticketService › CRUD" name="deleteTicket calls DELETE /api/v1/tickets/:id" time="0.003">
     </testcase>
-    <testcase classname="AuthService › setTokens" name="should set tokens" time="0.002">
+    <testcase classname="ticketService › workflow actions" name="updateStatus calls PUT /api/v1/tickets/:id/status with { status }" time="0.003">
     </testcase>
-    <testcase classname="AuthService › thirdPartyLogin" name="should handle third party login" time="0.003">
+    <testcase classname="ticketService › workflow actions" name="assign calls POST /api/v1/tickets/:id/assign with assigneeId + optional comment" time="0.02">
     </testcase>
-    <testcase classname="AuthService › thirdPartyLogin" name="should throw error on failed login" time="0.023">
+    <testcase classname="ticketService › workflow actions" name="assign omits comment when not provided" time="0.002">
     </testcase>
-  </testsuite>
-  <testsuite name="src/lib/i18n/__tests__/useI18n.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.239" tests="8">
-    <testcase classname="useI18n › initial state" name="should initialize with zh-CN language by default" time="0.009">
+    <testcase classname="ticketService › workflow actions" name="resolve calls POST /api/v1/tickets/:id/resolve with resolution + code" time="0.002">
     </testcase>
-    <testcase classname="useI18n › initial state" name="should initialize with en-US when preference is set" time="0.005">
+    <testcase classname="ticketService › workflow actions" name="close calls POST /api/v1/tickets/:id/close" time="0.003">
     </testcase>
-    <testcase classname="useI18n › t() function" name="should return translation for valid key" time="0.004">
+    <testcase classname="ticketService › workflow actions" name="reopen calls POST /api/v1/tickets/workflow/reopen (not /:id/reopen)" time="0.003">
     </testcase>
-    <testcase classname="useI18n › t() function" name="should return key when translation not found" time="0.003">
+    <testcase classname="ticketService › workflow actions" name="escalate calls POST /api/v1/tickets/:id/escalate with level/reason/assigneeId" time="0.002">
     </testcase>
-    <testcase classname="useI18n › t() function" name="should return key when placeholder params provided for unknown key" time="0.005">
+    <testcase classname="ticketService › approval &amp; flow actions" name="approve calls POST /api/v1/tickets/workflow/approve with ticketId + action" time="0.002">
     </testcase>
-    <testcase classname="useI18n › t() function" name="should handle nested keys" time="0.003">
+    <testcase classname="ticketService › approval &amp; flow actions" name="reject calls POST /api/v1/tickets/workflow/reject" time="0.002">
     </testcase>
-    <testcase classname="useI18n › changeLanguage()" name="should update language preference" time="0.004">
+    <testcase classname="ticketService › approval &amp; flow actions" name="accept calls POST /api/v1/tickets/workflow/accept" time="0.002">
     </testcase>
-    <testcase classname="useI18n › changeLanguage()" name="should switch to zh-CN" time="0.004">
+    <testcase classname="ticketService › approval &amp; flow actions" name="forward calls POST /api/v1/tickets/workflow/forward with toUserId + comment" time="0.004">
     </testcase>
-  </testsuite>
-  <testsuite name="src/components/common/__tests__/ErrorBoundary.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:34" time="14.54" tests="35">
-    <testcase classname="ErrorBoundary › 基本功能" name="正常渲染子组件（无错误时）" time="0.053">
+    <testcase classname="ticketService › comments" name="getComments calls GET /api/v1/tickets/:id/comments" time="0.002">
     </testcase>
-    <testcase classname="ErrorBoundary › 基本功能" name="渲染多个子组件" time="0.013">
+    <testcase classname="ticketService › comments" name="addComment calls POST /api/v1/tickets/:id/comments with body" time="0.002">
     </testcase>
-    <testcase classname="ErrorBoundary › 错误捕获" name="捕获子组件渲染错误并显示错误 UI" time="0.381">
+    <testcase classname="ticketService › comments" name="updateComment calls PUT /api/v1/tickets/:id/comments/:commentId" time="0.003">
     </testcase>
-    <testcase classname="ErrorBoundary › 错误捕获" name="显示默认错误消息" time="0.122">
+    <testcase classname="ticketService › comments" name="deleteComment calls DELETE /api/v1/tickets/:id/comments/:commentId" time="0.002">
     </testcase>
-    <testcase classname="ErrorBoundary › 错误操作按钮" name="显示重试按钮" time="1.055">
+    <testcase classname="ticketService › queries &amp; stats" name="searchTickets calls GET /api/v1/tickets/search?q=..." time="0.002">
     </testcase>
-    <testcase classname="ErrorBoundary › 错误操作按钮" name="显示返回首页按钮" time="0.088">
+    <testcase classname="ticketService › queries &amp; stats" name="getStats calls GET /api/v1/tickets/stats" time="0.003">
     </testcase>
-    <testcase classname="ErrorBoundary › 错误操作按钮" name="显示报告问题按钮" time="0.079">
+    <testcase classname="ticketService › error propagation" name="propagates backend error message on non-zero code" time="0.215">
     </testcase>
-    <testcase classname="ErrorBoundary › 错误操作按钮" name="点击重试按钮重置错误状态" time="0.899">
-    </testcase>
-    <testcase classname="ErrorBoundary › 错误操作按钮" name="点击返回首页按钮跳转首页" time="1.199">
-    </testcase>
-    <testcase classname="ErrorBoundary › 错误操作按钮" name="点击报告问题按钮复制错误信息到剪贴板" time="1.311">
-    </testcase>
-    <testcase classname="ErrorBoundary › 自定义配置" name="使用自定义 fallback 组件" time="0.022">
-    </testcase>
-    <testcase classname="ErrorBoundary › 自定义配置" name="调用 onError 回调函数" time="0.124">
-    </testcase>
-    <testcase classname="ErrorBoundary › 自定义配置" name="showDetails 为 true 时显示错误详情" time="0.108">
-    </testcase>
-    <testcase classname="ErrorBoundary › 自定义配置" name="showDetails 为 false 时不显示错误详情" time="0.097">
-    </testcase>
-    <testcase classname="ErrorBoundary › resetOnPropsChange 功能" name="resetOnPropsChange 为 true 时，props 变化重置错误状态" time="0.11">
-    </testcase>
-    <testcase classname="ErrorBoundary › resetOnPropsChange 功能" name="resetOnPropsChange 为 false 时，props 变化不重置错误状态" time="0.118">
-    </testcase>
-    <testcase classname="ErrorBoundary › resetOnPropsChange 功能" name="仅 children 变化不触发重置" time="0.098">
-    </testcase>
-    <testcase classname="ErrorBoundary › withErrorBoundary HOC" name="包装组件并添加错误边界" time="0.005">
-    </testcase>
-    <testcase classname="ErrorBoundary › withErrorBoundary HOC" name="HOC 设置自定义 displayName" time="0.002">
-    </testcase>
-    <testcase classname="ErrorBoundary › useErrorBoundary Hook" name="提供 captureError 和 resetError 函数" time="0.006">
-    </testcase>
-    <testcase classname="ErrorBoundary › useErrorBoundary Hook" name="captureError 后抛出错误" time="0.086">
-    </testcase>
-    <testcase classname="ErrorBoundary › 组件生命周期" name="组件卸载时清理定时器" time="0.106">
-    </testcase>
-    <testcase classname="ErrorBoundary › 错误 ID 生成" name="生成错误 ID" time="0.818">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 基本功能" name="正常渲染子组件" time="0.003">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 基本功能" name="捕获错误并显示错误 UI" time="0.078">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="显示重试按钮" time="0.079">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="显示返回首页按钮" time="0.096">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="显示报告问题按钮" time="0.087">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="点击重试按钮重置错误状态" time="0.934">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="点击返回首页按钮跳转到 dashboard" time="0.8">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 错误操作按钮" name="点击报告问题按钮复制错误信息到剪贴板" time="0.952">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 自定义配置" name="使用自定义 fallback" time="0.005">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 自定义配置" name="调用 onError 回调" time="0.084">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › 错误计数" name="多次错误增加错误计数" time="0.096">
-    </testcase>
-    <testcase classname="GlobalErrorBoundary › withErrorBoundary HOC" name="包装组件" time="0.003">
+    <testcase classname="ticketService › error propagation" name="propagates HTTP error on 500" time="0.007">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/__tests__/formatters.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.224" tests="14">
-    <testcase classname="formatDateTime" name="should format valid ISO date string" time="0.058">
+  <testsuite name="src/lib/__tests__/formatters.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.289" tests="14">
+    <testcase classname="formatDateTime" name="should format valid ISO date string" time="0.005">
     </testcase>
-    <testcase classname="formatDateTime" name="should return empty string for undefined" time="0.001">
+    <testcase classname="formatDateTime" name="should return empty string for undefined" time="0.019">
     </testcase>
     <testcase classname="formatDateTime" name="should return empty string for null" time="0.001">
     </testcase>
@@ -1198,81 +1068,313 @@
     </testcase>
     <testcase classname="formatDateTime" name="should return Invalid Date for invalid date" time="0.001">
     </testcase>
-    <testcase classname="formatDateTime" name="should handle ISO format with milliseconds" time="0.001">
+    <testcase classname="formatDateTime" name="should handle ISO format with milliseconds" time="0.002">
     </testcase>
     <testcase classname="formatDateTime" name="should handle date-only format" time="0.002">
     </testcase>
-    <testcase classname="mapLabel" name="should return mapped value when key exists" time="0.002">
+    <testcase classname="mapLabel" name="should return mapped value when key exists" time="0.001">
     </testcase>
-    <testcase classname="mapLabel" name="should return original value when key does not exist" time="0.002">
+    <testcase classname="mapLabel" name="should return original value when key does not exist" time="0.001">
     </testcase>
-    <testcase classname="mapLabel" name="should return empty string for undefined value" time="0.001">
+    <testcase classname="mapLabel" name="should return empty string for undefined value" time="0.002">
     </testcase>
     <testcase classname="mapLabel" name="should return empty string for null value" time="0.001">
     </testcase>
     <testcase classname="mapLabel" name="should return empty string for empty string value" time="0.001">
     </testcase>
-    <testcase classname="mapLabel" name="should handle empty map" time="0.002">
+    <testcase classname="mapLabel" name="should handle empty map" time="0.001">
     </testcase>
     <testcase classname="mapLabel" name="should handle complex map" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="src/components/cmdb/ci-detail/__tests__/CITopologyGraph.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.227" tests="5">
-    <testcase classname="CITopologyGraph" name="应该渲染拓扑图组件" time="0.01">
+  <testsuite name="src/components/business/ticket-modal/__tests__/ticket-form-utils.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.356" tests="22">
+    <testcase classname="ticket-form-utils › MOCK_TICKET_TEMPLATES" name="应该包含模板数据" time="0.004">
     </testcase>
-    <testcase classname="CITopologyGraph" name="应该传递正确的 ciId 给子组件" time="0.008">
+    <testcase classname="ticket-form-utils › MOCK_TICKET_TEMPLATES" name="每个模板应该有必需字段" time="0.023">
     </testcase>
-    <testcase classname="CITopologyGraph" name="应该设置正确的高度" time="0.006">
+    <testcase classname="ticket-form-utils › MOCK_TICKET_TEMPLATES" name="模板应该包含有效的描述" time="0.002">
     </testcase>
-    <testcase classname="CITopologyGraph" name="应该接收必需的 ciId prop" time="0.005">
+    <testcase classname="ticket-form-utils › MOCK_USER_LIST" name="应该包含用户数据" time="0.003">
     </testcase>
-    <testcase classname="CITopologyGraph" name="ciId 变化时应重新渲染" time="0.008">
+    <testcase classname="ticket-form-utils › MOCK_USER_LIST" name="每个用户应该有必需字段" time="0.003">
+    </testcase>
+    <testcase classname="ticket-form-utils › TICKET_FORM_STEPS" name="应该定义表单步骤" time="0.003">
+    </testcase>
+    <testcase classname="ticket-form-utils › TICKET_FORM_STEPS" name="每个步骤应该有标题" time="0.002">
+    </testcase>
+    <testcase classname="ticket-form-utils › TITLE_RULES" name="应该定义标题验证规则" time="0.002">
+    </testcase>
+    <testcase classname="ticket-form-utils › DESCRIPTION_RULES" name="应该定义描述验证规则" time="0.002">
+    </testcase>
+    <testcase classname="ticket-form-utils › TYPE_RULES" name="应该定义类型验证规则" time="0.002">
+    </testcase>
+    <testcase classname="ticket-form-utils › CATEGORY_RULES" name="应该定义分类验证规则" time="0.002">
+    </testcase>
+    <testcase classname="ticket-form-utils › PRIORITY_RULES" name="应该定义优先级验证规则" time="0.001">
+    </testcase>
+    <testcase classname="ticket-form-utils › TICKET_TYPE_OPTIONS" name="应该定义工单类型选项" time="0.002">
+    </testcase>
+    <testcase classname="ticket-form-utils › TICKET_TYPE_OPTIONS" name="每个选项应该有 value 和 label" time="0.002">
+    </testcase>
+    <testcase classname="ticket-form-utils › PRIORITY_OPTIONS" name="应该定义优先级选项" time="0.003">
+    </testcase>
+    <testcase classname="ticket-form-utils › CATEGORY_OPTIONS" name="应该定义分类选项" time="0.002">
+    </testcase>
+    <testcase classname="ticket-form-utils › getFieldsForStep" name="应该返回步骤0的字段" time="0.003">
+    </testcase>
+    <testcase classname="ticket-form-utils › getFieldsForStep" name="应该返回步骤1的字段" time="0.002">
+    </testcase>
+    <testcase classname="ticket-form-utils › getFieldsForStep" name="应该返回步骤2的空数组" time="0.001">
+    </testcase>
+    <testcase classname="ticket-form-utils › mergeFormData" name="应该合并表单数据" time="0.002">
+    </testcase>
+    <testcase classname="ticket-form-utils › mergeFormData" name="应该覆盖已有字段" time="0.001">
+    </testcase>
+    <testcase classname="ticket-form-utils › resetFormData" name="应该返回空对象" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/api/__tests__/workflow-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.24" tests="15">
-    <testcase classname="WorkflowApi › getWorkflows" name="should fetch workflows successfully" time="0.005">
+  <testsuite name="src/lib/api/__tests__/workflow-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.372" tests="15">
+    <testcase classname="WorkflowApi › getWorkflows" name="should fetch workflows successfully" time="0.004">
     </testcase>
     <testcase classname="WorkflowApi › getWorkflows" name="should handle empty workflow list" time="0.002">
     </testcase>
-    <testcase classname="WorkflowApi › getWorkflows" name="should pass pagination parameters correctly" time="0.002">
+    <testcase classname="WorkflowApi › getWorkflows" name="should pass pagination parameters correctly" time="0.001">
     </testcase>
     <testcase classname="WorkflowApi › getWorkflow" name="should fetch single workflow successfully" time="0.002">
     </testcase>
     <testcase classname="WorkflowApi › getWorkflow" name="should handle workflow not found" time="0.002">
     </testcase>
-    <testcase classname="WorkflowApi › getProcessDefinition (backward compatible)" name="should fetch process definition using key" time="0.002">
+    <testcase classname="WorkflowApi › getProcessDefinition (backward compatible)" name="should fetch process definition using key" time="0.001">
     </testcase>
-    <testcase classname="WorkflowApi › getProcessVersions" name="should fetch all versions of a process" time="0.002">
+    <testcase classname="WorkflowApi › getProcessVersions" name="should fetch all versions of a process" time="0.019">
     </testcase>
-    <testcase classname="WorkflowApi › workflow persistence" name="returns the already-unwrapped definition after update" time="0.002">
+    <testcase classname="WorkflowApi › workflow persistence" name="returns the already-unwrapped definition after update" time="0.009">
     </testcase>
-    <testcase classname="WorkflowApi › workflow persistence" name="persists a new version through the backend version endpoint" time="0.002">
+    <testcase classname="WorkflowApi › workflow persistence" name="persists a new version through the backend version endpoint" time="0.001">
     </testcase>
     <testcase classname="WorkflowApi › listWorkflowInstances" name="should fetch workflow instances" time="0.002">
     </testcase>
-    <testcase classname="WorkflowApi › startWorkflow" name="should start a new workflow" time="0.001">
+    <testcase classname="WorkflowApi › startWorkflow" name="should start a new workflow" time="0.002">
     </testcase>
     <testcase classname="WorkflowApi › suspendWorkflow" name="should suspend a running workflow" time="0.002">
     </testcase>
-    <testcase classname="WorkflowApi › resumeWorkflow" name="should resume a suspended workflow" time="0.013">
+    <testcase classname="WorkflowApi › resumeWorkflow" name="should resume a suspended workflow" time="0.002">
     </testcase>
-    <testcase classname="WorkflowApi › terminateWorkflow" name="should terminate a running workflow" time="0.004">
+    <testcase classname="WorkflowApi › terminateWorkflow" name="should terminate a running workflow" time="0.001">
     </testcase>
     <testcase classname="WorkflowApi › deleteWorkflow" name="should delete a workflow" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/__tests__/http-client.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.189" tests="13">
-    <testcase classname="HttpClient › constructor" name="should create client with default base URL" time="0.003">
+  <testsuite name="src/lib/i18n/__tests__/useI18n.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.402" tests="8">
+    <testcase classname="useI18n › initial state" name="should initialize with zh-CN language by default" time="0.008">
     </testcase>
-    <testcase classname="HttpClient › constructor" name="should create client with custom base URL" time="0.002">
+    <testcase classname="useI18n › initial state" name="should initialize with en-US when preference is set" time="0.005">
     </testcase>
-    <testcase classname="HttpClient › token management" name="should set and get token" time="0.002">
+    <testcase classname="useI18n › t() function" name="should return translation for valid key" time="0.021">
     </testcase>
-    <testcase classname="HttpClient › token management" name="should clear token" time="0.002">
+    <testcase classname="useI18n › t() function" name="should return key when translation not found" time="0.004">
     </testcase>
-    <testcase classname="HttpClient › tenant management" name="should set and get tenant ID (deprecated — delegates to TenantContext)" time="0.008">
+    <testcase classname="useI18n › t() function" name="should return key when placeholder params provided for unknown key" time="0.004">
     </testcase>
-    <testcase classname="HttpClient › tenant management" name="should set and get tenant code (deprecated — delegates to TenantContext)" time="0.002">
+    <testcase classname="useI18n › t() function" name="should handle nested keys" time="0.003">
+    </testcase>
+    <testcase classname="useI18n › changeLanguage()" name="should update language preference" time="0.003">
+    </testcase>
+    <testcase classname="useI18n › changeLanguage()" name="should switch to zh-CN" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/store/__tests__/layout-store.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.317" tests="7">
+    <testcase classname="useLayoutStore › initial state" name="exposes collapsed: false on first read" time="0.002">
+    </testcase>
+    <testcase classname="useLayoutStore › toggleCollapsed" name="flips false → true" time="0.002">
+    </testcase>
+    <testcase classname="useLayoutStore › toggleCollapsed" name="flips true → false" time="0.002">
+    </testcase>
+    <testcase classname="useLayoutStore › toggleCollapsed" name="returns to the same value after two toggles" time="0.002">
+    </testcase>
+    <testcase classname="useLayoutStore › setCollapsed" name="sets collapsed to true" time="0.002">
+    </testcase>
+    <testcase classname="useLayoutStore › setCollapsed" name="sets collapsed to false after it was true" time="0.002">
+    </testcase>
+    <testcase classname="useLayoutStore › consumer synchronization (Zustand guarantees)" name="mutations are visible to subsequent getState() calls" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/__tests__/api-config.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.279" tests="21">
+    <testcase classname="API Configuration › API_BASE_URL" name="should be defined" time="0.003">
+    </testcase>
+    <testcase classname="API Configuration › API_BASE_URL" name="should be a string" time="0.002">
+    </testcase>
+    <testcase classname="API Configuration › API_VERSION" name="should be defined" time="0.002">
+    </testcase>
+    <testcase classname="API Configuration › API_VERSION" name="should be v1 by default" time="0.001">
+    </testcase>
+    <testcase classname="API Configuration › API_TIMEOUT" name="should be defined" time="0.001">
+    </testcase>
+    <testcase classname="API Configuration › API_TIMEOUT" name="should be a number" time="0.001">
+    </testcase>
+    <testcase classname="API Configuration › API_TIMEOUT" name="should be positive" time="0.001">
+    </testcase>
+    <testcase classname="API Configuration › API_TIMEOUT" name="should be 30000 by default" time="0.001">
+    </testcase>
+    <testcase classname="API Configuration › API_ERROR_CODES" name="should be defined" time="0.002">
+    </testcase>
+    <testcase classname="API Configuration › API_ERROR_CODES" name="should have SUCCESS code" time="0.001">
+    </testcase>
+    <testcase classname="API Configuration › API_ERROR_CODES" name="should have PARAM_ERROR code" time="0.002">
+    </testcase>
+    <testcase classname="API Configuration › API_ERROR_CODES" name="should have AUTH_FAILED code" time="0.001">
+    </testcase>
+    <testcase classname="API Configuration › API_ERROR_CODES" name="should have FORBIDDEN code" time="0.002">
+    </testcase>
+    <testcase classname="API Configuration › API_ERROR_CODES" name="should have NOT_FOUND code" time="0.001">
+    </testcase>
+    <testcase classname="API Configuration › API_ERROR_CODES" name="should have INTERNAL_ERROR code" time="0.002">
+    </testcase>
+    <testcase classname="ApiResponse Interface" name="should accept valid response structure" time="0.019">
+    </testcase>
+    <testcase classname="ApiResponse Interface" name="should accept error response structure" time="0.002">
+    </testcase>
+    <testcase classname="PaginationRequest Interface" name="should accept valid pagination request" time="0.001">
+    </testcase>
+    <testcase classname="PaginationRequest Interface" name="should accept undefined values" time="0.001">
+    </testcase>
+    <testcase classname="PaginationResponse Interface" name="should accept valid pagination response" time="0.002">
+    </testcase>
+    <testcase classname="PaginationResponse Interface" name="should handle empty items" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/cmdb/ci-detail/__tests__/CITopologyGraph.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.312" tests="5">
+    <testcase classname="CITopologyGraph" name="应该渲染拓扑图组件" time="0.008">
+    </testcase>
+    <testcase classname="CITopologyGraph" name="应该传递正确的 ciId 给子组件" time="0.005">
+    </testcase>
+    <testcase classname="CITopologyGraph" name="应该设置正确的高度" time="0.004">
+    </testcase>
+    <testcase classname="CITopologyGraph" name="应该接收必需的 ciId prop" time="0.004">
+    </testcase>
+    <testcase classname="CITopologyGraph" name="ciId 变化时应重新渲染" time="0.008">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/api/__tests__/sla-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:41" time="0.245" tests="1">
+    <testcase classname="SLAApi monitoring contract" name="uses the registered /sla/monitor compatibility endpoint" time="0.006">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/services/__tests__/notification-ws.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:40" time="0.429" tests="15">
+    <testcase classname="NotificationWSService › connect" name="builds the URL from NEXT_PUBLIC_WS_URL and includes user_id + token" time="0.007">
+    </testcase>
+    <testcase classname="NotificationWSService › connect" name="falls back to localhost:8090 when NEXT_PUBLIC_WS_URL is not set" time="0.003">
+    </testcase>
+    <testcase classname="NotificationWSService › connect" name="notifies connection-status subscribers on open" time="0.004">
+    </testcase>
+    <testcase classname="NotificationWSService › message routing" name="routes &apos;notification&apos; messages to onNotification subscribers" time="0.021">
+    </testcase>
+    <testcase classname="NotificationWSService › message routing" name="does not call onNotification for &apos;heartbeat&apos; messages" time="0.002">
+    </testcase>
+    <testcase classname="NotificationWSService › message routing" name="logs server error messages but does not throw" time="0.002">
+    </testcase>
+    <testcase classname="NotificationWSService › message routing" name="does not crash when a message has no data" time="0.001">
+    </testcase>
+    <testcase classname="NotificationWSService › message routing" name="unsubscribe stops callback from firing" time="0.002">
+    </testcase>
+    <testcase classname="NotificationWSService › disconnect" name="marks the service as not connected and clears reconnect intent" time="0.003">
+    </testcase>
+    <testcase classname="NotificationWSService › disconnect" name="does not schedule a reconnect after a manual disconnect" time="0.004">
+    </testcase>
+    <testcase classname="NotificationWSService › reconnect with exponential backoff" name="schedules a reconnect after an unexpected close" time="0.005">
+    </testcase>
+    <testcase classname="NotificationWSService › reconnect with exponential backoff" name="stops and notifies after maxReconnectAttempts" time="0.003">
+    </testcase>
+    <testcase classname="NotificationWSService › manual reconnect" name="rejects when no credentials have been stored" time="0.054">
+    </testcase>
+    <testcase classname="NotificationWSService › manual reconnect" name="reuses stored credentials when called after connect" time="0.003">
+    </testcase>
+    <testcase classname="notificationWS singleton" name="is a NotificationWSService instance" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/api/__tests__/bpmn-ai-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:41" time="0.249" tests="3">
+    <testcase classname="BPMNAIApi" name="generates BPMN XML through the backend AI endpoint" time="0.004">
+    </testcase>
+    <testcase classname="BPMNAIApi" name="previews BPMN structure through the backend AI endpoint" time="0.002">
+    </testcase>
+    <testcase classname="BPMNAIApi" name="loads template suggestions from the backend AI endpoint" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/__tests__/env.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:41" time="0.299" tests="31">
+    <testcase classname="Environment Utilities › getEnvironment" name="should be defined" time="0.002">
+    </testcase>
+    <testcase classname="Environment Utilities › getEnvironment" name="should be a function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › getEnvironment" name="should return a valid environment" time="0.002">
+    </testcase>
+    <testcase classname="Environment Utilities › env" name="should be defined" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › env" name="should have isDevelopment property" time="0.002">
+    </testcase>
+    <testcase classname="Environment Utilities › env" name="should have isProduction property" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › env" name="should have isTest property" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › env" name="should have features object" time="0.002">
+    </testcase>
+    <testcase classname="Environment Utilities › env" name="should have api object" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › env" name="should have app object" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › logger" name="should be defined" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › logger" name="should have debug function" time="0.002">
+    </testcase>
+    <testcase classname="Environment Utilities › logger" name="should have info function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › logger" name="should have warn function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › logger" name="should have error function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › logger" name="should have performance function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › logger" name="should have security function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › performance" name="should be defined" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › performance" name="should have start function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › performance" name="should have end function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › performance" name="should have measure function" time="0.019">
+    </testcase>
+    <testcase classname="Environment Utilities › performance" name="should have measureAsync function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › errorHandler" name="should be defined" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › errorHandler" name="should have handleApiError function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › errorHandler" name="should have handleValidationError function" time="0">
+    </testcase>
+    <testcase classname="Environment Utilities › errorHandler" name="should have handleNetworkError function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › devTools" name="should be defined" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › devTools" name="should have onlyInDev function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › devTools" name="should have debugInfo function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › devTools" name="should have mark function" time="0.001">
+    </testcase>
+    <testcase classname="Environment Utilities › devTools" name="should have measure function" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/__tests__/http-client.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:41" time="0.265" tests="13">
+    <testcase classname="HttpClient › constructor" name="should create client with default base URL" time="0.02">
+    </testcase>
+    <testcase classname="HttpClient › constructor" name="should create client with custom base URL" time="0.001">
+    </testcase>
+    <testcase classname="HttpClient › token management" name="should set and get token" time="0.001">
+    </testcase>
+    <testcase classname="HttpClient › token management" name="should clear token" time="0.001">
+    </testcase>
+    <testcase classname="HttpClient › tenant management" name="should set and get tenant ID (deprecated — delegates to TenantContext)" time="0.001">
+    </testcase>
+    <testcase classname="HttpClient › tenant management" name="should set and get tenant code (deprecated — delegates to TenantContext)" time="0.001">
     </testcase>
     <testcase classname="HttpClient › tenant management" name="should clear tenant ID (deprecated — no-op)" time="0.001">
     </testcase>
@@ -1289,58 +1391,58 @@
     <testcase classname="HttpClient methods › clearToken" name="should clear token" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="src/components/business/ticket-modal/__tests__/ticket-form-utils.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.234" tests="22">
-    <testcase classname="ticket-form-utils › MOCK_TICKET_TEMPLATES" name="应该包含模板数据" time="0.001">
+  <testsuite name="src/lib/permissions/__tests__/permissions.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:41" time="0.294" tests="20">
+    <testcase classname="parsePermissions" name="should parse permission strings into a Set" time="0.004">
     </testcase>
-    <testcase classname="ticket-form-utils › MOCK_TICKET_TEMPLATES" name="每个模板应该有必需字段" time="0.004">
+    <testcase classname="parsePermissions" name="should return empty Set for empty array" time="0.001">
     </testcase>
-    <testcase classname="ticket-form-utils › MOCK_TICKET_TEMPLATES" name="模板应该包含有效的描述" time="0.002">
+    <testcase classname="hasWildcardPermission" name="should return true for &quot;*&quot; wildcard" time="0.002">
     </testcase>
-    <testcase classname="ticket-form-utils › MOCK_USER_LIST" name="应该包含用户数据" time="0.001">
+    <testcase classname="hasWildcardPermission" name="should return true for &quot;*:*&quot; wildcard" time="0.001">
     </testcase>
-    <testcase classname="ticket-form-utils › MOCK_USER_LIST" name="每个用户应该有必需字段" time="0.003">
+    <testcase classname="hasWildcardPermission" name="should return false for non-wildcard permissions" time="0.001">
     </testcase>
-    <testcase classname="ticket-form-utils › TICKET_FORM_STEPS" name="应该定义表单步骤" time="0.002">
+    <testcase classname="hasWildcardPermission" name="should return false for empty Set" time="0.002">
     </testcase>
-    <testcase classname="ticket-form-utils › TICKET_FORM_STEPS" name="每个步骤应该有标题" time="0.002">
+    <testcase classname="matchesPermission › exact match" name="should return true when permission matches exactly" time="0.002">
     </testcase>
-    <testcase classname="ticket-form-utils › TITLE_RULES" name="应该定义标题验证规则" time="0.002">
+    <testcase classname="matchesPermission › exact match" name="should return false when permission does not match" time="0.002">
     </testcase>
-    <testcase classname="ticket-form-utils › DESCRIPTION_RULES" name="应该定义描述验证规则" time="0.001">
+    <testcase classname="matchesPermission › wildcard match" name="should match &quot;*&quot; wildcard for any permission" time="0.002">
     </testcase>
-    <testcase classname="ticket-form-utils › TYPE_RULES" name="应该定义类型验证规则" time="0.002">
+    <testcase classname="matchesPermission › wildcard match" name="should match &quot;*:*&quot; wildcard for any permission" time="0.001">
     </testcase>
-    <testcase classname="ticket-form-utils › CATEGORY_RULES" name="应该定义分类验证规则" time="0.001">
+    <testcase classname="matchesPermission › wildcard match" name="should match resource wildcard &quot;resource:*&quot;" time="0.002">
     </testcase>
-    <testcase classname="ticket-form-utils › PRIORITY_RULES" name="应该定义优先级验证规则" time="0.002">
+    <testcase classname="matchesPermission › wildcard match" name="should match action wildcard &quot;*:action&quot;" time="0.001">
     </testcase>
-    <testcase classname="ticket-form-utils › TICKET_TYPE_OPTIONS" name="应该定义工单类型选项" time="0.001">
+    <testcase classname="hasAllPermissions" name="should return true when all permissions are present" time="0.001">
     </testcase>
-    <testcase classname="ticket-form-utils › TICKET_TYPE_OPTIONS" name="每个选项应该有 value 和 label" time="0.003">
+    <testcase classname="hasAllPermissions" name="should return false when any permission is missing" time="0.002">
     </testcase>
-    <testcase classname="ticket-form-utils › PRIORITY_OPTIONS" name="应该定义优先级选项" time="0.002">
+    <testcase classname="hasAllPermissions" name="should return true for empty required array" time="0">
     </testcase>
-    <testcase classname="ticket-form-utils › CATEGORY_OPTIONS" name="应该定义分类选项" time="0.002">
+    <testcase classname="hasAllPermissions" name="should work with wildcard permissions" time="0.001">
     </testcase>
-    <testcase classname="ticket-form-utils › getFieldsForStep" name="应该返回步骤0的字段" time="0.008">
+    <testcase classname="hasAnyPermission" name="should return true when any permission is present" time="0.001">
     </testcase>
-    <testcase classname="ticket-form-utils › getFieldsForStep" name="应该返回步骤1的字段" time="0.002">
+    <testcase classname="hasAnyPermission" name="should return false when no permissions are present" time="0">
     </testcase>
-    <testcase classname="ticket-form-utils › getFieldsForStep" name="应该返回步骤2的空数组" time="0.001">
+    <testcase classname="hasAnyPermission" name="should return false for empty required array" time="0.001">
     </testcase>
-    <testcase classname="ticket-form-utils › mergeFormData" name="应该合并表单数据" time="0.002">
-    </testcase>
-    <testcase classname="ticket-form-utils › mergeFormData" name="应该覆盖已有字段" time="0.001">
-    </testcase>
-    <testcase classname="ticket-form-utils › resetFormData" name="应该返回空对象" time="0.002">
+    <testcase classname="hasAnyPermission" name="should work with wildcard permissions" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/__tests__/ticket-approval.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.183" tests="8">
+  <testsuite name="src/components/workflow/__tests__/itsm-moddle-descriptor.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:41" time="0.235" tests="1">
+    <testcase classname="ITSM BPMN moddle descriptor" name="persists assignment, approval and countersign attributes" time="0.008">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/__tests__/ticket-approval.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:41" time="0.261" tests="8">
     <testcase classname="TicketApprovalApi › getWorkflows" name="should fetch approval workflows successfully" time="0.003">
     </testcase>
-    <testcase classname="TicketApprovalApi › getWorkflows" name="should handle empty workflow list" time="0.002">
+    <testcase classname="TicketApprovalApi › getWorkflows" name="should handle empty workflow list" time="0.019">
     </testcase>
-    <testcase classname="TicketApprovalApi › createWorkflow" name="should create approval workflow successfully" time="0.002">
+    <testcase classname="TicketApprovalApi › createWorkflow" name="should create approval workflow successfully" time="0.001">
     </testcase>
     <testcase classname="TicketApprovalApi › submitApproval" name="should submit approval successfully" time="0.001">
     </testcase>
@@ -1353,76 +1455,44 @@
     <testcase classname="TicketApprovalApi › getApprovalRecords" name="should filter by status" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="src/components/workflow/__tests__/itsm-moddle-descriptor.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.15" tests="1">
-    <testcase classname="ITSM BPMN moddle descriptor" name="persists assignment, approval and countersign attributes" time="0.003">
+  <testsuite name="src/components/workflow/designer/__tests__/WorkflowAIModal.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:14" time="29.555" tests="2">
+    <testcase classname="WorkflowAIModal" name="calls the real BPMN AI generate endpoint and applies generated XML" time="15.359">
+    </testcase>
+    <testcase classname="WorkflowAIModal" name="renders a clean error when generation fails" time="6.087">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/api/__tests__/bpmn-ai-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.148" tests="3">
-    <testcase classname="BPMNAIApi" name="generates BPMN XML through the backend AI endpoint" time="0.003">
+  <testsuite name="src/components/change/__tests__/ChangeList.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-22T23:31:14" time="30.001" tests="16">
+    <testcase classname="ChangeList › List Rendering" name="renders change list with data" time="3.414">
     </testcase>
-    <testcase classname="BPMNAIApi" name="previews BPMN structure through the backend AI endpoint" time="0.001">
+    <testcase classname="ChangeList › List Rendering" name="renders table columns correctly" time="1.608">
     </testcase>
-    <testcase classname="BPMNAIApi" name="loads template suggestions from the backend AI endpoint" time="0.001">
+    <testcase classname="ChangeList › List Rendering" name="displays correct status labels" time="1.25">
     </testcase>
-  </testsuite>
-  <testsuite name="src/lib/services/__tests__/ticket-service.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:49" time="0.244" tests="9">
-    <testcase classname="TicketService › Basic Service" name="should be defined" time="0.002">
+    <testcase classname="ChangeList › List Rendering" name="displays correct type labels" time="1.313">
     </testcase>
-    <testcase classname="TicketService › Basic Service" name="should be an object with methods" time="0.002">
+    <testcase classname="ChangeList › List Rendering" name="displays correct priority labels" time="1.246">
     </testcase>
-    <testcase classname="TicketService › Service Methods" name="should have createTicket method" time="0.001">
+    <testcase classname="ChangeList › List Rendering" name="renders empty state when no data" time="0.892">
     </testcase>
-    <testcase classname="TicketService › Service Methods" name="should have updateTicket method" time="0.001">
+    <testcase classname="ChangeList › List Rendering" name="renders header with title and description" time="1.108">
     </testcase>
-    <testcase classname="TicketService › Service Methods" name="should have deleteTicket method" time="0.001">
+    <testcase classname="ChangeList › List Rendering" name="hides header when showHeader is false" time="1.235">
     </testcase>
-    <testcase classname="TicketService › Service Methods" name="should have getTicket method" time="0.002">
+    <testcase classname="ChangeList › List Rendering" name="renders new change button" time="1.152">
     </testcase>
-    <testcase classname="TicketService › Ticket Type Definitions" name="should have CreateTicketParams interface" time="0.001">
+    <testcase classname="ChangeList › Loading State" name="shows loading spinner while fetching data" time="1.196">
     </testcase>
-    <testcase classname="TicketService › Ticket Type Definitions" name="should have UpdateTicketParams interface" time="0.001">
+    <testcase classname="ChangeList › Loading State" name="hides loading spinner after data is loaded" time="1.225">
     </testcase>
-    <testcase classname="TicketService › Ticket Type Definitions" name="should have TicketStats interface" time="0.001">
+    <testcase classname="ChangeList › Pagination" name="displays pagination info" time="1.233">
     </testcase>
-  </testsuite>
-  <testsuite name="src/components/workflow/designer/__tests__/WorkflowAIModal.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:34" time="18.14" tests="2">
-    <testcase classname="WorkflowAIModal" name="calls the real BPMN AI generate endpoint and applies generated XML" time="10.725">
+    <testcase classname="ChangeList › Pagination" name="calls API with correct page number when pagination changes" time="2.454">
     </testcase>
-    <testcase classname="WorkflowAIModal" name="renders a clean error when generation fails" time="2.967">
+    <testcase classname="ChangeList › Status Filter" name="renders status filter dropdown" time="0.895">
     </testcase>
-  </testsuite>
-  <testsuite name="src/components/change/__tests__/ChangeList.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T14:33:34" time="18.308" tests="16">
-    <testcase classname="ChangeList › List Rendering" name="renders change list with data" time="2.093">
+    <testcase classname="ChangeList › Status Filter" name="renders search input" time="0.847">
     </testcase>
-    <testcase classname="ChangeList › List Rendering" name="renders table columns correctly" time="0.867">
-    </testcase>
-    <testcase classname="ChangeList › List Rendering" name="displays correct status labels" time="1.536">
-    </testcase>
-    <testcase classname="ChangeList › List Rendering" name="displays correct type labels" time="1.015">
-    </testcase>
-    <testcase classname="ChangeList › List Rendering" name="displays correct priority labels" time="0.844">
-    </testcase>
-    <testcase classname="ChangeList › List Rendering" name="renders empty state when no data" time="0.59">
-    </testcase>
-    <testcase classname="ChangeList › List Rendering" name="renders header with title and description" time="0.808">
-    </testcase>
-    <testcase classname="ChangeList › List Rendering" name="hides header when showHeader is false" time="0.715">
-    </testcase>
-    <testcase classname="ChangeList › List Rendering" name="renders new change button" time="0.851">
-    </testcase>
-    <testcase classname="ChangeList › Loading State" name="shows loading spinner while fetching data" time="0.919">
-    </testcase>
-    <testcase classname="ChangeList › Loading State" name="hides loading spinner after data is loaded" time="0.489">
-    </testcase>
-    <testcase classname="ChangeList › Pagination" name="displays pagination info" time="0.634">
-    </testcase>
-    <testcase classname="ChangeList › Pagination" name="calls API with correct page number when pagination changes" time="1.168">
-    </testcase>
-    <testcase classname="ChangeList › Status Filter" name="renders status filter dropdown" time="0.439">
-    </testcase>
-    <testcase classname="ChangeList › Status Filter" name="renders search input" time="0.417">
-    </testcase>
-    <testcase classname="ChangeList › Actions" name="navigates to new change page when new button is clicked" time="0.392">
+    <testcase classname="ChangeList › Actions" name="navigates to new change page when new button is clicked" time="0.808">
     </testcase>
   </testsuite>
 </testsuites>

@@ -350,6 +350,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		public.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok", "timestamp": time.Now()})
 		})
+		// /healthz 别名，兼容 K8s / 常见探针路径
+		public.GET("/healthz", func(c *gin.Context) {
+			c.JSON(200, gin.H{"status": "ok", "timestamp": time.Now()})
+		})
 		public.GET("/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{"version": "1.0.0", "build": "dev"})
 		})
@@ -1175,10 +1179,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			org := tenant.(*gin.RouterGroup).Group("/org")
 			{
 				org.GET("/departments/tree", middleware.RequirePermission("org", "read"), config.CommonHandler.GetDepartmentTree)
+				org.GET("/departments/:id", middleware.RequirePermission("org", "read"), config.CommonHandler.GetDepartment)
 				org.POST("/departments", middleware.RequirePermission("org", "write"), config.CommonHandler.CreateDepartment)
 				org.PUT("/departments/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.UpdateDepartment)
 				org.DELETE("/departments/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.DeleteDepartment)
 				org.GET("/teams", middleware.RequirePermission("org", "read"), config.CommonHandler.ListTeams)
+				org.GET("/teams/:id", middleware.RequirePermission("org", "read"), config.CommonHandler.GetTeam)
 				org.POST("/teams", middleware.RequirePermission("org", "write"), config.CommonHandler.CreateTeam)
 				org.PUT("/teams/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.UpdateTeam)
 				org.DELETE("/teams/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.DeleteTeam)

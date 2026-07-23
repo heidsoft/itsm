@@ -2144,7 +2144,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		},
 		// 普通用户
 		"end_user": {
-			"ticket:read", "ticket:write", "knowledge:read",
+			"ticket:read", "ticket:write", "knowledge:read", "service_catalog:read",
 		},
 		// 访客
 		"guest": {

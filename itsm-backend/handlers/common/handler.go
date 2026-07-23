@@ -140,6 +140,22 @@ func (h *Handler) ListUsers(c *gin.Context) {
 
 // Departments
 
+func (h *Handler) GetDepartment(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.ParamError(c, "无效的部门ID")
+		return
+	}
+	tenantID := c.GetInt("tenant_id")
+	dept, err := h.svc.GetDepartment(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.InternalError(c, "获取部门失败: "+err.Error())
+		return
+	}
+	common.Success(c, dept)
+}
+
 func (h *Handler) GetDepartmentTree(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	tree, err := h.svc.GetDepartmentTree(c.Request.Context(), tenantID)
@@ -210,16 +226,29 @@ func (h *Handler) UpdateDepartment(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	d := &Department{
-		ID:          id,
-		Name:        req.Name,
-		Code:        req.Code,
-		Description: req.Description,
-		ManagerID:   req.ManagerID,
-		ParentID:    req.ParentID,
-		TenantID:    tenantID,
+	// 先读取现有部门，避免部分更新时把 name/code 覆盖为空
+	existing, err := h.svc.GetDepartment(c.Request.Context(), id, tenantID)
+	if err != nil || existing == nil {
+		common.NotFound(c, "部门不存在")
+		return
 	}
-	result, err := h.svc.UpdateDepartment(c.Request.Context(), d)
+	if req.Name != "" {
+		existing.Name = req.Name
+	}
+	if req.Code != "" {
+		existing.Code = req.Code
+	}
+	if req.Description != "" {
+		existing.Description = req.Description
+	}
+	if req.ManagerID != 0 {
+		existing.ManagerID = req.ManagerID
+	}
+	if req.ParentID != 0 {
+		existing.ParentID = req.ParentID
+	}
+	existing.TenantID = tenantID
+	result, err := h.svc.UpdateDepartment(c.Request.Context(), existing)
 	if err != nil {
 		common.InternalError(c, "更新部门失败: "+err.Error())
 		return
@@ -252,6 +281,21 @@ func (h *Handler) ListTeams(c *gin.Context) {
 		return
 	}
 	common.Success(c, teams)
+}
+
+func (h *Handler) GetTeam(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的团队ID")
+		return
+	}
+	tenantID := c.GetInt("tenant_id")
+	t, err := h.svc.GetTeam(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.InternalError(c, "获取团队失败: "+err.Error())
+		return
+	}
+	common.Success(c, t)
 }
 
 func (h *Handler) CreateTeam(c *gin.Context) {
@@ -301,15 +345,25 @@ func (h *Handler) UpdateTeam(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	t := &Team{
-		ID:          id,
-		Name:        req.Name,
-		Code:        req.Code,
-		Description: req.Description,
-		ManagerID:   req.ManagerID,
-		TenantID:    tenantID,
+	existing, err := h.svc.GetTeam(c.Request.Context(), id, tenantID)
+	if err != nil || existing == nil {
+		common.NotFound(c, "团队不存在")
+		return
 	}
-	result, err := h.svc.UpdateTeam(c.Request.Context(), t)
+	if req.Name != "" {
+		existing.Name = req.Name
+	}
+	if req.Code != "" {
+		existing.Code = req.Code
+	}
+	if req.Description != "" {
+		existing.Description = req.Description
+	}
+	if req.ManagerID != 0 {
+		existing.ManagerID = req.ManagerID
+	}
+	existing.TenantID = tenantID
+	result, err := h.svc.UpdateTeam(c.Request.Context(), existing)
 	if err != nil {
 		common.InternalError(c, "更新团队失败: "+err.Error())
 		return

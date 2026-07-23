@@ -155,6 +155,7 @@ type CIResponse struct {
 	CloudSyncStatus    string                 `json:"cloudSyncStatus,omitempty"`
 	CloudResourceRefID int                    `json:"cloudResourceRefId,omitempty"`
 	TenantID           int                    `json:"tenantId"`
+	Version            int                    `json:"version"`
 	// 生命周期管理
 	LifecycleStatus   string                    `json:"lifecycleStatus,omitempty"`
 	EffectiveAt       *time.Time                `json:"effectiveAt,omitempty"`
@@ -222,6 +223,8 @@ type UpdateCIRequest struct {
 	LifecycleStatus string     `json:"lifecycleStatus,omitempty"`
 	EffectiveAt     *time.Time `json:"effectiveAt,omitempty"`
 	ExpireAt        *time.Time `json:"expireAt,omitempty"`
+	// 版本号，用于乐观锁
+	Version int `json:"version,omitempty"`
 }
 
 // CloudService DTOs

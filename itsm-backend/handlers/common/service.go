@@ -221,6 +221,10 @@ func (s *Service) ListUsers(ctx context.Context, tenantID int) ([]*User, error) 
 
 // Organization Management
 
+func (s *Service) GetDepartment(ctx context.Context, id int, tenantID int) (*Department, error) {
+	return s.repo.GetDepartment(ctx, id, tenantID)
+}
+
 func (s *Service) GetDepartmentTree(ctx context.Context, tenantID int) ([]*Department, error) {
 	return s.repo.GetDepartmentTree(ctx, tenantID)
 }
@@ -243,6 +247,10 @@ func (s *Service) DeleteDepartment(ctx context.Context, id int, tenantID int) er
 
 func (s *Service) ListTeams(ctx context.Context, tenantID int) ([]*Team, error) {
 	return s.repo.ListTeams(ctx, tenantID)
+}
+
+func (s *Service) GetTeam(ctx context.Context, id int, tenantID int) (*Team, error) {
+	return s.repo.GetTeam(ctx, id, tenantID)
 }
 
 func (s *Service) CreateTeam(ctx context.Context, t *Team) (*Team, error) {

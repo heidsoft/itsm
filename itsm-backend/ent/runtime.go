@@ -867,18 +867,22 @@ func init() {
 	configurationitemDescTenantID := configurationitemFields[30].Descriptor()
 	// configurationitem.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	configurationitem.TenantIDValidator = configurationitemDescTenantID.Validators[0].(func(int) error)
+	// configurationitemDescVersion is the schema descriptor for version field.
+	configurationitemDescVersion := configurationitemFields[31].Descriptor()
+	// configurationitem.DefaultVersion holds the default value on creation for the version field.
+	configurationitem.DefaultVersion = configurationitemDescVersion.Default.(int)
 	// configurationitemDescCreatedAt is the schema descriptor for created_at field.
-	configurationitemDescCreatedAt := configurationitemFields[31].Descriptor()
+	configurationitemDescCreatedAt := configurationitemFields[32].Descriptor()
 	// configurationitem.DefaultCreatedAt holds the default value on creation for the created_at field.
 	configurationitem.DefaultCreatedAt = configurationitemDescCreatedAt.Default.(func() time.Time)
 	// configurationitemDescUpdatedAt is the schema descriptor for updated_at field.
-	configurationitemDescUpdatedAt := configurationitemFields[32].Descriptor()
+	configurationitemDescUpdatedAt := configurationitemFields[33].Descriptor()
 	// configurationitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	configurationitem.DefaultUpdatedAt = configurationitemDescUpdatedAt.Default.(func() time.Time)
 	// configurationitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	configurationitem.UpdateDefaultUpdatedAt = configurationitemDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// configurationitemDescLifecycleStatus is the schema descriptor for lifecycle_status field.
-	configurationitemDescLifecycleStatus := configurationitemFields[33].Descriptor()
+	configurationitemDescLifecycleStatus := configurationitemFields[34].Descriptor()
 	// configurationitem.DefaultLifecycleStatus holds the default value on creation for the lifecycle_status field.
 	configurationitem.DefaultLifecycleStatus = configurationitemDescLifecycleStatus.Default.(string)
 	configurationitemhistoryFields := schema.ConfigurationItemHistory{}.Fields()

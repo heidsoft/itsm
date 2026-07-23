@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
@@ -37,20 +38,24 @@ func (s *CIHistoryService) RecordCIHistory(
 	before, after *ent.ConfigurationItem,
 ) error {
 	// 获取当前最大版本号
-	maxVersion, err := s.client.ConfigurationItemHistory.Query().
+	// 使用 Scan + sql.NullInt64 兜底：MAX 在无记录时返回 NULL，直接 Int(ctx) 会 "converting NULL to int" 500
+	var aggResult []struct {
+		Max sql.NullInt64 `json:"max"`
+	}
+	err := s.client.ConfigurationItemHistory.Query().
 		Where(
 			configurationitemhistory.CiIDEQ(ciID),
 			configurationitemhistory.TenantIDEQ(tenantID),
 		).
 		Aggregate(ent.Max(configurationitemhistory.FieldVersion)).
-		Int(ctx)
+		Scan(ctx, &aggResult)
 	if err != nil {
 		s.logger.Errorw("Failed to get max CI version", "error", err, "ci_id", ciID)
 		return fmt.Errorf("failed to get max version: %w", err)
 	}
 	version := 1
-	if maxVersion > 0 {
-		version = maxVersion + 1
+	if len(aggResult) > 0 && aggResult[0].Max.Valid && aggResult[0].Max.Int64 > 0 {
+		version = int(aggResult[0].Max.Int64) + 1
 	}
 
 	// 转换before和after为map

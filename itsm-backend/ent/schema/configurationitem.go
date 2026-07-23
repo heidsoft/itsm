@@ -119,6 +119,9 @@ func (ConfigurationItem) Fields() []ent.Field {
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(),
+		field.Int("version").
+			Comment("版本号，用于乐观锁").
+			Default(1),
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),

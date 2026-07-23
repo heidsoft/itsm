@@ -82,6 +82,8 @@ type ConfigurationItem struct {
 	CloudResourceRefID int `json:"cloud_resource_ref_id,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
+	// 版本号，用于乐观锁
+	Version int `json:"version,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -204,7 +206,7 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case configurationitem.FieldAttributes, configurationitem.FieldCloudMetadata, configurationitem.FieldCloudTags, configurationitem.FieldCloudMetrics:
 			values[i] = new([]byte)
-		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID:
+		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID, configurationitem.FieldVersion:
 			values[i] = new(sql.NullInt64)
 		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus, configurationitem.FieldLifecycleStatus:
 			values[i] = new(sql.NullString)
@@ -425,6 +427,12 @@ func (_m *ConfigurationItem) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				_m.TenantID = int(value.Int64)
 			}
+		case configurationitem.FieldVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				_m.Version = int(value.Int64)
+			}
 		case configurationitem.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -623,6 +631,9 @@ func (_m *ConfigurationItem) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
+	builder.WriteString(", ")
+	builder.WriteString("version=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Version))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

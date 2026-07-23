@@ -405,6 +405,20 @@ func (_c *ConfigurationItemCreate) SetTenantID(v int) *ConfigurationItemCreate {
 	return _c
 }
 
+// SetVersion sets the "version" field.
+func (_c *ConfigurationItemCreate) SetVersion(v int) *ConfigurationItemCreate {
+	_c.mutation.SetVersion(v)
+	return _c
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableVersion(v *int) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetVersion(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *ConfigurationItemCreate) SetCreatedAt(v time.Time) *ConfigurationItemCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -632,6 +646,10 @@ func (_c *ConfigurationItemCreate) defaults() {
 		v := configurationitem.DefaultCriticality
 		_c.mutation.SetCriticality(v)
 	}
+	if _, ok := _c.mutation.Version(); !ok {
+		v := configurationitem.DefaultVersion
+		_c.mutation.SetVersion(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := configurationitem.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -683,6 +701,9 @@ func (_c *ConfigurationItemCreate) check() error {
 		if err := configurationitem.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.tenant_id": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "ConfigurationItem.version"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ConfigurationItem.created_at"`)}
@@ -837,6 +858,10 @@ func (_c *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.C
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(configurationitem.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
+	}
+	if value, ok := _c.mutation.Version(); ok {
+		_spec.SetField(configurationitem.FieldVersion, field.TypeInt, value)
+		_node.Version = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(configurationitem.FieldCreatedAt, field.TypeTime, value)

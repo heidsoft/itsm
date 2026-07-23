@@ -16,6 +16,23 @@ func NewDepartmentService(client *ent.Client) *DepartmentService {
 	return &DepartmentService{client: client}
 }
 
+// GetDepartmentByID 根据ID获取部门
+func (s *DepartmentService) GetDepartmentByID(ctx context.Context, id, tenantID int) (*ent.Department, error) {
+	dept, err := s.client.Department.Query().
+		Where(
+			department.IDEQ(id),
+			department.TenantIDEQ(tenantID),
+		).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("部门不存在: id=%d", id)
+		}
+		return nil, fmt.Errorf("获取部门失败: %w", err)
+	}
+	return dept, nil
+}
+
 // Department Methods
 
 func (s *DepartmentService) CreateDepartment(ctx context.Context, name, code, description string, managerID, parentID, tenantID int) (*ent.Department, error) {
@@ -76,8 +93,8 @@ func (s *DepartmentService) GetDepartmentTree(ctx context.Context, tenantID int)
 
 // UpdateDepartment 更新部门
 func (s *DepartmentService) UpdateDepartment(ctx context.Context, id int, name, code, description string, managerID, parentID, tenantID int) (*ent.Department, error) {
-	// 检查部门是否存在且属于当前租户
-	_, err := s.client.Department.Query().
+	// 先获取原始部门信息
+	oldDept, err := s.client.Department.Query().
 		Where(
 			department.IDEQ(id),
 			department.TenantIDEQ(tenantID),
@@ -87,22 +104,29 @@ func (s *DepartmentService) UpdateDepartment(ctx context.Context, id int, name, 
 		return nil, err
 	}
 
-	update := s.client.Department.UpdateOneID(id)
-	if name != "" {
-		update = update.SetName(name)
+	// 如果字段为空，保留原值
+	if name == "" {
+		name = oldDept.Name
 	}
-	if code != "" {
-		update = update.SetCode(code)
+	if code == "" {
+		code = oldDept.Code
 	}
-	if description != "" {
-		update = update.SetDescription(description)
+	if description == "" {
+		description = oldDept.Description
 	}
-	if managerID > 0 {
-		update = update.SetManagerID(managerID)
+	if managerID <= 0 {
+		managerID = oldDept.ManagerID
 	}
-	if parentID >= 0 { // 允许设置为0（根节点）
-		update = update.SetParentID(parentID)
+	if parentID < 0 {
+		parentID = oldDept.ParentID
 	}
+
+	update := s.client.Department.UpdateOneID(id).
+		SetName(name).
+		SetCode(code).
+		SetDescription(description).
+		SetManagerID(managerID).
+		SetParentID(parentID)
 
 	return update.Save(ctx)
 }

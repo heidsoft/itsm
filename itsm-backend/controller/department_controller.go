@@ -58,6 +58,38 @@ func (c *DepartmentController) CreateDepartment(ctx *gin.Context) {
 	common.Success(ctx, dept)
 }
 
+// GetDepartment 获取单个部门
+// @Summary 获取单个部门
+// @Description 根据ID获取部门详情
+// @Tags 部门管理
+// @Accept json
+// @Produce json
+// @Param id path int true "部门ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/departments/{id} [get]
+func (c *DepartmentController) GetDepartment(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的部门ID")
+		return
+	}
+
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	dept, err := c.service.GetDepartmentByID(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(ctx, dept)
+}
+
 // GetDepartmentTree 获取部门树
 // @Summary 获取部门树
 // @Description 获取部门层级树形结构

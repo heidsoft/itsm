@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"fmt"
 	"time"
 
 	"itsm-backend/ent"
@@ -65,7 +66,7 @@ func ToBPMNProcessInstanceResponse(p *ent.ProcessInstance) *BPMNProcessInstanceR
 		return nil
 	}
 	return &BPMNProcessInstanceResponse{
-		ID:                    p.ProcessInstanceID,
+		ID:                    fmt.Sprintf("%d", p.ID),
 		InstanceID:            p.ProcessInstanceID,
 		BusinessKey:           p.BusinessKey,
 		ProcessDefinitionKey:  p.ProcessDefinitionKey,

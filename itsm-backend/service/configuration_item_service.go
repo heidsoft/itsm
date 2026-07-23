@@ -59,7 +59,8 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 		SetCiTypeID(ciTypeID).
 		SetCiType(ciType.Name).
 		SetStatus(req.Status).
-		SetTenantID(tenantID)
+		SetTenantID(tenantID).
+		SetVersion(1)
 
 	if req.Environment != "" {
 		create.SetEnvironment(req.Environment)
@@ -264,8 +265,17 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 		return nil, fmt.Errorf("failed to get CI: %w", err)
 	}
 
+	// 乐观锁检查
+	if req.Version > 0 && oldCI.Version != req.Version {
+		return nil, fmt.Errorf("version mismatch: expected %d, got %d", oldCI.Version, req.Version)
+	}
+
 	update := s.client.ConfigurationItem.UpdateOneID(id).
-		Where(configurationitem.TenantIDEQ(tenantID))
+		Where(
+			configurationitem.TenantIDEQ(tenantID),
+			configurationitem.VersionEQ(oldCI.Version),
+		).
+		SetVersion(oldCI.Version + 1)
 
 	if req.Name != "" {
 		update.SetName(req.Name)

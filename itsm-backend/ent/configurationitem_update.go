@@ -588,6 +588,27 @@ func (_u *ConfigurationItemUpdate) AddTenantID(v int) *ConfigurationItemUpdate {
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *ConfigurationItemUpdate) SetVersion(v int) *ConfigurationItemUpdate {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableVersion(v *int) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *ConfigurationItemUpdate) AddVersion(v int) *ConfigurationItemUpdate {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *ConfigurationItemUpdate) SetCreatedAt(v time.Time) *ConfigurationItemUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -1140,6 +1161,12 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(configurationitem.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(configurationitem.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(configurationitem.FieldVersion, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(configurationitem.FieldCreatedAt, field.TypeTime, value)
@@ -2063,6 +2090,27 @@ func (_u *ConfigurationItemUpdateOne) AddTenantID(v int) *ConfigurationItemUpdat
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *ConfigurationItemUpdateOne) SetVersion(v int) *ConfigurationItemUpdateOne {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableVersion(v *int) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *ConfigurationItemUpdateOne) AddVersion(v int) *ConfigurationItemUpdateOne {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *ConfigurationItemUpdateOne) SetCreatedAt(v time.Time) *ConfigurationItemUpdateOne {
 	_u.mutation.SetCreatedAt(v)
@@ -2645,6 +2693,12 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(configurationitem.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(configurationitem.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(configurationitem.FieldVersion, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(configurationitem.FieldCreatedAt, field.TypeTime, value)
