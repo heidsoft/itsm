@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Space, message, Pagination, Badge, Modal, Select, Input, Form } from 'antd';
-import { Plus, Search, Bell, RotateCcw, Download, Filter, UserPlus, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Plus, Search, Bell, RotateCcw, Download, Filter, UserPlus, CheckCircle, XCircle, Trash2, BarChart3, Clock, AlertTriangle, Timer } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   BusinessPageTemplate,
@@ -283,26 +283,26 @@ export default function IncidentsPage() {
           label: '总事件',
           value: metrics.totalIncidents || 0,
           color: '#1890ff',
-          icon: <span className="text-2xl">📊</span>,
+          icon: <BarChart3 className="w-5 h-5" />,
         },
         {
           label: '待处理',
           value: metrics.openIncidents || 0,
           color: '#faad14',
-          icon: <span className="text-2xl">⏳</span>,
+          icon: <Clock className="w-5 h-5" />,
         },
         {
           label: '紧急事件',
           value: metrics.criticalIncidents || 0,
           color: '#ff4d4f',
-          icon: <span className="text-2xl">🚨</span>,
+          icon: <AlertTriangle className="w-5 h-5" />,
         },
         {
           label: '平均解决时间',
           value: Math.round((metrics.avgResolutionTime || 0) / 60),
           suffix: '分钟',
           color: '#52c41a',
-          icon: <span className="text-2xl">⏱️</span>,
+          icon: <Timer className="w-5 h-5" />,
         },
       ]
     : [];

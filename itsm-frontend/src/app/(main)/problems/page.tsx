@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Space, message, Pagination, Select } from 'antd';
-import { Plus, Search, RotateCcw, Download, Filter } from 'lucide-react';
+import { Plus, Search, RotateCcw, Download, Filter, Bug, AlertCircle, Search as SearchIcon, CheckCircle } from 'lucide-react';
 import { LayoutGrid } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -178,25 +178,25 @@ export default function ProblemListPage() {
       label: '总问题数',
       value: stats.total,
       color: '#1890ff',
-      icon: <span className="text-2xl">🐛</span>,
+      icon: <Bug className="w-5 h-5" />,
     },
     {
       label: '待处理',
       value: stats.open,
       color: '#ff4d4f',
-      icon: <span className="text-2xl">⚠️</span>,
+      icon: <AlertCircle className="w-5 h-5" />,
     },
     {
       label: '调查中',
       value: stats.inProgress,
       color: '#fa8c16',
-      icon: <span className="text-2xl">🔍</span>,
+      icon: <SearchIcon className="w-5 h-5" />,
     },
     {
       label: '已解决',
       value: stats.resolved,
       color: '#52c41a',
-      icon: <span className="text-2xl">✅</span>,
+      icon: <CheckCircle className="w-5 h-5" />,
     },
   ];
 
