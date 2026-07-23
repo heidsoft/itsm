@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Space, message, Pagination, Select, Card, Empty } from 'antd';
+import { Button, Calendar as AntCalendar, message, Pagination, Select, Card, Empty, Tag, Spin } from 'antd';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import {
   Calendar,
   CheckCircle2,
@@ -20,7 +22,7 @@ import {
   type PageStats,
 } from '@/components/layout/BusinessPageTemplate';
 import ChangeList from '@/components/change/ChangeList';
-import { ChangeApi, type Change } from '@/lib/api/change-api';
+import { ChangeApi, type Change, type ChangeCalendarItem } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
   UnifiedKanbanBoard,
@@ -55,6 +57,19 @@ const riskOptions = [
   { value: 'low', label: '低风险' },
 ];
 
+const CHANGE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  draft: { label: '草稿', color: 'default' },
+  pending: { label: '待审批', color: 'orange' },
+  approved: { label: '已批准', color: 'blue' },
+  scheduled: { label: '已排期', color: 'purple' },
+  in_progress: { label: '实施中', color: 'cyan' },
+  completed: { label: '已完成', color: 'green' },
+  rejected: { label: '已拒绝', color: 'red' },
+  failed: { label: '失败', color: 'red' },
+  rolled_back: { label: '已回滚', color: 'volcano' },
+  cancelled: { label: '已取消', color: 'default' },
+};
+
 export default function ChangesPage() {
   const router = useRouter();
   const { t } = useI18n();
@@ -76,6 +91,13 @@ export default function ChangesPage() {
   const [activeView, setActiveView] = useState<'list' | 'kanban' | 'calendar'>('list');
   const [changes, setChanges] = useState<Change[]>([]);
   const [loading, setLoading] = useState(false);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarData, setCalendarData] = useState<ChangeCalendarItem[]>([]);
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+    dayjs().startOf('month'),
+    dayjs().endOf('month'),
+  ]);
+  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
   // 分页
   const [page, setPage] = useState(1);
@@ -141,14 +163,34 @@ export default function ChangesPage() {
     }
   }, [t]);
 
+  const fetchCalendarData = useCallback(async () => {
+    setCalendarLoading(true);
+    try {
+      const response = await ChangeApi.getCalendar({
+        startDate: dateRange[0].format('YYYY-MM-DD'),
+        endDate: dateRange[1].format('YYYY-MM-DD'),
+        status: statusFilter,
+      });
+      setCalendarData(response.items || []);
+    } catch (error) {
+      console.error('Failed to fetch change calendar:', error);
+      setCalendarData([]);
+      message.error('加载变更日历失败，请稍后重试');
+    } finally {
+      setCalendarLoading(false);
+    }
+  }, [dateRange, statusFilter]);
+
   // 加载数据
   useEffect(() => {
     if (activeView === 'kanban') {
       fetchChangesForKanban();
+    } else if (activeView === 'calendar') {
+      fetchCalendarData();
     } else if (activeView === 'list') {
       fetchChanges();
     }
-  }, [activeView, fetchChanges, fetchChangesForKanban]);
+  }, [activeView, fetchCalendarData, fetchChanges, fetchChangesForKanban]);
 
   useEffect(() => {
     fetchStats();
@@ -167,11 +209,13 @@ export default function ChangesPage() {
   const handleRefresh = useCallback(() => {
     if (activeView === 'kanban') {
       fetchChangesForKanban();
+    } else if (activeView === 'calendar') {
+      fetchCalendarData();
     } else {
       fetchChanges();
     }
     fetchStats();
-  }, [activeView, fetchChanges, fetchChangesForKanban, fetchStats]);
+  }, [activeView, fetchCalendarData, fetchChanges, fetchChangesForKanban, fetchStats]);
 
   const handleResetFilters = useCallback(() => {
     setSearchKeyword('');
@@ -286,14 +330,92 @@ export default function ChangesPage() {
     />
   );
 
-  const renderCalendarContent = () => (
-    <Card className="text-center py-12">
-      <Empty
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-        description="日历视图开发中，敬请期待"
-      />
-    </Card>
-  );
+  const getChangesForDate = (date: Dayjs) =>
+    calendarData.filter((change) => {
+      const start = dayjs(change.plannedStart);
+      const end = dayjs(change.plannedEnd || change.plannedStart);
+      return (
+        start.isValid() &&
+        end.isValid() &&
+        !date.startOf('day').isBefore(start.startOf('day')) &&
+        !date.startOf('day').isAfter(end.endOf('day'))
+      );
+    });
+
+  const renderCalendarContent = () => {
+    const selectedChanges = getChangesForDate(selectedDate);
+
+    return (
+      <Spin spinning={calendarLoading}>
+        <Card styles={{ body: { padding: 16 } }}>
+          <AntCalendar
+            value={selectedDate}
+            onSelect={setSelectedDate}
+            onPanelChange={(date) => {
+              setSelectedDate(date);
+              setDateRange([date.startOf('month'), date.endOf('month')]);
+            }}
+            cellRender={(current, info) => {
+              if (info.type !== 'date') return info.originNode;
+              const dayChanges = getChangesForDate(current);
+
+              return (
+                <div className="h-full overflow-hidden">
+                  {dayChanges.slice(0, 3).map((change) => {
+                    const status = CHANGE_STATUS_CONFIG[change.status] || {
+                      label: change.status,
+                      color: 'default',
+                    };
+                    return (
+                      <Tag
+                        key={change.id}
+                        color={status.color}
+                        className="mb-1 block max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                        title={`${change.changeNumber} ${change.title}`}
+                      >
+                        {change.title}
+                      </Tag>
+                    );
+                  })}
+                  {dayChanges.length > 3 && (
+                    <span className="text-xs text-gray-500">另有 {dayChanges.length - 3} 项</span>
+                  )}
+                </div>
+              );
+            }}
+          />
+        </Card>
+
+        <Card title={`${selectedDate.format('YYYY年MM月DD日')}的变更`} className="mt-4">
+          {selectedChanges.length === 0 ? (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="当天暂无变更" />
+          ) : (
+            <div className="space-y-2">
+              {selectedChanges.map((change) => {
+                const status = CHANGE_STATUS_CONFIG[change.status] || {
+                  label: change.status,
+                  color: 'default',
+                };
+                return (
+                  <button
+                    key={change.id}
+                    type="button"
+                    className="flex w-full items-center gap-3 rounded-md border border-gray-200 px-3 py-2 text-left transition-colors hover:bg-gray-50"
+                    onClick={() => router.push(`/changes/${change.id}`)}
+                  >
+                    <Tag color={status.color}>{status.label}</Tag>
+                    <span className="shrink-0 text-sm text-gray-500">{change.changeNumber}</span>
+                    <span className="min-w-0 flex-1 truncate">{change.title}</span>
+                    <span className="shrink-0 text-sm text-gray-500">{change.assigneeName || '未分配'}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      </Spin>
+    );
+  };
 
   // ====== 渲染视图 ======
   const renderContent = () => {
@@ -355,8 +477,8 @@ export default function ChangesPage() {
       ]}
 
       // 内容
-      loading={loading}
-      empty={changes.length === 0 && !loading}
+      loading={activeView === 'calendar' ? false : loading}
+      empty={activeView !== 'calendar' && changes.length === 0 && !loading}
       emptyDescription="暂无变更记录"
       emptyAction={{
         label: '创建第一个变更',

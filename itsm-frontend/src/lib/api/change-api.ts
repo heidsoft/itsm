@@ -212,6 +212,19 @@ export interface PIRListResponse {
   items: PIRResponse[];
 }
 
+// 日历视图项
+export interface ChangeCalendarItem {
+  id: number;
+  title: string;
+  changeNumber: string;
+  status: string;
+  riskLevel: string;
+  category: string;
+  plannedStart: string;
+  plannedEnd: string;
+  assigneeName: string;
+}
+
 // 变更API类
 export class ChangeApi {
   // 获取变更列表
@@ -337,6 +350,15 @@ export class ChangeApi {
   // 获取变更关联工单
   static async getRelatedTickets(id: number): Promise<any[]> {
     return httpClient.get(`/api/v1/changes/${id}/tickets`);
+  }
+
+  // 获取日历视图数据
+  static async getCalendar(params?: {
+    startDate?: string;
+    endDate?: string;
+    status?: string;
+  }): Promise<{ items: ChangeCalendarItem[]; total: number }> {
+    return httpClient.get('/api/v1/changes/calendar', { params });
   }
 
   // 获取变更影响分析
