@@ -16,7 +16,9 @@ type Change struct {
 	ImpactScope        string
 	RiskLevel          string
 	AssigneeID         *int
+	Assignee           *User
 	CreatedBy          int
+	CreatedByUser      *User
 	TenantID           int
 	PlannedStartDate   *time.Time
 	PlannedEndDate     *time.Time
@@ -28,6 +30,14 @@ type Change struct {
 	RelatedTickets     []string
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
+}
+
+// User is the minimal user projection needed by the Change domain response.
+// Keeping this projection local avoids exposing the persistence model while
+// still allowing repositories to hydrate user display information.
+type User struct {
+	ID   int
+	Name string
 }
 
 // ApprovalChain represents an item in the approval workflow

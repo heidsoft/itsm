@@ -174,6 +174,8 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 		Status:          incident.Status,
 		Priority:        incident.Priority,
 		Severity:        incident.Severity,
+		Impact:          incident.Impact,
+		Urgency:         incident.Urgency,
 		IncidentNumber:  incident.IncidentNumber,
 		ReporterID:      incident.ReporterID,
 		Category:        incident.Category,
@@ -181,8 +183,11 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 		ImpactAnalysis:  impactAnalysis,
 		RootCause:       rootCause,
 		ResolutionSteps: resolutionSteps,
+		EscalationLevel: incident.EscalationLevel,
 		IsAutomated:     incident.IsAutomated,
 		IsMajorIncident: incident.IsMajorIncident,
+		Source:          incident.Source,
+		Metadata:        incident.Metadata,
 		TenantID:        incident.TenantID,
 		Version:         incident.Version, // 乐观锁版本号
 		CreatedAt:       incident.CreatedAt,
@@ -1077,6 +1082,7 @@ func ToCIResponse(ci *ent.ConfigurationItem) *CIResponse {
 		CloudSyncStatus:    ci.CloudSyncStatus,
 		CloudResourceRefID: ci.CloudResourceRefID,
 		TenantID:           ci.TenantID,
+		Version:            ci.Version,
 		CreatedAt:          ci.CreatedAt,
 		UpdatedAt:          ci.UpdatedAt,
 	}

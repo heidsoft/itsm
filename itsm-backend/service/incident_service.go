@@ -1167,60 +1167,7 @@ func isValidIncidentStatusTransition(currentStatus, newStatus string) bool {
 
 // 转换为响应DTO
 func (s *IncidentService) toIncidentResponse(incident *ent.Incident) *dto.IncidentResponse {
-	var impactAnalysis *dto.ImpactAnalysis
-	if incident.ImpactAnalysis != nil {
-		impactAnalysis = &dto.ImpactAnalysis{}
-		dto.MapToStruct(incident.ImpactAnalysis, impactAnalysis)
-	}
-
-	var rootCause *dto.RootCause
-	if incident.RootCause != nil {
-		rootCause = &dto.RootCause{}
-		dto.MapToStruct(incident.RootCause, rootCause)
-	}
-
-	var resolutionSteps []dto.ResolutionStep
-	if incident.ResolutionSteps != nil {
-		dto.MapSliceToStructSlice(incident.ResolutionSteps, &resolutionSteps)
-	}
-
-	response := &dto.IncidentResponse{
-		ID:              incident.ID,
-		Title:           incident.Title,
-		Description:     incident.Description,
-		Status:          incident.Status,
-		Priority:        incident.Priority,
-		Severity:        incident.Severity,
-		Impact:          incident.Impact,
-		Urgency:         incident.Urgency,
-		IncidentNumber:  incident.IncidentNumber,
-		ReporterID:      incident.ReporterID,
-		Category:        incident.Category,
-		Subcategory:     incident.Subcategory,
-		ImpactAnalysis:  impactAnalysis,
-		RootCause:       rootCause,
-		ResolutionSteps: resolutionSteps,
-		Version:         incident.Version,
-		DetectedAt:      incident.DetectedAt,
-		ResolvedAt:      &incident.ResolvedAt,
-		ClosedAt:        &incident.ClosedAt,
-		EscalatedAt:     &incident.EscalatedAt,
-		EscalationLevel: incident.EscalationLevel,
-		IsAutomated:     incident.IsAutomated,
-		IsMajorIncident: incident.IsMajorIncident,
-		Source:          incident.Source,
-		Metadata:        incident.Metadata,
-		TenantID:        incident.TenantID,
-		CreatedAt:       incident.CreatedAt,
-		UpdatedAt:       incident.UpdatedAt,
-	}
-	if incident.AssigneeID > 0 {
-		response.AssigneeID = &incident.AssigneeID
-	}
-	if incident.ConfigurationItemID > 0 {
-		response.ConfigurationItemID = &incident.ConfigurationItemID
-	}
-	return response
+	return dto.ToIncidentResponse(incident)
 }
 
 func (s *IncidentService) toIncidentEventResponse(event *ent.IncidentEvent) *dto.IncidentEventResponse {

@@ -28,8 +28,8 @@ interface IncidentFormValues {
   title: string;
   description: string;
   priority: 'critical' | 'high' | 'medium' | 'low';
-  source: 'manual' | 'monitoring' | 'email' | 'phone' | 'portal';
-  type: 'incident' | 'service_request' | 'problem' | 'change';
+  source: 'manual' | 'monitoring' | 'system' | 'user';
+  type: 'incident' | 'service_request' | 'security_event' | 'alert';
   category?: string;
   impact?: 'critical' | 'high' | 'medium' | 'low';
   urgency?: 'critical' | 'high' | 'medium' | 'low';
@@ -120,7 +120,7 @@ export default function CreateIncidentPage() {
         category: values.category,
         impact: values.impact,
         urgency: values.urgency,
-        assignedTo: values.assignedTo,
+        assigneeId: values.assignedTo,
         // 关联第一个CI（后续可扩展支持多个CI）
         configurationItemId: selectedCIs.length > 0 ? selectedCIs[0].id : undefined,
       });
@@ -222,9 +222,8 @@ export default function CreateIncidentPage() {
                               <Select>
                                 <Option value="manual">手动创建</Option>
                                 <Option value="monitoring">监控告警</Option>
-                                <Option value="email">邮件</Option>
-                                <Option value="phone">电话</Option>
-                                <Option value="portal">门户网站</Option>
+                                <Option value="system">系统</Option>
+                                <Option value="user">用户</Option>
                               </Select>
                             </Form.Item>
                           </Col>
@@ -237,8 +236,8 @@ export default function CreateIncidentPage() {
                               <Select>
                                 <Option value="incident">事件</Option>
                                 <Option value="service_request">服务请求</Option>
-                                <Option value="problem">问题</Option>
-                                <Option value="change">变更</Option>
+                                <Option value="security_event">安全事件</Option>
+                                <Option value="alert">告警</Option>
                               </Select>
                             </Form.Item>
                           </Col>

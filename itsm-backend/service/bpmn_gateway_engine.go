@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -370,12 +369,18 @@ func (e *GatewayEngine) recordGatewayExecution(ctx context.Context, req *Gateway
 	// 保存到流程执行历史表
 	historyID := fmt.Sprintf("HIST-%s-%d", req.GatewayID, time.Now().UnixNano())
 
-	// 解析 process_instance_id 为 int
-	instanceID, _ := strconv.Atoi(req.ProcessInstanceID)
+	// req.ProcessInstanceID 是 BPMN 业务键（例如 PI-change-123），历史表存储的是实例数据库 ID。
+	instance, err := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(req.ProcessInstanceID)).
+		Where(processinstance.TenantID(req.TenantID)).
+		First(ctx)
+	if err != nil {
+		return fmt.Errorf("获取流程实例失败: %w", err)
+	}
 
 	_, err = e.client.ProcessExecutionHistory.Create().
 		SetHistoryID(historyID).
-		SetProcessInstanceID(instanceID).
+		SetProcessInstanceID(instance.ID).
 		SetProcessDefinitionKey(req.ProcessDefinitionKey).
 		SetActivityID(req.GatewayID).
 		SetActivityType("gateway").
@@ -395,15 +400,18 @@ func (e *GatewayEngine) recordGatewayExecution(ctx context.Context, req *Gateway
 
 // GetGatewayExecutionHistory 获取网关执行历史
 func (e *GatewayEngine) GetGatewayExecutionHistory(ctx context.Context, processInstanceID string, tenantID int) ([]map[string]interface{}, error) {
-	// 解析 process_instance_id 为 int
-	instanceID, err := strconv.Atoi(processInstanceID)
+	// processInstanceID 是 BPMN 业务键；先解析为租户内的实例，再用数据库 ID 查历史。
+	instance, err := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID)).
+		Where(processinstance.TenantID(tenantID)).
+		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("invalid process instance ID: %w", err)
+		return nil, fmt.Errorf("failed to query process instance: %w", err)
 	}
 
 	// 从数据库查询执行历史
 	histories, err := e.client.ProcessExecutionHistory.Query().
-		Where(processexecutionhistory.ProcessInstanceID(instanceID)).
+		Where(processexecutionhistory.ProcessInstanceID(instance.ID)).
 		Where(processexecutionhistory.TenantID(tenantID)).
 		Where(processexecutionhistory.ActivityType("gateway")).
 		Order(ent.Asc(processexecutionhistory.FieldTimestamp)).

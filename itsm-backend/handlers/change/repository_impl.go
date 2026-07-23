@@ -54,6 +54,53 @@ func toDomain(ec *ent.Change) *Change {
 	}
 }
 
+// hydrateUsers loads all users referenced by the supplied changes in one
+// tenant-scoped query. Change currently stores user IDs without Ent edges, so
+// this provides the domain associations without introducing N+1 queries.
+func (r *EntRepository) hydrateUsers(ctx context.Context, changes []*Change, tenantID int) error {
+	userIDs := make(map[int]struct{})
+	for _, c := range changes {
+		if c == nil {
+			continue
+		}
+		if c.CreatedBy > 0 {
+			userIDs[c.CreatedBy] = struct{}{}
+		}
+		if c.AssigneeID != nil && *c.AssigneeID > 0 {
+			userIDs[*c.AssigneeID] = struct{}{}
+		}
+	}
+	if len(userIDs) == 0 {
+		return nil
+	}
+
+	ids := make([]int, 0, len(userIDs))
+	for id := range userIDs {
+		ids = append(ids, id)
+	}
+	users, err := r.client.User.Query().
+		Where(entuser.IDIn(ids...), entuser.TenantID(tenantID)).
+		All(ctx)
+	if err != nil {
+		return err
+	}
+
+	usersByID := make(map[int]*User, len(users))
+	for _, u := range users {
+		usersByID[u.ID] = &User{ID: u.ID, Name: u.Name}
+	}
+	for _, c := range changes {
+		if c == nil {
+			continue
+		}
+		c.CreatedByUser = usersByID[c.CreatedBy]
+		if c.AssigneeID != nil {
+			c.Assignee = usersByID[*c.AssigneeID]
+		}
+	}
+	return nil
+}
+
 func (r *EntRepository) Create(ctx context.Context, c *Change) (*Change, error) {
 	ec, err := r.client.Change.Create().
 		SetTitle(c.Title).
@@ -76,7 +123,11 @@ func (r *EntRepository) Create(ctx context.Context, c *Change) (*Change, error) 
 	if err != nil {
 		return nil, err
 	}
-	return toDomain(ec), nil
+	result := toDomain(ec)
+	if err := r.hydrateUsers(ctx, []*Change{result}, c.TenantID); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Change, error) {
@@ -86,7 +137,11 @@ func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Change,
 	if err != nil {
 		return nil, err
 	}
-	return toDomain(ec), nil
+	result := toDomain(ec)
+	if err := r.hydrateUsers(ctx, []*Change{result}, tenantID); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string) ([]*Change, int, error) {
@@ -121,6 +176,9 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 	var results []*Change
 	for _, ec := range ecs {
 		results = append(results, toDomain(ec))
+	}
+	if err := r.hydrateUsers(ctx, results, tenantID); err != nil {
+		return nil, 0, err
 	}
 	return results, total, nil
 }
@@ -160,7 +218,11 @@ func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) 
 	if err != nil {
 		return nil, err
 	}
-	return toDomain(ec), nil
+	result := toDomain(ec)
+	if err := r.hydrateUsers(ctx, []*Change{result}, c.TenantID); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error {

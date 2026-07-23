@@ -159,13 +159,19 @@ func (c *IncidentController) GetIncident(ctx *gin.Context) {
 func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	// 支持 page_size 和 size 两种参数名
-	pageSizeStr := ctx.Query("page_size")
+	pageSizeStr := ctx.Query("pageSize")
+	if pageSizeStr == "" {
+		pageSizeStr = ctx.Query("page_size")
+	}
 	if pageSizeStr == "" {
 		pageSizeStr = ctx.DefaultQuery("size", "10")
 	}
 	size, _ := strconv.Atoi(pageSizeStr)
 	if size <= 0 {
 		size = 10
+	}
+	if page <= 0 {
+		page = 1
 	}
 
 	// 构建筛选条件

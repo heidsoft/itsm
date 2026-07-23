@@ -99,7 +99,12 @@ class AuthApiClient {
       }
 
       const data = await response.json();
-      return data.token;
+      // 后端返回: { code: 0, message, data: { csrf_token } }
+      const token = data?.data?.csrf_token || data?.data?.csrfToken || data?.token;
+      if (!token) {
+        throw new Error('CSRF token missing in response');
+      }
+      return token as string;
     } catch (error) {
       console.error('Error getting CSRF token:', error);
       throw error;

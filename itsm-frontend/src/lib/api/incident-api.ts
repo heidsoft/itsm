@@ -102,7 +102,6 @@ export interface CreateIncidentRequest {
   type: string;
   isMajorIncident?: boolean;
   assigneeId?: number;
-  assignedTo?: number; // Added for compatibility with UI forms
   configurationItemId?: number;
   category?: string;
   subcategory?: string;
@@ -797,7 +796,11 @@ export class IncidentAPI {
 
   /** @deprecated 使用 listIncidents */
   static async getIncidents(params?: ListIncidentsRequest): Promise<ListIncidentsResponse> {
-    return this.listIncidents(params);
+    return this.listIncidents(params && {
+      ...params,
+      assignee_id: params.assigneeId,
+      assigneeId: undefined,
+    } as ListIncidentsRequest);
   }
 
   /** @deprecated 使用 listIncidents */

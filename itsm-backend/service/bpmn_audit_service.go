@@ -59,8 +59,8 @@ const (
 
 // AuditContext 审计上下文
 type AuditContext struct {
-	ProcessInstanceID    int
-	ProcessInstanceKey   string
+	ProcessInstanceID    int    // ProcessInstance 表的数据库整数主键（instance.ID）
+	ProcessInstanceKey   string // BPMN 流程实例业务键（instance.ProcessInstanceID，例如 PI-change-123）
 	ProcessDefinitionKey string
 	ProcessDefinitionID  int
 	ActivityID           string

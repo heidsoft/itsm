@@ -43,8 +43,15 @@ func toDTO(c *Change) *dto.ChangeResponse {
 		ImplementationPlan: c.ImplementationPlan,
 		RollbackPlan:       c.RollbackPlan,
 		AffectedCIs:        c.AffectedCIs,
+		RelatedTickets:     c.RelatedTickets,
 		CreatedAt:          c.CreatedAt,
 		UpdatedAt:          c.UpdatedAt,
+	}
+	if c.Assignee != nil {
+		res.AssigneeName = &c.Assignee.Name
+	}
+	if c.CreatedByUser != nil {
+		res.CreatedByName = c.CreatedByUser.Name
 	}
 	return res
 }
@@ -78,6 +85,7 @@ func (h *Handler) CreateChange(c *gin.Context) {
 		ImplementationPlan: req.ImplementationPlan,
 		RollbackPlan:       req.RollbackPlan,
 		AffectedCIs:        req.AffectedCIs,
+		RelatedTickets:     req.RelatedTickets,
 	}
 
 	res, err := h.svc.CreateChange(c.Request.Context(), changeEntity)
@@ -240,6 +248,9 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 	}
 	if req.Description != nil {
 		existing.Description = *req.Description
+	}
+	if req.Justification != nil {
+		existing.Justification = *req.Justification
 	}
 	if req.Type != nil {
 		existing.Type = string(*req.Type)

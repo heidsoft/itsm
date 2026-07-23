@@ -23,7 +23,7 @@ const KANBAN_COLUMNS: KanbanColumnConfig<Change>[] = [
   { key: 'pending', title: '待审批', color: '#fa8c16' },
   { key: 'approved', title: '已批准', color: '#1890ff' },
   { key: 'scheduled', title: '已排期', color: '#722ed1' },
-  { key: 'implementing', title: '实施中', color: '#13c2c2' },
+  { key: 'in_progress', title: '实施中', color: '#13c2c2' },
   { key: 'completed', title: '已完成', color: '#52c41a' },
   { key: 'cancelled', title: '已取消', color: '#ff4d4f' },
 ];
@@ -33,7 +33,7 @@ const statusOptions = [
   { value: 'draft', label: '草稿' },
   { value: 'pending', label: '待审批' },
   { value: 'approved', label: '已批准' },
-  { value: 'implementing', label: '实施中' },
+  { value: 'in_progress', label: '实施中' },
   { value: 'completed', label: '已完成' },
   { value: 'rejected', label: '已拒绝' },
   { value: 'cancelled', label: '已取消' },

@@ -224,7 +224,11 @@ export class ChangeApi {
     risk?: string;
     search?: string;
   }): Promise<ChangeListResponse> {
-    return httpClient.get<ChangeListResponse>('/api/v1/changes', params);
+    return httpClient.get<ChangeListResponse>('/api/v1/changes', params && {
+      ...params,
+      riskLevel: params.risk,
+      risk: undefined,
+    });
   }
 
   // 获取单个变更
