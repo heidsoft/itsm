@@ -155,29 +155,29 @@ export class ProblemApi {
   /**
    * 调查问题
    */
-  static async investigateProblem(id: number, data: unknown): Promise<Problem> {
-    return httpClient.post(`/api/v1/problems/${id}/investigate`, data);
+  static async investigateProblem(_id: number, _data: unknown): Promise<Problem> {
+    throw new Error('功能开发中');
   }
 
   /**
    * 记录根本原因
    */
-  static async recordRootCause(id: number, rootCause: string): Promise<Problem> {
-    return httpClient.post(`/api/v1/problems/${id}/root-cause`, { rootCause: rootCause });
+  static async recordRootCause(_id: number, _rootCause: string): Promise<Problem> {
+    throw new Error('功能开发中');
   }
 
   /**
    * 提供解决方案
    */
-  static async provideSolution(id: number, solution: string): Promise<Problem> {
-    return httpClient.post(`/api/v1/problems/${id}/solution`, { resolution: solution });
+  static async provideSolution(_id: number, _solution: string): Promise<Problem> {
+    throw new Error('功能开发中');
   }
 
   /**
    * 关闭问题
    */
-  static async closeProblem(id: number, resolution: string): Promise<Problem> {
-    return httpClient.post(`/api/v1/problems/${id}/close`, { resolution });
+  static async closeProblem(_id: number, _resolution: string): Promise<Problem> {
+    throw new Error('功能开发中');
   }
 
   // ==================== 趋势分析 ====================

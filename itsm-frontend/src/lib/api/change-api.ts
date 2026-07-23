@@ -358,7 +358,7 @@ export class ChangeApi {
     endDate?: string;
     status?: string;
   }): Promise<{ items: ChangeCalendarItem[]; total: number }> {
-    return httpClient.get('/api/v1/changes/calendar', { params });
+    return httpClient.get('/api/v1/changes/calendar', params);
   }
 
   // 获取变更影响分析

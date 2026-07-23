@@ -513,14 +513,11 @@ export class IncidentAPI {
 
   /**
    * 确认告警
-   * 后端: POST /api/v1/incidents/:id/alerts/:alertId/acknowledge
+   * 后端: POST /api/v1/incidents/alerts/:alertId/acknowledge
    */
-  static async acknowledgeAlert(
-    incidentId: number,
-    alertId: number
-  ): Promise<{ message: string }> {
+  static async acknowledgeAlert(alertId: number): Promise<{ message: string }> {
     const response = await httpClient.post<{ message: string }>(
-      `/api/v1/incidents/${incidentId}/alerts/${alertId}/acknowledge`,
+      `/api/v1/incidents/alerts/${alertId}/acknowledge`,
       {}
     );
     return response;
