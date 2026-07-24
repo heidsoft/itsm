@@ -531,7 +531,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tickets.PUT("/:id", config.TicketController.UpdateTicket)
 			tickets.PUT("/:id/status", config.TicketController.UpdateTicketStatus)
 			tickets.DELETE("/:id", config.TicketController.DeleteTicket)
-			tickets.POST("/:id/assign", config.TicketController.AssignTicket)
+			tickets.POST("/:id/assign", middleware.RequirePermission("ticket", "assign"), config.TicketController.AssignTicket)
 			tickets.POST("/:id/resolve", config.TicketController.ResolveTicket)
 			tickets.POST("/:id/close", config.TicketController.CloseTicket)
 

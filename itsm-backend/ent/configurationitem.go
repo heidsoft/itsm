@@ -96,8 +96,9 @@ type ConfigurationItem struct {
 	ExpireAt time.Time `json:"expire_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ConfigurationItemQuery when eager-loading is set.
-	Edges        ConfigurationItemEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                    ConfigurationItemEdges `json:"edges"`
+	asset_configuration_item *int
+	selectValues             sql.SelectValues
 }
 
 // ConfigurationItemEdges holds the relations/edges for other nodes in the graph.
@@ -212,6 +213,8 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case configurationitem.FieldLastDiscovered, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt, configurationitem.FieldEffectiveAt, configurationitem.FieldExpireAt:
 			values[i] = new(sql.NullTime)
+		case configurationitem.ForeignKeys[0]: // asset_configuration_item
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -462,6 +465,13 @@ func (_m *ConfigurationItem) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field expire_at", values[i])
 			} else if value.Valid {
 				_m.ExpireAt = value.Time
+			}
+		case configurationitem.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field asset_configuration_item", value)
+			} else if value.Valid {
+				_m.asset_configuration_item = new(int)
+				*_m.asset_configuration_item = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

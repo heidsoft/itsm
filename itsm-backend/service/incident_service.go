@@ -75,15 +75,16 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 			return nil, err
 		}
 	}
-	if req.ConfigurationItemID != nil {
-		exists, err := s.client.ConfigurationItem.Query().
-			Where(configurationitem.IDEQ(*req.ConfigurationItemID), configurationitem.TenantIDEQ(tenantID)).
-			Exist(ctx)
+	var configurationItems []*ent.ConfigurationItem
+	if len(req.ConfigurationItemIDs) > 0 {
+		configurationItems, err = s.client.ConfigurationItem.Query().
+			Where(configurationitem.IDIn(req.ConfigurationItemIDs...), configurationitem.TenantIDEQ(tenantID)).
+			All(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to validate configuration item: %w", err)
+			return nil, fmt.Errorf("failed to validate configuration items: %w", err)
 		}
-		if !exists {
-			return nil, fmt.Errorf("configuration item not found")
+		if len(configurationItems) != len(req.ConfigurationItemIDs) {
+			return nil, fmt.Errorf("one or more configuration items not found")
 		}
 	}
 
@@ -167,10 +168,8 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 		SetIsAutomated(false).
 		SetTenantID(tenantID).
 		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now())
-	if req.ConfigurationItemID != nil {
-		create.SetConfigurationItemID(*req.ConfigurationItemID)
-	}
+		SetUpdatedAt(time.Now()).
+		AddConfigurationItemIDs(req.ConfigurationItemIDs...)
 	if req.AssigneeID != nil {
 		create.SetAssigneeID(*req.AssigneeID)
 	}
@@ -198,6 +197,7 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 	if err := tx.Commit(); err != nil {
 		return rollback(fmt.Errorf("failed to commit incident transaction: %w", err))
 	}
+	incidentEntity.Edges.ConfigurationItems = configurationItems
 
 	// 执行事件规则
 	go func() {
@@ -235,6 +235,7 @@ func (s *IncidentService) GetIncident(ctx context.Context, id int, tenantID int)
 			incident.TenantIDEQ(tenantID),
 			incident.DeletedAtIsNil(),
 		).
+		WithConfigurationItems().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -300,6 +301,7 @@ func (s *IncidentService) ListIncidents(ctx context.Context, tenantID int, page,
 
 	// 分页查询
 	incidents, err := query.
+		WithConfigurationItems().
 		Offset((page - 1) * size).
 		Limit(size).
 		Order(ent.Desc(incident.FieldCreatedAt)).
@@ -315,6 +317,60 @@ func (s *IncidentService) ListIncidents(ctx context.Context, tenantID int, page,
 	}
 
 	return responses, total, nil
+}
+
+// LinkIncidentCIs links configuration items to an incident.
+func (s *IncidentService) LinkIncidentCIs(ctx context.Context, incidentID int, ciIDs []int) error {
+	incidentEntity, err := s.client.Incident.Query().
+		Where(incident.IDEQ(incidentID), incident.DeletedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("incident not found")
+		}
+		return fmt.Errorf("failed to get incident: %w", err)
+	}
+	if len(ciIDs) == 0 {
+		return nil
+	}
+
+	count, err := s.client.ConfigurationItem.Query().
+		Where(configurationitem.IDIn(ciIDs...), configurationitem.TenantIDEQ(incidentEntity.TenantID)).
+		Count(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to validate configuration items: %w", err)
+	}
+	if count != len(ciIDs) {
+		return fmt.Errorf("one or more configuration items not found")
+	}
+
+	if _, err := s.client.Incident.UpdateOneID(incidentID).
+		Where(incident.TenantIDEQ(incidentEntity.TenantID), incident.DeletedAtIsNil()).
+		AddConfigurationItemIDs(ciIDs...).
+		Save(ctx); err != nil {
+		return fmt.Errorf("failed to link configuration items: %w", err)
+	}
+	return nil
+}
+
+// GetIncidentCIs returns the configuration items linked to an incident.
+func (s *IncidentService) GetIncidentCIs(ctx context.Context, incidentID int) ([]dto.CIInfo, error) {
+	incidentEntity, err := s.client.Incident.Query().
+		Where(incident.IDEQ(incidentID), incident.DeletedAtIsNil()).
+		WithConfigurationItems().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("incident not found")
+		}
+		return nil, fmt.Errorf("failed to get incident configuration items: %w", err)
+	}
+
+	cis := make([]dto.CIInfo, 0, len(incidentEntity.Edges.ConfigurationItems))
+	for _, ci := range incidentEntity.Edges.ConfigurationItems {
+		cis = append(cis, dto.CIInfo{ID: ci.ID, Name: ci.Name})
+	}
+	return cis, nil
 }
 
 // UpdateIncident 更新事件

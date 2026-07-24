@@ -71,9 +71,41 @@ type Asset struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt     time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the AssetQuery when eager-loading is set.
+	Edges         AssetEdges `json:"edges"`
 	vendor_assets *int
 	selectValues  sql.SelectValues
+}
+
+// AssetEdges holds the relations/edges for other nodes in the graph.
+type AssetEdges struct {
+	// 关联的CMDB配置项
+	ConfigurationItem []*ConfigurationItem `json:"configuration_item,omitempty"`
+	// 分配给的用户
+	AssignedToUser []*User `json:"assigned_to_user,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// ConfigurationItemOrErr returns the ConfigurationItem value or an error if the edge
+// was not loaded in eager-loading.
+func (e AssetEdges) ConfigurationItemOrErr() ([]*ConfigurationItem, error) {
+	if e.loadedTypes[0] {
+		return e.ConfigurationItem, nil
+	}
+	return nil, &NotLoadedError{edge: "configuration_item"}
+}
+
+// AssignedToUserOrErr returns the AssignedToUser value or an error if the edge
+// was not loaded in eager-loading.
+func (e AssetEdges) AssignedToUserOrErr() ([]*User, error) {
+	if e.loadedTypes[1] {
+		return e.AssignedToUser, nil
+	}
+	return nil, &NotLoadedError{edge: "assigned_to_user"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -300,6 +332,16 @@ func (_m *Asset) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Asset) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryConfigurationItem queries the "configuration_item" edge of the Asset entity.
+func (_m *Asset) QueryConfigurationItem() *ConfigurationItemQuery {
+	return NewAssetClient(_m.config).QueryConfigurationItem(_m)
+}
+
+// QueryAssignedToUser queries the "assigned_to_user" edge of the Asset entity.
+func (_m *Asset) QueryAssignedToUser() *UserQuery {
+	return NewAssetClient(_m.config).QueryAssignedToUser(_m)
 }
 
 // Update returns a builder for updating this Asset.

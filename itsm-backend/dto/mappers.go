@@ -194,13 +194,19 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 		UpdatedAt:       incident.UpdatedAt,
 	}
 
+	if configurationItems := incident.Edges.ConfigurationItems; configurationItems != nil {
+		response.RelatedCIs = make([]CIInfo, 0, len(configurationItems))
+		for _, ci := range configurationItems {
+			response.RelatedCIs = append(response.RelatedCIs, CIInfo{
+				ID:   ci.ID,
+				Name: ci.Name,
+			})
+		}
+	}
+
 	// Add optional fields if present
 	if incident.AssigneeID > 0 {
 		response.AssigneeID = &incident.AssigneeID
-	}
-
-	if incident.ConfigurationItemID > 0 {
-		response.ConfigurationItemID = &incident.ConfigurationItemID
 	}
 
 	// Handle time fields - convert to pointer if not zero

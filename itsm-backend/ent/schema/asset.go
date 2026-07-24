@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -101,7 +102,12 @@ func (Asset) Fields() []ent.Field {
 }
 
 func (Asset) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.To("configuration_item", ConfigurationItem.Type).
+			Comment("关联的CMDB配置项"),
+		edge.To("assigned_to_user", User.Type).
+			Comment("分配给的用户"),
+	}
 }
 
 func (Asset) Indexes() []ent.Index {

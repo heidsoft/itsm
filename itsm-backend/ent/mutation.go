@@ -4955,47 +4955,53 @@ func (m *ApprovalWorkflowMutation) ResetEdge(name string) error {
 // AssetMutation represents an operation that mutates the Asset nodes in the graph.
 type AssetMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *int
-	asset_number       *string
-	name               *string
-	description        *string
-	_type              *string
-	status             *string
-	category           *string
-	subcategory        *string
-	tenant_id          *int
-	addtenant_id       *int
-	ci_id              *int
-	addci_id           *int
-	assigned_to        *int
-	addassigned_to     *int
-	location_id        *int
-	addlocation_id     *int
-	serial_number      *string
-	model              *string
-	manufacturer       *string
-	vendor             *string
-	purchase_date      *string
-	purchase_price     *float64
-	addpurchase_price  *float64
-	warranty_expiry    *string
-	support_expiry     *string
-	location           *string
-	department         *string
-	parent_asset_id    *int
-	addparent_asset_id *int
-	specifications     *map[string]string
-	custom_fields      *map[string]string
-	tags               *[]string
-	appendtags         []string
-	created_at         *time.Time
-	updated_at         *time.Time
-	clearedFields      map[string]struct{}
-	done               bool
-	oldValue           func(context.Context) (*Asset, error)
-	predicates         []predicate.Asset
+	op                        Op
+	typ                       string
+	id                        *int
+	asset_number              *string
+	name                      *string
+	description               *string
+	_type                     *string
+	status                    *string
+	category                  *string
+	subcategory               *string
+	tenant_id                 *int
+	addtenant_id              *int
+	ci_id                     *int
+	addci_id                  *int
+	assigned_to               *int
+	addassigned_to            *int
+	location_id               *int
+	addlocation_id            *int
+	serial_number             *string
+	model                     *string
+	manufacturer              *string
+	vendor                    *string
+	purchase_date             *string
+	purchase_price            *float64
+	addpurchase_price         *float64
+	warranty_expiry           *string
+	support_expiry            *string
+	location                  *string
+	department                *string
+	parent_asset_id           *int
+	addparent_asset_id        *int
+	specifications            *map[string]string
+	custom_fields             *map[string]string
+	tags                      *[]string
+	appendtags                []string
+	created_at                *time.Time
+	updated_at                *time.Time
+	clearedFields             map[string]struct{}
+	configuration_item        map[int]struct{}
+	removedconfiguration_item map[int]struct{}
+	clearedconfiguration_item bool
+	assigned_to_user          map[int]struct{}
+	removedassigned_to_user   map[int]struct{}
+	clearedassigned_to_user   bool
+	done                      bool
+	oldValue                  func(context.Context) (*Asset, error)
+	predicates                []predicate.Asset
 }
 
 var _ ent.Mutation = (*AssetMutation)(nil)
@@ -6469,6 +6475,114 @@ func (m *AssetMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// AddConfigurationItemIDs adds the "configuration_item" edge to the ConfigurationItem entity by ids.
+func (m *AssetMutation) AddConfigurationItemIDs(ids ...int) {
+	if m.configuration_item == nil {
+		m.configuration_item = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.configuration_item[ids[i]] = struct{}{}
+	}
+}
+
+// ClearConfigurationItem clears the "configuration_item" edge to the ConfigurationItem entity.
+func (m *AssetMutation) ClearConfigurationItem() {
+	m.clearedconfiguration_item = true
+}
+
+// ConfigurationItemCleared reports if the "configuration_item" edge to the ConfigurationItem entity was cleared.
+func (m *AssetMutation) ConfigurationItemCleared() bool {
+	return m.clearedconfiguration_item
+}
+
+// RemoveConfigurationItemIDs removes the "configuration_item" edge to the ConfigurationItem entity by IDs.
+func (m *AssetMutation) RemoveConfigurationItemIDs(ids ...int) {
+	if m.removedconfiguration_item == nil {
+		m.removedconfiguration_item = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.configuration_item, ids[i])
+		m.removedconfiguration_item[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedConfigurationItem returns the removed IDs of the "configuration_item" edge to the ConfigurationItem entity.
+func (m *AssetMutation) RemovedConfigurationItemIDs() (ids []int) {
+	for id := range m.removedconfiguration_item {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ConfigurationItemIDs returns the "configuration_item" edge IDs in the mutation.
+func (m *AssetMutation) ConfigurationItemIDs() (ids []int) {
+	for id := range m.configuration_item {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetConfigurationItem resets all changes to the "configuration_item" edge.
+func (m *AssetMutation) ResetConfigurationItem() {
+	m.configuration_item = nil
+	m.clearedconfiguration_item = false
+	m.removedconfiguration_item = nil
+}
+
+// AddAssignedToUserIDs adds the "assigned_to_user" edge to the User entity by ids.
+func (m *AssetMutation) AddAssignedToUserIDs(ids ...int) {
+	if m.assigned_to_user == nil {
+		m.assigned_to_user = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.assigned_to_user[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAssignedToUser clears the "assigned_to_user" edge to the User entity.
+func (m *AssetMutation) ClearAssignedToUser() {
+	m.clearedassigned_to_user = true
+}
+
+// AssignedToUserCleared reports if the "assigned_to_user" edge to the User entity was cleared.
+func (m *AssetMutation) AssignedToUserCleared() bool {
+	return m.clearedassigned_to_user
+}
+
+// RemoveAssignedToUserIDs removes the "assigned_to_user" edge to the User entity by IDs.
+func (m *AssetMutation) RemoveAssignedToUserIDs(ids ...int) {
+	if m.removedassigned_to_user == nil {
+		m.removedassigned_to_user = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.assigned_to_user, ids[i])
+		m.removedassigned_to_user[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAssignedToUser returns the removed IDs of the "assigned_to_user" edge to the User entity.
+func (m *AssetMutation) RemovedAssignedToUserIDs() (ids []int) {
+	for id := range m.removedassigned_to_user {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AssignedToUserIDs returns the "assigned_to_user" edge IDs in the mutation.
+func (m *AssetMutation) AssignedToUserIDs() (ids []int) {
+	for id := range m.assigned_to_user {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAssignedToUser resets all changes to the "assigned_to_user" edge.
+func (m *AssetMutation) ResetAssignedToUser() {
+	m.assigned_to_user = nil
+	m.clearedassigned_to_user = false
+	m.removedassigned_to_user = nil
+}
+
 // Where appends a list predicates to the AssetMutation builder.
 func (m *AssetMutation) Where(ps ...predicate.Asset) {
 	m.predicates = append(m.predicates, ps...)
@@ -7242,49 +7356,111 @@ func (m *AssetMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AssetMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.configuration_item != nil {
+		edges = append(edges, asset.EdgeConfigurationItem)
+	}
+	if m.assigned_to_user != nil {
+		edges = append(edges, asset.EdgeAssignedToUser)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *AssetMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case asset.EdgeConfigurationItem:
+		ids := make([]ent.Value, 0, len(m.configuration_item))
+		for id := range m.configuration_item {
+			ids = append(ids, id)
+		}
+		return ids
+	case asset.EdgeAssignedToUser:
+		ids := make([]ent.Value, 0, len(m.assigned_to_user))
+		for id := range m.assigned_to_user {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AssetMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.removedconfiguration_item != nil {
+		edges = append(edges, asset.EdgeConfigurationItem)
+	}
+	if m.removedassigned_to_user != nil {
+		edges = append(edges, asset.EdgeAssignedToUser)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *AssetMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case asset.EdgeConfigurationItem:
+		ids := make([]ent.Value, 0, len(m.removedconfiguration_item))
+		for id := range m.removedconfiguration_item {
+			ids = append(ids, id)
+		}
+		return ids
+	case asset.EdgeAssignedToUser:
+		ids := make([]ent.Value, 0, len(m.removedassigned_to_user))
+		for id := range m.removedassigned_to_user {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AssetMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.clearedconfiguration_item {
+		edges = append(edges, asset.EdgeConfigurationItem)
+	}
+	if m.clearedassigned_to_user {
+		edges = append(edges, asset.EdgeAssignedToUser)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *AssetMutation) EdgeCleared(name string) bool {
+	switch name {
+	case asset.EdgeConfigurationItem:
+		return m.clearedconfiguration_item
+	case asset.EdgeAssignedToUser:
+		return m.clearedassigned_to_user
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *AssetMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown Asset unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *AssetMutation) ResetEdge(name string) error {
+	switch name {
+	case asset.EdgeConfigurationItem:
+		m.ResetConfigurationItem()
+		return nil
+	case asset.EdgeAssignedToUser:
+		m.ResetAssignedToUser()
+		return nil
+	}
 	return fmt.Errorf("unknown Asset edge %s", name)
 }
 

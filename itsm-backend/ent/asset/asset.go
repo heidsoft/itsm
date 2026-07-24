@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -67,8 +68,26 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeConfigurationItem holds the string denoting the configuration_item edge name in mutations.
+	EdgeConfigurationItem = "configuration_item"
+	// EdgeAssignedToUser holds the string denoting the assigned_to_user edge name in mutations.
+	EdgeAssignedToUser = "assigned_to_user"
 	// Table holds the table name of the asset in the database.
 	Table = "assets"
+	// ConfigurationItemTable is the table that holds the configuration_item relation/edge.
+	ConfigurationItemTable = "configuration_items"
+	// ConfigurationItemInverseTable is the table name for the ConfigurationItem entity.
+	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
+	ConfigurationItemInverseTable = "configuration_items"
+	// ConfigurationItemColumn is the table column denoting the configuration_item relation/edge.
+	ConfigurationItemColumn = "asset_configuration_item"
+	// AssignedToUserTable is the table that holds the assigned_to_user relation/edge.
+	AssignedToUserTable = "users"
+	// AssignedToUserInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	AssignedToUserInverseTable = "users"
+	// AssignedToUserColumn is the table column denoting the assigned_to_user relation/edge.
+	AssignedToUserColumn = "asset_assigned_to_user"
 )
 
 // Columns holds all SQL columns for asset fields.
@@ -269,4 +288,46 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByConfigurationItemCount orders the results by configuration_item count.
+func ByConfigurationItemCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newConfigurationItemStep(), opts...)
+	}
+}
+
+// ByConfigurationItem orders the results by configuration_item terms.
+func ByConfigurationItem(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newConfigurationItemStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAssignedToUserCount orders the results by assigned_to_user count.
+func ByAssignedToUserCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAssignedToUserStep(), opts...)
+	}
+}
+
+// ByAssignedToUser orders the results by assigned_to_user terms.
+func ByAssignedToUser(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAssignedToUserStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newConfigurationItemStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ConfigurationItemInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ConfigurationItemTable, ConfigurationItemColumn),
+	)
+}
+func newAssignedToUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AssignedToUserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AssignedToUserTable, AssignedToUserColumn),
+	)
 }

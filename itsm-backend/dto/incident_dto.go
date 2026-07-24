@@ -43,23 +43,28 @@ type ResolutionStep struct {
 	Status      string    `json:"status"` // pending, in_progress, completed, failed
 }
 
+type CIInfo struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 // 事件管理相关DTO
 type CreateIncidentRequest struct {
-	Title               string                 `json:"title" binding:"required" example:"服务器CPU使用率过高"`
-	Description         string                 `json:"description" binding:"omitempty,max=5000" example:"生产环境Web服务器CPU使用率持续超过90%"`
-	Type                string                 `json:"type" binding:"omitempty,oneof=incident service_request security_event alert" example:"incident"` // 事件类型
-	Priority            string                 `json:"priority" binding:"omitempty,oneof=low medium high critical" example:"high"`
-	Severity            string                 `json:"severity" binding:"omitempty,oneof=low medium high critical" example:"high"`
-	Impact              string                 `json:"impact" binding:"omitempty,oneof=low medium high critical" example:"medium"`
-	Urgency             string                 `json:"urgency" binding:"omitempty,oneof=low medium high critical" example:"medium"`
-	Category            string                 `json:"category" example:"performance"`
-	Subcategory         string                 `json:"subcategory" example:"cpu"`
-	ConfigurationItemID *int                   `json:"configurationItemId" example:"1"`
-	AssigneeID          *int                   `json:"assigneeId" example:"1"`
-	ImpactAnalysis      *ImpactAnalysis        `json:"impactAnalysis"`
-	Source              string                 `json:"source" binding:"omitempty,oneof=manual monitoring system user" example:"monitoring"`
-	Metadata            map[string]interface{} `json:"metadata"`
-	DetectedAt          *time.Time             `json:"detectedAt" example:"2024-01-01T00:00:00Z"`
+	Title                string                 `json:"title" binding:"required" example:"服务器CPU使用率过高"`
+	Description          string                 `json:"description" binding:"omitempty,max=5000" example:"生产环境Web服务器CPU使用率持续超过90%"`
+	Type                 string                 `json:"type" binding:"omitempty,oneof=incident service_request security_event alert" example:"incident"` // 事件类型
+	Priority             string                 `json:"priority" binding:"omitempty,oneof=low medium high critical" example:"high"`
+	Severity             string                 `json:"severity" binding:"omitempty,oneof=low medium high critical" example:"high"`
+	Impact               string                 `json:"impact" binding:"omitempty,oneof=low medium high critical" example:"medium"`
+	Urgency              string                 `json:"urgency" binding:"omitempty,oneof=low medium high critical" example:"medium"`
+	Category             string                 `json:"category" example:"performance"`
+	Subcategory          string                 `json:"subcategory" example:"cpu"`
+	ConfigurationItemIDs []int                  `json:"configurationItemIds"`
+	AssigneeID           *int                   `json:"assigneeId" example:"1"`
+	ImpactAnalysis       *ImpactAnalysis        `json:"impactAnalysis"`
+	Source               string                 `json:"source" binding:"omitempty,oneof=manual monitoring system user" example:"monitoring"`
+	Metadata             map[string]interface{} `json:"metadata"`
+	DetectedAt           *time.Time             `json:"detectedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 type UpdateIncidentRequest struct {
@@ -73,6 +78,7 @@ type UpdateIncidentRequest struct {
 	Category        *string                `json:"category,omitempty"`
 	Subcategory     *string                `json:"subcategory,omitempty"`
 	AssigneeID      *int                   `json:"assigneeId,omitempty"`
+	RelatedCIIDs    []int                  `json:"relatedCIIds,omitempty"`
 	ImpactAnalysis  *ImpactAnalysis        `json:"impactAnalysis,omitempty"`
 	RootCause       *RootCause             `json:"rootCause,omitempty"`
 	ResolutionSteps []ResolutionStep       `json:"resolutionSteps,omitempty"`
@@ -87,36 +93,36 @@ type AssignIncidentRequest struct {
 }
 
 type IncidentResponse struct {
-	ID                  int                    `json:"id" example:"1"`
-	Title               string                 `json:"title" example:"服务器CPU使用率过高"`
-	Description         string                 `json:"description" binding:"omitempty,max=5000" example:"生产环境Web服务器CPU使用率持续超过90%"`
-	Status              string                 `json:"status" example:"new"`
-	Priority            string                 `json:"priority" example:"high"`
-	Severity            string                 `json:"severity" example:"high"`
-	Impact              string                 `json:"impact" example:"medium"`
-	Urgency             string                 `json:"urgency" example:"medium"`
-	IncidentNumber      string                 `json:"incidentNumber" example:"INC-000001"`
-	ReporterID          int                    `json:"reporterId" example:"1"`
-	AssigneeID          *int                   `json:"assigneeId" example:"2"`
-	ConfigurationItemID *int                   `json:"configurationItemId" example:"1"`
-	Category            string                 `json:"category" example:"performance"`
-	Subcategory         string                 `json:"subcategory" example:"cpu"`
-	ImpactAnalysis      *ImpactAnalysis        `json:"impactAnalysis"`
-	RootCause           *RootCause             `json:"rootCause"`
-	ResolutionSteps     []ResolutionStep       `json:"resolutionSteps"`
-	Version             int                    `json:"version" example:"1"`
-	DetectedAt          time.Time              `json:"detectedAt" example:"2024-01-01T00:00:00Z"`
-	ResolvedAt          *time.Time             `json:"resolvedAt,omitempty" example:"2024-01-01T12:00:00Z"`
-	ClosedAt            *time.Time             `json:"closedAt,omitempty" example:"2024-01-01T18:00:00Z"`
-	EscalatedAt         *time.Time             `json:"escalatedAt,omitempty" example:"2024-01-01T06:00:00Z"`
-	EscalationLevel     int                    `json:"escalationLevel" example:"1"`
-	IsAutomated         bool                   `json:"isAutomated" example:"false"`
-	IsMajorIncident     bool                   `json:"isMajorIncident" example:"false"`
-	Source              string                 `json:"source" example:"monitoring"`
-	Metadata            map[string]interface{} `json:"metadata"`
-	TenantID            int                    `json:"tenantId" example:"1"`
-	CreatedAt           time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt           time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
+	ID              int                    `json:"id" example:"1"`
+	Title           string                 `json:"title" example:"服务器CPU使用率过高"`
+	Description     string                 `json:"description" binding:"omitempty,max=5000" example:"生产环境Web服务器CPU使用率持续超过90%"`
+	Status          string                 `json:"status" example:"new"`
+	Priority        string                 `json:"priority" example:"high"`
+	Severity        string                 `json:"severity" example:"high"`
+	Impact          string                 `json:"impact" example:"medium"`
+	Urgency         string                 `json:"urgency" example:"medium"`
+	IncidentNumber  string                 `json:"incidentNumber" example:"INC-000001"`
+	ReporterID      int                    `json:"reporterId" example:"1"`
+	AssigneeID      *int                   `json:"assigneeId" example:"2"`
+	RelatedCIs      []CIInfo               `json:"relatedCIs"`
+	Category        string                 `json:"category" example:"performance"`
+	Subcategory     string                 `json:"subcategory" example:"cpu"`
+	ImpactAnalysis  *ImpactAnalysis        `json:"impactAnalysis"`
+	RootCause       *RootCause             `json:"rootCause"`
+	ResolutionSteps []ResolutionStep       `json:"resolutionSteps"`
+	Version         int                    `json:"version" example:"1"`
+	DetectedAt      time.Time              `json:"detectedAt" example:"2024-01-01T00:00:00Z"`
+	ResolvedAt      *time.Time             `json:"resolvedAt,omitempty" example:"2024-01-01T12:00:00Z"`
+	ClosedAt        *time.Time             `json:"closedAt,omitempty" example:"2024-01-01T18:00:00Z"`
+	EscalatedAt     *time.Time             `json:"escalatedAt,omitempty" example:"2024-01-01T06:00:00Z"`
+	EscalationLevel int                    `json:"escalationLevel" example:"1"`
+	IsAutomated     bool                   `json:"isAutomated" example:"false"`
+	IsMajorIncident bool                   `json:"isMajorIncident" example:"false"`
+	Source          string                 `json:"source" example:"monitoring"`
+	Metadata        map[string]interface{} `json:"metadata"`
+	TenantID        int                    `json:"tenantId" example:"1"`
+	CreatedAt       time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt       time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 type IncidentListResponse struct {

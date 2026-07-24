@@ -938,6 +938,7 @@ var (
 		{Name: "lifecycle_status", Type: field.TypeString, Default: "online"},
 		{Name: "effective_at", Type: field.TypeTime, Nullable: true},
 		{Name: "expire_at", Type: field.TypeTime, Nullable: true},
+		{Name: "asset_configuration_item", Type: field.TypeInt, Nullable: true},
 		{Name: "ci_type_id", Type: field.TypeInt},
 		{Name: "cloud_resource_ref_id", Type: field.TypeInt, Nullable: true},
 	}
@@ -948,14 +949,20 @@ var (
 		PrimaryKey: []*schema.Column{ConfigurationItemsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "configuration_items_ci_types_cis",
+				Symbol:     "configuration_items_assets_configuration_item",
 				Columns:    []*schema.Column{ConfigurationItemsColumns[36]},
+				RefColumns: []*schema.Column{AssetsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "configuration_items_ci_types_cis",
+				Columns:    []*schema.Column{ConfigurationItemsColumns[37]},
 				RefColumns: []*schema.Column{CiTypesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "configuration_items_cloud_resources_cis",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[37]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[38]},
 				RefColumns: []*schema.Column{CloudResourcesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -969,7 +976,7 @@ var (
 			{
 				Name:    "configurationitem_ci_type_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[36]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[37]},
 			},
 			{
 				Name:    "configurationitem_status",
@@ -4357,6 +4364,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "msp_role", Type: field.TypeEnum, Nullable: true, Enums: []string{"provider_admin", "provider_agent", "customer_user"}},
 		{Name: "assigned_by_msp_id", Type: field.TypeInt, Nullable: true},
+		{Name: "asset_assigned_to_user", Type: field.TypeInt, Nullable: true},
 		{Name: "department_id", Type: field.TypeInt, Nullable: true},
 		{Name: "group_members", Type: field.TypeInt, Nullable: true},
 		{Name: "team_users", Type: field.TypeInt, Nullable: true},
@@ -4369,26 +4377,32 @@ var (
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "users_departments_users",
+				Symbol:     "users_assets_assigned_to_user",
 				Columns:    []*schema.Column{UsersColumns[14]},
+				RefColumns: []*schema.Column{AssetsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "users_departments_users",
+				Columns:    []*schema.Column{UsersColumns[15]},
 				RefColumns: []*schema.Column{DepartmentsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "users_groups_members",
-				Columns:    []*schema.Column{UsersColumns[15]},
+				Columns:    []*schema.Column{UsersColumns[16]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "users_teams_users",
-				Columns:    []*schema.Column{UsersColumns[16]},
+				Columns:    []*schema.Column{UsersColumns[17]},
 				RefColumns: []*schema.Column{TeamsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "users_tenants_users",
-				Columns:    []*schema.Column{UsersColumns[17]},
+				Columns:    []*schema.Column{UsersColumns[18]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -5089,8 +5103,9 @@ func init() {
 	CloudResourcesTable.ForeignKeys[0].RefTable = CloudAccountsTable
 	CloudResourcesTable.ForeignKeys[1].RefTable = CloudServicesTable
 	CloudServicesTable.ForeignKeys[0].RefTable = CloudServicesTable
-	ConfigurationItemsTable.ForeignKeys[0].RefTable = CiTypesTable
-	ConfigurationItemsTable.ForeignKeys[1].RefTable = CloudResourcesTable
+	ConfigurationItemsTable.ForeignKeys[0].RefTable = AssetsTable
+	ConfigurationItemsTable.ForeignKeys[1].RefTable = CiTypesTable
+	ConfigurationItemsTable.ForeignKeys[2].RefTable = CloudResourcesTable
 	ConfigurationItemHistoriesTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	ContractsTable.ForeignKeys[0].RefTable = VendorsTable
 	DepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
@@ -5162,10 +5177,11 @@ func init() {
 	TicketViewsTable.ForeignKeys[0].RefTable = UsersTable
 	TicketWorkflowRecordsTable.ForeignKeys[0].RefTable = TicketsTable
 	ToolInvocationsTable.ForeignKeys[0].RefTable = ConversationsTable
-	UsersTable.ForeignKeys[0].RefTable = DepartmentsTable
-	UsersTable.ForeignKeys[1].RefTable = GroupsTable
-	UsersTable.ForeignKeys[2].RefTable = TeamsTable
-	UsersTable.ForeignKeys[3].RefTable = TenantsTable
+	UsersTable.ForeignKeys[0].RefTable = AssetsTable
+	UsersTable.ForeignKeys[1].RefTable = DepartmentsTable
+	UsersTable.ForeignKeys[2].RefTable = GroupsTable
+	UsersTable.ForeignKeys[3].RefTable = TeamsTable
+	UsersTable.ForeignKeys[4].RefTable = TenantsTable
 	WorkflowsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	WorkflowInstancesTable.ForeignKeys[0].RefTable = WorkflowsTable
 	WorkflowTasksTable.ForeignKeys[0].RefTable = WorkflowInstancesTable

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -1732,6 +1733,52 @@ func UpdatedAtLT(v time.Time) predicate.Asset {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Asset {
 	return predicate.Asset(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasConfigurationItem applies the HasEdge predicate on the "configuration_item" edge.
+func HasConfigurationItem() predicate.Asset {
+	return predicate.Asset(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ConfigurationItemTable, ConfigurationItemColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasConfigurationItemWith applies the HasEdge predicate on the "configuration_item" edge with a given conditions (other predicates).
+func HasConfigurationItemWith(preds ...predicate.ConfigurationItem) predicate.Asset {
+	return predicate.Asset(func(s *sql.Selector) {
+		step := newConfigurationItemStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAssignedToUser applies the HasEdge predicate on the "assigned_to_user" edge.
+func HasAssignedToUser() predicate.Asset {
+	return predicate.Asset(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AssignedToUserTable, AssignedToUserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAssignedToUserWith applies the HasEdge predicate on the "assigned_to_user" edge with a given conditions (other predicates).
+func HasAssignedToUserWith(preds ...predicate.User) predicate.Asset {
+	return predicate.Asset(func(s *sql.Selector) {
+		step := newAssignedToUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

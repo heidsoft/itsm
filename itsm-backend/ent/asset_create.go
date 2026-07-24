@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/asset"
+	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/user"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -350,6 +352,36 @@ func (_c *AssetCreate) SetNillableUpdatedAt(v *time.Time) *AssetCreate {
 	return _c
 }
 
+// AddConfigurationItemIDs adds the "configuration_item" edge to the ConfigurationItem entity by IDs.
+func (_c *AssetCreate) AddConfigurationItemIDs(ids ...int) *AssetCreate {
+	_c.mutation.AddConfigurationItemIDs(ids...)
+	return _c
+}
+
+// AddConfigurationItem adds the "configuration_item" edges to the ConfigurationItem entity.
+func (_c *AssetCreate) AddConfigurationItem(v ...*ConfigurationItem) *AssetCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddConfigurationItemIDs(ids...)
+}
+
+// AddAssignedToUserIDs adds the "assigned_to_user" edge to the User entity by IDs.
+func (_c *AssetCreate) AddAssignedToUserIDs(ids ...int) *AssetCreate {
+	_c.mutation.AddAssignedToUserIDs(ids...)
+	return _c
+}
+
+// AddAssignedToUser adds the "assigned_to_user" edges to the User entity.
+func (_c *AssetCreate) AddAssignedToUser(v ...*User) *AssetCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAssignedToUserIDs(ids...)
+}
+
 // Mutation returns the AssetMutation object of the builder.
 func (_c *AssetCreate) Mutation() *AssetMutation {
 	return _c.mutation
@@ -574,6 +606,38 @@ func (_c *AssetCreate) createSpec() (*Asset, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(asset.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := _c.mutation.ConfigurationItemIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   asset.ConfigurationItemTable,
+			Columns: []string{asset.ConfigurationItemColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AssignedToUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   asset.AssignedToUserTable,
+			Columns: []string{asset.AssignedToUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

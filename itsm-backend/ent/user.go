@@ -51,10 +51,11 @@ type User struct {
 	AssignedByMspID int `json:"assigned_by_msp_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges         UserEdges `json:"edges"`
-	group_members *int
-	team_users    *int
-	selectValues  sql.SelectValues
+	Edges                  UserEdges `json:"edges"`
+	asset_assigned_to_user *int
+	group_members          *int
+	team_users             *int
+	selectValues           sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
@@ -246,9 +247,11 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case user.ForeignKeys[0]: // group_members
+		case user.ForeignKeys[0]: // asset_assigned_to_user
 			values[i] = new(sql.NullInt64)
-		case user.ForeignKeys[1]: // team_users
+		case user.ForeignKeys[1]: // group_members
+			values[i] = new(sql.NullInt64)
+		case user.ForeignKeys[2]: // team_users
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -363,12 +366,19 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field asset_assigned_to_user", value)
+			} else if value.Valid {
+				_m.asset_assigned_to_user = new(int)
+				*_m.asset_assigned_to_user = int(value.Int64)
+			}
+		case user.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field group_members", value)
 			} else if value.Valid {
 				_m.group_members = new(int)
 				*_m.group_members = int(value.Int64)
 			}
-		case user.ForeignKeys[1]:
+		case user.ForeignKeys[2]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field team_users", value)
 			} else if value.Valid {

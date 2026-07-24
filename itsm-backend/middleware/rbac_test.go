@@ -182,6 +182,8 @@ func TestMatchPath(t *testing.T) {
 	t.Run("Wildcard Match", func(t *testing.T) {
 		assert.True(t, matchPath("/api/v1/tickets/*", "/api/v1/tickets/123"))
 		assert.True(t, matchPath("/api/v1/tickets/*", "/api/v1/tickets/abc/edit"))
+		assert.True(t, matchPath("/api/v1/tickets/*/assign", "/api/v1/tickets/123/assign"))
+		assert.False(t, matchPath("/api/v1/tickets/*/assign", "/api/v1/tickets/123/close"))
 		assert.False(t, matchPath("/api/v1/tickets/*", "/api/v1/users/123"))
 	})
 
@@ -206,6 +208,13 @@ func TestGetPermissionFromPath(t *testing.T) {
 		assert.Equal(t, "write", perm.Action)
 	})
 
+	t.Run("Assign Ticket Returns Assign Permission", func(t *testing.T) {
+		perm := getPermissionFromPath("POST", "/api/v1/tickets/123/assign")
+		assert.NotNil(t, perm)
+		assert.Equal(t, "ticket", perm.Resource)
+		assert.Equal(t, "assign", perm.Action)
+	})
+
 	t.Run("DELETE Tickets Returns Delete Permission", func(t *testing.T) {
 		perm := getPermissionFromPath("DELETE", "/api/v1/tickets/123")
 		assert.NotNil(t, perm)
@@ -217,4 +226,11 @@ func TestGetPermissionFromPath(t *testing.T) {
 		perm := getPermissionFromPath("GET", "/api/v1/unknown/path")
 		assert.Nil(t, perm)
 	})
+}
+
+func TestCheckPermissionMatch_ResourceAdminIncludesActions(t *testing.T) {
+	permissions := []Permission{{Resource: "ticket", Action: "admin"}}
+
+	assert.True(t, checkPermissionMatch(permissions, "ticket", "assign"))
+	assert.False(t, checkPermissionMatch(permissions, "incident", "assign"))
 }

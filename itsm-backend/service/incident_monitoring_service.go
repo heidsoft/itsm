@@ -698,9 +698,6 @@ func (s *IncidentMonitoringService) convertIncidentsToResponse(incidents []*ent.
 		if incident.AssigneeID > 0 {
 			responses[i].AssigneeID = &incident.AssigneeID
 		}
-		if incident.ConfigurationItemID > 0 {
-			responses[i].ConfigurationItemID = &incident.ConfigurationItemID
-		}
 		if !incident.ResolvedAt.IsZero() {
 			responses[i].ResolvedAt = &incident.ResolvedAt
 		}

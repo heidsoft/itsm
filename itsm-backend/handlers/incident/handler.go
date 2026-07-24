@@ -61,9 +61,6 @@ func (h *Handler) Create(c *gin.Context) {
 	if req.AssigneeID != nil {
 		incident.AssigneeID = req.AssigneeID
 	}
-	if req.ConfigurationItemID != nil {
-		incident.ConfigurationItemID = req.ConfigurationItemID
-	}
 	if req.DetectedAt != nil {
 		incident.DetectedAt = *req.DetectedAt
 	}
@@ -253,32 +250,31 @@ func (h *Handler) toDTO(i *Incident) *dto.IncidentResponse {
 	}
 
 	return &dto.IncidentResponse{
-		ID:                  i.ID,
-		Title:               i.Title,
-		Description:         i.Description,
-		Status:              i.Status,
-		Priority:            i.Priority,
-		Severity:            i.Severity,
-		IncidentNumber:      i.IncidentNumber,
-		ReporterID:          i.ReporterID,
-		AssigneeID:          i.AssigneeID,
-		ConfigurationItemID: i.ConfigurationItemID,
-		Category:            i.Category,
-		Subcategory:         i.Subcategory,
-		ImpactAnalysis:      impactAnalysis,
-		RootCause:           rootCause,
-		ResolutionSteps:     resolutionSteps,
-		DetectedAt:          i.DetectedAt,
-		ResolvedAt:          i.ResolvedAt,
-		ClosedAt:            i.ClosedAt,
-		EscalatedAt:         i.EscalatedAt,
-		EscalationLevel:     i.EscalationLevel,
-		IsAutomated:         i.IsAutomated,
-		Source:              i.Source,
-		Metadata:            i.Metadata,
-		TenantID:            i.TenantID,
-		CreatedAt:           i.CreatedAt,
-		UpdatedAt:           i.UpdatedAt,
+		ID:              i.ID,
+		Title:           i.Title,
+		Description:     i.Description,
+		Status:          i.Status,
+		Priority:        i.Priority,
+		Severity:        i.Severity,
+		IncidentNumber:  i.IncidentNumber,
+		ReporterID:      i.ReporterID,
+		AssigneeID:      i.AssigneeID,
+		Category:        i.Category,
+		Subcategory:     i.Subcategory,
+		ImpactAnalysis:  impactAnalysis,
+		RootCause:       rootCause,
+		ResolutionSteps: resolutionSteps,
+		DetectedAt:      i.DetectedAt,
+		ResolvedAt:      i.ResolvedAt,
+		ClosedAt:        i.ClosedAt,
+		EscalatedAt:     i.EscalatedAt,
+		EscalationLevel: i.EscalationLevel,
+		IsAutomated:     i.IsAutomated,
+		Source:          i.Source,
+		Metadata:        i.Metadata,
+		TenantID:        i.TenantID,
+		CreatedAt:       i.CreatedAt,
+		UpdatedAt:       i.UpdatedAt,
 	}
 }
 

@@ -4,9 +4,12 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/asset"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/user"
 	"math"
 
 	"entgo.io/ent"
@@ -18,11 +21,13 @@ import (
 // AssetQuery is the builder for querying Asset entities.
 type AssetQuery struct {
 	config
-	ctx        *QueryContext
-	order      []asset.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Asset
-	withFKs    bool
+	ctx                   *QueryContext
+	order                 []asset.OrderOption
+	inters                []Interceptor
+	predicates            []predicate.Asset
+	withConfigurationItem *ConfigurationItemQuery
+	withAssignedToUser    *UserQuery
+	withFKs               bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -57,6 +62,50 @@ func (_q *AssetQuery) Unique(unique bool) *AssetQuery {
 func (_q *AssetQuery) Order(o ...asset.OrderOption) *AssetQuery {
 	_q.order = append(_q.order, o...)
 	return _q
+}
+
+// QueryConfigurationItem chains the current query on the "configuration_item" edge.
+func (_q *AssetQuery) QueryConfigurationItem() *ConfigurationItemQuery {
+	query := (&ConfigurationItemClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(asset.Table, asset.FieldID, selector),
+			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, asset.ConfigurationItemTable, asset.ConfigurationItemColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAssignedToUser chains the current query on the "assigned_to_user" edge.
+func (_q *AssetQuery) QueryAssignedToUser() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(asset.Table, asset.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, asset.AssignedToUserTable, asset.AssignedToUserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Asset entity from the query.
@@ -246,15 +295,39 @@ func (_q *AssetQuery) Clone() *AssetQuery {
 		return nil
 	}
 	return &AssetQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]asset.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Asset{}, _q.predicates...),
+		config:                _q.config,
+		ctx:                   _q.ctx.Clone(),
+		order:                 append([]asset.OrderOption{}, _q.order...),
+		inters:                append([]Interceptor{}, _q.inters...),
+		predicates:            append([]predicate.Asset{}, _q.predicates...),
+		withConfigurationItem: _q.withConfigurationItem.Clone(),
+		withAssignedToUser:    _q.withAssignedToUser.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
+}
+
+// WithConfigurationItem tells the query-builder to eager-load the nodes that are connected to
+// the "configuration_item" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AssetQuery) WithConfigurationItem(opts ...func(*ConfigurationItemQuery)) *AssetQuery {
+	query := (&ConfigurationItemClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withConfigurationItem = query
+	return _q
+}
+
+// WithAssignedToUser tells the query-builder to eager-load the nodes that are connected to
+// the "assigned_to_user" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AssetQuery) WithAssignedToUser(opts ...func(*UserQuery)) *AssetQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAssignedToUser = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -333,9 +406,13 @@ func (_q *AssetQuery) prepareQuery(ctx context.Context) error {
 
 func (_q *AssetQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Asset, error) {
 	var (
-		nodes   = []*Asset{}
-		withFKs = _q.withFKs
-		_spec   = _q.querySpec()
+		nodes       = []*Asset{}
+		withFKs     = _q.withFKs
+		_spec       = _q.querySpec()
+		loadedTypes = [2]bool{
+			_q.withConfigurationItem != nil,
+			_q.withAssignedToUser != nil,
+		}
 	)
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, asset.ForeignKeys...)
@@ -346,6 +423,7 @@ func (_q *AssetQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Asset,
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Asset{config: _q.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -357,7 +435,84 @@ func (_q *AssetQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Asset,
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withConfigurationItem; query != nil {
+		if err := _q.loadConfigurationItem(ctx, query, nodes,
+			func(n *Asset) { n.Edges.ConfigurationItem = []*ConfigurationItem{} },
+			func(n *Asset, e *ConfigurationItem) { n.Edges.ConfigurationItem = append(n.Edges.ConfigurationItem, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAssignedToUser; query != nil {
+		if err := _q.loadAssignedToUser(ctx, query, nodes,
+			func(n *Asset) { n.Edges.AssignedToUser = []*User{} },
+			func(n *Asset, e *User) { n.Edges.AssignedToUser = append(n.Edges.AssignedToUser, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (_q *AssetQuery) loadConfigurationItem(ctx context.Context, query *ConfigurationItemQuery, nodes []*Asset, init func(*Asset), assign func(*Asset, *ConfigurationItem)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Asset)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.ConfigurationItem(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(asset.ConfigurationItemColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.asset_configuration_item
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "asset_configuration_item" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "asset_configuration_item" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *AssetQuery) loadAssignedToUser(ctx context.Context, query *UserQuery, nodes []*Asset, init func(*Asset), assign func(*Asset, *User)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Asset)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.User(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(asset.AssignedToUserColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.asset_assigned_to_user
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "asset_assigned_to_user" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "asset_assigned_to_user" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (_q *AssetQuery) sqlCount(ctx context.Context) (int, error) {

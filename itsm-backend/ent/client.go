@@ -1908,6 +1908,38 @@ func (c *AssetClient) GetX(ctx context.Context, id int) *Asset {
 	return obj
 }
 
+// QueryConfigurationItem queries the configuration_item edge of a Asset.
+func (c *AssetClient) QueryConfigurationItem(_m *Asset) *ConfigurationItemQuery {
+	query := (&ConfigurationItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(asset.Table, asset.FieldID, id),
+			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, asset.ConfigurationItemTable, asset.ConfigurationItemColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAssignedToUser queries the assigned_to_user edge of a Asset.
+func (c *AssetClient) QueryAssignedToUser(_m *Asset) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(asset.Table, asset.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, asset.AssignedToUserTable, asset.AssignedToUserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *AssetClient) Hooks() []Hook {
 	return c.hooks.Asset

@@ -119,7 +119,7 @@ func SmartCheckPermission(c *gin.Context, db DBQuerier, client *ent.Client, role
 	}
 
 	// L3: Check URL auto-inference (REST endpoints)
-	if checkURLInference(role, method, path) {
+	if checkURLInference(client, role, method, path, tenantID) {
 		return true
 	}
 
@@ -308,7 +308,18 @@ func matchACL(acl EndpointACL, method, path string) bool {
 
 // REST URL pattern: /api/v1/{resource}/*
 // Examples: /api/v1/tickets, /api/v1/incidents/123
-func checkURLInference(role, method, path string) bool {
+func checkURLInference(client *ent.Client, role, method, path string, tenantID int) bool {
+	// 优先使用显式端点映射。动作型接口不能只按 HTTP 方法推断，
+	// 例如 POST /tickets/:id/assign 对应 ticket:assign，而不是 ticket:write。
+	if permission := getPermissionFromPath(method, path); permission != nil {
+		if checkRolePermissionFromDB(client, role, permission.Resource, permission.Action, tenantID) {
+			zap.S().Debugw("URL permission mapping granted",
+				"path", path, "method", method,
+				"resource", permission.Resource, "action", permission.Action)
+			return true
+		}
+	}
+
 	// Extract resource from URL
 	// Format: /api/v1/{resource}[/*]
 	parts := strings.Split(path, "/")
@@ -359,7 +370,7 @@ func hasResourcePermissionFromRole(role, resource, action string) bool {
 		if perm.Resource == "*" && perm.Action == "*" {
 			return true
 		}
-		if perm.Resource == resource && (perm.Action == action || perm.Action == "*") {
+		if perm.Resource == resource && (perm.Action == action || perm.Action == "*" || perm.Action == "admin") {
 			return true
 		}
 	}
