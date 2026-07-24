@@ -12,6 +12,7 @@ import {
   Empty,
   Typography,
   Dropdown,
+  Grid,
   type MenuProps,
 } from 'antd';
 import type { MenuProps as AntdMenuProps } from 'antd';
@@ -229,6 +230,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
   className = '',
 }) => {
   const router = useRouter();
+  const screens = Grid.useBreakpoint();
   const [localSearchValue, setLocalSearchValue] = useState(searchValue || '');
 
   // 防抖搜索
@@ -294,10 +296,10 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
     <div className={`min-h-screen bg-[#f5f7fb] ${className}`}>
       {/* ====== 页面头部区域 ====== */}
       <div className="bg-white border-b border-gray-200">
-        <div className="w-full px-6 py-4">
+        <div className="w-full px-3 py-4 sm:px-6">
           {/* 标题行 */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
               <Title level={2} style={{ marginBottom: 0, marginTop: 0 }}>
                 {title}
               </Title>
@@ -364,8 +366,8 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
 
       {/* ====== 搜索和筛选区域 ====== */}
       <div className="bg-white border-b border-gray-200">
-        <div className="w-full px-6 py-3">
-          <div className="flex items-center justify-between gap-4">
+        <div className="w-full px-3 py-3 sm:px-6">
+          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* 搜索框 */}
             <Input.Search
               placeholder={searchPlaceholder}
@@ -374,11 +376,11 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
               onChange={handleSearchChange}
               onSearch={handleSearch}
               loading={searchLoading}
-              className="w-72"
+              className="w-full sm:w-72"
               enterButton
             />
 
-            <Space>
+            <Space wrap className="w-full sm:w-auto">
               {/* 筛选按钮 */}
               {filters && (
                 <Button
@@ -408,7 +410,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
       </div>
 
       {/* ====== 主内容区域 ====== */}
-      <div className="w-full px-6 py-4">
+      <div className="w-full px-3 py-4 sm:px-6">
         {/* Tab 切换 */}
         {tabs && tabs.length > 0 && (
           <Tabs
@@ -432,7 +434,11 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
         {/* 内容区域 */}
         <Card
           className="rounded-lg shadow-sm"
-          styles={{ body: { padding: activeView === 'kanban' ? 16 : 24 } }}
+          styles={{
+            body: {
+              padding: screens.md ? (activeView === 'kanban' ? 16 : 24) : 12,
+            },
+          }}
         >
           {loading ? (
             <div className="flex items-center justify-center py-20">
@@ -461,7 +467,8 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
                 pageSize={pagination.pageSize}
                 total={pagination.total}
                 onChange={pagination.onChange}
-                showSizeChanger={pagination.showSizeChanger ?? true}
+                showSizeChanger={screens.md && (pagination.showSizeChanger ?? true)}
+                responsive
                 showTotal={pagination.showTotal ?? ((total) => `共 ${total} 条`)}
                 pageSizeOptions={pagination.pageSizeOptions ?? ['10', '20', '50', '100']}
               />

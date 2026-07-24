@@ -1,79 +1,54 @@
 ---
-name: "ticket-module-dev"
-description: "Provides guidelines, code templates, and validation for Ticket Management development. Invoke when user wants to add features, fix bugs, or refactor ticket-related code."
+name: ticket-module-dev
+description: Implement, fix, and refactor the ITSM ticket module across Go services/controllers/DTOs, Next.js pages/API clients, workflow, SLA, assignment, comments, attachments, templates, permissions, tenant isolation, and tests. Use for any ticket-management code change.
 ---
 
-# Ticket Module Development Assistant
+# Ticket Module Development
 
-This skill encapsulates the best practices and architectural standards for the ITSM Ticket Management module. Use it to guide development, ensure consistency, and avoid common pitfalls.
+## Trace before editing
 
-## Core Architecture
+Locate the active route and implementation with `rg`; the repository contains legacy and
+specialized ticket surfaces. Trace backend route/controller/service/DTO/schema together with
+the frontend page/client/types before deciding where to change behavior.
 
--   **Backend**: Go (Gin + Ent).
-    -   **Controller**: Handles HTTP requests, validation, and response formatting.
-    -   **Service**: Contains business logic (SLA calculation, workflow triggers, notifications).
-    -   **Ent Schema**: Defines data models and relationships.
--   **Frontend**: Next.js + Ant Design.
-    -   **API Layer**: `src/lib/api/ticket-api.ts` (Ensure HTTP methods match backend).
-    -   **Types**: `src/lib/api/api-config.ts` (Must align with Backend DTOs).
+## Contract rules
 
-## Development Guidelines
+- HTTP request, response, and query fields use `camelCase`.
+- Ent/database fields may use `snake_case`.
+- Controllers return ticket DTOs through existing mappers, never Ent models.
+- The frontend calls through `src/app/lib/api/` or `src/lib/api/` according to the existing
+  module pattern; do not add direct `fetch` calls inside components.
+- Keep ID types aligned with the backend contract.
 
-### 1. API Consistency Check
-*   **Method Matching**: Always verify the HTTP method defined in Backend `router.go` matches the Frontend `ticket-api.ts`.
-    *   *Example*: Use `PUT` for updates if backend defines `PUT /:id`. Avoid `PATCH` unless explicitly supported.
-*   **DTO Alignment**: Frontend interfaces (`CreateTicketRequest`) MUST match Backend DTO JSON tags.
-    *   *Critical*: Watch out for `int` vs `string` mismatches (e.g., `category_id` vs `category`).
+## Business rules
 
-### 2. Data Handling
-*   **Categories/Priorities**:
-    *   Prefer using **IDs** for relationships (e.g., `category_id`) over names.
-    *   If using names, ensure Backend has logic to lookup IDs or fall back gracefully.
-*   **Validation**:
-    *   Frontend: Use Ant Design Form rules.
-    *   Backend: Use `binding:"required"` tags in DTOs.
+- Validate lifecycle transitions in the service, not only in the UI.
+- Derive requester/actor/tenant from authenticated context.
+- Scope ticket and related user/category/team queries to the tenant.
+- Preserve SLA timestamps, workflow execution, comments, attachments, CCs, and audit history.
+- Route assignment automation through existing assignment rules and engineer skill matching.
+- Keep AI triage/summarization auditable and provide deterministic fallback.
+- Do not silently delete enterprise records when closure/archive is the intended lifecycle.
 
-### 3. Testing Standard
-*   Always run the E2E test suite after modifying ticket logic:
-    ```bash
-    # Run specific ticket test
-    source tests/e2e/venv/bin/activate
-    pytest -s tests/e2e/test_tickets_full.py
-    ```
+## Implementation loop
 
-## Common Pitfalls & Fixes
+1. Add or update regression tests.
+2. Change DTO/mapper and frontend types together for contract changes.
+3. Put transactions and side effects in the service.
+4. Expose loading, empty, validation, permission, success, and failure states in the UI.
+5. Verify refresh/revisit persistence.
 
-| Issue | Symptom | Fix |
-|-------|---------|-----|
-| **404/405 on Update** | Frontend calls `PATCH`, Backend has `PUT` | Change Frontend to `httpClient.put` |
-| **Missing Category** | Ticket created without category | Ensure Frontend sends `category_id` OR Backend implements lookup by name |
-| **CORS Error** | Login fails with Network Error | Check `cors.go` allows Origin headers properly |
+## Verification
 
-## Code Templates
+```bash
+cd itsm-backend
+go test ./service ./controller ./tests/contract ./tests/rbac
 
-### Backend: Lookup Category by Name (Service Layer)
-```go
-if req.CategoryID != nil && *req.CategoryID > 0 {
-    createBuilder = createBuilder.SetCategoryID(*req.CategoryID)
-} else if req.Category != "" {
-    // Lookup by name
-    cat, err := s.client.TicketCategory.Query().
-        Where(ticketcategory.NameEQ(req.Category), ticketcategory.TenantID(tenantID)).
-        First(ctx)
-    if err == nil {
-        createBuilder = createBuilder.SetCategoryID(cat.ID)
-    }
-}
-```
-
-### Frontend: Create Ticket Request (Interface)
-```typescript
-export interface CreateTicketRequest {
-  title: string;
-  description: string;
-  priority: string;
-  category_id?: number; // Preferred
-  category?: string;    // Fallback
-  // ...
-}
+cd ../itsm-frontend
+npm run type-check
+npm run lint:check
+PLAYWRIGHT_SKIP_CHANNELS=1 \
+npx playwright test tests/e2e/tickets.spec.ts \
+  tests/e2e/business-flows/ticket-lifecycle.spec.ts \
+  --project=chromium --workers=1
 ```

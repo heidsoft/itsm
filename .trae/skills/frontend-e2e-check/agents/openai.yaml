@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend E2E Check"
+  short_description: "Verify ITSM pages with TypeScript Playwright"
+  default_prompt: "Use $frontend-e2e-check to verify this ITSM page in a real browser."

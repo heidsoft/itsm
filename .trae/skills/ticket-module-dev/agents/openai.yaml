@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ticket Module Development"
+  short_description: "Develop ticket features across backend and frontend"
+  default_prompt: "Use $ticket-module-dev to implement this ticket-management change."

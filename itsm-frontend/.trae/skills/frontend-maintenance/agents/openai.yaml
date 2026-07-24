@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Maintenance"
+  short_description: "Harden frontend dependencies state and resilience"
+  default_prompt: "Use $frontend-maintenance to diagnose and fix this maintenance issue."

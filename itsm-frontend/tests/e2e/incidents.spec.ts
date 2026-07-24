@@ -52,4 +52,25 @@ test.describe('事件管理页面功能', () => {
     await expect(page).toHaveURL(/\/incidents$/);
     await expect(page.getByText(title)).toBeVisible();
   });
+
+  test('移动端侧边栏使用抽屉模式且页面没有横向溢出', async ({ page }) => {
+    test.slow();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole('heading', { name: '事件管理' })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    const sidebar = page.locator('.ant-layout-sider');
+    await expect(sidebar).toHaveClass(/ant-layout-sider-zero-width/);
+    expect(await page.evaluate(() => document.body.scrollWidth)).toBeLessThanOrEqual(390);
+
+    await page.getByRole('button', { name: '展开侧边栏' }).click();
+    await expect(sidebar).not.toHaveClass(/ant-layout-sider-collapsed/);
+    await expect
+      .poll(() => sidebar.evaluate(element => element.getBoundingClientRect().width))
+      .toBeGreaterThanOrEqual(255);
+
+    await page.mouse.click(350, 400);
+    await expect(sidebar).toHaveClass(/ant-layout-sider-zero-width/);
+  });
 });

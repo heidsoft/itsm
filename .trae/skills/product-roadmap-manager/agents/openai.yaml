@@ -1,0 +1,4 @@
+interface:
+  display_name: "Product Roadmap Manager"
+  short_description: "Maintain an evidence-based ITSM product roadmap"
+  default_prompt: "Use $product-roadmap-manager to prioritize and update this roadmap item."

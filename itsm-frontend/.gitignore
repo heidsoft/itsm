@@ -41,8 +41,17 @@ playwright-report/
 # compiler caches
 .swc/
 
-# IDE
+# IDE state is local; only project-owned Skill definitions are tracked.
 .trae/
+!.trae/
+.trae/*
+!.trae/skills/
+.trae/skills/*
+!.trae/skills/*/
+.trae/skills/*/*
+!.trae/skills/*/SKILL.md
+!.trae/skills/*/agents/
+!.trae/skills/*/agents/openai.yaml
 .claude/
 
 # backups

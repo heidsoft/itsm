@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend UI Details Fix"
+  short_description: "Improve responsive accessible page-level UI details"
+  default_prompt: "Use $frontend-ui-details-fix to review and repair this page UI in a real browser."

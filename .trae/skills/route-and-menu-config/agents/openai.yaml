@@ -1,0 +1,4 @@
+interface:
+  display_name: "Route and Menu Configuration"
+  short_description: "Align routes menus permissions and navigation"
+  default_prompt: "Use $route-and-menu-config to add or repair this route and menu entry."

@@ -1,46 +1,47 @@
 ---
-name: "ticket-lifecycle-check"
-description: "Verifies the complete lifecycle of tickets including creation, editing, status changes, and deletion. Invoke when user asks to test ticket management or verify CRUD operations."
+name: ticket-lifecycle-check
+description: Verify the real ITSM ticket lifecycle across creation, classification, assignment, comments, SLA, status transitions, resolution, closure, permissions, tenant isolation, audit, and persistence. Use for ticket workflow testing, CRUD/lifecycle regressions, or release acceptance.
 ---
 
 # Ticket Lifecycle Check
 
-This skill runs a comprehensive end-to-end test suite (`tests/e2e/test_tickets_full.py`) to verify the Ticket Management module.
+## Use the repository Playwright flow
 
-## Scope
-
-The test covers the following user flows:
-1.  **Authentication**: Logs in as an administrator.
-2.  **Navigation**: Accesses the Ticket Management dashboard.
-3.  **Creation**: Creates a new ticket with specific priority and category.
-4.  **Verification**: Confirms the ticket appears in the detail view with correct data.
-5.  **Editing**: Modifies the ticket title and status.
-6.  **Search**: Locates the modified ticket in the list view using search filters.
-7.  **Deletion**: Deletes the ticket and verifies it is removed from the list.
-
-## Prerequisites
-
-- Frontend application running on `http://localhost:3000`.
-- Backend API (mock or real) responding to ticket requests.
-- Python 3 environment with `playwright` and `pytest` installed.
-
-## Usage
-
-The skill automatically:
-1.  Checks/Activates the Python virtual environment (`tests/e2e/venv`).
-2.  Installs necessary dependencies if missing.
-3.  Executes the test script with verbose output.
-
-## Command
+The canonical browser flow is:
 
 ```bash
-# Manual execution reference
-source tests/e2e/venv/bin/activate
-pytest -s tests/e2e/test_tickets_full.py
+cd itsm-frontend
+PLAYWRIGHT_SKIP_CHANNELS=1 \
+npx playwright test tests/e2e/business-flows/ticket-lifecycle.spec.ts \
+  --project=chromium --workers=1
 ```
 
-## Troubleshooting
+Backend must be available on `8090`; frontend uses `PLAYWRIGHT_BASE_URL` or port `3000`.
+Use existing auth fixtures and unique test data. Do not use mock backend data.
 
-- **Login Failed**: Ensure the mock user `admin` / `admin123` is valid.
-- **Element Not Found**: The frontend UI might have changed (e.g., class names, labels). Check `test_tickets_full.py` for selector updates.
-- **Timeout**: Network latency or backend slowness. Increase timeouts in `expect()` calls.
+## Validate the lifecycle
+
+1. End user creates a ticket with required classification.
+2. Ticket appears in requester and service-desk views as permitted.
+3. Authorized agent assigns/updates it; unauthorized roles cannot.
+4. Comments/attachments and workflow/SLA side effects are visible.
+5. Status follows valid service-layer transitions.
+6. Resolution and closure retain authoritative timestamps and audit history.
+7. Refresh/revisit preserves the result.
+8. A different tenant cannot access the record.
+
+Do not assume delete is part of the business lifecycle; many enterprise records should be
+retained and audited.
+
+## Failure triage
+
+Observe the expected API response for each mutation. If behavior fails, trace:
+
+`ticket page → ticket API client → router → controller → service → DTO/mapper → Ent`.
+
+Add or update a focused test for the broken visible outcome, then run:
+
+```bash
+cd itsm-backend && go test ./service ./tests/contract ./tests/rbac
+cd ../itsm-frontend && npm run type-check && npm run lint:check
+```

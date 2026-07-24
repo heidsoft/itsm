@@ -1,0 +1,4 @@
+interface:
+  display_name: "API Integration Testing"
+  short_description: "Validate frontend and backend API contracts safely"
+  default_prompt: "Use $api-integration-testing to validate and repair this API contract."

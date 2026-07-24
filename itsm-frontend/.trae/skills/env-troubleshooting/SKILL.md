@@ -1,86 +1,56 @@
 ---
 name: env-troubleshooting
-description: Diagnoses and fixes common development environment issues, specifically Go version mismatches and NPM dependency conflicts. Invoke when startup fails due to environment or dependency errors.
+description: Diagnose ITSM local development and CI environment failures involving Go/Node versions, npm dependencies, ports, environment files, databases, Redis, Docker networks, frontend-backend routing, or service health. Use when install, startup, build, test, or local integration fails.
 ---
 
-# Environment Troubleshooting Skill
+# Environment Troubleshooting
 
-This skill provides systematic solutions for resolving common development environment startup failures, focusing on Go and Node.js/NPM ecosystems.
+## Diagnose read-only first
 
-## 1. Go Version Mismatch
-**Symptoms**:
-- Error: `compile: version "go1.X" does not match go tool version "go1.Y"`
-- Error: `go: cannot run *go1.X* (installed in ...) please ensure that go1.X is in your PATH`
+Collect evidence before changing the environment:
 
-**Diagnosis**:
-The version specified in `go.mod` differs from the local `go` toolchain, or the toolchain auto-download mechanism is failing. Often caused by `GOROOT` environment variable pointing to an older system installation while `go` binary is newer.
+```bash
+node --version
+npm --version
+go version
+go env GOROOT GOTOOLCHAIN
+lsof -nP -iTCP:3000 -sTCP:LISTEN
+lsof -nP -iTCP:8090 -sTCP:LISTEN
+curl -i http://localhost:8090/api/v1/health
+```
 
-**Solutions**:
-1.  **Force Local Toolchain** (Recommended for dev):
-    Tell Go to use the locally installed version regardless of `go.mod`.
-    ```bash
-    go env -w GOTOOLCHAIN=local
-    go clean -cache
-    ```
-2.  **Fix GOROOT Mismatch** (Critical if Solution 1 fails):
-    If `go version` shows X but `go env GOROOT` shows Y, explicit export is needed.
-    ```bash
-    # Check current GOROOT
-    go env GOROOT
-    # Find correct toolchain path (example for Mac)
-    ls -d ~/go/pkg/mod/golang.org/toolchain@*
-    # Set GOROOT (replace path with actual one found above)
-    export GOROOT=/Users/<user>/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.25.6.darwin-amd64
-    export PATH=$GOROOT/bin:$PATH
-    ```
-3.  **Match go.mod**:
-    Update `go.mod` to match your local version (if permissible).
-    ```bash
-    go mod edit -go=1.25.6  # Replace with your `go version`
-    go mod tidy
-    ```
+Read `package.json`, lockfiles, `go.mod`, `.env.example`, Compose files, and the exact error.
+Do not change `go.mod`, kill processes, delete `node_modules`, clear caches, or force dependency
+resolution until the cause is confirmed.
 
-## 2. NPM Dependency Conflicts
-**Symptoms**:
-- Error: `ERESOLVE unable to resolve dependency tree`
-- Error: `Conflicting peer dependency: ...`
+## Common boundaries
 
-**Diagnosis**:
-Strict peer dependency checks in npm v7+ are failing because libraries require different versions of the same package (e.g., React or Ant Design).
+- Frontend defaults to `3000`; backend defaults to `8090`.
+- Browser API configuration uses `NEXT_PUBLIC_API_URL` or the project's same-origin proxy.
+- Production Compose must receive an explicit `--env-file`.
+- Development and production containers may use different Docker networks.
+- Secrets belong in local environment files and must never be printed or committed.
 
-**Solutions**:
-1.  **Legacy Peer Deps** (Quick Fix):
-    Bypass strict peer dependency checks. Safe for dev, but check for runtime errors.
-    ```bash
-    npm install --legacy-peer-deps
-    ```
-2.  **Force Install** (Aggressive):
-    ```bash
-    npm install --force
-    ```
-3.  **Resolution Override** (Best Practice):
-    Add a `overrides` (npm) or `resolutions` (yarn) section to `package.json` to force a specific version.
-    ```json
-    "overrides": {
-      "antd": "^5.0.0"
-    }
-    ```
+## Recovery order
 
-## 3. Port Conflicts
-**Symptoms**:
-- Error: `listen tcp :8090: bind: address already in use`
+1. Correct the command/working directory.
+2. Correct missing or invalid environment values.
+3. Resolve the port owner or choose an explicit alternate port.
+4. Align the toolchain with the repository without weakening version requirements.
+5. Use `npm ci` when the lockfile is authoritative; repair lockfile drift deliberately.
+6. Verify dependent database/Redis/network health.
+7. Re-run the smallest failed command and health endpoint.
 
-**Solutions**:
-1.  **Find and Kill**:
-    ```bash
-    lsof -i :8090
-    kill -9 <PID>
-    ```
-2.  **Change Port**:
-    Update `config.yaml` or `.env` to use a free port.
+Avoid `npm --force`, `--legacy-peer-deps`, global Go environment mutation, or broad cleanup as
+default fixes.
 
-## Workflow
-1.  **Analyze Error Log**: Identify keywords (`compile version`, `ERESOLVE`, `bind`).
-2.  **Apply Fix**: Use the corresponding solution above.
-3.  **Clean & Rebuild**: Always run `go clean -cache` or `rm -rf node_modules` after major env changes.
-4.  **Verify**: Start the service and check health endpoints.
+## Docker verification
+
+```bash
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+docker logs <container> --tail 50
+docker inspect <container> --format '{{json .NetworkSettings.Networks}}'
+```
+
+Report the root cause, current service endpoints, exact remediation, and any remaining external
+dependency.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "ITSM Backend Guide"
+  short_description: "Implement enterprise Go backend changes safely"
+  default_prompt: "Use $itsm-backend-guide to implement this ITSM backend change safely."

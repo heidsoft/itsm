@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend CI Fix"
+  short_description: "Diagnose and repair frontend CI failures"
+  default_prompt: "Use $frontend-ci-fix to diagnose and repair this failing frontend CI job."

@@ -1,32 +1,52 @@
 ---
-name: "frontend-audit-fix"
-description: "Audits frontend for 'No Mock' rule, fixes API consistency (camel/snake case), and resolves Jest/Antd test issues. Invoke for frontend QA tasks or build validation."
+name: frontend-audit-fix
+description: Audit and repair the ITSM Next.js frontend for real-API usage, camelCase contracts, type safety, Ant Design correctness, user states, accessibility, tests, and production build health. Use for frontend QA, code review, mock-data removal, API/UI mismatch, or build validation.
 ---
 
-# Frontend Audit & Fix Workflow
+# Frontend Audit and Fix
 
-Use this workflow to validate and fix frontend projects, specifically Next.js + Ant Design.
+## Audit
 
-## 1. Enforce "No Mock Data" Rule
-- **Check**: Verify `http-client.ts` uses real API endpoints.
-- **Action**: Remove any `mockData` objects in components. Ensure 404s are handled by implementing backend routes, not falling back to mocks.
+1. Trace the page → API client → backend DTO/route.
+2. Search production components for mock/sample/random fallback data.
+3. Confirm HTTP fields and TypeScript types use `camelCase`.
+4. Check loading, empty, error, validation, permission, success, and refresh states.
+5. Check icon-button names, labels, keyboard access, responsive layout, and body overflow.
+6. Inspect console/network errors in a real browser.
 
-## 2. API Consistency Check
-- **Check**: Ensure frontend interfaces (camelCase) match backend API responses (often snake_case) via the HTTP client interceptors.
-- **Action**:
-    - If `http-client` converts snake_case -> camelCase, ensure TypeScript interfaces use **camelCase**.
-    - If data loading fails, check if the component expects camelCase but receives snakeCase (or vice versa) and if the conversion logic is active.
+Useful searches:
 
-## 3. Test Health (Jest + Antd)
-- **Common Issues**:
-    - `TypeError: window.matchMedia is not a function`: Mock in `jest.setup.js`.
-    - `TypeError: Form.useForm is not a function`: Mock `antd` in test files or globally.
-    - `Element type is invalid`: Check if `antd` mock returns all used components (Row, Col, Card, etc.).
-- **Fixing Strategies**:
-    - Use `screen.getAllByTestId` if multiple elements exist (e.g., desktop/mobile layouts).
-    - Wrap state updates in `waitFor(() => expect(...))`.
-    - Mock icons (`lucide-react` or `@ant-design/icons`) if they cause rendering issues.
+```bash
+rg -n 'mockData|Math\\.random\\(\\)|模拟数据' src --glob '*.tsx'
+rg -n 'snake_case|_[a-z]+:' src/lib/api src/app --glob '*.{ts,tsx}'
+rg -n 'valueStyle|bodyStyle|headStyle|Tabs\\.TabPane' src
+```
 
-## 4. Verification
-- Run `npm run test:ci` (or `npm test`) to verify logic.
-- Run `npm run build` to verify types and production build.
+Verify findings before mechanical replacement; legitimate internal snake_case or fixtures may
+exist.
+
+## Fix rules
+
+- Never add mock data to production paths to hide a missing API.
+- Fix backend DTO/mapper and frontend client/types together when the contract is wrong.
+- Keep business rules in backend services.
+- Use `App.useApp()` for contextual Ant Design message/modal APIs.
+- Preserve useful prior data on refresh failure, but clearly disclose stale state.
+- Avoid swallowing errors or converting permission denial into an empty list.
+- Add a focused regression test for user-facing defects.
+
+## Verification
+
+```bash
+npm run type-check
+npm run lint:check
+npm run test:ci
+npm run build
+```
+
+For page behavior:
+
+```bash
+PLAYWRIGHT_SKIP_CHANNELS=1 \
+npx playwright test tests/e2e/<module>.spec.ts --project=chromium --workers=1
+```

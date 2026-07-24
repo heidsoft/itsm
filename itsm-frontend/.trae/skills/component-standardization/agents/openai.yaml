@@ -1,0 +1,4 @@
+interface:
+  display_name: "Component Standardization"
+  short_description: "Standardize reusable accessible ITSM components"
+  default_prompt: "Use $component-standardization to refactor this UI to existing project patterns."

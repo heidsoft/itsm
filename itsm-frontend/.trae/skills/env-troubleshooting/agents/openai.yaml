@@ -1,0 +1,4 @@
+interface:
+  display_name: "Environment Troubleshooting"
+  short_description: "Diagnose local and CI environment failures safely"
+  default_prompt: "Use $env-troubleshooting to diagnose this startup or dependency failure."

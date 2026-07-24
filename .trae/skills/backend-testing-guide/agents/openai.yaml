@@ -1,0 +1,4 @@
+interface:
+  display_name: "Backend Testing Guide"
+  short_description: "Design reliable Go backend regression coverage"
+  default_prompt: "Use $backend-testing-guide to add focused backend regression tests for this change."

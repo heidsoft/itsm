@@ -1,49 +1,55 @@
 ---
-name: "frontend-e2e-check"
-description: "Runs automated E2E tests using Playwright to verify login, navigation, and core modules (Tickets, Incidents, SLA). Invoke when user asks to test the UI, verify system health, or check navigation."
+name: frontend-e2e-check
+description: Run and diagnose ITSM browser checks with the repository's TypeScript Playwright suite. Use for UI health checks, login/navigation verification, responsive checks, module smoke tests, screenshots, or browser regressions.
 ---
 
 # Frontend E2E Check
 
-This skill runs the end-to-end (E2E) test suite located in `tests/e2e/test_navigation.py`. It verifies that the frontend application is running, the user can log in, and all main menu items are accessible and load their respective pages correctly.
+## Environment
 
-## Prerequisites
+- backend: `http://localhost:8090`;
+- frontend: `PLAYWRIGHT_BASE_URL` or `http://localhost:3000`;
+- tests: `itsm-frontend/tests/e2e/*.spec.ts`;
+- artifacts: `/tmp/itsm-playwright-results`.
 
-- The frontend application must be running (usually on `http://localhost:3000`).
-- Python 3 must be installed.
+Confirm services before running tests. Reuse `tests/e2e/auth-utils.ts` or the role fixtures
+instead of duplicating login logic.
 
-## Usage
-
-1.  **Environment Setup**:
-    - Checks for `tests/e2e/venv`.
-    - If missing, creates the virtual environment and installs dependencies: `pytest`, `playwright`, `pytest-playwright`.
-    - Runs `playwright install chromium` to ensure the browser is available.
-
-2.  **Run Tests**:
-    - Executes `pytest -s tests/e2e/test_navigation.py`.
-    - The `-s` flag allows seeing the console output (progress logs).
-
-3.  **Result Analysis**:
-    - Reports PASS/FAIL status.
-    - If tests fail, checks for screenshots (e.g., `login_failed.png`, `error_*.png`) and informs the user.
-
-## Command
+## Run
 
 ```bash
-# Ensure frontend is running (if not already)
-# npm run dev --cwd itsm-frontend &
+cd itsm-frontend
+npm run test:smoke
 
-# Run the tests
-cd tests/e2e
-python3 -m venv venv
-source venv/bin/activate
-pip install pytest playwright pytest-playwright
-playwright install chromium
-pytest -s test_navigation.py
+PLAYWRIGHT_SKIP_CHANNELS=1 \
+npx playwright test tests/e2e/navigation.spec.ts \
+  --project=chromium --workers=1
 ```
 
-## Scenarios
+For a module, select its focused spec such as `tickets.spec.ts`, `incidents.spec.ts`,
+`changes.spec.ts`, or a file under `business-flows/`.
 
-- **Regression Testing**: Verify that recent changes didn't break core navigation.
-- **Health Check**: Confirm the system is operational after startup.
-- **Smoke Test**: Quick verification of login and main modules.
+## Assertions
+
+Verify more than rendering:
+
+1. intended role can enter;
+2. heading, loading, empty, error, and permission states are understandable;
+3. controls work using role/test-id selectors;
+4. API-backed actions observe the expected response;
+5. successful data survives refresh or revisit;
+6. narrow viewport has no body-level horizontal overflow.
+
+Use `page.waitForResponse` for mutations. Do not use arbitrary sleeps as the primary
+synchronization mechanism.
+
+## Diagnose failures
+
+Inspect the Playwright error context, screenshot, video, and trace. Separate:
+
+- first-time Next.js compilation latency;
+- stale/brittle selector;
+- missing backend or authentication;
+- actual product or API regression.
+
+Fix the product and keep a focused regression test when behavior is user-facing.

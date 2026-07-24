@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Testing Guide"
+  short_description: "Build focused Jest and Playwright coverage"
+  default_prompt: "Use $frontend-testing-guide to add the right frontend tests for this behavior."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Audit and Fix"
+  short_description: "Audit real API contracts UI states and build health"
+  default_prompt: "Use $frontend-audit-fix to audit and repair this frontend area."

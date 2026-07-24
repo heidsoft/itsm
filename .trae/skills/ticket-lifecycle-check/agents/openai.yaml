@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ticket Lifecycle Check"
+  short_description: "Verify the complete audited ticket lifecycle"
+  default_prompt: "Use $ticket-lifecycle-check to verify this ticket lifecycle end to end."

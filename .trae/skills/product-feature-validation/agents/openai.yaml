@@ -1,0 +1,4 @@
+interface:
+  display_name: "Product Feature Validation"
+  short_description: "Validate feature readiness with executable evidence"
+  default_prompt: "Use $product-feature-validation to assess this feature from the user workflow to persistence."
