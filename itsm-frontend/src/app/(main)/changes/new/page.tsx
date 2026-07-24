@@ -135,6 +135,7 @@ const CreateChangePage: React.FC = () => {
       <Card className="shadow-sm rounded-lg">
         <Form<ChangeFormValues>
           form={form}
+          data-testid="change-create-form"
           layout="vertical"
           initialValues={{
             type: 'normal',
@@ -154,7 +155,11 @@ const CreateChangePage: React.FC = () => {
               { max: 200, message: '标题不超过 200 字' },
             ]}
           >
-            <Input placeholder="简要描述变更内容" allowClear />
+            <Input
+              placeholder="简要描述变更内容"
+              allowClear
+              data-testid="change-title-input"
+            />
           </Form.Item>
 
           <Form.Item
@@ -163,6 +168,7 @@ const CreateChangePage: React.FC = () => {
             rules={[{ required: true, message: '请填写详细描述' }]}
           >
             <TextArea
+              data-testid="change-description-input"
               rows={4}
               placeholder="请详细说明变更的目的、范围和内容..."
               showCount
@@ -177,6 +183,7 @@ const CreateChangePage: React.FC = () => {
             rules={[{ required: true, message: '请填写变更理由' }]}
           >
             <TextArea
+              data-testid="change-justification-input"
               rows={3}
               placeholder="例如：解决问题 PRB-XXXXX，满足新业务需求等"
               showCount
@@ -269,6 +276,7 @@ const CreateChangePage: React.FC = () => {
             rules={[{ required: true, message: '请填写实施计划' }]}
           >
             <TextArea
+              data-testid="change-implementation-input"
               rows={5}
               placeholder="详细描述变更的实施步骤..."
               showCount
@@ -283,6 +291,7 @@ const CreateChangePage: React.FC = () => {
             rules={[{ required: true, message: '请填写回滚计划' }]}
           >
             <TextArea
+              data-testid="change-rollback-input"
               rows={5}
               placeholder="详细描述如果变更失败如何回滚..."
               showCount
@@ -295,7 +304,12 @@ const CreateChangePage: React.FC = () => {
               <Button onClick={() => router.back()} disabled={loading}>
                 取消
               </Button>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                data-testid="change-submit-button"
+              >
                 提交变更请求
               </Button>
             </Space>

@@ -15,7 +15,6 @@ interface IncidentListProps {
   selectedRowKeys: React.Key[];
   onSelectedRowKeysChange: (keys: React.Key[]) => void;
   onEdit: (incident: Incident) => void;
-  onView: (incident: Incident) => void;
   onDelete?: (incident: Incident) => void;
   onRefresh?: () => void;
 }
@@ -26,7 +25,6 @@ export const IncidentList: React.FC<IncidentListProps> = ({
   selectedRowKeys,
   onSelectedRowKeysChange,
   onEdit,
-  onView,
   onDelete,
   onRefresh,
 }) => {
@@ -288,7 +286,8 @@ export const IncidentList: React.FC<IncidentListProps> = ({
               type="text"
               size="small"
               icon={<Eye size={16} />}
-              onClick={() => onView(record)}
+              href={`/incidents/${record.id}`}
+              aria-label={`查看事件 ${record.title}`}
               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-0 rounded-lg transition-all duration-200 p-2"
               title={t('incidents.viewDetails')}
             />
@@ -297,6 +296,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
               size="small"
               icon={<Edit size={16} />}
               onClick={() => onEdit(record)}
+              aria-label={`编辑事件 ${record.title}`}
               className="text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2"
               title={t('incidents.editIncident')}
             />

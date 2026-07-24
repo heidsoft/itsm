@@ -199,6 +199,10 @@ func (ac *AuthController) Logout(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
+	if err := ac.authService.RevokeAccessToken(ctx, c.GetString("token")); err != nil {
+		common.InternalError(c, "登出失败")
+		return
+	}
 	err := ac.authService.Logout(ctx, userID)
 	if err != nil {
 		common.InternalError(c, err.Error())

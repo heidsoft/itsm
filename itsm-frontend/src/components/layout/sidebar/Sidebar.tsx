@@ -25,6 +25,7 @@ const { Sider } = Layout;
 interface SidebarProps {
   collapsed: boolean;
   onCollapse: (collapsed: boolean) => void;
+  mobile?: boolean;
 }
 
 /**
@@ -50,7 +51,7 @@ function convertApiMenuToSidebar(menus: MenuItemType[]): MenuItem[] {
 /**
  * 侧边栏组件
  */
-export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile = false }) => {
   const { token } = theme.useToken();
   const { message } = App.useApp();
   const router = useRouter();
@@ -151,7 +152,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       collapsed={collapsed}
       onCollapse={onCollapse}
       breakpoint={LAYOUT_CONFIG.sider.breakpoint}
-      collapsedWidth={LAYOUT_CONFIG.sider.collapsedWidth}
+      collapsedWidth={mobile ? 0 : LAYOUT_CONFIG.sider.collapsedWidth}
       width={LAYOUT_CONFIG.sider.width}
       className={styles.sider}
       style={{

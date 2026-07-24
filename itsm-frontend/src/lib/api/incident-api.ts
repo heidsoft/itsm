@@ -102,7 +102,7 @@ export interface CreateIncidentRequest {
   type: string;
   isMajorIncident?: boolean;
   assigneeId?: number;
-  configurationItemId?: number;
+  configurationItemIds?: number[];
   category?: string;
   subcategory?: string;
   impact?: string; // Added for UI

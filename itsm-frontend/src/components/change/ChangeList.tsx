@@ -202,14 +202,16 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
             <Button
               type="text"
               icon={<Eye />}
-              onClick={() => router.push(`/changes/${record.id}`)}
+              href={`/changes/${record.id}`}
+              aria-label={`查看变更 ${record.title}`}
             />
           </Tooltip>
           <Tooltip title="编辑">
             <Button
               type="text"
               icon={<Pencil />}
-              onClick={() => router.push(`/changes/${record.id}/edit`)}
+              href={`/changes/${record.id}/edit`}
+              aria-label={`编辑变更 ${record.title}`}
             />
           </Tooltip>
           <Tooltip title="删除">

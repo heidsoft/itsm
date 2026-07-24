@@ -180,7 +180,11 @@ export default function MainLayout({
           }}
         >
           {/* 侧边栏 */}
-          <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
+          <Sidebar
+            collapsed={collapsed}
+            onCollapse={setCollapsed}
+            mobile={isMobile}
+          />
 
           {/* 主区域 */}
           <Layout className="bg-[#f5f7fb] min-h-screen">

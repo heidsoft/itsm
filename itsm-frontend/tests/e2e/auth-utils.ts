@@ -9,7 +9,12 @@ import { test as base, expect } from '@playwright/test';
 /**
  * 执行登录并返回认证后的页面
  */
-export async function loginAndReturn(page: Page, username: string = 'admin', password: string = 'admin123') {
+export async function loginAndReturn(
+  page: Page,
+  username: string = 'admin',
+  password: string = 'admin123',
+  landingPath: string = '/dashboard'
+) {
   const appURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
   // 清除之前的认证状态
   await page.context().clearCookies();
@@ -114,7 +119,7 @@ export async function loginAndReturn(page: Page, username: string = 'admin', pas
     { token: accessToken, currentUser: user, currentTenant: tenant }
   );
 
-  await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+  await page.goto(landingPath, { waitUntil: 'domcontentloaded' });
 
   return page;
 }

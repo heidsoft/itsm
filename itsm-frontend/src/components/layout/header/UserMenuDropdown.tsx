@@ -7,6 +7,7 @@ import { User, Settings, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { DESIGN } from '@/design-system/tokens';
+import styles from './Header.module.css';
 
 interface UserMenuDropdownProps {
   open: boolean;
@@ -108,6 +109,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
       styles={{ root: { padding: 0 } }}
     >
       <div
+        className={styles.userMenuTrigger}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -130,7 +132,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
         >
           {userInitial}
         </Avatar>
-        <div style={{ lineHeight: 1.3 }}>
+        <div className={styles.userMenuDetails} style={{ lineHeight: 1.3 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: DESIGN.colors.text }}>
             {displayName}
           </div>
@@ -148,6 +150,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
           </Tag>
         </div>
         <svg
+          className={styles.userMenuChevron}
           width="14"
           height="14"
           viewBox="0 0 24 24"

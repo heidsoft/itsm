@@ -3,6 +3,24 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  // Local development fallback: when NEXT_PUBLIC_API_URL is intentionally
+  // empty, keep browser requests same-origin and proxy them to the backend.
+  // Production deployments may provide the same /api routing at the ingress.
+  async rewrites() {
+    const configuredBackendURL = process.env.ITSM_BACKEND_URL;
+    if (process.env.NODE_ENV === 'production' && !configuredBackendURL) {
+      return [];
+    }
+
+    const backendURL = configuredBackendURL || 'http://localhost:8090';
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendURL}/api/:path*`,
+      },
+    ];
+  },
+
   // 图片优化配置
   images: {
     formats: ['image/webp', 'image/avif'],

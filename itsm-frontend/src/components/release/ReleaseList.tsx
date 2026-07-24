@@ -4,7 +4,7 @@
  * 发布列表组件
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Table,
   Tag,
@@ -20,13 +20,14 @@ import {
   Row,
   Col,
   Empty,
-  message,
+  Grid,
 } from 'antd';
 import { Search, Plus, Pencil, Eye, Rocket } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { ReleaseApi, ReleaseStatus, ReleaseType } from '@/lib/api/release-api';
+import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 
 const { Option } = Select;
 
@@ -57,6 +58,10 @@ const ReleaseList: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<any>({});
   const [form] = Form.useForm();
+  const screens = Grid.useBreakpoint();
+  const requestIdRef = useRef(0);
+  const hasLoadedDataRef = useRef(false);
+  const compact = !screens.md;
 
   const [query, setQuery] = useState({
     page: 1,
@@ -64,6 +69,7 @@ const ReleaseList: React.FC = () => {
   });
 
   const loadData = async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     try {
       const values = await form.validateFields();
@@ -71,12 +77,23 @@ const ReleaseList: React.FC = () => {
         ...query,
         ...values,
       });
-      setData(resp.releases || []);
-      setTotal(resp.total || 0);
+      if (requestId === requestIdRef.current) {
+        setData(resp.releases || []);
+        setTotal(resp.total || 0);
+        hasLoadedDataRef.current = true;
+      }
     } catch (error) {
-      message.error('加载发布列表失败');
+      if (requestId === requestIdRef.current) {
+        if (hasLoadedDataRef.current) {
+          message.warning('刷新发布列表失败，已保留当前数据');
+        } else {
+          message.error('加载发布列表失败');
+        }
+      }
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -197,13 +214,14 @@ const ReleaseList: React.FC = () => {
       title: '操作',
       key: 'action',
       width: 120,
+      fixed: 'right' as const,
       render: (_: any, record: any) => (
         <Space aria-label="操作按钮">
           <Tooltip title="查看发布详情">
             <Button
               type="text"
               icon={<Eye />}
-              onClick={() => router.push(`/releases/${record.id}`)}
+              href={`/releases/${record.id}`}
               aria-label={`查看发布 ${record.title || record.releaseNumber || '详情'}`}
             />
           </Tooltip>
@@ -211,7 +229,7 @@ const ReleaseList: React.FC = () => {
             <Button
               type="text"
               icon={<Pencil />}
-              onClick={() => router.push(`/releases/${record.id}`)}
+              href={`/releases/${record.id}/edit`}
               aria-label={`编辑发布 ${record.title || record.releaseNumber || '详情'}`}
             />
           </Tooltip>
@@ -221,7 +239,22 @@ const ReleaseList: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="p-3 md:p-6">
+      <ManagementPageHeader
+        title="发布管理"
+        description="规划、跟踪并审计软件和基础设施发布活动"
+        actions={
+          <Button
+            type="primary"
+            icon={<Plus />}
+            onClick={() => router.push('/releases/new')}
+          >
+            创建发布
+          </Button>
+        }
+        className="mb-4"
+      />
+
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
@@ -259,12 +292,16 @@ const ReleaseList: React.FC = () => {
       </Row>
 
       <Card>
-        <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
+        <Form
+          form={form}
+          layout={compact ? 'vertical' : 'inline'}
+          style={{ marginBottom: 16 }}
+        >
           <Form.Item name="status" label="状态">
             <Select
               placeholder="选择状态"
               allowClear
-              style={{ width: 150 }}
+              style={{ width: compact ? '100%' : 150 }}
               onChange={handleSearch}
             >
               <Option value="draft">草稿</Option>
@@ -279,7 +316,7 @@ const ReleaseList: React.FC = () => {
             <Select
               placeholder="选择类型"
               allowClear
-              style={{ width: 150 }}
+              style={{ width: compact ? '100%' : 150 }}
               onChange={handleSearch}
             >
               <Option value="major">主版本</Option>
@@ -289,18 +326,11 @@ const ReleaseList: React.FC = () => {
             </Select>
           </Form.Item>
           <Form.Item>
-            <Space>
+            <Space wrap>
               <Button type="primary" icon={<Search />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
-              <Button
-                type="primary"
-                icon={<Plus />}
-                onClick={() => router.push('/releases/new')}
-              >
-                创建发布
-              </Button>
             </Space>
           </Form.Item>
         </Form>

@@ -419,3 +419,53 @@
   height: 36px;
   border-radius: 8px;
 }
+
+.userMenuTrigger {
+  min-width: 0;
+}
+
+.userMenuDetails {
+  min-width: 0;
+}
+
+.userMenuChevron {
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .header {
+    min-height: 56px;
+    padding: 0 8px;
+  }
+
+  .mainRow {
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .left,
+  .right {
+    min-width: 0;
+    gap: 2px;
+  }
+
+  .headerSearchInput,
+  .breadcrumb {
+    display: none !important;
+  }
+
+  .actionButton {
+    width: 34px;
+    height: 34px;
+  }
+
+  .userMenuTrigger {
+    padding: 3px !important;
+    background: transparent !important;
+  }
+
+  .userMenuDetails,
+  .userMenuChevron {
+    display: none;
+  }
+}

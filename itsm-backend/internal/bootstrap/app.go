@@ -445,6 +445,7 @@ func NewApplication() *Application {
 			sugar.Warnw("common domain redis ping failed; refresh token blacklist disabled", "error", err)
 		} else {
 			commonServiceDomain.SetRedis(commonRedis)
+			middleware.ConfigureAccessTokenRevocationRedis(commonRedis)
 			sugar.Info("refresh token blacklist enabled via redis")
 		}
 		pingCancel()

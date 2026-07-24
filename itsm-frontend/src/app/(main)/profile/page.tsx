@@ -555,6 +555,8 @@ export default function ProfilePage() {
                               rules={[{ required: true, message: '请输入姓名' }]}
                             >
                               <Input
+                                data-testid="profile-name-input"
+                                aria-label="姓名"
                                 prefix={
                                   <User size={16} style={{ color: DESIGN.colors.textMuted }} />
                                 }

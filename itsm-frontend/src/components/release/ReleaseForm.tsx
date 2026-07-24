@@ -29,6 +29,37 @@ import type { Dayjs } from 'dayjs';
 const { TextArea } = Input;
 const { Option } = Select;
 
+interface ReleaseFormValues {
+  releaseNumber: string;
+  title: string;
+  description?: string;
+  type?: Release['type'];
+  environment?: Release['environment'];
+  severity?: Release['severity'];
+  changeId?: number;
+  ownerId?: number;
+  plannedReleaseDate?: Dayjs;
+  plannedStartDate?: Dayjs;
+  plannedEndDate?: Dayjs;
+  releaseNotes?: string;
+  rollbackProcedure?: string;
+  validationCriteria?: string;
+  affectedSystems?: string;
+  affectedComponents?: string;
+  deploymentSteps?: string;
+  tags?: string[];
+  isEmergency?: boolean;
+  requiresApproval?: boolean;
+}
+
+const splitLines = (value?: string): string[] | undefined => {
+  const items = value
+    ?.split(/\r?\n/)
+    .map(item => item.trim())
+    .filter(Boolean);
+  return items?.length ? items : undefined;
+};
+
 const ReleaseForm: React.FC = () => {
   const router = useRouter();
   const { id } = useParams() as { id: string };
@@ -56,6 +87,9 @@ const ReleaseForm: React.FC = () => {
           : undefined,
         plannedStartDate: data.plannedStartDate ? dayjs(data.plannedStartDate) : undefined,
         plannedEndDate: data.plannedEndDate ? dayjs(data.plannedEndDate) : undefined,
+        deploymentSteps: data.deploymentSteps?.join('\n'),
+        affectedSystems: data.affectedSystems?.join('\n'),
+        affectedComponents: data.affectedComponents?.join('\n'),
       });
     } catch (error) {
       message.error('加载发布详情失败');
@@ -64,28 +98,7 @@ const ReleaseForm: React.FC = () => {
     }
   };
 
-  const onFinish = async (values: {
-    releaseNumber: string;
-    title: string;
-    description?: string;
-    type?: Release['type'];
-    environment?: Release['environment'];
-    severity?: Release['severity'];
-    changeId?: number;
-    ownerId?: number;
-    plannedReleaseDate?: Dayjs;
-    plannedStartDate?: Dayjs;
-    plannedEndDate?: Dayjs;
-    releaseNotes?: string;
-    rollbackProcedure?: string;
-    validationCriteria?: string;
-    affectedSystems?: string[];
-    affectedComponents?: string[];
-    deploymentSteps?: string[];
-    tags?: string[];
-    isEmergency?: boolean;
-    requiresApproval?: boolean;
-  }) => {
+  const onFinish = async (values: ReleaseFormValues) => {
     setLoading(true);
     try {
       const data: ReleaseRequest = {
@@ -103,9 +116,9 @@ const ReleaseForm: React.FC = () => {
         releaseNotes: values.releaseNotes,
         rollbackProcedure: values.rollbackProcedure,
         validationCriteria: values.validationCriteria,
-        affectedSystems: values.affectedSystems,
-        affectedComponents: values.affectedComponents,
-        deploymentSteps: values.deploymentSteps,
+        affectedSystems: splitLines(values.affectedSystems),
+        affectedComponents: splitLines(values.affectedComponents),
+        deploymentSteps: splitLines(values.deploymentSteps),
         tags: values.tags,
         isEmergency: values.isEmergency,
         requiresApproval: values.requiresApproval,
@@ -130,6 +143,7 @@ const ReleaseForm: React.FC = () => {
     <Card>
       <Form
         form={form}
+        data-testid="release-form"
         layout="vertical"
         onFinish={onFinish}
         initialValues={{
@@ -149,11 +163,14 @@ const ReleaseForm: React.FC = () => {
         <Divider>基本信息</Divider>
 
         <Form.Item
-          name="release_number"
+          name="releaseNumber"
           label="发布编号"
           rules={[{ required: true, message: '请输入发布编号' }]}
         >
-          <Input placeholder="例如: REL-20260222-001" />
+          <Input
+            placeholder="例如: REL-20260222-001"
+            data-testid="release-number-input"
+          />
         </Form.Item>
 
         <Form.Item
@@ -161,7 +178,7 @@ const ReleaseForm: React.FC = () => {
           label="标题"
           rules={[{ required: true, message: '请输入发布标题' }]}
         >
-          <Input placeholder="发布标题" />
+          <Input placeholder="发布标题" data-testid="release-title-input" />
         </Form.Item>
 
         <Form.Item name="description" label="描述">
@@ -196,59 +213,65 @@ const ReleaseForm: React.FC = () => {
 
         <Divider>计划信息</Divider>
 
-        <Form.Item name="planned_release_date" label="计划发布日期">
+        <Form.Item name="plannedReleaseDate" label="计划发布日期">
           <DatePicker showTime style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item name="planned_start_date" label="计划开始时间">
+        <Form.Item name="plannedStartDate" label="计划开始时间">
           <DatePicker showTime style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item name="planned_end_date" label="计划结束时间">
+        <Form.Item name="plannedEndDate" label="计划结束时间">
           <DatePicker showTime style={{ width: '100%' }} />
         </Form.Item>
 
         <Divider>发布内容</Divider>
 
-        <Form.Item name="release_notes" label="发布说明">
+        <Form.Item name="releaseNotes" label="发布说明">
           <TextArea rows={4} placeholder="发布说明内容" />
         </Form.Item>
 
-        <Form.Item name="deployment_steps" label="部署步骤">
+        <Form.Item name="deploymentSteps" label="部署步骤">
           <TextArea rows={4} placeholder="每行一个步骤" />
         </Form.Item>
 
-        <Form.Item name="affected_systems" label="受影响的系统">
+        <Form.Item name="affectedSystems" label="受影响的系统">
           <TextArea rows={2} placeholder="每行一个系统" />
         </Form.Item>
 
-        <Form.Item name="affected_components" label="受影响的组件">
+        <Form.Item name="affectedComponents" label="受影响的组件">
           <TextArea rows={2} placeholder="每行一个组件" />
         </Form.Item>
 
         <Divider>回滚与验证</Divider>
 
-        <Form.Item name="rollback_procedure" label="回滚程序">
+        <Form.Item name="rollbackProcedure" label="回滚程序">
           <TextArea rows={4} placeholder="回滚步骤说明" />
         </Form.Item>
 
-        <Form.Item name="validation_criteria" label="验证标准">
+        <Form.Item name="validationCriteria" label="验证标准">
           <TextArea rows={3} placeholder="验证通过的标准" />
         </Form.Item>
 
         <Divider>其他选项</Divider>
 
-        <Form.Item name="is_emergency" label="紧急发布" valuePropName="checked">
+        <Form.Item name="isEmergency" label="紧急发布" valuePropName="checked">
           <Switch />
         </Form.Item>
 
-        <Form.Item name="requires_approval" label="需要审批" valuePropName="checked">
+        <Form.Item name="requiresApproval" label="需要审批" valuePropName="checked">
           <Switch />
         </Form.Item>
 
         <Form.Item>
           <Space>
-            <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              icon={<Save />}
+              loading={loading}
+              data-testid="release-submit-button"
+            >
               {isEdit ? '保存' : '创建'}
             </Button>
             <Button onClick={() => router.push('/releases')}>取消</Button>

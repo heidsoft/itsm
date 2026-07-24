@@ -9,12 +9,12 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
-	"itsm-backend/ent/mspallocation"
-	"itsm-backend/pkg/tenantmode"
 	"itsm-backend/middleware"
+	"itsm-backend/pkg/tenantmode"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -527,6 +527,19 @@ func (s *AuthService) AddTokenToBlacklist(tokenString string, expiresAt time.Tim
 	}
 
 	return s.tokenBlacklist.AddToBlacklist(tokenString, expiresAt)
+}
+
+// RevokeAccessToken 撤销当前 access token。该路径同时支持进程内存储与 Redis，
+// 确保未配置 Redis 的单实例环境也不会在登出后继续接受旧 token。
+func (s *AuthService) RevokeAccessToken(ctx context.Context, tokenString string) error {
+	claims, err := middleware.ValidateAccessToken(tokenString, s.jwtSecret)
+	if err != nil {
+		return fmt.Errorf("invalid access token: %w", err)
+	}
+	if claims.ExpiresAt == nil {
+		return fmt.Errorf("access token has no expiry")
+	}
+	return middleware.RevokeAccessToken(ctx, tokenString, claims.ExpiresAt.Time)
 }
 
 // Register 用户注册

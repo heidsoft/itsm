@@ -176,7 +176,7 @@ export default function IncidentsPage() {
   );
 
   const handleCreate = useCallback(() => {
-    router.push('/incidents/new');
+    router.push('/incidents/create');
   }, [router]);
 
   const handleRefresh = useCallback(() => {
@@ -308,7 +308,7 @@ export default function IncidentsPage() {
   const pageStats: PageStats[] = metrics
     ? [
         {
-          label: '总事件',
+          label: '总事件数',
           value: metrics.totalIncidents || 0,
           color: '#1890ff',
           icon: <Siren size={20} strokeWidth={1.8} />,
@@ -363,7 +363,6 @@ export default function IncidentsPage() {
           selectedRowKeys={selectedRowKeys}
           onSelectedRowKeysChange={setSelectedRowKeys}
           onEdit={handleEdit}
-          onView={handleView}
           onRefresh={handleRefresh}
         />
       </>

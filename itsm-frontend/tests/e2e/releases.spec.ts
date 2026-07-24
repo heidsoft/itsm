@@ -1,44 +1,62 @@
-/**
- * Release Management E2E Tests
- * 发布管理模块测试
- */
+import { expect, test } from '@playwright/test';
+import { loginAndReturn } from './auth-utils';
 
-import { test, expect } from '@playwright/test';
+test.describe('发布管理页面功能', () => {
+  test.describe.configure({ timeout: 60_000 });
 
-test.describe('Release Management - 发布管理', () => {
   test.beforeEach(async ({ page }) => {
-    // 先登录
-    await page.goto('/login');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForSelector('.ant-input, input.ant-input', { timeout: 15000 });
-    const inputs = page.locator('input.ant-input');
-    await inputs.nth(0).fill('admin');
-    await inputs.nth(1).fill('admin123');
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|tickets|incidents)/, { timeout: 20000 });
+    test.slow();
+    await loginAndReturn(page, 'admin', 'admin123', '/releases');
   });
 
-  test.describe('Release List - 发布列表', () => {
-    test('should navigate to release management page', async ({ page }) => {
-      await page.goto('/releases');
-      await page.waitForURL(/\/releases/);
-      await expect(page.locator('h1, h2').first()).toBeVisible();
-    });
+  test('发布经理可以创建发布并在刷新后查看记录', async ({ page }) => {
+    test.slow();
+    await page.getByRole('button', { name: '创建发布' }).click();
+    await expect(page).toHaveURL(/\/releases\/new$/);
+    await expect(page.getByTestId('release-form')).toBeVisible();
 
-    test('should display release list page', async ({ page }) => {
-      await page.goto('/releases');
-      await page.waitForLoadState('networkidle');
-      // 检查页面有内容
-      await expect(page.locator('body')).toBeVisible();
-    });
+    await page.getByTestId('release-submit-button').click();
+    await expect(page.getByText('请输入发布编号')).toBeVisible();
+    await expect(page.getByText('请输入发布标题')).toBeVisible();
+
+    const suffix = Date.now();
+    const releaseNumber = `REL-E2E-${suffix}`;
+    const title = `E2E 发布 ${suffix}`;
+    await page.getByTestId('release-number-input').fill(releaseNumber);
+    await page.getByTestId('release-title-input').fill(title);
+
+    const createResponse = page.waitForResponse(
+      response =>
+        response.url().endsWith('/api/v1/releases') &&
+        response.request().method() === 'POST'
+    );
+    await page.getByTestId('release-submit-button').click();
+    expect((await createResponse).ok()).toBeTruthy();
+    await expect(page).toHaveURL(/\/releases$/);
+    await expect(page.getByText(releaseNumber)).toBeVisible({ timeout: 15_000 });
+
+    const reloadResponse = page.waitForResponse(
+      response =>
+        response.url().includes('/api/v1/releases?') &&
+        response.request().method() === 'GET'
+    );
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    expect((await reloadResponse).ok()).toBeTruthy();
+    await expect(page.getByText(releaseNumber)).toBeVisible({ timeout: 15_000 });
   });
 
-  test.describe('Release Create - 创建发布', () => {
-    test('should display create release form', async ({ page }) => {
-      await page.goto('/releases/new');
-      await page.waitForLoadState('networkidle');
-      // 表单应该可见
-      await expect(page.locator('form, .ant-form').first()).toBeVisible({ timeout: 10000 });
-    });
+  test('发布列表的查看与编辑操作进入各自页面', async ({ page }) => {
+    test.slow();
+    const viewLink = page.getByRole('link', { name: /查看发布/ }).first();
+    await expect(viewLink).toBeVisible({ timeout: 15_000 });
+    await viewLink.click();
+    await expect(page).toHaveURL(/\/releases\/\d+$/);
+    await page.goBack();
+
+    const editLink = page.getByRole('link', { name: /编辑发布/ }).first();
+    await expect(editLink).toBeVisible();
+    await editLink.click();
+    await expect(page).toHaveURL(/\/releases\/\d+\/edit$/);
+    await expect(page.getByTestId('release-form')).toBeVisible({ timeout: 15_000 });
   });
 });

@@ -121,8 +121,7 @@ export default function CreateIncidentPage() {
         impact: values.impact,
         urgency: values.urgency,
         assigneeId: values.assignedTo,
-        // 关联第一个CI（后续可扩展支持多个CI）
-        configurationItemId: selectedCIs.length > 0 ? selectedCIs[0].id : undefined,
+        configurationItemIds: selectedCIs.map(ci => ci.id),
       });
       message.success('事件创建成功');
       router.push('/incidents');
@@ -159,6 +158,7 @@ export default function CreateIncidentPage() {
           <Card>
             <Form
               form={form}
+              data-testid="incident-create-form"
               layout="vertical"
               onFinish={handleSubmit}
               initialValues={{
@@ -420,7 +420,12 @@ export default function CreateIncidentPage() {
 
               <Form.Item className="!mb-0">
                 <Space>
-                  <Button type="primary" htmlType="submit" loading={loading}>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    data-testid="incident-submit-button"
+                  >
                     提交
                   </Button>
                   <Button onClick={() => router.back()}>取消</Button>

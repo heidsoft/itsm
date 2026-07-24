@@ -20,6 +20,24 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// ValidateAccessToken 验证 access token 并返回声明。
+func ValidateAccessToken(tokenString, jwtSecret string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return []byte(jwtSecret), nil
+	})
+	if err != nil || !token.Valid {
+		return nil, err
+	}
+	claims, ok := token.Claims.(*Claims)
+	if !ok || claims.TokenType != "access" {
+		return nil, jwt.ErrInvalidKey
+	}
+	return claims, nil
+}
+
 // ValidateRefreshToken 验证refresh token
 func ValidateRefreshToken(tokenString, jwtSecret string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
@@ -185,6 +203,22 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 					"token_type", claims.TokenType,
 				)
 				common.Fail(c, common.AuthFailedCode, "无效的token类型，请使用access token")
+				c.Abort()
+				return
+			}
+
+			revoked, revocationErr := isAccessTokenRevoked(c.Request.Context(), tokenString)
+			if revocationErr != nil {
+				zap.S().Errorw("AuthMiddleware: token revocation check failed",
+					"path", c.Request.URL.Path, "error", revocationErr)
+				common.Fail(c, common.AuthFailedCode, "token状态验证失败")
+				c.Abort()
+				return
+			}
+			if revoked {
+				zap.S().Warnw("AuthMiddleware: revoked token rejected",
+					"path", c.Request.URL.Path, "user_id", claims.UserID)
+				common.Fail(c, common.AuthFailedCode, "token已失效")
 				c.Abort()
 				return
 			}

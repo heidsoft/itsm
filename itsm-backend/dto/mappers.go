@@ -208,6 +208,9 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 	if incident.AssigneeID > 0 {
 		response.AssigneeID = &incident.AssigneeID
 	}
+	if incident.ConfigurationItemID > 0 {
+		response.ConfigurationItemID = &incident.ConfigurationItemID
+	}
 
 	// Handle time fields - convert to pointer if not zero
 	if !incident.DetectedAt.IsZero() {

@@ -203,6 +203,12 @@ func (m *mockRepository) GetRiskAssessment(ctx context.Context, changeID int, te
 	return ra, nil
 }
 
+func (m *mockRepository) UpdateRiskAssessment(ctx context.Context, ra *RiskAssessment) (*RiskAssessment, error) {
+	ra.UpdatedAt = time.Now()
+	m.riskAssess[ra.ChangeID] = ra
+	return ra, nil
+}
+
 func (m *mockRepository) ValidateApproverBelongsToTenant(ctx context.Context, approverID, tenantID int) (bool, error) {
 	return m.approverValid, nil
 }
