@@ -69,6 +69,27 @@ func (_u *RolePermissionUpdate) AddPermissionID(v int) *RolePermissionUpdate {
 	return _u
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (_u *RolePermissionUpdate) SetTenantID(v int) *RolePermissionUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (_u *RolePermissionUpdate) SetNillableTenantID(v *int) *RolePermissionUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
+	}
+	return _u
+}
+
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *RolePermissionUpdate) AddTenantID(v int) *RolePermissionUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
+}
+
 // Mutation returns the RolePermissionMutation object of the builder.
 func (_u *RolePermissionUpdate) Mutation() *RolePermissionMutation {
 	return _u.mutation
@@ -121,6 +142,12 @@ func (_u *RolePermissionUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if value, ok := _u.mutation.AddedPermissionID(); ok {
 		_spec.AddField(rolepermission.FieldPermissionID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.TenantID(); ok {
+		_spec.SetField(rolepermission.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTenantID(); ok {
+		_spec.AddField(rolepermission.FieldTenantID, field.TypeInt, value)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -181,6 +208,27 @@ func (_u *RolePermissionUpdateOne) SetNillablePermissionID(v *int) *RolePermissi
 // AddPermissionID adds value to the "permission_id" field.
 func (_u *RolePermissionUpdateOne) AddPermissionID(v int) *RolePermissionUpdateOne {
 	_u.mutation.AddPermissionID(v)
+	return _u
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (_u *RolePermissionUpdateOne) SetTenantID(v int) *RolePermissionUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (_u *RolePermissionUpdateOne) SetNillableTenantID(v *int) *RolePermissionUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
+	}
+	return _u
+}
+
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *RolePermissionUpdateOne) AddTenantID(v int) *RolePermissionUpdateOne {
+	_u.mutation.AddTenantID(v)
 	return _u
 }
 
@@ -266,6 +314,12 @@ func (_u *RolePermissionUpdateOne) sqlSave(ctx context.Context) (_node *RolePerm
 	}
 	if value, ok := _u.mutation.AddedPermissionID(); ok {
 		_spec.AddField(rolepermission.FieldPermissionID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.TenantID(); ok {
+		_spec.SetField(rolepermission.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTenantID(); ok {
+		_spec.AddField(rolepermission.FieldTenantID, field.TypeInt, value)
 	}
 	_node = &RolePermission{config: _u.config}
 	_spec.Assign = _node.assignValues

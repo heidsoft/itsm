@@ -19,7 +19,9 @@ type RolePermission struct {
 	// 角色ID
 	RoleID int `json:"role_id,omitempty"`
 	// 权限ID
-	PermissionID                           int `json:"permission_id,omitempty"`
+	PermissionID int `json:"permission_id,omitempty"`
+	// 租户ID
+	TenantID                               int `json:"tenant_id,omitempty"`
 	permission_definition_role_permissions *int
 	selectValues                           sql.SelectValues
 }
@@ -29,7 +31,7 @@ func (*RolePermission) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case rolepermission.FieldID, rolepermission.FieldRoleID, rolepermission.FieldPermissionID:
+		case rolepermission.FieldID, rolepermission.FieldRoleID, rolepermission.FieldPermissionID, rolepermission.FieldTenantID:
 			values[i] = new(sql.NullInt64)
 		case rolepermission.ForeignKeys[0]: // permission_definition_role_permissions
 			values[i] = new(sql.NullInt64)
@@ -65,6 +67,12 @@ func (_m *RolePermission) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field permission_id", values[i])
 			} else if value.Valid {
 				_m.PermissionID = int(value.Int64)
+			}
+		case rolepermission.FieldTenantID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
+			} else if value.Valid {
+				_m.TenantID = int(value.Int64)
 			}
 		case rolepermission.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -114,6 +122,9 @@ func (_m *RolePermission) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("permission_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.PermissionID))
+	builder.WriteString(", ")
+	builder.WriteString("tenant_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteByte(')')
 	return builder.String()
 }

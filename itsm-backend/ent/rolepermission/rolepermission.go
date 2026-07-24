@@ -15,6 +15,8 @@ const (
 	FieldRoleID = "role_id"
 	// FieldPermissionID holds the string denoting the permission_id field in the database.
 	FieldPermissionID = "permission_id"
+	// FieldTenantID holds the string denoting the tenant_id field in the database.
+	FieldTenantID = "tenant_id"
 	// Table holds the table name of the rolepermission in the database.
 	Table = "role_permissions"
 )
@@ -24,6 +26,7 @@ var Columns = []string{
 	FieldID,
 	FieldRoleID,
 	FieldPermissionID,
+	FieldTenantID,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "role_permissions"
@@ -63,4 +66,9 @@ func ByRoleID(opts ...sql.OrderTermOption) OrderOption {
 // ByPermissionID orders the results by the permission_id field.
 func ByPermissionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPermissionID, opts...).ToFunc()
+}
+
+// ByTenantID orders the results by the tenant_id field.
+func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
 }

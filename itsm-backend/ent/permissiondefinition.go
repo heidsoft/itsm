@@ -26,6 +26,8 @@ type PermissionDefinition struct {
 	DisplayName string `json:"display_name,omitempty"`
 	// 分类，用于分组
 	Category int `json:"category,omitempty"`
+	// 租户ID，为空时表示共享权限定义
+	TenantID int `json:"tenant_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PermissionDefinitionQuery when eager-loading is set.
 	Edges        PermissionDefinitionEdges `json:"edges"`
@@ -55,7 +57,7 @@ func (*PermissionDefinition) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case permissiondefinition.FieldID, permissiondefinition.FieldCategory:
+		case permissiondefinition.FieldID, permissiondefinition.FieldCategory, permissiondefinition.FieldTenantID:
 			values[i] = new(sql.NullInt64)
 		case permissiondefinition.FieldResource, permissiondefinition.FieldAction, permissiondefinition.FieldDescription, permissiondefinition.FieldDisplayName:
 			values[i] = new(sql.NullString)
@@ -109,6 +111,12 @@ func (_m *PermissionDefinition) assignValues(columns []string, values []any) err
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
 				_m.Category = int(value.Int64)
+			}
+		case permissiondefinition.FieldTenantID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
+			} else if value.Valid {
+				_m.TenantID = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -165,6 +173,9 @@ func (_m *PermissionDefinition) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("category=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Category))
+	builder.WriteString(", ")
+	builder.WriteString("tenant_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteByte(')')
 	return builder.String()
 }

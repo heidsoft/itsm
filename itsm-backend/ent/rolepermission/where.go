@@ -63,6 +63,11 @@ func PermissionID(v int) predicate.RolePermission {
 	return predicate.RolePermission(sql.FieldEQ(FieldPermissionID, v))
 }
 
+// TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
+func TenantID(v int) predicate.RolePermission {
+	return predicate.RolePermission(sql.FieldEQ(FieldTenantID, v))
+}
+
 // RoleIDEQ applies the EQ predicate on the "role_id" field.
 func RoleIDEQ(v int) predicate.RolePermission {
 	return predicate.RolePermission(sql.FieldEQ(FieldRoleID, v))
@@ -141,6 +146,46 @@ func PermissionIDLT(v int) predicate.RolePermission {
 // PermissionIDLTE applies the LTE predicate on the "permission_id" field.
 func PermissionIDLTE(v int) predicate.RolePermission {
 	return predicate.RolePermission(sql.FieldLTE(FieldPermissionID, v))
+}
+
+// TenantIDEQ applies the EQ predicate on the "tenant_id" field.
+func TenantIDEQ(v int) predicate.RolePermission {
+	return predicate.RolePermission(sql.FieldEQ(FieldTenantID, v))
+}
+
+// TenantIDNEQ applies the NEQ predicate on the "tenant_id" field.
+func TenantIDNEQ(v int) predicate.RolePermission {
+	return predicate.RolePermission(sql.FieldNEQ(FieldTenantID, v))
+}
+
+// TenantIDIn applies the In predicate on the "tenant_id" field.
+func TenantIDIn(vs ...int) predicate.RolePermission {
+	return predicate.RolePermission(sql.FieldIn(FieldTenantID, vs...))
+}
+
+// TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
+func TenantIDNotIn(vs ...int) predicate.RolePermission {
+	return predicate.RolePermission(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
+// TenantIDGT applies the GT predicate on the "tenant_id" field.
+func TenantIDGT(v int) predicate.RolePermission {
+	return predicate.RolePermission(sql.FieldGT(FieldTenantID, v))
+}
+
+// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
+func TenantIDGTE(v int) predicate.RolePermission {
+	return predicate.RolePermission(sql.FieldGTE(FieldTenantID, v))
+}
+
+// TenantIDLT applies the LT predicate on the "tenant_id" field.
+func TenantIDLT(v int) predicate.RolePermission {
+	return predicate.RolePermission(sql.FieldLT(FieldTenantID, v))
+}
+
+// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
+func TenantIDLTE(v int) predicate.RolePermission {
+	return predicate.RolePermission(sql.FieldLTE(FieldTenantID, v))
 }
 
 // And groups predicates with the AND operator between them.

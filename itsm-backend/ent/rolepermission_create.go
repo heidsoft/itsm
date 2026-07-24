@@ -31,6 +31,12 @@ func (_c *RolePermissionCreate) SetPermissionID(v int) *RolePermissionCreate {
 	return _c
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (_c *RolePermissionCreate) SetTenantID(v int) *RolePermissionCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
+}
+
 // Mutation returns the RolePermissionMutation object of the builder.
 func (_c *RolePermissionCreate) Mutation() *RolePermissionMutation {
 	return _c.mutation
@@ -71,6 +77,9 @@ func (_c *RolePermissionCreate) check() error {
 	if _, ok := _c.mutation.PermissionID(); !ok {
 		return &ValidationError{Name: "permission_id", err: errors.New(`ent: missing required field "RolePermission.permission_id"`)}
 	}
+	if _, ok := _c.mutation.TenantID(); !ok {
+		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "RolePermission.tenant_id"`)}
+	}
 	return nil
 }
 
@@ -104,6 +113,10 @@ func (_c *RolePermissionCreate) createSpec() (*RolePermission, *sqlgraph.CreateS
 	if value, ok := _c.mutation.PermissionID(); ok {
 		_spec.SetField(rolepermission.FieldPermissionID, field.TypeInt, value)
 		_node.PermissionID = value
+	}
+	if value, ok := _c.mutation.TenantID(); ok {
+		_spec.SetField(rolepermission.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
 	}
 	return _node, _spec
 }

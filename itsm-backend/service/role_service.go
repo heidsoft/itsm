@@ -395,7 +395,10 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 
 	// 清除现有权限关联
 	_, err = s.client.RolePermission.Delete().
-		Where(rolepermission.RoleID(roleID)).
+		Where(
+			rolepermission.RoleID(roleID),
+			rolepermission.TenantID(tenantID),
+		).
 		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("清除权限关联失败: %w", err)
@@ -406,6 +409,7 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 		_, err = s.client.RolePermission.Create().
 			SetRoleID(roleID).
 			SetPermissionID(pid).
+			SetTenantID(tenantID).
 			Save(ctx)
 		if err != nil {
 			s.logger.Warnw("Failed to create role-permission association", "role_id", roleID, "permission_id", pid, "error", err)

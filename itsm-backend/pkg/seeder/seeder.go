@@ -2181,7 +2181,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		created := 0
 		for _, pid := range permIDs {
 			exists, err := s.client.RolePermission.Query().
-				Where(rolepermission.RoleID(r.ID), rolepermission.PermissionID(pid)).
+				Where(rolepermission.RoleID(r.ID), rolepermission.PermissionID(pid), rolepermission.TenantID(t.ID)).
 				Exist(ctx)
 			if err != nil {
 				s.sugar.Warnw("check role-permission failed", "error", err, "role", r.Code, "permission_id", pid)
@@ -2193,6 +2193,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			_, err = s.client.RolePermission.Create().
 				SetRoleID(r.ID).
 				SetPermissionID(pid).
+				SetTenantID(t.ID).
 				Save(ctx)
 			if err != nil {
 				s.sugar.Warnw("create role-permission failed", "error", err, "role", r.Code, "permission_id", pid)

@@ -20,6 +20,7 @@ func (PermissionDefinition) Fields() []ent.Field {
 		field.String("description").Optional().Comment("权限描述"),
 		field.String("display_name").Optional().Comment("显示名称"),
 		field.Int("category").Optional().Comment("分类，用于分组"),
+		field.Int("tenant_id").Optional().Comment("租户ID，为空时表示共享权限定义"),
 	}
 }
 

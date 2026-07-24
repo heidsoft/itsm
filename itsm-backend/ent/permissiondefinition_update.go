@@ -123,6 +123,33 @@ func (_u *PermissionDefinitionUpdate) ClearCategory() *PermissionDefinitionUpdat
 	return _u
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (_u *PermissionDefinitionUpdate) SetTenantID(v int) *PermissionDefinitionUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (_u *PermissionDefinitionUpdate) SetNillableTenantID(v *int) *PermissionDefinitionUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
+	}
+	return _u
+}
+
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *PermissionDefinitionUpdate) AddTenantID(v int) *PermissionDefinitionUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (_u *PermissionDefinitionUpdate) ClearTenantID() *PermissionDefinitionUpdate {
+	_u.mutation.ClearTenantID()
+	return _u
+}
+
 // AddRolePermissionIDs adds the "role_permissions" edge to the RolePermission entity by IDs.
 func (_u *PermissionDefinitionUpdate) AddRolePermissionIDs(ids ...int) *PermissionDefinitionUpdate {
 	_u.mutation.AddRolePermissionIDs(ids...)
@@ -244,6 +271,15 @@ func (_u *PermissionDefinitionUpdate) sqlSave(ctx context.Context) (_node int, e
 	}
 	if _u.mutation.CategoryCleared() {
 		_spec.ClearField(permissiondefinition.FieldCategory, field.TypeInt)
+	}
+	if value, ok := _u.mutation.TenantID(); ok {
+		_spec.SetField(permissiondefinition.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTenantID(); ok {
+		_spec.AddField(permissiondefinition.FieldTenantID, field.TypeInt, value)
+	}
+	if _u.mutation.TenantIDCleared() {
+		_spec.ClearField(permissiondefinition.FieldTenantID, field.TypeInt)
 	}
 	if _u.mutation.RolePermissionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -405,6 +441,33 @@ func (_u *PermissionDefinitionUpdateOne) ClearCategory() *PermissionDefinitionUp
 	return _u
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (_u *PermissionDefinitionUpdateOne) SetTenantID(v int) *PermissionDefinitionUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (_u *PermissionDefinitionUpdateOne) SetNillableTenantID(v *int) *PermissionDefinitionUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
+	}
+	return _u
+}
+
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *PermissionDefinitionUpdateOne) AddTenantID(v int) *PermissionDefinitionUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (_u *PermissionDefinitionUpdateOne) ClearTenantID() *PermissionDefinitionUpdateOne {
+	_u.mutation.ClearTenantID()
+	return _u
+}
+
 // AddRolePermissionIDs adds the "role_permissions" edge to the RolePermission entity by IDs.
 func (_u *PermissionDefinitionUpdateOne) AddRolePermissionIDs(ids ...int) *PermissionDefinitionUpdateOne {
 	_u.mutation.AddRolePermissionIDs(ids...)
@@ -556,6 +619,15 @@ func (_u *PermissionDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pe
 	}
 	if _u.mutation.CategoryCleared() {
 		_spec.ClearField(permissiondefinition.FieldCategory, field.TypeInt)
+	}
+	if value, ok := _u.mutation.TenantID(); ok {
+		_spec.SetField(permissiondefinition.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTenantID(); ok {
+		_spec.AddField(permissiondefinition.FieldTenantID, field.TypeInt, value)
+	}
+	if _u.mutation.TenantIDCleared() {
+		_spec.ClearField(permissiondefinition.FieldTenantID, field.TypeInt)
 	}
 	if _u.mutation.RolePermissionsCleared() {
 		edge := &sqlgraph.EdgeSpec{

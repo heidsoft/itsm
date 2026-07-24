@@ -16,6 +16,7 @@ func (RolePermission) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("role_id").Comment("角色ID"),
 		field.Int("permission_id").Comment("权限ID"),
+		field.Int("tenant_id").Comment("租户ID"),
 	}
 }
 

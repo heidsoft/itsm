@@ -407,7 +407,7 @@ func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int
 
 		// 直接查询 role_permissions 联表获取该角色的权限
 		rolePerms, err := client.RolePermission.Query().
-			Where(rolepermission.RoleIDEQ(roleID)).
+			Where(rolepermission.RoleIDEQ(roleID), rolepermission.TenantID(tenantID)).
 			All(context.Background())
 
 		if err == nil && len(rolePerms) > 0 {
@@ -417,9 +417,9 @@ func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int
 				permIDs[i] = rp.PermissionID
 			}
 
-			// 查询 permissions 表获取权限详情
+			// 查询 permissions 表获取权限详情（加 tenant 过滤）
 			permsData, err := client.Permission.Query().
-				Where(permission.IDIn(permIDs...)).
+				Where(permission.IDIn(permIDs...), permission.TenantID(tenantID)).
 				All(context.Background())
 
 			if err == nil {
@@ -495,7 +495,7 @@ func loadPermissionsFromDB(client *ent.Client, roleName string, tenantID int) []
 
 		// 查询role_permission表获取该角色的权限定义ID
 		rolePerms, err := client.RolePermission.Query().
-			Where(rolepermission.RoleIDEQ(roleID)).
+			Where(rolepermission.RoleIDEQ(roleID), rolepermission.TenantID(tenantID)).
 			All(context.Background())
 
 		if err == nil && len(rolePerms) > 0 {
@@ -505,9 +505,9 @@ func loadPermissionsFromDB(client *ent.Client, roleName string, tenantID int) []
 				permIDs[i] = rp.PermissionID
 			}
 
-			// 查询 permissions 表获取权限详情
+			// 查询 permissions 表获取权限详情（加 tenant 过滤）
 			permsData, err := client.Permission.Query().
-				Where(permission.IDIn(permIDs...)).
+				Where(permission.IDIn(permIDs...), permission.TenantID(tenantID)).
 				All(context.Background())
 
 			if err == nil {
@@ -603,6 +603,7 @@ var ResourceActionMap = map[string]map[string]Permission{
 	},
 	"POST": {
 		"/api/v1/tickets":               {Resource: "ticket", Action: "write"},
+		"/api/v1/tickets/*/assign":      {Resource: "ticket", Action: "assign"},
 		"/api/v1/tickets/*":             {Resource: "ticket", Action: "write"},
 		"/api/v1/ticket-categories":     {Resource: "ticket_category", Action: "write"},
 		"/api/v1/ticket-categories/*":   {Resource: "ticket_category", Action: "write"},
@@ -1042,6 +1043,10 @@ func checkPermissionMatch(permissions []Permission, resource, action string) boo
 		if perm.Resource == resource && perm.Action == "*" {
 			return true
 		}
+		// 资源管理员权限包含该资源下的具体业务动作。
+		if perm.Resource == resource && perm.Action == "admin" {
+			return true
+		}
 		if perm.Resource == resource && perm.Action == action {
 			return true
 		}
@@ -1076,14 +1081,22 @@ func getPermissionFromPath(method, path string) *Permission {
 		return &perm
 	}
 
-	// 通配符匹配
+	// 通配符匹配。多个规则命中时选择最具体的规则，避免
+	// /tickets/* 抢先覆盖 /tickets/*/assign 这类动作权限。
+	var matched *Permission
+	bestSpecificity := -1
 	for pattern, perm := range methodMap {
 		if matchPath(pattern, path) {
-			return &perm
+			specificity := len(strings.ReplaceAll(pattern, "*", ""))
+			if specificity > bestSpecificity {
+				permission := perm
+				matched = &permission
+				bestSpecificity = specificity
+			}
 		}
 	}
 
-	return nil
+	return matched
 }
 
 // matchPath 匹配路径（支持通配符）
@@ -1092,11 +1105,22 @@ func matchPath(pattern, path string) bool {
 		return true
 	}
 
-	// 支持 * 通配符
-	if strings.HasSuffix(pattern, "*") {
+	// 末尾 * 保持历史语义：匹配剩余任意层级。
+	if strings.Count(pattern, "*") == 1 && strings.HasSuffix(pattern, "*") {
 		prefix := strings.TrimSuffix(pattern, "*")
 		return strings.HasPrefix(path, prefix)
 	}
 
-	return false
+	// 中间 * 匹配单个路径段，例如 /tickets/*/assign。
+	patternParts := strings.Split(strings.Trim(pattern, "/"), "/")
+	pathParts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(patternParts) != len(pathParts) {
+		return false
+	}
+	for i := range patternParts {
+		if patternParts[i] != "*" && patternParts[i] != pathParts[i] {
+			return false
+		}
+	}
+	return true
 }

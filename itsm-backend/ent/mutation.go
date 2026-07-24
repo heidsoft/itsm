@@ -71309,6 +71309,8 @@ type PermissionDefinitionMutation struct {
 	display_name            *string
 	category                *int
 	addcategory             *int
+	tenant_id               *int
+	addtenant_id            *int
 	clearedFields           map[string]struct{}
 	role_permissions        map[int]struct{}
 	removedrole_permissions map[int]struct{}
@@ -71656,6 +71658,76 @@ func (m *PermissionDefinitionMutation) ResetCategory() {
 	delete(m.clearedFields, permissiondefinition.FieldCategory)
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (m *PermissionDefinitionMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *PermissionDefinitionMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the PermissionDefinition entity.
+// If the PermissionDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PermissionDefinitionMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *PermissionDefinitionMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *PermissionDefinitionMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *PermissionDefinitionMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+	m.clearedFields[permissiondefinition.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *PermissionDefinitionMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[permissiondefinition.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *PermissionDefinitionMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+	delete(m.clearedFields, permissiondefinition.FieldTenantID)
+}
+
 // AddRolePermissionIDs adds the "role_permissions" edge to the RolePermission entity by ids.
 func (m *PermissionDefinitionMutation) AddRolePermissionIDs(ids ...int) {
 	if m.role_permissions == nil {
@@ -71744,7 +71816,7 @@ func (m *PermissionDefinitionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PermissionDefinitionMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.resource != nil {
 		fields = append(fields, permissiondefinition.FieldResource)
 	}
@@ -71759,6 +71831,9 @@ func (m *PermissionDefinitionMutation) Fields() []string {
 	}
 	if m.category != nil {
 		fields = append(fields, permissiondefinition.FieldCategory)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, permissiondefinition.FieldTenantID)
 	}
 	return fields
 }
@@ -71778,6 +71853,8 @@ func (m *PermissionDefinitionMutation) Field(name string) (ent.Value, bool) {
 		return m.DisplayName()
 	case permissiondefinition.FieldCategory:
 		return m.Category()
+	case permissiondefinition.FieldTenantID:
+		return m.TenantID()
 	}
 	return nil, false
 }
@@ -71797,6 +71874,8 @@ func (m *PermissionDefinitionMutation) OldField(ctx context.Context, name string
 		return m.OldDisplayName(ctx)
 	case permissiondefinition.FieldCategory:
 		return m.OldCategory(ctx)
+	case permissiondefinition.FieldTenantID:
+		return m.OldTenantID(ctx)
 	}
 	return nil, fmt.Errorf("unknown PermissionDefinition field %s", name)
 }
@@ -71841,6 +71920,13 @@ func (m *PermissionDefinitionMutation) SetField(name string, value ent.Value) er
 		}
 		m.SetCategory(v)
 		return nil
+	case permissiondefinition.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown PermissionDefinition field %s", name)
 }
@@ -71852,6 +71938,9 @@ func (m *PermissionDefinitionMutation) AddedFields() []string {
 	if m.addcategory != nil {
 		fields = append(fields, permissiondefinition.FieldCategory)
 	}
+	if m.addtenant_id != nil {
+		fields = append(fields, permissiondefinition.FieldTenantID)
+	}
 	return fields
 }
 
@@ -71862,6 +71951,8 @@ func (m *PermissionDefinitionMutation) AddedField(name string) (ent.Value, bool)
 	switch name {
 	case permissiondefinition.FieldCategory:
 		return m.AddedCategory()
+	case permissiondefinition.FieldTenantID:
+		return m.AddedTenantID()
 	}
 	return nil, false
 }
@@ -71877,6 +71968,13 @@ func (m *PermissionDefinitionMutation) AddField(name string, value ent.Value) er
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddCategory(v)
+		return nil
+	case permissiondefinition.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown PermissionDefinition numeric field %s", name)
@@ -71894,6 +71992,9 @@ func (m *PermissionDefinitionMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(permissiondefinition.FieldCategory) {
 		fields = append(fields, permissiondefinition.FieldCategory)
+	}
+	if m.FieldCleared(permissiondefinition.FieldTenantID) {
+		fields = append(fields, permissiondefinition.FieldTenantID)
 	}
 	return fields
 }
@@ -71918,6 +72019,9 @@ func (m *PermissionDefinitionMutation) ClearField(name string) error {
 	case permissiondefinition.FieldCategory:
 		m.ClearCategory()
 		return nil
+	case permissiondefinition.FieldTenantID:
+		m.ClearTenantID()
+		return nil
 	}
 	return fmt.Errorf("unknown PermissionDefinition nullable field %s", name)
 }
@@ -71940,6 +72044,9 @@ func (m *PermissionDefinitionMutation) ResetField(name string) error {
 		return nil
 	case permissiondefinition.FieldCategory:
 		m.ResetCategory()
+		return nil
+	case permissiondefinition.FieldTenantID:
+		m.ResetTenantID()
 		return nil
 	}
 	return fmt.Errorf("unknown PermissionDefinition field %s", name)
@@ -95559,6 +95666,8 @@ type RolePermissionMutation struct {
 	addrole_id       *int
 	permission_id    *int
 	addpermission_id *int
+	tenant_id        *int
+	addtenant_id     *int
 	clearedFields    map[string]struct{}
 	done             bool
 	oldValue         func(context.Context) (*RolePermission, error)
@@ -95775,6 +95884,62 @@ func (m *RolePermissionMutation) ResetPermissionID() {
 	m.addpermission_id = nil
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (m *RolePermissionMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *RolePermissionMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the RolePermission entity.
+// If the RolePermission object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RolePermissionMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *RolePermissionMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *RolePermissionMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *RolePermissionMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
 // Where appends a list predicates to the RolePermissionMutation builder.
 func (m *RolePermissionMutation) Where(ps ...predicate.RolePermission) {
 	m.predicates = append(m.predicates, ps...)
@@ -95809,12 +95974,15 @@ func (m *RolePermissionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RolePermissionMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 3)
 	if m.role_id != nil {
 		fields = append(fields, rolepermission.FieldRoleID)
 	}
 	if m.permission_id != nil {
 		fields = append(fields, rolepermission.FieldPermissionID)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, rolepermission.FieldTenantID)
 	}
 	return fields
 }
@@ -95828,6 +95996,8 @@ func (m *RolePermissionMutation) Field(name string) (ent.Value, bool) {
 		return m.RoleID()
 	case rolepermission.FieldPermissionID:
 		return m.PermissionID()
+	case rolepermission.FieldTenantID:
+		return m.TenantID()
 	}
 	return nil, false
 }
@@ -95841,6 +96011,8 @@ func (m *RolePermissionMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldRoleID(ctx)
 	case rolepermission.FieldPermissionID:
 		return m.OldPermissionID(ctx)
+	case rolepermission.FieldTenantID:
+		return m.OldTenantID(ctx)
 	}
 	return nil, fmt.Errorf("unknown RolePermission field %s", name)
 }
@@ -95864,6 +96036,13 @@ func (m *RolePermissionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetPermissionID(v)
 		return nil
+	case rolepermission.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown RolePermission field %s", name)
 }
@@ -95878,6 +96057,9 @@ func (m *RolePermissionMutation) AddedFields() []string {
 	if m.addpermission_id != nil {
 		fields = append(fields, rolepermission.FieldPermissionID)
 	}
+	if m.addtenant_id != nil {
+		fields = append(fields, rolepermission.FieldTenantID)
+	}
 	return fields
 }
 
@@ -95890,6 +96072,8 @@ func (m *RolePermissionMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedRoleID()
 	case rolepermission.FieldPermissionID:
 		return m.AddedPermissionID()
+	case rolepermission.FieldTenantID:
+		return m.AddedTenantID()
 	}
 	return nil, false
 }
@@ -95912,6 +96096,13 @@ func (m *RolePermissionMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddPermissionID(v)
+		return nil
+	case rolepermission.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown RolePermission numeric field %s", name)
@@ -95945,6 +96136,9 @@ func (m *RolePermissionMutation) ResetField(name string) error {
 		return nil
 	case rolepermission.FieldPermissionID:
 		m.ResetPermissionID()
+		return nil
+	case rolepermission.FieldTenantID:
+		m.ResetTenantID()
 		return nil
 	}
 	return fmt.Errorf("unknown RolePermission field %s", name)

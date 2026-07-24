@@ -74,6 +74,20 @@ func (_c *PermissionDefinitionCreate) SetNillableCategory(v *int) *PermissionDef
 	return _c
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (_c *PermissionDefinitionCreate) SetTenantID(v int) *PermissionDefinitionCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (_c *PermissionDefinitionCreate) SetNillableTenantID(v *int) *PermissionDefinitionCreate {
+	if v != nil {
+		_c.SetTenantID(*v)
+	}
+	return _c
+}
+
 // AddRolePermissionIDs adds the "role_permissions" edge to the RolePermission entity by IDs.
 func (_c *PermissionDefinitionCreate) AddRolePermissionIDs(ids ...int) *PermissionDefinitionCreate {
 	_c.mutation.AddRolePermissionIDs(ids...)
@@ -184,6 +198,10 @@ func (_c *PermissionDefinitionCreate) createSpec() (*PermissionDefinition, *sqlg
 	if value, ok := _c.mutation.Category(); ok {
 		_spec.SetField(permissiondefinition.FieldCategory, field.TypeInt, value)
 		_node.Category = value
+	}
+	if value, ok := _c.mutation.TenantID(); ok {
+		_spec.SetField(permissiondefinition.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
 	}
 	if nodes := _c.mutation.RolePermissionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

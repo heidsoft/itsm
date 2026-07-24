@@ -22,6 +22,8 @@ const (
 	FieldDisplayName = "display_name"
 	// FieldCategory holds the string denoting the category field in the database.
 	FieldCategory = "category"
+	// FieldTenantID holds the string denoting the tenant_id field in the database.
+	FieldTenantID = "tenant_id"
 	// EdgeRolePermissions holds the string denoting the role_permissions edge name in mutations.
 	EdgeRolePermissions = "role_permissions"
 	// Table holds the table name of the permissiondefinition in the database.
@@ -43,6 +45,7 @@ var Columns = []string{
 	FieldDescription,
 	FieldDisplayName,
 	FieldCategory,
+	FieldTenantID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -93,6 +96,11 @@ func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
 // ByCategory orders the results by the category field.
 func ByCategory(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCategory, opts...).ToFunc()
+}
+
+// ByTenantID orders the results by the tenant_id field.
+func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
 }
 
 // ByRolePermissionsCount orders the results by role_permissions count.

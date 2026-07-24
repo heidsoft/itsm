@@ -2117,6 +2117,7 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "display_name", Type: field.TypeString, Nullable: true},
 		{Name: "category", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt, Nullable: true},
 	}
 	// PermissionDefinitionsTable holds the schema information for the "permission_definitions" table.
 	PermissionDefinitionsTable = &schema.Table{
@@ -3087,6 +3088,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "role_id", Type: field.TypeInt},
 		{Name: "permission_id", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "permission_definition_role_permissions", Type: field.TypeInt, Nullable: true},
 	}
 	// RolePermissionsTable holds the schema information for the "role_permissions" table.
@@ -3097,7 +3099,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "role_permissions_permission_definitions_role_permissions",
-				Columns:    []*schema.Column{RolePermissionsColumns[3]},
+				Columns:    []*schema.Column{RolePermissionsColumns[4]},
 				RefColumns: []*schema.Column{PermissionDefinitionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
