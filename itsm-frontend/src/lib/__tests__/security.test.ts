@@ -11,6 +11,8 @@ import {
   networkSecurity,
   encryption,
   securityConfig,
+  csrfProtection,
+  securityLogger,
 } from '../security';
 
 describe('xssProtection', () => {
@@ -348,5 +350,119 @@ describe('securityConfig', () => {
     expect(securityConfig.get('maxFileSize')).toBe(20);
     // Restore original
     securityConfig.set('maxFileSize', originalValue as number);
+  });
+});
+
+describe('csrfProtection', () => {
+  beforeEach(() => {
+    csrfProtection.clearToken();
+  });
+
+  it('validateToken returns false for empty tokens', () => {
+    expect(csrfProtection.validateToken('', 'abc')).toBe(false);
+    expect(csrfProtection.validateToken('abc', '')).toBe(false);
+  });
+
+  it('validateToken returns true for matching tokens', () => {
+    expect(csrfProtection.validateToken('token123', 'token123')).toBe(true);
+  });
+
+  it('validateToken returns false for non-matching tokens', () => {
+    expect(csrfProtection.validateToken('abc', 'def')).toBe(false);
+  });
+
+  it('clearToken resets the stored token', () => {
+    csrfProtection.privateToken = 'stored';
+    csrfProtection.clearToken();
+    expect(csrfProtection.privateToken).toBeNull();
+  });
+
+  it('getTokenFromMeta returns null when no meta tag', () => {
+    expect(csrfProtection.getTokenFromMeta()).toBeNull();
+  });
+
+  it('getTokenFromMeta returns content from meta tag', () => {
+    const meta = document.createElement('meta');
+    meta.setAttribute('name', 'csrf-token');
+    meta.setAttribute('content', 'meta-csrf-value');
+    document.head.appendChild(meta);
+    expect(csrfProtection.getTokenFromMeta()).toBe('meta-csrf-value');
+    document.head.removeChild(meta);
+  });
+
+  it('getToken fetches from API', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ code: 0, data: { csrf_token: 'fetched-token' } }),
+    }) as jest.Mock;
+    const token = await csrfProtection.getToken();
+    expect(token).toBe('fetched-token');
+    csrfProtection.clearToken();
+    (global.fetch as jest.Mock).mockRestore();
+  });
+
+  it('getToken returns cached token', async () => {
+    csrfProtection.privateToken = 'cached';
+    const token = await csrfProtection.getToken();
+    expect(token).toBe('cached');
+  });
+
+  it('getToken returns null on fetch failure', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('network')) as jest.Mock;
+    csrfProtection.privateToken = null;
+    const token = await csrfProtection.getToken();
+    expect(token).toBeNull();
+    (global.fetch as jest.Mock).mockRestore();
+  });
+});
+
+describe('securityLogger', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('logSecurityEvent logs to console in development', () => {
+    const originalEnv = process.env.NODE_ENV;
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
+    securityLogger.logSecurityEvent('test_event', { key: 'value' });
+    expect(console.warn).toHaveBeenCalled();
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, configurable: true });
+  });
+
+  it('logLoginAttempt logs with masked username', () => {
+    const originalEnv = process.env.NODE_ENV;
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
+    securityLogger.logLoginAttempt(true, 'admin');
+    expect(console.warn).toHaveBeenCalled();
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, configurable: true });
+  });
+
+  it('logLoginAttempt handles no username', () => {
+    const originalEnv = process.env.NODE_ENV;
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
+    securityLogger.logLoginAttempt(false);
+    expect(console.warn).toHaveBeenCalled();
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, configurable: true });
+  });
+
+  it('logSuspiciousActivity logs activity', () => {
+    const originalEnv = process.env.NODE_ENV;
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
+    securityLogger.logSuspiciousActivity('brute_force', { attempts: 10 });
+    expect(console.warn).toHaveBeenCalled();
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, configurable: true });
+  });
+});
+
+describe('xssProtection.safeInnerHTML', () => {
+  it('sets escaped HTML on element', () => {
+    const el = document.createElement('div');
+    xssProtection.safeInnerHTML(el, '<script>alert(1)</script>');
+    expect(el.innerHTML).not.toContain('<script>');
+    expect(el.innerHTML).toContain('&lt;script&gt;');
   });
 });
