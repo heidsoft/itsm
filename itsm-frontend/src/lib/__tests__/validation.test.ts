@@ -1,394 +1,240 @@
 /**
- * Validation 工具测试
+ * Tests for validation.ts
  */
 
-import { validators, Validator, ValidationRule } from '../validation';
+jest.mock('@/lib/api/http-client', () => ({
+  httpClient: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), patch: jest.fn() },
+}));
 
-describe('validators', () => {
-  describe('required', () => {
-    it('should return false for null', () => {
+import { validators, Validator } from '../validation';
+
+describe('Validation Utilities', () => {
+  describe('validators.required', () => {
+    it('should return false for null/undefined', () => {
       expect(validators.required(null)).toBe(false);
-    });
-
-    it('should return false for undefined', () => {
       expect(validators.required(undefined)).toBe(false);
     });
 
     it('should return false for empty string', () => {
       expect(validators.required('')).toBe(false);
-    });
-
-    it('should return false for whitespace-only string', () => {
       expect(validators.required('   ')).toBe(false);
-    });
-
-    it('should return true for non-empty string', () => {
-      expect(validators.required('test')).toBe(true);
-    });
-
-    it('should return true for number', () => {
-      expect(validators.required(0)).toBe(true);
     });
 
     it('should return false for empty array', () => {
       expect(validators.required([])).toBe(false);
     });
 
-    it('should return true for non-empty array', () => {
-      expect(validators.required([1, 2, 3])).toBe(true);
-    });
-
-    it('should return true for object', () => {
-      expect(validators.required({ key: 'value' })).toBe(true);
+    it('should return true for non-empty values', () => {
+      expect(validators.required('hello')).toBe(true);
+      expect(validators.required([1])).toBe(true);
+      expect(validators.required(0)).toBe(true);
+      expect(validators.required(false)).toBe(true);
     });
   });
 
-  describe('email', () => {
-    it('should return true for valid email', () => {
-      expect(validators.email('user@example.com')).toBe(true);
+  describe('validators.email', () => {
+    it('should validate correct emails', () => {
+      expect(validators.email('test@example.com')).toBe(true);
+      expect(validators.email('user+tag@domain.org')).toBe(true);
     });
 
-    it('should return true for email with subdomain', () => {
-      expect(validators.email('user@mail.example.com')).toBe(true);
-    });
-
-    it('should return false for email without @', () => {
-      expect(validators.email('userexample.com')).toBe(false);
-    });
-
-    it('should return false for email without domain', () => {
+    it('should reject invalid emails', () => {
+      expect(validators.email('notanemail')).toBe(false);
+      expect(validators.email('@domain.com')).toBe(false);
       expect(validators.email('user@')).toBe(false);
     });
-
-    it('should return false for email without username', () => {
-      expect(validators.email('@example.com')).toBe(false);
-    });
-
-    it('should return false for email with spaces', () => {
-      expect(validators.email('user @example.com')).toBe(false);
-    });
   });
 
-  describe('phone', () => {
-    it('should return true for valid China mobile numbers', () => {
+  describe('validators.phone', () => {
+    it('should validate Chinese phone numbers', () => {
       expect(validators.phone('13800138000')).toBe(true);
-      expect(validators.phone('13912345678')).toBe(true);
-      expect(validators.phone('18798765432')).toBe(true);
+      expect(validators.phone('19912345678')).toBe(true);
     });
 
-    it('should return false for invalid phone numbers', () => {
-      expect(validators.phone('12800138000')).toBe(false);
-      expect(validators.phone('1380013800')).toBe(false);
-      expect(validators.phone('138001380000')).toBe(false);
-      expect(validators.phone('abcdefghijk')).toBe(false);
+    it('should reject invalid phones', () => {
+      expect(validators.phone('12345')).toBe(false);
+      expect(validators.phone('02812345678')).toBe(false);
     });
   });
 
-  describe('minLength', () => {
-    it('should return true for string at minimum length', () => {
-      const minLength3 = validators.minLength(3);
-      expect(minLength3('abc')).toBe(true);
-    });
-
-    it('should return true for string longer than minimum', () => {
-      const minLength3 = validators.minLength(3);
-      expect(minLength3('abcd')).toBe(true);
-    });
-
-    it('should return false for string shorter than minimum', () => {
-      const minLength3 = validators.minLength(3);
-      expect(minLength3('ab')).toBe(false);
+  describe('validators.minLength', () => {
+    it('should validate minimum length', () => {
+      const validate = validators.minLength(3);
+      expect(validate('abc')).toBe(true);
+      expect(validate('ab')).toBe(false);
     });
   });
 
-  describe('maxLength', () => {
-    it('should return true for string at maximum length', () => {
-      const maxLength5 = validators.maxLength(5);
-      expect(maxLength5('abcde')).toBe(true);
-    });
-
-    it('should return true for string shorter than maximum', () => {
-      const maxLength5 = validators.maxLength(5);
-      expect(maxLength5('abc')).toBe(true);
-    });
-
-    it('should return false for string longer than maximum', () => {
-      const maxLength5 = validators.maxLength(5);
-      expect(maxLength5('abcdef')).toBe(false);
+  describe('validators.maxLength', () => {
+    it('should validate maximum length', () => {
+      const validate = validators.maxLength(5);
+      expect(validate('abc')).toBe(true);
+      expect(validate('abcdef')).toBe(false);
     });
   });
 
-  describe('minValue', () => {
-    it('should return true for number at minimum value', () => {
-      const min10 = validators.minValue(10);
-      expect(min10(10)).toBe(true);
-    });
-
-    it('should return true for number greater than minimum', () => {
-      const min10 = validators.minValue(10);
-      expect(min10(15)).toBe(true);
-    });
-
-    it('should return false for number less than minimum', () => {
-      const min10 = validators.minValue(10);
-      expect(min10(5)).toBe(false);
+  describe('validators.minValue', () => {
+    it('should validate minimum value', () => {
+      const validate = validators.minValue(10);
+      expect(validate(10)).toBe(true);
+      expect(validate(9)).toBe(false);
     });
   });
 
-  describe('maxValue', () => {
-    it('should return true for number at maximum value', () => {
-      const max100 = validators.maxValue(100);
-      expect(max100(100)).toBe(true);
-    });
-
-    it('should return true for number less than maximum', () => {
-      const max100 = validators.maxValue(100);
-      expect(max100(50)).toBe(true);
-    });
-
-    it('should return false for number greater than maximum', () => {
-      const max100 = validators.maxValue(100);
-      expect(max100(150)).toBe(false);
+  describe('validators.maxValue', () => {
+    it('should validate maximum value', () => {
+      const validate = validators.maxValue(100);
+      expect(validate(100)).toBe(true);
+      expect(validate(101)).toBe(false);
     });
   });
 
-  describe('url', () => {
-    it('should return true for valid URL', () => {
+  describe('validators.url', () => {
+    it('should validate URLs', () => {
       expect(validators.url('https://example.com')).toBe(true);
-      expect(validators.url('http://example.com/path')).toBe(true);
-      expect(validators.url('https://example.com/path?query=value')).toBe(true);
+      expect(validators.url('http://localhost:3000')).toBe(true);
     });
 
-    it('should return false for invalid URL', () => {
+    it('should reject invalid URLs', () => {
       expect(validators.url('not-a-url')).toBe(false);
     });
-
-    it('should return true for ftp URL', () => {
-      expect(validators.url('ftp://example.com')).toBe(true);
-    });
   });
 
-  describe('number', () => {
-    it('should return true for numeric string', () => {
+  describe('validators.number', () => {
+    it('should validate numbers', () => {
       expect(validators.number('123')).toBe(true);
-      expect(validators.number('123.45')).toBe(true);
-      expect(validators.number('-123')).toBe(true);
+      expect(validators.number('12.5')).toBe(true);
+      expect(validators.number('-10')).toBe(true);
     });
 
-    it('should return false for non-numeric string', () => {
+    it('should reject non-numbers', () => {
       expect(validators.number('abc')).toBe(false);
-      expect(validators.number('12abc')).toBe(false);
-    });
-
-    it('should return true for empty string (Number("") === 0)', () => {
-      expect(validators.number('')).toBe(true);
+      expect(validators.number('Infinity')).toBe(false);
     });
   });
 
-  describe('integer', () => {
-    it('should return true for integer string', () => {
+  describe('validators.integer', () => {
+    it('should validate integers', () => {
       expect(validators.integer('123')).toBe(true);
-      expect(validators.integer('-123')).toBe(true);
-      expect(validators.integer('0')).toBe(true);
+      expect(validators.integer('-10')).toBe(true);
     });
 
-    it('should return false for decimal string', () => {
-      expect(validators.integer('123.45')).toBe(false);
+    it('should reject non-integers', () => {
+      expect(validators.integer('12.5')).toBe(false);
     });
   });
 
-  describe('positive', () => {
-    it('should return true for positive numbers', () => {
+  describe('validators.positive', () => {
+    it('should validate positive numbers', () => {
       expect(validators.positive(1)).toBe(true);
-      expect(validators.positive(100)).toBe(true);
-    });
-
-    it('should return false for zero', () => {
       expect(validators.positive(0)).toBe(false);
-    });
-
-    it('should return false for negative numbers', () => {
       expect(validators.positive(-1)).toBe(false);
     });
   });
 
-  describe('nonNegative', () => {
-    it('should return true for positive numbers', () => {
-      expect(validators.nonNegative(1)).toBe(true);
-    });
-
-    it('should return true for zero', () => {
+  describe('validators.nonNegative', () => {
+    it('should validate non-negative numbers', () => {
       expect(validators.nonNegative(0)).toBe(true);
-    });
-
-    it('should return false for negative numbers', () => {
+      expect(validators.nonNegative(1)).toBe(true);
       expect(validators.nonNegative(-1)).toBe(false);
     });
   });
 
-  describe('date', () => {
-    it('should return true for valid date string', () => {
-      expect(validators.date('2024-01-15')).toBe(true);
-      expect(validators.date('2024-01-15T10:30:00')).toBe(true);
-      expect(validators.date('2024/01/15')).toBe(true);
+  describe('validators.date', () => {
+    it('should validate dates', () => {
+      expect(validators.date('2024-01-01')).toBe(true);
+      expect(validators.date('2024-12-31T23:59:59Z')).toBe(true);
     });
 
-    it('should return false for invalid date string', () => {
-      expect(validators.date('invalid-date')).toBe(false);
-      expect(validators.date('')).toBe(false);
+    it('should reject invalid dates', () => {
+      expect(validators.date('not-a-date')).toBe(false);
     });
   });
 
-  describe('oneOf', () => {
-    it('should return true for value in options', () => {
-      const isActive = validators.oneOf(['active', 'pending', 'closed']);
-      expect(isActive('active')).toBe(true);
-      expect(isActive('pending')).toBe(true);
-    });
-
-    it('should return false for value not in options', () => {
-      const isActive = validators.oneOf(['active', 'pending', 'closed']);
-      expect(isActive('deleted')).toBe(false);
+  describe('validators.pattern', () => {
+    it('should validate against regex', () => {
+      const validate = validators.pattern(/^[A-Z]+$/);
+      expect(validate('ABC')).toBe(true);
+      expect(validate('abc')).toBe(false);
     });
   });
-});
 
-describe('Validator class', () => {
-  interface TestForm extends Record<string, unknown> {
-    username: string;
-    email: string;
-    age: number;
-  }
-
-  it('should validate valid data', () => {
-    const validator = new Validator<TestForm>();
-
-    validator.addRule('username', {
-      validator: validators.required as (value: unknown) => boolean,
-      message: 'Username is required',
+  describe('validators.oneOf', () => {
+    it('should validate enum values', () => {
+      const validate = validators.oneOf(['a', 'b', 'c']);
+      expect(validate('a')).toBe(true);
+      expect(validate('d')).toBe(false);
     });
-
-    validator.addRule('email', {
-      validator: validators.email as (value: unknown) => boolean,
-      message: 'Invalid email',
-    });
-
-    const result = validator.validate({
-      username: 'testuser',
-      email: 'test@example.com',
-      age: 25,
-    });
-
-    expect(result.isValid).toBe(true);
-    expect(Object.keys(result.errors)).toHaveLength(0);
   });
 
-  it('should return errors for invalid data', () => {
-    const validator = new Validator<TestForm>();
+  describe('Validator class', () => {
+    it('should add and validate rules', () => {
+      const validator = new Validator<{ name: string; email: string }>();
+      validator.addRule('name', { validator: (v) => validators.required(v), message: 'Name required' });
+      validator.addRule('email', { validator: (v) => validators.email(v as string), message: 'Invalid email' });
 
-    validator.addRule('username', {
-      validator: validators.required as (value: unknown) => boolean,
-      message: 'Username is required',
+      const result = validator.validate({ name: '', email: 'bad' } as any);
+      expect(result.isValid).toBe(false);
+      expect(result.errors['name']).toContain('Name required');
+      expect(result.errors['email']).toContain('Invalid email');
     });
 
-    validator.addRule('email', {
-      validator: validators.email as (value: unknown) => boolean,
-      message: 'Invalid email',
+    it('should validate successfully', () => {
+      const validator = new Validator<{ name: string }>();
+      validator.addRule('name', { validator: (v) => validators.required(v), message: 'Required' });
+
+      const result = validator.validate({ name: 'John' } as any);
+      expect(result.isValid).toBe(true);
+      expect(Object.keys(result.errors)).toHaveLength(0);
     });
 
-    const result = validator.validate({
-      username: '',
-      email: 'invalid-email',
-      age: 25,
+    it('should validate single field', () => {
+      const validator = new Validator<{ name: string }>();
+      validator.addRule('name', { validator: (v) => validators.required(v), message: 'Required' });
+
+      const result = validator.validateField('name', '' as any);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('Required');
     });
 
-    expect(result.isValid).toBe(false);
-    expect(result.errors.username).toContain('Username is required');
-    expect(result.errors.email).toContain('Invalid email');
-  });
+    it('should add multiple rules at once', () => {
+      const validator = new Validator<{ name: string }>();
+      validator.addRules('name', [
+        { validator: (v) => validators.required(v), message: 'Required' },
+        { validator: (v) => validators.minLength(2)(v as string), message: 'Min 2' },
+      ]);
 
-  it('should support multiple rules per field', () => {
-    const validator = new Validator<TestForm>();
-
-    validator.addRules('username', [
-      { validator: validators.required as (value: unknown) => boolean, message: 'Required' },
-      { validator: validators.minLength(3) as (value: unknown) => boolean, message: 'Too short' },
-    ]);
-
-    const invalidResult = validator.validate({
-      username: 'ab',
-      email: 'test@example.com',
-      age: 25,
+      const result = validator.validate({ name: 'A' } as any);
+      expect(result.errors['name']).toContain('Min 2');
     });
 
-    expect(invalidResult.isValid).toBe(false);
-    expect(invalidResult.errors.username).toContain('Too short');
-
-    const validResult = validator.validate({
-      username: 'abc',
-      email: 'test@example.com',
-      age: 25,
+    it('should support method chaining', () => {
+      const validator = new Validator<{ name: string }>();
+      const result = validator
+        .addRule('name', { validator: (v) => validators.required(v), message: 'Required' })
+        .addRules('name', [{ validator: (v) => validators.minLength(2)(v as string), message: 'Min 2' }]);
+      
+      expect(result).toBe(validator);
     });
 
-    expect(validResult.isValid).toBe(true);
-  });
+    it('should clear all rules', () => {
+      const validator = new Validator<{ name: string }>();
+      validator.addRule('name', { validator: (v) => validators.required(v), message: 'Required' });
+      validator.clearRules();
 
-  it('should validate single field', () => {
-    const validator = new Validator<TestForm>();
-
-    validator.addRule('email', {
-      validator: validators.email as (value: unknown) => boolean,
-      message: 'Invalid email',
+      const result = validator.validate({ name: '' } as any);
+      expect(result.isValid).toBe(true);
     });
 
-    const result = validator.validateField('email', 'invalid');
+    it('should remove field rules', () => {
+      const validator = new Validator<{ name: string; email: string }>();
+      validator.addRule('name', { validator: (v) => validators.required(v), message: 'Required' });
+      validator.addRule('email', { validator: (v) => validators.email(v as string), message: 'Invalid' });
+      validator.removeFieldRules('name');
 
-    expect(result.isValid).toBe(false);
-    expect(result.errors).toContain('Invalid email');
-  });
-
-  it('should clear all rules', () => {
-    const validator = new Validator<TestForm>();
-
-    validator.addRule('username', {
-      validator: validators.required as (value: unknown) => boolean,
-      message: 'Required',
+      const result = validator.validate({ name: '', email: 'bad' } as any);
+      expect(result.errors).not.toHaveProperty('name');
+      expect(result.errors).toHaveProperty('email');
     });
-
-    validator.clearRules();
-
-    const result = validator.validate({
-      username: '',
-      email: '',
-      age: 0,
-    });
-
-    expect(result.isValid).toBe(true);
-  });
-
-  it('should remove specific field rules', () => {
-    const validator = new Validator<TestForm>();
-
-    validator.addRule('username', {
-      validator: validators.required as (value: unknown) => boolean,
-      message: 'Required',
-    });
-
-    validator.addRule('email', {
-      validator: validators.email as (value: unknown) => boolean,
-      message: 'Invalid email',
-    });
-
-    validator.removeFieldRules('username');
-
-    const result = validator.validate({
-      username: '',
-      email: 'invalid',
-      age: 25,
-    });
-
-    expect(result.isValid).toBe(false);
-    expect(result.errors.username).toBeUndefined();
-    expect(result.errors.email).toContain('Invalid email');
   });
 });

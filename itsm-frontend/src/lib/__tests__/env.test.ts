@@ -1,147 +1,164 @@
 /**
- * 环境配置测试
+ * Tests for env.ts
  */
 
-import { getEnvironment, env, logger, performance, errorHandler, devTools } from '@/lib/env';
+jest.mock('@/lib/api/http-client', () => ({
+  httpClient: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), patch: jest.fn() },
+}));
+
+import { getEnvironment, env, logger, performance as perfUtil, errorHandler, devTools } from '../env';
 
 describe('Environment Utilities', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(console, 'info').mockImplementation(() => {});
+    jest.spyOn(console, 'time').mockImplementation(() => {});
+    jest.spyOn(console, 'timeEnd').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('getEnvironment', () => {
-    it('should be defined', () => {
-      expect(getEnvironment).toBeDefined();
-    });
-
-    it('should be a function', () => {
-      expect(typeof getEnvironment).toBe('function');
-    });
-
-    it('should return a valid environment', () => {
+    it('should return current environment', () => {
       const result = getEnvironment();
       expect(['development', 'production', 'test']).toContain(result);
     });
   });
 
   describe('env', () => {
-    it('should be defined', () => {
-      expect(env).toBeDefined();
+    it('should have environment flags', () => {
+      expect(typeof env.isDevelopment).toBe('boolean');
+      expect(typeof env.isProduction).toBe('boolean');
+      expect(typeof env.isTest).toBe('boolean');
     });
 
-    it('should have isDevelopment property', () => {
-      expect(env.isDevelopment).toBeDefined();
+    it('should have feature flags', () => {
+      expect(typeof env.features.debugMode).toBe('boolean');
+      expect(typeof env.features.performanceMonitoring).toBe('boolean');
+      expect(typeof env.features.errorReporting).toBe('boolean');
     });
 
-    it('should have isProduction property', () => {
-      expect(env.isProduction).toBeDefined();
+    it('should have API config', () => {
+      expect(env.api.timeout).toBeGreaterThan(0);
+      expect(env.api.retryCount).toBeGreaterThan(0);
     });
 
-    it('should have isTest property', () => {
-      expect(env.isTest).toBeDefined();
-    });
-
-    it('should have features object', () => {
-      expect(env.features).toBeDefined();
-    });
-
-    it('should have api object', () => {
-      expect(env.api).toBeDefined();
-      expect(env.api.baseUrl).toBeDefined();
-      expect(env.api.timeout).toBeDefined();
-    });
-
-    it('should have app object', () => {
-      expect(env.app).toBeDefined();
+    it('should have app config', () => {
       expect(env.app.name).toBe('AI-Native ITSM');
+      expect(env.app.version).toBeDefined();
     });
   });
 
   describe('logger', () => {
-    it('should be defined', () => {
-      expect(logger).toBeDefined();
+    it('should have debug method', () => {
+      expect(() => logger.debug('test')).not.toThrow();
     });
 
-    it('should have debug function', () => {
-      expect(typeof logger.debug).toBe('function');
+    it('should have info method', () => {
+      expect(() => logger.info('test')).not.toThrow();
     });
 
-    it('should have info function', () => {
-      expect(typeof logger.info).toBe('function');
+    it('should have warn method', () => {
+      expect(() => logger.warn('test')).not.toThrow();
     });
 
-    it('should have warn function', () => {
-      expect(typeof logger.warn).toBe('function');
+    it('should have error method that always logs', () => {
+      logger.error('test error');
+      expect(console.error).toHaveBeenCalledWith('[ERROR]', 'test error');
     });
 
-    it('should have error function', () => {
-      expect(typeof logger.error).toBe('function');
+    it('should have performance method', () => {
+      expect(() => logger.performance('test', { duration: '100ms' })).not.toThrow();
     });
 
-    it('should have performance function', () => {
-      expect(typeof logger.performance).toBe('function');
-    });
-
-    it('should have security function', () => {
-      expect(typeof logger.security).toBe('function');
+    it('should have security method', () => {
+      expect(() => logger.security('event', { user: 'test' })).not.toThrow();
     });
   });
 
-  describe('performance', () => {
-    it('should be defined', () => {
-      expect(performance).toBeDefined();
+  describe('performance utilities', () => {
+    it('should have start method', () => {
+      const result = perfUtil.start('test');
+      // In test env performanceMonitoring is false
+      expect(result === null || result === 'test').toBe(true);
     });
 
-    it('should have start function', () => {
-      expect(typeof performance.start).toBe('function');
+    it('should have end method', () => {
+      expect(() => perfUtil.end('test')).not.toThrow();
     });
 
-    it('should have end function', () => {
-      expect(typeof performance.end).toBe('function');
+    it('should measure function execution', () => {
+      const result = perfUtil.measure('test', () => 42);
+      expect(result).toBe(42);
     });
 
-    it('should have measure function', () => {
-      expect(typeof performance.measure).toBe('function');
-    });
-
-    it('should have measureAsync function', () => {
-      expect(typeof performance.measureAsync).toBe('function');
+    it('should measure async function execution', async () => {
+      const result = await perfUtil.measureAsync('test', async () => 'async result');
+      expect(result).toBe('async result');
     });
   });
 
   describe('errorHandler', () => {
-    it('should be defined', () => {
-      expect(errorHandler).toBeDefined();
+    it('should handle API errors', () => {
+      const result = errorHandler.handleApiError(new Error('API failed'), 'test');
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('API failed');
     });
 
-    it('should have handleApiError function', () => {
-      expect(typeof errorHandler.handleApiError).toBe('function');
+    it('should handle non-Error API errors', () => {
+      const result = errorHandler.handleApiError('string error', 'ctx');
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('string error');
     });
 
-    it('should have handleValidationError function', () => {
-      expect(typeof errorHandler.handleValidationError).toBe('function');
+    it('should handle validation errors', () => {
+      const result = errorHandler.handleValidationError({ name: ['required'] });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('表单验证失败');
     });
 
-    it('should have handleNetworkError function', () => {
-      expect(typeof errorHandler.handleNetworkError).toBe('function');
+    it('should handle network errors', () => {
+      const result = errorHandler.handleNetworkError(new Error('Network Error'));
+      expect(result.success).toBe(false);
+      expect(result.type).toBe('network');
+    });
+
+    it('should handle Failed to fetch errors', () => {
+      const result = errorHandler.handleNetworkError(new Error('Failed to fetch'));
+      expect(result.type).toBe('network');
+    });
+
+    it('should handle non-network errors', () => {
+      const result = errorHandler.handleNetworkError(new Error('Some other error'));
+      expect(result.type).toBe('unknown');
     });
   });
 
   describe('devTools', () => {
-    it('should be defined', () => {
-      expect(devTools).toBeDefined();
+    it('should execute onlyInDev based on environment', () => {
+      const fn = jest.fn().mockReturnValue('result');
+      const result = devTools.onlyInDev(fn, 'fallback');
+      // In test env, isDevelopment is false
+      if (env.isDevelopment) {
+        expect(result).toBe('result');
+      } else {
+        expect(result).toBe('fallback');
+      }
     });
 
-    it('should have onlyInDev function', () => {
-      expect(typeof devTools.onlyInDev).toBe('function');
+    it('should call debugInfo without throwing', () => {
+      expect(() => devTools.debugInfo('Component', { data: 'test' })).not.toThrow();
     });
 
-    it('should have debugInfo function', () => {
-      expect(typeof devTools.debugInfo).toBe('function');
+    it('should call mark without throwing', () => {
+      expect(() => devTools.mark('test-mark')).not.toThrow();
     });
 
-    it('should have mark function', () => {
-      expect(typeof devTools.mark).toBe('function');
-    });
-
-    it('should have measure function', () => {
-      expect(typeof devTools.measure).toBe('function');
+    it('should call measure without throwing', () => {
+      expect(() => devTools.measure('test', 'start', 'end')).not.toThrow();
     });
   });
 });
