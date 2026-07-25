@@ -57,17 +57,17 @@ func TestWorkflowDefinition_FullDefinition(t *testing.T) {
 				},
 			},
 			{
-				ID:         "condition1",
-				Name:       "条件判断",
-				Type:       "condition",
+				ID:   "condition1",
+				Name: "条件判断",
+				Type: "condition",
 				Conditions: []WorkflowCondition{
 					{Type: "field", Field: "priority", Operator: "greater_than", Value: 5},
 				},
 			},
 			{
-				ID:         "end",
-				Name:       "结束",
-				Type:       "end",
+				ID:   "end",
+				Name: "结束",
+				Type: "end",
 			},
 		},
 		Transitions: []WorkflowTransition{
@@ -88,7 +88,7 @@ func TestWorkflowDefinition_FullDefinition(t *testing.T) {
 			{
 				ID:        "t3",
 				FromStep:  "condition1",
-				ToStep:     "end",
+				ToStep:    "end",
 				Auto:      false,
 				Condition: &WorkflowCondition{Type: "expression", Field: "", Operator: "", Value: nil},
 			},
@@ -162,13 +162,13 @@ func TestWorkflowCondition_JSONSerialization(t *testing.T) {
 
 func TestWorkflowExecutionContext(t *testing.T) {
 	ctx := &WorkflowExecutionContext{
-		InstanceID:   1,
-		WorkflowID:   100,
-		TenantID:     10,
-		CurrentStep:  "task1",
-		Variables:    map[string]interface{}{"key": "value"},
-		History:      []WorkflowHistory{},
-		Status:       "running",
+		InstanceID:  1,
+		WorkflowID:  100,
+		TenantID:    10,
+		CurrentStep: "task1",
+		Variables:   map[string]interface{}{"key": "value"},
+		History:     []WorkflowHistory{},
+		Status:      "running",
 	}
 
 	assert.Equal(t, 1, ctx.InstanceID)
@@ -179,12 +179,12 @@ func TestWorkflowExecutionContext(t *testing.T) {
 
 func TestWorkflowHistory(t *testing.T) {
 	history := WorkflowHistory{
-		StepID:    "task1",
-		StepName:  "任务1",
-		Action:    "complete",
-		UserID:    123,
-		Data:      map[string]interface{}{"result": "ok"},
-		Comment:   "测试评论",
+		StepID:   "task1",
+		StepName: "任务1",
+		Action:   "complete",
+		UserID:   123,
+		Data:     map[string]interface{}{"result": "ok"},
+		Comment:  "测试评论",
 	}
 
 	assert.Equal(t, "task1", history.StepID)
@@ -200,15 +200,15 @@ func TestContains_BoundaryCases(t *testing.T) {
 		substr   string
 		expected bool
 	}{
-		{"", "", true},           // 空字符串包含空子串
-		{"abc", "", true},        // 任何字符串包含空子串
-		{"", "a", false},         // 空字符串不包含任何非空子串
-		{"abc", "abc", true},     // 完整匹配
-		{"abc", "ab", true},      // 前缀匹配
-		{"abc", "bc", true},      // 后缀匹配
-		{"abc", "b", true},       // 中间匹配
-		{"abc", "d", false},      // 不匹配
-		{"abc", "abcd", false},   // 子串比原字符串长
+		{"", "", true},                 // 空字符串包含空子串
+		{"abc", "", true},              // 任何字符串包含空子串
+		{"", "a", false},               // 空字符串不包含任何非空子串
+		{"abc", "abc", true},           // 完整匹配
+		{"abc", "ab", true},            // 前缀匹配
+		{"abc", "bc", true},            // 后缀匹配
+		{"abc", "b", true},             // 中间匹配
+		{"abc", "d", false},            // 不匹配
+		{"abc", "abcd", false},         // 子串比原字符串长
 		{"hello world", "world", true}, // 单词匹配
 	}
 
@@ -299,11 +299,11 @@ func TestWorkflowEngine_FindTransitions_MultipleFromSameStep(t *testing.T) {
 func TestWorkflowEngine_EvaluateFieldCondition_AllOperators(t *testing.T) {
 	engine := &WorkflowEngine{}
 	variables := map[string]interface{}{
-		"string_field":  "hello",
-		"int_field":     10,
-		"float_field":   10.5,
-		"bool_field":    true,
-		"array_field":   []string{"a", "b"},
+		"string_field": "hello",
+		"int_field":    10,
+		"float_field":  10.5,
+		"bool_field":   true,
+		"array_field":  []string{"a", "b"},
 	}
 
 	tests := []struct {
@@ -334,10 +334,10 @@ func TestWorkflowEngine_EvaluateApprovalCondition(t *testing.T) {
 	engine := &WorkflowEngine{}
 
 	tests := []struct {
-		name       string
-		variables  map[string]interface{}
-		cond       WorkflowCondition
-		expected   bool
+		name      string
+		variables map[string]interface{}
+		cond      WorkflowCondition
+		expected  bool
 	}{
 		{
 			name:      "审批通过",
@@ -436,7 +436,7 @@ func TestWorkflowEngine_DetermineNextStep_NoMatchingAction(t *testing.T) {
 	}
 
 	result := engine.determineNextStep(execCtx, step, definition, "reject") // 使用 reject
-	assert.Empty(t, result)                                                   // 不匹配任何转换
+	assert.Empty(t, result)                                                 // 不匹配任何转换
 }
 
 func TestWorkflowEngine_DetermineNextStep_MatchingWithCondition(t *testing.T) {
@@ -449,8 +449,8 @@ func TestWorkflowEngine_DetermineNextStep_MatchingWithCondition(t *testing.T) {
 		Steps: []WorkflowStep{*step},
 		Transitions: []WorkflowTransition{
 			{
-				ID:       "t1",
-				FromStep: "approval",
+				ID:        "t1",
+				FromStep:  "approval",
 				ToStep:    "end",
 				Actions:   []string{"complete"},
 				Condition: &WorkflowCondition{Type: "field", Field: "approved", Operator: "equals", Value: true},
@@ -472,8 +472,8 @@ func TestWorkflowEngine_DetermineNextStep_ConditionNotMet(t *testing.T) {
 		Steps: []WorkflowStep{*step},
 		Transitions: []WorkflowTransition{
 			{
-				ID:       "t1",
-				FromStep: "approval",
+				ID:        "t1",
+				FromStep:  "approval",
 				ToStep:    "end",
 				Actions:   []string{"complete"},
 				Condition: &WorkflowCondition{Type: "field", Field: "approved", Operator: "equals", Value: true},
@@ -493,11 +493,11 @@ func TestContainsString_BoundaryCases(t *testing.T) {
 		value    string
 		expected bool
 	}{
-		{[]string{}, "", false},           // 空切片
-		{[]string{"a"}, "", false},        // 空值
-		{[]string{"a"}, "a", true},        // 单元素匹配
-		{[]string{"a"}, "b", false},       // 单元素不匹配
-		{[]string{"a", "b", "c"}, "b", true}, // 多元素匹配
+		{[]string{}, "", false},               // 空切片
+		{[]string{"a"}, "", false},            // 空值
+		{[]string{"a"}, "a", true},            // 单元素匹配
+		{[]string{"a"}, "b", false},           // 单元素不匹配
+		{[]string{"a", "b", "c"}, "b", true},  // 多元素匹配
 		{[]string{"a", "b", "c"}, "d", false}, // 多元素不匹配
 		{[]string{"a", "a", "b"}, "a", true},  // 重复元素
 	}
@@ -548,15 +548,15 @@ func TestWorkflowDefinition_JSONRoundTrip(t *testing.T) {
 
 func TestWorkflowExecutionContext_JSONRoundTrip(t *testing.T) {
 	ctx := &WorkflowExecutionContext{
-		InstanceID:   1,
-		WorkflowID:   100,
-		TenantID:     10,
-		CurrentStep:  "task1",
-		Variables:    map[string]interface{}{"key": "value", "count": 42},
+		InstanceID:  1,
+		WorkflowID:  100,
+		TenantID:    10,
+		CurrentStep: "task1",
+		Variables:   map[string]interface{}{"key": "value", "count": 42},
 		History: []WorkflowHistory{
 			{StepID: "start", StepName: "开始", Action: "start", UserID: 1},
 		},
-		Status:    "running",
+		Status: "running",
 	}
 
 	bytes, err := json.Marshal(ctx)

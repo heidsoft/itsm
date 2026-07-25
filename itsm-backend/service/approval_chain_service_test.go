@@ -667,9 +667,9 @@ func TestApprovalChainService_UpdateApprovalChain_PartialUpdate(t *testing.T) {
 	// 部分更新 - 只更新名称
 	updateReq := &dto.ApprovalChainRequest{
 		Name:        "更新后的名称",
-		Description: "", // 空值 - 不更新描述
-		EntityType:  "", // 空值 - 不更新实体类型
-		Status:      "", // 空值 - 不更新状态
+		Description: "",  // 空值 - 不更新描述
+		EntityType:  "",  // 空值 - 不更新实体类型
+		Status:      "",  // 空值 - 不更新状态
 		Chain:       nil, // nil - 不更新审批链
 	}
 

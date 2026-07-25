@@ -10,10 +10,10 @@ import (
 // HTML sanitizer 单例：UGC 策略适合知识库正文（保留常见富文本标签，剔除 script/on* 等 XSS 载体）
 // StrictText 策略用于标题/摘要类字段：只保留纯文本
 var (
-	ugcPolicyOnce   sync.Once
-	ugcPolicy       *bluemonday.Policy
+	ugcPolicyOnce    sync.Once
+	ugcPolicy        *bluemonday.Policy
 	strictPolicyOnce sync.Once
-	strictPolicy    *bluemonday.Policy
+	strictPolicy     *bluemonday.Policy
 )
 
 func UGCPolicy() *bluemonday.Policy {

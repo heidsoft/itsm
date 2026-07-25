@@ -239,8 +239,8 @@ func TestBPMNProcessEngine_EvaluateCondition_InvalidExpressions(t *testing.T) {
 		"invalid {{{{ expression",
 		"unbalanced (parentheses",
 		"undefined_var == 'test'",
-		"status === 'test'",  // 三等号无效
-		"status = 'test'",    // 赋值不是比较
+		"status === 'test'", // 三等号无效
+		"status = 'test'",   // 赋值不是比较
 	}
 
 	for _, expr := range invalidExpressions {
@@ -257,16 +257,16 @@ func TestBPMNProcessEngine_EvaluateCondition_InvalidExpressions(t *testing.T) {
 
 func TestMatchRuleConditions(t *testing.T) {
 	tests := []struct {
-		name      string
+		name       string
 		conditions []map[string]interface{}
-		taskName  string
-		expected  bool
+		taskName   string
+		expected   bool
 	}{
 		{
-			name:      "空条件列表",
+			name:       "空条件列表",
 			conditions: []map[string]interface{}{},
-			taskName:  "审批任务",
-			expected:  false,
+			taskName:   "审批任务",
+			expected:   false,
 		},
 		{
 			name: "equals 匹配",
@@ -373,14 +373,14 @@ func TestMergeServiceTaskVariables(t *testing.T) {
 		{
 			name: "带所有属性的 task",
 			task: &BPMNServiceTask{
-				Type:         "notification",
-				OperationRef: "send_email",
-				CCType:       "role",
-				CCUserIDs:    "1,2,3",
-				CCGroupIDs:   "g1,g2",
-				CCRoleIDs:    "r1",
-				CCVariable:   "cc_list",
-				CCNotify:     "true",
+				Type:           "notification",
+				OperationRef:   "send_email",
+				CCType:         "role",
+				CCUserIDs:      "1,2,3",
+				CCGroupIDs:     "g1,g2",
+				CCRoleIDs:      "r1",
+				CCVariable:     "cc_list",
+				CCNotify:       "true",
 				NotifyChannels: "email,wechat",
 			},
 			expectedLen: 12, // 3 instance + 9 task
@@ -412,8 +412,8 @@ func TestMergeServiceTaskVariables(t *testing.T) {
 func TestCustomProcessEngine_RegisterProcessFunctions(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 	engine := &CustomProcessEngine{
-		logger:        logger,
-		exprEngine:    NewExpressionEngine(),
+		logger:         logger,
+		exprEngine:     NewExpressionEngine(),
 		expressionVars: make(map[string]interface{}),
 	}
 
@@ -500,11 +500,11 @@ func TestInstanceStatistics(t *testing.T) {
 
 func TestBPMNTaskService_ListUserTasks(t *testing.T) {
 	req := &ListUserTasksRequest{
-		Assignee:        "user1",
-		CandidateUsers:  "user2,user3",
-		CandidateGroups: "managers",
-		UserID:          1,
-		Status:          "created",
+		Assignee:             "user1",
+		CandidateUsers:       "user2,user3",
+		CandidateGroups:      "managers",
+		UserID:               1,
+		Status:               "created",
 		ProcessDefinitionKey: "test-process",
 		ProcessInstanceID:    123,
 		TenantID:             1,
@@ -518,10 +518,10 @@ func TestBPMNTaskService_ListUserTasks(t *testing.T) {
 
 func TestTaskStatistics(t *testing.T) {
 	stats := &TaskStatistics{
-		TotalTasks:      100,
-		CompletedTasks:  60,
-		PendingTasks:    30,
-		OverdueTasks:    10,
+		TotalTasks:        100,
+		CompletedTasks:    60,
+		PendingTasks:      30,
+		OverdueTasks:      10,
 		AverageCompletion: 3600000.0, // 1小时（毫秒）
 		StatusBreakdown: map[string]int{
 			"completed": 60,
@@ -623,14 +623,14 @@ func TestGetNextVersion(t *testing.T) {
 
 func TestBPMNProcess_Structure(t *testing.T) {
 	process := &BPMNProcess{
-		ID:             "Process_1",
-		Name:           "测试流程",
-		StartEvents:    []*BPMNStartEvent{{ID: "StartEvent_1", Name: "开始"}},
-		EndEvents:      []*BPMNEndEvent{{ID: "EndEvent_1", Name: "结束"}},
-		UserTasks:      []*BPMNUserTask{{ID: "Task_1", Name: "用户任务"}},
-		ServiceTasks:   []*BPMNServiceTask{{ID: "ServiceTask_1", Name: "服务任务"}},
+		ID:                "Process_1",
+		Name:              "测试流程",
+		StartEvents:       []*BPMNStartEvent{{ID: "StartEvent_1", Name: "开始"}},
+		EndEvents:         []*BPMNEndEvent{{ID: "EndEvent_1", Name: "结束"}},
+		UserTasks:         []*BPMNUserTask{{ID: "Task_1", Name: "用户任务"}},
+		ServiceTasks:      []*BPMNServiceTask{{ID: "ServiceTask_1", Name: "服务任务"}},
 		ExclusiveGateways: []*BPMNExclusiveGateway{{ID: "Gateway_1", Name: "网关"}},
-		SequenceFlows:  []*BPMNSequenceFlow{{ID: "Flow_1", SourceRef: "StartEvent_1", TargetRef: "Task_1"}},
+		SequenceFlows:     []*BPMNSequenceFlow{{ID: "Flow_1", SourceRef: "StartEvent_1", TargetRef: "Task_1"}},
 	}
 
 	assert.NotEmpty(t, process.ID)

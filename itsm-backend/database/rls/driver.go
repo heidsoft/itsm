@@ -6,21 +6,21 @@
 //
 // Three modes, controlled by config.RLSConfig.Mode:
 //
-//   off (default):
-//     Pass-through. No side effects. Zero risk. Used until R2B灰度期结束.
+//	off (default):
+//	  Pass-through. No side effects. Zero risk. Used until R2B灰度期结束.
 //
-//   shadow:
-//     Pass-through DB behavior, but audit every query:
-//       - If ctx has tenant_id -> debug log with (op, entity, tid).
-//       - If ctx lacks tenant_id AND is not system-bypass -> WARN log with
-//         call stack summary. Used to detect missing propagation points
-//         before flipping to enforce.
+//	shadow:
+//	  Pass-through DB behavior, but audit every query:
+//	    - If ctx has tenant_id -> debug log with (op, entity, tid).
+//	    - If ctx lacks tenant_id AND is not system-bypass -> WARN log with
+//	      call stack summary. Used to detect missing propagation points
+//	      before flipping to enforce.
 //
-//   enforce:
-//     Every query is wrapped in a short-lived transaction (or reuses the
-//     caller's Tx if present) with SET LOCAL app.current_tenant = <tid>.
-//     System-bypass ctx skips the SET; caller is expected to have connected
-//     via itsm_admin (BYPASSRLS).
+//	enforce:
+//	  Every query is wrapped in a short-lived transaction (or reuses the
+//	  caller's Tx if present) with SET LOCAL app.current_tenant = <tid>.
+//	  System-bypass ctx skips the SET; caller is expected to have connected
+//	  via itsm_admin (BYPASSRLS).
 //
 // Design notes:
 //   - We wrap dialect.Driver (Ent's interface), not *sql.DB. This lets us
@@ -101,12 +101,12 @@ func (d *Driver) Mode() Mode { return d.mode }
 
 // Stats returns runtime counters. Intended for /internal/rls debug endpoint.
 type Stats struct {
-	Mode            Mode   `json:"mode"`
-	QueriesOff      uint64 `json:"queries_off"`
-	QueriesShadow   uint64 `json:"queries_shadow"`
-	MissingTenant   uint64 `json:"missing_tenant"`
-	SystemBypass    uint64 `json:"system_bypass"`
-	EnforceApplied  uint64 `json:"enforce_applied"`
+	Mode           Mode   `json:"mode"`
+	QueriesOff     uint64 `json:"queries_off"`
+	QueriesShadow  uint64 `json:"queries_shadow"`
+	MissingTenant  uint64 `json:"missing_tenant"`
+	SystemBypass   uint64 `json:"system_bypass"`
+	EnforceApplied uint64 `json:"enforce_applied"`
 }
 
 // Stats snapshots the current counters.
@@ -187,7 +187,8 @@ func (d *Driver) observe(ctx context.Context, op, firstTok string) {
 			// In shadow mode: WARN only (no error). In enforce, upstream
 			// AcquireConn is expected to have failed already; we log to be
 			// defensive against paths that bypass it.
-			d.log.Warnw("rls: query without tenant scope",
+			d.log.Warnw(
+				"rls: query without tenant scope",
 				"op", op,
 				"stmt", firstTok,
 				"mode", string(d.mode),
@@ -196,7 +197,8 @@ func (d *Driver) observe(ctx context.Context, op, firstTok string) {
 		}
 		if d.mode == ModeShadow {
 			d.nQueriesShadow.Add(1)
-			d.log.Debugw("rls: shadow query",
+			d.log.Debugw(
+				"rls: shadow query",
 				"op", op, "stmt", firstTok, "tenant_id", tid,
 			)
 		} else {

@@ -3,8 +3,9 @@
 // Package rls integration tests.
 //
 // Run with:
-//   RLS_TEST_DSN='host=<pg_host> port=5432 user=itsm_user dbname=itsm sslmode=disable password=<pwd>' \
-//     go test -tags integration_rls -v ./database/rls/...
+//
+//	RLS_TEST_DSN='host=<pg_host> port=5432 user=itsm_user dbname=itsm sslmode=disable password=<pwd>' \
+//	  go test -tags integration_rls -v ./database/rls/...
 //
 // Prerequisites:
 //   - itsm_app / itsm_admin roles exist (see migrations/001_roles.sql)
@@ -12,13 +13,14 @@
 //   - The connecting DB is the SAME one you migrated (see caveat below)
 //
 // Caveat on host environments:
-//   If your macOS/Linux host runs a local PostgreSQL (Homebrew, apt) that
-//   binds :5432, it may hijack `localhost` connections and route them to
-//   the wrong server. Use one of:
-//     - RLS_TEST_DSN with `host=<container_ip>` when Docker network is
-//       reachable from host (Linux, or Docker Desktop w/ direct routes)
-//     - Run the test INSIDE the container (docker exec ... go test ...)
-//     - Stop the local PostgreSQL service and rely on Docker-published :5432
+//
+//	If your macOS/Linux host runs a local PostgreSQL (Homebrew, apt) that
+//	binds :5432, it may hijack `localhost` connections and route them to
+//	the wrong server. Use one of:
+//	  - RLS_TEST_DSN with `host=<container_ip>` when Docker network is
+//	    reachable from host (Linux, or Docker Desktop w/ direct routes)
+//	  - Run the test INSIDE the container (docker exec ... go test ...)
+//	  - Stop the local PostgreSQL service and rely on Docker-published :5432
 //
 // The test enables policy at setup and disables at teardown, so running
 // it repeatedly is safe. It does NOT mutate business data other than

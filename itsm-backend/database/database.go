@@ -205,11 +205,11 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 //
 // 说明：本函数**不**主动执行 SET LOCAL/SESSION。变量注入由 middleware 与
 // 显式 rls.AcquireConn 负责，装饰器只是插入观测点。这么设计的原因：
-//   1. 一次 request 可能触发多次 Ent 查询，共享同一 *sql.Conn。若在装饰器
-//      内每查询前后 SET+RESET，连接来回换值成本高且易出错。
-//   2. SET LOCAL 只在事务内生效；Ent 大多数查询是 autocommit，事务边界由
-//      业务逻辑控制，装饰器无法感知。
-//   3. 装饰器保持无副作用，可以在 R2A 阶段以 shadow 模式安全上线。
+//  1. 一次 request 可能触发多次 Ent 查询，共享同一 *sql.Conn。若在装饰器
+//     内每查询前后 SET+RESET，连接来回换值成本高且易出错。
+//  2. SET LOCAL 只在事务内生效；Ent 大多数查询是 autocommit，事务边界由
+//     业务逻辑控制，装饰器无法感知。
+//  3. 装饰器保持无副作用，可以在 R2A 阶段以 shadow 模式安全上线。
 func InitDatabaseWithRLS(cfg *config.DatabaseConfig, rlsCfg *config.RLSConfig, logger *zap.SugaredLogger) (*ent.Client, error) {
 	// 复用 InitDatabase 完整逻辑（连接池、pgvector、schema 兼容修复等）
 	client, err := InitDatabase(cfg)
@@ -229,7 +229,8 @@ func InitDatabaseWithRLS(cfg *config.DatabaseConfig, rlsCfg *config.RLSConfig, l
 	deco := rls.From(innerDrv, rlsCfg.Mode, logger)
 	rlsDriver = deco
 	if logger != nil {
-		logger.Infow("rls: driver installed",
+		logger.Infow(
+			"rls: driver installed",
 			"mode", string(deco.Mode()),
 			"tenant_var", rlsCfg.TenantVarName,
 		)

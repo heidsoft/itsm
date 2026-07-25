@@ -286,7 +286,7 @@ func (pc *ProblemInvestigationController) GetProblemSolutions(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"problemId":  problemID,
+		"problemId": problemID,
 		"solutions": summary.Solutions,
 	})
 }
@@ -390,7 +390,7 @@ func (pc *ProblemInvestigationController) GetProblemRelationships(c *gin.Context
 	pc.logger.Info("Getting problem relationships", "problem_id", problemID, "tenant_id", tenantID)
 
 	common.Success(c, gin.H{
-		"problemId":      problemID,
+		"problemId":     problemID,
 		"relationships": []interface{}{},
 	})
 }
@@ -491,7 +491,7 @@ func (pc *ProblemInvestigationController) GetProblemKnowledgeArticles(c *gin.Con
 	}
 
 	common.Success(c, gin.H{
-		"problemId":          problemID,
+		"problemId":         problemID,
 		"knowledgeArticles": result,
 	})
 }

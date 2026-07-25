@@ -267,7 +267,8 @@ func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
 		return fmt.Errorf("删除租户失败: %w", err)
 	}
 
-	s.logger.Infow("tenant soft-deleted",
+	s.logger.Infow(
+		"tenant soft-deleted",
 		"tenant_id", tenantID,
 		"action", "tenant.delete",
 	)

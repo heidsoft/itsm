@@ -118,7 +118,6 @@ func (r *Runner) reconcile(ctx context.Context, account *ent.CloudAccount, adapt
 				configurationitem.CloudResourceID(resource.ResourceID),
 			).
 			Only(ctx)
-
 		if err != nil {
 			if ent.IsNotFound(err) {
 				_, err = r.client.ConfigurationItem.Create().

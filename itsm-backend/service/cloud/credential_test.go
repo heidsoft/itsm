@@ -26,8 +26,8 @@ func TestParseCredentialRef(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:  "valid JSON",
-			input: `{"type":"ak","access_key_id":"foo"}`,
+			name:    "valid JSON",
+			input:   `{"type":"ak","access_key_id":"foo"}`,
 			wantErr: false,
 			check: func(t *testing.T, data map[string]interface{}) {
 				assert.Equal(t, "ak", data["type"])

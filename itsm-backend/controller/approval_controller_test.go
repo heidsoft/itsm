@@ -181,15 +181,15 @@ func seedLegacyWorkflow(t *testing.T, client *ent.Client, tenantID int, name str
 	ctx := context.Background()
 	nodes := []map[string]interface{}{
 		{
-			"name":          "Manager Review",
-			"step_order":    1,
-			"assignee_type": "user",
+			"name":           "Manager Review",
+			"step_order":     1,
+			"assignee_type":  "user",
 			"assignee_value": "alice",
 		},
 		{
-			"name":          "Director Approval",
-			"step_order":    2,
-			"assignee_type": "role",
+			"name":           "Director Approval",
+			"step_order":     2,
+			"assignee_type":  "role",
 			"assignee_value": "director",
 		},
 	}

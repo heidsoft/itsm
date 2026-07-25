@@ -40,7 +40,8 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 		if claimsTenantID > 0 {
 			tenantEntity, err = client.Tenant.Get(c.Request.Context(), claimsTenantID)
 			if err != nil {
-				zap.S().Warnw("jwt tenant_id not found",
+				zap.S().Warnw(
+					"jwt tenant_id not found",
 					"jwt_tenant_id", claimsTenantID,
 					"user_id", c.GetInt("user_id"),
 				)
@@ -132,7 +133,8 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 		// 5) JWT 与最终结果不一致 → 拒绝。
 		// 这条对所有 header/subdomain/path 来源都生效,阻断跨租户越权。
 		if claimsTenantID > 0 && tenantEntity.ID != claimsTenantID {
-			zap.S().Warnw("tenant mismatch rejected",
+			zap.S().Warnw(
+				"tenant mismatch rejected",
 				"resolved_tenant_id", tenantEntity.ID,
 				"jwt_tenant_id", claimsTenantID,
 				"source", source,

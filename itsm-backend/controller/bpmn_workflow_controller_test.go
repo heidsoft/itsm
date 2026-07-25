@@ -36,69 +36,89 @@ type fakeTaskService struct {
 func (f *fakeTaskService) GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error) {
 	return nil, errors.New("not implemented")
 }
+
 func (f *fakeTaskService) GetTaskByID(ctx context.Context, id int) (*ent.ProcessTask, error) {
 	return nil, errors.New("not implemented")
 }
+
 func (f *fakeTaskService) CompleteTaskByID(ctx context.Context, id int, variables map[string]interface{}) error {
 	f.completeByIDCalls++
 	f.completeByIDVars = append(f.completeByIDVars, variables)
 	return f.completeByIDErr
 }
+
 func (f *fakeTaskService) ClaimTask(ctx context.Context, taskID, userID string) error {
 	return nil
 }
+
 func (f *fakeTaskService) ClaimTaskByID(ctx context.Context, id, userID int) error {
 	return nil
 }
+
 func (f *fakeTaskService) ListUserTasks(ctx context.Context, req *service.ListUserTasksRequest) ([]*ent.ProcessTask, int, error) {
 	return nil, 0, nil
 }
+
 func (f *fakeTaskService) AssignTask(ctx context.Context, taskID, assignee string) error {
 	return nil
 }
+
 func (f *fakeTaskService) CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error {
 	f.completeCalls++
 	f.completeVars = append(f.completeVars, variables)
 	return f.completeErr
 }
+
 func (f *fakeTaskService) CancelTask(ctx context.Context, taskID, reason string) error {
 	return nil
 }
+
 func (f *fakeTaskService) GetTaskVariables(ctx context.Context, taskID string) (map[string]interface{}, error) {
 	return nil, nil
 }
+
 func (f *fakeTaskService) SetTaskVariables(ctx context.Context, taskID string, variables map[string]interface{}) error {
 	return nil
 }
+
 func (f *fakeTaskService) HandleTaskTimeout(ctx context.Context, taskID string) error {
 	return nil
 }
+
 func (f *fakeTaskService) RetryTask(ctx context.Context, taskID string, maxRetries int) error {
 	return nil
 }
+
 func (f *fakeTaskService) DelegateTask(ctx context.Context, taskID, newAssignee string) error {
 	return nil
 }
+
 func (f *fakeTaskService) EscalateTask(ctx context.Context, taskID, reason string) error {
 	return nil
 }
+
 func (f *fakeTaskService) BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string) error {
 	return nil
 }
+
 func (f *fakeTaskService) GetTaskStatistics(ctx context.Context, req *service.TaskStatisticsRequest) (*service.TaskStatistics, error) {
 	return nil, nil
 }
+
 func (f *fakeTaskService) ListApprovalDecisions(ctx context.Context, processInstanceKey string) ([]*ent.ProcessApprovalDecision, error) {
 	f.historyCalls++
 	f.historyInstanceKey = processInstanceKey
 	return f.historyDecisions, f.historyErr
 }
+
 func (f *fakeTaskService) CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *service.CounterSignRequest) ([]*ent.ProcessTask, error) {
 	return nil, nil
 }
+
 func (f *fakeTaskService) GetCounterSignStatus(ctx context.Context, parentTaskID string) (*service.CounterSignStatus, error) {
 	return nil, nil
 }
+
 func (f *fakeTaskService) Vote(ctx context.Context, taskID string, req *service.VoteRequest) error {
 	return nil
 }
@@ -108,18 +128,22 @@ type fakeProcessEngine struct {
 }
 
 func (e *fakeProcessEngine) ProcessDefinitionService() service.ProcessDefinitionService { return nil }
-func (e *fakeProcessEngine) ProcessInstanceService() service.ProcessInstanceService   { return nil }
-func (e *fakeProcessEngine) TaskService() service.TaskService                         { return e.taskSvc }
+
+func (e *fakeProcessEngine) ProcessInstanceService() service.ProcessInstanceService { return nil }
+func (e *fakeProcessEngine) TaskService() service.TaskService                       { return e.taskSvc }
+
 func (e *fakeProcessEngine) StartProcess(ctx context.Context, key, biz string, vars map[string]interface{}) (*ent.ProcessInstance, error) {
 	return nil, nil
 }
+
 func (e *fakeProcessEngine) CompleteTask(ctx context.Context, taskID string, vars map[string]interface{}) error {
 	return e.taskSvc.CompleteTask(ctx, taskID, vars)
 }
+
 func (e *fakeProcessEngine) SuspendProcess(ctx context.Context, id, reason string) error {
 	return nil
 }
-func (e *fakeProcessEngine) ResumeProcess(ctx context.Context, id string) error       { return nil }
+func (e *fakeProcessEngine) ResumeProcess(ctx context.Context, id string) error { return nil }
 func (e *fakeProcessEngine) TerminateProcess(ctx context.Context, id, reason string) error {
 	return nil
 }

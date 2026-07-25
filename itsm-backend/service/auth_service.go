@@ -361,7 +361,8 @@ func (s *AuthService) SwitchTenant(ctx context.Context, userID, tenantID int) (*
 	}
 
 	if !nativeSwitch && !superAdmin && !mspAllowed {
-		s.logger.Warnw("Switch tenant denied",
+		s.logger.Warnw(
+			"Switch tenant denied",
 			"user_id", userID,
 			"tenant_id", tenantID,
 			"native_switch", nativeSwitch,

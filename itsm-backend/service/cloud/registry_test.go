@@ -31,12 +31,14 @@ func (m *mockAdapter) InitClients(ctx context.Context, account *ent.CloudAccount
 	}
 	return result, nil
 }
+
 func (m *mockAdapter) ListRegions(ctx context.Context, account *ent.CloudAccount) ([]string, error) {
 	if m.regionsErr != nil {
 		return nil, m.regionsErr
 	}
 	return []string{"region-a", "region-b"}, nil
 }
+
 func (m *mockAdapter) DiscoverRegion(ctx context.Context, account *ent.CloudAccount, region string, client Client, nextToken string) (*PageResult, error) {
 	return &PageResult{
 		Resources: []DiscoveredResource{
@@ -52,7 +54,7 @@ func (m *mockAdapter) DiscoverRegion(ctx context.Context, account *ent.CloudAcco
 		},
 	}, nil
 }
-func (m *mockAdapter) Close()                             {}
+func (m *mockAdapter) Close() {}
 func (m *mockAdapter) ValidateCredential(ctx context.Context, account *ent.CloudAccount) error {
 	return nil
 }
@@ -155,12 +157,19 @@ func TestNormalizeProvider(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"aliyun", "aliyun"}, {"alibaba", "aliyun"}, {"alicloud", "aliyun"},
-		{"tencent", "tencent"}, {"qcloud", "tencent"}, {"tencentcloud", "tencent"},
-		{"aws", "aws"}, {"amazon", "aws"},
+		{"aliyun", "aliyun"},
+		{"alibaba", "aliyun"},
+		{"alicloud", "aliyun"},
+		{"tencent", "tencent"},
+		{"qcloud", "tencent"},
+		{"tencentcloud", "tencent"},
+		{"aws", "aws"},
+		{"amazon", "aws"},
 		{"azure", "azure"},
 		{"huawei", "huawei"},
-		{"onprem", "onprem"}, {"private", "onprem"}, {"private_cloud", "onprem"},
+		{"onprem", "onprem"},
+		{"private", "onprem"},
+		{"private_cloud", "onprem"},
 		{"PRIVATE_CLOUD", "onprem"},
 		{"unknown", "unknown"},
 	}

@@ -115,7 +115,7 @@ func (h *Handler) ListStandardChanges(c *gin.Context) {
 		"templates": templates,
 		"total":     total,
 		"page":      page,
-		"pageSize": pageSize,
+		"pageSize":  pageSize,
 	})
 }
 

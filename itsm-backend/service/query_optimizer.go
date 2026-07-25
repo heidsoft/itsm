@@ -179,7 +179,6 @@ func (qc *QueryCache) CachedQueryExecutor(
 	queryFunc func() (interface{}, error),
 	ttl ...time.Duration,
 ) (interface{}, error) {
-
 	// 尝试从缓存获取
 	if cachedValue, ok := qc.Get(cacheKey); ok {
 		qc.logger.Debugw("Cache hit", "key", cacheKey)

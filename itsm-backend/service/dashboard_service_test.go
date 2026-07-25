@@ -165,7 +165,7 @@ func TestDashboardOverviewStats_Structure(t *testing.T) {
 		TotalTickets:      100,
 		PendingTickets:    20,
 		InProgressTickets: 30,
-		ResolvedToday:    10,
+		ResolvedToday:     10,
 		AvgResponseTime:   2.5,
 		AvgResolutionTime: 24.0,
 	}

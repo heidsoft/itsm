@@ -91,8 +91,8 @@ func TestBPMNSLAService_GetProcessSLA(t *testing.T) {
 		sla, err := slaService.GetProcessSLA(ctx, "no_sla_process")
 		require.NoError(t, err)
 		assert.Equal(t, "no_sla_process", sla.ProcessDefinitionKey)
-		assert.Equal(t, 480, sla.DeadlineMinutes)   // 默认8小时
-		assert.Equal(t, 360, sla.WarningMinutes)     // 默认6小时
+		assert.Equal(t, 480, sla.DeadlineMinutes) // 默认8小时
+		assert.Equal(t, 360, sla.WarningMinutes)  // 默认6小时
 	})
 
 	t.Run("获取不存在的流程定义", func(t *testing.T) {
@@ -203,8 +203,8 @@ func TestBPMNSLAService_GetTaskSLA(t *testing.T) {
 
 		sla, err := slaService.GetTaskSLA(ctx, task)
 		require.NoError(t, err)
-		assert.Equal(t, 120, sla.DeadlineMinutes)  // 任务默认2小时
-		assert.Equal(t, 90, sla.WarningMinutes)    // 任务默认90分钟
+		assert.Equal(t, 120, sla.DeadlineMinutes) // 任务默认2小时
+		assert.Equal(t, 90, sla.WarningMinutes)   // 任务默认90分钟
 		assert.Equal(t, "normal_task", sla.TaskDefinitionKey)
 	})
 }
@@ -220,35 +220,35 @@ func TestBPMNSLAService_CalculateSLAStatus(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name          string
-		startTime     time.Time
-		deadlineMins  int
-		warningMins   int
-		businessHours bool
+		name           string
+		startTime      time.Time
+		deadlineMins   int
+		warningMins    int
+		businessHours  bool
 		expectedStatus string
 	}{
 		{
-			name:          "正常工作时间内-SLA正常",
-			startTime:     time.Now(),
-			deadlineMins:  480,
-			warningMins:   360,
-			businessHours: false,
+			name:           "正常工作时间内-SLA正常",
+			startTime:      time.Now(),
+			deadlineMins:   480,
+			warningMins:    360,
+			businessHours:  false,
 			expectedStatus: SLAStatusOK,
 		},
 		{
-			name:          "超时-SLA违规",
-			startTime:     time.Now().Add(-10 * time.Hour),
-			deadlineMins:  60,
-			warningMins:   30,
-			businessHours: false,
+			name:           "超时-SLA违规",
+			startTime:      time.Now().Add(-10 * time.Hour),
+			deadlineMins:   60,
+			warningMins:    30,
+			businessHours:  false,
 			expectedStatus: SLAStatusBreached,
 		},
 		{
-			name:          "警告状态",
-			startTime:     time.Now().Add(-50 * time.Minute),
-			deadlineMins:  60,
-			warningMins:   45,
-			businessHours: false,
+			name:           "警告状态",
+			startTime:      time.Now().Add(-50 * time.Minute),
+			deadlineMins:   60,
+			warningMins:    45,
+			businessHours:  false,
 			expectedStatus: SLAStatusWarning,
 		},
 	}
@@ -282,7 +282,7 @@ func TestBPMNSLAService_BusinessHoursCalculation(t *testing.T) {
 		// 周五下午5点开始，30分钟工作时间
 		friday := time.Date(2024, 1, 5, 17, 0, 0, 0, time.Local) // 周五
 		deadline := slaService.calculateBusinessHoursDeadline(friday, 30)
-		
+
 		// 应该计算到下周一的某个时间
 		assert.True(t, deadline.After(friday))
 	})
@@ -291,7 +291,7 @@ func TestBPMNSLAService_BusinessHoursCalculation(t *testing.T) {
 		// 周三上午10点开始，60分钟工作时间
 		wednesday := time.Date(2024, 1, 3, 10, 0, 0, 0, time.Local) // 周三
 		deadline := slaService.calculateBusinessHoursDeadline(wednesday, 60)
-		
+
 		// 应该当天完成
 		assert.Equal(t, 11, deadline.Hour())
 	})
@@ -300,7 +300,7 @@ func TestBPMNSLAService_BusinessHoursCalculation(t *testing.T) {
 		// 周三下午5:30开始，60分钟工作时间
 		wednesday := time.Date(2024, 1, 3, 17, 30, 0, 0, time.Local) // 周三
 		deadline := slaService.calculateBusinessHoursDeadline(wednesday, 60)
-		
+
 		// 验证结果在输入时间之后
 		assert.True(t, deadline.After(wednesday), "截止时间应该在开始时间之后")
 		// 验证结果在合理范围内（不超过开始时间太多）
@@ -511,7 +511,7 @@ func TestBPMNSLAService_CheckSLAViolations(t *testing.T) {
 			}).
 			Save(ctx)
 		require.NoError(t, err)
-	
+
 		// 创建超时5小时的流程实例
 		_, err = client.ProcessInstance.Create().
 			SetProcessInstanceID("PI-VIOLATION-001").
@@ -523,7 +523,7 @@ func TestBPMNSLAService_CheckSLAViolations(t *testing.T) {
 			SetStartTime(time.Now().Add(-5 * time.Hour)).
 			Save(ctx)
 		require.NoError(t, err)
-	
+
 		violations, err := slaService.CheckSLAViolations(ctx, testTenant.ID)
 		require.NoError(t, err)
 		// 验证返回结果结构正确
@@ -550,7 +550,7 @@ func TestBPMNSLAService_CheckSLAViolations(t *testing.T) {
 			}).
 			Save(ctx)
 		require.NoError(t, err)
-	
+
 		_, err = client.ProcessInstance.Create().
 			SetProcessInstanceID("PI-NO-VIOLATION-001").
 			SetBusinessKey("test").
@@ -561,7 +561,7 @@ func TestBPMNSLAService_CheckSLAViolations(t *testing.T) {
 			SetStartTime(time.Now().Add(-1 * time.Hour)).
 			Save(ctx)
 		require.NoError(t, err)
-	
+
 		violations, err := slaService.CheckSLAViolations(ctx, testTenant.ID)
 		require.NoError(t, err)
 		// 验证返回结果结构正确，不要求特定的违规数量

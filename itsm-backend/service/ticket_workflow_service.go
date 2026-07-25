@@ -857,7 +857,8 @@ func (s *TicketWorkflowService) NotifyTicketUpdate(ctx context.Context, ticketID
 	if _, err := s.getTicket(ctx, ticketID, tenantID); err != nil {
 		return err
 	}
-	s.logger.Infow("NotifyTicketUpdate",
+	s.logger.Infow(
+		"NotifyTicketUpdate",
 		"ticket_id", ticketID,
 		"tenant_id", tenantID,
 		"message", message,

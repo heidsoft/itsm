@@ -15,10 +15,10 @@ import (
 //
 // Typical usage:
 //
-//   repo := service.NewTenantAwareRepository(client, tenantID)
-//   err := repo.GuardDelete(ctx, repo.LoadTicketTenant, func(ctx context.Context, id int) error {
-//       return client.Ticket.DeleteOneID(id).Exec(ctx)
-//   }, ticketID)
+//	repo := service.NewTenantAwareRepository(client, tenantID)
+//	err := repo.GuardDelete(ctx, repo.LoadTicketTenant, func(ctx context.Context, id int) error {
+//	    return client.Ticket.DeleteOneID(id).Exec(ctx)
+//	}, ticketID)
 type TenantAwareRepository struct {
 	client   *ent.Client
 	tenantID int

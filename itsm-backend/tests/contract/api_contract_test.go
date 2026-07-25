@@ -241,14 +241,14 @@ func TestContract_TicketAPI_List_Pagination(t *testing.T) {
 		common.Success(c, gin.H{
 			"items": []interface{}{
 				gin.H{
-					"id":            1,
-					"ticketNumber":  "INC-001",
-					"title":         "Test Incident",
-					"status":        "open",
-					"priority":      "high",
-					"assigneeId":    5,
-					"createdAt":     "2024-01-15T10:00:00Z",
-					"updatedAt":     "2024-01-15T10:00:00Z",
+					"id":           1,
+					"ticketNumber": "INC-001",
+					"title":        "Test Incident",
+					"status":       "open",
+					"priority":     "high",
+					"assigneeId":   5,
+					"createdAt":    "2024-01-15T10:00:00Z",
+					"updatedAt":    "2024-01-15T10:00:00Z",
 				},
 			},
 			"total":    1,
@@ -281,16 +281,16 @@ func TestContract_TicketAPI_List_ResponseDTOCamelCase(t *testing.T) {
 		common.Success(c, gin.H{
 			"items": []interface{}{
 				gin.H{
-					"id":             1,
-					"ticketNumber":   "INC-001",
-					"title":          "Test Incident",
-					"status":         "open",
-					"priority":       "high",
-					"assigneeId":     5,
-					"requesterId":    10,
+					"id":               1,
+					"ticketNumber":     "INC-001",
+					"title":            "Test Incident",
+					"status":           "open",
+					"priority":         "high",
+					"assigneeId":       5,
+					"requesterId":      10,
 					"serviceCatalogId": 1,
-					"createdAt":      "2024-01-15T10:00:00Z",
-					"updatedAt":      "2024-01-15T10:00:00Z",
+					"createdAt":        "2024-01-15T10:00:00Z",
+					"updatedAt":        "2024-01-15T10:00:00Z",
 				},
 			},
 			"total": 1,
@@ -368,11 +368,11 @@ func TestContract_ChangeAPI_List_Pagination(t *testing.T) {
 		common.Success(c, gin.H{
 			"changes": []interface{}{
 				gin.H{
-					"id":         1,
-					"title":      "Test Change",
-					"status":     "draft",
-					"priority":   "medium",
-					"createdAt":  "2024-01-15T10:00:00Z",
+					"id":        1,
+					"title":     "Test Change",
+					"status":    "draft",
+					"priority":  "medium",
+					"createdAt": "2024-01-15T10:00:00Z",
 				},
 			},
 			"total":    1,
@@ -558,7 +558,7 @@ func TestContract_CMDBAPI_GetByID(t *testing.T) {
 			return
 		}
 		common.Success(c, gin.H{
-			"id":             id,
+			"id":            id,
 			"name":          "Server-001",
 			"type":          "server",
 			"ciTypeId":      1,
@@ -603,12 +603,12 @@ func TestContract_KnowledgeAPI_List_Pagination(t *testing.T) {
 		common.Success(c, gin.H{
 			"articles": []interface{}{
 				gin.H{
-					"id":         1,
-					"title":      "How to reset password",
-					"category":   "IT Support",
-					"status":     "published",
-					"createdAt":  "2024-01-15T10:00:00Z",
-					"updatedAt":  "2024-01-15T10:00:00Z",
+					"id":        1,
+					"title":     "How to reset password",
+					"category":  "IT Support",
+					"status":    "published",
+					"createdAt": "2024-01-15T10:00:00Z",
+					"updatedAt": "2024-01-15T10:00:00Z",
 				},
 			},
 			"total":    1,
@@ -721,8 +721,8 @@ func TestContract_SmartAssignmentAPI_TestRule(t *testing.T) {
 
 	// 测试带 ruleId 的规则测试
 	w := doRequest(r, "POST", "/api/v1/tickets/assignment-rules/test", map[string]interface{}{
-		"ruleId":    1,
-		"ticketId":  1,
+		"ruleId":     1,
+		"ticketId":   1,
 		"ticketType": "incident",
 	})
 
@@ -741,14 +741,14 @@ func TestContract_SmartAssignmentAPI_ListRules(t *testing.T) {
 		common.Success(c, gin.H{
 			"rules": []interface{}{
 				gin.H{
-					"id":          1,
-					"name":        "Critical Priority Rule",
-					"priority":    "critical",
-					"strategy":    "skill_based",
-					"assigneeId":  5,
+					"id":           1,
+					"name":         "Critical Priority Rule",
+					"priority":     "critical",
+					"strategy":     "skill_based",
+					"assigneeId":   5,
 					"assigneeName": "John Doe",
-					"isActive":    true,
-					"createdAt":   "2024-01-15T10:00:00Z",
+					"isActive":     true,
+					"createdAt":    "2024-01-15T10:00:00Z",
 				},
 			},
 			"total": 1,
@@ -769,10 +769,10 @@ func TestContract_SmartAssignmentAPI_ListRules(t *testing.T) {
 
 func TestContract_Pagination_ParameterNaming(t *testing.T) {
 	tests := []struct {
-		name         string
-		queryParams  string
-		expectPage   string
-		expectSize   string
+		name        string
+		queryParams string
+		expectPage  string
+		expectSize  string
 	}{
 		{"camelCase pageSize", "?page=1&pageSize=10", "1", "10"},
 		{"snake_case page_size", "?page=1&page_size=10", "1", "10"},

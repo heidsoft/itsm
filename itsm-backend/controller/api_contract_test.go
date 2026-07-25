@@ -122,19 +122,19 @@ func TestBPMNAPIContract_ProcessDefinitionsList(t *testing.T) {
 		common.Success(c, gin.H{
 			"items": []interface{}{
 				gin.H{
-					"id":               1,
-					"key":              "incident_workflow",
-					"name":             "Incident Workflow",
-					"version":          "1.0.0",
-					"category":         "incident",
-					"isActive":         true,
+					"id":                   1,
+					"key":                  "incident_workflow",
+					"name":                 "Incident Workflow",
+					"version":              "1.0.0",
+					"category":             "incident",
+					"isActive":             true,
 					"processDefinitionKey": "incident_workflow",
 				},
 			},
 			"pagination": gin.H{
-				"page":      1,
-				"pageSize":  20,
-				"total":     1,
+				"page":       1,
+				"pageSize":   20,
+				"total":      1,
 				"totalPages": 1,
 			},
 		})
@@ -160,16 +160,16 @@ func TestBPMNAPIContract_ProcessDefinitionDetail(t *testing.T) {
 	r.GET("/api/v1/bpmn/process-definitions/:key", func(c *gin.Context) {
 		key := c.Param("key")
 		common.Success(c, gin.H{
-			"id":                     1,
-			"key":                    key,
-			"name":                   "Incident Workflow",
-			"version":                "1.0.0",
-			"category":               "incident",
-			"isActive":               true,
-			"isLatest":               true,
-			"processDefinitionKey":   key,
-			"processDefinitionId":    1,
-			"bpmnXml":                "<bpmn>...</bpmn>",
+			"id":                   1,
+			"key":                  key,
+			"name":                 "Incident Workflow",
+			"version":              "1.0.0",
+			"category":             "incident",
+			"isActive":             true,
+			"isLatest":             true,
+			"processDefinitionKey": key,
+			"processDefinitionId":  1,
+			"bpmnXml":              "<bpmn>...</bpmn>",
 		})
 	})
 
@@ -194,21 +194,21 @@ func TestBPMNAPIContract_TasksList(t *testing.T) {
 		common.Success(c, gin.H{
 			"items": []interface{}{
 				gin.H{
-					"id":                    1,
-					"taskId":                "task-001",
-					"processInstanceId":     "inst-001",
-					"processDefinitionKey":  "incident_workflow",
-					"taskDefinitionKey":     "approve",
-					"taskName":              "Approve Incident",
-					"assignee":              "user1",
-					"status":                "pending",
-					"createdTime":           "2026-07-09T10:00:00Z",
+					"id":                   1,
+					"taskId":               "task-001",
+					"processInstanceId":    "inst-001",
+					"processDefinitionKey": "incident_workflow",
+					"taskDefinitionKey":    "approve",
+					"taskName":             "Approve Incident",
+					"assignee":             "user1",
+					"status":               "pending",
+					"createdTime":          "2026-07-09T10:00:00Z",
 				},
 			},
 			"pagination": gin.H{
-				"page":      1,
-				"pageSize":  20,
-				"total":     1,
+				"page":       1,
+				"pageSize":   20,
+				"total":      1,
 				"totalPages": 1,
 			},
 		})
@@ -232,16 +232,16 @@ func TestWorkflowAPIContract_TasksList(t *testing.T) {
 		common.Success(c, gin.H{
 			"items": []interface{}{
 				gin.H{
-					"id":                    1,
-					"taskId":                "task-001",
-					"taskName":              "Review Request",
-					"status":                "pending",
+					"id":       1,
+					"taskId":   "task-001",
+					"taskName": "Review Request",
+					"status":   "pending",
 				},
 			},
 			"pagination": gin.H{
-				"page":      1,
-				"pageSize":  20,
-				"total":     1,
+				"page":     1,
+				"pageSize": 20,
+				"total":    1,
 			},
 		})
 	})
@@ -260,14 +260,14 @@ func TestSLAAPIContract_DefinitionsList(t *testing.T) {
 		common.Success(c, gin.H{
 			"items": []interface{}{
 				gin.H{
-					"id":            1,
-					"name":          "P1 Incident Response",
-					"type":          "response_time",
-					"priority":      "critical",
-					"targetTime":    30,
-					"warningTime":   20,
-					"status":        "active",
-					"isDefault":     true,
+					"id":          1,
+					"name":        "P1 Incident Response",
+					"type":        "response_time",
+					"priority":    "critical",
+					"targetTime":  30,
+					"warningTime": 20,
+					"status":      "active",
+					"isDefault":   true,
 				},
 			},
 			"total":    1,
@@ -295,12 +295,12 @@ func TestAssignmentRulesAPIContract_ListRules(t *testing.T) {
 		common.Success(c, gin.H{
 			"rules": []interface{}{
 				gin.H{
-					"id":          1,
-					"name":        "Critical Priority Rule",
-					"priority":    "critical",
-					"assigneeId":  5,
+					"id":           1,
+					"name":         "Critical Priority Rule",
+					"priority":     "critical",
+					"assigneeId":   5,
 					"assigneeName": "John Doe",
-					"isActive":    true,
+					"isActive":     true,
 				},
 			},
 			"total": 1,
@@ -325,7 +325,7 @@ func TestAuthRefreshAPIContract_RefreshToken(t *testing.T) {
 	// Test /api/v1/auth/refresh endpoint
 	r.POST("/api/v1/auth/refresh", func(c *gin.Context) {
 		common.Success(c, gin.H{
-			"accessToken": "new-access-token",
+			"accessToken":  "new-access-token",
 			"refreshToken": "new-refresh-token",
 		})
 	})

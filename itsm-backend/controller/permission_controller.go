@@ -15,14 +15,14 @@ import (
 // PermissionController 权限管理控制器
 type PermissionController struct {
 	permissionService *service.PermissionService
-	logger           *zap.SugaredLogger
+	logger            *zap.SugaredLogger
 }
 
 // NewPermissionController 创建权限控制器
 func NewPermissionController(permissionService *service.PermissionService, logger *zap.SugaredLogger) *PermissionController {
 	return &PermissionController{
 		permissionService: permissionService,
-		logger:           logger,
+		logger:            logger,
 	}
 }
 

@@ -300,7 +300,9 @@ func (e *WorkflowEngine) evaluateApprovalCondition(condition WorkflowCondition, 
 
 // compareValues 比较两个任意类型的值
 // 支持 operator: equals / not_equals / greater_than / less_than /
-//                greater_than_or_equals / less_than_or_equals / contains / not_contains
+//
+//	greater_than_or_equals / less_than_or_equals / contains / not_contains
+//
 // 数值：float64 归一（int / int64 / float64 全部走 float 比较）
 // 字符串：字典序比较
 // 其他：仅支持 equals / not_equals（走 fmt.Sprintf 归一）

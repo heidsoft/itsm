@@ -101,7 +101,8 @@ func (s *ChangeApprovalService) UpdateChangeApproval(ctx context.Context, approv
 	if currentUserID > 0 {
 		var recordApprover int
 		var recordStatus string
-		if scanErr := s.rawDB.QueryRowContext(ctx,
+		if scanErr := s.rawDB.QueryRowContext(
+			ctx,
 			`SELECT approver_id, status FROM change_approvals WHERE id = $1 AND tenant_id = $2`,
 			approvalID, tenantID,
 		).Scan(&recordApprover, &recordStatus); scanErr != nil {
@@ -160,7 +161,8 @@ func (s *ChangeApprovalService) UpdateChangeApproval(ctx context.Context, approv
 		if req.Status == dto.ChangeApprovalStatusRejected {
 			chainStatus = "rejected"
 		}
-		if _, serr := s.rawDB.ExecContext(ctx,
+		if _, serr := s.rawDB.ExecContext(
+			ctx,
 			`UPDATE change_approval_chains SET status = $1 WHERE change_id = $2 AND approver_id = $3 AND tenant_id = $4 AND status = 'pending'`,
 			chainStatus, changeID, approverID, tenantID,
 		); serr != nil {
@@ -666,7 +668,8 @@ func (s *ChangeApprovalService) ExecuteChangeRollback(ctx context.Context, chang
 
 	// 验证回滚计划是否存在（严格校验 tenant_id，防跨租户）
 	var planExists bool
-	err = s.rawDB.QueryRowContext(ctx,
+	err = s.rawDB.QueryRowContext(
+		ctx,
 		"SELECT EXISTS(SELECT 1 FROM change_rollback_plans WHERE id = $1 AND tenant_id = $2)",
 		rollbackPlanID, tenantID,
 	).Scan(&planExists)

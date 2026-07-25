@@ -502,7 +502,7 @@ func TestBPMNDeploymentService_GenerateNextVersion(t *testing.T) {
 	deployService := NewBPMNDeploymentService(client)
 
 	tests := []struct {
-		currentVersion string
+		currentVersion  string
 		expectedVersion string
 	}{
 		{"", "1.0.0"},

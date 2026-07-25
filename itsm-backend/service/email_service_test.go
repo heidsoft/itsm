@@ -103,10 +103,10 @@ func TestEmailService_BuildMessageWithoutCC(t *testing.T) {
 	_ = NewEmailService(config, logger)
 
 	msg := &EmailMessage{
-		To:       []string{"recipient@example.com"},
-		CC:       []string{}, // 空CC
-		Subject:  "No CC Test",
-		Body:     "<p>No CC</p>",
+		To:      []string{"recipient@example.com"},
+		CC:      []string{}, // 空CC
+		Subject: "No CC Test",
+		Body:    "<p>No CC</p>",
 	}
 
 	assert.NotNil(t, msg.CC)
@@ -127,9 +127,9 @@ func TestEmailService_MultipleRecipients(t *testing.T) {
 	_ = NewEmailService(config, logger)
 
 	msg := &EmailMessage{
-		To:       []string{"user1@example.com", "user2@example.com", "user3@example.com"},
-		Subject:  "Multiple Recipients",
-		Body:     "<p>Multiple recipients test</p>",
+		To:      []string{"user1@example.com", "user2@example.com", "user3@example.com"},
+		Subject: "Multiple Recipients",
+		Body:    "<p>Multiple recipients test</p>",
 	}
 
 	assert.Len(t, msg.To, 3)
@@ -214,9 +214,9 @@ func TestEmailService_EmptyRecipients(t *testing.T) {
 	_ = NewEmailService(config, logger)
 
 	msg := &EmailMessage{
-		To:       []string{}, // 空收件人
-		Subject:  "Empty Recipients",
-		Body:     "<p>Test</p>",
+		To:      []string{}, // 空收件人
+		Subject: "Empty Recipients",
+		Body:    "<p>Test</p>",
 	}
 
 	assert.NotNil(t, msg.To)
@@ -286,11 +286,11 @@ func TestEmailService_EmailConfig(t *testing.T) {
 
 func TestEmailAttachment(t *testing.T) {
 	tests := []struct {
-		name        string
-		attachment  EmailAttachment
-		wantName    string
-		wantType    string
-		wantSize    int
+		name       string
+		attachment EmailAttachment
+		wantName   string
+		wantType   string
+		wantSize   int
 	}{
 		{
 			name: "Text File",
@@ -389,9 +389,9 @@ func TestEmailService_SpecialCharactersInSubject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			msg := &EmailMessage{
-				To:       []string{"test@example.com"},
-				Subject:  tt.subject,
-				Body:     "<p>Test</p>",
+				To:      []string{"test@example.com"},
+				Subject: tt.subject,
+				Body:    "<p>Test</p>",
 			}
 			assert.Equal(t, tt.subject, msg.Subject)
 		})

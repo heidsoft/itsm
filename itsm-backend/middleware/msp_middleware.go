@@ -16,11 +16,11 @@ import (
 )
 
 // MSPMiddleware 在请求进入 MSP 路由族时构造 MSPContext：
-//   1. 门控 mspEnabled（private 部署直接 404）
-//   2. 解析 user_id / 加载用户与租户
-//   3. 仅当租户类型为 msp_provider 且 msp_role 非空才认定 MSP 身份
-//   4. 拉取有效 MSPAllocation，写入 AllowedCustomers
-//   5. 若请求头带 X-Customer-Tenant-ID，验证其是否在分配列表中
+//  1. 门控 mspEnabled（private 部署直接 404）
+//  2. 解析 user_id / 加载用户与租户
+//  3. 仅当租户类型为 msp_provider 且 msp_role 非空才认定 MSP 身份
+//  4. 拉取有效 MSPAllocation，写入 AllowedCustomers
+//  5. 若请求头带 X-Customer-Tenant-ID，验证其是否在分配列表中
 //
 // 注意：admin 角色不再自动授予 MSP 访问权，必须有真实的 msp_role 和
 // allocation 才能访问客户数据（参见 msp_rbac.go 与 plan 文档 Task 9）。

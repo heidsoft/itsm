@@ -84,7 +84,7 @@ func TestExpressionEngine_Evaluate_SimpleArithmetic(t *testing.T) {
 func TestExpressionEngine_Evaluate_StringOperations(t *testing.T) {
 	engine := NewExpressionEngine()
 	variables := map[string]interface{}{
-		"name":    "World",
+		"name":     "World",
 		"greeting": "Hello",
 	}
 
@@ -293,11 +293,11 @@ func setupBPMNEngineTest(t *testing.T) (*CustomProcessEngine, *ent.Client) {
 	client := enttest.Open(t, "sqlite3", "file:bpmn_engine_test?mode=memory&cache=shared&_fk=1")
 	logger := zaptest.NewLogger(t).Sugar()
 	engine := &CustomProcessEngine{
-		client:           client,
-		logger:           logger,
-		parser:           NewBPMNParser(),
-		exprEngine:       NewExpressionEngine(),
-		expressionVars:   make(map[string]interface{}),
+		client:         client,
+		logger:         logger,
+		parser:         NewBPMNParser(),
+		exprEngine:     NewExpressionEngine(),
+		expressionVars: make(map[string]interface{}),
 	}
 	engine.registerProcessFunctions()
 	return engine, client
@@ -393,11 +393,11 @@ func TestCustomProcessEngine_EvaluateCondition_EmptyExpression(t *testing.T) {
 
 func TestCreateProcessDefinitionRequest_Structure(t *testing.T) {
 	req := &CreateProcessDefinitionRequest{
-		Key:        "test-process",
-		Name:       "测试流程",
-		Category:   "approval",
-		BPMNXML:    "<definitions>...</definitions>",
-		TenantID:   1,
+		Key:      "test-process",
+		Name:     "测试流程",
+		Category: "approval",
+		BPMNXML:  "<definitions>...</definitions>",
+		TenantID: 1,
 	}
 
 	assert.Equal(t, "test-process", req.Key)
@@ -449,8 +449,8 @@ func TestInstanceStatistics_Structure(t *testing.T) {
 func TestCounterSignRequest_Structure(t *testing.T) {
 	req := &CounterSignRequest{
 		ApprovalType: "parallel",
-		Approvers:   []string{"user1", "user2", "user3"},
-		Threshold:   2,
+		Approvers:    []string{"user1", "user2", "user3"},
+		Threshold:    2,
 	}
 
 	assert.Len(t, req.Approvers, 3)

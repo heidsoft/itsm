@@ -36,8 +36,8 @@ func NewSequenceService(host string, port int, password string, db int, logger *
 	}
 
 	return &SequenceService{
-		client:         rdb,
-		logger:         logger,
+		client:          rdb,
+		logger:          logger,
 		dbQueryMaxSeqFn: nil,
 	}
 }

@@ -61,6 +61,7 @@ func TestTenantController_ListTenants(t *testing.T) {
 		})
 	}
 }
+
 func TestTenantController_RecordAudit_DoesNotPanic(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 	tc := NewTenantController(nil, logger)
@@ -75,4 +76,3 @@ func TestTenantController_RecordAudit_DoesNotPanic(t *testing.T) {
 		tc.recordAudit(c2, "tenant.create", 7, "tenant_code", "acme")
 	})
 }
-

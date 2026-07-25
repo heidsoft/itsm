@@ -219,5 +219,3 @@ func (rc *RoleController) AssignPermissions(c *gin.Context) {
 
 	common.Success(c, nil)
 }
-
-

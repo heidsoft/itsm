@@ -14,12 +14,12 @@ import (
 
 // fakeDriver stubs dialect.Driver so we can test the decorator in isolation.
 type fakeDriver struct {
-	execCount   int
-	queryCount  int
-	txCount     int
-	lastCtxTID  int
-	lastCtxSys  bool
-	execErr     error
+	execCount  int
+	queryCount int
+	txCount    int
+	lastCtxTID int
+	lastCtxSys bool
+	execErr    error
 }
 
 func (f *fakeDriver) Dialect() string { return "postgres" }
@@ -28,6 +28,7 @@ func (f *fakeDriver) Tx(ctx context.Context) (dialect.Tx, error) {
 	f.txCount++
 	return nil, errors.New("tx not used in test")
 }
+
 func (f *fakeDriver) Exec(ctx context.Context, query string, args, v any) error {
 	f.execCount++
 	if tid, ok := tenantctx.TenantID(ctx); ok {
@@ -36,6 +37,7 @@ func (f *fakeDriver) Exec(ctx context.Context, query string, args, v any) error 
 	f.lastCtxSys = tenantctx.IsSystemBypass(ctx)
 	return f.execErr
 }
+
 func (f *fakeDriver) Query(ctx context.Context, query string, args, v any) error {
 	f.queryCount++
 	return nil
@@ -45,12 +47,12 @@ var _ dialect.Driver = (*fakeDriver)(nil)
 
 func TestParseMode(t *testing.T) {
 	cases := map[string]Mode{
-		"":             ModeOff,
-		"off":          ModeOff,
-		"OFF":          ModeOff, // unknown values fall back to off
-		"shadow":       ModeShadow,
-		"enforce":      ModeEnforce,
-		"gibberish":    ModeOff,
+		"":          ModeOff,
+		"off":       ModeOff,
+		"OFF":       ModeOff, // unknown values fall back to off
+		"shadow":    ModeShadow,
+		"enforce":   ModeEnforce,
+		"gibberish": ModeOff,
 	}
 	for in, want := range cases {
 		if got := ParseMode(in); got != want {

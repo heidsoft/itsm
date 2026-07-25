@@ -211,24 +211,24 @@ func mapStatus(status string) string {
 
 func transformInstance(inst *ecs.DescribeInstancesResponseBodyInstancesInstance, region string) cloud.DiscoveredResource {
 	extra := map[string]interface{}{
-		"instance_type":                derefString(inst.InstanceType),
-		"cpu":                          derefInt32(inst.Cpu),
-		"memory":                       derefInt32(inst.Memory),
-		"image_id":                     derefString(inst.ImageId),
-		"serial_number":                derefString(inst.SerialNumber),
-		"instance_charge_type":         derefString(inst.InstanceChargeType),
-		"os_type":                      derefString(inst.OSType),
-		"internet_max_bandwidth_in":    derefInt32(inst.InternetMaxBandwidthIn),
-		"internet_max_bandwidth_out":   derefInt32(inst.InternetMaxBandwidthOut),
-		"eip_ip_address":               derefString(inst.EipAddress.IpAddress),
-		"public_ip_address":            extractPublicIPs(inst),
-		"inner_ip_address":             extractInnerIPs(inst),
-		"vpc_id":                      derefString(inst.VpcAttributes.VpcId),
-		"vswitch_id":                   derefString(inst.VpcAttributes.VSwitchId),
-		"security_groups":              extractSecurityGroupIDs(inst),
-		"instance_network_type":        derefString(inst.InstanceNetworkType),
-		"description":                  derefString(inst.Description),
-		"expired_time":                 derefString(inst.ExpiredTime),
+		"instance_type":              derefString(inst.InstanceType),
+		"cpu":                        derefInt32(inst.Cpu),
+		"memory":                     derefInt32(inst.Memory),
+		"image_id":                   derefString(inst.ImageId),
+		"serial_number":              derefString(inst.SerialNumber),
+		"instance_charge_type":       derefString(inst.InstanceChargeType),
+		"os_type":                    derefString(inst.OSType),
+		"internet_max_bandwidth_in":  derefInt32(inst.InternetMaxBandwidthIn),
+		"internet_max_bandwidth_out": derefInt32(inst.InternetMaxBandwidthOut),
+		"eip_ip_address":             derefString(inst.EipAddress.IpAddress),
+		"public_ip_address":          extractPublicIPs(inst),
+		"inner_ip_address":           extractInnerIPs(inst),
+		"vpc_id":                     derefString(inst.VpcAttributes.VpcId),
+		"vswitch_id":                 derefString(inst.VpcAttributes.VSwitchId),
+		"security_groups":            extractSecurityGroupIDs(inst),
+		"instance_network_type":      derefString(inst.InstanceNetworkType),
+		"description":                derefString(inst.Description),
+		"expired_time":               derefString(inst.ExpiredTime),
 	}
 
 	return cloud.DiscoveredResource{
@@ -248,5 +248,7 @@ func transformInstance(inst *ecs.DescribeInstancesResponseBodyInstancesInstance,
 }
 
 // compile-time interface compliance check
-var _ cloud.CloudDiscoveryAdapter = (*AliyunECSAdapter)(nil)
-var _ cloud.Client = (*ecsClientWrapper)(nil)
+var (
+	_ cloud.CloudDiscoveryAdapter = (*AliyunECSAdapter)(nil)
+	_ cloud.Client                = (*ecsClientWrapper)(nil)
+)

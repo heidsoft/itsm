@@ -78,7 +78,6 @@ func (c *CMDBController) resolveTenantID(ctx *gin.Context) (int, bool) {
 	return 0, false
 }
 
-
 func (c *CMDBController) ListCITypes(ctx *gin.Context) {
 	tenantID, ok := c.resolveTenantID(ctx)
 	if !ok {

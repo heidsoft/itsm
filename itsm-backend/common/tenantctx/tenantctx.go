@@ -1,12 +1,12 @@
 // Package tenantctx provides tenant_id propagation via context.Context.
 //
 // Design goals:
-//   1. Give downstream code (services, DB layer, RLS hooks) a single source
-//      of truth for "which tenant is this request for".
-//   2. Support explicit system-bypass for background jobs, migrations, and
-//      MSP cross-tenant operations.
-//   3. Coexist with the existing `c.Set("tenant_id", int)` gin convention
-//      without breaking any current call site.
+//  1. Give downstream code (services, DB layer, RLS hooks) a single source
+//     of truth for "which tenant is this request for".
+//  2. Support explicit system-bypass for background jobs, migrations, and
+//     MSP cross-tenant operations.
+//  3. Coexist with the existing `c.Set("tenant_id", int)` gin convention
+//     without breaking any current call site.
 //
 // This package uses `int` to match the codebase's tenant_id type (Ent schemas
 // declare tenant_id as int). The database/rls package works with int64 for

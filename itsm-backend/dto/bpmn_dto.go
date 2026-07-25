@@ -29,26 +29,26 @@ import (
 //   - ParentProcessInstanceID: 父流程实例ID（用于子流程）
 //   - RootProcessInstanceID: 根流程实例ID（用于嵌套子流程追溯）
 type BPMNProcessInstanceResponse struct {
-	ID                    string                 `json:"id"`
-	InstanceID            string                 `json:"instanceId"`
-	BusinessKey           string                 `json:"businessKey"`
-	ProcessDefinitionKey  string                 `json:"processDefinitionKey"`
-	ProcessDefinitionID   int                    `json:"processDefinitionId"`
-	Status                string                 `json:"status"`
-	CurrentActivityID     string                 `json:"currentActivityId"`
-	CurrentActivityName   string                 `json:"currentActivityName"`
-	Variables             map[string]interface{} `json:"variables"`
-	StartTime             time.Time              `json:"startTime"`
-	EndTime               time.Time              `json:"endTime,omitempty"`
-	SuspendedTime         time.Time              `json:"suspendedTime,omitempty"`
-	SuspendedReason       string                 `json:"suspendedReason"`
-	TenantID              int                    `json:"tenantId"`
-	Version               int                    `json:"version"`
-	Initiator             string                 `json:"initiator"`
-	ParentProcessInstanceID string               `json:"parentProcessInstanceId"`
-	RootProcessInstanceID   string               `json:"rootProcessInstanceId"`
-	CreatedAt             time.Time              `json:"createdAt"`
-	UpdatedAt             time.Time              `json:"updatedAt"`
+	ID                      string                 `json:"id"`
+	InstanceID              string                 `json:"instanceId"`
+	BusinessKey             string                 `json:"businessKey"`
+	ProcessDefinitionKey    string                 `json:"processDefinitionKey"`
+	ProcessDefinitionID     int                    `json:"processDefinitionId"`
+	Status                  string                 `json:"status"`
+	CurrentActivityID       string                 `json:"currentActivityId"`
+	CurrentActivityName     string                 `json:"currentActivityName"`
+	Variables               map[string]interface{} `json:"variables"`
+	StartTime               time.Time              `json:"startTime"`
+	EndTime                 time.Time              `json:"endTime,omitempty"`
+	SuspendedTime           time.Time              `json:"suspendedTime,omitempty"`
+	SuspendedReason         string                 `json:"suspendedReason"`
+	TenantID                int                    `json:"tenantId"`
+	Version                 int                    `json:"version"`
+	Initiator               string                 `json:"initiator"`
+	ParentProcessInstanceID string                 `json:"parentProcessInstanceId"`
+	RootProcessInstanceID   string                 `json:"rootProcessInstanceId"`
+	CreatedAt               time.Time              `json:"createdAt"`
+	UpdatedAt               time.Time              `json:"updatedAt"`
 }
 
 // BPMNProcessInstanceListResponse 流程实例列表响应
@@ -66,26 +66,26 @@ func ToBPMNProcessInstanceResponse(p *ent.ProcessInstance) *BPMNProcessInstanceR
 		return nil
 	}
 	return &BPMNProcessInstanceResponse{
-		ID:                    fmt.Sprintf("%d", p.ID),
-		InstanceID:            p.ProcessInstanceID,
-		BusinessKey:           p.BusinessKey,
-		ProcessDefinitionKey:  p.ProcessDefinitionKey,
-		ProcessDefinitionID:    p.ProcessDefinitionID,
-		Status:                p.Status,
-		CurrentActivityID:     p.CurrentActivityID,
-		CurrentActivityName:   p.CurrentActivityName,
-		Variables:             p.Variables,
-		StartTime:             p.StartTime,
-		EndTime:               p.EndTime,
-		SuspendedTime:         p.SuspendedTime,
-		SuspendedReason:       p.SuspendedReason,
-		TenantID:              p.TenantID,
-		Version:               p.Version,
-		Initiator:             p.Initiator,
+		ID:                      fmt.Sprintf("%d", p.ID),
+		InstanceID:              p.ProcessInstanceID,
+		BusinessKey:             p.BusinessKey,
+		ProcessDefinitionKey:    p.ProcessDefinitionKey,
+		ProcessDefinitionID:     p.ProcessDefinitionID,
+		Status:                  p.Status,
+		CurrentActivityID:       p.CurrentActivityID,
+		CurrentActivityName:     p.CurrentActivityName,
+		Variables:               p.Variables,
+		StartTime:               p.StartTime,
+		EndTime:                 p.EndTime,
+		SuspendedTime:           p.SuspendedTime,
+		SuspendedReason:         p.SuspendedReason,
+		TenantID:                p.TenantID,
+		Version:                 p.Version,
+		Initiator:               p.Initiator,
 		ParentProcessInstanceID: p.ParentProcessInstanceID,
 		RootProcessInstanceID:   p.RootProcessInstanceID,
-		CreatedAt:             p.CreatedAt,
-		UpdatedAt:             p.UpdatedAt,
+		CreatedAt:               p.CreatedAt,
+		UpdatedAt:               p.UpdatedAt,
 	}
 }
 

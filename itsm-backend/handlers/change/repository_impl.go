@@ -477,7 +477,8 @@ func (r *EntRepository) UpdateRiskAssessment(ctx context.Context, ra *RiskAssess
 		WHERE change_id = $9 AND tenant_id = $10
 		RETURNING id, created_at, updated_at
 	`
-	err := r.db.QueryRowContext(ctx, query,
+	err := r.db.QueryRowContext(
+		ctx, query,
 		ra.RiskLevel, ra.RiskDescription, ra.ImpactAnalysis,
 		ra.MitigationMeasures, ra.ContingencyPlan, ra.RiskOwner,
 		ra.RiskReviewDate, time.Now(), ra.ChangeID, ra.TenantID,

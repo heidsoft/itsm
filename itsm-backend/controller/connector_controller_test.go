@@ -81,6 +81,7 @@ type provisionFake struct{ cfg connector.Config }
 func (f *provisionFake) Manifest() connector.Manifest {
 	return connector.Manifest{Name: "fakeconn", Title: "Fake Conn", Provider: "fakep", Type: connector.TypeCustom}
 }
+
 func (f *provisionFake) Init(_ context.Context, cfg connector.Config) error { f.cfg = cfg; return nil }
 func (f *provisionFake) Send(_ context.Context, _ *connector.Message) error { return nil }
 func (f *provisionFake) HealthCheck(_ context.Context) connector.HealthStatus {

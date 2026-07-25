@@ -428,9 +428,9 @@ func (h *Handler) GetAlertHistory(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{
-		"items":     res,
-		"total":     total,
-		"page":      page,
+		"items":    res,
+		"total":    total,
+		"page":     page,
 		"pageSize": size,
 	})
 }

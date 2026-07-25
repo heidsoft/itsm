@@ -228,9 +228,9 @@ func (h *Handler) ListCIs(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"items": dtos,
-		"total": total,
-		"page":  page,
+		"items":    dtos,
+		"total":    total,
+		"page":     page,
 		"pageSize": pageSize,
 	})
 }

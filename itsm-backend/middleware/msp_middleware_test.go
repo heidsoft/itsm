@@ -7,9 +7,9 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"itsm-backend/ent/enttest"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"itsm-backend/ent/enttest"
 )
 
 // TestMSPMiddleware_Gate verifies that SetMSPEnabled(false) makes the

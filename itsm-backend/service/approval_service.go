@@ -305,7 +305,6 @@ func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, user
 }
 
 func (s *ApprovalService) submitApproval(ctx context.Context, client *ent.Client, recordID int, userID int, action string, comment string, delegateToUserID *int, tenantID int) error {
-
 	// 先校验 action 合法性，确保"invalid action"错误能在 workflow 检查之前准确返回
 	switch action {
 	case "approve", "reject", "delegate":

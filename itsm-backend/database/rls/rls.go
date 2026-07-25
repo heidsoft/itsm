@@ -1,11 +1,11 @@
 // Package rls provides Row-Level Security context propagation for PostgreSQL.
 //
 // Design (from rls-migration-proposal-2026-07-18.md):
-//   1. Middleware extracts tenant_id from JWT and stores it in gin.Context.
-//   2. When a DB connection is acquired from the pool, we execute
-//      SET SESSION app.current_tenant = <tid> on that connection.
-//   3. Before the connection is returned to the pool, we RESET the variable
-//      to prevent cross-request tenant leakage.
+//  1. Middleware extracts tenant_id from JWT and stores it in gin.Context.
+//  2. When a DB connection is acquired from the pool, we execute
+//     SET SESSION app.current_tenant = <tid> on that connection.
+//  3. Before the connection is returned to the pool, we RESET the variable
+//     to prevent cross-request tenant leakage.
 //
 // Threading model: database/sql pool guarantees exclusive ownership of a
 // *sql.Conn per checkout, so SESSION-level variables are safe as long as
