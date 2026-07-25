@@ -16,7 +16,12 @@ coverage
 itsm-backend
 dist
 build
+bin
+main
+deploy
 vendor
+coverage.out
+*_coverage.out
 .DS_Store
 # Speed up build context; not needed to compile the binary
 **/*_test.go

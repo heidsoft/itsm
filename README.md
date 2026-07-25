@@ -170,6 +170,8 @@ docker compose --env-file .env -f docker-compose.dev.yml --profile dev down -v
 
 > `down -v` 会删除本地数据库和对象存储数据，请确认不再需要后执行。
 
+> 📖 **完整命令参考**：开发/测试/生产环境的常用命令、排查技巧、Docker 维护等详见 [开发命令参考](./docs/dev-commands-reference.md)。
+
 ### 本机开发模式
 
 ```bash
@@ -526,50 +528,54 @@ itsm/
 |:---:|:---:|:---:|
 | 按角色查找文档 | 开发环境搭建 | Docker/K8s 部署 |
 
-| [配置参考](./docs/configuration.md) | [数据库](./docs/database.md) | [运维手册](./docs/operations.md) |
+| [开发命令参考](./docs/dev-commands-reference.md) | [配置参考](./docs/configuration.md) | [数据库](./docs/database.md) |
 |:---:|:---:|:---:|
-| 环境变量详解 | 迁移与备份 | 日志与监控 |
+| 完整命令速查（dev/test/prod） | 环境变量详解 | 迁移与备份 |
 
-| [v1.0 验收](./docs/v1-ga-readiness.md) | [AI架构解析](./docs/articles/07-ai-native-architecture-guidance-harness-skill.md) | [贡献指南](./CONTRIBUTING.md) |
+| [运维手册](./docs/operations.md) | [v1.0 验收](./docs/v1-ga-readiness.md) | [AI架构解析](./docs/articles/07-ai-native-architecture-guidance-harness-skill.md) |
 |:---:|:---:|:---:|
-| GA 能力检查 | Guidance-Harness-Skill 三层体系 | PR 流程 |
+| 日志与监控 | GA 能力检查 | Guidance-Harness-Skill 三层体系 |
 
-| [审批节点语义](./docs/architecture/approval-node-semantics.md) | [CMDB × ITIL4 集成](./docs/cmdb/cmdb-workflow-itil4-integration.md) | [中文 README](./README.zh-CN.md) |
+| [审批节点语义](./docs/architecture/approval-node-semantics.md) | [CMDB × ITIL4 集成](./docs/cmdb/cmdb-workflow-itil4-integration.md) | [贡献指南](./CONTRIBUTING.md) |
 |:---:|:---:|:---:|
-| 节点级 / 流程级审批边界 | 事件/问题/变更与 CMDB 联动 | 中文快速上手 |
+| 节点级 / 流程级审批边界 | 事件/问题/变更与 CMDB 联动 | PR 流程 |
 
 ---
 
 ## 常用命令
 
+> 📖 完整命令速查（含测试、生产、Docker 维护、排查技巧）见 [开发命令参考](./docs/dev-commands-reference.md)。
+
 ```bash
-# 开发环境
-make dev-start
-make dev-status
-make dev-health
-make dev-logs
-make dev-stop
+# ===== 开发 =====
+make dev-init            # 首次初始化（自动创建 .env + 启动）
+make dev-start-docker    # Docker 模式（推荐 CI/演示）
+make dev-start-local     # 本机模式（推荐日常开发，热重载）
+make dev-stop            # 停止
+make dev-logs            # 查看日志
+make dev-health          # 健康检查
+make dev-doctor          # 环境诊断
+make dev-clean           # ⚠️ 重置环境（清数据）
 
-# 后端
-cd itsm-backend
-go run main.go
-go test ./...
+# ===== 测试 =====
+make db-migrate          # 数据库迁移
+make db-seed             # 填充测试数据
+make check-contracts     # 校验 API/部署/Docker 契约
+./scripts/smoke-test.sh  # 冒烟测试
 
-# 前端
-cd itsm-frontend
-npm install
-npm run dev
-npm run type-check
-npm run lint:check
-npm test -- --runInBand
-npm run build
+# ===== 生产 =====
+make prod-init           # 生成 .env.prod（含随机密钥）
+make prod-deploy         # 5 阶段流水线：validate → backup → build → deploy → verify
+make prod-rollback       # 回滚到上一版本
+make prod-backup         # 备份数据库
+make prod-health         # 健康检查
 
-# 生产部署：校验、备份、构建、部署、健康检查
-make prod-init
-make prod-deploy
-make prod-health
-make prod-logs
+# ===== 镜像 =====
+VERSION=v1.2.0 REGISTRY=ghcr.io/heidsoft make build-images
 ```
+
+> ⚠️ **重要**：启动和停止必须用**同一套** env-file + compose 文件，否则会产生孤儿网络。详见 [开发命令参考 § 零](./docs/dev-commands-reference.md#-零最重要的规则启动和停止必须用同一套配置)。
+
 
 测试目录、分层策略和 E2E 使用方式见[测试指南](./docs/testing/README.md)。
 

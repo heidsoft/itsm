@@ -232,3 +232,13 @@ make lint             # Lint all
 make test            # Run all tests
 make swagger         # Generate API docs
 ```
+
+## Extended Reference
+
+For a comprehensive command reference including:
+- Detailed Docker Compose commands
+- Production deployment workflows
+- Docker maintenance and cleanup
+- Troubleshooting tips
+
+See [开发命令参考](./dev-commands-reference.md).

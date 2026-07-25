@@ -4,6 +4,7 @@
 *.tsbuildinfo
 node_modules
 coverage
+.jest-cache
 playwright-report
 test-results
 reports

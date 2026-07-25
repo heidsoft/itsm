@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -59,6 +60,91 @@ type Application struct {
 	Router      *gin.Engine
 	Embedder    service.Embedder
 	VectorStore *service.VectorStore
+}
+
+// prepareRolePermissionTenantMigration upgrades installations created before
+// role_permissions became tenant-scoped. Ent cannot add a required column to a
+// populated table directly, so the compatibility step adds it as nullable and
+// derives each value from the authoritative roles table first. Ent then applies
+// the final NOT NULL contract in Schema.Create.
+func prepareRolePermissionTenantMigration(
+	ctx context.Context,
+	db *sql.DB,
+	logger *zap.SugaredLogger,
+) error {
+	if db == nil {
+		return nil
+	}
+
+	var tableExists bool
+	if err := db.QueryRowContext(ctx, `
+		SELECT EXISTS (
+			SELECT 1
+			FROM information_schema.tables
+			WHERE table_schema = current_schema()
+			  AND table_name = 'role_permissions'
+		)
+	`).Scan(&tableExists); err != nil {
+		return fmt.Errorf("inspect role_permissions table: %w", err)
+	}
+	if !tableExists {
+		return nil
+	}
+
+	var columnExists bool
+	if err := db.QueryRowContext(ctx, `
+		SELECT EXISTS (
+			SELECT 1
+			FROM information_schema.columns
+			WHERE table_schema = current_schema()
+			  AND table_name = 'role_permissions'
+			  AND column_name = 'tenant_id'
+		)
+	`).Scan(&columnExists); err != nil {
+		return fmt.Errorf("inspect role_permissions.tenant_id: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin role_permissions tenant migration: %w", err)
+	}
+	defer tx.Rollback()
+
+	if !columnExists {
+		if _, err := tx.ExecContext(ctx,
+			`ALTER TABLE role_permissions ADD COLUMN tenant_id BIGINT`); err != nil {
+			return fmt.Errorf("add role_permissions.tenant_id: %w", err)
+		}
+	}
+
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE role_permissions AS rp
+		SET tenant_id = r.tenant_id
+		FROM roles AS r
+		WHERE rp.role_id = r.id
+		  AND rp.tenant_id IS NULL
+	`); err != nil {
+		return fmt.Errorf("backfill role_permissions.tenant_id: %w", err)
+	}
+
+	var unresolved int
+	if err := tx.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM role_permissions WHERE tenant_id IS NULL`,
+	).Scan(&unresolved); err != nil {
+		return fmt.Errorf("verify role_permissions.tenant_id: %w", err)
+	}
+	if unresolved > 0 {
+		return fmt.Errorf(
+			"cannot enforce role_permissions.tenant_id: %d rows have no matching tenant-scoped role",
+			unresolved,
+		)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit role_permissions tenant migration: %w", err)
+	}
+	logger.Infow("role permission tenant migration prepared", "column_existed", columnExists)
+	return nil
 }
 
 func NewApplication() *Application {
@@ -668,6 +754,9 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 		"schema migration and default seed at process boot")
 
 	if cfg.Deployment.AutoMigrate {
+		if err := prepareRolePermissionTenantMigration(ctx, database.GetRawDB(), sugar); err != nil {
+			return fmt.Errorf("prepare role permission tenant migration: %w", err)
+		}
 		if err := client.Schema.Create(ctx); err != nil {
 			return fmt.Errorf("create schema resources: %w", err)
 		}

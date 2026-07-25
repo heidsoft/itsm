@@ -411,7 +411,10 @@ deploy_services() {
 
     # Start infrastructure
     log_step "Starting infrastructure (PostgreSQL, Redis, MinIO)"
-    run dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" up -d postgres redis minio
+    if ! run dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" up -d postgres redis minio; then
+        log_error "Failed to start production infrastructure"
+        return 1
+    fi
 
     log_info "Waiting for infrastructure..."
     if ! $DRY_RUN; then
@@ -431,7 +434,11 @@ deploy_services() {
 
     # Start backend
     log_step "Starting backend service"
-    run dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" up -d itsm-backend
+    if ! run dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" up -d itsm-backend; then
+        log_error "Failed to start backend or complete database initialization"
+        dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" logs --tail=50 itsm-init itsm-backend
+        return 1
+    fi
 
     log_info "Waiting for backend health check (up to 120s)..."
     if ! $DRY_RUN; then
@@ -446,7 +453,10 @@ deploy_services() {
 
     # Start frontend
     log_step "Starting frontend service"
-    run dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" up -d itsm-frontend
+    if ! run dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" up -d itsm-frontend; then
+        log_error "Failed to start frontend"
+        return 1
+    fi
 
     log_info "Waiting for frontend..."
     if ! $DRY_RUN; then

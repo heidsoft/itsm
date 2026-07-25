@@ -200,8 +200,13 @@ func (s *IncidentAlertingService) CreateIncidentAlert(ctx context.Context, req *
 		return nil, fmt.Errorf("failed to create incident alert: %w", err)
 	}
 
-	// 发送告警通知
-	go s.sendAlertNotifications(context.Background(), alert, tenantID)
+	// Persist in-app notifications before returning. Keeping database writes out
+	// of the delivery goroutine prevents them from racing with subsequent alert
+	// lifecycle updates (and their mandatory audit events).
+	s.createSystemNotification(ctx, alert, tenantID)
+
+	// External channel delivery may block on remote services, so keep it async.
+	go s.sendAlertNotifications(context.Background(), alert)
 
 	s.logger.Infow("Incident alert created successfully", "id", alert.ID)
 	return s.toIncidentAlertResponse(alert), nil
@@ -238,7 +243,7 @@ func (s *IncidentAlertingService) validateAlertRequest(ctx context.Context, req 
 }
 
 // sendAlertNotifications 发送告警通知
-func (s *IncidentAlertingService) sendAlertNotifications(ctx context.Context, alert *ent.IncidentAlert, tenantID int) {
+func (s *IncidentAlertingService) sendAlertNotifications(ctx context.Context, alert *ent.IncidentAlert) {
 	s.logger.Infow("Sending alert notifications", "alert_id", alert.ID)
 
 	// 获取告警渠道
@@ -263,8 +268,6 @@ func (s *IncidentAlertingService) sendAlertNotifications(ctx context.Context, al
 		}
 	}
 
-	// 创建系统通知记录
-	s.createSystemNotification(ctx, alert, tenantID)
 }
 
 // getAlertChannels 获取告警渠道

@@ -132,3 +132,62 @@ test('production dry-run exits before runtime verification and success reporting
     'dry-run branch must return before runtime verification'
   );
 });
+
+test('production deploy stops immediately when a compose start phase fails', () => {
+  const script = fs.readFileSync(path.join(root, 'scripts', 'deploy-prod.sh'), 'utf8');
+
+  assert.match(
+    script,
+    /if ! run dc [^\n]+ up -d postgres redis minio; then[\s\S]*?return 1/
+  );
+  assert.match(
+    script,
+    /if ! run dc [^\n]+ up -d itsm-backend; then[\s\S]*?return 1/
+  );
+  assert.match(
+    script,
+    /if ! run dc [^\n]+ up -d itsm-frontend; then[\s\S]*?return 1/
+  );
+});
+
+test('production init and backend services share one immutable image contract', () => {
+  const compose = fs.readFileSync(path.join(root, 'docker-compose.prod.yml'), 'utf8');
+  const sharedImage = 'image: itsm-backend:${VERSION:-latest}';
+
+  assert.equal(
+    compose.split(sharedImage).length - 1,
+    2,
+    'itsm-init and itsm-backend must run the exact same backend image'
+  );
+});
+
+test('backend production image excludes local binaries and coverage artifacts', () => {
+  const dockerignore = fs.readFileSync(
+    path.join(root, 'itsm-backend', '.dockerignore'),
+    'utf8'
+  );
+  const ignoredEntries = new Set(
+    dockerignore.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
+  );
+
+  for (const entry of ['bin', 'main', 'deploy', 'coverage.out', '*_coverage.out']) {
+    assert.ok(
+      ignoredEntries.has(entry),
+      `${entry} must not be sent to the production Docker build context`
+    );
+  }
+});
+
+test('frontend production image excludes Jest cache artifacts', () => {
+  const ignoredEntries = new Set(
+    fs.readFileSync(path.join(root, 'itsm-frontend', '.dockerignore'), 'utf8')
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean)
+  );
+
+  assert.ok(
+    ignoredEntries.has('.jest-cache'),
+    '.jest-cache must not be sent to the production Docker build context'
+  );
+});

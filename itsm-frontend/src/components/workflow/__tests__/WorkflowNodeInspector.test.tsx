@@ -12,7 +12,7 @@
  * the value persists into the BPMN XML.
  */
 import React from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import type { BpmnNodeSelection } from '@/components/workflow/BPMNDesigner';
@@ -177,19 +177,19 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
     const switches = screen.getAllByRole('switch');
     const commentSwitch = switches[switches.length - 1]; // 拒绝意见必填 is the last switch
     expect(commentSwitch).toBeChecked();
-    await userEvent.click(commentSwitch);
+    fireEvent.click(commentSwitch);
     expect(onUpdateProperties).toHaveBeenCalledWith('Task_Approve', { commentRequiredOnReject: false });
 
     // The 委托 switch is wired to allowDelegate.
     const delegateSwitch = switches[0];
     expect(delegateSwitch).not.toBeChecked();
-    await userEvent.click(delegateSwitch);
+    fireEvent.click(delegateSwitch);
     expect(onUpdateProperties).toHaveBeenCalledWith('Task_Approve', { allowDelegate: true });
 
     // The 加签 switch is wired to allowAddApprover.
     const addApproverSwitch = switches[1];
     expect(addApproverSwitch).not.toBeChecked();
-    await userEvent.click(addApproverSwitch);
+    fireEvent.click(addApproverSwitch);
     expect(onUpdateProperties).toHaveBeenCalledWith('Task_Approve', { allowAddApprover: true });
   });
 
