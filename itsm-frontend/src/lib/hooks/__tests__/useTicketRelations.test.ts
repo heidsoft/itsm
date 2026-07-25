@@ -131,7 +131,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useRelationQuery', () => {
     it('should fetch a single relation', async () => {
-      mockApi.getRelation.mockResolvedValue({ id: 'rel-1' });
+      mockApi.getRelation.mockResolvedValue({ id: 'rel-1' } as any);
 
       const { result } = renderHook(() => useRelationQuery('rel-1'), {
         wrapper: createWrapper(),

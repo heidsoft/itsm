@@ -91,7 +91,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useCommentsQuery', () => {
     it('should fetch comments when ticketId is valid', async () => {
-      mockApi.getComments.mockResolvedValue({ items: [], total: 0 });
+      mockApi.getComments.mockResolvedValue({ items: [], total: 0 } as any);
 
       const { result } = renderHook(
         () => useCommentsQuery({ ticketId: 1 } as any),
@@ -117,7 +117,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useCommentQuery', () => {
     it('should fetch a single comment', async () => {
-      mockApi.getComment.mockResolvedValue({ id: 'c1', content: 'Hello' });
+      mockApi.getComment.mockResolvedValue({ id: 'c1', content: 'Hello' } as any);
 
       const { result } = renderHook(() => useCommentQuery('c1'), {
         wrapper: createWrapper(),
@@ -143,7 +143,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useCommentStatsQuery', () => {
     it('should fetch comment stats', async () => {
-      mockApi.getCommentStats.mockResolvedValue({ total: 5, replied: 3 });
+      mockApi.getCommentStats.mockResolvedValue({ total: 5, replied: 3 } as any);
 
       const { result } = renderHook(() => useCommentStatsQuery(1), {
         wrapper: createWrapper(),
@@ -164,7 +164,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useNotificationsQuery', () => {
     it('should fetch notifications', async () => {
-      mockApi.getNotifications.mockResolvedValue({ items: [], total: 0 });
+      mockApi.getNotifications.mockResolvedValue({ items: [], total: 0 } as any);
 
       const { result } = renderHook(() => useNotificationsQuery(), {
         wrapper: createWrapper(),
@@ -178,7 +178,7 @@ describe('useCollaboration hooks', () => {
     });
 
     it('should pass query params', async () => {
-      mockApi.getNotifications.mockResolvedValue({ items: [], total: 0 });
+      mockApi.getNotifications.mockResolvedValue({ items: [], total: 0 } as any);
       const query = { unread: true } as any;
 
       const { result } = renderHook(() => useNotificationsQuery(query), {
@@ -211,7 +211,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useActivitiesQuery', () => {
     it('should fetch activities', async () => {
-      mockApi.getActivities.mockResolvedValue([]);
+      mockApi.getActivities.mockResolvedValue([] as any);
       const query = { ticketId: 1 } as any;
 
       const { result } = renderHook(() => useActivitiesQuery(query), {
@@ -235,7 +235,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useWatchersQuery', () => {
     it('should fetch watchers', async () => {
-      mockApi.getWatchers.mockResolvedValue([{ id: 'w1' }]);
+      mockApi.getWatchers.mockResolvedValue([{ id: 'w1' }] as any);
 
       const { result } = renderHook(() => useWatchersQuery(1), {
         wrapper: createWrapper(),
@@ -256,7 +256,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useCollaborationStatsQuery', () => {
     it('should fetch collaboration stats', async () => {
-      mockApi.getCollaborationStats.mockResolvedValue({ comments: 5 });
+      mockApi.getCollaborationStats.mockResolvedValue({ comments: 5 } as any);
 
       const { result } = renderHook(() => useCollaborationStatsQuery(1), {
         wrapper: createWrapper(),
@@ -272,7 +272,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useMentionSuggestionsQuery', () => {
     it('should fetch suggestions when query has content', async () => {
-      mockApi.searchMentionSuggestions.mockResolvedValue([{ id: 'u1', name: 'User' }]);
+      mockApi.searchMentionSuggestions.mockResolvedValue([{ id: 'u1', name: 'User' }] as any);
 
       const { result } = renderHook(
         () => useMentionSuggestionsQuery({ query: 'user', ticketId: 1 }),
@@ -297,7 +297,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useCreateCommentMutation', () => {
     it('should create a comment', async () => {
-      mockApi.createComment.mockResolvedValue({ id: 'new-c' });
+      mockApi.createComment.mockResolvedValue({ id: 'new-c' } as any);
 
       const { result } = renderHook(() => useCreateCommentMutation(), {
         wrapper: createWrapper(),
@@ -329,7 +329,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useUpdateCommentMutation', () => {
     it('should update a comment', async () => {
-      mockApi.updateComment.mockResolvedValue({ id: 'c1', content: 'Updated' });
+      mockApi.updateComment.mockResolvedValue({ id: 'c1', content: 'Updated' } as any);
 
       const { result } = renderHook(() => useUpdateCommentMutation(), {
         wrapper: createWrapper(),
@@ -437,7 +437,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useAddWatcherMutation', () => {
     it('should add a watcher', async () => {
-      mockApi.addWatcher.mockResolvedValue(undefined);
+      mockApi.addWatcher.mockResolvedValue(undefined as any);
 
       const { result } = renderHook(() => useAddWatcherMutation(), {
         wrapper: createWrapper(),
@@ -487,7 +487,7 @@ describe('useCollaboration hooks', () => {
 
   describe('useWatchTicketMutation', () => {
     it('should watch a ticket', async () => {
-      mockApi.watchTicket.mockResolvedValue(undefined);
+      mockApi.watchTicket.mockResolvedValue(undefined as any);
 
       const { result } = renderHook(() => useWatchTicketMutation(), {
         wrapper: createWrapper(),

@@ -336,16 +336,16 @@ describe('Utils', () => {
   describe('getApiData', () => {
     it('should get data by camelCase key', () => {
       const response = { totalCount: 10 };
-      expect(getApiData(response, 'total_count' as any)).toBe(10);
+      expect(getApiData(response as any, 'total_count')).toBe(10);
     });
 
     it('should get data by snake_case key', () => {
       const response = { total_count: 10 };
-      expect(getApiData(response, 'total_count' as any)).toBe(10);
+      expect(getApiData(response as any, 'total_count')).toBe(10);
     });
 
     it('should return undefined for missing key', () => {
-      expect(getApiData({}, 'missing' as any)).toBeUndefined();
+      expect(getApiData({} as any, 'missing')).toBeUndefined();
     });
   });
 

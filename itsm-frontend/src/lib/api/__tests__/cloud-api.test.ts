@@ -26,10 +26,10 @@ describe('Cloud API', () => {
     });
 
     it('get should get account by id', async () => {
-      mockGet.mockResolvedValue({ id: 1, name: 'AWS' });
+      mockGet.mockResolvedValue({ id: 1, name: 'AWS' } as any);
       const result = await cloudAccountApi.get(1);
       expect(mockGet).toHaveBeenCalledWith('/cloud/accounts/1');
-      expect(result.name).toBe('AWS');
+      expect((result as any).name).toBe('AWS');
     });
 
     it('create should create account', async () => {

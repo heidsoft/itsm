@@ -236,7 +236,7 @@ describe('useTemplateQuery hooks', () => {
 
   describe('useTemplateCategoriesQuery', () => {
     it('should fetch categories', async () => {
-      mockApi.getCategories.mockResolvedValue([{ id: 'c1', name: 'Incident' }]);
+      mockApi.getCategories.mockResolvedValue([{ id: 'c1', name: 'Incident' }] as any);
 
       const { result } = renderHook(() => useTemplateCategoriesQuery(), {
         wrapper: createWrapper(),
@@ -383,7 +383,7 @@ describe('useTemplateQuery hooks', () => {
 
   describe('useRateTemplateMutation', () => {
     it('should rate a template', async () => {
-      mockApi.rateTemplate.mockResolvedValue({ rating: 5 });
+      mockApi.rateTemplate.mockResolvedValue({ rating: 5 } as any);
 
       const { result } = renderHook(() => useRateTemplateMutation(), {
         wrapper: createWrapper(),
@@ -428,7 +428,7 @@ describe('useTemplateQuery hooks', () => {
 
   describe('useImportTemplateMutation', () => {
     it('should import a template', async () => {
-      mockApi.importTemplate.mockResolvedValue({ id: 'imported' });
+      mockApi.importTemplate.mockResolvedValue({ id: 'imported' } as any);
 
       const { result } = renderHook(() => useImportTemplateMutation(), {
         wrapper: createWrapper(),

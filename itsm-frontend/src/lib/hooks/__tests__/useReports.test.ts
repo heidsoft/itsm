@@ -111,7 +111,7 @@ describe('useReports hooks', () => {
 
   describe('useReportsQuery', () => {
     it('should fetch reports', async () => {
-      mockApi.getReports.mockResolvedValue({ items: [], total: 0 });
+      mockApi.getReports.mockResolvedValue({ items: [], total: 0 } as any);
 
       const { result } = renderHook(() => useReportsQuery(), {
         wrapper: createWrapper(),
@@ -122,7 +122,7 @@ describe('useReports hooks', () => {
     });
 
     it('should pass query params', async () => {
-      mockApi.getReports.mockResolvedValue({ items: [], total: 0 });
+      mockApi.getReports.mockResolvedValue({ items: [], total: 0 } as any);
       const query = { category: 'tickets' } as any;
 
       const { result } = renderHook(() => useReportsQuery(query), {
@@ -136,7 +136,7 @@ describe('useReports hooks', () => {
 
   describe('useReportQuery', () => {
     it('should fetch a single report', async () => {
-      mockApi.getReport.mockResolvedValue({ id: 'r1', name: 'Report 1' });
+      mockApi.getReport.mockResolvedValue({ id: 'r1', name: 'Report 1' } as any);
 
       const { result } = renderHook(() => useReportQuery('r1'), {
         wrapper: createWrapper(),
@@ -159,7 +159,7 @@ describe('useReports hooks', () => {
 
   describe('useExecutionHistoryQuery', () => {
     it('should fetch execution history', async () => {
-      mockApi.getExecutionHistory.mockResolvedValue({ items: [], total: 0 });
+      mockApi.getExecutionHistory.mockResolvedValue({ items: [], total: 0 } as any);
 
       const { result } = renderHook(() => useExecutionHistoryQuery('r1'), {
         wrapper: createWrapper(),
@@ -177,7 +177,7 @@ describe('useReports hooks', () => {
 
   describe('useExecutionResultQuery', () => {
     it('should fetch execution result', async () => {
-      mockApi.getExecutionResult.mockResolvedValue({ data: [] });
+      mockApi.getExecutionResult.mockResolvedValue({ data: [] } as any);
 
       const { result } = renderHook(() => useExecutionResultQuery('e1'), {
         wrapper: createWrapper(),
@@ -208,7 +208,7 @@ describe('useReports hooks', () => {
 
   describe('useDatasetQuery', () => {
     it('should fetch a single dataset', async () => {
-      mockApi.getDataset.mockResolvedValue({ id: 'd1' });
+      mockApi.getDataset.mockResolvedValue({ id: 'd1' } as any);
 
       const { result } = renderHook(() => useDatasetQuery('d1'), {
         wrapper: createWrapper(),
@@ -226,7 +226,7 @@ describe('useReports hooks', () => {
 
   describe('useReportStatsQuery', () => {
     it('should fetch report stats', async () => {
-      mockApi.getStats.mockResolvedValue({ totalReports: 10 });
+      mockApi.getStats.mockResolvedValue({ totalReports: 10 } as any);
 
       const { result } = renderHook(() => useReportStatsQuery(), {
         wrapper: createWrapper(),
@@ -239,7 +239,7 @@ describe('useReports hooks', () => {
 
   describe('useReportPerformanceQuery', () => {
     it('should fetch report performance', async () => {
-      mockApi.getPerformance.mockResolvedValue({ avgTime: 500 });
+      mockApi.getPerformance.mockResolvedValue({ avgTime: 500 } as any);
 
       const { result } = renderHook(() => useReportPerformanceQuery('r1'), {
         wrapper: createWrapper(),
@@ -294,7 +294,7 @@ describe('useReports hooks', () => {
 
   describe('useCreateReportMutation', () => {
     it('should create a report', async () => {
-      mockApi.createReport.mockResolvedValue({ id: 'new-r' });
+      mockApi.createReport.mockResolvedValue({ id: 'new-r' } as any);
 
       const { result } = renderHook(() => useCreateReportMutation(), {
         wrapper: createWrapper(),
@@ -309,7 +309,7 @@ describe('useReports hooks', () => {
 
   describe('useUpdateReportMutation', () => {
     it('should update a report', async () => {
-      mockApi.updateReport.mockResolvedValue({ id: 'r1' });
+      mockApi.updateReport.mockResolvedValue({ id: 'r1' } as any);
 
       const { result } = renderHook(() => useUpdateReportMutation(), {
         wrapper: createWrapper(),
@@ -339,7 +339,7 @@ describe('useReports hooks', () => {
 
   describe('useCloneReportMutation', () => {
     it('should clone a report', async () => {
-      mockApi.cloneReport.mockResolvedValue({ id: 'r2' });
+      mockApi.cloneReport.mockResolvedValue({ id: 'r2' } as any);
 
       const { result } = renderHook(() => useCloneReportMutation(), {
         wrapper: createWrapper(),
@@ -354,7 +354,7 @@ describe('useReports hooks', () => {
 
   describe('useExecuteReportMutation', () => {
     it('should execute a report', async () => {
-      mockApi.executeReport.mockResolvedValue({ executionId: 'e1' });
+      mockApi.executeReport.mockResolvedValue({ executionId: 'e1' } as any);
 
       const { result } = renderHook(() => useExecuteReportMutation(), {
         wrapper: createWrapper(),
@@ -424,7 +424,7 @@ describe('useReports hooks', () => {
 
   describe('useCreateScheduleMutation', () => {
     it('should create a schedule', async () => {
-      mockApi.createSchedule.mockResolvedValue({ id: 's1' });
+      mockApi.createSchedule.mockResolvedValue({ id: 's1' } as any);
 
       const { result } = renderHook(() => useCreateScheduleMutation(), {
         wrapper: createWrapper(),
@@ -454,7 +454,7 @@ describe('useReports hooks', () => {
 
   describe('useCreateFromTemplateMutation', () => {
     it('should create from template', async () => {
-      mockApi.createFromTemplate.mockResolvedValue({ id: 'new-r' });
+      mockApi.createFromTemplate.mockResolvedValue({ id: 'new-r' } as any);
 
       const { result } = renderHook(() => useCreateFromTemplateMutation(), {
         wrapper: createWrapper(),
@@ -514,7 +514,7 @@ describe('useReports hooks', () => {
 
   describe('usePreviewDataMutation', () => {
     it('should preview data', async () => {
-      mockApi.previewData.mockResolvedValue({ data: [] });
+      mockApi.previewData.mockResolvedValue({ data: [] } as any);
 
       const { result } = renderHook(() => usePreviewDataMutation(), {
         wrapper: createWrapper(),

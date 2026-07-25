@@ -256,7 +256,7 @@ describe('useBatchOperations hooks', () => {
       const mockRemoveChild = jest.spyOn(document.body, 'removeChild').mockImplementation(n => n);
 
       const { result } = renderHook(() => useBatchExportMutation(), { wrapper: createWrapper() });
-      act(() => { result.current.mutate({ ticketIds: [1, 2], config: { format: 'csv', fileName: 'test.csv', fields: [] } }); });
+      act(() => { result.current.mutate({ ticketIds: [1, 2], config: { format: 'csv', fileName: 'test.csv', fields: [] } as any }); });
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(mockCreateObjectURL).toHaveBeenCalled();
       expect(message.success).toHaveBeenCalled();
@@ -267,7 +267,7 @@ describe('useBatchOperations hooks', () => {
     it('should handle export error', async () => {
       mockApi.batchExportTickets.mockRejectedValue(new Error('export fail'));
       const { result } = renderHook(() => useBatchExportMutation(), { wrapper: createWrapper() });
-      act(() => { result.current.mutate({ config: { format: 'csv', fileName: 'x.csv', fields: [] } }); });
+      act(() => { result.current.mutate({ config: { format: 'csv', fileName: 'x.csv', fields: [] } as any }); });
       await waitFor(() => expect(result.current.isError).toBe(true));
       expect(message.error).toHaveBeenCalled();
     });

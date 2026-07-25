@@ -292,7 +292,7 @@ describe('useChangeClassification hooks', () => {
 
   describe('useAssessRiskMutation', () => {
     it('should assess risk', async () => {
-      mockApi.assessRisk.mockResolvedValue({ riskLevel: 'medium' });
+      mockApi.assessRisk.mockResolvedValue({ riskLevel: 'medium' } as any);
 
       const { result } = renderHook(() => useAssessRiskMutation(), {
         wrapper: createWrapper(),
@@ -310,7 +310,7 @@ describe('useChangeClassification hooks', () => {
 
   describe('useAnalyzeImpactMutation', () => {
     it('should analyze impact', async () => {
-      mockApi.analyzeImpact.mockResolvedValue({ impactLevel: 'high' });
+      mockApi.analyzeImpact.mockResolvedValue({ impactLevel: 'high' } as any);
 
       const { result } = renderHook(() => useAnalyzeImpactMutation(), {
         wrapper: createWrapper(),
@@ -328,7 +328,7 @@ describe('useChangeClassification hooks', () => {
 
   describe('useApplyClassificationMutation', () => {
     it('should apply classification', async () => {
-      mockApi.applyClassificationSuggestion.mockResolvedValue({ success: true });
+      mockApi.applyClassificationSuggestion.mockResolvedValue({ success: true } as any);
 
       const { result } = renderHook(() => useApplyClassificationMutation(), {
         wrapper: createWrapper(),

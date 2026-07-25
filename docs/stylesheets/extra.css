@@ -1,0 +1,24 @@
+/* ITSM Documentation Custom Styles */
+
+/* Improve code block readability */
+.highlight pre {
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* Better table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.5rem;
+    border: 1px solid var(--md-default-fg-color--lighter);
+}
+
+/* Admonition improvements */
+.md-typeset .admonition,
+.md-typeset details {
+    margin-bottom: 1rem;
+}

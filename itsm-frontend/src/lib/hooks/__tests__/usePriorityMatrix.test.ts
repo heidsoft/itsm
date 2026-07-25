@@ -69,7 +69,7 @@ describe('usePriorityMatrix hooks', () => {
 
   describe('useMatrixConfigsQuery', () => {
     it('should fetch matrix configs', async () => {
-      mockApi.getMatrixConfigs.mockResolvedValue([{ id: 'cfg-1' }]);
+      mockApi.getMatrixConfigs.mockResolvedValue([{ id: 'cfg-1' }] as any);
 
       const { result } = renderHook(() => useMatrixConfigsQuery(), {
         wrapper: createWrapper(),
@@ -97,7 +97,7 @@ describe('usePriorityMatrix hooks', () => {
 
   describe('useActiveMatrixConfigQuery', () => {
     it('should fetch active config', async () => {
-      mockApi.getActiveMatrixConfig.mockResolvedValue({ id: 'active-cfg', active: true });
+      mockApi.getActiveMatrixConfig.mockResolvedValue({ id: 'active-cfg', active: true } as any);
 
       const { result } = renderHook(() => useActiveMatrixConfigQuery(), {
         wrapper: createWrapper(),
@@ -114,7 +114,7 @@ describe('usePriorityMatrix hooks', () => {
 
   describe('useMatrixDataQuery', () => {
     it('should fetch matrix data with configId', async () => {
-      mockApi.getMatrixData.mockResolvedValue({ matrix: [] });
+      mockApi.getMatrixData.mockResolvedValue({ matrix: [] } as any);
 
       const { result } = renderHook(() => useMatrixDataQuery('cfg-1'), {
         wrapper: createWrapper(),
@@ -128,7 +128,7 @@ describe('usePriorityMatrix hooks', () => {
     });
 
     it('should fetch matrix data without configId', async () => {
-      mockApi.getMatrixData.mockResolvedValue({ matrix: [] });
+      mockApi.getMatrixData.mockResolvedValue({ matrix: [] } as any);
 
       const { result } = renderHook(() => useMatrixDataQuery(), {
         wrapper: createWrapper(),
@@ -144,7 +144,7 @@ describe('usePriorityMatrix hooks', () => {
 
   describe('usePriorityRulesQuery', () => {
     it('should fetch priority rules', async () => {
-      mockApi.getPriorityRules.mockResolvedValue([{ id: 'r1' }]);
+      mockApi.getPriorityRules.mockResolvedValue([{ id: 'r1' }] as any);
 
       const { result } = renderHook(() => usePriorityRulesQuery(), {
         wrapper: createWrapper(),
@@ -158,7 +158,7 @@ describe('usePriorityMatrix hooks', () => {
     });
 
     it('should pass query params', async () => {
-      mockApi.getPriorityRules.mockResolvedValue([]);
+      mockApi.getPriorityRules.mockResolvedValue([] as any);
       const query = { active: true } as any;
 
       const { result } = renderHook(() => usePriorityRulesQuery(query), {
@@ -175,7 +175,7 @@ describe('usePriorityMatrix hooks', () => {
 
   describe('usePrioritySuggestionQuery', () => {
     it('should fetch suggestion for a ticket', async () => {
-      mockApi.getPrioritySuggestion.mockResolvedValue({ priority: 'high' });
+      mockApi.getPrioritySuggestion.mockResolvedValue({ priority: 'high' } as any);
 
       const { result } = renderHook(() => usePrioritySuggestionQuery(10), {
         wrapper: createWrapper(),
@@ -208,7 +208,7 @@ describe('usePriorityMatrix hooks', () => {
   describe('usePriorityDistributionQuery', () => {
     it('should fetch priority distribution', async () => {
       const query = { period: '7d' } as any;
-      mockApi.getPriorityDistribution.mockResolvedValue({ data: [] });
+      mockApi.getPriorityDistribution.mockResolvedValue({ data: [] } as any);
 
       const { result } = renderHook(() => usePriorityDistributionQuery(query), {
         wrapper: createWrapper(),
@@ -224,7 +224,7 @@ describe('usePriorityMatrix hooks', () => {
 
   describe('useCalculatePriorityMutation', () => {
     it('should calculate priority', async () => {
-      mockApi.calculatePriority.mockResolvedValue({ priority: 'urgent', score: 95 });
+      mockApi.calculatePriority.mockResolvedValue({ priority: 'urgent', score: 95 } as any);
 
       const { result } = renderHook(() => useCalculatePriorityMutation(), {
         wrapper: createWrapper(),
@@ -256,7 +256,7 @@ describe('usePriorityMatrix hooks', () => {
 
   describe('useCreateMatrixConfigMutation', () => {
     it('should create matrix config', async () => {
-      mockApi.createMatrixConfig.mockResolvedValue({ id: 'new-cfg' });
+      mockApi.createMatrixConfig.mockResolvedValue({ id: 'new-cfg' } as any);
 
       const { result } = renderHook(() => useCreateMatrixConfigMutation(), {
         wrapper: createWrapper(),
@@ -274,7 +274,7 @@ describe('usePriorityMatrix hooks', () => {
 
   describe('useActivateMatrixConfigMutation', () => {
     it('should activate a config', async () => {
-      mockApi.activateMatrixConfig.mockResolvedValue({ id: 'cfg-1', active: true });
+      mockApi.activateMatrixConfig.mockResolvedValue({ id: 'cfg-1', active: true } as any);
 
       const { result } = renderHook(() => useActivateMatrixConfigMutation(), {
         wrapper: createWrapper(),
@@ -292,7 +292,7 @@ describe('usePriorityMatrix hooks', () => {
 
   describe('useCreatePriorityRuleMutation', () => {
     it('should create a priority rule', async () => {
-      mockApi.createPriorityRule.mockResolvedValue({ id: 'rule-1' });
+      mockApi.createPriorityRule.mockResolvedValue({ id: 'rule-1' } as any);
 
       const { result } = renderHook(() => useCreatePriorityRuleMutation(), {
         wrapper: createWrapper(),
