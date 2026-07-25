@@ -501,9 +501,8 @@ func TestCrossTenantCIEnumeration(t *testing.T) {
 		t2CI, err := client.ConfigurationItem.Query().Where(configurationitem.TenantIDEQ(t2.ID)).First(ctx)
 		require.NoError(t, err)
 		probeCross, err := readCI(t1.ID, t2CI.ID)
+		assert.NoError(t, err)
 		probeMissing, err := readCI(t1.ID, 9999999)
-		assert.NoError(t, err)
-		assert.NoError(t, err)
 		assert.Equal(t, probeMissing, probeCross,
 			"CMDB 影响分析如果遍历 CI 关系,租户过滤必须保证跨租户与不存在不可区分")
 	})
@@ -564,9 +563,8 @@ func TestCrossTenantKnowledgeEnumeration(t *testing.T) {
 		t2KA, err := client.KnowledgeArticle.Query().Where(knowledgearticle.TenantIDEQ(t2.ID)).First(ctx)
 		require.NoError(t, err)
 		probeCross, err := readKA(t1.ID, t2KA.ID)
+		assert.NoError(t, err)
 		probeMissing, err := readKA(t1.ID, 9999999)
-		assert.NoError(t, err)
-		assert.NoError(t, err)
 		assert.Equal(t, probeMissing, probeCross,
 			"RAG 必须保证跨租户与不存在不可区分,防止攻击者用状态码倒推文章 ID")
 	})

@@ -13,6 +13,14 @@ import (
 	"go.uber.org/zap"
 )
 
+// contextKey is a custom type for context keys to avoid collisions.
+type contextKey string
+
+const (
+	userIDKey   contextKey = "user_id"
+	userNameKey contextKey = "user_name"
+)
+
 // CMDBController CMDB控制器
 type CMDBController struct {
 	logger                       *zap.SugaredLogger
@@ -1247,8 +1255,8 @@ func (c *CMDBController) RevertCIVersion(ctx *gin.Context) {
 	// 获取操作人信息
 	userID, _ := ctx.Get("user_id")
 	userName, _ := ctx.Get("user_name")
-	ctxWithUser := context.WithValue(ctx.Request.Context(), "user_id", userID)
-	ctxWithUser = context.WithValue(ctxWithUser, "user_name", userName)
+	ctxWithUser := context.WithValue(ctx.Request.Context(), userIDKey, userID)
+	ctxWithUser = context.WithValue(ctxWithUser, userNameKey, userName)
 
 	result, err := c.ciHistoryService.RevertCIVersion(ctxWithUser, id, tenantID, userID.(int), userName.(string), &req)
 	if err != nil {
@@ -1286,8 +1294,8 @@ func (c *CMDBController) BatchCreateCI(ctx *gin.Context) {
 	// 获取操作人信息
 	userID, _ := ctx.Get("user_id")
 	userName, _ := ctx.Get("user_name")
-	ctxWithUser := context.WithValue(ctx.Request.Context(), "user_id", userID)
-	ctxWithUser = context.WithValue(ctxWithUser, "user_name", userName)
+	ctxWithUser := context.WithValue(ctx.Request.Context(), userIDKey, userID)
+	ctxWithUser = context.WithValue(ctxWithUser, userNameKey, userName)
 
 	result, err := c.ciService.BatchCreateCI(ctxWithUser, &req, tenantID)
 	if err != nil {
@@ -1323,8 +1331,8 @@ func (c *CMDBController) BatchUpdateCI(ctx *gin.Context) {
 	// 获取操作人信息
 	userID, _ := ctx.Get("user_id")
 	userName, _ := ctx.Get("user_name")
-	ctxWithUser := context.WithValue(ctx.Request.Context(), "user_id", userID)
-	ctxWithUser = context.WithValue(ctxWithUser, "user_name", userName)
+	ctxWithUser := context.WithValue(ctx.Request.Context(), userIDKey, userID)
+	ctxWithUser = context.WithValue(ctxWithUser, userNameKey, userName)
 
 	result, err := c.ciService.BatchUpdateCI(ctxWithUser, &req, tenantID)
 	if err != nil {
@@ -1360,8 +1368,8 @@ func (c *CMDBController) BatchDeleteCI(ctx *gin.Context) {
 	// 获取操作人信息
 	userID, _ := ctx.Get("user_id")
 	userName, _ := ctx.Get("user_name")
-	ctxWithUser := context.WithValue(ctx.Request.Context(), "user_id", userID)
-	ctxWithUser = context.WithValue(ctxWithUser, "user_name", userName)
+	ctxWithUser := context.WithValue(ctx.Request.Context(), userIDKey, userID)
+	ctxWithUser = context.WithValue(ctxWithUser, userNameKey, userName)
 
 	result, err := c.ciService.BatchDeleteCI(ctxWithUser, &req, tenantID)
 	if err != nil {

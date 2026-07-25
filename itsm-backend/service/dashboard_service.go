@@ -1006,8 +1006,8 @@ func (s *DashboardService) getIncidentDistribution(ctx context.Context, tenantID
 	return distribution, nil
 }
 
-// getSLADataForDashboard 获取SLA数据
-func (s *DashboardService) getSLADataForDashboard(ctx context.Context, tenantID int) ([]SLAData, error) {
+// _getSLADataForDashboard 获取SLA数据
+func (s *DashboardService) _getSLADataForDashboard(ctx context.Context, tenantID int) ([]SLAData, error) {
 	// 从数据库查询SLA定义和实际性能数据
 	slaDefinitions, err := s.client.SLADefinition.Query().
 		Where(sladefinition.TenantIDEQ(tenantID)).
@@ -1019,7 +1019,7 @@ func (s *DashboardService) getSLADataForDashboard(ctx context.Context, tenantID 
 	var slaData []SLAData
 	for _, sla := range slaDefinitions {
 		// 计算实际性能（这里可以根据实际指标计算）
-		actualPerformance, err := s.calculateActualSLAPerformance(ctx, sla.ID, tenantID)
+		actualPerformance, err := s._calculateActualSLAPerformance(ctx, sla.ID, tenantID)
 		if err != nil {
 			s.logger.Warnf("Failed to calculate performance for SLA %d: %v", sla.ID, err)
 			actualPerformance = 0.0 // 使用默认值
@@ -1035,8 +1035,8 @@ func (s *DashboardService) getSLADataForDashboard(ctx context.Context, tenantID 
 	return slaData, nil
 }
 
-// calculateActualSLAPerformance 计算SLA的实际性能百分比
-func (s *DashboardService) calculateActualSLAPerformance(ctx context.Context, slaID int, tenantID int) (float64, error) {
+// _calculateActualSLAPerformance 计算SLA的实际性能百分比
+func (s *DashboardService) _calculateActualSLAPerformance(ctx context.Context, slaID int, tenantID int) (float64, error) {
 	// 查询近30天的工单数据来计算SLA达成率
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
 

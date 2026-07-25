@@ -319,13 +319,13 @@ func (c *Controller) UpdateInstallationConfig(ctx *gin.Context) {
 		return
 	}
 
-	installation, err := c.service.UpdateInstallationConfig(ctx, tenantID, itemID, config)
+	_, err = c.service.UpdateInstallationConfig(ctx, tenantID, itemID, config)
 	if err != nil {
 		common.Fail(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	installation, err = c.service.GetInstallation(ctx, tenantID, itemID)
+	installation, err := c.service.GetInstallation(ctx, tenantID, itemID)
 	if err != nil {
 		common.Fail(ctx, http.StatusInternalServerError, err.Error())
 		return

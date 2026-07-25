@@ -84,7 +84,9 @@ func TestMD5Hash(t *testing.T) {
 	}
 
 	// 验证幂等性
-	if MD5Hash("test") != MD5Hash("test") {
+	h1 := MD5Hash("test")
+	h2 := MD5Hash("test")
+	if h1 != h2 {
 		t.Error("MD5Hash should be deterministic")
 	}
 }

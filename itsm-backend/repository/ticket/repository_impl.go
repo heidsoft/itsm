@@ -611,8 +611,8 @@ func (r *EntRepository) generateTicketNumberWithDB(ctx context.Context, tenantID
 	return "", fmt.Errorf("failed to generate unique ticket number after 3 attempts")
 }
 
-// uniqueFallbackSuffix 生成唯一后缀（用于当月第一条记录的回退）
-func uniqueFallbackSuffix() string {
+// _uniqueFallbackSuffix 生成唯一后缀（用于当月第一条记录的回退）
+func _uniqueFallbackSuffix() string {
 	// 使用时间戳+随机数生成唯一后缀
 	n := time.Now().UnixNano()
 	return fmt.Sprintf("%010d", n)[2:]

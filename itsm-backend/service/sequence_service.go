@@ -73,12 +73,12 @@ func (s *SequenceService) GetNextSequenceWithExpiry(ctx context.Context, key str
 		// 从DB获取当前最大序列号
 		dbMax, dbErr := s.dbQueryMaxSeqFn(key)
 		if dbErr == nil && dbMax > 0 {
-			// 用SetNX确保只有第一个请求设置成功（其他请求会失败并重读）
-			set, setErr := s.client.SetNX(ctx, key, dbMax, time.Until(expiredAt)).Result()
-			if setErr != nil {
-				s.logger.Warnw("SetNX failed, will retry read", "key", key, "error", setErr)
+			// 用SetArgs+NX确保只有第一个请求设置成功（其他请求会失败并重读）
+			set, setErr := s.client.SetArgs(ctx, key, dbMax, redis.SetArgs{Mode: "NX", TTL: time.Until(expiredAt)}).Result()
+			if setErr != nil && setErr != redis.Nil {
+				s.logger.Warnw("SetArgs NX failed, will retry read", "key", key, "error", setErr)
 			}
-			if !set {
+			if set != "OK" {
 				// 其他协程已初始化，重新读取
 				current, _ = s.client.Get(ctx, key).Int64()
 			} else {

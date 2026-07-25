@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -245,7 +246,7 @@ func TestWorkflowStep_InvalidType(t *testing.T) {
 	step := &WorkflowStep{ID: "invalid_step", Name: "Invalid", Type: "invalid_type"}
 	definition := WorkflowDefinition{Steps: []WorkflowStep{*step}, Transitions: []WorkflowTransition{}}
 
-	_, err := engine.executeStep(nil, execCtx, step, definition)
+	_, err := engine.executeStep(context.TODO(), execCtx, step, definition)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "未知的步骤类型")
 }

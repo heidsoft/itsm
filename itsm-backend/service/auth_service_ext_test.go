@@ -30,7 +30,7 @@ type authFixture struct {
 	user        *ent.User
 	logger      interface{}
 	ctx         context.Context
-	cleanupFunc func()
+	cleanupFunc func() //nolint:staticcheck // intentionally kept for future use
 }
 
 func newAuthFixture(t *testing.T) *authFixture {

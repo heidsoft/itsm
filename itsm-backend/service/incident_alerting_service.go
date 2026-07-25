@@ -126,7 +126,7 @@ type SlackChannel struct {
 func (c *SlackChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending Slack alert", "alert_id", alert.ID, "channel", c.channel)
 	if os.Getenv("GIN_MODE") == "release" {
-		return fmt.Errorf("Slack alert delivery must use the connector lifecycle")
+		return fmt.Errorf("slack alert delivery must use the connector lifecycle")
 	}
 	time.Sleep(150 * time.Millisecond)
 	c.logger.Infow("Slack alert simulated in non-production environment", "alert_id", alert.ID)

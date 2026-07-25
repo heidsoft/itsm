@@ -291,7 +291,7 @@ func convertRecentActivities(activities []service.RecentActivityData) []RecentAc
 	return result
 }
 
-func convertSLAData(slaData []service.SLAData) []SLAData {
+func _convertSLAData(slaData []service.SLAData) []SLAData {
 	result := make([]SLAData, len(slaData))
 	for i, s := range slaData {
 		result[i] = SLAData{

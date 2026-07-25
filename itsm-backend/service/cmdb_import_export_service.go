@@ -256,27 +256,24 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 			continue
 		}
 
-		var ci *dto.CIResponse
-
 		if existingCI != nil {
 			// CI已存在，根据更新模式处理
 			switch req.UpdateMode {
 			case "skip":
 				// 跳过
-				_ = ci
 				continue
 			case "overwrite":
 				// 覆盖更新
 				updateReq := s.convertCreateToUpdateReq(createReq)
-				ci, err = s.ciService.UpdateCI(ctx, existingCI.ID, tenantID, updateReq)
+				_, err = s.ciService.UpdateCI(ctx, existingCI.ID, tenantID, updateReq)
 			case "merge":
 				// 合并更新，只更新非空字段
 				updateReq := s.convertCreateToUpdateReqMerge(createReq, existingCI)
-				ci, err = s.ciService.UpdateCI(ctx, existingCI.ID, tenantID, updateReq)
+				_, err = s.ciService.UpdateCI(ctx, existingCI.ID, tenantID, updateReq)
 			}
 		} else {
 			// 创建新CI
-			ci, err = s.ciService.CreateCI(ctx, createReq, tenantID)
+			_, err = s.ciService.CreateCI(ctx, createReq, tenantID)
 		}
 
 		if err != nil {

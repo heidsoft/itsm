@@ -192,7 +192,8 @@ function isSourceFile(p) {
 
 function isFrontendSource(p) {
   // itsm-frontend/src/lib/<area>/<name>.ts  (api, services, store, hooks, ...)
-  return /^itsm-frontend\/src\/lib\/[^/]+\/[^/]+\.tsx?$/.test(p);
+  // Exclude __tests__ directories - those are test files, not source.
+  return /^itsm-frontend\/src\/lib\/[^/]+\/[^/]+\.tsx?$/.test(p) && !/__tests__\//.test(p);
 }
 
 function isBackendSource(p) {
