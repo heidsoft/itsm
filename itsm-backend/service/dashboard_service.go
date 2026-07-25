@@ -1007,6 +1007,7 @@ func (s *DashboardService) getIncidentDistribution(ctx context.Context, tenantID
 }
 
 // _getSLADataForDashboard 获取SLA数据
+//nolint:staticcheck // Reserved for SLA dashboard integration
 func (s *DashboardService) _getSLADataForDashboard(ctx context.Context, tenantID int) ([]SLAData, error) {
 	// 从数据库查询SLA定义和实际性能数据
 	slaDefinitions, err := s.client.SLADefinition.Query().
@@ -1036,6 +1037,7 @@ func (s *DashboardService) _getSLADataForDashboard(ctx context.Context, tenantID
 }
 
 // _calculateActualSLAPerformance 计算SLA的实际性能百分比
+//nolint:staticcheck // Reserved for SLA performance calculation
 func (s *DashboardService) _calculateActualSLAPerformance(ctx context.Context, slaID int, tenantID int) (float64, error) {
 	// 查询近30天的工单数据来计算SLA达成率
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
