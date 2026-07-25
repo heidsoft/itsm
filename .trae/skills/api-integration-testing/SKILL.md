@@ -1,6 +1,6 @@
 ---
 name: api-integration-testing
-description: Validate and repair ITSM frontend/backend API contracts, authentication, tenant isolation, DTO mapping, routes, and persistence. Use for endpoint testing, 4xx/5xx diagnosis, request or response mismatches, camelCase issues, contract regressions, and cross-module integration failures.
+description: Validate and repair ITSM frontend/backend API contracts, authentication, CSRF, tenant isolation, DTO mapping, routes, and persistence. Use for endpoint testing, 4xx/5xx diagnosis, mutating-request failures, request or response mismatches, camelCase issues, contract regressions, and cross-module integration failures.
 ---
 
 # API Integration Testing
@@ -20,6 +20,19 @@ The API envelope is:
 ```
 
 Do not infer success from HTTP 200 alone. Assert `code`, the typed `data`, and visible persistence.
+
+## Classify authentication and CSRF failures
+
+For browser-originated mutations, verify the complete double-submit flow:
+
+1. `GET /api/v1/csrf-token` is reachable through the same frontend origin.
+2. The mutation includes credentials and `X-CSRF-Token`.
+3. A successful mutation invalidates the cached token because the backend rotates it.
+4. Only explicit `CSRF token missing` or `CSRF token mismatch` failures retry once.
+5. Authentication, RBAC, and cross-tenant 403 responses never retry as CSRF failures.
+
+Check both the shared `src/lib/api/http-client.ts` and any legacy direct `fetch` caller.
+Do not weaken or disable backend CSRF middleware to make a UI test pass.
 
 ## Test in layers
 
@@ -46,6 +59,9 @@ npx playwright test tests/e2e/<module>.spec.ts --project=chromium --workers=1
 
 Use `page.waitForResponse` to verify the expected method and endpoint, then assert the
 resulting UI state and refresh/revisit persistence.
+
+Before reusing ports 3000/8090, identify their owning process or container. A responding
+Docker image may not contain the checked-out source.
 
 ## Required negative coverage
 

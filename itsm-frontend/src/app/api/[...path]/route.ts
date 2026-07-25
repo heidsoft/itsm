@@ -18,6 +18,8 @@ const PUBLIC_PATHS = [
   '/api/v1/auth/forgot-password',
   '/api/v1/auth/reset-password',
   '/api/v1/auth/sso',
+  // The browser must be able to bootstrap a CSRF token before any mutating request.
+  '/api/v1/csrf-token',
   '/api/v1/health',
   '/api/v1/connectors', // 连接器市场列表（公开）
   '/api/v1/connectors/health', // 连接器健康（公开）

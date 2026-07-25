@@ -14,6 +14,7 @@ import (
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/service/cloud"
 )
 
 // CloudDiscoveryService 云资源发现服务
@@ -172,32 +173,12 @@ func cloudProfile(provider, serviceType string) cloudResourceProfile {
 	}
 }
 
-// DiscoverAll 执行全量云资源发现
+// DiscoverAll 执行全量云资源发现（委托给 Runner）
 func (s *CloudDiscoveryService) DiscoverAll(ctx context.Context, tenantID int) error {
-	s.logger.Infow("Starting cloud resource discovery", "tenantID", tenantID)
-
-	// 获取所有启用的云账号
-	accounts, err := s.client.CloudAccount.Query().
-		Where(
-			cloudaccount.TenantID(tenantID),
-			cloudaccount.IsActive(true),
-		).
-		All(ctx)
-	if err != nil {
-		return fmt.Errorf("查询云账号失败: %w", err)
-	}
-
-	s.logger.Infow("Found cloud accounts", "count", len(accounts))
-
-	// 对每个云账号执行发现
-	for _, account := range accounts {
-		if err := s.DiscoverAccount(ctx, account); err != nil {
-			s.logger.Warnw("Discovery failed for account", "account", account.ID, "error", err)
-			continue
-		}
-	}
-
-	return nil
+	runner := cloud.NewRunner(s.client, s.logger)
+	return runner.RunAll(ctx, tenantID, &cloud.RunConfig{
+		ReconcilePolicy: cloud.ReconcileDiscoveredWins,
+	})
 }
 
 // DiscoverAccount 发现单个云账号的资源

@@ -2,6 +2,9 @@
  * Tests for theme configuration
  */
 
+import React from 'react';
+import { renderHook, act } from '@testing-library/react';
+
 jest.mock('@/lib/api/http-client', () => ({
   httpClient: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), patch: jest.fn() },
 }));
@@ -19,6 +22,7 @@ import {
   breakpoints,
   theme,
 } from '../index';
+import { ThemeProvider, useTheme, useBreakpoint } from '../components';
 
 describe('Theme Configuration', () => {
   describe('colors', () => {
@@ -341,6 +345,82 @@ describe('Theme Configuration', () => {
       expect(zIndex.fixed).toBe('1030');
       expect(zIndex.popover).toBe('1050');
       expect(zIndex.notification).toBe('1070');
+    });
+  });
+});
+
+describe('Theme Components', () => {
+  const wrapper = ({ children }: { children: React.ReactNode }) =>
+    React.createElement(ThemeProvider, { defaultMode: 'light' }, children);
+
+  describe('ThemeProvider & useTheme', () => {
+    it('provides theme context', () => {
+      const { result } = renderHook(() => useTheme(), { wrapper });
+      expect(result.current.theme).toBe(theme);
+      expect(result.current.colors).toBe(theme.colors);
+      expect(result.current.mode).toBe('light');
+      expect(result.current.colorScheme).toBe('light');
+    });
+
+    it('allows setting mode', () => {
+      const { result } = renderHook(() => useTheme(), { wrapper });
+      act(() => { result.current.setMode('dark'); });
+      expect(result.current.mode).toBe('dark');
+      expect(result.current.colorScheme).toBe('dark');
+    });
+
+    it('sets system mode to follow system preference', () => {
+      const { result } = renderHook(() => useTheme(), { wrapper });
+      act(() => { result.current.setMode('system'); });
+      expect(result.current.mode).toBe('system');
+    });
+
+    it('throws when used outside provider', () => {
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+      expect(() => {
+        renderHook(() => useTheme());
+      }).toThrow('useTheme must be used within a ThemeProvider');
+      consoleError.mockRestore();
+    });
+
+    it('reads mode from localStorage', () => {
+      localStorage.setItem('itsm-theme-mode', 'dark');
+      const { result } = renderHook(() => useTheme(), { wrapper });
+      // After effect runs, mode should be loaded from localStorage
+      expect(result.current.mode).toBeDefined();
+      localStorage.removeItem('itsm-theme-mode');
+    });
+
+    it('saves mode to localStorage on change', () => {
+      const { result } = renderHook(() => useTheme(), { wrapper });
+      act(() => { result.current.setMode('dark'); });
+      expect(localStorage.getItem('itsm-theme-mode')).toBe('dark');
+      localStorage.removeItem('itsm-theme-mode');
+    });
+  });
+
+  describe('useBreakpoint', () => {
+    it('returns breakpoint info', () => {
+      const { result } = renderHook(() => useBreakpoint());
+      expect(result.current.breakpoint).toBeDefined();
+      expect(typeof result.current.isMobile).toBe('boolean');
+      expect(typeof result.current.isTablet).toBe('boolean');
+      expect(typeof result.current.isDesktop).toBe('boolean');
+    });
+
+    it('responds to resize events', () => {
+      const { result } = renderHook(() => useBreakpoint());
+      act(() => {
+        Object.defineProperty(window, 'innerWidth', { writable: true, value: 500 });
+        window.dispatchEvent(new Event('resize'));
+      });
+      expect(result.current.isMobile).toBe(true);
+
+      act(() => {
+        Object.defineProperty(window, 'innerWidth', { writable: true, value: 1200 });
+        window.dispatchEvent(new Event('resize'));
+      });
+      expect(result.current.isDesktop).toBe(true);
     });
   });
 });

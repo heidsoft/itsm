@@ -17,6 +17,7 @@ go env GOROOT GOTOOLCHAIN
 lsof -nP -iTCP:3000 -sTCP:LISTEN
 lsof -nP -iTCP:8090 -sTCP:LISTEN
 curl -i http://localhost:8090/api/v1/health
+docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
 ```
 
 Read `package.json`, lockfiles, `go.mod`, `.env.example`, Compose files, and the exact error.
@@ -29,6 +30,7 @@ resolution until the cause is confirmed.
 - Browser API configuration uses `NEXT_PUBLIC_API_URL` or the project's same-origin proxy.
 - Production Compose must receive an explicit `--env-file`.
 - Development and production containers may use different Docker networks.
+- A listener on port 3000 may be an older Docker image rather than the checked-out frontend.
 - Secrets belong in local environment files and must never be printed or committed.
 
 ## Recovery order
@@ -36,10 +38,11 @@ resolution until the cause is confirmed.
 1. Correct the command/working directory.
 2. Correct missing or invalid environment values.
 3. Resolve the port owner or choose an explicit alternate port.
-4. Align the toolchain with the repository without weakening version requirements.
-5. Use `npm ci` when the lockfile is authoritative; repair lockfile drift deliberately.
-6. Verify dependent database/Redis/network health.
-7. Re-run the smallest failed command and health endpoint.
+4. Confirm the running artifact matches the source before debugging already-fixed code.
+5. Align the toolchain with the repository without weakening version requirements.
+6. Use `npm ci` when the lockfile is authoritative; repair lockfile drift deliberately.
+7. Verify dependent database/Redis/network health.
+8. Re-run the smallest failed command and health endpoint.
 
 Avoid `npm --force`, `--legacy-peer-deps`, global Go environment mutation, or broad cleanup as
 default fixes.
@@ -51,6 +54,10 @@ docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 docker logs <container> --tail 50
 docker inspect <container> --format '{{json .NetworkSettings.Networks}}'
 ```
+
+If a protected browser flow cannot log in with documented seed credentials, classify it as
+environment/seed drift until proven otherwise. Do not read or print environment secrets to
+work around the failure; validate public endpoints and source/build layers independently.
 
 Report the root cause, current service endpoints, exact remediation, and any remaining external
 dependency.

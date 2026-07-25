@@ -153,4 +153,119 @@ describe('AI API', () => {
       await expect(aiTriage('t', 'd')).rejects.toThrow('AI service unavailable');
     });
   });
+
+  describe('aiChatStream', () => {
+    let originalFetch: typeof global.fetch;
+    const encode = (str: string) => Buffer.from(str);
+
+    beforeEach(() => {
+      originalFetch = global.fetch;
+      // Polyfill TextDecoder for jsdom
+      if (typeof TextDecoder === 'undefined') {
+        (global as any).TextDecoder = class { decode(buf: any) { return Buffer.from(buf).toString('utf-8'); } };
+      }
+    });
+    afterEach(() => {
+      global.fetch = originalFetch;
+    });
+
+    it('should stream SSE events and invoke callbacks', async () => {
+      const { aiChatStream } = require('../ai-api');
+      const chunks = [
+        encode('event:sources\ndata:[{"objectType":"article","id":1,"snippet":"hi"}]\n\n'),
+        encode('event:delta\ndata:{"content":"Hello"}\n\n'),
+        encode('event:done\ndata:{"conversationId":42}\n\n'),
+      ];
+      let chunkIndex = 0;
+      const mockReader = {
+        read: jest.fn().mockImplementation(() => {
+          if (chunkIndex < chunks.length) {
+            return Promise.resolve({ value: chunks[chunkIndex++], done: false });
+          }
+          return Promise.resolve({ value: undefined, done: true });
+        }),
+      };
+      const mockBody = { getReader: () => mockReader };
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, body: mockBody });
+
+      const onSources = jest.fn();
+      const onDelta = jest.fn();
+      const onDone = jest.fn();
+      const result = await aiChatStream({ query: 'test', limit: 5 }, { onSources, onDelta, onDone });
+
+      expect(onSources).toHaveBeenCalledWith([expect.objectContaining({ id: 1 })]);
+      expect(onDelta).toHaveBeenCalledWith('Hello');
+      expect(onDone).toHaveBeenCalledWith(42);
+      expect(result).toBe(42);
+    });
+
+    it('should handle HTTP error', async () => {
+      const { aiChatStream } = require('../ai-api');
+      global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500, body: null });
+      const onError = jest.fn();
+      await expect(aiChatStream({ query: 'test' }, { onError })).rejects.toThrow();
+      expect(onError).toHaveBeenCalled();
+    });
+
+    it('should handle error event in stream', async () => {
+      const { aiChatStream } = require('../ai-api');
+      const chunks = [
+        encode('event:error\ndata:{"message":"rate limited"}\n\n'),
+      ];
+      let chunkIndex = 0;
+      const mockReader = {
+        read: jest.fn().mockImplementation(() => {
+          if (chunkIndex < chunks.length) {
+            return Promise.resolve({ value: chunks[chunkIndex++], done: false });
+          }
+          return Promise.resolve({ value: undefined, done: true });
+        }),
+      };
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, body: { getReader: () => mockReader } });
+      const onError = jest.fn();
+      await aiChatStream({ query: 'test' }, { onError });
+      expect(onError).toHaveBeenCalledWith('rate limited');
+    });
+
+    it('should handle invalid JSON in SSE data gracefully', async () => {
+      const { aiChatStream } = require('../ai-api');
+      const chunks = [
+        encode('event:delta\ndata:not-json\n\n'),
+        encode('event:done\ndata:{"conversationId":7}\n\n'),
+      ];
+      let chunkIndex = 0;
+      const mockReader = {
+        read: jest.fn().mockImplementation(() => {
+          if (chunkIndex < chunks.length) {
+            return Promise.resolve({ value: chunks[chunkIndex++], done: false });
+          }
+          return Promise.resolve({ value: undefined, done: true });
+        }),
+      };
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, body: { getReader: () => mockReader } });
+      const onDelta = jest.fn();
+      const result = await aiChatStream({ query: 'test' }, { onDelta });
+      expect(onDelta).not.toHaveBeenCalled();
+      expect(result).toBe(7);
+    });
+  });
+
+  describe('AIApi.chatStream', () => {
+    it('should delegate to aiChatStream', async () => {
+      const encode = (str: string) => Buffer.from(str);
+      const chunks = [encode('event:done\ndata:{"conversationId":99}\n\n')];
+      let chunkIndex = 0;
+      const mockReader = {
+        read: jest.fn().mockImplementation(() => {
+          if (chunkIndex < chunks.length) {
+            return Promise.resolve({ value: chunks[chunkIndex++], done: false });
+          }
+          return Promise.resolve({ value: undefined, done: true });
+        }),
+      };
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, body: { getReader: () => mockReader } });
+      const result = await AIApi.chatStream({ query: 'hello' });
+      expect(result).toBe(99);
+    });
+  });
 });

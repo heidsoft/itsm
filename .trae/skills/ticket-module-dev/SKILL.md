@@ -16,8 +16,8 @@ the frontend page/client/types before deciding where to change behavior.
 - HTTP request, response, and query fields use `camelCase`.
 - Ent/database fields may use `snake_case`.
 - Controllers return ticket DTOs through existing mappers, never Ent models.
-- The frontend calls through `src/app/lib/api/` or `src/lib/api/` according to the existing
-  module pattern; do not add direct `fetch` calls inside components.
+- The frontend calls through `itsm-frontend/src/lib/api/`; do not add direct `fetch` calls
+  inside components.
 - Keep ID types aligned with the backend contract.
 
 ## Business rules

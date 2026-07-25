@@ -24,6 +24,7 @@ jest.mock('@/lib/security', () => ({
   security: {
     csrf: {
       getToken: jest.fn().mockResolvedValue('mock-csrf-token'),
+      clearToken: jest.fn(),
     },
     network: {
       getSecureHeaders: jest.fn().mockReturnValue({

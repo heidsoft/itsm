@@ -15,6 +15,18 @@ description: Run and diagnose ITSM browser checks with the repository's TypeScri
 Confirm services before running tests. Reuse `tests/e2e/auth-utils.ts` or the role fixtures
 instead of duplicating login logic.
 
+Confirm runtime identity, not only port availability:
+
+```bash
+lsof -nP -iTCP:3000 -sTCP:LISTEN
+lsof -nP -iTCP:8090 -sTCP:LISTEN
+docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+```
+
+Record whether the frontend is the current dev server, current production build, an older
+Docker image, or unknown. Do not treat behavior from a stale image as proof about current
+source.
+
 ## Run
 
 ```bash
@@ -50,6 +62,12 @@ Inspect the Playwright error context, screenshot, video, and trace. Separate:
 - first-time Next.js compilation latency;
 - stale/brittle selector;
 - missing backend or authentication;
+- stale Docker image or mismatched seed credentials;
+- CSRF bootstrap/header/token-rotation failure versus an RBAC 403;
 - actual product or API regression.
 
 Fix the product and keep a focused regression test when behavior is user-facing.
+
+If login is blocked, report browser verification as blocked. Continue with independent
+evidence such as the public CSRF endpoint, client tests, backend handler tests, type-check,
+production build, and route manifests, but do not call that a passed authenticated E2E flow.

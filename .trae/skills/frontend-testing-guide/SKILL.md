@@ -28,10 +28,14 @@ npm run test:e2e
 Run focused tests while iterating:
 
 ```bash
-npm test -- TicketList.test.tsx
+npx jest --runInBand --coverage=false TicketList.test.tsx
 PLAYWRIGHT_SKIP_CHANNELS=1 \
 npx playwright test tests/e2e/tickets.spec.ts --project=chromium --workers=1
 ```
+
+Repository-wide Jest coverage thresholds can make a partial run exit non-zero even when every
+selected assertion passes. Report assertion status and coverage-gate status separately; do
+not lower thresholds to hide the distinction.
 
 ## Component rules
 
@@ -49,6 +53,9 @@ and arbitrary timeouts. Keep one visible outcome per test.
 
 For shared state or a single development database, use `--workers=1`. Create unique records and
 avoid destructive cleanup unless the test owns them.
+
+For mutating API clients, cover CSRF header injection, stale-token recovery, token clearing
+after a successful rotation, and non-retry of ordinary permission 403 responses.
 
 ## Completion
 

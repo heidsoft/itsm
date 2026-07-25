@@ -30,7 +30,8 @@ project/spec with `--workers=1` for shared authenticated state.
   `--force` or `--legacy-peer-deps`.
 - Type/Lint failure: fix the narrow source error; do not weaken compiler or lint rules.
 - Jest failure: reproduce the individual test and distinguish missing browser polyfills from
-  product regressions.
+  product regressions. A focused run can pass every selected assertion yet exit non-zero
+  because global coverage thresholds apply to the partial suite; inspect both results.
 - Playwright failure: inspect trace, screenshot, console, network response, selector, and
   first-compile timing.
 - Build-only failure: check server/client boundaries, dynamic route usage, environment access,
@@ -40,6 +41,10 @@ project/spec with `--workers=1` for shared authenticated state.
 
 Do not skip E2E merely because the backend is missing. Start the required service or make the
 job dependency explicit.
+
+For focused Jest diagnosis, use `npx jest --runInBand --coverage=false <test-files>` when the
+purpose is regression behavior rather than repository-wide coverage. Never change global
+coverage thresholds merely to make a partial run green.
 
 ## Keep changes minimal
 

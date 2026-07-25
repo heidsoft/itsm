@@ -13,6 +13,7 @@ description: Audit and repair the ITSM Next.js frontend for real-API usage, came
 4. Check loading, empty, error, validation, permission, success, and refresh states.
 5. Check icon-button names, labels, keyboard access, responsive layout, and body overflow.
 6. Inspect console/network errors in a real browser.
+7. Identify whether the browser is serving the checked-out source or an older container image.
 
 Useful searches:
 
@@ -33,6 +34,7 @@ exist.
 - Use `App.useApp()` for contextual Ant Design message/modal APIs.
 - Preserve useful prior data on refresh failure, but clearly disclose stale state.
 - Avoid swallowing errors or converting permission denial into an empty list.
+- Keep authentication, CSRF, RBAC, and tenant-denial errors distinct.
 - Add a focused regression test for user-facing defects.
 
 ## Verification

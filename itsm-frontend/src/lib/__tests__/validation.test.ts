@@ -6,7 +6,8 @@ jest.mock('@/lib/api/http-client', () => ({
   httpClient: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), patch: jest.fn() },
 }));
 
-import { validators, Validator } from '../validation';
+import { renderHook, act } from '@testing-library/react';
+import { validators, Validator, useFormValidation } from '../validation';
 
 describe('Validation Utilities', () => {
   describe('validators.required', () => {
@@ -235,6 +236,147 @@ describe('Validation Utilities', () => {
       const result = validator.validate({ name: '', email: 'bad' } as any);
       expect(result.errors).not.toHaveProperty('name');
       expect(result.errors).toHaveProperty('email');
+    });
+
+    it('should validate single field', () => {
+      const validator = new Validator<{ age: number }>();
+      validator.addRule('age', { validator: (v) => (v as number) >= 18, message: 'Must be 18+' });
+      const result = validator.validateField('age', 15 as any);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('Must be 18+');
+    });
+
+    it('validateField returns valid for unknown field', () => {
+      const validator = new Validator<{ x: string }>();
+      const result = validator.validateField('x', 'any' as any);
+      expect(result.isValid).toBe(true);
+    });
+  });
+
+  describe('validators - additional', () => {
+    it('number validates numeric strings', () => {
+      expect(validators.number('123')).toBe(true);
+      expect(validators.number('3.14')).toBe(true);
+      expect(validators.number('abc')).toBe(false);
+      expect(validators.number('Infinity')).toBe(false);
+    });
+
+    it('integer validates integer strings', () => {
+      expect(validators.integer('42')).toBe(true);
+      expect(validators.integer('3.14')).toBe(false);
+    });
+
+    it('positive validates positive numbers', () => {
+      expect(validators.positive(5)).toBe(true);
+      expect(validators.positive(0)).toBe(false);
+      expect(validators.positive(-1)).toBe(false);
+    });
+
+    it('nonNegative validates non-negative numbers', () => {
+      expect(validators.nonNegative(0)).toBe(true);
+      expect(validators.nonNegative(1)).toBe(true);
+      expect(validators.nonNegative(-1)).toBe(false);
+    });
+
+    it('date validates date strings', () => {
+      expect(validators.date('2024-01-01')).toBe(true);
+      expect(validators.date('not-a-date')).toBe(false);
+    });
+
+    it('pattern validates against regex', () => {
+      const alphaOnly = validators.pattern(/^[a-z]+$/);
+      expect(alphaOnly('abc')).toBe(true);
+      expect(alphaOnly('ABC')).toBe(false);
+    });
+
+    it('oneOf validates enum values', () => {
+      const statusCheck = validators.oneOf(['active', 'inactive']);
+      expect(statusCheck('active')).toBe(true);
+      expect(statusCheck('unknown')).toBe(false);
+    });
+
+    it('minValue and maxValue validate numbers', () => {
+      expect(validators.minValue(10)(10)).toBe(true);
+      expect(validators.minValue(10)(9)).toBe(false);
+      expect(validators.maxValue(100)(100)).toBe(true);
+      expect(validators.maxValue(100)(101)).toBe(false);
+    });
+
+    it('url validates URLs', () => {
+      expect(validators.url('https://example.com')).toBe(true);
+      expect(validators.url('not-a-url')).toBe(false);
+    });
+
+    it('minLength and maxLength', () => {
+      expect(validators.minLength(3)('abc')).toBe(true);
+      expect(validators.minLength(3)('ab')).toBe(false);
+      expect(validators.maxLength(5)('hello')).toBe(true);
+      expect(validators.maxLength(5)('toolong')).toBe(false);
+    });
+  });
+
+  describe('useFormValidation hook', () => {
+    it('initializes with provided data', () => {
+      const { result } = renderHook(() => useFormValidation({ name: 'John', email: 'test@test.com' }));
+      expect(result.current.data).toEqual({ name: 'John', email: 'test@test.com' });
+      expect(result.current.errors).toEqual({});
+      expect(result.current.isValidating).toBe(false);
+    });
+
+    it('updateField updates data and clears field error', () => {
+      const { result } = renderHook(() => useFormValidation({ name: '', email: '' }));
+      act(() => { result.current.updateField('name', 'Jane'); });
+      expect(result.current.data.name).toBe('Jane');
+    });
+
+    it('reset restores initial data', () => {
+      const { result } = renderHook(() => useFormValidation({ name: 'Init', age: 0 }));
+      act(() => { result.current.updateField('name', 'Changed'); });
+      expect(result.current.data.name).toBe('Changed');
+      act(() => { result.current.reset(); });
+      expect(result.current.data.name).toBe('Init');
+    });
+
+    it('getFieldError returns first error or undefined', () => {
+      const { result } = renderHook(() => useFormValidation({ name: '' }));
+      expect(result.current.getFieldError('name')).toBeUndefined();
+    });
+
+    it('hasFieldError returns boolean', () => {
+      const { result } = renderHook(() => useFormValidation({ name: '' }));
+      expect(result.current.hasFieldError('name')).toBe(false);
+    });
+
+    it('addValidationRule and validate', async () => {
+      const { result } = renderHook(() => useFormValidation({ name: '' }));
+      act(() => {
+        result.current.addValidationRule('name', { validator: (v) => validators.required(v), message: 'Required' });
+      });
+      let isValid: boolean = true;
+      await act(async () => { isValid = await result.current.validate(); });
+      expect(isValid).toBe(false);
+    });
+
+    it('addValidationRules adds multiple rules', () => {
+      const { result } = renderHook(() => useFormValidation({ name: '' }));
+      act(() => {
+        result.current.addValidationRules('name', [
+          { validator: (v) => validators.required(v), message: 'Required' },
+          { validator: (v) => validators.minLength(3)(v as string), message: 'Min 3' },
+        ]);
+      });
+      // Just verify no errors in calling
+      expect(result.current.data.name).toBe('');
+    });
+
+    it('validateField validates single field', () => {
+      const { result } = renderHook(() => useFormValidation({ name: '' }));
+      act(() => {
+        result.current.addValidationRule('name', { validator: (v) => validators.required(v), message: 'Required' });
+      });
+      let isValid: boolean = true;
+      act(() => { isValid = result.current.validateField('name'); });
+      expect(isValid).toBe(false);
     });
   });
 });

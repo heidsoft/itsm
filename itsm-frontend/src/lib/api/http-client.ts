@@ -188,6 +188,20 @@ class HttpClient {
     return headers;
   }
 
+  private isMutatingMethod(method?: string): boolean {
+    return ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method || 'GET');
+  }
+
+  private async isCSRFRejection(response: Response): Promise<boolean> {
+    if (response.status !== 403) return false;
+    try {
+      const payload = (await response.clone().json()) as { message?: string };
+      return payload.message?.startsWith('CSRF token') === true;
+    } catch {
+      return false;
+    }
+  }
+
   // Independent token refresh method to avoid circular dependencies
   private async refreshTokenInternal(): Promise<boolean> {
     // Get refresh token from cookie only (httpOnly)
@@ -263,13 +277,35 @@ class HttpClient {
       const timeoutMs = config.timeout ?? this.timeout;
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-      const response = await fetch(url, {
+      let response = await fetch(url, {
         ...requestConfig,
         credentials: 'include', // Include httpOnly cookies for authenticated requests
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
+
+      // The backend rotates the token after every successful mutation. A cached token
+      // can therefore race with the CSRF cookie; refresh it once and retry the request.
+      if (
+        this.isMutatingMethod(config.method) &&
+        (await this.isCSRFRejection(response))
+      ) {
+        security.csrf.clearToken();
+        const retryHeaders = await this.addCSRFHeader(this.getHeaders(), config.method || 'GET');
+        response = await fetch(url, {
+          ...requestConfig,
+          credentials: 'include',
+          headers: {
+            ...retryHeaders,
+            ...config.headers,
+          },
+        });
+      }
+
+      if (response.ok && this.isMutatingMethod(config.method)) {
+        security.csrf.clearToken();
+      }
 
       logger.debug('HTTP Client Response:', {
         status: response?.status,

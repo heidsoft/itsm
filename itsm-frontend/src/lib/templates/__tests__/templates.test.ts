@@ -141,11 +141,37 @@ describe('Templates - API Service', () => {
 
 describe('Templates - Store', () => {
   it('should export createSimpleStore', async () => {
+    jest.resetModules();
+    jest.doMock('zustand', () => ({
+      create: () => {
+        const fn = () => ({});
+        fn.getState = () => ({});
+        fn.setState = () => {};
+        fn.subscribe = () => () => {};
+        return fn;
+      },
+    }));
+    jest.doMock('zustand/middleware', () => ({
+      persist: (fn: any) => fn,
+    }));
     const { createSimpleStore } = await import('../store');
     expect(createSimpleStore).toBeDefined();
   });
 
   it('should export useAuthStore', async () => {
+    jest.resetModules();
+    jest.doMock('zustand', () => ({
+      create: () => {
+        const fn = () => ({});
+        fn.getState = () => ({});
+        fn.setState = () => {};
+        fn.subscribe = () => () => {};
+        return fn;
+      },
+    }));
+    jest.doMock('zustand/middleware', () => ({
+      persist: (fn: any) => fn,
+    }));
     const { useAuthStore } = await import('../store');
     expect(useAuthStore).toBeDefined();
   });
@@ -175,5 +201,82 @@ describe('Templates - Query', () => {
   it('should export useDelete', async () => {
     const { useDelete } = await import('../query');
     expect(useDelete).toBeDefined();
+  });
+
+  it('useList handles array key', async () => {
+    const { useQuery } = await import('@tanstack/react-query');
+    const { useList } = await import('../query');
+    useList(['multi', 'key'], '/endpoint', { page: 1 });
+    expect(useQuery).toHaveBeenCalled();
+  });
+
+  it('useList handles string key', async () => {
+    const { useQuery } = await import('@tanstack/react-query');
+    const { useList } = await import('../query');
+    useList('single-key', '/endpoint');
+    expect(useQuery).toHaveBeenCalled();
+  });
+
+  it('useDetail passes id and endpoint', async () => {
+    const { useQuery } = await import('@tanstack/react-query');
+    const { useDetail } = await import('../query');
+    useDetail('items', 5, '/items');
+    expect(useQuery).toHaveBeenCalled();
+  });
+
+  it('useCreate calls useMutation', async () => {
+    const { useMutation } = await import('@tanstack/react-query');
+    const { useCreate } = await import('../query');
+    useCreate('/items', 'items');
+    expect(useMutation).toHaveBeenCalled();
+  });
+
+  it('useUpdate calls useMutation', async () => {
+    const { useMutation } = await import('@tanstack/react-query');
+    const { useUpdate } = await import('../query');
+    useUpdate('/items');
+    expect(useMutation).toHaveBeenCalled();
+  });
+
+  it('useDelete calls useMutation', async () => {
+    const { useMutation } = await import('@tanstack/react-query');
+    const { useDelete } = await import('../query');
+    useDelete('/items', 'items');
+    expect(useMutation).toHaveBeenCalled();
+  });
+});
+
+describe('Templates - Wrappers', () => {
+  it('should export LoadingWrapper', async () => {
+    const { LoadingWrapper } = await import('../wrappers');
+    expect(LoadingWrapper).toBeDefined();
+  });
+
+  it('should export AsyncDataWrapper', async () => {
+    const { AsyncDataWrapper } = await import('../wrappers');
+    expect(AsyncDataWrapper).toBeDefined();
+  });
+
+  it('should export ShowWhen', async () => {
+    const { ShowWhen } = await import('../wrappers');
+    expect(ShowWhen).toBeDefined();
+  });
+});
+
+describe('Templates - ListPage', () => {
+  it('should export createListPage', async () => {
+    const { createListPage } = await import('../list-page');
+    expect(createListPage).toBeDefined();
+    expect(typeof createListPage).toBe('function');
+  });
+
+  it('createListPage returns a component function', async () => {
+    const { createListPage } = await import('../list-page');
+    const Page = createListPage({
+      name: 'Test',
+      fetchApi: async () => ({ list: [], total: 0 }),
+      columns: [],
+    });
+    expect(typeof Page).toBe('function');
   });
 });

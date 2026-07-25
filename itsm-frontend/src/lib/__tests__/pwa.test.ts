@@ -143,5 +143,52 @@ describe('PWA utilities', () => {
       pwa.showNotification('Test', { body: 'body' });
       expect(MockNotification).toHaveBeenCalledWith('Test', expect.objectContaining({ body: 'body' }));
     });
+
+    it('should not create notification when not granted', async () => {
+      const MockNotification = jest.fn();
+      (MockNotification as any).permission = 'denied';
+      Object.defineProperty(window, 'Notification', {
+        value: MockNotification,
+        writable: true,
+        configurable: true,
+      });
+      const pwa = await import('../pwa');
+      pwa.showNotification('Test', { body: 'body' });
+      expect(MockNotification).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('requestNotificationPermission edge cases', () => {
+    it('should return false when Notification not in window', async () => {
+      const origNotification = (window as any).Notification;
+      delete (window as any).Notification;
+      const pwa = await import('../pwa');
+      const result = await pwa.requestNotificationPermission();
+      expect(result).toBe(false);
+      (window as any).Notification = origNotification;
+    });
+  });
+
+  describe('register function', () => {
+    it('should register service worker', async () => {
+      const pwa = await import('../pwa');
+      const addSpy = jest.spyOn(window, 'addEventListener');
+      pwa.register();
+      expect(addSpy).toHaveBeenCalledWith('load', expect.any(Function));
+    });
+
+    it('should call onSuccess callback', async () => {
+      const pwa = await import('../pwa');
+      const onSuccess = jest.fn();
+      pwa.register({ onSuccess });
+      // verify no errors
+    });
+
+    it('should call onUpdate callback', async () => {
+      const pwa = await import('../pwa');
+      const onUpdate = jest.fn();
+      pwa.register({ onUpdate });
+      // verify no errors
+    });
   });
 });

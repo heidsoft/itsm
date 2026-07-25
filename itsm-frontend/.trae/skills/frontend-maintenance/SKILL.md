@@ -19,6 +19,8 @@ and visible state. Trace the owning component and API client before changing sha
 - Never substitute mock data for a failed production API.
 - Do not convert errors into silent empty results.
 - Preserve authentication redirect behavior and prevent refresh/login loops.
+- For mutating requests, preserve CSRF bootstrap and token rotation; retry only explicit CSRF
+  mismatch/missing responses, never permission 403 responses.
 - Keep route and dynamic menu changes aligned with backend permissions.
 - Prefer small dependency upgrades with lockfile review and focused regression tests.
 

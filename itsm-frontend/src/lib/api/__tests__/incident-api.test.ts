@@ -138,4 +138,235 @@ describe('IncidentAPI', () => {
       expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/1/escalate', { escalationLevel: 2, reason: 'Urgent' });
     });
   });
+
+  describe('addComment', () => {
+    it('should add comment to incident', async () => {
+      mockPost.mockResolvedValue({ id: 1 });
+      await IncidentAPI.addComment(1, { content: 'Investigating' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/1/comments', { content: 'Investigating' });
+    });
+  });
+
+  describe('reopenIncident', () => {
+    it('should reopen an incident', async () => {
+      mockPost.mockResolvedValue({ id: 1, status: 'in_progress' });
+      await IncidentAPI.reopenIncident(1);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/1/reopen', {});
+    });
+  });
+
+  describe('getIncidentComments', () => {
+    it('should get incident comments', async () => {
+      mockGet.mockResolvedValue([{ id: 1, content: 'test' }]);
+      const result = await IncidentAPI.getIncidentComments(1);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/1/comments');
+      expect(result).toHaveLength(1);
+    });
+
+    it('should propagate errors', async () => {
+      mockGet.mockRejectedValue(new Error('fail'));
+      await expect(IncidentAPI.getIncidentComments(1)).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getIncidentAlerts', () => {
+    it('should get alerts without params', async () => {
+      mockGet.mockResolvedValue({ alerts: [], total: 0 });
+      await IncidentAPI.getIncidentAlerts(1);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/1/alerts', {});
+    });
+
+    it('should get alerts with params', async () => {
+      mockGet.mockResolvedValue({ alerts: [], total: 0 });
+      await IncidentAPI.getIncidentAlerts(1, { status: 'active', alertLevel: 'critical' });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/1/alerts', { status: 'active', alertLevel: 'critical' });
+    });
+  });
+
+  describe('acknowledgeAlert', () => {
+    it('should acknowledge an alert', async () => {
+      mockPost.mockResolvedValue({ message: 'acknowledged' });
+      const result = await IncidentAPI.acknowledgeAlert(5);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/alerts/5/acknowledge', {});
+      expect(result.message).toBe('acknowledged');
+    });
+  });
+
+  describe('getRootCauseAnalysis', () => {
+    it('should get root cause analysis', async () => {
+      mockGet.mockResolvedValue({ id: 1, rootCause: 'DNS' });
+      const result = await IncidentAPI.getRootCauseAnalysis(1);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/1/root-cause');
+    });
+
+    it('should propagate errors', async () => {
+      mockGet.mockRejectedValue(new Error('not found'));
+      await expect(IncidentAPI.getRootCauseAnalysis(1)).rejects.toThrow('not found');
+    });
+  });
+
+  describe('createRootCauseAnalysis', () => {
+    it('should create root cause analysis', async () => {
+      mockPost.mockResolvedValue({ id: 1 });
+      await IncidentAPI.createRootCauseAnalysis({ incidentId: 1, rootCause: 'DNS', category: 'network' } as any);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/root-cause', expect.any(Object));
+    });
+  });
+
+  describe('updateRootCauseAnalysis', () => {
+    it('should update root cause analysis', async () => {
+      mockPut.mockResolvedValue({ id: 1 });
+      await IncidentAPI.updateRootCauseAnalysis(1, { rootCause: 'Updated' } as any);
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/incidents/root-cause/1', { rootCause: 'Updated' });
+    });
+  });
+
+  describe('getImpactAssessment', () => {
+    it('should get impact assessment', async () => {
+      mockGet.mockResolvedValue({ id: 1, impactLevel: 'high' });
+      await IncidentAPI.getImpactAssessment(1);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/1/impact-assessment');
+    });
+  });
+
+  describe('createImpactAssessment', () => {
+    it('should create impact assessment', async () => {
+      mockPost.mockResolvedValue({ id: 1 });
+      await IncidentAPI.createImpactAssessment({ incidentId: 1, impactLevel: 'high' } as any);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/impact-assessment', expect.any(Object));
+    });
+  });
+
+  describe('updateImpactAssessment', () => {
+    it('should update impact assessment', async () => {
+      mockPut.mockResolvedValue({ id: 1 });
+      await IncidentAPI.updateImpactAssessment(1, { impactLevel: 'medium' } as any);
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/incidents/impact-assessment/1', { impactLevel: 'medium' });
+    });
+  });
+
+  describe('getIncidentClassification', () => {
+    it('should get classification', async () => {
+      mockGet.mockResolvedValue({ id: 1, category: 'network' });
+      await IncidentAPI.getIncidentClassification(1);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/1/classification');
+    });
+  });
+
+  describe('createIncidentClassification', () => {
+    it('should create classification', async () => {
+      mockPost.mockResolvedValue({ id: 1 });
+      await IncidentAPI.createIncidentClassification({ incidentId: 1, category: 'network' } as any);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/classification', expect.any(Object));
+    });
+  });
+
+  describe('updateIncidentClassification', () => {
+    it('should update classification', async () => {
+      mockPut.mockResolvedValue({ id: 1 });
+      await IncidentAPI.updateIncidentClassification(1, { category: 'app' } as any);
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/incidents/classification/1', { category: 'app' });
+    });
+  });
+
+  describe('getConfigurationItems', () => {
+    it('should get CIs without params', async () => {
+      mockGet.mockResolvedValue([{ id: 1, name: 'Server1' }]);
+      const result = await IncidentAPI.getConfigurationItems();
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/configuration-items', {});
+    });
+
+    it('should get CIs with params', async () => {
+      mockGet.mockResolvedValue([]);
+      await IncidentAPI.getConfigurationItems('web', 'server', 'active');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/configuration-items', { search: 'web', type: 'server', status: 'active' });
+    });
+  });
+
+  describe('createIncidentFromAlibabaCloudAlert', () => {
+    it('should create incident from alert', async () => {
+      mockPost.mockResolvedValue({ id: 1, source: 'alibaba-cloud' });
+      await IncidentAPI.createIncidentFromAlibabaCloudAlert({ alertId: 'a1', alertName: 'CPU High' } as any);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/alibaba-cloud-alert', expect.any(Object));
+    });
+  });
+
+  describe('createIncidentFromSecurityEvent', () => {
+    it('should create incident from security event', async () => {
+      mockPost.mockResolvedValue({ id: 1, source: 'security' });
+      await IncidentAPI.createIncidentFromSecurityEvent({ eventId: 's1', eventType: 'SSH' } as any);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/security-event', expect.any(Object));
+    });
+  });
+
+  describe('createIncidentFromCloudProductEvent', () => {
+    it('should create incident from cloud event', async () => {
+      mockPost.mockResolvedValue({ id: 1, source: 'cloud' });
+      await IncidentAPI.createIncidentFromCloudProductEvent({ eventId: 'c1', product: 'rds' } as any);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/cloud-product-event', expect.any(Object));
+    });
+  });
+
+  describe('simulateAlibabaCloudAlert', () => {
+    it('should simulate alert and create incident', async () => {
+      mockPost.mockResolvedValue({ id: 1 });
+      await IncidentAPI.simulateAlibabaCloudAlert();
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/alibaba-cloud-alert', expect.objectContaining({ alertName: 'CPU使用率过高告警' }));
+    });
+  });
+
+  describe('simulateSecurityEvent', () => {
+    it('should simulate security event', async () => {
+      mockPost.mockResolvedValue({ id: 1 });
+      await IncidentAPI.simulateSecurityEvent();
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/security-event', expect.objectContaining({ eventType: 'SSH暴力破解' }));
+    });
+  });
+
+  describe('simulateCloudProductEvent', () => {
+    it('should simulate cloud product event', async () => {
+      mockPost.mockResolvedValue({ id: 1 });
+      await IncidentAPI.simulateCloudProductEvent();
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/cloud-product-event', expect.objectContaining({ product: 'rds' }));
+    });
+  });
+
+  describe('getIncidents (deprecated alias)', () => {
+    it('should call listIncidents', async () => {
+      mockGet.mockResolvedValue({ incidents: [], total: 0 });
+      await IncidentAPI.getIncidents({ status: 'open' } as any);
+      expect(mockGet).toHaveBeenCalled();
+    });
+  });
+
+  describe('incidents accessor', () => {
+    it('should have list method', async () => {
+      mockGet.mockResolvedValue({ incidents: [{ id: 1 }], total: 1 });
+      const result = await IncidentAPI.incidents.list();
+      expect(result.incidents).toHaveLength(1);
+    });
+
+    it('should have items method that extracts items', async () => {
+      mockGet.mockResolvedValue({ incidents: [{ id: 1 }], total: 1 });
+      const result = await IncidentAPI.incidents.items();
+      expect(result).toEqual([{ id: 1 }]);
+    });
+  });
+
+  describe('getIncidentEvents', () => {
+    it('should get events', async () => {
+      mockGet.mockResolvedValue([{ id: 1, type: 'status_change' }]);
+      const result = await IncidentAPI.getIncidentEvents(1);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/1/events');
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('getIncidentMetricsData', () => {
+    it('should get metrics data', async () => {
+      mockGet.mockResolvedValue({ responseTime: 120 });
+      const result = await IncidentAPI.getIncidentMetricsData(1);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/1/metrics');
+    });
+  });
 });

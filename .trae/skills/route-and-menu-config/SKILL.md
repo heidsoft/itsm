@@ -42,6 +42,15 @@ rg -n 'resource-name|/resource-path' \
 For a 404/405, compare the frontend client's method/path with Gin registration. For a missing
 menu, inspect `/api/v1/auth/menus` before changing presentation code.
 
+For an App Router page that exists in source but fails at runtime, distinguish an old running
+image from a source/build defect. Run a production build and confirm the page appears in:
+
+- `.next/server/app-paths-manifest.json`;
+- `.next/routes-manifest.json`.
+
+For dynamic routes, verify both the parameter route and any more-specific static sibling such
+as `/changes/new`; do not infer route health from type-check alone.
+
 ## Verification
 
 ```bash
@@ -50,6 +59,7 @@ go test ./router ./service ./pkg/seeder
 
 cd ../itsm-frontend
 npm run type-check
+npm run build
 PLAYWRIGHT_SKIP_CHANNELS=1 \
 npx playwright test tests/e2e/module-access.spec.ts --project=chromium --workers=1
 ```

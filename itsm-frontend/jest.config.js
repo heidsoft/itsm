@@ -22,13 +22,19 @@ const customJestConfig = {
   ],
   collectCoverage: true,
   collectCoverageFrom: [
-    'src/components/ui/**/*.{ts,tsx}',
-    'src/components/common/**/*.{ts,tsx}',
-    'src/app/lib/**/*.{ts,tsx}',
     'src/lib/**/*.{ts,tsx}',
+    '!src/lib/**/__tests__/**',
+    '!src/lib/**/index.ts',
+    '!src/lib/**/types.ts',
   ],
-  // Coverage thresholds disabled during development - tests are passing
-  coverageThreshold: {},
+  coverageThreshold: {
+    global: {
+      branches: 65,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
   coverageReporters: [
     'text',
     'text-summary',

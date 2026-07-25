@@ -24,6 +24,7 @@
  */
 
 import { httpClient } from '../http-client';
+import { security } from '@/lib/security';
 import { setTenantId, setTenantCode, clearTenant } from '@/lib/auth/tenant-context';
 
 jest.mock('@/lib/security', () => ({
@@ -61,6 +62,7 @@ function jsonResponse(body: unknown, init: { status?: number; ok?: boolean } = {
     status,
     statusText: status === 200 ? 'OK' : 'Error',
     json: async () => body,
+    clone: () => jsonResponse(body, init),
     headers: new Headers(),
   } as unknown as Response;
 }
@@ -225,6 +227,31 @@ describe('httpClient', () => {
       await httpClient.get('/api/v1/tickets');
       const [, init2] = fetchMock.mock.calls[1];
       expect(init2.headers['X-CSRF-Token']).toBeUndefined();
+    });
+
+    it('refreshes a stale CSRF token once after a 403 and clears it after success', async () => {
+      fetchMock
+        .mockResolvedValueOnce(
+          jsonResponse({ code: 403, message: 'CSRF token mismatch' }, { status: 403, ok: false })
+        )
+        .mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: { id: 1 } }));
+
+      await expect(httpClient.post('/api/v1/changes', { title: 'change' })).resolves.toEqual({
+        id: 1,
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(security.csrf.clearToken).toHaveBeenCalledTimes(2);
+      expect(fetchMock.mock.calls[1][1].headers['X-CSRF-Token']).toBe('mock-csrf-token');
+    });
+
+    it('does not retry permission-related 403 responses', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({ code: 2003, message: 'Forbidden' }, { status: 403, ok: false })
+      );
+
+      await expect(httpClient.delete('/api/v1/changes/1')).rejects.toThrow('status: 403');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
     it('adds Bearer token from cookie when present', async () => {
