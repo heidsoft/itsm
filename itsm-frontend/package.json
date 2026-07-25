@@ -8,8 +8,8 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "NEXT_DISABLE_TURBOPACK=1 npx next build && (cp -r .next/static .next/standalone/.next/ 2>/dev/null || true) && (cp -r public .next/standalone/public 2>/dev/null || true)",
-    "start": "node .next/standalone/server.js",
+    "build": "NEXT_DISABLE_TURBOPACK=1 next build && node scripts/prepare-standalone.mjs",
+    "start": "node scripts/start-standalone.mjs",
     "lint": "eslint src tests --fix",
     "lint:check": "eslint src tests",
     "type-check": "tsc --noEmit",

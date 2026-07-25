@@ -1,6 +1,8 @@
 # ITSM Makefile
 
 SHELL := /bin/bash
+VERSION ?= latest
+REGISTRY ?=
 
 # Development
 dev-init:           ## First-time development setup
@@ -9,8 +11,20 @@ dev-init:           ## First-time development setup
 dev-start:          ## Start development environment
 	./scripts/deploy-dev.sh up
 
+dev-start-local:    ## Start local Go/Next.js processes with Docker infrastructure
+	./scripts/deploy-dev.sh up --local
+
+dev-start-docker:   ## Start the Docker Compose development environment
+	./scripts/deploy-dev.sh up --docker
+
 dev-stop:           ## Stop development environment
 	./scripts/deploy-dev.sh down
+
+dev-stop-local:     ## Stop local Go/Next.js development processes
+	./scripts/deploy-dev.sh down --local
+
+dev-stop-docker:    ## Stop the Docker Compose development environment
+	./scripts/deploy-dev.sh down --docker
 
 dev-logs:           ## View development logs
 	./scripts/deploy-dev.sh logs
@@ -75,7 +89,17 @@ endif
 
 # Build images
 build-images:      ## Build all service images (VERSION=... REGISTRY=... make build-images)
-	./scripts/build-images.sh $(VERSION) $(REGISTRY)
+	./scripts/build-images.sh "$(VERSION)" "$(REGISTRY)"
+
+build-backend:     ## Build the backend image only
+	./scripts/build-images.sh "$(VERSION)" "$(REGISTRY)" backend
+
+build-frontend:    ## Build the frontend image only
+	./scripts/build-images.sh "$(VERSION)" "$(REGISTRY)" frontend
+
+verify-scripts:    ## Validate build/start scripts without starting services
+	bash -n scripts/build-images.sh scripts/deploy-dev.sh scripts/deploy-prod.sh scripts/lib/common.sh
+	node --test scripts/__tests__/build-start-scripts.test.js
 
 # Database
 db-migrate:         ## Run database migrations
@@ -98,9 +122,9 @@ check-contracts:    ## Validate cross-file API, deployment, Docker, and docs con
 	node scripts/check-engineering-contracts.js
 	node scripts/check-api-paths.js
 
-.PHONY: dev-init dev-start dev-stop dev-logs dev-restart dev-status dev-health dev-doctor dev-clean \
+.PHONY: dev-init dev-start dev-start-local dev-start-docker dev-stop dev-stop-local dev-stop-docker dev-logs dev-restart dev-status dev-health dev-doctor dev-clean \
         prod-init prod-start prod-stop prod-deploy prod-status prod-health prod-logs \
         prod-restart prod-rollback prod-backup prod-down \
         db-migrate db-seed \
-        release build-images \
+        release build-images build-backend build-frontend verify-scripts \
         logs-backend logs-frontend logs-postgres check-contracts

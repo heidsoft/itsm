@@ -10,7 +10,7 @@
 #
 # Optimizations:
 #   - Pinned node:22-alpine
-#   - BuildKit cache mount for pnpm's content-addressable store
+#   - Reproducible npm ci install using the committed package-lock.json
 #   - production stage runs as the built-in "node" user (no root)
 #   - production stage ships ONLY the standalone bundle + static + public
 #     (devDependencies never reach the final image)
@@ -22,18 +22,18 @@ FROM node:22-alpine AS deps
 
 WORKDIR /app
 
-# eslint v10 peer-range escape hatch (mirrors prior Dockerfile behavior).
+# Keep the install contract aligned with local development and CI.
 ENV NPM_CONFIG_LEGACY_PEER_DEPS=true
 
 ARG NPM_REGISTRY
 RUN npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org} \
-    && npm install -g pnpm@9.0.0 \
-    && pnpm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org}
+    && npm config set fund false \
+    && npm config set audit false
 
 COPY package.json package-lock.json ./
 
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --ignore-scripts --no-frozen-lockfile
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --ignore-scripts
 
 # ============================================================
 # Stage 2: Build

@@ -57,6 +57,7 @@ BACKEND_DIR="$PROJECT_ROOT/itsm-backend"
 FRONTEND_DIR="$PROJECT_ROOT/itsm-frontend"
 COMPOSE_DEV="$PROJECT_ROOT/docker-compose.dev.yml"
 COMPOSE_OOB="$PROJECT_ROOT/docker-compose.yml"
+DEV_ENV_FILE="$PROJECT_ROOT/.env"
 
 BACKEND_URL="http://localhost:8090"
 FRONTEND_URL="http://localhost:3000"
@@ -135,9 +136,9 @@ on_exit "cleanup"
 # ============================================================
 ensure_dev_env() {
 
-    # Create required directories with correct permissions
+    # Create required directories without making them world-writable.
     mkdir -p "$PROJECT_ROOT/logs" "$PROJECT_ROOT/uploads"
-    chmod -R 777 "$PROJECT_ROOT/logs" "$PROJECT_ROOT/uploads"
+    chmod u+rwx "$PROJECT_ROOT/logs" "$PROJECT_ROOT/uploads"
 
     if [[ -f "$PROJECT_ROOT/.env" ]]; then
         return 0
@@ -149,7 +150,14 @@ ensure_dev_env() {
     elif [[ -f "$PROJECT_ROOT/.env.example" ]]; then
         cp "$PROJECT_ROOT/.env.example" "$PROJECT_ROOT/.env"
         log_info "Created .env from .env.example"
+    else
+        log_error "No development environment file found (.env, .env.dev.example, or .env.example)"
+        return 1
     fi
+}
+
+dev_dc() {
+    dc --env-file "$DEV_ENV_FILE" -f "$COMPOSE_DEV" --profile dev "$@"
 }
 
 docker_up() {
@@ -159,16 +167,11 @@ docker_up() {
     log_step "Starting development environment (Docker Compose)"
 
     ensure_dev_env
-    log_info "Cleaning up stale ITSM containers..."
-    docker rm -f $(docker ps -a | grep -E "itsm-(backend|frontend|postgres|redis|minio|init)-dev" | awk '{print $1}') 2>/dev/null || true
-    
-
-
 
     # Phase 1: Infrastructure
     log_step "[1/3] Starting PostgreSQL + Redis + MinIO"
     local start; start=$(timer_start)
-    dc -f "$COMPOSE_DEV" --profile dev up -d postgres redis minio
+    dev_dc up -d postgres redis minio
     local infra_ok=true
     for svc in itsm-postgres-dev itsm-redis-dev itsm-minio-dev; do
         if ! wait_for_container_healthy "$svc" 45; then
@@ -177,7 +180,7 @@ docker_up() {
         fi
     done
     if ! $infra_ok; then
-        dc -f "$COMPOSE_DEV" --profile dev logs --tail=30 postgres redis minio
+        dev_dc logs --tail=30 postgres redis minio
         return 1
     fi
     timer_end "$start" "Infrastructure"
@@ -185,7 +188,7 @@ docker_up() {
     # Phase 2: Backend
     log_step "[2/3] Building and starting backend"
     start=$(timer_start)
-    dc -f "$COMPOSE_DEV" --profile dev up -d $build_flag itsm-backend
+    dev_dc up -d $build_flag itsm-backend
     log_info "Waiting for backend health check..."
     if wait_for_http "${BACKEND_URL}${HEALTH_PATH}" "backend" 120; then
         timer_end "$start" "Backend build + start"
@@ -199,7 +202,7 @@ docker_up() {
     # Phase 3: Frontend
     log_step "[3/3] Building and starting frontend"
     start=$(timer_start)
-    dc -f "$COMPOSE_DEV" --profile dev up -d $build_flag itsm-frontend
+    dev_dc up -d $build_flag itsm-frontend
     log_info "Waiting for frontend..."
     if wait_for_http "$FRONTEND_URL" "frontend" 90; then
         timer_end "$start" "Frontend build + start"
@@ -213,7 +216,8 @@ docker_up() {
 
 docker_down() {
     log_step "Stopping development environment"
-    dc -f "$COMPOSE_DEV" --profile dev down --remove-orphans
+    ensure_dev_env
+    dev_dc down --remove-orphans
     log_success "All services stopped"
 }
 
@@ -222,10 +226,8 @@ docker_reset() {
     log_warn "This will DELETE all data in PostgreSQL and Redis"
     read -rp "Continue? [y/N] " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        dc -f "$COMPOSE_DEV" --profile dev down -v --remove-orphans
-        # Force clean up all remaining ITSM containers and volumes
-                docker rm -f $(docker ps -a | grep -E "itsm-" | awk '{print $1}') 2>/dev/null || true
-                docker volume rm $(docker volume ls | grep -E "itsm-" | awk '{print $2}') 2>/dev/null || true
+        ensure_dev_env
+        dev_dc down -v --remove-orphans
 
         log_success "Environment reset complete"
     else
@@ -235,10 +237,11 @@ docker_reset() {
 
 docker_logs() {
     local service="${1:-}"
+    ensure_dev_env
     if [[ -n "$service" ]]; then
-        dc -f "$COMPOSE_DEV" --profile dev logs -f "$service"
+        dev_dc logs -f "$service"
     else
-        dc -f "$COMPOSE_DEV" --profile dev logs -f
+        dev_dc logs -f
     fi
 }
 
@@ -265,7 +268,7 @@ check_prerequisites() {
 
     command -v go &>/dev/null   || missing+=("go")
     command -v node &>/dev/null || missing+=("node")
-    command -v pnpm &>/dev/null || missing+=("pnpm")
+    command -v npm &>/dev/null  || missing+=("npm")
     command -v docker &>/dev/null || missing+=("docker")
 
     if [[ ${#missing[@]} -gt 0 ]]; then
@@ -278,7 +281,18 @@ check_prerequisites() {
     local go_ver node_ver
     go_ver=$(go version 2>/dev/null | grep -oE 'go[0-9]+\.[0-9]+' | tr -d 'go' || echo "?")
     node_ver=$(node --version 2>/dev/null | tr -d 'v' || echo "?")
-    log_success "Go ${go_ver}, Node ${node_ver}, pnpm $(pnpm --version 2>/dev/null || echo '?'), Docker $(docker --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo '?')"
+    log_success "Go ${go_ver}, Node ${node_ver}, npm $(npm --version 2>/dev/null || echo '?'), Docker $(docker --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo '?')"
+}
+
+managed_pid_running() {
+    local pid_file="$1"
+    local expected_marker="$2"
+    [[ -f "$pid_file" ]] || return 1
+    local pid
+    pid=$(cat "$pid_file" 2>/dev/null) || return 1
+    [[ "$pid" =~ ^[0-9]+$ ]] || return 1
+    kill -0 "$pid" 2>/dev/null || return 1
+    ps -p "$pid" -o command= 2>/dev/null | grep -Fq "$expected_marker"
 }
 
 start_infrastructure() {
@@ -336,8 +350,13 @@ start_backend_local() {
     log_step "Starting backend service"
 
     if wait_for_http "${BACKEND_URL}${HEALTH_PATH}" "backend" 2; then
-        log_info "Backend already running on port 8090"
-        return 0
+        if managed_pid_running "$PID_DIR/backend.pid" "$PID_DIR/itsm-backend-dev"; then
+            log_info "Managed backend already running on port 8090"
+            return 0
+        fi
+        log_error "Port 8090 is healthy but is not managed by this local startup"
+        log_info "Run './scripts/deploy-dev.sh doctor' and stop the conflicting process/container"
+        return 1
     fi
 
     if port_in_use 8090; then
@@ -392,8 +411,13 @@ start_frontend_local() {
     log_step "Starting frontend service"
 
     if wait_for_http "$FRONTEND_URL" "frontend" 2; then
-        log_info "Frontend already running on port 3000"
-        return 0
+        if managed_pid_running "$PID_DIR/frontend.pid" "next dev --port 3000"; then
+            log_info "Managed frontend already running on port 3000"
+            return 0
+        fi
+        log_error "Port 3000 is responding but is not managed by this local startup"
+        log_info "This is commonly an older Docker image; inspect it with './scripts/deploy-dev.sh doctor'"
+        return 1
     fi
 
     if port_in_use 3000; then
@@ -405,17 +429,17 @@ start_frontend_local() {
 
     if [[ "$SKIP_DEPS" == "false" ]] && [[ ! -d "node_modules" ]]; then
         log_info "Installing frontend dependencies..."
-        pnpm install --ignore-scripts
-        # Approve builds for native modules (sharp, etc.) to avoid pnpm blocking on startup
-        pnpm approve-builds --silent 2>/dev/null || true
+        npm ci --ignore-scripts
     fi
 
-    export NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-http://localhost:8090}"
+    # Keep browser traffic same-origin; server-side proxying reaches the local backend.
+    export NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-}"
+    export ITSM_BACKEND_URL="${ITSM_BACKEND_URL:-http://localhost:8090}"
     export NODE_ENV="${NODE_ENV:-development}"
 
     local start; start=$(timer_start)
     log_info "Starting Next.js dev server..."
-    # Use direct node_modules path to bypass pnpm wrapper overhead on each reload
+    # Use the installed binary directly to avoid package-manager wrapper overhead.
     nohup ./node_modules/.bin/next dev --port 3000 > "$LOG_DIR/frontend.log" 2>&1 &
     local pid=$!
     echo "$pid" > "$PID_DIR/frontend.pid"
@@ -441,7 +465,7 @@ local_down() {
         fi
         rm -f "$PID_DIR/backend.pid"
     else
-        pkill -f "go run main.go" 2>/dev/null && log_success "Backend stopped" || true
+        log_warn "Backend PID file not found; no unmanaged process was stopped"
     fi
 
     # Frontend
@@ -453,8 +477,7 @@ local_down() {
         fi
         rm -f "$PID_DIR/frontend.pid"
     else
-        pkill -f "next dev --port 3000" 2>/dev/null && log_success "Frontend stopped" || true
-        pkill -f "pnpm dev" 2>/dev/null && log_success "Frontend stopped" || true
+        log_warn "Frontend PID file not found; no unmanaged process was stopped"
     fi
 
     # Optionally clean infrastructure
@@ -546,10 +569,7 @@ cmd_init() {
     if [[ ! -d "$FRONTEND_DIR/node_modules" ]]; then
         log_info "Installing frontend dependencies..."
         cd "$FRONTEND_DIR"
-        if ! command -v pnpm &>/dev/null; then
-            npm install -g pnpm@9.0.0
-        fi
-        pnpm install --ignore-scripts
+        npm ci --ignore-scripts
         log_success "Frontend dependencies installed"
     else
         log_info "Frontend dependencies already installed"
@@ -613,6 +633,7 @@ cmd_doctor() {
         local name="${port_desc##*:}"
         if port_in_use "$port"; then
             log_warn "Port $port ($name) in use"
+            lsof -nP -iTCP:"$port" -sTCP:LISTEN 2>/dev/null | tail -n +2 | head -n 3 || true
         else
             log_success "Port $port ($name) available"
         fi
@@ -634,11 +655,21 @@ cmd_doctor() {
     echo -e "${BOLD}Health Endpoints${NC}"
     if wait_for_http "${BACKEND_URL}${HEALTH_PATH}" "backend" 3; then
         log_success "Backend: healthy"
+        if ! container_running "itsm-backend-dev" \
+            && ! managed_pid_running "$PID_DIR/backend.pid" "$PID_DIR/itsm-backend-dev"; then
+            log_warn "Backend is healthy but belongs to another runtime (not this dev environment)"
+            issues=$((issues + 1))
+        fi
     else
         log_warn "Backend: unreachable"
     fi
     if wait_for_http "$FRONTEND_URL" "frontend" 3; then
         log_success "Frontend: healthy"
+        if ! container_running "itsm-frontend-dev" \
+            && ! managed_pid_running "$PID_DIR/frontend.pid" "next dev --port 3000"; then
+            log_warn "Frontend is healthy but belongs to another runtime (possibly an older image)"
+            issues=$((issues + 1))
+        fi
     else
         log_warn "Frontend: unreachable"
     fi
@@ -696,7 +727,8 @@ show_status() {
     echo "─────────────────────────────────────────"
 
     if [[ "$mode" == "docker" ]]; then
-        dc -f "$COMPOSE_DEV" --profile dev ps 2>/dev/null || echo "  No containers running"
+        ensure_dev_env
+        dev_dc ps 2>/dev/null || echo "  No containers running"
     else
         # Backend
         if wait_for_http "${BACKEND_URL}${HEALTH_PATH}" "backend" 3; then

@@ -80,11 +80,12 @@ git clone https://github.com/heidsoft/itsm.git
 cd itsm
 
 # 2. 配置环境变量
-cp .env.dev.example .env.dev
-# 编辑 .env.dev，仅用于本地开发
+cp .env.dev.example .env
+# 编辑 .env，仅用于本地开发
 
 # 3. 一键启动（dev 模式）
-docker compose -f docker-compose.dev.yml --env-file .env.dev --profile dev up -d --build
+make dev-start-docker
+# 等价：docker compose --env-file .env -f docker-compose.dev.yml --profile dev up -d --build
 
 # 4. 访问
 #   前端  http://localhost:3000

@@ -76,7 +76,7 @@ func (r *Registry) GetByAccount(account *ent.CloudAccount) []CloudDiscoveryAdapt
 
 // NormalizeProvider 统一云厂商标识
 func NormalizeProvider(provider string) string {
-	switch provider {
+	switch strings.ToLower(provider) {
 	case "alibaba", "alicloud", "aliyun":
 		return "aliyun"
 	case "tencentcloud", "qcloud", "tencent":

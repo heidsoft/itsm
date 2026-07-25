@@ -20,6 +20,7 @@
 #   NPM_REGISTRY   npm registry      (default: https://registry.npmjs.org)
 #   TORCH_INDEX    torch wheel index (default: CPU wheels)
 #   REGISTRY       image registry prefix (e.g. ghcr.io/heidsoft/)
+#   BUILDPLATFORM  optional target platform (e.g. linux/amd64); native by default
 #
 set -euo pipefail
 
@@ -30,10 +31,20 @@ cd "$PROJECT_ROOT"
 # BuildKit is required for cache mounts + inline cache.
 export DOCKER_BUILDKIT=1
 
-VERSION="${1:-latest}"
-REGISTRY="${2:-${REGISTRY:-}}"
-shift 2 2>/dev/null || true
+VERSION="${1:-${VERSION:-latest}}"
+if [[ $# -gt 0 ]]; then shift; fi
+REGISTRY="${1:-${REGISTRY:-}}"
+if [[ $# -gt 0 ]]; then shift; fi
+SELECTED_COUNT=$#
 SELECTED=("$@")
+
+if [[ ! "$VERSION" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]]; then
+  echo "Invalid image version/tag: $VERSION" >&2
+  exit 2
+fi
+if [[ -n "$REGISTRY" ]]; then
+  REGISTRY="${REGISTRY%/}/"
+fi
 
 # service -> "context|dockerfile|target|build-args..."
 ALL_SERVICES=(
@@ -47,30 +58,66 @@ log_info()  { echo -e "\033[0;34m[INFO]\033[0m  $*"; }
 log_success(){ echo -e "\033[0;32m[OK]\033[0m    $*"; }
 log_error() { echo -e "\033[0;31m[ERROR]\033[0m $*"; }
 
+if ! command -v docker >/dev/null 2>&1; then
+  log_error "Docker is required to build images"
+  exit 1
+fi
+
+if ! docker info >/dev/null 2>&1; then
+  log_error "Docker daemon is not available"
+  exit 1
+fi
+
 build_one() {
   local svc="$1" ctx="$2" df="$3" target="$4" extra="$5"
   local tag="${REGISTRY}itsm-${svc}:${VERSION}"
+  local -a command=(docker build --build-arg BUILDKIT_INLINE_CACHE=1)
+  local -a extra_args=()
+
+  if [[ -n "${BUILDPLATFORM:-}" ]]; then
+    command+=(--platform="$BUILDPLATFORM")
+  fi
+  if [[ -n "$target" ]]; then
+    command+=(--target "$target")
+  fi
+  if [[ -n "$extra" ]]; then
+    read -r -a extra_args <<< "$extra"
+  fi
+
+  command+=(-f "$ctx/$df" -t "$tag")
+  command+=("${extra_args[@]}")
+  command+=("$ctx")
+
   log_info "Building ${tag} (context=${ctx}, dockerfile=${df}${target:+, target=${target}})"
-  # shellcheck disable=SC2086
-  docker build \
-    --platform="${BUILDPLATFORM:-linux/amd64}" \
-    --build-arg BUILDKIT_INLINE_CACHE=1 \
-    ${target:+--target "$target"} \
-    -f "$ctx/$df" \
-    -t "$tag" \
-    $extra \
-    "$ctx"
+  "${command[@]}"
   log_success "Built ${tag}"
 }
 
 should_build() {
   local svc="$1"
-  [[ ${#SELECTED[@]} -eq 0 ]] && return 0
+  [[ $SELECTED_COUNT -eq 0 ]] && return 0
   for s in "${SELECTED[@]}"; do
     [[ "$s" == "$svc" ]] && return 0
   done
   return 1
 }
+
+if [[ $SELECTED_COUNT -gt 0 ]]; then
+  for selected in "${SELECTED[@]}"; do
+    known=false
+    for entry in "${ALL_SERVICES[@]}"; do
+      IFS='|' read -r svc _ <<< "$entry"
+      if [[ "$selected" == "$svc" ]]; then
+        known=true
+        break
+      fi
+    done
+    if [[ "$known" != "true" ]]; then
+      log_error "Unknown service '$selected'. Valid services: backend frontend ai-service guidance_sidecar"
+      exit 2
+    fi
+  done
+fi
 
 for entry in "${ALL_SERVICES[@]}"; do
   IFS='|' read -r svc ctx df target extra <<< "$entry"

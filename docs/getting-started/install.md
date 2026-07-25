@@ -19,7 +19,7 @@
 ## 2. 克隆仓库
 
 ```bash
-git clone https://github.com/itsm/itsm.git
+git clone https://github.com/heidsoft/itsm.git
 cd itsm
 ```
 
@@ -50,7 +50,9 @@ LOG_LEVEL=info  # debug | info | warn | error
 ## 4. 启动服务（开发模式）
 
 ```bash
-docker compose -f docker-compose.dev.yml up -d
+cp .env.dev.example .env
+make dev-start-docker
+# 等价：docker compose --env-file .env -f docker-compose.dev.yml --profile dev up -d --build
 ```
 
 首次启动会：
@@ -63,7 +65,7 @@ docker compose -f docker-compose.dev.yml up -d
 查看启动进度：
 
 ```bash
-docker compose -f docker-compose.dev.yml logs -f itsm-backend
+docker compose --env-file .env -f docker-compose.dev.yml --profile dev logs -f itsm-backend
 ```
 
 看到 `Server started on :8090` 即后端就绪。
@@ -98,7 +100,11 @@ cp .env.prod.example .env.prod
 # 编辑 .env.prod，填入上述密钥
 
 # 3. 启动（必须显式传入 --env-file）
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+make prod-deploy
+
+# 手工执行时必须显式传入环境文件
+docker compose --env-file .env.prod -f docker-compose.prod.yml build itsm-backend itsm-frontend
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 ```
 
 详见 [运维 - 部署](../operations/deployment.md)。
@@ -107,10 +113,10 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
 ```bash
 # 停止并删除容器（保留数据卷）
-docker compose -f docker-compose.dev.yml down
+make dev-stop-docker
 
 # 停止并删除容器 + 数据卷（⚠️ 会清空所有数据）
-docker compose -f docker-compose.dev.yml down -v
+docker compose --env-file .env -f docker-compose.dev.yml --profile dev down -v
 ```
 
 ## 下一步

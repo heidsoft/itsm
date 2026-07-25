@@ -13,6 +13,7 @@ require (
 	github.com/ThreeDotsLabs/watermill-redisstream v1.4.5
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.2
 	github.com/alibabacloud-go/ecs-20140526/v7 v7.9.2
+	github.com/alibabacloud-go/tea v1.5.1
 	github.com/expr-lang/expr v1.17.8
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-playground/validator/v10 v10.30.1
@@ -53,7 +54,6 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/alibabacloud-go/alibabacloud-gateway-spi v0.0.5 // indirect
 	github.com/alibabacloud-go/debug v1.0.1 // indirect
-	github.com/alibabacloud-go/tea v1.5.1 // indirect
 	github.com/alibabacloud-go/tea-utils/v2 v2.0.9 // indirect
 	github.com/aliyun/credentials-go v1.4.5 // indirect
 	github.com/antonmedv/expr v1.9.0 // indirect

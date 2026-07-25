@@ -20,6 +20,8 @@
 
 **🚀 ITIL 流程治理 | BPMN 工作流 | CMDB | AI 决策支持 | Apache-2.0**
 
+**简体中文** · **[English](./README.en.md)** · **[日本語](./README.ja.md)**
+
 **[🌐 官网](https://cloudmesh.top/)** · **[📖 架构解析](./docs/articles/07-ai-native-architecture-guidance-harness-skill.md)**
 
 </div>
@@ -60,7 +62,7 @@ AI 能力不是外挂式聊天框，而是嵌入到工单分诊、摘要、知�
 
 | 方式 | 适用场景 | 入口 |
 |:---|:---|:---|
-| 源码 Docker Compose | 本地体验、二次开发、查看完整配置 | `docker compose -f docker-compose.dev.yml --profile dev up -d --build` |
+| 源码 Docker Compose | 本地体验、二次开发、查看完整配置 | `make dev-start-docker` |
 | GitHub Packages 镜像 | 只想快速部署运行，不想本地构建 | `ghcr.io/heidsoft/itsm-backend` / `ghcr.io/heidsoft/itsm-frontend` |
 | Release zip | 离线分发、自定义部署脚本 | [GitHub Releases](https://github.com/heidsoft/itsm/releases) |
 
@@ -102,14 +104,17 @@ AI 能力不是外挂式聊天框，而是嵌入到工单分诊、摘要、知�
 git clone https://github.com/heidsoft/itsm.git
 cd itsm
 
-# 启动核心开发栈：PostgreSQL、Redis、MinIO、初始化器、后端、前端
-docker compose -f docker-compose.dev.yml --profile dev up -d --build
+# 首次使用：根目录统一使用 .env
+cp .env.dev.example .env
 
-# 等价的项目命令
-make dev-start
+# 启动核心开发栈：PostgreSQL、Redis、MinIO、初始化器、后端、前端
+make dev-start-docker
+
+# 等价的原生 Docker Compose 命令
+docker compose --env-file .env -f docker-compose.dev.yml --profile dev up -d --build
 
 # 查看服务状态
-docker compose -f docker-compose.dev.yml --profile dev ps
+make dev-status
 
 # 访问应用
 # 前端:    http://localhost:3000
@@ -129,13 +134,13 @@ docker compose -f docker-compose.dev.yml --profile dev ps
 
 ```bash
 # 本地 Ollama（首次镜像较大）
-docker compose -f docker-compose.dev.yml --profile dev --profile ai up -d
+docker compose --env-file .env -f docker-compose.dev.yml --profile dev --profile ai up -d
 
 # Prometheus + Grafana
-docker compose -f docker-compose.dev.yml --profile dev --profile monitoring up -d
+docker compose --env-file .env -f docker-compose.dev.yml --profile dev --profile monitoring up -d
 
 # 同时启用全部可选组件
-docker compose -f docker-compose.dev.yml \
+docker compose --env-file .env -f docker-compose.dev.yml \
   --profile dev --profile ai --profile monitoring up -d
 ```
 
@@ -154,13 +159,13 @@ curl http://localhost:3000/api/health
 curl http://localhost:8090/api/v1/readiness/ga
 
 # 查看日志
-docker compose -f docker-compose.dev.yml --profile dev logs -f
+docker compose --env-file .env -f docker-compose.dev.yml --profile dev logs -f
 
 # 停止服务
-docker compose -f docker-compose.dev.yml --profile dev down
+make dev-stop-docker
 
 # 完全清理（包括数据卷）
-docker compose -f docker-compose.dev.yml --profile dev down -v
+docker compose --env-file .env -f docker-compose.dev.yml --profile dev down -v
 ```
 
 > `down -v` 会删除本地数据库和对象存储数据，请确认不再需要后执行。
@@ -168,16 +173,14 @@ docker compose -f docker-compose.dev.yml --profile dev down -v
 ### 本机开发模式
 
 ```bash
-# 启动本机前后端开发进程及所需依赖
-./scripts/start-dev.sh
+# 启动基础设施及本机 Go/Next.js 开发进程
+make dev-start-local
 
-# 方式2: 使用 Makefile
-make dev-start
+# 等价脚本命令
+./scripts/deploy-dev.sh up --local
 
 # 停止服务
-./scripts/stop-dev.sh
-# 或
-make dev-stop
+make dev-stop-local
 
 # 查看日志
 make dev-logs
@@ -227,10 +230,10 @@ DB_NAME=itsm
 
 ```bash
 # 清理旧进程并重新启动
-./scripts/start-dev.sh restart
+./scripts/deploy-dev.sh restart --local
 
 # 验证前端和后端是否真的可访问
-./scripts/start-dev.sh status
+./scripts/deploy-dev.sh status --local
 curl -I http://127.0.0.1:3000
 curl http://127.0.0.1:8090/api/v1/health
 
@@ -240,7 +243,7 @@ lsof -nP -iTCP:8090 -sTCP:LISTEN
 tail -f logs/frontend.log
 ```
 
-在 local 模式下，如果使用本机 Homebrew PostgreSQL/Redis，`./scripts/start-dev.sh status` 会显示 `PostgreSQL: external` / `Redis: external`，表示脚本检测到外部服务正在监听端口，不会再启动 Docker 容器。
+在 local 模式下，如果使用本机 Homebrew PostgreSQL/Redis，`./scripts/deploy-dev.sh status --local` 会显示 `PostgreSQL: external` / `Redis: external`，表示脚本检测到外部服务正在监听端口，不会再启动 Docker 容器。
 
 如果 `curl` 返回 200 但浏览器打不开，优先检查浏览器代理配置，确保 `localhost` / `127.0.0.1` 不走 HTTP 代理。
 
@@ -248,13 +251,34 @@ tail -f logs/frontend.log
 
 ```bash
 # 手动执行一次性初始化（迁移 + seed）
-docker compose -f docker-compose.dev.yml --profile dev run --rm itsm-init
+docker compose --env-file .env -f docker-compose.dev.yml --profile dev run --rm itsm-init
 
-# 生产环境必须显式传入环境文件
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# 首次生成生产配置并修改所有 REQUIRED/默认凭据
+make prod-init
+
+# 完整生产部署：校验、备份、构建、启动、健康检查
+make prod-deploy
+
+# 手工方式必须显式传入环境文件
+docker compose --env-file .env.prod -f docker-compose.prod.yml build itsm-backend itsm-frontend
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 ```
 
 生产环境必须更换 `ADMIN_PASSWORD`、`JWT_SECRET`、数据库/Redis/MinIO 凭据，配置 TLS、备份、日志留存与告警；不要直接复用仓库中的开发默认值。完整步骤见[部署指南](./docs/deployment.md)和[运维手册](./docs/operations.md)。
+
+需要构建可推送或离线分发的版本化镜像时，使用统一镜像构建器：
+
+```bash
+# 本地标签：itsm-backend:v1.2.0、itsm-frontend:v1.2.0
+VERSION=v1.2.0 make build-images
+
+# Registry 标签：ghcr.io/heidsoft/itsm-backend:v1.2.0 等
+VERSION=v1.2.0 REGISTRY=ghcr.io/heidsoft make build-images
+
+# 也可单独构建
+VERSION=v1.2.0 make build-backend
+VERSION=v1.2.0 make build-frontend
+```
 
 默认初始化模板：
 

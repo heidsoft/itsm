@@ -176,9 +176,7 @@ func cloudProfile(provider, serviceType string) cloudResourceProfile {
 // DiscoverAll 执行全量云资源发现（委托给 Runner）
 func (s *CloudDiscoveryService) DiscoverAll(ctx context.Context, tenantID int) error {
 	runner := cloud.NewRunner(s.client, s.logger)
-	return runner.RunAll(ctx, tenantID, &cloud.RunConfig{
-		ReconcilePolicy: cloud.ReconcileDiscoveredWins,
-	})
+	return runner.RunAll(ctx, tenantID, cloud.WithReconcilePolicy(cloud.ReconcileDiscoveredWins))
 }
 
 // DiscoverAccount 发现单个云账号的资源

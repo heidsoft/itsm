@@ -16,7 +16,9 @@
 
 **🚀 LLM-first 智能分诊 | Guidance-Harness-Skill 工程体系 | 开源免费**
 
-[English](./README.md) · [架构解析](./docs/articles/07-ai-native-architecture-guidance-harness-skill.md) · [GA 能力矩阵](./docs/v1-ga/capability-matrix.md)
+**简体中文** · [English](./README.en.md) · [日本語](./README.ja.md)
+
+[架构解析](./docs/articles/07-ai-native-architecture-guidance-harness-skill.md) · [GA 能力矩阵](./docs/v1-ga/capability-matrix.md)
 
 </div>
 
@@ -68,8 +70,9 @@ git clone https://github.com/heidsoft/itsm.git
 cd itsm
 
 # 2. 启动（默认 private 模式）
-cp .env.dev.example .env.dev
-docker compose -f docker-compose.dev.yml --env-file .env.dev --profile dev up -d --build
+cp .env.dev.example .env
+make dev-start-docker
+# 等价：docker compose --env-file .env -f docker-compose.dev.yml --profile dev up -d --build
 
 # 3. 访问
 # 前端：http://localhost:3000
@@ -80,14 +83,11 @@ docker compose -f docker-compose.dev.yml --env-file .env.dev --profile dev up -d
 ### 方式二：本地开发
 
 ```bash
-# 后端
-cd itsm-backend
-go run main.go  # http://localhost:8090
+# 启动基础设施及本机 Go/Next.js 开发进程
+make dev-start-local
 
-# 前端
-cd itsm-frontend
-npm install
-npm run dev  # http://localhost:3000
+# 停止本机进程
+make dev-stop-local
 ```
 
 ### 方式三：生产部署
@@ -98,12 +98,27 @@ cp .env.prod.example .env.prod
 # 必须修改：DB_PASSWORD / REDIS_PASSWORD / JWT_SECRET / ADMIN_PASSWORD
 # ⚠️ 生产环境会自动检测默认密码并拒绝启动
 
-# 2. 部署
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# 2. 完整部署（校验、备份、构建、启动、健康检查）
+make prod-deploy
+
+# 手工构建与启动（必须显式传入 env-file）
+docker compose --env-file .env.prod -f docker-compose.prod.yml build itsm-backend itsm-frontend
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 
 # 3. 验证
 curl http://localhost/health  # 通过 Nginx 验证整体链路，期望 200
 curl http://localhost:8090/api/v1/readiness/ga  # 验证后端就绪度
+```
+
+### 构建版本化镜像
+
+```bash
+VERSION=v1.2.0 make build-images
+VERSION=v1.2.0 REGISTRY=ghcr.io/heidsoft make build-images
+
+# 单独构建
+VERSION=v1.2.0 make build-frontend
+VERSION=v1.2.0 make build-backend
 ```
 
 ## 文档索引
