@@ -154,7 +154,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useTicketHierarchyQuery', () => {
     it('should fetch hierarchy', async () => {
-      mockApi.getHierarchy.mockResolvedValue({ parent: null, children: [] });
+      mockApi.getHierarchy.mockResolvedValue({ parent: null, children: [] } as any);
 
       const { result } = renderHook(() => useTicketHierarchyQuery(1), {
         wrapper: createWrapper(),
@@ -190,7 +190,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useDependencyGraphQuery', () => {
     it('should fetch dependency graph', async () => {
-      mockApi.getDependencyGraph.mockResolvedValue({ nodes: [], edges: [] });
+      mockApi.getDependencyGraph.mockResolvedValue({ nodes: [], edges: [] } as any);
 
       const { result } = renderHook(() => useDependencyGraphQuery(1, 3), {
         wrapper: createWrapper(),
@@ -208,7 +208,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useRelationStatsQuery', () => {
     it('should fetch relation stats', async () => {
-      mockApi.getRelationStats.mockResolvedValue({ total: 5 });
+      mockApi.getRelationStats.mockResolvedValue({ total: 5 } as any);
 
       const { result } = renderHook(() => useRelationStatsQuery(1), {
         wrapper: createWrapper(),
@@ -221,7 +221,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useRelationGraphQuery', () => {
     it('should fetch relation graph', async () => {
-      mockApi.getRelationGraph.mockResolvedValue({ nodes: [], edges: [] });
+      mockApi.getRelationGraph.mockResolvedValue({ nodes: [], edges: [] } as any);
 
       const { result } = renderHook(
         () => useRelationGraphQuery(1, { maxDepth: 2, relationTypes: ['blocks'] }),
@@ -235,7 +235,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useRelationSuggestionsQuery', () => {
     it('should fetch suggestions', async () => {
-      mockApi.getRelationSuggestions.mockResolvedValue([]);
+      mockApi.getRelationSuggestions.mockResolvedValue([] as any);
 
       const { result } = renderHook(() => useRelationSuggestionsQuery(1, 5), {
         wrapper: createWrapper(),
@@ -248,7 +248,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useRelationPermissionsQuery', () => {
     it('should fetch permissions', async () => {
-      mockApi.getRelationPermissions.mockResolvedValue({ canCreate: true });
+      mockApi.getRelationPermissions.mockResolvedValue({ canCreate: true } as any);
 
       const { result } = renderHook(() => useRelationPermissionsQuery(1), {
         wrapper: createWrapper(),
@@ -261,7 +261,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useCreateRelationMutation', () => {
     it('should create a relation', async () => {
-      mockApi.createRelation.mockResolvedValue({ id: 'new-rel' });
+      mockApi.createRelation.mockResolvedValue({ id: 'new-rel' } as any);
 
       const { result } = renderHook(() => useCreateRelationMutation(), {
         wrapper: createWrapper(),
@@ -288,7 +288,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useBatchCreateRelationsMutation', () => {
     it('should batch create relations', async () => {
-      mockApi.batchCreateRelations.mockResolvedValue({ created: 3, failed: 0 });
+      mockApi.batchCreateRelations.mockResolvedValue({ created: 3, failed: 0 } as any);
 
       const { result } = renderHook(() => useBatchCreateRelationsMutation(), {
         wrapper: createWrapper(),
@@ -314,7 +314,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useUpdateRelationMutation', () => {
     it('should update a relation', async () => {
-      mockApi.updateRelation.mockResolvedValue({ id: 'rel-1' });
+      mockApi.updateRelation.mockResolvedValue({ id: 'rel-1' } as any);
 
       const { result } = renderHook(() => useUpdateRelationMutation(), {
         wrapper: createWrapper(),
@@ -329,7 +329,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useDeleteRelationMutation', () => {
     it('should delete a relation', async () => {
-      mockApi.deleteRelation.mockResolvedValue(undefined);
+      mockApi.deleteRelation.mockResolvedValue(undefined as any);
 
       const { result } = renderHook(() => useDeleteRelationMutation(), {
         wrapper: createWrapper(),
@@ -356,7 +356,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useSetParentMutation', () => {
     it('should set parent', async () => {
-      mockApi.setParent.mockResolvedValue(undefined);
+      mockApi.setParent.mockResolvedValue(undefined as any);
 
       const { result } = renderHook(() => useSetParentMutation(), {
         wrapper: createWrapper(),
@@ -383,7 +383,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useRemoveParentMutation', () => {
     it('should remove parent', async () => {
-      mockApi.removeParent.mockResolvedValue(undefined);
+      mockApi.removeParent.mockResolvedValue(undefined as any);
 
       const { result } = renderHook(() => useRemoveParentMutation(), {
         wrapper: createWrapper(),
@@ -398,7 +398,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useAddDependencyMutation', () => {
     it('should add dependency', async () => {
-      mockApi.addDependency.mockResolvedValue(undefined);
+      mockApi.addDependency.mockResolvedValue(undefined as any);
 
       const { result } = renderHook(() => useAddDependencyMutation(), {
         wrapper: createWrapper(),
@@ -415,7 +415,7 @@ describe('useTicketRelations hooks', () => {
 
   describe('useRemoveDependencyMutation', () => {
     it('should remove dependency', async () => {
-      mockApi.removeDependency.mockResolvedValue(undefined);
+      mockApi.removeDependency.mockResolvedValue(undefined as any);
 
       const { result } = renderHook(() => useRemoveDependencyMutation(), {
         wrapper: createWrapper(),

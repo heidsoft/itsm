@@ -99,7 +99,7 @@ describe('useVersionControl', () => {
     const mockFetchLatest = jest.fn();
 
     const defaultConfig = {
-      initialData: { id: 1, name: 'Test', version: 1 },
+      initialData: { id: 1, name: 'Test', version: 1 } as any,
       updateData: mockUpdateData,
       fetchLatest: mockFetchLatest,
       dataName: '工单',
@@ -151,13 +151,13 @@ describe('useVersionControl', () => {
 
       await expect(
         act(async () => {
-          await result.current.update({ name: 'Fail' });
+          await result.current.update({ name: 'Fail' } as any);
         })
       ).rejects.toThrow('No data to update');
     });
 
     it('should refresh data', async () => {
-      mockFetchLatest.mockResolvedValue({ id: 1, name: 'Fresh', version: 5 });
+      mockFetchLatest.mockResolvedValue({ id: 1, name: 'Fresh', version: 5 } as any);
 
       const { result } = renderHook(() => useVersionControl(defaultConfig));
 
@@ -183,7 +183,7 @@ describe('useVersionControl', () => {
     });
 
     it('should force overwrite data', async () => {
-      mockUpdateData.mockResolvedValue({ id: 1, name: 'Forced', version: 10 });
+      mockUpdateData.mockResolvedValue({ id: 1, name: 'Forced', version: 10 } as any);
 
       const { result } = renderHook(() => useVersionControl(defaultConfig));
 
@@ -203,7 +203,7 @@ describe('useVersionControl', () => {
 
       await expect(
         act(async () => {
-          await result.current.forceOverwrite({ name: 'Fail' });
+          await result.current.forceOverwrite({ name: 'Fail' } as any);
         })
       ).rejects.toThrow('No data to update');
     });
@@ -220,7 +220,7 @@ describe('useVersionControl', () => {
     });
 
     it('should discard local changes', async () => {
-      mockFetchLatest.mockResolvedValue({ id: 1, name: 'Latest', version: 3 });
+      mockFetchLatest.mockResolvedValue({ id: 1, name: 'Latest', version: 3 } as any);
 
       const { result } = renderHook(() => useVersionControl(defaultConfig));
 
@@ -255,7 +255,7 @@ describe('useVersionControl', () => {
 
       rerender({
         ...defaultConfig,
-        initialData: { id: 1, name: 'Changed', version: 3 },
+        initialData: { id: 1, name: 'Changed', version: 3 } as any,
       });
 
       expect(result.current.data).toEqual({ id: 1, name: 'Changed', version: 3 });

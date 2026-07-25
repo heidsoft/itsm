@@ -31,13 +31,13 @@ const mockTicketService = ticketService as jest.Mocked<typeof ticketService>;
 describe('useTickets', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTicketService.listTickets.mockResolvedValue({ tickets: [], total: 0 });
+    mockTicketService.listTickets.mockResolvedValue({ tickets: [], total: 0 } as any);
     mockTicketService.getTicketStats.mockResolvedValue({
       total: 10,
       open: 5,
       resolved: 3,
       highPriority: 2,
-    });
+    } as any);
   });
 
   it('should return initial state with loading', async () => {
@@ -54,7 +54,7 @@ describe('useTickets', () => {
     mockTicketService.listTickets.mockResolvedValue({
       tickets: [{ id: 1, title: 'Test Ticket' }],
       total: 1,
-    });
+    } as any);
 
     const { result } = renderHook(() => useTickets());
 
@@ -123,7 +123,7 @@ describe('useTickets', () => {
   });
 
   it('should create ticket and refresh data', async () => {
-    mockTicketService.createTicket.mockResolvedValue({ id: 1 });
+    mockTicketService.createTicket.mockResolvedValue({ id: 1 } as any);
 
     const { result } = renderHook(() => useTickets());
 
@@ -139,7 +139,7 @@ describe('useTickets', () => {
   });
 
   it('should delete ticket and refresh data', async () => {
-    mockTicketService.deleteTicket.mockResolvedValue(undefined);
+    mockTicketService.deleteTicket.mockResolvedValue(undefined as any);
 
     const { result } = renderHook(() => useTickets());
 
