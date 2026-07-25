@@ -291,7 +291,7 @@ func convertRecentActivities(activities []service.RecentActivityData) []RecentAc
 	return result
 }
 
-//nolint:staticcheck // Reserved for future SLA dashboard feature
+//lint:ignore U1000 reserved for future SLA dashboard feature
 func _convertSLAData(slaData []service.SLAData) []SLAData {
 	result := make([]SLAData, len(slaData))
 	for i, s := range slaData {
