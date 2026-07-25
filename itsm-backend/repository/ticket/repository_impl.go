@@ -612,6 +612,7 @@ func (r *EntRepository) generateTicketNumberWithDB(ctx context.Context, tenantID
 }
 
 // _uniqueFallbackSuffix 生成唯一后缀（用于当月第一条记录的回退）
+//
 //nolint:staticcheck // Utility for ticket number generation
 func _uniqueFallbackSuffix() string {
 	// 使用时间戳+随机数生成唯一后缀

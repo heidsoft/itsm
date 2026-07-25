@@ -294,6 +294,7 @@ func TestServiceRequestHandler_Delete(t *testing.T) {
 // --- ApplyApproval（审批动作）路径 ---
 
 // _srAuthRole 与 srAuth 类似，但允许指定角色/部门，用于覆盖审批权限分支。
+//
 //nolint:staticcheck // Test helper for future auth role tests
 func _srAuthRole(tid, uid int, role, dept string) gin.HandlerFunc {
 	return func(c *gin.Context) {
