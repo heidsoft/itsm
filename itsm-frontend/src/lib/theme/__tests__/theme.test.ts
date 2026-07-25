@@ -350,8 +350,9 @@ describe('Theme Configuration', () => {
 });
 
 describe('Theme Components', () => {
-  const wrapper = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(ThemeProvider, { defaultMode: 'light' }, children);
+  const wrapper = ({ children }: { children: React.ReactNode }) => {
+    return React.createElement(ThemeProvider, { defaultMode: 'light', children } as any);
+  };
 
   describe('ThemeProvider & useTheme', () => {
     it('provides theme context', () => {

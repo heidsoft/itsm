@@ -7,6 +7,7 @@ jest.mock('@/lib/api/http-client', () => ({
 }));
 
 import { ReportEngine } from '../report-engine';
+import { FilterType, FilterOperator } from '@/types/reports';
 
 const mockData = [
   { name: 'Alice', age: 30, department: 'Engineering', salary: 100000, createdAt: '2024-01-15T10:00:00Z' },
@@ -19,98 +20,98 @@ const mockData = [
 describe('ReportEngine', () => {
   describe('applyFilters', () => {
     it('should filter with equals operator', () => {
-      const filters = [{ field: 'department', operator: 'equals' as any }];
+      const filters = [{ id: 'f1', field: 'department', label: 'Department', type: FilterType.SELECT, operator: FilterOperator.EQUALS }];
       const result = ReportEngine.applyFilters(mockData, filters, { department: 'Engineering' });
       expect(result).toHaveLength(2);
     });
 
     it('should filter with not_equals operator', () => {
-      const filters = [{ field: 'department', operator: 'not_equals' as any }];
+      const filters = [{ id: 'f2', field: 'department', label: 'Department', type: FilterType.SELECT, operator: FilterOperator.NOT_EQUALS }];
       const result = ReportEngine.applyFilters(mockData, filters, { department: 'Sales' });
       expect(result).toHaveLength(3);
     });
 
     it('should filter with contains operator', () => {
-      const filters = [{ field: 'name', operator: 'contains' as any }];
+      const filters = [{ id: 'f3', field: 'name', label: 'Name', type: FilterType.TEXT, operator: FilterOperator.CONTAINS }];
       const result = ReportEngine.applyFilters(mockData, filters, { name: 'li' });
       expect(result).toHaveLength(2); // Alice, Charlie
     });
 
     it('should filter with not_contains operator', () => {
-      const filters = [{ field: 'name', operator: 'not_contains' as any }];
+      const filters = [{ id: 'f4', field: 'name', label: 'Name', type: FilterType.TEXT, operator: FilterOperator.NOT_CONTAINS }];
       const result = ReportEngine.applyFilters(mockData, filters, { name: 'li' });
       expect(result).toHaveLength(3);
     });
 
     it('should filter with starts_with operator', () => {
-      const filters = [{ field: 'name', operator: 'starts_with' as any }];
+      const filters = [{ id: 'f5', field: 'name', label: 'Name', type: FilterType.TEXT, operator: FilterOperator.STARTS_WITH }];
       const result = ReportEngine.applyFilters(mockData, filters, { name: 'A' });
       expect(result).toHaveLength(1);
     });
 
     it('should filter with ends_with operator', () => {
-      const filters = [{ field: 'name', operator: 'ends_with' as any }];
+      const filters = [{ id: 'f6', field: 'name', label: 'Name', type: FilterType.TEXT, operator: FilterOperator.ENDS_WITH }];
       const result = ReportEngine.applyFilters(mockData, filters, { name: 'e' });
       expect(result).toHaveLength(3); // Alice, Charlie, Eve
     });
 
     it('should filter with greater_than operator', () => {
-      const filters = [{ field: 'age', operator: 'greater_than' as any }];
+      const filters = [{ id: 'f7', field: 'age', label: 'Age', type: FilterType.NUMBER, operator: FilterOperator.GREATER_THAN }];
       const result = ReportEngine.applyFilters(mockData, filters, { age: 30 });
       expect(result).toHaveLength(2); // Charlie 35, Eve 32
     });
 
     it('should filter with less_than operator', () => {
-      const filters = [{ field: 'age', operator: 'less_than' as any }];
+      const filters = [{ id: 'f8', field: 'age', label: 'Age', type: FilterType.NUMBER, operator: FilterOperator.LESS_THAN }];
       const result = ReportEngine.applyFilters(mockData, filters, { age: 30 });
       expect(result).toHaveLength(2); // Bob 25, Diana 28
     });
 
     it('should filter with between operator', () => {
-      const filters = [{ field: 'age', operator: 'between' as any }];
+      const filters = [{ id: 'f9', field: 'age', label: 'Age', type: FilterType.NUMBER, operator: FilterOperator.BETWEEN }];
       const result = ReportEngine.applyFilters(mockData, filters, { age: [28, 32] });
       expect(result).toHaveLength(3); // Alice 30, Diana 28, Eve 32
     });
 
     it('should return false for between with invalid value', () => {
-      const filters = [{ field: 'age', operator: 'between' as any }];
+      const filters = [{ id: 'f10', field: 'age', label: 'Age', type: FilterType.NUMBER, operator: FilterOperator.BETWEEN }];
       const result = ReportEngine.applyFilters(mockData, filters, { age: 'invalid' });
       expect(result).toHaveLength(0);
     });
 
     it('should filter with in operator', () => {
-      const filters = [{ field: 'department', operator: 'in' as any }];
+      const filters = [{ id: 'f11', field: 'department', label: 'Department', type: FilterType.MULTISELECT, operator: FilterOperator.IN }];
       const result = ReportEngine.applyFilters(mockData, filters, { department: ['Engineering', 'Marketing'] });
       expect(result).toHaveLength(3);
     });
 
     it('should filter with not_in operator', () => {
-      const filters = [{ field: 'department', operator: 'not_in' as any }];
+      const filters = [{ id: 'f12', field: 'department', label: 'Department', type: FilterType.MULTISELECT, operator: FilterOperator.NOT_IN }];
       const result = ReportEngine.applyFilters(mockData, filters, { department: ['Engineering'] });
       expect(result).toHaveLength(3);
     });
 
     it('should filter with is_null operator', () => {
       const dataWithNull = [...mockData, { name: null, age: 40, department: 'HR', salary: 70000, createdAt: '2024-04-01' }];
-      const filters = [{ field: 'name', operator: 'is_null' as any }];
+      const filters = [{ id: 'f13', field: 'name', label: 'Name', type: FilterType.TEXT, operator: FilterOperator.IS_NULL }];
       const result = ReportEngine.applyFilters(dataWithNull, filters, { name: true });
       expect(result).toHaveLength(1);
     });
 
     it('should filter with is_not_null operator', () => {
-      const filters = [{ field: 'name', operator: 'is_not_null' as any }];
+      const filters = [{ id: 'f14', field: 'name', label: 'Name', type: FilterType.TEXT, operator: FilterOperator.IS_NOT_NULL }];
       const result = ReportEngine.applyFilters(mockData, filters, { name: true });
       expect(result).toHaveLength(5);
     });
 
     it('should skip filters with null/undefined values', () => {
-      const filters = [{ field: 'department', operator: 'equals' as any }];
+      const filters = [{ id: 'f15', field: 'department', label: 'Department', type: FilterType.SELECT, operator: FilterOperator.EQUALS }];
       const result = ReportEngine.applyFilters(mockData, filters, {});
       expect(result).toHaveLength(5);
     });
 
     it('should handle default operator case', () => {
-      const filters = [{ field: 'name', operator: 'unknown_operator' as any }];
+      const filters = [{ id: 'f16', field: 'name', label: 'Name', type: FilterType.TEXT, operator: 'unknown_operator' as any }];
       const result = ReportEngine.applyFilters(mockData, filters, { name: 'test' });
       expect(result).toHaveLength(5);
     });

@@ -87,7 +87,7 @@ describe('safeGet', () => {
     expect(safeGet({ name: 'Alice' }, 'name')).toBe('Alice');
   });
   it('returns defaultValue when obj is null', () => {
-    expect(safeGet(null, 'name' as any, 'fallback')).toBe('fallback');
+    expect(safeGet(null as unknown as Record<string, string>, 'name', 'fallback')).toBe('fallback');
   });
 });
 
