@@ -14,6 +14,7 @@ import {
   useApplyClassificationMutation,
   CHANGE_CLASSIFICATION_KEYS,
 } from '../useChangeClassification';
+import { ChangeType } from '@/types/change-classification';
 
 // Mock antd
 jest.mock('antd', () => ({
@@ -72,7 +73,7 @@ describe('useChangeClassification hooks', () => {
 
   describe('useClassificationsQuery', () => {
     it('should fetch classifications list', async () => {
-      mockApi.getClassifications.mockResolvedValue({ items: [{ id: '1' }], total: 1 });
+      mockApi.getClassifications.mockResolvedValue({ classifications: [{ id: '1', name: 'Test', code: 'test', type: ChangeType.NORMAL, riskLevel: 'low', approvalRequired: false, cabRequired: false, testingRequired: false, backoutPlanRequired: false, businessJustificationRequired: false, isActive: true, createdAt: new Date(), updatedAt: new Date() }], total: 1 });
 
       const { result } = renderHook(() => useClassificationsQuery(), {
         wrapper: createWrapper(),
@@ -86,7 +87,7 @@ describe('useChangeClassification hooks', () => {
     });
 
     it('should pass query params', async () => {
-      mockApi.getClassifications.mockResolvedValue({ items: [], total: 0 });
+      mockApi.getClassifications.mockResolvedValue({ classifications: [], total: 0 });
       const query = { page: 1, pageSize: 10 } as any;
 
       const { result } = renderHook(() => useClassificationsQuery(query), {
@@ -117,7 +118,7 @@ describe('useChangeClassification hooks', () => {
 
   describe('useClassificationQuery', () => {
     it('should fetch a single classification', async () => {
-      mockApi.getClassification.mockResolvedValue({ id: 'cls-1', name: 'Standard' });
+      mockApi.getClassification.mockResolvedValue({ id: 'cls-1', name: 'Standard', code: 'standard', type: ChangeType.NORMAL, riskLevel: 'low', approvalRequired: false, cabRequired: false, testingRequired: false, backoutPlanRequired: false, businessJustificationRequired: false, isActive: true, createdAt: new Date(), updatedAt: new Date() });
 
       const { result } = renderHook(() => useClassificationQuery('cls-1'), {
         wrapper: createWrapper(),
@@ -149,7 +150,7 @@ describe('useChangeClassification hooks', () => {
 
   describe('useClassificationSuggestionQuery', () => {
     it('should fetch suggestion for a change', async () => {
-      mockApi.getClassificationSuggestion.mockResolvedValue({ suggestion: 'standard' });
+      mockApi.getClassificationSuggestion.mockResolvedValue({ changeId: 42, suggestedClassification: { id: 'cls-1', name: 'Standard', code: 'standard', type: ChangeType.NORMAL, riskLevel: 'low', approvalRequired: false, cabRequired: false, testingRequired: false, backoutPlanRequired: false, businessJustificationRequired: false, isActive: true, createdAt: new Date(), updatedAt: new Date() }, confidence: 85, reasoning: 'Based on historical data', basedOn: 'historical' });
 
       const { result } = renderHook(() => useClassificationSuggestionQuery(42), {
         wrapper: createWrapper(),
@@ -181,7 +182,7 @@ describe('useChangeClassification hooks', () => {
 
   describe('useClassificationRulesQuery', () => {
     it('should fetch classification rules', async () => {
-      mockApi.getClassificationRules.mockResolvedValue([{ id: 'r1', name: 'Rule 1' }]);
+      mockApi.getClassificationRules.mockResolvedValue([{ id: 'r1', name: 'Rule 1', priority: 1, conditions: [], resultClassification: 'cls-1', enabled: true, createdAt: new Date(), updatedAt: new Date() }]);
 
       const { result } = renderHook(() => useClassificationRulesQuery(), {
         wrapper: createWrapper(),
@@ -227,7 +228,7 @@ describe('useChangeClassification hooks', () => {
 
   describe('useCreateClassificationMutation', () => {
     it('should create classification on success', async () => {
-      mockApi.createClassification.mockResolvedValue({ id: 'new-1' });
+      mockApi.createClassification.mockResolvedValue({ id: 'new-1', name: 'New Classification', code: 'new-classification', type: ChangeType.NORMAL, riskLevel: 'low', approvalRequired: false, cabRequired: false, testingRequired: false, backoutPlanRequired: false, businessJustificationRequired: false, isActive: true, createdAt: new Date(), updatedAt: new Date() });
 
       const { result } = renderHook(() => useCreateClassificationMutation(), {
         wrapper: createWrapper(),
@@ -259,7 +260,7 @@ describe('useChangeClassification hooks', () => {
 
   describe('useUpdateClassificationMutation', () => {
     it('should update classification', async () => {
-      mockApi.updateClassification.mockResolvedValue({ id: 'cls-1', name: 'Updated' });
+      mockApi.updateClassification.mockResolvedValue({ id: 'cls-1', name: 'Updated', code: 'updated', type: ChangeType.NORMAL, riskLevel: 'low', approvalRequired: false, cabRequired: false, testingRequired: false, backoutPlanRequired: false, businessJustificationRequired: false, isActive: true, createdAt: new Date(), updatedAt: new Date() });
 
       const { result } = renderHook(() => useUpdateClassificationMutation(), {
         wrapper: createWrapper(),

@@ -116,3 +116,19 @@ test('standalone preparation copies static and public assets into the runtime bu
     'public'
   );
 });
+
+test('production dry-run exits before runtime verification and success reporting', () => {
+  const script = fs.readFileSync(path.join(root, 'scripts', 'deploy-prod.sh'), 'utf8');
+  const dryRunExit = script.indexOf('print_banner "Production Dry Run Complete"');
+  const verification = script.indexOf('# Phase 5', dryRunExit);
+  const deploymentSuccess = script.indexOf('print_banner "Deployment Successful!"', dryRunExit);
+
+  assert.ok(dryRunExit >= 0, 'dry-run completion branch is missing');
+  assert.ok(verification > dryRunExit, 'dry-run must exit before runtime verification');
+  assert.ok(deploymentSuccess > dryRunExit, 'dry-run must exit before deployment success reporting');
+  assert.match(
+    script.slice(dryRunExit, verification),
+    /return 0/,
+    'dry-run branch must return before runtime verification'
+  );
+});

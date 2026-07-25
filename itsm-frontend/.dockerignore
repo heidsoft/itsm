@@ -1,6 +1,7 @@
 .git
 .github
 .next
+*.tsbuildinfo
 node_modules
 coverage
 playwright-report

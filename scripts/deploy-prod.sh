@@ -355,7 +355,11 @@ build_images() {
         return 1
     fi
     timer_end "$start" "Backend image build"
-    log_success "Backend image built"
+    if $DRY_RUN; then
+        log_info "Backend image build planned"
+    else
+        log_success "Backend image built"
+    fi
 
     # Frontend
     log_step "Building frontend image"
@@ -367,7 +371,11 @@ build_images() {
         return 1
     fi
     timer_end "$start" "Frontend image build"
-    log_success "Frontend image built"
+    if $DRY_RUN; then
+        log_info "Frontend image build planned"
+    else
+        log_success "Frontend image built"
+    fi
 
     # Save deployment state
     if ! $DRY_RUN; then
@@ -452,7 +460,11 @@ deploy_services() {
     fi
 
     timer_end "$start" "Service deployment"
-    log_success "All services deployed"
+    if $DRY_RUN; then
+        log_info "Service deployment plan generated"
+    else
+        log_success "All services deployed"
+    fi
 }
 
 # ============================================================
@@ -638,6 +650,16 @@ full_deploy() {
         log_error "Deploy failed! Attempting rollback..."
         do_rollback || true
         exit 1
+    fi
+
+    if $DRY_RUN; then
+        local dry_duration; dry_duration=$(( $(date +%s) - total_start ))
+        print_banner "Production Dry Run Complete" \
+            "Configuration and deployment plan validated." \
+            "No images, containers, volumes, or deployment state were changed." \
+            "" \
+            "Duration: ${CYAN}${dry_duration}s${NC}"
+        return 0
     fi
 
     # Phase 5

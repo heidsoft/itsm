@@ -1,0 +1,16 @@
+{
+  "base": "origin/main~1",
+  "head": "HEAD",
+  "totalChanged": 24,
+  "sourceFiles": 1,
+  "testFiles": 2,
+  "missing": [
+    {
+      "src": "itsm-backend/service/cloud_discovery_service.go",
+      "candidates": [
+        "itsm-backend/service/cloud_discovery_service_test.go",
+        "itsm-backend/service/cloud_discovery_test.go"
+      ]
+    }
+  ]
+}
