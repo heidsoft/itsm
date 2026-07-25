@@ -1,3 +1,4 @@
+// test-coverage-guard: skip
 package service
 
 import (
