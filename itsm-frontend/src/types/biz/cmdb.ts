@@ -49,6 +49,7 @@ export interface CIType {
   icon?: string;
   color?: string;
   attributeSchema?: string;
+  parentTypeId?: number;
   isActive: boolean;
   tenantId: number;
 }

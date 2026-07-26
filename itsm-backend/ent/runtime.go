@@ -440,35 +440,47 @@ func init() {
 	// ciattributedefinition.DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
 	ciattributedefinition.DisplayNameValidator = ciattributedefinitionDescDisplayName.Validators[0].(func(string) error)
 	// ciattributedefinitionDescType is the schema descriptor for type field.
-	ciattributedefinitionDescType := ciattributedefinitionFields[2].Descriptor()
+	ciattributedefinitionDescType := ciattributedefinitionFields[3].Descriptor()
 	// ciattributedefinition.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	ciattributedefinition.TypeValidator = ciattributedefinitionDescType.Validators[0].(func(string) error)
 	// ciattributedefinitionDescRequired is the schema descriptor for required field.
-	ciattributedefinitionDescRequired := ciattributedefinitionFields[3].Descriptor()
+	ciattributedefinitionDescRequired := ciattributedefinitionFields[4].Descriptor()
 	// ciattributedefinition.DefaultRequired holds the default value on creation for the required field.
 	ciattributedefinition.DefaultRequired = ciattributedefinitionDescRequired.Default.(bool)
 	// ciattributedefinitionDescUnique is the schema descriptor for unique field.
-	ciattributedefinitionDescUnique := ciattributedefinitionFields[4].Descriptor()
+	ciattributedefinitionDescUnique := ciattributedefinitionFields[5].Descriptor()
 	// ciattributedefinition.DefaultUnique holds the default value on creation for the unique field.
 	ciattributedefinition.DefaultUnique = ciattributedefinitionDescUnique.Default.(bool)
+	// ciattributedefinitionDescDisplayOrder is the schema descriptor for display_order field.
+	ciattributedefinitionDescDisplayOrder := ciattributedefinitionFields[10].Descriptor()
+	// ciattributedefinition.DefaultDisplayOrder holds the default value on creation for the display_order field.
+	ciattributedefinition.DefaultDisplayOrder = ciattributedefinitionDescDisplayOrder.Default.(int)
+	// ciattributedefinitionDescIsSearchable is the schema descriptor for is_searchable field.
+	ciattributedefinitionDescIsSearchable := ciattributedefinitionFields[14].Descriptor()
+	// ciattributedefinition.DefaultIsSearchable holds the default value on creation for the is_searchable field.
+	ciattributedefinition.DefaultIsSearchable = ciattributedefinitionDescIsSearchable.Default.(bool)
+	// ciattributedefinitionDescIsSystem is the schema descriptor for is_system field.
+	ciattributedefinitionDescIsSystem := ciattributedefinitionFields[15].Descriptor()
+	// ciattributedefinition.DefaultIsSystem holds the default value on creation for the is_system field.
+	ciattributedefinition.DefaultIsSystem = ciattributedefinitionDescIsSystem.Default.(bool)
 	// ciattributedefinitionDescCiTypeID is the schema descriptor for ci_type_id field.
-	ciattributedefinitionDescCiTypeID := ciattributedefinitionFields[7].Descriptor()
+	ciattributedefinitionDescCiTypeID := ciattributedefinitionFields[16].Descriptor()
 	// ciattributedefinition.CiTypeIDValidator is a validator for the "ci_type_id" field. It is called by the builders before save.
 	ciattributedefinition.CiTypeIDValidator = ciattributedefinitionDescCiTypeID.Validators[0].(func(int) error)
 	// ciattributedefinitionDescTenantID is the schema descriptor for tenant_id field.
-	ciattributedefinitionDescTenantID := ciattributedefinitionFields[8].Descriptor()
+	ciattributedefinitionDescTenantID := ciattributedefinitionFields[17].Descriptor()
 	// ciattributedefinition.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	ciattributedefinition.TenantIDValidator = ciattributedefinitionDescTenantID.Validators[0].(func(int) error)
 	// ciattributedefinitionDescIsActive is the schema descriptor for is_active field.
-	ciattributedefinitionDescIsActive := ciattributedefinitionFields[9].Descriptor()
+	ciattributedefinitionDescIsActive := ciattributedefinitionFields[18].Descriptor()
 	// ciattributedefinition.DefaultIsActive holds the default value on creation for the is_active field.
 	ciattributedefinition.DefaultIsActive = ciattributedefinitionDescIsActive.Default.(bool)
 	// ciattributedefinitionDescCreatedAt is the schema descriptor for created_at field.
-	ciattributedefinitionDescCreatedAt := ciattributedefinitionFields[10].Descriptor()
+	ciattributedefinitionDescCreatedAt := ciattributedefinitionFields[19].Descriptor()
 	// ciattributedefinition.DefaultCreatedAt holds the default value on creation for the created_at field.
 	ciattributedefinition.DefaultCreatedAt = ciattributedefinitionDescCreatedAt.Default.(func() time.Time)
 	// ciattributedefinitionDescUpdatedAt is the schema descriptor for updated_at field.
-	ciattributedefinitionDescUpdatedAt := ciattributedefinitionFields[11].Descriptor()
+	ciattributedefinitionDescUpdatedAt := ciattributedefinitionFields[20].Descriptor()
 	// ciattributedefinition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	ciattributedefinition.DefaultUpdatedAt = ciattributedefinitionDescUpdatedAt.Default.(func() time.Time)
 	// ciattributedefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -528,19 +540,19 @@ func init() {
 	// citype.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	citype.NameValidator = citypeDescName.Validators[0].(func(string) error)
 	// citypeDescTenantID is the schema descriptor for tenant_id field.
-	citypeDescTenantID := citypeFields[5].Descriptor()
+	citypeDescTenantID := citypeFields[6].Descriptor()
 	// citype.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	citype.TenantIDValidator = citypeDescTenantID.Validators[0].(func(int) error)
 	// citypeDescIsActive is the schema descriptor for is_active field.
-	citypeDescIsActive := citypeFields[6].Descriptor()
+	citypeDescIsActive := citypeFields[7].Descriptor()
 	// citype.DefaultIsActive holds the default value on creation for the is_active field.
 	citype.DefaultIsActive = citypeDescIsActive.Default.(bool)
 	// citypeDescCreatedAt is the schema descriptor for created_at field.
-	citypeDescCreatedAt := citypeFields[7].Descriptor()
+	citypeDescCreatedAt := citypeFields[8].Descriptor()
 	// citype.DefaultCreatedAt holds the default value on creation for the created_at field.
 	citype.DefaultCreatedAt = citypeDescCreatedAt.Default.(func() time.Time)
 	// citypeDescUpdatedAt is the schema descriptor for updated_at field.
-	citypeDescUpdatedAt := citypeFields[8].Descriptor()
+	citypeDescUpdatedAt := citypeFields[9].Descriptor()
 	// citype.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	citype.DefaultUpdatedAt = citypeDescUpdatedAt.Default.(func() time.Time)
 	// citype.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

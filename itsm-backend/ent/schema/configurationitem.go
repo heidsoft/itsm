@@ -181,6 +181,6 @@ func (ConfigurationItem) Indexes() []ent.Index {
 		index.Fields("cloud_account_id"),
 		index.Fields("cloud_region"),
 		index.Fields("cloud_resource_id"),
-		index.Fields("serial_number").Unique(),
+		index.Fields("tenant_id", "serial_number").Unique(),
 	}
 }

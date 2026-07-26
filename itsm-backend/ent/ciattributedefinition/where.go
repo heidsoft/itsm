@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -64,6 +65,11 @@ func DisplayName(v string) predicate.CIAttributeDefinition {
 	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldDisplayName, v))
 }
 
+// Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
+func Description(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldDescription, v))
+}
+
 // Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
 func Type(v string) predicate.CIAttributeDefinition {
 	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldType, v))
@@ -87,6 +93,41 @@ func DefaultValue(v string) predicate.CIAttributeDefinition {
 // ValidationRules applies equality check predicate on the "validation_rules" field. It's identical to ValidationRulesEQ.
 func ValidationRules(v string) predicate.CIAttributeDefinition {
 	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldValidationRules, v))
+}
+
+// ReferenceType applies equality check predicate on the "reference_type" field. It's identical to ReferenceTypeEQ.
+func ReferenceType(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldReferenceType, v))
+}
+
+// DisplayOrder applies equality check predicate on the "display_order" field. It's identical to DisplayOrderEQ.
+func DisplayOrder(v int) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldDisplayOrder, v))
+}
+
+// GroupName applies equality check predicate on the "group_name" field. It's identical to GroupNameEQ.
+func GroupName(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldGroupName, v))
+}
+
+// Placeholder applies equality check predicate on the "placeholder" field. It's identical to PlaceholderEQ.
+func Placeholder(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldPlaceholder, v))
+}
+
+// HelpText applies equality check predicate on the "help_text" field. It's identical to HelpTextEQ.
+func HelpText(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldHelpText, v))
+}
+
+// IsSearchable applies equality check predicate on the "is_searchable" field. It's identical to IsSearchableEQ.
+func IsSearchable(v bool) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldIsSearchable, v))
+}
+
+// IsSystem applies equality check predicate on the "is_system" field. It's identical to IsSystemEQ.
+func IsSystem(v bool) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldIsSystem, v))
 }
 
 // CiTypeID applies equality check predicate on the "ci_type_id" field. It's identical to CiTypeIDEQ.
@@ -242,6 +283,81 @@ func DisplayNameEqualFold(v string) predicate.CIAttributeDefinition {
 // DisplayNameContainsFold applies the ContainsFold predicate on the "display_name" field.
 func DisplayNameContainsFold(v string) predicate.CIAttributeDefinition {
 	return predicate.CIAttributeDefinition(sql.FieldContainsFold(FieldDisplayName, v))
+}
+
+// DescriptionEQ applies the EQ predicate on the "description" field.
+func DescriptionEQ(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldDescription, v))
+}
+
+// DescriptionNEQ applies the NEQ predicate on the "description" field.
+func DescriptionNEQ(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNEQ(FieldDescription, v))
+}
+
+// DescriptionIn applies the In predicate on the "description" field.
+func DescriptionIn(vs ...string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIn(FieldDescription, vs...))
+}
+
+// DescriptionNotIn applies the NotIn predicate on the "description" field.
+func DescriptionNotIn(vs ...string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotIn(FieldDescription, vs...))
+}
+
+// DescriptionGT applies the GT predicate on the "description" field.
+func DescriptionGT(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGT(FieldDescription, v))
+}
+
+// DescriptionGTE applies the GTE predicate on the "description" field.
+func DescriptionGTE(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGTE(FieldDescription, v))
+}
+
+// DescriptionLT applies the LT predicate on the "description" field.
+func DescriptionLT(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLT(FieldDescription, v))
+}
+
+// DescriptionLTE applies the LTE predicate on the "description" field.
+func DescriptionLTE(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLTE(FieldDescription, v))
+}
+
+// DescriptionContains applies the Contains predicate on the "description" field.
+func DescriptionContains(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldContains(FieldDescription, v))
+}
+
+// DescriptionHasPrefix applies the HasPrefix predicate on the "description" field.
+func DescriptionHasPrefix(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldHasPrefix(FieldDescription, v))
+}
+
+// DescriptionHasSuffix applies the HasSuffix predicate on the "description" field.
+func DescriptionHasSuffix(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldHasSuffix(FieldDescription, v))
+}
+
+// DescriptionIsNil applies the IsNil predicate on the "description" field.
+func DescriptionIsNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIsNull(FieldDescription))
+}
+
+// DescriptionNotNil applies the NotNil predicate on the "description" field.
+func DescriptionNotNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotNull(FieldDescription))
+}
+
+// DescriptionEqualFold applies the EqualFold predicate on the "description" field.
+func DescriptionEqualFold(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEqualFold(FieldDescription, v))
+}
+
+// DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
+func DescriptionContainsFold(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldContainsFold(FieldDescription, v))
 }
 
 // TypeEQ applies the EQ predicate on the "type" field.
@@ -479,6 +595,376 @@ func ValidationRulesContainsFold(v string) predicate.CIAttributeDefinition {
 	return predicate.CIAttributeDefinition(sql.FieldContainsFold(FieldValidationRules, v))
 }
 
+// EnumValuesIsNil applies the IsNil predicate on the "enum_values" field.
+func EnumValuesIsNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIsNull(FieldEnumValues))
+}
+
+// EnumValuesNotNil applies the NotNil predicate on the "enum_values" field.
+func EnumValuesNotNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotNull(FieldEnumValues))
+}
+
+// ReferenceTypeEQ applies the EQ predicate on the "reference_type" field.
+func ReferenceTypeEQ(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldReferenceType, v))
+}
+
+// ReferenceTypeNEQ applies the NEQ predicate on the "reference_type" field.
+func ReferenceTypeNEQ(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNEQ(FieldReferenceType, v))
+}
+
+// ReferenceTypeIn applies the In predicate on the "reference_type" field.
+func ReferenceTypeIn(vs ...string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIn(FieldReferenceType, vs...))
+}
+
+// ReferenceTypeNotIn applies the NotIn predicate on the "reference_type" field.
+func ReferenceTypeNotIn(vs ...string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotIn(FieldReferenceType, vs...))
+}
+
+// ReferenceTypeGT applies the GT predicate on the "reference_type" field.
+func ReferenceTypeGT(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGT(FieldReferenceType, v))
+}
+
+// ReferenceTypeGTE applies the GTE predicate on the "reference_type" field.
+func ReferenceTypeGTE(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGTE(FieldReferenceType, v))
+}
+
+// ReferenceTypeLT applies the LT predicate on the "reference_type" field.
+func ReferenceTypeLT(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLT(FieldReferenceType, v))
+}
+
+// ReferenceTypeLTE applies the LTE predicate on the "reference_type" field.
+func ReferenceTypeLTE(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLTE(FieldReferenceType, v))
+}
+
+// ReferenceTypeContains applies the Contains predicate on the "reference_type" field.
+func ReferenceTypeContains(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldContains(FieldReferenceType, v))
+}
+
+// ReferenceTypeHasPrefix applies the HasPrefix predicate on the "reference_type" field.
+func ReferenceTypeHasPrefix(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldHasPrefix(FieldReferenceType, v))
+}
+
+// ReferenceTypeHasSuffix applies the HasSuffix predicate on the "reference_type" field.
+func ReferenceTypeHasSuffix(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldHasSuffix(FieldReferenceType, v))
+}
+
+// ReferenceTypeIsNil applies the IsNil predicate on the "reference_type" field.
+func ReferenceTypeIsNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIsNull(FieldReferenceType))
+}
+
+// ReferenceTypeNotNil applies the NotNil predicate on the "reference_type" field.
+func ReferenceTypeNotNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotNull(FieldReferenceType))
+}
+
+// ReferenceTypeEqualFold applies the EqualFold predicate on the "reference_type" field.
+func ReferenceTypeEqualFold(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEqualFold(FieldReferenceType, v))
+}
+
+// ReferenceTypeContainsFold applies the ContainsFold predicate on the "reference_type" field.
+func ReferenceTypeContainsFold(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldContainsFold(FieldReferenceType, v))
+}
+
+// DisplayOrderEQ applies the EQ predicate on the "display_order" field.
+func DisplayOrderEQ(v int) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldDisplayOrder, v))
+}
+
+// DisplayOrderNEQ applies the NEQ predicate on the "display_order" field.
+func DisplayOrderNEQ(v int) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNEQ(FieldDisplayOrder, v))
+}
+
+// DisplayOrderIn applies the In predicate on the "display_order" field.
+func DisplayOrderIn(vs ...int) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIn(FieldDisplayOrder, vs...))
+}
+
+// DisplayOrderNotIn applies the NotIn predicate on the "display_order" field.
+func DisplayOrderNotIn(vs ...int) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotIn(FieldDisplayOrder, vs...))
+}
+
+// DisplayOrderGT applies the GT predicate on the "display_order" field.
+func DisplayOrderGT(v int) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGT(FieldDisplayOrder, v))
+}
+
+// DisplayOrderGTE applies the GTE predicate on the "display_order" field.
+func DisplayOrderGTE(v int) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGTE(FieldDisplayOrder, v))
+}
+
+// DisplayOrderLT applies the LT predicate on the "display_order" field.
+func DisplayOrderLT(v int) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLT(FieldDisplayOrder, v))
+}
+
+// DisplayOrderLTE applies the LTE predicate on the "display_order" field.
+func DisplayOrderLTE(v int) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLTE(FieldDisplayOrder, v))
+}
+
+// GroupNameEQ applies the EQ predicate on the "group_name" field.
+func GroupNameEQ(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldGroupName, v))
+}
+
+// GroupNameNEQ applies the NEQ predicate on the "group_name" field.
+func GroupNameNEQ(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNEQ(FieldGroupName, v))
+}
+
+// GroupNameIn applies the In predicate on the "group_name" field.
+func GroupNameIn(vs ...string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIn(FieldGroupName, vs...))
+}
+
+// GroupNameNotIn applies the NotIn predicate on the "group_name" field.
+func GroupNameNotIn(vs ...string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotIn(FieldGroupName, vs...))
+}
+
+// GroupNameGT applies the GT predicate on the "group_name" field.
+func GroupNameGT(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGT(FieldGroupName, v))
+}
+
+// GroupNameGTE applies the GTE predicate on the "group_name" field.
+func GroupNameGTE(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGTE(FieldGroupName, v))
+}
+
+// GroupNameLT applies the LT predicate on the "group_name" field.
+func GroupNameLT(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLT(FieldGroupName, v))
+}
+
+// GroupNameLTE applies the LTE predicate on the "group_name" field.
+func GroupNameLTE(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLTE(FieldGroupName, v))
+}
+
+// GroupNameContains applies the Contains predicate on the "group_name" field.
+func GroupNameContains(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldContains(FieldGroupName, v))
+}
+
+// GroupNameHasPrefix applies the HasPrefix predicate on the "group_name" field.
+func GroupNameHasPrefix(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldHasPrefix(FieldGroupName, v))
+}
+
+// GroupNameHasSuffix applies the HasSuffix predicate on the "group_name" field.
+func GroupNameHasSuffix(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldHasSuffix(FieldGroupName, v))
+}
+
+// GroupNameIsNil applies the IsNil predicate on the "group_name" field.
+func GroupNameIsNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIsNull(FieldGroupName))
+}
+
+// GroupNameNotNil applies the NotNil predicate on the "group_name" field.
+func GroupNameNotNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotNull(FieldGroupName))
+}
+
+// GroupNameEqualFold applies the EqualFold predicate on the "group_name" field.
+func GroupNameEqualFold(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEqualFold(FieldGroupName, v))
+}
+
+// GroupNameContainsFold applies the ContainsFold predicate on the "group_name" field.
+func GroupNameContainsFold(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldContainsFold(FieldGroupName, v))
+}
+
+// PlaceholderEQ applies the EQ predicate on the "placeholder" field.
+func PlaceholderEQ(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldPlaceholder, v))
+}
+
+// PlaceholderNEQ applies the NEQ predicate on the "placeholder" field.
+func PlaceholderNEQ(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNEQ(FieldPlaceholder, v))
+}
+
+// PlaceholderIn applies the In predicate on the "placeholder" field.
+func PlaceholderIn(vs ...string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIn(FieldPlaceholder, vs...))
+}
+
+// PlaceholderNotIn applies the NotIn predicate on the "placeholder" field.
+func PlaceholderNotIn(vs ...string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotIn(FieldPlaceholder, vs...))
+}
+
+// PlaceholderGT applies the GT predicate on the "placeholder" field.
+func PlaceholderGT(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGT(FieldPlaceholder, v))
+}
+
+// PlaceholderGTE applies the GTE predicate on the "placeholder" field.
+func PlaceholderGTE(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGTE(FieldPlaceholder, v))
+}
+
+// PlaceholderLT applies the LT predicate on the "placeholder" field.
+func PlaceholderLT(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLT(FieldPlaceholder, v))
+}
+
+// PlaceholderLTE applies the LTE predicate on the "placeholder" field.
+func PlaceholderLTE(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLTE(FieldPlaceholder, v))
+}
+
+// PlaceholderContains applies the Contains predicate on the "placeholder" field.
+func PlaceholderContains(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldContains(FieldPlaceholder, v))
+}
+
+// PlaceholderHasPrefix applies the HasPrefix predicate on the "placeholder" field.
+func PlaceholderHasPrefix(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldHasPrefix(FieldPlaceholder, v))
+}
+
+// PlaceholderHasSuffix applies the HasSuffix predicate on the "placeholder" field.
+func PlaceholderHasSuffix(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldHasSuffix(FieldPlaceholder, v))
+}
+
+// PlaceholderIsNil applies the IsNil predicate on the "placeholder" field.
+func PlaceholderIsNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIsNull(FieldPlaceholder))
+}
+
+// PlaceholderNotNil applies the NotNil predicate on the "placeholder" field.
+func PlaceholderNotNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotNull(FieldPlaceholder))
+}
+
+// PlaceholderEqualFold applies the EqualFold predicate on the "placeholder" field.
+func PlaceholderEqualFold(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEqualFold(FieldPlaceholder, v))
+}
+
+// PlaceholderContainsFold applies the ContainsFold predicate on the "placeholder" field.
+func PlaceholderContainsFold(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldContainsFold(FieldPlaceholder, v))
+}
+
+// HelpTextEQ applies the EQ predicate on the "help_text" field.
+func HelpTextEQ(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldHelpText, v))
+}
+
+// HelpTextNEQ applies the NEQ predicate on the "help_text" field.
+func HelpTextNEQ(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNEQ(FieldHelpText, v))
+}
+
+// HelpTextIn applies the In predicate on the "help_text" field.
+func HelpTextIn(vs ...string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIn(FieldHelpText, vs...))
+}
+
+// HelpTextNotIn applies the NotIn predicate on the "help_text" field.
+func HelpTextNotIn(vs ...string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotIn(FieldHelpText, vs...))
+}
+
+// HelpTextGT applies the GT predicate on the "help_text" field.
+func HelpTextGT(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGT(FieldHelpText, v))
+}
+
+// HelpTextGTE applies the GTE predicate on the "help_text" field.
+func HelpTextGTE(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldGTE(FieldHelpText, v))
+}
+
+// HelpTextLT applies the LT predicate on the "help_text" field.
+func HelpTextLT(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLT(FieldHelpText, v))
+}
+
+// HelpTextLTE applies the LTE predicate on the "help_text" field.
+func HelpTextLTE(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldLTE(FieldHelpText, v))
+}
+
+// HelpTextContains applies the Contains predicate on the "help_text" field.
+func HelpTextContains(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldContains(FieldHelpText, v))
+}
+
+// HelpTextHasPrefix applies the HasPrefix predicate on the "help_text" field.
+func HelpTextHasPrefix(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldHasPrefix(FieldHelpText, v))
+}
+
+// HelpTextHasSuffix applies the HasSuffix predicate on the "help_text" field.
+func HelpTextHasSuffix(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldHasSuffix(FieldHelpText, v))
+}
+
+// HelpTextIsNil applies the IsNil predicate on the "help_text" field.
+func HelpTextIsNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldIsNull(FieldHelpText))
+}
+
+// HelpTextNotNil applies the NotNil predicate on the "help_text" field.
+func HelpTextNotNil() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNotNull(FieldHelpText))
+}
+
+// HelpTextEqualFold applies the EqualFold predicate on the "help_text" field.
+func HelpTextEqualFold(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEqualFold(FieldHelpText, v))
+}
+
+// HelpTextContainsFold applies the ContainsFold predicate on the "help_text" field.
+func HelpTextContainsFold(v string) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldContainsFold(FieldHelpText, v))
+}
+
+// IsSearchableEQ applies the EQ predicate on the "is_searchable" field.
+func IsSearchableEQ(v bool) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldIsSearchable, v))
+}
+
+// IsSearchableNEQ applies the NEQ predicate on the "is_searchable" field.
+func IsSearchableNEQ(v bool) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNEQ(FieldIsSearchable, v))
+}
+
+// IsSystemEQ applies the EQ predicate on the "is_system" field.
+func IsSystemEQ(v bool) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldIsSystem, v))
+}
+
+// IsSystemNEQ applies the NEQ predicate on the "is_system" field.
+func IsSystemNEQ(v bool) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(sql.FieldNEQ(FieldIsSystem, v))
+}
+
 // CiTypeIDEQ applies the EQ predicate on the "ci_type_id" field.
 func CiTypeIDEQ(v int) predicate.CIAttributeDefinition {
 	return predicate.CIAttributeDefinition(sql.FieldEQ(FieldCiTypeID, v))
@@ -497,26 +983,6 @@ func CiTypeIDIn(vs ...int) predicate.CIAttributeDefinition {
 // CiTypeIDNotIn applies the NotIn predicate on the "ci_type_id" field.
 func CiTypeIDNotIn(vs ...int) predicate.CIAttributeDefinition {
 	return predicate.CIAttributeDefinition(sql.FieldNotIn(FieldCiTypeID, vs...))
-}
-
-// CiTypeIDGT applies the GT predicate on the "ci_type_id" field.
-func CiTypeIDGT(v int) predicate.CIAttributeDefinition {
-	return predicate.CIAttributeDefinition(sql.FieldGT(FieldCiTypeID, v))
-}
-
-// CiTypeIDGTE applies the GTE predicate on the "ci_type_id" field.
-func CiTypeIDGTE(v int) predicate.CIAttributeDefinition {
-	return predicate.CIAttributeDefinition(sql.FieldGTE(FieldCiTypeID, v))
-}
-
-// CiTypeIDLT applies the LT predicate on the "ci_type_id" field.
-func CiTypeIDLT(v int) predicate.CIAttributeDefinition {
-	return predicate.CIAttributeDefinition(sql.FieldLT(FieldCiTypeID, v))
-}
-
-// CiTypeIDLTE applies the LTE predicate on the "ci_type_id" field.
-func CiTypeIDLTE(v int) predicate.CIAttributeDefinition {
-	return predicate.CIAttributeDefinition(sql.FieldLTE(FieldCiTypeID, v))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
@@ -647,6 +1113,29 @@ func UpdatedAtLT(v time.Time) predicate.CIAttributeDefinition {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.CIAttributeDefinition {
 	return predicate.CIAttributeDefinition(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasCiType applies the HasEdge predicate on the "ci_type" edge.
+func HasCiType() predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, CiTypeTable, CiTypeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCiTypeWith applies the HasEdge predicate on the "ci_type" edge with a given conditions (other predicates).
+func HasCiTypeWith(preds ...predicate.CIType) predicate.CIAttributeDefinition {
+	return predicate.CIAttributeDefinition(func(s *sql.Selector) {
+		step := newCiTypeStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"time"
@@ -83,6 +84,20 @@ func (_c *CITypeCreate) SetNillableAttributeSchema(v *string) *CITypeCreate {
 	return _c
 }
 
+// SetParentTypeID sets the "parent_type_id" field.
+func (_c *CITypeCreate) SetParentTypeID(v int) *CITypeCreate {
+	_c.mutation.SetParentTypeID(v)
+	return _c
+}
+
+// SetNillableParentTypeID sets the "parent_type_id" field if the given value is not nil.
+func (_c *CITypeCreate) SetNillableParentTypeID(v *int) *CITypeCreate {
+	if v != nil {
+		_c.SetParentTypeID(*v)
+	}
+	return _c
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_c *CITypeCreate) SetTenantID(v int) *CITypeCreate {
 	_c.mutation.SetTenantID(v)
@@ -144,6 +159,55 @@ func (_c *CITypeCreate) AddCis(v ...*ConfigurationItem) *CITypeCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddCiIDs(ids...)
+}
+
+// SetParentID sets the "parent" edge to the CIType entity by ID.
+func (_c *CITypeCreate) SetParentID(id int) *CITypeCreate {
+	_c.mutation.SetParentID(id)
+	return _c
+}
+
+// SetNillableParentID sets the "parent" edge to the CIType entity by ID if the given value is not nil.
+func (_c *CITypeCreate) SetNillableParentID(id *int) *CITypeCreate {
+	if id != nil {
+		_c = _c.SetParentID(*id)
+	}
+	return _c
+}
+
+// SetParent sets the "parent" edge to the CIType entity.
+func (_c *CITypeCreate) SetParent(v *CIType) *CITypeCreate {
+	return _c.SetParentID(v.ID)
+}
+
+// AddChildIDs adds the "children" edge to the CIType entity by IDs.
+func (_c *CITypeCreate) AddChildIDs(ids ...int) *CITypeCreate {
+	_c.mutation.AddChildIDs(ids...)
+	return _c
+}
+
+// AddChildren adds the "children" edges to the CIType entity.
+func (_c *CITypeCreate) AddChildren(v ...*CIType) *CITypeCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddChildIDs(ids...)
+}
+
+// AddAttributeDefinitionIDs adds the "attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (_c *CITypeCreate) AddAttributeDefinitionIDs(ids ...int) *CITypeCreate {
+	_c.mutation.AddAttributeDefinitionIDs(ids...)
+	return _c
+}
+
+// AddAttributeDefinitions adds the "attribute_definitions" edges to the CIAttributeDefinition entity.
+func (_c *CITypeCreate) AddAttributeDefinitions(v ...*CIAttributeDefinition) *CITypeCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAttributeDefinitionIDs(ids...)
 }
 
 // Mutation returns the CITypeMutation object of the builder.
@@ -293,6 +357,55 @@ func (_c *CITypeCreate) createSpec() (*CIType, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   citype.ParentTable,
+			Columns: []string{citype.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ParentTypeID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.ChildrenTable,
+			Columns: []string{citype.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AttributeDefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

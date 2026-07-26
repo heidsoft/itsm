@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processapprovaldecision"
@@ -70,6 +71,7 @@ type TaskService interface {
 	ClaimTask(ctx context.Context, taskID string, userID string) error
 	ClaimTaskByID(ctx context.Context, id int, userID int) error
 	ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error)
+	ListUserTaskViews(ctx context.Context, req *ListUserTasksRequest) ([]*dto.BPMNTaskResponse, int, error)
 	AssignTask(ctx context.Context, taskID string, assignee string) error
 	CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error
 	CancelTask(ctx context.Context, taskID string, reason string) error
@@ -1825,6 +1827,39 @@ func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksR
 	}
 
 	return tasks, total, nil
+}
+
+// ListUserTaskViews 「我的待办」视图：任务列表附带所属实例的 businessKey 等业务上下文，
+// 供审批中心跳转业务单据使用。返回 DTO 而非 Ent 模型。
+func (s *bpmnTaskService) ListUserTaskViews(ctx context.Context, req *ListUserTasksRequest) ([]*dto.BPMNTaskResponse, int, error) {
+	tasks, total, err := s.ListUserTasks(ctx, req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 批量加载任务所属流程实例，避免 N+1 查询
+	instanceIDs := make([]int, 0, len(tasks))
+	seen := make(map[int]bool, len(tasks))
+	for _, task := range tasks {
+		if !seen[task.ProcessInstanceID] {
+			seen[task.ProcessInstanceID] = true
+			instanceIDs = append(instanceIDs, task.ProcessInstanceID)
+		}
+	}
+	instanceMap := make(map[int]*ent.ProcessInstance, len(instanceIDs))
+	if len(instanceIDs) > 0 {
+		instances, err := s.client.ProcessInstance.Query().
+			Where(processinstance.IDIn(instanceIDs...)).
+			All(ctx)
+		if err != nil {
+			return nil, 0, fmt.Errorf("加载任务所属流程实例失败: %w", err)
+		}
+		for _, instance := range instances {
+			instanceMap[instance.ID] = instance
+		}
+	}
+
+	return dto.ToBPMNTaskResponseList(tasks, instanceMap), total, nil
 }
 
 func (s *bpmnTaskService) ListApprovalDecisions(ctx context.Context, processInstanceKey string) ([]*ent.ProcessApprovalDecision, error) {

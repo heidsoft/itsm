@@ -467,7 +467,12 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 	}
 	_ = c.ShouldBindJSON(&body)
 
-	res, err := h.svc.TransitionStatus(c.Request.Context(), id, tenantID, userID, targetStatus)
+	comment := strings.TrimSpace(body.Comment)
+	if comment == "" {
+		comment = strings.TrimSpace(body.Reason)
+	}
+
+	res, err := h.svc.TransitionStatus(c.Request.Context(), id, tenantID, userID, targetStatus, comment)
 	if err != nil {
 		common.InternalError(c, "状态转换失败: "+err.Error())
 		return

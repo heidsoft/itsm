@@ -92,6 +92,13 @@ type AssignIncidentRequest struct {
 	AssigneeID int `json:"assigneeId" binding:"required"`
 }
 
+// EscalateMajorIncidentRequest 升级为重大事件请求
+type EscalateMajorIncidentRequest struct {
+	ImpactScope       string `json:"impactScope" binding:"required,oneof=low medium high critical"`
+	BusinessImpact    string `json:"businessImpact" binding:"required"`
+	CommunicationPlan string `json:"communicationPlan"`
+}
+
 type IncidentResponse struct {
 	ID                  int                    `json:"id" example:"1"`
 	Title               string                 `json:"title" example:"服务器CPU使用率过高"`

@@ -1,5 +1,5 @@
 import { CIStatus, CIStatusLabels } from '@/constants/cmdb';
-import type { CloudResource, CloudService } from '@/types/biz/cmdb';
+import type { CIType, CloudResource, CloudService } from '@/types/biz/cmdb';
 
 export const statusOptions = [CIStatus.ACTIVE, CIStatus.INACTIVE, CIStatus.MAINTENANCE];
 
@@ -27,6 +27,7 @@ export const cloudProviderOptions = [
   { label: '华为云', value: 'huawei' },
   { label: '腾讯云', value: 'tencent' },
   { label: 'Azure', value: 'azure' },
+  { label: 'AWS', value: 'aws' },
   { label: '私有云', value: 'onprem' },
 ];
 
@@ -99,7 +100,9 @@ export const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
           required: Boolean(record.required),
           options: Array.isArray(record.options)
             ? record.options
-                .map(option => (typeof option === 'string' || typeof option === 'number' ? String(option) : ''))
+                .map(option =>
+                  typeof option === 'string' || typeof option === 'number' ? String(option) : ''
+                )
                 .filter(Boolean)
             : undefined,
           placeholder: typeof record.placeholder === 'string' ? record.placeholder : undefined,
@@ -127,7 +130,9 @@ export const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
           required: Boolean(entry.required),
           options: Array.isArray(entry.options)
             ? entry.options
-                .map(option => (typeof option === 'string' || typeof option === 'number' ? String(option) : ''))
+                .map(option =>
+                  typeof option === 'string' || typeof option === 'number' ? String(option) : ''
+                )
                 .filter(Boolean)
             : undefined,
           placeholder: typeof entry.placeholder === 'string' ? entry.placeholder : undefined,
@@ -138,6 +143,29 @@ export const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
   }
 
   return [];
+};
+
+export const resolveEffectiveTypeSchemaFields = (
+  types: CIType[],
+  selectedTypeId?: number
+): SchemaField[] => {
+  if (!selectedTypeId) return [];
+  const byID = new Map(types.map(type => [type.id, type]));
+  const visited = new Set<number>();
+  const chain: CIType[] = [];
+  let selectedType = byID.get(selectedTypeId);
+  while (selectedType && !visited.has(selectedType.id)) {
+    visited.add(selectedType.id);
+    chain.unshift(selectedType);
+    selectedType = selectedType.parentTypeId ? byID.get(selectedType.parentTypeId) : undefined;
+  }
+  const merged = new Map<string, SchemaField>();
+  for (const type of chain) {
+    for (const field of normalizeSchemaFields(type.attributeSchema)) {
+      merged.set(field.key, field);
+    }
+  }
+  return Array.from(merged.values());
 };
 
 export const buildCloudResourceOptions = (
@@ -161,7 +189,9 @@ export const getStatusSelectOptions = () =>
 
 export const compactRecord = (record?: Record<string, unknown>) => {
   if (!record) return undefined;
-  const entries = Object.entries(record).filter(([, value]) => value !== undefined && value !== null && value !== '');
+  const entries = Object.entries(record).filter(
+    ([, value]) => value !== undefined && value !== null && value !== ''
+  );
   return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 };
 

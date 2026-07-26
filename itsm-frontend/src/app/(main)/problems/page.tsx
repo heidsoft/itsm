@@ -70,6 +70,7 @@ export default function ProblemListPage() {
   const [activeView, setActiveView] = useState<'list' | 'kanban'>('list');
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   // 分页
   const [page, setPage] = useState(1);
@@ -79,6 +80,7 @@ export default function ProblemListPage() {
   // ====== 数据获取 ======
   const fetchProblems = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const response = await ProblemApi.getProblems({
         page,
@@ -93,6 +95,8 @@ export default function ProblemListPage() {
     } catch (error) {
       console.error('Failed to fetch problems:', error);
       message.error('加载问题列表失败，请稍后重试');
+      // 错误态与空态区分，由模板 error 态展示重试
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -100,6 +104,7 @@ export default function ProblemListPage() {
 
   const fetchProblemsForKanban = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const response = await ProblemApi.getProblems({
         page: 1,
@@ -111,7 +116,8 @@ export default function ProblemListPage() {
       setProblems(response.problems || []);
     } catch (error) {
       console.error('Failed to fetch problems for kanban:', error);
-      setProblems([]);
+      // 错误态与空态区分：不清空数据伪装成空态
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -184,7 +190,7 @@ export default function ProblemListPage() {
     {
       label: '总问题数',
       value: stats.total,
-      color: '#1890ff',
+      color: '#3b82f6',
       icon: <Bug size={20} strokeWidth={1.8} />,
     },
     {
@@ -334,6 +340,9 @@ export default function ProblemListPage() {
 
       // 内容
       loading={loading}
+      error={loadError}
+      errorDescription="加载问题列表失败"
+      onRetry={handleRefresh}
       empty={problems.length === 0 && !loading}
       emptyDescription="暂无问题记录"
       emptyAction={{

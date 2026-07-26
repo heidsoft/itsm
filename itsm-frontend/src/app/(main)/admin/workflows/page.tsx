@@ -18,6 +18,7 @@ import {
   Plus,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   Table,
@@ -126,8 +127,10 @@ const STATUS_CONFIG = {
 };
 
 const WorkflowManagement = () => {
+  const router = useRouter();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -171,13 +174,22 @@ const WorkflowManagement = () => {
     loadWorkflows();
   }, []);
 
+  // 搜索输入防抖（300ms）
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // 统计信息
   const stats = {
     total: workflows.length,
     active: workflows.filter(w => w.status === WORKFLOW_STATUS.ACTIVE).length,
     draft: workflows.filter(w => w.status === WORKFLOW_STATUS.DRAFT).length,
     totalInstances: workflows.reduce((sum, w) => sum + w.activeInstances, 0),
-    avgSteps: Math.round(workflows.reduce((sum, w) => sum + w.stepsCount, 0) / workflows.length),
+    avgSteps:
+      workflows.length > 0
+        ? Math.round(workflows.reduce((sum, w) => sum + w.stepsCount, 0) / workflows.length)
+        : 0,
   };
 
   // 获取所有工作流类型
@@ -186,8 +198,8 @@ const WorkflowManagement = () => {
   // 过滤工作流
   const filteredWorkflows = workflows.filter(workflow => {
     const matchesSearch =
-      workflow.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      workflow.description.toLowerCase().includes(searchTerm.toLowerCase());
+      workflow.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      workflow.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
     const matchesType = typeFilter === 'all' || workflow.type === typeFilter;
     const matchesStatus = statusFilter === 'all' || workflow.status === statusFilter;
 
@@ -307,7 +319,7 @@ const WorkflowManagement = () => {
         message.success('工作流更新成功');
       } else {
         // 新建
-        await WorkflowAPI.createWorkflow({
+        const created = await WorkflowAPI.createWorkflow({
           code: values.name,
           name: values.name,
           description: values.description,
@@ -315,6 +327,20 @@ const WorkflowManagement = () => {
           status: 'draft',
         } as never);
         message.success('工作流创建成功');
+
+        // 创建成功后引导进入设计器编排流程
+        const createdId = (created as { id?: number | string } | undefined)?.id;
+        if (createdId) {
+          Modal.confirm({
+            title: '是否立即进入设计器编排流程？',
+            content: '工作流已创建为草稿，需要在设计器中编排节点后才能启用。',
+            okText: '进入设计器',
+            cancelText: '稍后再说',
+            onOk: () => {
+              router.push(`/workflow/designer?id=${createdId}`);
+            },
+          });
+        }
       }
 
       setShowCreateModal(false);
@@ -457,13 +483,22 @@ const WorkflowManagement = () => {
             <Button
               type="text"
               icon={<Eye className="w-4 h-4" />}
+              aria-label="查看详情"
               onClick={() => handleViewDetail(record)}
             />
           </Tooltip>
-          <Tooltip title="编辑">
+          <Tooltip title="设计流程">
+            <Button
+              type="text"
+              icon={<GitBranch className="w-4 h-4" />}
+              onClick={() => router.push(`/workflow/designer?id=${record.id}`)}
+            />
+          </Tooltip>
+          <Tooltip title="编辑元数据">
             <Button
               type="text"
               icon={<Edit className="w-4 h-4" />}
+              aria-label="编辑元数据"
               onClick={() => {
                 setSelectedWorkflow(record);
                 form.setFieldsValue(record);
@@ -475,6 +510,7 @@ const WorkflowManagement = () => {
             <Button
               type="text"
               icon={<Copy className="w-4 h-4" />}
+              aria-label="复制工作流"
               onClick={() => handleDuplicate(record)}
             />
           </Tooltip>
@@ -499,7 +535,7 @@ const WorkflowManagement = () => {
             cancelText="取消"
             okType="danger"
           >
-            <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+            <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} aria-label="删除工作流" />
           </Popconfirm>
         </Space>
       ),
@@ -618,6 +654,12 @@ const WorkflowManagement = () => {
                   </Button>
                 </Popconfirm>
               )}
+              <Button
+                icon={<Settings className="w-4 h-4" />}
+                onClick={() => router.push('/admin/process-routing')}
+              >
+                绑定规则
+              </Button>
               <Button
                 type="primary"
                 icon={<Plus className="w-4 h-4" />}

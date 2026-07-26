@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -17,6 +18,8 @@ const (
 	FieldName = "name"
 	// FieldDisplayName holds the string denoting the display_name field in the database.
 	FieldDisplayName = "display_name"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
 	// FieldRequired holds the string denoting the required field in the database.
@@ -27,6 +30,22 @@ const (
 	FieldDefaultValue = "default_value"
 	// FieldValidationRules holds the string denoting the validation_rules field in the database.
 	FieldValidationRules = "validation_rules"
+	// FieldEnumValues holds the string denoting the enum_values field in the database.
+	FieldEnumValues = "enum_values"
+	// FieldReferenceType holds the string denoting the reference_type field in the database.
+	FieldReferenceType = "reference_type"
+	// FieldDisplayOrder holds the string denoting the display_order field in the database.
+	FieldDisplayOrder = "display_order"
+	// FieldGroupName holds the string denoting the group_name field in the database.
+	FieldGroupName = "group_name"
+	// FieldPlaceholder holds the string denoting the placeholder field in the database.
+	FieldPlaceholder = "placeholder"
+	// FieldHelpText holds the string denoting the help_text field in the database.
+	FieldHelpText = "help_text"
+	// FieldIsSearchable holds the string denoting the is_searchable field in the database.
+	FieldIsSearchable = "is_searchable"
+	// FieldIsSystem holds the string denoting the is_system field in the database.
+	FieldIsSystem = "is_system"
 	// FieldCiTypeID holds the string denoting the ci_type_id field in the database.
 	FieldCiTypeID = "ci_type_id"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
@@ -37,8 +56,17 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeCiType holds the string denoting the ci_type edge name in mutations.
+	EdgeCiType = "ci_type"
 	// Table holds the table name of the ciattributedefinition in the database.
 	Table = "ci_attribute_definitions"
+	// CiTypeTable is the table that holds the ci_type relation/edge.
+	CiTypeTable = "ci_attribute_definitions"
+	// CiTypeInverseTable is the table name for the CIType entity.
+	// It exists in this package in order to avoid circular dependency with the "citype" package.
+	CiTypeInverseTable = "ci_types"
+	// CiTypeColumn is the table column denoting the ci_type relation/edge.
+	CiTypeColumn = "ci_type_id"
 )
 
 // Columns holds all SQL columns for ciattributedefinition fields.
@@ -46,11 +74,20 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 	FieldDisplayName,
+	FieldDescription,
 	FieldType,
 	FieldRequired,
 	FieldUnique,
 	FieldDefaultValue,
 	FieldValidationRules,
+	FieldEnumValues,
+	FieldReferenceType,
+	FieldDisplayOrder,
+	FieldGroupName,
+	FieldPlaceholder,
+	FieldHelpText,
+	FieldIsSearchable,
+	FieldIsSystem,
 	FieldCiTypeID,
 	FieldTenantID,
 	FieldIsActive,
@@ -79,6 +116,12 @@ var (
 	DefaultRequired bool
 	// DefaultUnique holds the default value on creation for the "unique" field.
 	DefaultUnique bool
+	// DefaultDisplayOrder holds the default value on creation for the "display_order" field.
+	DefaultDisplayOrder int
+	// DefaultIsSearchable holds the default value on creation for the "is_searchable" field.
+	DefaultIsSearchable bool
+	// DefaultIsSystem holds the default value on creation for the "is_system" field.
+	DefaultIsSystem bool
 	// CiTypeIDValidator is a validator for the "ci_type_id" field. It is called by the builders before save.
 	CiTypeIDValidator func(int) error
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
@@ -111,6 +154,11 @@ func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDisplayName, opts...).ToFunc()
 }
 
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
 // ByType orders the results by the type field.
 func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
@@ -136,6 +184,41 @@ func ByValidationRules(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldValidationRules, opts...).ToFunc()
 }
 
+// ByReferenceType orders the results by the reference_type field.
+func ByReferenceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReferenceType, opts...).ToFunc()
+}
+
+// ByDisplayOrder orders the results by the display_order field.
+func ByDisplayOrder(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDisplayOrder, opts...).ToFunc()
+}
+
+// ByGroupName orders the results by the group_name field.
+func ByGroupName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGroupName, opts...).ToFunc()
+}
+
+// ByPlaceholder orders the results by the placeholder field.
+func ByPlaceholder(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPlaceholder, opts...).ToFunc()
+}
+
+// ByHelpText orders the results by the help_text field.
+func ByHelpText(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldHelpText, opts...).ToFunc()
+}
+
+// ByIsSearchable orders the results by the is_searchable field.
+func ByIsSearchable(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsSearchable, opts...).ToFunc()
+}
+
+// ByIsSystem orders the results by the is_system field.
+func ByIsSystem(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsSystem, opts...).ToFunc()
+}
+
 // ByCiTypeID orders the results by the ci_type_id field.
 func ByCiTypeID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCiTypeID, opts...).ToFunc()
@@ -159,4 +242,18 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByCiTypeField orders the results by ci_type field.
+func ByCiTypeField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCiTypeStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newCiTypeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CiTypeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, CiTypeTable, CiTypeColumn),
+	)
 }

@@ -134,6 +134,7 @@ export default function WorkflowNodeInspector({
                 type="text"
                 size="small"
                 icon={<RefreshCw className="w-3 h-3" />}
+                aria-label="重读节点属性"
                 onClick={onRefresh}
               />
             </Tooltip>

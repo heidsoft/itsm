@@ -93,7 +93,7 @@ func (ac *AuthController) RefreshToken(c *gin.Context) {
 // @Tags 认证
 // @Accept json
 // @Produce json
-// @Success 200 {object} dto.GetUserTenantsResponse "租户列表"
+// @Success 200 {object} dto.UserTenantsResponse "租户列表"
 // @Failure 401 {object} map[string]interface{} "用户未认证"
 // @Router /api/v1/auth/tenants [get]
 // @Security BearerAuth
@@ -121,7 +121,7 @@ func (ac *AuthController) GetUserTenants(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body dto.SwitchTenantRequest true "切换租户请求（tenant_id）"
-// @Success 200 {object} dto.SwitchTenantResponse "切换成功，返回新的租户信息"
+// @Success 200 {object} dto.LoginResponse "切换成功，返回新的租户信息"
 // @Failure 400 {object} map[string]interface{} "请求参数错误"
 // @Failure 401 {object} map[string]interface{} "用户未认证"
 // @Failure 403 {object} map[string]interface{} "无权访问该租户"

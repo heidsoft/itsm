@@ -8,15 +8,15 @@ import { httpClient } from './http-client';
 export interface TicketCategory {
   id: number;
   name: string;
+  code: string;
   description: string;
   parentId: number | null;
   level: number;
-  path: string;
+  path?: string;
   sortOrder: number;
   isActive: boolean;
-  isDefault: boolean;
-  color: string;
-  icon: string;
+  workflowId?: number | null;
+  departmentId?: number | null;
   ticketCount?: number;
   children?: TicketCategory[];
   createdAt: string;
@@ -26,25 +26,25 @@ export interface TicketCategory {
 // 创建分类请求
 export interface CreateCategoryRequest {
   name: string;
+  code: string;
   description?: string;
   parentId?: number;
   sortOrder?: number;
   isActive?: boolean;
-  isDefault?: boolean;
-  color?: string;
-  icon?: string;
+  workflowId?: number;
+  departmentId?: number;
 }
 
 // 更新分类请求
 export interface UpdateCategoryRequest {
   name?: string;
+  code?: string;
   description?: string;
   parentId?: number;
   sortOrder?: number;
   isActive?: boolean;
-  isDefault?: boolean;
-  color?: string;
-  icon?: string;
+  workflowId?: number;
+  departmentId?: number;
 }
 
 export class TicketCategoryApi {
@@ -73,9 +73,10 @@ export class TicketCategoryApi {
     return httpClient.get(`/api/v1/ticket-categories/${id}`);
   }
 
-  // 创建分类
+  // 创建分类（兼容旧版后端：请求体携带 tenantId，新版后端会以认证上下文为准）
   static async createCategory(data: CreateCategoryRequest): Promise<TicketCategory> {
-    return httpClient.post('/api/v1/ticket-categories', data);
+    const tenantId = httpClient.getTenantId() || 1;
+    return httpClient.post('/api/v1/ticket-categories', { ...data, tenantId });
   }
 
   // 更新分类

@@ -46,11 +46,11 @@ export const CIDetail: React.FC = () => {
     return (
       <Card>
         <Result
-          status="404"
-          title="404"
-          subTitle="抱歉，您访问的配置项不存在"
+          status='404'
+          title='404'
+          subTitle='抱歉，您访问的配置项不存在'
           extra={
-            <Button type="primary" onClick={() => router.push('/cmdb')}>
+            <Button type='primary' onClick={() => router.push('/cmdb/ci')}>
               返回列表
             </Button>
           }
@@ -130,7 +130,7 @@ export const CIDetail: React.FC = () => {
         items={[
           { title: '首页' },
           { title: '配置管理' },
-          { title: <a onClick={() => router.push('/cmdb')}>配置项列表</a> },
+          { title: <a onClick={() => router.push('/cmdb/ci')}>配置项列表</a> },
           { title: '资产详情' },
         ]}
       />
@@ -139,7 +139,7 @@ export const CIDetail: React.FC = () => {
         <div style={{ marginBottom: 24 }}>
           <Button
             icon={<ArrowLeft />}
-            onClick={() => router.push('/cmdb')}
+            onClick={() => router.push('/cmdb/ci')}
             style={{ marginBottom: 16 }}
           >
             返回列表
@@ -147,11 +147,11 @@ export const CIDetail: React.FC = () => {
           <div
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
           >
-            <Space orientation="vertical" size={0}>
+            <Space orientation='vertical' size={0}>
               <Title level={3} style={{ margin: 0 }}>
                 {ci.name}
               </Title>
-              <Text type="secondary">配置项 ID: {ci.id}</Text>
+              <Text type='secondary'>配置项 ID: {ci.id}</Text>
             </Space>
             <Tag color={STATUS_COLORS[ci.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
               {CIStatusLabels[ci.status] || ci.status}
@@ -159,7 +159,7 @@ export const CIDetail: React.FC = () => {
           </div>
         </div>
 
-        <Tabs defaultActiveKey="basic" items={tabItems} />
+        <Tabs defaultActiveKey='basic' items={tabItems} />
       </Card>
     </div>
   );

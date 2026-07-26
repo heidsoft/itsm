@@ -3,8 +3,10 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/ciattributedefinition"
+	"itsm-backend/ent/citype"
 	"strings"
 	"time"
 
@@ -21,6 +23,8 @@ type CIAttributeDefinition struct {
 	Name string `json:"name,omitempty"`
 	// 显示名称
 	DisplayName string `json:"display_name,omitempty"`
+	// 属性说明
+	Description string `json:"description,omitempty"`
 	// 属性类型
 	Type string `json:"type,omitempty"`
 	// 是否必填
@@ -31,6 +35,22 @@ type CIAttributeDefinition struct {
 	DefaultValue string `json:"default_value,omitempty"`
 	// 验证规则
 	ValidationRules string `json:"validation_rules,omitempty"`
+	// 枚举选项
+	EnumValues []string `json:"enum_values,omitempty"`
+	// 引用目标类型
+	ReferenceType string `json:"reference_type,omitempty"`
+	// 显示顺序
+	DisplayOrder int `json:"display_order,omitempty"`
+	// 属性分组
+	GroupName string `json:"group_name,omitempty"`
+	// 输入提示
+	Placeholder string `json:"placeholder,omitempty"`
+	// 帮助文本
+	HelpText string `json:"help_text,omitempty"`
+	// 是否进入属性检索索引
+	IsSearchable bool `json:"is_searchable,omitempty"`
+	// 是否系统属性
+	IsSystem bool `json:"is_system,omitempty"`
 	// CI类型ID
 	CiTypeID int `json:"ci_type_id,omitempty"`
 	// 租户ID
@@ -40,8 +60,31 @@ type CIAttributeDefinition struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the CIAttributeDefinitionQuery when eager-loading is set.
+	Edges        CIAttributeDefinitionEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// CIAttributeDefinitionEdges holds the relations/edges for other nodes in the graph.
+type CIAttributeDefinitionEdges struct {
+	// CiType holds the value of the ci_type edge.
+	CiType *CIType `json:"ci_type,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// CiTypeOrErr returns the CiType value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e CIAttributeDefinitionEdges) CiTypeOrErr() (*CIType, error) {
+	if e.CiType != nil {
+		return e.CiType, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: citype.Label}
+	}
+	return nil, &NotLoadedError{edge: "ci_type"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -49,11 +92,13 @@ func (*CIAttributeDefinition) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ciattributedefinition.FieldRequired, ciattributedefinition.FieldUnique, ciattributedefinition.FieldIsActive:
+		case ciattributedefinition.FieldEnumValues:
+			values[i] = new([]byte)
+		case ciattributedefinition.FieldRequired, ciattributedefinition.FieldUnique, ciattributedefinition.FieldIsSearchable, ciattributedefinition.FieldIsSystem, ciattributedefinition.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case ciattributedefinition.FieldID, ciattributedefinition.FieldCiTypeID, ciattributedefinition.FieldTenantID:
+		case ciattributedefinition.FieldID, ciattributedefinition.FieldDisplayOrder, ciattributedefinition.FieldCiTypeID, ciattributedefinition.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case ciattributedefinition.FieldName, ciattributedefinition.FieldDisplayName, ciattributedefinition.FieldType, ciattributedefinition.FieldDefaultValue, ciattributedefinition.FieldValidationRules:
+		case ciattributedefinition.FieldName, ciattributedefinition.FieldDisplayName, ciattributedefinition.FieldDescription, ciattributedefinition.FieldType, ciattributedefinition.FieldDefaultValue, ciattributedefinition.FieldValidationRules, ciattributedefinition.FieldReferenceType, ciattributedefinition.FieldGroupName, ciattributedefinition.FieldPlaceholder, ciattributedefinition.FieldHelpText:
 			values[i] = new(sql.NullString)
 		case ciattributedefinition.FieldCreatedAt, ciattributedefinition.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -90,6 +135,12 @@ func (_m *CIAttributeDefinition) assignValues(columns []string, values []any) er
 			} else if value.Valid {
 				_m.DisplayName = value.String
 			}
+		case ciattributedefinition.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				_m.Description = value.String
+			}
 		case ciattributedefinition.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
@@ -119,6 +170,56 @@ func (_m *CIAttributeDefinition) assignValues(columns []string, values []any) er
 				return fmt.Errorf("unexpected type %T for field validation_rules", values[i])
 			} else if value.Valid {
 				_m.ValidationRules = value.String
+			}
+		case ciattributedefinition.FieldEnumValues:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field enum_values", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.EnumValues); err != nil {
+					return fmt.Errorf("unmarshal field enum_values: %w", err)
+				}
+			}
+		case ciattributedefinition.FieldReferenceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field reference_type", values[i])
+			} else if value.Valid {
+				_m.ReferenceType = value.String
+			}
+		case ciattributedefinition.FieldDisplayOrder:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field display_order", values[i])
+			} else if value.Valid {
+				_m.DisplayOrder = int(value.Int64)
+			}
+		case ciattributedefinition.FieldGroupName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field group_name", values[i])
+			} else if value.Valid {
+				_m.GroupName = value.String
+			}
+		case ciattributedefinition.FieldPlaceholder:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field placeholder", values[i])
+			} else if value.Valid {
+				_m.Placeholder = value.String
+			}
+		case ciattributedefinition.FieldHelpText:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field help_text", values[i])
+			} else if value.Valid {
+				_m.HelpText = value.String
+			}
+		case ciattributedefinition.FieldIsSearchable:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_searchable", values[i])
+			} else if value.Valid {
+				_m.IsSearchable = value.Bool
+			}
+		case ciattributedefinition.FieldIsSystem:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_system", values[i])
+			} else if value.Valid {
+				_m.IsSystem = value.Bool
 			}
 		case ciattributedefinition.FieldCiTypeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -163,6 +264,11 @@ func (_m *CIAttributeDefinition) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
+// QueryCiType queries the "ci_type" edge of the CIAttributeDefinition entity.
+func (_m *CIAttributeDefinition) QueryCiType() *CITypeQuery {
+	return NewCIAttributeDefinitionClient(_m.config).QueryCiType(_m)
+}
+
 // Update returns a builder for updating this CIAttributeDefinition.
 // Note that you need to call CIAttributeDefinition.Unwrap() before calling this method if this CIAttributeDefinition
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -192,6 +298,9 @@ func (_m *CIAttributeDefinition) String() string {
 	builder.WriteString("display_name=")
 	builder.WriteString(_m.DisplayName)
 	builder.WriteString(", ")
+	builder.WriteString("description=")
+	builder.WriteString(_m.Description)
+	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
@@ -206,6 +315,30 @@ func (_m *CIAttributeDefinition) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("validation_rules=")
 	builder.WriteString(_m.ValidationRules)
+	builder.WriteString(", ")
+	builder.WriteString("enum_values=")
+	builder.WriteString(fmt.Sprintf("%v", _m.EnumValues))
+	builder.WriteString(", ")
+	builder.WriteString("reference_type=")
+	builder.WriteString(_m.ReferenceType)
+	builder.WriteString(", ")
+	builder.WriteString("display_order=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DisplayOrder))
+	builder.WriteString(", ")
+	builder.WriteString("group_name=")
+	builder.WriteString(_m.GroupName)
+	builder.WriteString(", ")
+	builder.WriteString("placeholder=")
+	builder.WriteString(_m.Placeholder)
+	builder.WriteString(", ")
+	builder.WriteString("help_text=")
+	builder.WriteString(_m.HelpText)
+	builder.WriteString(", ")
+	builder.WriteString("is_searchable=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsSearchable))
+	builder.WriteString(", ")
+	builder.WriteString("is_system=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsSystem))
 	builder.WriteString(", ")
 	builder.WriteString("ci_type_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CiTypeID))

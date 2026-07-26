@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, Tag, Button, Space, Skeleton, message, Typography, Tabs } from 'antd';
+import { Card, Tag, Button, Space, Skeleton, message, Typography, Tabs, Modal } from 'antd';
 import { ArrowLeft, Search, Pencil } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -24,6 +24,8 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const id = propId || (params?.id as string);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Problem | null>(null);
+  // 状态流转 loading：记录正在提交的目标状态，防止重复点击
+  const [updatingStatus, setUpdatingStatus] = useState<ProblemStatus | null>(null);
 
   const loadData = async () => {
     if (!id) return;
@@ -44,13 +46,28 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
   const handleUpdateStatus = async (status: ProblemStatus) => {
     if (!id) return;
+    setUpdatingStatus(status);
     try {
       await ProblemApi.updateProblem(Number(id), { status });
       message.success('状态更新成功');
       loadData();
     } catch (error) {
       message.error('状态更新失败');
+    } finally {
+      setUpdatingStatus(null);
     }
+  };
+
+  // 关闭问题为不可逆操作，必须二次确认
+  const handleCloseProblem = () => {
+    Modal.confirm({
+      title: '确认关闭问题？',
+      content: '关闭后问题将进入终态，无法再进行处理操作。请确认根因分析与解决方案已记录完整。',
+      okText: '确认关闭',
+      okButtonProps: { danger: true },
+      cancelText: '取消',
+      onOk: () => handleUpdateStatus(ProblemStatus.CLOSED),
+    });
   };
 
   if (loading) {
@@ -112,17 +129,33 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               编辑
             </Button>
             {data.status === ProblemStatus.OPEN && (
-              <Button type="primary" onClick={() => handleUpdateStatus(ProblemStatus.IN_PROGRESS)}>
+              <Button
+                type="primary"
+                loading={updatingStatus === ProblemStatus.IN_PROGRESS}
+                disabled={updatingStatus !== null}
+                onClick={() => handleUpdateStatus(ProblemStatus.IN_PROGRESS)}
+              >
                 开始处理
               </Button>
             )}
             {data.status === ProblemStatus.IN_PROGRESS && (
-              <Button type="primary" onClick={() => handleUpdateStatus(ProblemStatus.RESOLVED)}>
+              <Button
+                type="primary"
+                loading={updatingStatus === ProblemStatus.RESOLVED}
+                disabled={updatingStatus !== null}
+                onClick={() => handleUpdateStatus(ProblemStatus.RESOLVED)}
+              >
                 标记解决
               </Button>
             )}
             {data.status === ProblemStatus.RESOLVED && (
-              <Button onClick={() => handleUpdateStatus(ProblemStatus.CLOSED)}>关闭问题</Button>
+              <Button
+                loading={updatingStatus === ProblemStatus.CLOSED}
+                disabled={updatingStatus !== null}
+                onClick={handleCloseProblem}
+              >
+                关闭问题
+              </Button>
             )}
           </Space>
         </div>

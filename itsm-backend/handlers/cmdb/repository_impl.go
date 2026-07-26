@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/cloudaccount"
@@ -84,6 +85,7 @@ func toTypeDomain(e *ent.CIType) *CIType {
 		Icon:            e.Icon,
 		Color:           e.Color,
 		AttributeSchema: e.AttributeSchema,
+		ParentTypeID:    e.ParentTypeID,
 		IsActive:        e.IsActive,
 		TenantID:        e.TenantID,
 		CreatedAt:       e.CreatedAt,
@@ -349,15 +351,18 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 
 // CITypes
 func (r *EntRepository) CreateCIType(ctx context.Context, ct *CIType) (*CIType, error) {
-	e, err := r.client.CIType.Create().
+	create := r.client.CIType.Create().
 		SetName(ct.Name).
 		SetDescription(ct.Description).
 		SetIcon(ct.Icon).
 		SetColor(ct.Color).
 		SetAttributeSchema(ct.AttributeSchema).
 		SetIsActive(ct.IsActive).
-		SetTenantID(ct.TenantID).
-		Save(ctx)
+		SetTenantID(ct.TenantID)
+	if ct.ParentTypeID != nil {
+		create.SetParentTypeID(*ct.ParentTypeID)
+	}
+	e, err := create.Save(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -388,6 +393,7 @@ func (r *EntRepository) ListCITypes(ctx context.Context, tenantID int) ([]*CITyp
 
 func (r *EntRepository) UpdateCIType(ctx context.Context, ct *CIType) (*CIType, error) {
 	update := r.client.CIType.UpdateOneID(ct.ID).
+		Where(citype.TenantID(ct.TenantID)).
 		SetName(ct.Name).
 		SetDescription(ct.Description).
 		SetIcon(ct.Icon).
@@ -395,6 +401,11 @@ func (r *EntRepository) UpdateCIType(ctx context.Context, ct *CIType) (*CIType, 
 		SetIsActive(ct.IsActive)
 	if ct.AttributeSchema != "" {
 		update = update.SetAttributeSchema(ct.AttributeSchema)
+	}
+	if ct.ParentTypeID == nil {
+		update = update.ClearParentTypeID()
+	} else {
+		update = update.SetParentTypeID(*ct.ParentTypeID)
 	}
 
 	e, err := update.Save(ctx)
@@ -416,6 +427,21 @@ func (r *EntRepository) CountCIsByType(ctx context.Context, typeID int, tenantID
 		Where(
 			configurationitem.CiTypeID(typeID),
 			configurationitem.TenantID(tenantID),
+		).
+		Count(ctx)
+}
+
+func (r *EntRepository) CountChildTypes(ctx context.Context, typeID int, tenantID int) (int, error) {
+	return r.client.CIType.Query().
+		Where(citype.ParentTypeID(typeID), citype.TenantID(tenantID)).
+		Count(ctx)
+}
+
+func (r *EntRepository) CountAttributeDefinitionsByType(ctx context.Context, typeID int, tenantID int) (int, error) {
+	return r.client.CIAttributeDefinition.Query().
+		Where(
+			ciattributedefinition.CiTypeID(typeID),
+			ciattributedefinition.TenantID(tenantID),
 		).
 		Count(ctx)
 }

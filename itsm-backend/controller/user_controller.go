@@ -379,7 +379,7 @@ func (uc *UserController) ResetPassword(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param tenant_id query int false "租户ID"
-// @Success 200 {object} common.Response{data=dto.UserStatsResponse}
+// @Success 200 {object} common.Response{data=object}
 // @Failure 400 {object} common.Response
 // @Router /api/v1/users/stats [get]
 func (uc *UserController) GetUserStats(c *gin.Context) {

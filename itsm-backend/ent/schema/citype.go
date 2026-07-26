@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 type CIType struct{ ent.Schema }
@@ -17,6 +18,7 @@ func (CIType) Fields() []ent.Field {
 		field.String("icon").Comment("图标").Optional(),
 		field.String("color").Comment("颜色").Optional(),
 		field.Text("attribute_schema").Comment("属性模式定义").Optional(),
+		field.Int("parent_type_id").Comment("父CI类型ID").Optional().Nillable(),
 		field.Int("tenant_id").Comment("租户ID").Positive(),
 		field.Bool("is_active").Comment("是否激活").Default(true),
 		field.Time("created_at").Comment("创建时间").Default(time.Now),
@@ -27,5 +29,17 @@ func (CIType) Fields() []ent.Field {
 func (CIType) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("cis", ConfigurationItem.Type),
+		edge.To("children", CIType.Type).
+			From("parent").
+			Unique().
+			Field("parent_type_id"),
+		edge.To("attribute_definitions", CIAttributeDefinition.Type),
+	}
+}
+
+func (CIType) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("tenant_id", "name").Unique(),
+		index.Fields("tenant_id", "parent_type_id"),
 	}
 }

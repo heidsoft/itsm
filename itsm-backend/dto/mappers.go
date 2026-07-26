@@ -909,6 +909,12 @@ func ToTicketCategoryResponse(category *ent.TicketCategory) *TicketCategoryRespo
 	if category.ParentID > 0 {
 		response.ParentID = &category.ParentID
 	}
+	if category.WorkflowID > 0 {
+		response.WorkflowID = &category.WorkflowID
+	}
+	if category.DepartmentID > 0 {
+		response.DepartmentID = &category.DepartmentID
+	}
 
 	return response
 }
@@ -1035,6 +1041,7 @@ func ToCITypeResponse(ciType *ent.CIType) *CITypeResponse {
 		Icon:            ciType.Icon,
 		Color:           ciType.Color,
 		AttributeSchema: ciType.AttributeSchema,
+		ParentTypeID:    ciType.ParentTypeID,
 		IsActive:        ciType.IsActive,
 		TenantID:        ciType.TenantID,
 		CreatedAt:       ciType.CreatedAt,
@@ -1126,11 +1133,20 @@ func ToCIAttributeDefinitionResponse(attr *ent.CIAttributeDefinition) *CIAttribu
 		ID:              attr.ID,
 		Name:            attr.Name,
 		DisplayName:     attr.DisplayName,
+		Description:     attr.Description,
 		DataType:        attr.Type,
 		IsRequired:      attr.Required,
 		IsUnique:        attr.Unique,
 		DefaultValue:    attr.DefaultValue,
 		ValidationRules: validationRules,
+		EnumValues:      attr.EnumValues,
+		ReferenceType:   attr.ReferenceType,
+		DisplayOrder:    attr.DisplayOrder,
+		GroupName:       attr.GroupName,
+		Placeholder:     attr.Placeholder,
+		HelpText:        attr.HelpText,
+		IsSearchable:    attr.IsSearchable,
+		IsSystem:        attr.IsSystem,
 		CITypeID:        attr.CiTypeID,
 		IsActive:        attr.IsActive,
 		TenantID:        attr.TenantID,

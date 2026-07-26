@@ -24,6 +24,8 @@ const (
 	FieldColor = "color"
 	// FieldAttributeSchema holds the string denoting the attribute_schema field in the database.
 	FieldAttributeSchema = "attribute_schema"
+	// FieldParentTypeID holds the string denoting the parent_type_id field in the database.
+	FieldParentTypeID = "parent_type_id"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldIsActive holds the string denoting the is_active field in the database.
@@ -34,6 +36,12 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeCis holds the string denoting the cis edge name in mutations.
 	EdgeCis = "cis"
+	// EdgeParent holds the string denoting the parent edge name in mutations.
+	EdgeParent = "parent"
+	// EdgeChildren holds the string denoting the children edge name in mutations.
+	EdgeChildren = "children"
+	// EdgeAttributeDefinitions holds the string denoting the attribute_definitions edge name in mutations.
+	EdgeAttributeDefinitions = "attribute_definitions"
 	// Table holds the table name of the citype in the database.
 	Table = "ci_types"
 	// CisTable is the table that holds the cis relation/edge.
@@ -43,6 +51,21 @@ const (
 	CisInverseTable = "configuration_items"
 	// CisColumn is the table column denoting the cis relation/edge.
 	CisColumn = "ci_type_id"
+	// ParentTable is the table that holds the parent relation/edge.
+	ParentTable = "ci_types"
+	// ParentColumn is the table column denoting the parent relation/edge.
+	ParentColumn = "parent_type_id"
+	// ChildrenTable is the table that holds the children relation/edge.
+	ChildrenTable = "ci_types"
+	// ChildrenColumn is the table column denoting the children relation/edge.
+	ChildrenColumn = "parent_type_id"
+	// AttributeDefinitionsTable is the table that holds the attribute_definitions relation/edge.
+	AttributeDefinitionsTable = "ci_attribute_definitions"
+	// AttributeDefinitionsInverseTable is the table name for the CIAttributeDefinition entity.
+	// It exists in this package in order to avoid circular dependency with the "ciattributedefinition" package.
+	AttributeDefinitionsInverseTable = "ci_attribute_definitions"
+	// AttributeDefinitionsColumn is the table column denoting the attribute_definitions relation/edge.
+	AttributeDefinitionsColumn = "ci_type_id"
 )
 
 // Columns holds all SQL columns for citype fields.
@@ -53,6 +76,7 @@ var Columns = []string{
 	FieldIcon,
 	FieldColor,
 	FieldAttributeSchema,
+	FieldParentTypeID,
 	FieldTenantID,
 	FieldIsActive,
 	FieldCreatedAt,
@@ -117,6 +141,11 @@ func ByAttributeSchema(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAttributeSchema, opts...).ToFunc()
 }
 
+// ByParentTypeID orders the results by the parent_type_id field.
+func ByParentTypeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldParentTypeID, opts...).ToFunc()
+}
+
 // ByTenantID orders the results by the tenant_id field.
 func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
@@ -150,10 +179,66 @@ func ByCis(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCisStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByParentField orders the results by parent field.
+func ByParentField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParentStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByChildrenCount orders the results by children count.
+func ByChildrenCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChildrenStep(), opts...)
+	}
+}
+
+// ByChildren orders the results by children terms.
+func ByChildren(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChildrenStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAttributeDefinitionsCount orders the results by attribute_definitions count.
+func ByAttributeDefinitionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAttributeDefinitionsStep(), opts...)
+	}
+}
+
+// ByAttributeDefinitions orders the results by attribute_definitions terms.
+func ByAttributeDefinitions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAttributeDefinitionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newCisStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CisInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CisTable, CisColumn),
+	)
+}
+func newParentStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ParentTable, ParentColumn),
+	)
+}
+func newChildrenStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ChildrenTable, ChildrenColumn),
+	)
+}
+func newAttributeDefinitionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AttributeDefinitionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AttributeDefinitionsTable, AttributeDefinitionsColumn),
 	)
 }

@@ -11,17 +11,20 @@ type CreateCITypeRequest struct {
 	Icon            string `json:"icon"`
 	Color           string `json:"color"`
 	AttributeSchema string `json:"attributeSchema"`
+	ParentTypeID    *int   `json:"parentTypeId,omitempty" binding:"omitempty,min=1"`
 	IsActive        *bool  `json:"isActive"`
 	TenantID        int    `json:"tenantId"`
 }
 
 type UpdateCITypeRequest struct {
-	Name            string `json:"name" binding:"required"`
-	Description     string `json:"description"`
-	Icon            string `json:"icon"`
-	Color           string `json:"color"`
-	AttributeSchema string `json:"attributeSchema"`
-	IsActive        *bool  `json:"isActive"`
+	Name            *string `json:"name,omitempty" binding:"omitempty,min=1,max=100"`
+	Description     *string `json:"description,omitempty"`
+	Icon            *string `json:"icon,omitempty"`
+	Color           *string `json:"color,omitempty"`
+	AttributeSchema *string `json:"attributeSchema,omitempty"`
+	ParentTypeID    *int    `json:"parentTypeId,omitempty" binding:"omitempty,min=1"`
+	ClearParent     bool    `json:"clearParent,omitempty"`
+	IsActive        *bool   `json:"isActive,omitempty"`
 }
 
 type CITypeResponse struct {
@@ -31,6 +34,7 @@ type CITypeResponse struct {
 	Icon            string    `json:"icon"`
 	Color           string    `json:"color"`
 	AttributeSchema string    `json:"attributeSchema"`
+	ParentTypeID    *int      `json:"parentTypeId,omitempty"`
 	IsActive        bool      `json:"isActive"`
 	TenantID        int       `json:"tenantId"`
 	CreatedAt       time.Time `json:"createdAt"`
@@ -80,6 +84,9 @@ type CIAttributeDefinitionRequest struct {
 	EnumValues      []string               `json:"enumValues"`
 	ReferenceType   string                 `json:"referenceType"`
 	DisplayOrder    int                    `json:"displayOrder"`
+	GroupName       string                 `json:"groupName"`
+	Placeholder     string                 `json:"placeholder"`
+	HelpText        string                 `json:"helpText"`
 	IsSearchable    bool                   `json:"isSearchable"`
 	CITypeID        int                    `json:"ciTypeId" binding:"required"`
 }
@@ -97,6 +104,9 @@ type CIAttributeDefinitionResponse struct {
 	EnumValues      []string               `json:"enumValues"`
 	ReferenceType   string                 `json:"referenceType"`
 	DisplayOrder    int                    `json:"displayOrder"`
+	GroupName       string                 `json:"groupName"`
+	Placeholder     string                 `json:"placeholder"`
+	HelpText        string                 `json:"helpText"`
 	IsSearchable    bool                   `json:"isSearchable"`
 	IsSystem        bool                   `json:"isSystem"`
 	IsActive        bool                   `json:"isActive"`

@@ -424,6 +424,26 @@ export class IncidentAPI {
     return response;
   }
 
+  /**
+   * 升级为重大事件 (Major Incident)
+   * 记录影响评估与危机沟通计划，后端会提升严重程度并写入审计事件
+   * 后端: POST /api/v1/incidents/:id/major-incident
+   */
+  static async escalateMajorIncident(
+    id: number,
+    data: {
+      impactScope: 'low' | 'medium' | 'high' | 'critical';
+      businessImpact: string;
+      communicationPlan?: string;
+    }
+  ): Promise<{ message: string }> {
+    const response = await httpClient.post<{ message: string }>(
+      `/api/v1/incidents/${id}/major-incident`,
+      data
+    );
+    return response;
+  }
+
   // 添加评论（注意：后端期望 content 字段）
   static async addComment(id: number, data: { content: string }): Promise<Incident> {
     const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/comments`, data);

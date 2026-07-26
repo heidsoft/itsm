@@ -7,11 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/ciattributedefinition"
+	"itsm-backend/ent/citype"
 	"itsm-backend/ent/predicate"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -53,6 +55,26 @@ func (_u *CIAttributeDefinitionUpdate) SetNillableDisplayName(v *string) *CIAttr
 	if v != nil {
 		_u.SetDisplayName(*v)
 	}
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *CIAttributeDefinitionUpdate) SetDescription(v string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdate) SetNillableDescription(v *string) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (_u *CIAttributeDefinitionUpdate) ClearDescription() *CIAttributeDefinitionUpdate {
+	_u.mutation.ClearDescription()
 	return _u
 }
 
@@ -138,9 +160,155 @@ func (_u *CIAttributeDefinitionUpdate) ClearValidationRules() *CIAttributeDefini
 	return _u
 }
 
+// SetEnumValues sets the "enum_values" field.
+func (_u *CIAttributeDefinitionUpdate) SetEnumValues(v []string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetEnumValues(v)
+	return _u
+}
+
+// AppendEnumValues appends value to the "enum_values" field.
+func (_u *CIAttributeDefinitionUpdate) AppendEnumValues(v []string) *CIAttributeDefinitionUpdate {
+	_u.mutation.AppendEnumValues(v)
+	return _u
+}
+
+// ClearEnumValues clears the value of the "enum_values" field.
+func (_u *CIAttributeDefinitionUpdate) ClearEnumValues() *CIAttributeDefinitionUpdate {
+	_u.mutation.ClearEnumValues()
+	return _u
+}
+
+// SetReferenceType sets the "reference_type" field.
+func (_u *CIAttributeDefinitionUpdate) SetReferenceType(v string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetReferenceType(v)
+	return _u
+}
+
+// SetNillableReferenceType sets the "reference_type" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdate) SetNillableReferenceType(v *string) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetReferenceType(*v)
+	}
+	return _u
+}
+
+// ClearReferenceType clears the value of the "reference_type" field.
+func (_u *CIAttributeDefinitionUpdate) ClearReferenceType() *CIAttributeDefinitionUpdate {
+	_u.mutation.ClearReferenceType()
+	return _u
+}
+
+// SetDisplayOrder sets the "display_order" field.
+func (_u *CIAttributeDefinitionUpdate) SetDisplayOrder(v int) *CIAttributeDefinitionUpdate {
+	_u.mutation.ResetDisplayOrder()
+	_u.mutation.SetDisplayOrder(v)
+	return _u
+}
+
+// SetNillableDisplayOrder sets the "display_order" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdate) SetNillableDisplayOrder(v *int) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetDisplayOrder(*v)
+	}
+	return _u
+}
+
+// AddDisplayOrder adds value to the "display_order" field.
+func (_u *CIAttributeDefinitionUpdate) AddDisplayOrder(v int) *CIAttributeDefinitionUpdate {
+	_u.mutation.AddDisplayOrder(v)
+	return _u
+}
+
+// SetGroupName sets the "group_name" field.
+func (_u *CIAttributeDefinitionUpdate) SetGroupName(v string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetGroupName(v)
+	return _u
+}
+
+// SetNillableGroupName sets the "group_name" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdate) SetNillableGroupName(v *string) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetGroupName(*v)
+	}
+	return _u
+}
+
+// ClearGroupName clears the value of the "group_name" field.
+func (_u *CIAttributeDefinitionUpdate) ClearGroupName() *CIAttributeDefinitionUpdate {
+	_u.mutation.ClearGroupName()
+	return _u
+}
+
+// SetPlaceholder sets the "placeholder" field.
+func (_u *CIAttributeDefinitionUpdate) SetPlaceholder(v string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetPlaceholder(v)
+	return _u
+}
+
+// SetNillablePlaceholder sets the "placeholder" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdate) SetNillablePlaceholder(v *string) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetPlaceholder(*v)
+	}
+	return _u
+}
+
+// ClearPlaceholder clears the value of the "placeholder" field.
+func (_u *CIAttributeDefinitionUpdate) ClearPlaceholder() *CIAttributeDefinitionUpdate {
+	_u.mutation.ClearPlaceholder()
+	return _u
+}
+
+// SetHelpText sets the "help_text" field.
+func (_u *CIAttributeDefinitionUpdate) SetHelpText(v string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetHelpText(v)
+	return _u
+}
+
+// SetNillableHelpText sets the "help_text" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdate) SetNillableHelpText(v *string) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetHelpText(*v)
+	}
+	return _u
+}
+
+// ClearHelpText clears the value of the "help_text" field.
+func (_u *CIAttributeDefinitionUpdate) ClearHelpText() *CIAttributeDefinitionUpdate {
+	_u.mutation.ClearHelpText()
+	return _u
+}
+
+// SetIsSearchable sets the "is_searchable" field.
+func (_u *CIAttributeDefinitionUpdate) SetIsSearchable(v bool) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetIsSearchable(v)
+	return _u
+}
+
+// SetNillableIsSearchable sets the "is_searchable" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdate) SetNillableIsSearchable(v *bool) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetIsSearchable(*v)
+	}
+	return _u
+}
+
+// SetIsSystem sets the "is_system" field.
+func (_u *CIAttributeDefinitionUpdate) SetIsSystem(v bool) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetIsSystem(v)
+	return _u
+}
+
+// SetNillableIsSystem sets the "is_system" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdate) SetNillableIsSystem(v *bool) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetIsSystem(*v)
+	}
+	return _u
+}
+
 // SetCiTypeID sets the "ci_type_id" field.
 func (_u *CIAttributeDefinitionUpdate) SetCiTypeID(v int) *CIAttributeDefinitionUpdate {
-	_u.mutation.ResetCiTypeID()
 	_u.mutation.SetCiTypeID(v)
 	return _u
 }
@@ -150,12 +318,6 @@ func (_u *CIAttributeDefinitionUpdate) SetNillableCiTypeID(v *int) *CIAttributeD
 	if v != nil {
 		_u.SetCiTypeID(*v)
 	}
-	return _u
-}
-
-// AddCiTypeID adds value to the "ci_type_id" field.
-func (_u *CIAttributeDefinitionUpdate) AddCiTypeID(v int) *CIAttributeDefinitionUpdate {
-	_u.mutation.AddCiTypeID(v)
 	return _u
 }
 
@@ -214,9 +376,20 @@ func (_u *CIAttributeDefinitionUpdate) SetUpdatedAt(v time.Time) *CIAttributeDef
 	return _u
 }
 
+// SetCiType sets the "ci_type" edge to the CIType entity.
+func (_u *CIAttributeDefinitionUpdate) SetCiType(v *CIType) *CIAttributeDefinitionUpdate {
+	return _u.SetCiTypeID(v.ID)
+}
+
 // Mutation returns the CIAttributeDefinitionMutation object of the builder.
 func (_u *CIAttributeDefinitionUpdate) Mutation() *CIAttributeDefinitionMutation {
 	return _u.mutation
+}
+
+// ClearCiType clears the "ci_type" edge to the CIType entity.
+func (_u *CIAttributeDefinitionUpdate) ClearCiType() *CIAttributeDefinitionUpdate {
+	_u.mutation.ClearCiType()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -282,6 +455,9 @@ func (_u *CIAttributeDefinitionUpdate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.tenant_id": %w`, err)}
 		}
 	}
+	if _u.mutation.CiTypeCleared() && len(_u.mutation.CiTypeIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "CIAttributeDefinition.ci_type"`)
+	}
 	return nil
 }
 
@@ -302,6 +478,12 @@ func (_u *CIAttributeDefinitionUpdate) sqlSave(ctx context.Context) (_node int, 
 	}
 	if value, ok := _u.mutation.DisplayName(); ok {
 		_spec.SetField(ciattributedefinition.FieldDisplayName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(ciattributedefinition.FieldDescription, field.TypeString, value)
+	}
+	if _u.mutation.DescriptionCleared() {
+		_spec.ClearField(ciattributedefinition.FieldDescription, field.TypeString)
 	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(ciattributedefinition.FieldType, field.TypeString, value)
@@ -324,11 +506,52 @@ func (_u *CIAttributeDefinitionUpdate) sqlSave(ctx context.Context) (_node int, 
 	if _u.mutation.ValidationRulesCleared() {
 		_spec.ClearField(ciattributedefinition.FieldValidationRules, field.TypeString)
 	}
-	if value, ok := _u.mutation.CiTypeID(); ok {
-		_spec.SetField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
+	if value, ok := _u.mutation.EnumValues(); ok {
+		_spec.SetField(ciattributedefinition.FieldEnumValues, field.TypeJSON, value)
 	}
-	if value, ok := _u.mutation.AddedCiTypeID(); ok {
-		_spec.AddField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
+	if value, ok := _u.mutation.AppendedEnumValues(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, ciattributedefinition.FieldEnumValues, value)
+		})
+	}
+	if _u.mutation.EnumValuesCleared() {
+		_spec.ClearField(ciattributedefinition.FieldEnumValues, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.ReferenceType(); ok {
+		_spec.SetField(ciattributedefinition.FieldReferenceType, field.TypeString, value)
+	}
+	if _u.mutation.ReferenceTypeCleared() {
+		_spec.ClearField(ciattributedefinition.FieldReferenceType, field.TypeString)
+	}
+	if value, ok := _u.mutation.DisplayOrder(); ok {
+		_spec.SetField(ciattributedefinition.FieldDisplayOrder, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedDisplayOrder(); ok {
+		_spec.AddField(ciattributedefinition.FieldDisplayOrder, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.GroupName(); ok {
+		_spec.SetField(ciattributedefinition.FieldGroupName, field.TypeString, value)
+	}
+	if _u.mutation.GroupNameCleared() {
+		_spec.ClearField(ciattributedefinition.FieldGroupName, field.TypeString)
+	}
+	if value, ok := _u.mutation.Placeholder(); ok {
+		_spec.SetField(ciattributedefinition.FieldPlaceholder, field.TypeString, value)
+	}
+	if _u.mutation.PlaceholderCleared() {
+		_spec.ClearField(ciattributedefinition.FieldPlaceholder, field.TypeString)
+	}
+	if value, ok := _u.mutation.HelpText(); ok {
+		_spec.SetField(ciattributedefinition.FieldHelpText, field.TypeString, value)
+	}
+	if _u.mutation.HelpTextCleared() {
+		_spec.ClearField(ciattributedefinition.FieldHelpText, field.TypeString)
+	}
+	if value, ok := _u.mutation.IsSearchable(); ok {
+		_spec.SetField(ciattributedefinition.FieldIsSearchable, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.IsSystem(); ok {
+		_spec.SetField(ciattributedefinition.FieldIsSystem, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ciattributedefinition.FieldTenantID, field.TypeInt, value)
@@ -344,6 +567,35 @@ func (_u *CIAttributeDefinitionUpdate) sqlSave(ctx context.Context) (_node int, 
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ciattributedefinition.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.CiTypeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ciattributedefinition.CiTypeTable,
+			Columns: []string{ciattributedefinition.CiTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CiTypeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ciattributedefinition.CiTypeTable,
+			Columns: []string{ciattributedefinition.CiTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -390,6 +642,26 @@ func (_u *CIAttributeDefinitionUpdateOne) SetNillableDisplayName(v *string) *CIA
 	if v != nil {
 		_u.SetDisplayName(*v)
 	}
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *CIAttributeDefinitionUpdateOne) SetDescription(v string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableDescription(v *string) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (_u *CIAttributeDefinitionUpdateOne) ClearDescription() *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ClearDescription()
 	return _u
 }
 
@@ -475,9 +747,155 @@ func (_u *CIAttributeDefinitionUpdateOne) ClearValidationRules() *CIAttributeDef
 	return _u
 }
 
+// SetEnumValues sets the "enum_values" field.
+func (_u *CIAttributeDefinitionUpdateOne) SetEnumValues(v []string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetEnumValues(v)
+	return _u
+}
+
+// AppendEnumValues appends value to the "enum_values" field.
+func (_u *CIAttributeDefinitionUpdateOne) AppendEnumValues(v []string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.AppendEnumValues(v)
+	return _u
+}
+
+// ClearEnumValues clears the value of the "enum_values" field.
+func (_u *CIAttributeDefinitionUpdateOne) ClearEnumValues() *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ClearEnumValues()
+	return _u
+}
+
+// SetReferenceType sets the "reference_type" field.
+func (_u *CIAttributeDefinitionUpdateOne) SetReferenceType(v string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetReferenceType(v)
+	return _u
+}
+
+// SetNillableReferenceType sets the "reference_type" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableReferenceType(v *string) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetReferenceType(*v)
+	}
+	return _u
+}
+
+// ClearReferenceType clears the value of the "reference_type" field.
+func (_u *CIAttributeDefinitionUpdateOne) ClearReferenceType() *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ClearReferenceType()
+	return _u
+}
+
+// SetDisplayOrder sets the "display_order" field.
+func (_u *CIAttributeDefinitionUpdateOne) SetDisplayOrder(v int) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ResetDisplayOrder()
+	_u.mutation.SetDisplayOrder(v)
+	return _u
+}
+
+// SetNillableDisplayOrder sets the "display_order" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableDisplayOrder(v *int) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetDisplayOrder(*v)
+	}
+	return _u
+}
+
+// AddDisplayOrder adds value to the "display_order" field.
+func (_u *CIAttributeDefinitionUpdateOne) AddDisplayOrder(v int) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.AddDisplayOrder(v)
+	return _u
+}
+
+// SetGroupName sets the "group_name" field.
+func (_u *CIAttributeDefinitionUpdateOne) SetGroupName(v string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetGroupName(v)
+	return _u
+}
+
+// SetNillableGroupName sets the "group_name" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableGroupName(v *string) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetGroupName(*v)
+	}
+	return _u
+}
+
+// ClearGroupName clears the value of the "group_name" field.
+func (_u *CIAttributeDefinitionUpdateOne) ClearGroupName() *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ClearGroupName()
+	return _u
+}
+
+// SetPlaceholder sets the "placeholder" field.
+func (_u *CIAttributeDefinitionUpdateOne) SetPlaceholder(v string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetPlaceholder(v)
+	return _u
+}
+
+// SetNillablePlaceholder sets the "placeholder" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdateOne) SetNillablePlaceholder(v *string) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetPlaceholder(*v)
+	}
+	return _u
+}
+
+// ClearPlaceholder clears the value of the "placeholder" field.
+func (_u *CIAttributeDefinitionUpdateOne) ClearPlaceholder() *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ClearPlaceholder()
+	return _u
+}
+
+// SetHelpText sets the "help_text" field.
+func (_u *CIAttributeDefinitionUpdateOne) SetHelpText(v string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetHelpText(v)
+	return _u
+}
+
+// SetNillableHelpText sets the "help_text" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableHelpText(v *string) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetHelpText(*v)
+	}
+	return _u
+}
+
+// ClearHelpText clears the value of the "help_text" field.
+func (_u *CIAttributeDefinitionUpdateOne) ClearHelpText() *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ClearHelpText()
+	return _u
+}
+
+// SetIsSearchable sets the "is_searchable" field.
+func (_u *CIAttributeDefinitionUpdateOne) SetIsSearchable(v bool) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetIsSearchable(v)
+	return _u
+}
+
+// SetNillableIsSearchable sets the "is_searchable" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableIsSearchable(v *bool) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetIsSearchable(*v)
+	}
+	return _u
+}
+
+// SetIsSystem sets the "is_system" field.
+func (_u *CIAttributeDefinitionUpdateOne) SetIsSystem(v bool) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetIsSystem(v)
+	return _u
+}
+
+// SetNillableIsSystem sets the "is_system" field if the given value is not nil.
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableIsSystem(v *bool) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetIsSystem(*v)
+	}
+	return _u
+}
+
 // SetCiTypeID sets the "ci_type_id" field.
 func (_u *CIAttributeDefinitionUpdateOne) SetCiTypeID(v int) *CIAttributeDefinitionUpdateOne {
-	_u.mutation.ResetCiTypeID()
 	_u.mutation.SetCiTypeID(v)
 	return _u
 }
@@ -487,12 +905,6 @@ func (_u *CIAttributeDefinitionUpdateOne) SetNillableCiTypeID(v *int) *CIAttribu
 	if v != nil {
 		_u.SetCiTypeID(*v)
 	}
-	return _u
-}
-
-// AddCiTypeID adds value to the "ci_type_id" field.
-func (_u *CIAttributeDefinitionUpdateOne) AddCiTypeID(v int) *CIAttributeDefinitionUpdateOne {
-	_u.mutation.AddCiTypeID(v)
 	return _u
 }
 
@@ -551,9 +963,20 @@ func (_u *CIAttributeDefinitionUpdateOne) SetUpdatedAt(v time.Time) *CIAttribute
 	return _u
 }
 
+// SetCiType sets the "ci_type" edge to the CIType entity.
+func (_u *CIAttributeDefinitionUpdateOne) SetCiType(v *CIType) *CIAttributeDefinitionUpdateOne {
+	return _u.SetCiTypeID(v.ID)
+}
+
 // Mutation returns the CIAttributeDefinitionMutation object of the builder.
 func (_u *CIAttributeDefinitionUpdateOne) Mutation() *CIAttributeDefinitionMutation {
 	return _u.mutation
+}
+
+// ClearCiType clears the "ci_type" edge to the CIType entity.
+func (_u *CIAttributeDefinitionUpdateOne) ClearCiType() *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ClearCiType()
+	return _u
 }
 
 // Where appends a list predicates to the CIAttributeDefinitionUpdate builder.
@@ -632,6 +1055,9 @@ func (_u *CIAttributeDefinitionUpdateOne) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.tenant_id": %w`, err)}
 		}
 	}
+	if _u.mutation.CiTypeCleared() && len(_u.mutation.CiTypeIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "CIAttributeDefinition.ci_type"`)
+	}
 	return nil
 }
 
@@ -670,6 +1096,12 @@ func (_u *CIAttributeDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *C
 	if value, ok := _u.mutation.DisplayName(); ok {
 		_spec.SetField(ciattributedefinition.FieldDisplayName, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(ciattributedefinition.FieldDescription, field.TypeString, value)
+	}
+	if _u.mutation.DescriptionCleared() {
+		_spec.ClearField(ciattributedefinition.FieldDescription, field.TypeString)
+	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(ciattributedefinition.FieldType, field.TypeString, value)
 	}
@@ -691,11 +1123,52 @@ func (_u *CIAttributeDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *C
 	if _u.mutation.ValidationRulesCleared() {
 		_spec.ClearField(ciattributedefinition.FieldValidationRules, field.TypeString)
 	}
-	if value, ok := _u.mutation.CiTypeID(); ok {
-		_spec.SetField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
+	if value, ok := _u.mutation.EnumValues(); ok {
+		_spec.SetField(ciattributedefinition.FieldEnumValues, field.TypeJSON, value)
 	}
-	if value, ok := _u.mutation.AddedCiTypeID(); ok {
-		_spec.AddField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
+	if value, ok := _u.mutation.AppendedEnumValues(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, ciattributedefinition.FieldEnumValues, value)
+		})
+	}
+	if _u.mutation.EnumValuesCleared() {
+		_spec.ClearField(ciattributedefinition.FieldEnumValues, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.ReferenceType(); ok {
+		_spec.SetField(ciattributedefinition.FieldReferenceType, field.TypeString, value)
+	}
+	if _u.mutation.ReferenceTypeCleared() {
+		_spec.ClearField(ciattributedefinition.FieldReferenceType, field.TypeString)
+	}
+	if value, ok := _u.mutation.DisplayOrder(); ok {
+		_spec.SetField(ciattributedefinition.FieldDisplayOrder, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedDisplayOrder(); ok {
+		_spec.AddField(ciattributedefinition.FieldDisplayOrder, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.GroupName(); ok {
+		_spec.SetField(ciattributedefinition.FieldGroupName, field.TypeString, value)
+	}
+	if _u.mutation.GroupNameCleared() {
+		_spec.ClearField(ciattributedefinition.FieldGroupName, field.TypeString)
+	}
+	if value, ok := _u.mutation.Placeholder(); ok {
+		_spec.SetField(ciattributedefinition.FieldPlaceholder, field.TypeString, value)
+	}
+	if _u.mutation.PlaceholderCleared() {
+		_spec.ClearField(ciattributedefinition.FieldPlaceholder, field.TypeString)
+	}
+	if value, ok := _u.mutation.HelpText(); ok {
+		_spec.SetField(ciattributedefinition.FieldHelpText, field.TypeString, value)
+	}
+	if _u.mutation.HelpTextCleared() {
+		_spec.ClearField(ciattributedefinition.FieldHelpText, field.TypeString)
+	}
+	if value, ok := _u.mutation.IsSearchable(); ok {
+		_spec.SetField(ciattributedefinition.FieldIsSearchable, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.IsSystem(); ok {
+		_spec.SetField(ciattributedefinition.FieldIsSystem, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ciattributedefinition.FieldTenantID, field.TypeInt, value)
@@ -711,6 +1184,35 @@ func (_u *CIAttributeDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *C
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ciattributedefinition.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.CiTypeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ciattributedefinition.CiTypeTable,
+			Columns: []string{ciattributedefinition.CiTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CiTypeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ciattributedefinition.CiTypeTable,
+			Columns: []string{ciattributedefinition.CiTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &CIAttributeDefinition{config: _u.config}
 	_spec.Assign = _node.assignValues

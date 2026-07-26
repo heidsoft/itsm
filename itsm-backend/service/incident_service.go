@@ -1441,6 +1441,61 @@ func (s *IncidentService) ReopenIncident(ctx context.Context, id, userID, tenant
 	return eventErr
 }
 
+// EscalateToMajorIncident 将事件升级为重大事件（Major Incident）
+// 写入影响评估信息，提升严重程度，并记录审计事件
+func (s *IncidentService) EscalateToMajorIncident(ctx context.Context, id, userID, tenantID int, req *dto.EscalateMajorIncidentRequest) error {
+	incidentEntity, err := s.client.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+
+	if incidentEntity.IsMajorIncident {
+		return fmt.Errorf("incident is already a major incident")
+	}
+	if incidentEntity.Status == common.IncidentStatusResolved || incidentEntity.Status == common.IncidentStatusClosed {
+		return fmt.Errorf("resolved or closed incidents cannot be escalated to major incident")
+	}
+
+	now := time.Now()
+	impactAnalysis := incidentEntity.ImpactAnalysis
+	if impactAnalysis == nil {
+		impactAnalysis = make(map[string]interface{})
+	}
+	impactAnalysis["majorIncident"] = map[string]interface{}{
+		"impactScope":       req.ImpactScope,
+		"businessImpact":    strings.TrimSpace(req.BusinessImpact),
+		"communicationPlan": strings.TrimSpace(req.CommunicationPlan),
+		"escalatedBy":       userID,
+		"escalatedAt":       now,
+	}
+
+	err = s.client.Incident.UpdateOneID(id).
+		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil(), incident.VersionEQ(incidentEntity.Version)).
+		SetIsMajorIncident(true).
+		SetSeverity("critical").
+		SetImpactAnalysis(impactAnalysis).
+		SetEscalatedAt(now).
+		AddEscalationLevel(1).
+		SetUpdatedAt(now).
+		AddVersion(1).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	_, eventErr := s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+		IncidentID: id, EventType: "major_incident_escalation", EventName: "升级为重大事件",
+		Description: strings.TrimSpace(req.BusinessImpact), Status: "active", Severity: "critical",
+		Data: map[string]interface{}{
+			"impactScope":       req.ImpactScope,
+			"communicationPlan": strings.TrimSpace(req.CommunicationPlan),
+		},
+		UserID: &userID, Source: "user",
+	}, tenantID)
+	return eventErr
+}
+
 func (s *IncidentService) GetIncidentStats(ctx context.Context, tenantID int) (*dto.IncidentStatsResponse, error) {
 	s.logger.Infow("Getting incident stats", "tenant_id", tenantID)
 

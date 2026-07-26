@@ -126,6 +126,11 @@ export interface BusinessPageTemplateProps {
     label: string;
     onClick: () => void;
   };
+  /** 加载失败态（与 empty 区分，优先于 empty 展示） */
+  error?: boolean;
+  errorDescription?: string;
+  /** 错误态重试回调 */
+  onRetry?: () => void;
   children?: React.ReactNode;
 
   // 分页
@@ -143,7 +148,7 @@ const StatsCard: React.FC<PageStats & { loading?: boolean }> = ({
   label,
   value,
   suffix,
-  color = '#1890ff',
+  color = '#3b82f6',
   icon,
   loading,
 }) => (
@@ -221,6 +226,9 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
   empty = false,
   emptyDescription = '暂无数据',
   emptyAction,
+  error = false,
+  errorDescription = '加载失败，请稍后重试',
+  onRetry,
   children,
 
   // 分页
@@ -443,6 +451,18 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-gray-400">加载中...</div>
+            </div>
+          ) : error ? (
+            <div className="py-12 text-center" role="alert">
+              <div className="mb-2 text-base font-medium text-red-500">{errorDescription}</div>
+              <Text type="secondary" className="mb-4 block text-sm">
+                数据加载失败，并非暂无数据，请检查网络后重试
+              </Text>
+              {onRetry && (
+                <Button type="primary" icon={<RotateCcw className="h-4 w-4" />} onClick={onRetry}>
+                  重试
+                </Button>
+              )}
             </div>
           ) : empty ? (
             <Empty

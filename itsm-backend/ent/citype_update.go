@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/predicate"
@@ -123,6 +124,26 @@ func (_u *CITypeUpdate) ClearAttributeSchema() *CITypeUpdate {
 	return _u
 }
 
+// SetParentTypeID sets the "parent_type_id" field.
+func (_u *CITypeUpdate) SetParentTypeID(v int) *CITypeUpdate {
+	_u.mutation.SetParentTypeID(v)
+	return _u
+}
+
+// SetNillableParentTypeID sets the "parent_type_id" field if the given value is not nil.
+func (_u *CITypeUpdate) SetNillableParentTypeID(v *int) *CITypeUpdate {
+	if v != nil {
+		_u.SetParentTypeID(*v)
+	}
+	return _u
+}
+
+// ClearParentTypeID clears the value of the "parent_type_id" field.
+func (_u *CITypeUpdate) ClearParentTypeID() *CITypeUpdate {
+	_u.mutation.ClearParentTypeID()
+	return _u
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_u *CITypeUpdate) SetTenantID(v int) *CITypeUpdate {
 	_u.mutation.ResetTenantID()
@@ -193,6 +214,55 @@ func (_u *CITypeUpdate) AddCis(v ...*ConfigurationItem) *CITypeUpdate {
 	return _u.AddCiIDs(ids...)
 }
 
+// SetParentID sets the "parent" edge to the CIType entity by ID.
+func (_u *CITypeUpdate) SetParentID(id int) *CITypeUpdate {
+	_u.mutation.SetParentID(id)
+	return _u
+}
+
+// SetNillableParentID sets the "parent" edge to the CIType entity by ID if the given value is not nil.
+func (_u *CITypeUpdate) SetNillableParentID(id *int) *CITypeUpdate {
+	if id != nil {
+		_u = _u.SetParentID(*id)
+	}
+	return _u
+}
+
+// SetParent sets the "parent" edge to the CIType entity.
+func (_u *CITypeUpdate) SetParent(v *CIType) *CITypeUpdate {
+	return _u.SetParentID(v.ID)
+}
+
+// AddChildIDs adds the "children" edge to the CIType entity by IDs.
+func (_u *CITypeUpdate) AddChildIDs(ids ...int) *CITypeUpdate {
+	_u.mutation.AddChildIDs(ids...)
+	return _u
+}
+
+// AddChildren adds the "children" edges to the CIType entity.
+func (_u *CITypeUpdate) AddChildren(v ...*CIType) *CITypeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddChildIDs(ids...)
+}
+
+// AddAttributeDefinitionIDs adds the "attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (_u *CITypeUpdate) AddAttributeDefinitionIDs(ids ...int) *CITypeUpdate {
+	_u.mutation.AddAttributeDefinitionIDs(ids...)
+	return _u
+}
+
+// AddAttributeDefinitions adds the "attribute_definitions" edges to the CIAttributeDefinition entity.
+func (_u *CITypeUpdate) AddAttributeDefinitions(v ...*CIAttributeDefinition) *CITypeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAttributeDefinitionIDs(ids...)
+}
+
 // Mutation returns the CITypeMutation object of the builder.
 func (_u *CITypeUpdate) Mutation() *CITypeMutation {
 	return _u.mutation
@@ -217,6 +287,54 @@ func (_u *CITypeUpdate) RemoveCis(v ...*ConfigurationItem) *CITypeUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveCiIDs(ids...)
+}
+
+// ClearParent clears the "parent" edge to the CIType entity.
+func (_u *CITypeUpdate) ClearParent() *CITypeUpdate {
+	_u.mutation.ClearParent()
+	return _u
+}
+
+// ClearChildren clears all "children" edges to the CIType entity.
+func (_u *CITypeUpdate) ClearChildren() *CITypeUpdate {
+	_u.mutation.ClearChildren()
+	return _u
+}
+
+// RemoveChildIDs removes the "children" edge to CIType entities by IDs.
+func (_u *CITypeUpdate) RemoveChildIDs(ids ...int) *CITypeUpdate {
+	_u.mutation.RemoveChildIDs(ids...)
+	return _u
+}
+
+// RemoveChildren removes "children" edges to CIType entities.
+func (_u *CITypeUpdate) RemoveChildren(v ...*CIType) *CITypeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveChildIDs(ids...)
+}
+
+// ClearAttributeDefinitions clears all "attribute_definitions" edges to the CIAttributeDefinition entity.
+func (_u *CITypeUpdate) ClearAttributeDefinitions() *CITypeUpdate {
+	_u.mutation.ClearAttributeDefinitions()
+	return _u
+}
+
+// RemoveAttributeDefinitionIDs removes the "attribute_definitions" edge to CIAttributeDefinition entities by IDs.
+func (_u *CITypeUpdate) RemoveAttributeDefinitionIDs(ids ...int) *CITypeUpdate {
+	_u.mutation.RemoveAttributeDefinitionIDs(ids...)
+	return _u
+}
+
+// RemoveAttributeDefinitions removes "attribute_definitions" edges to CIAttributeDefinition entities.
+func (_u *CITypeUpdate) RemoveAttributeDefinitions(v ...*CIAttributeDefinition) *CITypeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAttributeDefinitionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -369,6 +487,125 @@ func (_u *CITypeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.ParentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   citype.ParentTable,
+			Columns: []string{citype.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   citype.ParentTable,
+			Columns: []string{citype.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.ChildrenTable,
+			Columns: []string{citype.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !_u.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.ChildrenTable,
+			Columns: []string{citype.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.ChildrenTable,
+			Columns: []string{citype.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAttributeDefinitionsIDs(); len(nodes) > 0 && !_u.mutation.AttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AttributeDefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{citype.Label}
@@ -483,6 +720,26 @@ func (_u *CITypeUpdateOne) ClearAttributeSchema() *CITypeUpdateOne {
 	return _u
 }
 
+// SetParentTypeID sets the "parent_type_id" field.
+func (_u *CITypeUpdateOne) SetParentTypeID(v int) *CITypeUpdateOne {
+	_u.mutation.SetParentTypeID(v)
+	return _u
+}
+
+// SetNillableParentTypeID sets the "parent_type_id" field if the given value is not nil.
+func (_u *CITypeUpdateOne) SetNillableParentTypeID(v *int) *CITypeUpdateOne {
+	if v != nil {
+		_u.SetParentTypeID(*v)
+	}
+	return _u
+}
+
+// ClearParentTypeID clears the value of the "parent_type_id" field.
+func (_u *CITypeUpdateOne) ClearParentTypeID() *CITypeUpdateOne {
+	_u.mutation.ClearParentTypeID()
+	return _u
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_u *CITypeUpdateOne) SetTenantID(v int) *CITypeUpdateOne {
 	_u.mutation.ResetTenantID()
@@ -553,6 +810,55 @@ func (_u *CITypeUpdateOne) AddCis(v ...*ConfigurationItem) *CITypeUpdateOne {
 	return _u.AddCiIDs(ids...)
 }
 
+// SetParentID sets the "parent" edge to the CIType entity by ID.
+func (_u *CITypeUpdateOne) SetParentID(id int) *CITypeUpdateOne {
+	_u.mutation.SetParentID(id)
+	return _u
+}
+
+// SetNillableParentID sets the "parent" edge to the CIType entity by ID if the given value is not nil.
+func (_u *CITypeUpdateOne) SetNillableParentID(id *int) *CITypeUpdateOne {
+	if id != nil {
+		_u = _u.SetParentID(*id)
+	}
+	return _u
+}
+
+// SetParent sets the "parent" edge to the CIType entity.
+func (_u *CITypeUpdateOne) SetParent(v *CIType) *CITypeUpdateOne {
+	return _u.SetParentID(v.ID)
+}
+
+// AddChildIDs adds the "children" edge to the CIType entity by IDs.
+func (_u *CITypeUpdateOne) AddChildIDs(ids ...int) *CITypeUpdateOne {
+	_u.mutation.AddChildIDs(ids...)
+	return _u
+}
+
+// AddChildren adds the "children" edges to the CIType entity.
+func (_u *CITypeUpdateOne) AddChildren(v ...*CIType) *CITypeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddChildIDs(ids...)
+}
+
+// AddAttributeDefinitionIDs adds the "attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (_u *CITypeUpdateOne) AddAttributeDefinitionIDs(ids ...int) *CITypeUpdateOne {
+	_u.mutation.AddAttributeDefinitionIDs(ids...)
+	return _u
+}
+
+// AddAttributeDefinitions adds the "attribute_definitions" edges to the CIAttributeDefinition entity.
+func (_u *CITypeUpdateOne) AddAttributeDefinitions(v ...*CIAttributeDefinition) *CITypeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAttributeDefinitionIDs(ids...)
+}
+
 // Mutation returns the CITypeMutation object of the builder.
 func (_u *CITypeUpdateOne) Mutation() *CITypeMutation {
 	return _u.mutation
@@ -577,6 +883,54 @@ func (_u *CITypeUpdateOne) RemoveCis(v ...*ConfigurationItem) *CITypeUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveCiIDs(ids...)
+}
+
+// ClearParent clears the "parent" edge to the CIType entity.
+func (_u *CITypeUpdateOne) ClearParent() *CITypeUpdateOne {
+	_u.mutation.ClearParent()
+	return _u
+}
+
+// ClearChildren clears all "children" edges to the CIType entity.
+func (_u *CITypeUpdateOne) ClearChildren() *CITypeUpdateOne {
+	_u.mutation.ClearChildren()
+	return _u
+}
+
+// RemoveChildIDs removes the "children" edge to CIType entities by IDs.
+func (_u *CITypeUpdateOne) RemoveChildIDs(ids ...int) *CITypeUpdateOne {
+	_u.mutation.RemoveChildIDs(ids...)
+	return _u
+}
+
+// RemoveChildren removes "children" edges to CIType entities.
+func (_u *CITypeUpdateOne) RemoveChildren(v ...*CIType) *CITypeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveChildIDs(ids...)
+}
+
+// ClearAttributeDefinitions clears all "attribute_definitions" edges to the CIAttributeDefinition entity.
+func (_u *CITypeUpdateOne) ClearAttributeDefinitions() *CITypeUpdateOne {
+	_u.mutation.ClearAttributeDefinitions()
+	return _u
+}
+
+// RemoveAttributeDefinitionIDs removes the "attribute_definitions" edge to CIAttributeDefinition entities by IDs.
+func (_u *CITypeUpdateOne) RemoveAttributeDefinitionIDs(ids ...int) *CITypeUpdateOne {
+	_u.mutation.RemoveAttributeDefinitionIDs(ids...)
+	return _u
+}
+
+// RemoveAttributeDefinitions removes "attribute_definitions" edges to CIAttributeDefinition entities.
+func (_u *CITypeUpdateOne) RemoveAttributeDefinitions(v ...*CIAttributeDefinition) *CITypeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAttributeDefinitionIDs(ids...)
 }
 
 // Where appends a list predicates to the CITypeUpdate builder.
@@ -752,6 +1106,125 @@ func (_u *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ParentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   citype.ParentTable,
+			Columns: []string{citype.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   citype.ParentTable,
+			Columns: []string{citype.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.ChildrenTable,
+			Columns: []string{citype.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !_u.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.ChildrenTable,
+			Columns: []string{citype.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.ChildrenTable,
+			Columns: []string{citype.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAttributeDefinitionsIDs(); len(nodes) > 0 && !_u.mutation.AttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AttributeDefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -84,7 +84,7 @@ func (c *BPMNAIGeneratorController) PreviewBPMN(ctx *gin.Context) {
 // @Produce json
 // @Param keyword query string true "搜索关键词"
 // @Param process_type query string false "流程类型过滤"
-// @Success 200 {object} common.Response{data=[]dto.BPMNTemplateSuggestion}
+// @Success 200 {object} common.Response{data=[]string}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Router /api/v1/bpmn/ai/templates/suggestions [get]

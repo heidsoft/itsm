@@ -40,6 +40,9 @@ export default function CloudAccountPage() {
   const [createForm] = Form.useForm();
   const [editForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [updateSubmitting, setUpdateSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [data, setData] = useState<CloudAccount[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -50,9 +53,10 @@ export default function CloudAccountPage() {
   // 过滤后的数据
   const filteredData = useCallback(() => {
     return data.filter(item => {
-      const matchSearch = !searchText ||
-        (item.accountName?.toLowerCase().includes(searchText.toLowerCase())) ||
-        (item.accountId?.toLowerCase().includes(searchText.toLowerCase()));
+      const matchSearch =
+        !searchText ||
+        item.accountName?.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.accountId?.toLowerCase().includes(searchText.toLowerCase());
       const matchProvider = !filterProvider || item.provider === filterProvider;
       return matchSearch && matchProvider;
     });
@@ -86,6 +90,8 @@ export default function CloudAccountPage() {
   }, []);
 
   const handleCreate = async () => {
+    if (createSubmitting) return;
+    setCreateSubmitting(true);
     try {
       const values = await createForm.validateFields();
       await CMDBApi.createCloudAccount(values);
@@ -97,6 +103,8 @@ export default function CloudAccountPage() {
       if (error instanceof Error) {
         message.error(error.message || '创建失败');
       }
+    } finally {
+      setCreateSubmitting(false);
     }
   };
 
@@ -114,10 +122,12 @@ export default function CloudAccountPage() {
 
   const handleUpdate = async () => {
     if (!editingAccount) return;
+    if (updateSubmitting) return;
+    setUpdateSubmitting(true);
     try {
       const values = await editForm.validateFields();
       // 使用 CloudAccount ID 进行更新
-	  await CMDBApi.updateCloudAccount(editingAccount.id, {
+      await CMDBApi.updateCloudAccount(editingAccount.id, {
         ...values,
       });
       message.success('云账号已更新');
@@ -129,10 +139,14 @@ export default function CloudAccountPage() {
       if (error instanceof Error) {
         message.error(error.message || '更新失败');
       }
+    } finally {
+      setUpdateSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
+    if (deletingId !== null) return;
+    setDeletingId(id);
     try {
       await CMDBApi.deleteCloudAccount(String(id));
       message.success('云账号已删除');
@@ -141,13 +155,15 @@ export default function CloudAccountPage() {
       if (error instanceof Error) {
         message.error(error.message || '删除失败');
       }
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const handleToggleStatus = async (record: CloudAccount) => {
     try {
       // 调用更新接口切换状态
-	  await CMDBApi.updateCloudAccount(record.id, {
+      await CMDBApi.updateCloudAccount(record.id, {
         isActive: !record.isActive,
       });
       message.success(record.isActive ? '云账号已停用' : '云账号已启用');
@@ -166,7 +182,7 @@ export default function CloudAccountPage() {
       width: 110,
       render: (value: string) => {
         const provider = providerOptions.find(p => p.value === value);
-        return <Tag color="blue">{provider?.label || value}</Tag>;
+        return <Tag color='blue'>{provider?.label || value}</Tag>;
       },
     },
     {
@@ -195,9 +211,9 @@ export default function CloudAccountPage() {
       render: (value: boolean, record: CloudAccount) => (
         <Switch
           checked={value}
-          checkedChildren="启用"
-          unCheckedChildren="停用"
-          size="small"
+          checkedChildren='启用'
+          unCheckedChildren='停用'
+          size='small'
           onChange={() => handleToggleStatus(record)}
         />
       ),
@@ -208,23 +224,31 @@ export default function CloudAccountPage() {
       width: 120,
       render: (_: unknown, record: CloudAccount) => (
         <Space>
-          <Tooltip title="编辑">
+          <Tooltip title='编辑'>
             <Button
-              type="text"
+              type='text'
               icon={<Pencil />}
               onClick={() => handleEdit(record)}
-              size="small"
+              size='small'
+              aria-label={`编辑云账号 ${record.accountName}`}
             />
           </Tooltip>
           <Popconfirm
-            title="确定删除此云账号？"
-            description="删除后无法恢复"
+            title='确定删除此云账号？'
+            description='删除后无法恢复'
             onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
+            okText='确定'
+            cancelText='取消'
           >
-            <Tooltip title="删除">
-              <Button type="text" danger icon={<Trash2 />} size="small" />
+            <Tooltip title='删除'>
+              <Button
+                type='text'
+                danger
+                icon={<Trash2 />}
+                size='small'
+                loading={deletingId === record.id}
+                aria-label={`删除云账号 ${record.accountName}`}
+              />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -234,9 +258,9 @@ export default function CloudAccountPage() {
 
   return (
     <Card>
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold">云账号管理</h1>
-        <p className="text-gray-500 mt-1">管理云服务商的访问账号，用于资源同步和发现</p>
+      <div className='mb-4'>
+        <h1 className='text-2xl font-bold'>云账号管理</h1>
+        <p className='text-gray-500 mt-1'>管理云服务商的访问账号，用于资源同步和发现</p>
       </div>
 
       <Breadcrumb
@@ -250,17 +274,17 @@ export default function CloudAccountPage() {
       />
 
       {/* 搜索筛选工具栏 */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className='mb-4 flex flex-wrap items-center gap-3'>
         <Input
-          placeholder="搜索账号名称/ID"
-          prefix={<Search className="text-gray-400" />}
+          placeholder='搜索账号名称/ID'
+          prefix={<Search className='text-gray-400' />}
           value={searchText}
           onChange={e => setSearchText(e.target.value)}
           allowClear
           style={{ width: 200 }}
         />
         <Select
-          placeholder="云厂商筛选"
+          placeholder='云厂商筛选'
           value={filterProvider}
           onChange={setFilterProvider}
           allowClear
@@ -276,17 +300,15 @@ export default function CloudAccountPage() {
           <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
             刷新
           </Button>
-          <Button type="primary" icon={<Plus />} onClick={() => setCreateOpen(true)}>
+          <Button type='primary' icon={<Plus />} onClick={() => setCreateOpen(true)}>
             新增云账号
           </Button>
         </Space>
-        <span className="ml-auto text-sm text-gray-500">
-          共 {filteredData().length} 个账号
-        </span>
+        <span className='ml-auto text-sm text-gray-500'>共 {filteredData().length} 个账号</span>
       </div>
 
       <Table
-        rowKey="id"
+        rowKey='id'
         loading={loading}
         dataSource={filteredData()}
         columns={columns as any}
@@ -301,22 +323,23 @@ export default function CloudAccountPage() {
 
       {/* 新增云账号模态框 */}
       <Modal
-        title="新增云账号"
+        title='新增云账号'
         open={createOpen}
         onCancel={() => {
           setCreateOpen(false);
           createForm.resetFields();
         }}
         onOk={handleCreate}
+        confirmLoading={createSubmitting}
         width={500}
       >
-        <Form form={createForm} layout="vertical">
+        <Form form={createForm} layout='vertical'>
           <Form.Item
-            name="provider"
-            label="云厂商"
+            name='provider'
+            label='云厂商'
             rules={[{ required: true, message: '请选择云厂商' }]}
           >
-            <Select placeholder="请选择云厂商">
+            <Select placeholder='请选择云厂商'>
               {providerOptions.map(item => (
                 <Option key={item.value} value={item.value}>
                   {item.label}
@@ -325,28 +348,28 @@ export default function CloudAccountPage() {
             </Select>
           </Form.Item>
           <Form.Item
-            name="accountId"
-            label="账号ID"
+            name='accountId'
+            label='账号ID'
             rules={[{ required: true, message: '请输入账号ID' }]}
           >
-            <Input placeholder="例如 1234567890123456" />
+            <Input placeholder='例如 1234567890123456' />
           </Form.Item>
           <Form.Item
-            name="accountName"
-            label="账号名称"
+            name='accountName'
+            label='账号名称'
             rules={[{ required: true, message: '请输入账号名称' }]}
           >
-            <Input placeholder="例如 生产账号" />
+            <Input placeholder='例如 生产账号' />
           </Form.Item>
-          <Form.Item name="credentialRef" label="凭据引用">
-            <Input placeholder="例如 aliyun-prod-credential" />
+          <Form.Item name='credentialRef' label='凭据引用'>
+            <Input placeholder='例如 aliyun-prod-credential' />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* 编辑云账号模态框 */}
       <Modal
-        title="编辑云账号"
+        title='编辑云账号'
         open={editOpen}
         onCancel={() => {
           setEditOpen(false);
@@ -354,15 +377,16 @@ export default function CloudAccountPage() {
           editForm.resetFields();
         }}
         onOk={handleUpdate}
+        confirmLoading={updateSubmitting}
         width={500}
       >
-        <Form form={editForm} layout="vertical">
+        <Form form={editForm} layout='vertical'>
           <Form.Item
-            name="provider"
-            label="云厂商"
+            name='provider'
+            label='云厂商'
             rules={[{ required: true, message: '请选择云厂商' }]}
           >
-            <Select placeholder="请选择云厂商" disabled>
+            <Select placeholder='请选择云厂商' disabled>
               {providerOptions.map(item => (
                 <Option key={item.value} value={item.value}>
                   {item.label}
@@ -371,24 +395,24 @@ export default function CloudAccountPage() {
             </Select>
           </Form.Item>
           <Form.Item
-            name="accountId"
-            label="账号ID"
+            name='accountId'
+            label='账号ID'
             rules={[{ required: true, message: '请输入账号ID' }]}
           >
-            <Input placeholder="例如 1234567890123456" disabled />
+            <Input placeholder='例如 1234567890123456' disabled />
           </Form.Item>
           <Form.Item
-            name="accountName"
-            label="账号名称"
+            name='accountName'
+            label='账号名称'
             rules={[{ required: true, message: '请输入账号名称' }]}
           >
-            <Input placeholder="例如 生产账号" />
+            <Input placeholder='例如 生产账号' />
           </Form.Item>
-          <Form.Item name="credentialRef" label="凭据引用">
-            <Input placeholder="例如 aliyun-prod-credential" />
+          <Form.Item name='credentialRef' label='凭据引用'>
+            <Input placeholder='例如 aliyun-prod-credential' />
           </Form.Item>
-          <Form.Item name="isActive" label="状态" valuePropName="checked">
-            <Switch checkedChildren="启用" unCheckedChildren="停用" />
+          <Form.Item name='isActive' label='状态' valuePropName='checked'>
+            <Switch checkedChildren='启用' unCheckedChildren='停用' />
           </Form.Item>
         </Form>
       </Modal>

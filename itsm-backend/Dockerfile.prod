@@ -44,6 +44,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 COPY . .
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
+    go run github.com/swaggo/swag/cmd/swag@v1.16.6 init --parseDependency --parseInternal -g main.go -o docs
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -ldflags="-s -w" -o /out/main ./main.go
 
 # ============================================================
@@ -63,6 +66,8 @@ COPY --from=builder --chown=app:app /out/main ./main
 COPY --chown=app:app config.yaml ./
 COPY --chown=app:app migrations ./migrations
 COPY --chown=app:app config/seed ./config/seed
+COPY --chown=app:app docs/swagger.json ./docs/
+COPY --chown=app:app docs/swagger.yaml ./docs/
 
 EXPOSE 8090
 

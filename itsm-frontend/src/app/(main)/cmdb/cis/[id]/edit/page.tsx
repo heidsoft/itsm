@@ -6,13 +6,13 @@ import { App, Card } from 'antd';
 import { Form } from 'antd';
 
 import { CIEditorForm } from '@/components/cmdb/CIEditorForm';
-import type {
-  CIFormValues,
-  SchemaField} from '@/components/cmdb/ci-editor-shared';
+import { useUnsavedChangesGuard } from '@/components/cmdb/useUnsavedChangesGuard';
+import type { CIFormValues, SchemaField } from '@/components/cmdb/ci-editor-shared';
 import {
   compactRecord,
   extractCloudDataList,
-  normalizeSchemaFields
+  normalizeSchemaFields,
+  resolveEffectiveTypeSchemaFields,
 } from '@/components/cmdb/ci-editor-shared';
 import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { CMDBApi } from '@/lib/api/cmdb-api';
@@ -34,6 +34,7 @@ const EditCIPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [ci, setCi] = useState<ConfigurationItem | null>(null);
   const initializedRef = useRef(false);
+  const { markDirty, clearDirty, handleCancel } = useUnsavedChangesGuard(router);
 
   const cloudServiceMap = useMemo(
     () => new Map(cloudServices.map(service => [service.id, service])),
@@ -43,7 +44,7 @@ const EditCIPage: React.FC = () => {
   useEffect(() => {
     const loadTypes = async () => {
       try {
-		const res = await CMDBApi.getCITypes();
+        const res = await CMDBApi.getCITypes();
         setTypes(res || []);
       } catch {
         message.error('加载资产类型失败');
@@ -102,11 +103,12 @@ const EditCIPage: React.FC = () => {
 
   useEffect(() => {
     if (!ci || typesLoading || initializedRef.current) return;
-    const ciTypeId = ci.ciTypeId ?? ci.ciTypeId ?? 0;
-    const selectedType = types.find(type => type.id === ciTypeId);
-    const initialTypeSchemaFields = normalizeSchemaFields(selectedType?.attributeSchema);
+    const ciTypeId = ci.ciTypeId ?? 0;
+    const initialTypeSchemaFields = resolveEffectiveTypeSchemaFields(types, ciTypeId);
     const attributeRecord =
-      ci.attributes && typeof ci.attributes === 'object' ? (ci.attributes as Record<string, unknown>) : undefined;
+      ci.attributes && typeof ci.attributes === 'object'
+        ? (ci.attributes as Record<string, unknown>)
+        : undefined;
     const remainingAttributes = omitSchemaFieldValues(attributeRecord, initialTypeSchemaFields);
 
     const initialValues: Partial<CIFormValues> = {
@@ -149,8 +151,8 @@ const EditCIPage: React.FC = () => {
     const cloudResourceRefId = ci?.cloudResourceRefId ?? ci?.cloudResourceRefId;
     if (!cloudResourceRefId || !cloudResources.length || !cloudServices.length) return;
     const resource = cloudResources.find(item => item.id === cloudResourceRefId);
-      const service = resource ? cloudServiceMap.get(resource.serviceId) : undefined;
-      setSchemaFields(normalizeSchemaFields(service?.attributeSchema));
+    const service = resource ? cloudServiceMap.get(resource.serviceId) : undefined;
+    setSchemaFields(normalizeSchemaFields(service?.attributeSchema));
   }, [ci, cloudResources, cloudServices, cloudServiceMap]);
 
   const handleCloudResourceChange = (value?: number) => {
@@ -173,9 +175,8 @@ const EditCIPage: React.FC = () => {
   };
 
   const handleCITypeChange = (value?: number) => {
-    const selectedType = types.find(type => type.id === value);
-    setTypeSchemaFields(normalizeSchemaFields(selectedType?.attributeSchema));
-    form.setFieldValue('custom_attributes', undefined);
+    setTypeSchemaFields(resolveEffectiveTypeSchemaFields(types, value));
+    form.setFieldValue('customAttributes', undefined);
   };
 
   const handleSubmit = async (values: CIFormValues) => {
@@ -192,7 +193,9 @@ const EditCIPage: React.FC = () => {
           return;
         }
       }
-      const customAttributes = compactRecord(values.customAttributes as Record<string, unknown> | undefined);
+      const customAttributes = compactRecord(
+        values.customAttributes as Record<string, unknown> | undefined
+      );
       attributes = {
         ...(attributes || {}),
         ...(customAttributes || {}),
@@ -229,7 +232,8 @@ const EditCIPage: React.FC = () => {
         cloudMetadata: values.cloudMetadata,
       });
       message.success('配置项更新成功');
-      router.push('/cmdb');
+      clearDirty();
+      router.push('/cmdb/ci');
     } catch (error) {
       if (error instanceof Error) {
         message.error(error.message || '更新配置项失败');
@@ -242,19 +246,19 @@ const EditCIPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       <ManagementPageHeader
-        title="编辑配置项"
-        description="统一维护资产主数据、云资源映射和扩展属性，避免创建页与编辑页字段表现不一致。"
+        title='编辑配置项'
+        description='统一维护资产主数据、云资源映射和扩展属性，避免创建页与编辑页字段表现不一致。'
         notice={
           <ManagementNotice
-            message="编辑时会保留原有云资源映射"
-            description="变更云资源引用后，系统会同步刷新动态属性字段，请确认扩展属性是否仍然适配。"
+            message='编辑时会保留原有云资源映射'
+            description='变更云资源引用后，系统会同步刷新动态属性字段，请确认扩展属性是否仍然适配。'
           />
         }
       />
 
-      <Card className="rounded-xl shadow-sm" loading={loading}>
+      <Card className='rounded-xl shadow-sm' loading={loading}>
         <CIEditorForm
           form={form}
           types={types}
@@ -265,11 +269,14 @@ const EditCIPage: React.FC = () => {
           schemaFields={schemaFields}
           typeSchemaFields={typeSchemaFields}
           saving={saving}
-          submitText="保存修改"
+          submitText='保存修改'
           onSubmit={handleSubmit}
-          onCancel={() => router.back()}
+          onCancel={handleCancel}
           onCITypeChange={handleCITypeChange}
           onCloudResourceChange={handleCloudResourceChange}
+          onValuesChange={() => {
+            if (initializedRef.current) markDirty();
+          }}
         />
       </Card>
     </div>

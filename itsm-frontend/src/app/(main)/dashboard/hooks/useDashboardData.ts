@@ -208,7 +208,7 @@ function getInitialData(): DashboardData {
         id: 'create-incident',
         title: '报告事件',
         description: '报告IT事件和故障',
-        path: '/incidents/new',
+        path: '/incidents/create',
         color: '#ef4444',
       },
       {

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Card, Space, Button, Table, Tag, App, Empty, Tooltip, Popconfirm, Tabs, message } from 'antd';
+import { Card, Space, Button, Table, Tag, App, Empty, Tooltip, Popconfirm, Tabs, Modal, Input, Typography } from 'antd';
 import { X, Check, UserPlus, RotateCcw, CheckCircle, XCircle, GitBranch } from 'lucide-react';
 
 import type { ServiceRequest } from '@/lib/api/service-request-api';
@@ -279,6 +279,9 @@ function MyBpmnTaskTab() {
   const [size, setSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [claimingIds, setClaimingIds] = useState<Set<string | number>>(new Set());
+  const [decision, setDecision] = useState<{ task: WorkflowTask; action: 'approve' | 'reject' } | null>(null);
+  const [decisionComment, setDecisionComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const load = async (p = page, s = size) => {
     try {
@@ -313,6 +316,34 @@ function MyBpmnTaskTab() {
         next.delete(taskId);
         return next;
       });
+    }
+  };
+
+  // 打开审批决策弹窗
+  const openDecision = (task: WorkflowTask, action: 'approve' | 'reject') => {
+    setDecisionComment('');
+    setDecision({ task, action });
+  };
+
+  // 提交审批决策：批准可不填意见，拒绝必须填写（与后端校验一致）
+  const submitDecision = async () => {
+    if (!decision) return;
+    const comment = decisionComment.trim();
+    if (decision.action === 'reject' && !comment) {
+      message.warning('拒绝时必须填写审批意见');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await WorkflowApi.submitTaskDecision(decision.task.id, { action: decision.action, comment });
+      message.success(decision.action === 'approve' ? '已批准' : '已拒绝');
+      setDecision(null);
+      load();
+    } catch (e) {
+      console.error(e);
+      message.error('提交审批决策失败：' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -380,13 +411,12 @@ function MyBpmnTaskTab() {
             {
               title: '操作',
               key: 'actions',
-              width: 220,
+              width: 300,
               render: (_, r) => (
                 <Space size="small">
                   {!r.assignee && (
                     <Tooltip title="领取任务并成为指派人">
                       <Button
-                        type="primary"
                         size="small"
                         icon={<UserPlus />}
                         loading={claimingIds.has(r.id)}
@@ -396,6 +426,22 @@ function MyBpmnTaskTab() {
                       </Button>
                     </Tooltip>
                   )}
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<Check />}
+                    onClick={() => openDecision(r, 'approve')}
+                  >
+                    批准
+                  </Button>
+                  <Button
+                    danger
+                    size="small"
+                    icon={<X />}
+                    onClick={() => openDecision(r, 'reject')}
+                  >
+                    拒绝
+                  </Button>
                   <Link href={`/workflow/instances/${r.instanceId}?task=${r.id}`}>
                     <Button size="small">详情</Button>
                   </Link>
@@ -405,6 +451,41 @@ function MyBpmnTaskTab() {
           ]}
         />
       )}
+
+      {/* 审批决策弹窗 */}
+      <Modal
+        title={decision?.action === 'approve' ? '批准任务' : '拒绝任务'}
+        open={!!decision}
+        onOk={submitDecision}
+        onCancel={() => setDecision(null)}
+        okText={decision?.action === 'approve' ? '确认批准' : '确认拒绝'}
+        okButtonProps={{ danger: decision?.action === 'reject', loading: submitting }}
+        cancelText="取消"
+        destroyOnHidden
+      >
+        {decision && (
+          <div className="space-y-3">
+            <div>
+              <Typography.Text type="secondary">任务：</Typography.Text>
+              <Typography.Text strong>{decision.task.nodeName || String(decision.task.id)}</Typography.Text>
+            </div>
+            <div>
+              <Typography.Text type="secondary">
+                审批意见{decision.action === 'reject' ? '（必填）' : '（选填）'}：
+              </Typography.Text>
+              <Input.TextArea
+                rows={3}
+                className="mt-1"
+                value={decisionComment}
+                onChange={(e) => setDecisionComment(e.target.value)}
+                placeholder={decision.action === 'reject' ? '请填写拒绝原因' : '可填写审批意见'}
+                maxLength={500}
+                showCount
+              />
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

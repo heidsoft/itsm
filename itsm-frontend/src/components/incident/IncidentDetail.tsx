@@ -24,11 +24,13 @@ import {
   Empty,
   Spin,
 } from 'antd';
-import { ArrowUp, Plus, Save, Pencil, FileText, Clock, AlertCircle, CheckCircle, Plug, AreaChart } from 'lucide-react';
+import { ArrowUp, Plus, Save, Pencil, FileText, Clock, AlertCircle, CheckCircle, Plug, AreaChart, UserCheck, Siren } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { IncidentAPI } from '@/lib/api/';
+import { UserApi } from '@/lib/api/user-api';
+import type { User } from '@/lib/api/user-api';
 import {
   IncidentStatus,
   IncidentStatusLabels,
@@ -95,6 +97,22 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [form] = Form.useForm();
   const [resolveForm] = Form.useForm();
 
+  // ===== 指派：用户列表 + 指派弹窗状态 =====
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [assignForm] = Form.useForm<{ assigneeId: number }>();
+
+  // ===== 升级为重大事件：弹窗状态 =====
+  const [majorModalVisible, setMajorModalVisible] = useState(false);
+  const [escalatingMajor, setEscalatingMajor] = useState(false);
+  const [majorForm] = Form.useForm<{
+    impactScope: 'low' | 'medium' | 'high' | 'critical';
+    businessImpact: string;
+    communicationPlan?: string;
+  }>();
+
   // ===== 新增：根因分析、影响评估、事件分类状态 =====
   const [rootCauseData, setRootCauseData] = useState<RootCauseData | null>(null);
   const [impactData, setImpactData] = useState<ImpactAssessmentData | null>(null);
@@ -158,6 +176,30 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   useEffect(() => {
     loadData();
   }, [id]);
+
+  // 加载用户列表，用于负责人/报告人姓名展示与指派选择
+  useEffect(() => {
+    const loadUsers = async () => {
+      setLoadingUsers(true);
+      try {
+        const res = await UserApi.getUsers({ pageSize: 100 });
+        setUsers(res.users || []);
+      } catch (e) {
+        // 用户获取失败时降级为展示 ID，不阻断详情页
+        setUsers([]);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  // 用户 ID → 姓名（找不到时回退为 #ID）
+  const getUserName = (userId?: number | null) => {
+    if (!userId) return '-';
+    const user = users.find(u => u.id === userId);
+    return user ? user.name || user.username : `#${userId}`;
+  };
 
   // 当数据加载完成后，异步加载分析数据
   useEffect(() => {
@@ -239,6 +281,50 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       handleError(error, 'reopenIncident', '重新打开失败');
     } finally {
       setReopening(false);
+    }
+  };
+
+  // 打开指派弹窗
+  const handleAssignClick = () => {
+    assignForm.setFieldsValue({ assigneeId: data?.assigneeId ?? undefined });
+    setAssignModalVisible(true);
+  };
+
+  // 提交指派（使用专用 assign 端点）
+  const handleAssignSubmit = async (values: { assigneeId: number }) => {
+    if (!data) return;
+    setAssigning(true);
+    try {
+      await IncidentAPI.assignIncident(data.id, values.assigneeId);
+      message.success('事件指派成功');
+      setAssignModalVisible(false);
+      assignForm.resetFields();
+      loadData();
+    } catch (error) {
+      handleError(error, 'assignIncident', '指派失败');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  // 提交升级为重大事件（使用专用 major-incident 端点）
+  const handleMajorSubmit = async (values: {
+    impactScope: 'low' | 'medium' | 'high' | 'critical';
+    businessImpact: string;
+    communicationPlan?: string;
+  }) => {
+    if (!data) return;
+    setEscalatingMajor(true);
+    try {
+      await IncidentAPI.escalateMajorIncident(data.id, values);
+      message.success('已升级为重大事件');
+      setMajorModalVisible(false);
+      majorForm.resetFields();
+      loadData();
+    } catch (error) {
+      handleError(error, 'escalateMajorIncident', '升级为重大事件失败');
+    } finally {
+      setEscalatingMajor(false);
     }
   };
 
@@ -423,6 +509,11 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               <span style={{ fontSize: 20, fontWeight: 500, marginRight: 16 }}>
                 {data.incidentNumber} {data.title}
               </span>
+              {data.isMajorIncident && (
+                <Tag color="red" icon={<AlertCircle size={12} style={{ marginRight: 4, verticalAlign: -1 }} />}>
+                  重大事件
+                </Tag>
+              )}
               <Tag color={data.status === IncidentStatus.RESOLVED ? 'success' : 'blue'}>
                 {IncidentStatusLabels[data.status]}
               </Tag>
@@ -437,6 +528,18 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               <Button icon={<ArrowUp />} onClick={handleEscalate} loading={escalating}>
                 升级
               </Button>
+              {data.status !== IncidentStatus.RESOLVED && data.status !== IncidentStatus.CLOSED && (
+                <Button icon={<UserCheck />} onClick={handleAssignClick} loading={loadingUsers}>
+                  指派
+                </Button>
+              )}
+              {!data.isMajorIncident &&
+                data.status !== IncidentStatus.RESOLVED &&
+                data.status !== IncidentStatus.CLOSED && (
+                  <Button danger icon={<Siren />} onClick={() => setMajorModalVisible(true)}>
+                    升级为重大事件
+                  </Button>
+                )}
               {data.status !== IncidentStatus.RESOLVED && data.status !== IncidentStatus.CLOSED && (
                 <Button
                   type="primary"
@@ -459,8 +562,8 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         {/* 基本信息 */}
         <Card title="基本信息" extra={<Button type="link" icon={<Pencil />} onClick={handleEditCategory}>编辑分类</Button>}>
           <Descriptions column={2}>
-            <Descriptions.Item label="报告人ID">{data.reporterId}</Descriptions.Item>
-            <Descriptions.Item label="负责人ID">{data.assigneeId || '-'}</Descriptions.Item>
+            <Descriptions.Item label="报告人">{getUserName(data.reporterId)}</Descriptions.Item>
+            <Descriptions.Item label="负责人">{getUserName(data.assigneeId)}</Descriptions.Item>
             <Descriptions.Item label="优先级">
               {IncidentPriorityLabels[data.priority]}
             </Descriptions.Item>
@@ -710,6 +813,107 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           </Form>
         </Modal>
       )}
+
+      {/* 指派弹窗 */}
+      <Modal
+        title={
+          <Space>
+            <UserCheck style={{ color: '#1677ff' }} />
+            指派事件
+          </Space>
+        }
+        open={assignModalVisible}
+        onCancel={() => {
+          setAssignModalVisible(false);
+          assignForm.resetFields();
+        }}
+        confirmLoading={assigning}
+        onOk={() => assignForm.submit()}
+        okText="确认指派"
+        cancelText="取消"
+        width={480}
+      >
+        <Form form={assignForm} layout="vertical" onFinish={handleAssignSubmit}>
+          <Form.Item
+            name="assigneeId"
+            label="指派给"
+            rules={[{ required: true, message: '请选择处理人' }]}
+          >
+            <Select
+              placeholder="请选择处理人"
+              loading={loadingUsers}
+              showSearch
+              optionFilterProp="label"
+              options={users.map(user => ({
+                value: user.id,
+                label: `${user.name || user.username}${user.department ? ` (${user.department})` : ''}`,
+              }))}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 升级为重大事件弹窗（影响评估 + 危机沟通） */}
+      <Modal
+        title={
+          <Space>
+            <Siren style={{ color: '#ff4d4f' }} />
+            升级为重大事件
+          </Space>
+        }
+        open={majorModalVisible}
+        onCancel={() => {
+          setMajorModalVisible(false);
+          majorForm.resetFields();
+        }}
+        confirmLoading={escalatingMajor}
+        onOk={() => majorForm.submit()}
+        okText="确认升级"
+        okButtonProps={{ danger: true }}
+        cancelText="取消"
+        width={520}
+      >
+        <div style={{ marginBottom: 16, color: '#8c8c8c', fontSize: 13 }}>
+          升级后事件严重程度将提升为“严重”，并记录影响评估与审计日志，此操作不可撤销。
+        </div>
+        <Form form={majorForm} layout="vertical" onFinish={handleMajorSubmit}>
+          <Form.Item
+            name="impactScope"
+            label="影响范围"
+            rules={[{ required: true, message: '请选择影响范围' }]}
+          >
+            <Select placeholder="请选择影响范围">
+              <Select.Option value="low">低 - 少量用户受影响</Select.Option>
+              <Select.Option value="medium">中 - 部分部门/服务受影响</Select.Option>
+              <Select.Option value="high">高 - 多个核心服务受影响</Select.Option>
+              <Select.Option value="critical">严重 - 全局性业务中断</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="businessImpact"
+            label="业务影响评估"
+            rules={[
+              { required: true, message: '请填写业务影响评估' },
+              { min: 10, message: '业务影响评估至少需要10个字符' },
+            ]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="请描述受影响的业务/系统范围、用户数量、预估损失等..."
+              showCount
+              maxLength={2000}
+            />
+          </Form.Item>
+          <Form.Item name="communicationPlan" label="危机沟通计划">
+            <Input.TextArea
+              rows={3}
+              placeholder="可选：说明通报对象、沟通频率、作战室/应急群等安排..."
+              showCount
+              maxLength={1000}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* 解决确认弹窗 (ITIL 合规：要求填写解决方案) */}
       <Modal

@@ -8,7 +8,13 @@
  */
 
 import { httpClient } from './http-client';
-import type { CIType, CloudService, CloudAccount, CloudResource, ConfigurationItem } from '@/types/biz/cmdb';
+import type {
+  CIType,
+  CloudService,
+  CloudAccount,
+  CloudResource,
+  ConfigurationItem,
+} from '@/types/biz/cmdb';
 import type { TopologyGraph, ImpactAnalysisResponse } from './cmdb-relationship';
 
 export interface CIRelationship {
@@ -56,12 +62,12 @@ export interface GetCIListRequest {
   environment?: string;
   offset?: number;
   limit?: number;
-	page?: number;
-	size?: number;
+  page?: number;
+  size?: number;
 }
 
 export interface GetCIListResponse {
-	items: ConfigurationItem[];
+  items: ConfigurationItem[];
   total: number;
 }
 
@@ -73,10 +79,11 @@ export class CMDBApi {
   // ==================== CI CRUD ====================
 
   static async getCIs(query?: GetCIListRequest): Promise<GetCIListResponse> {
-	const { offset, limit, ...filters } = query ?? {};
-	const size = filters.size ?? limit;
-	const page = filters.page ?? (size && offset !== undefined ? Math.floor(offset / size) + 1 : undefined);
-	return httpClient.get(BASE, { ...filters, page, size });
+    const { offset, limit, ...filters } = query ?? {};
+    const size = filters.size ?? limit;
+    const page =
+      filters.page ?? (size && offset !== undefined ? Math.floor(offset / size) + 1 : undefined);
+    return httpClient.get(BASE, { ...filters, page, size });
   }
 
   static async getCI(id: string | number): Promise<ConfigurationItem> {
@@ -87,7 +94,10 @@ export class CMDBApi {
     return httpClient.post(BASE, request);
   }
 
-  static async updateCI(id: string | number, request: Partial<CreateCIRequest> & Record<string, any>): Promise<ConfigurationItem> {
+  static async updateCI(
+    id: string | number,
+    request: Partial<CreateCIRequest> & Record<string, any>
+  ): Promise<ConfigurationItem> {
     return httpClient.put(`${BASE}/${id}`, request);
   }
 
@@ -102,8 +112,19 @@ export class CMDBApi {
   }
 
   static async getCITypes(): Promise<CIType[]> {
-	const response = await httpClient.get<CIType[] | { items: CIType[] }>(`${BASE}/types`);
-	return Array.isArray(response) ? response : response.items ?? [];
+    const all: CIType[] = [];
+    const size = 200;
+    for (let page = 1; ; page += 1) {
+      const response = await httpClient.get<
+        CIType[] | { items: CIType[]; total?: number; page?: number; size?: number }
+      >(`${BASE}/types`, { page, size });
+      if (Array.isArray(response)) return response;
+      const items = response.items ?? [];
+      all.push(...items);
+      if (items.length < size || (response.total !== undefined && all.length >= response.total)) {
+        return all;
+      }
+    }
   }
 
   static async getCMDBTypes(): Promise<CIType[]> {
@@ -116,19 +137,25 @@ export class CMDBApi {
     icon?: string;
     color?: string;
     attributeSchema?: string;
+    parentTypeId?: number;
     isActive?: boolean;
   }): Promise<CIType> {
     return httpClient.post(`${BASE}/types`, data);
   }
 
-  static async updateCITypes(id: number, data: {
-    name: string;
-    description?: string;
-    icon?: string;
-    color?: string;
-    attributeSchema?: string;
-    isActive?: boolean;
-  }): Promise<CIType> {
+  static async updateCITypes(
+    id: number,
+    data: {
+      name: string;
+      description?: string;
+      icon?: string;
+      color?: string;
+      attributeSchema?: string;
+      parentTypeId?: number;
+      clearParent?: boolean;
+      isActive?: boolean;
+    }
+  ): Promise<CIType> {
     return httpClient.put(`${BASE}/types/${id}`, data);
   }
 
@@ -146,11 +173,24 @@ export class CMDBApi {
     return httpClient.get(`${BASE}/${id}/impact-analysis`);
   }
 
-  static async analyzeImpact(request: { ciId: string; analysisType?: string; maxDepth?: number }): Promise<ImpactAnalysisResponse> {
-	return httpClient.get(`${BASE}/${request.ciId}/impact-analysis`, { maxDepth: request.maxDepth });
+  static async analyzeImpact(request: {
+    ciId: string;
+    analysisType?: string;
+    maxDepth?: number;
+  }): Promise<ImpactAnalysisResponse> {
+    return httpClient.get(`${BASE}/${request.ciId}/impact-analysis`, {
+      maxDepth: request.maxDepth,
+    });
   }
 
-  static async getCIChangeHistory(id: number, params?: { page?: number; pageSize?: number }): Promise<{ items?: Array<Record<string, unknown>>; data?: Array<Record<string, unknown>>; total?: number }> {
+  static async getCIChangeHistory(
+    id: number,
+    params?: { page?: number; pageSize?: number }
+  ): Promise<{
+    items?: Array<Record<string, unknown>>;
+    data?: Array<Record<string, unknown>>;
+    total?: number;
+  }> {
     return httpClient.get(`${BASE}/${id}/change-history`, params);
   }
 
@@ -179,11 +219,14 @@ export class CMDBApi {
     });
   }
 
-  static async getCIRelationships(ciId: string | number, params?: {
-    direction?: 'incoming' | 'outgoing' | 'both';
-    types?: string[];
-  }): Promise<CIRelationship[]> {
-	return httpClient.get(`${BASE}/${ciId}/relationships`, params);
+  static async getCIRelationships(
+    ciId: string | number,
+    params?: {
+      direction?: 'incoming' | 'outgoing' | 'both';
+      types?: string[];
+    }
+  ): Promise<CIRelationship[]> {
+    return httpClient.get(`${BASE}/${ciId}/relationships`, params);
   }
 
   static async deleteRelationship(id: string): Promise<void> {
@@ -192,7 +235,9 @@ export class CMDBApi {
 
   // ==================== Reconciliation ====================
 
-  static async getReconciliationResults(params?: Record<string, unknown>): Promise<Record<string, unknown>> {
+  static async getReconciliationResults(
+    params?: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
     return httpClient.get(`${CMDB_BASE}/reconciliation`, params);
   }
 
@@ -206,7 +251,10 @@ export class CMDBApi {
     return httpClient.post(`${CMDB_BASE}/cloud-services`, data);
   }
 
-  static async updateCloudService(id: string | number, data: Record<string, unknown>): Promise<CloudService> {
+  static async updateCloudService(
+    id: string | number,
+    data: Record<string, unknown>
+  ): Promise<CloudService> {
     return httpClient.put(`${CMDB_BASE}/cloud-services/${id}`, data);
   }
 
@@ -226,30 +274,33 @@ export class CMDBApi {
     return httpClient.delete(`${CMDB_BASE}/cloud-accounts/${id}`);
   }
 
-	static async updateCloudAccount(id: string | number, data: Record<string, unknown>): Promise<CloudAccount> {
-	  return httpClient.put(`${CMDB_BASE}/cloud-accounts/${id}`, data);
-	}
+  static async updateCloudAccount(
+    id: string | number,
+    data: Record<string, unknown>
+  ): Promise<CloudAccount> {
+    return httpClient.put(`${CMDB_BASE}/cloud-accounts/${id}`, data);
+  }
 
-	static async getCloudResources(params?: Record<string, unknown>): Promise<CloudResource[]> {
+  static async getCloudResources(params?: Record<string, unknown>): Promise<CloudResource[]> {
     return httpClient.get(`${CMDB_BASE}/cloud-resources`, params);
   }
 
   // ==================== Discovery ====================
 
   static async getDiscoveryRules(): Promise<Array<Record<string, unknown>>> {
-	return httpClient.get(`${CMDB_BASE}/discovery/sources`);
+    return httpClient.get(`${CMDB_BASE}/discovery/sources`);
   }
 
   static async getDiscoverySources(): Promise<Array<Record<string, unknown>>> {
-	return httpClient.get(`${CMDB_BASE}/discovery/sources`);
+    return httpClient.get(`${CMDB_BASE}/discovery/sources`);
   }
 
   static async getDiscoveryHistory(ruleId?: string): Promise<Array<Record<string, unknown>>> {
-	return httpClient.get(`${CMDB_BASE}/discovery/results`, ruleId ? { jobId: ruleId } : undefined);
+    return httpClient.get(`${CMDB_BASE}/discovery/results`, ruleId ? { jobId: ruleId } : undefined);
   }
 
   static async runDiscoveryRule(ruleId: string): Promise<void> {
-	return httpClient.post(`${CMDB_BASE}/discovery/jobs`, { sourceId: ruleId });
+    return httpClient.post(`${CMDB_BASE}/discovery/jobs`, { sourceId: ruleId });
   }
 
   // ==================== Search ====================
@@ -261,7 +312,7 @@ export class CMDBApi {
   }): Promise<{ items: ConfigurationItem[]; total: number }> {
     const result = await this.getCIs(query);
     return {
-	  items: result.items ?? [],
+      items: result.items ?? [],
       total: result.total,
     };
   }
@@ -279,7 +330,6 @@ export class CMDBApi {
     }
     return results;
   }
-
 }
 
 export default CMDBApi;

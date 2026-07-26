@@ -4,25 +4,41 @@ import "time"
 
 // CreateCIAttributeDefinitionRequest 创建CI属性定义请求。
 type CreateCIAttributeDefinitionRequest struct {
-	Name            string `json:"name" binding:"required,max=100"`
-	DisplayName     string `json:"displayName" binding:"required,max=100"`
-	Type            string `json:"type" binding:"required,oneof=string int integer float bool boolean date datetime json enum reference list map"`
-	Required        bool   `json:"required,omitempty"`
-	Unique          bool   `json:"unique,omitempty"`
-	DefaultValue    string `json:"defaultValue,omitempty"`
-	ValidationRules string `json:"validationRules,omitempty"`
-	CiTypeID        int    `json:"ciTypeId" binding:"required"`
+	Name            string   `json:"name" binding:"required,max=100"`
+	DisplayName     string   `json:"displayName" binding:"required,max=100"`
+	Description     string   `json:"description,omitempty" binding:"omitempty,max=500"`
+	Type            string   `json:"type" binding:"required,oneof=string int integer float bool boolean date datetime json enum reference list map"`
+	Required        bool     `json:"required,omitempty"`
+	Unique          bool     `json:"unique,omitempty"`
+	DefaultValue    string   `json:"defaultValue,omitempty"`
+	ValidationRules string   `json:"validationRules,omitempty"`
+	EnumValues      []string `json:"enumValues,omitempty"`
+	ReferenceType   string   `json:"referenceType,omitempty" binding:"omitempty,max=100"`
+	DisplayOrder    int      `json:"displayOrder,omitempty" binding:"omitempty,min=0"`
+	GroupName       string   `json:"groupName,omitempty" binding:"omitempty,max=100"`
+	Placeholder     string   `json:"placeholder,omitempty" binding:"omitempty,max=200"`
+	HelpText        string   `json:"helpText,omitempty" binding:"omitempty,max=500"`
+	IsSearchable    bool     `json:"isSearchable,omitempty"`
+	CiTypeID        int      `json:"ciTypeId" binding:"required"`
 }
 
 // UpdateCIAttributeDefinitionRequest 更新CI属性定义请求。
 type UpdateCIAttributeDefinitionRequest struct {
-	DisplayName     *string `json:"displayName,omitempty" binding:"omitempty,max=100"`
-	Type            *string `json:"type,omitempty" binding:"omitempty,oneof=string int integer float bool boolean date datetime json enum reference list map"`
-	Required        *bool   `json:"required,omitempty"`
-	Unique          *bool   `json:"unique,omitempty"`
-	DefaultValue    *string `json:"defaultValue,omitempty"`
-	ValidationRules *string `json:"validationRules,omitempty"`
-	IsActive        *bool   `json:"isActive,omitempty"`
+	DisplayName     *string   `json:"displayName,omitempty" binding:"omitempty,max=100"`
+	Description     *string   `json:"description,omitempty" binding:"omitempty,max=500"`
+	Type            *string   `json:"type,omitempty" binding:"omitempty,oneof=string int integer float bool boolean date datetime json enum reference list map"`
+	Required        *bool     `json:"required,omitempty"`
+	Unique          *bool     `json:"unique,omitempty"`
+	DefaultValue    *string   `json:"defaultValue,omitempty"`
+	ValidationRules *string   `json:"validationRules,omitempty"`
+	EnumValues      *[]string `json:"enumValues,omitempty"`
+	ReferenceType   *string   `json:"referenceType,omitempty" binding:"omitempty,max=100"`
+	DisplayOrder    *int      `json:"displayOrder,omitempty" binding:"omitempty,min=0"`
+	GroupName       *string   `json:"groupName,omitempty" binding:"omitempty,max=100"`
+	Placeholder     *string   `json:"placeholder,omitempty" binding:"omitempty,max=200"`
+	HelpText        *string   `json:"helpText,omitempty" binding:"omitempty,max=500"`
+	IsSearchable    *bool     `json:"isSearchable,omitempty"`
+	IsActive        *bool     `json:"isActive,omitempty"`
 }
 
 // CITypeListResponse CI类型列表响应。

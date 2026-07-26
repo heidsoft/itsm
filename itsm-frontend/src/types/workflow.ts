@@ -516,6 +516,7 @@ export interface UpdateWorkflowRequest {
 export interface StartWorkflowRequest {
   workflowId: string;
   ticketId?: number;
+  businessKey?: string;
   variables?: Record<string, any>;
 }
 

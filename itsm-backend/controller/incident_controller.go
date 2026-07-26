@@ -727,6 +727,38 @@ func (c *IncidentController) ReopenIncident(ctx *gin.Context) {
 	common.Success(ctx, gin.H{"message": "事件已重新打开"})
 }
 
+// EscalateMajorIncident 升级为重大事件
+// @Summary 升级为重大事件
+// @Description 将事件标记为重大事件，记录影响评估与危机沟通计划，并提升严重程度
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param request body dto.EscalateMajorIncidentRequest true "升级请求"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/:id/major-incident [post]
+func (c *IncidentController) EscalateMajorIncident(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+	var req dto.EscalateMajorIncidentRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+	userID := ctx.GetInt("user_id")
+	tenantID := ctx.GetInt("tenant_id")
+	if err := c.incidentService.EscalateToMajorIncident(ctx.Request.Context(), id, userID, tenantID, &req); err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(ctx, gin.H{"message": "已升级为重大事件"})
+}
+
 // AssignIncident 分配事件
 // @Summary 分配事件
 // @Description 将事件分配给指定处理人

@@ -167,3 +167,59 @@ func TestEntRepository_UpdateCI_EnforcesUniqueAttributes(t *testing.T) {
 		t.Fatal("更新为重复唯一属性时应返回错误")
 	}
 }
+
+func TestEntRepository_CreateCI_ValidatesInheritedAttributes(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cmdb_repo_inherited?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant := client.Tenant.Create().
+		SetName("Tenant Inherited").
+		SetCode("tenant-inherited").
+		SetDomain("inherited.example.com").
+		SetStatus("active").
+		SaveX(ctx)
+	baseType := client.CIType.Create().
+		SetName("compute").
+		SetTenantID(tenant.ID).
+		SaveX(ctx)
+	childType := client.CIType.Create().
+		SetName("physical-server").
+		SetParentTypeID(baseType.ID).
+		SetTenantID(tenant.ID).
+		SaveX(ctx)
+	client.CIAttributeDefinition.Create().
+		SetName("owner").
+		SetDisplayName("Owner").
+		SetType("string").
+		SetRequired(true).
+		SetCiTypeID(baseType.ID).
+		SetTenantID(tenant.ID).
+		SaveX(ctx)
+
+	repo := NewEntRepository(client)
+	_, err := repo.CreateCI(ctx, &ConfigurationItem{
+		Name:        "server-without-owner",
+		CITypeID:    childType.ID,
+		Status:      "active",
+		Environment: "production",
+		Criticality: "high",
+		TenantID:    tenant.ID,
+	})
+	if err == nil {
+		t.Fatal("缺少父类型必填属性时应返回错误")
+	}
+
+	_, err = repo.CreateCI(ctx, &ConfigurationItem{
+		Name:        "server-with-owner",
+		CITypeID:    childType.ID,
+		Status:      "active",
+		Environment: "production",
+		Criticality: "high",
+		TenantID:    tenant.ID,
+		Attributes:  map[string]interface{}{"owner": "ops"},
+	})
+	if err != nil {
+		t.Fatalf("提供父类型必填属性后创建失败: %v", err)
+	}
+}

@@ -7,9 +7,11 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/service_catalog"
+	"itsm-backend/service"
 
 	"go.uber.org/zap"
 )
@@ -49,19 +51,25 @@ const (
 )
 
 type Service struct {
-	repo     Repository
-	scRepo   service_catalog.Repository
-	cmdbRepo cmdb.Repository
-	logger   *zap.SugaredLogger
+	repo           Repository
+	scRepo         service_catalog.Repository
+	cmdbRepo       cmdb.Repository
+	logger         *zap.SugaredLogger
+	approvalBridge *service.BPMNApprovalBridge
 }
 
-func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmdb.Repository, logger *zap.SugaredLogger) *Service {
-	return &Service{
+func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmdb.Repository, entClient *ent.Client, logger *zap.SugaredLogger) *Service {
+	svc := &Service{
 		repo:     repo,
 		scRepo:   scRepo,
 		cmdbRepo: cmdbRepo,
 		logger:   logger,
 	}
+	if entClient != nil {
+		// P0-1：服务请求审批桥接到 BPMN 任务，避免流程实例悬挂
+		svc.approvalBridge = service.NewBPMNApprovalBridge(entClient, logger)
+	}
+	return svc
 }
 
 // Create submits a new service request
@@ -259,6 +267,16 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	}
 	if err := s.checkEligibility(userRole, actorDept, requesterDept, currentApproval.Step); err != nil {
 		return nil, nil, err
+	}
+
+	// P0-1：审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源）。
+	// 无关联运行中流程实例时回退旧审批链，兼容未绑定流程的历史数据；
+	// 若存在待办流程任务但完成失败（如操作人不是流程任务审批人），则中止业务审批，避免双轨分叉。
+	if s.approvalBridge != nil {
+		if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
+			ctx, tenantID, actorID, string(dto.BusinessTypeServiceRequest), id, action, comment); bridgeErr != nil {
+			return nil, nil, common.NewInternalError("同步流程审批任务失败", bridgeErr)
+		}
 	}
 
 	// 5. Process

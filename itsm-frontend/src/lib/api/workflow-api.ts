@@ -47,7 +47,7 @@ interface BpmnTaskRaw {
   id?: string | number;
   taskId?: string;
   ID?: string;
-  processInstanceId?: string;
+  processInstanceId?: string | number;
   instanceId?: string;
   taskDefinitionKey?: string;
   taskName?: string;
@@ -60,6 +60,34 @@ interface BpmnTaskRaw {
   taskVariables?: Record<string, unknown>;
   variables?: Record<string, unknown>;
   retryCount?: number;
+}
+
+/**
+ * 「我的待办」BPMN 任务视图（对应后端 dto.BPMNTaskResponse），
+ * 附带所属流程实例的 businessKey 等业务上下文，供审批中心跳转业务单据。
+ */
+export interface BpmnMyTask {
+  id: number;
+  taskId: string;
+  taskDefinitionKey: string;
+  taskName: string;
+  taskType: string;
+  status: string;
+  priority?: string;
+  assignee?: string;
+  candidateUsers?: string;
+  candidateGroups?: string;
+  processInstanceId: number;
+  processInstanceKey?: string;
+  processDefinitionKey?: string;
+  businessKey?: string;
+  businessType?: string;
+  businessId?: number;
+  taskPurpose?: string;
+  formKey?: string;
+  taskVariables?: Record<string, unknown>;
+  dueDate?: string;
+  createdTime?: string;
 }
 
 export class WorkflowApi {
@@ -370,7 +398,7 @@ export class WorkflowApi {
       : (res?.items || res?.list || res?.data || []);
     const items: WorkflowTask[] = raw.map((task) => ({
       id: String(task.id || task.taskId || task.ID || ''),
-      instanceId: task.processInstanceId || task.instanceId || '',
+      instanceId: String(task.processInstanceId ?? task.instanceId ?? ''),
       nodeId: task.taskId || task.taskDefinitionKey || '',
       nodeName: task.taskName || '',
       nodeType: task.taskType || 'user_task',
@@ -394,6 +422,44 @@ export class WorkflowApi {
    */
   static async claimMyTask(taskId: string | number): Promise<void> {
     await httpClient.put(`/api/v1/bpmn/tasks/${taskId}/claim`);
+  }
+
+  /**
+   * 获取「我的待办」审批任务视图（含业务单据上下文）。
+   * 后端按 JWT 用户自动过滤 assignee / candidate_users / candidate_groups。
+   */
+  static async listMyApprovalTasks(
+    params?: { status?: string; page?: number; pageSize?: number }
+  ): Promise<{ items: BpmnMyTask[]; total: number; page: number; size: number }> {
+    const query: Record<string, unknown> = {
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? 50,
+    };
+    if (params?.status) {
+      query.status = params.status;
+    }
+    const res = await httpClient.get<BpmnMyTask[] | { items?: BpmnMyTask[]; list?: BpmnMyTask[]; data?: BpmnMyTask[]; total?: number; page?: number; size?: number }>('/api/v1/bpmn/tasks', query);
+    const items: BpmnMyTask[] = Array.isArray(res)
+      ? res
+      : (res?.items || res?.list || res?.data || []);
+    const meta = Array.isArray(res) ? null : res;
+    return {
+      items,
+      total: Number(meta?.total ?? items.length),
+      page: Number(meta?.page ?? params?.page ?? 1),
+      size: Number(meta?.size ?? params?.pageSize ?? items.length),
+    };
+  }
+
+  /**
+   * 提交审批决策（approve/reject），完成对应 BPMN 任务并推进流程。
+   * 后端要求拒绝时必须填写意见，并会写入审批决策与审计记录。
+   */
+  static async submitTaskDecision(
+    taskId: string | number,
+    payload: { action: 'approve' | 'reject'; comment?: string; variables?: Record<string, unknown> }
+  ): Promise<void> {
+    await httpClient.post(`/api/v1/bpmn/tasks/${taskId}/decisions`, payload);
   }
 
   static async resumeWorkflow(instanceId: string): Promise<void> {
@@ -721,7 +787,7 @@ export class WorkflowApi {
   static async startWorkflow(request: StartWorkflowRequest): Promise<WorkflowInstance> {
     const payload = {
       processDefinitionKey: request.workflowId, // Assuming workflowId is the Key
-      businessKey: `BIZ-${Date.now()}`, // Auto generate or from request
+      businessKey: request.businessKey || `BIZ-${Date.now()}`, // 优先使用调用方传入的业务键
       variables: request.variables,
     };
     const item = await httpClient.post<{

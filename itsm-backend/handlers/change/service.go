@@ -17,10 +17,11 @@ import (
 )
 
 type Service struct {
-	repo       Repository
-	logger     *zap.SugaredLogger
-	entClient  *ent.Client
-	pirService *service.ChangePIRService
+	repo           Repository
+	logger         *zap.SugaredLogger
+	entClient      *ent.Client
+	pirService     *service.ChangePIRService
+	approvalBridge *service.BPMNApprovalBridge
 }
 
 func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogger) *Service {
@@ -31,6 +32,10 @@ func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogge
 	}
 	// Initialize PIR service
 	svc.pirService = service.NewChangePIRService(entClient, logger)
+	if entClient != nil {
+		// P0-1：变更审批桥接到 BPMN 任务，避免流程实例悬挂
+		svc.approvalBridge = service.NewBPMNApprovalBridge(entClient, logger)
+	}
 	return svc
 }
 
@@ -515,7 +520,7 @@ func inferITILPractices(summary *dto.ChangeCMDBImpactSummary) []string {
 
 // TransitionStatus transitions a change to a new status
 // For approve/reject actions, verifies user is the designated approver
-func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int, targetStatus string) (*Change, error) {
+func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int, targetStatus, comment string) (*Change, error) {
 	c, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("change not found")
@@ -542,6 +547,20 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		}
 		if !isApprover {
 			return nil, fmt.Errorf("用户不是该变更的审批人，无权执行此操作")
+		}
+
+		// P0-1：审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源）。
+		// 无关联运行中流程实例时回退为纯业务审批；若存在待办流程任务但完成失败，
+		// 则中止业务审批，避免变更状态与流程状态分叉。
+		if s.approvalBridge != nil {
+			action := "approve"
+			if targetStatus == "rejected" {
+				action = "reject"
+			}
+			if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
+				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, action, comment); bridgeErr != nil {
+				return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+			}
 		}
 	}
 

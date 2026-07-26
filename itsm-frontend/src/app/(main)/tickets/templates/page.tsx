@@ -21,13 +21,11 @@ import {
   Tooltip,
   Popconfirm,
   Statistic,
-  Rate,
   Radio,
 } from 'antd';
 import type { RadioChangeEvent } from 'antd';
 import {
   AlertTriangle,
-  BarChart3,
   BookOpen,
   CheckCircle,
   Plus,
@@ -39,7 +37,6 @@ import {
   RefreshCw,
   Search,
   FileText,
-  Star,
   Tag as TagIcon,
 } from 'lucide-react';
 import { TicketApi } from '@/lib/api/ticket-api';
@@ -72,13 +69,8 @@ interface TicketTemplate {
   customFields: CustomField[];
   tags: string[];
   isActive: boolean;
-  isPublic: boolean;
-  createdBy: string;
   createdAt: string;
   updatedAt: string;
-  usageCount: number;
-  rating: number;
-  version: string;
   icon: React.ReactNode;
   color: string;
 }
@@ -154,6 +146,7 @@ const TicketTemplatesPage = () => {
           description: string;
           category: string;
           content?: Record<string, unknown>;
+          isActive?: boolean;
           createdAt?: string;
           updatedAt?: string;
         }) => ({
@@ -177,14 +170,9 @@ const TicketTemplatesPage = () => {
           approvalLevel: (item.content?.approvalLevel as string) || 'none',
           customFields: (item.content?.customFields as CustomField[]) || [],
           tags: (item.content?.tags as string[]) || [],
-          isActive: true,
-          isPublic: true,
-          createdBy: 'System',
+          isActive: item.isActive ?? true,
           createdAt: item.createdAt || new Date().toISOString(),
           updatedAt: item.updatedAt || new Date().toISOString(),
-          usageCount: 0,
-          rating: 4.0,
-          version: '1.0',
           icon: <FileText size={20} />,
           color:
             item.category === 'System Access'
@@ -361,18 +349,14 @@ const TicketTemplatesPage = () => {
       </div>
 
       <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-        <span>Usage Count: {template.usageCount}</span>
-        <span>Rating: {template.rating}/5</span>
+        <span>创建时间: {new Date(template.createdAt).toLocaleDateString('zh-CN')}</span>
+        <span>更新时间: {new Date(template.updatedAt).toLocaleDateString('zh-CN')}</span>
       </div>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Switch checked={template.isActive} size="small" />
           <Text className="text-xs">{template.isActive ? 'Active' : 'Inactive'}</Text>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Switch checked={template.isPublic} size="small" />
-          <Text className="text-xs">{template.isPublic ? 'Public' : 'Private'}</Text>
         </div>
       </div>
     </Card>
@@ -399,13 +383,9 @@ const TicketTemplatesPage = () => {
 
         <div className="flex items-center space-x-4">
           <div className="text-center">
-            <Text className="text-xs text-gray-500">Usage Count</Text>
-            <div className="font-semibold">{template.usageCount}</div>
-          </div>
-          <div className="text-center">
-            <Text className="text-xs text-gray-500">Rating</Text>
-            <div className="flex items-center">
-              <Rate disabled defaultValue={template.rating} />
+            <Text className="text-xs text-gray-500">更新时间</Text>
+            <div className="font-semibold">
+              {new Date(template.updatedAt).toLocaleDateString('zh-CN')}
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -481,7 +461,7 @@ const TicketTemplatesPage = () => {
       </div>
       {/* Statistics */}
       <Row gutter={16} className="mb-6">
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title="Total Templates"
@@ -490,7 +470,7 @@ const TicketTemplatesPage = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title="Active Templates"
@@ -500,26 +480,12 @@ const TicketTemplatesPage = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
-              title="Total Usage"
-              value={templates.reduce((sum, t) => sum + t.usageCount, 0)}
-              prefix={<BarChart3 size={16} style={{ color: '#faad14' }} />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Average Rating"
-              value={
-                templates.length > 0
-                  ? (templates.reduce((sum, t) => sum + t.rating, 0) / templates.length).toFixed(1)
-                  : 0
-              }
-              prefix={<Star size={16} style={{ color: '#ff4d4f' }} />}
-              suffix="/5"
+              title="Categories"
+              value={new Set(templates.map(t => t.category).filter(Boolean)).size}
+              prefix={<TagIcon size={16} style={{ color: '#faad14' }} />}
             />
           </Card>
         </Col>
@@ -852,11 +818,6 @@ const TicketTemplatesPage = () => {
           </Row>
 
           <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item label="Public Template" name="isPublic" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-            </Col>
             <Col span={8}>
               <Form.Item
                 label="SLA Type"

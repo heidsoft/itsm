@@ -2605,6 +2605,22 @@ func (c *CIAttributeDefinitionClient) GetX(ctx context.Context, id int) *CIAttri
 	return obj
 }
 
+// QueryCiType queries the ci_type edge of a CIAttributeDefinition.
+func (c *CIAttributeDefinitionClient) QueryCiType(_m *CIAttributeDefinition) *CITypeQuery {
+	query := (&CITypeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ciattributedefinition.Table, ciattributedefinition.FieldID, id),
+			sqlgraph.To(citype.Table, citype.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ciattributedefinition.CiTypeTable, ciattributedefinition.CiTypeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *CIAttributeDefinitionClient) Hooks() []Hook {
 	return c.hooks.CIAttributeDefinition
@@ -3061,6 +3077,54 @@ func (c *CITypeClient) QueryCis(_m *CIType) *ConfigurationItemQuery {
 			sqlgraph.From(citype.Table, citype.FieldID, id),
 			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, citype.CisTable, citype.CisColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParent queries the parent edge of a CIType.
+func (c *CITypeClient) QueryParent(_m *CIType) *CITypeQuery {
+	query := (&CITypeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(citype.Table, citype.FieldID, id),
+			sqlgraph.To(citype.Table, citype.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, citype.ParentTable, citype.ParentColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChildren queries the children edge of a CIType.
+func (c *CITypeClient) QueryChildren(_m *CIType) *CITypeQuery {
+	query := (&CITypeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(citype.Table, citype.FieldID, id),
+			sqlgraph.To(citype.Table, citype.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, citype.ChildrenTable, citype.ChildrenColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAttributeDefinitions queries the attribute_definitions edge of a CIType.
+func (c *CITypeClient) QueryAttributeDefinitions(_m *CIType) *CIAttributeDefinitionQuery {
+	query := (&CIAttributeDefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(citype.Table, citype.FieldID, id),
+			sqlgraph.To(ciattributedefinition.Table, ciattributedefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, citype.AttributeDefinitionsTable, citype.AttributeDefinitionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

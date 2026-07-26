@@ -12,7 +12,6 @@ import {
   RefreshCw,
   Search,
   Link as LinkIcon,
-  Key,
   Hash,
 } from 'lucide-react';
 
@@ -34,23 +33,27 @@ import {
   Statistic,
   Tooltip,
   Popconfirm,
-  message,
   Alert,
   Tag,
   App,
+  AutoComplete,
+  Popover,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { MenuAdminAPI, type MenuItem } from '@/lib/api/menu-api';
+import { MenuAdminAPI, notifyMenusUpdated, type MenuItem } from '@/lib/api/menu-api';
+import { RoleAPI } from '@/lib/api/role-api';
+import { iconMap, getIconByName } from '@/components/layout/sidebar/icons';
+import { buildMenuTree, collectMenuDescendantIds } from './menuTreeUtils';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 /**
  * 菜单管理页面
- * - 列表展示（按 sortOrder 升序）
+ * - 树形列表展示（按 parentId 组装、sortOrder 升序）
  * - 新增 / 编辑 / 删除
  * - 启用/可见性 切换
- * - 一键重新初始化默认菜单
+ * - 图标选择器 + 权限码自动补全
  */
 export default function MenuManagementPage() {
   const { message: antMessage } = App.useApp();
@@ -62,7 +65,10 @@ export default function MenuManagementPage() {
   );
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<MenuItem | null>(null);
+  const [permissionOptions, setPermissionOptions] = useState<{ value: string }[]>([]);
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [form] = Form.useForm();
+  const iconValue = Form.useWatch('icon', form);
 
   // 加载列表
   const loadMenus = async () => {
@@ -82,6 +88,13 @@ export default function MenuManagementPage() {
     loadMenus();
   }, []);
 
+  // 加载权限码候选（用于 AutoComplete 提示）
+  useEffect(() => {
+    RoleAPI.getPermissions()
+      .then(perms => setPermissionOptions((perms || []).map(p => ({ value: p }))))
+      .catch(() => setPermissionOptions([]));
+  }, []);
+
   // 过滤后的列表
   const filteredMenus = useMemo(() => {
     const q = searchText.trim().toLowerCase();
@@ -98,6 +111,9 @@ export default function MenuManagementPage() {
       })
       .sort((a, b) => a.sortOrder - b.sortOrder);
   }, [menus, searchText, statusFilter]);
+
+  // 树形表格数据（被过滤掉父级的节点提升为根，保证搜索结果可见）
+  const treeMenus = useMemo(() => buildMenuTree(filteredMenus), [filteredMenus]);
 
   // 统计
   const stats = useMemo(() => {
@@ -164,6 +180,7 @@ export default function MenuManagementPage() {
       setShowModal(false);
       setEditing(null);
       form.resetFields();
+      notifyMenusUpdated();
       loadMenus();
     } catch (err: any) {
       if (err?.errorFields) {
@@ -182,6 +199,7 @@ export default function MenuManagementPage() {
     try {
       await MenuAdminAPI.remove(id);
       antMessage.success('菜单已删除');
+      notifyMenusUpdated();
       loadMenus();
     } catch (err: any) {
       console.error('Delete menu failed', err);
@@ -194,6 +212,7 @@ export default function MenuManagementPage() {
     try {
       await MenuAdminAPI.update(record.id, { isEnabled: !record.isEnabled });
       antMessage.success(record.isEnabled ? '已禁用' : '已启用');
+      notifyMenusUpdated();
       loadMenus();
     } catch (err: any) {
       antMessage.error(err?.message || '操作失败');
@@ -205,39 +224,18 @@ export default function MenuManagementPage() {
     try {
       await MenuAdminAPI.update(record.id, { isVisible: !record.isVisible });
       antMessage.success(record.isVisible ? '已隐藏' : '已显示');
+      notifyMenusUpdated();
       loadMenus();
     } catch (err: any) {
       antMessage.error(err?.message || '操作失败');
     }
   };
 
-  // 重新初始化
-  const handleReinit = async () => {
-    Modal.confirm({
-      title: '重新初始化默认菜单',
-      content:
-        '此操作会扫描代码内置的默认菜单，插入数据库中缺失的项。已存在的菜单不会被修改或删除。是否继续？',
-      okText: '开始初始化',
-      cancelText: '取消',
-      onOk: async () => {
-        try {
-          setLoading(true);
-          const res = await MenuAdminAPI.initDefaults();
-          antMessage.success(res.message || `初始化完成，新增 ${res.count} 个菜单`);
-          loadMenus();
-        } catch (err: any) {
-          antMessage.error(err?.message || '初始化失败');
-        } finally {
-          setLoading(false);
-        }
-      },
-    });
-  };
-
-  // 父菜单候选（排除自身及子项）
+  // 父菜单候选（排除自身及全部后代，避免成环）
   const parentOptions = useMemo(() => {
     if (!editing) return menus;
-    return menus.filter(m => m.id !== editing.id);
+    const excluded = collectMenuDescendantIds(menus, editing.id);
+    return menus.filter(m => !excluded.has(m.id));
   }, [menus, editing]);
 
   const columns: ColumnsType<MenuItem> = [
@@ -271,8 +269,16 @@ export default function MenuManagementPage() {
     {
       title: '图标',
       dataIndex: 'icon',
-      width: 110,
-      render: (v?: string) => (v ? <Tag>{v}</Tag> : <span className="text-gray-400">-</span>),
+      width: 130,
+      render: (v?: string) =>
+        v ? (
+          <Space size={4}>
+            {getIconByName(v)}
+            <Tag>{v}</Tag>
+          </Space>
+        ) : (
+          <span className="text-gray-400">-</span>
+        ),
     },
     {
       title: '权限码',
@@ -367,6 +373,7 @@ export default function MenuManagementPage() {
             <div>• 权限码必须与 <code>permissions</code> 表中已存在的权限代码一致，菜单才会按角色过滤。</div>
             <div>• sortOrder 越小越靠前；建议按 10/20/30… 或 100/110/120… 留出插入空间。</div>
             <div>• 隐藏(isVisible=false)仍占位；禁用(isEnabled=false)会被完全过滤。</div>
+            <div>• 默认菜单请通过后端种子数据（seed）初始化，本页面不提供一键初始化。</div>
           </div>
         }
       />
@@ -441,9 +448,6 @@ export default function MenuManagementPage() {
               <Button icon={<RefreshCw className="w-4 h-4" />} onClick={loadMenus} loading={loading}>
                 刷新
               </Button>
-              <Button icon={<Plus className="w-4 h-4" />} onClick={handleReinit}>
-                初始化默认菜单
-              </Button>
               <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={openCreate}>
                 新建菜单
               </Button>
@@ -457,7 +461,8 @@ export default function MenuManagementPage() {
           rowKey="id"
           loading={loading}
           columns={columns}
-          dataSource={filteredMenus}
+          dataSource={treeMenus}
+          expandable={{ indentSize: 20 }}
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
@@ -502,7 +507,13 @@ export default function MenuManagementPage() {
               <Form.Item
                 label="路径"
                 name="path"
-                rules={[{ required: true, message: '请输入路由路径' }]}
+                rules={[
+                  { required: true, message: '请输入路由路径' },
+                  {
+                    pattern: /^\/[\w\-./]*$/,
+                    message: '路径必须以 / 开头，仅支持字母、数字、- _ . /',
+                  },
+                ]}
                 tooltip="前端路由地址，例如 /admin/sla-templates"
               >
                 <Input
@@ -518,9 +529,49 @@ export default function MenuManagementPage() {
               <Form.Item
                 label="图标"
                 name="icon"
-                tooltip="Lucide React 图标名，例如 LayoutDashboard、FileText、BarChart3"
+                tooltip="Lucide React 图标名，可手输或从列表选择"
               >
-                <Input placeholder="如：Layers / BarChart3" />
+                <Input
+                  placeholder="如：Layers / BarChart3"
+                  addonBefore={getIconByName(iconValue) ?? <MenuIcon className="w-4 h-4 text-gray-300" />}
+                  addonAfter={
+                    <Popover
+                      title="选择图标"
+                      trigger="click"
+                      open={iconPickerOpen}
+                      onOpenChange={setIconPickerOpen}
+                      content={
+                        <div
+                          style={{
+                            width: 320,
+                            maxHeight: 260,
+                            overflowY: 'auto',
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(8, 1fr)',
+                            gap: 4,
+                          }}
+                        >
+                          {Object.keys(iconMap).map(name => (
+                            <Tooltip title={name} key={name}>
+                              <Button
+                                type={iconValue === name ? 'primary' : 'text'}
+                                size="small"
+                                onClick={() => {
+                                  form.setFieldsValue({ icon: name });
+                                  setIconPickerOpen(false);
+                                }}
+                              >
+                                {iconMap[name]}
+                              </Button>
+                            </Tooltip>
+                          ))}
+                        </div>
+                      }
+                    >
+                      <span style={{ cursor: 'pointer' }}>选择</span>
+                    </Popover>
+                  }
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -541,9 +592,15 @@ export default function MenuManagementPage() {
                 name="permissionCode"
                 tooltip="菜单关联的权限码，留空则对所有登录用户可见"
               >
-                <Input
-                  prefix={<Key className="w-4 h-4 text-gray-400" />}
-                  placeholder="如：sla:write"
+                <AutoComplete
+                  options={permissionOptions}
+                  allowClear
+                  placeholder="如：sla:write（支持从已有权限码中选择）"
+                  filterOption={(input, option) =>
+                    String(option?.value ?? '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
                 />
               </Form.Item>
             </Col>

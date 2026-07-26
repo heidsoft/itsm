@@ -11,37 +11,40 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/ciattributedefinition"
+	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 )
 
 func (r *EntRepository) normalizeCIAttributes(ctx context.Context, ci *ConfigurationItem, existingID int) (map[string]interface{}, error) {
-	defs, err := r.client.CIAttributeDefinition.Query().
-		Where(
-			ciattributedefinition.CiTypeID(ci.CITypeID),
-			ciattributedefinition.IsActive(true),
-			ciattributedefinition.Or(
-				ciattributedefinition.TenantID(ci.TenantID),
-				ciattributedefinition.TenantID(1),
-			),
-		).
-		All(ctx)
+	typeIDs, err := r.resolveCITypeChain(ctx, ci.CITypeID, ci.TenantID)
 	if err != nil {
-		return nil, fmt.Errorf("查询CI属性定义失败: %w", err)
+		return nil, err
 	}
-
-	if len(defs) == 0 {
+	definitionMap := make(map[string]*ent.CIAttributeDefinition)
+	for i := len(typeIDs) - 1; i >= 0; i-- {
+		defs, queryErr := r.client.CIAttributeDefinition.Query().
+			Where(
+				ciattributedefinition.CiTypeID(typeIDs[i]),
+				ciattributedefinition.IsActive(true),
+				ciattributedefinition.Or(
+					ciattributedefinition.TenantID(ci.TenantID),
+					ciattributedefinition.TenantID(1),
+				),
+			).
+			Order(ent.Asc(ciattributedefinition.FieldTenantID)).
+			All(ctx)
+		if queryErr != nil {
+			return nil, fmt.Errorf("查询CI属性定义失败: %w", queryErr)
+		}
+		for _, def := range defs {
+			definitionMap[def.Name] = def
+		}
+	}
+	if len(definitionMap) == 0 {
 		if ci.Attributes == nil {
 			return map[string]interface{}{}, nil
 		}
 		return ci.Attributes, nil
-	}
-
-	definitionMap := make(map[string]*ent.CIAttributeDefinition, len(defs))
-	for _, def := range defs {
-		current, exists := definitionMap[def.Name]
-		if !exists || (def.TenantID == ci.TenantID && current.TenantID != ci.TenantID) {
-			definitionMap[def.Name] = def
-		}
 	}
 
 	normalized := make(map[string]interface{}, len(ci.Attributes))
@@ -86,6 +89,30 @@ func (r *EntRepository) normalizeCIAttributes(ctx context.Context, ci *Configura
 	}
 
 	return normalized, nil
+}
+
+func (r *EntRepository) resolveCITypeChain(ctx context.Context, ciTypeID, tenantID int) ([]int, error) {
+	visited := make(map[int]struct{})
+	ids := make([]int, 0, 4)
+	currentID := ciTypeID
+	for currentID != 0 {
+		if _, exists := visited[currentID]; exists {
+			return nil, fmt.Errorf("CI类型继承关系存在循环")
+		}
+		visited[currentID] = struct{}{}
+		current, err := r.client.CIType.Query().
+			Where(citype.ID(currentID), citype.TenantID(tenantID)).
+			First(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("查询CI类型继承关系失败: %w", err)
+		}
+		ids = append(ids, current.ID)
+		if current.ParentTypeID == nil {
+			break
+		}
+		currentID = *current.ParentTypeID
+	}
+	return ids, nil
 }
 
 func (r *EntRepository) hasDuplicateAttributeValue(ctx context.Context, tenantID, ciTypeID int, attributeName string, value interface{}, existingID int) (bool, error) {

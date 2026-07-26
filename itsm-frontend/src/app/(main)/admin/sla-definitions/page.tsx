@@ -570,7 +570,6 @@ const SLADefinitionManagement = () => {
                   showSearch
                   optionFilterProp="label"
                   placeholder="选择或输入服务类型"
-                  mode="tags"
                 >
                   {serviceTypes.map(type => (
                     <Option key={type} value={type}>

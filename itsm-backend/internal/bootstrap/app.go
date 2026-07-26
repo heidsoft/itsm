@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"itsm-backend/common"
@@ -475,7 +474,7 @@ func NewApplication() *Application {
 
 	// Domain: Service Request (DDD)
 	srRepo := service_request.NewEntRepository(client)
-	srService := service_request.NewService(srRepo, scRepo, cmdbRepo, sugar)
+	srService := service_request.NewService(srRepo, scRepo, cmdbRepo, client, sugar)
 	srHandler := service_request.NewHandler(srService)
 
 	// Domain: Incident (DDD)
@@ -731,7 +730,7 @@ func NewApplication() *Application {
 
 	// Swagger - configure and register swagger docs
 	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "localhost:" + strconv.Itoa(cfg.Server.Port)
+	docs.SwaggerInfo.Host = ""
 	docs.SwaggerInfo.BasePath = "/"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 	docs.SwaggerInfo.Title = "ITSM API"
@@ -756,6 +755,9 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 	if cfg.Deployment.AutoMigrate {
 		if err := prepareRolePermissionTenantMigration(ctx, database.GetRawDB(), sugar); err != nil {
 			return fmt.Errorf("prepare role permission tenant migration: %w", err)
+		}
+		if err := prepareCMDBModelMigration(ctx, database.GetRawDB(), sugar); err != nil {
+			return fmt.Errorf("prepare CMDB model migration: %w", err)
 		}
 		if err := client.Schema.Create(ctx); err != nil {
 			return fmt.Errorf("create schema resources: %w", err)

@@ -640,7 +640,7 @@ func (h *DashboardHandler) GetStats(c *gin.Context) {
 // @Tags Dashboard
 // @Accept json
 // @Produce json
-// @Success 200 {object} UserStatsResponse
+// @Success 200 {object} object
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/dashboard/stats/users [get]
 func (h *DashboardHandler) GetUserStats(c *gin.Context) {
@@ -659,7 +659,7 @@ func (h *DashboardHandler) GetUserStats(c *gin.Context) {
 // @Tags Dashboard
 // @Accept json
 // @Produce json
-// @Success 200 {object} SystemStatsResponse
+// @Success 200 {object} object
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/dashboard/stats/system [get]
 func (h *DashboardHandler) GetSystemStats(c *gin.Context) {

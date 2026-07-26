@@ -417,8 +417,13 @@ func (h *Handler) CreateType(c *gin.Context) {
 		Icon:            req.Icon,
 		Color:           req.Color,
 		AttributeSchema: req.AttributeSchema,
+		ParentTypeID:    req.ParentTypeID,
 		IsActive:        isActive,
 		TenantID:        tenantID,
+	}
+	if err := h.svc.ValidateTypeParent(c.Request.Context(), 0, req.ParentTypeID, tenantID); err != nil {
+		common.ParamError(c, err.Error())
+		return
 	}
 
 	res, err := h.svc.CreateType(c.Request.Context(), ct)
@@ -451,11 +456,30 @@ func (h *Handler) UpdateType(c *gin.Context) {
 		return
 	}
 
-	existing.Name = req.Name
-	existing.Description = req.Description
-	existing.Icon = req.Icon
-	existing.Color = req.Color
-	existing.AttributeSchema = req.AttributeSchema
+	if err := h.svc.ValidateTypeParent(c.Request.Context(), id, req.ParentTypeID, tenantID); err != nil {
+		common.ParamError(c, err.Error())
+		return
+	}
+	if req.Name != nil {
+		existing.Name = *req.Name
+	}
+	if req.Description != nil {
+		existing.Description = *req.Description
+	}
+	if req.Icon != nil {
+		existing.Icon = *req.Icon
+	}
+	if req.Color != nil {
+		existing.Color = *req.Color
+	}
+	if req.AttributeSchema != nil {
+		existing.AttributeSchema = *req.AttributeSchema
+	}
+	if req.ClearParent {
+		existing.ParentTypeID = nil
+	} else if req.ParentTypeID != nil {
+		existing.ParentTypeID = req.ParentTypeID
+	}
 
 	if req.IsActive != nil {
 		existing.IsActive = *req.IsActive
@@ -490,6 +514,24 @@ func (h *Handler) DeleteType(c *gin.Context) {
 		common.ParamError(c, fmt.Sprintf("Cannot delete CI type: %d CI(s) are using this type. Please migrate or delete those CIs first.", count))
 		return
 	}
+	childCount, err := h.svc.CountChildTypes(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.InternalError(c, "检查子类型失败: "+err.Error())
+		return
+	}
+	if childCount > 0 {
+		common.ParamError(c, fmt.Sprintf("无法删除CI类型：仍有 %d 个子类型继承该类型", childCount))
+		return
+	}
+	attributeCount, err := h.svc.CountAttributeDefinitionsByType(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.InternalError(c, "检查属性定义失败: "+err.Error())
+		return
+	}
+	if attributeCount > 0 {
+		common.ParamError(c, fmt.Sprintf("无法删除CI类型：仍有 %d 个属性定义，请先停用或删除属性定义", attributeCount))
+		return
+	}
 
 	if err := h.svc.DeleteType(c.Request.Context(), id, tenantID); err != nil {
 		common.InternalError(c, "删除CI类型失败: "+err.Error())
@@ -511,6 +553,7 @@ func toCITypeDTO(ct *CIType) *dto.CITypeResponse {
 		Icon:            ct.Icon,
 		Color:           ct.Color,
 		AttributeSchema: ct.AttributeSchema,
+		ParentTypeID:    ct.ParentTypeID,
 		IsActive:        ct.IsActive,
 		TenantID:        ct.TenantID,
 		CreatedAt:       ct.CreatedAt,

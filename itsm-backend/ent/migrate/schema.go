@@ -384,22 +384,56 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "display_name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "type", Type: field.TypeString},
 		{Name: "required", Type: field.TypeBool, Default: false},
 		{Name: "unique", Type: field.TypeBool, Default: false},
 		{Name: "default_value", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "validation_rules", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "ci_type_id", Type: field.TypeInt},
+		{Name: "enum_values", Type: field.TypeJSON, Nullable: true},
+		{Name: "reference_type", Type: field.TypeString, Nullable: true},
+		{Name: "display_order", Type: field.TypeInt, Default: 0},
+		{Name: "group_name", Type: field.TypeString, Nullable: true},
+		{Name: "placeholder", Type: field.TypeString, Nullable: true},
+		{Name: "help_text", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "is_searchable", Type: field.TypeBool, Default: false},
+		{Name: "is_system", Type: field.TypeBool, Default: false},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "ci_type_id", Type: field.TypeInt},
 	}
 	// CiAttributeDefinitionsTable holds the schema information for the "ci_attribute_definitions" table.
 	CiAttributeDefinitionsTable = &schema.Table{
 		Name:       "ci_attribute_definitions",
 		Columns:    CiAttributeDefinitionsColumns,
 		PrimaryKey: []*schema.Column{CiAttributeDefinitionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ci_attribute_definitions_ci_types_attribute_definitions",
+				Columns:    []*schema.Column{CiAttributeDefinitionsColumns[21]},
+				RefColumns: []*schema.Column{CiTypesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ciattributedefinition_tenant_id_ci_type_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{CiAttributeDefinitionsColumns[17], CiAttributeDefinitionsColumns[21], CiAttributeDefinitionsColumns[1]},
+			},
+			{
+				Name:    "ciattributedefinition_tenant_id_ci_type_id_display_order",
+				Unique:  false,
+				Columns: []*schema.Column{CiAttributeDefinitionsColumns[17], CiAttributeDefinitionsColumns[21], CiAttributeDefinitionsColumns[11]},
+			},
+			{
+				Name:    "ciattributedefinition_tenant_id_is_searchable",
+				Unique:  false,
+				Columns: []*schema.Column{CiAttributeDefinitionsColumns[17], CiAttributeDefinitionsColumns[15]},
+			},
+		},
 	}
 	// CiRelationshipsColumns holds the columns for the "ci_relationships" table.
 	CiRelationshipsColumns = []*schema.Column{
@@ -515,12 +549,33 @@ var (
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parent_type_id", Type: field.TypeInt, Nullable: true},
 	}
 	// CiTypesTable holds the schema information for the "ci_types" table.
 	CiTypesTable = &schema.Table{
 		Name:       "ci_types",
 		Columns:    CiTypesColumns,
 		PrimaryKey: []*schema.Column{CiTypesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ci_types_ci_types_children",
+				Columns:    []*schema.Column{CiTypesColumns[10]},
+				RefColumns: []*schema.Column{CiTypesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "citype_tenant_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{CiTypesColumns[6], CiTypesColumns[1]},
+			},
+			{
+				Name:    "citype_tenant_id_parent_type_id",
+				Unique:  false,
+				Columns: []*schema.Column{CiTypesColumns[6], CiTypesColumns[10]},
+			},
+		},
 	}
 	// CmdbExportTasksColumns holds the columns for the "cmdb_export_tasks" table.
 	CmdbExportTasksColumns = []*schema.Column{
@@ -1009,9 +1064,9 @@ var (
 				Columns: []*schema.Column{ConfigurationItemsColumns[22]},
 			},
 			{
-				Name:    "configurationitem_serial_number",
+				Name:    "configurationitem_tenant_id_serial_number",
 				Unique:  true,
-				Columns: []*schema.Column{ConfigurationItemsColumns[8]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[29], ConfigurationItemsColumns[8]},
 			},
 		},
 	}
@@ -5095,8 +5150,10 @@ func init() {
 	ApprovalRecordsTable.ForeignKeys[0].RefTable = ApprovalWorkflowsTable
 	ApprovalRecordsTable.ForeignKeys[1].RefTable = TicketsTable
 	AssetsTable.ForeignKeys[0].RefTable = VendorsTable
+	CiAttributeDefinitionsTable.ForeignKeys[0].RefTable = CiTypesTable
 	CiRelationshipsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	CiRelationshipsTable.ForeignKeys[1].RefTable = ConfigurationItemsTable
+	CiTypesTable.ForeignKeys[0].RefTable = CiTypesTable
 	ChangesTable.ForeignKeys[0].RefTable = StandardChangesTable
 	ChangePiRsTable.ForeignKeys[0].RefTable = ChangesTable
 	ChangePiRsTable.ForeignKeys[1].RefTable = UsersTable

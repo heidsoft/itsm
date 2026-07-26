@@ -23,6 +23,7 @@ import {
   message,
   Spin,
   Divider,
+  Popconfirm,
 } from 'antd';
 import {
   Plus,
@@ -206,14 +207,18 @@ const WorkflowAutomationPage = () => {
           <Tooltip title='复制'>
             <Button type='text' icon={<Copy className='w-4 h-4' />} />
           </Tooltip>
-          <Tooltip title='删除'>
-            <Button
-              type='text'
-              danger
-              icon={<Trash2 className='w-4 h-4' />}
-              onClick={() => handleDeleteRule(record.id)}
-            />
-          </Tooltip>
+          <Popconfirm
+            title='确认删除该自动化规则？'
+            description='删除后规则将立即停止执行，且无法恢复。'
+            okText='删除'
+            okButtonProps={{ danger: true }}
+            cancelText='取消'
+            onConfirm={() => handleDeleteRule(record.id)}
+          >
+            <Tooltip title='删除'>
+              <Button type='text' danger icon={<Trash2 className='w-4 h-4' />} />
+            </Tooltip>
+          </Popconfirm>
         </Space>
       ),
     },

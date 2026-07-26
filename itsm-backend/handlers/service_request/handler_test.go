@@ -99,7 +99,7 @@ func srSetup(t *testing.T) (*gin.Engine, *ent.Client, int, int, int) {
 
 	repo := NewEntRepository(client)
 	cmdbRepo := cmdb.NewEntRepository(client)
-	svc := NewService(repo, scRepo, cmdbRepo, logger)
+	svc := NewService(repo, scRepo, cmdbRepo, client, logger)
 	h := NewHandler(svc)
 
 	user, err := client.User.Create().
@@ -198,7 +198,7 @@ func TestServiceRequestCreateDefersNewCIUntilProvisioning(t *testing.T) {
 	catalog, err := service_catalog.NewService(scRepo, logger).
 		Create(ctx, "VM Request", "infrastructure", "Provision VM", 24, tenant.ID, "enabled", ciType.ID, 0)
 	require.NoError(t, err)
-	service := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), logger)
+	service := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger)
 	expireAt := time.Now().Add(30 * 24 * time.Hour)
 
 	created, err := service.Create(ctx, tenant.ID, user.ID, catalog.ID, &ServiceRequest{
@@ -341,7 +341,7 @@ func srSetupRole(t *testing.T, role, dept string) (*gin.Engine, int, int, int) {
 	require.NoError(t, err)
 	repo := NewEntRepository(client)
 	cmdbRepo := cmdb.NewEntRepository(client)
-	svc := NewService(repo, scRepo, cmdbRepo, logger)
+	svc := NewService(repo, scRepo, cmdbRepo, client, logger)
 	h := NewHandler(svc)
 	requester, err := client.User.Create().
 		SetUsername("sr-requester-" + srUID()).
@@ -470,7 +470,7 @@ func TestServiceRequestPendingApprovalsAreDepartmentScopedAndUnknownRoleDenied(t
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t).Sugar()
 	scRepo := service_catalog.NewEntRepository(client)
-	service := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), logger)
+	service := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger)
 	itRequester, err := client.User.Create().
 		SetUsername("it-requester-" + srUID()).SetEmail("it-" + srUID() + "@example.com").SetName("IT Requester").
 		SetPasswordHash("hash").SetRole("agent").SetDepartment("IT").SetActive(true).SetTenantID(tenantID).Save(ctx)

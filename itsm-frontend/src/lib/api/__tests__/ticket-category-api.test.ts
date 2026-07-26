@@ -8,6 +8,7 @@ jest.mock('@/lib/api/http-client', () => ({
     put: jest.fn(),
     delete: jest.fn(),
     patch: jest.fn(),
+    getTenantId: jest.fn(() => 1),
   },
 }));
 
@@ -47,11 +48,11 @@ describe('TicketCategoryApi', () => {
   });
 
   describe('createCategory', () => {
-    it('should create a category', async () => {
-      const data = { name: 'Feature' };
+    it('should create a category with tenantId attached', async () => {
+      const data = { name: 'Feature', code: 'FEATURE' };
       mockPost.mockResolvedValue({ id: 2, name: 'Feature' });
       const result = await TicketCategoryApi.createCategory(data);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/ticket-categories', data);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/ticket-categories', { ...data, tenantId: 1 });
       expect(result.id).toBe(2);
     });
   });

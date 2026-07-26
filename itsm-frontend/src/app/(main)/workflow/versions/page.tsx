@@ -36,7 +36,7 @@ const getVersionStatusText = (status: string): string => {
 };
 
 export default function WorkflowVersionsPage() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const searchParams = useSearchParams();
   const initialProcessKey = searchParams.get('workflowId') || '';
   const [processKey, setProcessKey] = useState(initialProcessKey);
@@ -115,28 +115,61 @@ export default function WorkflowVersionsPage() {
         key: 'actions',
         render: (_: unknown, record: VersionRow) => (
           <Space>
-            <Button type="text" icon={<Eye className="h-4 w-4" />} onClick={() => setSelectedVersion(record)} />
+            <Button
+              type="text"
+              icon={<Eye className="h-4 w-4" />}
+              aria-label={`查看版本 v${record.version} 详情`}
+              onClick={() => setSelectedVersion(record)}
+            />
             <Button
               type="text"
               icon={<PlayCircle className="h-4 w-4" />}
-              onClick={async () => {
-                await WorkflowAPI.activateVersion(record.processKey, record.version);
-                message.success(`已激活版本 v${record.version}`);
-                loadVersions();
+              aria-label={`激活版本 v${record.version}`}
+              onClick={() => {
+                modal.confirm({
+                  title: '激活版本',
+                  content: `确定要激活版本 v${record.version} 吗？激活后新发起的流程实例将使用该版本。`,
+                  okText: '激活',
+                  cancelText: '取消',
+                  onOk: async () => {
+                    try {
+                      await WorkflowAPI.activateVersion(record.processKey, record.version);
+                      message.success(`已激活版本 v${record.version}`);
+                      loadVersions();
+                    } catch {
+                      message.error('激活版本失败');
+                    }
+                  },
+                });
               }}
             />
             <Button
               type="text"
               icon={<RotateCcw className="h-4 w-4" />}
-              onClick={async () => {
-                await WorkflowAPI.rollbackVersion(record.processKey, record.version, '前端回滚');
-                message.success(`已回滚到版本 v${record.version}`);
-                loadVersions();
+              aria-label={`回滚到版本 v${record.version}`}
+              onClick={() => {
+                modal.confirm({
+                  title: '回滚版本',
+                  content: `确定要回滚到版本 v${record.version} 吗？回滚将替换当前生效的流程定义。`,
+                  okText: '回滚',
+                  okType: 'danger',
+                  cancelText: '取消',
+                  onOk: async () => {
+                    try {
+                      await WorkflowAPI.rollbackVersion(record.processKey, record.version, '前端回滚');
+                      message.success(`已回滚到版本 v${record.version}`);
+                      loadVersions();
+                    } catch {
+                      message.error('回滚版本失败');
+                    }
+                  },
+                });
               }}
             />
             <Button
               type="text"
               icon={<Diff className="h-4 w-4" />}
+              aria-label={`比较版本 v${record.version} 与最新版本`}
               onClick={async () => {
                 const latestVersion = versions[0];
                 if (!latestVersion || latestVersion.version === record.version) {
@@ -144,30 +177,48 @@ export default function WorkflowVersionsPage() {
                   setComparisonVisible(true);
                   return;
                 }
-                const result = await WorkflowAPI.compareVersions(
-                  record.processKey,
-                  latestVersion.version,
-                  record.version
-                );
-                setComparisonText(JSON.stringify(result, null, 2));
-                setComparisonVisible(true);
+                try {
+                  const result = await WorkflowAPI.compareVersions(
+                    record.processKey,
+                    latestVersion.version,
+                    record.version
+                  );
+                  setComparisonText(JSON.stringify(result, null, 2));
+                  setComparisonVisible(true);
+                } catch {
+                  message.error('版本比较失败');
+                }
               }}
             />
             <Button
               type="text"
               danger
               icon={<Trash2 className="h-4 w-4" />}
-              onClick={async () => {
-                await WorkflowAPI.deleteVersion(record.processKey, record.version);
-                message.success(`已删除版本 v${record.version}`);
-                loadVersions();
+              aria-label={`删除版本 v${record.version}`}
+              onClick={() => {
+                modal.confirm({
+                  title: '删除版本',
+                  content: `确定要删除版本 v${record.version} 吗？删除后不可恢复。`,
+                  okText: '删除',
+                  okType: 'danger',
+                  cancelText: '取消',
+                  onOk: async () => {
+                    try {
+                      await WorkflowAPI.deleteVersion(record.processKey, record.version);
+                      message.success(`已删除版本 v${record.version}`);
+                      loadVersions();
+                    } catch {
+                      message.error('删除版本失败');
+                    }
+                  },
+                });
               }}
             />
           </Space>
         ),
       },
     ],
-    [message, versions]
+    [message, modal, versions]
   );
 
   return (

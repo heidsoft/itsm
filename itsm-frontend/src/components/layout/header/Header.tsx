@@ -15,6 +15,7 @@ import { notificationWS } from '@/lib/services/notification-ws';
 import { UserMenuDropdown } from './UserMenuDropdown';
 import { NotificationDrawer } from './NotificationDrawer';
 import { GlobalSearch, SearchInput } from './GlobalSearch';
+import { buildBreadcrumb } from './breadcrumb-utils';
 import styles from './Header.module.css';
 
 const { Header: AntHeader } = Layout;
@@ -39,19 +40,6 @@ interface HeaderProps {
   extra?: React.ReactNode;
   showBreadcrumb?: boolean;
 }
-
-// 路径到面包屑的映射
-const pathToBreadcrumb: Record<string, Array<{ title: string; href?: string }>> = {
-  '/dashboard': [{ title: '首页', href: '/dashboard' }],
-  '/tickets': [{ title: '首页', href: '/dashboard' }, { title: '工单管理' }],
-  '/incidents': [{ title: '首页', href: '/dashboard' }, { title: '事件管理' }],
-  '/problems': [{ title: '首页', href: '/dashboard' }, { title: '问题管理' }],
-  '/changes': [{ title: '首页', href: '/dashboard' }, { title: '变更管理' }],
-  '/knowledge': [{ title: '首页', href: '/dashboard' }, { title: '知识库' }],
-  '/service-catalog': [{ title: '首页', href: '/dashboard' }, { title: '服务目录' }],
-  '/profile': [{ title: '首页', href: '/dashboard' }, { title: '个人中心' }],
-  '/notifications': [{ title: '首页', href: '/dashboard' }, { title: '通知中心' }],
-};
 
 export const Header: React.FC<HeaderProps> = ({
   collapsed,
@@ -243,10 +231,7 @@ export const Header: React.FC<HeaderProps> = ({
           {showBreadcrumb && (
             <div className={styles.breadcrumb} role="navigation" aria-label="面包屑导航">
               <Breadcrumb
-                items={
-                  breadcrumb ||
-                  pathToBreadcrumb[pathname] || [{ title: '首页', href: '/dashboard' }]
-                }
+                items={breadcrumb || buildBreadcrumb(pathname)}
                 separator="/"
               />
             </div>

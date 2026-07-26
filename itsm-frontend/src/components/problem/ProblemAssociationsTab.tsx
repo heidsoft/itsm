@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Button, Modal, Space, Tag, message, Input, Empty, Card } from 'antd';
+import { Table, Button, Modal, Space, Tag, message, Input, Empty, Card, Popconfirm } from 'antd';
 import { Search, Plus, Trash2, FileText, Link, AlertTriangle, ArrowLeftRight } from 'lucide-react';
 import {
   ProblemApi,
@@ -191,15 +191,18 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
         key: 'action',
         width: 80,
         render: (_: unknown, record: AssociatedItem) => (
-          <Button
-            type="link"
-            danger
-            size="small"
-            icon={<Trash2 />}
-            onClick={() => handleRemove(type, record.id)}
+          <Popconfirm
+            title="确认移除该关联？"
+            description="移除后可重新添加关联。"
+            okText="移除"
+            okButtonProps={{ danger: true }}
+            cancelText="取消"
+            onConfirm={() => handleRemove(type, record.id)}
           >
-            移除
-          </Button>
+            <Button type="link" danger size="small" icon={<Trash2 />}>
+              移除
+            </Button>
+          </Popconfirm>
         ),
       },
     ];

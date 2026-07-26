@@ -424,7 +424,7 @@ func (tc *TicketWorkflowController) GetTicketWorkflowState(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "工单ID"
-// @Success 200 {object} common.Response{data=[]dto.TicketWorkflowRecordResponse}
+// @Success 200 {object} common.Response{data=[]object}
 // @Router /api/v1/tickets/:id/workflow-history [get]
 func (tc *TicketWorkflowController) GetTicketWorkflowHistory(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))

@@ -27,6 +27,8 @@ type CIType struct {
 	Color string `json:"color,omitempty"`
 	// 属性模式定义
 	AttributeSchema string `json:"attribute_schema,omitempty"`
+	// 父CI类型ID
+	ParentTypeID *int `json:"parent_type_id,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 是否激活
@@ -45,9 +47,15 @@ type CIType struct {
 type CITypeEdges struct {
 	// Cis holds the value of the cis edge.
 	Cis []*ConfigurationItem `json:"cis,omitempty"`
+	// Parent holds the value of the parent edge.
+	Parent *CIType `json:"parent,omitempty"`
+	// Children holds the value of the children edge.
+	Children []*CIType `json:"children,omitempty"`
+	// AttributeDefinitions holds the value of the attribute_definitions edge.
+	AttributeDefinitions []*CIAttributeDefinition `json:"attribute_definitions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [4]bool
 }
 
 // CisOrErr returns the Cis value or an error if the edge
@@ -59,6 +67,35 @@ func (e CITypeEdges) CisOrErr() ([]*ConfigurationItem, error) {
 	return nil, &NotLoadedError{edge: "cis"}
 }
 
+// ParentOrErr returns the Parent value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e CITypeEdges) ParentOrErr() (*CIType, error) {
+	if e.Parent != nil {
+		return e.Parent, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: citype.Label}
+	}
+	return nil, &NotLoadedError{edge: "parent"}
+}
+
+// ChildrenOrErr returns the Children value or an error if the edge
+// was not loaded in eager-loading.
+func (e CITypeEdges) ChildrenOrErr() ([]*CIType, error) {
+	if e.loadedTypes[2] {
+		return e.Children, nil
+	}
+	return nil, &NotLoadedError{edge: "children"}
+}
+
+// AttributeDefinitionsOrErr returns the AttributeDefinitions value or an error if the edge
+// was not loaded in eager-loading.
+func (e CITypeEdges) AttributeDefinitionsOrErr() ([]*CIAttributeDefinition, error) {
+	if e.loadedTypes[3] {
+		return e.AttributeDefinitions, nil
+	}
+	return nil, &NotLoadedError{edge: "attribute_definitions"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*CIType) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -66,7 +103,7 @@ func (*CIType) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case citype.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case citype.FieldID, citype.FieldTenantID:
+		case citype.FieldID, citype.FieldParentTypeID, citype.FieldTenantID:
 			values[i] = new(sql.NullInt64)
 		case citype.FieldName, citype.FieldDescription, citype.FieldIcon, citype.FieldColor, citype.FieldAttributeSchema:
 			values[i] = new(sql.NullString)
@@ -123,6 +160,13 @@ func (_m *CIType) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.AttributeSchema = value.String
 			}
+		case citype.FieldParentTypeID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field parent_type_id", values[i])
+			} else if value.Valid {
+				_m.ParentTypeID = new(int)
+				*_m.ParentTypeID = int(value.Int64)
+			}
 		case citype.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
@@ -165,6 +209,21 @@ func (_m *CIType) QueryCis() *ConfigurationItemQuery {
 	return NewCITypeClient(_m.config).QueryCis(_m)
 }
 
+// QueryParent queries the "parent" edge of the CIType entity.
+func (_m *CIType) QueryParent() *CITypeQuery {
+	return NewCITypeClient(_m.config).QueryParent(_m)
+}
+
+// QueryChildren queries the "children" edge of the CIType entity.
+func (_m *CIType) QueryChildren() *CITypeQuery {
+	return NewCITypeClient(_m.config).QueryChildren(_m)
+}
+
+// QueryAttributeDefinitions queries the "attribute_definitions" edge of the CIType entity.
+func (_m *CIType) QueryAttributeDefinitions() *CIAttributeDefinitionQuery {
+	return NewCITypeClient(_m.config).QueryAttributeDefinitions(_m)
+}
+
 // Update returns a builder for updating this CIType.
 // Note that you need to call CIType.Unwrap() before calling this method if this CIType
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -202,6 +261,11 @@ func (_m *CIType) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("attribute_schema=")
 	builder.WriteString(_m.AttributeSchema)
+	builder.WriteString(", ")
+	if v := _m.ParentTypeID; v != nil {
+		builder.WriteString("parent_type_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))

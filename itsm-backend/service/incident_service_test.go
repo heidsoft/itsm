@@ -1051,3 +1051,121 @@ func TestIncidentService_GetIncidentStats(t *testing.T) {
 	// critical incidents
 	assert.Equal(t, 2, stats.CriticalIncidents)
 }
+
+// ==================== 升级为重大事件测试 ====================
+
+func TestIncidentService_EscalateToMajorIncident_Success(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "major")
+	require.NoError(t, err)
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "major")
+	require.NoError(t, err)
+
+	inc, err := client.Incident.Create().
+		SetTitle("数据库主从切换失败").
+		SetDescription("desc").
+		SetStatus("in_progress").
+		SetPriority("high").
+		SetSeverity("high").
+		SetIncidentNumber("INC-MAJOR-001").
+		SetReporterID(testUser.ID).
+		SetTenantID(testTenant.ID).
+		SetDetectedAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
+
+	req := &dto.EscalateMajorIncidentRequest{
+		ImpactScope:       "critical",
+		BusinessImpact:    "核心交易链路不可用，影响全部线上用户",
+		CommunicationPlan: "拉通应急群，每30分钟同步进展",
+	}
+	err = service.EscalateToMajorIncident(ctx, inc.ID, testUser.ID, testTenant.ID, req)
+	require.NoError(t, err)
+
+	updated, err := client.Incident.Get(ctx, inc.ID)
+	require.NoError(t, err)
+	assert.True(t, updated.IsMajorIncident)
+	assert.Equal(t, "critical", updated.Severity)
+	assert.Equal(t, 1, updated.EscalationLevel)
+	assert.False(t, updated.EscalatedAt.IsZero())
+	assert.Equal(t, inc.Version+1, updated.Version)
+
+	majorInfo, ok := updated.ImpactAnalysis["majorIncident"].(map[string]interface{})
+	require.True(t, ok, "impact_analysis 应包含 majorIncident 评估信息")
+	assert.Equal(t, "critical", majorInfo["impactScope"])
+	assert.Equal(t, req.BusinessImpact, majorInfo["businessImpact"])
+
+	// 审计事件已记录
+	eventCount, err := client.IncidentEvent.Query().
+		Where(incidentevent.EventTypeEQ("major_incident_escalation")).
+		Count(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 1, eventCount)
+}
+
+func TestIncidentService_EscalateToMajorIncident_Rejections(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "majorrej")
+	require.NoError(t, err)
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "majorrej")
+	require.NoError(t, err)
+
+	req := &dto.EscalateMajorIncidentRequest{
+		ImpactScope:    "high",
+		BusinessImpact: "影响评估描述足够长度",
+	}
+
+	tests := []struct {
+		name    string
+		status  string
+		isMajor bool
+		wantErr string
+	}{
+		{"已是重大事件", "in_progress", true, "already a major incident"},
+		{"已解决事件", "resolved", false, "cannot be escalated"},
+		{"已关闭事件", "closed", false, "cannot be escalated"},
+	}
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inc, err := client.Incident.Create().
+				SetTitle("拒绝场景 " + tt.name).
+				SetDescription("desc").
+				SetStatus(tt.status).
+				SetPriority("high").
+				SetSeverity("high").
+				SetIncidentNumber(fmt.Sprintf("INC-MAJOR-REJ-%d", i)).
+				SetReporterID(testUser.ID).
+				SetTenantID(testTenant.ID).
+				SetIsMajorIncident(tt.isMajor).
+				SetDetectedAt(time.Now()).
+				Save(ctx)
+			require.NoError(t, err)
+
+			err = service.EscalateToMajorIncident(ctx, inc.ID, testUser.ID, testTenant.ID, req)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tt.wantErr)
+		})
+	}
+
+	// 跨租户访问必须失败（fail closed）
+	otherTenant, err := createIncidentTestTenant(ctx, client, "majorother")
+	require.NoError(t, err)
+	inc, err := client.Incident.Create().
+		SetTitle("跨租户事件").
+		SetDescription("desc").
+		SetStatus("in_progress").
+		SetPriority("high").
+		SetSeverity("high").
+		SetIncidentNumber("INC-MAJOR-CROSS").
+		SetReporterID(testUser.ID).
+		SetTenantID(testTenant.ID).
+		SetDetectedAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
+	err = service.EscalateToMajorIncident(ctx, inc.ID, testUser.ID, otherTenant.ID, req)
+	require.Error(t, err)
+}

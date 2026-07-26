@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { App, Button, Card, Descriptions, Input, Modal, Select, Space, Table, Tag, Tabs, Timeline, Empty, Badge } from 'antd';
-import { Eye, PauseCircle, PlayCircle, RefreshCw, StopCircle, Clock, User, FileText, MessageSquare } from 'lucide-react';
+import { App, Button, Card, Descriptions, Form, Input, Modal, Select, Space, Table, Tag, Tabs, Timeline, Empty, Badge } from 'antd';
+import { Eye, PauseCircle, PlayCircle, RefreshCw, StopCircle, Clock, User, FileText, MessageSquare, Rocket } from 'lucide-react';
 
 import { FilterToolbarCard } from '@/components/ui/FilterToolbarCard';
 import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
@@ -10,7 +10,7 @@ import { ManagementNotice, ManagementPageHeader } from '@/components/ui/Manageme
 import { StatsOverview } from '@/components/ui/StatsOverview';
 import { WorkflowApi } from '@/lib/api/workflow-api';
 import BPMNDashboardApi from '@/lib/api/bpmn-dashboard-api';
-import type { NodeInstance } from '@/types/workflow';
+import type { NodeInstance, WorkflowDefinition } from '@/types/workflow';
 import type { ProcessAuditLog } from '@/lib/api/bpmn-dashboard-api';
 
 type InstanceRow = {
@@ -78,7 +78,7 @@ const auditActionColorMap: Record<string, string> = {
 };
 
 export default function WorkflowInstancesPage() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [instances, setInstances] = useState<InstanceRow[]>([]);
   const [stats, setStats] = useState({
@@ -98,6 +98,13 @@ export default function WorkflowInstancesPage() {
   const [auditLogs, setAuditLogs] = useState<ProcessAuditLog[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
+
+  // 发起流程弹窗状态
+  const [startModalVisible, setStartModalVisible] = useState(false);
+  const [startSubmitting, setStartSubmitting] = useState(false);
+  const [definitions, setDefinitions] = useState<WorkflowDefinition[]>([]);
+  const [definitionsLoading, setDefinitionsLoading] = useState(false);
+  const [startForm] = Form.useForm();
 
   const loadData = async () => {
     try {
@@ -165,6 +172,54 @@ export default function WorkflowInstancesPage() {
     loadInstanceDetail(record.id);
   };
 
+  // 打开发起流程弹窗：加载已激活的流程定义供选择
+  const openStartModal = async () => {
+    setStartModalVisible(true);
+    setDefinitionsLoading(true);
+    try {
+      const { workflows } = await WorkflowApi.getWorkflows({ page: 1, pageSize: 100 });
+      setDefinitions(workflows.filter(w => String(w.status) === 'active'));
+    } catch {
+      message.error('加载流程定义失败');
+      setDefinitions([]);
+    } finally {
+      setDefinitionsLoading(false);
+    }
+  };
+
+  // 发起流程实例：选择已激活的流程定义，填写业务键与变量后调用 startWorkflow
+  const handleStartSubmit = async () => {
+    try {
+      const values = await startForm.validateFields();
+      let variables: Record<string, unknown> | undefined;
+      if (values.variables) {
+        try {
+          variables = JSON.parse(values.variables);
+        } catch {
+          message.error('流程变量必须是合法的 JSON 对象');
+          return;
+        }
+      }
+      setStartSubmitting(true);
+      const instance = await WorkflowApi.startWorkflow({
+        workflowId: values.processDefinitionKey,
+        businessKey: values.businessKey || undefined,
+        variables: variables as Record<string, unknown> | undefined,
+      });
+      message.success(`流程实例已启动：${instance.id}`);
+      setStartModalVisible(false);
+      startForm.resetFields();
+      loadData();
+    } catch (error) {
+      // validateFields 失败时不提示；API 失败提示错误
+      if (error instanceof Error) {
+        message.error(`启动流程失败：${error.message}`);
+      }
+    } finally {
+      setStartSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, [keyword, status]);
@@ -230,10 +285,22 @@ export default function WorkflowInstancesPage() {
                 <Button
                   type="text"
                   icon={<PauseCircle className="h-4 w-4" />}
-                  onClick={async () => {
-                    await WorkflowApi.suspendWorkflow(record.id);
-                    message.success('实例已暂停');
-                    loadData();
+                  onClick={() => {
+                    modal.confirm({
+                      title: '暂停流程实例',
+                      content: `确定要暂停实例 ${record.id} 吗？暂停后待办任务将不可处理，可随时恢复。`,
+                      okText: '暂停',
+                      cancelText: '取消',
+                      onOk: async () => {
+                        try {
+                          await WorkflowApi.suspendWorkflow(record.id);
+                          message.success('实例已暂停');
+                          loadData();
+                        } catch {
+                          message.error('暂停实例失败');
+                        }
+                      },
+                    });
                   }}
                   size="small"
                 >
@@ -243,10 +310,23 @@ export default function WorkflowInstancesPage() {
                   type="text"
                   danger
                   icon={<StopCircle className="h-4 w-4" />}
-                  onClick={async () => {
-                    await WorkflowApi.terminateWorkflow(record.id, '前端终止');
-                    message.success('实例已终止');
-                    loadData();
+                  onClick={() => {
+                    modal.confirm({
+                      title: '终止流程实例',
+                      content: `确定要终止实例 ${record.id} 吗？终止后流程不可恢复，未完成的审批链将被中断。`,
+                      okText: '终止',
+                      okType: 'danger',
+                      cancelText: '取消',
+                      onOk: async () => {
+                        try {
+                          await WorkflowApi.terminateWorkflow(record.id, '前端终止');
+                          message.success('实例已终止');
+                          loadData();
+                        } catch {
+                          message.error('终止实例失败');
+                        }
+                      },
+                    });
                   }}
                   size="small"
                 >
@@ -258,10 +338,22 @@ export default function WorkflowInstancesPage() {
               <Button
                 type="text"
                 icon={<PlayCircle className="h-4 w-4" />}
-                onClick={async () => {
-                  await WorkflowApi.resumeWorkflow(record.id);
-                  message.success('实例已恢复');
-                  loadData();
+                onClick={() => {
+                  modal.confirm({
+                    title: '恢复流程实例',
+                    content: `确定要恢复实例 ${record.id} 吗？恢复后流程将继续执行。`,
+                    okText: '恢复',
+                    cancelText: '取消',
+                    onOk: async () => {
+                      try {
+                        await WorkflowApi.resumeWorkflow(record.id);
+                        message.success('实例已恢复');
+                        loadData();
+                      } catch {
+                        message.error('恢复实例失败');
+                      }
+                    },
+                  });
                 }}
                 size="small"
               >
@@ -272,7 +364,7 @@ export default function WorkflowInstancesPage() {
         ),
       },
     ],
-    [message]
+    [message, modal]
   );
 
   const taskColumns = useMemo(
@@ -513,9 +605,14 @@ export default function WorkflowInstancesPage() {
           </>
         }
         actions={
-          <Button icon={<RefreshCw className="h-4 w-4" />} onClick={loadData}>
-            刷新
-          </Button>
+          <Space>
+            <Button type="primary" icon={<Rocket className="h-4 w-4" />} onClick={openStartModal}>
+              发起流程
+            </Button>
+            <Button icon={<RefreshCw className="h-4 w-4" />} onClick={loadData}>
+              刷新
+            </Button>
+          </Space>
         }
       />
 
@@ -539,6 +636,51 @@ export default function WorkflowInstancesPage() {
           />
         </LoadingEmptyError>
       </Card>
+
+      <Modal
+        title="发起流程实例"
+        open={startModalVisible}
+        onCancel={() => {
+          setStartModalVisible(false);
+          startForm.resetFields();
+        }}
+        onOk={handleStartSubmit}
+        confirmLoading={startSubmitting}
+        okText="启动"
+        cancelText="取消"
+        destroyOnHidden
+      >
+        <Form form={startForm} layout="vertical">
+          <Form.Item
+            name="processDefinitionKey"
+            label="流程定义"
+            rules={[{ required: true, message: '请选择要发起的流程定义' }]}
+          >
+            <Select
+              placeholder="选择已激活的流程定义"
+              showSearch
+              optionFilterProp="label"
+              loading={definitionsLoading}
+              options={definitions.map(w => ({ label: `${w.name} (${w.code})`, value: w.code }))}
+              notFoundContent="没有已激活的流程定义，请先部署/激活"
+            />
+          </Form.Item>
+          <Form.Item
+            name="businessKey"
+            label="业务键（可选）"
+            tooltip="关联的业务单据标识，如工单号、变更号；留空将自动生成"
+          >
+            <Input placeholder="例如 TICKET-2026-0001" />
+          </Form.Item>
+          <Form.Item
+            name="variables"
+            label="流程变量（可选，JSON）"
+            tooltip='以 JSON 对象形式传入启动变量，例如 {"priority": "high"}'
+          >
+            <Input.TextArea rows={4} placeholder='{"priority": "high"}' />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Modal
         title={selectedInstance ? `实例详情 · ${selectedInstance.id}` : '实例详情'}

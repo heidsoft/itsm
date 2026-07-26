@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/predicate"
@@ -20,11 +21,14 @@ import (
 // CITypeQuery is the builder for querying CIType entities.
 type CITypeQuery struct {
 	config
-	ctx        *QueryContext
-	order      []citype.OrderOption
-	inters     []Interceptor
-	predicates []predicate.CIType
-	withCis    *ConfigurationItemQuery
+	ctx                      *QueryContext
+	order                    []citype.OrderOption
+	inters                   []Interceptor
+	predicates               []predicate.CIType
+	withCis                  *ConfigurationItemQuery
+	withParent               *CITypeQuery
+	withChildren             *CITypeQuery
+	withAttributeDefinitions *CIAttributeDefinitionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +80,72 @@ func (_q *CITypeQuery) QueryCis() *ConfigurationItemQuery {
 			sqlgraph.From(citype.Table, citype.FieldID, selector),
 			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, citype.CisTable, citype.CisColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryParent chains the current query on the "parent" edge.
+func (_q *CITypeQuery) QueryParent() *CITypeQuery {
+	query := (&CITypeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(citype.Table, citype.FieldID, selector),
+			sqlgraph.To(citype.Table, citype.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, citype.ParentTable, citype.ParentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryChildren chains the current query on the "children" edge.
+func (_q *CITypeQuery) QueryChildren() *CITypeQuery {
+	query := (&CITypeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(citype.Table, citype.FieldID, selector),
+			sqlgraph.To(citype.Table, citype.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, citype.ChildrenTable, citype.ChildrenColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAttributeDefinitions chains the current query on the "attribute_definitions" edge.
+func (_q *CITypeQuery) QueryAttributeDefinitions() *CIAttributeDefinitionQuery {
+	query := (&CIAttributeDefinitionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(citype.Table, citype.FieldID, selector),
+			sqlgraph.To(ciattributedefinition.Table, ciattributedefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, citype.AttributeDefinitionsTable, citype.AttributeDefinitionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -270,12 +340,15 @@ func (_q *CITypeQuery) Clone() *CITypeQuery {
 		return nil
 	}
 	return &CITypeQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]citype.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.CIType{}, _q.predicates...),
-		withCis:    _q.withCis.Clone(),
+		config:                   _q.config,
+		ctx:                      _q.ctx.Clone(),
+		order:                    append([]citype.OrderOption{}, _q.order...),
+		inters:                   append([]Interceptor{}, _q.inters...),
+		predicates:               append([]predicate.CIType{}, _q.predicates...),
+		withCis:                  _q.withCis.Clone(),
+		withParent:               _q.withParent.Clone(),
+		withChildren:             _q.withChildren.Clone(),
+		withAttributeDefinitions: _q.withAttributeDefinitions.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -290,6 +363,39 @@ func (_q *CITypeQuery) WithCis(opts ...func(*ConfigurationItemQuery)) *CITypeQue
 		opt(query)
 	}
 	_q.withCis = query
+	return _q
+}
+
+// WithParent tells the query-builder to eager-load the nodes that are connected to
+// the "parent" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *CITypeQuery) WithParent(opts ...func(*CITypeQuery)) *CITypeQuery {
+	query := (&CITypeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withParent = query
+	return _q
+}
+
+// WithChildren tells the query-builder to eager-load the nodes that are connected to
+// the "children" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *CITypeQuery) WithChildren(opts ...func(*CITypeQuery)) *CITypeQuery {
+	query := (&CITypeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withChildren = query
+	return _q
+}
+
+// WithAttributeDefinitions tells the query-builder to eager-load the nodes that are connected to
+// the "attribute_definitions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *CITypeQuery) WithAttributeDefinitions(opts ...func(*CIAttributeDefinitionQuery)) *CITypeQuery {
+	query := (&CIAttributeDefinitionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAttributeDefinitions = query
 	return _q
 }
 
@@ -371,8 +477,11 @@ func (_q *CITypeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CITyp
 	var (
 		nodes       = []*CIType{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [4]bool{
 			_q.withCis != nil,
+			_q.withParent != nil,
+			_q.withChildren != nil,
+			_q.withAttributeDefinitions != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -400,6 +509,28 @@ func (_q *CITypeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CITyp
 			return nil, err
 		}
 	}
+	if query := _q.withParent; query != nil {
+		if err := _q.loadParent(ctx, query, nodes, nil,
+			func(n *CIType, e *CIType) { n.Edges.Parent = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withChildren; query != nil {
+		if err := _q.loadChildren(ctx, query, nodes,
+			func(n *CIType) { n.Edges.Children = []*CIType{} },
+			func(n *CIType, e *CIType) { n.Edges.Children = append(n.Edges.Children, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAttributeDefinitions; query != nil {
+		if err := _q.loadAttributeDefinitions(ctx, query, nodes,
+			func(n *CIType) { n.Edges.AttributeDefinitions = []*CIAttributeDefinition{} },
+			func(n *CIType, e *CIAttributeDefinition) {
+				n.Edges.AttributeDefinitions = append(n.Edges.AttributeDefinitions, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -419,6 +550,101 @@ func (_q *CITypeQuery) loadCis(ctx context.Context, query *ConfigurationItemQuer
 	}
 	query.Where(predicate.ConfigurationItem(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(citype.CisColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CiTypeID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ci_type_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *CITypeQuery) loadParent(ctx context.Context, query *CITypeQuery, nodes []*CIType, init func(*CIType), assign func(*CIType, *CIType)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*CIType)
+	for i := range nodes {
+		if nodes[i].ParentTypeID == nil {
+			continue
+		}
+		fk := *nodes[i].ParentTypeID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(citype.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "parent_type_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *CITypeQuery) loadChildren(ctx context.Context, query *CITypeQuery, nodes []*CIType, init func(*CIType), assign func(*CIType, *CIType)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*CIType)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(citype.FieldParentTypeID)
+	}
+	query.Where(predicate.CIType(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(citype.ChildrenColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ParentTypeID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "parent_type_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "parent_type_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *CITypeQuery) loadAttributeDefinitions(ctx context.Context, query *CIAttributeDefinitionQuery, nodes []*CIType, init func(*CIType), assign func(*CIType, *CIAttributeDefinition)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*CIType)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(ciattributedefinition.FieldCiTypeID)
+	}
+	query.Where(predicate.CIAttributeDefinition(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(citype.AttributeDefinitionsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -459,6 +685,9 @@ func (_q *CITypeQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != citype.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if _q.withParent != nil {
+			_spec.Node.AddColumnOnce(citype.FieldParentTypeID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

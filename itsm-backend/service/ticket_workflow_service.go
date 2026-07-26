@@ -22,13 +22,19 @@ type TicketWorkflowService struct {
 	client           *ent.Client
 	logger           *zap.SugaredLogger
 	connectorManager *connector.Manager
+	approvalBridge   *BPMNApprovalBridge
 }
 
 func NewTicketWorkflowService(client *ent.Client, logger *zap.SugaredLogger) *TicketWorkflowService {
-	return &TicketWorkflowService{
+	svc := &TicketWorkflowService{
 		client: client,
 		logger: logger,
 	}
+	if client != nil {
+		// P0-1：业务审批统一桥接到 BPMN 任务，避免流程实例悬挂
+		svc.approvalBridge = NewBPMNApprovalBridge(client, logger)
+	}
+	return svc
 }
 
 // SetConnectorManager 设置连接器管理器，用于飞书、钉钉、企业微信等外部渠道通知。
@@ -369,6 +375,19 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 
 	approvalLevel := approval.Level
 
+	// P0-1：审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源）。
+	// 无关联运行中流程实例时回退为纯业务审批，兼容未绑定流程的历史工单；
+	// 若存在待办流程任务但完成失败（如操作人不是流程任务的审批人），则中止业务审批，避免双轨分叉。
+	bpmnHandled := false
+	if (req.Action == "approve" || req.Action == "reject") && s.approvalBridge != nil {
+		handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
+			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment)
+		if bridgeErr != nil {
+			return fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+		}
+		bpmnHandled = handled
+	}
+
 	// 确定审批结果状态
 	var newApprovalStatus string
 	switch req.Action {
@@ -383,6 +402,17 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		newApprovalStatus = string(dto.ApprovalStatusCancelled)
 	default:
 		return fmt.Errorf("无效的审批操作: %s", req.Action)
+	}
+
+	// P0-1 延伸：委派同步 BPMN 任务重新指派，保持流程侧审批人与业务侧委派结果一致；
+	// 同步失败时中止业务侧委派，避免流程任务仍停留在原审批人造成双轨分叉。
+	if req.Action == "delegate" && s.approvalBridge != nil {
+		handled, bridgeErr := s.approvalBridge.DelegateBusinessApprovalTask(
+			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID)
+		if bridgeErr != nil {
+			return fmt.Errorf("同步流程委派任务失败: %w", bridgeErr)
+		}
+		bpmnHandled = handled
 	}
 
 	// 开启事务，保证原子性
@@ -487,6 +517,7 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 	metadata := map[string]interface{}{
 		"approval_id":    req.ApprovalID,
 		"approval_level": approvalLevel,
+		"bpmn_handled":   bpmnHandled,
 	}
 	if req.DelegateToUserID != nil {
 		metadata["delegate_to_user_id"] = *req.DelegateToUserID

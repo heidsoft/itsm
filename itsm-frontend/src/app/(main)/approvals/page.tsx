@@ -2,34 +2,27 @@
 
 /**
  * 审批中心首页
- * 汇总展示所有待我审批的工单、变更、服务请求、事件
- * 优化：快捷审批操作、响应式布局、动画效果、批量审批
+ * 以 BPMN 流程待办为权威审批入口（GET /bpmn/tasks + POST /bpmn/tasks/:id/decisions），
+ * 旧的工单/变更/服务请求业务列表保留为只读参考视图。
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
+  App,
   Card,
   Tabs,
   Table,
   Tag,
   Button,
   Space,
-  Empty,
-  Spin,
-  Statistic,
+  Input,
+  Modal,
   Row,
   Col,
-  message,
   Typography,
-  Modal,
-  Popconfirm,
   Tooltip,
   Badge,
-  Avatar,
-  Drawer,
-  Descriptions,
   Skeleton,
-  ConfigProvider,
 } from 'antd';
 import {
   CheckCircle,
@@ -37,383 +30,281 @@ import {
   RotateCcw,
   FileText,
   Wrench,
-  AlertTriangle,
   Headphones,
   Check,
   X,
-  Eye,
-  Bell,
-  Filter,
-  LayoutGrid,
-  List,
-  Loader2,
-  ArrowRight,
+  Hand,
+  GitBranch,
+  ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { httpClient } from '@/lib/api/http-client';
+import { WorkflowApi, type BpmnMyTask } from '@/lib/api/workflow-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
+const { TextArea } = Input;
 
-interface PendingItem {
+// ==================== BPMN 待办 ====================
+
+// 待处理任务状态（后端 status：created/assigned/started 均视为待办）
+const PENDING_TASK_STATUSES = new Set(['created', 'assigned', 'started', 'pending']);
+
+const taskStatusMap: Record<string, { text: string; color: string }> = {
+  created: { text: '待领取', color: 'gold' },
+  assigned: { text: '已分配', color: 'blue' },
+  started: { text: '处理中', color: 'processing' },
+  pending: { text: '待处理', color: 'gold' },
+  completed: { text: '已完成', color: 'green' },
+  cancelled: { text: '已取消', color: 'default' },
+};
+
+// 业务类型 → 展示名 + 详情路由
+const businessTypeMap: Record<string, { label: string; url: (id: number) => string }> = {
+  ticket: { label: '工单', url: (id) => `/tickets/${id}` },
+  change: { label: '变更', url: (id) => `/changes/${id}` },
+  incident: { label: '事件', url: (id) => `/incidents/${id}` },
+  problem: { label: '问题', url: (id) => `/problems/${id}` },
+  service_request: { label: '服务请求', url: (id) => `/service-requests/${id}` },
+};
+
+function getBusinessLink(task: BpmnMyTask): { label: string; url: string } | null {
+  if (task.businessType && task.businessId) {
+    const meta = businessTypeMap[task.businessType];
+    if (meta) {
+      return { label: `${meta.label} #${task.businessId}`, url: meta.url(task.businessId) };
+    }
+  }
+  if (task.processInstanceId) {
+    return { label: `流程实例 #${task.processInstanceId}`, url: `/workflow/instances/${task.processInstanceId}` };
+  }
+  return null;
+}
+
+// ==================== 旧业务参考视图（只读） ====================
+
+interface LegacyPendingItem {
   id: number | string;
-  type: 'ticket' | 'change' | 'service_request' | 'incident';
+  type: 'ticket' | 'change' | 'service_request';
   title: string;
   status: string;
   priority?: string;
   createdAt: string;
   url: string;
   requester?: string;
-  description?: string;
-  assigneeName?: string;
 }
 
-// 增强的审批项类型，包含详情
-interface EnhancedPendingItem extends PendingItem {
-  detail?: any;
-}
-
-// 审批状态中文映射
-const approvalStatusMap: Record<string, { text: string; color: string }> = {
-  pending: { text: '待审批', color: 'gold' },
-  approved: { text: '已批准', color: 'green' },
-  rejected: { text: '已拒绝', color: 'red' },
-  cancelled: { text: '已取消', color: 'gray' },
+const priorityColorMap: Record<string, string> = {
+  critical: 'red',
+  high: 'orange',
+  medium: 'blue',
+  low: 'green',
 };
 
 export default function ApprovalsCenterPage() {
-  const router = useRouter();
+  const { message, modal } = App.useApp();
   const { user } = useAuthStore();
-  const [loading, setLoading] = useState(false);
-  const [tickets, setTickets] = useState<EnhancedPendingItem[]>([]);
-  const [changes, setChanges] = useState<EnhancedPendingItem[]>([]);
-  const [serviceRequests, setServiceRequests] = useState<EnhancedPendingItem[]>([]);
-  const [activeTab, setActiveTab] = useState('tickets');
-  const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
-  const [selectedItems, setSelectedItems] = useState<EnhancedPendingItem[]>([]);
-  const [detailDrawer, setDetailDrawer] = useState<{ open: boolean; item: EnhancedPendingItem | null }>({
-    open: false,
-    item: null,
-  });
-  const [approving, setApproving] = useState<{ id: string; action: 'approve' | 'reject' } | null>(null);
 
-  // 批量审批处理 — 实际逐项调用后端审批接口，避免伪造成功
-  const handleBatchApprove = async () => {
-    if (selectedItems.length === 0) return;
-    Modal.confirm({
-      title: '批量审批',
-      content: `确定要批准选中的 ${selectedItems.length} 项吗？`,
-      okText: '确认批准',
-      cancelText: '取消',
-      onOk: async () => {
-        await runBatch('approve');
-      },
-    });
-  };
+  // BPMN 待办
+  const [taskLoading, setTaskLoading] = useState(false);
+  const [tasks, setTasks] = useState<BpmnMyTask[]>([]);
+  const [claiming, setClaiming] = useState<number | null>(null);
+  const [decision, setDecision] = useState<{
+    task: BpmnMyTask;
+    action: 'approve' | 'reject';
+  } | null>(null);
+  const [decisionComment, setDecisionComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleBatchReject = async () => {
-    if (selectedItems.length === 0) return;
-    Modal.confirm({
-      title: '批量拒绝',
-      content: `确定要拒绝选中的 ${selectedItems.length} 项吗？`,
-      okText: '确认拒绝',
-      okType: 'danger',
-      cancelText: '取消',
-      onOk: async () => {
-        await runBatch('reject');
-      },
-    });
-  };
+  // 旧业务参考视图
+  const [legacyLoading, setLegacyLoading] = useState(false);
+  const [legacyItems, setLegacyItems] = useState<LegacyPendingItem[]>([]);
+  const [activeTab, setActiveTab] = useState('bpmn-tasks');
 
-  // 共用：按类型映射到对应审批接口，逐项调用，统计成功/失败 (#3修复)
-  const runBatch = async (action: 'approve' | 'reject') => {
-    // 根据类型和动作构建正确的API请求
-    const getRequestParams = (item: EnhancedPendingItem, action: 'approve' | 'reject') => {
-      const status = action === 'approve' ? 'approved' : 'rejected';
-      const actionStr = action;
-      switch (item.type) {
-        case 'ticket':
-          return {
-            url: `/api/v1/tickets/workflow/approve`,
-            body: { ticketId: item.id, action: actionStr, approvalId: item.detail?.approvalId || 0, comment: '' }
-          };
-        case 'change':
-          return {
-            url: `/api/v1/changes/${item.id}/${actionStr}`,
-            body: {}
-          };
-        case 'service_request':
-          return {
-            url: `/api/v1/service-requests/${item.id}/approval`,
-            body: { action: actionStr, status, comment: '' }
-          };
-        case 'incident':
-          return {
-            // 事件使用状态转换而非审批
-            url: action === 'approve' 
-              ? `/api/v1/incidents/${item.id}/acknowledge`
-              : `/api/v1/incidents/${item.id}/resolve`,
-            body: {}
-          };
-        default:
-          return null;
-      }
-    };
-
-    let success = 0;
-    let failed = 0;
-    setLoading(true);
+  const loadTasks = useCallback(async () => {
+    setTaskLoading(true);
     try {
-      for (const item of selectedItems) {
-        const req = getRequestParams(item, action);
-        if (!req) {
-          failed += 1;
-          continue;
-        }
-        try {
-          await httpClient.post(req.url, req.body);
-          success += 1;
-        } catch (err) {
-          failed += 1;
-        }
-      }
-      if (failed === 0) {
-        message.success(`已${action === 'approve' ? '批准' : '拒绝'} ${success} 项`);
-      } else {
-        message.error(`完成 ${success} 项，失败 ${failed} 项`);
-      }
-      setSelectedItems([]);
-      load();
+      const res = await WorkflowApi.listMyApprovalTasks({ page: 1, pageSize: 100 });
+      // 后端仅支持单状态过滤，这里客户端过滤出待处理任务
+      setTasks(res.items.filter((t) => PENDING_TASK_STATUSES.has((t.status || '').toLowerCase())));
+    } catch {
+      message.error('加载流程待办失败');
     } finally {
-      setLoading(false);
+      setTaskLoading(false);
     }
-  };
+  }, [message]);
 
-  // 单项快速审批 - #3修复: 使用正确的后端API端点
-  const handleQuickApprove = async (item: EnhancedPendingItem) => {
-    setApproving({ id: String(item.id), action: 'approve' });
+  const loadLegacy = useCallback(async () => {
+    setLegacyLoading(true);
     try {
-      // 根据类型调用不同的审批API（修正端点路径）
-      const endpoints: Record<PendingItem['type'], { url: string; body: any }> = {
-        ticket: {
-          // 工单使用统一的workflow/approve接口，需要ticketId和action
-          url: `/api/v1/tickets/workflow/approve`,
-          body: { ticketId: item.id, action: 'approve', approvalId: item.detail?.approvalId || 0, comment: '' }
-        },
-        change: {
-          // 变更直接用/:id/approve端点
-          url: `/api/v1/changes/${item.id}/approve`,
-          body: {}
-        },
-        service_request: {
-          // 服务请求使用/:id/approval端点
-          url: `/api/v1/service-requests/${item.id}/approval`,
-          body: { action: 'approve', status: 'approved', comment: '' }
-        },
-        incident: {
-          // 事件使用acknowledged状态转换（事件没有传统审批流程）
-          url: `/api/v1/incidents/${item.id}/acknowledge`,
-          body: {}
-        }
-      };
-      const endpoint = endpoints[item.type];
-      if (!endpoint) throw new Error(`未知的审批类型: ${item.type}`);
-      await httpClient.post(endpoint.url, endpoint.body);
-      message.success('审批通过');
-      load();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : '操作失败';
-      message.error(msg);
-    } finally {
-      setApproving(null);
-    }
-  };
-
-  const handleQuickReject = async (item: EnhancedPendingItem) => {
-    setApproving({ id: String(item.id), action: 'reject' });
-    try {
-      const endpoints: Record<PendingItem['type'], { url: string; body: any }> = {
-        ticket: {
-          url: `/api/v1/tickets/workflow/approve`,
-          body: { ticketId: item.id, action: 'reject', approvalId: item.detail?.approvalId || 0, comment: '' }
-        },
-        change: {
-          url: `/api/v1/changes/${item.id}/reject`,
-          body: {}
-        },
-        service_request: {
-          url: `/api/v1/service-requests/${item.id}/approval`,
-          body: { action: 'reject', status: 'rejected', comment: '' }
-        },
-        incident: {
-          // 事件使用resolve状态转换
-          url: `/api/v1/incidents/${item.id}/resolve`,
-          body: {}
-        }
-      };
-      const endpoint = endpoints[item.type];
-      if (!endpoint) throw new Error(`未知的审批类型: ${item.type}`);
-      await httpClient.post(endpoint.url, endpoint.body);
-      message.success('已拒绝');
-      load();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : '操作失败';
-      message.error(msg);
-    } finally {
-      setApproving(null);
-    }
-  };
-
-  // 加载数据
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      // 并行请求所有待审批数据
       const [ticketsResp, changesResp, srResp] = await Promise.all([
-        httpClient.get<{ tickets?: any[]; total: number }>('/api/v1/tickets?status=pending&page=1&page_size=20').catch(() => ({ tickets: [], total: 0 })),
-        httpClient.get<{ changes?: any[]; total: number }>('/api/v1/changes?status=pending&page=1&page_size=20').catch(() => ({ changes: [], total: 0 })),
-        httpClient.get<{ items?: any[]; total: number }>('/api/v1/service-requests?status=pending&page=1&page_size=20').catch(() => ({ items: [], total: 0 })),
+        httpClient.get<{ tickets?: any[] }>('/api/v1/tickets?status=pending&page=1&page_size=20').catch(() => ({ tickets: [] })),
+        httpClient.get<{ changes?: any[] }>('/api/v1/changes?status=pending&page=1&page_size=20').catch(() => ({ changes: [] })),
+        httpClient.get<{ items?: any[] }>('/api/v1/service-requests?status=pending&page=1&page_size=20').catch(() => ({ items: [] })),
       ]);
-
-      setTickets((ticketsResp.tickets || []).map((t: any) => ({
-        id: t.id,
-        type: 'ticket' as const,
-        title: t.title || `工单 #${t.id}`,
-        status: t.status,
-        priority: t.priority,
-        createdAt: t.createdAt,
-        url: `/tickets/${t.id}`,
-        requester: t.requesterName,
-        description: t.description,
-        assigneeName: t.assigneeName,
-        detail: t,
-      })));
-
-      setChanges((changesResp.changes || []).map((c: any) => ({
-        id: c.id,
-        type: 'change' as const,
-        title: c.title || `变更 #${c.id}`,
-        status: c.status,
-        priority: c.priority,
-        createdAt: c.scheduledStart || c.createdAt,
-        url: `/changes/${c.id}`,
-        requester: c.requesterName,
-        description: c.description,
-        assigneeName: c.assigneeName,
-        detail: c,
-      })));
-
-      setServiceRequests((srResp.items || []).map((s: any) => ({
-        id: s.id,
-        type: 'service_request' as const,
-        title: s.title || `服务请求 #${s.id}`,
-        status: s.status,
-        priority: s.priority,
-        createdAt: s.createdAt,
-        url: `/service-requests/${s.id}`,
-        requester: s.requesterName,
-        description: s.description,
-        assigneeName: s.assigneeName,
-        detail: s,
-      })));
-    } catch (e) {
-      message.error('加载待审批列表失败');
+      const items: LegacyPendingItem[] = [
+        ...(ticketsResp.tickets || []).map((t: any) => ({
+          id: t.id,
+          type: 'ticket' as const,
+          title: t.title || `工单 #${t.id}`,
+          status: t.status,
+          priority: t.priority,
+          createdAt: t.createdAt,
+          url: `/tickets/${t.id}`,
+          requester: t.requesterName,
+        })),
+        ...(changesResp.changes || []).map((c: any) => ({
+          id: c.id,
+          type: 'change' as const,
+          title: c.title || `变更 #${c.id}`,
+          status: c.status,
+          priority: c.priority,
+          createdAt: c.scheduledStart || c.createdAt,
+          url: `/changes/${c.id}`,
+          requester: c.requesterName,
+        })),
+        ...(srResp.items || []).map((s: any) => ({
+          id: s.id,
+          type: 'service_request' as const,
+          title: s.title || `服务请求 #${s.id}`,
+          status: s.status,
+          priority: s.priority,
+          createdAt: s.createdAt,
+          url: `/service-requests/${s.id}`,
+          requester: s.requesterName,
+        })),
+      ];
+      setLegacyItems(items);
+    } catch {
+      message.error('加载业务待审列表失败');
     } finally {
-      setLoading(false);
+      setLegacyLoading(false);
     }
-  }, []);
+  }, [message]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    loadTasks();
+    loadLegacy();
+  }, [loadTasks, loadLegacy]);
 
-  // 刷新时带加载动画
   const handleRefresh = () => {
-    load();
+    loadTasks();
+    loadLegacy();
   };
 
-  // 卡片视图列定义
-  const cardColumns = [
+  // 领取任务（无负责人时）
+  const handleClaim = async (task: BpmnMyTask) => {
+    setClaiming(task.id);
+    try {
+      await WorkflowApi.claimMyTask(task.id);
+      message.success('任务已领取');
+      loadTasks();
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '领取任务失败');
+    } finally {
+      setClaiming(null);
+    }
+  };
+
+  // 打开审批决策弹窗
+  const openDecision = (task: BpmnMyTask, action: 'approve' | 'reject') => {
+    setDecisionComment('');
+    setDecision({ task, action });
+  };
+
+  // 提交审批决策：批准可不填意见，拒绝必须填写（与后端校验一致）
+  const submitDecision = async () => {
+    if (!decision) return;
+    const comment = decisionComment.trim();
+    if (decision.action === 'reject' && !comment) {
+      message.warning('拒绝时必须填写审批意见');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await WorkflowApi.submitTaskDecision(decision.task.id, {
+        action: decision.action,
+        comment,
+      });
+      message.success(decision.action === 'approve' ? '已批准' : '已拒绝');
+      setDecision(null);
+      loadTasks();
+      loadLegacy();
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '提交审批决策失败');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // BPMN 待办表格列
+  const taskColumns = [
     {
-      title: '',
-      key: 'selection',
-      width: 50,
-      render: (_: any, record: EnhancedPendingItem) => (
-        <input
-          type="checkbox"
-          checked={selectedItems.some(item => item.id === record.id)}
-          onChange={(e) => {
-            if (e.target.checked) {
-              setSelectedItems([...selectedItems, record]);
-            } else {
-              setSelectedItems(selectedItems.filter(item => item.id !== record.id));
-            }
-          }}
-          className="w-4 h-4 cursor-pointer accent-blue-500"
-        />
-      ),
-    },
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 70,
-      responsive: ['md'] as any,
-    },
-    {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text: string, record: EnhancedPendingItem) => (
-        <div className="flex items-center gap-2">
-          <Link href={record.url} className="font-medium text-gray-900 hover:text-blue-600 transition-colors">
-            {text}
-          </Link>
-          {record.description && (
-            <Tooltip title={record.description}>
-              <Eye className="text-gray-400 cursor-pointer hover:text-blue-500" />
-            </Tooltip>
+      title: '任务',
+      dataIndex: 'taskName',
+      key: 'taskName',
+      render: (text: string, record: BpmnMyTask) => (
+        <div>
+          <div className="font-medium text-gray-900">{text || record.taskDefinitionKey}</div>
+          {record.taskPurpose && (
+            <Text type="secondary" className="text-xs">{record.taskPurpose}</Text>
           )}
         </div>
       ),
     },
     {
-      title: '优先级',
-      dataIndex: 'priority',
-      key: 'priority',
-      width: 90,
-      render: (p: string) => {
-        if (!p) return '-';
-        const colorMap: Record<string, string> = {
-          critical: 'red',
-          high: 'orange',
-          medium: 'blue',
-          low: 'green',
-        };
-        return <Tag color={colorMap[p] || 'default'} className="font-medium">{p.toUpperCase()}</Tag>;
+      title: '业务单据',
+      key: 'business',
+      width: 180,
+      render: (_: unknown, record: BpmnMyTask) => {
+        const link = getBusinessLink(record);
+        if (!link) return <Text type="secondary">-</Text>;
+        return (
+          <Link href={link.url} className="text-blue-600 hover:text-blue-700 inline-flex items-center gap-1">
+            {link.label}
+            <ExternalLink className="w-3 h-3" />
+          </Link>
+        );
       },
     },
     {
-      title: '申请人',
-      dataIndex: 'requester',
-      key: 'requester',
-      width: 100,
+      title: '流程',
+      dataIndex: 'processDefinitionKey',
+      key: 'processDefinitionKey',
+      width: 180,
       responsive: ['lg'] as any,
-      render: (name: string) => name || '-',
+      render: (key: string) => key ? <Tag icon={<GitBranch className="w-3 h-3 inline mr-1" />}>{key}</Tag> : '-',
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (status: string) => {
+        const meta = taskStatusMap[(status || '').toLowerCase()];
+        return <Tag color={meta?.color || 'default'}>{meta?.text || status}</Tag>;
+      },
+    },
+    {
+      title: '负责人',
+      dataIndex: 'assignee',
+      key: 'assignee',
+      width: 110,
+      responsive: ['md'] as any,
+      render: (assignee: string) => assignee || <Text type="secondary">未领取</Text>,
     },
     {
       title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 140,
+      dataIndex: 'createdTime',
+      key: 'createdTime',
+      width: 130,
       responsive: ['xl'] as any,
       render: (t: string) => t ? (
-        <Tooltip title={new Date(t).toLocaleString('zh-CN')}>
+        <Tooltip title={dayjs(t).format('YYYY-MM-DD HH:mm:ss')}>
           <span className="text-gray-500">{dayjs(t).fromNow()}</span>
         </Tooltip>
       ) : '-',
@@ -421,71 +312,116 @@ export default function ApprovalsCenterPage() {
     {
       title: '操作',
       key: 'action',
-      width: 180,
-      render: (_: any, record: EnhancedPendingItem) => (
+      width: 220,
+      render: (_: unknown, record: BpmnMyTask) => (
         <Space size="small">
-          <Tooltip title="批准">
+          {!record.assignee && (
             <Button
-              type="primary"
               size="small"
-              icon={<Check />}
-              onClick={() => handleQuickApprove(record)}
-              loading={approving?.id === String(record.id) && approving?.action === 'approve'}
-              className="!bg-green-500 !border-green-500 hover:!bg-green-600 hover:!border-green-600"
+              icon={<Hand className="w-3 h-3" />}
+              loading={claiming === record.id}
+              onClick={() => handleClaim(record)}
             >
-              批准
+              领取
             </Button>
-          </Tooltip>
-          <Tooltip title="拒绝">
-            <Button
-              danger
-              size="small"
-              icon={<X />}
-              onClick={() => handleQuickReject(record)}
-              loading={approving?.id === String(record.id) && approving?.action === 'reject'}
-            >
-              拒绝
-            </Button>
-          </Tooltip>
-          <Tooltip title="查看详情">
-            <Button
-              size="small"
-              icon={<Eye />}
-              onClick={() => setDetailDrawer({ open: true, item: record })}
-            />
-          </Tooltip>
+          )}
+          <Button
+            type="primary"
+            size="small"
+            icon={<Check className="w-3 h-3" />}
+            onClick={() => openDecision(record, 'approve')}
+            className="!bg-green-500 !border-green-500 hover:!bg-green-600 hover:!border-green-600"
+          >
+            批准
+          </Button>
+          <Button
+            danger
+            size="small"
+            icon={<X className="w-3 h-3" />}
+            onClick={() => openDecision(record, 'reject')}
+          >
+            拒绝
+          </Button>
         </Space>
       ),
     },
   ];
 
-  const totalPending = tickets.length + changes.length + serviceRequests.length;
+  // 旧业务参考视图表格列（只读，仅提供跳转）
+  const legacyColumns = [
+    {
+      title: '类型',
+      dataIndex: 'type',
+      key: 'type',
+      width: 100,
+      render: (type: LegacyPendingItem['type']) => {
+        const map: Record<LegacyPendingItem['type'], { label: string; icon: React.ReactNode }> = {
+          ticket: { label: '工单', icon: <FileText className="w-3 h-3 inline mr-1" /> },
+          change: { label: '变更', icon: <Wrench className="w-3 h-3 inline mr-1" /> },
+          service_request: { label: '服务请求', icon: <Headphones className="w-3 h-3 inline mr-1" /> },
+        };
+        return <Tag>{map[type].icon}{map[type].label}</Tag>;
+      },
+    },
+    {
+      title: '标题',
+      dataIndex: 'title',
+      key: 'title',
+      render: (text: string, record: LegacyPendingItem) => (
+        <Link href={record.url} className="font-medium text-gray-900 hover:text-blue-600 transition-colors">
+          {text}
+        </Link>
+      ),
+    },
+    {
+      title: '优先级',
+      dataIndex: 'priority',
+      key: 'priority',
+      width: 90,
+      render: (p: string) => p ? <Tag color={priorityColorMap[p] || 'default'}>{p.toUpperCase()}</Tag> : '-',
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (s: string) => <Tag color="gold">{s}</Tag>,
+    },
+    {
+      title: '申请人',
+      dataIndex: 'requester',
+      key: 'requester',
+      width: 110,
+      responsive: ['md'] as any,
+      render: (name: string) => name || '-',
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 130,
+      responsive: ['lg'] as any,
+      render: (t: string) => t ? (
+        <Tooltip title={dayjs(t).format('YYYY-MM-DD HH:mm:ss')}>
+          <span className="text-gray-500">{dayjs(t).fromNow()}</span>
+        </Tooltip>
+      ) : '-',
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 90,
+      render: (_: unknown, record: LegacyPendingItem) => (
+        <Link href={record.url}>
+          <Button size="small" icon={<ExternalLink className="w-3 h-3" />}>查看</Button>
+        </Link>
+      ),
+    },
+  ];
 
-  // 获取当前Tab的数据
-  const getCurrentTabData = () => {
-    switch (activeTab) {
-      case 'tickets': return tickets;
-      case 'changes': return changes;
-      case 'service-requests': return serviceRequests;
-      default: return [];
-    }
-  };
-
-  // 空状态组件
-  const EmptyState = ({ type }: { type: string }) => (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="w-20 h-20 mb-6 rounded-full bg-gray-100 flex items-center justify-center">
-        <Clock className="text-4xl text-gray-300" />
-      </div>
-      <Title level={4} className="text-gray-500 mb-2">暂无待审批{type}</Title>
-      <Text type="secondary">当前没有需要审批的{type}，可以稍后刷新查看最新</Text>
-    </div>
-  );
-
-  // 骨架屏加载
   const LoadingSkeleton = () => (
     <div className="space-y-4">
-      {[1, 2, 3].map(i => (
+      {[1, 2, 3].map((i) => (
         <Skeleton key={i} active paragraph={{ rows: 2 }} />
       ))}
     </div>
@@ -501,305 +437,177 @@ export default function ApprovalsCenterPage() {
           </div>
           <div>
             <Title level={3} className="!mb-0 !text-xl md:!text-2xl">审批中心</Title>
-            <Text type="secondary" className="text-sm">您有 {totalPending} 项待审批</Text>
+            <Text type="secondary" className="text-sm">
+              {user?.username ? `${user.username}，` : ''}您有 {tasks.length} 项流程待办
+            </Text>
           </div>
         </div>
-        <Space wrap className="w-full md:w-auto justify-end">
-          <Button
-            icon={<RotateCcw className={loading ? 'animate-spin' : ''} />}
-            onClick={handleRefresh}
-            loading={loading}
-            className="w-full md:w-auto"
-          >
-            刷新
-          </Button>
-          <Link href="/approvals/pending" className="w-full md:w-auto">
-            <Button type="primary" icon={<Clock />} className="w-full md:w-auto">
-              待我审批
-            </Button>
-          </Link>
-        </Space>
+        <Button
+          icon={<RotateCcw className={taskLoading || legacyLoading ? 'animate-spin' : ''} />}
+          onClick={handleRefresh}
+          loading={taskLoading || legacyLoading}
+        >
+          刷新
+        </Button>
       </div>
 
-      {/* 统计卡片 - 响应式网格 */}
+      {/* 统计卡片 */}
       <Row gutter={[12, 12]} className="mb-4 md:mb-6">
-        <Col xs={12} sm={6}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500" onClick={() => setActiveTab('tickets')}>
+        <Col xs={12} sm={8}>
+          <Card className="border-l-4 border-l-blue-500">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs md:text-sm text-gray-500">待审批总数</div>
-                <div className="text-2xl md:text-3xl font-bold text-blue-600">{totalPending}</div>
+                <div className="text-xs md:text-sm text-gray-500">流程待办</div>
+                <div className="text-2xl md:text-3xl font-bold text-blue-600">{tasks.length}</div>
               </div>
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-50 flex items-center justify-center">
-                <Clock className="text-lg md:text-xl text-blue-500" />
+                <GitBranch className="text-lg md:text-xl text-blue-500" />
               </div>
             </div>
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-green-500" onClick={() => setActiveTab('tickets')}>
+        <Col xs={12} sm={8}>
+          <Card className="border-l-4 border-l-gold-500">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs md:text-sm text-gray-500">工单待审</div>
-                <div className="text-2xl md:text-3xl font-bold text-green-600">{tickets.length}</div>
+                <div className="text-xs md:text-sm text-gray-500">待领取</div>
+                <div className="text-2xl md:text-3xl font-bold text-amber-500">
+                  {tasks.filter((t) => !t.assignee).length}
+                </div>
               </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-green-50 flex items-center justify-center">
-                <FileText className="text-lg md:text-xl text-green-500" />
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-50 flex items-center justify-center">
+                <Hand className="text-lg md:text-xl text-amber-500" />
               </div>
             </div>
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-orange-500" onClick={() => setActiveTab('changes')}>
+        <Col xs={12} sm={8}>
+          <Card className="border-l-4 border-l-purple-500">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs md:text-sm text-gray-500">变更待审</div>
-                <div className="text-2xl md:text-3xl font-bold text-orange-600">{changes.length}</div>
-              </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-orange-50 flex items-center justify-center">
-                <Wrench className="text-lg md:text-xl text-orange-500" />
-              </div>
-            </div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-purple-500" onClick={() => setActiveTab('service-requests')}>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs md:text-sm text-gray-500">服务请求</div>
-                <div className="text-2xl md:text-3xl font-bold text-purple-600">{serviceRequests.length}</div>
+                <div className="text-xs md:text-sm text-gray-500">业务待审（参考）</div>
+                <div className="text-2xl md:text-3xl font-bold text-purple-600">{legacyItems.length}</div>
               </div>
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-purple-50 flex items-center justify-center">
-                <Headphones className="text-lg md:text-xl text-purple-500" />
+                <Clock className="text-lg md:text-xl text-purple-500" />
               </div>
             </div>
           </Card>
         </Col>
       </Row>
 
-      {/* 批量操作工具栏 */}
-      {selectedItems.length > 0 && (
-        <Card className="mb-4 bg-blue-50 border-blue-200">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Badge count={selectedItems.length} />
-              <Text>已选择 {selectedItems.length} 项</Text>
-              <Button size="small" onClick={() => setSelectedItems([])}>取消</Button>
-            </div>
-            <Space>
-              <Button type="primary" icon={<Check />} onClick={handleBatchApprove} className="!bg-green-500">
-                批量批准
-              </Button>
-              <Button danger icon={<X />} onClick={handleBatchReject}>
-                批量拒绝
-              </Button>
-            </Space>
-          </div>
-        </Card>
-      )}
-
-      {/* Tab切换和视图模式 */}
-      <Card className="mb-4 md:mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            className="w-full md:w-auto"
-            items={[
-              {
-                key: 'tickets',
-                label: (
-                  <span className="flex items-center gap-2">
-                    <FileText /> 工单
-                    <Badge count={tickets.length} showZero={false} />
-                  </span>
-                ),
-              },
-              {
-                key: 'changes',
-                label: (
-                  <span className="flex items-center gap-2">
-                    <Wrench /> 变更
-                    <Badge count={changes.length} showZero={false} />
-                  </span>
-                ),
-              },
-              {
-                key: 'service-requests',
-                label: (
-                  <span className="flex items-center gap-2">
-                    <Headphones /> 服务请求
-                    <Badge count={serviceRequests.length} showZero={false} />
-                  </span>
-                ),
-              },
-            ]}
-          />
-          <div className="flex items-center gap-2">
-            <Tooltip title="列表视图">
-              <Button
-                icon={<List />}
-                type={viewMode === 'list' ? 'primary' : 'default'}
-                onClick={() => setViewMode('list')}
-                size="small"
-              />
-            </Tooltip>
-            <Tooltip title="卡片视图">
-              <Button
-                icon={<LayoutGrid />}
-                type={viewMode === 'card' ? 'primary' : 'default'}
-                onClick={() => setViewMode('card')}
-                size="small"
-              />
-            </Tooltip>
-          </div>
-        </div>
-
-        {/* 表格内容 */}
-        {loading ? (
-          <LoadingSkeleton />
-        ) : getCurrentTabData().length === 0 ? (
-          <EmptyState type={activeTab === 'tickets' ? '工单' : activeTab === 'changes' ? '变更' : '服务请求'} />
-        ) : viewMode === 'list' ? (
-          <Table
-            rowKey="id"
-            dataSource={getCurrentTabData()}
-            columns={cardColumns}
-            pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `共 ${total} 项` }}
-            scroll={{ x: 800 }}
-            rowSelection={{
-              selectedRowKeys: selectedItems.map(i => i.id),
-              onChange: (_, selected) => setSelectedItems(selected as EnhancedPendingItem[]),
-            }}
-            className="approval-table"
-          />
-        ) : (
-          // 卡片视图
-          <Row gutter={[16, 16]}>
-            {getCurrentTabData().map((item) => (
-              <Col key={item.id} xs={24} sm={12} lg={8}>
-                <Card
-                  hoverable
-                  className="h-full transition-all duration-300 hover:shadow-lg"
-                  actions={[
-                    <Button
-                      key="approve"
-                      type="text"
-                      icon={<Check />}
-                      onClick={(e) => { e.stopPropagation(); handleQuickApprove(item); }}
-                      className="text-green-600 hover:text-green-700"
-                    >
-                      批准
-                    </Button>,
-                    <Button
-                      key="reject"
-                      type="text"
-                      danger
-                      icon={<X />}
-                      onClick={(e) => { e.stopPropagation(); handleQuickReject(item); }}
-                    >
-                      拒绝
-                    </Button>,
-                    <Button
-                      key="detail"
-                      type="text"
-                      icon={<Eye />}
-                      onClick={(e) => { e.stopPropagation(); setDetailDrawer({ open: true, item }); }}
-                    >
-                      详情
-                    </Button>,
-                  ]}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.some(i => i.id === item.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedItems([...selectedItems, item]);
-                          } else {
-                            setSelectedItems(selectedItems.filter(i => i.id !== item.id));
-                          }
-                        }}
-                        className="w-4 h-4 cursor-pointer accent-blue-500"
-                      />
-                      <Tag color={item.priority === 'critical' ? 'red' : item.priority === 'high' ? 'orange' : item.priority === 'medium' ? 'blue' : 'green'}>
-                        {item.priority || '普通'}
-                      </Tag>
-                    </div>
-                    <Text type="secondary" className="text-xs">{dayjs(item.createdAt).fromNow()}</Text>
+      {/* Tab 内容 */}
+      <Card>
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'bpmn-tasks',
+              label: (
+                <span className="flex items-center gap-2">
+                  <GitBranch /> 流程待办
+                  <Badge count={tasks.length} showZero={false} />
+                </span>
+              ),
+              children: taskLoading ? (
+                <LoadingSkeleton />
+              ) : (
+                <Table
+                  rowKey="id"
+                  dataSource={tasks}
+                  columns={taskColumns}
+                  pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `共 ${total} 项` }}
+                  scroll={{ x: 900 }}
+                  locale={{
+                    emptyText: (
+                      <div className="py-12 text-center">
+                        <Clock className="mx-auto mb-3 text-gray-300 w-10 h-10" />
+                        <div className="text-gray-500 mb-1">暂无流程待办</div>
+                        <Text type="secondary" className="text-sm">当前没有分配给您或待您领取的审批任务</Text>
+                      </div>
+                    ),
+                  }}
+                />
+              ),
+            },
+            {
+              key: 'legacy',
+              label: (
+                <span className="flex items-center gap-2">
+                  <FileText /> 业务待审（参考）
+                  <Badge count={legacyItems.length} showZero={false} color="#999" />
+                </span>
+              ),
+              children: (
+                <div>
+                  <div className="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-sm text-amber-700">
+                    此视图为业务单据状态参考，审批操作请在「流程待办」中完成，以保证流程实例正常推进。
                   </div>
-                  <Link href={item.url}>
-                    <Title level={5} className="!mb-2 !text-base hover:text-blue-600 transition-colors line-clamp-2">
-                      {item.title}
-                    </Title>
-                  </Link>
-                  <div className="flex items-center gap-2 mt-3">
-                    <Avatar size="small" className="bg-blue-100 text-blue-600">
-                      {item.requester?.charAt(0) || 'U'}
-                    </Avatar>
-                    <Text type="secondary" className="text-sm">{item.requester || '未知'}</Text>
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        )}
+                  {legacyLoading ? (
+                    <LoadingSkeleton />
+                  ) : (
+                    <Table
+                      rowKey={(r) => `${r.type}-${r.id}`}
+                      dataSource={legacyItems}
+                      columns={legacyColumns}
+                      pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `共 ${total} 项` }}
+                      scroll={{ x: 800 }}
+                    />
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
       </Card>
 
-      {/* 详情抽屉 */}
-      <Drawer
-        title={`${detailDrawer.item?.title || '审批详情'}`}
-        placement="right"
-        width={500}
-        onClose={() => setDetailDrawer({ open: false, item: null })}
-        open={detailDrawer.open}
-        extra={
-          <Space>
-            <Button
-              type="primary"
-              icon={<Check />}
-              onClick={() => detailDrawer.item && handleQuickApprove(detailDrawer.item)}
-              className="!bg-green-500"
-            >
-              批准
-            </Button>
-            <Button
-              danger
-              icon={<X />}
-              onClick={() => detailDrawer.item && handleQuickReject(detailDrawer.item)}
-            >
-              拒绝
-            </Button>
-          </Space>
-        }
+      {/* 审批决策弹窗 */}
+      <Modal
+        title={decision?.action === 'approve' ? '批准任务' : '拒绝任务'}
+        open={!!decision}
+        onOk={submitDecision}
+        onCancel={() => setDecision(null)}
+        okText={decision?.action === 'approve' ? '确认批准' : '确认拒绝'}
+        okButtonProps={{
+          danger: decision?.action === 'reject',
+          loading: submitting,
+        }}
+        cancelText="取消"
+        destroyOnHidden
       >
-        {detailDrawer.item && (
-          <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="类型">
-              <Tag>{detailDrawer.item.type === 'ticket' ? '工单' : detailDrawer.item.type === 'change' ? '变更' : '服务请求'}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="优先级">
-              <Tag color={detailDrawer.item.priority === 'critical' ? 'red' : detailDrawer.item.priority === 'high' ? 'orange' : 'blue'}>
-                {detailDrawer.item.priority || '普通'}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="状态">
-              <Tag color={approvalStatusMap[detailDrawer.item.status]?.color || 'default'}>
-                {approvalStatusMap[detailDrawer.item.status]?.text || detailDrawer.item.status}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="申请人">{detailDrawer.item.requester || '-'}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">
-              {detailDrawer.item.createdAt ? dayjs(detailDrawer.item.createdAt).format('YYYY-MM-DD HH:mm:ss') : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="描述">
-              {detailDrawer.item.description || '无描述'}
-            </Descriptions.Item>
-          </Descriptions>
+        {decision && (
+          <div className="space-y-3">
+            <div>
+              <Text type="secondary">任务：</Text>
+              <Text strong>{decision.task.taskName || decision.task.taskDefinitionKey}</Text>
+            </div>
+            {(() => {
+              const link = getBusinessLink(decision.task);
+              return link ? (
+                <div>
+                  <Text type="secondary">业务单据：</Text>
+                  <Link href={link.url} className="text-blue-600">{link.label}</Link>
+                </div>
+              ) : null;
+            })()}
+            <div>
+              <Text type="secondary">
+                审批意见{decision.action === 'reject' ? '（必填）' : '（选填）'}：
+              </Text>
+              <TextArea
+                rows={3}
+                className="mt-1"
+                value={decisionComment}
+                onChange={(e) => setDecisionComment(e.target.value)}
+                placeholder={decision.action === 'reject' ? '请填写拒绝原因' : '可填写审批意见'}
+                maxLength={500}
+                showCount
+              />
+            </div>
+          </div>
         )}
-      </Drawer>
+      </Modal>
     </div>
   );
 }

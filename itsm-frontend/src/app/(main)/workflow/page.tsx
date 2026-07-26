@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * @deprecated 旧版工作流一体化页面（列表+内嵌 BPMN 设计）。
+ * 工作流元数据管理已迁移至 /admin/workflows，流程编排请使用 /workflow/designer。
+ * 本页仅作兼容保留，请勿在本页基础上新增功能。
+ */
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Card,
@@ -85,6 +91,9 @@ const WorkflowManagementPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [designerVisible, setDesignerVisible] = useState(false);
   const [viewingWorkflow, setViewingWorkflow] = useState<Workflow | null>(null);
+  const [startModalVisible, setStartModalVisible] = useState(false);
+  const [startSubmitting, setStartSubmitting] = useState(false);
+  const [startForm] = Form.useForm();
 
   const [editingWorkflow, setEditingWorkflow] = useState<Workflow | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -451,13 +460,54 @@ const WorkflowManagementPage = () => {
   };
 
   const handleActivateWorkflow = async (id: React.Key) => {
+    modal.confirm({
+      title: t('workflow.activate'),
+      content: t('workflow.activateConfirmation'),
+      okText: t('workflow.activate'),
+      cancelText: t('workflow.cancel'),
+      onOk: async () => {
+        try {
+          await WorkflowAPI.activateWorkflow(String(id));
+          setWorkflows(prev => prev.map(w => (w.id === id ? { ...w, status: 'active' as const } : w)));
+          message.success(t('workflow.activateSuccess'));
+          loadStats();
+        } catch {
+          message.error(t('workflow.activateFailed'));
+        }
+      },
+    });
+  };
+
+  // 发起流程实例：选择已激活的流程定义，填写业务键与变量后调用 startWorkflow
+  const handleStartWorkflowSubmit = async () => {
     try {
-      await WorkflowAPI.activateWorkflow(String(id));
-      setWorkflows(prev => prev.map(w => (w.id === id ? { ...w, status: 'active' as const } : w)));
-      message.success(t('workflow.activateSuccess'));
-      loadStats();
-    } catch {
-      message.error(t('workflow.activateFailed'));
+      const values = await startForm.validateFields();
+      let variables: Record<string, unknown> | undefined;
+      if (values.variables) {
+        try {
+          variables = JSON.parse(values.variables);
+        } catch {
+          message.error('流程变量必须是合法的 JSON 对象');
+          return;
+        }
+      }
+      setStartSubmitting(true);
+      const instance = await WorkflowAPI.startWorkflow({
+        workflowId: values.workflowId,
+        businessKey: values.businessKey || undefined,
+        variables: variables as Record<string, any> | undefined,
+      });
+      message.success(`流程实例已启动：${instance.id}`);
+      setStartModalVisible(false);
+      startForm.resetFields();
+      router.push('/workflow/instances');
+    } catch (error) {
+      // validateFields 失败时不提示；API 失败提示错误
+      if (error instanceof Error) {
+        message.error(`启动流程失败：${error.message}`);
+      }
+    } finally {
+      setStartSubmitting(false);
     }
   };
 
@@ -924,7 +974,7 @@ const WorkflowManagementPage = () => {
       <Button
         type="default"
         icon={<PlayCircle className="w-4 h-4" />}
-        onClick={() => router.push('/workflow/instances')}
+        onClick={() => setStartModalVisible(true)}
       >
         发起流程
       </Button>
@@ -1136,6 +1186,53 @@ const WorkflowManagementPage = () => {
           />
         )}
       </Card>
+
+      {/* 发起流程实例模态框 */}
+      <Modal
+        title="发起流程实例"
+        open={startModalVisible}
+        onCancel={() => {
+          setStartModalVisible(false);
+          startForm.resetFields();
+        }}
+        onOk={handleStartWorkflowSubmit}
+        confirmLoading={startSubmitting}
+        okText="启动"
+        cancelText={t('workflow.cancel')}
+        destroyOnHidden
+      >
+        <Form form={startForm} layout="vertical">
+          <Form.Item
+            name="workflowId"
+            label="流程定义"
+            rules={[{ required: true, message: '请选择要发起的流程定义' }]}
+          >
+            <Select
+              placeholder="选择已激活的流程定义"
+              showSearch
+              optionFilterProp="label"
+              options={workflows
+                .filter(w => w.status === 'active')
+                .map(w => ({ label: `${w.name} (${w.id})`, value: w.id }))}
+              notFoundContent="没有已激活的流程定义，请先部署/激活"
+            />
+          </Form.Item>
+          <Form.Item
+            name="businessKey"
+            label="业务键（可选）"
+            tooltip="关联的业务单据标识，如工单号、变更号；留空将自动生成"
+          >
+            <Input placeholder="例如 TICKET-2026-0001" />
+          </Form.Item>
+          <Form.Item
+            name="variables"
+            label="流程变量（可选，JSON）"
+            tooltip='以 JSON 对象形式传入启动变量，例如 {"priority": "high"}'
+          >
+            <Input.TextArea rows={4} placeholder='{"priority": "high"}' />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* 创建/编辑工作流模态框 */}
       <Modal

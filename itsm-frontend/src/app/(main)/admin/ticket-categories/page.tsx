@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   Button,
@@ -14,6 +14,7 @@ import {
   Popconfirm,
   Tooltip,
   Tree,
+  TreeSelect,
   Row,
   Col,
   Typography,
@@ -34,6 +35,9 @@ import {
 } from 'lucide-react';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { TicketCategoryApi } from '@/lib/api/ticket-category-api';
+import { WorkflowApi } from '@/lib/api/workflow-api';
+import { CommonApi } from '@/lib/api/common-api';
+import { buildCategoryTree, collectDescendantIds } from './categoryTreeUtils';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -42,59 +46,79 @@ const { Option } = Select;
 interface TicketCategory {
   id: number;
   name: string;
+  code: string;
   description: string;
   parentId: number | null;
   level: number;
-  path: string;
   sortOrder: number;
   isActive: boolean;
-  isDefault: boolean;
-  color: string;
-  icon?: string;
+  workflowId: number | null;
+  departmentId: number | null;
   createdAt: string;
   updatedAt: string;
   children?: TicketCategory[];
-  ticketCount?: number;
 }
 
-type RawTicketCategory = Partial<TicketCategory> & {
-  parentId?: number | null;
-  sortOrder?: number;
-  isActive?: boolean;
-  isDefault?: boolean;
-  ticketCount?: number;
-  createdAt?: string;
-  updatedAt?: string;
+type RawTicketCategory = Partial<Omit<TicketCategory, 'children'>> & {
+  children?: RawTicketCategory[];
 };
 
-interface TicketCategoryFormData {
+// 父级分类 TreeSelect 节点
+interface ParentTreeNode {
+  title: string;
+  value: number;
+  disabled: boolean;
+  children?: ParentTreeNode[];
+}
+
+// 树形视图节点
+interface CategoryTreeNode {
+  key: number;
+  title: React.ReactNode;
+  children?: CategoryTreeNode[];
+}
+
+interface CategoryFormValues {
   name: string;
-  description: string;
+  code: string;
+  description?: string;
   parentId?: number;
-  color: string;
-  icon?: string;
-  sortOrder: number;
-  isActive: boolean;
+  sortOrder?: number;
+  isActive?: boolean;
+  workflowId?: number;
+  departmentId?: number;
+}
+
+interface WorkflowOption {
+  id: number;
+  name: string;
+}
+
+interface DepartmentOption {
+  id: number;
+  name: string;
 }
 
 const TicketCategoryManagementPage = () => {
   const [categories, setCategories] = useState<TicketCategory[]>([]);
+  const [workflows, setWorkflows] = useState<WorkflowOption[]>([]);
+  const [departments, setDepartments] = useState<DepartmentOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editingCategory, setEditingCategory] = useState<TicketCategory | null>(null);
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<CategoryFormValues>();
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
 
-  // 模拟加载分类数据
   useEffect(() => {
     loadCategories();
+    loadBindingOptions();
   }, []);
 
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const data = await TicketCategoryApi.getCategories();
-      // Handle backend response format: {categories: [...], total: X} or {items: [...], total: X}
+      const data = await TicketCategoryApi.getCategories({ page: 1, pageSize: 500 });
       const list = normalizeCategories(data.categories || data.items || []);
       setCategories(list);
     } catch (error) {
@@ -106,25 +130,63 @@ const TicketCategoryManagementPage = () => {
     }
   };
 
+  const loadBindingOptions = async () => {
+    try {
+      const [workflowRes, departmentRes] = await Promise.allSettled([
+        WorkflowApi.getWorkflows({ page: 1, pageSize: 100 }),
+        CommonApi.getDepartments(),
+      ]);
+      if (workflowRes.status === 'fulfilled') {
+        setWorkflows(
+          (workflowRes.value?.workflows || []).map(w => ({ id: Number(w.id), name: w.name }))
+        );
+      }
+      if (departmentRes.status === 'fulfilled') {
+        const list = Array.isArray(departmentRes.value) ? departmentRes.value : [];
+        setDepartments(
+          list
+            .filter((d: { id?: number; name?: string }) => d?.id && d?.name)
+            .map((d: { id: number; name: string }) => ({ id: d.id, name: d.name }))
+        );
+      }
+    } catch (error) {
+      // 绑定选项加载失败不阻塞分类管理主流程
+      console.error('Failed to load binding options:', error);
+    }
+  };
+
   const normalizeCategory = (category: RawTicketCategory): TicketCategory => ({
     id: category.id || 0,
     name: category.name || '',
+    code: category.code || '',
     description: category.description || '',
     parentId: category.parentId ?? null,
     level: category.level || 1,
-    path: category.path || category.name || '',
-    sortOrder: category.sortOrder ?? 1,
+    sortOrder: category.sortOrder ?? 0,
     isActive: category.isActive ?? true,
-    isDefault: category.isDefault ?? false,
-    color: category.color || '#1890ff',
-    icon: category.icon,
+    workflowId: category.workflowId ?? null,
+    departmentId: category.departmentId ?? null,
     createdAt: category.createdAt || '',
     updatedAt: category.updatedAt || '',
-    ticketCount: category.ticketCount ?? 0,
-    children: category.children ? normalizeCategories(category.children) : undefined,
   });
 
   const normalizeCategories = (list: RawTicketCategory[]) => list.map(normalizeCategory);
+
+  const categoryTree = useMemo(() => buildCategoryTree(categories), [categories]);
+
+  // 父级分类 TreeSelect 数据：编辑时禁用自身及全部后代，防止形成环
+  const parentTreeData = useMemo(() => {
+    const disabledIds = editingCategory
+      ? collectDescendantIds(categories, editingCategory.id)
+      : new Set<number>();
+    const mapNode = (node: TicketCategory): ParentTreeNode => ({
+      title: node.name,
+      value: node.id,
+      disabled: disabledIds.has(node.id),
+      children: node.children?.map(mapNode),
+    });
+    return categoryTree.map(mapNode);
+  }, [categoryTree, categories, editingCategory]);
 
   const handleCreateCategory = () => {
     setEditingCategory(null);
@@ -136,12 +198,13 @@ const TicketCategoryManagementPage = () => {
     setEditingCategory(category);
     form.setFieldsValue({
       name: category.name,
+      code: category.code,
       description: category.description,
-      parentId: category.parentId,
-      color: category.color,
-      icon: category.icon,
+      parentId: category.parentId ?? undefined,
       sortOrder: category.sortOrder,
       isActive: category.isActive,
+      workflowId: category.workflowId ?? undefined,
+      departmentId: category.departmentId ?? undefined,
     });
     setModalVisible(true);
   };
@@ -150,19 +213,19 @@ const TicketCategoryManagementPage = () => {
     try {
       await TicketCategoryApi.createCategory({
         name: `${category.name} - 副本`,
+        code: `${category.code}_COPY_${Date.now().toString(36).toUpperCase()}`,
         description: category.description,
         parentId: category.parentId || undefined,
         sortOrder: category.sortOrder,
         isActive: category.isActive,
-        isDefault: false,
-        color: category.color,
-        icon: category.icon,
+        workflowId: category.workflowId || undefined,
+        departmentId: category.departmentId || undefined,
       });
       message.success('分类复制成功');
       loadCategories();
     } catch (error) {
       console.error('Failed to copy category:', error);
-      message.error('复制分类失败');
+      message.error(error instanceof Error ? error.message : '复制分类失败');
     }
   };
 
@@ -173,21 +236,40 @@ const TicketCategoryManagementPage = () => {
       loadCategories();
     } catch (error) {
       console.error('Failed to delete category:', error);
-      message.error('删除失败');
+      // 展示后端保护性错误信息（如：无法删除有子分类的分类 / 无法删除正在使用的分类）
+      message.error(error instanceof Error ? error.message : '删除失败');
     }
   };
 
   const handleSaveCategory = async () => {
     try {
       const values = await form.validateFields();
+      setSaving(true);
 
       if (editingCategory) {
-        // 更新分类
-        await TicketCategoryApi.updateCategory(editingCategory.id, values);
+        // 更新分类：未选择即视为清除绑定（传 0 由后端 Clear）
+        await TicketCategoryApi.updateCategory(editingCategory.id, {
+          name: values.name,
+          code: values.code,
+          description: values.description,
+          parentId: values.parentId ?? 0,
+          sortOrder: values.sortOrder,
+          isActive: values.isActive,
+          workflowId: values.workflowId ?? 0,
+          departmentId: values.departmentId ?? 0,
+        });
         message.success('分类更新成功');
       } else {
-        // 创建新分类
-        await TicketCategoryApi.createCategory(values);
+        await TicketCategoryApi.createCategory({
+          name: values.name,
+          code: values.code,
+          description: values.description,
+          parentId: values.parentId,
+          sortOrder: values.sortOrder,
+          isActive: values.isActive ?? true,
+          workflowId: values.workflowId,
+          departmentId: values.departmentId,
+        });
         message.success('分类创建成功');
       }
 
@@ -195,7 +277,12 @@ const TicketCategoryManagementPage = () => {
       form.resetFields();
       loadCategories();
     } catch (error) {
+      if (error instanceof Error) {
+        message.error(error.message);
+      }
       console.error('保存分类失败:', error);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -212,6 +299,11 @@ const TicketCategoryManagementPage = () => {
     }
   };
 
+  const workflowNameOf = (id: number | null) =>
+    id ? workflows.find(w => w.id === id)?.name || `工作流 #${id}` : null;
+  const departmentNameOf = (id: number | null) =>
+    id ? departments.find(d => d.id === id)?.name || `部门 #${id}` : null;
+
   const handleViewCategory = (category: TicketCategory) => {
     Modal.info({
       title: '分类详情',
@@ -223,12 +315,20 @@ const TicketCategoryManagementPage = () => {
             {category.name}
           </p>
           <p>
-            <Text strong>路径：</Text>
-            {category.path || '-'}
+            <Text strong>编码：</Text>
+            {category.code || '-'}
           </p>
           <p>
             <Text strong>描述：</Text>
             {category.description || '-'}
+          </p>
+          <p>
+            <Text strong>关联工作流：</Text>
+            {workflowNameOf(category.workflowId) || '-'}
+          </p>
+          <p>
+            <Text strong>所属部门：</Text>
+            {departmentNameOf(category.departmentId) || '-'}
           </p>
           <p>
             <Text strong>状态：</Text>
@@ -245,12 +345,9 @@ const TicketCategoryManagementPage = () => {
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: TicketCategory) => (
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{record.icon}</span>
-          <div>
-            <div className="font-medium">{text}</div>
-            <div className="text-sm text-gray-500">{record.path}</div>
-          </div>
+        <div>
+          <div className="font-medium">{text}</div>
+          <div className="text-sm text-gray-500">{record.code}</div>
         </div>
       ),
     },
@@ -260,7 +357,7 @@ const TicketCategoryManagementPage = () => {
       key: 'description',
       render: (text: string) => (
         <div className="max-w-xs truncate" title={text}>
-          {text}
+          {text || '-'}
         </div>
       ),
     },
@@ -268,14 +365,14 @@ const TicketCategoryManagementPage = () => {
       title: '层级',
       dataIndex: 'level',
       key: 'level',
-      render: (level: number) => (
-        <Tag color={level === 1 ? 'blue' : 'cyan'}>{level === 1 ? '一级' : '二级'}</Tag>
-      ),
+      width: 80,
+      render: (level: number) => <Tag color={level === 1 ? 'blue' : 'cyan'}>{level} 级</Tag>,
     },
     {
       title: '排序',
-      dataIndex:'sortOrder',
-      key:'sortOrder',
+      dataIndex: 'sortOrder',
+      key: 'sortOrder',
+      width: 90,
       render: (order: number) => (
         <div className="flex items-center gap-1">
           <GripVertical size={14} className="text-gray-400" />
@@ -284,28 +381,39 @@ const TicketCategoryManagementPage = () => {
       ),
     },
     {
-      title: '工单数量',
-      dataIndex:'ticketCount',
-      key:'ticketCount',
-      render: (count: number) => <Tag color="orange">{count}</Tag>,
+      title: '关联工作流',
+      dataIndex: 'workflowId',
+      key: 'workflowId',
+      render: (workflowId: number | null) => {
+        const name = workflowNameOf(workflowId);
+        return name ? <Tag color="purple">{name}</Tag> : <Text type="secondary">-</Text>;
+      },
+    },
+    {
+      title: '所属部门',
+      dataIndex: 'departmentId',
+      key: 'departmentId',
+      render: (departmentId: number | null) => {
+        const name = departmentNameOf(departmentId);
+        return name ? <Tag color="geekblue">{name}</Tag> : <Text type="secondary">-</Text>;
+      },
     },
     {
       title: '状态',
       key: 'status',
+      width: 90,
       render: (record: TicketCategory) => (
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={record.isActive}
-            size="small"
-            onChange={checked => handleToggleStatus(record, checked)}
-          />
-          {record.isDefault && <Tag color="green">默认</Tag>}
-        </div>
+        <Switch
+          checked={record.isActive}
+          size="small"
+          onChange={checked => handleToggleStatus(record, checked)}
+        />
       ),
     },
     {
       title: '操作',
       key: 'actions',
+      width: 160,
       render: (record: TicketCategory) => (
         <Space>
           <Tooltip title="查看详情">
@@ -338,14 +446,17 @@ const TicketCategoryManagementPage = () => {
     },
   ];
 
-  const treeData = (categories || []).map(category => ({
+  // 树形视图：递归渲染任意层级
+  const buildTreeNode = (category: TicketCategory): CategoryTreeNode => ({
     key: category.id,
     title: (
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
-          <span className="text-lg">{category.icon}</span>
           <span className="font-medium">{category.name}</span>
-          <Tag color="orange">{category.ticketCount}</Tag>
+          <Text type="secondary" className="text-xs">
+            {category.code}
+          </Text>
+          {!category.isActive && <Tag color="default">已停用</Tag>}
         </div>
         <div className="flex items-center gap-1">
           <Switch
@@ -364,35 +475,10 @@ const TicketCategoryManagementPage = () => {
         </div>
       </div>
     ),
-    children:
-      category.children?.map(child => ({
-        key: child.id,
-        title: (
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{child.icon}</span>
-              <span>{child.name}</span>
-              <Tag color="orange">{child.ticketCount}</Tag>
-            </div>
-            <div className="flex items-center gap-1">
-              <Switch
-                checked={child.isActive}
-                size="small"
-                onChange={checked => handleToggleStatus(child, checked)}
-              />
-              <Button
-                size="small"
-                icon={<Edit size={12} />}
-                onClick={e => {
-                  e.stopPropagation();
-                  handleEditCategory(child);
-                }}
-              />
-            </div>
-          </div>
-        ),
-      })) || [],
-  }));
+    children: category.children?.map(buildTreeNode),
+  });
+
+  const treeData = categoryTree.map(buildTreeNode);
 
   if (loading) {
     return <LoadingSkeleton type="table" rows={8} columns={7} />;
@@ -407,7 +493,7 @@ const TicketCategoryManagementPage = () => {
             <Title level={4} className="mb-1">
               工单分类管理
             </Title>
-            <Text type="secondary">管理和配置工单分类体系，支持树形结构和权限控制</Text>
+            <Text type="secondary">管理和配置工单分类体系，支持树形结构和工作流绑定</Text>
           </div>
           <Space>
             <Button.Group>
@@ -438,9 +524,10 @@ const TicketCategoryManagementPage = () => {
         {viewMode === 'table' ? (
           <Table
             columns={columns}
-            dataSource={categories}
+            dataSource={categoryTree}
             rowKey="id"
             scroll={{ x: 960 }}
+            expandable={{ defaultExpandAllRows: true }}
             locale={{
               emptyText: (
                 <Empty description="暂无工单分类">
@@ -457,7 +544,7 @@ const TicketCategoryManagementPage = () => {
               showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
             }}
           />
-        ) : (
+        ) : treeData.length > 0 ? (
           <Tree
             treeData={treeData}
             defaultExpandAll
@@ -465,6 +552,12 @@ const TicketCategoryManagementPage = () => {
             showIcon={false}
             className="category-tree"
           />
+        ) : (
+          <Empty description="暂无工单分类">
+            <Button type="primary" onClick={handleCreateCategory}>
+              创建分类
+            </Button>
+          </Empty>
         )}
       </Card>
 
@@ -476,6 +569,7 @@ const TicketCategoryManagementPage = () => {
         onCancel={() => setModalVisible(false)}
         okText="保存"
         cancelText="取消"
+        confirmLoading={saving}
         width={600}
       >
         <Form form={form} layout="vertical">
@@ -490,19 +584,31 @@ const TicketCategoryManagementPage = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="parent_id" label="父级分类">
-                <Select placeholder="请选择父级分类" allowClear>
-                  {categories
-                    .filter(c => !c.parentId)
-                    .map(category => (
-                      <Option key={category.id} value={category.id}>
-                        {category.name}
-                      </Option>
-                    ))}
-                </Select>
+              <Form.Item
+                name="code"
+                label="分类编码"
+                tooltip="租户内唯一，创建后作为分类的稳定标识"
+                rules={[
+                  { required: true, message: '请输入分类编码' },
+                  {
+                    pattern: /^[A-Za-z][A-Za-z0-9_-]*$/,
+                    message: '以字母开头，仅允许字母、数字、下划线和连字符',
+                  },
+                ]}
+              >
+                <Input placeholder="如 INCIDENT_NETWORK" />
               </Form.Item>
             </Col>
           </Row>
+
+          <Form.Item name="parentId" label="父级分类">
+            <TreeSelect
+              placeholder="不选择则为顶级分类"
+              allowClear
+              treeDefaultExpandAll
+              treeData={parentTreeData}
+            />
+          </Form.Item>
 
           <Form.Item name="description" label="分类描述">
             <TextArea rows={3} placeholder="请输入分类描述" />
@@ -510,26 +616,38 @@ const TicketCategoryManagementPage = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="color" label="主题色彩" initialValue="#1890ff">
-                <Input type="color" />
+              <Form.Item name="workflowId" label="关联工作流" tooltip="该分类下的工单将默认走此工作流">
+                <Select placeholder="请选择工作流（可选）" allowClear showSearch optionFilterProp="children">
+                  {workflows.map(w => (
+                    <Option key={w.id} value={w.id}>
+                      {w.name}
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="icon" label="分类图标">
-                <Input placeholder="输入emoji或图标名称" />
+              <Form.Item name="departmentId" label="所属部门">
+                <Select placeholder="请选择部门（可选）" allowClear showSearch optionFilterProp="children">
+                  {departments.map(d => (
+                    <Option key={d.id} value={d.id}>
+                      {d.name}
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="sort_order" label="排序顺序" initialValue={1}>
-                <InputNumber min={1} placeholder="数字越小越靠前" />
+              <Form.Item name="sortOrder" label="排序顺序" initialValue={1}>
+                <InputNumber min={0} style={{ width: '100%' }} placeholder="数字越小越靠前" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name="is_active"
+                name="isActive"
                 label="启用状态"
                 valuePropName="checked"
                 initialValue={true}

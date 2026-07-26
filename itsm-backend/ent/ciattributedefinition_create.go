@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/ciattributedefinition"
+	"itsm-backend/ent/citype"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -29,6 +30,20 @@ func (_c *CIAttributeDefinitionCreate) SetName(v string) *CIAttributeDefinitionC
 // SetDisplayName sets the "display_name" field.
 func (_c *CIAttributeDefinitionCreate) SetDisplayName(v string) *CIAttributeDefinitionCreate {
 	_c.mutation.SetDisplayName(v)
+	return _c
+}
+
+// SetDescription sets the "description" field.
+func (_c *CIAttributeDefinitionCreate) SetDescription(v string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetDescription(v)
+	return _c
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_c *CIAttributeDefinitionCreate) SetNillableDescription(v *string) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetDescription(*v)
+	}
 	return _c
 }
 
@@ -94,6 +109,110 @@ func (_c *CIAttributeDefinitionCreate) SetNillableValidationRules(v *string) *CI
 	return _c
 }
 
+// SetEnumValues sets the "enum_values" field.
+func (_c *CIAttributeDefinitionCreate) SetEnumValues(v []string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetEnumValues(v)
+	return _c
+}
+
+// SetReferenceType sets the "reference_type" field.
+func (_c *CIAttributeDefinitionCreate) SetReferenceType(v string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetReferenceType(v)
+	return _c
+}
+
+// SetNillableReferenceType sets the "reference_type" field if the given value is not nil.
+func (_c *CIAttributeDefinitionCreate) SetNillableReferenceType(v *string) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetReferenceType(*v)
+	}
+	return _c
+}
+
+// SetDisplayOrder sets the "display_order" field.
+func (_c *CIAttributeDefinitionCreate) SetDisplayOrder(v int) *CIAttributeDefinitionCreate {
+	_c.mutation.SetDisplayOrder(v)
+	return _c
+}
+
+// SetNillableDisplayOrder sets the "display_order" field if the given value is not nil.
+func (_c *CIAttributeDefinitionCreate) SetNillableDisplayOrder(v *int) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetDisplayOrder(*v)
+	}
+	return _c
+}
+
+// SetGroupName sets the "group_name" field.
+func (_c *CIAttributeDefinitionCreate) SetGroupName(v string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetGroupName(v)
+	return _c
+}
+
+// SetNillableGroupName sets the "group_name" field if the given value is not nil.
+func (_c *CIAttributeDefinitionCreate) SetNillableGroupName(v *string) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetGroupName(*v)
+	}
+	return _c
+}
+
+// SetPlaceholder sets the "placeholder" field.
+func (_c *CIAttributeDefinitionCreate) SetPlaceholder(v string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetPlaceholder(v)
+	return _c
+}
+
+// SetNillablePlaceholder sets the "placeholder" field if the given value is not nil.
+func (_c *CIAttributeDefinitionCreate) SetNillablePlaceholder(v *string) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetPlaceholder(*v)
+	}
+	return _c
+}
+
+// SetHelpText sets the "help_text" field.
+func (_c *CIAttributeDefinitionCreate) SetHelpText(v string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetHelpText(v)
+	return _c
+}
+
+// SetNillableHelpText sets the "help_text" field if the given value is not nil.
+func (_c *CIAttributeDefinitionCreate) SetNillableHelpText(v *string) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetHelpText(*v)
+	}
+	return _c
+}
+
+// SetIsSearchable sets the "is_searchable" field.
+func (_c *CIAttributeDefinitionCreate) SetIsSearchable(v bool) *CIAttributeDefinitionCreate {
+	_c.mutation.SetIsSearchable(v)
+	return _c
+}
+
+// SetNillableIsSearchable sets the "is_searchable" field if the given value is not nil.
+func (_c *CIAttributeDefinitionCreate) SetNillableIsSearchable(v *bool) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetIsSearchable(*v)
+	}
+	return _c
+}
+
+// SetIsSystem sets the "is_system" field.
+func (_c *CIAttributeDefinitionCreate) SetIsSystem(v bool) *CIAttributeDefinitionCreate {
+	_c.mutation.SetIsSystem(v)
+	return _c
+}
+
+// SetNillableIsSystem sets the "is_system" field if the given value is not nil.
+func (_c *CIAttributeDefinitionCreate) SetNillableIsSystem(v *bool) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetIsSystem(*v)
+	}
+	return _c
+}
+
 // SetCiTypeID sets the "ci_type_id" field.
 func (_c *CIAttributeDefinitionCreate) SetCiTypeID(v int) *CIAttributeDefinitionCreate {
 	_c.mutation.SetCiTypeID(v)
@@ -148,6 +267,11 @@ func (_c *CIAttributeDefinitionCreate) SetNillableUpdatedAt(v *time.Time) *CIAtt
 	return _c
 }
 
+// SetCiType sets the "ci_type" edge to the CIType entity.
+func (_c *CIAttributeDefinitionCreate) SetCiType(v *CIType) *CIAttributeDefinitionCreate {
+	return _c.SetCiTypeID(v.ID)
+}
+
 // Mutation returns the CIAttributeDefinitionMutation object of the builder.
 func (_c *CIAttributeDefinitionCreate) Mutation() *CIAttributeDefinitionMutation {
 	return _c.mutation
@@ -190,6 +314,18 @@ func (_c *CIAttributeDefinitionCreate) defaults() {
 	if _, ok := _c.mutation.Unique(); !ok {
 		v := ciattributedefinition.DefaultUnique
 		_c.mutation.SetUnique(v)
+	}
+	if _, ok := _c.mutation.DisplayOrder(); !ok {
+		v := ciattributedefinition.DefaultDisplayOrder
+		_c.mutation.SetDisplayOrder(v)
+	}
+	if _, ok := _c.mutation.IsSearchable(); !ok {
+		v := ciattributedefinition.DefaultIsSearchable
+		_c.mutation.SetIsSearchable(v)
+	}
+	if _, ok := _c.mutation.IsSystem(); !ok {
+		v := ciattributedefinition.DefaultIsSystem
+		_c.mutation.SetIsSystem(v)
 	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		v := ciattributedefinition.DefaultIsActive
@@ -237,6 +373,15 @@ func (_c *CIAttributeDefinitionCreate) check() error {
 	if _, ok := _c.mutation.Unique(); !ok {
 		return &ValidationError{Name: "unique", err: errors.New(`ent: missing required field "CIAttributeDefinition.unique"`)}
 	}
+	if _, ok := _c.mutation.DisplayOrder(); !ok {
+		return &ValidationError{Name: "display_order", err: errors.New(`ent: missing required field "CIAttributeDefinition.display_order"`)}
+	}
+	if _, ok := _c.mutation.IsSearchable(); !ok {
+		return &ValidationError{Name: "is_searchable", err: errors.New(`ent: missing required field "CIAttributeDefinition.is_searchable"`)}
+	}
+	if _, ok := _c.mutation.IsSystem(); !ok {
+		return &ValidationError{Name: "is_system", err: errors.New(`ent: missing required field "CIAttributeDefinition.is_system"`)}
+	}
 	if _, ok := _c.mutation.CiTypeID(); !ok {
 		return &ValidationError{Name: "ci_type_id", err: errors.New(`ent: missing required field "CIAttributeDefinition.ci_type_id"`)}
 	}
@@ -261,6 +406,9 @@ func (_c *CIAttributeDefinitionCreate) check() error {
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "CIAttributeDefinition.updated_at"`)}
+	}
+	if len(_c.mutation.CiTypeIDs()) == 0 {
+		return &ValidationError{Name: "ci_type", err: errors.New(`ent: missing required edge "CIAttributeDefinition.ci_type"`)}
 	}
 	return nil
 }
@@ -296,6 +444,10 @@ func (_c *CIAttributeDefinitionCreate) createSpec() (*CIAttributeDefinition, *sq
 		_spec.SetField(ciattributedefinition.FieldDisplayName, field.TypeString, value)
 		_node.DisplayName = value
 	}
+	if value, ok := _c.mutation.Description(); ok {
+		_spec.SetField(ciattributedefinition.FieldDescription, field.TypeString, value)
+		_node.Description = value
+	}
 	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(ciattributedefinition.FieldType, field.TypeString, value)
 		_node.Type = value
@@ -316,9 +468,37 @@ func (_c *CIAttributeDefinitionCreate) createSpec() (*CIAttributeDefinition, *sq
 		_spec.SetField(ciattributedefinition.FieldValidationRules, field.TypeString, value)
 		_node.ValidationRules = value
 	}
-	if value, ok := _c.mutation.CiTypeID(); ok {
-		_spec.SetField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
-		_node.CiTypeID = value
+	if value, ok := _c.mutation.EnumValues(); ok {
+		_spec.SetField(ciattributedefinition.FieldEnumValues, field.TypeJSON, value)
+		_node.EnumValues = value
+	}
+	if value, ok := _c.mutation.ReferenceType(); ok {
+		_spec.SetField(ciattributedefinition.FieldReferenceType, field.TypeString, value)
+		_node.ReferenceType = value
+	}
+	if value, ok := _c.mutation.DisplayOrder(); ok {
+		_spec.SetField(ciattributedefinition.FieldDisplayOrder, field.TypeInt, value)
+		_node.DisplayOrder = value
+	}
+	if value, ok := _c.mutation.GroupName(); ok {
+		_spec.SetField(ciattributedefinition.FieldGroupName, field.TypeString, value)
+		_node.GroupName = value
+	}
+	if value, ok := _c.mutation.Placeholder(); ok {
+		_spec.SetField(ciattributedefinition.FieldPlaceholder, field.TypeString, value)
+		_node.Placeholder = value
+	}
+	if value, ok := _c.mutation.HelpText(); ok {
+		_spec.SetField(ciattributedefinition.FieldHelpText, field.TypeString, value)
+		_node.HelpText = value
+	}
+	if value, ok := _c.mutation.IsSearchable(); ok {
+		_spec.SetField(ciattributedefinition.FieldIsSearchable, field.TypeBool, value)
+		_node.IsSearchable = value
+	}
+	if value, ok := _c.mutation.IsSystem(); ok {
+		_spec.SetField(ciattributedefinition.FieldIsSystem, field.TypeBool, value)
+		_node.IsSystem = value
 	}
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(ciattributedefinition.FieldTenantID, field.TypeInt, value)
@@ -335,6 +515,23 @@ func (_c *CIAttributeDefinitionCreate) createSpec() (*CIAttributeDefinition, *sq
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(ciattributedefinition.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := _c.mutation.CiTypeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ciattributedefinition.CiTypeTable,
+			Columns: []string{ciattributedefinition.CiTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.CiTypeID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

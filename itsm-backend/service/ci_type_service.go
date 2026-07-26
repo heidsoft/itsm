@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 
@@ -28,14 +29,21 @@ func NewCITypeService(client *ent.Client, logger *zap.SugaredLogger) *CITypeServ
 
 // CreateCIType 创建CI类型
 func (s *CITypeService) CreateCIType(ctx context.Context, req *dto.CreateCITypeRequest, tenantID int) (*dto.CITypeResponse, error) {
-	ciType, err := s.client.CIType.Create().
+	if err := s.validateParent(ctx, 0, req.ParentTypeID, tenantID); err != nil {
+		return nil, err
+	}
+
+	create := s.client.CIType.Create().
 		SetName(req.Name).
 		SetDescription(req.Description).
 		SetIcon(req.Icon).
 		SetColor(req.Color).
 		SetAttributeSchema(req.AttributeSchema).
-		SetTenantID(tenantID).
-		Save(ctx)
+		SetTenantID(tenantID)
+	if req.ParentTypeID != nil {
+		create.SetParentTypeID(*req.ParentTypeID)
+	}
+	ciType, err := create.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create CI type", "error", err, "tenant_id", tenantID, "name", req.Name)
 		return nil, fmt.Errorf("failed to create CI type: %w", err)
@@ -95,23 +103,32 @@ func (s *CITypeService) ListCITypes(ctx context.Context, tenantID int, page, pag
 
 // UpdateCIType 更新CI类型
 func (s *CITypeService) UpdateCIType(ctx context.Context, id, tenantID int, req *dto.UpdateCITypeRequest) (*dto.CITypeResponse, error) {
+	if err := s.validateParent(ctx, id, req.ParentTypeID, tenantID); err != nil {
+		return nil, err
+	}
+
 	update := s.client.CIType.UpdateOneID(id).
 		Where(citype.TenantIDEQ(tenantID))
 
-	if req.Name != "" {
-		update.SetName(req.Name)
+	if req.Name != nil {
+		update.SetName(*req.Name)
 	}
-	if req.Description != "" {
-		update.SetDescription(req.Description)
+	if req.Description != nil {
+		update.SetDescription(*req.Description)
 	}
-	if req.Icon != "" {
-		update.SetIcon(req.Icon)
+	if req.Icon != nil {
+		update.SetIcon(*req.Icon)
 	}
-	if req.Color != "" {
-		update.SetColor(req.Color)
+	if req.Color != nil {
+		update.SetColor(*req.Color)
 	}
-	if req.AttributeSchema != "" {
-		update.SetAttributeSchema(req.AttributeSchema)
+	if req.AttributeSchema != nil {
+		update.SetAttributeSchema(*req.AttributeSchema)
+	}
+	if req.ClearParent {
+		update.ClearParentTypeID()
+	} else if req.ParentTypeID != nil {
+		update.SetParentTypeID(*req.ParentTypeID)
 	}
 	if req.IsActive != nil {
 		update.SetIsActive(*req.IsActive)
@@ -127,6 +144,43 @@ func (s *CITypeService) UpdateCIType(ctx context.Context, id, tenantID int, req 
 	return dto.ToCITypeResponse(ciType), nil
 }
 
+func (s *CITypeService) validateParent(ctx context.Context, currentID int, parentID *int, tenantID int) error {
+	if parentID == nil {
+		return nil
+	}
+	if *parentID == currentID {
+		return fmt.Errorf("CI type cannot inherit from itself")
+	}
+
+	parent, err := s.client.CIType.Query().
+		Where(citype.IDEQ(*parentID), citype.TenantIDEQ(tenantID)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("parent CI type not found")
+		}
+		return fmt.Errorf("failed to validate parent CI type: %w", err)
+	}
+
+	visited := map[int]struct{}{currentID: {}}
+	for parent.ParentTypeID != nil {
+		if _, exists := visited[parent.ID]; exists {
+			return fmt.Errorf("CI type inheritance cycle detected")
+		}
+		visited[parent.ID] = struct{}{}
+		parent, err = s.client.CIType.Query().
+			Where(citype.IDEQ(*parent.ParentTypeID), citype.TenantIDEQ(tenantID)).
+			First(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to validate CI type inheritance chain: %w", err)
+		}
+	}
+	if _, exists := visited[parent.ID]; exists {
+		return fmt.Errorf("CI type inheritance cycle detected")
+	}
+	return nil
+}
+
 // DeleteCIType 删除CI类型
 func (s *CITypeService) DeleteCIType(ctx context.Context, id, tenantID int) error {
 	// 检查是否有关联的CI
@@ -140,6 +194,27 @@ func (s *CITypeService) DeleteCIType(ctx context.Context, id, tenantID int) erro
 
 	if count > 0 {
 		return fmt.Errorf("cannot delete CI type with %d associated configuration items", count)
+	}
+	childCount, err := s.client.CIType.Query().
+		Where(citype.ParentTypeIDEQ(id), citype.TenantIDEQ(tenantID)).
+		Count(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check child CI types: %w", err)
+	}
+	if childCount > 0 {
+		return fmt.Errorf("cannot delete CI type with %d child types", childCount)
+	}
+	attributeCount, err := s.client.CIAttributeDefinition.Query().
+		Where(
+			ciattributedefinition.CiTypeIDEQ(id),
+			ciattributedefinition.TenantIDEQ(tenantID),
+		).
+		Count(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check CI attribute definitions: %w", err)
+	}
+	if attributeCount > 0 {
+		return fmt.Errorf("cannot delete CI type with %d attribute definitions", attributeCount)
 	}
 
 	err = s.client.CIType.DeleteOneID(id).

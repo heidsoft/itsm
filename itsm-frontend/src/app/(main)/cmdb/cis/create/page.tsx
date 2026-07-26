@@ -5,13 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { App, Card, Form, Spin } from 'antd';
 
 import { CIEditorForm } from '@/components/cmdb/CIEditorForm';
-import type {
-  CIFormValues,
-  SchemaField} from '@/components/cmdb/ci-editor-shared';
+import { useUnsavedChangesGuard } from '@/components/cmdb/useUnsavedChangesGuard';
+import type { CIFormValues, SchemaField } from '@/components/cmdb/ci-editor-shared';
 import {
   compactRecord,
   extractCloudDataList,
-  normalizeSchemaFields
+  normalizeSchemaFields,
+  resolveEffectiveTypeSchemaFields,
 } from '@/components/cmdb/ci-editor-shared';
 import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { CMDBApi } from '@/lib/api/cmdb-api';
@@ -32,6 +32,7 @@ const CreateCIPage: React.FC = () => {
   const [schemaFields, setSchemaFields] = useState<SchemaField[]>([]);
   const [typeSchemaFields, setTypeSchemaFields] = useState<SchemaField[]>([]);
   const [saving, setSaving] = useState(false);
+  const { markDirty, clearDirty, handleCancel } = useUnsavedChangesGuard(router);
 
   const cloudServiceMap = useMemo(
     () => new Map(cloudServices.map(service => [service.id, service])),
@@ -41,7 +42,7 @@ const CreateCIPage: React.FC = () => {
   useEffect(() => {
     const loadTypes = async () => {
       try {
-		const res = await CMDBApi.getCITypes();
+        const res = await CMDBApi.getCITypes();
         setTypes(res || []);
       } catch {
         message.error(t('cmdb.loadCITypesFailed'));
@@ -128,9 +129,8 @@ const CreateCIPage: React.FC = () => {
   };
 
   const handleCITypeChange = (value?: number) => {
-    const selectedType = types.find(type => type.id === value);
-    setTypeSchemaFields(normalizeSchemaFields(selectedType?.attributeSchema));
-    form.setFieldValue('custom_attributes', undefined);
+    setTypeSchemaFields(resolveEffectiveTypeSchemaFields(types, value));
+    form.setFieldValue('customAttributes', undefined);
   };
 
   const handleSubmit = async (values: CIFormValues) => {
@@ -147,7 +147,9 @@ const CreateCIPage: React.FC = () => {
           return;
         }
       }
-      const customAttributes = compactRecord(values.customAttributes as Record<string, unknown> | undefined);
+      const customAttributes = compactRecord(
+        values.customAttributes as Record<string, unknown> | undefined
+      );
       attributes = {
         ...(attributes || {}),
         ...(customAttributes || {}),
@@ -157,7 +159,7 @@ const CreateCIPage: React.FC = () => {
       }
 
       setSaving(true);
-      await CMDBApi.createCI({
+      const created = await CMDBApi.createCI({
         name: values.name,
         ciTypeId: Number(values.ciTypeId),
         status: values.status,
@@ -185,7 +187,13 @@ const CreateCIPage: React.FC = () => {
         cloudMetadata: values.cloudMetadata,
       });
       message.success(t('cmdb.createCISuccess'));
-      router.push('/cmdb');
+      clearDirty();
+      // 创建成功后跳转新 CI 详情页；接口未返回 id 时回退到列表
+      if (created?.id) {
+        router.push(`/cmdb/cis/${created.id}`);
+      } else {
+        router.push('/cmdb');
+      }
     } catch (error) {
       let errorMessage = t('cmdb.createCIFailed');
       if (error && typeof error === 'object') {
@@ -215,19 +223,19 @@ const CreateCIPage: React.FC = () => {
   const formReady = !typesLoading && !cloudLoading;
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       <ManagementPageHeader
-        title="录入配置项"
-        description="统一录入基础资产信息、云资源关联和扩展属性，减少后续补录和字段不一致。"
+        title='录入配置项'
+        description='统一录入基础资产信息、云资源关联和扩展属性，减少后续补录和字段不一致。'
         notice={
           <ManagementNotice
-            message="优先选择云资源引用"
-            description="如果配置项来自云发现，先绑定云资源，系统会自动带出 Region、Zone、资源类型和动态属性。"
+            message='优先选择云资源引用'
+            description='如果配置项来自云发现，先绑定云资源，系统会自动带出 Region、Zone、资源类型和动态属性。'
           />
         }
       />
 
-      <Card className="rounded-xl shadow-sm">
+      <Card className='rounded-xl shadow-sm'>
         {formReady ? (
           <CIEditorForm
             form={form}
@@ -239,15 +247,18 @@ const CreateCIPage: React.FC = () => {
             schemaFields={schemaFields}
             typeSchemaFields={typeSchemaFields}
             saving={saving}
-            submitText="保存配置项"
+            submitText='保存配置项'
             onSubmit={handleSubmit}
-            onCancel={() => router.back()}
+            onCancel={handleCancel}
             onCITypeChange={handleCITypeChange}
             onCloudResourceChange={handleCloudResourceChange}
+            onValuesChange={() => {
+              markDirty();
+            }}
           />
         ) : (
-          <div className="flex min-h-[240px] items-center justify-center">
-            <Spin size="large" />
+          <div className='flex min-h-[240px] items-center justify-center'>
+            <Spin size='large' />
           </div>
         )}
       </Card>

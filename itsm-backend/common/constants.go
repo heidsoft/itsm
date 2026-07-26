@@ -103,6 +103,7 @@ const (
 	ProcessTaskStatusCreated   = "created"
 	ProcessTaskStatusAssigned  = "assigned"
 	ProcessTaskStatusStarted   = "started"
+	ProcessTaskStatusDelegated = "delegated"
 	ProcessTaskStatusCompleted = "completed"
 	ProcessTaskStatusCancelled = "cancelled"
 )

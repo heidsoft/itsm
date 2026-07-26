@@ -17,8 +17,6 @@ import {
   App,
   Modal,
   Empty,
-  Dropdown,
-  message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { Search, Plus, Pencil, Trash2, Download, Eye, RotateCcw } from 'lucide-react';
@@ -54,6 +52,7 @@ const CIList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const requestIdRef = useRef(0);
   const isMountedRef = useRef(true);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [filters, setFilters] = useState<{
     search: string;
     ciTypeId?: number;
@@ -116,6 +115,9 @@ const CIList: React.FC = () => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
     };
   }, []);
 
@@ -133,6 +135,23 @@ const CIList: React.FC = () => {
       return;
     }
     setQuery(prev => ({ ...prev, offset: 0 }));
+  };
+
+  // 搜索框变化：300ms 防抖后自动查询
+  const handleSearchInputChange = (value: string) => {
+    updateFilters({ ...filtersRef.current, search: value });
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+    searchTimerRef.current = setTimeout(() => {
+      handleSearch();
+    }, 300);
+  };
+
+  // 下拉筛选变化：即时自动查询
+  const handleFilterChange = (patch: Partial<typeof filters>) => {
+    updateFilters({ ...filtersRef.current, ...patch });
+    handleSearch();
   };
 
   const handleDelete = (id: number) => {
@@ -162,16 +181,20 @@ const CIList: React.FC = () => {
       title: '批量删除',
       content: `确定要删除选中的 ${selectedRowKeys.length} 个配置项吗？此操作不可恢复。`,
       onOk: async () => {
-        try {
-          const deletePromises = selectedRowKeys.map(id => CMDBApi.deleteCI(String(id)));
-          await Promise.all(deletePromises);
-          message.success(`成功删除 ${selectedRowKeys.length} 个配置项`);
-          setSelectedRowKeys([]);
-          loadData();
-        } catch (e) {
-          message.error('批量删除部分失败，请检查');
-          loadData();
+        const results = await Promise.allSettled(
+          selectedRowKeys.map(id => CMDBApi.deleteCI(String(id))),
+        );
+        const succeeded = results.filter(r => r.status === 'fulfilled').length;
+        const failed = results.length - succeeded;
+        if (failed === 0) {
+          message.success(`成功删除 ${succeeded} 个配置项`);
+        } else if (succeeded === 0) {
+          message.error(`批量删除失败：${failed} 个配置项均未删除`);
+        } else {
+          message.warning(`成功删除 ${succeeded} 个，失败 ${failed} 个，请检查后重试`);
         }
+        setSelectedRowKeys([]);
+        loadData();
       },
     });
   };
@@ -327,18 +350,8 @@ const CIList: React.FC = () => {
             placeholder="搜索名称/序列号"
             allowClear
             value={filters.search}
-            onChange={event =>
-              updateFilters({
-                ...filtersRef.current,
-                search: event.target.value,
-              })
-            }
-            onClear={() =>
-              updateFilters({
-                ...filtersRef.current,
-                search: '',
-              })
-            }
+            onChange={event => handleSearchInputChange(event.target.value)}
+            onClear={() => handleSearchInputChange('')}
             prefix={<Search className="text-gray-400" />}
             style={{ width: 200 }}
           />
@@ -348,7 +361,7 @@ const CIList: React.FC = () => {
             style={{ width: 140 }}
             allowClear
             value={filters.ciTypeId}
-            onChange={value => updateFilters({ ...filtersRef.current, ciTypeId: value })}
+            onChange={value => handleFilterChange({ ciTypeId: value })}
           >
             {types.map(t => (
               <Option key={t.id} value={t.id}>
@@ -362,7 +375,7 @@ const CIList: React.FC = () => {
             style={{ width: 110 }}
             allowClear
             value={filters.status}
-            onChange={value => updateFilters({ ...filtersRef.current, status: value })}
+            onChange={value => handleFilterChange({ status: value })}
           >
             {Object.entries(CIStatusLabels).map(([value, label]) => (
               <Option key={value} value={value}>

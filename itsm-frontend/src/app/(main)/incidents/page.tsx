@@ -33,12 +33,12 @@ import {
 } from '@/components/business/UnifiedKanbanBoard';
 import { useI18n } from '@/lib/i18n/useI18n';
 
-// 看板列配置
+// 看板列配置（颜色与全站主色 #3b82f6 对齐，避免遗留 antd 旧蓝 #1890ff）
 const KANBAN_COLUMNS: KanbanColumnConfig<Incident>[] = [
-  { key: 'new', title: '新建', color: '#1890ff' },
+  { key: 'new', title: '新建', color: '#3b82f6' },
   { key: 'acknowledged', title: '已确认', color: '#722ed1' },
   { key: 'assigned', title: '已分配', color: '#13c2c2' },
-  { key: 'inProgress', title: '处理中', color: '#1890ff' },
+  { key: 'inProgress', title: '处理中', color: '#3b82f6' },
   { key: 'resolved', title: '已解决', color: '#52c41a' },
   { key: 'closed', title: '已关闭', color: '#d9d9d9' },
 ];
@@ -49,6 +49,7 @@ export default function IncidentsPage() {
 
   // ====== 状态管理 ======
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [total, setTotal] = useState(0);
@@ -77,6 +78,7 @@ export default function IncidentsPage() {
   // ====== 数据获取 ======
   const fetchIncidents = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const response = await IncidentAPI.listIncidents({
         page,
@@ -114,8 +116,8 @@ export default function IncidentsPage() {
     } catch (error) {
       console.error('Failed to fetch incidents:', error);
       message.error(t('incidents.getFailed') || '加载事件列表失败，请稍后重试');
-      setIncidents([]);
-      setTotal(0);
+      // 错误态与空态区分：不清空已有数据伪装成空态，由模板 error 态展示重试
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -310,7 +312,7 @@ export default function IncidentsPage() {
         {
           label: '总事件数',
           value: metrics.totalIncidents || 0,
-          color: '#1890ff',
+          color: '#3b82f6',
           icon: <Siren size={20} strokeWidth={1.8} />,
         },
         {
@@ -464,6 +466,9 @@ export default function IncidentsPage() {
 
       // 内容
       loading={loading}
+      error={loadError}
+      errorDescription="加载事件列表失败"
+      onRetry={handleRefresh}
       empty={incidents.length === 0 && !loading}
       emptyDescription="暂无事件记录"
       emptyAction={{

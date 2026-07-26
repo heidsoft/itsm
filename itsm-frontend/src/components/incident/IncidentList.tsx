@@ -211,7 +211,7 @@ const IncidentList: React.FC = () => {
           <Button
             type="primary"
             icon={<Plus />}
-            onClick={() => router.push('/incidents/new')}
+            onClick={() => router.push('/incidents/create')}
           >
             新建事件
           </Button>
@@ -227,7 +227,7 @@ const IncidentList: React.FC = () => {
         locale={{
           emptyText: (
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无事件数据">
-              <Button type="primary" onClick={() => router.push('/incidents/new')}>
+              <Button type="primary" onClick={() => router.push('/incidents/create')}>
                 创建第一个事件
               </Button>
             </Empty>

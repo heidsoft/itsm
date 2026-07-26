@@ -80,6 +80,11 @@ func AttributeSchema(v string) predicate.CIType {
 	return predicate.CIType(sql.FieldEQ(FieldAttributeSchema, v))
 }
 
+// ParentTypeID applies equality check predicate on the "parent_type_id" field. It's identical to ParentTypeIDEQ.
+func ParentTypeID(v int) predicate.CIType {
+	return predicate.CIType(sql.FieldEQ(FieldParentTypeID, v))
+}
+
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.CIType {
 	return predicate.CIType(sql.FieldEQ(FieldTenantID, v))
@@ -465,6 +470,36 @@ func AttributeSchemaContainsFold(v string) predicate.CIType {
 	return predicate.CIType(sql.FieldContainsFold(FieldAttributeSchema, v))
 }
 
+// ParentTypeIDEQ applies the EQ predicate on the "parent_type_id" field.
+func ParentTypeIDEQ(v int) predicate.CIType {
+	return predicate.CIType(sql.FieldEQ(FieldParentTypeID, v))
+}
+
+// ParentTypeIDNEQ applies the NEQ predicate on the "parent_type_id" field.
+func ParentTypeIDNEQ(v int) predicate.CIType {
+	return predicate.CIType(sql.FieldNEQ(FieldParentTypeID, v))
+}
+
+// ParentTypeIDIn applies the In predicate on the "parent_type_id" field.
+func ParentTypeIDIn(vs ...int) predicate.CIType {
+	return predicate.CIType(sql.FieldIn(FieldParentTypeID, vs...))
+}
+
+// ParentTypeIDNotIn applies the NotIn predicate on the "parent_type_id" field.
+func ParentTypeIDNotIn(vs ...int) predicate.CIType {
+	return predicate.CIType(sql.FieldNotIn(FieldParentTypeID, vs...))
+}
+
+// ParentTypeIDIsNil applies the IsNil predicate on the "parent_type_id" field.
+func ParentTypeIDIsNil() predicate.CIType {
+	return predicate.CIType(sql.FieldIsNull(FieldParentTypeID))
+}
+
+// ParentTypeIDNotNil applies the NotNil predicate on the "parent_type_id" field.
+func ParentTypeIDNotNil() predicate.CIType {
+	return predicate.CIType(sql.FieldNotNull(FieldParentTypeID))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v int) predicate.CIType {
 	return predicate.CIType(sql.FieldEQ(FieldTenantID, v))
@@ -610,6 +645,75 @@ func HasCis() predicate.CIType {
 func HasCisWith(preds ...predicate.ConfigurationItem) predicate.CIType {
 	return predicate.CIType(func(s *sql.Selector) {
 		step := newCisStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasParent applies the HasEdge predicate on the "parent" edge.
+func HasParent() predicate.CIType {
+	return predicate.CIType(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ParentTable, ParentColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasParentWith applies the HasEdge predicate on the "parent" edge with a given conditions (other predicates).
+func HasParentWith(preds ...predicate.CIType) predicate.CIType {
+	return predicate.CIType(func(s *sql.Selector) {
+		step := newParentStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasChildren applies the HasEdge predicate on the "children" edge.
+func HasChildren() predicate.CIType {
+	return predicate.CIType(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ChildrenTable, ChildrenColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasChildrenWith applies the HasEdge predicate on the "children" edge with a given conditions (other predicates).
+func HasChildrenWith(preds ...predicate.CIType) predicate.CIType {
+	return predicate.CIType(func(s *sql.Selector) {
+		step := newChildrenStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAttributeDefinitions applies the HasEdge predicate on the "attribute_definitions" edge.
+func HasAttributeDefinitions() predicate.CIType {
+	return predicate.CIType(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AttributeDefinitionsTable, AttributeDefinitionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAttributeDefinitionsWith applies the HasEdge predicate on the "attribute_definitions" edge with a given conditions (other predicates).
+func HasAttributeDefinitionsWith(preds ...predicate.CIAttributeDefinition) predicate.CIType {
+	return predicate.CIType(func(s *sql.Selector) {
+		step := newAttributeDefinitionsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

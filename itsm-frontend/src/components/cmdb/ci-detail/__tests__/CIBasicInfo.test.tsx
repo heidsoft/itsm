@@ -152,4 +152,33 @@ describe('CIBasicInfo', () => {
     expect(screen.getByText(mockCI.discoverySource!)).toBeInTheDocument();
     expect(screen.getByText(mockCI.source!)).toBeInTheDocument();
   });
+
+  it('应该按类型模板显示动态属性并格式化布尔值', () => {
+    render(
+      <CIBasicInfo
+        ci={{
+          ...mockCI,
+          attributes: { cpuCores: 16, monitored: true },
+        }}
+        typeInfo={{
+          id: 1,
+          name: '服务器',
+          description: '',
+          attributeSchema: JSON.stringify({
+            fields: [
+              { key: 'cpuCores', label: 'CPU 核数', type: 'number' },
+              { key: 'monitored', label: '纳入监控', type: 'boolean' },
+            ],
+          }),
+          isActive: true,
+          tenantId: 1,
+        }}
+      />
+    );
+
+    expect(screen.getByText('CPU 核数')).toBeInTheDocument();
+    expect(screen.getByText('16')).toBeInTheDocument();
+    expect(screen.getByText('纳入监控')).toBeInTheDocument();
+    expect(screen.getByText('是')).toBeInTheDocument();
+  });
 });

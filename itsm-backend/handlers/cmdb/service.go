@@ -2,6 +2,7 @@ package cmdb
 
 import (
 	"context"
+	"fmt"
 
 	"go.uber.org/zap"
 )
@@ -65,8 +66,45 @@ func (s *Service) GetType(ctx context.Context, id int, tenantID int) (*CIType, e
 	return s.repo.GetCIType(ctx, id, tenantID)
 }
 
+func (s *Service) ValidateTypeParent(ctx context.Context, currentID int, parentID *int, tenantID int) error {
+	if parentID == nil {
+		return nil
+	}
+	if currentID != 0 && *parentID == currentID {
+		return fmt.Errorf("CI type cannot inherit from itself")
+	}
+	visited := map[int]struct{}{}
+	if currentID != 0 {
+		visited[currentID] = struct{}{}
+	}
+	nextID := *parentID
+	for nextID != 0 {
+		if _, exists := visited[nextID]; exists {
+			return fmt.Errorf("CI type inheritance cycle detected")
+		}
+		visited[nextID] = struct{}{}
+		parent, err := s.repo.GetCIType(ctx, nextID, tenantID)
+		if err != nil {
+			return fmt.Errorf("parent CI type not found: %w", err)
+		}
+		if parent.ParentTypeID == nil {
+			break
+		}
+		nextID = *parent.ParentTypeID
+	}
+	return nil
+}
+
 func (s *Service) CountCIsByType(ctx context.Context, typeID int, tenantID int) (int, error) {
 	return s.repo.CountCIsByType(ctx, typeID, tenantID)
+}
+
+func (s *Service) CountChildTypes(ctx context.Context, typeID int, tenantID int) (int, error) {
+	return s.repo.CountChildTypes(ctx, typeID, tenantID)
+}
+
+func (s *Service) CountAttributeDefinitionsByType(ctx context.Context, typeID int, tenantID int) (int, error) {
+	return s.repo.CountAttributeDefinitionsByType(ctx, typeID, tenantID)
 }
 
 // Relationship operations

@@ -155,6 +155,7 @@ type CIType struct {
 	Icon            string    `json:"icon"`
 	Color           string    `json:"color"`
 	AttributeSchema string    `json:"attributeSchema"`
+	ParentTypeID    *int      `json:"parentTypeId,omitempty"`
 	IsActive        bool      `json:"isActive"`
 	TenantID        int       `json:"tenantId"`
 	CreatedAt       time.Time `json:"createdAt"`

@@ -30,6 +30,7 @@ export interface Incident {
   escalatedAt?: string;
   escalationLevel?: number;
   isAutomated?: boolean;
+  isMajorIncident?: boolean;
   source: string;
   metadata?: Record<string, any>;
   tenantId?: number;

@@ -21,7 +21,9 @@ import {
   Row,
   Col,
   Statistic,
+  Alert,
 } from 'antd';
+import Link from 'next/link';
 import { Plus, Edit, Delete, Copy, Search, Settings } from 'lucide-react';
 import type {
   ProcessBinding,
@@ -161,6 +163,17 @@ export default function ProcessRoutingPage() {
     return items.flatMap(item => [item, ...flattenDepartments(item.children || [])]);
   };
 
+  // 条件 JSON 实时校验（onChange 触发，非法时红字提示但不阻塞输入）
+  const jsonValidator = (_: unknown, value: unknown) => {
+    if (!value || typeof value !== 'string' || !value.trim()) return Promise.resolve();
+    try {
+      JSON.parse(value);
+      return Promise.resolve();
+    } catch {
+      return Promise.reject(new Error('JSON 格式不合法，请检查引号、逗号与括号'));
+    }
+  };
+
   const parseJSONField = (value: unknown, label: string) => {
     if (!value || typeof value !== 'string' || value.trim() === '') {
       return {};
@@ -282,6 +295,21 @@ export default function ProcessRoutingPage() {
 
   return (
     <div style={{ padding: 24 }}>
+      {/* 关联页面入口 */}
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message="流程路由规则决定业务单据匹配到哪个工作流"
+        description={
+          <Space wrap>
+            <span>相关配置：</span>
+            <Link href="/admin/department-processes">部门流程配置</Link>
+            <Link href="/admin/workflows">工作流管理</Link>
+            <Link href="/workflow/designer">流程设计器</Link>
+          </Space>
+        }
+      />
       {/* Statistics */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={6}>
@@ -363,7 +391,7 @@ export default function ProcessRoutingPage() {
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item
-                          name="business_type"
+                          name="businessType"
                           label="Business Type"
                           rules={[{ required: true }]}
                         >
@@ -378,14 +406,14 @@ export default function ProcessRoutingPage() {
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item name="business_sub_type" label="Sub Type">
+                        <Form.Item name="businessSubType" label="Sub Type">
                           <Input />
                         </Form.Item>
                       </Col>
                     </Row>
 
                     <Form.Item
-                      name="process_definition_key"
+                      name="processDefinitionKey"
                       label="Process Definition"
                       rules={[{ required: true }]}
                     >
@@ -411,7 +439,7 @@ export default function ProcessRoutingPage() {
                       </Col>
                       <Col span={12}>
                         <Form.Item
-                          name="is_active"
+                          name="isActive"
                           label="Active"
                           valuePropName="checked"
                         >
@@ -429,7 +457,7 @@ export default function ProcessRoutingPage() {
                   <>
                     <Row gutter={16}>
                       <Col span={12}>
-                        <Form.Item name="department_id" label="Department">
+                        <Form.Item name="departmentId" label="Department">
                           <Select
                             allowClear
                             placeholder="Global (All Departments)"
@@ -445,7 +473,7 @@ export default function ProcessRoutingPage() {
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item name="team_id" label="Team">
+                        <Form.Item name="teamId" label="Team">
                           <Select
                             allowClear
                             placeholder="All Teams"
@@ -494,13 +522,18 @@ export default function ProcessRoutingPage() {
                 label: 'Advanced',
                 children: (
                   <>
-                    <Form.Item name="approval_chain_id" label="Approval Chain ID">
+                    <Form.Item name="approvalChainId" label="Approval Chain ID">
                       <Input placeholder="Optional approval chain override" />
                     </Form.Item>
-                    <Form.Item name="sla_policy_id" label="SLA Policy ID">
+                    <Form.Item name="slaPolicyId" label="SLA Policy ID">
                       <Input placeholder="Optional SLA policy override" />
                     </Form.Item>
-                    <Form.Item name="conditions" label="Conditions JSON">
+                    <Form.Item
+                      name="conditions"
+                      label="Conditions JSON"
+                      validateTrigger="onChange"
+                      rules={[{ validator: jsonValidator }]}
+                    >
                       <Input.TextArea
                         rows={5}
                         placeholder='{"severity":"p0","min_amount":100000}'

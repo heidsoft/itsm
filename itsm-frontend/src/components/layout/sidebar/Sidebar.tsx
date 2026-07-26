@@ -16,6 +16,7 @@ import { getIconByName } from './icons';
 import { MenuItems, renderMenuItems } from './MenuItems';
 import {
   getUserMenus,
+  MENUS_UPDATED_EVENT,
   type MenuItem as MenuItemType,
   type MenuTreeResponse,
 } from '@/lib/api/menu-api';
@@ -66,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
   const [menuLoading, setMenuLoading] = useState(false);
   const [menuError, setMenuError] = useState<string | null>(null);
 
-  // 加载用户菜单
+  // 加载用户菜单（并监听菜单管理变更事件即时刷新）
   useEffect(() => {
     const loadMenus = async () => {
       if (!user) return;
@@ -89,6 +90,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
     };
 
     loadMenus();
+
+    const handleMenusUpdated = () => {
+      loadMenus();
+    };
+    window.addEventListener(MENUS_UPDATED_EVENT, handleMenusUpdated);
+    return () => {
+      window.removeEventListener(MENUS_UPDATED_EVENT, handleMenusUpdated);
+    };
   }, [user]);
 
   // 显示错误提示

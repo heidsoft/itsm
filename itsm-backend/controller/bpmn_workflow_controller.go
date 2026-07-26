@@ -630,7 +630,7 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 		req.PageSize = 20
 	}
 
-	tasks, total, err := c.processEngine.TaskService().ListUserTasks(ctx, &req)
+	tasks, total, err := c.processEngine.TaskService().ListUserTaskViews(ctx, &req)
 	if err != nil {
 		common.InternalError(ctx, "获取用户任务列表失败: "+err.Error())
 		return

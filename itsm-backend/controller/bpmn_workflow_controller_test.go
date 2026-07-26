@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"testing"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/service"
 
@@ -56,6 +57,10 @@ func (f *fakeTaskService) ClaimTaskByID(ctx context.Context, id, userID int) err
 }
 
 func (f *fakeTaskService) ListUserTasks(ctx context.Context, req *service.ListUserTasksRequest) ([]*ent.ProcessTask, int, error) {
+	return nil, 0, nil
+}
+
+func (f *fakeTaskService) ListUserTaskViews(ctx context.Context, req *service.ListUserTasksRequest) ([]*dto.BPMNTaskResponse, int, error) {
 	return nil, 0, nil
 }
 

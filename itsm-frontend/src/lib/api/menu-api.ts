@@ -55,6 +55,15 @@ export interface MenuRequest {
  * 菜单管理 API
  * 后端路由：/api/v1/menus（tenant_id 通过 JWT claims 注入）
  */
+// 菜单数据变更事件：管理端 CRUD 成功后派发，Sidebar 监听后重新拉取 /api/v1/auth/menus
+export const MENUS_UPDATED_EVENT = 'itsm:menus-updated';
+
+export function notifyMenusUpdated(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(MENUS_UPDATED_EVENT));
+  }
+}
+
 export class MenuAdminAPI {
   private static readonly baseUrl = '/api/v1/menus';
 

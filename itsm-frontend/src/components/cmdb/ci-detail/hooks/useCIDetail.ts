@@ -32,8 +32,9 @@ export const useCIDetail = (): UseCIDetailReturn => {
   // 用于取消异步操作的 ref
   const cancelledRef = useRef(false);
 
-  // 组件卸载时设置取消标志
+  // 组件卸载时设置取消标志（挂载时重置，兼容 StrictMode 双重挂载）
   useEffect(() => {
+    cancelledRef.current = false;
     return () => {
       cancelledRef.current = true;
     };

@@ -644,6 +644,26 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/analytics/tickets": {
+            "get": {
+                "description": "聚合工单的 status / priority 分布与 30 天趋势",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "数据分析"
+                ],
+                "summary": "获取工单分析概览",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/applications": {
             "get": {
                 "description": "获取所有应用列表",
@@ -1067,9 +1087,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/changes": {
-            "get": {
-                "description": "获取所有变更的列表，支持分页和筛选",
+        "/api/v1/auth/forgot-password": {
+            "post": {
+                "description": "发送密码重置邮件到用户邮箱",
                 "consumes": [
                     "application/json"
                 ],
@@ -1077,38 +1097,654 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "变更管理"
+                    "认证"
                 ],
-                "summary": "获取变更列表",
+                "summary": "忘记密码 - 申请重置",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
+                        "description": "忘记密码请求（email）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ForgotPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "重置邮件发送成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ForgotPasswordResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "用户不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "description": "使用用户名/邮箱和密码登录，返回访问令牌和刷新令牌",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "用户登录",
+                "parameters": [
+                    {
+                        "description": "登录请求（username/email + password）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "登录成功，返回 tokens 和用户信息",
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "认证失败（用户名或密码错误）",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "使当前用户的令牌失效，退出登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "用户登出",
+                "responses": {
+                    "200": {
+                        "description": "登出成功",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "用户未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取当前登录用户的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "获取当前登录用户信息",
+                "responses": {
+                    "200": {
+                        "description": "用户详细信息",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserInfo"
+                        }
+                    },
+                    "401": {
+                        "description": "用户未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/menus": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "获取当前用户可见菜单",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "description": "使用刷新令牌获取新的访问令牌",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "刷新访问令牌",
+                "parameters": [
+                    {
+                        "description": "刷新令牌请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "刷新成功，返回新的访问令牌",
+                        "schema": {
+                            "$ref": "#/definitions/dto.RefreshTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "刷新令牌无效或已过期",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "description": "创建新用户账号",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "用户注册",
+                "parameters": [
+                    {
+                        "description": "注册请求（username, email, password 等）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "注册成功，返回用户信息",
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "用户名或邮箱已存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/reset-password": {
+            "post": {
+                "description": "使用重置令牌设置新密码",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "重置密码",
+                "parameters": [
+                    {
+                        "description": "重置密码请求（token + new_password）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PasswordResetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "密码重置成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PasswordResetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "重置令牌无效或已过期",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/switch-tenant": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "切换用户当前操作的租户上下文",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "切换当前租户",
+                "parameters": [
+                    {
+                        "description": "切换租户请求（tenant_id）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SwitchTenantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "切换成功，返回新的租户信息",
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "用户未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "无权访问该租户",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/tenants": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取当前用户可以访问的所有租户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "获取用户可访问的租户列表",
+                "responses": {
+                    "200": {
+                        "description": "租户列表",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserTenantsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "用户未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/validate-reset-token": {
+            "post": {
+                "description": "验证密码重置令牌是否有效",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "验证重置令牌",
+                "parameters": [
+                    {
+                        "description": "验证令牌请求（token）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ValidateResetTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "令牌有效",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ValidateResetTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "令牌无效或已过期",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bpmn/ai/generate": {
+            "post": {
+                "description": "根据用户输入的业务需求自动生成BPMN工作流定义",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BPMN AI"
+                ],
+                "summary": "生成BPMN流程",
+                "parameters": [
+                    {
+                        "description": "生成请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GenerateBPMNRequest"
+                        }
                     },
                     {
-                        "type": "integer",
-                        "description": "每页数量",
-                        "name": "pageSize",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "状态筛选",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "关键词搜索",
-                        "name": "search",
+                        "type": "boolean",
+                        "description": "是否自动部署生成的流程",
+                        "name": "auto_deploy",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GenerateBPMNResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bpmn/ai/preview": {
+            "post": {
+                "description": "根据用户输入的业务需求预览流程结构，不生成完整XML",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BPMN AI"
+                ],
+                "summary": "预览流程结构",
+                "parameters": [
+                    {
+                        "description": "预览请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PreviewBPMNRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.PreviewBPMNResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bpmn/ai/templates/suggestions": {
+            "get": {
+                "description": "根据用户输入的关键词推荐相关的流程模板",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BPMN AI"
+                ],
+                "summary": "获取流程模板建议",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "keyword",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "流程类型过滤",
+                        "name": "process_type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
@@ -1542,6 +2178,3176 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/cloud/accounts": {
+            "get": {
+                "description": "分页获取云账号列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "获取云账号列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "云厂商过滤",
+                        "name": "provider",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否启用过滤",
+                        "name": "isActive",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudAccountListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的云账号",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "创建云账号",
+                "parameters": [
+                    {
+                        "description": "云账号信息",
+                        "name": "cloudAccount",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCloudAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudAccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud/accounts/{id}": {
+            "get": {
+                "description": "获取指定云账号的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "获取云账号详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云账号ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudAccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新指定云账号的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "更新云账号",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云账号ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "云账号信息",
+                        "name": "cloudAccount",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCloudAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudAccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除指定云账号",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "删除云账号",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云账号ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud/resources": {
+            "get": {
+                "description": "分页获取云资源列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "获取云资源列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "云账号ID过滤",
+                        "name": "cloudAccountId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "云服务类型ID过滤",
+                        "name": "serviceId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Region过滤",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "资源状态过滤",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudResourceListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的云资源记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "创建云资源",
+                "parameters": [
+                    {
+                        "description": "云资源信息",
+                        "name": "cloudResource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCloudResourceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudResourceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud/resources/{id}": {
+            "get": {
+                "description": "获取指定云资源的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "获取云资源详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云资源ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudResourceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新指定云资源的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "更新云资源",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云资源ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "云资源信息",
+                        "name": "cloudResource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCloudResourceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudResourceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除指定云资源",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "删除云资源",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云资源ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud/services": {
+            "get": {
+                "description": "分页获取云服务列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "获取云服务列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "云厂商过滤",
+                        "name": "provider",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "服务分类过滤",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否系统预置过滤",
+                        "name": "isSystem",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否启用过滤",
+                        "name": "isActive",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "父级服务ID过滤",
+                        "name": "parentId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudServiceListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的云服务定义",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "创建云服务",
+                "parameters": [
+                    {
+                        "description": "云服务信息",
+                        "name": "cloudService",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCloudServiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudServiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud/services/{id}": {
+            "get": {
+                "description": "获取指定云服务的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "获取云服务详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云服务ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudServiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新指定云服务的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "更新云服务",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云服务ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "云服务信息",
+                        "name": "cloudService",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCloudServiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudServiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除指定云服务",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云管理"
+                ],
+                "summary": "删除云服务",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云服务ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/attributes": {
+            "post": {
+                "description": "创建新的CI属性定义",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "创建CI属性定义",
+                "parameters": [
+                    {
+                        "description": "创建CI属性定义请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCIAttributeDefinitionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIAttributeDefinitionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/attributes/{id}": {
+            "get": {
+                "description": "根据ID获取CI属性定义的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取CI属性定义详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI属性定义ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIAttributeDefinitionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "根据ID更新CI属性定义的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "更新CI属性定义",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI属性定义ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新CI属性定义请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCIAttributeDefinitionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIAttributeDefinitionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据ID删除CI属性定义",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "删除CI属性定义",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI属性定义ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/ci-types": {
+            "post": {
+                "description": "创建新的CI类型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "创建CI类型",
+                "parameters": [
+                    {
+                        "description": "创建CI类型请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCITypeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CITypeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/ci-types/{id}": {
+            "get": {
+                "description": "根据ID获取CI类型的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取CI类型详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI类型ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CITypeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "根据ID更新CI类型的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "更新CI类型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI类型ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新CI类型请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCITypeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CITypeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据ID删除CI类型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "删除CI类型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI类型ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/ci-types/{id}/attributes": {
+            "get": {
+                "description": "根据CI类型ID获取对应的属性定义列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取CI属性定义列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI类型ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.CIAttributeDefinitionResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis": {
+            "get": {
+                "description": "获取所有配置项的列表，支持分页和筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取配置项列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "CI类型ID",
+                        "name": "ciTypeId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "环境",
+                        "name": "environment",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "重要性",
+                        "name": "criticality",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "云厂商",
+                        "name": "cloudProvider",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "云账号ID",
+                        "name": "cloudAccountId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "云区域",
+                        "name": "cloudRegion",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "负责人",
+                        "name": "assignedTo",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "拥有者",
+                        "name": "ownedBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词（名称、资产标签、序列号等）",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的配置项",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "创建配置项",
+                "parameters": [
+                    {
+                        "description": "创建配置项请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCIRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/batch": {
+            "put": {
+                "description": "批量更新多个CI的相同属性，最多支持100个",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "批量更新CI",
+                "parameters": [
+                    {
+                        "description": "批量更新请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BatchUpdateCIRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.BatchOperationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "批量创建多个CI，最多支持100个",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "批量创建CI",
+                "parameters": [
+                    {
+                        "description": "批量创建请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BatchCreateCIRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.BatchOperationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "批量删除多个CI，最多支持100个",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "批量删除CI",
+                "parameters": [
+                    {
+                        "description": "批量删除请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BatchDeleteCIRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.BatchOperationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/batch/lifecycle": {
+            "put": {
+                "description": "批量变更多个CI的生命周期状态",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "批量更新CI生命周期状态",
+                "parameters": [
+                    {
+                        "description": "批量更新请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BatchUpdateLifecycleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.BatchOperationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/search": {
+            "post": {
+                "description": "多条件组合搜索CI，支持全文搜索、属性过滤、分页、排序",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "高级搜索CI",
+                "parameters": [
+                    {
+                        "description": "搜索请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CISearchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ListResponse-dto_CIResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/stats": {
+            "get": {
+                "description": "获取当前租户下配置项的统计信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取配置项统计",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/{id}": {
+            "get": {
+                "description": "根据ID获取配置项的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取配置项详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "配置项ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否包含关系信息",
+                        "name": "withRelations",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "根据ID更新配置项的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "更新配置项",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "配置项ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新配置项请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCIRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据ID删除配置项",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "删除配置项",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "配置项ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/{id}/history": {
+            "get": {
+                "description": "获取指定CI的所有变更历史记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取CI历史记录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIHistoryListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/{id}/impact-analysis": {
+            "get": {
+                "description": "分析指定CI故障时可能影响的其他CI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取CI影响分析",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "配置项ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "最大分析深度，默认3",
+                        "name": "maxDepth",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIImpactAnalysisResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/{id}/lifecycle": {
+            "put": {
+                "description": "变更CI的生命周期状态，记录变更历史",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "更新CI生命周期状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "目标状态: draft/online/maintenance/offline/scrapped",
+                        "name": "status",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "变更备注",
+                        "name": "remark",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/{id}/lifecycle/history": {
+            "get": {
+                "description": "查询CI的所有生命周期状态变更记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取CI生命周期变更历史",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/{id}/relationships": {
+            "get": {
+                "description": "获取指定CI的所有关系列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "根据CI ID获取关系列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "配置项ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "关系方向（outgoing/incoming/不传为所有）",
+                        "name": "direction",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.CIRelationshipResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/{id}/revert": {
+            "post": {
+                "description": "将CI回滚到历史中的某个版本",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "回滚CI到指定版本",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "回滚版本请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RevertCIVersionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cis/{id}/tags": {
+            "post": {
+                "description": "给指定的CI添加多个标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "给CI添加标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "添加标签请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AddCITagsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "从指定的CI移除多个标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "从CI移除标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "移除标签请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RemoveCITagsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/export": {
+            "get": {
+                "description": "查询历史导出任务列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取导出任务列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ListResponse-dto_ExportCIResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "批量导出CI数据，支持Excel和CSV格式，异步执行",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "创建CI导出任务",
+                "parameters": [
+                    {
+                        "description": "导出请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ExportCIRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ExportCIResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/export/{task_id}": {
+            "get": {
+                "description": "查询导出任务的执行状态和结果",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取导出任务状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ExportCIResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/import": {
+            "get": {
+                "description": "查询历史导入任务列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取导入任务列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ListResponse-dto_ImportCIResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "批量导入CI数据，支持Excel和CSV格式，异步执行",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "创建CI导入任务",
+                "parameters": [
+                    {
+                        "description": "导入请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ImportCIRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ImportCIResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/import/{task_id}": {
+            "get": {
+                "description": "查询导入任务的执行状态和结果",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取导入任务状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ImportCIResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/relationship-types": {
+            "get": {
+                "description": "获取CMDB支持的内置关系类型枚举",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取内置CI关系类型",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GetRelationshipTypesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/relationships": {
+            "get": {
+                "description": "获取所有CI关系的列表，支持分页和筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取CI关系列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关系类型",
+                        "name": "relationshipType",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIRelationshipListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的CI关系",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "创建CI关系",
+                "parameters": [
+                    {
+                        "description": "创建CI关系请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCIRelationshipRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIRelationshipResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/relationships/{id}": {
+            "get": {
+                "description": "根据ID获取CI关系的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取CI关系详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI关系ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIRelationshipResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "根据ID更新CI关系的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "更新CI关系",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI关系ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新CI关系请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCIRelationshipRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIRelationshipResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据ID删除CI关系",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "删除CI关系",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CI关系ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/tags": {
+            "get": {
+                "description": "获取所有CI标签的列表，支持分页和搜索",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取CI标签列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词（标签名/值）",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CITagListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的CI标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "创建CI标签",
+                "parameters": [
+                    {
+                        "description": "创建标签请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCITagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CITagResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/tags/{id}": {
+            "get": {
+                "description": "根据ID获取CI标签的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取CI标签详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "标签ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CITagResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "根据ID更新CI标签的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "更新CI标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "标签ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新标签请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCITagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CITagResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据ID删除CI标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "删除CI标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "标签ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/views": {
+            "get": {
+                "description": "获取当前用户创建的和公开的搜索视图",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取保存的视图列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否包含公开视图，默认true",
+                        "name": "include_public",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ListResponse-dto_CISavedView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "保存搜索条件为视图，方便后续快速查询",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "创建保存的搜索视图",
+                "parameters": [
+                    {
+                        "description": "创建视图请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCISavedViewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CISavedView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/views/{id}": {
+            "get": {
+                "description": "根据ID获取保存的搜索视图",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取视图详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "视图ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CISavedView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新保存的搜索视图",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "更新视图",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "视图ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新视图请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCISavedViewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CISavedView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除保存的搜索视图",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "删除视图",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "视图ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/dashboard/incident-distribution": {
             "get": {
                 "description": "获取事件类型分布统计",
@@ -1810,6 +5616,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/dashboard/stats/system": {
+            "get": {
+                "description": "获取系统性能指标、数据库统计等",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "获取系统统计数据",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dashboard/stats/users": {
+            "get": {
+                "description": "获取用户统计包括按角色、部门分布等",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "获取用户统计数据",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/dashboard/ticket-trend": {
             "get": {
                 "description": "获取最近几天的工单趋势数据",
@@ -1909,6 +5773,36 @@ const docTemplate = `{
             }
         },
         "/api/v1/departments/{id}": {
+            "get": {
+                "description": "根据ID获取部门详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "部门管理"
+                ],
+                "summary": "获取单个部门",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "部门ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "更新部门信息",
                 "consumes": [
@@ -1942,6 +5836,539 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/escalation-matrices": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "升级矩阵"
+                ],
+                "summary": "获取升级矩阵",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.EscalationMatrix"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "升级矩阵"
+                ],
+                "summary": "设置升级矩阵",
+                "parameters": [
+                    {
+                        "description": "升级矩阵配置",
+                        "name": "matrix",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.EscalationMatrix"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/escalation-matrices/invalidate-cache": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "升级矩阵"
+                ],
+                "summary": "清除缓存",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/groups": {
+            "get": {
+                "description": "分页获取组列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "组管理"
+                ],
+                "summary": "获取组列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "tenant_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.PagedGroupsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的组",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "组管理"
+                ],
+                "summary": "创建组",
+                "parameters": [
+                    {
+                        "description": "组信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GroupResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/groups/{id}": {
+            "get": {
+                "description": "获取组的详细信息，包括成员列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "组管理"
+                ],
+                "summary": "获取组详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GroupDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新组信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "组管理"
+                ],
+                "summary": "更新组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "组信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GroupResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除组及其所有关联关系",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "组管理"
+                ],
+                "summary": "删除组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/groups/{id}/members": {
+            "get": {
+                "description": "分页获取组的成员列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "组管理"
+                ],
+                "summary": "获取组成员列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.PagedUsersResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "将用户添加到指定的组",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "组管理"
+                ],
+                "summary": "添加用户到组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "用户信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AddUserToGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "从指定组中移除用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "组管理"
+                ],
+                "summary": "从组移除用户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "用户信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RemoveUserFromGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
@@ -2076,9 +6503,11 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/v1/incidents/:id/acknowledge": {
             "post": {
-                "description": "创建新的事件记录",
+                "description": "将事件状态从 new 流转到 acknowledged",
                 "consumes": [
                     "application/json"
                 ],
@@ -2088,15 +6517,54 @@ const docTemplate = `{
                 "tags": [
                     "事件管理"
                 ],
-                "summary": "创建事件",
+                "summary": "确认事件",
                 "parameters": [
                     {
-                        "description": "创建事件请求",
-                        "name": "request",
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incidents/:id/close": {
+            "post": {
+                "description": "将已解决的事件关闭",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "关闭事件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "关闭信息",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateIncidentRequest"
+                            "type": "object"
                         }
                     }
                 ],
@@ -2104,19 +6572,48 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.IncidentResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incidents/:id/major-incident": {
+            "post": {
+                "description": "将事件标记为重大事件，记录影响评估与危机沟通计划，并提升严重程度",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "升级为重大事件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "升级请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.EscalateMajorIncidentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
                         }
                     },
                     "400": {
@@ -2127,6 +6624,76 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incidents/:id/reopen": {
+            "post": {
+                "description": "将已解决或已关闭的事件重新打开并流转到 in_progress",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "重新打开事件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incidents/:id/resolve": {
+            "post": {
+                "description": "将事件状态流转到 resolved",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "解决事件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "解决信息",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
@@ -2879,6 +7446,370 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/incidents/{id}/assign": {
+            "post": {
+                "description": "将事件分配给指定处理人",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "分配事件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "分配请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AssignIncidentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incidents/{id}/classification": {
+            "get": {
+                "description": "获取事件的分类信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "获取事件分类",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新事件的分类信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "更新事件分类",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "分类信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "category": {
+                                    "type": "string"
+                                },
+                                "subcategory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incidents/{id}/comments": {
+            "get": {
+                "description": "获取事件的评论列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "获取事件评论列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gin.H"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "为事件创建评论",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "创建事件评论",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "创建评论请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateIncidentCommentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gin.H"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incidents/{id}/convert-to-problem": {
+            "post": {
+                "description": "将指定的事件转换为问题记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "将事件转换为问题",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "转换请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ConvertIncidentToProblemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/ent.Problem"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/incidents/{id}/events": {
             "get": {
                 "description": "获取事件的活动记录列表",
@@ -3001,6 +7932,110 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/incidents/{id}/impact-assessment": {
+            "get": {
+                "description": "获取事件的影响评估",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "获取影响评估",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新事件的影响评估",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "更新影响评估",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "影响评估",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ImpactAnalysis"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/incidents/{id}/metrics": {
             "get": {
                 "description": "获取事件的指标数据",
@@ -3040,6 +8075,110 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incidents/{id}/root-cause": {
+            "get": {
+                "description": "获取事件的根因分析",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "获取根因分析",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新事件的根因分析",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "更新根因分析",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "事件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "根因分析",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RootCause"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
                         }
                     },
                     "400": {
@@ -3123,56 +8262,6 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/dto.KnowledgeArticleListResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/common.Response"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "创建新的知识库文章",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "知识库"
-                ],
-                "summary": "创建知识库文章",
-                "parameters": [
-                    {
-                        "description": "文章信息",
-                        "name": "article",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateKnowledgeArticleRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
                                         }
                                     }
                                 }
@@ -3375,6 +8464,1114 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/knowledge-articles/{id}/participants": {
+            "get": {
+                "description": "获取文章的当前参与者列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识库-协作"
+                ],
+                "summary": "获取参与者列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ListParticipantsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge-articles/{id}/session": {
+            "get": {
+                "description": "获取文章的当前协作会话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识库-协作"
+                ],
+                "summary": "获取当前会话",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ArticleSessionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新会话或加入现有会话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识库-协作"
+                ],
+                "summary": "创建或加入会话",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ArticleSessionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "离开当前协作会话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识库-协作"
+                ],
+                "summary": "离开会话",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge-articles/{id}/session/heartbeat": {
+            "post": {
+                "description": "更新会话心跳",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识库-协作"
+                ],
+                "summary": "心跳保活",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "心跳信息",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SessionHeartbeatRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge-articles/{id}/versions": {
+            "get": {
+                "description": "获取指定文章的版本历史",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识库-版本"
+                ],
+                "summary": "获取文章版本列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleVersionListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge-articles/{id}/versions/restore": {
+            "post": {
+                "description": "将文章恢复到指定的历史版本",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识库-版本"
+                ],
+                "summary": "恢复文章到指定版本",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "版本信息",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RestoreArticleVersionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge-articles/{id}/versions/{version}": {
+            "get": {
+                "description": "获取文章的指定版本详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识库-版本"
+                ],
+                "summary": "获取指定版本",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "版本号",
+                        "name": "version",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleVersionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/installations": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "列出租户所有已安装的组件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "市场"
+                ],
+                "summary": "列出已安装的组件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "状态过滤：active/disabled/failed",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/ent.TenantInstallation"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/installations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "获取指定组件的安装详情和配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "市场"
+                ],
+                "summary": "获取安装详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/ent.TenantInstallation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/installations/{id}/config": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "更新已安装组件的配置信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "市场"
+                ],
+                "summary": "更新组件配置",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "配置信息",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/ent.TenantInstallation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/items": {
+            "get": {
+                "description": "根据条件查询市场上的组件列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "市场"
+                ],
+                "summary": "查询市场商品列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "组件类型：connector/skill/plugin",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "分类",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否是官方组件",
+                        "name": "is_official",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码，默认1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量，默认20",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                " page": {
+                                                    "type": "integer"
+                                                },
+                                                " page_size": {
+                                                    "type": "integer"
+                                                },
+                                                " total": {
+                                                    "type": "integer"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/definitions/ent.MarketplaceItem"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/items/{id}": {
+            "get": {
+                "description": "根据ID获取组件的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "市场"
+                ],
+                "summary": "获取商品详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/ent.MarketplaceItem"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/items/{id}/install": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "租户安装指定的组件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "市场"
+                ],
+                "summary": "安装组件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/ent.TenantInstallation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/items/{id}/uninstall": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "租户卸载已安装的组件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "市场"
+                ],
+                "summary": "卸载组件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/msp/allocations": {
+            "get": {
+                "description": "获取当前MSP员工的所有有效分配",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MSP管理"
+                ],
+                "summary": "获取分配列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "MSP经理为MSP员工分配客户租户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MSP管理"
+                ],
+                "summary": "创建分配",
+                "parameters": [
+                    {
+                        "description": "创建分配请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateAllocationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/msp/allocations/deallocate": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "解除MSP员工与客户租户的关联",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MSP管理"
+                ],
+                "summary": "解除分配",
+                "parameters": [
+                    {
+                        "description": "解除分配请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DeallocateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/msp/context": {
+            "get": {
+                "description": "返回MSP员工的分配信息和允许访问的客户列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MSP管理"
+                ],
+                "summary": "获取MSP上下文",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/msp/customers": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "返回当前MSP员工有权访问的客户租户列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MSP管理"
+                ],
+                "summary": "获取客户列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/msp/customers/{customer_tenant_id}/tickets": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "获取指定客户租户的工单列表（需要X-Customer-Tenant-ID头）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MSP管理"
+                ],
+                "summary": "获取客户工单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "客户租户ID",
+                        "name": "customer_tenant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "工单状态过滤",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/msp/reports/customers": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "获取指定时间范围内的客户服务报表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MSP管理"
+                ],
+                "summary": "获取客户报表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "开始日期 (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束日期 (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "客户租户ID（不填则返回所有客户）",
+                        "name": "customer_tenant_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/msp/reports/performance": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "获取MSP员工绩效报表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MSP管理"
+                ],
+                "summary": "获取绩效报表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "开始日期",
+                        "name": "start_date",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束日期",
+                        "name": "end_date",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "MSP用户ID（不填则返回当前用户）",
+                        "name": "msp_user_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/msp/status": {
+            "get": {
+                "description": "返回当前用户是否是MSP员工或管理员",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MSP管理"
+                ],
+                "summary": "获取MSP状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/msp/tickets/{id}/assign": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "MSP经理为工单分配技术员（自动设置managed_by_user_id）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MSP管理"
+                ],
+                "summary": "分配技术员",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "分配请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AssignMSPTechnicianRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/notifications": {
             "get": {
                 "description": "获取当前用户的所有通知，支持分页和状态过滤",
@@ -3505,113 +9702,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/problems": {
-            "get": {
-                "description": "获取问题列表，支持分页和状态过滤",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "问题管理"
-                ],
-                "summary": "获取问题列表",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "每页数量",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "问题状态",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.Response"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "创建新的问题记录",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "问题管理"
-                ],
-                "summary": "创建问题",
-                "parameters": [
-                    {
-                        "description": "问题信息",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateProblemRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/problems/{id}": {
-            "get": {
-                "description": "获取指定问题的详细信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "问题管理"
-                ],
-                "summary": "获取问题详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "问题ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/process-trigger": {
             "post": {
                 "description": "根据业务类型和业务ID触发对应的流程",
@@ -3695,6 +9785,38 @@ const docTemplate = `{
                         "schema": {
                             "type": "object"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/projects/{id}": {
+            "get": {
+                "description": "根据ID获取项目详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "项目管理"
+                ],
+                "summary": "获取单个项目",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -4674,6 +10796,242 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/sla-policies": {
+            "get": {
+                "description": "获取所有SLA策略列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA策略管理"
+                ],
+                "summary": "获取SLA策略列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的SLA策略",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA策略管理"
+                ],
+                "summary": "创建SLA策略",
+                "parameters": [
+                    {
+                        "description": "SLA策略信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateSLAPolicyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla-policies/compliance-rate": {
+            "get": {
+                "description": "获取指定时间范围内的SLA合规率",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA策略管理"
+                ],
+                "summary": "获取SLA合规率",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "开始日期",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束日期",
+                        "name": "end_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla-policies/match": {
+            "get": {
+                "description": "根据工单属性匹配最优SLA策略",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA策略管理"
+                ],
+                "summary": "匹配SLA策略",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "工单类型",
+                        "name": "ticket_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "优先级",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "客户等级",
+                        "name": "customer_tier",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla-policies/{id}": {
+            "get": {
+                "description": "根据ID获取SLA策略详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA策略管理"
+                ],
+                "summary": "获取单个SLA策略",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SLA策略ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新SLA策略信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA策略管理"
+                ],
+                "summary": "更新SLA策略",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SLA策略ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "SLA策略信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateSLAPolicyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除SLA策略",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA策略管理"
+                ],
+                "summary": "删除SLA策略",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SLA策略ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tags": {
             "post": {
                 "description": "创建新的标签",
@@ -4730,6 +11088,237 @@ const docTemplate = `{
                         "schema": {
                             "type": "object"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenants/{tenant_id}/menus": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "获取菜单列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "创建菜单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "创建请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMenuRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenants/{tenant_id}/menus/init": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "初始化默认菜单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenants/{tenant_id}/menus/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "获取菜单详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "菜单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "更新菜单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "菜单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateMenuRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "删除菜单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "菜单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -5065,123 +11654,8 @@ const docTemplate = `{
             }
         },
         "/api/v1/tickets": {
-            "get": {
-                "description": "Search tickets with various filters",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tickets"
-                ],
-                "summary": "Search tickets",
-                "parameters": [
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "description": "Status filter",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "description": "Priority filter",
-                        "name": "priority",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Assigned to filter",
-                        "name": "assigned_to",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Created by filter",
-                        "name": "created_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Category filter",
-                        "name": "category",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Keywords search",
-                        "name": "keywords",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Date from filter",
-                        "name": "date_from",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Date to filter",
-                        "name": "date_to",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "Page size",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort by field",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "default": "desc",
-                        "description": "Sort order",
-                        "name": "sort_order",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.SearchTicketsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    }
-                }
-            },
             "post": {
-                "description": "Create a new support ticket",
+                "description": "创建新的工单",
                 "consumes": [
                     "application/json"
                 ],
@@ -5189,37 +11663,113 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tickets"
+                    "工单管理"
                 ],
-                "summary": "Create a new ticket",
+                "summary": "创建工单",
                 "parameters": [
                     {
-                        "description": "Ticket creation request",
+                        "description": "创建工单请求",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/interfaces.CreateTicketRequest"
+                            "$ref": "#/definitions/dto.CreateTicketRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.CreateTicketResponse"
+                            "$ref": "#/definitions/common.Response"
                         }
-                    },
-                    "400": {
-                        "description": "Bad Request",
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/:id/cc": {
+            "get": {
+                "description": "返回指定工单的抄送记录",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单流转"
+                ],
+                "summary": "获取工单抄送记录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.CreateTicketResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketCCListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/:id/workflow-history": {
+            "get": {
+                "description": "返回工单状态变更、分配、审批等操作历史记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单流转"
+                ],
+                "summary": "获取工单流转历史",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.CreateTicketResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -5461,6 +12011,38 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.TestAutomationRuleResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/cc/my": {
+            "get": {
+                "description": "返回当前用户收到的工单抄送记录",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单流转"
+                ],
+                "summary": "获取我的抄送",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketCCListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -5907,106 +12489,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/tickets/{id}": {
-            "get": {
-                "description": "Retrieve a ticket with all its details",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tickets"
-                ],
-                "summary": "Get a ticket by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ticket ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.TicketDetailsResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/tickets/{id}/assign": {
-            "put": {
-                "description": "Assign a ticket to a user or team",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tickets"
-                ],
-                "summary": "Assign a ticket",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ticket ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Assignment request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.AssignTicketRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/tickets/{id}/attachments": {
             "get": {
                 "description": "获取指定工单的所有附件",
@@ -6071,7 +12553,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Add a comment to a ticket",
+                "description": "为工单添加评论",
                 "consumes": [
                     "application/json"
                 ],
@@ -6079,83 +12561,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tickets"
+                    "工单评论"
                 ],
-                "summary": "Add a comment to a ticket",
+                "summary": "创建工单评论",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Ticket ID",
+                        "type": "integer",
+                        "description": "工单ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Comment request",
+                        "description": "评论信息",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/interfaces.AddCommentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/tickets/{id}/status": {
-            "put": {
-                "description": "Update the status of a ticket",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tickets"
-                ],
-                "summary": "Update ticket status",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ticket ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Status update request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.UpdateStatusRequest"
+                            "$ref": "#/definitions/dto.CreateTicketCommentRequest"
                         }
                     }
                 ],
@@ -6163,25 +12586,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BaseResponse"
+                            "$ref": "#/definitions/common.Response"
                         }
                     }
                 }
@@ -6461,7 +12866,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.UserStatsResponse"
+                                            "type": "object"
                                         }
                                     }
                                 }
@@ -6744,40 +13149,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/webhooks/alert": {
-            "post": {
-                "description": "接收外部监控系统发送的告警，自动创建事件工单",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Webhook"
-                ],
-                "summary": "接收监控告警",
-                "parameters": [
-                    {
-                        "description": "告警信息",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/common.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/workflows": {
             "get": {
                 "description": "获取所有工作流列表，支持分页",
@@ -6950,191 +13321,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "application.AttachmentInfo": {
-            "type": "object",
-            "properties": {
-                "file_size": {
-                    "type": "integer"
-                },
-                "filename": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "mime_type": {
-                    "type": "string"
-                },
-                "uploaded_at": {
-                    "type": "string"
-                },
-                "uploaded_by": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "application.CommentInfo": {
-            "type": "object",
-            "properties": {
-                "author_id": {
-                    "type": "string"
-                },
-                "content": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_private": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "application.CreateTicketResult": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "ticket_number": {
-                    "type": "string"
-                }
-            }
-        },
-        "application.SearchTicketsResult": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "tickets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/application.TicketSummary"
-                    }
-                },
-                "total_count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "application.TicketAssignmentInfo": {
-            "type": "object",
-            "properties": {
-                "assigned_at": {
-                    "type": "string"
-                },
-                "assigned_by": {
-                    "type": "string"
-                },
-                "assigned_to": {
-                    "type": "string"
-                },
-                "instructions": {
-                    "type": "string"
-                },
-                "team_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "application.TicketDetails": {
-            "type": "object",
-            "properties": {
-                "assignment": {
-                    "$ref": "#/definitions/application.TicketAssignmentInfo"
-                },
-                "attachments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/application.AttachmentInfo"
-                    }
-                },
-                "category": {
-                    "type": "string"
-                },
-                "comments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/application.CommentInfo"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "priority": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "ticket_number": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "application.TicketSummary": {
-            "type": "object",
-            "properties": {
-                "assigned_to": {
-                    "type": "string"
-                },
-                "category": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "priority": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "ticket_number": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "common.Response": {
             "type": "object",
             "properties": {
@@ -7164,7 +13350,7 @@ const docTemplate = `{
                 "query"
             ],
             "properties": {
-                "conversation_id": {
+                "conversationId": {
                     "type": "integer"
                 },
                 "limit": {
@@ -7192,28 +13378,92 @@ const docTemplate = `{
         },
         "dto.AcceptTicketRequest": {
             "type": "object",
-            "required": [
-                "ticket_id"
-            ],
             "properties": {
                 "comment": {
                     "type": "string"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.AddCITagsRequest": {
+            "type": "object",
+            "required": [
+                "tagIds"
+            ],
+            "properties": {
+                "tagIds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "dto.AddUserToGroupRequest": {
+            "type": "object",
+            "required": [
+                "userId"
+            ],
+            "properties": {
+                "userId": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "dto.AffectedIncident": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.AffectedTicket": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
         "dto.ApprovalChainDefinition": {
             "type": "object",
             "properties": {
-                "allow_delegate": {
+                "allowDelegate": {
                     "type": "boolean"
                 },
-                "allow_reject": {
+                "allowReject": {
                     "type": "boolean"
                 },
-                "approval_type": {
+                "approvalType": {
                     "description": "any, all, majority",
                     "type": "string"
                 },
@@ -7235,24 +13485,24 @@ const docTemplate = `{
                 "level": {
                     "type": "integer"
                 },
-                "minimum_approvals": {
+                "minimumApprovals": {
                     "type": "integer"
                 },
                 "name": {
                     "type": "string"
                 },
-                "reject_action": {
+                "rejectAction": {
                     "description": "end, return, custom",
                     "type": "string"
                 },
-                "return_to_level": {
+                "returnToLevel": {
                     "type": "integer"
                 },
                 "timeout": {
                     "description": "超时时间（小时）",
                     "type": "integer"
                 },
-                "timeout_action": {
+                "timeoutAction": {
                     "description": "auto_approve, auto_reject, escalate",
                     "type": "string"
                 }
@@ -7293,10 +13543,10 @@ const docTemplate = `{
                 "comment": {
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
-                "delegate_to": {
+                "delegateTo": {
                     "$ref": "#/definitions/dto.WorkflowUserInfo"
                 },
                 "id": {
@@ -7305,16 +13555,16 @@ const docTemplate = `{
                 "level": {
                     "type": "integer"
                 },
-                "level_name": {
+                "levelName": {
                     "type": "string"
                 },
-                "processed_at": {
+                "processedAt": {
                     "type": "string"
                 },
                 "status": {
                     "$ref": "#/definitions/dto.ApprovalStatus"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
                 }
             }
@@ -7340,9 +13590,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "action",
-                "approval_id",
-                "comment",
-                "ticket_id"
+                "approvalId"
             ],
             "properties": {
                 "action": {
@@ -7353,16 +13601,16 @@ const docTemplate = `{
                         "delegate"
                     ]
                 },
-                "approval_id": {
+                "approvalId": {
                     "type": "integer"
                 },
                 "comment": {
                     "type": "string"
                 },
-                "delegate_to_user_id": {
+                "delegateToUserId": {
                     "type": "integer"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
                 }
             }
@@ -7382,6 +13630,86 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ArticleParticipantResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "cursorPosition": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "joinedAt": {
+                    "type": "string"
+                },
+                "lastActivity": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ArticleSessionResponse": {
+            "type": "object",
+            "properties": {
+                "articleId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "lastHeartbeat": {
+                    "type": "string"
+                },
+                "sessionId": {
+                    "type": "integer"
+                },
+                "sessionToken": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.AssignIncidentRequest": {
+            "type": "object",
+            "required": [
+                "assigneeId"
+            ],
+            "properties": {
+                "assigneeId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.AssignMSPTechnicianRequest": {
+            "type": "object",
+            "required": [
+                "customerTenantId"
+            ],
+            "properties": {
+                "assignerUserId": {
+                    "type": "integer"
+                },
+                "customerTenantId": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.AssignToConfig": {
             "type": "object",
             "properties": {
@@ -7397,7 +13725,7 @@ const docTemplate = `{
         "dto.AssignmentRule": {
             "type": "object",
             "properties": {
-                "assign_to": {
+                "assignTo": {
                     "$ref": "#/definitions/dto.AssignToConfig"
                 },
                 "conditions": {
@@ -7464,10 +13792,10 @@ const docTemplate = `{
                         "additionalProperties": true
                     }
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
-                "created_by": {
+                "createdBy": {
                     "type": "integer"
                 },
                 "creator": {
@@ -7476,16 +13804,16 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "execution_count": {
+                "executionCount": {
                     "type": "integer"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "is_active": {
+                "isActive": {
                     "type": "boolean"
                 },
-                "last_executed_at": {
+                "lastExecutedAt": {
                     "type": "string"
                 },
                 "name": {
@@ -7494,11 +13822,140 @@ const docTemplate = `{
                 "priority": {
                     "type": "integer"
                 },
-                "tenant_id": {
+                "tenantId": {
                     "type": "integer"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.BPMNNodePreview": {
+            "type": "object",
+            "properties": {
+                "assigneeRole": {
+                    "description": "处理人角色",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "节点描述",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "节点ID",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "节点名称",
+                    "type": "string"
+                },
+                "slaMinutes": {
+                    "description": "SLA时间（分钟）",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "节点类型：startEvent/endEvent/userTask/serviceTask/exclusiveGateway/parallelGateway",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.BatchCreateCIRequest": {
+            "type": "object",
+            "required": [
+                "items"
+            ],
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CreateCIRequest"
+                    }
+                }
+            }
+        },
+        "dto.BatchDeleteCIRequest": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "dto.BatchOperationResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "failedCount": {
+                    "type": "integer"
+                },
+                "failedIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "successCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.BatchUpdateCIRequest": {
+            "type": "object",
+            "required": [
+                "ids",
+                "updates"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "updates": {
+                    "$ref": "#/definitions/dto.UpdateCIRequest"
+                }
+            }
+        },
+        "dto.BatchUpdateLifecycleRequest": {
+            "type": "object",
+            "required": [
+                "ids",
+                "status"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
                 }
             }
         },
@@ -7506,7 +13963,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "action",
-                "user_ids"
+                "userIds"
             ],
             "properties": {
                 "action": {
@@ -7520,7 +13977,7 @@ const docTemplate = `{
                 "department": {
                     "type": "string"
                 },
-                "user_ids": {
+                "userIds": {
                     "type": "array",
                     "minItems": 1,
                     "items": {
@@ -7532,13 +13989,13 @@ const docTemplate = `{
         "dto.BusinessImpact": {
             "type": "object",
             "properties": {
-                "affected_users": {
+                "affectedUsers": {
                     "type": "integer"
                 },
-                "revenue_impact": {
+                "revenueImpact": {
                     "type": "number"
                 },
-                "service_availability": {
+                "serviceAvailability": {
                     "type": "number"
                 }
             }
@@ -7550,12 +14007,14 @@ const docTemplate = `{
                 "change",
                 "incident",
                 "service_request",
-                "problem"
+                "problem",
+                "release"
             ],
             "x-enum-comments": {
                 "BusinessTypeChange": "变更",
                 "BusinessTypeIncident": "事件",
                 "BusinessTypeProblem": "问题",
+                "BusinessTypeRelease": "发布",
                 "BusinessTypeServiceRequest": "服务请求",
                 "BusinessTypeTicket": "工单"
             },
@@ -7564,24 +14023,25 @@ const docTemplate = `{
                 "变更",
                 "事件",
                 "服务请求",
-                "问题"
+                "问题",
+                "发布"
             ],
             "x-enum-varnames": [
                 "BusinessTypeTicket",
                 "BusinessTypeChange",
                 "BusinessTypeIncident",
                 "BusinessTypeServiceRequest",
-                "BusinessTypeProblem"
+                "BusinessTypeProblem",
+                "BusinessTypeRelease"
             ]
         },
         "dto.CCTicketRequest": {
             "type": "object",
             "required": [
-                "cc_users",
-                "ticket_id"
+                "ccUsers"
             ],
             "properties": {
-                "cc_users": {
+                "ccUsers": {
                     "type": "array",
                     "minItems": 1,
                     "items": {
@@ -7591,24 +14051,841 @@ const docTemplate = `{
                 "comment": {
                     "type": "string"
                 },
-                "ticket_id": {
+                "notifyChannels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ticketId": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.CIAttributeDefinitionResponse": {
+            "type": "object",
+            "properties": {
+                "ciTypeId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "dataType": {
+                    "type": "string"
+                },
+                "defaultValue": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "displayOrder": {
+                    "type": "integer"
+                },
+                "enumValues": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "groupName": {
+                    "type": "string"
+                },
+                "helpText": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "isRequired": {
+                    "type": "boolean"
+                },
+                "isSearchable": {
+                    "type": "boolean"
+                },
+                "isSystem": {
+                    "type": "boolean"
+                },
+                "isUnique": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "referenceType": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "validationRules": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "dto.CIHistoryListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CIHistoryResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CIHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "after": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "before": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "changedFields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ciId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
+                },
+                "operation": {
+                    "type": "string"
+                },
+                "operatorId": {
+                    "type": "integer"
+                },
+                "operatorName": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type is optional; will be set from CIType if not provided",
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CIImpactAnalysisResponse": {
+            "type": "object",
+            "properties": {
+                "affectedIncidents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AffectedIncident"
+                    }
+                },
+                "affectedTickets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AffectedTicket"
+                    }
+                },
+                "criticalDependencies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ImpactAnalysisItem"
+                    }
+                },
+                "downstreamImpact": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ImpactAnalysisItem"
+                    }
+                },
+                "graph": {
+                    "$ref": "#/definitions/dto.TopologyGraph"
+                },
+                "riskLevel": {
+                    "type": "string"
+                },
+                "sourceCiId": {
+                    "type": "integer"
+                },
+                "summary": {
+                    "type": "string"
+                },
+                "targetCi": {
+                    "$ref": "#/definitions/dto.TopologyNode"
+                },
+                "totalImpacted": {
+                    "type": "integer"
+                },
+                "upstreamImpact": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ImpactAnalysisItem"
+                    }
+                }
+            }
+        },
+        "dto.CIImportError": {
+            "type": "object",
+            "properties": {
+                "fieldName": {
+                    "description": "字段名",
+                    "type": "string"
+                },
+                "message": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "rowNumber": {
+                    "description": "行号",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CIInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CIListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CIResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CIRelationshipListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CIRelationshipResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CIRelationshipResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "impactLevel": {
+                    "$ref": "#/definitions/dto.ImpactLevel"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "isDiscovered": {
+                    "type": "boolean"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "relationshipType": {
+                    "$ref": "#/definitions/dto.CIRelationshipType"
+                },
+                "relationshipTypeName": {
+                    "type": "string"
+                },
+                "sourceCiId": {
+                    "type": "integer"
+                },
+                "sourceCiName": {
+                    "type": "string"
+                },
+                "sourceCiType": {
+                    "type": "string"
+                },
+                "strength": {
+                    "$ref": "#/definitions/dto.RelationshipStrength"
+                },
+                "targetCiId": {
+                    "type": "integer"
+                },
+                "targetCiName": {
+                    "type": "string"
+                },
+                "targetCiType": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CIRelationshipType": {
+            "type": "string",
+            "enum": [
+                "depends_on",
+                "hosts",
+                "hosted_on",
+                "connects_to",
+                "runs_on",
+                "contains",
+                "part_of",
+                "impacts",
+                "impacted_by",
+                "owns",
+                "owned_by",
+                "uses",
+                "used_by"
+            ],
+            "x-enum-varnames": [
+                "DependsOn",
+                "Hosts",
+                "HostedOn",
+                "ConnectsTo",
+                "RunsOn",
+                "Contains",
+                "PartOf",
+                "Impacts",
+                "ImpactedBy",
+                "Owns",
+                "OwnedBy",
+                "Uses",
+                "UsedBy"
+            ]
+        },
+        "dto.CIResponse": {
+            "type": "object",
+            "properties": {
+                "assetTag": {
+                    "type": "string"
+                },
+                "assignedTo": {
+                    "type": "string"
+                },
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "ciTypeId": {
+                    "type": "integer"
+                },
+                "cloudAccountId": {
+                    "type": "string"
+                },
+                "cloudMetadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloudMetrics": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloudProvider": {
+                    "type": "string"
+                },
+                "cloudRegion": {
+                    "type": "string"
+                },
+                "cloudResourceId": {
+                    "type": "string"
+                },
+                "cloudResourceRefId": {
+                    "type": "integer"
+                },
+                "cloudResourceType": {
+                    "type": "string"
+                },
+                "cloudSyncStatus": {
+                    "type": "string"
+                },
+                "cloudSyncTime": {
+                    "type": "string"
+                },
+                "cloudTags": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloudZone": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "criticality": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discoverySource": {
+                    "type": "string"
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "environment": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "incomingRelations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CIRelationshipResponse"
+                    }
+                },
+                "lastDiscovered": {
+                    "type": "string"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "outgoingRelations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CIRelationshipResponse"
+                    }
+                },
+                "ownedBy": {
+                    "type": "string"
+                },
+                "serialNumber": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tagDetails": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CITagResponse"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "vendor": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CISavedView": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "creatorId": {
+                    "description": "创建人ID",
+                    "type": "integer"
+                },
+                "creatorName": {
+                    "description": "创建人名称",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "视图描述",
+                    "type": "string"
+                },
+                "filters": {
+                    "description": "保存的过滤条件",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.CISearchFilter"
+                        }
+                    ]
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isPublic": {
+                    "description": "是否公开",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "视图名称",
+                    "type": "string"
+                },
+                "sortBy": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CISearchFilter": {
+            "type": "object",
+            "properties": {
+                "assetTag": {
+                    "description": "资产标签",
+                    "type": "string"
+                },
+                "assignedTo": {
+                    "description": "负责人",
+                    "type": "string"
+                },
+                "attributes": {
+                    "description": "自定义属性过滤",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "ciTypeId": {
+                    "description": "CI类型ID",
+                    "type": "integer"
+                },
+                "cloudProvider": {
+                    "description": "云厂商",
+                    "type": "string"
+                },
+                "cloudRegion": {
+                    "description": "云区域",
+                    "type": "string"
+                },
+                "cloudResourceId": {
+                    "description": "云资源ID",
+                    "type": "string"
+                },
+                "criticality": {
+                    "description": "重要级别",
+                    "type": "string"
+                },
+                "dateFrom": {
+                    "description": "创建时间起始",
+                    "type": "string"
+                },
+                "dateTo": {
+                    "description": "创建时间截止",
+                    "type": "string"
+                },
+                "environment": {
+                    "description": "环境",
+                    "type": "string"
+                },
+                "keyword": {
+                    "description": "全文搜索关键词",
+                    "type": "string"
+                },
+                "location": {
+                    "description": "位置",
+                    "type": "string"
+                },
+                "ownedBy": {
+                    "description": "归属人",
+                    "type": "string"
+                },
+                "serialNumber": {
+                    "description": "序列号",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                },
+                "tagIds": {
+                    "description": "标签ID列表",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "vendor": {
+                    "description": "厂商",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CISearchRequest": {
+            "type": "object",
+            "properties": {
+                "filters": {
+                    "description": "搜索过滤条件",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.CISearchFilter"
+                        }
+                    ]
+                },
+                "page": {
+                    "description": "页码",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "pageSize": {
+                    "description": "每页数量",
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1
+                },
+                "sortBy": {
+                    "description": "排序字段",
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "description": "排序方向",
+                    "type": "string",
+                    "enum": [
+                        "asc",
+                        "desc"
+                    ]
+                }
+            }
+        },
+        "dto.CIStatsResponse": {
+            "type": "object",
+            "properties": {
+                "criticalityDistribution": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "environmentDistribution": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "statusDistribution": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "totalCount": {
+                    "type": "integer"
+                },
+                "typeDistribution": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "dto.CITagListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CITagResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CITagResponse": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CITypeResponse": {
+            "type": "object",
+            "properties": {
+                "attributeSchema": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentTypeId": {
+                    "type": "integer"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
         "dto.ChangeApprovalChainItem": {
             "type": "object",
             "required": [
-                "approver_id",
+                "approverId",
                 "level",
                 "role"
             ],
             "properties": {
-                "approver_id": {
+                "approverId": {
                     "description": "审批人ID",
                     "type": "integer"
                 },
-                "is_required": {
+                "isRequired": {
                     "description": "是否必需审批",
                     "type": "boolean"
                 },
@@ -7625,19 +14902,19 @@ const docTemplate = `{
         "dto.ChangeApprovalChainResponse": {
             "type": "object",
             "properties": {
-                "approver_id": {
+                "approverId": {
                     "description": "审批人ID",
                     "type": "integer"
                 },
-                "approver_name": {
+                "approverName": {
                     "description": "审批人姓名",
                     "type": "string"
                 },
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
-                "created_at": {
+                "createdAt": {
                     "description": "创建时间",
                     "type": "string"
                 },
@@ -7645,7 +14922,7 @@ const docTemplate = `{
                     "description": "审批链ID",
                     "type": "integer"
                 },
-                "is_required": {
+                "isRequired": {
                     "description": "是否必需审批",
                     "type": "boolean"
                 },
@@ -7666,19 +14943,19 @@ const docTemplate = `{
         "dto.ChangeApprovalResponse": {
             "type": "object",
             "properties": {
-                "approved_at": {
+                "approvedAt": {
                     "description": "审批时间",
                     "type": "string"
                 },
-                "approver_id": {
+                "approverId": {
                     "description": "审批人ID",
                     "type": "integer"
                 },
-                "approver_name": {
+                "approverName": {
                     "description": "审批人姓名",
                     "type": "string"
                 },
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
@@ -7686,7 +14963,7 @@ const docTemplate = `{
                     "description": "审批意见",
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "description": "创建时间",
                     "type": "string"
                 },
@@ -7704,40 +14981,53 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ChangeApprovalStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "approved",
+                "rejected"
+            ],
+            "x-enum-varnames": [
+                "ChangeApprovalStatusPending",
+                "ChangeApprovalStatusApproved",
+                "ChangeApprovalStatusRejected"
+            ]
+        },
         "dto.ChangeApprovalSummary": {
             "type": "object",
             "properties": {
-                "approval_history": {
+                "approvalHistory": {
                     "description": "审批历史",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ChangeApprovalResponse"
                     }
                 },
-                "approval_status": {
+                "approvalStatus": {
                     "description": "审批状态",
                     "type": "string"
                 },
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
-                "current_level": {
+                "currentLevel": {
                     "description": "当前审批级别",
                     "type": "integer"
                 },
-                "next_approver": {
+                "nextApprover": {
                     "description": "下一个审批人",
                     "type": "string"
                 },
-                "pending_approvals": {
+                "pendingApprovals": {
                     "description": "待审批项目",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ChangeApprovalChainResponse"
                     }
                 },
-                "total_levels": {
+                "totalLevels": {
                     "description": "总审批级别",
                     "type": "integer"
                 }
@@ -7746,18 +15036,18 @@ const docTemplate = `{
         "dto.ChangeApprovalWorkflowRequest": {
             "type": "object",
             "required": [
-                "approval_chain",
-                "change_id"
+                "approvalChain",
+                "changeId"
             ],
             "properties": {
-                "approval_chain": {
+                "approvalChain": {
                     "description": "审批链",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ChangeApprovalChainItem"
                     }
                 },
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 }
@@ -7766,11 +15056,11 @@ const docTemplate = `{
         "dto.ChangeImplementationPlanResponse": {
             "type": "object",
             "properties": {
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
-                "created_at": {
+                "createdAt": {
                     "description": "创建时间",
                     "type": "string"
                 },
@@ -7785,7 +15075,7 @@ const docTemplate = `{
                     "description": "阶段描述",
                     "type": "string"
                 },
-                "end_date": {
+                "endDate": {
                     "description": "结束时间",
                     "type": "string"
                 },
@@ -7808,7 +15098,7 @@ const docTemplate = `{
                     "description": "负责人",
                     "type": "string"
                 },
-                "start_date": {
+                "startDate": {
                     "description": "开始时间",
                     "type": "string"
                 },
@@ -7816,7 +15106,7 @@ const docTemplate = `{
                     "description": "状态",
                     "type": "string"
                 },
-                "success_criteria": {
+                "successCriteria": {
                     "description": "成功标准",
                     "type": "string"
                 },
@@ -7827,7 +15117,7 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "updated_at": {
+                "updatedAt": {
                     "description": "更新时间",
                     "type": "string"
                 }
@@ -7859,15 +15149,15 @@ const docTemplate = `{
         "dto.ChangeRiskAssessmentResponse": {
             "type": "object",
             "properties": {
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
-                "contingency_plan": {
+                "contingencyPlan": {
                     "description": "应急计划",
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "description": "创建时间",
                     "type": "string"
                 },
@@ -7875,19 +15165,19 @@ const docTemplate = `{
                     "description": "风险评估ID",
                     "type": "integer"
                 },
-                "impact_analysis": {
+                "impactAnalysis": {
                     "description": "影响分析",
                     "type": "string"
                 },
-                "mitigation_measures": {
+                "mitigationMeasures": {
                     "description": "缓解措施",
                     "type": "string"
                 },
-                "risk_description": {
+                "riskDescription": {
                     "description": "风险描述",
                     "type": "string"
                 },
-                "risk_level": {
+                "riskLevel": {
                     "description": "风险等级",
                     "allOf": [
                         {
@@ -7895,15 +15185,15 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "risk_owner": {
+                "riskOwner": {
                     "description": "风险责任人",
                     "type": "string"
                 },
-                "risk_review_date": {
+                "riskReviewDate": {
                     "description": "风险评审日期",
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "description": "更新时间",
                     "type": "string"
                 }
@@ -7912,7 +15202,7 @@ const docTemplate = `{
         "dto.ChangeRollbackExecutionResponse": {
             "type": "object",
             "properties": {
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
@@ -7920,11 +15210,11 @@ const docTemplate = `{
                     "description": "备注",
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "description": "创建时间",
                     "type": "string"
                 },
-                "end_time": {
+                "endTime": {
                     "description": "结束时间",
                     "type": "string"
                 },
@@ -7932,11 +15222,11 @@ const docTemplate = `{
                     "description": "执行记录ID",
                     "type": "integer"
                 },
-                "initiated_by": {
+                "initiatedBy": {
                     "description": "发起人ID",
                     "type": "integer"
                 },
-                "initiated_by_name": {
+                "initiatedByName": {
                     "description": "发起人姓名",
                     "type": "string"
                 },
@@ -7944,11 +15234,11 @@ const docTemplate = `{
                     "description": "执行结果",
                     "type": "string"
                 },
-                "rollback_plan_id": {
+                "rollbackPlanId": {
                     "description": "回滚计划ID",
                     "type": "integer"
                 },
-                "start_time": {
+                "startTime": {
                     "description": "开始时间",
                     "type": "string"
                 },
@@ -7956,11 +15246,11 @@ const docTemplate = `{
                     "description": "状态",
                     "type": "string"
                 },
-                "trigger_reason": {
+                "triggerReason": {
                     "description": "触发原因",
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "description": "更新时间",
                     "type": "string"
                 }
@@ -7969,23 +15259,23 @@ const docTemplate = `{
         "dto.ChangeRollbackPlanResponse": {
             "type": "object",
             "properties": {
-                "approval_required": {
+                "approvalRequired": {
                     "description": "是否需要审批",
                     "type": "boolean"
                 },
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
-                "communication_plan": {
+                "communicationPlan": {
                     "description": "沟通计划",
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "description": "创建时间",
                     "type": "string"
                 },
-                "estimated_time": {
+                "estimatedTime": {
                     "description": "预估时间",
                     "type": "string"
                 },
@@ -7997,25 +15287,25 @@ const docTemplate = `{
                     "description": "负责人",
                     "type": "string"
                 },
-                "rollback_steps": {
+                "rollbackSteps": {
                     "description": "回滚步骤",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "test_plan": {
+                "testPlan": {
                     "description": "测试计划",
                     "type": "string"
                 },
-                "trigger_conditions": {
+                "triggerConditions": {
                     "description": "触发条件",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "updated_at": {
+                "updatedAt": {
                     "description": "更新时间",
                     "type": "string"
                 }
@@ -8028,8 +15318,10 @@ const docTemplate = `{
                 "pending",
                 "approved",
                 "rejected",
+                "scheduled",
                 "in_progress",
                 "completed",
+                "failed",
                 "rolled_back",
                 "cancelled"
             ],
@@ -8038,18 +15330,22 @@ const docTemplate = `{
                 "ChangeStatusCancelled": "已取消",
                 "ChangeStatusCompleted": "已完成",
                 "ChangeStatusDraft": "草稿",
+                "ChangeStatusFailed": "实施失败",
                 "ChangeStatusInProgress": "实施中",
                 "ChangeStatusPending": "待审批",
                 "ChangeStatusRejected": "已拒绝",
-                "ChangeStatusRolledBack": "已回滚"
+                "ChangeStatusRolledBack": "已回滚",
+                "ChangeStatusScheduled": "已排期"
             },
             "x-enum-descriptions": [
                 "草稿",
                 "待审批",
                 "已批准",
                 "已拒绝",
+                "已排期",
                 "实施中",
                 "已完成",
+                "实施失败",
                 "已回滚",
                 "已取消"
             ],
@@ -8058,8 +15354,10 @@ const docTemplate = `{
                 "ChangeStatusPending",
                 "ChangeStatusApproved",
                 "ChangeStatusRejected",
+                "ChangeStatusScheduled",
                 "ChangeStatusInProgress",
                 "ChangeStatusCompleted",
+                "ChangeStatusFailed",
                 "ChangeStatusRolledBack",
                 "ChangeStatusCancelled"
             ]
@@ -8075,17 +15373,326 @@ const docTemplate = `{
         "dto.CloseTicketRequest": {
             "type": "object",
             "properties": {
-                "close_notes": {
+                "closeNotes": {
                     "type": "string"
                 },
-                "close_reason": {
+                "closeReason": {
                     "type": "string"
                 },
                 "feedback": {
                     "type": "string"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.CloudAccountListResponse": {
+            "type": "object",
+            "properties": {
+                "cloudAccounts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CloudAccountResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CloudAccountResponse": {
+            "type": "object",
+            "properties": {
+                "accountId": {
+                    "type": "string"
+                },
+                "accountName": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "credentialRef": {
+                    "type": "string"
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "regionWhitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type is optional; will be set from CIType if not provided",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CloudResourceListResponse": {
+            "type": "object",
+            "properties": {
+                "cloudResources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CloudResourceResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CloudResourceResponse": {
+            "type": "object",
+            "properties": {
+                "cloudAccountId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "firstSeenAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "lastSeenAt": {
+                    "type": "string"
+                },
+                "lifecycleState": {
+                    "type": "string"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "region": {
+                    "type": "string"
+                },
+                "resourceId": {
+                    "type": "string"
+                },
+                "resourceName": {
+                    "type": "string"
+                },
+                "serviceId": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type is optional; will be set from CIType if not provided",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CloudServiceListResponse": {
+            "type": "object",
+            "properties": {
+                "cloudServices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CloudServiceResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CloudServiceResponse": {
+            "type": "object",
+            "properties": {
+                "apiVersion": {
+                    "type": "string"
+                },
+                "attributeSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "isSystem": {
+                    "type": "boolean"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "resourceTypeCode": {
+                    "type": "string"
+                },
+                "resourceTypeName": {
+                    "type": "string"
+                },
+                "serviceCode": {
+                    "type": "string"
+                },
+                "serviceName": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type is optional; will be set from CIType if not provided",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ConvertIncidentToProblemRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "可选自定义描述",
+                    "type": "string"
+                },
+                "rootCause": {
+                    "description": "根因分析",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "可选自定义标题",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateAllocationRequest": {
+            "type": "object",
+            "required": [
+                "customerTenantId",
+                "mspUserId"
+            ],
+            "properties": {
+                "customerTenantId": {
+                    "type": "integer"
+                },
+                "mspUserId": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "primary",
+                        "backup",
+                        "specialist"
+                    ]
                 }
             }
         },
@@ -8095,15 +15702,15 @@ const docTemplate = `{
         "dto.CreateAssetRequest": {
             "type": "object",
             "required": [
-                "asset_number",
+                "assetNumber",
                 "name"
             ],
             "properties": {
-                "asset_number": {
+                "assetNumber": {
                     "description": "资产编号",
                     "type": "string"
                 },
-                "assigned_to": {
+                "assignedTo": {
                     "description": "分配给的用户ID",
                     "type": "integer"
                 },
@@ -8111,11 +15718,11 @@ const docTemplate = `{
                     "description": "资产分类",
                     "type": "string"
                 },
-                "ci_id": {
+                "ciId": {
                     "description": "关联CMDB配置项ID",
                     "type": "integer"
                 },
-                "custom_fields": {
+                "customFields": {
                     "description": "自定义字段",
                     "type": "object",
                     "additionalProperties": {
@@ -8134,7 +15741,7 @@ const docTemplate = `{
                     "description": "物理位置",
                     "type": "string"
                 },
-                "location_id": {
+                "locationId": {
                     "description": "位置ID",
                     "type": "integer"
                 },
@@ -8150,19 +15757,19 @@ const docTemplate = `{
                     "description": "资产名称",
                     "type": "string"
                 },
-                "parent_asset_id": {
+                "parentAssetId": {
                     "description": "父资产ID",
                     "type": "integer"
                 },
-                "purchase_date": {
+                "purchaseDate": {
                     "description": "采购日期",
                     "type": "string"
                 },
-                "purchase_price": {
+                "purchasePrice": {
                     "description": "采购价格",
                     "type": "number"
                 },
-                "serial_number": {
+                "serialNumber": {
                     "description": "序列号",
                     "type": "string"
                 },
@@ -8177,7 +15784,7 @@ const docTemplate = `{
                     "description": "资产子分类",
                     "type": "string"
                 },
-                "support_expiry": {
+                "supportExpiry": {
                     "description": "支持期到期",
                     "type": "string"
                 },
@@ -8196,7 +15803,7 @@ const docTemplate = `{
                     "description": "供应商",
                     "type": "string"
                 },
-                "warranty_expiry": {
+                "warrantyExpiry": {
                     "description": "保修期到期",
                     "type": "string"
                 }
@@ -8227,7 +15834,7 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "is_active": {
+                "isActive": {
                     "type": "boolean"
                 },
                 "name": {
@@ -8238,18 +15845,342 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateCIAttributeDefinitionRequest": {
+            "type": "object",
+            "required": [
+                "ciTypeId",
+                "displayName",
+                "name",
+                "type"
+            ],
+            "properties": {
+                "ciTypeId": {
+                    "type": "integer"
+                },
+                "defaultValue": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "displayName": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "displayOrder": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "enumValues": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "groupName": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "helpText": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "isSearchable": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "placeholder": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "referenceType": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "string",
+                        "int",
+                        "integer",
+                        "float",
+                        "bool",
+                        "boolean",
+                        "date",
+                        "datetime",
+                        "json",
+                        "enum",
+                        "reference",
+                        "list",
+                        "map"
+                    ]
+                },
+                "unique": {
+                    "type": "boolean"
+                },
+                "validationRules": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateCIRelationshipRequest": {
+            "type": "object",
+            "required": [
+                "relationshipType",
+                "sourceCiId",
+                "targetCiId"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "impactLevel": {
+                    "$ref": "#/definitions/dto.ImpactLevel"
+                },
+                "isDiscovered": {
+                    "type": "boolean"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "relationshipType": {
+                    "$ref": "#/definitions/dto.CIRelationshipType"
+                },
+                "sourceCiId": {
+                    "type": "integer"
+                },
+                "strength": {
+                    "$ref": "#/definitions/dto.RelationshipStrength"
+                },
+                "targetCiId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CreateCIRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "status"
+            ],
+            "properties": {
+                "assetTag": {
+                    "type": "string"
+                },
+                "assignedTo": {
+                    "type": "string"
+                },
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "ciTypeId": {
+                    "type": "integer"
+                },
+                "cloudAccountId": {
+                    "type": "string"
+                },
+                "cloudMetadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloudMetrics": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloudProvider": {
+                    "type": "string"
+                },
+                "cloudRegion": {
+                    "type": "string"
+                },
+                "cloudResourceId": {
+                    "type": "string"
+                },
+                "cloudResourceRefId": {
+                    "type": "integer"
+                },
+                "cloudResourceType": {
+                    "type": "string"
+                },
+                "cloudSyncStatus": {
+                    "type": "string"
+                },
+                "cloudSyncTime": {
+                    "type": "string"
+                },
+                "cloudTags": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloudZone": {
+                    "type": "string"
+                },
+                "criticality": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discoverySource": {
+                    "type": "string"
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "environment": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
+                },
+                "location": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "ownedBy": {
+                    "type": "string"
+                },
+                "serialNumber": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type is optional; will be set from CIType if not provided",
+                    "type": "string"
+                },
+                "vendor": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateCISavedViewRequest": {
+            "type": "object",
+            "required": [
+                "filters",
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "filters": {
+                    "$ref": "#/definitions/dto.CISearchFilter"
+                },
+                "isPublic": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "sortBy": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateCITagRequest": {
+            "type": "object",
+            "required": [
+                "key"
+            ],
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateCITypeRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "attributeSchema": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentTypeId": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "tenantId": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.CreateChangeApprovalRequest": {
             "type": "object",
             "required": [
-                "approver_id",
-                "change_id"
+                "approverId",
+                "changeId"
             ],
             "properties": {
-                "approver_id": {
+                "approverId": {
                     "description": "审批人ID",
                     "type": "integer"
                 },
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
@@ -8262,15 +16193,15 @@ const docTemplate = `{
         "dto.CreateChangeImplementationPlanRequest": {
             "type": "object",
             "required": [
-                "change_id",
+                "changeId",
                 "description",
                 "phase",
                 "responsible",
-                "success_criteria",
+                "successCriteria",
                 "tasks"
             ],
             "properties": {
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
@@ -8285,7 +16216,7 @@ const docTemplate = `{
                     "description": "阶段描述",
                     "type": "string"
                 },
-                "end_date": {
+                "endDate": {
                     "description": "结束时间",
                     "type": "string"
                 },
@@ -8304,11 +16235,11 @@ const docTemplate = `{
                     "description": "负责人",
                     "type": "string"
                 },
-                "start_date": {
+                "startDate": {
                     "description": "开始时间",
                     "type": "string"
                 },
-                "success_criteria": {
+                "successCriteria": {
                     "description": "成功标准",
                     "type": "string"
                 },
@@ -8324,35 +16255,35 @@ const docTemplate = `{
         "dto.CreateChangeRiskAssessmentRequest": {
             "type": "object",
             "required": [
-                "change_id",
-                "impact_analysis",
-                "mitigation_measures",
-                "risk_description",
-                "risk_level",
-                "risk_owner"
+                "changeId",
+                "impactAnalysis",
+                "mitigationMeasures",
+                "riskDescription",
+                "riskLevel",
+                "riskOwner"
             ],
             "properties": {
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
-                "contingency_plan": {
+                "contingencyPlan": {
                     "description": "应急计划",
                     "type": "string"
                 },
-                "impact_analysis": {
+                "impactAnalysis": {
                     "description": "影响分析",
                     "type": "string"
                 },
-                "mitigation_measures": {
+                "mitigationMeasures": {
                     "description": "缓解措施",
                     "type": "string"
                 },
-                "risk_description": {
+                "riskDescription": {
                     "description": "风险描述",
                     "type": "string"
                 },
-                "risk_level": {
+                "riskLevel": {
                     "description": "风险等级",
                     "allOf": [
                         {
@@ -8360,11 +16291,11 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "risk_owner": {
+                "riskOwner": {
                     "description": "风险责任人",
                     "type": "string"
                 },
-                "risk_review_date": {
+                "riskReviewDate": {
                     "description": "风险评审日期",
                     "type": "string"
                 }
@@ -8373,26 +16304,26 @@ const docTemplate = `{
         "dto.CreateChangeRollbackPlanRequest": {
             "type": "object",
             "required": [
-                "change_id",
-                "estimated_time",
+                "changeId",
+                "estimatedTime",
                 "responsible",
-                "rollback_steps",
-                "trigger_conditions"
+                "rollbackSteps",
+                "triggerConditions"
             ],
             "properties": {
-                "approval_required": {
+                "approvalRequired": {
                     "description": "是否需要审批",
                     "type": "boolean"
                 },
-                "change_id": {
+                "changeId": {
                     "description": "变更ID",
                     "type": "integer"
                 },
-                "communication_plan": {
+                "communicationPlan": {
                     "description": "沟通计划",
                     "type": "string"
                 },
-                "estimated_time": {
+                "estimatedTime": {
                     "description": "预估时间",
                     "type": "string"
                 },
@@ -8400,18 +16331,18 @@ const docTemplate = `{
                     "description": "负责人",
                     "type": "string"
                 },
-                "rollback_steps": {
+                "rollbackSteps": {
                     "description": "回滚步骤",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "test_plan": {
+                "testPlan": {
                     "description": "测试计划",
                     "type": "string"
                 },
-                "trigger_conditions": {
+                "triggerConditions": {
                     "description": "触发条件",
                     "type": "array",
                     "items": {
@@ -8420,20 +16351,193 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateCloudAccountRequest": {
+            "type": "object",
+            "required": [
+                "accountId",
+                "accountName",
+                "provider"
+            ],
+            "properties": {
+                "accountId": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "accountName": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "credentialRef": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "aliyun",
+                        "tencent",
+                        "huawei",
+                        "aws",
+                        "azure",
+                        "onprem"
+                    ]
+                },
+                "regionWhitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.CreateCloudResourceRequest": {
+            "type": "object",
+            "required": [
+                "cloudAccountId",
+                "resourceId",
+                "serviceId"
+            ],
+            "properties": {
+                "cloudAccountId": {
+                    "type": "integer"
+                },
+                "lifecycleState": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "region": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "resourceId": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "resourceName": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "serviceId": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "zone": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "dto.CreateCloudServiceRequest": {
+            "type": "object",
+            "required": [
+                "provider",
+                "resourceTypeCode",
+                "resourceTypeName",
+                "serviceCode",
+                "serviceName"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "attributeSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "isSystem": {
+                    "type": "boolean"
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "aliyun",
+                        "tencent",
+                        "huawei",
+                        "aws",
+                        "azure",
+                        "onprem"
+                    ]
+                },
+                "resourceTypeCode": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "resourceTypeName": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "serviceCode": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "serviceName": {
+                    "type": "string",
+                    "maxLength": 200
+                }
+            }
+        },
+        "dto.CreateGroupRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "tenantId": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
         "dto.CreateIncidentAlertRequest": {
             "type": "object",
             "required": [
-                "alert_name",
-                "alert_type",
-                "incident_id",
+                "alertName",
+                "alertType",
+                "incidentId",
                 "message"
             ],
             "properties": {
-                "alert_name": {
+                "alertName": {
                     "type": "string",
                     "example": "事件升级告警"
                 },
-                "alert_type": {
+                "alertType": {
                     "type": "string",
                     "example": "escalation"
                 },
@@ -8447,7 +16551,7 @@ const docTemplate = `{
                         "\"sms\"]"
                     ]
                 },
-                "incident_id": {
+                "incidentId": {
                     "type": "integer",
                     "example": 1
                 },
@@ -8472,18 +16576,46 @@ const docTemplate = `{
                     "type": "string",
                     "example": "high"
                 },
-                "triggered_at": {
+                "triggeredAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "dto.CreateIncidentCommentRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 1
+                },
+                "isInternal": {
+                    "type": "boolean"
+                },
+                "mentions": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
         "dto.CreateIncidentEventRequest": {
             "type": "object",
             "required": [
-                "event_name",
-                "event_type",
-                "incident_id"
+                "eventName",
+                "eventType",
+                "incidentId"
             ],
             "properties": {
                 "data": {
@@ -8494,15 +16626,15 @@ const docTemplate = `{
                     "type": "string",
                     "example": "事件状态从new变更为in_progress"
                 },
-                "event_name": {
+                "eventName": {
                     "type": "string",
                     "example": "状态变更"
                 },
-                "event_type": {
+                "eventType": {
                     "type": "string",
                     "example": "status_change"
                 },
-                "incident_id": {
+                "incidentId": {
                     "type": "integer",
                     "example": 1
                 },
@@ -8510,7 +16642,7 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
-                "occurred_at": {
+                "occurredAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
@@ -8526,153 +16658,45 @@ const docTemplate = `{
                     "type": "string",
                     "example": "active"
                 },
-                "user_id": {
+                "userId": {
                     "type": "integer",
                     "example": 1
                 }
             }
         },
-        "dto.CreateIncidentRequest": {
+        "dto.CreateMenuRequest": {
             "type": "object",
             "required": [
-                "title"
+                "name",
+                "path"
             ],
             "properties": {
-                "assignee_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "category": {
-                    "type": "string",
-                    "example": "performance"
-                },
-                "configuration_item_id": {
-                    "type": "integer",
-                    "example": 1
-                },
                 "description": {
-                    "type": "string",
-                    "example": "生产环境Web服务器CPU使用率持续超过90%"
-                },
-                "detected_at": {
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
-                },
-                "impact_analysis": {
-                    "$ref": "#/definitions/dto.ImpactAnalysis"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "priority": {
-                    "type": "string",
-                    "enum": [
-                        "low",
-                        "medium",
-                        "high",
-                        "critical"
-                    ],
-                    "example": "high"
-                },
-                "severity": {
-                    "type": "string",
-                    "enum": [
-                        "low",
-                        "medium",
-                        "high",
-                        "critical"
-                    ],
-                    "example": "high"
-                },
-                "source": {
-                    "type": "string",
-                    "enum": [
-                        "manual",
-                        "monitoring",
-                        "system",
-                        "user"
-                    ],
-                    "example": "monitoring"
-                },
-                "subcategory": {
-                    "type": "string",
-                    "example": "cpu"
-                },
-                "title": {
-                    "type": "string",
-                    "example": "服务器CPU使用率过高"
-                },
-                "type": {
-                    "description": "事件类型",
-                    "type": "string",
-                    "enum": [
-                        "incident",
-                        "service_request",
-                        "security_event",
-                        "alert"
-                    ],
-                    "example": "incident"
-                }
-            }
-        },
-        "dto.CreateKnowledgeArticleRequest": {
-            "type": "object",
-            "required": [
-                "category",
-                "title"
-            ],
-            "properties": {
-                "category": {
                     "type": "string"
                 },
-                "content": {
+                "icon": {
                     "type": "string"
                 },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "isEnabled": {
+                    "type": "boolean"
                 },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.CreateProblemRequest": {
-            "type": "object",
-            "required": [
-                "description",
-                "priority",
-                "title"
-            ],
-            "properties": {
-                "category": {
+                "isVisible": {
+                    "type": "boolean"
+                },
+                "name": {
                     "type": "string"
                 },
-                "description": {
-                    "type": "string",
-                    "maxLength": 5000,
-                    "minLength": 10
+                "parentId": {
+                    "type": "integer"
                 },
-                "impact": {
+                "path": {
                     "type": "string"
                 },
-                "impact_scope": {
-                    "description": "影响范围",
+                "permissionCode": {
                     "type": "string"
                 },
-                "priority": {
-                    "type": "string"
-                },
-                "root_cause": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 2
+                "sortOrder": {
+                    "type": "integer"
                 }
             }
         },
@@ -8689,7 +16713,7 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "is_system": {
+                "isSystem": {
                     "type": "boolean"
                 },
                 "name": {
@@ -8706,11 +16730,65 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateSLAPolicyRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "businessHours": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "customerTier": {
+                    "description": "platinum/gold/silver/bronze",
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "escalationRules": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "excludeHolidays": {
+                    "type": "boolean"
+                },
+                "excludeWeekends": {
+                    "type": "boolean"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "description": "critical/high/medium/low",
+                    "type": "string"
+                },
+                "priorityScore": {
+                    "type": "integer"
+                },
+                "resolutionTimeMinutes": {
+                    "type": "integer"
+                },
+                "responseTimeMinutes": {
+                    "type": "integer"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "ticketType": {
+                    "description": "incident/problem/change/request",
+                    "type": "string"
+                }
+            }
+        },
         "dto.CreateServiceCatalogRequest": {
             "type": "object",
             "required": [
                 "category",
-                "delivery_time",
                 "name"
             ],
             "properties": {
@@ -8718,13 +16796,13 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
-                "ci_type_id": {
+                "ciTypeId": {
                     "type": "integer"
                 },
-                "cloud_service_id": {
+                "cloudServiceId": {
                     "type": "integer"
                 },
-                "delivery_time": {
+                "deliveryTime": {
                     "type": "string",
                     "maxLength": 50
                 },
@@ -8747,44 +16825,42 @@ const docTemplate = `{
         },
         "dto.CreateServiceRequestRequest": {
             "type": "object",
-            "required": [
-                "catalog_id"
-            ],
             "properties": {
-                "catalog_id": {
+                "catalogId": {
                     "type": "integer",
                     "minimum": 1
                 },
-                "compliance_ack": {
+                "complianceAck": {
                     "type": "boolean"
                 },
-                "cost_center": {
+                "costCenter": {
                     "type": "string",
                     "maxLength": 100
                 },
-                "data_classification": {
+                "dataClassification": {
                     "type": "string",
                     "enum": [
                         "public",
                         "internal",
-                        "confidential"
+                        "confidential",
+                        "restricted"
                     ]
                 },
-                "expire_at": {
+                "expireAt": {
                     "type": "string"
                 },
-                "form_data": {
+                "formData": {
                     "type": "object",
                     "additionalProperties": {}
                 },
-                "needs_public_ip": {
+                "needsPublicIp": {
                     "type": "boolean"
                 },
                 "reason": {
                     "type": "string",
                     "maxLength": 500
                 },
-                "source_ip_whitelist": {
+                "sourceIpWhitelist": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -8804,36 +16880,75 @@ const docTemplate = `{
                 "type"
             ],
             "properties": {
+                "billingEnabled": {
+                    "type": "boolean"
+                },
                 "code": {
                     "type": "string",
                     "maxLength": 50
+                },
+                "costCenterCode": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
                 },
                 "domain": {
                     "type": "string",
                     "maxLength": 100
                 },
-                "expires_at": {
+                "expiresAt": {
                     "type": "string"
+                },
+                "legalEntityCode": {
+                    "type": "string"
+                },
+                "mspProviderId": {
+                    "type": "integer"
                 },
                 "name": {
                     "type": "string",
                     "maxLength": 100
                 },
+                "ownerContact": {
+                    "type": "string"
+                },
+                "parentTenantId": {
+                    "type": "integer"
+                },
+                "planCode": {
+                    "type": "string"
+                },
                 "quota": {
                     "type": "object",
                     "additionalProperties": true
+                },
+                "serviceTier": {
+                    "type": "string"
                 },
                 "settings": {
                     "type": "object",
                     "additionalProperties": true
                 },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "suspended",
+                        "expired",
+                        "deleted"
+                    ]
+                },
                 "type": {
                     "type": "string",
                     "enum": [
-                        "trial",
                         "standard",
-                        "professional",
-                        "enterprise"
+                        "internal",
+                        "saas_customer",
+                        "msp_provider",
+                        "msp_customer",
+                        "msp",
+                        "customer"
                     ]
                 }
             }
@@ -8856,7 +16971,7 @@ const docTemplate = `{
                     "maxLength": 5000,
                     "minLength": 1
                 },
-                "is_internal": {
+                "isInternal": {
                     "description": "是否内部备注",
                     "type": "boolean"
                 },
@@ -8877,7 +16992,7 @@ const docTemplate = `{
                 "title"
             ],
             "properties": {
-                "assignee_id": {
+                "assigneeId": {
                     "type": "integer"
                 },
                 "attachments": {
@@ -8890,30 +17005,37 @@ const docTemplate = `{
                     "description": "分类名称（可选，前端传入）",
                     "type": "string"
                 },
-                "category_id": {
+                "categoryId": {
                     "description": "分类ID（优先使用）",
                     "type": "integer"
                 },
                 "description": {
                     "type": "string",
                     "maxLength": 5000,
-                    "minLength": 10
+                    "minLength": 0
                 },
-                "form_fields": {
+                "formFields": {
                     "type": "object",
                     "additionalProperties": true
                 },
-                "parent_ticket_id": {
+                "parentTicketId": {
                     "type": "integer"
                 },
                 "priority": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical",
+                        "urgent"
+                    ]
                 },
-                "requester_id": {
+                "requesterId": {
                     "description": "从认证上下文中获取，前端可不传",
                     "type": "integer"
                 },
-                "tag_ids": {
+                "tagIds": {
                     "description": "标签ID列表",
                     "type": "array",
                     "items": {
@@ -8921,13 +17043,12 @@ const docTemplate = `{
                     }
                 },
                 "tags": {
-                    "description": "标签名称列表",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "template_id": {
+                "templateId": {
                     "description": "模板ID",
                     "type": "integer"
                 },
@@ -8943,8 +17064,17 @@ const docTemplate = `{
                         "incident",
                         "service_request",
                         "change",
-                        "ticket"
+                        "ticket",
+                        "problem",
+                        "improvement"
                     ]
+                },
+                "typeId": {
+                    "type": "string"
+                },
+                "workflowDefinitionKey": {
+                    "description": "工作流定义Key（可选，优先级高于自动选择）",
+                    "type": "string"
                 }
             }
         },
@@ -8955,22 +17085,22 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
-                "approval_chain": {
+                "approvalChain": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ApprovalChainDefinition"
                     }
                 },
-                "approval_enabled": {
+                "approvalEnabled": {
                     "type": "boolean"
                 },
-                "assignment_rules": {
+                "assignmentRules": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.AssignmentRule"
                     }
                 },
-                "auto_assign_enabled": {
+                "autoAssignEnabled": {
                     "type": "boolean"
                 },
                 "code": {
@@ -8979,13 +17109,13 @@ const docTemplate = `{
                 "color": {
                     "type": "string"
                 },
-                "custom_fields": {
+                "customFields": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.CustomFieldDefinition"
                     }
                 },
-                "default_sla_id": {
+                "defaultSlaId": {
                     "type": "integer"
                 },
                 "description": {
@@ -8997,13 +17127,13 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "notification_config": {
+                "notificationConfig": {
                     "$ref": "#/definitions/dto.NotificationConfig"
                 },
-                "permission_config": {
+                "permissionConfig": {
                     "$ref": "#/definitions/dto.PermissionConfig"
                 },
-                "sla_enabled": {
+                "slaEnabled": {
                     "type": "boolean"
                 }
             }
@@ -9014,7 +17144,6 @@ const docTemplate = `{
                 "email",
                 "name",
                 "password",
-                "tenant_id",
                 "username"
             ],
             "properties": {
@@ -9023,6 +17152,15 @@ const docTemplate = `{
                 },
                 "email": {
                     "type": "string"
+                },
+                "mspRole": {
+                    "description": "MSP角色，仅当用户属于MSP租户时使用",
+                    "type": "string",
+                    "enum": [
+                        "provider_admin",
+                        "provider_agent",
+                        "customer_user"
+                    ]
                 },
                 "name": {
                     "type": "string",
@@ -9046,12 +17184,12 @@ const docTemplate = `{
                         "agent",
                         "technician",
                         "security",
-                        "end_user"
+                        "end_user",
+                        "user"
                     ]
                 },
-                "tenant_id": {
-                    "type": "integer",
-                    "minimum": 1
+                "tenantId": {
+                    "type": "integer"
                 },
                 "username": {
                     "type": "string",
@@ -9076,10 +17214,10 @@ const docTemplate = `{
         "dto.CustomFieldDefinition": {
             "type": "object",
             "properties": {
-                "conditional_display": {
+                "conditionalDisplay": {
                     "$ref": "#/definitions/dto.CustomFieldConditionalDisplay"
                 },
-                "default_value": {},
+                "defaultValue": {},
                 "description": {
                     "type": "string"
                 },
@@ -9201,16 +17339,16 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.DashboardKPIResponse"
                     }
                 },
-                "last_updated": {
+                "lastUpdated": {
                     "type": "string"
                 },
-                "multi_cloud_resources": {
+                "multiCloudResources": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.MultiCloudResourceData"
                     }
                 },
-                "resource_health": {
+                "resourceHealth": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ResourceHealthData"
@@ -9218,16 +17356,34 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.DeallocateRequest": {
+            "type": "object",
+            "required": [
+                "customerTenantId",
+                "mspUserId"
+            ],
+            "properties": {
+                "customerTenantId": {
+                    "type": "integer"
+                },
+                "mspUserId": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.DeepAnalyticsRequest": {
             "type": "object",
             "required": [
-                "chart_type",
+                "chartType",
                 "dimensions",
                 "metrics",
-                "time_range"
+                "timeRange"
             ],
             "properties": {
-                "chart_type": {
+                "chartType": {
                     "type": "string",
                     "enum": [
                         "line",
@@ -9253,7 +17409,7 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
-                "group_by": {
+                "groupBy": {
                     "type": "string",
                     "example": "status"
                 },
@@ -9272,11 +17428,11 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
-                "page_size": {
+                "pageSize": {
                     "type": "integer",
                     "example": 20
                 },
-                "time_range": {
+                "timeRange": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -9288,61 +17444,456 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.EscalateMajorIncidentRequest": {
+            "type": "object",
+            "required": [
+                "businessImpact",
+                "impactScope"
+            ],
+            "properties": {
+                "businessImpact": {
+                    "type": "string"
+                },
+                "communicationPlan": {
+                    "type": "string"
+                },
+                "impactScope": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
+                }
+            }
+        },
+        "dto.ExportCIRequest": {
+            "type": "object",
+            "required": [
+                "exportType"
+            ],
+            "properties": {
+                "exportFields": {
+                    "description": "指定导出字段，默认导出所有",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "exportType": {
+                    "description": "导出类型：xlsx/csv",
+                    "type": "string",
+                    "enum": [
+                        "xlsx",
+                        "csv"
+                    ]
+                },
+                "filters": {
+                    "description": "导出过滤条件",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.CISearchFilter"
+                        }
+                    ]
+                }
+            }
+        },
+        "dto.ExportCIResult": {
+            "type": "object",
+            "properties": {
+                "completedAt": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "expiresAt": {
+                    "description": "下载链接过期时间",
+                    "type": "string"
+                },
+                "fileSize": {
+                    "description": "文件大小（字节）",
+                    "type": "integer"
+                },
+                "fileUrl": {
+                    "description": "导出文件下载地址",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "任务状态：pending processing completed failed",
+                    "type": "string"
+                },
+                "taskId": {
+                    "description": "导出任务ID",
+                    "type": "string"
+                },
+                "totalCount": {
+                    "description": "导出的CI数量",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ForgotPasswordRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "tenantCode": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ForgotPasswordResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ForwardTicketRequest": {
             "type": "object",
             "required": [
                 "comment",
-                "ticket_id",
-                "to_user_id"
+                "toUserId"
             ],
             "properties": {
                 "comment": {
                     "type": "string"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
                 },
-                "to_user_id": {
+                "toUserId": {
                     "type": "integer"
                 },
-                "transfer_ownership": {
+                "transferOwnership": {
                     "type": "boolean"
+                }
+            }
+        },
+        "dto.GenerateBPMNRequest": {
+            "type": "object",
+            "required": [
+                "enterpriseType",
+                "processType",
+                "requirement",
+                "tenantId"
+            ],
+            "properties": {
+                "enterpriseType": {
+                    "description": "企业类型：cn_enterprise/international/startup/government",
+                    "type": "string",
+                    "enum": [
+                        "cn_enterprise",
+                        "international",
+                        "startup",
+                        "government"
+                    ]
+                },
+                "includeApprovals": {
+                    "description": "是否包含审批节点",
+                    "type": "boolean"
+                },
+                "includeNotifications": {
+                    "description": "是否包含通知配置",
+                    "type": "boolean"
+                },
+                "includeSla": {
+                    "description": "是否包含SLA配置",
+                    "type": "boolean"
+                },
+                "processType": {
+                    "description": "流程类型：incident/change/problem/service_request/custom",
+                    "type": "string",
+                    "enum": [
+                        "incident",
+                        "change",
+                        "problem",
+                        "service_request",
+                        "custom"
+                    ]
+                },
+                "requirement": {
+                    "description": "业务需求描述",
+                    "type": "string",
+                    "maxLength": 2000,
+                    "minLength": 10
+                },
+                "tenantId": {
+                    "description": "租户ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.GenerateBPMNResponse": {
+            "type": "object",
+            "properties": {
+                "bpmnXml": {
+                    "description": "生成的BPMN XML内容",
+                    "type": "string"
+                },
+                "complexity": {
+                    "description": "预估复杂度：low/medium/high",
+                    "type": "string"
+                },
+                "deploymentId": {
+                    "description": "部署后的流程定义ID（如果选择自动部署）",
+                    "type": "string"
+                },
+                "explanation": {
+                    "description": "生成说明",
+                    "type": "string"
+                },
+                "nodeCount": {
+                    "description": "节点数量",
+                    "type": "integer"
+                },
+                "processDefinitionId": {
+                    "description": "流程定义ID",
+                    "type": "integer"
+                },
+                "processDescription": {
+                    "description": "流程描述",
+                    "type": "string"
+                },
+                "processId": {
+                    "description": "流程ID",
+                    "type": "string"
+                },
+                "processName": {
+                    "description": "流程名称",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "版本号",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GetRelationshipTypesResponse": {
+            "type": "object",
+            "properties": {
+                "types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.RelationshipTypeInfo"
+                    }
+                }
+            }
+        },
+        "dto.GroupDetailResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.UserDTO"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GroupResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
         "dto.ImpactAnalysis": {
             "type": "object",
             "properties": {
-                "affected_users": {
+                "affectedUsers": {
                     "type": "integer"
                 },
-                "business_impact": {
+                "businessImpact": {
                     "$ref": "#/definitions/dto.BusinessImpact"
                 },
-                "technical_impact": {
+                "technicalImpact": {
                     "type": "string"
                 },
-                "time_impact": {
+                "timeImpact": {
                     "$ref": "#/definitions/dto.TimeImpact"
+                }
+            }
+        },
+        "dto.ImpactAnalysisItem": {
+            "type": "object",
+            "properties": {
+                "affectedCount": {
+                    "description": "受影响的工单/事件数量",
+                    "type": "integer"
+                },
+                "ciId": {
+                    "type": "integer"
+                },
+                "ciName": {
+                    "type": "string"
+                },
+                "ciType": {
+                    "type": "string"
+                },
+                "direction": {
+                    "description": "upstream / downstream",
+                    "type": "string"
+                },
+                "distance": {
+                    "type": "integer"
+                },
+                "impactLevel": {
+                    "$ref": "#/definitions/dto.ImpactLevel"
+                },
+                "relationship": {
+                    "type": "string"
+                },
+                "relationshipType": {
+                    "$ref": "#/definitions/dto.CIRelationshipType"
+                }
+            }
+        },
+        "dto.ImpactLevel": {
+            "type": "string",
+            "enum": [
+                "critical",
+                "high",
+                "medium",
+                "low"
+            ],
+            "x-enum-varnames": [
+                "ImpactCritical",
+                "ImpactHigh",
+                "ImpactMedium",
+                "ImpactLow"
+            ]
+        },
+        "dto.ImportCIRequest": {
+            "type": "object",
+            "required": [
+                "fileType",
+                "fileUrl",
+                "updateMode"
+            ],
+            "properties": {
+                "fileType": {
+                    "description": "文件类型：xlsx/csv",
+                    "type": "string",
+                    "enum": [
+                        "xlsx",
+                        "csv"
+                    ]
+                },
+                "fileUrl": {
+                    "description": "导入文件地址",
+                    "type": "string"
+                },
+                "sheetName": {
+                    "description": "Excel的Sheet名称，默认第一个",
+                    "type": "string"
+                },
+                "updateMode": {
+                    "description": "更新模式：skip=跳过已存在 overwrite=覆盖 merge=合并更新",
+                    "type": "string",
+                    "enum": [
+                        "skip",
+                        "overwrite",
+                        "merge"
+                    ]
+                }
+            }
+        },
+        "dto.ImportCIResult": {
+            "type": "object",
+            "properties": {
+                "completedAt": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "errors": {
+                    "description": "错误详情",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CIImportError"
+                    }
+                },
+                "failedCount": {
+                    "description": "失败行数",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "任务状态：pending processing completed failed",
+                    "type": "string"
+                },
+                "successCount": {
+                    "description": "成功行数",
+                    "type": "integer"
+                },
+                "taskId": {
+                    "description": "导入任务ID",
+                    "type": "string"
+                },
+                "totalCount": {
+                    "description": "总行数",
+                    "type": "integer"
                 }
             }
         },
         "dto.IncidentAlertResponse": {
             "type": "object",
             "properties": {
-                "acknowledged_at": {
+                "acknowledgedAt": {
                     "type": "string",
                     "example": "2024-01-01T01:00:00Z"
                 },
-                "acknowledged_by": {
+                "acknowledgedBy": {
                     "type": "integer",
                     "example": 1
                 },
-                "alert_name": {
+                "alertName": {
                     "type": "string",
                     "example": "事件升级告警"
                 },
-                "alert_type": {
+                "alertType": {
                     "type": "string",
                     "example": "escalation"
                 },
@@ -9356,7 +17907,7 @@ const docTemplate = `{
                         "\"sms\"]"
                     ]
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
@@ -9364,7 +17915,7 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
-                "incident_id": {
+                "incidentId": {
                     "type": "integer",
                     "example": 1
                 },
@@ -9385,7 +17936,7 @@ const docTemplate = `{
                         "[\"manager@company.com\"]"
                     ]
                 },
-                "resolved_at": {
+                "resolvedAt": {
                     "type": "string",
                     "example": "2024-01-01T02:00:00Z"
                 },
@@ -9397,15 +17948,15 @@ const docTemplate = `{
                     "type": "string",
                     "example": "active"
                 },
-                "tenant_id": {
+                "tenantId": {
                     "type": "integer",
                     "example": 1
                 },
-                "triggered_at": {
+                "triggeredAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 }
@@ -9414,23 +17965,23 @@ const docTemplate = `{
         "dto.IncidentEscalationRequest": {
             "type": "object",
             "required": [
-                "escalation_level",
-                "incident_id"
+                "escalationLevel",
+                "incidentId"
             ],
             "properties": {
-                "auto_assign": {
+                "autoAssign": {
                     "type": "boolean",
                     "example": true
                 },
-                "escalation_level": {
+                "escalationLevel": {
                     "type": "integer",
                     "example": 1
                 },
-                "incident_id": {
+                "incidentId": {
                     "type": "integer",
                     "example": 1
                 },
-                "notify_users": {
+                "notifyUsers": {
                     "type": "array",
                     "items": {
                         "type": "integer"
@@ -9445,15 +17996,15 @@ const docTemplate = `{
         "dto.IncidentEscalationResponse": {
             "type": "object",
             "properties": {
-                "auto_assigned": {
+                "autoAssigned": {
                     "type": "boolean",
                     "example": true
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
-                "escalation_level": {
+                "escalationLevel": {
                     "type": "integer",
                     "example": 1
                 },
@@ -9461,11 +18012,11 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
-                "incident_id": {
+                "incidentId": {
                     "type": "integer",
                     "example": 1
                 },
-                "notified_users": {
+                "notifiedUsers": {
                     "type": "array",
                     "items": {
                         "type": "integer"
@@ -9479,7 +18030,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "active"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 }
@@ -9488,7 +18039,7 @@ const docTemplate = `{
         "dto.IncidentEventResponse": {
             "type": "object",
             "properties": {
-                "created_at": {
+                "createdAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
@@ -9500,11 +18051,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "事件状态从new变更为in_progress"
                 },
-                "event_name": {
+                "eventName": {
                     "type": "string",
                     "example": "状态变更"
                 },
-                "event_type": {
+                "eventType": {
                     "type": "string",
                     "example": "status_change"
                 },
@@ -9512,7 +18063,7 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
-                "incident_id": {
+                "incidentId": {
                     "type": "integer",
                     "example": 1
                 },
@@ -9520,7 +18071,7 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
-                "occurred_at": {
+                "occurredAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
@@ -9536,15 +18087,15 @@ const docTemplate = `{
                     "type": "string",
                     "example": "active"
                 },
-                "tenant_id": {
+                "tenantId": {
                     "type": "integer",
                     "example": 1
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
-                "user_id": {
+                "userId": {
                     "type": "integer",
                     "example": 1
                 }
@@ -9553,7 +18104,7 @@ const docTemplate = `{
         "dto.IncidentMetricResponse": {
             "type": "object",
             "properties": {
-                "created_at": {
+                "createdAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
@@ -9561,11 +18112,11 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
-                "incident_id": {
+                "incidentId": {
                     "type": "integer",
                     "example": 1
                 },
-                "measured_at": {
+                "measuredAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
@@ -9573,15 +18124,15 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
-                "metric_name": {
+                "metricName": {
                     "type": "string",
                     "example": "平均响应时间"
                 },
-                "metric_type": {
+                "metricType": {
                     "type": "string",
                     "example": "response_time"
                 },
-                "metric_value": {
+                "metricValue": {
                     "type": "number",
                     "example": 2.5
                 },
@@ -9591,7 +18142,7 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "tenant_id": {
+                "tenantId": {
                     "type": "integer",
                     "example": 1
                 },
@@ -9599,7 +18150,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "秒"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 }
@@ -9612,11 +18163,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "performance"
                 },
-                "end_time": {
+                "endTime": {
                     "type": "string",
                     "example": "2024-01-31T23:59:59Z"
                 },
-                "incident_id": {
+                "incidentId": {
                     "type": "integer",
                     "example": 1
                 },
@@ -9624,7 +18175,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "high"
                 },
-                "start_time": {
+                "startTime": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
@@ -9643,23 +18194,23 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.IncidentAlertResponse"
                     }
                 },
-                "average_resolution_time": {
+                "averageResolutionTime": {
                     "type": "number",
                     "example": 4.5
                 },
-                "closed_incidents": {
+                "closedIncidents": {
                     "type": "integer",
                     "example": 5
                 },
-                "critical_incidents": {
+                "criticalIncidents": {
                     "type": "integer",
                     "example": 10
                 },
-                "escalation_rate": {
+                "escalationRate": {
                     "type": "number",
                     "example": 15
                 },
-                "high_priority_incidents": {
+                "highPriorityIncidents": {
                     "type": "integer",
                     "example": 20
                 },
@@ -9675,19 +18226,19 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.IncidentMetricResponse"
                     }
                 },
-                "open_incidents": {
+                "openIncidents": {
                     "type": "integer",
                     "example": 25
                 },
-                "resolution_rate": {
+                "resolutionRate": {
                     "type": "number",
                     "example": 95
                 },
-                "resolved_incidents": {
+                "resolvedIncidents": {
                     "type": "integer",
                     "example": 70
                 },
-                "total_incidents": {
+                "totalIncidents": {
                     "type": "integer",
                     "example": 100
                 }
@@ -9696,7 +18247,7 @@ const docTemplate = `{
         "dto.IncidentResponse": {
             "type": "object",
             "properties": {
-                "assignee_id": {
+                "assigneeId": {
                     "type": "integer",
                     "example": 2
                 },
@@ -9704,31 +18255,32 @@ const docTemplate = `{
                     "type": "string",
                     "example": "performance"
                 },
-                "closed_at": {
+                "closedAt": {
                     "type": "string",
                     "example": "2024-01-01T18:00:00Z"
                 },
-                "configuration_item_id": {
+                "configurationItemId": {
                     "type": "integer",
-                    "example": 1
+                    "example": 3
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "description": {
                     "type": "string",
+                    "maxLength": 5000,
                     "example": "生产环境Web服务器CPU使用率持续超过90%"
                 },
-                "detected_at": {
+                "detectedAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
-                "escalated_at": {
+                "escalatedAt": {
                     "type": "string",
                     "example": "2024-01-01T06:00:00Z"
                 },
-                "escalation_level": {
+                "escalationLevel": {
                     "type": "integer",
                     "example": 1
                 },
@@ -9736,14 +18288,22 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
-                "impact_analysis": {
+                "impact": {
+                    "type": "string",
+                    "example": "medium"
+                },
+                "impactAnalysis": {
                     "$ref": "#/definitions/dto.ImpactAnalysis"
                 },
-                "incident_number": {
+                "incidentNumber": {
                     "type": "string",
                     "example": "INC-000001"
                 },
-                "is_automated": {
+                "isAutomated": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "isMajorIncident": {
                     "type": "boolean",
                     "example": false
                 },
@@ -9755,21 +18315,27 @@ const docTemplate = `{
                     "type": "string",
                     "example": "high"
                 },
-                "reporter_id": {
+                "relatedCIs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CIInfo"
+                    }
+                },
+                "reporterId": {
                     "type": "integer",
                     "example": 1
                 },
-                "resolution_steps": {
+                "resolutionSteps": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ResolutionStep"
                     }
                 },
-                "resolved_at": {
+                "resolvedAt": {
                     "type": "string",
                     "example": "2024-01-01T12:00:00Z"
                 },
-                "root_cause": {
+                "rootCause": {
                     "$ref": "#/definitions/dto.RootCause"
                 },
                 "severity": {
@@ -9788,7 +18354,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "cpu"
                 },
-                "tenant_id": {
+                "tenantId": {
                     "type": "integer",
                     "example": 1
                 },
@@ -9796,22 +18362,30 @@ const docTemplate = `{
                     "type": "string",
                     "example": "服务器CPU使用率过高"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
+                },
+                "urgency": {
+                    "type": "string",
+                    "example": "medium"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
         "dto.IncidentStatsResponse": {
             "type": "object",
             "properties": {
-                "avg_resolution_time": {
+                "avgResolutionTime": {
                     "type": "number"
                 },
-                "critical_incidents": {
+                "criticalIncidents": {
                     "type": "integer"
                 },
-                "major_incidents": {
+                "majorIncidents": {
                     "type": "integer"
                 },
                 "mtta": {
@@ -9822,10 +18396,10 @@ const docTemplate = `{
                     "description": "Mean Time To Resolve",
                     "type": "number"
                 },
-                "open_incidents": {
+                "openIncidents": {
                     "type": "integer"
                 },
-                "total_incidents": {
+                "totalIncidents": {
                     "type": "integer"
                 }
             }
@@ -9842,7 +18416,7 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
@@ -9862,7 +18436,7 @@ const docTemplate = `{
                 "content": {
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
                 "id": {
@@ -9877,16 +18451,77 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "tenant_id": {
+                "tenantId": {
                     "type": "integer"
                 },
                 "title": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 },
                 "views": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.KnowledgeArticleVersionListResponse": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.KnowledgeArticleVersionResponse"
+                    }
+                }
+            }
+        },
+        "dto.KnowledgeArticleVersionResponse": {
+            "type": "object",
+            "properties": {
+                "articleId": {
+                    "type": "integer"
+                },
+                "authorId": {
+                    "type": "integer"
+                },
+                "authorName": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "changeSummary": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "version": {
                     "type": "integer"
                 }
             }
@@ -9902,6 +18537,187 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.ListParticipantsResponse": {
+            "type": "object",
+            "properties": {
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ArticleParticipantResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ListResponse-dto_CIResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CIResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ListResponse-dto_CISavedView": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CISavedView"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ListResponse-dto_ExportCIResult": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ExportCIResult"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ListResponse-dto_ImportCIResult": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ImportCIResult"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.LoginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "tenantCode": {
+                    "description": "可选的租户代码",
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "refreshToken": {
+                    "type": "string"
+                },
+                "tenant": {
+                    "$ref": "#/definitions/ent.Tenant"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.LoginUserResponse"
+                }
+            }
+        },
+        "dto.LoginUserResponse": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "departmentId": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "mspRole": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "description": "用户权限列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -9925,19 +18741,19 @@ const docTemplate = `{
         "dto.NotificationConfig": {
             "type": "object",
             "properties": {
-                "on_approval": {
+                "onApproval": {
                     "$ref": "#/definitions/dto.NotificationRecipients"
                 },
-                "on_complete": {
+                "onComplete": {
                     "$ref": "#/definitions/dto.NotificationRecipients"
                 },
-                "on_create": {
+                "onCreate": {
                     "$ref": "#/definitions/dto.NotificationRecipients"
                 },
-                "on_reject": {
+                "onReject": {
                     "$ref": "#/definitions/dto.NotificationRecipients"
                 },
-                "on_update": {
+                "onUpdate": {
                     "$ref": "#/definitions/dto.NotificationRecipients"
                 }
             }
@@ -9957,6 +18773,20 @@ const docTemplate = `{
                 },
                 "template": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.PagedGroupsResponse": {
+            "type": "object",
+            "properties": {
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.GroupResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/dto.PaginationResponse"
                 }
             }
         },
@@ -9980,45 +18810,77 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "page_size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
                     "type": "integer"
                 },
-                "total_page": {
+                "totalPages": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.PasswordResetRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "passwordConfirm",
+                "token"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "passwordConfirm": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PasswordResetResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
                 }
             }
         },
         "dto.PermissionConfig": {
             "type": "object",
             "properties": {
-                "can_approve": {
+                "canApprove": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "can_create": {
+                "canCreate": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "can_delete": {
+                "canDelete": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "can_edit": {
+                "canEdit": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "can_view": {
+                "canView": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -10026,17 +18888,92 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.PreviewBPMNRequest": {
+            "type": "object",
+            "required": [
+                "enterpriseType",
+                "processType",
+                "requirement"
+            ],
+            "properties": {
+                "enterpriseType": {
+                    "description": "企业类型",
+                    "type": "string",
+                    "enum": [
+                        "cn_enterprise",
+                        "international",
+                        "startup",
+                        "government"
+                    ]
+                },
+                "processType": {
+                    "description": "流程类型",
+                    "type": "string",
+                    "enum": [
+                        "incident",
+                        "change",
+                        "problem",
+                        "service_request",
+                        "custom"
+                    ]
+                },
+                "requirement": {
+                    "description": "业务需求描述",
+                    "type": "string",
+                    "maxLength": 2000,
+                    "minLength": 10
+                }
+            }
+        },
+        "dto.PreviewBPMNResponse": {
+            "type": "object",
+            "properties": {
+                "complexity": {
+                    "description": "预估复杂度",
+                    "type": "string"
+                },
+                "estimatedNodeCount": {
+                    "description": "预估节点数量",
+                    "type": "integer"
+                },
+                "nodes": {
+                    "description": "节点列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.BPMNNodePreview"
+                    }
+                },
+                "structureDescription": {
+                    "description": "流程结构描述",
+                    "type": "string"
+                },
+                "suggestions": {
+                    "description": "优化建议",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "useCases": {
+                    "description": "适用场景说明",
+                    "type": "string"
+                }
+            }
+        },
         "dto.ProcessTriggerRequest": {
             "type": "object",
             "required": [
-                "business_id",
-                "business_type"
+                "businessId",
+                "businessType"
             ],
             "properties": {
-                "business_id": {
+                "businessId": {
                     "type": "integer"
                 },
-                "business_type": {
+                "businessSubType": {
+                    "type": "string"
+                },
+                "businessType": {
                     "description": "业务标识",
                     "allOf": [
                         {
@@ -10044,20 +18981,36 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "process_definition_key": {
+                "category": {
+                    "type": "string"
+                },
+                "departmentId": {
+                    "description": "多维流程路由上下文",
+                    "type": "integer"
+                },
+                "processDefinitionKey": {
                     "description": "流程定义（可选，如果不传则根据业务类型自动匹配）",
                     "type": "string"
                 },
-                "process_version": {
+                "processVersion": {
                     "type": "integer"
                 },
-                "tenant_id": {
+                "projectId": {
                     "type": "integer"
                 },
-                "triggered_at": {
+                "scenario": {
                     "type": "string"
                 },
-                "triggered_by": {
+                "teamId": {
+                    "type": "integer"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "triggeredAt": {
+                    "type": "string"
+                },
+                "triggeredBy": {
                     "description": "触发者信息",
                     "type": "string"
                 },
@@ -10071,10 +19024,10 @@ const docTemplate = `{
         "dto.ProvisioningTaskResponse": {
             "type": "object",
             "properties": {
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
-                "error_message": {
+                "errorMessage": {
                     "type": "string"
                 },
                 "id": {
@@ -10087,20 +19040,97 @@ const docTemplate = `{
                 "provider": {
                     "type": "string"
                 },
-                "resource_type": {
+                "resourceType": {
                     "type": "string"
                 },
                 "result": {
                     "type": "object",
                     "additionalProperties": {}
                 },
-                "service_request_id": {
+                "serviceRequestId": {
                     "type": "integer"
                 },
                 "status": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refreshToken"
+            ],
+            "properties": {
+                "refreshToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "refreshToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "fullName",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "company": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "tenantCode": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
+                }
+            }
+        },
+        "dto.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -10109,8 +19139,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "comment",
-                "reason",
-                "ticket_id"
+                "reason"
             ],
             "properties": {
                 "comment": {
@@ -10119,25 +19148,87 @@ const docTemplate = `{
                 "reason": {
                     "type": "string"
                 },
-                "return_to_status": {
+                "returnToStatus": {
                     "type": "string"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.RelationshipStrength": {
+            "type": "string",
+            "enum": [
+                "critical",
+                "high",
+                "medium",
+                "low"
+            ],
+            "x-enum-varnames": [
+                "StrengthCritical",
+                "StrengthHigh",
+                "StrengthMedium",
+                "StrengthLow"
+            ]
+        },
+        "dto.RelationshipTypeInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "direction": {
+                    "description": "uni-directional / bi-directional",
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/dto.CIRelationshipType"
+                }
+            }
+        },
+        "dto.RemoveCITagsRequest": {
+            "type": "object",
+            "required": [
+                "tagIds"
+            ],
+            "properties": {
+                "tagIds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "dto.RemoveUserFromGroupRequest": {
+            "type": "object",
+            "required": [
+                "userId"
+            ],
+            "properties": {
+                "userId": {
+                    "type": "integer",
+                    "minimum": 1
                 }
             }
         },
         "dto.ReopenTicketRequest": {
             "type": "object",
             "required": [
-                "reason",
-                "ticket_id"
+                "reason"
             ],
             "properties": {
                 "reason": {
                     "type": "string"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
                 }
             }
@@ -10145,10 +19236,10 @@ const docTemplate = `{
         "dto.ResetPasswordRequest": {
             "type": "object",
             "required": [
-                "new_password"
+                "newPassword"
             ],
             "properties": {
-                "new_password": {
+                "newPassword": {
                     "type": "string",
                     "minLength": 6
                 }
@@ -10160,10 +19251,10 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "executed_at": {
+                "executedAt": {
                     "type": "string"
                 },
-                "executed_by": {
+                "executedBy": {
                     "type": "string"
                 },
                 "status": {
@@ -10182,17 +19273,17 @@ const docTemplate = `{
                     "description": "解决方案（可选，兼容前端发送 solution）",
                     "type": "string"
                 },
-                "resolution_category": {
+                "resolutionCategory": {
                     "type": "string"
                 },
                 "solution": {
                     "description": "兼容前端字段名",
                     "type": "string"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
                 },
-                "work_notes": {
+                "workNotes": {
                     "type": "string"
                 }
             }
@@ -10208,13 +19299,40 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.RestoreArticleVersionRequest": {
+            "type": "object",
+            "required": [
+                "version"
+            ],
+            "properties": {
+                "version": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "dto.RevertCIVersionRequest": {
+            "type": "object",
+            "required": [
+                "version"
+            ],
+            "properties": {
+                "remark": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
         "dto.RootCause": {
             "type": "object",
             "properties": {
-                "analysis_method": {
+                "analysisMethod": {
                     "type": "string"
                 },
-                "contributing_factors": {
+                "contributingFactors": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -10226,13 +19344,13 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "preventive_actions": {
+                "preventiveActions": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "root_cause": {
+                "rootCause": {
                     "type": "string"
                 },
                 "status": {
@@ -10266,16 +19384,16 @@ const docTemplate = `{
                 "category": {
                     "type": "string"
                 },
-                "ci_type_id": {
+                "ciTypeId": {
                     "type": "integer"
                 },
-                "cloud_service_id": {
+                "cloudServiceId": {
                     "type": "integer"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
-                "delivery_time": {
+                "deliveryTime": {
                     "type": "string"
                 },
                 "description": {
@@ -10290,7 +19408,7 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -10320,44 +19438,44 @@ const docTemplate = `{
                 "action": {
                     "type": "string"
                 },
-                "approver_id": {
+                "approverId": {
                     "type": "integer"
                 },
-                "approver_name": {
+                "approverName": {
                     "type": "string"
                 },
                 "comment": {
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
-                "delegated_to_id": {
+                "delegatedToId": {
                     "description": "转交审批人ID",
                     "type": "integer"
                 },
-                "due_at": {
+                "dueAt": {
                     "description": "到期时间",
                     "type": "string"
                 },
-                "escalation_reason": {
+                "escalationReason": {
                     "description": "升级原因",
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "is_escalated": {
+                "isEscalated": {
                     "description": "是否已升级",
                     "type": "boolean"
                 },
                 "level": {
                     "type": "integer"
                 },
-                "processed_at": {
+                "processedAt": {
                     "type": "string"
                 },
-                "service_request_id": {
+                "serviceRequestId": {
                     "type": "integer"
                 },
                 "status": {
@@ -10366,7 +19484,7 @@ const docTemplate = `{
                 "step": {
                     "type": "string"
                 },
-                "timeout_hours": {
+                "timeoutHours": {
                     "description": "V1 新增字段",
                     "type": "integer"
                 }
@@ -10375,14 +19493,14 @@ const docTemplate = `{
         "dto.ServiceRequestListResponse": {
             "type": "object",
             "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "requests": {
+                "items": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ServiceRequestResponse"
                     }
+                },
+                "page": {
+                    "type": "integer"
                 },
                 "size": {
                     "type": "integer"
@@ -10401,42 +19519,57 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.ServiceRequestApprovalResponse"
                     }
                 },
+                "approvedAt": {
+                    "type": "string"
+                },
                 "catalog": {
                     "$ref": "#/definitions/dto.ServiceCatalogResponse"
                 },
-                "catalog_id": {
+                "catalogId": {
                     "type": "integer"
                 },
-                "ci_id": {
+                "ciId": {
                     "type": "integer"
                 },
-                "compliance_ack": {
+                "completedAt": {
+                    "type": "string"
+                },
+                "completionNote": {
+                    "type": "string"
+                },
+                "complianceAck": {
                     "type": "boolean"
                 },
-                "cost_center": {
+                "costCenter": {
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
-                "current_level": {
+                "currentLevel": {
                     "type": "integer"
                 },
-                "data_classification": {
+                "dataClassification": {
                     "type": "string"
                 },
-                "expire_at": {
+                "expireAt": {
                     "type": "string"
                 },
-                "form_data": {
+                "formData": {
                     "type": "object",
                     "additionalProperties": {}
                 },
                 "id": {
                     "type": "integer"
                 },
-                "needs_public_ip": {
+                "lastError": {
+                    "type": "string"
+                },
+                "needsPublicIp": {
                     "type": "boolean"
+                },
+                "processorId": {
+                    "type": "integer"
                 },
                 "reason": {
                     "type": "string"
@@ -10444,14 +19577,17 @@ const docTemplate = `{
                 "requester": {
                     "$ref": "#/definitions/dto.UserResponse"
                 },
-                "requester_id": {
+                "requesterId": {
                     "type": "integer"
                 },
-                "source_ip_whitelist": {
+                "sourceIpWhitelist": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "startedAt": {
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -10459,10 +19595,27 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "total_levels": {
+                "totalLevels": {
                     "type": "integer"
                 },
-                "updated_at": {
+                "updatedAt": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.SessionHeartbeatRequest": {
+            "type": "object",
+            "required": [
+                "sessionToken"
+            ],
+            "properties": {
+                "cursorPosition": {
+                    "type": "integer"
+                },
+                "sessionToken": {
                     "type": "string"
                 }
             }
@@ -10475,13 +19628,47 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.SwitchTenantRequest": {
+            "type": "object",
+            "required": [
+                "tenantId"
+            ],
+            "properties": {
+                "tenantId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TenantInfo": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TenantListResponse": {
             "type": "object",
             "properties": {
                 "page": {
                     "type": "integer"
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "tenants": {
@@ -10498,27 +19685,54 @@ const docTemplate = `{
         "dto.TenantResponse": {
             "type": "object",
             "properties": {
+                "billingEnabled": {
+                    "type": "boolean"
+                },
                 "code": {
                     "type": "string"
                 },
-                "created_at": {
+                "costCenterCode": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "currency": {
                     "type": "string"
                 },
                 "domain": {
                     "type": "string"
                 },
-                "expires_at": {
+                "expiresAt": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
+                "legalEntityCode": {
+                    "type": "string"
+                },
+                "mspProviderId": {
+                    "type": "integer"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "ownerContact": {
+                    "type": "string"
+                },
+                "parentTenantId": {
+                    "type": "integer"
+                },
+                "planCode": {
                     "type": "string"
                 },
                 "quota": {
                     "type": "object",
                     "additionalProperties": true
+                },
+                "serviceTier": {
+                    "type": "string"
                 },
                 "settings": {
                     "type": "object",
@@ -10530,7 +19744,7 @@ const docTemplate = `{
                 "type": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -10538,14 +19752,14 @@ const docTemplate = `{
         "dto.TestAutomationRuleRequest": {
             "type": "object",
             "required": [
-                "rule_id",
-                "ticket_id"
+                "ruleId",
+                "ticketId"
             ],
             "properties": {
-                "rule_id": {
+                "ruleId": {
                     "type": "integer"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
                 }
             }
@@ -10570,28 +19784,77 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.TicketCCListResponse": {
+            "type": "object",
+            "properties": {
+                "records": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketCCRecordResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TicketCCRecordResponse": {
+            "type": "object",
+            "properties": {
+                "addedAt": {
+                    "type": "string"
+                },
+                "addedBy": {
+                    "$ref": "#/definitions/dto.WorkflowUserInfo"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "ticketId": {
+                    "type": "integer"
+                },
+                "ticketNumber": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.WorkflowUserInfo"
+                }
+            }
+        },
         "dto.TicketTypeDefinition": {
             "type": "object",
             "properties": {
-                "approval_chain": {
+                "approvalChain": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ApprovalChainDefinition"
                     }
                 },
-                "approval_enabled": {
+                "approvalEnabled": {
                     "type": "boolean"
                 },
-                "approval_workflow_id": {
+                "approvalWorkflowId": {
                     "type": "string"
                 },
-                "assignment_rules": {
+                "assignmentRules": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.AssignmentRule"
                     }
                 },
-                "auto_assign_enabled": {
+                "autoAssignEnabled": {
                     "type": "boolean"
                 },
                 "code": {
@@ -10600,22 +19863,22 @@ const docTemplate = `{
                 "color": {
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
-                "created_by": {
+                "createdBy": {
                     "type": "integer"
                 },
-                "created_by_name": {
+                "createdByName": {
                     "type": "string"
                 },
-                "custom_fields": {
+                "customFields": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.CustomFieldDefinition"
                     }
                 },
-                "default_sla_id": {
+                "defaultSlaId": {
                     "type": "integer"
                 },
                 "description": {
@@ -10630,31 +19893,31 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "notification_config": {
+                "notificationConfig": {
                     "$ref": "#/definitions/dto.NotificationConfig"
                 },
-                "permission_config": {
+                "permissionConfig": {
                     "$ref": "#/definitions/dto.PermissionConfig"
                 },
-                "sla_enabled": {
+                "slaEnabled": {
                     "type": "boolean"
                 },
                 "status": {
                     "$ref": "#/definitions/dto.TicketTypeStatus"
                 },
-                "tenant_id": {
+                "tenantId": {
                     "type": "integer"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 },
-                "updated_by": {
+                "updatedBy": {
                     "type": "integer"
                 },
-                "updated_by_name": {
+                "updatedByName": {
                     "type": "string"
                 },
-                "usage_count": {
+                "usageCount": {
                     "type": "integer"
                 }
             }
@@ -10665,13 +19928,13 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "page_size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
                     "type": "integer"
                 },
-                "total_pages": {
+                "totalPages": {
                     "type": "integer"
                 },
                 "types": {
@@ -10729,64 +19992,64 @@ const docTemplate = `{
         "dto.TicketWorkflowState": {
             "type": "object",
             "properties": {
-                "approval_status": {
+                "approvalStatus": {
                     "$ref": "#/definitions/dto.ApprovalStatus"
                 },
-                "available_actions": {
+                "availableActions": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.TicketWorkflowAction"
                     }
                 },
-                "can_accept": {
+                "canAccept": {
                     "type": "boolean"
                 },
-                "can_approve": {
+                "canApprove": {
                     "type": "boolean"
                 },
-                "can_cc": {
+                "canCc": {
                     "type": "boolean"
                 },
-                "can_close": {
+                "canClose": {
                     "type": "boolean"
                 },
-                "can_forward": {
+                "canForward": {
                     "type": "boolean"
                 },
-                "can_reject": {
+                "canReject": {
                     "type": "boolean"
                 },
-                "can_resolve": {
+                "canResolve": {
                     "type": "boolean"
                 },
-                "can_withdraw": {
+                "canWithdraw": {
                     "type": "boolean"
                 },
-                "completed_approvals": {
+                "completedApprovals": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ApprovalRecord"
                     }
                 },
-                "current_approval_level": {
+                "currentApprovalLevel": {
                     "type": "integer"
                 },
-                "current_assignee": {
+                "currentAssignee": {
                     "$ref": "#/definitions/dto.WorkflowUserInfo"
                 },
-                "current_status": {
+                "currentStatus": {
                     "type": "string"
                 },
-                "pending_approvers": {
+                "pendingApprovers": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.WorkflowUserInfo"
                     }
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
                 },
-                "total_approval_levels": {
+                "totalApprovalLevels": {
                     "type": "integer"
                 }
             }
@@ -10794,16 +20057,101 @@ const docTemplate = `{
         "dto.TimeImpact": {
             "type": "object",
             "properties": {
-                "hours_since_creation": {
+                "hoursSinceCreation": {
                     "type": "integer"
                 },
-                "is_overdue": {
+                "isOverdue": {
                     "type": "boolean"
                 },
-                "resolution_deadline": {
+                "resolutionDeadline": {
                     "type": "string"
                 },
-                "response_deadline": {
+                "responseDeadline": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TopologyEdge": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "impactLevel": {
+                    "type": "string"
+                },
+                "relationshipLabel": {
+                    "type": "string"
+                },
+                "relationshipType": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "integer"
+                },
+                "strength": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TopologyGraph": {
+            "type": "object",
+            "properties": {
+                "depth": {
+                    "type": "integer"
+                },
+                "edges": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TopologyEdge"
+                    }
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TopologyNode"
+                    }
+                },
+                "rootCiId": {
+                    "type": "integer"
+                },
+                "totalEdges": {
+                    "type": "integer"
+                },
+                "totalNodes": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TopologyNode": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "criticality": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "typeName": {
                     "type": "string"
                 }
             }
@@ -10814,7 +20162,7 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "is_active": {
+                "isActive": {
                     "type": "boolean"
                 },
                 "name": {
@@ -10829,7 +20177,7 @@ const docTemplate = `{
                 "priority": {
                     "type": "string"
                 },
-                "ticket_type": {
+                "ticketType": {
                     "type": "string"
                 }
             }
@@ -10854,7 +20202,7 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "is_active": {
+                "isActive": {
                     "type": "boolean"
                 },
                 "name": {
@@ -10862,6 +20210,290 @@ const docTemplate = `{
                 },
                 "priority": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.UpdateCIAttributeDefinitionRequest": {
+            "type": "object",
+            "properties": {
+                "defaultValue": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "displayName": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "displayOrder": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "enumValues": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "groupName": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "helpText": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "isSearchable": {
+                    "type": "boolean"
+                },
+                "placeholder": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "referenceType": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "string",
+                        "int",
+                        "integer",
+                        "float",
+                        "bool",
+                        "boolean",
+                        "date",
+                        "datetime",
+                        "json",
+                        "enum",
+                        "reference",
+                        "list",
+                        "map"
+                    ]
+                },
+                "unique": {
+                    "type": "boolean"
+                },
+                "validationRules": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateCIRelationshipRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "impactLevel": {
+                    "$ref": "#/definitions/dto.ImpactLevel"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "relationshipType": {
+                    "$ref": "#/definitions/dto.CIRelationshipType"
+                },
+                "strength": {
+                    "$ref": "#/definitions/dto.RelationshipStrength"
+                }
+            }
+        },
+        "dto.UpdateCIRequest": {
+            "type": "object",
+            "properties": {
+                "assetTag": {
+                    "type": "string"
+                },
+                "assignedTo": {
+                    "type": "string"
+                },
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "ciTypeId": {
+                    "type": "integer"
+                },
+                "cloudAccountId": {
+                    "type": "string"
+                },
+                "cloudMetadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloudMetrics": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloudProvider": {
+                    "type": "string"
+                },
+                "cloudRegion": {
+                    "type": "string"
+                },
+                "cloudResourceId": {
+                    "type": "string"
+                },
+                "cloudResourceRefId": {
+                    "type": "integer"
+                },
+                "cloudResourceType": {
+                    "type": "string"
+                },
+                "cloudSyncStatus": {
+                    "type": "string"
+                },
+                "cloudSyncTime": {
+                    "type": "string"
+                },
+                "cloudTags": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloudZone": {
+                    "type": "string"
+                },
+                "criticality": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discoverySource": {
+                    "type": "string"
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "environment": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ownedBy": {
+                    "type": "string"
+                },
+                "serialNumber": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "vendor": {
+                    "type": "string"
+                },
+                "version": {
+                    "description": "版本号，用于乐观锁",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdateCISavedViewRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "filters": {
+                    "$ref": "#/definitions/dto.CISearchFilter"
+                },
+                "isPublic": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "sortBy": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateCITagRequest": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string",
+                    "maxLength": 7
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "key": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "value": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "dto.UpdateCITypeRequest": {
+            "type": "object",
+            "properties": {
+                "attributeSchema": {
+                    "type": "string"
+                },
+                "clearParent": {
+                    "type": "boolean"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "parentTypeId": {
+                    "type": "integer",
+                    "minimum": 1
                 }
             }
         },
@@ -10879,16 +20511,115 @@ const docTemplate = `{
                     "description": "审批状态",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/dto.ChangeStatus"
+                            "$ref": "#/definitions/dto.ChangeApprovalStatus"
                         }
                     ]
+                }
+            }
+        },
+        "dto.UpdateCloudAccountRequest": {
+            "type": "object",
+            "properties": {
+                "accountName": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "credentialRef": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "regionWhitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.UpdateCloudResourceRequest": {
+            "type": "object",
+            "properties": {
+                "lifecycleState": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "region": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "resourceName": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "status": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "zone": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "dto.UpdateCloudServiceRequest": {
+            "type": "object",
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "attributeSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "resourceTypeName": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "serviceName": {
+                    "type": "string",
+                    "maxLength": 200
+                }
+            }
+        },
+        "dto.UpdateGroupRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
                 }
             }
         },
         "dto.UpdateIncidentRequest": {
             "type": "object",
             "properties": {
-                "assignee_id": {
+                "assigneeId": {
                     "type": "integer"
                 },
                 "category": {
@@ -10897,7 +20628,20 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "impact_analysis": {
+                "force": {
+                    "description": "是否强制更新（忽略版本检查）",
+                    "type": "boolean"
+                },
+                "impact": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
+                },
+                "impactAnalysis": {
                     "$ref": "#/definitions/dto.ImpactAnalysis"
                 },
                 "metadata": {
@@ -10913,13 +20657,19 @@ const docTemplate = `{
                         "critical"
                     ]
                 },
-                "resolution_steps": {
+                "relatedCIIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "resolutionSteps": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ResolutionStep"
                     }
                 },
-                "root_cause": {
+                "rootCause": {
                     "$ref": "#/definitions/dto.RootCause"
                 },
                 "severity": {
@@ -10940,7 +20690,10 @@ const docTemplate = `{
                         "on_hold",
                         "resolved",
                         "closed",
-                        "cancelled"
+                        "cancelled",
+                        "acknowledged",
+                        "triaged",
+                        "escalated"
                     ]
                 },
                 "subcategory": {
@@ -10948,6 +20701,19 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                },
+                "urgency": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
+                },
+                "version": {
+                    "description": "版本号（乐观锁）",
+                    "type": "integer"
                 }
             }
         },
@@ -10974,6 +20740,84 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateMenuRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "isEnabled": {
+                    "type": "boolean"
+                },
+                "isVisible": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "permissionCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdateSLAPolicyRequest": {
+            "type": "object",
+            "properties": {
+                "businessHours": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "customerTier": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "escalationRules": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "excludeHolidays": {
+                    "type": "boolean"
+                },
+                "excludeWeekends": {
+                    "type": "boolean"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "priorityScore": {
+                    "type": "integer"
+                },
+                "resolutionTimeMinutes": {
+                    "type": "integer"
+                },
+                "responseTimeMinutes": {
+                    "type": "integer"
+                },
+                "ticketType": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UpdateServiceCatalogRequest": {
             "type": "object",
             "properties": {
@@ -10981,13 +20825,13 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
-                "ci_type_id": {
+                "ciTypeId": {
                     "type": "integer"
                 },
-                "cloud_service_id": {
+                "cloudServiceId": {
                     "type": "integer"
                 },
-                "delivery_time": {
+                "deliveryTime": {
                     "type": "string",
                     "maxLength": 50
                 },
@@ -11015,38 +20859,54 @@ const docTemplate = `{
             ],
             "properties": {
                 "status": {
-                    "type": "string",
-                    "enum": [
-                        "submitted",
-                        "manager_approved",
-                        "it_approved",
-                        "security_approved",
-                        "provisioning",
-                        "delivered",
-                        "failed",
-                        "rejected",
-                        "cancelled"
-                    ]
+                    "type": "string"
                 }
             }
         },
         "dto.UpdateTenantRequest": {
             "type": "object",
             "properties": {
+                "billingEnabled": {
+                    "type": "boolean"
+                },
+                "costCenterCode": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
                 "domain": {
                     "type": "string",
                     "maxLength": 100
                 },
-                "expires_at": {
+                "expiresAt": {
                     "type": "string"
+                },
+                "legalEntityCode": {
+                    "type": "string"
+                },
+                "mspProviderId": {
+                    "type": "integer"
                 },
                 "name": {
                     "type": "string",
                     "maxLength": 100
                 },
+                "ownerContact": {
+                    "type": "string"
+                },
+                "parentTenantId": {
+                    "type": "integer"
+                },
+                "planCode": {
+                    "type": "string"
+                },
                 "quota": {
                     "type": "object",
                     "additionalProperties": true
+                },
+                "serviceTier": {
+                    "type": "string"
                 },
                 "settings": {
                     "type": "object",
@@ -11064,10 +20924,13 @@ const docTemplate = `{
                 "type": {
                     "type": "string",
                     "enum": [
-                        "trial",
                         "standard",
-                        "professional",
-                        "enterprise"
+                        "internal",
+                        "saas_customer",
+                        "msp_provider",
+                        "msp_customer",
+                        "msp",
+                        "customer"
                     ]
                 }
             }
@@ -11075,34 +20938,34 @@ const docTemplate = `{
         "dto.UpdateTicketTypeRequest": {
             "type": "object",
             "properties": {
-                "approval_chain": {
+                "approvalChain": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ApprovalChainDefinition"
                     }
                 },
-                "approval_enabled": {
+                "approvalEnabled": {
                     "type": "boolean"
                 },
-                "assignment_rules": {
+                "assignmentRules": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.AssignmentRule"
                     }
                 },
-                "auto_assign_enabled": {
+                "autoAssignEnabled": {
                     "type": "boolean"
                 },
                 "color": {
                     "type": "string"
                 },
-                "custom_fields": {
+                "customFields": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.CustomFieldDefinition"
                     }
                 },
-                "default_sla_id": {
+                "defaultSlaId": {
                     "type": "integer"
                 },
                 "description": {
@@ -11114,13 +20977,13 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "notification_config": {
+                "notificationConfig": {
                     "$ref": "#/definitions/dto.NotificationConfig"
                 },
-                "permission_config": {
+                "permissionConfig": {
                     "$ref": "#/definitions/dto.PermissionConfig"
                 },
-                "sla_enabled": {
+                "slaEnabled": {
                     "type": "boolean"
                 },
                 "status": {
@@ -11155,7 +21018,8 @@ const docTemplate = `{
                         "agent",
                         "technician",
                         "security",
-                        "end_user"
+                        "end_user",
+                        "user"
                     ]
                 },
                 "username": {
@@ -11165,15 +21029,70 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UserDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserDetailResponse": {
             "type": "object",
             "properties": {
                 "active": {
                     "type": "boolean"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
+                "department": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "mspRole": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserInfo": {
+            "type": "object",
+            "properties": {
                 "department": {
                     "type": "string"
                 },
@@ -11186,17 +21105,11 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "phone": {
-                    "type": "string"
-                },
                 "role": {
                     "type": "string"
                 },
-                "tenant_id": {
+                "tenantId": {
                     "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
                 },
                 "username": {
                     "type": "string"
@@ -11223,31 +21136,53 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UserStatsResponse": {
+        "dto.UserTenantsResponse": {
             "type": "object",
             "properties": {
-                "active": {
-                    "type": "integer"
+                "tenants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TenantInfo"
+                    }
+                }
+            }
+        },
+        "dto.ValidateResetTokenRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "token"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
                 },
-                "inactive": {
-                    "type": "integer"
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ValidateResetTokenResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
                 },
-                "total": {
-                    "type": "integer"
+                "valid": {
+                    "type": "boolean"
                 }
             }
         },
         "dto.WithdrawTicketRequest": {
             "type": "object",
             "required": [
-                "reason",
-                "ticket_id"
+                "reason"
             ],
             "properties": {
                 "reason": {
                     "type": "string"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
                 }
             }
@@ -11264,7 +21199,7 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
-                "full_name": {
+                "fullName": {
                     "type": "string"
                 },
                 "id": {
@@ -11275,6 +21210,2231 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "ent.Application": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "应用代码",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "应用描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ApplicationQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ApplicationEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "应用名称",
+                    "type": "string"
+                },
+                "owner_id": {
+                    "description": "负责人ID",
+                    "type": "integer"
+                },
+                "project_id": {
+                    "description": "所属项目ID",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "状态: active, inactive, deprecated",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "类型: web, mobile, backend, desktop",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ApplicationEdges": {
+            "type": "object",
+            "properties": {
+                "microservices": {
+                    "description": "包含的微服务",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Microservice"
+                    }
+                },
+                "project": {
+                    "description": "Project holds the value of the project edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Project"
+                        }
+                    ]
+                },
+                "tags": {
+                    "description": "应用标签",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Tag"
+                    }
+                }
+            }
+        },
+        "ent.ApprovalRecord": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "description": "操作: approve, reject, delegate",
+                    "type": "string"
+                },
+                "approver_id": {
+                    "description": "审批人ID",
+                    "type": "integer"
+                },
+                "approver_name": {
+                    "description": "审批人姓名",
+                    "type": "string"
+                },
+                "comment": {
+                    "description": "审批意见",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "current_level": {
+                    "description": "当前审批级别",
+                    "type": "integer"
+                },
+                "due_date": {
+                    "description": "到期时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ApprovalRecordQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ApprovalRecordEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "processed_at": {
+                    "description": "处理时间",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态: pending, approved, rejected, delegated, timeout",
+                    "type": "string"
+                },
+                "step_order": {
+                    "description": "节点顺序",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "工单ID",
+                    "type": "integer"
+                },
+                "ticket_number": {
+                    "description": "工单编号",
+                    "type": "string"
+                },
+                "ticket_title": {
+                    "description": "工单标题",
+                    "type": "string"
+                },
+                "total_levels": {
+                    "description": "总审批级别数",
+                    "type": "integer"
+                },
+                "workflow_id": {
+                    "description": "工作流ID",
+                    "type": "integer"
+                },
+                "workflow_name": {
+                    "description": "工作流名称",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ApprovalRecordEdges": {
+            "type": "object",
+            "properties": {
+                "ticket": {
+                    "description": "关联的工单",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                },
+                "workflow": {
+                    "description": "关联的工作流",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ApprovalWorkflow"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.ApprovalWorkflow": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "description": "完成时间",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "工作流描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ApprovalWorkflowQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ApprovalWorkflowEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "工作流名称",
+                    "type": "string"
+                },
+                "nodes": {
+                    "description": "审批节点配置",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "priority": {
+                    "description": "优先级",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态: pending, approved, rejected, returned, cancelled",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_type": {
+                    "description": "工单类型",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ApprovalWorkflowEdges": {
+            "type": "object",
+            "properties": {
+                "approval_records": {
+                    "description": "审批记录",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ApprovalRecord"
+                    }
+                }
+            }
+        },
+        "ent.CIAttributeDefinition": {
+            "type": "object",
+            "properties": {
+                "ci_type_id": {
+                    "description": "CI类型ID",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "default_value": {
+                    "description": "默认值",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "属性说明",
+                    "type": "string"
+                },
+                "display_name": {
+                    "description": "显示名称",
+                    "type": "string"
+                },
+                "display_order": {
+                    "description": "显示顺序",
+                    "type": "integer"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the CIAttributeDefinitionQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CIAttributeDefinitionEdges"
+                        }
+                    ]
+                },
+                "enum_values": {
+                    "description": "枚举选项",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "group_name": {
+                    "description": "属性分组",
+                    "type": "string"
+                },
+                "help_text": {
+                    "description": "帮助文本",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否激活",
+                    "type": "boolean"
+                },
+                "is_searchable": {
+                    "description": "是否进入属性检索索引",
+                    "type": "boolean"
+                },
+                "is_system": {
+                    "description": "是否系统属性",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "属性名称",
+                    "type": "string"
+                },
+                "placeholder": {
+                    "description": "输入提示",
+                    "type": "string"
+                },
+                "reference_type": {
+                    "description": "引用目标类型",
+                    "type": "string"
+                },
+                "required": {
+                    "description": "是否必填",
+                    "type": "boolean"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "属性类型",
+                    "type": "string"
+                },
+                "unique": {
+                    "description": "是否唯一",
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "validation_rules": {
+                    "description": "验证规则",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.CIAttributeDefinitionEdges": {
+            "type": "object",
+            "properties": {
+                "ci_type": {
+                    "description": "CiType holds the value of the ci_type edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CIType"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.CIRelationship": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "CreatedAt holds the value of the \"created_at\" field.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "关系描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the CIRelationshipQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CIRelationshipEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "impact_level": {
+                    "description": "影响程度",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/itsm-backend_ent_cirelationship.ImpactLevel"
+                        }
+                    ]
+                },
+                "is_active": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
+                "is_discovered": {
+                    "description": "是否自动发现",
+                    "type": "boolean"
+                },
+                "metadata": {
+                    "description": "关系元数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "relationship_type": {
+                    "description": "关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, owned_by, owns, uses, used_by",
+                    "type": "string"
+                },
+                "source_ci_id": {
+                    "description": "源CI ID",
+                    "type": "integer"
+                },
+                "strength": {
+                    "description": "关系强度",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/itsm-backend_ent_cirelationship.Strength"
+                        }
+                    ]
+                },
+                "target_ci_id": {
+                    "description": "目标CI ID",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.CIRelationshipEdges": {
+            "type": "object",
+            "properties": {
+                "source_ci": {
+                    "description": "SourceCi holds the value of the source_ci edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ConfigurationItem"
+                        }
+                    ]
+                },
+                "target_ci": {
+                    "description": "TargetCi holds the value of the target_ci edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ConfigurationItem"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.CITag": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "description": "标签颜色",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "标签描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the CITagQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CITagEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "key": {
+                    "description": "标签键",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "标签值",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.CITagEdges": {
+            "type": "object",
+            "properties": {
+                "cis": {
+                    "description": "Cis holds the value of the cis edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ConfigurationItem"
+                    }
+                }
+            }
+        },
+        "ent.CIType": {
+            "type": "object",
+            "properties": {
+                "attribute_schema": {
+                    "description": "属性模式定义",
+                    "type": "string"
+                },
+                "color": {
+                    "description": "颜色",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "类型描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the CITypeQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CITypeEdges"
+                        }
+                    ]
+                },
+                "icon": {
+                    "description": "图标",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否激活",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "类型名称",
+                    "type": "string"
+                },
+                "parent_type_id": {
+                    "description": "父CI类型ID",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.CITypeEdges": {
+            "type": "object",
+            "properties": {
+                "attribute_definitions": {
+                    "description": "AttributeDefinitions holds the value of the attribute_definitions edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.CIAttributeDefinition"
+                    }
+                },
+                "children": {
+                    "description": "Children holds the value of the children edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.CIType"
+                    }
+                },
+                "cis": {
+                    "description": "Cis holds the value of the cis edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ConfigurationItem"
+                    }
+                },
+                "parent": {
+                    "description": "Parent holds the value of the parent edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CIType"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.Change": {
+            "type": "object",
+            "properties": {
+                "actual_end_date": {
+                    "description": "实际结束时间",
+                    "type": "string"
+                },
+                "actual_start_date": {
+                    "description": "实际开始时间",
+                    "type": "string"
+                },
+                "affected_cis": {
+                    "description": "受影响的配置项",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "assignee_id": {
+                    "description": "处理人ID",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "创建人ID",
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "变更描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ChangeQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ChangeEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "impact_scope": {
+                    "description": "影响范围",
+                    "type": "string"
+                },
+                "implementation_plan": {
+                    "description": "实施计划",
+                    "type": "string"
+                },
+                "justification": {
+                    "description": "变更理由",
+                    "type": "string"
+                },
+                "planned_end_date": {
+                    "description": "计划结束时间",
+                    "type": "string"
+                },
+                "planned_start_date": {
+                    "description": "计划开始时间",
+                    "type": "string"
+                },
+                "priority": {
+                    "description": "优先级",
+                    "type": "string"
+                },
+                "related_tickets": {
+                    "description": "相关工单",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "risk_level": {
+                    "description": "风险等级",
+                    "type": "string"
+                },
+                "rollback_plan": {
+                    "description": "回滚计划",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "变更标题",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "变更类型",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ChangeEdges": {
+            "type": "object",
+            "properties": {
+                "pir": {
+                    "description": "实施后审查",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ChangePIR"
+                    }
+                },
+                "problems": {
+                    "description": "关联的问题",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Problem"
+                    }
+                }
+            }
+        },
+        "ent.ChangePIR": {
+            "type": "object",
+            "properties": {
+                "actual_duration_minutes": {
+                    "description": "实际持续时间（分钟）",
+                    "type": "integer"
+                },
+                "actual_end_time": {
+                    "description": "实际结束时间",
+                    "type": "string"
+                },
+                "actual_start_time": {
+                    "description": "实际开始时间",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ChangePIRQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ChangePIREdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "improvement_recommendations": {
+                    "description": "改进建议",
+                    "type": "string"
+                },
+                "issues_encountered": {
+                    "description": "遇到的问题",
+                    "type": "string"
+                },
+                "lessons_learned": {
+                    "description": "经验教训",
+                    "type": "string"
+                },
+                "objectives_achieved": {
+                    "description": "目标是否达成",
+                    "type": "boolean"
+                },
+                "overall_result": {
+                    "description": "总体结果: successful, partially_successful, failed",
+                    "type": "string"
+                },
+                "review_date": {
+                    "description": "审查日期",
+                    "type": "string"
+                },
+                "reviewer_id": {
+                    "description": "审查人ID",
+                    "type": "integer"
+                },
+                "rollback_performed": {
+                    "description": "是否执行了回滚",
+                    "type": "boolean"
+                },
+                "rollback_reason": {
+                    "description": "回滚原因",
+                    "type": "string"
+                },
+                "success_summary": {
+                    "description": "成功总结",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ChangePIREdges": {
+            "type": "object",
+            "properties": {
+                "change": {
+                    "description": "关联的变更",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Change"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.CloudAccount": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "description": "云账号ID",
+                    "type": "string"
+                },
+                "account_name": {
+                    "description": "云账号名称",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "credential_ref": {
+                    "description": "凭据引用（不存明文）",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the CloudAccountQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CloudAccountEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
+                "provider": {
+                    "description": "云厂商标识（aliyun/tencent/huawei/aws/azure/onprem）",
+                    "type": "string"
+                },
+                "region_whitelist": {
+                    "description": "可用Region白名单",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.CloudAccountEdges": {
+            "type": "object",
+            "properties": {
+                "resources": {
+                    "description": "Resources holds the value of the resources edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.CloudResource"
+                    }
+                }
+            }
+        },
+        "ent.CloudResource": {
+            "type": "object",
+            "properties": {
+                "cloud_account_id": {
+                    "description": "云账号ID",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the CloudResourceQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CloudResourceEdges"
+                        }
+                    ]
+                },
+                "first_seen_at": {
+                    "description": "首次发现时间",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "last_seen_at": {
+                    "description": "最近发现时间",
+                    "type": "string"
+                },
+                "lifecycle_state": {
+                    "description": "生命周期状态",
+                    "type": "string"
+                },
+                "metadata": {
+                    "description": "资源元数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "region": {
+                    "description": "Region",
+                    "type": "string"
+                },
+                "resource_id": {
+                    "description": "云资源唯一ID",
+                    "type": "string"
+                },
+                "resource_name": {
+                    "description": "云资源名称",
+                    "type": "string"
+                },
+                "service_id": {
+                    "description": "云服务类型ID",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "资源状态",
+                    "type": "string"
+                },
+                "tags": {
+                    "description": "资源标签",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "zone": {
+                    "description": "Zone",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.CloudResourceEdges": {
+            "type": "object",
+            "properties": {
+                "account": {
+                    "description": "Account holds the value of the account edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CloudAccount"
+                        }
+                    ]
+                },
+                "cis": {
+                    "description": "Cis holds the value of the cis edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ConfigurationItem"
+                    }
+                },
+                "service": {
+                    "description": "Service holds the value of the service edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CloudService"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.CloudService": {
+            "type": "object",
+            "properties": {
+                "api_version": {
+                    "description": "API版本",
+                    "type": "string"
+                },
+                "attribute_schema": {
+                    "description": "动态属性Schema",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category": {
+                    "description": "服务分类",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the CloudServiceQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CloudServiceEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
+                "is_system": {
+                    "description": "是否系统预置",
+                    "type": "boolean"
+                },
+                "parent_id": {
+                    "description": "父级服务ID",
+                    "type": "integer"
+                },
+                "provider": {
+                    "description": "云厂商标识（aliyun/tencent/huawei/aws/azure/onprem）",
+                    "type": "string"
+                },
+                "resource_type_code": {
+                    "description": "资源类型代码，例如 instance/volume/vpc",
+                    "type": "string"
+                },
+                "resource_type_name": {
+                    "description": "资源类型名称",
+                    "type": "string"
+                },
+                "service_code": {
+                    "description": "云服务代码，例如 ecs/rds/oss",
+                    "type": "string"
+                },
+                "service_name": {
+                    "description": "云服务名称",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.CloudServiceEdges": {
+            "type": "object",
+            "properties": {
+                "children": {
+                    "description": "Children holds the value of the children edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.CloudService"
+                    }
+                },
+                "parent": {
+                    "description": "Parent holds the value of the parent edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CloudService"
+                        }
+                    ]
+                },
+                "resources": {
+                    "description": "Resources holds the value of the resources edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.CloudResource"
+                    }
+                }
+            }
+        },
+        "ent.ConfigurationItem": {
+            "type": "object",
+            "properties": {
+                "asset_tag": {
+                    "description": "资产标签",
+                    "type": "string"
+                },
+                "assigned_to": {
+                    "description": "分配给",
+                    "type": "string"
+                },
+                "attributes": {
+                    "description": "扩展属性",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "ci_type": {
+                    "description": "CI类型",
+                    "type": "string"
+                },
+                "ci_type_id": {
+                    "description": "CI类型ID",
+                    "type": "integer"
+                },
+                "cloud_account_id": {
+                    "description": "云账号ID",
+                    "type": "string"
+                },
+                "cloud_metadata": {
+                    "description": "云资源元数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloud_metrics": {
+                    "description": "云资源监控指标",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloud_provider": {
+                    "description": "云厂商",
+                    "type": "string"
+                },
+                "cloud_region": {
+                    "description": "云Region",
+                    "type": "string"
+                },
+                "cloud_resource_id": {
+                    "description": "云资源ID",
+                    "type": "string"
+                },
+                "cloud_resource_ref_id": {
+                    "description": "云资源引用ID",
+                    "type": "integer"
+                },
+                "cloud_resource_type": {
+                    "description": "云资源类型",
+                    "type": "string"
+                },
+                "cloud_sync_status": {
+                    "description": "云资源同步状态",
+                    "type": "string"
+                },
+                "cloud_sync_time": {
+                    "description": "云资源同步时间",
+                    "type": "string"
+                },
+                "cloud_tags": {
+                    "description": "云资源标签",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cloud_zone": {
+                    "description": "云Zone",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "criticality": {
+                    "description": "重要性级别",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "CI描述",
+                    "type": "string"
+                },
+                "discovery_source": {
+                    "description": "发现源",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ConfigurationItemQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ConfigurationItemEdges"
+                        }
+                    ]
+                },
+                "effective_at": {
+                    "description": "生效时间",
+                    "type": "string"
+                },
+                "environment": {
+                    "description": "环境",
+                    "type": "string"
+                },
+                "expire_at": {
+                    "description": "失效时间",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "last_discovered": {
+                    "description": "最后发现时间",
+                    "type": "string"
+                },
+                "lifecycle_status": {
+                    "description": "生命周期状态",
+                    "type": "string"
+                },
+                "location": {
+                    "description": "位置",
+                    "type": "string"
+                },
+                "model": {
+                    "description": "型号",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "CI名称",
+                    "type": "string"
+                },
+                "owned_by": {
+                    "description": "拥有者",
+                    "type": "string"
+                },
+                "serial_number": {
+                    "description": "序列号",
+                    "type": "string"
+                },
+                "source": {
+                    "description": "数据来源（manual/discovery/import）",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "运行状态",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "vendor": {
+                    "description": "厂商",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "版本号，用于乐观锁",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.ConfigurationItemEdges": {
+            "type": "object",
+            "properties": {
+                "ci_type_ref": {
+                    "description": "CiTypeRef holds the value of the ci_type_ref edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CIType"
+                        }
+                    ]
+                },
+                "cloud_resource_ref": {
+                    "description": "CloudResourceRef holds the value of the cloud_resource_ref edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CloudResource"
+                        }
+                    ]
+                },
+                "history": {
+                    "description": "CI变更历史",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ConfigurationItemHistory"
+                    }
+                },
+                "incidents": {
+                    "description": "Incidents holds the value of the incidents edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Incident"
+                    }
+                },
+                "incoming_relations": {
+                    "description": "IncomingRelations holds the value of the incoming_relations edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.CIRelationship"
+                    }
+                },
+                "outgoing_relations": {
+                    "description": "OutgoingRelations holds the value of the outgoing_relations edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.CIRelationship"
+                    }
+                },
+                "tags": {
+                    "description": "CI标签",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.CITag"
+                    }
+                },
+                "tickets": {
+                    "description": "Tickets holds the value of the tickets edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Ticket"
+                    }
+                }
+            }
+        },
+        "ent.ConfigurationItemHistory": {
+            "type": "object",
+            "properties": {
+                "after": {
+                    "description": "变更后数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "before": {
+                    "description": "变更前数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "changed_fields": {
+                    "description": "变更的字段列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ci_id": {
+                    "description": "CI ID",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ConfigurationItemHistoryQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ConfigurationItemHistoryEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "operation": {
+                    "description": "操作类型: create/update/delete",
+                    "type": "string"
+                },
+                "operator_id": {
+                    "description": "操作人ID",
+                    "type": "integer"
+                },
+                "operator_name": {
+                    "description": "操作人姓名",
+                    "type": "string"
+                },
+                "remark": {
+                    "description": "变更备注",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "version": {
+                    "description": "版本号",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.ConfigurationItemHistoryEdges": {
+            "type": "object",
+            "properties": {
+                "ci": {
+                    "description": "Ci holds the value of the ci edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ConfigurationItem"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.Department": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "部门代码",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "部门描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the DepartmentQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.DepartmentEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "manager_id": {
+                    "description": "部门经理ID",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "部门名称",
+                    "type": "string"
+                },
+                "parent_id": {
+                    "description": "父部门ID",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.DepartmentEdges": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "description": "部门工单分类",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketCategory"
+                    }
+                },
+                "children": {
+                    "description": "Children holds the value of the children edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Department"
+                    }
+                },
+                "parent": {
+                    "description": "Parent holds the value of the parent edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Department"
+                        }
+                    ]
+                },
+                "projects": {
+                    "description": "部门项目",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Project"
+                    }
+                },
+                "tags": {
+                    "description": "部门标签",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Tag"
+                    }
+                },
+                "tickets": {
+                    "description": "部门工单",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Ticket"
+                    }
+                },
+                "users": {
+                    "description": "部门成员",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.User"
+                    }
+                },
+                "workflows": {
+                    "description": "部门工作流",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Workflow"
+                    }
+                }
+            }
+        },
+        "ent.FeishuTicketSync": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the FeishuTicketSyncQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.FeishuTicketSyncEdges"
+                        }
+                    ]
+                },
+                "error_message": {
+                    "description": "同步错误信息",
+                    "type": "string"
+                },
+                "feishu_task_guid": {
+                    "description": "飞书任务GUID（用于API调用）",
+                    "type": "string"
+                },
+                "feishu_task_id": {
+                    "description": "飞书任务ID",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "last_sync_direction": {
+                    "description": "最后同步方向: itsm_to_feishu / feishu_to_itsm",
+                    "type": "string"
+                },
+                "last_synced_at": {
+                    "description": "最后同步时间",
+                    "type": "string"
+                },
+                "sync_status": {
+                    "description": "同步状态: pending/synced/failed",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "ITSM工单ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.FeishuTicketSyncEdges": {
+            "type": "object",
+            "properties": {
+                "ticket": {
+                    "description": "Ticket holds the value of the ticket edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.Group": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "组描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the GroupQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.GroupEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "组名称",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.GroupEdges": {
+            "type": "object",
+            "properties": {
+                "members": {
+                    "description": "组的成员",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.User"
+                    }
+                }
+            }
+        },
+        "ent.Incident": {
+            "type": "object",
+            "properties": {
+                "assignee_id": {
+                    "description": "处理人ID",
+                    "type": "integer"
+                },
+                "category": {
+                    "description": "事件分类",
+                    "type": "string"
+                },
+                "closed_at": {
+                    "description": "关闭时间",
+                    "type": "string"
+                },
+                "configuration_item_id": {
+                    "description": "配置项ID",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "description": "软删除时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "事件描述",
+                    "type": "string"
+                },
+                "detected_at": {
+                    "description": "检测时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the IncidentQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.IncidentEdges"
+                        }
+                    ]
+                },
+                "escalated_at": {
+                    "description": "升级时间",
+                    "type": "string"
+                },
+                "escalation_level": {
+                    "description": "升级级别",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "impact": {
+                    "description": "影响范围：low/medium/high/critical",
+                    "type": "string"
+                },
+                "impact_analysis": {
+                    "description": "影响分析",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "incident_number": {
+                    "description": "事件编号",
+                    "type": "string"
+                },
+                "is_automated": {
+                    "description": "是否自动化处理",
+                    "type": "boolean"
+                },
+                "is_major_incident": {
+                    "description": "是否重大事件",
+                    "type": "boolean"
+                },
+                "metadata": {
+                    "description": "元数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "priority": {
+                    "description": "优先级",
+                    "type": "string"
+                },
+                "reporter_id": {
+                    "description": "报告人ID",
+                    "type": "integer"
+                },
+                "resolution_steps": {
+                    "description": "解决步骤",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "resolved_at": {
+                    "description": "解决时间",
+                    "type": "string"
+                },
+                "root_cause": {
+                    "description": "根本原因",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "severity": {
+                    "description": "严重程度",
+                    "type": "string"
+                },
+                "source": {
+                    "description": "事件来源",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                },
+                "subcategory": {
+                    "description": "事件子分类",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "事件标题",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "事件类型",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "urgency": {
+                    "description": "紧急程度：low/medium/high/critical",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "版本号（乐观锁）",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.IncidentAlert": {
+            "type": "object",
+            "properties": {
+                "acknowledged_at": {
+                    "description": "确认时间",
+                    "type": "string"
+                },
+                "acknowledged_by": {
+                    "description": "确认人ID",
+                    "type": "integer"
+                },
+                "alert_name": {
+                    "description": "告警名称",
+                    "type": "string"
+                },
+                "alert_type": {
+                    "description": "告警类型",
+                    "type": "string"
+                },
+                "channels": {
+                    "description": "通知渠道",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the IncidentAlertQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.IncidentAlertEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "incident_id": {
+                    "description": "事件ID",
+                    "type": "integer"
+                },
+                "message": {
+                    "description": "告警消息",
+                    "type": "string"
+                },
+                "metadata": {
+                    "description": "元数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "recipients": {
+                    "description": "接收人",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "resolved_at": {
+                    "description": "解决时间",
+                    "type": "string"
+                },
+                "severity": {
+                    "description": "严重程度",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "triggered_at": {
+                    "description": "触发时间",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.IncidentAlertEdges": {
+            "type": "object",
+            "properties": {
+                "incident": {
+                    "description": "事件",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Incident"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.IncidentEdges": {
+            "type": "object",
+            "properties": {
+                "configuration_items": {
+                    "description": "关联的配置项",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ConfigurationItem"
+                    }
+                },
+                "incident_alerts": {
+                    "description": "事件告警",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.IncidentAlert"
+                    }
+                },
+                "incident_events": {
+                    "description": "事件活动记录",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.IncidentEvent"
+                    }
+                },
+                "incident_metrics": {
+                    "description": "事件指标",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.IncidentMetric"
+                    }
+                },
+                "parent_incident": {
+                    "description": "父事件",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Incident"
+                    }
+                },
+                "problems": {
+                    "description": "关联的问题",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Problem"
+                    }
+                },
+                "related_incidents": {
+                    "description": "关联事件",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Incident"
+                    }
+                }
+            }
+        },
+        "ent.IncidentEvent": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "data": {
+                    "description": "事件数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "description": {
+                    "description": "事件描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the IncidentEventQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.IncidentEventEdges"
+                        }
+                    ]
+                },
+                "event_name": {
+                    "description": "事件名称",
+                    "type": "string"
+                },
+                "event_type": {
+                    "description": "事件类型",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "incident_id": {
+                    "description": "事件ID",
+                    "type": "integer"
+                },
+                "metadata": {
+                    "description": "元数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "occurred_at": {
+                    "description": "发生时间",
+                    "type": "string"
+                },
+                "severity": {
+                    "description": "严重程度",
+                    "type": "string"
+                },
+                "source": {
+                    "description": "事件来源",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "操作用户ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.IncidentEventEdges": {
+            "type": "object",
+            "properties": {
+                "incident": {
+                    "description": "事件",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Incident"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.IncidentMetric": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the IncidentMetricQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.IncidentMetricEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "incident_id": {
+                    "description": "事件ID",
+                    "type": "integer"
+                },
+                "measured_at": {
+                    "description": "测量时间",
+                    "type": "string"
+                },
+                "metadata": {
+                    "description": "元数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "metric_name": {
+                    "description": "指标名称",
+                    "type": "string"
+                },
+                "metric_type": {
+                    "description": "指标类型",
+                    "type": "string"
+                },
+                "metric_value": {
+                    "description": "指标值",
+                    "type": "number"
+                },
+                "tags": {
+                    "description": "标签",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "unit": {
+                    "description": "单位",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.IncidentMetricEdges": {
+            "type": "object",
+            "properties": {
+                "incident": {
+                    "description": "事件",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Incident"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.ItemVersion": {
+            "type": "object",
+            "properties": {
+                "changelog": {
+                    "description": "版本更新日志",
+                    "type": "string"
+                },
+                "config_schema": {
+                    "description": "该版本的配置Schema，覆盖item级别的Schema",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "created_at": {
+                    "description": "CreatedAt holds the value of the \"created_at\" field.",
+                    "type": "string"
+                },
+                "dependencies": {
+                    "description": "依赖的其他组件，格式为组件名:版本要求",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "download_count": {
+                    "description": "该版本下载次数",
+                    "type": "integer"
+                },
+                "download_url": {
+                    "description": "安装包下载地址，第三方组件使用",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ItemVersionQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ItemVersionEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "item_id": {
+                    "description": "关联的MarketplaceItem ID",
+                    "type": "integer"
+                },
+                "manifest_path": {
+                    "description": "内置组件的Manifest路径，官方组件使用",
+                    "type": "string"
+                },
+                "min_system_version": {
+                    "description": "该版本最低支持的系统版本",
+                    "type": "string"
+                },
+                "released_at": {
+                    "description": "ReleasedAt holds the value of the \"released_at\" field.",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "版本状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/itemversion.Status"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "版本号，语义化版本如v1.0.0",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ItemVersionEdges": {
+            "type": "object",
+            "properties": {
+                "item": {
+                    "description": "Item holds the value of the item edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.MarketplaceItem"
+                        }
+                    ]
                 }
             }
         },
@@ -11342,12 +23502,28 @@ const docTemplate = `{
         "ent.KnowledgeArticleEdges": {
             "type": "object",
             "properties": {
+                "sessions": {
+                    "description": "Sessions holds the value of the sessions edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.KnowledgeArticleSession"
+                        }
+                    ]
+                },
                 "user_likes": {
                     "description": "UserLikes holds the value of the user_likes edge.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/ent.KnowledgeArticleLike"
                     }
+                },
+                "versions": {
+                    "description": "Versions holds the value of the versions edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.KnowledgeArticleVersion"
+                        }
+                    ]
                 }
             }
         },
@@ -11397,6 +23573,4081 @@ const docTemplate = `{
                 }
             }
         },
+        "ent.KnowledgeArticleParticipant": {
+            "type": "object",
+            "properties": {
+                "cursor_position": {
+                    "description": "光标位置",
+                    "type": "integer"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the KnowledgeArticleParticipantQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.KnowledgeArticleParticipantEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否活跃",
+                    "type": "boolean"
+                },
+                "joined_at": {
+                    "description": "加入时间",
+                    "type": "string"
+                },
+                "last_activity": {
+                    "description": "最后活动时间",
+                    "type": "string"
+                },
+                "session_id": {
+                    "description": "会话ID",
+                    "type": "integer"
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.KnowledgeArticleParticipantEdges": {
+            "type": "object",
+            "properties": {
+                "session": {
+                    "description": "Session holds the value of the session edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.KnowledgeArticleSession"
+                    }
+                },
+                "user": {
+                    "description": "User holds the value of the user edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.User"
+                    }
+                }
+            }
+        },
+        "ent.KnowledgeArticleSession": {
+            "type": "object",
+            "properties": {
+                "article_id": {
+                    "description": "文章ID",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the KnowledgeArticleSessionQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.KnowledgeArticleSessionEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "last_heartbeat": {
+                    "description": "最后心跳时间",
+                    "type": "string"
+                },
+                "session_token": {
+                    "description": "会话Token",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/itsm-backend_ent_knowledgearticlesession.Status"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.KnowledgeArticleSessionEdges": {
+            "type": "object",
+            "properties": {
+                "article": {
+                    "description": "Article holds the value of the article edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.KnowledgeArticle"
+                    }
+                },
+                "participants": {
+                    "description": "Participants holds the value of the participants edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.KnowledgeArticleParticipant"
+                    }
+                },
+                "user": {
+                    "description": "User holds the value of the user edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.User"
+                    }
+                }
+            }
+        },
+        "ent.KnowledgeArticleVersion": {
+            "type": "object",
+            "properties": {
+                "article_id": {
+                    "description": "文章ID",
+                    "type": "integer"
+                },
+                "author_id": {
+                    "description": "作者ID",
+                    "type": "integer"
+                },
+                "category": {
+                    "description": "分类",
+                    "type": "string"
+                },
+                "change_summary": {
+                    "description": "变更摘要",
+                    "type": "string"
+                },
+                "content": {
+                    "description": "文章内容",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the KnowledgeArticleVersionQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.KnowledgeArticleVersionEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "tags": {
+                    "description": "标签",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "文章标题",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "版本号",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.KnowledgeArticleVersionEdges": {
+            "type": "object",
+            "properties": {
+                "article": {
+                    "description": "Article holds the value of the article edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.KnowledgeArticle"
+                    }
+                }
+            }
+        },
+        "ent.MSPAllocation": {
+            "type": "object",
+            "properties": {
+                "assigned_at": {
+                    "description": "分配时间",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "customer_tenant_id": {
+                    "description": "客户租户ID（支持单客户模式）",
+                    "type": "integer"
+                },
+                "deassigned_at": {
+                    "description": "解除分配时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the MSPAllocationQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.MSPAllocationEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "msp_user_id": {
+                    "description": "MSP 员工ID（属于MSP租户）",
+                    "type": "integer"
+                },
+                "role": {
+                    "description": "分配角色: primary|backup|specialist",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.MSPAllocationEdges": {
+            "type": "object",
+            "properties": {
+                "customer_tenant": {
+                    "description": "CustomerTenant holds the value of the customer_tenant edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Tenant"
+                        }
+                    ]
+                },
+                "msp_user": {
+                    "description": "MspUser holds the value of the msp_user edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.MarketplaceItem": {
+            "type": "object",
+            "properties": {
+                "author_id": {
+                    "description": "作者用户ID",
+                    "type": "string"
+                },
+                "author_name": {
+                    "description": "作者名称",
+                    "type": "string"
+                },
+                "capabilities": {
+                    "description": "组件支持的能力列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "category": {
+                    "description": "分类，如办公协同/监控告警/AI能力等",
+                    "type": "string"
+                },
+                "config_schema": {
+                    "description": "配置JSON Schema",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "created_at": {
+                    "description": "CreatedAt holds the value of the \"created_at\" field.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "组件描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the MarketplaceItemQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.MarketplaceItemEdges"
+                        }
+                    ]
+                },
+                "homepage": {
+                    "description": "项目主页",
+                    "type": "string"
+                },
+                "icon_url": {
+                    "description": "图标URL",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "install_count": {
+                    "description": "安装次数",
+                    "type": "integer"
+                },
+                "is_free": {
+                    "description": "是否免费",
+                    "type": "boolean"
+                },
+                "is_official": {
+                    "description": "是否是官方组件",
+                    "type": "boolean"
+                },
+                "latest_version": {
+                    "description": "最新版本号",
+                    "type": "string"
+                },
+                "license": {
+                    "description": "开源协议",
+                    "type": "string"
+                },
+                "long_description": {
+                    "description": "详细描述",
+                    "type": "string"
+                },
+                "min_system_version": {
+                    "description": "最低支持的系统版本",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "组件唯一标识名称",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "价格，付费组件使用",
+                    "type": "number"
+                },
+                "provider": {
+                    "description": "提供商名称",
+                    "type": "string"
+                },
+                "rating": {
+                    "description": "评分，0-5",
+                    "type": "number"
+                },
+                "repository": {
+                    "description": "代码仓库地址",
+                    "type": "string"
+                },
+                "required_permissions": {
+                    "description": "组件需要的系统权限列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "screenshots": {
+                    "description": "截图URL列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "description": "发布状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/marketplaceitem.Status"
+                        }
+                    ]
+                },
+                "tags": {
+                    "description": "标签列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "description": "组件显示名称",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "组件类型：连接器/技能/插件",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/marketplaceitem.Type"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.MarketplaceItemEdges": {
+            "type": "object",
+            "properties": {
+                "installations": {
+                    "description": "Installations holds the value of the installations edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TenantInstallation"
+                    }
+                },
+                "versions": {
+                    "description": "Versions holds the value of the versions edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ItemVersion"
+                    }
+                }
+            }
+        },
+        "ent.Microservice": {
+            "type": "object",
+            "properties": {
+                "application_id": {
+                    "description": "所属应用ID",
+                    "type": "integer"
+                },
+                "ci_pipeline": {
+                    "description": "CI流水线地址",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "微服务代码",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "微服务描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the MicroserviceQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.MicroserviceEdges"
+                        }
+                    ]
+                },
+                "framework": {
+                    "description": "开发框架",
+                    "type": "string"
+                },
+                "git_repo": {
+                    "description": "Git仓库地址",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "language": {
+                    "description": "开发语言",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "微服务名称",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态: active, maintenance, deprecated",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.MicroserviceEdges": {
+            "type": "object",
+            "properties": {
+                "application": {
+                    "description": "Application holds the value of the application edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Application"
+                        }
+                    ]
+                },
+                "tags": {
+                    "description": "微服务标签",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Tag"
+                    }
+                }
+            }
+        },
+        "ent.NotificationPreference": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the NotificationPreferenceQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.NotificationPreferenceEdges"
+                        }
+                    ]
+                },
+                "email_enabled": {
+                    "description": "是否启用邮件通知",
+                    "type": "boolean"
+                },
+                "event_type": {
+                    "description": "事件类型: ticket_created, ticket_assigned, ticket_updated, ticket_resolved, ticket_closed, sla_warning, sla_violated, comment_added, approval_required, mention",
+                    "type": "string"
+                },
+                "frequency": {
+                    "description": "通知频率: immediate, hourly_digest, daily_digest",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "in_app_enabled": {
+                    "description": "是否启用站内通知",
+                    "type": "boolean"
+                },
+                "push_enabled": {
+                    "description": "是否启用推送通知",
+                    "type": "boolean"
+                },
+                "quiet_hours_end": {
+                    "description": "免打扰结束时间",
+                    "type": "string"
+                },
+                "quiet_hours_start": {
+                    "description": "免打扰开始时间",
+                    "type": "string"
+                },
+                "sms_enabled": {
+                    "description": "是否启用短信通知",
+                    "type": "boolean"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "timezone": {
+                    "description": "时区",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.NotificationPreferenceEdges": {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "description": "所属用户",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.Permission": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "description": "操作类型",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "权限代码",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "权限描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the PermissionQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.PermissionEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "权限名称",
+                    "type": "string"
+                },
+                "resource": {
+                    "description": "资源类型",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.PermissionEdges": {
+            "type": "object",
+            "properties": {
+                "roles": {
+                    "description": "拥有此权限的角色",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Role"
+                    }
+                }
+            }
+        },
+        "ent.Problem": {
+            "type": "object",
+            "properties": {
+                "assignee_id": {
+                    "description": "处理人ID",
+                    "type": "integer"
+                },
+                "category": {
+                    "description": "问题分类",
+                    "type": "string"
+                },
+                "closed_at": {
+                    "description": "关闭时间",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "创建人ID",
+                    "type": "integer"
+                },
+                "deleted_at": {
+                    "description": "删除时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "问题描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProblemQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProblemEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "impact": {
+                    "description": "影响范围",
+                    "type": "string"
+                },
+                "priority": {
+                    "description": "优先级",
+                    "type": "string"
+                },
+                "resolution": {
+                    "description": "最终解决方案",
+                    "type": "string"
+                },
+                "resolved_at": {
+                    "description": "解决时间",
+                    "type": "string"
+                },
+                "root_cause": {
+                    "description": "根本原因",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "问题标题",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "workaround": {
+                    "description": "临时解决方案",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ProblemEdges": {
+            "type": "object",
+            "properties": {
+                "changes": {
+                    "description": "关联的变更",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Change"
+                    }
+                },
+                "incidents": {
+                    "description": "关联的事件",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Incident"
+                    }
+                },
+                "tickets": {
+                    "description": "关联的工单",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Ticket"
+                    }
+                }
+            }
+        },
+        "ent.ProcessBinding": {
+            "type": "object",
+            "properties": {
+                "approval_chain_id": {
+                    "description": "审批链ID",
+                    "type": "string"
+                },
+                "business_sub_type": {
+                    "description": "业务子类型",
+                    "type": "string"
+                },
+                "business_type": {
+                    "description": "业务类型",
+                    "type": "string"
+                },
+                "category": {
+                    "description": "流程分类: operations, rd, finance, hr",
+                    "type": "string"
+                },
+                "conditions": {
+                    "description": "匹配条件JSON",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "department_id": {
+                    "description": "部门ID (0表示全局)",
+                    "type": "integer"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProcessBindingQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessBindingEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否激活",
+                    "type": "boolean"
+                },
+                "is_default": {
+                    "description": "是否默认流程",
+                    "type": "boolean"
+                },
+                "overrides": {
+                    "description": "覆盖配置",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "priority": {
+                    "description": "优先级（数值越大优先级越高）",
+                    "type": "integer"
+                },
+                "process_definition_key": {
+                    "description": "流程定义Key",
+                    "type": "string"
+                },
+                "process_version": {
+                    "description": "流程版本",
+                    "type": "integer"
+                },
+                "scenario": {
+                    "description": "场景标识: alert_handling, change_release, code_release, expense_approval",
+                    "type": "string"
+                },
+                "sla_policy_id": {
+                    "description": "SLA策略ID",
+                    "type": "string"
+                },
+                "team_id": {
+                    "description": "团队ID (0表示全局)",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ProcessBindingEdges": {
+            "type": "object",
+            "properties": {
+                "process_definition": {
+                    "description": "ProcessDefinition holds the value of the process_definition edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessDefinition"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.ProcessDefinition": {
+            "type": "object",
+            "properties": {
+                "bpmn_xml": {
+                    "description": "BPMN XML定义内容",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "category": {
+                    "description": "流程分类",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "deployed_at": {
+                    "description": "部署时间",
+                    "type": "string"
+                },
+                "deployment_id": {
+                    "description": "部署ID",
+                    "type": "integer"
+                },
+                "deployment_name": {
+                    "description": "部署名称",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "流程描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProcessDefinitionQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessDefinitionEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否激活",
+                    "type": "boolean"
+                },
+                "is_latest": {
+                    "description": "是否最新版本",
+                    "type": "boolean"
+                },
+                "key": {
+                    "description": "流程定义Key，BPMN标准",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "流程定义名称",
+                    "type": "string"
+                },
+                "process_variables": {
+                    "description": "流程变量定义",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "版本号",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ProcessDefinitionEdges": {
+            "type": "object",
+            "properties": {
+                "bindings": {
+                    "description": "流程绑定",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ProcessBinding"
+                    }
+                },
+                "deployment": {
+                    "description": "Deployment holds the value of the deployment edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessDeployment"
+                        }
+                    ]
+                },
+                "process_instances": {
+                    "description": "流程实例",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ProcessInstance"
+                    }
+                },
+                "version_changelogs": {
+                    "description": "版本变更日志",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ProcessVersionChangelog"
+                    }
+                }
+            }
+        },
+        "ent.ProcessDeployment": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "deployed_by": {
+                    "description": "部署人",
+                    "type": "string"
+                },
+                "deployment_category": {
+                    "description": "部署分类",
+                    "type": "string"
+                },
+                "deployment_comment": {
+                    "description": "部署备注",
+                    "type": "string"
+                },
+                "deployment_id": {
+                    "description": "部署ID，BPMN标准",
+                    "type": "string"
+                },
+                "deployment_metadata": {
+                    "description": "部署元数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "deployment_name": {
+                    "description": "部署名称",
+                    "type": "string"
+                },
+                "deployment_source": {
+                    "description": "部署来源",
+                    "type": "string"
+                },
+                "deployment_time": {
+                    "description": "部署时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProcessDeploymentQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessDeploymentEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否激活",
+                    "type": "boolean"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ProcessDeploymentEdges": {
+            "type": "object",
+            "properties": {
+                "definitions": {
+                    "description": "流程定义",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ProcessDefinition"
+                    }
+                }
+            }
+        },
+        "ent.ProcessExecutionHistory": {
+            "type": "object",
+            "properties": {
+                "activity_id": {
+                    "description": "活动ID",
+                    "type": "string"
+                },
+                "activity_name": {
+                    "description": "活动名称",
+                    "type": "string"
+                },
+                "activity_type": {
+                    "description": "活动类型：start_event, user_task, service_task, gateway, end_event",
+                    "type": "string"
+                },
+                "comment": {
+                    "description": "备注",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProcessExecutionHistoryQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessExecutionHistoryEdges"
+                        }
+                    ]
+                },
+                "error_code": {
+                    "description": "错误代码",
+                    "type": "string"
+                },
+                "error_message": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "event_detail": {
+                    "description": "事件详情",
+                    "type": "string"
+                },
+                "event_type": {
+                    "description": "事件类型：start, complete, cancel, error",
+                    "type": "string"
+                },
+                "history_id": {
+                    "description": "历史记录ID",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "process_definition_key": {
+                    "description": "流程定义Key",
+                    "type": "string"
+                },
+                "process_instance_id": {
+                    "description": "流程实例ID",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "description": "时间戳",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "操作用户ID",
+                    "type": "string"
+                },
+                "user_name": {
+                    "description": "操作用户名称",
+                    "type": "string"
+                },
+                "variables": {
+                    "description": "相关变量",
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "ent.ProcessExecutionHistoryEdges": {
+            "type": "object",
+            "properties": {
+                "process_instance": {
+                    "description": "ProcessInstance holds the value of the process_instance edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessInstance"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.ProcessInstance": {
+            "type": "object",
+            "properties": {
+                "business_key": {
+                    "description": "业务键，关联业务实体",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "current_activity_id": {
+                    "description": "当前活动ID",
+                    "type": "string"
+                },
+                "current_activity_name": {
+                    "description": "当前活动名称",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProcessInstanceQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessInstanceEdges"
+                        }
+                    ]
+                },
+                "end_time": {
+                    "description": "结束时间",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "initiator": {
+                    "description": "流程发起人",
+                    "type": "string"
+                },
+                "parent_process_instance_id": {
+                    "description": "父流程实例ID",
+                    "type": "string"
+                },
+                "process_definition_id": {
+                    "description": "流程定义ID",
+                    "type": "integer"
+                },
+                "process_definition_key": {
+                    "description": "流程定义Key",
+                    "type": "string"
+                },
+                "process_instance_id": {
+                    "description": "流程实例ID，BPMN标准",
+                    "type": "string"
+                },
+                "root_process_instance_id": {
+                    "description": "根流程实例ID",
+                    "type": "string"
+                },
+                "start_time": {
+                    "description": "开始时间",
+                    "type": "string"
+                },
+                "state_snapshot": {
+                    "description": "流程引擎状态快照",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "status": {
+                    "description": "实例状态：running, suspended, completed, terminated",
+                    "type": "string"
+                },
+                "suspended_reason": {
+                    "description": "暂停原因",
+                    "type": "string"
+                },
+                "suspended_time": {
+                    "description": "暂停时间",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "variables": {
+                    "description": "流程变量",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "version": {
+                    "description": "乐观锁版本号",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.ProcessInstanceEdges": {
+            "type": "object",
+            "properties": {
+                "definition": {
+                    "description": "Definition holds the value of the definition edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessDefinition"
+                        }
+                    ]
+                },
+                "execution_history": {
+                    "description": "执行历史",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ProcessExecutionHistory"
+                    }
+                },
+                "process_tasks": {
+                    "description": "流程任务",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ProcessTask"
+                    }
+                },
+                "process_variables": {
+                    "description": "流程变量",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ProcessVariable"
+                    }
+                }
+            }
+        },
+        "ent.ProcessTask": {
+            "type": "object",
+            "properties": {
+                "assigned_time": {
+                    "description": "分配时间",
+                    "type": "string"
+                },
+                "assignee": {
+                    "description": "任务负责人",
+                    "type": "string"
+                },
+                "candidate_groups": {
+                    "description": "候选组，逗号分隔",
+                    "type": "string"
+                },
+                "candidate_users": {
+                    "description": "候选用户，逗号分隔",
+                    "type": "string"
+                },
+                "completed_time": {
+                    "description": "完成时间",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "created_time": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "任务描述",
+                    "type": "string"
+                },
+                "due_date": {
+                    "description": "到期时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProcessTaskQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessTaskEdges"
+                        }
+                    ]
+                },
+                "form_key": {
+                    "description": "表单Key",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "parent_task_id": {
+                    "description": "父任务ID",
+                    "type": "string"
+                },
+                "priority": {
+                    "description": "优先级：low, normal, high, urgent",
+                    "type": "string"
+                },
+                "process_definition_key": {
+                    "description": "流程定义Key",
+                    "type": "string"
+                },
+                "process_instance_id": {
+                    "description": "流程实例ID",
+                    "type": "integer"
+                },
+                "root_task_id": {
+                    "description": "根任务ID",
+                    "type": "string"
+                },
+                "started_time": {
+                    "description": "开始时间",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "任务状态：created, assigned, started, completed, cancelled",
+                    "type": "string"
+                },
+                "task_definition_key": {
+                    "description": "任务定义Key",
+                    "type": "string"
+                },
+                "task_id": {
+                    "description": "任务ID，BPMN标准",
+                    "type": "string"
+                },
+                "task_name": {
+                    "description": "任务名称",
+                    "type": "string"
+                },
+                "task_type": {
+                    "description": "任务类型：user_task, service_task, script_task, manual_task",
+                    "type": "string"
+                },
+                "task_variables": {
+                    "description": "任务变量",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ProcessTaskEdges": {
+            "type": "object",
+            "properties": {
+                "process_instance": {
+                    "description": "ProcessInstance holds the value of the process_instance edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessInstance"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.ProcessVariable": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProcessVariableQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessVariableEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_transient": {
+                    "description": "是否临时变量",
+                    "type": "boolean"
+                },
+                "process_instance_id": {
+                    "description": "流程实例ID",
+                    "type": "integer"
+                },
+                "scope": {
+                    "description": "变量作用域：process, task, global",
+                    "type": "string"
+                },
+                "serialization_format": {
+                    "description": "序列化格式：json, xml, binary",
+                    "type": "string"
+                },
+                "task_id": {
+                    "description": "任务ID，可选",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "variable_id": {
+                    "description": "变量ID",
+                    "type": "string"
+                },
+                "variable_name": {
+                    "description": "变量名称",
+                    "type": "string"
+                },
+                "variable_type": {
+                    "description": "变量类型：string, integer, long, double, boolean, date, object",
+                    "type": "string"
+                },
+                "variable_value": {
+                    "description": "变量值",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ProcessVariableEdges": {
+            "type": "object",
+            "properties": {
+                "process_instance": {
+                    "description": "ProcessInstance holds the value of the process_instance edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessInstance"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.ProcessVersionChangelog": {
+            "type": "object",
+            "properties": {
+                "change_details": {
+                    "description": "变更详情列表",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "change_log": {
+                    "description": "变更日志描述",
+                    "type": "string"
+                },
+                "change_type": {
+                    "description": "变更类型：create/update/delete/rollback",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "创建人 ID",
+                    "type": "integer"
+                },
+                "created_by_name": {
+                    "description": "创建人姓名",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProcessVersionChangelogQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessVersionChangelogEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "process_definition_id": {
+                    "description": "流程定义 ID",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户 ID",
+                    "type": "integer"
+                },
+                "version": {
+                    "description": "版本号",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ProcessVersionChangelogEdges": {
+            "type": "object",
+            "properties": {
+                "process_definition": {
+                    "description": "ProcessDefinition holds the value of the process_definition edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessDefinition"
+                        }
+                    ]
+                },
+                "user": {
+                    "description": "User holds the value of the user edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.Project": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "项目代码",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "department_id": {
+                    "description": "所属部门ID",
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "项目描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProjectQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProjectEdges"
+                        }
+                    ]
+                },
+                "end_date": {
+                    "description": "结束日期",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "manager_id": {
+                    "description": "项目经理ID",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "项目名称",
+                    "type": "string"
+                },
+                "start_date": {
+                    "description": "开始日期",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态: active, completed, suspended",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ProjectEdges": {
+            "type": "object",
+            "properties": {
+                "applications": {
+                    "description": "包含的应用",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Application"
+                    }
+                },
+                "department": {
+                    "description": "Department holds the value of the department edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Department"
+                        }
+                    ]
+                },
+                "tags": {
+                    "description": "项目标签",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Tag"
+                    }
+                }
+            }
+        },
+        "ent.Role": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "角色代码",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "角色描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the RoleQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.RoleEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "角色是否启用",
+                    "type": "boolean"
+                },
+                "is_system": {
+                    "description": "是否系统角色",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "角色名称",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.RoleEdges": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "description": "角色拥有的权限",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Permission"
+                    }
+                },
+                "users": {
+                    "description": "拥有此角色的用户",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.User"
+                    }
+                }
+            }
+        },
+        "ent.RootCauseAnalysis": {
+            "type": "object",
+            "properties": {
+                "analysis_date": {
+                    "description": "分析日期",
+                    "type": "string"
+                },
+                "analysis_method": {
+                    "description": "分析方法: automatic, manual, hybrid",
+                    "type": "string"
+                },
+                "analysis_summary": {
+                    "description": "分析摘要",
+                    "type": "string"
+                },
+                "confidence_score": {
+                    "description": "置信度分数(0-1)",
+                    "type": "number"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the RootCauseAnalysisQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.RootCauseAnalysisEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "root_causes": {
+                    "description": "根因列表",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "工单ID",
+                    "type": "integer"
+                },
+                "ticket_number": {
+                    "description": "工单编号",
+                    "type": "string"
+                },
+                "ticket_title": {
+                    "description": "工单标题",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.RootCauseAnalysisEdges": {
+            "type": "object",
+            "properties": {
+                "ticket": {
+                    "description": "关联的工单",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.SLAAlertHistory": {
+            "type": "object",
+            "properties": {
+                "actual_percentage": {
+                    "description": "实际百分比",
+                    "type": "number"
+                },
+                "alert_level": {
+                    "description": "预警级别",
+                    "type": "string"
+                },
+                "alert_rule_id": {
+                    "description": "预警规则ID",
+                    "type": "integer"
+                },
+                "alert_rule_name": {
+                    "description": "预警规则名称",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the SLAAlertHistoryQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.SLAAlertHistoryEdges"
+                        }
+                    ]
+                },
+                "escalation_level": {
+                    "description": "升级级别",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "notification_sent": {
+                    "description": "是否已发送通知",
+                    "type": "boolean"
+                },
+                "resolved_at": {
+                    "description": "解决时间",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "threshold_percentage": {
+                    "description": "阈值百分比",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "工单ID",
+                    "type": "integer"
+                },
+                "ticket_number": {
+                    "description": "工单编号",
+                    "type": "string"
+                },
+                "ticket_title": {
+                    "description": "工单标题",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.SLAAlertHistoryEdges": {
+            "type": "object",
+            "properties": {
+                "alert_rule": {
+                    "description": "关联的预警规则",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.SLAAlertRule"
+                        }
+                    ]
+                },
+                "ticket": {
+                    "description": "关联的工单",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.SLAAlertRule": {
+            "type": "object",
+            "properties": {
+                "alert_level": {
+                    "description": "预警级别: warning, critical, severe",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the SLAAlertRuleQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.SLAAlertRuleEdges"
+                        }
+                    ]
+                },
+                "escalation_enabled": {
+                    "description": "是否启用升级",
+                    "type": "boolean"
+                },
+                "escalation_levels": {
+                    "description": "升级级别配置",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "预警规则名称",
+                    "type": "string"
+                },
+                "notification_channels": {
+                    "description": "通知渠道: email, sms, in_app",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sla_definition_id": {
+                    "description": "SLA定义ID",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "threshold_percentage": {
+                    "description": "阈值百分比(0-100)",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.SLAAlertRuleEdges": {
+            "type": "object",
+            "properties": {
+                "alert_history": {
+                    "description": "预警历史记录",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.SLAAlertHistory"
+                    }
+                },
+                "sla_definition": {
+                    "description": "关联的SLA定义",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.SLADefinition"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.SLADefinition": {
+            "type": "object",
+            "properties": {
+                "business_hours": {
+                    "description": "营业时间配置",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "conditions": {
+                    "description": "适用条件",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "SLA描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the SLADefinitionQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.SLADefinitionEdges"
+                        }
+                    ]
+                },
+                "escalation_rules": {
+                    "description": "升级规则",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否激活",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "SLA名称",
+                    "type": "string"
+                },
+                "priority": {
+                    "description": "优先级",
+                    "type": "string"
+                },
+                "resolution_time": {
+                    "description": "解决时间(分钟)",
+                    "type": "integer"
+                },
+                "response_time": {
+                    "description": "响应时间(分钟)",
+                    "type": "integer"
+                },
+                "service_type": {
+                    "description": "服务类型",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.SLADefinitionEdges": {
+            "type": "object",
+            "properties": {
+                "alert_rules": {
+                    "description": "SLA预警规则",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.SLAAlertRule"
+                    }
+                },
+                "metrics": {
+                    "description": "SLA指标",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.SLAMetric"
+                    }
+                },
+                "tickets": {
+                    "description": "关联工单",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Ticket"
+                    }
+                },
+                "violations": {
+                    "description": "SLA违规记录",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.SLAViolation"
+                    }
+                }
+            }
+        },
+        "ent.SLAMetric": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the SLAMetricQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.SLAMetricEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "measurement_time": {
+                    "description": "测量时间",
+                    "type": "string"
+                },
+                "metadata": {
+                    "description": "元数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "metric_name": {
+                    "description": "指标名称",
+                    "type": "string"
+                },
+                "metric_type": {
+                    "description": "指标类型",
+                    "type": "string"
+                },
+                "metric_value": {
+                    "description": "指标值",
+                    "type": "number"
+                },
+                "sla_definition_id": {
+                    "description": "SLA定义ID",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "unit": {
+                    "description": "单位",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.SLAMetricEdges": {
+            "type": "object",
+            "properties": {
+                "sla_definition": {
+                    "description": "SLA定义",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.SLADefinition"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.SLAViolation": {
+            "type": "object",
+            "properties": {
+                "actual_time": {
+                    "description": "实际时间(时间戳)",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "创建人ID",
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "违规描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the SLAViolationQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.SLAViolationEdges"
+                        }
+                    ]
+                },
+                "expected_time": {
+                    "description": "期望时间(时间戳)",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_resolved": {
+                    "description": "是否已解决",
+                    "type": "boolean"
+                },
+                "overdue_minutes": {
+                    "description": "超时分钟数",
+                    "type": "integer"
+                },
+                "resolution_notes": {
+                    "description": "解决说明",
+                    "type": "string"
+                },
+                "resolved_at": {
+                    "description": "解决时间",
+                    "type": "string"
+                },
+                "severity": {
+                    "description": "严重程度",
+                    "type": "string"
+                },
+                "sla_definition_id": {
+                    "description": "SLA定义ID",
+                    "type": "integer"
+                },
+                "sla_name": {
+                    "description": "SLA名称",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "工单ID",
+                    "type": "integer"
+                },
+                "ticket_type": {
+                    "description": "工单类型",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "violation_occurred_at": {
+                    "description": "违规发生时间",
+                    "type": "string"
+                },
+                "violation_time": {
+                    "description": "违规时间",
+                    "type": "string"
+                },
+                "violation_type": {
+                    "description": "违规类型",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.SLAViolationEdges": {
+            "type": "object",
+            "properties": {
+                "sla_definition": {
+                    "description": "SLA定义",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.SLADefinition"
+                        }
+                    ]
+                },
+                "ticket": {
+                    "description": "工单",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.Tag": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "标签代码",
+                    "type": "string"
+                },
+                "color": {
+                    "description": "标签颜色",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "标签描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TagQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TagEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "标签名称",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.TagEdges": {
+            "type": "object",
+            "properties": {
+                "applications": {
+                    "description": "关联的应用",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Application"
+                    }
+                },
+                "departments": {
+                    "description": "关联的部门",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Department"
+                    }
+                },
+                "microservices": {
+                    "description": "关联的微服务",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Microservice"
+                    }
+                },
+                "projects": {
+                    "description": "关联的项目",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Project"
+                    }
+                },
+                "teams": {
+                    "description": "关联的团队",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Team"
+                    }
+                }
+            }
+        },
+        "ent.Team": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "团队代码",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "团队描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TeamQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TeamEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "manager_id": {
+                    "description": "负责人ID",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "团队名称",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态: active, inactive",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.TeamEdges": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "description": "团队标签",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Tag"
+                    }
+                },
+                "users": {
+                    "description": "团队成员",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.User"
+                    }
+                }
+            }
+        },
+        "ent.Tenant": {
+            "type": "object",
+            "properties": {
+                "billing_enabled": {
+                    "description": "是否启用计费/核算",
+                    "type": "boolean"
+                },
+                "code": {
+                    "description": "租户代码",
+                    "type": "string"
+                },
+                "cost_center_code": {
+                    "description": "成本中心编码",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "currency": {
+                    "description": "结算币种",
+                    "type": "string"
+                },
+                "domain": {
+                    "description": "域名",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TenantQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TenantEdges"
+                        }
+                    ]
+                },
+                "expires_at": {
+                    "description": "过期时间",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "legal_entity_code": {
+                    "description": "法人实体编码",
+                    "type": "string"
+                },
+                "msp_provider_id": {
+                    "description": "MSP服务提供商ID",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "租户名称",
+                    "type": "string"
+                },
+                "owner_contact": {
+                    "description": "租户负责人联系方式",
+                    "type": "string"
+                },
+                "parent_tenant_id": {
+                    "description": "父租户ID (MSP客户指向MSP提供商)",
+                    "type": "integer"
+                },
+                "plan_code": {
+                    "description": "订阅或套餐编码",
+                    "type": "string"
+                },
+                "service_tier": {
+                    "description": "服务等级",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "租户类型: internal|saas_customer|msp_provider|msp_customer，保留 standard|msp|customer 兼容历史数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/itsm-backend_ent_tenant.Type"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.TenantEdges": {
+            "type": "object",
+            "properties": {
+                "msp_customer_allocations": {
+                    "description": "MSP客户分配",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.MSPAllocation"
+                    }
+                },
+                "users": {
+                    "description": "租户用户",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.User"
+                    }
+                }
+            }
+        },
+        "ent.TenantInstallation": {
+            "type": "object",
+            "properties": {
+                "auto_upgrade": {
+                    "description": "是否自动升级到最新版本",
+                    "type": "boolean"
+                },
+                "config": {
+                    "description": "租户的组件配置信息，敏感字段加密存储",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "created_at": {
+                    "description": "CreatedAt holds the value of the \"created_at\" field.",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TenantInstallationQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TenantInstallationEdges"
+                        }
+                    ]
+                },
+                "error_message": {
+                    "description": "安装/运行错误信息",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "installed_at": {
+                    "description": "InstalledAt holds the value of the \"installed_at\" field.",
+                    "type": "string"
+                },
+                "installed_by": {
+                    "description": "安装者用户ID",
+                    "type": "string"
+                },
+                "installed_version": {
+                    "description": "安装的版本号",
+                    "type": "string"
+                },
+                "item_id": {
+                    "description": "关联的MarketplaceItem ID",
+                    "type": "integer"
+                },
+                "last_updated_at": {
+                    "description": "LastUpdatedAt holds the value of the \"last_updated_at\" field.",
+                    "type": "string"
+                },
+                "last_used_at": {
+                    "description": "LastUsedAt holds the value of the \"last_used_at\" field.",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "安装状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/tenantinstallation.Status"
+                        }
+                    ]
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.TenantInstallationEdges": {
+            "type": "object",
+            "properties": {
+                "item": {
+                    "description": "Item holds the value of the item edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.MarketplaceItem"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.Ticket": {
+            "type": "object",
+            "properties": {
+                "assignee_id": {
+                    "description": "处理人ID",
+                    "type": "integer"
+                },
+                "category_id": {
+                    "description": "分类ID",
+                    "type": "integer"
+                },
+                "closed_at": {
+                    "description": "关闭时间",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "description": "删除时间",
+                    "type": "string"
+                },
+                "department_id": {
+                    "description": "部门ID",
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "工单描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TicketQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TicketEdges"
+                        }
+                    ]
+                },
+                "first_response_at": {
+                    "description": "首次响应时间",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_managed_by_msp": {
+                    "description": "是否由MSP管理",
+                    "type": "boolean"
+                },
+                "managed_by_user_id": {
+                    "description": "MSP处理人ID",
+                    "type": "integer"
+                },
+                "msp_provider_id": {
+                    "description": "MSP服务提供商ID",
+                    "type": "integer"
+                },
+                "msp_ticket_id": {
+                    "description": "MSP工单ID(跨租户)",
+                    "type": "string"
+                },
+                "parent_ticket_id": {
+                    "description": "父工单ID",
+                    "type": "integer"
+                },
+                "priority": {
+                    "description": "优先级",
+                    "type": "string"
+                },
+                "rated_at": {
+                    "description": "评分时间",
+                    "type": "string"
+                },
+                "rated_by": {
+                    "description": "评分人ID",
+                    "type": "integer"
+                },
+                "rating": {
+                    "description": "评分（1-5星）",
+                    "type": "integer"
+                },
+                "rating_comment": {
+                    "description": "评分评论",
+                    "type": "string"
+                },
+                "requester_id": {
+                    "description": "申请人ID",
+                    "type": "integer"
+                },
+                "resolution": {
+                    "description": "解决方案",
+                    "type": "string"
+                },
+                "resolution_category": {
+                    "description": "解决方案分类",
+                    "type": "string"
+                },
+                "resolved_at": {
+                    "description": "解决时间",
+                    "type": "string"
+                },
+                "sla_definition_id": {
+                    "description": "SLA定义ID",
+                    "type": "integer"
+                },
+                "sla_resolution_deadline": {
+                    "description": "SLA解决截止时间",
+                    "type": "string"
+                },
+                "sla_response_deadline": {
+                    "description": "SLA响应截止时间",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                },
+                "template_id": {
+                    "description": "模板ID",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_number": {
+                    "description": "工单编号",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "工单标题",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "工单类型",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "版本号（乐观锁）",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.TicketApproval": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "description": "审批动作: approve/reject/delegate",
+                    "type": "string"
+                },
+                "approver_id": {
+                    "description": "审批人ID",
+                    "type": "integer"
+                },
+                "comment": {
+                    "description": "审批意见",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "delegate_to_user_id": {
+                    "description": "委派目标用户ID",
+                    "type": "integer"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TicketApprovalQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TicketApprovalEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "level": {
+                    "description": "审批级别（1=一级,2=二级...）",
+                    "type": "integer"
+                },
+                "level_name": {
+                    "description": "级别名称",
+                    "type": "string"
+                },
+                "processed_at": {
+                    "description": "处理时间",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "审批状态: pending/approved/rejected/cancelled",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "工单ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.TicketApprovalEdges": {
+            "type": "object",
+            "properties": {
+                "ticket": {
+                    "description": "所属工单",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.TicketAttachment": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TicketAttachmentQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TicketAttachmentEdges"
+                        }
+                    ]
+                },
+                "file_name": {
+                    "description": "文件名",
+                    "type": "string"
+                },
+                "file_path": {
+                    "description": "文件路径",
+                    "type": "string"
+                },
+                "file_size": {
+                    "description": "文件大小（字节）",
+                    "type": "integer"
+                },
+                "file_type": {
+                    "description": "文件类型（MIME类型）",
+                    "type": "string"
+                },
+                "file_url": {
+                    "description": "文件URL（用于访问）",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "mime_type": {
+                    "description": "MIME类型",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "工单ID",
+                    "type": "integer"
+                },
+                "uploaded_by": {
+                    "description": "上传人ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.TicketAttachmentEdges": {
+            "type": "object",
+            "properties": {
+                "ticket": {
+                    "description": "所属工单",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                },
+                "uploader": {
+                    "description": "上传人",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.TicketCC": {
+            "type": "object",
+            "properties": {
+                "added_at": {
+                    "description": "添加时间",
+                    "type": "string"
+                },
+                "added_by": {
+                    "description": "添加人ID",
+                    "type": "integer"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TicketCCQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TicketCCEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否有效",
+                    "type": "boolean"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "工单ID",
+                    "type": "integer"
+                },
+                "user_id": {
+                    "description": "抄送用户ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.TicketCCEdges": {
+            "type": "object",
+            "properties": {
+                "ticket": {
+                    "description": "所属工单",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.TicketCategory": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "分类代码",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "department_id": {
+                    "description": "所属部门ID",
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "分类描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TicketCategoryQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TicketCategoryEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
+                "level": {
+                    "description": "分类层级",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "分类名称",
+                    "type": "string"
+                },
+                "parent_id": {
+                    "description": "父分类ID",
+                    "type": "integer"
+                },
+                "sort_order": {
+                    "description": "排序顺序",
+                    "type": "integer"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "workflow_id": {
+                    "description": "关联工作流ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.TicketCategoryEdges": {
+            "type": "object",
+            "properties": {
+                "children": {
+                    "description": "子分类",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketCategory"
+                    }
+                },
+                "department": {
+                    "description": "所属部门",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Department"
+                        }
+                    ]
+                },
+                "parent": {
+                    "description": "父分类",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TicketCategory"
+                        }
+                    ]
+                },
+                "tickets": {
+                    "description": "此分类下的工单",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Ticket"
+                    }
+                },
+                "workflow": {
+                    "description": "关联工作流",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Workflow"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.TicketComment": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "description": "附件ID列表",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "content": {
+                    "description": "评论内容",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TicketCommentQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TicketCommentEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_internal": {
+                    "description": "是否内部备注",
+                    "type": "boolean"
+                },
+                "mentions": {
+                    "description": "@的用户ID列表",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "工单ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "评论人ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.TicketCommentEdges": {
+            "type": "object",
+            "properties": {
+                "ticket": {
+                    "description": "所属工单",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                },
+                "user": {
+                    "description": "评论人",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.TicketEdges": {
+            "type": "object",
+            "properties": {
+                "approval_records": {
+                    "description": "ApprovalRecords holds the value of the approval_records edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ApprovalRecord"
+                    }
+                },
+                "approvals": {
+                    "description": "Approvals holds the value of the approvals edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketApproval"
+                    }
+                },
+                "assignee": {
+                    "description": "Assignee holds the value of the assignee edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                },
+                "attachments": {
+                    "description": "Attachments holds the value of the attachments edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketAttachment"
+                    }
+                },
+                "category": {
+                    "description": "Category holds the value of the category edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketCategory"
+                    }
+                },
+                "cc_users": {
+                    "description": "CcUsers holds the value of the cc_users edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketCC"
+                    }
+                },
+                "comments": {
+                    "description": "Comments holds the value of the comments edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketComment"
+                    }
+                },
+                "feishu_syncs": {
+                    "description": "FeishuSyncs holds the value of the feishu_syncs edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.FeishuTicketSync"
+                    }
+                },
+                "notifications": {
+                    "description": "Notifications holds the value of the notifications edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketNotification"
+                    }
+                },
+                "related_tickets": {
+                    "description": "双向关联工单",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Ticket"
+                    }
+                },
+                "requester": {
+                    "description": "Requester holds the value of the requester edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                },
+                "root_cause_analyses": {
+                    "description": "RootCauseAnalyses holds the value of the root_cause_analyses edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.RootCauseAnalysis"
+                    }
+                },
+                "sla_alert_history": {
+                    "description": "SLAAlertHistory holds the value of the sla_alert_history edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.SLAAlertHistory"
+                    }
+                },
+                "sla_violations": {
+                    "description": "SLAViolations holds the value of the sla_violations edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.SLAViolation"
+                    }
+                },
+                "tags": {
+                    "description": "Tags holds the value of the tags edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketTag"
+                    }
+                },
+                "workflow_records": {
+                    "description": "WorkflowRecords holds the value of the workflow_records edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketWorkflowRecord"
+                    }
+                }
+            }
+        },
+        "ent.TicketNotification": {
+            "type": "object",
+            "properties": {
+                "channel": {
+                    "description": "通知渠道: email, in_app, sms",
+                    "type": "string"
+                },
+                "content": {
+                    "description": "通知内容",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TicketNotificationQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TicketNotificationEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "read_at": {
+                    "description": "阅读时间",
+                    "type": "string"
+                },
+                "sent_at": {
+                    "description": "发送时间",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态: pending, sent, read",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "工单ID",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "通知类型: created, assigned, status_changed, commented, sla_warning, resolved, closed",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "接收人ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.TicketNotificationEdges": {
+            "type": "object",
+            "properties": {
+                "ticket": {
+                    "description": "所属工单",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                },
+                "user": {
+                    "description": "接收人",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.TicketTag": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "description": "标签颜色",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "标签描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TicketTagQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TicketTagEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "标签名称",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.TicketTagEdges": {
+            "type": "object",
+            "properties": {
+                "tickets": {
+                    "description": "使用此标签的工单",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Ticket"
+                    }
+                }
+            }
+        },
+        "ent.TicketWorkflowRecord": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "description": "操作: accept/reject/approve/resolve/close/reopen/forward/cc/withdraw/delegate",
+                    "type": "string"
+                },
+                "comment": {
+                    "description": "操作备注",
+                    "type": "string"
+                },
+                "create_time": {
+                    "description": "CreateTime holds the value of the \"create_time\" field.",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TicketWorkflowRecordQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.TicketWorkflowRecordEdges"
+                        }
+                    ]
+                },
+                "from_status": {
+                    "description": "变更前状态",
+                    "type": "string"
+                },
+                "from_user_id": {
+                    "description": "来源用户ID",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "metadata": {
+                    "description": "扩展元数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "operator_id": {
+                    "description": "操作人ID",
+                    "type": "integer"
+                },
+                "reason": {
+                    "description": "操作原因",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "description": "工单ID",
+                    "type": "integer"
+                },
+                "to_status": {
+                    "description": "变更后状态",
+                    "type": "string"
+                },
+                "to_user_id": {
+                    "description": "目标用户ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.TicketWorkflowRecordEdges": {
+            "type": "object",
+            "properties": {
+                "ticket": {
+                    "description": "所属工单",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Ticket"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.User": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "description": "是否激活",
+                    "type": "boolean"
+                },
+                "assigned_by_msp_id": {
+                    "description": "MSP分配人ID",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "department": {
+                    "description": "部门",
+                    "type": "string"
+                },
+                "department_id": {
+                    "description": "部门ID",
+                    "type": "integer"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the UserQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.UserEdges"
+                        }
+                    ]
+                },
+                "email": {
+                    "description": "邮箱",
+                    "type": "string"
+                },
+                "feishu_open_id": {
+                    "description": "飞书用户OpenID",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "msp_role": {
+                    "description": "MSP角色: provider_admin=MSP管理员, provider_agent=MSP客服, customer_user=客户用户",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/itsm-backend_ent_user.MspRole"
+                        }
+                    ]
+                },
+                "name": {
+                    "description": "姓名",
+                    "type": "string"
+                },
+                "password_hash": {
+                    "description": "密码哈希",
+                    "type": "string"
+                },
+                "phone": {
+                    "description": "电话",
+                    "type": "string"
+                },
+                "role": {
+                    "description": "角色",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/itsm-backend_ent_user.Role"
+                        }
+                    ]
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.UserEdges": {
+            "type": "object",
+            "properties": {
+                "article_participations": {
+                    "description": "文章协作参与",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.KnowledgeArticleParticipant"
+                    }
+                },
+                "article_sessions": {
+                    "description": "文章协作会话",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.KnowledgeArticleSession"
+                    }
+                },
+                "assigned_tickets": {
+                    "description": "分配给用户的工单",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Ticket"
+                    }
+                },
+                "department_ref": {
+                    "description": "DepartmentRef holds the value of the department_ref edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Department"
+                        }
+                    ]
+                },
+                "groups": {
+                    "description": "用户所属组",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Group"
+                    }
+                },
+                "msp_allocations": {
+                    "description": "MSP用户分配",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.MSPAllocation"
+                    }
+                },
+                "notification_preferences": {
+                    "description": "通知偏好",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.NotificationPreference"
+                    }
+                },
+                "pir_reviews": {
+                    "description": "PIR审查记录",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ChangePIR"
+                    }
+                },
+                "roles": {
+                    "description": "用户角色",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Role"
+                    }
+                },
+                "tenant": {
+                    "description": "Tenant holds the value of the tenant edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Tenant"
+                        }
+                    ]
+                },
+                "ticket_attachments": {
+                    "description": "工单附件",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketAttachment"
+                    }
+                },
+                "ticket_comments": {
+                    "description": "工单评论",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketComment"
+                    }
+                },
+                "ticket_notifications": {
+                    "description": "工单通知",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.TicketNotification"
+                    }
+                },
+                "tickets": {
+                    "description": "用户提交的工单",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Ticket"
+                    }
+                },
+                "version_changelogs": {
+                    "description": "版本变更日志",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ProcessVersionChangelog"
+                    }
+                }
+            }
+        },
+        "ent.Workflow": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "definition": {
+                    "description": "工作流定义",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "department_id": {
+                    "description": "部门ID",
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "工作流描述",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the WorkflowQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.WorkflowEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "工作流名称",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "工作流类型",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "版本号",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.WorkflowEdges": {
+            "type": "object",
+            "properties": {
+                "department": {
+                    "description": "所属部门",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Department"
+                        }
+                    ]
+                },
+                "workflow_instances": {
+                    "description": "工作流实例",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.WorkflowInstance"
+                    }
+                },
+                "workflow_versions": {
+                    "description": "版本历史",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.WorkflowVersion"
+                    }
+                }
+            }
+        },
+        "ent.WorkflowInstance": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "description": "完成时间",
+                    "type": "string"
+                },
+                "context": {
+                    "description": "执行上下文",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "current_step": {
+                    "description": "当前步骤",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the WorkflowInstanceQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.WorkflowInstanceEdges"
+                        }
+                    ]
+                },
+                "entity_id": {
+                    "description": "关联实体ID",
+                    "type": "integer"
+                },
+                "entity_type": {
+                    "description": "关联实体类型",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "started_at": {
+                    "description": "开始时间",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "实例状态",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "workflow_id": {
+                    "description": "工作流ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.WorkflowInstanceEdges": {
+            "type": "object",
+            "properties": {
+                "workflow": {
+                    "description": "Workflow holds the value of the workflow edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Workflow"
+                        }
+                    ]
+                },
+                "workflow_tasks": {
+                    "description": "任务列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.WorkflowTask"
+                    }
+                }
+            }
+        },
+        "ent.WorkflowTask": {
+            "type": "object",
+            "properties": {
+                "activity_id": {
+                    "description": "活动ID",
+                    "type": "string"
+                },
+                "assignee": {
+                    "description": "处理人",
+                    "type": "string"
+                },
+                "candidate_groups": {
+                    "description": "候选人组，多个用逗号分隔",
+                    "type": "string"
+                },
+                "candidate_users": {
+                    "description": "候选人用户，多个用逗号分隔",
+                    "type": "string"
+                },
+                "comment": {
+                    "description": "备注",
+                    "type": "string"
+                },
+                "completed_at": {
+                    "description": "完成时间",
+                    "type": "string"
+                },
+                "completed_by": {
+                    "description": "完成人",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "due_date": {
+                    "description": "截止时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the WorkflowTaskQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.WorkflowTaskEdges"
+                        }
+                    ]
+                },
+                "form_data": {
+                    "description": "表单数据",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "instance_id": {
+                    "description": "实例ID",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "任务名称",
+                    "type": "string"
+                },
+                "priority": {
+                    "description": "优先级: low, medium, high, urgent",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "任务状态: pending, in_progress, completed, failed, cancelled",
+                    "type": "string"
+                },
+                "task_id": {
+                    "description": "任务ID",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "任务类型: user_task, service_task, script_task, call_activity",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "variables": {
+                    "description": "流程变量",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "ent.WorkflowTaskEdges": {
+            "type": "object",
+            "properties": {
+                "instance": {
+                    "description": "Instance holds the value of the instance edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.WorkflowInstance"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.WorkflowVersion": {
+            "type": "object",
+            "properties": {
+                "bpmn_xml": {
+                    "description": "BPMN XML内容",
+                    "type": "string"
+                },
+                "change_log": {
+                    "description": "变更日志",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "创建人",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the WorkflowVersionQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.WorkflowVersionEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_current": {
+                    "description": "是否为当前版本",
+                    "type": "boolean"
+                },
+                "process_variables": {
+                    "description": "流程变量定义",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "status": {
+                    "description": "版本状态: draft, active, deprecated",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "版本号，如 1.0.0",
+                    "type": "string"
+                },
+                "workflow_id": {
+                    "description": "工作流ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.WorkflowVersionEdges": {
+            "type": "object",
+            "properties": {
+                "workflow": {
+                    "description": "Workflow holds the value of the workflow edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Workflow"
+                        }
+                    ]
+                }
+            }
+        },
+        "gin.H": {
+            "type": "object",
+            "additionalProperties": {}
+        },
         "handlers.DashboardOverview": {
             "type": "object",
             "properties": {
@@ -11411,6 +27662,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/handlers.KPIMetric"
                     }
+                },
+                "overview": {
+                    "$ref": "#/definitions/handlers.DashboardOverviewData"
                 },
                 "peakHours": {
                     "type": "array",
@@ -11443,10 +27697,7 @@ const docTemplate = `{
                     }
                 },
                 "slaData": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.SLAData"
-                    }
+                    "$ref": "#/definitions/service.SLAComplianceData"
                 },
                 "teamWorkload": {
                     "type": "array",
@@ -11459,6 +27710,29 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/handlers.TicketTrendData"
                     }
+                }
+            }
+        },
+        "handlers.DashboardOverviewData": {
+            "type": "object",
+            "properties": {
+                "avgResolutionTime": {
+                    "type": "number"
+                },
+                "avgResponseTime": {
+                    "type": "number"
+                },
+                "inProgressTickets": {
+                    "type": "integer"
+                },
+                "pendingTickets": {
+                    "type": "integer"
+                },
+                "resolvedToday": {
+                    "type": "integer"
+                },
+                "totalTickets": {
+                    "type": "integer"
                 }
             }
         },
@@ -11674,159 +27948,160 @@ const docTemplate = `{
                 }
             }
         },
-        "interfaces.AddCommentRequest": {
-            "type": "object",
-            "required": [
-                "content"
+        "itemversion.Status": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "draft",
+                "published",
+                "deprecated",
+                "withdrawn"
             ],
-            "properties": {
-                "content": {
-                    "type": "string",
-                    "maxLength": 2000
-                },
-                "is_private": {
-                    "type": "boolean"
-                }
-            }
+            "x-enum-varnames": [
+                "DefaultStatus",
+                "StatusDraft",
+                "StatusPublished",
+                "StatusDeprecated",
+                "StatusWithdrawn"
+            ]
         },
-        "interfaces.AssignTicketRequest": {
-            "type": "object",
-            "required": [
-                "assigned_to"
+        "itsm-backend_ent_cirelationship.ImpactLevel": {
+            "type": "string",
+            "enum": [
+                "medium",
+                "critical",
+                "high",
+                "medium",
+                "low"
             ],
-            "properties": {
-                "assigned_to": {
-                    "type": "string"
-                },
-                "instructions": {
-                    "type": "string"
-                },
-                "team_id": {
-                    "type": "string"
-                }
-            }
+            "x-enum-varnames": [
+                "DefaultImpactLevel",
+                "ImpactLevelCritical",
+                "ImpactLevelHigh",
+                "ImpactLevelMedium",
+                "ImpactLevelLow"
+            ]
         },
-        "interfaces.BaseResponse": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "error": {
-                    "$ref": "#/definitions/interfaces.ErrorDetails"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "interfaces.CreateTicketRequest": {
-            "type": "object",
-            "required": [
-                "category",
-                "priority",
-                "title"
+        "itsm-backend_ent_cirelationship.Strength": {
+            "type": "string",
+            "enum": [
+                "medium",
+                "critical",
+                "high",
+                "medium",
+                "low"
             ],
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 2000
-                },
-                "priority": {
-                    "type": "string",
-                    "enum": [
-                        "low",
-                        "normal",
-                        "high",
-                        "urgent",
-                        "critical"
-                    ]
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 200
-                }
-            }
+            "x-enum-varnames": [
+                "DefaultStrength",
+                "StrengthCritical",
+                "StrengthHigh",
+                "StrengthMedium",
+                "StrengthLow"
+            ]
         },
-        "interfaces.CreateTicketResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/application.CreateTicketResult"
-                },
-                "error": {
-                    "$ref": "#/definitions/interfaces.ErrorDetails"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "interfaces.ErrorDetails": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "details": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "interfaces.SearchTicketsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/application.SearchTicketsResult"
-                },
-                "error": {
-                    "$ref": "#/definitions/interfaces.ErrorDetails"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "interfaces.TicketDetailsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/application.TicketDetails"
-                },
-                "error": {
-                    "$ref": "#/definitions/interfaces.ErrorDetails"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "interfaces.UpdateStatusRequest": {
-            "type": "object",
-            "required": [
-                "status"
+        "itsm-backend_ent_knowledgearticlesession.Status": {
+            "type": "string",
+            "enum": [
+                "active",
+                "idle",
+                "inactive"
             ],
-            "properties": {
-                "reason": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "new",
-                        "open",
-                        "in_progress",
-                        "pending",
-                        "resolved",
-                        "closed",
-                        "cancelled"
-                    ]
-                }
-            }
+            "x-enum-varnames": [
+                "StatusActive",
+                "StatusIdle",
+                "StatusInactive"
+            ]
+        },
+        "itsm-backend_ent_tenant.Type": {
+            "type": "string",
+            "enum": [
+                "standard",
+                "standard",
+                "msp",
+                "customer",
+                "internal",
+                "saas_customer",
+                "msp_provider",
+                "msp_customer"
+            ],
+            "x-enum-varnames": [
+                "DefaultType",
+                "TypeStandard",
+                "TypeMsp",
+                "TypeCustomer",
+                "TypeInternal",
+                "TypeSaasCustomer",
+                "TypeMspProvider",
+                "TypeMspCustomer"
+            ]
+        },
+        "itsm-backend_ent_user.MspRole": {
+            "type": "string",
+            "enum": [
+                "provider_admin",
+                "provider_agent",
+                "customer_user"
+            ],
+            "x-enum-varnames": [
+                "MspRoleProviderAdmin",
+                "MspRoleProviderAgent",
+                "MspRoleCustomerUser"
+            ]
+        },
+        "itsm-backend_ent_user.Role": {
+            "type": "string",
+            "enum": [
+                "end_user",
+                "super_admin",
+                "admin",
+                "manager",
+                "agent",
+                "technician",
+                "security",
+                "end_user"
+            ],
+            "x-enum-varnames": [
+                "DefaultRole",
+                "RoleSuperAdmin",
+                "RoleAdmin",
+                "RoleManager",
+                "RoleAgent",
+                "RoleTechnician",
+                "RoleSecurity",
+                "RoleEndUser"
+            ]
+        },
+        "marketplaceitem.Status": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "draft",
+                "reviewing",
+                "published",
+                "rejected",
+                "deprecated"
+            ],
+            "x-enum-varnames": [
+                "DefaultStatus",
+                "StatusDraft",
+                "StatusReviewing",
+                "StatusPublished",
+                "StatusRejected",
+                "StatusDeprecated"
+            ]
+        },
+        "marketplaceitem.Type": {
+            "type": "string",
+            "enum": [
+                "connector",
+                "skill",
+                "plugin"
+            ],
+            "x-enum-varnames": [
+                "TypeConnector",
+                "TypeSkill",
+                "TypePlugin"
+            ]
         },
         "service.AIRecommendation": {
             "type": "object",
@@ -11837,22 +28112,22 @@ const docTemplate = `{
                 "reason": {
                     "type": "string"
                 },
-                "suggested_assignee": {
+                "suggestedAssignee": {
                     "type": "integer"
                 },
-                "suggested_category": {
+                "suggestedCategory": {
                     "type": "string"
                 },
-                "suggested_priority": {
+                "suggestedPriority": {
                     "type": "string"
                 },
-                "suggested_tags": {
+                "suggestedTags": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
                 }
             }
@@ -11860,14 +28135,14 @@ const docTemplate = `{
         "service.AssociateWithKnowledgeRequest": {
             "type": "object",
             "required": [
-                "article_id",
-                "association_type"
+                "articleId",
+                "associationType"
             ],
             "properties": {
-                "article_id": {
+                "articleId": {
                     "type": "integer"
                 },
-                "association_type": {
+                "associationType": {
                     "description": "auto, manual, suggested",
                     "type": "string"
                 }
@@ -11877,29 +28152,34 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "code",
-                "name",
-                "tenant_id"
+                "name"
             ],
             "properties": {
                 "code": {
                     "type": "string"
                 },
+                "departmentId": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
-                "is_active": {
+                "isActive": {
                     "type": "boolean"
                 },
                 "name": {
                     "type": "string"
                 },
-                "parent_id": {
+                "parentId": {
                     "type": "integer"
                 },
-                "sort_order": {
+                "sortOrder": {
                     "type": "integer"
                 },
-                "tenant_id": {
+                "tenantId": {
+                    "type": "integer"
+                },
+                "workflowId": {
                     "type": "integer"
                 }
             }
@@ -11909,7 +28189,7 @@ const docTemplate = `{
             "required": [
                 "definition",
                 "name",
-                "tenant_id",
+                "tenantId",
                 "type"
             ],
             "properties": {
@@ -11920,13 +28200,13 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "is_active": {
+                "isActive": {
                     "type": "boolean"
                 },
                 "name": {
                     "type": "string"
                 },
-                "tenant_id": {
+                "tenantId": {
                     "type": "integer"
                 },
                 "type": {
@@ -11937,24 +28217,84 @@ const docTemplate = `{
                 }
             }
         },
+        "service.EscalationLevel": {
+            "type": "object",
+            "properties": {
+                "afterMinutes": {
+                    "description": "距离告警开始多少分钟后触发",
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "描述（用于审计/通知内容）",
+                    "type": "string"
+                },
+                "level": {
+                    "description": "升级级别编号（1, 2, 3...）",
+                    "type": "integer"
+                },
+                "notifyRoles": {
+                    "description": "通知角色名（manager/team_lead/director）",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "notifyUserIDs": {
+                    "description": "通知具体用户 ID",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "service.EscalationMatrix": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/service.EscalationLevel"
+                }
+            }
+        },
         "service.KnowledgeAssociation": {
             "type": "object",
             "properties": {
-                "article_id": {
+                "articleId": {
                     "type": "integer"
                 },
-                "association_type": {
+                "associationType": {
                     "description": "auto, manual, suggested",
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
-                "relevance_score": {
+                "relevanceScore": {
                     "type": "number"
                 },
-                "ticket_id": {
+                "ticketId": {
                     "type": "integer"
+                }
+            }
+        },
+        "service.SLAComplianceData": {
+            "type": "object",
+            "properties": {
+                "atRiskTickets": {
+                    "type": "integer"
+                },
+                "breachedTickets": {
+                    "type": "integer"
+                },
+                "complianceRate": {
+                    "type": "number"
+                },
+                "resolutionTimeCompliance": {
+                    "type": "number"
+                },
+                "responseTimeCompliance": {
+                    "type": "number"
                 }
             }
         },
@@ -11978,7 +28318,7 @@ const docTemplate = `{
         "service.SolutionRecommendation": {
             "type": "object",
             "properties": {
-                "article_id": {
+                "articleId": {
                     "type": "integer"
                 },
                 "category": {
@@ -11987,10 +28327,10 @@ const docTemplate = `{
                 "content": {
                     "type": "string"
                 },
-                "last_updated": {
+                "lastUpdated": {
                     "type": "string"
                 },
-                "relevance_score": {
+                "relevanceScore": {
                     "type": "number"
                 },
                 "tags": {
@@ -12003,6 +28343,25 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "tenantinstallation.Status": {
+            "type": "string",
+            "enum": [
+                "installing",
+                "installing",
+                "active",
+                "disabled",
+                "failed",
+                "uninstalled"
+            ],
+            "x-enum-varnames": [
+                "DefaultStatus",
+                "StatusInstalling",
+                "StatusActive",
+                "StatusDisabled",
+                "StatusFailed",
+                "StatusUninstalled"
+            ]
         }
     }
 }`
