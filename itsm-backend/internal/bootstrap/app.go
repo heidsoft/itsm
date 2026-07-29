@@ -558,6 +558,10 @@ func NewApplication() *Application {
 	menuService := service.NewMenuService(client, sugar)
 	menuController := controller.NewMenuController(menuService)
 
+	// Audit Log Controller (支持过滤/分页的审计日志查询)
+	auditLogService := service.NewAuditLogService(client, sugar)
+	auditLogController := controller.NewAuditLogController(auditLogService, sugar)
+
 	// Tenant Controller
 	tenantService := service.NewTenantService(client, sugar)
 	tenantController := controller.NewTenantController(tenantService, sugar)
@@ -674,6 +678,7 @@ func NewApplication() *Application {
 		MenuController:             menuController,
 		TenantController:           tenantController,
 		EscalationMatrixController: escalationMatrixController,
+		AuditLogController:         auditLogController,
 
 		MSPController:           mspController,
 		SystemConfigController:  systemConfigController,

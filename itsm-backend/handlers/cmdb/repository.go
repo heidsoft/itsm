@@ -5,33 +5,8 @@ import (
 )
 
 // Repository interface for CMDB domain
+// 仅保留云账号/云服务/云资源/发现/对账职责；CI/CIType/关系的死代码接口已删除。
 type Repository interface {
-	// CI CRUD
-	CreateCI(ctx context.Context, ci *ConfigurationItem) (*ConfigurationItem, error)
-	GetCI(ctx context.Context, id int, tenantID int) (*ConfigurationItem, error)
-	ListCIs(ctx context.Context, tenantID int, page, size int, ciTypeID int, status string, search string) ([]*ConfigurationItem, int, error)
-	UpdateCI(ctx context.Context, ci *ConfigurationItem) (*ConfigurationItem, error)
-	DeleteCI(ctx context.Context, id int, tenantID int) error
-	GetStats(ctx context.Context, tenantID int) (*Stats, error)
-
-	// CI Types
-	CreateCIType(ctx context.Context, ct *CIType) (*CIType, error)
-	GetCIType(ctx context.Context, id int, tenantID int) (*CIType, error)
-	ListCITypes(ctx context.Context, tenantID int) ([]*CIType, error)
-	UpdateCIType(ctx context.Context, ct *CIType) (*CIType, error)
-	DeleteCIType(ctx context.Context, id int, tenantID int) error
-	CountCIsByType(ctx context.Context, typeID int, tenantID int) (int, error)
-	CountChildTypes(ctx context.Context, typeID int, tenantID int) (int, error)
-	CountAttributeDefinitionsByType(ctx context.Context, typeID int, tenantID int) (int, error)
-
-	// Relationships
-	CreateRelationship(ctx context.Context, rel *CIRelationship) (*CIRelationship, error)
-	GetRelationships(ctx context.Context, ciID int) ([]*CIRelationship, error)
-	DeleteRelationship(ctx context.Context, id int, tenantID int) error
-
-	// Relationship types
-	ListRelationshipTypes(ctx context.Context, tenantID int) ([]*RelationshipType, error)
-
 	// Cloud services
 	CreateCloudService(ctx context.Context, cs *CloudService) (*CloudService, error)
 	ListCloudServices(ctx context.Context, tenantID int, provider string) ([]*CloudService, error)

@@ -435,16 +435,6 @@ func TenantIDLTE(v int) predicate.DiscoverySource {
 	return predicate.DiscoverySource(sql.FieldLTE(FieldTenantID, v))
 }
 
-// TenantIDIsNil applies the IsNil predicate on the "tenant_id" field.
-func TenantIDIsNil() predicate.DiscoverySource {
-	return predicate.DiscoverySource(sql.FieldIsNull(FieldTenantID))
-}
-
-// TenantIDNotNil applies the NotNil predicate on the "tenant_id" field.
-func TenantIDNotNil() predicate.DiscoverySource {
-	return predicate.DiscoverySource(sql.FieldNotNull(FieldTenantID))
-}
-
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.DiscoverySource {
 	return predicate.DiscoverySource(sql.FieldEQ(FieldCreatedAt, v))

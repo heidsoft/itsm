@@ -398,58 +398,140 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 		return nil, fmt.Errorf("failed to get CI: %w", err)
 	}
 
-	// 使用按层广度优先搜索遍历影响链。每层批量读取关系和 CI，避免逐节点 N+1 查询。
-	visited := map[int]bool{ciID: true}
-	queue := []struct {
+	// 下游（root 影响谁）与上游（谁影响 root）均用按层 BFS，每层批量读取关系和 CI，避免逐节点 N+1 查询。
+	downstream, downNodes, downEdges, downCritical, err := s.traverseImpactLayers(ctx, tenantID, ciID, maxDepth, "downstream")
+	if err != nil {
+		return nil, err
+	}
+	upstream, upNodes, upEdges, upCritical, err := s.traverseImpactLayers(ctx, tenantID, ciID, maxDepth, "upstream")
+	if err != nil {
+		return nil, err
+	}
+
+	// 合并双向图（按 ID 去重）
+	impactNodes := []dto.TopologyNode{topologyNodeFromCI(root)}
+	seenNodes := map[int]bool{impactNodes[0].ID: true}
+	for _, node := range append(downNodes, upNodes...) {
+		if !seenNodes[node.ID] {
+			seenNodes[node.ID] = true
+			impactNodes = append(impactNodes, node)
+		}
+	}
+	impactEdges := make([]dto.TopologyEdge, 0, len(downEdges)+len(upEdges))
+	seenEdges := map[int]bool{}
+	for _, edge := range append(downEdges, upEdges...) {
+		if !seenEdges[edge.ID] {
+			seenEdges[edge.ID] = true
+			impactEdges = append(impactEdges, edge)
+		}
+	}
+	criticalDeps := append(downCritical, upCritical...)
+
+	// 受影响的工单/事件：通过 CI 已有的 tickets/incidents 边填充
+	affectedTickets := make([]dto.AffectedTicket, 0)
+	tickets, err := root.QueryTickets().All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query affected tickets: %w", err)
+	}
+	for _, tk := range tickets {
+		affectedTickets = append(affectedTickets, dto.AffectedTicket{
+			ID: tk.ID, Title: tk.Title, Status: tk.Status, Priority: tk.Priority,
+			CreatedAt: tk.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		})
+	}
+	affectedIncidents := make([]dto.AffectedIncident, 0)
+	incidents, err := root.QueryIncidents().All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query affected incidents: %w", err)
+	}
+	for _, in := range incidents {
+		affectedIncidents = append(affectedIncidents, dto.AffectedIncident{
+			ID: in.ID, Title: in.Title, Status: in.Status, Severity: in.Severity,
+			CreatedAt: in.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		})
+	}
+
+	graph := &dto.TopologyGraph{Nodes: impactNodes, Edges: impactEdges, RootCIID: ciID, Depth: maxDepth}
+	graph.TotalNodes, graph.TotalEdges = len(graph.Nodes), len(graph.Edges)
+	riskLevel := "low"
+	if len(downstream) >= 10 {
+		riskLevel = "critical"
+	} else if len(downstream) >= 5 {
+		riskLevel = "high"
+	} else if len(downstream) > 0 {
+		riskLevel = "medium"
+	}
+	return &dto.CIImpactAnalysisResponse{
+		SourceCIID: ciID, TargetCI: ptrTopologyNode(topologyNodeFromCI(root)), Graph: graph,
+		UpstreamImpact: upstream, DownstreamImpact: downstream,
+		CriticalDependencies: criticalDeps, AffectedTickets: affectedTickets,
+		AffectedIncidents: affectedIncidents, RiskLevel: riskLevel,
+		Summary: fmt.Sprintf("%d configuration items may be impacted, %d upstream dependencies", len(downstream), len(upstream)),
+		TotalImpacted: len(downstream),
+	}, nil
+}
+
+// traverseImpactLayers 按层 BFS 遍历影响链。
+// direction=downstream：沿出边 source→target 前进（root 影响的 CI）；
+// direction=upstream：沿入边反向前进（影响 root 的 CI）。
+// 返回影响项、节点、边，以及经由 strength=critical 边到达的关键依赖项。
+func (s *CIRelationshipService) traverseImpactLayers(ctx context.Context, tenantID, rootID, maxDepth int, direction string) (
+	[]dto.ImpactAnalysisItem, []dto.TopologyNode, []dto.TopologyEdge, []dto.ImpactAnalysisItem, error,
+) {
+	visited := map[int]bool{rootID: true}
+	type queueItem struct {
 		ciID  int
 		depth int
-		path  []int
-	}{{ciID: ciID, depth: 0, path: []int{ciID}}}
+	}
+	queue := []queueItem{{ciID: rootID, depth: 0}}
 
-	impactedCIs := make([]dto.ImpactAnalysisItem, 0)
-	impactEdges := make([]dto.TopologyEdge, 0)
-	impactNodes := []dto.TopologyNode{topologyNodeFromCI(root)}
+	items := make([]dto.ImpactAnalysisItem, 0)
+	nodes := make([]dto.TopologyNode, 0)
+	edges := make([]dto.TopologyEdge, 0)
+	criticalItems := make([]dto.ImpactAnalysisItem, 0)
 
 	for len(queue) > 0 {
 		currentDepth := queue[0].depth
 		frontier := make([]int, 0)
-		paths := make(map[int][]int)
 		for len(queue) > 0 && queue[0].depth == currentDepth {
-			item := queue[0]
+			frontier = append(frontier, queue[0].ciID)
 			queue = queue[1:]
-			frontier = append(frontier, item.ciID)
-			paths[item.ciID] = item.path
 		}
 		if currentDepth >= maxDepth {
 			continue
 		}
 
-		relations, err := s.client.CIRelationship.Query().
+		query := s.client.CIRelationship.Query().
 			Where(
-				cirelationship.SourceCiIDIn(frontier...),
 				cirelationship.TenantIDEQ(tenantID),
 				cirelationship.IsActiveEQ(true),
 				cirelationship.RelationshipTypeIn("impacts", "depends_on", "uses"),
-			).
-			All(ctx)
+			)
+		if direction == "upstream" {
+			query = query.Where(cirelationship.TargetCiIDIn(frontier...))
+		} else {
+			query = query.Where(cirelationship.SourceCiIDIn(frontier...))
+		}
+		relations, err := query.All(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to query impact relationships: %w", err)
+			return nil, nil, nil, nil, fmt.Errorf("failed to query %s impact relationships: %w", direction, err)
 		}
 
-		nextPaths := make(map[int][]int)
+		nextIDs := make([]int, 0)
+		nextRelType := make(map[int]string)
+		nextCritical := make(map[int]bool)
 		for _, rel := range relations {
-			impactEdges = append(impactEdges, topologyEdgeFromRelationship(rel))
-			if !visited[rel.TargetCiID] {
-				visited[rel.TargetCiID] = true
-				newPath := append([]int(nil), paths[rel.SourceCiID]...)
-				newPath = append(newPath, rel.TargetCiID)
-				nextPaths[rel.TargetCiID] = newPath
+			edges = append(edges, topologyEdgeFromRelationship(rel))
+			nextID := rel.TargetCiID
+			if direction == "upstream" {
+				nextID = rel.SourceCiID
 			}
-		}
-
-		nextIDs := make([]int, 0, len(nextPaths))
-		for id := range nextPaths {
-			nextIDs = append(nextIDs, id)
+			if !visited[nextID] {
+				visited[nextID] = true
+				nextIDs = append(nextIDs, nextID)
+				nextRelType[nextID] = rel.RelationshipType
+				nextCritical[nextID] = rel.Strength == cirelationship.StrengthCritical
+			}
 		}
 		if len(nextIDs) == 0 {
 			continue
@@ -458,40 +540,24 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 			Where(configurationitem.IDIn(nextIDs...), configurationitem.TenantIDEQ(tenantID)).
 			All(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to query impacted CIs: %w", err)
+			return nil, nil, nil, nil, fmt.Errorf("failed to query %s impacted CIs: %w", direction, err)
 		}
 		for _, ci := range cis {
-			path := nextPaths[ci.ID]
-			impactNodes = append(impactNodes, topologyNodeFromCI(ci))
-			impactedCIs = append(impactedCIs, dto.ImpactAnalysisItem{
+			nodes = append(nodes, topologyNodeFromCI(ci))
+			item := dto.ImpactAnalysisItem{
 				CIID: ci.ID, CIName: ci.Name, CIT: ci.CiType, Distance: currentDepth + 1,
-				Direction: "downstream", Relationship: "impact path", ImpactLevel: impactLevelForCI(ci),
-			})
-			queue = append(queue, struct {
-				ciID  int
-				depth int
-				path  []int
-			}{ciID: ci.ID, depth: currentDepth + 1, path: path})
+				Direction: direction, Relationship: "impact path",
+				RelationshipType: dto.CIRelationshipType(nextRelType[ci.ID]),
+				ImpactLevel:      impactLevelForCI(ci),
+			}
+			items = append(items, item)
+			if nextCritical[ci.ID] {
+				criticalItems = append(criticalItems, item)
+			}
+			queue = append(queue, queueItem{ciID: ci.ID, depth: currentDepth + 1})
 		}
 	}
-
-	graph := &dto.TopologyGraph{Nodes: impactNodes, Edges: impactEdges, RootCIID: ciID, Depth: maxDepth}
-	graph.TotalNodes, graph.TotalEdges = len(graph.Nodes), len(graph.Edges)
-	riskLevel := "low"
-	if len(impactedCIs) >= 10 {
-		riskLevel = "critical"
-	} else if len(impactedCIs) >= 5 {
-		riskLevel = "high"
-	} else if len(impactedCIs) > 0 {
-		riskLevel = "medium"
-	}
-	return &dto.CIImpactAnalysisResponse{
-		SourceCIID: ciID, TargetCI: ptrTopologyNode(topologyNodeFromCI(root)), Graph: graph,
-		UpstreamImpact: []dto.ImpactAnalysisItem{}, DownstreamImpact: impactedCIs,
-		CriticalDependencies: []dto.ImpactAnalysisItem{}, AffectedTickets: []dto.AffectedTicket{},
-		AffectedIncidents: []dto.AffectedIncident{}, RiskLevel: riskLevel,
-		Summary: fmt.Sprintf("%d configuration items may be impacted", len(impactedCIs)), TotalImpacted: len(impactedCIs),
-	}, nil
+	return items, nodes, edges, criticalItems, nil
 }
 
 func ptrTopologyNode(node dto.TopologyNode) *dto.TopologyNode { return &node }
@@ -510,19 +576,29 @@ func impactLevelForCI(ci *ent.ConfigurationItem) dto.ImpactLevel {
 }
 
 // wouldCreateCycle 检测新增 source→target 边是否会导致 CI 关系图形成环。
-// 算法：从 target 出发做有向 DFS，若能到达 source，即添加后回到 source 形成环。
-// 只对同 tenant 内、is_active=true 的关系进行遍历。
+// 算法：一次性批量加载租户内所有 is_active=true 的边构建邻接表，
+// 再从 target 出发内存 DFS，若能到达 source 即添加后形成环（消除逐节点 N+1 查询）。
 // 关系类型语义：depends_on/contains/parent_of 等有明确层级方向；relates_to 等弱关系仍视为有向。
-// 复杂度：O(V+E)，深度上限 512 兜底防脏数据死循环。
+// 复杂度：1 次查询 + O(V+E) 内存遍历；visited 集合保证脏数据下也不会死循环。
 func (s *CIRelationshipService) wouldCreateCycle(ctx context.Context, tenantID, sourceID, targetID int, _ string) (bool, error) {
-	const maxDepth = 512
+	rels, err := s.client.CIRelationship.Query().
+		Where(
+			cirelationship.TenantIDEQ(tenantID),
+			cirelationship.IsActiveEQ(true),
+		).
+		Select(cirelationship.FieldSourceCiID, cirelationship.FieldTargetCiID).
+		All(ctx)
+	if err != nil {
+		return false, fmt.Errorf("load active relationship edges for cycle detection: %w", err)
+	}
+	adjacency := make(map[int][]int, len(rels))
+	for _, rel := range rels {
+		adjacency[rel.SourceCiID] = append(adjacency[rel.SourceCiID], rel.TargetCiID)
+	}
+
 	visited := make(map[int]bool)
 	stack := []int{targetID}
-	depth := 0
 	for len(stack) > 0 {
-		if depth++; depth > maxDepth {
-			return false, fmt.Errorf("cycle detection exceeded max depth %d (possible corrupted graph)", maxDepth)
-		}
 		cur := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 		if cur == sourceID {
@@ -532,20 +608,7 @@ func (s *CIRelationshipService) wouldCreateCycle(ctx context.Context, tenantID, 
 			continue
 		}
 		visited[cur] = true
-
-		// 出边：cur → next
-		nexts, err := s.client.CIRelationship.Query().
-			Where(
-				cirelationship.SourceCiIDEQ(cur),
-				cirelationship.TenantIDEQ(tenantID),
-				cirelationship.IsActiveEQ(true),
-			).
-			Select(cirelationship.FieldTargetCiID).
-			Ints(ctx)
-		if err != nil {
-			return false, fmt.Errorf("query outgoing edges of ci=%d: %w", cur, err)
-		}
-		stack = append(stack, nexts...)
+		stack = append(stack, adjacency[cur]...)
 	}
 	return false, nil
 }

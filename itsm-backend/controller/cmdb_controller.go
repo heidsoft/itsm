@@ -13,14 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// contextKey is a custom type for context keys to avoid collisions.
-type contextKey string
-
-const (
-	userIDKey   contextKey = "user_id"
-	userNameKey contextKey = "user_name"
-)
-
 // CMDBController CMDB控制器
 type CMDBController struct {
 	logger                       *zap.SugaredLogger
@@ -84,6 +76,11 @@ func (c *CMDBController) resolveTenantID(ctx *gin.Context) (int, bool) {
 	}
 	common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
 	return 0, false
+}
+
+// operatorContext 将当前登录用户信息下传到请求 context，供服务层记录变更历史
+func (c *CMDBController) operatorContext(ctx *gin.Context) context.Context {
+	return service.WithOperator(ctx.Request.Context(), ctx.GetInt("user_id"), ctx.GetString("user_name"))
 }
 
 func (c *CMDBController) ListCITypes(ctx *gin.Context) {
@@ -531,7 +528,7 @@ func (c *CMDBController) CreateCI(ctx *gin.Context) {
 	// 自动设置租户ID
 	req.TenantID = tenantID
 
-	result, err := c.ciService.CreateCI(ctx.Request.Context(), &req, tenantID)
+	result, err := c.ciService.CreateCI(c.operatorContext(ctx), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Create CI failed", "error", err, "tenant_id", tenantID, "name", req.Name)
 		common.Fail(ctx, common.InternalErrorCode, "创建配置项失败: "+err.Error())
@@ -570,7 +567,7 @@ func (c *CMDBController) UpdateCI(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.ciService.UpdateCI(ctx.Request.Context(), id, tenantID, &req)
+	result, err := c.ciService.UpdateCI(c.operatorContext(ctx), id, tenantID, &req)
 	if err != nil {
 		c.logger.Errorw("Update CI failed", "error", err, "ci_id", id, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "更新配置项失败: "+err.Error())
@@ -602,7 +599,7 @@ func (c *CMDBController) DeleteCI(ctx *gin.Context) {
 		return
 	}
 
-	err = c.ciService.DeleteCI(ctx.Request.Context(), id, tenantID)
+	err = c.ciService.DeleteCI(c.operatorContext(ctx), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Delete CI failed", "error", err, "ci_id", id, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "删除配置项失败: "+err.Error())
@@ -1135,7 +1132,7 @@ func (c *CMDBController) AddTagsToCI(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.ciService.AddTagsToCI(ctx.Request.Context(), id, tenantID, req.TagIDs)
+	result, err := c.ciService.AddTagsToCI(c.operatorContext(ctx), id, tenantID, req.TagIDs)
 	if err != nil {
 		c.logger.Errorw("Add tags to CI failed", "error", err, "ci_id", id, "tag_ids", req.TagIDs, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "添加标签失败: "+err.Error())
@@ -1174,7 +1171,7 @@ func (c *CMDBController) RemoveTagsFromCI(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.ciService.RemoveTagsFromCI(ctx.Request.Context(), id, tenantID, req.TagIDs)
+	result, err := c.ciService.RemoveTagsFromCI(c.operatorContext(ctx), id, tenantID, req.TagIDs)
 	if err != nil {
 		c.logger.Errorw("Remove tags from CI failed", "error", err, "ci_id", id, "tag_ids", req.TagIDs, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "移除标签失败: "+err.Error())
@@ -1253,12 +1250,10 @@ func (c *CMDBController) RevertCIVersion(ctx *gin.Context) {
 	}
 
 	// 获取操作人信息
-	userID, _ := ctx.Get("user_id")
-	userName, _ := ctx.Get("user_name")
-	ctxWithUser := context.WithValue(ctx.Request.Context(), userIDKey, userID)
-	ctxWithUser = context.WithValue(ctxWithUser, userNameKey, userName)
+	operatorID := ctx.GetInt("user_id")
+	operatorName := ctx.GetString("user_name")
 
-	result, err := c.ciHistoryService.RevertCIVersion(ctxWithUser, id, tenantID, userID.(int), userName.(string), &req)
+	result, err := c.ciHistoryService.RevertCIVersion(c.operatorContext(ctx), id, tenantID, operatorID, operatorName, &req)
 	if err != nil {
 		c.logger.Errorw("Revert CI version failed", "error", err, "ci_id", id, "version", req.Version, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "回滚版本失败: "+err.Error())
@@ -1291,13 +1286,7 @@ func (c *CMDBController) BatchCreateCI(ctx *gin.Context) {
 		return
 	}
 
-	// 获取操作人信息
-	userID, _ := ctx.Get("user_id")
-	userName, _ := ctx.Get("user_name")
-	ctxWithUser := context.WithValue(ctx.Request.Context(), userIDKey, userID)
-	ctxWithUser = context.WithValue(ctxWithUser, userNameKey, userName)
-
-	result, err := c.ciService.BatchCreateCI(ctxWithUser, &req, tenantID)
+	result, err := c.ciService.BatchCreateCI(c.operatorContext(ctx), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Batch create CI failed", "error", err, "count", len(req.Items), "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "批量创建失败: "+err.Error())
@@ -1328,13 +1317,7 @@ func (c *CMDBController) BatchUpdateCI(ctx *gin.Context) {
 		return
 	}
 
-	// 获取操作人信息
-	userID, _ := ctx.Get("user_id")
-	userName, _ := ctx.Get("user_name")
-	ctxWithUser := context.WithValue(ctx.Request.Context(), userIDKey, userID)
-	ctxWithUser = context.WithValue(ctxWithUser, userNameKey, userName)
-
-	result, err := c.ciService.BatchUpdateCI(ctxWithUser, &req, tenantID)
+	result, err := c.ciService.BatchUpdateCI(c.operatorContext(ctx), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Batch update CI failed", "error", err, "count", len(req.IDs), "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "批量更新失败: "+err.Error())
@@ -1365,13 +1348,7 @@ func (c *CMDBController) BatchDeleteCI(ctx *gin.Context) {
 		return
 	}
 
-	// 获取操作人信息
-	userID, _ := ctx.Get("user_id")
-	userName, _ := ctx.Get("user_name")
-	ctxWithUser := context.WithValue(ctx.Request.Context(), userIDKey, userID)
-	ctxWithUser = context.WithValue(ctxWithUser, userNameKey, userName)
-
-	result, err := c.ciService.BatchDeleteCI(ctxWithUser, &req, tenantID)
+	result, err := c.ciService.BatchDeleteCI(c.operatorContext(ctx), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Batch delete CI failed", "error", err, "count", len(req.IDs), "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "批量删除失败: "+err.Error())
@@ -1818,10 +1795,10 @@ func (c *CMDBController) UpdateLifecycleStatus(ctx *gin.Context) {
 	}
 
 	remark := ctx.Query("remark")
-	userID, _ := ctx.Get("user_id")
-	userName, _ := ctx.Get("user_name")
+	operatorID := ctx.GetInt("user_id")
+	operatorName := ctx.GetString("user_name")
 
-	result, err := c.ciService.UpdateLifecycleStatus(ctx.Request.Context(), id, tenantID, status, remark, userID.(int), userName.(string))
+	result, err := c.ciService.UpdateLifecycleStatus(c.operatorContext(ctx), id, tenantID, status, remark, operatorID, operatorName)
 	if err != nil {
 		c.logger.Errorw("Update CI lifecycle status failed", "error", err, "ci_id", id, "status", status, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "更新生命周期状态失败: "+err.Error())
@@ -1856,10 +1833,10 @@ func (c *CMDBController) BatchUpdateLifecycleStatus(ctx *gin.Context) {
 		return
 	}
 
-	userID, _ := ctx.Get("user_id")
-	userName, _ := ctx.Get("user_name")
+	operatorID := ctx.GetInt("user_id")
+	operatorName := ctx.GetString("user_name")
 
-	result, err := c.ciService.BatchUpdateLifecycleStatus(ctx.Request.Context(), req.IDs, tenantID, req.Status, req.Remark, userID.(int), userName.(string))
+	result, err := c.ciService.BatchUpdateLifecycleStatus(c.operatorContext(ctx), req.IDs, tenantID, req.Status, req.Remark, operatorID, operatorName)
 	if err != nil {
 		c.logger.Errorw("Batch update CI lifecycle status failed", "error", err, "count", len(req.IDs), "status", req.Status, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "批量更新失败: "+err.Error())

@@ -239,6 +239,7 @@ type RouterConfig struct {
 	ApprovalChainController          *controller.ApprovalChainController
 	EscalationMatrixController       *controller.EscalationMatrixController
 	NotificationPreferenceController *controller.NotificationPreferenceController
+	AuditLogController               *controller.AuditLogController
 	NotificationController           *controller.NotificationController
 
 	// Additional domain controllers
@@ -1146,8 +1147,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				authGrp.GET("/menus", middleware.AuthMiddleware(config.JWTSecret), config.MenuController.GetUserMenus)
 			}
 
-			// Audit Logs (short path for frontend compatibility)
-			tenant.GET("/audit-logs", middleware.RequirePermission("audit", "read"), config.CommonHandler.GetAuditLogs)
+			// ==================== Audit Logs ====================
+			SetupAuditLogRoutes(tenant.(*gin.RouterGroup), config.AuditLogController, config.CommonHandler)
 
 			// Users
 			if config.UserController != nil {

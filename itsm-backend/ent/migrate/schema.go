@@ -438,7 +438,7 @@ var (
 	// CiRelationshipsColumns holds the columns for the "ci_relationships" table.
 	CiRelationshipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "tenant_id", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "relationship_type", Type: field.TypeString},
 		{Name: "strength", Type: field.TypeEnum, Enums: []string{"critical", "high", "medium", "low"}, Default: "medium"},
 		{Name: "impact_level", Type: field.TypeEnum, Enums: []string{"critical", "high", "medium", "low"}, Default: "medium"},
@@ -1292,7 +1292,7 @@ var (
 		{Name: "provider", Type: field.TypeString, Nullable: true},
 		{Name: "enabled", Type: field.TypeBool, Default: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
-		{Name: "tenant_id", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}

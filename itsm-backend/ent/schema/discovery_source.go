@@ -38,8 +38,7 @@ func (DiscoverySource) Fields() []ent.Field {
 			Optional(),
 		field.Int("tenant_id").
 			Comment("租户ID").
-			Optional().
-			Positive(),
+			Positive(), // 必填：存量数据已由 migrations/20260610_cmdb_tenant_id_backfill.sql 回填
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),

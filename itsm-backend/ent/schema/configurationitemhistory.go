@@ -36,8 +36,8 @@ func (ConfigurationItemHistory) Fields() []ent.Field {
 			Comment("变更的字段列表").
 			Optional(),
 		field.Int("operator_id").
-			Comment("操作人ID").
-			Positive(),
+			Comment("操作人ID，0 表示系统操作者").
+			NonNegative(),
 		field.String("operator_name").
 			Comment("操作人姓名").
 			Optional(),

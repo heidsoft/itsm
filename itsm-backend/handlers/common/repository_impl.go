@@ -392,7 +392,8 @@ func (r *EntRepository) ListAuditLogs(ctx context.Context, tenantID int, userID 
 	if err != nil {
 		return nil, err
 	}
-	var res []*AuditLog
+	// 返回空切片而非 nil，避免 JSON 序列化为 null 导致前端崩溃
+	res := make([]*AuditLog, 0, len(es))
 	for _, e := range es {
 		res = append(res, toAuditLogDomain(e))
 	}

@@ -94,18 +94,6 @@ type CloudResource struct {
 	UpdatedAt      time.Time              `json:"updatedAt"`
 }
 
-// RelationshipType represents CI relationship semantics.
-type RelationshipType struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Directional bool      `json:"directional"`
-	ReverseName string    `json:"reverseName,omitempty"`
-	Description string    `json:"description,omitempty"`
-	TenantID    int       `json:"tenantId"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-}
-
 // DiscoverySource represents a CMDB discovery source.
 type DiscoverySource struct {
 	ID          string    `json:"id"`
@@ -145,42 +133,6 @@ type DiscoveryResult struct {
 	TenantID     int                    `json:"tenantId"`
 	CreatedAt    time.Time              `json:"createdAt"`
 	UpdatedAt    time.Time              `json:"updatedAt"`
-}
-
-// CIType represents a classification of CIs
-type CIType struct {
-	ID              int       `json:"id"`
-	Name            string    `json:"name"`
-	Description     string    `json:"description"`
-	Icon            string    `json:"icon"`
-	Color           string    `json:"color"`
-	AttributeSchema string    `json:"attributeSchema"`
-	ParentTypeID    *int      `json:"parentTypeId,omitempty"`
-	IsActive        bool      `json:"isActive"`
-	TenantID        int       `json:"tenantId"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-}
-
-// CIRelationship represents a link between two CIs
-type CIRelationship struct {
-	ID                 int       `json:"id"`
-	SourceCIID         int       `json:"sourceCiId"`
-	TargetCIID         int       `json:"targetCiId"`
-	RelationshipTypeID int       `json:"relationshipTypeId"`
-	Description        string    `json:"description"`
-	TenantID           int       `json:"tenantId"`
-	CreatedAt          time.Time `json:"createdAt"`
-	UpdatedAt          time.Time `json:"updatedAt"`
-}
-
-// Stats represents CMDB statistics
-type Stats struct {
-	TotalCount       int            `json:"totalCount"`
-	ActiveCount      int            `json:"activeCount"`
-	InactiveCount    int            `json:"inactiveCount"`
-	MaintenanceCount int            `json:"maintenanceCount"`
-	TypeDistribution map[string]int `json:"typeDistribution"`
 }
 
 // ReconciliationSummary represents CMDB reconciliation summary.

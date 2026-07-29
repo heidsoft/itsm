@@ -8,11 +8,16 @@ import (
 )
 
 // SetupCMDBRoutes 设置CMDB相关路由
+//
+// 规范前缀：/api/v1/cmdb/*（前端已全部切换）。
+// /api/v1/configuration-items/* 为兼容别名，仅保留给尚未升级的旧客户端，
+// 回归稳定后评估摘除（见 CHANGELOG）。新增端点只允许注册到 /cmdb 下。
 func SetupCMDBRoutes(
 	auth *gin.RouterGroup,
 	cmdbController *controller.CMDBController,
 	config *RouterConfig,
 ) {
+	// 兼容别名：/configuration-items（弃用，勿新增端点）
 	configurationItems := auth.Group("/configuration-items")
 	configurationItems.Use(middleware.RequirePermission("cmdb_ci", "read"))
 	{
@@ -41,9 +46,12 @@ func SetupCMDBRoutes(
 		configurationItems.GET("/:id/history", cmdbController.GetCIHistory)
 	}
 
-	// CMDB管理路由
+	// CMDB管理路由（规范前缀）
 	cmdb := auth.Group("/cmdb")
 	{
+		// 关系类型元数据
+		cmdb.GET("/relationship-types", middleware.RequirePermission("cmdb_relationship", "read"), cmdbController.ListRelationshipTypes)
+
 		// ------------------------------ CI类型相关路由 ------------------------------
 		ciTypes := cmdb.Group("/ci-types")
 		ciTypes.Use(middleware.RequirePermission("cmdb_ci_type", "read"))

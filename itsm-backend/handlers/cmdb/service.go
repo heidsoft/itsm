@@ -2,7 +2,6 @@ package cmdb
 
 import (
 	"context"
-	"fmt"
 
 	"go.uber.org/zap"
 )
@@ -19,107 +18,8 @@ func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
 	}
 }
 
-// CI operations
-func (s *Service) CreateCI(ctx context.Context, ci *ConfigurationItem) (*ConfigurationItem, error) {
-	s.logger.Infow("Creating CI", "name", ci.Name, "type_id", ci.CITypeID)
-	return s.repo.CreateCI(ctx, ci)
-}
-
-func (s *Service) GetCI(ctx context.Context, id int, tenantID int) (*ConfigurationItem, error) {
-	return s.repo.GetCI(ctx, id, tenantID)
-}
-
-func (s *Service) ListCIs(ctx context.Context, tenantID int, page, size int, ciTypeID int, status string, search string) ([]*ConfigurationItem, int, error) {
-	return s.repo.ListCIs(ctx, tenantID, page, size, ciTypeID, status, search)
-}
-
-func (s *Service) UpdateCI(ctx context.Context, ci *ConfigurationItem) (*ConfigurationItem, error) {
-	return s.repo.UpdateCI(ctx, ci)
-}
-
-func (s *Service) DeleteCI(ctx context.Context, id int, tenantID int) error {
-	return s.repo.DeleteCI(ctx, id, tenantID)
-}
-
-func (s *Service) GetStats(ctx context.Context, tenantID int) (*Stats, error) {
-	return s.repo.GetStats(ctx, tenantID)
-}
-
-// CIType operations
-func (s *Service) ListTypes(ctx context.Context, tenantID int) ([]*CIType, error) {
-	return s.repo.ListCITypes(ctx, tenantID)
-}
-
-func (s *Service) CreateType(ctx context.Context, ct *CIType) (*CIType, error) {
-	return s.repo.CreateCIType(ctx, ct)
-}
-
-func (s *Service) UpdateType(ctx context.Context, ct *CIType) (*CIType, error) {
-	return s.repo.UpdateCIType(ctx, ct)
-}
-
-func (s *Service) DeleteType(ctx context.Context, id int, tenantID int) error {
-	return s.repo.DeleteCIType(ctx, id, tenantID)
-}
-
-func (s *Service) GetType(ctx context.Context, id int, tenantID int) (*CIType, error) {
-	return s.repo.GetCIType(ctx, id, tenantID)
-}
-
-func (s *Service) ValidateTypeParent(ctx context.Context, currentID int, parentID *int, tenantID int) error {
-	if parentID == nil {
-		return nil
-	}
-	if currentID != 0 && *parentID == currentID {
-		return fmt.Errorf("CI type cannot inherit from itself")
-	}
-	visited := map[int]struct{}{}
-	if currentID != 0 {
-		visited[currentID] = struct{}{}
-	}
-	nextID := *parentID
-	for nextID != 0 {
-		if _, exists := visited[nextID]; exists {
-			return fmt.Errorf("CI type inheritance cycle detected")
-		}
-		visited[nextID] = struct{}{}
-		parent, err := s.repo.GetCIType(ctx, nextID, tenantID)
-		if err != nil {
-			return fmt.Errorf("parent CI type not found: %w", err)
-		}
-		if parent.ParentTypeID == nil {
-			break
-		}
-		nextID = *parent.ParentTypeID
-	}
-	return nil
-}
-
-func (s *Service) CountCIsByType(ctx context.Context, typeID int, tenantID int) (int, error) {
-	return s.repo.CountCIsByType(ctx, typeID, tenantID)
-}
-
-func (s *Service) CountChildTypes(ctx context.Context, typeID int, tenantID int) (int, error) {
-	return s.repo.CountChildTypes(ctx, typeID, tenantID)
-}
-
-func (s *Service) CountAttributeDefinitionsByType(ctx context.Context, typeID int, tenantID int) (int, error) {
-	return s.repo.CountAttributeDefinitionsByType(ctx, typeID, tenantID)
-}
-
-// Relationship operations
-func (s *Service) CreateRelationship(ctx context.Context, rel *CIRelationship) (*CIRelationship, error) {
-	return s.repo.CreateRelationship(ctx, rel)
-}
-
-func (s *Service) GetCIRelationships(ctx context.Context, ciID int) ([]*CIRelationship, error) {
-	return s.repo.GetRelationships(ctx, ciID)
-}
-
-// Relationship types
-func (s *Service) ListRelationshipTypes(ctx context.Context, tenantID int) ([]*RelationshipType, error) {
-	return s.repo.ListRelationshipTypes(ctx, tenantID)
-}
+// 未注册路由的 CI / CIType / 关系相关方法属死代码，已删除；
+// 线上 CI 能力由 service/configuration_item_service.go 提供。
 
 // Cloud services
 func (s *Service) CreateCloudService(ctx context.Context, cs *CloudService) (*CloudService, error) {

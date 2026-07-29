@@ -140,16 +140,6 @@ func TenantIDLTE(v int) predicate.CIRelationship {
 	return predicate.CIRelationship(sql.FieldLTE(FieldTenantID, v))
 }
 
-// TenantIDIsNil applies the IsNil predicate on the "tenant_id" field.
-func TenantIDIsNil() predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldIsNull(FieldTenantID))
-}
-
-// TenantIDNotNil applies the NotNil predicate on the "tenant_id" field.
-func TenantIDNotNil() predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldNotNull(FieldTenantID))
-}
-
 // RelationshipTypeEQ applies the EQ predicate on the "relationship_type" field.
 func RelationshipTypeEQ(v string) predicate.CIRelationship {
 	return predicate.CIRelationship(sql.FieldEQ(FieldRelationshipType, v))

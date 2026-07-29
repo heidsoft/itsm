@@ -3,8 +3,11 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
+	"itsm-backend/dto"
+	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/enttest"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -187,6 +190,64 @@ func TestGetCIImpactAnalysis_TraversesByDepthAndStopsCycles(t *testing.T) {
 	}
 }
 
+func TestGetCIImpactAnalysis_UpstreamCriticalAndAffectedItems(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_impact_fields?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, _ := createCMDBTestTenant(ctx, client, "Impact Fields Tenant", "impact-fields", "impact-fields.example.com")
+	ciType, _ := createTestCIType(ctx, client, tenant.ID, "impact-fields-server")
+	root, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "if-root")
+	down, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "if-down")
+	up, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "if-up")
+
+	// root --impacts(critical)--> down； up --depends_on--> root
+	client.CIRelationship.Create().SetRelationshipType("impacts").
+		SetSourceCiID(root.ID).SetTargetCiID(down.ID).
+		SetStrength(cirelationship.StrengthCritical).
+		SetTenantID(tenant.ID).SaveX(ctx)
+	client.CIRelationship.Create().SetRelationshipType("depends_on").
+		SetSourceCiID(up.ID).SetTargetCiID(root.ID).
+		SetTenantID(tenant.ID).SaveX(ctx)
+
+	// root 关联工单与事件
+	user := client.User.Create().SetUsername("impact-user").SetEmail("impact-user@example.com").
+		SetName("Impact User").SetPasswordHash("hash").SetTenantID(tenant.ID).SaveX(ctx)
+	tk := client.Ticket.Create().SetTitle("impact ticket").SetTicketNumber("TCK-IMPACT-1").
+		SetRequesterID(user.ID).SetTenantID(tenant.ID).SaveX(ctx)
+	in := client.Incident.Create().SetTitle("impact incident").SetIncidentNumber("INC-IMPACT-1").
+		SetReporterID(user.ID).SetTenantID(tenant.ID).SaveX(ctx)
+	client.ConfigurationItem.UpdateOneID(root.ID).AddTickets(tk).AddIncidents(in).ExecX(ctx)
+
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	result, err := svc.GetCIImpactAnalysis(ctx, root.ID, tenant.ID, 3)
+	if err != nil {
+		t.Fatalf("GetCIImpactAnalysis failed: %v", err)
+	}
+
+	if len(result.DownstreamImpact) != 1 || result.DownstreamImpact[0].CIID != down.ID {
+		t.Fatalf("DownstreamImpact = %#v, want only CI %d", result.DownstreamImpact, down.ID)
+	}
+	if len(result.UpstreamImpact) != 1 || result.UpstreamImpact[0].CIID != up.ID {
+		t.Fatalf("UpstreamImpact = %#v, want only CI %d", result.UpstreamImpact, up.ID)
+	}
+	if len(result.CriticalDependencies) != 1 || result.CriticalDependencies[0].CIID != down.ID {
+		t.Fatalf("CriticalDependencies = %#v, want only critical CI %d", result.CriticalDependencies, down.ID)
+	}
+	if len(result.AffectedTickets) != 1 || result.AffectedTickets[0].ID != tk.ID {
+		t.Fatalf("AffectedTickets = %#v, want ticket %d", result.AffectedTickets, tk.ID)
+	}
+	if len(result.AffectedIncidents) != 1 || result.AffectedIncidents[0].ID != in.ID {
+		t.Fatalf("AffectedIncidents = %#v, want incident %d", result.AffectedIncidents, in.ID)
+	}
+	if result.TotalImpacted != 1 {
+		t.Fatalf("TotalImpacted = %d, want 1 (downstream only)", result.TotalImpacted)
+	}
+	if result.Graph == nil || result.Graph.TotalNodes != 3 || result.Graph.TotalEdges != 2 {
+		t.Fatalf("impact graph = %#v, want 3 nodes / 2 edges", result.Graph)
+	}
+}
+
 func TestGetCITopology_UsesUnifiedGraphContract(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ci_topology_graph?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
@@ -214,5 +275,62 @@ func TestGetCIImpactAnalysis_RequiresTenant(t *testing.T) {
 	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
 	if _, err := svc.GetCIImpactAnalysis(context.Background(), 1, 0, 3); err == nil {
 		t.Fatal("expected missing tenant ID to be rejected")
+	}
+}
+
+func TestCIRelationship_CrossTenantIsolation(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_rel_cross_tenant?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+
+	tenantA, _ := createCMDBTestTenant(ctx, client, "Tenant A", "tenant-a-iso", "a-iso.example.com")
+	tenantB, _ := createCMDBTestTenant(ctx, client, "Tenant B", "tenant-b-iso", "b-iso.example.com")
+	ciType, _ := createTestCIType(ctx, client, tenantA.ID, "server-iso")
+	ciA1, _ := createTestCI(ctx, client, tenantA.ID, ciType.ID, "iso-a1")
+	ciA2, _ := createTestCI(ctx, client, tenantA.ID, ciType.ID, "iso-a2")
+
+	// 租户A创建关系成功
+	rel, err := svc.CreateCIRelationship(ctx, &dto.CreateCIRelationshipRequest{
+		SourceCIID:       ciA1.ID,
+		TargetCIID:       ciA2.ID,
+		RelationshipType: "depends_on",
+	}, tenantA.ID)
+	if err != nil {
+		t.Fatalf("tenant A create relationship failed: %v", err)
+	}
+
+	// 租户B不能用租户A的CI创建关系（失败闭合）
+	if _, err := svc.CreateCIRelationship(ctx, &dto.CreateCIRelationshipRequest{
+		SourceCIID:       ciA1.ID,
+		TargetCIID:       ciA2.ID,
+		RelationshipType: "hosts",
+	}, tenantB.ID); err == nil || !strings.Contains(err.Error(), "not found") {
+		t.Fatalf("cross-tenant create should fail with not found, got: %v", err)
+	}
+
+	// 租户B查不到租户A的关系（未命中语义为返回 nil, nil）
+	if got, err := svc.GetCIRelationshipByID(ctx, rel.ID, tenantB.ID); err != nil || got != nil {
+		t.Fatalf("cross-tenant GetCIRelationshipByID should return nil, got=%v err=%v", got, err)
+	}
+	listB, err := svc.ListAllCIRelationships(ctx, tenantB.ID, 1, 10, "")
+	if err != nil {
+		t.Fatalf("tenant B list relationships failed: %v", err)
+	}
+	if listB.Total != 0 {
+		t.Fatalf("tenant B should see 0 relationships, got %d", listB.Total)
+	}
+	byCI, err := svc.ListCIRelationshipsByCIID(ctx, ciA1.ID, tenantB.ID, "all")
+	if err != nil {
+		t.Fatalf("tenant B list by CI failed: %v", err)
+	}
+	if len(byCI) != 0 {
+		t.Fatalf("tenant B should see 0 relationships for tenant A CI, got %d", len(byCI))
+	}
+
+	// 租户B不能删除租户A的关系
+	if err := svc.DeleteCIRelationship(ctx, rel.ID, tenantB.ID); err == nil {
+		t.Fatal("cross-tenant delete should fail")
 	}
 }

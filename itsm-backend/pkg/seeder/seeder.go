@@ -149,7 +149,8 @@ type CITypeSeed struct {
 	Description string `json:"description"`
 	Icon        string `json:"icon"`
 	Color       string `json:"color"`
-	IsActive    bool   `json:"is_active"`
+	// IsActive 缺省为启用：预置 CI 类型应开箱可用，配置省略时不得隐式禁用
+	IsActive *bool `json:"is_active"`
 }
 
 // IncidentSeed 事件种子数据结构
@@ -2416,29 +2417,32 @@ func (s *Seeder) seedCITypes(ctx context.Context) {
 	// 使用配置中的CI类型，如果没有配置则使用默认值
 	ciTypes := s.config.CITypes
 	if len(ciTypes) == 0 {
-		// 默认CI类型
+		// 默认CI类型（is_active 省略，走 schema 默认启用）
 		ciTypes = []CITypeSeed{
-			{Name: "server", Description: "服务器", Icon: "server", Color: "#28a745", IsActive: true},
-			{Name: "database", Description: "数据库", Icon: "database", Color: "#fd7e14", IsActive: true},
-			{Name: "network", Description: "网络设备", Icon: "network", Color: "#17a2b8", IsActive: true},
-			{Name: "storage", Description: "存储设备", Icon: "storage", Color: "#e83e8c", IsActive: true},
-			{Name: "application", Description: "应用服务", Icon: "app", Color: "#6610f2", IsActive: true},
-			{Name: "middleware", Description: "中间件", Icon: "middleware", Color: "#e74c3c", IsActive: true},
-			{Name: "cloud_vm", Description: "云虚拟机", Icon: "cloud", Color: "#6f42c1", IsActive: true},
-			{Name: "kubernetes", Description: "Kubernetes资源", Icon: "kubernetes", Color: "#20c997", IsActive: true},
+			{Name: "server", Description: "服务器", Icon: "server", Color: "#28a745"},
+			{Name: "database", Description: "数据库", Icon: "database", Color: "#fd7e14"},
+			{Name: "network", Description: "网络设备", Icon: "network", Color: "#17a2b8"},
+			{Name: "storage", Description: "存储设备", Icon: "storage", Color: "#e83e8c"},
+			{Name: "application", Description: "应用服务", Icon: "app", Color: "#6610f2"},
+			{Name: "middleware", Description: "中间件", Icon: "middleware", Color: "#e74c3c"},
+			{Name: "cloud_vm", Description: "云虚拟机", Icon: "cloud", Color: "#6f42c1"},
+			{Name: "kubernetes", Description: "Kubernetes资源", Icon: "kubernetes", Color: "#20c997"},
 		}
 	}
 
 	for _, ct := range ciTypes {
-		_, err := s.client.CIType.Create().
+		create := s.client.CIType.Create().
 			SetName(ct.Name).
 			SetDescription(ct.Description).
 			SetIcon(ct.Icon).
 			SetColor(ct.Color).
-			SetIsActive(ct.IsActive).
-			SetTenantID(t.ID).
-			Save(ctx)
-		if err != nil {
+			SetTenantID(t.ID)
+		// 仅在配置显式声明时覆盖；省略时保持 schema 默认 is_active=true，
+		// 避免 Go 零值 false 把预置类型隐式种为禁用。
+		if ct.IsActive != nil {
+			create.SetIsActive(*ct.IsActive)
+		}
+		if _, err := create.Save(ctx); err != nil {
 			s.sugar.Warnw("seed CI type failed", "error", err, "name", ct.Name)
 		}
 	}

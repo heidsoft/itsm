@@ -132,12 +132,6 @@ func (_u *DiscoverySourceUpdate) AddTenantID(v int) *DiscoverySourceUpdate {
 	return _u
 }
 
-// ClearTenantID clears the value of the "tenant_id" field.
-func (_u *DiscoverySourceUpdate) ClearTenantID() *DiscoverySourceUpdate {
-	_u.mutation.ClearTenantID()
-	return _u
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (_u *DiscoverySourceUpdate) SetCreatedAt(v time.Time) *DiscoverySourceUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -293,9 +287,6 @@ func (_u *DiscoverySourceUpdate) sqlSave(ctx context.Context) (_node int, err er
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(discoverysource.FieldTenantID, field.TypeInt, value)
-	}
-	if _u.mutation.TenantIDCleared() {
-		_spec.ClearField(discoverysource.FieldTenantID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(discoverysource.FieldCreatedAt, field.TypeTime, value)
@@ -468,12 +459,6 @@ func (_u *DiscoverySourceUpdateOne) SetNillableTenantID(v *int) *DiscoverySource
 // AddTenantID adds value to the "tenant_id" field.
 func (_u *DiscoverySourceUpdateOne) AddTenantID(v int) *DiscoverySourceUpdateOne {
 	_u.mutation.AddTenantID(v)
-	return _u
-}
-
-// ClearTenantID clears the value of the "tenant_id" field.
-func (_u *DiscoverySourceUpdateOne) ClearTenantID() *DiscoverySourceUpdateOne {
-	_u.mutation.ClearTenantID()
 	return _u
 }
 
@@ -662,9 +647,6 @@ func (_u *DiscoverySourceUpdateOne) sqlSave(ctx context.Context) (_node *Discove
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(discoverysource.FieldTenantID, field.TypeInt, value)
-	}
-	if _u.mutation.TenantIDCleared() {
-		_spec.ClearField(discoverysource.FieldTenantID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(discoverysource.FieldCreatedAt, field.TypeTime, value)

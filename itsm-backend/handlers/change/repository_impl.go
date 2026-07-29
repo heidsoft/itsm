@@ -347,7 +347,8 @@ func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, te
 	}
 	defer rows.Close()
 
-	var records []*ApprovalRecord
+	// 返回空切片而非 nil，避免 JSON 序列化为 null 导致前端崩溃
+	records := make([]*ApprovalRecord, 0)
 	for rows.Next() {
 		var rec ApprovalRecord
 		var approvedAt sql.NullTime
@@ -398,7 +399,8 @@ func (r *EntRepository) GetApprovalChain(ctx context.Context, changeID int) ([]*
 	}
 	defer rows.Close()
 
-	var chain []*ApprovalChain
+	// 返回空切片而非 nil，避免 JSON 序列化为 null 导致前端崩溃
+	chain := make([]*ApprovalChain, 0)
 	for rows.Next() {
 		var item ApprovalChain
 		err := rows.Scan(&item.ID, &item.Level, &item.ApproverID, &item.ApproverName, &item.Role, &item.Status, &item.IsRequired, &item.CreatedAt)

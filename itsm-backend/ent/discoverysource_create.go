@@ -81,14 +81,6 @@ func (_c *DiscoverySourceCreate) SetTenantID(v int) *DiscoverySourceCreate {
 	return _c
 }
 
-// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (_c *DiscoverySourceCreate) SetNillableTenantID(v *int) *DiscoverySourceCreate {
-	if v != nil {
-		_c.SetTenantID(*v)
-	}
-	return _c
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (_c *DiscoverySourceCreate) SetCreatedAt(v time.Time) *DiscoverySourceCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -207,6 +199,9 @@ func (_c *DiscoverySourceCreate) check() error {
 	}
 	if _, ok := _c.mutation.Enabled(); !ok {
 		return &ValidationError{Name: "enabled", err: errors.New(`ent: missing required field "DiscoverySource.enabled"`)}
+	}
+	if _, ok := _c.mutation.TenantID(); !ok {
+		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "DiscoverySource.tenant_id"`)}
 	}
 	if v, ok := _c.mutation.TenantID(); ok {
 		if err := discoverysource.TenantIDValidator(v); err != nil {

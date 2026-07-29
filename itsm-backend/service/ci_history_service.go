@@ -37,7 +37,56 @@ func (s *CIHistoryService) RecordCIHistory(
 	operatorName, operation, remark string,
 	before, after *ent.ConfigurationItem,
 ) error {
-	// 获取当前最大版本号
+	// operator_id 无法解析时使用系统操作者约定值，保证历史必写成功
+	if operatorID < 0 {
+		operatorID = SystemOperatorID
+	}
+
+	// 转换before和after为map
+	beforeMap := s.ciToMap(before)
+	afterMap := s.ciToMap(after)
+
+	// 计算变更的字段
+	changedFields := s.getChangedFields(beforeMap, afterMap)
+
+	// MAX+1 取版本号存在并发竞态：撞 (ci_id, version) 唯一索引时重新取版本号重试
+	const maxAttempts = 3
+	var lastErr error
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		version, err := s.nextHistoryVersion(ctx, ciID, tenantID)
+		if err != nil {
+			s.logger.Errorw("Failed to get max CI version", "error", err, "ci_id", ciID)
+			return fmt.Errorf("failed to get max version: %w", err)
+		}
+
+		_, err = s.client.ConfigurationItemHistory.Create().
+			SetCiID(ciID).
+			SetVersion(version).
+			SetOperation(operation).
+			SetBefore(beforeMap).
+			SetAfter(afterMap).
+			SetChangedFields(changedFields).
+			SetOperatorID(operatorID).
+			SetOperatorName(operatorName).
+			SetRemark(remark).
+			SetTenantID(tenantID).
+			Save(ctx)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		if !ent.IsConstraintError(err) {
+			break
+		}
+		s.logger.Warnw("CI history version conflict, retrying", "ci_id", ciID, "version", version, "attempt", attempt+1)
+	}
+
+	s.logger.Errorw("Failed to record CI history", "error", lastErr, "ci_id", ciID, "operation", operation)
+	return fmt.Errorf("failed to record history: %w", lastErr)
+}
+
+// nextHistoryVersion 取当前最大历史版本号+1
+func (s *CIHistoryService) nextHistoryVersion(ctx context.Context, ciID, tenantID int) (int, error) {
 	// 使用 Scan + sql.NullInt64 兜底：MAX 在无记录时返回 NULL，直接 Int(ctx) 会 "converting NULL to int" 500
 	var aggResult []struct {
 		Max sql.NullInt64 `json:"max"`
@@ -50,39 +99,13 @@ func (s *CIHistoryService) RecordCIHistory(
 		Aggregate(ent.Max(configurationitemhistory.FieldVersion)).
 		Scan(ctx, &aggResult)
 	if err != nil {
-		s.logger.Errorw("Failed to get max CI version", "error", err, "ci_id", ciID)
-		return fmt.Errorf("failed to get max version: %w", err)
+		return 0, err
 	}
 	version := 1
 	if len(aggResult) > 0 && aggResult[0].Max.Valid && aggResult[0].Max.Int64 > 0 {
 		version = int(aggResult[0].Max.Int64) + 1
 	}
-
-	// 转换before和after为map
-	beforeMap := s.ciToMap(before)
-	afterMap := s.ciToMap(after)
-
-	// 计算变更的字段
-	changedFields := s.getChangedFields(beforeMap, afterMap)
-
-	_, err = s.client.ConfigurationItemHistory.Create().
-		SetCiID(ciID).
-		SetVersion(version).
-		SetOperation(operation).
-		SetBefore(beforeMap).
-		SetAfter(afterMap).
-		SetChangedFields(changedFields).
-		SetOperatorID(operatorID).
-		SetOperatorName(operatorName).
-		SetRemark(remark).
-		SetTenantID(tenantID).
-		Save(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to record CI history", "error", err, "ci_id", ciID, "operation", operation)
-		return fmt.Errorf("failed to record history: %w", err)
-	}
-
-	return nil
+	return version, nil
 }
 
 // GetCIHistory 获取CI历史记录列表

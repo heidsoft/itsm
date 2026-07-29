@@ -31,7 +31,7 @@ type ConfigurationItemHistory struct {
 	After map[string]interface{} `json:"after,omitempty"`
 	// 变更的字段列表
 	ChangedFields []string `json:"changed_fields,omitempty"`
-	// 操作人ID
+	// 操作人ID，0 表示系统操作者
 	OperatorID int `json:"operator_id,omitempty"`
 	// 操作人姓名
 	OperatorName string `json:"operator_name,omitempty"`

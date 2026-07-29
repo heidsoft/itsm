@@ -22,6 +22,7 @@ type ConfigurationItemService struct {
 	logger         *zap.SugaredLogger
 	historyService *CIHistoryService
 	tagService     *CITagService
+	attrValidator  *CIAttributeValidator
 }
 
 // NewConfigurationItemService 创建配置项服务
@@ -31,6 +32,7 @@ func NewConfigurationItemService(client *ent.Client, logger *zap.SugaredLogger, 
 		logger:         logger,
 		historyService: historyService,
 		tagService:     tagService,
+		attrValidator:  NewCIAttributeValidator(client),
 	}
 }
 
@@ -95,8 +97,14 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 	if req.Source != "" {
 		create.SetSource(req.Source)
 	}
-	if req.Attributes != nil {
-		create.SetAttributes(req.Attributes)
+	// 依据 CI 类型（含继承链）属性定义归一化并校验动态属性
+	normalizedAttrs, err := s.attrValidator.NormalizeAttributes(ctx, tenantID, ciTypeID, req.Attributes, 0)
+	if err != nil {
+		s.logger.Warnw("CI attribute validation failed", "error", err, "tenant_id", tenantID, "ci_type_id", ciTypeID)
+		return nil, err
+	}
+	if len(normalizedAttrs) > 0 {
+		create.SetAttributes(normalizedAttrs)
 	}
 	if req.CloudProvider != "" {
 		create.SetCloudProvider(req.CloudProvider)
@@ -138,9 +146,10 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 	ci, err := create.Save(ctx)
 	if err == nil {
 		// 记录创建历史
-		operatorID, _ := ctx.Value("user_id").(int)
-		operatorName, _ := ctx.Value("user_name").(string)
-		_ = s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "create", "", nil, ci)
+		operatorID, operatorName := OperatorFromContext(ctx)
+		if historyErr := s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "create", "", nil, ci); historyErr != nil {
+			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", ci.ID, "operation", "create")
+		}
 	}
 	if err != nil {
 		s.logger.Errorw("Failed to create configuration item", "error", err, "tenant_id", tenantID, "name", req.Name)
@@ -317,7 +326,17 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 		update.SetSource(req.Source)
 	}
 	if req.Attributes != nil {
-		update.SetAttributes(req.Attributes)
+		// 依据生效的 CI 类型（本次更新后的类型）归一化并校验动态属性
+		effectiveTypeID := oldCI.CiTypeID
+		if req.CITypeID != 0 {
+			effectiveTypeID = req.CITypeID
+		}
+		normalizedAttrs, err := s.attrValidator.NormalizeAttributes(ctx, tenantID, effectiveTypeID, req.Attributes, id)
+		if err != nil {
+			s.logger.Warnw("CI attribute validation failed", "error", err, "ci_id", id, "tenant_id", tenantID, "ci_type_id", effectiveTypeID)
+			return nil, err
+		}
+		update.SetAttributes(normalizedAttrs)
 	}
 	if req.CloudProvider != "" {
 		update.SetCloudProvider(req.CloudProvider)
@@ -375,9 +394,10 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	ci, err := update.Save(ctx)
 	if err == nil {
 		// 记录更新历史
-		operatorID, _ := ctx.Value("user_id").(int)
-		operatorName, _ := ctx.Value("user_name").(string)
-		_ = s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "update", "", oldCI, ci)
+		operatorID, operatorName := OperatorFromContext(ctx)
+		if historyErr := s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "update", "", oldCI, ci); historyErr != nil {
+			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", ci.ID, "operation", "update")
+		}
 	}
 	if err != nil {
 		s.logger.Errorw("Failed to update configuration item", "error", err, "ci_id", id)
@@ -448,9 +468,10 @@ func (s *ConfigurationItemService) DeleteCI(ctx context.Context, id, tenantID in
 
 	if err == nil {
 		// 记录删除历史
-		operatorID, _ := ctx.Value("user_id").(int)
-		operatorName, _ := ctx.Value("user_name").(string)
-		_ = s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "delete", "", ci, nil)
+		operatorID, operatorName := OperatorFromContext(ctx)
+		if historyErr := s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "delete", "", ci, nil); historyErr != nil {
+			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", id, "operation", "delete")
+		}
 	}
 
 	s.logger.Infow("Configuration item deleted successfully", "ci_id", id, "tenant_id", tenantID)
@@ -620,9 +641,10 @@ func (s *ConfigurationItemService) AddTagsToCI(ctx context.Context, ciID, tenant
 	}
 
 	// 记录历史
-	operatorID, _ := ctx.Value("user_id").(int)
-	operatorName, _ := ctx.Value("user_name").(string)
-	_ = s.historyService.RecordCIHistory(ctx, ciID, tenantID, operatorID, operatorName, "update", "Added tags", ci, updatedCI)
+	operatorID, operatorName := OperatorFromContext(ctx)
+	if historyErr := s.historyService.RecordCIHistory(ctx, ciID, tenantID, operatorID, operatorName, "update", "Added tags", ci, updatedCI); historyErr != nil {
+		s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", ciID, "operation", "update")
+	}
 
 	s.logger.Infow("Tags added to CI successfully", "ci_id", ciID, "tag_ids", tagIDs)
 	return dto.ToCIResponseWithRelations(updatedCI), nil
@@ -664,9 +686,10 @@ func (s *ConfigurationItemService) RemoveTagsFromCI(ctx context.Context, ciID, t
 	}
 
 	// 记录历史
-	operatorID, _ := ctx.Value("user_id").(int)
-	operatorName, _ := ctx.Value("user_name").(string)
-	_ = s.historyService.RecordCIHistory(ctx, ciID, tenantID, operatorID, operatorName, "update", "Removed tags", ci, updatedCI)
+	operatorID, operatorName := OperatorFromContext(ctx)
+	if historyErr := s.historyService.RecordCIHistory(ctx, ciID, tenantID, operatorID, operatorName, "update", "Removed tags", ci, updatedCI); historyErr != nil {
+		s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", ciID, "operation", "update")
+	}
 
 	s.logger.Infow("Tags removed from CI successfully", "ci_id", ciID, "tag_ids", tagIDs)
 	return dto.ToCIResponseWithRelations(updatedCI), nil
@@ -805,9 +828,10 @@ func (s *ConfigurationItemService) BatchCreateCI(ctx context.Context, req *dto.B
 		}
 
 		// 记录历史
-		operatorID, _ := ctx.Value("user_id").(int)
-		operatorName, _ := ctx.Value("user_name").(string)
-		_ = s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "create", "Batch created", nil, ci)
+		operatorID, operatorName := OperatorFromContext(ctx)
+		if historyErr := s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "create", "Batch created", nil, ci); historyErr != nil {
+			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", ci.ID, "operation", "create")
+		}
 
 		successCount++
 	}
@@ -1014,9 +1038,10 @@ func (s *ConfigurationItemService) BatchUpdateCI(ctx context.Context, req *dto.B
 		}
 
 		// 记录历史
-		operatorID, _ := ctx.Value("user_id").(int)
-		operatorName, _ := ctx.Value("user_name").(string)
-		_ = s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "update", "Batch updated", oldCI, updatedCI)
+		operatorID, operatorName := OperatorFromContext(ctx)
+		if historyErr := s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "update", "Batch updated", oldCI, updatedCI); historyErr != nil {
+			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", id, "operation", "update")
+		}
 
 		successCount++
 	}
@@ -1134,9 +1159,10 @@ func (s *ConfigurationItemService) BatchDeleteCI(ctx context.Context, req *dto.B
 		}
 
 		// 记录历史
-		operatorID, _ := ctx.Value("user_id").(int)
-		operatorName, _ := ctx.Value("user_name").(string)
-		_ = s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "delete", "Batch deleted", ci, nil)
+		operatorID, operatorName := OperatorFromContext(ctx)
+		if historyErr := s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "delete", "Batch deleted", ci, nil); historyErr != nil {
+			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", id, "operation", "delete")
+		}
 
 		successCount++
 	}

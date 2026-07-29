@@ -14196,24 +14196,10 @@ func (m *CIRelationshipMutation) AddedTenantID() (r int, exists bool) {
 	return *v, true
 }
 
-// ClearTenantID clears the value of the "tenant_id" field.
-func (m *CIRelationshipMutation) ClearTenantID() {
-	m.tenant_id = nil
-	m.addtenant_id = nil
-	m.clearedFields[cirelationship.FieldTenantID] = struct{}{}
-}
-
-// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
-func (m *CIRelationshipMutation) TenantIDCleared() bool {
-	_, ok := m.clearedFields[cirelationship.FieldTenantID]
-	return ok
-}
-
 // ResetTenantID resets all changes to the "tenant_id" field.
 func (m *CIRelationshipMutation) ResetTenantID() {
 	m.tenant_id = nil
 	m.addtenant_id = nil
-	delete(m.clearedFields, cirelationship.FieldTenantID)
 }
 
 // SetRelationshipType sets the "relationship_type" field.
@@ -14966,9 +14952,6 @@ func (m *CIRelationshipMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *CIRelationshipMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(cirelationship.FieldTenantID) {
-		fields = append(fields, cirelationship.FieldTenantID)
-	}
 	if m.FieldCleared(cirelationship.FieldDescription) {
 		fields = append(fields, cirelationship.FieldDescription)
 	}
@@ -14989,9 +14972,6 @@ func (m *CIRelationshipMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *CIRelationshipMutation) ClearField(name string) error {
 	switch name {
-	case cirelationship.FieldTenantID:
-		m.ClearTenantID()
-		return nil
 	case cirelationship.FieldDescription:
 		m.ClearDescription()
 		return nil
@@ -38638,24 +38618,10 @@ func (m *DiscoverySourceMutation) AddedTenantID() (r int, exists bool) {
 	return *v, true
 }
 
-// ClearTenantID clears the value of the "tenant_id" field.
-func (m *DiscoverySourceMutation) ClearTenantID() {
-	m.tenant_id = nil
-	m.addtenant_id = nil
-	m.clearedFields[discoverysource.FieldTenantID] = struct{}{}
-}
-
-// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
-func (m *DiscoverySourceMutation) TenantIDCleared() bool {
-	_, ok := m.clearedFields[discoverysource.FieldTenantID]
-	return ok
-}
-
 // ResetTenantID resets all changes to the "tenant_id" field.
 func (m *DiscoverySourceMutation) ResetTenantID() {
 	m.tenant_id = nil
 	m.addtenant_id = nil
-	delete(m.clearedFields, discoverysource.FieldTenantID)
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -39008,9 +38974,6 @@ func (m *DiscoverySourceMutation) ClearedFields() []string {
 	if m.FieldCleared(discoverysource.FieldDescription) {
 		fields = append(fields, discoverysource.FieldDescription)
 	}
-	if m.FieldCleared(discoverysource.FieldTenantID) {
-		fields = append(fields, discoverysource.FieldTenantID)
-	}
 	return fields
 }
 
@@ -39030,9 +38993,6 @@ func (m *DiscoverySourceMutation) ClearField(name string) error {
 		return nil
 	case discoverysource.FieldDescription:
 		m.ClearDescription()
-		return nil
-	case discoverysource.FieldTenantID:
-		m.ClearTenantID()
 		return nil
 	}
 	return fmt.Errorf("unknown DiscoverySource nullable field %s", name)

@@ -72,8 +72,7 @@ func (CIRelationship) Fields() []ent.Field {
 		// 租户ID
 		field.Int("tenant_id").
 			Comment("租户ID").
-			Positive().
-			Optional(), // 兼容存量数据，迁移脚本填充后改为 Required
+			Positive(), // 必填：存量数据已由 migrations/20260610_cmdb_tenant_id_backfill.sql 回填
 		// 关系类型
 		field.String("relationship_type").
 			Comment("关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, owned_by, owns, uses, used_by").

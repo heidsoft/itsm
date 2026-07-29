@@ -1,4 +1,4 @@
-package cmdb
+package service
 
 import (
 	"context"
@@ -13,24 +13,48 @@ import (
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
+
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqljson"
 )
 
-func (r *EntRepository) normalizeCIAttributes(ctx context.Context, ci *ConfigurationItem, existingID int) (map[string]interface{}, error) {
-	typeIDs, err := r.resolveCITypeChain(ctx, ci.CITypeID, ci.TenantID)
+// globalAttributeDefinitionTenantID 全局属性定义所属的租户ID。
+// 系统预置的 CI 属性定义统一挂在该租户下，供所有租户共享；
+// 查询时显式带上该租户作为兜底，而非隐式回退。
+const globalAttributeDefinitionTenantID = 1
+
+// CIAttributeValidator 基于 CIAttributeDefinition 元数据对 CI 动态属性做归一化与校验。
+// 校验内容：类型强转、默认值填充、必填、validation_rules（枚举/长度/数值范围/pattern）、唯一性。
+type CIAttributeValidator struct {
+	client *ent.Client
+}
+
+// NewCIAttributeValidator 创建 CI 属性校验器
+func NewCIAttributeValidator(client *ent.Client) *CIAttributeValidator {
+	return &CIAttributeValidator{client: client}
+}
+
+// NormalizeAttributes 按 CI 类型（含父类型继承链）的属性定义归一化并校验 attributes。
+// existingID 为更新场景下当前 CI 的 ID（用于唯一性校验时排除自身），创建场景传 0。
+// 返回归一化后的属性集合；校验失败返回面向用户的中文错误。
+func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID, ciTypeID int, attributes map[string]interface{}, existingID int) (map[string]interface{}, error) {
+	typeIDs, err := v.resolveCITypeChain(ctx, ciTypeID, tenantID)
 	if err != nil {
 		return nil, err
 	}
 	definitionMap := make(map[string]*ent.CIAttributeDefinition)
+	// 从继承链根部向叶子遍历，子类型定义覆盖父类型同名定义
 	for i := len(typeIDs) - 1; i >= 0; i-- {
-		defs, queryErr := r.client.CIAttributeDefinition.Query().
+		defs, queryErr := v.client.CIAttributeDefinition.Query().
 			Where(
 				ciattributedefinition.CiTypeID(typeIDs[i]),
 				ciattributedefinition.IsActive(true),
 				ciattributedefinition.Or(
-					ciattributedefinition.TenantID(ci.TenantID),
-					ciattributedefinition.TenantID(1),
+					ciattributedefinition.TenantID(tenantID),
+					ciattributedefinition.TenantID(globalAttributeDefinitionTenantID),
 				),
 			).
+			// 全局定义排前，租户自定义同名定义覆盖全局定义
 			Order(ent.Asc(ciattributedefinition.FieldTenantID)).
 			All(ctx)
 		if queryErr != nil {
@@ -41,20 +65,20 @@ func (r *EntRepository) normalizeCIAttributes(ctx context.Context, ci *Configura
 		}
 	}
 	if len(definitionMap) == 0 {
-		if ci.Attributes == nil {
+		if attributes == nil {
 			return map[string]interface{}{}, nil
 		}
-		return ci.Attributes, nil
+		return attributes, nil
 	}
 
-	normalized := make(map[string]interface{}, len(ci.Attributes))
-	for k, v := range ci.Attributes {
-		normalized[k] = v
+	normalized := make(map[string]interface{}, len(attributes))
+	for k, val := range attributes {
+		normalized[k] = val
 	}
 
 	for name, def := range definitionMap {
 		value, exists := normalized[name]
-		if (!exists || value == nil || isBlankString(value)) && def.DefaultValue != "" {
+		if (!exists || value == nil || isBlankAttributeString(value)) && def.DefaultValue != "" {
 			parsedDefault, err := parseAttributeValue(def.Type, def.DefaultValue)
 			if err != nil {
 				return nil, fmt.Errorf("属性 %s 默认值无效: %w", def.DisplayName, err)
@@ -64,7 +88,7 @@ func (r *EntRepository) normalizeCIAttributes(ctx context.Context, ci *Configura
 			exists = true
 		}
 
-		if def.Required && (!exists || value == nil || isBlankString(value)) {
+		if def.Required && (!exists || value == nil || isBlankAttributeString(value)) {
 			return nil, fmt.Errorf("属性 %s 为必填项", def.DisplayName)
 		}
 		if !exists || value == nil {
@@ -78,7 +102,7 @@ func (r *EntRepository) normalizeCIAttributes(ctx context.Context, ci *Configura
 		normalized[name] = normalizedValue
 
 		if def.Unique {
-			duplicate, err := r.hasDuplicateAttributeValue(ctx, ci.TenantID, ci.CITypeID, name, normalizedValue, existingID)
+			duplicate, err := v.hasDuplicateAttributeValue(ctx, tenantID, ciTypeID, name, normalizedValue, existingID)
 			if err != nil {
 				return nil, fmt.Errorf("校验属性 %s 唯一性失败: %w", def.DisplayName, err)
 			}
@@ -91,7 +115,8 @@ func (r *EntRepository) normalizeCIAttributes(ctx context.Context, ci *Configura
 	return normalized, nil
 }
 
-func (r *EntRepository) resolveCITypeChain(ctx context.Context, ciTypeID, tenantID int) ([]int, error) {
+// resolveCITypeChain 沿 parent_type_id 解析 CI 类型继承链（含自身），带环检测
+func (v *CIAttributeValidator) resolveCITypeChain(ctx context.Context, ciTypeID, tenantID int) ([]int, error) {
 	visited := make(map[int]struct{})
 	ids := make([]int, 0, 4)
 	currentID := ciTypeID
@@ -100,7 +125,7 @@ func (r *EntRepository) resolveCITypeChain(ctx context.Context, ciTypeID, tenant
 			return nil, fmt.Errorf("CI类型继承关系存在循环")
 		}
 		visited[currentID] = struct{}{}
-		current, err := r.client.CIType.Query().
+		current, err := v.client.CIType.Query().
 			Where(citype.ID(currentID), citype.TenantID(tenantID)).
 			First(ctx)
 		if err != nil {
@@ -115,34 +140,25 @@ func (r *EntRepository) resolveCITypeChain(ctx context.Context, ciTypeID, tenant
 	return ids, nil
 }
 
-func (r *EntRepository) hasDuplicateAttributeValue(ctx context.Context, tenantID, ciTypeID int, attributeName string, value interface{}, existingID int) (bool, error) {
-	items, err := r.client.ConfigurationItem.Query().
+// hasDuplicateAttributeValue 检查同租户同类型下是否已有 CI 使用相同属性值。
+// 使用 JSON 谓词下推到数据库（PostgreSQL: attributes->>name = ?），避免全表加载内存比对。
+// 传入的 value 已经过 normalizeAttributeValue 类型归一化，可直接按类型比对。
+func (v *CIAttributeValidator) hasDuplicateAttributeValue(ctx context.Context, tenantID, ciTypeID int, attributeName string, value interface{}, existingID int) (bool, error) {
+	query := v.client.ConfigurationItem.Query().
 		Where(
 			configurationitem.TenantID(tenantID),
 			configurationitem.CiTypeID(ciTypeID),
-		).
-		All(ctx)
-	if err != nil {
-		return false, err
+			func(s *sql.Selector) {
+				s.Where(sqljson.ValueEQ(configurationitem.FieldAttributes, value, sqljson.Path(attributeName)))
+			},
+		)
+	if existingID > 0 {
+		query = query.Where(configurationitem.IDNEQ(existingID))
 	}
-
-	target := canonicalAttributeValue(value)
-	for _, item := range items {
-		if existingID > 0 && item.ID == existingID {
-			continue
-		}
-		current, ok := item.Attributes[attributeName]
-		if !ok {
-			continue
-		}
-		if canonicalAttributeValue(current) == target {
-			return true, nil
-		}
-	}
-
-	return false, nil
+	return query.Exist(ctx)
 }
 
+// normalizeAttributeValue 对单个属性值做类型强转并应用 validation_rules
 func normalizeAttributeValue(def *ent.CIAttributeDefinition, value interface{}) (interface{}, error) {
 	normalized, err := coerceAttributeValue(def.Type, value)
 	if err != nil {
@@ -154,7 +170,7 @@ func normalizeAttributeValue(def *ent.CIAttributeDefinition, value interface{}) 
 		return nil, fmt.Errorf("验证规则格式错误: %w", err)
 	}
 
-	if err := applyValidationRules(def.Type, normalized, rules); err != nil {
+	if err := applyAttributeValidationRules(def.Type, normalized, rules); err != nil {
 		return nil, err
 	}
 
@@ -182,15 +198,15 @@ func coerceAttributeValue(attributeType string, value interface{}) (interface{},
 	case "string", "reference":
 		return fmt.Sprint(value), nil
 	case "integer", "int":
-		return toInt(value)
+		return attrToInt(value)
 	case "float", "number":
-		return toFloat(value)
+		return attrToFloat(value)
 	case "boolean", "bool":
-		return toBool(value)
+		return attrToBool(value)
 	case "date":
-		return toTimeString(value, "2006-01-02")
+		return attrToTimeString(value, "2006-01-02")
 	case "datetime":
-		return toTimeString(value, time.RFC3339)
+		return attrToTimeString(value, time.RFC3339)
 	case "json":
 		return value, nil
 	case "enum":
@@ -200,22 +216,25 @@ func coerceAttributeValue(attributeType string, value interface{}) (interface{},
 	}
 }
 
-func applyValidationRules(attributeType string, value interface{}, rules map[string]interface{}) error {
+func applyAttributeValidationRules(attributeType string, value interface{}, rules map[string]interface{}) error {
 	if len(rules) == 0 {
 		return nil
 	}
 
 	if allowed := stringListFromRule(rules, "enum_values"); len(allowed) > 0 {
 		actual := fmt.Sprint(value)
+		matched := false
 		for _, item := range allowed {
 			if actual == item {
-				goto patternCheck
+				matched = true
+				break
 			}
 		}
-		return fmt.Errorf("值 %q 不在允许范围内", actual)
+		if !matched {
+			return fmt.Errorf("值 %q 不在允许范围内", actual)
+		}
 	}
 
-patternCheck:
 	if pattern, ok := rules["pattern"].(string); ok && pattern != "" {
 		actual := fmt.Sprint(value)
 		if !strings.Contains(actual, pattern) && actual != pattern {
@@ -233,7 +252,7 @@ patternCheck:
 			return fmt.Errorf("长度不能大于 %.0f", maxLen)
 		}
 	case "integer", "int", "float", "number":
-		actual, err := toFloat(value)
+		actual, err := attrToFloat(value)
 		if err != nil {
 			return err
 		}
@@ -273,14 +292,14 @@ func numericRuleValue(rules map[string]interface{}, key string) (float64, bool) 
 	if !ok {
 		return 0, false
 	}
-	value, err := toFloat(raw)
+	value, err := attrToFloat(raw)
 	if err != nil {
 		return 0, false
 	}
 	return value, true
 }
 
-func toInt(value interface{}) (int, error) {
+func attrToInt(value interface{}) (int, error) {
 	switch typed := value.(type) {
 	case int:
 		return typed, nil
@@ -312,7 +331,7 @@ func toInt(value interface{}) (int, error) {
 	}
 }
 
-func toFloat(value interface{}) (float64, error) {
+func attrToFloat(value interface{}) (float64, error) {
 	switch typed := value.(type) {
 	case int:
 		return float64(typed), nil
@@ -337,7 +356,7 @@ func toFloat(value interface{}) (float64, error) {
 	}
 }
 
-func toBool(value interface{}) (bool, error) {
+func attrToBool(value interface{}) (bool, error) {
 	switch typed := value.(type) {
 	case bool:
 		return typed, nil
@@ -355,7 +374,7 @@ func toBool(value interface{}) (bool, error) {
 	}
 }
 
-func toTimeString(value interface{}, layout string) (string, error) {
+func attrToTimeString(value interface{}, layout string) (string, error) {
 	switch typed := value.(type) {
 	case time.Time:
 		return typed.Format(layout), nil
@@ -370,15 +389,7 @@ func toTimeString(value interface{}, layout string) (string, error) {
 	}
 }
 
-func canonicalAttributeValue(value interface{}) string {
-	data, err := json.Marshal(value)
-	if err != nil {
-		return fmt.Sprint(value)
-	}
-	return string(data)
-}
-
-func isBlankString(value interface{}) bool {
+func isBlankAttributeString(value interface{}) bool {
 	text, ok := value.(string)
 	return ok && strings.TrimSpace(text) == ""
 }

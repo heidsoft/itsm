@@ -50,12 +50,6 @@ func (_u *CIRelationshipUpdate) AddTenantID(v int) *CIRelationshipUpdate {
 	return _u
 }
 
-// ClearTenantID clears the value of the "tenant_id" field.
-func (_u *CIRelationshipUpdate) ClearTenantID() *CIRelationshipUpdate {
-	_u.mutation.ClearTenantID()
-	return _u
-}
-
 // SetRelationshipType sets the "relationship_type" field.
 func (_u *CIRelationshipUpdate) SetRelationshipType(v string) *CIRelationshipUpdate {
 	_u.mutation.SetRelationshipType(v)
@@ -318,9 +312,6 @@ func (_u *CIRelationshipUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(cirelationship.FieldTenantID, field.TypeInt, value)
 	}
-	if _u.mutation.TenantIDCleared() {
-		_spec.ClearField(cirelationship.FieldTenantID, field.TypeInt)
-	}
 	if value, ok := _u.mutation.RelationshipType(); ok {
 		_spec.SetField(cirelationship.FieldRelationshipType, field.TypeString, value)
 	}
@@ -450,12 +441,6 @@ func (_u *CIRelationshipUpdateOne) SetNillableTenantID(v *int) *CIRelationshipUp
 // AddTenantID adds value to the "tenant_id" field.
 func (_u *CIRelationshipUpdateOne) AddTenantID(v int) *CIRelationshipUpdateOne {
 	_u.mutation.AddTenantID(v)
-	return _u
-}
-
-// ClearTenantID clears the value of the "tenant_id" field.
-func (_u *CIRelationshipUpdateOne) ClearTenantID() *CIRelationshipUpdateOne {
-	_u.mutation.ClearTenantID()
 	return _u
 }
 
@@ -750,9 +735,6 @@ func (_u *CIRelationshipUpdateOne) sqlSave(ctx context.Context) (_node *CIRelati
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(cirelationship.FieldTenantID, field.TypeInt, value)
-	}
-	if _u.mutation.TenantIDCleared() {
-		_spec.ClearField(cirelationship.FieldTenantID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.RelationshipType(); ok {
 		_spec.SetField(cirelationship.FieldRelationshipType, field.TypeString, value)
