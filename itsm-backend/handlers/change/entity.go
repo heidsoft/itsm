@@ -44,6 +44,7 @@ type User struct {
 type ApprovalChain struct {
 	ID           int
 	ChangeID     int
+	TenantID     int
 	Level        int
 	ApproverID   int
 	ApproverName string
@@ -57,6 +58,7 @@ type ApprovalChain struct {
 type ApprovalRecord struct {
 	ID           int
 	ChangeID     int
+	TenantID     int
 	ApproverID   int
 	ApproverName string
 	Status       string

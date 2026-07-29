@@ -3,6 +3,7 @@ package seeder
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -258,11 +259,14 @@ type SLAPolicySeed struct {
 
 // Seeder manages database seeding operations
 type Seeder struct {
-	client              *ent.Client
-	sugar               *zap.SugaredLogger
-	config              *SeedConfig
-	appConfig           *config.Config
-	bpmnTemplateService *service.BPMNTemplateService
+	client                  *ent.Client
+	sugar                   *zap.SugaredLogger
+	config                  *SeedConfig
+	appConfig               *config.Config
+	bpmnTemplateService     *service.BPMNTemplateService
+	expectedPermissions     []string
+	expectedMenus           []string
+	expectedRolePermissions map[string][]string
 }
 
 // NewSeeder creates a new Seeder instance
@@ -393,6 +397,7 @@ func mergeSeedConfig(base *SeedConfig, override *SeedConfig) *SeedConfig {
 // getEmbeddedConfig 返回内置的默认配置
 func getEmbeddedConfig() *SeedConfig {
 	return &SeedConfig{
+		SeedWorkflows: true,
 		Departments: []DepartmentSeed{
 			{Name: "信息技术部", Code: "IT", Desc: "IT整体管理"},
 			{Name: "IT基础架构", Code: "IT-INFRA", Desc: "基础设施运维", ParentCode: "IT"},
@@ -533,6 +538,160 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedTicketTags(ctx)             // 新增：初始化标签
 	s.seedMenuAndPermissionFixes(ctx) // 修复：更新菜单路径和补充缺失权限
 	s.seedRolePermissions(ctx)        // 新增：为角色分配权限
+}
+
+// SeedProduction applies product defaults and then verifies the minimum
+// production invariants. Individual legacy seed helpers log and continue on
+// conflict; this fail-closed verification prevents bootstrap from reporting
+// success when a required tenant, identity, RBAC, menu, or product template
+// was only partially initialized.
+func (s *Seeder) SeedProduction(ctx context.Context) error {
+	s.SeedAll(ctx)
+	return s.VerifyProduction(ctx)
+}
+
+// VerifyProduction checks the complete managed baseline without writing data.
+func (s *Seeder) VerifyProduction(ctx context.Context) error {
+	rootTenant, err := s.client.Tenant.Query().
+		Where(tenant.CodeEQ("default")).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("verify default tenant: %w", err)
+	}
+
+	checks := []struct {
+		name  string
+		exist func() (bool, error)
+	}{
+		{
+			name: "administrator",
+			exist: func() (bool, error) {
+				return s.client.User.Query().
+					Where(user.UsernameEQ("admin"), user.TenantIDEQ(rootTenant.ID)).
+					Exist(ctx)
+			},
+		},
+		{
+			name: "roles",
+			exist: func() (bool, error) {
+				for _, expected := range s.config.Roles {
+					exists, err := s.client.Role.Query().
+						Where(role.CodeEQ(expected.Code), role.TenantIDEQ(rootTenant.ID)).
+						Exist(ctx)
+					if err != nil || !exists {
+						return exists, err
+					}
+				}
+				return len(s.config.Roles) > 0, nil
+			},
+		},
+		{
+			name: "permissions",
+			exist: func() (bool, error) {
+				count, err := s.client.Permission.Query().
+					Where(
+						permission.TenantIDEQ(rootTenant.ID),
+						permission.CodeIn(s.expectedPermissions...),
+					).
+					Count(ctx)
+				return count == len(s.expectedPermissions) && count > 0, err
+			},
+		},
+		{
+			name: "role permission bindings",
+			exist: func() (bool, error) {
+				roleCodes := make([]string, 0, len(s.config.Roles))
+				for _, expected := range s.config.Roles {
+					roleCodes = append(roleCodes, expected.Code)
+				}
+				roles, err := s.client.Role.Query().
+					Where(role.TenantIDEQ(rootTenant.ID), role.CodeIn(roleCodes...)).
+					All(ctx)
+				if err != nil {
+					return false, err
+				}
+				for _, seededRole := range roles {
+					expectedCodes, managed := s.expectedRolePermissions[seededRole.Code]
+					if !managed {
+						continue
+					}
+					bindings, err := s.client.RolePermission.Query().
+						Where(
+							rolepermission.TenantIDEQ(rootTenant.ID),
+							rolepermission.RoleIDEQ(seededRole.ID),
+						).
+						All(ctx)
+					if err != nil {
+						return false, err
+					}
+					actualCodes := make(map[string]struct{}, len(bindings))
+					for _, binding := range bindings {
+						p, err := s.client.Permission.Get(ctx, binding.PermissionID)
+						if err != nil {
+							return false, err
+						}
+						actualCodes[p.Code] = struct{}{}
+					}
+					if len(actualCodes) < len(expectedCodes) {
+						return false, nil
+					}
+					for _, code := range expectedCodes {
+						if _, ok := actualCodes[code]; !ok {
+							return false, nil
+						}
+					}
+				}
+				return len(roles) > 0, nil
+			},
+		},
+		{
+			name: "menus",
+			exist: func() (bool, error) {
+				count, err := s.client.Menu.Query().
+					Where(
+						menu.TenantIDEQ(rootTenant.ID),
+						menu.PathIn(s.expectedMenus...),
+					).
+					Count(ctx)
+				return count == len(s.expectedMenus) && count > 0, err
+			},
+		},
+		{
+			name: "SLA definitions",
+			exist: func() (bool, error) {
+				return s.client.SLADefinition.Query().
+					Where(sladefinition.TenantIDEQ(rootTenant.ID)).
+					Exist(ctx)
+			},
+		},
+		{
+			name: "service catalog templates",
+			exist: func() (bool, error) {
+				return s.client.ServiceCatalog.Query().
+					Where(servicecatalog.TenantIDEQ(rootTenant.ID)).
+					Exist(ctx)
+			},
+		},
+		{
+			name: "standard change templates",
+			exist: func() (bool, error) {
+				return s.client.StandardChange.Query().
+					Where(standardchange.TenantIDEQ(rootTenant.ID)).
+					Exist(ctx)
+			},
+		},
+	}
+
+	for _, check := range checks {
+		exists, err := check.exist()
+		if err != nil {
+			return fmt.Errorf("verify %s: %w", check.name, err)
+		}
+		if !exists {
+			return fmt.Errorf("verify %s: required production seed is missing", check.name)
+		}
+	}
+	return nil
 }
 
 // seedDefaultTenant ensures default tenant exists
@@ -717,17 +876,23 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 		return
 	}
 
-	existing, err := s.client.Role.Query().Where(role.TenantIDEQ(t.ID)).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing roles failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("roles already seeded")
-		return
-	}
-
 	for _, r := range s.config.Roles {
+		existing, err := s.client.Role.Query().
+			Where(role.CodeEQ(r.Code), role.TenantIDEQ(t.ID)).
+			Only(ctx)
+		if err == nil {
+			if _, err := existing.Update().
+				SetName(r.Name).
+				SetDescription(r.Description).
+				Save(ctx); err != nil {
+				s.sugar.Warnw("update role failed", "error", err, "code", r.Code)
+			}
+			continue
+		}
+		if !ent.IsNotFound(err) {
+			s.sugar.Warnw("query role failed", "error", err, "code", r.Code)
+			continue
+		}
 		if _, err := s.client.Role.Create().
 			SetName(r.Name).
 			SetCode(r.Code).
@@ -1480,6 +1645,10 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		{"msp_report:read", "查看报表", "msp_report", "read", "查看MSP报表"},
 		{"msp_report:write", "管理报表", "msp_report", "write", "生成和管理MSP报表"},
 	}
+	s.expectedPermissions = make([]string, 0, len(permissions))
+	for _, p := range permissions {
+		s.expectedPermissions = append(s.expectedPermissions, p.Code)
+	}
 
 	created := 0
 	updated := 0
@@ -1525,17 +1694,6 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		return
 	}
 
-	// 检查是否已有菜单
-	existing, err := s.client.Menu.Query().Where(menu.TenantIDEQ(t.ID)).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing menus failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("menus already seeded")
-		return
-	}
-
 	// 定义所有菜单
 	menus := []struct {
 		Name           string
@@ -1571,8 +1729,32 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		{Name: "SLA配置", Path: "/admin/sla-definitions", Icon: "Calendar", PermissionCode: "sla:write", SortOrder: 270},
 		{Name: "系统配置", Path: "/admin/system-config", Icon: "Settings", PermissionCode: "system:write", SortOrder: 280},
 	}
+	s.expectedMenus = make([]string, 0, len(menus))
+	for _, item := range menus {
+		s.expectedMenus = append(s.expectedMenus, item.Path)
+	}
 
 	for _, m := range menus {
+		existing, err := s.client.Menu.Query().
+			Where(menu.PathEQ(m.Path), menu.TenantIDEQ(t.ID)).
+			Only(ctx)
+		if err == nil {
+			if _, err := existing.Update().
+				SetName(m.Name).
+				SetIcon(m.Icon).
+				SetSortOrder(m.SortOrder).
+				SetIsVisible(true).
+				SetIsEnabled(true).
+				SetPermissionCode(m.PermissionCode).
+				Save(ctx); err != nil {
+				s.sugar.Warnw("update menu failed", "error", err, "path", m.Path)
+			}
+			continue
+		}
+		if !ent.IsNotFound(err) {
+			s.sugar.Warnw("query menu failed", "error", err, "path", m.Path)
+			continue
+		}
 		builder := s.client.Menu.Create().
 			SetName(m.Name).
 			SetPath(m.Path).
@@ -1888,6 +2070,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"knowledge:read",
 		},
 	}
+	s.expectedRolePermissions = rolePermissionMap
 
 	// 查询所有角色并为每个角色分配权限
 	roles, err := s.client.Role.Query().Where(role.TenantIDEQ(t.ID)).All(ctx)
@@ -1912,6 +2095,22 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		}
 		if len(permIDs) == 0 {
 			continue
+		}
+		managedPermissionIDs := make([]int, 0, len(s.expectedPermissions))
+		for _, code := range s.expectedPermissions {
+			if id, exists := permByCode[code]; exists {
+				managedPermissionIDs = append(managedPermissionIDs, id)
+			}
+		}
+		if _, err := s.client.RolePermission.Delete().
+			Where(
+				rolepermission.RoleIDEQ(r.ID),
+				rolepermission.TenantIDEQ(t.ID),
+				rolepermission.PermissionIDIn(managedPermissionIDs...),
+				rolepermission.PermissionIDNotIn(permIDs...),
+			).
+			Exec(ctx); err != nil {
+			s.sugar.Warnw("remove obsolete role permissions failed", "error", err, "role", r.Code)
 		}
 
 		// 为角色添加权限（直接写入 role_permissions 联表）

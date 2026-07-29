@@ -122,6 +122,9 @@ func TestRequireRole(t *testing.T) {
 
 func TestHasResourcePermission(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+	original := PermissionConfig.Mode
+	PermissionConfig.Mode = PermissionConfigModeHardcodeOnly
+	t.Cleanup(func() { PermissionConfig.Mode = original })
 
 	t.Run("Super Admin Has All Permissions", func(t *testing.T) {
 		result := hasResourcePermission(nil, "super_admin", "any_resource", "any_action", 1)
@@ -233,4 +236,14 @@ func TestCheckPermissionMatch_ResourceAdminIncludesActions(t *testing.T) {
 
 	assert.True(t, checkPermissionMatch(permissions, "ticket", "assign"))
 	assert.False(t, checkPermissionMatch(permissions, "incident", "assign"))
+}
+
+func TestDBOnlyPermissionModeDoesNotUseHardcodedFallback(t *testing.T) {
+	original := PermissionConfig.Mode
+	PermissionConfig.Mode = PermissionConfigModeDBOnly
+	t.Cleanup(func() { PermissionConfig.Mode = original })
+
+	permissions := loadPermissionsByMode(nil, "admin", 1)
+	assert.Empty(t, permissions)
+	assert.False(t, checkPermissionMatch(permissions, "ticket", "read"))
 }

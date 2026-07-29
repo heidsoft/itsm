@@ -47,8 +47,8 @@ func TestRegisteredMigrations(t *testing.T) {
 	// Test that RegisteredMigrations contains expected migrations
 	assert.NotEmpty(t, RegisteredMigrations)
 
-	// Check first migration is initial schema
-	assert.Equal(t, "001_initial_schema", RegisteredMigrations[0].Version)
+	assert.Equal(t, "007_add_change_execution_tables", RegisteredMigrations[0].Version)
+	assert.Equal(t, "001_initial_schema", LegacyMigrations[0].Version)
 }
 
 func TestGetMigrationSQL(t *testing.T) {
@@ -66,4 +66,67 @@ func TestGetMigrationSQL_InitialSchema(t *testing.T) {
 	// Test that initial schema returns empty (handled by Ent)
 	sql := GetMigrationSQL("001_initial_schema")
 	assert.Empty(t, sql)
+}
+
+func TestChangeExecutionTablesAreVersioned(t *testing.T) {
+	sql := GetMigrationSQL("007_add_change_execution_tables")
+	assert.NotEmpty(t, sql)
+
+	for _, table := range []string{
+		"change_approval_chains",
+		"change_risk_assessments",
+		"change_rollback_plans",
+		"change_rollback_executions",
+		"change_implementation_plans",
+	} {
+		assert.Contains(t, sql, "CREATE TABLE IF NOT EXISTS "+table)
+	}
+	assert.Contains(t, sql, "tenant_id BIGINT NOT NULL")
+	assert.Contains(t, sql, "ALTER COLUMN tenant_id DROP DEFAULT")
+	assert.Contains(t, sql, "ALTER TABLE change_approvals ALTER COLUMN tenant_id SET NOT NULL")
+	assert.Contains(t, sql, "rows without a resolvable tenant")
+	for _, table := range []string{
+		"change_approval_chains",
+		"change_risk_assessments",
+		"change_rollback_plans",
+		"change_rollback_executions",
+		"change_implementation_plans",
+	} {
+		assert.Contains(t, sql, "ALTER TABLE "+table+" ALTER COLUMN tenant_id DROP DEFAULT")
+	}
+}
+
+func TestPostSchemaMigrationsStartsAtUnifiedVersion(t *testing.T) {
+	migrations := PostSchemaMigrations()
+	assert.NotEmpty(t, migrations)
+	assert.Equal(t, "007_add_change_execution_tables", migrations[0].Version)
+	for _, migration := range migrations {
+		assert.GreaterOrEqual(t, migration.Version, "007_")
+		assert.NotEmpty(t, GetMigrationSQL(migration.Version))
+	}
+}
+
+func TestInitializationLedgerIsVersioned(t *testing.T) {
+	sql := GetMigrationSQL("008_add_initialization_ledger")
+	assert.NotEmpty(t, sql)
+	for _, table := range []string{
+		"initialization_installations",
+		"initialization_runs",
+		"initialization_component_attempts",
+		"initialization_managed_records",
+	} {
+		assert.Contains(t, sql, "CREATE TABLE IF NOT EXISTS "+table)
+	}
+	assert.Contains(t, sql, "fencing_token")
+	assert.Contains(t, sql, "lease_expires_at")
+	assert.Contains(t, sql, "UNIQUE(scope_type, scope_id, component)")
+}
+
+func TestMigrationSQLChecksumIsDeterministic(t *testing.T) {
+	sql := GetMigrationSQL("008_add_initialization_ledger")
+	first := checksumSQL(sql)
+	second := checksumSQL(sql)
+	assert.NotEmpty(t, first)
+	assert.Equal(t, first, second)
+	assert.NotEqual(t, first, checksumSQL(sql+" -- changed"))
 }

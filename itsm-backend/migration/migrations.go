@@ -1,8 +1,9 @@
 package migration
 
-// RegisteredMigrations contains all available migrations
-// Each migration has a version, description, SQL to apply, and SQL to rollback
-var RegisteredMigrations = []Migration{
+// LegacyMigrations documents the pre-unified migration history. These versions
+// were superseded by the Ent schema and must never be replayed by active
+// migration entry points.
+var LegacyMigrations = []Migration{
 	{
 		Version:     "001_initial_schema",
 		Description: "Initial schema created by Ent (handled separately)",
@@ -33,6 +34,28 @@ var RegisteredMigrations = []Migration{
 		Description: "Add change approvals table for change workflow",
 		RollbackSQL: `DROP TABLE IF EXISTS change_approvals;`,
 	},
+}
+
+// RegisteredMigrations is the single canonical active migration stream used
+// by bootstrap, migrate up, and migration status.
+var RegisteredMigrations = []Migration{
+	{
+		Version:     "007_add_change_execution_tables",
+		Description: "Add tenant-scoped change execution and rollback tables (irreversible; forward-fix only)",
+		RollbackSQL: "",
+	},
+	{
+		Version:     "008_add_initialization_ledger",
+		Description: "Add production initialization installation, run, component-attempt, and managed-record ledgers",
+		RollbackSQL: "",
+	},
+}
+
+// PostSchemaMigrations returns a defensive copy of the canonical active stream.
+func PostSchemaMigrations() []Migration {
+	result := make([]Migration, len(RegisteredMigrations))
+	copy(result, RegisteredMigrations)
+	return result
 }
 
 // GetMigrationSQL returns the SQL for a specific migration
@@ -112,6 +135,246 @@ CREATE TABLE IF NOT EXISTS change_approvals (
 CREATE INDEX IF NOT EXISTS idx_change_approvals_change ON change_approvals(change_id);
 CREATE INDEX IF NOT EXISTS idx_change_approvals_approver ON change_approvals(approver_id);
 CREATE INDEX IF NOT EXISTS idx_change_approvals_status ON change_approvals(status);
+`
+	case "007_add_change_execution_tables":
+		return `
+CREATE TABLE IF NOT EXISTS change_approvals (
+    id BIGSERIAL PRIMARY KEY,
+    change_id BIGINT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+    tenant_id BIGINT NOT NULL,
+    approver_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'pending',
+    comment TEXT,
+    approved_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE change_approvals ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS change_approval_chains (
+    id BIGSERIAL PRIMARY KEY,
+    change_id BIGINT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+    tenant_id BIGINT NOT NULL,
+    level INTEGER NOT NULL,
+    approver_id BIGINT NOT NULL,
+    role TEXT DEFAULT 'approver',
+    status TEXT DEFAULT 'pending',
+    is_required BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS change_risk_assessments (
+    id BIGSERIAL PRIMARY KEY,
+    change_id BIGINT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+    tenant_id BIGINT NOT NULL,
+    risk_level TEXT NOT NULL DEFAULT 'medium',
+    risk_description TEXT,
+    impact_analysis TEXT,
+    mitigation_measures TEXT,
+    contingency_plan TEXT,
+    risk_owner TEXT,
+    risk_review_date TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS change_rollback_plans (
+    id BIGSERIAL PRIMARY KEY,
+    change_id BIGINT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+    tenant_id BIGINT NOT NULL,
+    trigger_conditions JSONB,
+    rollback_steps JSONB,
+    responsible TEXT,
+    estimated_time INTEGER,
+    communication_plan TEXT,
+    test_plan TEXT,
+    approval_required BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS change_rollback_executions (
+    id BIGSERIAL PRIMARY KEY,
+    change_id BIGINT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+    tenant_id BIGINT NOT NULL,
+    rollback_plan_id BIGINT NOT NULL REFERENCES change_rollback_plans(id) ON DELETE CASCADE,
+    trigger_reason TEXT,
+    initiated_by BIGINT,
+    status TEXT NOT NULL DEFAULT 'initiated',
+    start_time TIMESTAMPTZ,
+    end_time TIMESTAMPTZ,
+    result TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS change_implementation_plans (
+    id BIGSERIAL PRIMARY KEY,
+    change_id BIGINT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+    tenant_id BIGINT NOT NULL,
+    phase TEXT,
+    description TEXT,
+    tasks JSONB,
+    responsible TEXT,
+    start_date TIMESTAMPTZ,
+    end_date TIMESTAMPTZ,
+    prerequisites JSONB,
+    dependencies JSONB,
+    success_criteria TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE change_approval_chains ADD COLUMN IF NOT EXISTS tenant_id BIGINT;
+ALTER TABLE change_risk_assessments ADD COLUMN IF NOT EXISTS tenant_id BIGINT;
+ALTER TABLE change_rollback_plans ADD COLUMN IF NOT EXISTS tenant_id BIGINT;
+ALTER TABLE change_rollback_executions ADD COLUMN IF NOT EXISTS tenant_id BIGINT;
+ALTER TABLE change_implementation_plans ADD COLUMN IF NOT EXISTS tenant_id BIGINT;
+
+UPDATE change_approvals ca
+SET tenant_id = c.tenant_id
+FROM changes c
+WHERE ca.change_id = c.id AND (ca.tenant_id IS NULL OR ca.tenant_id = 0);
+
+UPDATE change_approval_chains t SET tenant_id = c.tenant_id
+FROM changes c WHERE t.change_id = c.id AND (t.tenant_id IS NULL OR t.tenant_id = 0);
+UPDATE change_risk_assessments t SET tenant_id = c.tenant_id
+FROM changes c WHERE t.change_id = c.id AND (t.tenant_id IS NULL OR t.tenant_id = 0);
+UPDATE change_rollback_plans t SET tenant_id = c.tenant_id
+FROM changes c WHERE t.change_id = c.id AND (t.tenant_id IS NULL OR t.tenant_id = 0);
+UPDATE change_rollback_executions t SET tenant_id = c.tenant_id
+FROM changes c WHERE t.change_id = c.id AND (t.tenant_id IS NULL OR t.tenant_id = 0);
+UPDATE change_implementation_plans t SET tenant_id = c.tenant_id
+FROM changes c WHERE t.change_id = c.id AND (t.tenant_id IS NULL OR t.tenant_id = 0);
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM change_approvals WHERE tenant_id IS NULL OR tenant_id = 0)
+       OR EXISTS (SELECT 1 FROM change_approval_chains WHERE tenant_id IS NULL OR tenant_id = 0)
+       OR EXISTS (SELECT 1 FROM change_risk_assessments WHERE tenant_id IS NULL OR tenant_id = 0)
+       OR EXISTS (SELECT 1 FROM change_rollback_plans WHERE tenant_id IS NULL OR tenant_id = 0)
+       OR EXISTS (SELECT 1 FROM change_rollback_executions WHERE tenant_id IS NULL OR tenant_id = 0)
+       OR EXISTS (SELECT 1 FROM change_implementation_plans WHERE tenant_id IS NULL OR tenant_id = 0) THEN
+        RAISE EXCEPTION 'change execution tables contain rows without a resolvable tenant';
+    END IF;
+END $$;
+
+ALTER TABLE change_approvals ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE change_approvals ALTER COLUMN tenant_id DROP DEFAULT;
+ALTER TABLE change_approval_chains ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE change_approval_chains ALTER COLUMN tenant_id DROP DEFAULT;
+ALTER TABLE change_risk_assessments ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE change_risk_assessments ALTER COLUMN tenant_id DROP DEFAULT;
+ALTER TABLE change_rollback_plans ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE change_rollback_plans ALTER COLUMN tenant_id DROP DEFAULT;
+ALTER TABLE change_rollback_executions ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE change_rollback_executions ALTER COLUMN tenant_id DROP DEFAULT;
+ALTER TABLE change_implementation_plans ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE change_implementation_plans ALTER COLUMN tenant_id DROP DEFAULT;
+
+CREATE INDEX IF NOT EXISTS idx_change_approvals_tenant_id ON change_approvals(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_change_approval_chains_change_id ON change_approval_chains(change_id);
+CREATE INDEX IF NOT EXISTS idx_change_approval_chains_tenant_id ON change_approval_chains(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_change_risk_assessments_change_id ON change_risk_assessments(change_id);
+CREATE INDEX IF NOT EXISTS idx_change_risk_assessments_tenant_id ON change_risk_assessments(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_change_rollback_plans_change_id ON change_rollback_plans(change_id);
+CREATE INDEX IF NOT EXISTS idx_change_rollback_plans_tenant_id ON change_rollback_plans(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_change_rollback_executions_change_id ON change_rollback_executions(change_id);
+CREATE INDEX IF NOT EXISTS idx_change_rollback_executions_tenant_id ON change_rollback_executions(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_change_rollback_executions_plan_id ON change_rollback_executions(rollback_plan_id);
+CREATE INDEX IF NOT EXISTS idx_change_implementation_plans_change_id ON change_implementation_plans(change_id);
+CREATE INDEX IF NOT EXISTS idx_change_implementation_plans_tenant_id ON change_implementation_plans(tenant_id);
+`
+	case "008_add_initialization_ledger":
+		return `
+CREATE TABLE IF NOT EXISTS initialization_installations (
+    id BIGSERIAL PRIMARY KEY,
+    scope_type VARCHAR(16) NOT NULL CHECK (scope_type IN ('platform', 'tenant')),
+    scope_id BIGINT NOT NULL,
+    component VARCHAR(100) NOT NULL,
+    installed_version VARCHAR(64) NOT NULL DEFAULT '',
+    source_checksum VARCHAR(128) NOT NULL DEFAULT '',
+    status VARCHAR(24) NOT NULL CHECK (status IN ('pending', 'running', 'succeeded', 'failed', 'rolling_back')),
+    fencing_token BIGINT NOT NULL DEFAULT 0,
+    lease_owner VARCHAR(255) NOT NULL DEFAULT '',
+    heartbeat_at TIMESTAMPTZ,
+    lease_expires_at TIMESTAMPTZ,
+    last_run_id BIGINT,
+    error_code VARCHAR(100) NOT NULL DEFAULT '',
+    error_message TEXT NOT NULL DEFAULT '',
+    result_summary JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(scope_type, scope_id, component)
+);
+
+CREATE TABLE IF NOT EXISTS initialization_runs (
+    id BIGSERIAL PRIMARY KEY,
+    scope_type VARCHAR(16) NOT NULL CHECK (scope_type IN ('platform', 'tenant', 'batch')),
+    scope_id BIGINT NOT NULL,
+    target_version VARCHAR(64) NOT NULL,
+    release_version VARCHAR(64) NOT NULL,
+    requested_by VARCHAR(255) NOT NULL,
+    executor_id VARCHAR(255) NOT NULL,
+    status VARCHAR(24) NOT NULL CHECK (status IN ('pending', 'running', 'succeeded', 'failed', 'partial')),
+    started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_at TIMESTAMPTZ,
+    result_summary JSONB NOT NULL DEFAULT '{}'::jsonb,
+    error_message TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS initialization_component_attempts (
+    id BIGSERIAL PRIMARY KEY,
+    run_id BIGINT NOT NULL REFERENCES initialization_runs(id) ON DELETE CASCADE,
+    scope_type VARCHAR(16) NOT NULL,
+    scope_id BIGINT NOT NULL,
+    component VARCHAR(100) NOT NULL,
+    attempt INTEGER NOT NULL,
+    from_version VARCHAR(64) NOT NULL DEFAULT '',
+    target_version VARCHAR(64) NOT NULL,
+    source_checksum VARCHAR(128) NOT NULL,
+    fencing_token BIGINT NOT NULL,
+    status VARCHAR(24) NOT NULL CHECK (status IN ('pending', 'running', 'succeeded', 'failed', 'rolling_back')),
+    started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_at TIMESTAMPTZ,
+    error_code VARCHAR(100) NOT NULL DEFAULT '',
+    error_message TEXT NOT NULL DEFAULT '',
+    result_summary JSONB NOT NULL DEFAULT '{}'::jsonb,
+    rollback_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(run_id, component, attempt)
+);
+
+CREATE TABLE IF NOT EXISTS initialization_managed_records (
+    id BIGSERIAL PRIMARY KEY,
+    scope_type VARCHAR(16) NOT NULL,
+    scope_id BIGINT NOT NULL,
+    component VARCHAR(100) NOT NULL,
+    source_key VARCHAR(255) NOT NULL,
+    source_version VARCHAR(64) NOT NULL,
+    manifest_checksum VARCHAR(128) NOT NULL,
+    ownership_mode VARCHAR(24) NOT NULL DEFAULT 'managed',
+    managed_fields JSONB NOT NULL DEFAULT '[]'::jsonb,
+    last_applied_values JSONB NOT NULL DEFAULT '{}'::jsonb,
+    local_modified_at TIMESTAMPTZ,
+    deprecated BOOLEAN NOT NULL DEFAULT false,
+    stable_key_aliases JSONB NOT NULL DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(scope_type, scope_id, component, source_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_init_installations_status_lease
+    ON initialization_installations(status, lease_expires_at);
+CREATE INDEX IF NOT EXISTS idx_init_runs_scope_started
+    ON initialization_runs(scope_type, scope_id, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_init_attempts_run_component
+    ON initialization_component_attempts(run_id, component, attempt);
+CREATE INDEX IF NOT EXISTS idx_init_managed_scope_component
+    ON initialization_managed_records(scope_type, scope_id, component);
 `
 	default:
 		return ""

@@ -2,8 +2,11 @@ package migration
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
+	"os"
 	"time"
 
 	"go.uber.org/zap"
@@ -11,21 +14,29 @@ import (
 
 // Migration represents a single database migration
 type Migration struct {
-	Version     string
-	Description string
-	AppliedAt   *time.Time
-	RollbackSQL string
+	Version        string
+	Description    string
+	AppliedAt      *time.Time
+	RollbackSQL    string
+	Checksum       string
+	ExecutionMS    int64
+	ReleaseVersion string
 }
 
 // Migrator handles database migrations
 type Migrator struct {
-	db     *sql.DB
-	logger *zap.SugaredLogger
+	db             *sql.DB
+	logger         *zap.SugaredLogger
+	releaseVersion string
 }
 
 // NewMigrator creates a new Migrator instance
 func NewMigrator(db *sql.DB, logger *zap.SugaredLogger) *Migrator {
-	return &Migrator{db: db, logger: logger}
+	releaseVersion := os.Getenv("ITSM_RELEASE_VERSION")
+	if releaseVersion == "" {
+		releaseVersion = "unversioned"
+	}
+	return &Migrator{db: db, logger: logger, releaseVersion: releaseVersion}
 }
 
 // EnsureMigrationsTable creates the migrations tracking table if it doesn't exist
@@ -37,13 +48,21 @@ func (m *Migrator) EnsureMigrationsTable(ctx context.Context) error {
 		applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		rollback_sql TEXT
 	)`
-	_, err := m.db.ExecContext(ctx, query)
+	if _, err := m.db.ExecContext(ctx, query); err != nil {
+		return err
+	}
+	_, err := m.db.ExecContext(ctx, `
+		ALTER TABLE schema_migrations ADD COLUMN IF NOT EXISTS checksum VARCHAR(128) NOT NULL DEFAULT '';
+		ALTER TABLE schema_migrations ADD COLUMN IF NOT EXISTS execution_ms BIGINT NOT NULL DEFAULT 0;
+		ALTER TABLE schema_migrations ADD COLUMN IF NOT EXISTS release_version VARCHAR(64) NOT NULL DEFAULT '';
+	`)
 	return err
 }
 
 // GetAppliedMigrations returns all applied migrations sorted by version
 func (m *Migrator) GetAppliedMigrations(ctx context.Context) ([]Migration, error) {
-	query := `SELECT version, description, applied_at, rollback_sql FROM schema_migrations ORDER BY version`
+	query := `SELECT version, description, applied_at, rollback_sql, checksum, execution_ms, release_version
+		FROM schema_migrations ORDER BY version`
 	rows, err := m.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query migrations: %w", err)
@@ -54,7 +73,10 @@ func (m *Migrator) GetAppliedMigrations(ctx context.Context) ([]Migration, error
 	for rows.Next() {
 		var mig Migration
 		var rollback sql.NullString
-		if err := rows.Scan(&mig.Version, &mig.Description, &mig.AppliedAt, &rollback); err != nil {
+		if err := rows.Scan(
+			&mig.Version, &mig.Description, &mig.AppliedAt, &rollback,
+			&mig.Checksum, &mig.ExecutionMS, &mig.ReleaseVersion,
+		); err != nil {
 			return nil, fmt.Errorf("failed to scan migration: %w", err)
 		}
 		if rollback.Valid {
@@ -75,6 +97,13 @@ func (m *Migrator) GetPendingMigrations(ctx context.Context, available []Migrati
 	appliedVersions := make(map[string]bool)
 	for _, mig := range applied {
 		appliedVersions[mig.Version] = true
+		expected := checksumSQL(GetMigrationSQL(mig.Version))
+		if mig.Checksum != "" && expected != "" && mig.Checksum != expected {
+			return nil, fmt.Errorf(
+				"migration checksum mismatch for %s: applied=%s current=%s",
+				mig.Version, mig.Checksum, expected,
+			)
+		}
 	}
 
 	var pending []Migration
@@ -109,15 +138,20 @@ func (m *Migrator) ApplyMigration(ctx context.Context, mig Migration) error {
 
 	m.logger.Infow("Applying migration", "version", mig.Version, "description", mig.Description)
 
+	started := time.Now()
 	// Execute migration SQL
 	if _, err := tx.ExecContext(ctx, sql); err != nil {
 		return fmt.Errorf("failed to execute migration SQL: %w", err)
 	}
 
 	// Record migration
-	_, err = tx.ExecContext(ctx,
-		`INSERT INTO schema_migrations (version, description, applied_at, rollback_sql) VALUES ($1, $2, $3, $4)`,
-		mig.Version, mig.Description, time.Now(), mig.RollbackSQL)
+	executionMS := time.Since(started).Milliseconds()
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO schema_migrations
+			(version, description, applied_at, rollback_sql, checksum, execution_ms, release_version)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, mig.Version, mig.Description, time.Now(), mig.RollbackSQL,
+		checksumSQL(sql), executionMS, m.releaseVersion)
 	if err != nil {
 		return fmt.Errorf("failed to record migration: %w", err)
 	}
@@ -128,6 +162,14 @@ func (m *Migrator) ApplyMigration(ctx context.Context, mig Migration) error {
 
 	m.logger.Infow("Migration applied successfully", "version", mig.Version)
 	return nil
+}
+
+func checksumSQL(sql string) string {
+	if sql == "" {
+		return ""
+	}
+	sum := sha256.Sum256([]byte(sql))
+	return hex.EncodeToString(sum[:])
 }
 
 // RollbackMigration rolls back a single migration

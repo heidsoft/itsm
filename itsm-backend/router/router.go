@@ -3,6 +3,7 @@ package router
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"io"
 	"os"
@@ -182,6 +183,7 @@ type RouterConfig struct {
 	JWTSecret string
 	Logger    *zap.SugaredLogger
 	Client    *ent.Client
+	RawDB     *sql.DB
 
 	// CSRF configuration
 	CSRFEnabled bool
@@ -354,6 +356,14 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// /healthz 别名，兼容 K8s / 常见探针路径
 		public.GET("/healthz", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok", "timestamp": time.Now()})
+		})
+		public.GET("/readyz", func(c *gin.Context) {
+			readiness := checkInitializationReadiness(c.Request.Context(), config.RawDB)
+			status := 200
+			if !readiness.Ready {
+				status = 503
+			}
+			c.JSON(status, readiness)
 		})
 		public.GET("/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{"version": "1.0.0", "build": "dev"})

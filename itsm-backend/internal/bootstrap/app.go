@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -41,7 +42,9 @@ import (
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
+	"itsm-backend/internal/initialization"
 	"itsm-backend/middleware"
+	"itsm-backend/migration"
 	"itsm-backend/pkg/seeder"
 	repository_ticket "itsm-backend/repository/ticket"
 	"itsm-backend/router"
@@ -164,17 +167,18 @@ func NewApplication() *Application {
 		sugar,
 	)
 
-	// 3. 初始化权限配置（数据库优先，不存在时使用硬编码权限）
-	middleware.PermissionConfig.Mode = middleware.PermissionConfigModeFallback
+	// 3. 生产权限必须以数据库为唯一事实来源并在缺失时 fail closed。
+	// 只有显式 development/test/local 环境允许使用开发期硬编码回退。
+	configurePermissionMode(os.Getenv("ENV"))
+
+	if err := ValidateWebStartupConfig(cfg); err != nil {
+		log.Fatalf("Unsafe web startup configuration: %v", err)
+	}
 
 	// 3. 初始化数据库连接（带 RLS 装饰器，默认 off 模式=透明）
 	client, err := database.InitDatabaseWithRLS(&cfg.Database, &cfg.RLS, sugar)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
-	}
-
-	if err := InitializeStorage(cfg, client, sugar); err != nil {
-		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 
 	// 6. 初始化服务层 & 控制器
@@ -646,6 +650,7 @@ func NewApplication() *Application {
 		JWTSecret:                       cfg.JWT.Secret,
 		Logger:                          sugar,
 		Client:                          client,
+		RawDB:                           database.GetRawDB(),
 		CSRFEnabled:                     cfg.Security.CSRFEnabled,
 		RedisRateLimiter:                redisRateLimiter,
 		TicketController:                ticketController,
@@ -758,6 +763,30 @@ func NewApplication() *Application {
 	}
 }
 
+func configurePermissionMode(environment string) {
+	switch strings.ToLower(strings.TrimSpace(environment)) {
+	case "development", "dev", "test", "local":
+		middleware.PermissionConfig.Mode = middleware.PermissionConfigModeFallback
+	default:
+		middleware.PermissionConfig.Mode = middleware.PermissionConfigModeDBOnly
+	}
+}
+
+// ValidateWebStartupConfig prevents schema or seed mutations from running in
+// the long-lived HTTP process. Deployments must execute them through the
+// explicit ITSM_BOOTSTRAP_ONLY job before starting application instances.
+func ValidateWebStartupConfig(cfg *config.Config) error {
+	if cfg == nil {
+		return fmt.Errorf("configuration is required")
+	}
+	if cfg.Deployment.AutoMigrate || cfg.Deployment.AutoSeed {
+		return fmt.Errorf(
+			"ITSM_AUTO_MIGRATE and ITSM_AUTO_SEED are bootstrap-job options; run with ITSM_BOOTSTRAP_ONLY=true",
+		)
+	}
+	return nil
+}
+
 func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.SugaredLogger) error {
 	// RLS：schema 创建 / seed / DDL 属于跨租户操作，必须显式声明 system bypass
 	ctx := tenantctx.SystemContext(context.Background(), "bootstrap:initialize_storage",
@@ -773,136 +802,11 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 		if err := client.Schema.Create(ctx); err != nil {
 			return fmt.Errorf("create schema resources: %w", err)
 		}
-		sugar.Infow("database schema ensured", "deployment_mode", cfg.Deployment.Mode)
-	}
-
-	// Create non-Ent tables for change management approval chain
-	if rawDB := database.GetRawDB(); rawDB != nil {
-		_, err := rawDB.ExecContext(ctx, `
-			CREATE TABLE IF NOT EXISTS change_approvals (
-				id SERIAL PRIMARY KEY,
-				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
-				tenant_id INT NOT NULL DEFAULT 0,
-				approver_id INT NOT NULL,
-				status TEXT NOT NULL DEFAULT 'pending',
-				comment TEXT,
-				approved_at TIMESTAMP,
-				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-			);
-			CREATE TABLE IF NOT EXISTS change_approval_chains (
-				id SERIAL PRIMARY KEY,
-				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
-				tenant_id INT NOT NULL DEFAULT 0,
-				level INT NOT NULL,
-				approver_id INT NOT NULL,
-				role TEXT DEFAULT 'approver',
-				status TEXT DEFAULT 'pending',
-				is_required BOOLEAN DEFAULT true,
-				created_at TIMESTAMP NOT NULL DEFAULT NOW()
-			);
-			CREATE TABLE IF NOT EXISTS change_risk_assessments (
-				id SERIAL PRIMARY KEY,
-				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
-				tenant_id INT NOT NULL DEFAULT 0,
-				risk_level TEXT NOT NULL DEFAULT 'medium',
-				risk_description TEXT,
-				impact_analysis TEXT,
-				mitigation_measures TEXT,
-				contingency_plan TEXT,
-				risk_owner TEXT,
-				risk_review_date TIMESTAMP,
-				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-			);
-			CREATE TABLE IF NOT EXISTS change_rollback_plans (
-				id SERIAL PRIMARY KEY,
-				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
-				tenant_id INT NOT NULL DEFAULT 0,
-				trigger_conditions JSONB,
-				rollback_steps JSONB,
-				responsible TEXT,
-				estimated_time INT,
-				communication_plan TEXT,
-				test_plan TEXT,
-				approval_required BOOLEAN DEFAULT false,
-				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-			);
-			CREATE TABLE IF NOT EXISTS change_rollback_executions (
-				id SERIAL PRIMARY KEY,
-				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
-				tenant_id INT NOT NULL DEFAULT 0,
-				rollback_plan_id INT NOT NULL REFERENCES change_rollback_plans(id) ON DELETE CASCADE,
-				trigger_reason TEXT,
-				initiated_by INT,
-				status TEXT NOT NULL DEFAULT 'initiated',
-				start_time TIMESTAMP,
-				end_time TIMESTAMP,
-				result TEXT,
-				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-			);
-			CREATE TABLE IF NOT EXISTS change_implementation_plans (
-				id SERIAL PRIMARY KEY,
-				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
-				tenant_id INT NOT NULL DEFAULT 0,
-				phase TEXT,
-				description TEXT,
-				tasks JSONB,
-				responsible TEXT,
-				start_date TIMESTAMP,
-				end_date TIMESTAMP,
-				prerequisites JSONB,
-				dependencies JSONB,
-				success_criteria TEXT,
-				status TEXT NOT NULL DEFAULT 'pending',
-				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-			);
-			-- 兼容旧库：如果表已存在但缺 tenant_id 列，补上并从 changes 回填
-			ALTER TABLE change_approvals       ADD COLUMN IF NOT EXISTS tenant_id INT NOT NULL DEFAULT 0;
-			ALTER TABLE change_approval_chains ADD COLUMN IF NOT EXISTS tenant_id INT NOT NULL DEFAULT 0;
-			ALTER TABLE change_rollback_plans      ADD COLUMN IF NOT EXISTS tenant_id INT NOT NULL DEFAULT 0;
-			ALTER TABLE change_rollback_executions ADD COLUMN IF NOT EXISTS tenant_id INT NOT NULL DEFAULT 0;
-			ALTER TABLE change_implementation_plans ADD COLUMN IF NOT EXISTS tenant_id INT NOT NULL DEFAULT 0;
-			UPDATE change_approvals ca
-				SET tenant_id = c.tenant_id
-				FROM changes c
-				WHERE ca.change_id = c.id AND ca.tenant_id = 0;
-			UPDATE change_approval_chains cac
-				SET tenant_id = c.tenant_id
-				FROM changes c
-				WHERE cac.change_id = c.id AND cac.tenant_id = 0;
-			UPDATE change_rollback_plans crp
-				SET tenant_id = c.tenant_id
-				FROM changes c
-				WHERE crp.change_id = c.id AND crp.tenant_id = 0;
-			UPDATE change_rollback_executions cre
-				SET tenant_id = c.tenant_id
-				FROM changes c
-				WHERE cre.change_id = c.id AND cre.tenant_id = 0;
-			UPDATE change_implementation_plans cip
-				SET tenant_id = c.tenant_id
-				FROM changes c
-				WHERE cip.change_id = c.id AND cip.tenant_id = 0;
-			CREATE INDEX IF NOT EXISTS idx_change_approvals_change_id ON change_approvals(change_id);
-			CREATE INDEX IF NOT EXISTS idx_change_approvals_tenant_id ON change_approvals(tenant_id);
-			CREATE INDEX IF NOT EXISTS idx_change_approval_chains_change_id ON change_approval_chains(change_id);
-			CREATE INDEX IF NOT EXISTS idx_change_approval_chains_tenant_id ON change_approval_chains(tenant_id);
-			CREATE INDEX IF NOT EXISTS idx_change_risk_assessments_change_id ON change_risk_assessments(change_id);
-			CREATE INDEX IF NOT EXISTS idx_change_risk_assessments_tenant_id ON change_risk_assessments(tenant_id);
-			CREATE INDEX IF NOT EXISTS idx_change_rollback_plans_change_id ON change_rollback_plans(change_id);
-			CREATE INDEX IF NOT EXISTS idx_change_rollback_plans_tenant_id ON change_rollback_plans(tenant_id);
-			CREATE INDEX IF NOT EXISTS idx_change_rollback_executions_change_id ON change_rollback_executions(change_id);
-			CREATE INDEX IF NOT EXISTS idx_change_rollback_executions_tenant_id ON change_rollback_executions(tenant_id);
-			CREATE INDEX IF NOT EXISTS idx_change_rollback_executions_plan_id ON change_rollback_executions(rollback_plan_id);
-			CREATE INDEX IF NOT EXISTS idx_change_implementation_plans_change_id ON change_implementation_plans(change_id);
-			CREATE INDEX IF NOT EXISTS idx_change_implementation_plans_tenant_id ON change_implementation_plans(tenant_id);
-		`)
-		if err != nil {
-			sugar.Warnw("failed to create change approval tables (non-fatal)", "error", err)
+		migrator := migration.NewMigrator(database.GetRawDB(), sugar)
+		if err := runPostSchemaMigrations(ctx, migrator); err != nil {
+			return fmt.Errorf("apply versioned post-schema migrations: %w", err)
 		}
+		sugar.Infow("database schema ensured", "deployment_mode", cfg.Deployment.Mode)
 	}
 
 	if cfg.Deployment.AutoSeed {
@@ -922,10 +826,65 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 			}
 		}
 		s := seeder.NewSeeder(client, sugar, cfg)
-		s.SeedAll(ctx)
-		sugar.Infow("seed completed", "deployment_mode", cfg.Deployment.Mode)
+		components, err := seeder.ProductionInitializers(s)
+		if err != nil {
+			return fmt.Errorf("create production initializers: %w", err)
+		}
+		store, err := initialization.NewSQLStore(database.GetRawDB())
+		if err != nil {
+			return fmt.Errorf("create initialization store: %w", err)
+		}
+		engine, err := initialization.NewEngine(
+			store,
+			components,
+			30*time.Second,
+		)
+		if err != nil {
+			return fmt.Errorf("create initialization engine: %w", err)
+		}
+		executorID, err := os.Hostname()
+		if err != nil {
+			executorID = "bootstrap-job"
+		}
+		executorID, err = initialization.NewExecutorID(executorID)
+		if err != nil {
+			return fmt.Errorf("create initialization executor id: %w", err)
+		}
+		releaseVersion := strings.TrimSpace(os.Getenv("ITSM_RELEASE_VERSION"))
+		if releaseVersion == "" {
+			releaseVersion = "unversioned"
+		}
+		runID, err := engine.Apply(ctx, initialization.Request{
+			Scope:          initialization.Scope{Type: "platform", ID: 0},
+			TargetVersion:  seeder.CurrentTenantTemplateVersion,
+			ReleaseVersion: releaseVersion,
+			RequestedBy:    "bootstrap-job",
+			ExecutorID:     executorID,
+		})
+		if err != nil {
+			return fmt.Errorf("initialize production defaults (run %d): %w", runID, err)
+		}
+		sugar.Infow("seed completed", "deployment_mode", cfg.Deployment.Mode, "initialization_run_id", runID)
 	}
 
+	return nil
+}
+
+type postSchemaMigrator interface {
+	EnsureMigrationsTable(context.Context) error
+	RunMigrations(context.Context, []migration.Migration) (int, error)
+}
+
+func runPostSchemaMigrations(ctx context.Context, migrator postSchemaMigrator) error {
+	if migrator == nil {
+		return fmt.Errorf("migration runner is required")
+	}
+	if err := migrator.EnsureMigrationsTable(ctx); err != nil {
+		return fmt.Errorf("ensure migration ledger: %w", err)
+	}
+	if _, err := migrator.RunMigrations(ctx, migration.PostSchemaMigrations()); err != nil {
+		return fmt.Errorf("run post-schema migrations: %w", err)
+	}
 	return nil
 }
 

@@ -107,6 +107,19 @@ func TestSetupRoutes_HealthEndpoint(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "status")
 }
 
+func TestSetupRoutes_ReadinessFailsClosedWithoutInitializationLedger(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	SetupRoutes(r, &RouterConfig{Logger: zaptest.NewLogger(t).Sugar()})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/readyz", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+	assert.Contains(t, w.Body.String(), `"ready":false`)
+}
+
 func TestSetupRoutes_VersionEndpoint(t *testing.T) {
 	r, client := setupTestEngine(t)
 	defer client.Close()

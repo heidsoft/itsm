@@ -10,7 +10,6 @@ package bootstrap
 // 调用方式：在 main.go 启动早期调用 GuardDefaultCredentials(environment)
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -77,15 +76,6 @@ func guardCredentials(
 				Code:     "WEAK_DB_PASSWORD",
 				Message:  "检测到生产环境 DB_PASSWORD 为常见弱密码。建议使用密码管理器生成 16+ 字符强密码。",
 			})
-		}
-	}
-
-	// 报告
-	for _, r := range risks {
-		if r.Severity == "fatal" {
-			fmt.Fprintf(os.Stderr, "\n[FATAL %s] %s\n\n", r.Code, r.Message)
-		} else {
-			fmt.Fprintf(os.Stderr, "\n[WARN %s] %s\n\n", r.Code, r.Message)
 		}
 	}
 

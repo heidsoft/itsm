@@ -2,16 +2,25 @@ package seeder
 
 import (
 	"context"
+	"errors"
+	"strconv"
 	"testing"
 
 	"itsm-backend/config"
+	"itsm-backend/ent/citype"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/menu"
+	"itsm-backend/ent/permission"
+	"itsm-backend/ent/role"
+	"itsm-backend/ent/rolepermission"
 	_ "itsm-backend/ent/runtime"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/standardchange"
+	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/initialization"
 	"itsm-backend/pkg/tenantmode"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -236,4 +245,260 @@ func TestSeedAdminPreservesExistingCredentials(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, string(originalHash), after.PasswordHash)
 	assert.Equal(t, user.RoleAdmin, after.Role)
+}
+
+func TestSeedProductionValidatesAndIsIdempotent(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
+
+	require.NoError(t, seeder.SeedProduction(ctx))
+	first := productionSeedCounts{
+		tenants:         mustCount(t, func() (int, error) { return seeder.client.Tenant.Query().Count(ctx) }),
+		users:           mustCount(t, func() (int, error) { return seeder.client.User.Query().Count(ctx) }),
+		roles:           mustCount(t, func() (int, error) { return seeder.client.Role.Query().Count(ctx) }),
+		permissions:     mustCount(t, func() (int, error) { return seeder.client.Permission.Query().Count(ctx) }),
+		rolePermissions: mustCount(t, func() (int, error) { return seeder.client.RolePermission.Query().Count(ctx) }),
+		menus:           mustCount(t, func() (int, error) { return seeder.client.Menu.Query().Count(ctx) }),
+	}
+
+	require.NoError(t, seeder.SeedProduction(ctx))
+	second := productionSeedCounts{
+		tenants:         mustCount(t, func() (int, error) { return seeder.client.Tenant.Query().Count(ctx) }),
+		users:           mustCount(t, func() (int, error) { return seeder.client.User.Query().Count(ctx) }),
+		roles:           mustCount(t, func() (int, error) { return seeder.client.Role.Query().Count(ctx) }),
+		permissions:     mustCount(t, func() (int, error) { return seeder.client.Permission.Query().Count(ctx) }),
+		rolePermissions: mustCount(t, func() (int, error) { return seeder.client.RolePermission.Query().Count(ctx) }),
+		menus:           mustCount(t, func() (int, error) { return seeder.client.Menu.Query().Count(ctx) }),
+	}
+
+	assert.Equal(t, first, second)
+}
+
+func TestProductionInitializersExposeCompleteComponentDAG(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
+	components, err := ProductionInitializers(seeder)
+	require.NoError(t, err)
+	require.Len(t, components, len(ProductionComponentNames))
+
+	actualNames := make([]string, 0, len(components))
+	for _, component := range components {
+		actualNames = append(actualNames, component.Name())
+		plan, err := component.Plan(ctx, initialization.Scope{Type: "platform", ID: 0})
+		require.NoError(t, err)
+		assert.Equal(t, CurrentTenantTemplateVersion, plan.TargetVersion)
+		assert.NotEmpty(t, plan.SourceChecksum)
+	}
+	assert.Equal(t, ProductionComponentNames, actualNames)
+}
+
+func TestProductionInitializersApplyAndVerifyCompleteDAG(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
+	components, err := ProductionInitializers(seeder)
+	require.NoError(t, err)
+	scope := initialization.Scope{Type: "platform", ID: 0}
+
+	for index, component := range components {
+		plan, err := component.Plan(ctx, scope)
+		require.NoError(t, err)
+		_, err = component.Apply(ctx, scope, plan, int64(index+1))
+		require.NoError(t, err, component.Name())
+		require.NoError(t, component.Verify(ctx, scope, plan), component.Name())
+	}
+}
+
+func TestProductionComponentRollsBackWhenTransactionalVerificationFails(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
+	components, err := ProductionInitializers(seeder)
+	require.NoError(t, err)
+	identity := components[0].(*productionComponentInitializer)
+	identity.verify = func(context.Context, *Seeder) error {
+		return errors.New("injected verification failure")
+	}
+
+	plan, err := identity.Plan(ctx, initialization.Scope{Type: "platform", ID: 0})
+	require.NoError(t, err)
+	_, err = identity.Apply(
+		ctx,
+		initialization.Scope{Type: "platform", ID: 0},
+		plan,
+		1,
+	)
+	require.ErrorContains(t, err, "injected verification failure")
+
+	tenantCount, err := seeder.client.Tenant.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, tenantCount)
+	userCount, err := seeder.client.User.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, userCount)
+}
+
+func TestSeedProductionRepairsPartialRBACAndMenuInitialization(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
+	require.NoError(t, seeder.SeedProduction(ctx))
+	rootTenant, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+	require.NoError(t, err)
+
+	_, err = seeder.client.Menu.Delete().
+		Where(menu.PathEQ(seeder.expectedMenus[0]), menu.TenantIDEQ(rootTenant.ID)).
+		Exec(ctx)
+	require.NoError(t, err)
+	deletedPermission, err := seeder.client.Permission.Query().
+		Where(permission.CodeEQ(seeder.expectedPermissions[0]), permission.TenantIDEQ(rootTenant.ID)).
+		Only(ctx)
+	require.NoError(t, err)
+	_, err = seeder.client.RolePermission.Delete().
+		Where(rolepermission.PermissionIDEQ(deletedPermission.ID)).
+		Exec(ctx)
+	require.NoError(t, err)
+	err = seeder.client.Permission.DeleteOne(deletedPermission).Exec(ctx)
+	require.NoError(t, err)
+	_, err = seeder.client.Role.Delete().
+		Where(role.CodeEQ(seeder.config.Roles[0].Code), role.TenantIDEQ(rootTenant.ID)).
+		Exec(ctx)
+	require.NoError(t, err)
+
+	require.NoError(t, seeder.SeedProduction(ctx))
+
+	menuExists, err := seeder.client.Menu.Query().
+		Where(menu.PathEQ(seeder.expectedMenus[0]), menu.TenantIDEQ(rootTenant.ID)).
+		Exist(ctx)
+	require.NoError(t, err)
+	assert.True(t, menuExists)
+	permissionExists, err := seeder.client.Permission.Query().
+		Where(permission.CodeEQ(seeder.expectedPermissions[0]), permission.TenantIDEQ(rootTenant.ID)).
+		Exist(ctx)
+	require.NoError(t, err)
+	assert.True(t, permissionExists)
+	roleExists, err := seeder.client.Role.Query().
+		Where(role.CodeEQ(seeder.config.Roles[0].Code), role.TenantIDEQ(rootTenant.ID)).
+		Exist(ctx)
+	require.NoError(t, err)
+	assert.True(t, roleExists)
+}
+
+func TestSeedProductionPreservesTenantOwnedGrantOnManagedRole(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
+	require.NoError(t, seeder.SeedProduction(ctx))
+	rootTenant, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+	require.NoError(t, err)
+	adminRole, err := seeder.client.Role.Query().
+		Where(role.CodeEQ("sysadmin"), role.TenantIDEQ(rootTenant.ID)).
+		Only(ctx)
+	require.NoError(t, err)
+	customPermission, err := seeder.client.Permission.Create().
+		SetCode("customer:custom").
+		SetName("Customer Custom").
+		SetResource("customer").
+		SetAction("custom").
+		SetTenantID(rootTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = seeder.client.RolePermission.Create().
+		SetRoleID(adminRole.ID).
+		SetPermissionID(customPermission.ID).
+		SetTenantID(rootTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	require.NoError(t, seeder.SeedProduction(ctx))
+
+	exists, err := seeder.client.RolePermission.Query().
+		Where(
+			rolepermission.RoleIDEQ(adminRole.ID),
+			rolepermission.PermissionIDEQ(customPermission.ID),
+			rolepermission.TenantIDEQ(rootTenant.ID),
+		).
+		Exist(ctx)
+	require.NoError(t, err)
+	assert.True(t, exists)
+}
+
+func TestProvisionTenantReadinessAcrossDeploymentModes(t *testing.T) {
+	for _, mode := range []string{
+		tenantmode.DeploymentModePrivate,
+		tenantmode.DeploymentModeSaaS,
+		tenantmode.DeploymentModeSaaSMSP,
+	} {
+		t.Run(mode, func(t *testing.T) {
+			seeder, ctx := newTestSeeder(t, mode)
+			require.NoError(t, seeder.SeedProduction(ctx))
+			target, err := seeder.client.Tenant.Create().
+				SetName("Production Customer").
+				SetCode("production-customer").
+				SetType(tenant.TypeSaasCustomer).
+				Save(ctx)
+			require.NoError(t, err)
+
+			require.NoError(t, seeder.ProvisionTenant(ctx, target.ID, CurrentTenantTemplateVersion))
+			firstRoles, err := seeder.client.Role.Query().Where(role.TenantIDEQ(target.ID)).Count(ctx)
+			require.NoError(t, err)
+			require.Positive(t, firstRoles)
+			require.NoError(t, seeder.validateTenantReadiness(ctx, target.ID))
+
+			_, err = seeder.client.Role.Create().
+				SetName("Customer Custom Role").SetCode("customer_custom").
+				SetDescription("tenant-owned").SetTenantID(target.ID).Save(ctx)
+			require.NoError(t, err)
+			_, err = seeder.client.Menu.Create().
+				SetName("Customer Custom Menu").SetPath("/customer/custom").
+				SetTenantID(target.ID).Save(ctx)
+			require.NoError(t, err)
+
+			require.NoError(t, seeder.ProvisionTenant(ctx, target.ID, CurrentTenantTemplateVersion))
+			secondRoles, err := seeder.client.Role.Query().Where(role.TenantIDEQ(target.ID)).Count(ctx)
+			require.NoError(t, err)
+			assert.Equal(t, firstRoles+1, secondRoles)
+
+			foreignPermission, err := seeder.client.Permission.Query().
+				Where(permission.TenantIDEQ(target.ID)).
+				First(ctx)
+			require.NoError(t, err)
+			sourceHasForeignID, err := seeder.client.Permission.Query().
+				Where(permission.IDEQ(foreignPermission.ID), permission.TenantIDNEQ(target.ID)).
+				Exist(ctx)
+			require.NoError(t, err)
+			assert.False(t, sourceHasForeignID)
+		})
+	}
+}
+
+func TestProvisionTenantRollsBackWhenSourceTemplateIsIncomplete(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModeSaaS)
+	require.NoError(t, seeder.SeedProduction(ctx))
+	root, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+	require.NoError(t, err)
+	_, err = seeder.client.CIType.Delete().Where(citype.TenantIDEQ(root.ID)).Exec(ctx)
+	require.NoError(t, err)
+	target, err := seeder.client.Tenant.Create().
+		SetName("Incomplete Target").SetCode("incomplete-target").
+		SetType(tenant.TypeSaasCustomer).Save(ctx)
+	require.NoError(t, err)
+
+	err = seeder.ProvisionTenant(ctx, target.ID, CurrentTenantTemplateVersion)
+	require.ErrorContains(t, err, "validate tenant template before commit")
+
+	roleCount, err := seeder.client.Role.Query().Where(role.TenantIDEQ(target.ID)).Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, roleCount)
+	versionExists, err := seeder.client.SystemConfig.Query().
+		Where(systemconfig.KeyEQ("tenant.bootstrap.version." + strconv.Itoa(target.ID))).
+		Exist(ctx)
+	require.NoError(t, err)
+	assert.False(t, versionExists)
+}
+
+type productionSeedCounts struct {
+	tenants         int
+	users           int
+	roles           int
+	permissions     int
+	rolePermissions int
+	menus           int
+}
+
+func mustCount(t *testing.T, query func() (int, error)) int {
+	t.Helper()
+	count, err := query()
+	require.NoError(t, err)
+	return count
 }

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -59,8 +61,11 @@ type mockRepository struct {
 	changes       map[int]*Change
 	approvals     map[int]*ApprovalRecord
 	riskAssess    map[int]*RiskAssessment
+	chains        map[int][]*ApprovalChain
 	nextID        int
 	approverValid bool
+	submitErr     error
+	replaceErr    error
 }
 
 func newMockRepository() *mockRepository {
@@ -68,6 +73,7 @@ func newMockRepository() *mockRepository {
 		changes:       make(map[int]*Change),
 		approvals:     make(map[int]*ApprovalRecord),
 		riskAssess:    make(map[int]*RiskAssessment),
+		chains:        make(map[int][]*ApprovalChain),
 		nextID:        1,
 		approverValid: true,
 	}
@@ -148,6 +154,30 @@ func (m *mockRepository) GetStats(ctx context.Context, tenantID int) (*Stats, er
 	return stats, nil
 }
 
+func (m *mockRepository) SubmitForApproval(ctx context.Context, changeID, tenantID int, approverIDs []int, comment string) error {
+	if m.submitErr != nil {
+		return m.submitErr
+	}
+	c, ok := m.changes[changeID]
+	if !ok || c.TenantID != tenantID || c.Status != "draft" {
+		return fmt.Errorf("change is not an editable draft")
+	}
+	c.Status = "pending"
+	for _, approverID := range approverIDs {
+		record := &ApprovalRecord{
+			ID:         m.nextID,
+			ChangeID:   changeID,
+			TenantID:   tenantID,
+			ApproverID: approverID,
+			Status:     "pending",
+			CreatedAt:  time.Now(),
+		}
+		m.nextID++
+		m.approvals[record.ID] = record
+	}
+	return nil
+}
+
 func (m *mockRepository) CreateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error) {
 	r.ID = m.nextID
 	m.nextID++
@@ -175,11 +205,19 @@ func (m *mockRepository) CreateApprovalChain(ctx context.Context, chain []*Appro
 	return nil
 }
 
-func (m *mockRepository) GetApprovalChain(ctx context.Context, changeID int) ([]*ApprovalChain, error) {
-	return []*ApprovalChain{}, nil
+func (m *mockRepository) GetApprovalChain(ctx context.Context, changeID int, tenantID int) ([]*ApprovalChain, error) {
+	return m.chains[changeID], nil
 }
 
-func (m *mockRepository) DeleteApprovalChain(ctx context.Context, changeID int) error {
+func (m *mockRepository) DeleteApprovalChain(ctx context.Context, changeID int, tenantID int) error {
+	return nil
+}
+
+func (m *mockRepository) ReplaceApprovalChain(ctx context.Context, changeID, tenantID int, chain []*ApprovalChain) error {
+	if m.replaceErr != nil {
+		return m.replaceErr
+	}
+	m.chains[changeID] = append([]*ApprovalChain(nil), chain...)
 	return nil
 }
 
@@ -671,6 +709,41 @@ func TestChangeController_GetApprovalSummary(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 	assert.Equal(t, common.SuccessCode, response.Code)
+}
+
+func TestSubmitChangeAtomicFailureLeavesDraftUnchanged(t *testing.T) {
+	logger := zaptest.NewLogger(t).Sugar()
+	repo := newMockRepository()
+	repo.changes[1] = &Change{ID: 1, TenantID: 1, CreatedBy: 1, Status: "draft"}
+	repo.submitErr = errors.New("injected transaction failure")
+	svc := NewService(repo, nil, logger)
+
+	_, err := svc.SubmitChange(context.Background(), 1, 1, 1, &dto.SubmitChangeRequest{
+		ApproverIDs: []int{1},
+		Comment:     "review",
+	})
+
+	require.ErrorContains(t, err, "提交变更审批失败")
+	require.Equal(t, "draft", repo.changes[1].Status)
+	require.Empty(t, repo.approvals)
+	require.Empty(t, repo.chains[1])
+}
+
+func TestConfigureWorkflowAtomicFailurePreservesOldChain(t *testing.T) {
+	logger := zaptest.NewLogger(t).Sugar()
+	repo := newMockRepository()
+	repo.changes[1] = &Change{ID: 1, TenantID: 1, CreatedBy: 1, Status: "draft"}
+	oldChain := []*ApprovalChain{{ID: 10, ChangeID: 1, TenantID: 1, Level: 1, ApproverID: 1}}
+	repo.chains[1] = oldChain
+	repo.replaceErr = errors.New("injected transaction failure")
+	svc := NewService(repo, nil, logger)
+
+	err := svc.ConfigureWorkflow(context.Background(), 1, 1, []*ApprovalChain{
+		{Level: 1, ApproverID: 2},
+	})
+
+	require.ErrorContains(t, err, "failed to replace approval chain")
+	require.Equal(t, oldChain, repo.chains[1])
 }
 
 // TestChangeController_GetRiskAssessment tests GET /api/v1/changes/:id/risk-assessment

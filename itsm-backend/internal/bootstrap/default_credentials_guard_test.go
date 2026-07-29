@@ -4,8 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"itsm-backend/config"
 	"itsm-backend/ent/enttest"
 	_ "itsm-backend/ent/runtime"
+	"itsm-backend/middleware"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
@@ -123,4 +125,40 @@ func TestNeedsBootstrapAdminTracksPersistedAdministrator(t *testing.T) {
 	needsAdmin, err = needsBootstrapAdmin(ctx, client)
 	require.NoError(t, err)
 	assert.False(t, needsAdmin)
+}
+
+func TestValidateWebStartupConfigRejectsMutationFlags(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		autoMigrate bool
+		autoSeed    bool
+	}{
+		{name: "auto migrate", autoMigrate: true},
+		{name: "auto seed", autoSeed: true},
+		{name: "both", autoMigrate: true, autoSeed: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := &config.Config{Deployment: config.DeploymentConfig{
+				AutoMigrate: tc.autoMigrate,
+				AutoSeed:    tc.autoSeed,
+			}}
+			assert.Error(t, ValidateWebStartupConfig(cfg))
+		})
+	}
+
+	assert.NoError(t, ValidateWebStartupConfig(&config.Config{}))
+}
+
+func TestConfigurePermissionModeFailsClosedByDefault(t *testing.T) {
+	original := middleware.PermissionConfig.Mode
+	t.Cleanup(func() { middleware.PermissionConfig.Mode = original })
+
+	configurePermissionMode("")
+	require.Equal(t, middleware.PermissionConfigModeDBOnly, middleware.PermissionConfig.Mode)
+
+	configurePermissionMode("production")
+	require.Equal(t, middleware.PermissionConfigModeDBOnly, middleware.PermissionConfig.Mode)
+
+	configurePermissionMode("development")
+	require.Equal(t, middleware.PermissionConfigModeFallback, middleware.PermissionConfig.Mode)
 }
