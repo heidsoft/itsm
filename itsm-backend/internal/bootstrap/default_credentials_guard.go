@@ -28,12 +28,28 @@ type DefaultCredentialRisk struct {
 // environment: 部署模式 ("private" | "saas" | "saas_msp" | "development")
 // 返回 fatal 级风险时进程应 panic
 func GuardDefaultCredentials(environment string) []DefaultCredentialRisk {
+	return guardCredentials(
+		environment,
+		os.Getenv("ADMIN_PASSWORD"),
+		os.Getenv("JWT_SECRET"),
+		os.Getenv("DB_PASSWORD"),
+		true,
+	)
+}
+
+func guardCredentials(
+	environment string,
+	adminPassword string,
+	jwtSecret string,
+	dbPassword string,
+	includeAdmin bool,
+) []DefaultCredentialRisk {
 	risks := make([]DefaultCredentialRisk, 0)
 	isProd := isProductionEnvironment(environment)
 
 	// 检测 1: admin 默认密码
-	if isProd {
-		if hasDefaultAdminPassword() {
+	if isProd && includeAdmin {
+		if hasDefaultAdminPassword(adminPassword) {
 			risks = append(risks, DefaultCredentialRisk{
 				Severity: "fatal",
 				Code:     "DEFAULT_ADMIN_PASSWORD",
@@ -44,7 +60,7 @@ func GuardDefaultCredentials(environment string) []DefaultCredentialRisk {
 
 	// 检测 2: JWT_SECRET 默认值
 	if isProd {
-		if isDefaultJWTSecret() {
+		if isDefaultJWTSecret(jwtSecret) {
 			risks = append(risks, DefaultCredentialRisk{
 				Severity: "fatal",
 				Code:     "DEFAULT_JWT_SECRET",
@@ -55,7 +71,7 @@ func GuardDefaultCredentials(environment string) []DefaultCredentialRisk {
 
 	// 检测 3: 数据库弱密码
 	if isProd {
-		if isWeakDBPassword() {
+		if isWeakDBPassword(dbPassword) {
 			risks = append(risks, DefaultCredentialRisk{
 				Severity: "warning",
 				Code:     "WEAK_DB_PASSWORD",
@@ -74,6 +90,25 @@ func GuardDefaultCredentials(environment string) []DefaultCredentialRisk {
 	}
 
 	return risks
+}
+
+// GuardRuntimeCredentials validates credentials required for every process
+// start. The one-time bootstrap admin secret is intentionally excluded and is
+// checked only when initialization is about to create the first administrator.
+func GuardRuntimeCredentials(environment, jwtSecret, dbPassword string) []DefaultCredentialRisk {
+	return guardCredentials(environment, "", jwtSecret, dbPassword, false)
+}
+
+// GuardBootstrapAdminCredentials validates the one-time administrator secret.
+func GuardBootstrapAdminCredentials(environment, adminPassword string) []DefaultCredentialRisk {
+	risks := guardCredentials(environment, adminPassword, "", "", true)
+	filtered := make([]DefaultCredentialRisk, 0, 1)
+	for _, risk := range risks {
+		if risk.Code == "DEFAULT_ADMIN_PASSWORD" {
+			filtered = append(filtered, risk)
+		}
+	}
+	return filtered
 }
 
 // LogDefaultCredentialRisks 用 zap 记录风险
@@ -97,19 +132,23 @@ func LogDefaultCredentialRisks(risks []DefaultCredentialRisk, logger *zap.Sugare
 
 // isProductionEnvironment 判定是否为生产部署
 func isProductionEnvironment(env string) bool {
-	if env == "" {
-		env = os.Getenv("ENV")
-		if env == "" {
-			env = os.Getenv("DEPLOYMENT_MODE")
-		}
+	stage := strings.ToLower(strings.TrimSpace(os.Getenv("ENV")))
+	switch stage {
+	case "development", "dev", "test", "testing", "local":
+		return false
+	case "production", "prod":
+		return true
 	}
-	env = strings.ToLower(env)
+
+	if env == "" {
+		env = os.Getenv("DEPLOYMENT_MODE")
+	}
+	env = strings.ToLower(strings.TrimSpace(env))
 	return env == "production" || env == "prod" ||
-		env == "saas" || env == "saas_msp"
+		env == "private" || env == "saas" || env == "saas_msp"
 }
 
-func hasDefaultAdminPassword() bool {
-	adminPass := os.Getenv("ADMIN_PASSWORD")
+func hasDefaultAdminPassword(adminPass string) bool {
 	if adminPass == "" {
 		// 未设置：依赖 seeder 的默认值。在生产环境应视为默认。
 		// 这里保守判定：有 ENV=prod + 没设 ADMIN_PASSWORD = 默认值
@@ -128,8 +167,7 @@ func hasDefaultAdminPassword() bool {
 	return false
 }
 
-func isDefaultJWTSecret() bool {
-	secret := os.Getenv("JWT_SECRET")
+func isDefaultJWTSecret(secret string) bool {
 	if secret == "" {
 		return true
 	}
@@ -156,8 +194,7 @@ func isDefaultJWTSecret() bool {
 	return false
 }
 
-func isWeakDBPassword() bool {
-	pass := os.Getenv("DB_PASSWORD")
+func isWeakDBPassword(pass string) bool {
 	if pass == "" {
 		return false // 未设置时不强制判定
 	}

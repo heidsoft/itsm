@@ -26,6 +26,8 @@ import (
 	"itsm-backend/database"
 	"itsm-backend/docs"
 	"itsm-backend/ent"
+	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/user"
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/handlers/change"
@@ -157,6 +159,10 @@ func NewApplication() *Application {
 	logger := initLogger(&cfg.Log)
 	sugar := logger.Sugar()
 	middleware.SetLogger(sugar)
+	LogDefaultCredentialRisks(
+		GuardRuntimeCredentials(cfg.Deployment.Mode, cfg.JWT.Secret, cfg.Database.Password),
+		sugar,
+	)
 
 	// 3. 初始化权限配置（数据库优先，不存在时使用硬编码权限）
 	middleware.PermissionConfig.Mode = middleware.PermissionConfigModeFallback
@@ -900,6 +906,21 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 	}
 
 	if cfg.Deployment.AutoSeed {
+		needsAdmin, err := needsBootstrapAdmin(ctx, client)
+		if err != nil {
+			return fmt.Errorf("check bootstrap administrator: %w", err)
+		}
+		if needsAdmin {
+			for _, risk := range GuardBootstrapAdminCredentials(
+				cfg.Deployment.Mode,
+				os.Getenv("ADMIN_PASSWORD"),
+			) {
+				if risk.Severity == "fatal" {
+					return fmt.Errorf("bootstrap credential rejected [%s]: %s", risk.Code, risk.Message)
+				}
+				sugar.Warnw("bootstrap credential risk detected", "code", risk.Code, "message", risk.Message)
+			}
+		}
 		s := seeder.NewSeeder(client, sugar, cfg)
 		s.SeedAll(ctx)
 		sugar.Infow("seed completed", "deployment_mode", cfg.Deployment.Mode)
@@ -920,6 +941,10 @@ func RunInitialization() {
 	}()
 
 	sugar := logger.Sugar()
+	LogDefaultCredentialRisks(
+		GuardRuntimeCredentials(cfg.Deployment.Mode, cfg.JWT.Secret, cfg.Database.Password),
+		sugar,
+	)
 	client, err := database.InitDatabaseWithRLS(&cfg.Database, &cfg.RLS, sugar)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -929,6 +954,24 @@ func RunInitialization() {
 	if err := InitializeStorage(cfg, client, sugar); err != nil {
 		log.Fatalf("Initialization failed: %v", err)
 	}
+}
+
+func needsBootstrapAdmin(ctx context.Context, client *ent.Client) (bool, error) {
+	rootTenant, err := client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+	if ent.IsNotFound(err) {
+		return true, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	exists, err := client.User.Query().
+		Where(user.UsernameEQ("admin"), user.TenantIDEQ(rootTenant.ID)).
+		Exist(ctx)
+	if err != nil {
+		return false, err
+	}
+	return !exists, nil
 }
 
 func (app *Application) Run() {

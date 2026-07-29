@@ -19,7 +19,7 @@ type TicketWorkflowRecord struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
+	// 创建时间（DB column: created_at）
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 工单ID
 	TicketID int `json:"ticket_id,omitempty"`

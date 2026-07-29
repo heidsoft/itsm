@@ -197,6 +197,9 @@ func (_c *TicketWorkflowRecordCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *TicketWorkflowRecordCreate) check() error {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TicketWorkflowRecord.created_at"`)}
+	}
 	if _, ok := _c.mutation.TicketID(); !ok {
 		return &ValidationError{Name: "ticket_id", err: errors.New(`ent: missing required field "TicketWorkflowRecord.ticket_id"`)}
 	}

@@ -16,7 +16,6 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/menu"
-	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processbinding"
@@ -510,22 +509,14 @@ func getEmbeddedConfig() *SeedConfig {
 // SeedAll runs all seeding operations
 func (s *Seeder) SeedAll(ctx context.Context) {
 	// 首先确保 default 租户存在
-	rootTenant := s.seedDefaultTenant(ctx)
+	s.seedDefaultTenant(ctx)
 	s.seedDepartments(ctx)
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
 	s.seedPermissions(ctx) // 新增：初始化权限
 	s.seedMenus(ctx)       // 新增：初始化菜单
-	s.backfillAdminRole(ctx)
 	s.seedAdmin(ctx)
-	s.seedModeTenants(ctx, rootTenant)
-	s.seedUser1(ctx)
-	s.seedSecurity1(ctx)
-	s.backfillUserRole(ctx)
 	s.seedCloudServiceTemplates(ctx)
-	s.seedAssets(ctx)
-	s.seedAssetLicenses(ctx)
-	s.seedReleases(ctx)
 	// 使用配置的初始化数据
 	s.seedSLADefinitions(ctx)
 	s.seedSLAPolicies(ctx)
@@ -538,12 +529,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedTicketTypes(ctx)            // 新增：初始化工单类型
 	s.seedCITypes(ctx)                // 新增：初始化CI类型
 	s.seedIncidentCategories(ctx)     // 新增：初始化事件分类
-	s.seedIncidents(ctx)              // 新增：初始化事件数据
-	s.seedProblems(ctx)               // 新增：初始化问题数据
-	s.seedChanges(ctx)                // 新增：初始化变更数据
-	s.seedKnowledgeArticles(ctx)      // 新增：初始化知识库文章
 	s.seedStandardChanges(ctx)        // 新增：初始化标准变更模板
-	s.seedKnownErrors(ctx)            // 新增：初始化已知错误
 	s.seedTicketTags(ctx)             // 新增：初始化标签
 	s.seedMenuAndPermissionFixes(ctx) // 修复：更新菜单路径和补充缺失权限
 	s.seedRolePermissions(ctx)        // 新增：为角色分配权限
@@ -600,163 +586,6 @@ func (s *Seeder) seedDefaultTenant(ctx context.Context) *ent.Tenant {
 	return defaultTenant
 }
 
-func (s *Seeder) seedModeTenants(ctx context.Context, rootTenant *ent.Tenant) {
-	if rootTenant == nil {
-		return
-	}
-
-	switch s.deploymentMode() {
-	case tenantmode.DeploymentModePrivate:
-		s.ensureTenant(ctx, tenantSeed{
-			Code:            "hq",
-			Name:            "Group Headquarters",
-			Type:            tenantmode.TenantTypeInternal,
-			ParentTenantID:  &rootTenant.ID,
-			BillingEnabled:  true,
-			CostCenterCode:  "HQ-001",
-			LegalEntityCode: "GROUP",
-			Currency:        "CNY",
-			ServiceTier:     "enterprise",
-			OwnerContact:    "hq-admin@example.com",
-		})
-	case tenantmode.DeploymentModeSaaSMSP:
-		customerOne := s.ensureTenant(ctx, tenantSeed{
-			Code:            "customer-a",
-			Name:            "Customer A",
-			Type:            tenantmode.TenantTypeMSPCustomer,
-			MSPProviderID:   &rootTenant.ID,
-			ParentTenantID:  &rootTenant.ID,
-			BillingEnabled:  true,
-			PlanCode:        "msp-enterprise",
-			CostCenterCode:  "CUS-A",
-			LegalEntityCode: "CUS-A-LE",
-			Currency:        "CNY",
-			ServiceTier:     "gold",
-			OwnerContact:    "it-manager@customer-a.example.com",
-		})
-		customerTwo := s.ensureTenant(ctx, tenantSeed{
-			Code:            "customer-b",
-			Name:            "Customer B",
-			Type:            tenantmode.TenantTypeMSPCustomer,
-			MSPProviderID:   &rootTenant.ID,
-			ParentTenantID:  &rootTenant.ID,
-			BillingEnabled:  true,
-			PlanCode:        "msp-standard",
-			CostCenterCode:  "CUS-B",
-			LegalEntityCode: "CUS-B-LE",
-			Currency:        "CNY",
-			ServiceTier:     "silver",
-			OwnerContact:    "ops@customer-b.example.com",
-		})
-		if customerOne != nil {
-			s.seedDefaultMSPAllocations(ctx, rootTenant, customerOne)
-		}
-		if customerTwo != nil {
-			s.seedDefaultMSPAllocations(ctx, rootTenant, customerTwo)
-		}
-	}
-}
-
-type tenantSeed struct {
-	Code            string
-	Name            string
-	Type            string
-	ParentTenantID  *int
-	MSPProviderID   *int
-	PlanCode        string
-	BillingEnabled  bool
-	CostCenterCode  string
-	LegalEntityCode string
-	Currency        string
-	ServiceTier     string
-	OwnerContact    string
-}
-
-func (s *Seeder) ensureTenant(ctx context.Context, input tenantSeed) *ent.Tenant {
-	existing, err := s.client.Tenant.Query().Where(tenant.CodeEQ(input.Code)).First(ctx)
-	if err == nil && existing != nil {
-		updated, updateErr := existing.Update().
-			SetName(input.Name).
-			SetType(tenant.Type(input.Type)).
-			SetStatus("active").
-			SetNillableParentTenantID(input.ParentTenantID).
-			SetNillableMspProviderID(input.MSPProviderID).
-			SetBillingEnabled(input.BillingEnabled).
-			SetNillablePlanCode(nilIfEmpty(input.PlanCode)).
-			SetNillableCostCenterCode(nilIfEmpty(input.CostCenterCode)).
-			SetNillableLegalEntityCode(nilIfEmpty(input.LegalEntityCode)).
-			SetNillableCurrency(nilIfEmpty(input.Currency)).
-			SetNillableServiceTier(nilIfEmpty(input.ServiceTier)).
-			SetNillableOwnerContact(nilIfEmpty(input.OwnerContact)).
-			SetUpdatedAt(time.Now()).
-			Save(ctx)
-		if updateErr == nil {
-			return updated
-		}
-		s.sugar.Warnw("update tenant seed failed", "code", input.Code, "error", updateErr)
-		return existing
-	}
-
-	created, createErr := s.client.Tenant.Create().
-		SetName(input.Name).
-		SetCode(input.Code).
-		SetType(tenant.Type(input.Type)).
-		SetStatus("active").
-		SetNillableParentTenantID(input.ParentTenantID).
-		SetNillableMspProviderID(input.MSPProviderID).
-		SetBillingEnabled(input.BillingEnabled).
-		SetNillablePlanCode(nilIfEmpty(input.PlanCode)).
-		SetNillableCostCenterCode(nilIfEmpty(input.CostCenterCode)).
-		SetNillableLegalEntityCode(nilIfEmpty(input.LegalEntityCode)).
-		SetNillableCurrency(nilIfEmpty(input.Currency)).
-		SetNillableServiceTier(nilIfEmpty(input.ServiceTier)).
-		SetNillableOwnerContact(nilIfEmpty(input.OwnerContact)).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
-	if createErr != nil {
-		s.sugar.Warnw("create tenant seed failed", "code", input.Code, "error", createErr)
-		return nil
-	}
-	return created
-}
-
-func (s *Seeder) seedDefaultMSPAllocations(ctx context.Context, providerTenant *ent.Tenant, customerTenant *ent.Tenant) {
-	if providerTenant == nil || customerTenant == nil {
-		return
-	}
-
-	adminUser, err := s.client.User.Query().
-		Where(
-			user.UsernameEQ("admin"),
-			user.TenantIDEQ(providerTenant.ID),
-		).
-		Only(ctx)
-	if err != nil {
-		return
-	}
-
-	exists, err := s.client.MSPAllocation.Query().
-		Where(
-			mspallocation.MspUserIDEQ(adminUser.ID),
-			mspallocation.CustomerTenantIDEQ(customerTenant.ID),
-			mspallocation.DeassignedAtIsNil(),
-		).
-		Exist(ctx)
-	if err == nil && exists {
-		return
-	}
-
-	if _, err := s.client.MSPAllocation.Create().
-		SetMspUserID(adminUser.ID).
-		SetCustomerTenantID(customerTenant.ID).
-		SetRole("primary").
-		SetAssignedAt(time.Now()).
-		Save(ctx); err != nil {
-		s.sugar.Warnw("seed MSP allocation failed", "error", err)
-	}
-}
-
 func (s *Seeder) deploymentMode() string {
 	if s.appConfig == nil || s.appConfig.Deployment.Mode == "" {
 		return tenantmode.DeploymentModePrivate
@@ -782,6 +611,10 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 		s.sugar.Warnw("query admin user failed", "error", err)
 		return
 	}
+	if existing != nil {
+		s.sugar.Infow("seed admin already exists; credentials preserved", "username", "admin")
+		return
+	}
 
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
 	if adminPassword == "" {
@@ -791,20 +624,6 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 	passHash, bcryptErr := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
 	if bcryptErr != nil {
 		s.sugar.Warnw("generate bcrypt for admin failed", "error", bcryptErr)
-		return
-	}
-
-	if existing != nil {
-		_, err = s.client.User.Update().
-			Where(user.ID(existing.ID)).
-			SetPasswordHash(string(passHash)).
-			SetRole("super_admin").
-			Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("update admin password failed", "error", err)
-		} else {
-			s.sugar.Infow("seed admin updated", "username", "admin")
-		}
 		return
 	}
 
@@ -922,8 +741,13 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 }
 
 func (s *Seeder) backfillAdminRole(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip admin role backfill", "error", err)
+		return
+	}
 	if _, err := s.client.User.Update().
-		Where(user.UsernameEQ("admin")).
+		Where(user.UsernameEQ("admin"), user.TenantIDEQ(t.ID)).
 		SetRole("super_admin").
 		Save(ctx); err != nil {
 		s.sugar.Warnw("admin role backfill failed", "error", err)
@@ -1007,8 +831,13 @@ func (s *Seeder) seedSecurity1(ctx context.Context) {
 }
 
 func (s *Seeder) backfillUserRole(ctx context.Context) {
+	t, tenantErr := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if tenantErr != nil {
+		s.sugar.Warnw("default tenant not found; skip user role backfill", "error", tenantErr)
+		return
+	}
 	n, err := s.client.User.Update().
-		Where(user.RoleEQ("user")).
+		Where(user.RoleEQ("user"), user.TenantIDEQ(t.ID)).
 		SetRole("end_user").
 		Save(ctx)
 	if err != nil {
@@ -1017,99 +846,6 @@ func (s *Seeder) backfillUserRole(ctx context.Context) {
 		s.sugar.Infow("backfilled roles", "updated", n)
 	}
 
-	// T005: 为测试方案 seed 额外的角色账号
-	s.seedRoleTestAccounts(ctx)
-}
-
-// T005: 角色测试账号 seeder
-// FR-604, R-07: engineer1 / manager1 / tenant1admin
-func (s *Seeder) seedRoleTestAccounts(ctx context.Context) {
-	// 确保 tenant_test 租户存在
-	testTenant := s.ensureTenant(ctx, tenantSeed{
-		Code: "tenant_test",
-		Name: "测试租户",
-		Type: "customer",
-	})
-	if testTenant == nil {
-		s.sugar.Warnw("tenant_test 创建失败，跳过角色测试账号 seed")
-		return
-	}
-
-	// 创建 engineer1 (角色: technician 用于处理工单)
-	s.createTestUser(ctx, testTenant, "engineer1", "eng123", "technician", "工程师")
-	// 创建 manager1 (角色: manager 用于审批)
-	s.createTestUser(ctx, testTenant, "manager1", "mgr123", "manager", "审批经理")
-	// 创建 tenant1admin (角色: admin 用于租户管理)
-	s.createTestUser(ctx, testTenant, "tenant1admin", "ta123456", "admin", "租户管理员")
-}
-
-func (s *Seeder) createTestUser(ctx context.Context, t *ent.Tenant, username, password, roleName, displayName string) {
-	// 检查用户是否已存在
-	existing, err := s.client.User.Query().Where(user.UsernameEQ(username), user.TenantIDEQ(t.ID)).First(ctx)
-	if err == nil && existing != nil {
-		s.sugar.Infow("测试用户已存在", "username", username)
-		return
-	}
-
-	// 创建新用户 - 使用 switch 确保类型正确
-	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		s.sugar.Warnw("bcrypt 密码生成失败", "username", username, "error", err)
-		return
-	}
-
-	switch roleName {
-	case "technician":
-		_, err = s.client.User.Create().
-			SetUsername(username).
-			SetRole("technician").
-			SetPasswordHash(string(passHash)).
-			SetEmail(username + "@test.com").
-			SetName(displayName).
-			SetDepartment("IT部门").
-			SetActive(true).
-			SetTenantID(t.ID).
-			Save(ctx)
-	case "manager":
-		_, err = s.client.User.Create().
-			SetUsername(username).
-			SetRole("manager").
-			SetPasswordHash(string(passHash)).
-			SetEmail(username + "@test.com").
-			SetName(displayName).
-			SetDepartment("IT部门").
-			SetActive(true).
-			SetTenantID(t.ID).
-			Save(ctx)
-	case "admin":
-		_, err = s.client.User.Create().
-			SetUsername(username).
-			SetRole("admin").
-			SetPasswordHash(string(passHash)).
-			SetEmail(username + "@test.com").
-			SetName(displayName).
-			SetDepartment("IT部门").
-			SetActive(true).
-			SetTenantID(t.ID).
-			Save(ctx)
-	default:
-		_, err = s.client.User.Create().
-			SetUsername(username).
-			SetRole("end_user").
-			SetPasswordHash(string(passHash)).
-			SetEmail(username + "@test.com").
-			SetName(displayName).
-			SetDepartment("IT部门").
-			SetActive(true).
-			SetTenantID(t.ID).
-			Save(ctx)
-	}
-
-	if err != nil {
-		s.sugar.Warnw("创建测试用户失败", "username", username, "error", err)
-	} else {
-		s.sugar.Infow("测试用户已创建", "username", username, "role", roleName)
-	}
 }
 
 // seedCloudServiceTemplates, seedAssets, seedAssets, seedReleases

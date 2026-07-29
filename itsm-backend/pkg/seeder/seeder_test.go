@@ -6,7 +6,7 @@ import (
 
 	"itsm-backend/config"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/ent/mspallocation"
+	_ "itsm-backend/ent/runtime"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/standardchange"
@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func newTestSeeder(t *testing.T, mode string) (*Seeder, context.Context) {
@@ -53,51 +54,24 @@ func TestSeedDefaultTenantPrivateMode(t *testing.T) {
 	assert.Equal(t, "CNY", rootTenant.Currency)
 	assert.Equal(t, "enterprise", rootTenant.ServiceTier)
 
-	seeder.seedModeTenants(ctx, rootTenant)
-
-	hqTenant, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("hq")).Only(ctx)
+	hqExists, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("hq")).Exist(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, tenantmode.TenantTypeInternal, string(hqTenant.Type))
-	assert.Equal(t, rootTenant.ID, hqTenant.ParentTenantID)
-	assert.Equal(t, "HQ-001", hqTenant.CostCenterCode)
+	assert.False(t, hqExists)
 }
 
-func TestSeedModeTenantsSaaSMSPCreatesCustomersAndAllocation(t *testing.T) {
+func TestProductSeedDoesNotCreateSampleMSPCustomers(t *testing.T) {
 	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModeSaaSMSP)
 
-	rootTenant := seeder.seedDefaultTenant(ctx)
-	require.NotNil(t, rootTenant)
-	assert.Equal(t, tenantmode.TenantTypeMSPProvider, string(rootTenant.Type))
+	seeder.SeedAll(ctx)
 
-	seeder.seedAdmin(ctx)
-	seeder.seedModeTenants(ctx, rootTenant)
-
-	customerA, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("customer-a")).Only(ctx)
+	for _, code := range []string{"customer-a", "customer-b"} {
+		exists, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ(code)).Exist(ctx)
+		require.NoError(t, err)
+		assert.False(t, exists)
+	}
+	allocationCount, err := seeder.client.MSPAllocation.Query().Count(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, tenantmode.TenantTypeMSPCustomer, string(customerA.Type))
-	assert.Equal(t, rootTenant.ID, customerA.MspProviderID)
-	assert.Equal(t, rootTenant.ID, customerA.ParentTenantID)
-	assert.Equal(t, "msp-enterprise", customerA.PlanCode)
-
-	customerB, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("customer-b")).Only(ctx)
-	require.NoError(t, err)
-	assert.Equal(t, tenantmode.TenantTypeMSPCustomer, string(customerB.Type))
-	assert.Equal(t, rootTenant.ID, customerB.MspProviderID)
-
-	adminUser, err := seeder.client.User.Query().
-		Where(user.UsernameEQ("admin"), user.TenantIDEQ(rootTenant.ID)).
-		Only(ctx)
-	require.NoError(t, err)
-
-	exists, err := seeder.client.MSPAllocation.Query().
-		Where(
-			mspallocation.MspUserIDEQ(adminUser.ID),
-			mspallocation.CustomerTenantIDEQ(customerA.ID),
-			mspallocation.DeassignedAtIsNil(),
-		).
-		Exist(ctx)
-	require.NoError(t, err)
-	assert.True(t, exists)
+	assert.Zero(t, allocationCount)
 }
 
 func TestSeedAllSaaSModeCreatesPlatformTenantAndAdmin(t *testing.T) {
@@ -117,7 +91,7 @@ func TestSeedAllSaaSModeCreatesPlatformTenantAndAdmin(t *testing.T) {
 	assert.Equal(t, "super_admin", string(adminUser.Role))
 }
 
-func TestSeedAllSaaSMSPModeCreatesAdminAllocation(t *testing.T) {
+func TestSeedAllSaaSMSPModeCreatesOnlyProviderTenant(t *testing.T) {
 	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModeSaaSMSP)
 
 	seeder.SeedAll(ctx)
@@ -126,28 +100,21 @@ func TestSeedAllSaaSMSPModeCreatesAdminAllocation(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, tenantmode.TenantTypeMSPProvider, string(rootTenant.Type))
 
-	adminUser, err := seeder.client.User.Query().
+	adminExists, err := seeder.client.User.Query().
 		Where(user.UsernameEQ("admin"), user.TenantIDEQ(rootTenant.ID)).
-		Only(ctx)
+		Exist(ctx)
 	require.NoError(t, err)
+	assert.True(t, adminExists)
 
 	customers, err := seeder.client.Tenant.Query().
 		Where(tenant.TypeEQ(tenant.TypeMspCustomer)).
 		All(ctx)
 	require.NoError(t, err)
-	require.Len(t, customers, 2)
+	assert.Empty(t, customers)
 
-	for _, customer := range customers {
-		exists, err := seeder.client.MSPAllocation.Query().
-			Where(
-				mspallocation.MspUserIDEQ(adminUser.ID),
-				mspallocation.CustomerTenantIDEQ(customer.ID),
-				mspallocation.DeassignedAtIsNil(),
-			).
-			Exist(ctx)
-		require.NoError(t, err)
-		assert.True(t, exists, "expected MSP allocation for customer %s", customer.Code)
-	}
+	allocationCount, err := seeder.client.MSPAllocation.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, allocationCount)
 }
 
 func TestSeedAllProductDefaultsDoNotCreateBusinessSamples(t *testing.T) {
@@ -171,6 +138,50 @@ func TestSeedAllProductDefaultsDoNotCreateBusinessSamples(t *testing.T) {
 	require.NoError(t, err)
 	assert.Zero(t, knowledgeCount)
 
+	releaseCount, err := seeder.client.Release.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, releaseCount)
+
+	assetLicenseCount, err := seeder.client.AssetLicense.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, assetLicenseCount)
+
+	knownErrorCount, err := seeder.client.KnownError.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, knownErrorCount)
+
+	ticketCount, err := seeder.client.Ticket.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, ticketCount)
+
+	assetCount, err := seeder.client.Asset.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, assetCount)
+
+	ciCount, err := seeder.client.ConfigurationItem.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, ciCount)
+
+	processInstanceCount, err := seeder.client.ProcessInstance.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, processInstanceCount)
+
+	workflowInstanceCount, err := seeder.client.WorkflowInstance.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, workflowInstanceCount)
+
+	notificationCount, err := seeder.client.Notification.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, notificationCount)
+
+	auditCount, err := seeder.client.AuditLog.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, auditCount)
+
+	toolInvocationCount, err := seeder.client.ToolInvocation.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, toolInvocationCount)
+
 	serviceCatalogExists, err := seeder.client.ServiceCatalog.Query().Where(servicecatalog.NameNEQ("")).Exist(ctx)
 	require.NoError(t, err)
 	assert.True(t, serviceCatalogExists)
@@ -184,39 +195,45 @@ func TestSeedAllProductDefaultsDoNotCreateBusinessSamples(t *testing.T) {
 	assert.True(t, standardChangeExists)
 }
 
-// T012: verify 6 test accounts exist after seeding with correct roles (T005 verification)
-func TestSeedRoleTestAccountsAllSixPresent(t *testing.T) {
+func TestSeedAllDoesNotCreateTestTenantOrFixedPasswordAccounts(t *testing.T) {
 	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
 
 	seeder.SeedAll(ctx)
 
-	// admin / user1 / security1 live in the default tenant
-	defaultTenant, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+	exists, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("tenant_test")).Exist(ctx)
+	require.NoError(t, err)
+	assert.False(t, exists)
+
+	for _, username := range []string{"user1", "security1", "engineer1", "manager1", "tenant1admin"} {
+		exists, err := seeder.client.User.Query().Where(user.UsernameEQ(username)).Exist(ctx)
+		require.NoError(t, err)
+		assert.False(t, exists, "fixed-password account %s must not be seeded", username)
+	}
+}
+
+func TestSeedAdminPreservesExistingCredentials(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
+	rootTenant := seeder.seedDefaultTenant(ctx)
+	require.NotNil(t, rootTenant)
+
+	originalHash, err := bcrypt.GenerateFromPassword([]byte("operator-rotated-password"), bcrypt.DefaultCost)
+	require.NoError(t, err)
+	created, err := seeder.client.User.Create().
+		SetUsername("admin").
+		SetEmail("admin@example.com").
+		SetName("Existing Admin").
+		SetRole("admin").
+		SetPasswordHash(string(originalHash)).
+		SetActive(true).
+		SetTenantID(rootTenant.ID).
+		Save(ctx)
 	require.NoError(t, err)
 
-	// engineer1 / manager1 / tenant1admin live in tenant_test
-	testTenant, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("tenant_test")).Only(ctx)
+	t.Setenv("ADMIN_PASSWORD", "different-bootstrap-password")
+	seeder.seedAdmin(ctx)
+
+	after, err := seeder.client.User.Get(ctx, created.ID)
 	require.NoError(t, err)
-
-	// Define the 6 expected test accounts and their tenants/roles
-	expectedAccounts := []struct {
-		username string
-		tenantID int
-		role     user.Role
-	}{
-		{"admin", defaultTenant.ID, user.RoleSuperAdmin},
-		{"user1", defaultTenant.ID, user.RoleEndUser},
-		{"security1", defaultTenant.ID, user.RoleSecurity},
-		{"engineer1", testTenant.ID, user.RoleTechnician},
-		{"manager1", testTenant.ID, user.RoleManager},
-		{"tenant1admin", testTenant.ID, user.RoleAdmin},
-	}
-
-	for _, acc := range expectedAccounts {
-		u, err := seeder.client.User.Query().
-			Where(user.UsernameEQ(acc.username), user.TenantIDEQ(acc.tenantID)).
-			Only(ctx)
-		require.NoError(t, err, "account %s should exist", acc.username)
-		assert.Equal(t, acc.role, u.Role, "account %s should have role %s", acc.username, acc.role)
-	}
+	assert.Equal(t, string(originalHash), after.PasswordHash)
+	assert.Equal(t, user.RoleAdmin, after.Role)
 }
