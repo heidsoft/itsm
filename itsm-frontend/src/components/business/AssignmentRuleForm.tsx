@@ -26,7 +26,6 @@ import { Plus, X, Save, Trash2 } from 'lucide-react';
 import type { AssignmentRule } from '@/lib/api/ticket-assignment-api';
 
 const { TextArea } = Input;
-const { Option } = Select;
 const { Title, Text } = Typography;
 
 interface AssignmentRuleFormProps {
@@ -171,13 +170,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
                           name={[field.name, 'field']}
                           rules={[{ required: true }]}
                         >
-                          <Select placeholder="选择字段">
-                            {conditionFields.map(f => (
-                              <Option key={f.value} value={f.value}>
-                                {f.label}
-                              </Option>
-                            ))}
-                          </Select>
+                          <Select placeholder="选择字段" options={conditionFields.map(f => ({ value: f.value, label: f.label }))} />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
@@ -186,13 +179,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
                           name={[field.name, 'operator']}
                           rules={[{ required: true }]}
                         >
-                          <Select placeholder="操作符">
-                            <Option value="equals">等于</Option>
-                            <Option value="not_equals">不等于</Option>
-                            <Option value="contains">包含</Option>
-                            <Option value="in">属于</Option>
-                            <Option value="not_in">不属于</Option>
-                          </Select>
+                          <Select placeholder="操作符" options={[{ value: "equals", label: "等于" }, { value: "not_equals", label: "不等于" }, { value: "contains", label: "包含" }, { value: "in", label: "属于" }, { value: "not_in", label: "不属于" }]} />
                         </Form.Item>
                       </Col>
                       <Col span={10}>
@@ -223,13 +210,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
         label="分配方式"
         rules={[{ required: true, message: '请选择分配方式' }]}
       >
-        <Select placeholder="选择分配方式" onChange={value => setActionType(value)}>
-          {actionTypes.map(type => (
-            <Option key={type.value} value={type.value}>
-              {type.label}
-            </Option>
-          ))}
-        </Select>
+        <Select placeholder="选择分配方式" onChange={value => setActionType(value)} options={actionTypes.map(type => ({ value: type.value, label: type.label }))} />
       </Form.Item>
 
       {actionType === 'assign' && (

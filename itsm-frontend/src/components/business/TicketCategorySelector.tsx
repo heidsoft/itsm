@@ -8,7 +8,6 @@ import {
   type CategoryTreeItem,
 } from '../../lib/services/ticket-category-service';
 
-const { Option } = Select;
 const { Text } = Typography;
 
 interface TicketCategorySelectorProps {
@@ -309,7 +308,7 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
         style={style}
         className={className}
         filterOption={(input, option) =>
-          (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+          String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
         }
         popupRender={menu => (
           <div>
@@ -322,13 +321,11 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
             </div>
           </div>
         )}
-      >
-        {categories.map(category => (
-          <Option key={category.id} value={category.id}>
-            {category.name}
-          </Option>
-        ))}
-      </Select>
+        options={categories.map(category => ({
+          value: category.id,
+          label: category.name,
+        }))}
+      />
 
       {/* 分类选择模态框 */}
       <Modal

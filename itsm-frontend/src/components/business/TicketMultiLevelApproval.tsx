@@ -34,9 +34,8 @@ import { zhCN } from 'date-fns/locale';
 import type { Ticket } from '@/lib/services/ticket-service';
 import { TicketApprovalApi } from '@/lib/api/ticket-approval-api';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
+const { Title, Text } = Typography;
 
 interface ApprovalNode {
   id: string;
@@ -666,20 +665,10 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
             <TextArea rows={3} placeholder="工作流描述（可选）" />
           </Form.Item>
           <Form.Item name="ticketType" label="适用工单类型">
-            <Select placeholder="请选择工单类型" allowClear>
-              <Option value="incident">事件</Option>
-              <Option value="service_request">服务请求</Option>
-              <Option value="problem">问题</Option>
-              <Option value="change">变更</Option>
-            </Select>
+            <Select placeholder="请选择工单类型" allowClear options={[{ value: "incident", label: "事件" }, { value: "service_request", label: "服务请求" }, { value: "problem", label: "问题" }, { value: "change", label: "变更" }]} />
           </Form.Item>
           <Form.Item name="priority" label="适用优先级">
-            <Select placeholder="请选择优先级" allowClear>
-              <Option value="low">低</Option>
-              <Option value="medium">中</Option>
-              <Option value="high">高</Option>
-              <Option value="urgent">紧急</Option>
-            </Select>
+            <Select placeholder="请选择优先级" allowClear options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "urgent", label: "紧急" }]} />
           </Form.Item>
           <Form.Item name="isActive" label="启用状态" valuePropName="checked" initialValue={true}>
             <Switch />
@@ -737,12 +726,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
             label="审批模式"
             rules={[{ required: true, message: '请选择审批模式' }]}
           >
-            <Select>
-              <Option value="sequential">串行（按顺序审批）</Option>
-              <Option value="parallel">并行（同时审批）</Option>
-              <Option value="any">任一（任意一人通过即可）</Option>
-              <Option value="all">全部（所有人都需通过）</Option>
-            </Select>
+            <Select options={[{ value: "sequential", label: "串行（按顺序审批）" }, { value: "parallel", label: "并行（同时审批）" }, { value: "any", label: "任一（任意一人通过即可）" }, { value: "all", label: "全部（所有人都需通过）" }]} />
           </Form.Item>
           <Form.Item name="timeoutHours" label="超时时间（小时）">
             <InputNumber min={1} max={720} style={{ width: '100%' }} />
@@ -774,11 +758,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
             label="拒绝后的操作"
             rules={[{ required: true, message: '请选择拒绝后的操作' }]}
           >
-            <Select>
-              <Option value="end">结束流程</Option>
-              <Option value="return">返回上一级</Option>
-              <Option value="custom">自定义</Option>
-            </Select>
+            <Select options={[{ value: "end", label: "结束流程" }, { value: "return", label: "返回上一级" }, { value: "custom", label: "自定义" }]} />
           </Form.Item>
         </Form>
       </Modal>

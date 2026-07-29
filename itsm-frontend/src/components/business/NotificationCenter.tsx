@@ -54,7 +54,6 @@ import { TicketNotificationApi } from '@/lib/api/ticket-notification-api';
 import { PRODUCT_CAPABILITIES } from '@/config/product-capabilities';
 
 const { Title, Text, Paragraph } = Typography;
-const { Option } = Select;
 const { TabPane } = Tabs;
 const { TextArea } = Input;
 
@@ -732,24 +731,14 @@ const NotificationCenter: React.FC<{
                   style={{ width: 120 }}
                   value={filterType || undefined}
                   onChange={setFilterType}
-                >
-                  <Option value="info">通知</Option>
-                  <Option value="success">成功</Option>
-                  <Option value="warning">警告</Option>
-                  <Option value="error">错误</Option>
-                </Select>
+                 options={[{ value: "info", label: "通知" }, { value: "success", label: "成功" }, { value: "warning", label: "警告" }, { value: "error", label: "错误" }]} />
                 <Select
                   placeholder="通知状态"
                   allowClear
                   style={{ width: 120 }}
                   value={filterStatus || undefined}
                   onChange={setFilterStatus}
-                >
-                  <Option value="pending">待处理</Option>
-                  <Option value="sent">已发送</Option>
-                  <Option value="failed">失败</Option>
-                  <Option value="read">已读</Option>
-                </Select>
+                 options={[{ value: "pending", label: "待处理" }, { value: "sent", label: "已发送" }, { value: "failed", label: "失败" }, { value: "read", label: "已读" }]} />
                 <Button
                   onClick={() => {
                     setFilterType('');
@@ -868,12 +857,7 @@ const NotificationCenter: React.FC<{
                 name="type"
                 rules={[{ required: true, message: '请选择通知类型' }]}
               >
-                <Select placeholder="请选择通知类型">
-                  <Option value="info">信息</Option>
-                  <Option value="success">成功</Option>
-                  <Option value="warning">警告</Option>
-                  <Option value="error">错误</Option>
-                </Select>
+                <Select placeholder="请选择通知类型" options={[{ value: "info", label: "信息" }, { value: "success", label: "成功" }, { value: "warning", label: "警告" }, { value: "error", label: "错误" }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -882,12 +866,7 @@ const NotificationCenter: React.FC<{
                 name="channels"
                 rules={[{ required: true, message: '请选择通知通道' }]}
               >
-                <Select mode="multiple" placeholder="请选择通知通道">
-                  <Option value="in_app">站内信</Option>
-                  <Option value="email">邮件</Option>
-                  <Option value="sms">短信</Option>
-                  <Option value="webhook">Webhook</Option>
-                </Select>
+                <Select mode="multiple" placeholder="请选择通知通道" options={[{ value: "in_app", label: "站内信" }, { value: "email", label: "邮件" }, { value: "sms", label: "短信" }, { value: "webhook", label: "Webhook" }]} />
               </Form.Item>
             </Col>
           </Row>
@@ -905,12 +884,7 @@ const NotificationCenter: React.FC<{
           </Form.Item>
 
           <Form.Item label="可用变量" name="variables">
-            <Select mode="tags" placeholder="输入变量名后按回车">
-              <Option value="user_name">用户名</Option>
-              <Option value="ticket_id">工单ID</Option>
-              <Option value="ticket_title">工单标题</Option>
-              <Option value="priority">优先级</Option>
-            </Select>
+            <Select mode="tags" placeholder="输入变量名后按回车" options={[{ value: "user_name", label: "用户名" }, { value: "ticket_id", label: "工单ID" }, { value: "ticket_title", label: "工单标题" }, { value: "priority", label: "优先级" }]} />
           </Form.Item>
 
           <Form.Item label="启用状态" name="is_active" valuePropName="checked">
@@ -947,11 +921,7 @@ const NotificationCenter: React.FC<{
             name="type"
             rules={[{ required: true, message: '请选择通道类型' }]}
           >
-            <Select placeholder="请选择通道类型">
-              <Option value="email">邮件</Option>
-              <Option value="sms">短信</Option>
-              <Option value="webhook">Webhook</Option>
-            </Select>
+            <Select placeholder="请选择通道类型" options={[{ value: "email", label: "邮件" }, { value: "sms", label: "短信" }, { value: "webhook", label: "Webhook" }]} />
           </Form.Item>
 
           <Form.Item label="启用状态" name="is_active" valuePropName="checked">

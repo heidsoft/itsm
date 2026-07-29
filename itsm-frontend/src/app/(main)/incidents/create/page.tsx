@@ -13,7 +13,6 @@ import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 
 // CI状态中文映射
 const ciStatusNameMap: Record<string, string> = {
@@ -205,12 +204,12 @@ export default function CreateIncidentPage() {
                               label="优先级"
                               rules={[{ required: true }]}
                             >
-                              <Select>
-                                <Option value="critical">紧急</Option>
-                                <Option value="high">高</Option>
-                                <Option value="medium">中</Option>
-                                <Option value="low">低</Option>
-                              </Select>
+                              <Select options={[
+                                { value: 'critical', label: '紧急' },
+                                { value: 'high', label: '高' },
+                                { value: 'medium', label: '中' },
+                                { value: 'low', label: '低' },
+                              ]} />
                             </Form.Item>
                           </Col>
                           <Col span={8}>
@@ -219,12 +218,12 @@ export default function CreateIncidentPage() {
                               label="来源"
                               rules={[{ required: true }]}
                             >
-                              <Select>
-                                <Option value="manual">手动创建</Option>
-                                <Option value="monitoring">监控告警</Option>
-                                <Option value="system">系统</Option>
-                                <Option value="user">用户</Option>
-                              </Select>
+                              <Select options={[
+                                { value: 'manual', label: '手动创建' },
+                                { value: 'monitoring', label: '监控告警' },
+                                { value: 'system', label: '系统' },
+                                { value: 'user', label: '用户' },
+                              ]} />
                             </Form.Item>
                           </Col>
                           <Col span={8}>
@@ -233,12 +232,12 @@ export default function CreateIncidentPage() {
                               label="类型"
                               rules={[{ required: true }]}
                             >
-                              <Select>
-                                <Option value="incident">事件</Option>
-                                <Option value="service_request">服务请求</Option>
-                                <Option value="security_event">安全事件</Option>
-                                <Option value="alert">告警</Option>
-                              </Select>
+                              <Select options={[
+                                { value: 'incident', label: '事件' },
+                                { value: 'service_request', label: '服务请求' },
+                                { value: 'security_event', label: '安全事件' },
+                                { value: 'alert', label: '告警' },
+                              ]} />
                             </Form.Item>
                           </Col>
                         </Row>
@@ -248,13 +247,13 @@ export default function CreateIncidentPage() {
                               name="category"
                               label="事件分类"
                             >
-                              <Select placeholder="选择分类">
-                                <Option value="hardware">硬件故障</Option>
-                                <Option value="software">软件故障</Option>
-                                <Option value="network">网络问题</Option>
-                                <Option value="security">安全问题</Option>
-                                <Option value="other">其他</Option>
-                              </Select>
+                              <Select placeholder="选择分类" options={[
+                                { value: 'hardware', label: '硬件故障' },
+                                { value: 'software', label: '软件故障' },
+                                { value: 'network', label: '网络问题' },
+                                { value: 'security', label: '安全问题' },
+                                { value: 'other', label: '其他' },
+                              ]} />
                             </Form.Item>
                           </Col>
                           <Col span={12}>
@@ -262,13 +261,17 @@ export default function CreateIncidentPage() {
                               name="assignedTo"
                               label="指派给"
                             >
-                              <Select placeholder="选择负责人" allowClear loading={usersLoading} showSearch optionFilterProp="children">
-                                {users.map(user => (
-                                  <Option key={user.id} value={user.id}>
-                                    {user.name || user.username}
-                                  </Option>
-                                ))}
-                              </Select>
+                              <Select
+                                placeholder="选择负责人"
+                                allowClear
+                                loading={usersLoading}
+                                showSearch
+                                optionFilterProp="children"
+                                options={users.map(user => ({
+                                  value: user.id,
+                                  label: user.name || user.username,
+                                }))}
+                              />
                             </Form.Item>
                           </Col>
                         </Row>
@@ -340,12 +343,12 @@ export default function CreateIncidentPage() {
                               label="影响范围"
                               rules={[{ required: true }]}
                             >
-                              <Select>
-                                <Option value="critical">全局</Option>
-                                <Option value="high">部门级</Option>
-                                <Option value="medium">团队级</Option>
-                                <Option value="low">个人</Option>
-                              </Select>
+                              <Select options={[
+                                { value: 'critical', label: '全局' },
+                                { value: 'high', label: '部门级' },
+                                { value: 'medium', label: '团队级' },
+                                { value: 'low', label: '个人' },
+                              ]} />
                             </Form.Item>
                           </Col>
                           <Col span={12}>
@@ -354,12 +357,12 @@ export default function CreateIncidentPage() {
                               label="紧急程度"
                               rules={[{ required: true }]}
                             >
-                              <Select>
-                                <Option value="critical">紧急</Option>
-                                <Option value="high">高</Option>
-                                <Option value="medium">中</Option>
-                                <Option value="low">低</Option>
-                              </Select>
+                              <Select options={[
+                                { value: 'critical', label: '紧急' },
+                                { value: 'high', label: '高' },
+                                { value: 'medium', label: '中' },
+                                { value: 'low', label: '低' },
+                              ]} />
                             </Form.Item>
                           </Col>
                         </Row>
@@ -368,13 +371,18 @@ export default function CreateIncidentPage() {
                           name="affectedSystems"
                           label="受影响系统"
                         >
-                          <Select mode="multiple" placeholder="选择受影响的系统" allowClear>
-                            <Option value="web">Web网站</Option>
-                            <Option value="api">API服务</Option>
-                            <Option value="database">数据库</Option>
-                            <Option value="network">网络</Option>
-                            <Option value="storage">存储</Option>
-                          </Select>
+                          <Select
+                            mode="multiple"
+                            placeholder="选择受影响的系统"
+                            allowClear
+                            options={[
+                              { value: 'web', label: 'Web网站' },
+                              { value: 'api', label: 'API服务' },
+                              { value: 'database', label: '数据库' },
+                              { value: 'network', label: '网络' },
+                              { value: 'storage', label: '存储' },
+                            ]}
+                          />
                         </Form.Item>
 
                         <Form.Item

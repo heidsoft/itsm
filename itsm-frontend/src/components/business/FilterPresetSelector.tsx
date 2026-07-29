@@ -18,7 +18,6 @@ import { Plus, Save, Pencil, Trash2, Star } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TicketFilterState } from './TicketFilters';
 
-const { Option } = Select;
 
 // 筛选预设接口
 export interface FilterPreset {
@@ -287,13 +286,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
               </Button>
             </div>
           )}
-        >
-          {presets.length === 0 && (
-            <Option value="" disabled>
-              暂无预设
-            </Option>
-          )}
-        </Select>
+        />
       </Space>
 
       {/* 保存预设模态框 */}

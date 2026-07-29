@@ -31,9 +31,6 @@ import {
   KnowledgeStatusColors,
 } from '@/constants/knowledge';
 import type { KnowledgeArticle, ArticleQuery } from '@/types/knowledge-base';
-
-const { Option } = Select;
-
 interface ArticleListProps {
   showHeader?: boolean;
 }
@@ -219,14 +216,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
               allowClear
              
               style={{ backgroundColor: '#fafafa', borderRadius: '6px' }}
-            >
-              {Array.isArray(categories) &&
-                categories.map((c, idx) => (
-                  <Option key={idx} value={c}>
-                    {c}
-                  </Option>
-                ))}
-            </Select>
+             options={Array.isArray(categories) ? categories.map(c => ({ value: c, label: c })) : []} />
           </Form.Item>
           <Form.Item name="status" className="mb-0">
             <Select
@@ -235,10 +225,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
               allowClear
              
               style={{ backgroundColor: '#fafafa', borderRadius: '6px' }}
-            >
-              <Option value="published">已发布</Option>
-              <Option value="draft">草稿</Option>
-            </Select>
+             options={[{ value: "published", label: "已发布" }, { value: "draft", label: "草稿" }]} />
           </Form.Item>
           <Form.Item className="mb-0">
             <Space>

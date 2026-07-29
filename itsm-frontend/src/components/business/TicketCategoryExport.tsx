@@ -30,7 +30,6 @@ import {
   type CategoryTreeItem,
 } from '../../lib/services/ticket-category-service';
 
-const { Option } = Select;
 const { Text, Title } = Typography;
 
 interface TicketCategoryExportProps {
@@ -339,33 +338,11 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
                 label="导出格式"
                 rules={[{ required: true, message: '请选择导出格式' }]}
               >
-                <Select>
-                  <Option value="excel">
-                    <Space>
-                      <FileExcel className="w-4 h-4 text-green-600" />
-                      Excel (.xlsx)
-                    </Space>
-                  </Option>
-                  <Option value="csv">
-                    <Space>
-                      <FileCsv className="w-4 h-4 text-blue-600" />
-                      CSV (.csv)
-                    </Space>
-                  </Option>
-                  <Option value="json">
-                    <Space>
-                      <FileText className="w-4 h-4 text-orange-600" />
-                      JSON (.json)
-                    </Space>
-                  </Option>
-                </Select>
+                <Select options={[{ value: "excel", label: "Excel (.xlsx)" }, { value: "csv", label: "CSV (.csv)" }, { value: "json", label: "JSON (.json)" }]} />
               </Form.Item>
 
               <Form.Item name="encoding" label="文件编码">
-                <Select>
-                  <Option value="utf8">UTF-8</Option>
-                  <Option value="gbk">GBK (中文)</Option>
-                </Select>
+                <Select options={[{ value: "utf8", label: "UTF-8" }, { value: "gbk", label: "GBK (中文)" }]} />
               </Form.Item>
             </div>
           </Card>

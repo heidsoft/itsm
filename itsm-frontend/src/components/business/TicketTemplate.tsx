@@ -42,7 +42,6 @@ import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 interface TicketTemplate {
   id: number;
@@ -469,13 +468,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
                 label="主分类"
                 rules={[{ required: true, message: '请选择主分类' }]}
               >
-                <Select placeholder="请选择主分类">
-                  <Option value="网络故障">网络故障</Option>
-                  <Option value="硬件故障">硬件故障</Option>
-                  <Option value="软件故障">软件故障</Option>
-                  <Option value="权限问题">权限问题</Option>
-                  <Option value="其他">其他</Option>
-                </Select>
+                <Select placeholder="请选择主分类" options={[{ value: "网络故障", label: "网络故障" }, { value: "硬件故障", label: "硬件故障" }, { value: "软件故障", label: "软件故障" }, { value: "权限问题", label: "权限问题" }, { value: "其他", label: "其他" }]} />
               </Form.Item>
             </Col>
           </Row>
@@ -492,12 +485,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
                 label="默认优先级"
                 rules={[{ required: true, message: '请选择默认优先级' }]}
               >
-                <Select placeholder="请选择默认优先级">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                  <Option value="critical">紧急</Option>
-                </Select>
+                <Select placeholder="请选择默认优先级" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "critical", label: "紧急" }]} />
               </Form.Item>
             </Col>
           </Row>
@@ -509,11 +497,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
                 label="影响程度"
                 rules={[{ required: true, message: '请选择影响程度' }]}
               >
-                <Select placeholder="请选择影响程度">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                </Select>
+                <Select placeholder="请选择影响程度" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -522,11 +506,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
                 label="紧急程度"
                 rules={[{ required: true, message: '请选择紧急程度' }]}
               >
-                <Select placeholder="请选择紧急程度">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                </Select>
+                <Select placeholder="请选择紧急程度" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }]} />
               </Form.Item>
             </Col>
           </Row>
@@ -538,11 +518,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="workflow" label="关联工作流">
-                <Select placeholder="请选择工作流" allowClear>
-                  <Option value="标准处理流程">标准处理流程</Option>
-                  <Option value="紧急处理流程">紧急处理流程</Option>
-                  <Option value="变更审批流程">变更审批流程</Option>
-                </Select>
+                <Select placeholder="请选择工作流" allowClear options={[{ value: "标准处理流程", label: "标准处理流程" }, { value: "紧急处理流程", label: "紧急处理流程" }, { value: "变更审批流程", label: "变更审批流程" }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -553,11 +529,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
           </Row>
 
           <Form.Item name="tags" label="标签">
-            <Select mode="tags" placeholder="请输入标签">
-              <Option value="标准">标准</Option>
-              <Option value="常用">常用</Option>
-              <Option value="紧急">紧急</Option>
-            </Select>
+            <Select mode="tags" placeholder="请输入标签" options={[{ value: "标准", label: "标准" }, { value: "常用", label: "常用" }, { value: "紧急", label: "紧急" }]} />
           </Form.Item>
 
           <Form.Item name="isActive" label="启用状态" valuePropName="checked">
