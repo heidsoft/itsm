@@ -42,7 +42,6 @@ import type { ColumnsType } from 'antd/es/table';
 import { TenantAPI } from '@/lib/api/tenant-api';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 // 租户状态配置
 const TENANT_STATUS = {
@@ -406,13 +405,14 @@ export default function TenantManagement() {
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部状态</Option>
-              <Option value="active">活跃</Option>
-              <Option value="suspended">暂停</Option>
-              <Option value="expired">过期</Option>
-              <Option value="deleted">已删除</Option>
-            </Select>
+              options={[
+                { value: 'all', label: '全部状态' },
+                { value: 'active', label: '活跃' },
+                { value: 'suspended', label: '暂停' },
+                { value: 'expired', label: '过期' },
+                { value: 'deleted', label: '已删除' },
+              ]}
+            />
           </Col>
           <Col xs={24} md={8} lg={4}>
             <Select
@@ -420,14 +420,15 @@ export default function TenantManagement() {
               value={typeFilter}
               onChange={setTypeFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部类型</Option>
-              <Option value="standard">标准租户</Option>
-              <Option value="internal">内部组织</Option>
-              <Option value="saas_customer">SaaS客户</Option>
-              <Option value="msp_provider">MSP服务商</Option>
-              <Option value="msp_customer">MSP客户</Option>
-            </Select>
+              options={[
+                { value: 'all', label: '全部类型' },
+                { value: 'standard', label: '标准租户' },
+                { value: 'internal', label: '内部组织' },
+                { value: 'saas_customer', label: 'SaaS客户' },
+                { value: 'msp_provider', label: 'MSP服务商' },
+                { value: 'msp_customer', label: 'MSP客户' },
+              ]}
+            />
           </Col>
           <Col xs={24} md={4} lg={8} className="text-right">
             <Button
@@ -537,13 +538,13 @@ export default function TenantManagement() {
                 name="type"
                 rules={[{ required: true, message: '请选择租户类型' }]}
               >
-                <Select placeholder="请选择租户类型">
-                  <Option value="standard">标准租户</Option>
-                  <Option value="internal">内部组织</Option>
-                  <Option value="saas_customer">SaaS客户</Option>
-                  <Option value="msp_provider">MSP服务商</Option>
-                  <Option value="msp_customer">MSP客户</Option>
-                </Select>
+                <Select placeholder="请选择租户类型" options={[
+                  { value: 'standard', label: '标准租户' },
+                  { value: 'internal', label: '内部组织' },
+                  { value: 'saas_customer', label: 'SaaS客户' },
+                  { value: 'msp_provider', label: 'MSP服务商' },
+                  { value: 'msp_customer', label: 'MSP客户' },
+                ]} />
               </Form.Item>
             </Col>
 
@@ -553,12 +554,12 @@ export default function TenantManagement() {
                 name="status"
                 rules={[{ required: true, message: '请选择状态' }]}
               >
-                <Select placeholder="请选择状态">
-                  <Option value="active">活跃</Option>
-                  <Option value="suspended">暂停</Option>
-                  <Option value="expired">过期</Option>
-                  <Option value="deleted">已删除</Option>
-                </Select>
+                <Select placeholder="请选择状态" options={[
+                  { value: 'active', label: '活跃' },
+                  { value: 'suspended', label: '暂停' },
+                  { value: 'expired', label: '过期' },
+                  { value: 'deleted', label: '已删除' },
+                ]} />
               </Form.Item>
             </Col>
           </Row>

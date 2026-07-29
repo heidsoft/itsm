@@ -46,7 +46,6 @@ import { iconMap, getIconByName } from '@/components/layout/sidebar/icons';
 import { buildMenuTree, collectMenuDescendantIds } from './menuTreeUtils';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 /**
  * 菜单管理页面
@@ -436,12 +435,13 @@ export default function MenuManagementPage() {
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部状态</Option>
-              <Option value="enabled">已启用</Option>
-              <Option value="disabled">已禁用</Option>
-              <Option value="hidden">已隐藏</Option>
-            </Select>
+              options={[
+                { value: 'all', label: '全部状态' },
+                { value: 'enabled', label: '已启用' },
+                { value: 'disabled', label: '已禁用' },
+                { value: 'hidden', label: '已隐藏' },
+              ]}
+            />
           </Col>
           <Col xs={24} md={6} lg={10} className="text-right">
             <Space>
@@ -606,13 +606,9 @@ export default function MenuManagementPage() {
             </Col>
             <Col span={12}>
               <Form.Item label="父菜单" name="parentId" tooltip="二级菜单需指定父菜单">
-                <Select allowClear placeholder="无（顶级菜单）" showSearch optionFilterProp="label">
-                  {parentOptions.map(p => (
-                    <Option key={p.id} value={p.id} label={p.name}>
-                      {p.name} <span className="text-gray-400 text-xs ml-1">{p.path}</span>
-                    </Option>
-                  ))}
-                </Select>
+                <Select allowClear placeholder="无（顶级菜单）" showSearch optionFilterProp="label"
+                options={parentOptions.map(p => ({ value: p.id, label: p.name }))}
+              />
               </Form.Item>
             </Col>
           </Row>

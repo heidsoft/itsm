@@ -31,7 +31,6 @@ import { aiTriage, aiSearchKB, aiSimilarIncidents } from '@/lib/api/ai-api';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 interface AIWorkflowAssistantProps {
   initialTitle?: string;

@@ -32,7 +32,6 @@ import { ticketAnalyticsService } from '@/lib/services/analytics-service';
 import { ticketService } from '@/lib/services/ticket-service';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const IncidentTrendsPage = () => {
@@ -154,11 +153,11 @@ const IncidentTrendsPage = () => {
         <Row justify="space-between" align="middle">
           <Col>
             <Space>
-              <Select value={selectedPeriod} onChange={setSelectedPeriod} style={{ width: 140 }}>
-                <Option value="7d">最近7天</Option>
-                <Option value="30d">最近30天</Option>
-                <Option value="90d">最近90天</Option>
-              </Select>
+              <Select value={selectedPeriod} onChange={setSelectedPeriod} style={{ width: 140 }} options={[
+                { value: '7d', label: '最近7天' },
+                { value: '30d', label: '最近30天' },
+                { value: '90d', label: '最近90天' },
+              ]} />
               <RangePicker
                 value={dateRange}
                 onChange={(dates: any, dateStrings: any) => {

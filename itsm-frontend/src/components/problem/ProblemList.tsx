@@ -33,7 +33,7 @@ import {
 } from '@/constants/problem';
 import type { Problem, ProblemQuery } from '@/types/biz/problem';
 
-const { Option } = Select;
+
 
 // 状态和优先级颜色映射
 const statusColors: Record<string, string> = {
@@ -246,22 +246,26 @@ const ProblemList: React.FC<ProblemListProps> = ({
             />
           </Form.Item>
           <Form.Item name="status" className="mb-0">
-            <Select placeholder="状态" className="w-32" allowClear>
-              {Object.entries(ProblemStatusLabels).map(([value, label]) => (
-                <Option key={value} value={value}>
-                  {label}
-                </Option>
-              ))}
-            </Select>
+            <Select
+              placeholder="状态"
+              className="w-32"
+              allowClear
+              options={Object.entries(ProblemStatusLabels).map(([value, label]) => ({
+                value,
+                label,
+              }))}
+            />
           </Form.Item>
           <Form.Item name="priority" className="mb-0">
-            <Select placeholder="优先级" className="w-32" allowClear>
-              {Object.entries(ProblemPriorityLabels).map(([value, label]) => (
-                <Option key={value} value={value}>
-                  {label}
-                </Option>
-              ))}
-            </Select>
+            <Select
+              placeholder="优先级"
+              className="w-32"
+              allowClear
+              options={Object.entries(ProblemPriorityLabels).map(([value, label]) => ({
+                value,
+                label,
+              }))}
+            />
           </Form.Item>
           <Form.Item className="mb-0">
             <Space>

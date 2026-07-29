@@ -24,7 +24,6 @@ import { httpClient } from '@/lib/api/http-client';
 import type { BpmnNodeSelection } from '../BPMNDesigner';
 
 const { Text } = Typography;
-const { Option } = Select;
 const { TextArea } = Input;
 
 export interface WorkflowNodeInspectorProps {

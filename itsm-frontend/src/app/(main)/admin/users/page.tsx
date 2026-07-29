@@ -38,7 +38,6 @@ import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
-const { Option } = Select;
 
 const UserManagement: React.FC = () => {
   const { token } = theme.useToken();
@@ -379,21 +378,23 @@ const UserManagement: React.FC = () => {
                 style={{ width: 120 }}
                 allowClear
                 onChange={value => handleFilterChange('status', value || '')}
-              >
-                <Option value="active">激活</Option>
-                <Option value="inactive">禁用</Option>
-              </Select>
+                options={[
+                  { value: 'active', label: '激活' },
+                  { value: 'inactive', label: '禁用' },
+                ]}
+              />
               <Select
                 placeholder="部门筛选"
                 style={{ width: 160 }}
                 allowClear
                 onChange={value => handleFilterChange('department', value || '')}
-              >
-                <Option value="IT部门">IT部门</Option>
-                <Option value="财务部门">财务部门</Option>
-                <Option value="人事部门">人事部门</Option>
-                <Option value="市场部门">市场部门</Option>
-              </Select>
+                options={[
+                  { value: 'IT部门', label: 'IT部门' },
+                  { value: '财务部门', label: '财务部门' },
+                  { value: '人事部门', label: '人事部门' },
+                  { value: '市场部门', label: '市场部门' },
+                ]}
+              />
             </Space>
           </Col>
           <Col>
@@ -530,12 +531,7 @@ const UserManagement: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="department" label="部门">
-                <Select placeholder="请选择部门">
-                  <Option value="IT部门">IT部门</Option>
-                  <Option value="财务部门">财务部门</Option>
-                  <Option value="人事部门">人事部门</Option>
-                  <Option value="市场部门">市场部门</Option>
-                </Select>
+                <Select placeholder="请选择部门" options={[{ value: 'IT部门', label: 'IT部门' }, { value: '财务部门', label: '财务部门' }, { value: '人事部门', label: '人事部门' }, { value: '市场部门', label: '市场部门' }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -615,12 +611,12 @@ const UserManagement: React.FC = () => {
             </Col>
           </Row>
           <Form.Item name="department" label="部门">
-            <Select placeholder="请选择部门">
-              <Option value="IT部门">IT部门</Option>
-              <Option value="财务部门">财务部门</Option>
-              <Option value="人事部门">人事部门</Option>
-              <Option value="市场部门">市场部门</Option>
-            </Select>
+            <Select placeholder="请选择部门" options={[
+              { value: 'IT部门', label: 'IT部门' },
+              { value: '财务部门', label: '财务部门' },
+              { value: '人事部门', label: '人事部门' },
+              { value: '市场部门', label: '市场部门' },
+            ]} />
           </Form.Item>
           <Form.Item>
             <Space>

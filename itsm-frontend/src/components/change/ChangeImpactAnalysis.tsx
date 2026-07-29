@@ -35,7 +35,6 @@ import { CMDBApi } from '@/lib/api/cmdb-api';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 
 interface ChangeImpactAnalysisProps {
   changeId?: number;
@@ -446,23 +445,23 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
               name="dataRiskLevel"
               rules={[{ required: true, message: '请选择数据风险等级' }]}
             >
-              <Select placeholder="选择数据风险等级">
-                <Option value="low">低风险 - 无数据丢失风险</Option>
-                <Option value="medium">中风险 - 可能需要数据恢复</Option>
-                <Option value="high">高风险 - 有数据丢失可能</Option>
-                <Option value="critical">极高风险 - 严重数据损失风险</Option>
-              </Select>
+              <Select placeholder="选择数据风险等级" options={[
+                { value: 'low', label: '低风险 - 无数据丢失风险' },
+                { value: 'medium', label: '中风险 - 可能需要数据恢复' },
+                { value: 'high', label: '高风险 - 有数据丢失可能' },
+                { value: 'critical', label: '极高风险 - 严重数据损失风险' },
+              ]} />
             </Form.Item>
 
             {/* 服务依赖 */}
             <Form.Item label="服务依赖" name="serviceDependencies">
-              <Select mode="tags" placeholder="选择或输入依赖的服务" style={{ width: '100%' }}>
-                <Option value="认证服务">认证服务</Option>
-                <Option value="支付服务">支付服务</Option>
-                <Option value="通知服务">通知服务</Option>
-                <Option value="日志服务">日志服务</Option>
-                <Option value="文件服务">文件服务</Option>
-              </Select>
+              <Select mode="tags" placeholder="选择或输入依赖的服务" style={{ width: '100%' }} options={[
+                { value: '认证服务', label: '认证服务' },
+                { value: '支付服务', label: '支付服务' },
+                { value: '通知服务', label: '通知服务' },
+                { value: '日志服务', label: '日志服务' },
+                { value: '文件服务', label: '文件服务' },
+              ]} />
             </Form.Item>
           </Col>
 

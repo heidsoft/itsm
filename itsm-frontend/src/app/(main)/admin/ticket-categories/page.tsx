@@ -41,7 +41,6 @@ import { buildCategoryTree, collectDescendantIds } from './categoryTreeUtils';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 interface TicketCategory {
   id: number;
@@ -617,24 +616,12 @@ const TicketCategoryManagementPage = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="workflowId" label="关联工作流" tooltip="该分类下的工单将默认走此工作流">
-                <Select placeholder="请选择工作流（可选）" allowClear showSearch optionFilterProp="children">
-                  {workflows.map(w => (
-                    <Option key={w.id} value={w.id}>
-                      {w.name}
-                    </Option>
-                  ))}
-                </Select>
+                <Select placeholder="请选择工作流（可选）" allowClear showSearch optionFilterProp="children" options={workflows.map(w => ({ value: w.id, label: w.name }))} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="departmentId" label="所属部门">
-                <Select placeholder="请选择部门（可选）" allowClear showSearch optionFilterProp="children">
-                  {departments.map(d => (
-                    <Option key={d.id} value={d.id}>
-                      {d.name}
-                    </Option>
-                  ))}
-                </Select>
+                <Select placeholder="请选择部门（可选）" allowClear showSearch optionFilterProp="children" options={departments.map(d => ({ value: d.id, label: d.name }))} />
               </Form.Item>
             </Col>
           </Row>

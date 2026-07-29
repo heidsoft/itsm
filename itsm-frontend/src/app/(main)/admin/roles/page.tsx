@@ -43,7 +43,6 @@ import { UserApi } from '@/lib/api/user-api';
 import type { PermissionCatalogItem } from '@/lib/api/api-config';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 // 展示层映射：资源代码 -> 中文模块名（后端 permission_definition 未存中文时兜底）
 // 后端拉取的 permission.name 若为空或与代码相同，则使用此表；否则优先展示后端 name
@@ -605,11 +604,8 @@ export default function RoleManagement() {
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部状态</Option>
-              <Option value="active">启用</Option>
-              <Option value="inactive">禁用</Option>
-            </Select>
+              options={[{ value: 'all', label: '全部状态' }, { value: 'active', label: '启用' }, { value: 'inactive', label: '禁用' }]}
+            />
           </Col>
           <Col xs={24} md={4} lg={10} className="text-right">
             <Space>

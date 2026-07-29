@@ -37,7 +37,6 @@ import {
 } from '@/lib/api/cmdb-relationship';
 
 const { Text, Title } = Typography;
-const { Option } = Select;
 const { TextArea } = Input;
 
 // 在已有关系边中判断 from 是否可达 to（DFS，带访问集防止死循环）
@@ -427,16 +426,10 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
               optionFilterProp='children'
               onSearch={handleSearchAvailableCIs}
               style={{ width: '100%' }}
-            >
-              {availableCIs.map(ci => (
-                <Option key={ci.id} value={ci.id}>
-                  <Space>
+             options={availableCIs.map(ci => ({ value: ci.id, label: <Space>
                     <span>{ci.name}</span>
                     <Tag>{ci.type}</Tag>
-                  </Space>
-                </Option>
-              ))}
-            </Select>
+                  </Space> }))} />
           </Form.Item>
 
           <Form.Item
@@ -444,39 +437,23 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
             label='关系类型'
             rules={[{ required: true, message: '请选择关系类型' }]}
           >
-            <Select placeholder='选择关系类型' style={{ width: '100%' }}>
-              {relationshipTypes.map(type => (
-                <Option key={type.type} value={type.type}>
-                  <Tooltip title={type.description}>
+            <Select placeholder='选择关系类型' style={{ width: '100%' }} options={relationshipTypes.map(type => ({ value: type.type, label: <Tooltip title={type.description}>
                     <Space>
                       <span>{type.name}</span>
                       <Tag>{type.direction === 'bi-directional' ? '双向' : '单向'}</Tag>
                     </Space>
-                  </Tooltip>
-                </Option>
-              ))}
-            </Select>
+                  </Tooltip> }))} />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name='strength' label='关系强度'>
-                <Select placeholder='选择强度' style={{ width: '100%' }}>
-                  <Option value='critical'>关键</Option>
-                  <Option value='high'>高</Option>
-                  <Option value='medium'>中</Option>
-                  <Option value='low'>低</Option>
-                </Select>
+                <Select placeholder='选择强度' style={{ width: '100%' }} options={[{ value: "critical", label: "关键" }, { value: "high", label: "高" }, { value: "medium", label: "中" }, { value: "low", label: "低" }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name='impactLevel' label='影响程度'>
-                <Select placeholder='选择程度' style={{ width: '100%' }}>
-                  <Option value='critical'>致命</Option>
-                  <Option value='high'>高</Option>
-                  <Option value='medium'>中</Option>
-                  <Option value='low'>低</Option>
-                </Select>
+                <Select placeholder='选择程度' style={{ width: '100%' }} options={[{ value: "critical", label: "致命" }, { value: "high", label: "高" }, { value: "medium", label: "中" }, { value: "low", label: "低" }]} />
               </Form.Item>
             </Col>
           </Row>

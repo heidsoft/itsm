@@ -42,7 +42,6 @@ import type { SLADefinition } from './types';
 import { transformSLA, getPriorityColor, getStatusColor, getStatusText } from './utils';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 // 优先级配置
 const PRIORITY_CONFIG = {
@@ -447,14 +446,11 @@ const SLADefinitionManagement = () => {
               value={priorityFilter}
               onChange={setPriorityFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部优先级</Option>
-              {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
-                <Option key={key} value={key}>
-                  {config.label}
-                </Option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: '全部优先级' },
+                ...Object.entries(PRIORITY_CONFIG).map(([key, config]) => ({ value: key, label: config.label })),
+              ]}
+            />
           </Col>
           <Col xs={24} md={4}>
             <Select
@@ -462,14 +458,11 @@ const SLADefinitionManagement = () => {
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部状态</Option>
-              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                <Option key={key} value={key}>
-                  {config.label}
-                </Option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: '全部状态' },
+                ...Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label })),
+              ]}
+            />
           </Col>
           <Col xs={24} md={4}>
             <Select
@@ -477,14 +470,11 @@ const SLADefinitionManagement = () => {
               value={serviceTypeFilter}
               onChange={setServiceTypeFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部类型</Option>
-              {serviceTypes.map(type => (
-                <Option key={type} value={type}>
-                  {type}
-                </Option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: '全部类型' },
+                ...serviceTypes.map(type => ({ value: type, label: type })),
+              ]}
+            />
           </Col>
           <Col xs={24} md={4} className="text-right">
             <Button
@@ -570,13 +560,8 @@ const SLADefinitionManagement = () => {
                   showSearch
                   optionFilterProp="label"
                   placeholder="选择或输入服务类型"
-                >
-                  {serviceTypes.map(type => (
-                    <Option key={type} value={type}>
-                      {type}
-                    </Option>
-                  ))}
-                </Select>
+                  options={serviceTypes.map(type => ({ value: type, label: type }))}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -595,13 +580,7 @@ const SLADefinitionManagement = () => {
                 rules={[{ required: true, message: '请选择优先级' }]}
                 initialValue="P3"
               >
-                <Select>
-                  {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
-                    <Option key={key} value={key}>
-                      {config.label}
-                    </Option>
-                  ))}
-                </Select>
+                <Select options={Object.entries(PRIORITY_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -641,22 +620,16 @@ const SLADefinitionManagement = () => {
                 name="businessHours"
                 rules={[{ required: true, message: '请输入业务时间' }]}
               >
-                <Select>
-                  <Option value="7x24">7x24小时</Option>
-                  <Option value="工作时间">工作时间</Option>
-                  <Option value="5x8">5x8小时</Option>
-                </Select>
+                <Select options={[
+                  { value: '7x24', label: '7x24小时' },
+                  { value: '工作时间', label: '工作时间' },
+                  { value: '5x8', label: '5x8小时' },
+                ]} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item label="状态" name="status" initialValue="draft">
-                <Select>
-                  {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                    <Option key={key} value={key}>
-                      {config.label}
-                    </Option>
-                  ))}
-                </Select>
+                <Select options={Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
               </Form.Item>
             </Col>
           </Row>

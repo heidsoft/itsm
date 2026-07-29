@@ -42,7 +42,6 @@ import { ticketAnalyticsService } from '@/lib/services/analytics-service';
 import { ticketService, TicketStatsResponse } from '@/lib/services/ticket-service';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
 

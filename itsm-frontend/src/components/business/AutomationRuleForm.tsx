@@ -28,7 +28,6 @@ import type { AutomationRule } from '@/lib/api/ticket-automation-rule-api';
 import { TicketAutomationRuleApi } from '@/lib/api/ticket-automation-rule-api';
 
 const { TextArea } = Input;
-const { Option } = Select;
 const { Title, Text } = Typography;
 
 interface AutomationRuleFormProps {
@@ -233,13 +232,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                           name={[field.name, 'field']}
                           rules={[{ required: true }]}
                         >
-                          <Select placeholder="选择字段">
-                            {conditionFields.map(f => (
-                              <Option key={f.value} value={f.value}>
-                                {f.label}
-                              </Option>
-                            ))}
-                          </Select>
+                          <Select placeholder="选择字段" options={conditionFields.map(f => ({ value: f.value, label: f.label }))} />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
@@ -248,15 +241,15 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                           name={[field.name, 'operator']}
                           rules={[{ required: true }]}
                         >
-                          <Select placeholder="操作符">
-                            <Option value="equals">等于</Option>
-                            <Option value="not_equals">不等于</Option>
-                            <Option value="contains">包含</Option>
-                            <Option value="in">属于</Option>
-                            <Option value="not_in">不属于</Option>
-                            <Option value="greater_than">大于</Option>
-                            <Option value="less_than">小于</Option>
-                          </Select>
+                          <Select placeholder="操作符" options={[
+                            { value: 'equals', label: '等于' },
+                            { value: 'not_equals', label: '不等于' },
+                            { value: 'contains', label: '包含' },
+                            { value: 'in', label: '属于' },
+                            { value: 'not_in', label: '不属于' },
+                            { value: 'greater_than', label: '大于' },
+                            { value: 'less_than', label: '小于' },
+                          ]} />
                         </Form.Item>
                       </Col>
                       <Col span={10}>
@@ -312,13 +305,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                             name={[field.name, 'type']}
                             rules={[{ required: true }]}
                           >
-                            <Select placeholder="选择动作类型">
-                              {actionTypes.map(type => (
-                                <Option key={type.value} value={type.value}>
-                                  {type.label}
-                                </Option>
-                              ))}
-                            </Select>
+                            <Select placeholder="选择动作类型" options={actionTypes.map(type => ({ value: type.value, label: type.label }))} />
                           </Form.Item>
                         </Col>
                         <Col span={16}>
@@ -337,12 +324,12 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                               name={[field.name, 'priority']}
                               rules={[{ required: true }]}
                             >
-                              <Select placeholder="选择优先级">
-                                <Option value="low">低</Option>
-                                <Option value="medium">中</Option>
-                                <Option value="high">高</Option>
-                                <Option value="urgent">紧急</Option>
-                              </Select>
+                              <Select placeholder="选择优先级" options={[
+                                { value: 'low', label: '低' },
+                                { value: 'medium', label: '中' },
+                                { value: 'high', label: '高' },
+                                { value: 'urgent', label: '紧急' },
+                              ]} />
                             </Form.Item>
                           )}
                           {actionType === 'assign' && (
@@ -369,12 +356,12 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                               name={[field.name, 'status']}
                               rules={[{ required: true }]}
                             >
-                              <Select placeholder="选择状态">
-                                <Option value="open">待处理</Option>
-                                <Option value="in_progress">处理中</Option>
-                                <Option value="resolved">已解决</Option>
-                                <Option value="closed">已关闭</Option>
-                              </Select>
+                              <Select placeholder="选择状态" options={[
+                                { value: 'open', label: '待处理' },
+                                { value: 'in_progress', label: '处理中' },
+                                { value: 'resolved', label: '已解决' },
+                                { value: 'closed', label: '已关闭' },
+                              ]} />
                             </Form.Item>
                           )}
                           {(actionType === 'auto_assign' || actionType === 'escalate') && (

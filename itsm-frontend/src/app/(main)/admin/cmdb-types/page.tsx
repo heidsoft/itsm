@@ -48,7 +48,6 @@ import {
 import type { AttributeTemplateField } from './attributeSchemaUtils';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 const CMDBTypesManagement = () => {
   const { message } = App.useApp();
@@ -419,10 +418,8 @@ const CMDBTypesManagement = () => {
               allowClear
               style={{ width: '100%' }}
               size='middle'
-            >
-              <Option value='active'>激活</Option>
-              <Option value='inactive'>停用</Option>
-            </Select>
+              options={[{ value: 'active', label: '激活' }, { value: 'inactive', label: '停用' }]}
+            />
           </Col>
           <Col xs={24} sm={24} md={12}>
             <Space>
@@ -698,30 +695,12 @@ const CMDBTypesManagement = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name='icon' label='图标标识'>
-                <Select placeholder='选择图标标识' allowClear>
-                  {iconOptions.map(option => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
+                <Select placeholder='选择图标标识' allowClear options={iconOptions} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name='color' label='颜色'>
-                <Select placeholder='选择颜色'>
-                  {colorOptions.map(option => (
-                    <Option key={option.value} value={option.value}>
-                      <div className='flex items-center'>
-                        <div
-                          className='w-3 h-3 rounded mr-2'
-                          style={{ backgroundColor: option.value }}
-                        />
-                        {option.label}
-                      </div>
-                    </Option>
-                  ))}
-                </Select>
+                <Select placeholder='选择颜色' options={colorOptions.map(opt => ({ value: opt.value, label: opt.label }))} />
               </Form.Item>
             </Col>
           </Row>

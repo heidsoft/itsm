@@ -34,7 +34,7 @@ import { ProcessBindingApi } from '@/lib/api/process-binding-api';
 import type { Department } from '@/lib/services/department-service';
 import { departmentService } from '@/lib/services/department-service';
 
-const { Option } = Select;
+
 
 interface DepartmentTreeNode {
   title: string;
@@ -310,12 +310,8 @@ export default function DepartmentProcessPage() {
             <Select
               value={departmentType}
               onChange={setDepartmentType}
-            >
-              <Option value="operations">Operations (Alert Handling, Change Release)</Option>
-              <Option value="rd">R&D (Code Release, Requirement Change)</Option>
-              <Option value="finance">Finance (Expense Approval, Budget)</Option>
-              <Option value="hr">HR (Leave, Recruitment)</Option>
-            </Select>
+              options={[{ value: 'operations', label: 'Operations (Alert Handling, Change Release)' }, { value: 'rd', label: 'R&D (Code Release, Requirement Change)' }, { value: 'finance', label: 'Finance (Expense Approval, Budget)' }, { value: 'hr', label: 'HR (Leave, Recruitment)' }]}
+            />
           </Form.Item>
         </Form>
       </Modal>

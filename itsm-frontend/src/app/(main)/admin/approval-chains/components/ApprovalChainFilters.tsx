@@ -13,7 +13,7 @@ import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 
 const { Search } = Input;
-const { Option } = Select;
+
 const { RangePicker } = DatePicker;
 
 interface ApprovalChainFiltersProps {
@@ -107,10 +107,11 @@ export function ApprovalChainFilters({
             onChange={handleStatusChange}
             style={{ width: '100%' }}
             allowClear
-          >
-            <Option value="active">活跃</Option>
-            <Option value="inactive">非活跃</Option>
-          </Select>
+            options={[
+              { value: 'active', label: '活跃' },
+              { value: 'inactive', label: '非活跃' },
+            ]}
+          />
         </Col>
 
         <Col xs={24} sm={12} md={8} lg={6}>

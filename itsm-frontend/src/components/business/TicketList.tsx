@@ -24,7 +24,6 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import type { TicketListResponse } from '@/lib/api/api-config';
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 
 interface TicketListProps {
   onTicketSelect?: (ticket: Ticket) => void;
@@ -405,25 +404,27 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
             allowClear
             style={{ width: 120 }}
             onChange={value => handleFilterChange({ status: value })}
-          >
-            <Option value="open">待处理</Option>
-            <Option value="in_progress">处理中</Option>
-            <Option value="pending">待确认</Option>
-            <Option value="resolved">已解决</Option>
-            <Option value="closed">已关闭</Option>
-            <Option value="cancelled">已取消</Option>
-          </Select>
+            options={[
+              { value: "open", label: "待处理" },
+              { value: "in_progress", label: "处理中" },
+              { value: "pending", label: "待确认" },
+              { value: "resolved", label: "已解决" },
+              { value: "closed", label: "已关闭" },
+              { value: "cancelled", label: "已取消" },
+            ]}
+          />
           <Select
             placeholder="优先级"
             allowClear
             style={{ width: 120 }}
             onChange={value => handleFilterChange({ priority: value })}
-          >
-            <Option value="critical">紧急</Option>
-            <Option value="high">高</Option>
-            <Option value="medium">中</Option>
-            <Option value="low">低</Option>
-          </Select>
+            options={[
+              { value: "critical", label: "紧急" },
+              { value: "high", label: "高" },
+              { value: "medium", label: "中" },
+              { value: "low", label: "低" },
+            ]}
+          />
           <RangePicker
             placeholder={['开始日期', '结束日期']}
             onChange={dates => {

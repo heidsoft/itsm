@@ -37,7 +37,7 @@ import { departmentService } from '@/lib/services/department-service';
 import type { Team } from '@/lib/services/team-service';
 import { teamService } from '@/lib/services/team-service';
 
-const { Option } = Select;
+
 
 type ProcessRoutingRule = ProcessBinding & {
   departmentName?: string;
@@ -391,18 +391,11 @@ export default function ProcessRoutingPage() {
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item
-                          name="businessType"
-                          label="Business Type"
-                          rules={[{ required: true }]}
+                        name="businessType"
+                        label="Business Type"
+                        rules={[{ required: true }]}
                         >
-                          <Select>
-                            <Option value="ticket">Ticket</Option>
-                            <Option value="incident">Incident</Option>
-                            <Option value="change">Change</Option>
-                            <Option value="service_request">Service Request</Option>
-                            <Option value="problem">Problem</Option>
-                            <Option value="release">Release</Option>
-                          </Select>
+                        <Select options={[{ value: 'ticket', label: 'Ticket' }, { value: 'incident', label: 'Incident' }, { value: 'change', label: 'Change' }, { value: 'service_request', label: 'Service Request' }, { value: 'problem', label: 'Problem' }, { value: 'release', label: 'Release' }]} />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
@@ -417,13 +410,7 @@ export default function ProcessRoutingPage() {
                       label="Process Definition"
                       rules={[{ required: true }]}
                     >
-                      <Select showSearch optionFilterProp="children">
-                        {processDefinitions.map((pd: any) => (
-                          <Option key={pd.key} value={pd.key}>
-                            {pd.name} ({pd.key})
-                          </Option>
-                        ))}
-                      </Select>
+                      <Select showSearch optionFilterProp="children" options={processDefinitions.map(pd => ({ value: pd.key, label: `${pd.name} (${pd.key})` }))} />
                     </Form.Item>
 
                     <Row gutter={16}>
@@ -463,13 +450,8 @@ export default function ProcessRoutingPage() {
                             placeholder="Global (All Departments)"
                             showSearch
                             optionFilterProp="children"
-                          >
-                            {departments.map(dept => (
-                              <Option key={dept.id} value={dept.id}>
-                                {dept.name} ({dept.code})
-                              </Option>
-                            ))}
-                          </Select>
+                            options={departments.map(dept => ({ value: dept.id, label: `${dept.name} (${dept.code})` }))}
+                          />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
@@ -479,13 +461,8 @@ export default function ProcessRoutingPage() {
                             placeholder="All Teams"
                             showSearch
                             optionFilterProp="children"
-                          >
-                            {teams.map(team => (
-                              <Option key={team.id} value={team.id}>
-                                {team.name} ({team.code})
-                              </Option>
-                            ))}
-                          </Select>
+                            options={teams.map(team => ({ value: team.id, label: `${team.name} (${team.code})` }))}
+                          />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -493,24 +470,12 @@ export default function ProcessRoutingPage() {
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item name="scenario" label="Scenario">
-                          <Select allowClear placeholder="Any Scenario">
-                            {scenarioOptions.map(opt => (
-                              <Option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </Option>
-                            ))}
-                          </Select>
+                          <Select allowClear placeholder="Any Scenario" options={scenarioOptions} />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item name="category" label="Category">
-                          <Select allowClear placeholder="Any Category">
-                            {categoryOptions.map(opt => (
-                              <Option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </Option>
-                            ))}
-                          </Select>
+                          <Select allowClear placeholder="Any Category" options={categoryOptions} />
                         </Form.Item>
                       </Col>
                     </Row>

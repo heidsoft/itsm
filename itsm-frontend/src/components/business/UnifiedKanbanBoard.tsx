@@ -25,7 +25,6 @@ dayjs.extend(relativeTime);
 dayjs.locale('zh-cn');
 
 const { Search } = Input;
-const { Option } = Select;
 
 /**
  * 统一看板配置接口
@@ -450,14 +449,11 @@ export function UnifiedKanbanBoard<T>({
                 onChange={setFilterStatus}
                 style={{ width: 120 }}
                 placeholder="状态"
-              >
-                <Option value="all">全部状态</Option>
-                {columnConfigs.map(col => (
-                  <Option key={col.key} value={col.key}>
-                    {col.title}
-                  </Option>
-                ))}
-              </Select>
+                options={[
+                  { value: 'all', label: '全部状态' },
+                  ...columnConfigs.map(col => ({ value: col.key, label: col.title })),
+                ]}
+              />
             )}
             {showPriorityFilter && priorityOptions.length > 0 && (
               <Select
@@ -465,14 +461,11 @@ export function UnifiedKanbanBoard<T>({
                 onChange={setFilterPriority}
                 style={{ width: 120 }}
                 placeholder="优先级"
-              >
-                <Option value="all">全部优先级</Option>
-                {priorityOptions.map(p => (
-                  <Option key={p.value} value={p.value}>
-                    {p.label}
-                  </Option>
-                ))}
-              </Select>
+                options={[
+                  { value: 'all', label: '全部优先级' },
+                  ...priorityOptions.map(p => ({ value: p.value, label: p.label })),
+                ]}
+              />
             )}
           </div>
           <div className="flex items-center gap-2">

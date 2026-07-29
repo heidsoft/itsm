@@ -27,7 +27,6 @@ import { ReleaseApi } from '@/lib/api/release-api';
 import type { Dayjs } from 'dayjs';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 interface ReleaseFormValues {
   releaseNumber: string;
@@ -186,29 +185,29 @@ const ReleaseForm: React.FC = () => {
         </Form.Item>
 
         <Form.Item name="type" label="发布类型">
-          <Select>
-            <Option value="major">主版本 (Major)</Option>
-            <Option value="minor">次版本 (Minor)</Option>
-            <Option value="patch">补丁 (Patch)</Option>
-            <Option value="hotfix">紧急修复 (Hotfix)</Option>
-          </Select>
+          <Select options={[
+            { value: 'major', label: '主版本 (Major)' },
+            { value: 'minor', label: '次版本 (Minor)' },
+            { value: 'patch', label: '补丁 (Patch)' },
+            { value: 'hotfix', label: '紧急修复 (Hotfix)' },
+          ]} />
         </Form.Item>
 
         <Form.Item name="environment" label="目标环境">
-          <Select>
-            <Option value="dev">开发环境</Option>
-            <Option value="staging">预发布环境</Option>
-            <Option value="production">生产环境</Option>
-          </Select>
+          <Select options={[
+            { value: 'dev', label: '开发环境' },
+            { value: 'staging', label: '预发布环境' },
+            { value: 'production', label: '生产环境' },
+          ]} />
         </Form.Item>
 
         <Form.Item name="severity" label="严重程度">
-          <Select>
-            <Option value="low">低</Option>
-            <Option value="medium">中</Option>
-            <Option value="high">高</Option>
-            <Option value="critical">严重</Option>
-          </Select>
+          <Select options={[
+            { value: 'low', label: '低' },
+            { value: 'medium', label: '中' },
+            { value: 'high', label: '高' },
+            { value: 'critical', label: '严重' },
+          ]} />
         </Form.Item>
 
         <Divider>计划信息</Divider>

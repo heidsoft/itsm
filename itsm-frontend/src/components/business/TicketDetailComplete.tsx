@@ -58,7 +58,6 @@ import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 
 const { TextArea } = Input;
 const { Text, Title } = Typography;
-const { Option } = Select;
 
 // 工单详情接口
 interface TicketDetailComplete {

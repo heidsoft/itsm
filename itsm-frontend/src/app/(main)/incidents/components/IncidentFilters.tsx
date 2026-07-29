@@ -6,7 +6,7 @@ import { Search as SearchIcon } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 const { Search } = Input;
-const { Option } = Select;
+
 
 interface IncidentFiltersProps {
   loading?: boolean;
@@ -63,50 +63,16 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 value={status}
                 onChange={value => onFilterChange?.(value, priority, source)}
                 className="w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-              >
-                <Option value="new">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>{t('incidents.statusNew')}</span>
-                  </div>
-                </Option>
-                <Option value="acknowledged">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span>{t('incidents.statusAcknowledged')}</span>
-                  </div>
-                </Option>
-                <Option value="assigned">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
-                    <span>{t('incidents.statusAssigned')}</span>
-                  </div>
-                </Option>
-                <Option value="in_progress">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>{t('incidents.statusInProgress')}</span>
-                  </div>
-                </Option>
-                <Option value="escalated">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <span>{t('incidents.statusEscalated')}</span>
-                  </div>
-                </Option>
-                <Option value="resolved">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>{t('incidents.statusResolved')}</span>
-                  </div>
-                </Option>
-                <Option value="closed">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                    <span>{t('incidents.statusClosed')}</span>
-                  </div>
-                </Option>
-              </Select>
+                options={[
+                  { value: "new", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div><span>{t('incidents.statusNew')}</span></div> },
+                  { value: "acknowledged", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div><span>{t('incidents.statusAcknowledged')}</span></div> },
+                  { value: "assigned", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-teal-500 rounded-full"></div><span>{t('incidents.statusAssigned')}</span></div> },
+                  { value: "in_progress", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div><span>{t('incidents.statusInProgress')}</span></div> },
+                  { value: "escalated", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-red-500 rounded-full"></div><span>{t('incidents.statusEscalated')}</span></div> },
+                  { value: "resolved", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-green-500 rounded-full"></div><span>{t('incidents.statusResolved')}</span></div> },
+                  { value: "closed", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-gray-500 rounded-full"></div><span>{t('incidents.statusClosed')}</span></div> },
+                ]}
+              />
             </div>
           </Col>
           <Col xs={24} sm={12} md={4}>
@@ -119,32 +85,13 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 value={priority}
                 onChange={value => onFilterChange?.(status, value, source)}
                 className="w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-              >
-                <Option value="low">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>{t('incidents.priorityLow')}</span>
-                  </div>
-                </Option>
-                <Option value="medium">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>{t('incidents.priorityMedium')}</span>
-                  </div>
-                </Option>
-                <Option value="high">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <span>{t('incidents.priorityHigh')}</span>
-                  </div>
-                </Option>
-                <Option value="critical">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                    <span>{t('incidents.priorityCritical')}</span>
-                  </div>
-                </Option>
-              </Select>
+                options={[
+                  { value: "low", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-green-500 rounded-full"></div><span>{t('incidents.priorityLow')}</span></div> },
+                  { value: "medium", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div><span>{t('incidents.priorityMedium')}</span></div> },
+                  { value: "high", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-orange-500 rounded-full"></div><span>{t('incidents.priorityHigh')}</span></div> },
+                  { value: "critical", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div><span>{t('incidents.priorityCritical')}</span></div> },
+                ]}
+              />
             </div>
           </Col>
           <Col xs={24} sm={12} md={4}>
@@ -157,12 +104,13 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 value={source}
                 onChange={value => onFilterChange?.(status, priority, value)}
                 className="w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-              >
-                <Option value="email">📧 {t('incidents.sourceEmail')}</Option>
-                <Option value="phone">📞 {t('incidents.sourcePhone')}</Option>
-                <Option value="web">🌐 {t('incidents.sourceWeb')}</Option>
-                <Option value="system">⚙️ {t('incidents.sourceSystem')}</Option>
-              </Select>
+                options={[
+                  { value: "email", label: "📧 " + t('incidents.sourceEmail') },
+                  { value: "phone", label: "📞 " + t('incidents.sourcePhone') },
+                  { value: "web", label: "🌐 " + t('incidents.sourceWeb') },
+                  { value: "system", label: "⚙️ " + t('incidents.sourceSystem') },
+                ]}
+              />
             </div>
           </Col>
           <Col xs={24} sm={12} md={4}>

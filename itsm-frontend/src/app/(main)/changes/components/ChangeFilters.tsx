@@ -5,7 +5,6 @@ import { Card, Row, Col, Input, Select, Button } from 'antd';
 import { RefreshCw } from 'lucide-react';
 
 const { Search: SearchInput } = Input;
-const { Option } = Select;
 
 interface ChangeFiltersProps {
   loading: boolean;
@@ -47,32 +46,13 @@ export const ChangeFilters: React.FC<ChangeFiltersProps> = ({
             className="w-full"
             size="large"
             placeholder="选择状态"
-          >
-            <Option value="全部">
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>
-                全部状态
-              </div>
-            </Option>
-            <Option value="pending">
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full bg-orange-500 mr-2"></div>
-                待审批
-              </div>
-            </Option>
-            <Option value="approved">
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                已批准
-              </div>
-            </Option>
-            <Option value="completed">
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                已完成
-              </div>
-            </Option>
-          </Select>
+            options={[
+              { value: '全部', label: <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>全部状态</div> },
+              { value: 'pending', label: <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-orange-500 mr-2"></div>待审批</div> },
+              { value: 'approved', label: <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>已批准</div> },
+              { value: 'completed', label: <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>已完成</div> },
+            ]}
+          />
         </Col>
         <Col xs={24} sm={12} md={4}>
           <Button

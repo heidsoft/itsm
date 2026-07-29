@@ -22,7 +22,7 @@ import dayjs from 'dayjs';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { CloudResource, CloudService } from '@/types/biz/cmdb';
 
-const { Option } = Select;
+
 
 const providerOptions = [
   { value: 'aliyun', label: '阿里云' },
@@ -302,13 +302,7 @@ export default function CloudResourcePage() {
       <div className='mb-4 flex flex-wrap items-center gap-3'>
         <Form form={form} layout='inline' className='flex-wrap gap-2'>
           <Form.Item name='provider' className='!mb-0'>
-            <Select placeholder='云厂商' style={{ width: 140 }} allowClear>
-              {providerOptions.map(item => (
-                <Option key={item.value} value={item.value}>
-                  {item.label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder='云厂商' style={{ width: 140 }} allowClear options={providerOptions} />
           </Form.Item>
           <Form.Item name='serviceId' className='!mb-0'>
             <Select
@@ -317,19 +311,13 @@ export default function CloudResourcePage() {
               allowClear
               showSearch
               optionFilterProp='label'
-            >
-              {services
+              options={services
                 .filter(service => !provider || service.provider === provider)
-                .map(service => (
-                  <Option
-                    key={service.id}
-                    value={service.id}
-                    label={`${service.serviceName} (${service.resourceTypeName})`}
-                  >
-                    {service.serviceName} ({service.resourceTypeName})
-                  </Option>
-                ))}
-            </Select>
+                .map(service => ({
+                  value: service.id,
+                  label: `${service.serviceName} (${service.resourceTypeName})`,
+                }))}
+            />
           </Form.Item>
           <Form.Item name='region' className='!mb-0'>
             <Input placeholder='Region' style={{ width: 120 }} allowClear />

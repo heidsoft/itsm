@@ -63,8 +63,6 @@ import { BatchActionBar } from '@/components/business/BatchActionBar';
 
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
-
-const { Option } = Select;
 const { Text } = Typography;
 
 interface Workflow {
@@ -1010,24 +1008,14 @@ const WorkflowManagementPage = () => {
         onChange={value => setFilters(prev => ({ ...prev, status: value ?? '' }))}
         allowClear
         className="min-w-[160px]"
-      >
-        <Option value="draft">{t('workflow.draft')}</Option>
-        <Option value="active">{t('workflow.activated')}</Option>
-        <Option value="inactive">{t('workflow.deactivated')}</Option>
-        <Option value="archived">{t('workflow.archived')}</Option>
-      </Select>
+       options={[{ value: "draft", label: t('workflow.draft') }, { value: "active", label: t('workflow.activated') }, { value: "inactive", label: t('workflow.deactivated') }, { value: "archived", label: t('workflow.archived') }]} />
       <Select
         placeholder={t('workflow.categoryFilter')}
         value={filters.category || undefined}
         onChange={value => setFilters(prev => ({ ...prev, category: value ?? '' }))}
         allowClear
         className="min-w-[180px]"
-      >
-        <Option value="general">{t('workflow.generalWorkflow')}</Option>
-        <Option value="approval">{t('workflow.approvalProcess')}</Option>
-        <Option value="incident">{t('workflow.incidentHandling')}</Option>
-        <Option value="change">{t('workflow.changeManagement')}</Option>
-      </Select>
+       options={[{ value: "general", label: t('workflow.generalWorkflow') }, { value: "approval", label: t('workflow.approvalProcess') }, { value: "incident", label: t('workflow.incidentHandling') }, { value: "change", label: t('workflow.changeManagement') }]} />
     </>
   );
 
@@ -1289,22 +1277,12 @@ const WorkflowManagementPage = () => {
                 label={t('workflow.category')}
                 rules={[{ required: true, message: t('workflow.categoryRequired') }]}
               >
-                <Select placeholder={t('workflow.categoryPlaceholder')}>
-                  {workflowCategoryOptions.map(option => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
+                <Select placeholder={t('workflow.categoryPlaceholder')} options={workflowCategoryOptions.map(option => ({ value: option.value, label: option.label }))} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="status" label={t('workflow.status')}>
-                <Select placeholder={t('workflow.statusPlaceholder')}>
-                  <Option value="draft">{t('workflow.draft')}</Option>
-                  <Option value="active">{t('workflow.activated')}</Option>
-                  <Option value="inactive">{t('workflow.deactivated')}</Option>
-                </Select>
+                <Select placeholder={t('workflow.statusPlaceholder')} options={[{ value: "draft", label: t('workflow.draft') }, { value: "active", label: t('workflow.activated') }, { value: "inactive", label: t('workflow.deactivated') }]} />
               </Form.Item>
             </Col>
           </Row>

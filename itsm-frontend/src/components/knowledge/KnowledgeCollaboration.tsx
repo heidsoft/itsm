@@ -40,8 +40,6 @@ import { format } from 'date-fns';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
-
 interface UserPresence {
   userId: string;
   userName: string;
@@ -335,26 +333,16 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
                 onChange={setCommentType}
                 style={{ width: 120 }}
                 size="small"
-              >
-                <Option value="comment">
-                  <Space>
+               options={[{ value: "comment", label: <Space>
                     <MessageSquare className="w-3 h-3" />
                     评论
-                  </Space>
-                </Option>
-                <Option value="suggestion">
-                  <Space>
+                  </Space> }, { value: "suggestion", label: <Space>
                     <Edit3 className="w-3 h-3" />
                     建议
-                  </Space>
-                </Option>
-                <Option value="question">
-                  <Space>
+                  </Space> }, { value: "question", label: <Space>
                     <HelpCircle className="w-3 h-3" />
                     问题
-                  </Space>
-                </Option>
-              </Select>
+                  </Space> }]} />
             </div>
             <div className="flex space-x-2">
               <TextArea
@@ -453,26 +441,16 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
             />
           </Form.Item>
           <Form.Item label="权限">
-            <Select value={sharePermission} onChange={setSharePermission} style={{ width: '100%' }}>
-              <Option value="view">
-                <Space>
+            <Select value={sharePermission} onChange={setSharePermission} style={{ width: '100%' }} options={[{ value: "view", label: <Space>
                   <Eye className="w-4 h-4" />
                   只能查看
-                </Space>
-              </Option>
-              <Option value="comment">
-                <Space>
+                </Space> }, { value: "comment", label: <Space>
                   <MessageSquare className="w-4 h-4" />
                   可以评论
-                </Space>
-              </Option>
-              <Option value="edit">
-                <Space>
+                </Space> }, { value: "edit", label: <Space>
                   <Edit3 className="w-4 h-4" />
                   可以编辑
-                </Space>
-              </Option>
-            </Select>
+                </Space> }]} />
           </Form.Item>
         </Form>
 

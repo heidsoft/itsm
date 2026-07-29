@@ -26,9 +26,6 @@ import dayjs from 'dayjs';
 import { CMDBApi } from '@/lib/api/';
 import { CIStatus, CIStatusLabels } from '@/constants/cmdb';
 import type { ConfigurationItem, CIType } from '@/types/biz/cmdb';
-
-const { Option } = Select;
-
 const statusColors: Record<string, string> = {
   [CIStatus.ACTIVE]: 'green',
   [CIStatus.INACTIVE]: 'default',
@@ -362,13 +359,7 @@ const CIList: React.FC = () => {
             allowClear
             value={filters.ciTypeId}
             onChange={value => handleFilterChange({ ciTypeId: value })}
-          >
-            {types.map(t => (
-              <Option key={t.id} value={t.id}>
-                {t.name}
-              </Option>
-            ))}
-          </Select>
+           options={types.map(t => ({ value: t.id, label: t.name }))} />
           <Select
             aria-label="状态"
             placeholder="状态"
@@ -376,13 +367,7 @@ const CIList: React.FC = () => {
             allowClear
             value={filters.status}
             onChange={value => handleFilterChange({ status: value })}
-          >
-            {Object.entries(CIStatusLabels).map(([value, label]) => (
-              <Option key={value} value={value}>
-                {label}
-              </Option>
-            ))}
-          </Select>
+           options={Object.entries(CIStatusLabels).map(([value, label]) => ({ value: value, label: label }))} />
           <Space>
             <Button type="primary" onClick={handleSearch}>
               查询

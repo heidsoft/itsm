@@ -37,7 +37,6 @@ import dayjs from 'dayjs';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 // Steps.Step 已被移除，直接使用 Steps 组件
  
 const _Step = Steps;
@@ -227,16 +226,11 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           onChange={value => updateRollbackStep(index, 'type', value)}
           style={{ width: '100%' }}
           disabled={readOnly}
-        >
-          {Object.entries(stepTypeIcons).map(([key, icon]) => (
-            <Option key={key} value={key}>
-              <Space>
-                {icon}
-                <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
-              </Space>
-            </Option>
-          ))}
-        </Select>
+          options={Object.entries(stepTypeIcons).map(([key]) => ({
+            value: key,
+            label: key.charAt(0).toUpperCase() + key.slice(1),
+          }))}
+        />
       ),
     },
     {
@@ -307,42 +301,41 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
               name="rollbackStrategy"
               rules={[{ required: true, message: '请选择回滚策略' }]}
             >
-              <Select placeholder="选择回滚策略">
-                {Object.entries(rollbackStrategies).map(([key, strategy]) => (
-                  <Option key={key} value={key}>
-                    <div className="p-2">
-                      <div className="font-medium">{strategy.label}</div>
-                      <Text type="secondary" className="text-xs">
-                        {strategy.description}
-                      </Text>
-                      <div className="mt-1">
-                        <Tag
-                          color={
-                            strategy.risk === 'high'
-                              ? 'red'
-                              : strategy.risk === 'medium'
-                                ? 'orange'
-                                : 'green'
-                          }
-                        >
-                          风险: {strategy.risk}
-                        </Tag>
-                        <Tag
-                          color={
-                            strategy.time === 'high'
-                              ? 'red'
-                              : strategy.time === 'medium'
-                                ? 'orange'
-                                : 'green'
-                          }
-                        >
-                          时间: {strategy.time}
-                        </Tag>
-                      </div>
+              <Select placeholder="选择回滚策略" options={Object.entries(rollbackStrategies).map(([key, strategy]) => ({
+                value: key,
+                label: (
+                  <div className="p-2">
+                    <div className="font-medium">{strategy.label}</div>
+                    <Text type="secondary" className="text-xs">
+                      {strategy.description}
+                    </Text>
+                    <div className="mt-1">
+                      <Tag
+                        color={
+                          strategy.risk === 'high'
+                            ? 'red'
+                            : strategy.risk === 'medium'
+                              ? 'orange'
+                              : 'green'
+                        }
+                      >
+                        风险: {strategy.risk}
+                      </Tag>
+                      <Tag
+                        color={
+                          strategy.time === 'high'
+                            ? 'red'
+                            : strategy.time === 'medium'
+                              ? 'orange'
+                              : 'green'
+                        }
+                      >
+                        时间: {strategy.time}
+                      </Tag>
                     </div>
-                  </Option>
-                ))}
-              </Select>
+                  </div>
+                ),
+              }))} />
             </Form.Item>
           </Col>
 
@@ -353,16 +346,15 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
               name="rollbackTriggers"
               rules={[{ required: true, message: '请选择触发条件' }]}
             >
-              <Select mode="multiple" placeholder="选择触发回滚的条件" style={{ width: '100%' }}>
-                {rollbackTriggers.map(trigger => (
-                  <Option key={trigger} value={trigger}>
-                    <Space>
-                      <AlertTriangle className="w-4 h-4 text-orange-500" />
-                      {trigger}
-                    </Space>
-                  </Option>
-                ))}
-              </Select>
+              <Select mode="multiple" placeholder="选择触发回滚的条件" style={{ width: '100%' }} options={rollbackTriggers.map(trigger => ({
+                value: trigger,
+                label: (
+                  <Space>
+                    <AlertTriangle className="w-4 h-4 text-orange-500" />
+                    {trigger}
+                  </Space>
+                ),
+              }))} />
             </Form.Item>
           </Col>
 
@@ -373,13 +365,13 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
               name="rollbackTeam"
               rules={[{ required: true, message: '请指定回滚团队成员' }]}
             >
-              <Select mode="tags" placeholder="指定回滚团队成员" style={{ width: '100%' }}>
-                <Option value="系统管理员">系统管理员</Option>
-                <Option value="数据库管理员">数据库管理员</Option>
-                <Option value="网络工程师">网络工程师</Option>
-                <Option value="应用开发">应用开发</Option>
-                <Option value="安全专员">安全专员</Option>
-              </Select>
+              <Select mode="tags" placeholder="指定回滚团队成员" style={{ width: '100%' }} options={[
+                { value: '系统管理员', label: '系统管理员' },
+                { value: '数据库管理员', label: '数据库管理员' },
+                { value: '网络工程师', label: '网络工程师' },
+                { value: '应用开发', label: '应用开发' },
+                { value: '安全专员', label: '安全专员' },
+              ]} />
             </Form.Item>
           </Col>
         </Row>

@@ -44,7 +44,6 @@ import {
 } from 'lucide-react';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 interface SatisfactionData {
@@ -317,11 +316,7 @@ export const SatisfactionDashboard: React.FC = () => {
               value={timeRange[0]}
               onChange={value => setTimeRange([value, timeRange[1]])}
               style={{ width: 100 }}
-            >
-              <Option value="7d">7天</Option>
-              <Option value="30d">30天</Option>
-              <Option value="90d">90天</Option>
-            </Select>
+             options={[{ value: "7d", label: "7天" }, { value: "30d", label: "30天" }, { value: "90d", label: "90天" }]} />
             <Button icon={<Download />} size="small">
               导出报告
             </Button>

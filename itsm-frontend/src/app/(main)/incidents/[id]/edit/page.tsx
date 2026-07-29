@@ -9,7 +9,6 @@ import type { Incident, UpdateIncidentRequest } from '@/lib/api/incident-api';
 import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 export default function IncidentEditPage() {
   const router = useRouter();
@@ -127,12 +126,12 @@ export default function IncidentEditPage() {
                 label="状态"
                 rules={[{ required: true, message: '请选择状态' }]}
               >
-                <Select placeholder="请选择状态">
-                  <Option value="new">新建</Option>
-                  <Option value="in_progress">进行中</Option>
-                  <Option value="resolved">已解决</Option>
-                  <Option value="closed">已关闭</Option>
-                </Select>
+                <Select placeholder="请选择状态" options={[
+                  { value: 'new', label: '新建' },
+                  { value: 'in_progress', label: '进行中' },
+                  { value: 'resolved', label: '已解决' },
+                  { value: 'closed', label: '已关闭' },
+                ]} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -141,12 +140,12 @@ export default function IncidentEditPage() {
                 label="优先级"
                 rules={[{ required: true, message: '请选择优先级' }]}
               >
-                <Select placeholder="请选择优先级">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                  <Option value="urgent">紧急</Option>
-                </Select>
+                <Select placeholder="请选择优先级" options={[
+                  { value: 'low', label: '低' },
+                  { value: 'medium', label: '中' },
+                  { value: 'high', label: '高' },
+                  { value: 'urgent', label: '紧急' },
+                ]} />
               </Form.Item>
             </Col>
           </Row>
@@ -158,26 +157,26 @@ export default function IncidentEditPage() {
                 label="严重程度"
                 rules={[{ required: true, message: '请选择严重程度' }]}
               >
-                <Select placeholder="请选择严重程度">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                  <Option value="critical">严重</Option>
-                </Select>
+                <Select placeholder="请选择严重程度" options={[
+                  { value: 'low', label: '低' },
+                  { value: 'medium', label: '中' },
+                  { value: 'high', label: '高' },
+                  { value: 'critical', label: '严重' },
+                ]} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="category" label="分类">
-                <Select placeholder="请选择分类" allowClear>
-                  <Option value="performance">性能</Option>
-                  <Option value="connectivity">连接</Option>
-                  <Option value="security">安全</Option>
-                  <Option value="storage">存储</Option>
-                  <Option value="network">网络</Option>
-                  <Option value="application">应用</Option>
-                  <Option value="database">数据库</Option>
-                  <Option value="other">其他</Option>
-                </Select>
+                <Select placeholder="请选择分类" allowClear options={[
+                  { value: 'performance', label: '性能' },
+                  { value: 'connectivity', label: '连接' },
+                  { value: 'security', label: '安全' },
+                  { value: 'storage', label: '存储' },
+                  { value: 'network', label: '网络' },
+                  { value: 'application', label: '应用' },
+                  { value: 'database', label: '数据库' },
+                  { value: 'other', label: '其他' },
+                ]} />
               </Form.Item>
             </Col>
           </Row>
@@ -190,14 +189,14 @@ export default function IncidentEditPage() {
             </Col>
             <Col span={12}>
               <Form.Item name="source" label="来源">
-                <Select placeholder="请选择来源" allowClear>
-                  <Option value="manual">手动创建</Option>
-                  <Option value="monitoring">监控系统</Option>
-                  <Option value="email">邮件</Option>
-                  <Option value="phone">电话</Option>
-                  <Option value="chat">在线聊天</Option>
-                  <Option value="api">API</Option>
-                </Select>
+                <Select placeholder="请选择来源" allowClear options={[
+                  { value: 'manual', label: '手动创建' },
+                  { value: 'monitoring', label: '监控系统' },
+                  { value: 'email', label: '邮件' },
+                  { value: 'phone', label: '电话' },
+                  { value: 'chat', label: '在线聊天' },
+                  { value: 'api', label: 'API' },
+                ]} />
               </Form.Item>
             </Col>
           </Row>

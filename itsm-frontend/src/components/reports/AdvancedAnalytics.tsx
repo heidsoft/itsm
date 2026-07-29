@@ -46,8 +46,6 @@ import { format, subDays } from 'date-fns';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-const { Option } = Select;
-
 interface AdvancedAnalyticsProps {
   tenantId?: number;
 }
@@ -346,13 +344,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
                   ]);
                 }
               }}
-            >
-              {Object.entries(timeRanges).map(([key, label]) => (
-                <Option key={key} value={key}>
-                  {label}
-                </Option>
-              ))}
-            </Select>
+             options={Object.entries(timeRanges).map(([key, label]) => ({ value: key, label: label }))} />
           </Form.Item>
 
           <Form.Item label="分析维度">
@@ -365,13 +357,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
                   dimensions: [value],
                 }))
               }
-            >
-              <Option value="created_date">创建日期</Option>
-              <Option value="status">工单状态</Option>
-              <Option value="priority">优先级</Option>
-              <Option value="category">工单分类</Option>
-              <Option value="assignee">处理人</Option>
-            </Select>
+             options={[{ value: "created_date", label: "创建日期" }, { value: "status", label: "工单状态" }, { value: "priority", label: "优先级" }, { value: "category", label: "工单分类" }, { value: "assignee", label: "处理人" }]} />
           </Form.Item>
 
           <Form.Item label="分析指标">
@@ -384,12 +370,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
                   metrics: [value],
                 }))
               }
-            >
-              <Option value="count">工单数量</Option>
-              <Option value="avg_response_time">平均响应时间</Option>
-              <Option value="avg_resolution_time">平均解决时间</Option>
-              <Option value="sla_compliance_rate">SLA合规率</Option>
-            </Select>
+             options={[{ value: "count", label: "工单数量" }, { value: "avg_response_time", label: "平均响应时间" }, { value: "avg_resolution_time", label: "平均解决时间" }, { value: "sla_compliance_rate", label: "SLA合规率" }]} />
           </Form.Item>
 
           <Form.Item>
@@ -412,11 +393,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
               </Space>
             }
             extra={
-              <Select defaultValue="week" style={{ width: 120 }}>
-                <Option value="week">本周</Option>
-                <Option value="month">本月</Option>
-                <Option value="quarter">本季度</Option>
-              </Select>
+              <Select defaultValue="week" style={{ width: 120 }} options={[{ value: "week", label: "本周" }, { value: "month", label: "本月" }, { value: "quarter", label: "本季度" }]} />
             }
           >
             <div style={{ height: 400 }}>

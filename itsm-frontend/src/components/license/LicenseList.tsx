@@ -28,8 +28,6 @@ import dayjs from 'dayjs';
 
 import { AssetApi, LicenseStatus, LicenseType } from '@/lib/api/asset-api';
 
-const { Option } = Select;
-
 // 状态颜色映射
 const statusColors: Record<string, string> = {
   active: 'success',
@@ -297,12 +295,13 @@ const LicenseList: React.FC = () => {
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
-            >
-              <Option value="active">有效</Option>
-              <Option value="expired">已过期</Option>
-              <Option value="expiring-soon">即将过期</Option>
-              <Option value="depleted">已耗尽</Option>
-            </Select>
+              options={[
+                { value: 'active', label: '有效' },
+                { value: 'expired', label: '已过期' },
+                { value: 'expiring-soon', label: '即将过期' },
+                { value: 'depleted', label: '已耗尽' },
+              ]}
+            />
           </Form.Item>
           <Form.Item name="licenseType" label="类型">
             <Select
@@ -310,13 +309,14 @@ const LicenseList: React.FC = () => {
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
-            >
-              <Option value="perpetual">永久</Option>
-              <Option value="subscription">订阅</Option>
-              <Option value="per-user">按用户</Option>
-              <Option value="per-seat">按席位</Option>
-              <Option value="site">站点</Option>
-            </Select>
+              options={[
+                { value: 'perpetual', label: '永久' },
+                { value: 'subscription', label: '订阅' },
+                { value: 'per-user', label: '按用户' },
+                { value: 'per-seat', label: '按席位' },
+                { value: 'site', label: '站点' },
+              ]}
+            />
           </Form.Item>
           <Form.Item>
             <Space>

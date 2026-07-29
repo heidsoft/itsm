@@ -34,7 +34,6 @@ import TicketBatchOperations from './TicketBatchOperations';
 type ListTicketsRequest = Record<string, any>;
 
 const { Search } = Input;
-const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 interface TicketListProps {
@@ -465,13 +464,7 @@ const TicketList: React.FC<TicketListProps> = ({
                     onChange={value => handleFilterChange('status', value)}
                     allowClear
                     style={{ width: '100%' }}
-                  >
-                    {Object.entries(TICKET_STATUS_CONFIG).map(([key, config]) => (
-                      <Option key={key} value={key}>
-                        <Tag color={config.color}>{config.text}</Tag>
-                      </Option>
-                    ))}
-                  </Select>
+                   options={Object.entries(TICKET_STATUS_CONFIG).map(([key, config]) => ({ value: key, label: <Tag color={config.color}>{config.text}</Tag> }))} />
                 </Col>
                 <Col xs={24} sm={12} md={6}>
                   <Select
@@ -480,13 +473,7 @@ const TicketList: React.FC<TicketListProps> = ({
                     onChange={value => handleFilterChange('priority', value)}
                     allowClear
                     style={{ width: '100%' }}
-                  >
-                    {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
-                      <Option key={key} value={key}>
-                        <Tag color={config.color}>{config.text}</Tag>
-                      </Option>
-                    ))}
-                  </Select>
+                   options={Object.entries(PRIORITY_CONFIG).map(([key, config]) => ({ value: key, label: <Tag color={config.color}>{config.text}</Tag> }))} />
                 </Col>
                 <Col xs={24} sm={12} md={6}>
                   <Select
@@ -495,13 +482,7 @@ const TicketList: React.FC<TicketListProps> = ({
                     onChange={value => handleFilterChange('type', value)}
                     allowClear
                     style={{ width: '100%' }}
-                  >
-                    {Object.entries(TICKET_TYPE_CONFIG).map(([key, text]) => (
-                      <Option key={key} value={key}>
-                        {text}
-                      </Option>
-                    ))}
-                  </Select>
+                   options={Object.entries(TICKET_TYPE_CONFIG).map(([key, text]) => ({ value: key, label: text }))} />
                 </Col>
                 <Col xs={24} sm={12} md={6}>
                   <RangePicker

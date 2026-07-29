@@ -21,7 +21,6 @@ import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { CloudService } from '@/types/biz/cmdb';
 import { useI18n } from '@/lib/i18n';
 
-const { Option } = Select;
 const { TextArea } = Input;
 
 const providerOptions = [
@@ -299,13 +298,7 @@ export default function CloudServicePage() {
 
       <Form form={form} layout='inline' style={{ marginBottom: 24 }}>
         <Form.Item name='provider'>
-          <Select placeholder='云厂商' style={{ width: 160 }} allowClear>
-            {providerOptions.map(item => (
-              <Option key={item.value} value={item.value}>
-                {item.label}
-              </Option>
-            ))}
-          </Select>
+          <Select placeholder='云厂商' style={{ width: 160 }} allowClear options={providerOptions} />
         </Form.Item>
         <Form.Item>
           <Space>
@@ -341,13 +334,7 @@ export default function CloudServicePage() {
             label='云厂商'
             rules={[{ required: true, message: '请选择云厂商' }]}
           >
-            <Select placeholder='请选择云厂商'>
-              {providerOptions.map(item => (
-                <Option key={item.value} value={item.value}>
-                  {item.label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder='请选择云厂商' options={providerOptions} />
           </Form.Item>
           <Form.Item
             name='service_code'
@@ -362,19 +349,13 @@ export default function CloudServicePage() {
               allowClear
               showSearch
               optionFilterProp='label'
-            >
-              {data
+              options={data
                 .filter(service => !createProvider || service.provider === createProvider)
-                .map(service => (
-                  <Option
-                    key={service.id}
-                    value={service.id}
-                    label={`${service.serviceName} (${service.serviceCode})`}
-                  >
-                    {service.serviceName} ({service.serviceCode})
-                  </Option>
-                ))}
-            </Select>
+                .map(service => ({
+                  value: service.id,
+                  label: `${service.serviceName} (${service.serviceCode})`,
+                }))}
+            />
           </Form.Item>
           <Form.Item name='category' label='服务分类'>
             <Input placeholder='例如 计算/存储/网络' />
@@ -429,13 +410,7 @@ export default function CloudServicePage() {
             label='云厂商'
             rules={[{ required: true, message: '请选择云厂商' }]}
           >
-            <Select placeholder='请选择云厂商'>
-              {providerOptions.map(item => (
-                <Option key={item.value} value={item.value}>
-                  {item.label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder='请选择云厂商' options={providerOptions} />
           </Form.Item>
           <Form.Item
             name='service_code'
@@ -450,23 +425,17 @@ export default function CloudServicePage() {
               allowClear
               showSearch
               optionFilterProp='label'
-            >
-              {data
+              options={data
                 .filter(
                   service =>
                     service.id !== editingService?.id &&
                     (!createProvider || service.provider === createProvider)
                 )
-                .map(service => (
-                  <Option
-                    key={service.id}
-                    value={service.id}
-                    label={`${service.serviceName} (${service.serviceCode})`}
-                  >
-                    {service.serviceName} ({service.serviceCode})
-                  </Option>
-                ))}
-            </Select>
+                .map(service => ({
+                  value: service.id,
+                  label: `${service.serviceName} (${service.serviceCode})`,
+                }))}
+            />
           </Form.Item>
           <Form.Item name='category' label='服务分类'>
             <Input placeholder='例如 计算/存储/网络' />

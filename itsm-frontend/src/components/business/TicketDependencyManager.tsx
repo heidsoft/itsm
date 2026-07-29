@@ -37,7 +37,6 @@ import { TicketRelationType } from '@/types/ticket-relations';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 
 interface DependencyImpact {
   ticketId: number;
@@ -706,16 +705,16 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
             label="关系类型"
             rules={[{ required: true, message: '请选择关系类型' }]}
           >
-            <Select placeholder="请选择关系类型">
-              <Option value={TicketRelationType.BLOCKS}>阻塞</Option>
-              <Option value={TicketRelationType.BLOCKED_BY}>被阻塞</Option>
-              <Option value={TicketRelationType.DEPENDS_ON}>依赖于</Option>
-              <Option value={TicketRelationType.RELATES_TO}>相关</Option>
-              <Option value={TicketRelationType.DUPLICATES}>重复</Option>
-              <Option value={TicketRelationType.CAUSES}>导致</Option>
-              <Option value={TicketRelationType.REPLACES}>替代</Option>
-              <Option value={TicketRelationType.PARENT_CHILD}>父子关系</Option>
-            </Select>
+            <Select placeholder="请选择关系类型" options={[
+              { value: TicketRelationType.BLOCKS, label: '阻塞' },
+              { value: TicketRelationType.BLOCKED_BY, label: '被阻塞' },
+              { value: TicketRelationType.DEPENDS_ON, label: '依赖于' },
+              { value: TicketRelationType.RELATES_TO, label: '相关' },
+              { value: TicketRelationType.DUPLICATES, label: '重复' },
+              { value: TicketRelationType.CAUSES, label: '导致' },
+              { value: TicketRelationType.REPLACES, label: '替代' },
+              { value: TicketRelationType.PARENT_CHILD, label: '父子关系' },
+            ]} />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
@@ -724,18 +723,18 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                 label="依赖类型"
                 rules={[{ required: true, message: '请选择依赖类型' }]}
               >
-                <Select>
-                  <Option value="hard">硬依赖（必须等待）</Option>
-                  <Option value="soft">软依赖（建议等待）</Option>
-                </Select>
+              <Select options={[
+                { value: 'hard', label: '硬依赖（必须等待）' },
+                { value: 'soft', label: '软依赖（建议等待）' },
+              ]} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="isBlocking" label="是否阻塞" valuePropName="checked">
-                <Select>
-                  <Option value={true}>是</Option>
-                  <Option value={false}>否</Option>
-                </Select>
+              <Select options={[
+                { value: true, label: '是' },
+                { value: false, label: '否' },
+              ]} />
               </Form.Item>
             </Col>
           </Row>

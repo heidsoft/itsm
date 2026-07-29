@@ -26,7 +26,6 @@ import type { TicketView, CreateTicketViewRequest } from '@/lib/api/ticket-view-
 import { TicketViewApi } from '@/lib/api/ticket-view-api';
 import type { TicketFilterState } from './TicketFilters';
 
-const { Option } = Select;
 const { TextArea } = Input;
 
 interface TicketViewSelectorProps {
@@ -232,26 +231,9 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
           value={currentViewId}
           onChange={handleViewSelect}
           loading={loading}
-          popupRender={menu => (
-            <div>
-              {menu}
-              <Divider style={{ margin: '8px 0' }} />
-              <Button
-                type="text"
-                icon={<Plus />}
-                block
-                onClick={() => {
-                  form.resetFields();
-                  setSaveModalVisible(true);
-                }}
-              >
-                保存当前筛选为视图
-              </Button>
-            </div>
-          )}
-        >
-          {views.map(view => (
-            <Option key={view.id} value={view.id}>
+          options={views.map(view => ({
+            value: view.id,
+            label: (
               <Space>
                 <span>{view.name}</span>
                 {view.isShared && (
@@ -265,9 +247,9 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
                   </Tag>
                 )}
               </Space>
-            </Option>
-          ))}
-        </Select>
+            ),
+          }))}
+        />
 
         {currentView && (
           <Dropdown menu={{ items: getViewMenuItems(currentView) }} trigger={['click']}>

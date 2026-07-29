@@ -24,7 +24,6 @@ import dayjs from 'dayjs';
 import SLAApi from '@/lib/api/sla-api';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 interface SLAChartData {
@@ -192,24 +191,22 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
         <Row justify="space-between" align="middle">
           <Col>
             <Space>
-              <Select value={selectedPeriod} onChange={setSelectedPeriod} style={{ width: 120 }}>
-                <Option value="7d">最近7天</Option>
-                <Option value="30d">最近30天</Option>
-                <Option value="90d">最近90天</Option>
-              </Select>
+              <Select value={selectedPeriod} onChange={setSelectedPeriod} style={{ width: 120 }} options={[
+                { value: '7d', label: '最近7天' },
+                { value: '30d', label: '最近30天' },
+                { value: '90d', label: '最近90天' },
+              ]} />
               <Select
                 value={selectedSla}
                 onChange={setSelectedSla}
                 placeholder="选择SLA"
                 style={{ width: 200 }}
                 allowClear
-              >
-                {slaDefinitions.map(sla => (
-                  <Option key={sla.id} value={sla.id}>
-                    {sla.name}
-                  </Option>
-                ))}
-              </Select>
+                options={slaDefinitions.map(sla => ({
+                  value: sla.id,
+                  label: sla.name,
+                }))}
+              />
               <RangePicker
                 value={dateRange}
                 onChange={dates => {

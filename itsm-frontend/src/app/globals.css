@@ -298,7 +298,7 @@
 
 /* Select 下拉框样式修复 - 暗色模式 */
 .dark .ant-select-dropdown,
-:root:not(.light) .ant-select-dropdown {
+:root.dark .ant-select-dropdown {
   background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 8px !important;
@@ -307,45 +307,45 @@
 }
 
 .dark .ant-select-item,
-:root:not(.light) .ant-select-item,
+:root.dark .ant-select-item,
 .dark .ant-select-item-option-disabled,
-:root:not(.light) .ant-select-item-option-disabled,
+:root.dark .ant-select-item-option-disabled,
 .dark .ant-select-item-option-active,
-:root:not(.light) .ant-select-item-option-active,
+:root.dark .ant-select-item-option-active,
 .dark .ant-select-item-option-selected,
-:root:not(.light) .ant-select-item-option-selected {
+:root.dark .ant-select-item-option-selected {
   color: #fff !important;
   background-color: transparent !important;
 }
 
 .dark .ant-select-item-option-active:not(.ant-select-item-option-disabled),
-:root:not(.light) .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+:root.dark .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .dark .ant-select-item-option-selected,
-:root:not(.light) .ant-select-item-option-selected {
+:root.dark .ant-select-item-option-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 .dark .ant-select-selection-item,
-:root:not(.light) .ant-select-selection-item,
+:root.dark .ant-select-selection-item,
 .dark .ant-select-selection-search-input,
-:root:not(.light) .ant-select-selection-search-input {
+:root.dark .ant-select-selection-search-input {
   color: #fff !important;
 }
 
 /* DatePicker/TimePicker 下拉面板样式暗色主题下修复 - 仅在生效 */
 .dark .ant-picker-dropdown,
-:root:not(.light) .ant-picker-dropdown,
+:root.dark .ant-picker-dropdown,
 .dark .ant-picker-dropdown.ant-picker-dropdown-placement-topLeft,
-:root:not(.light) .ant-picker-dropdown.ant-picker-dropdown-placement-topLeft,
+:root.dark .ant-picker-dropdown.ant-picker-dropdown-placement-topLeft,
 .dark .ant-picker-dropdown.ant-picker-dropdown-placement-topRight,
-:root:not(.light) .ant-picker-dropdown.ant-picker-dropdown-placement-topRight,
+:root.dark .ant-picker-dropdown.ant-picker-dropdown-placement-topRight,
 .dark .ant-picker-dropdown.ant-picker-dropdown-placement-bottomLeft,
-:root:not(.light) .ant-picker-dropdown.ant-picker-dropdown-placement-bottomLeft,
+:root.dark .ant-picker-dropdown.ant-picker-dropdown-placement-bottomLeft,
 .dark .ant-picker-dropdown.ant-picker-dropdown-placement-bottomRight,
-:root:not(.light) .ant-picker-dropdown.ant-picker-dropdown-placement-bottomRight {
+:root.dark .ant-picker-dropdown.ant-picker-dropdown-placement-bottomRight {
   background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -354,59 +354,59 @@
 }
 
 .dark .ant-picker-panel,
-:root:not(.light) .ant-picker-panel {
+:root.dark .ant-picker-panel {
   background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
 }
 
 .dark .ant-picker-header,
-:root:not(.light) .ant-picker-header,
+:root.dark .ant-picker-header,
 .dark .ant-picker-body,
-:root:not(.light) .ant-picker-body,
+:root.dark .ant-picker-body,
 .dark .ant-picker-footer,
-:root:not(.light) .ant-picker-footer {
+:root.dark .ant-picker-footer {
   background-color: transparent !important;
   color: #fff !important;
 }
 
 .dark .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner,
-:root:not(.light) .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner,
+:root.dark .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner,
 .dark .ant-picker-cell:hover .ant-picker-cell-inner,
-:root:not(.light) .ant-picker-cell:hover .ant-picker-cell-inner {
+:root.dark .ant-picker-cell:hover .ant-picker-cell-inner {
   background-color: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
 }
 
 .dark .ant-picker-cell.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner,
-:root:not(.light) .ant-picker-cell.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
+:root.dark .ant-picker-cell.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
 .dark .ant-picker-time-panel-column,
-:root:not(.light) .ant-picker-time-panel-column {
+:root.dark .ant-picker-time-panel-column {
   background-color: transparent !important;
 }
 
 .dark .ant-picker-time-panel-cell-inner,
-:root:not(.light) .ant-picker-time-panel-cell-inner {
+:root.dark .ant-picker-time-panel-cell-inner {
   color: #fff !important;
 }
 
 .dark .ant-picker-time-panel-cell-inner:hover,
-:root:not(.light) .ant-picker-time-panel-cell-inner:hover {
+:root.dark .ant-picker-time-panel-cell-inner:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .dark .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner,
-:root:not(.light) .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+:root.dark .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
 /* ColorPicker 下拉样式修复 - 仅在暗色主题下生效 */
 .dark .ant-color-dropdown,
-:root:not(.light) .ant-color-dropdown {
+:root.dark .ant-color-dropdown {
   background-color: var(--color-bg-elevated) !important;
   border-radius: 4px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -414,20 +414,20 @@
 }
 
 .dark .ant-color-dropdown-link,
-:root:not(.light) .ant-color-dropdown-link,
+:root.dark .ant-color-dropdown-link,
 .dark .ant-color-dropdown-button,
-:root:not(.light) .ant-color-dropdown-button {
+:root.dark .ant-color-dropdown-button {
   color: #fff !important;
 }
 
 .dark .ant-color-dropdown-link:hover,
-:root:not(.light) .ant-color-dropdown-link:hover {
+:root.dark .ant-color-dropdown-link:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* TreeSelect 下拉样式修复 - 仅在暗色主题下生效 */
 .dark .ant-select-tree-dropdown,
-:root:not(.light) .ant-select-tree-dropdown {
+:root.dark .ant-select-tree-dropdown {
   background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -436,28 +436,28 @@
 }
 
 .dark .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper,
-:root:not(.light) .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper,
+:root.dark .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper,
 .dark .ant-select-tree-dropdown .ant-select-tree-title,
-:root:not(.light) .ant-select-tree-dropdown .ant-select-tree-title {
+:root.dark .ant-select-tree-dropdown .ant-select-tree-title {
   color: #fff !important;
 }
 
 .dark .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper:hover,
-:root:not(.light) .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper:hover {
+:root.dark .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .dark .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
-:root:not(.light) .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
+:root.dark .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
 .dark .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-title,
-:root:not(.light) .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-title {
+:root.dark .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-title {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
 /* Cascader 下拉样式修复 - 仅在暗色主题下生效 */
 .dark .ant-cascader-dropdown,
-:root:not(.light) .ant-cascader-dropdown {
+:root.dark .ant-cascader-dropdown {
   background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -466,31 +466,31 @@
 }
 
 .dark .ant-cascader-menu-item,
-:root:not(.light) .ant-cascader-menu-item,
+:root.dark .ant-cascader-menu-item,
 .dark .ant-cascader-menu-item-active,
-:root:not(.light) .ant-cascader-menu-item-active,
+:root.dark .ant-cascader-menu-item-active,
 .dark .ant-cascader-menu-item-expand-selected,
-:root:not(.light) .ant-cascader-menu-item-expand-selected,
+:root.dark .ant-cascader-menu-item-expand-selected,
 .dark .ant-cascader-menu-item-selected,
-:root:not(.light) .ant-cascader-menu-item-selected {
+:root.dark .ant-cascader-menu-item-selected {
   color: #fff !important;
   background-color: transparent !important;
 }
 
 .dark .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled),
-:root:not(.light) .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled) {
+:root.dark .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled) {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .dark .ant-cascader-menu-item-selected,
-:root:not(.light) .ant-cascader-menu-item-selected {
+:root.dark .ant-cascader-menu-item-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
 /* Mentions 下拉样式修复 - 仅在暗色主题下生效 */
 .dark .ant-mentions-dropdown,
-:root:not(.light) .ant-mentions-dropdown {
+:root.dark .ant-mentions-dropdown {
   background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -499,20 +499,20 @@
 }
 
 .dark .ant-mentions-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled),
-:root:not(.light) .ant-mentions-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+:root.dark .ant-mentions-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
   background-color: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
 }
 
 .dark .ant-mentions-dropdown .ant-select-item-option-selected,
-:root:not(.light) .ant-mentions-dropdown .ant-select-item-option-selected {
+:root.dark .ant-mentions-dropdown .ant-select-item-option-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
 /* AutoComplete 下拉样式修复 - 仅在暗色主题下生效 */
 .dark .ant-autocomplete-dropdown,
-:root:not(.light) .ant-autocomplete-dropdown {
+:root.dark .ant-autocomplete-dropdown {
   background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -521,46 +521,46 @@
 }
 
 .dark .ant-autocomplete-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled),
-:root:not(.light) .ant-autocomplete-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+:root.dark .ant-autocomplete-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
   background-color: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
 }
 
 .dark .ant-autocomplete-dropdown .ant-select-item-option-selected,
-:root:not(.light) .ant-autocomplete-dropdown .ant-select-item-option-selected {
+:root.dark .ant-autocomplete-dropdown .ant-select-item-option-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
 /* Transfer 左右选择框样式修复 - 仅在暗色主题下生效 */
 .dark .ant-transfer-dropdown,
-:root:not(.light) .ant-transfer-dropdown {
+:root.dark .ant-transfer-dropdown {
   background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
 }
 
 .dark .ant-transfer-list,
-:root:not(.light) .ant-transfer-list {
+:root.dark .ant-transfer-list {
   background-color: var(--color-bg-elevated) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 4px !important;
 }
 
 .dark .ant-transfer-list-header,
-:root:not(.light) .ant-transfer-list-header {
+:root.dark .ant-transfer-list-header {
   background-color: rgba(255, 255, 255, 0.05) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
 }
 
 .dark .ant-transfer-list-body-item:hover,
-:root:not(.light) .ant-transfer-list-body-item:hover {
+:root.dark .ant-transfer-list-body-item:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
 }
 
 .dark .ant-transfer-list-body-item-selected,
-:root:not(.light) .ant-transfer-list-body-item-selected {
+:root.dark .ant-transfer-list-body-item-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
@@ -731,7 +731,9 @@
   line-height: 1.6;
 }
 
-.accessibility-enhanced.reduce-motion *,
+/* 注意：排除 antd 弹层 motion 元素（*-enter/*-appear/*-leave）与弹层容器本身，
+   否则 rc-trigger 的弹层对齐流程无法完成，弹层会停留在屏外坐标（点击无反应且无报错） */
+.accessibility-enhanced.reduce-motion *:not([class*="-enter"]):not([class*="-appear"]):not([class*="-leave"]):not([class*="ant-select-dropdown"]):not([class*="ant-picker-dropdown"]):not([class*="ant-dropdown"]):not([class*="ant-popover"]):not([class*="ant-tooltip"]):not([class*="ant-menu-submenu-popup"]),
 .accessibility-enhanced.reduce-motion *::before,
 .accessibility-enhanced.reduce-motion *::after {
   animation-duration: 0.01ms !important;
@@ -789,10 +791,14 @@
   }
 }
 
-/* 减少动画支持 */
+/* 减少动画支持
+   注意：不能把 antd 弹层的 motion 元素（*-enter/*-appear/*-leave）及弹层容器本身
+   （Select/Picker/Dropdown/Popover/Tooltip 等）的动画时长压到 0.01ms，
+   否则 rc-motion/rc-trigger 的弹层对齐流程无法完成，弹层会停留在初始屏外坐标，
+   表现为“点击无反应且无报错” */
 @media (prefers-reduced-motion: reduce) {
 
-  *,
+  *:not([class*="-enter"]):not([class*="-appear"]):not([class*="-leave"]):not([class*="ant-select-dropdown"]):not([class*="ant-picker-dropdown"]):not([class*="ant-dropdown"]):not([class*="ant-popover"]):not([class*="ant-tooltip"]):not([class*="ant-menu-submenu-popup"]),
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
@@ -1644,7 +1650,7 @@
 
 /* 系统主题偏好支持 */
 @media (prefers-color-scheme: dark) {
-  :root:not(.light) {
+  :root.dark {
     /* 主色调（暗色主题） */
     --color-primary-50: #172554;
     --color-primary-100: #1e3a8a;
@@ -1743,19 +1749,6 @@
 
   .input {
     border-width: 2px;
-  }
-}
-
-/* 减少动画模式支持 */
-@media (prefers-reduced-motion: reduce) {
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }
 

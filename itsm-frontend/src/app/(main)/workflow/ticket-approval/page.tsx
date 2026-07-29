@@ -45,8 +45,6 @@ import BPMNDesigner from '@/components/workflow/BPMNDesigner';
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
-
 // 获取节点类型颜色
 const getNodeTypeColor = (type: string) => {
   switch (type) {
@@ -530,20 +528,7 @@ const TicketApprovalWorkflowPage = () => {
                   name="category"
                   rules={[{ required: true, message: t('workflow.processCategoryRequired') }]}
                 >
-                  <Select placeholder={t('workflow.processCategoryPlaceholder')}>
-                    <Option value={t('workflow.approvalProcess')}>
-                      {t('workflow.approvalProcess')}
-                    </Option>
-                    <Option value={t('workflow.ticketProcess')}>
-                      {t('workflow.ticketProcess')}
-                    </Option>
-                    <Option value={t('workflow.incidentProcess')}>
-                      {t('workflow.incidentProcess')}
-                    </Option>
-                    <Option value={t('workflow.changeProcess')}>
-                      {t('workflow.changeProcess')}
-                    </Option>
-                  </Select>
+                  <Select placeholder={t('workflow.processCategoryPlaceholder')} options={[{ value: t('workflow.approvalProcess'), label: t('workflow.approvalProcess') }, { value: t('workflow.ticketProcess'), label: t('workflow.ticketProcess') }, { value: t('workflow.incidentProcess'), label: t('workflow.incidentProcess') }, { value: t('workflow.changeProcess'), label: t('workflow.changeProcess') }]} />
                 </Form.Item>
               </Col>
             </Row>
@@ -568,11 +553,7 @@ const TicketApprovalWorkflowPage = () => {
               </Col>
               <Col span={12}>
                 <Form.Item label={t('workflow.initialStatus')} name="status" initialValue="draft">
-                  <Select disabled>
-                    <Option value="draft">{t('workflow.draft')}</Option>
-                    <Option value="active">{t('workflow.statusEnabled')}</Option>
-                    <Option value="inactive">{t('workflow.statusDisabled')}</Option>
-                  </Select>
+                  <Select disabled options={[{ value: "draft", label: t('workflow.draft') }, { value: "active", label: t('workflow.statusEnabled') }, { value: "inactive", label: t('workflow.statusDisabled') }]} />
                 </Form.Item>
               </Col>
             </Row>

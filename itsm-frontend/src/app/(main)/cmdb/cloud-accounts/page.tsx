@@ -23,7 +23,7 @@ import { Search, Plus, Pencil, Trash2, RotateCcw } from 'lucide-react';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { CloudAccount } from '@/types/biz/cmdb';
 
-const { Option } = Select;
+
 
 const providerOptions = [
   { value: 'aliyun', label: '阿里云' },
@@ -289,13 +289,8 @@ export default function CloudAccountPage() {
           onChange={setFilterProvider}
           allowClear
           style={{ width: 140 }}
-        >
-          {providerOptions.map(item => (
-            <Option key={item.value} value={item.value}>
-              {item.label}
-            </Option>
-          ))}
-        </Select>
+          options={providerOptions}
+        />
         <Space>
           <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
             刷新
@@ -339,13 +334,7 @@ export default function CloudAccountPage() {
             label='云厂商'
             rules={[{ required: true, message: '请选择云厂商' }]}
           >
-            <Select placeholder='请选择云厂商'>
-              {providerOptions.map(item => (
-                <Option key={item.value} value={item.value}>
-                  {item.label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder='请选择云厂商' options={providerOptions} />
           </Form.Item>
           <Form.Item
             name='accountId'
@@ -386,13 +375,7 @@ export default function CloudAccountPage() {
             label='云厂商'
             rules={[{ required: true, message: '请选择云厂商' }]}
           >
-            <Select placeholder='请选择云厂商' disabled>
-              {providerOptions.map(item => (
-                <Option key={item.value} value={item.value}>
-                  {item.label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder='请选择云厂商' disabled options={providerOptions} />
           </Form.Item>
           <Form.Item
             name='accountId'

@@ -42,7 +42,6 @@ import {
 import { TicketApi } from '@/lib/api/ticket-api';
 // AppLayout is handled by layout.tsx
 
-const { Option } = Select;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
@@ -524,17 +523,14 @@ const TicketTemplatesPage = () => {
               onChange={setSelectedCategory}
               style={{ width: '100%' }}
               placeholder="Select category"
-            >
-              <Option value="all">All Categories</Option>
-              {templateCategories.map(cat => (
-                <Option key={cat.key} value={cat.key}>
-                  <div className="flex items-center">
-                    <span className={`text-${cat.color}-500 mr-2`}>{cat.icon}</span>
-                    {cat.label}
-                  </div>
-                </Option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: 'All Categories' },
+                ...templateCategories.map(cat => ({
+                  value: cat.key,
+                  label: <div className="flex items-center"><span className={`text-${cat.color}-500 mr-2`}>{cat.icon}</span>{cat.label}</div>,
+                })),
+              ]}
+            />
           </Col>
           <Col span={6}>
             <Select
@@ -542,11 +538,12 @@ const TicketTemplatesPage = () => {
               onChange={setFilterStatus}
               style={{ width: '100%' }}
               placeholder="Status filter"
-            >
-              <Option value="all">All Status</Option>
-              <Option value="active">Active</Option>
-              <Option value="inactive">Inactive</Option>
-            </Select>
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+              ]}
+            />
           </Col>
           <Col span={4}>
             <Button type="primary" onClick={loadTemplates} block>
@@ -657,12 +654,12 @@ const TicketTemplatesPage = () => {
                 name="type"
                 rules={[{ required: true, message: 'Please select template type' }]}
               >
-                <Select placeholder="Please select template type">
-                  <Option value="incident">Incident</Option>
-                  <Option value="service_request">Service Request</Option>
-                  <Option value="problem">Problem</Option>
-                  <Option value="change">Change</Option>
-                </Select>
+                <Select placeholder="Please select template type" options={[
+                  { value: 'incident', label: 'Incident' },
+                  { value: 'service_request', label: 'Service Request' },
+                  { value: 'problem', label: 'Problem' },
+                  { value: 'change', label: 'Change' },
+                ]} />
               </Form.Item>
             </Col>
           </Row>
@@ -702,12 +699,12 @@ const TicketTemplatesPage = () => {
                 name="priority"
                 rules={[{ required: true, message: 'Please select priority' }]}
               >
-                <Select placeholder="Please select priority">
-                  <Option value="low">Low</Option>
-                  <Option value="medium">Medium</Option>
-                  <Option value="high">High</Option>
-                  <Option value="urgent">Urgent</Option>
-                </Select>
+                <Select placeholder="Please select priority" options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                  { value: 'urgent', label: 'Urgent' },
+                ]} />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -737,12 +734,12 @@ const TicketTemplatesPage = () => {
                 name="impact"
                 rules={[{ required: true, message: 'Please select impact scope' }]}
               >
-                <Select placeholder="Please select impact scope">
-                  <Option value="individual">Individual</Option>
-                  <Option value="department">Department</Option>
-                  <Option value="organization">Organization</Option>
-                  <Option value="customer">Customer</Option>
-                </Select>
+                <Select placeholder="Please select impact scope" options={[
+                  { value: 'individual', label: 'Individual' },
+                  { value: 'department', label: 'Department' },
+                  { value: 'organization', label: 'Organization' },
+                  { value: 'customer', label: 'Customer' },
+                ]} />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -751,12 +748,12 @@ const TicketTemplatesPage = () => {
                 name="urgency"
                 rules={[{ required: true, message: 'Please select urgency level' }]}
               >
-                <Select placeholder="Please select urgency level">
-                  <Option value="low">Low</Option>
-                  <Option value="medium">Medium</Option>
-                  <Option value="high">High</Option>
-                  <Option value="critical">Critical</Option>
-                </Select>
+                <Select placeholder="Please select urgency level" options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                  { value: 'critical', label: 'Critical' },
+                ]} />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -765,12 +762,12 @@ const TicketTemplatesPage = () => {
                 name="businessValue"
                 rules={[{ required: true, message: 'Please select business value' }]}
               >
-                <Select placeholder="Please select business value">
-                  <Option value="low">Low</Option>
-                  <Option value="medium">Medium</Option>
-                  <Option value="high">High</Option>
-                  <Option value="critical">Critical</Option>
-                </Select>
+                <Select placeholder="Please select business value" options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                  { value: 'critical', label: 'Critical' },
+                ]} />
               </Form.Item>
             </Col>
           </Row>
@@ -782,12 +779,12 @@ const TicketTemplatesPage = () => {
                 name="source"
                 rules={[{ required: true, message: 'Please select source' }]}
               >
-                <Select placeholder="Please select source">
-                  <Option value="web">Web Portal</Option>
-                  <Option value="email">Email</Option>
-                  <Option value="phone">Phone</Option>
-                  <Option value="chat">Online Chat</Option>
-                </Select>
+                <Select placeholder="Please select source" options={[
+                  { value: 'web', label: 'Web Portal' },
+                  { value: 'email', label: 'Email' },
+                  { value: 'phone', label: 'Phone' },
+                  { value: 'chat', label: 'Online Chat' },
+                ]} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -824,21 +821,21 @@ const TicketTemplatesPage = () => {
                 name="slaType"
                 rules={[{ required: true, message: 'Please select SLA type' }]}
               >
-                <Select placeholder="Please select SLA type">
-                  <Option value="hours">Hours</Option>
-                  <Option value="days">Days</Option>
-                  <Option value="business_hours">Business Hours</Option>
-                </Select>
+                <Select placeholder="Please select SLA type" options={[
+                  { value: 'hours', label: 'Hours' },
+                  { value: 'days', label: 'Days' },
+                  { value: 'business_hours', label: 'Business Hours' },
+                ]} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item label="Approval Level" name="approvalLevel">
-                <Select placeholder="Please select approval level">
-                  <Option value="none">No Approval Required</Option>
-                  <Option value="manager">Manager Approval</Option>
-                  <Option value="director">Director Approval</Option>
-                  <Option value="executive">Executive Approval</Option>
-                </Select>
+                <Select placeholder="Please select approval level" options={[
+                  { value: 'none', label: 'No Approval Required' },
+                  { value: 'manager', label: 'Manager Approval' },
+                  { value: 'director', label: 'Director Approval' },
+                  { value: 'executive', label: 'Executive Approval' },
+                ]} />
               </Form.Item>
             </Col>
           </Row>

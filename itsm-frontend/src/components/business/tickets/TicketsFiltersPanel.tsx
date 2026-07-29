@@ -9,7 +9,6 @@ import { Search, Filter, X } from 'lucide-react';
 import type { TicketFilters } from '@/types/ticket';
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 
 export interface TicketsFiltersPanelProps {
   filters: TicketFilters;
@@ -150,35 +149,26 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 
           {/* 状态筛选 */}
           <Form.Item label="状态" name="status" data-testid="status-filter">
-            <Select placeholder="选择状态" allowClear mode="multiple">
-              {statusOptions.map(option => (
-                <Option key={option.value} value={option.value}>
-                  {option.label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder="选择状态" allowClear mode="multiple" options={statusOptions.map(option => ({
+              value: option.value,
+              label: option.label,
+            }))} />
           </Form.Item>
 
           {/* 优先级筛选 */}
           <Form.Item label="优先级" name="priority" data-testid="priority-filter">
-            <Select placeholder="选择优先级" allowClear mode="multiple">
-              {priorityOptions.map(option => (
-                <Option key={option.value} value={option.value}>
-                  <Tag color={option.color}>{option.label}</Tag>
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder="选择优先级" allowClear mode="multiple" options={priorityOptions.map(option => ({
+              value: option.value,
+              label: <Tag color={option.color}>{option.label}</Tag>,
+            }))} />
           </Form.Item>
 
           {/* 类型筛选 */}
           <Form.Item label="类型" name="type">
-            <Select placeholder="选择类型" allowClear>
-              {typeOptions.map(option => (
-                <Option key={option.value} value={option.value}>
-                  {option.label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder="选择类型" allowClear options={typeOptions.map(option => ({
+              value: option.value,
+              label: option.label,
+            }))} />
           </Form.Item>
 
           {/* 指派人筛选 */}
@@ -192,23 +182,19 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
                   .toLowerCase()
                   .includes(String(input).toLowerCase())
               }
-            >
-              {/* 这里应该从API获取用户列表 */}
-              <Option value={1} label="用户1">
-                用户1
-              </Option>
-              <Option value={2} label="用户2">
-                用户2
-              </Option>
-            </Select>
+              options={[
+                { value: 1, label: '用户1' },
+                { value: 2, label: '用户2' },
+              ]}
+            />
           </Form.Item>
 
           {/* 创建人筛选 */}
           <Form.Item label="创建人" name="requester_id">
-            <Select placeholder="选择创建人" allowClear showSearch>
-              <Option value={1}>用户1</Option>
-              <Option value={2}>用户2</Option>
-            </Select>
+            <Select placeholder="选择创建人" allowClear showSearch options={[
+              { value: 1, label: '用户1' },
+              { value: 2, label: '用户2' },
+            ]} />
           </Form.Item>
 
           {/* 日期范围 */}
@@ -218,11 +204,11 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 
           {/* 标签筛选 */}
           <Form.Item label="标签" name="tags">
-            <Select mode="tags" placeholder="输入或选择标签" allowClear>
-              <Option value="urgent">紧急</Option>
-              <Option value="vip">VIP</Option>
-              <Option value="bug">Bug</Option>
-            </Select>
+            <Select mode="tags" placeholder="输入或选择标签" allowClear options={[
+              { value: 'urgent', label: '紧急' },
+              { value: 'vip', label: 'VIP' },
+              { value: 'bug', label: 'Bug' },
+            ]} />
           </Form.Item>
         </div>
 

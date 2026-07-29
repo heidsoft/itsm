@@ -9,7 +9,6 @@ import { ProblemPriority } from '@/constants/problem';
 import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 const CreateProblemPageContent = () => {
   const router = useRouter();
@@ -137,13 +136,7 @@ const CreateProblemPageContent = () => {
             name="priority"
             rules={[{ required: true, message: '请选择优先级' }]}
           >
-            <Select placeholder="选择优先级">
-              {priorityOptions.map(option => (
-                <Option key={option.value} value={option.value}>
-                  {option.label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder="选择优先级" options={priorityOptions} />
           </Form.Item>
 
           <Form.Item
@@ -151,13 +144,7 @@ const CreateProblemPageContent = () => {
             name="category"
             rules={[{ required: true, message: '请选择分类' }]}
           >
-            <Select placeholder="选择分类">
-              {categoryOptions.map(option => (
-                <Option key={option.value} value={option.value}>
-                  {option.label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder="选择分类" options={categoryOptions} />
           </Form.Item>
 
           <Form.Item

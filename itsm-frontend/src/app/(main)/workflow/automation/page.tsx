@@ -47,8 +47,6 @@ import { TicketAutomationRuleApi } from '@/lib/api/ticket-automation-rule-api';
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
-
 const WorkflowAutomationPage = () => {
   const { message } = App.useApp();
   const { t } = useI18n();
@@ -426,11 +424,7 @@ const WorkflowAutomationPage = () => {
                 label='规则类型'
                 rules={[{ required: true, message: '请选择规则类型' }]}
               >
-                <Select placeholder='选择规则类型'>
-                  <Option value='assignment'>自动分配</Option>
-                  <Option value='routing'>智能路由</Option>
-                  <Option value='escalation'>自动升级</Option>
-                </Select>
+                <Select placeholder='选择规则类型' options={[{ value: "assignment", label: "自动分配" }, { value: "routing", label: "智能路由" }, { value: "escalation", label: "自动升级" }]} />
               </Form.Item>
             </Col>
           </Row>
@@ -446,11 +440,7 @@ const WorkflowAutomationPage = () => {
                 label='优先级'
                 rules={[{ required: true, message: '请设置优先级' }]}
               >
-                <Select placeholder='选择优先级'>
-                  <Option value={1}>高 (P1)</Option>
-                  <Option value={2}>中 (P2)</Option>
-                  <Option value={3}>低 (P3)</Option>
-                </Select>
+                <Select placeholder='选择优先级' options={[{ value: 1, label: "高 (P1)" }, { value: 2, label: "中 (P2)" }, { value: 3, label: "低 (P3)" }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -465,31 +455,17 @@ const WorkflowAutomationPage = () => {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name={['conditions', 'priority']} label='优先级'>
-                <Select placeholder='选择优先级' allowClear>
-                  <Option value='low'>低</Option>
-                  <Option value='normal'>普通</Option>
-                  <Option value='high'>高</Option>
-                  <Option value='critical'>紧急</Option>
-                </Select>
+                <Select placeholder='选择优先级' allowClear options={[{ value: "low", label: "低" }, { value: "normal", label: "普通" }, { value: "high", label: "高" }, { value: "critical", label: "紧急" }]} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name={['conditions', 'category']} label='分类'>
-                <Select placeholder='选择分类' allowClear>
-                  <Option value='technical'>技术</Option>
-                  <Option value='finance'>财务</Option>
-                  <Option value='hr'>人事</Option>
-                  <Option value='general'>通用</Option>
-                </Select>
+                <Select placeholder='选择分类' allowClear options={[{ value: "technical", label: "技术" }, { value: "finance", label: "财务" }, { value: "hr", label: "人事" }, { value: "general", label: "通用" }]} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name={['conditions', 'status']} label='状态'>
-                <Select placeholder='选择状态' allowClear>
-                  <Option value='pending'>待处理</Option>
-                  <Option value='in_progress'>处理中</Option>
-                  <Option value='completed'>已完成</Option>
-                </Select>
+                <Select placeholder='选择状态' allowClear options={[{ value: "pending", label: "待处理" }, { value: "in_progress", label: "处理中" }, { value: "completed", label: "已完成" }]} />
               </Form.Item>
             </Col>
           </Row>
@@ -512,22 +488,12 @@ const WorkflowAutomationPage = () => {
                         label='分配给'
                         rules={[{ required: true, message: '请选择分配目标' }]}
                       >
-                        <Select placeholder='选择分配目标'>
-                          <Option value='expert'>专家</Option>
-                          <Option value='manager'>经理</Option>
-                          <Option value='supervisor'>主管</Option>
-                          <Option value='round_robin'>轮询分配</Option>
-                          <Option value='least_busy'>最少忙碌</Option>
-                        </Select>
+                        <Select placeholder='选择分配目标' options={[{ value: "expert", label: "专家" }, { value: "manager", label: "经理" }, { value: "supervisor", label: "主管" }, { value: "round_robin", label: "轮询分配" }, { value: "least_busy", label: "最少忙碌" }]} />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
                       <Form.Item name={['actions', 'method']} label='分配方法'>
-                        <Select placeholder='选择分配方法'>
-                          <Option value='round_robin'>轮询</Option>
-                          <Option value='least_busy'>最少忙碌</Option>
-                          <Option value='skill_based'>基于技能</Option>
-                        </Select>
+                        <Select placeholder='选择分配方法' options={[{ value: "round_robin", label: "轮询" }, { value: "least_busy", label: "最少忙碌" }, { value: "skill_based", label: "基于技能" }]} />
                       </Form.Item>
                     </Col>
                   </Row>
@@ -543,12 +509,7 @@ const WorkflowAutomationPage = () => {
                         label='路由到'
                         rules={[{ required: true, message: '请选择路由目标' }]}
                       >
-                        <Select placeholder='选择路由目标'>
-                          <Option value='tech_support'>技术支持组</Option>
-                          <Option value='finance_team'>财务组</Option>
-                          <Option value='hr_team'>人事组</Option>
-                          <Option value='management'>管理层</Option>
-                        </Select>
+                        <Select placeholder='选择路由目标' options={[{ value: "tech_support", label: "技术支持组" }, { value: "finance_team", label: "财务组" }, { value: "hr_team", label: "人事组" }, { value: "management", label: "管理层" }]} />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
@@ -569,11 +530,7 @@ const WorkflowAutomationPage = () => {
                         label='升级到'
                         rules={[{ required: true, message: '请选择升级目标' }]}
                       >
-                        <Select placeholder='选择升级目标'>
-                          <Option value='manager'>经理</Option>
-                          <Option value='supervisor'>主管</Option>
-                          <Option value='director'>总监</Option>
-                        </Select>
+                        <Select placeholder='选择升级目标' options={[{ value: "manager", label: "经理" }, { value: "supervisor", label: "主管" }, { value: "director", label: "总监" }]} />
                       </Form.Item>
                     </Col>
                     <Col span={8}>

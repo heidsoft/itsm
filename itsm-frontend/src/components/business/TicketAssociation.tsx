@@ -38,7 +38,6 @@ import {
 } from 'lucide-react';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 const { TextArea } = Input;
 
 interface Ticket {
@@ -476,13 +475,13 @@ export const TicketAssociation: React.FC = () => {
                 label="源工单"
                 rules={[{ required: true, message: '请选择源工单' }]}
               >
-                <Select placeholder="选择源工单">
-                  {tickets.map(ticket => (
-                    <Option key={ticket.id} value={ticket.id}>
-                      {ticket.ticketNumber} - {ticket.title}
-                    </Option>
-                  ))}
-                </Select>
+                <Select
+                  placeholder="选择源工单"
+                  options={tickets.map(ticket => ({
+                    value: ticket.id,
+                    label: `${ticket.ticketNumber} - ${ticket.title}`,
+                  }))}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -491,13 +490,13 @@ export const TicketAssociation: React.FC = () => {
                 label="目标工单"
                 rules={[{ required: true, message: '请选择目标工单' }]}
               >
-                <Select placeholder="选择目标工单">
-                  {tickets.map(ticket => (
-                    <Option key={ticket.id} value={ticket.id}>
-                      {ticket.ticketNumber} - {ticket.title}
-                    </Option>
-                  ))}
-                </Select>
+                <Select
+                  placeholder="选择目标工单"
+                  options={tickets.map(ticket => ({
+                    value: ticket.id,
+                    label: `${ticket.ticketNumber} - ${ticket.title}`,
+                  }))}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -507,14 +506,17 @@ export const TicketAssociation: React.FC = () => {
             label="关联类型"
             rules={[{ required: true, message: '请选择关联类型' }]}
           >
-            <Select placeholder="选择关联类型">
-              <Option value="parent">父工单</Option>
-              <Option value="child">子工单</Option>
-              <Option value="duplicate">重复工单</Option>
-              <Option value="related">相关工单</Option>
-              <Option value="blocked_by">被阻塞</Option>
-              <Option value="blocks">阻塞其他</Option>
-            </Select>
+            <Select
+              placeholder="选择关联类型"
+              options={[
+                { value: 'parent', label: '父工单' },
+                { value: 'child', label: '子工单' },
+                { value: 'duplicate', label: '重复工单' },
+                { value: 'related', label: '相关工单' },
+                { value: 'blocked_by', label: '被阻塞' },
+                { value: 'blocks', label: '阻塞其他' },
+              ]}
+            />
           </Form.Item>
 
           <Form.Item
@@ -553,15 +555,16 @@ export const TicketAssociation: React.FC = () => {
         <div className="space-y-4">
           <div>
             <Text strong>选择主工单（保留）:</Text>
-            <Select placeholder="选择要保留的主工单" style={{ width: '100%', marginTop: 8 }}>
-              {tickets
+            <Select
+              placeholder="选择要保留的主工单"
+              style={{ width: '100%', marginTop: 8 }}
+              options={tickets
                 .filter(t => selectedTickets.includes(t.id))
-                .map(ticket => (
-                  <Option key={ticket.id} value={ticket.id}>
-                    {ticket.ticketNumber} - {ticket.title}
-                  </Option>
-                ))}
-            </Select>
+                .map(ticket => ({
+                  value: ticket.id,
+                  label: `${ticket.ticketNumber} - ${ticket.title}`,
+                }))}
+            />
           </div>
 
           <div>

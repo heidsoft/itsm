@@ -51,7 +51,6 @@ import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 const CheckboxGroup = Checkbox.Group;
 
 interface AnalyticsDimension {
@@ -388,23 +387,14 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
             value={config.chartType}
             onChange={value => setConfig({ ...config, chartType: value })}
             style={{ width: 120 }}
-          >
-            <Option value="line">
-              <RechartsLineChart /> 折线图
-            </Option>
-            <Option value="bar">
-              <BarChart3 /> 柱状图
-            </Option>
-            <Option value="pie">
-              <RechartsPieChart /> 饼图
-            </Option>
-            <Option value="area">
-              <AreaChart /> 面积图
-            </Option>
-            <Option value="table">
-              <Table2 /> 表格
-            </Option>
-          </Select>
+            options={[
+              { value: 'line', label: '折线图' },
+              { value: 'bar', label: '柱状图' },
+              { value: 'pie', label: '饼图' },
+              { value: 'area', label: '面积图' },
+              { value: 'table', label: '表格' },
+            ]}
+          />
         </Space>
       </Card>
 
@@ -503,15 +493,12 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
             </Radio.Group>
           </Form.Item>
           <Form.Item name="group_by" label="分组方式">
-            <Select placeholder="请选择分组方式" allowClear>
-              {availableDimensions
-                .filter(d => d.type === 'category')
-                .map(dim => (
-                  <Option key={dim.key} value={dim.key}>
-                    {dim.label}
-                  </Option>
-                ))}
-            </Select>
+            <Select placeholder="请选择分组方式" allowClear options={availableDimensions
+              .filter(d => d.type === 'category')
+              .map(dim => ({
+                value: dim.key,
+                label: dim.label,
+              }))} />
           </Form.Item>
         </Form>
       </Modal>

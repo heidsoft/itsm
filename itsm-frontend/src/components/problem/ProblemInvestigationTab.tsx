@@ -47,7 +47,6 @@ import {
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 
 // 状态标签映射
 const statusColors: Record<string, string> = {
@@ -815,12 +814,12 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             label="分析方法"
             rules={[{ required: true, message: '请选择分析方法' }]}
           >
-            <Select placeholder="请选择分析方法">
-              <Option value="5-whys">5个为什么 (5-Whys)</Option>
-              <Option value="fishbone">鱼骨图 (Fishbone)</Option>
-              <Option value="timeline">时间线分析 (Timeline)</Option>
-              <Option value="fault_tree">故障树分析 (Fault Tree)</Option>
-            </Select>
+            <Select placeholder="请选择分析方法" options={[
+              { value: '5-whys', label: '5个为什么 (5-Whys)' },
+              { value: 'fishbone', label: '鱼骨图 (Fishbone)' },
+              { value: 'timeline', label: '时间线分析 (Timeline)' },
+              { value: 'fault_tree', label: '故障树分析 (Fault Tree)' },
+            ]} />
           </Form.Item>
           <Form.Item
             name="rootCauseDescription"
@@ -840,11 +839,11 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             label="置信度"
             rules={[{ required: true, message: '请选择置信度' }]}
           >
-            <Select placeholder="请选择置信度">
-              <Option value="low">低 - 需要进一步验证</Option>
-              <Option value="medium">中 - 基本确定</Option>
-              <Option value="high">高 - 经过验证确认</Option>
-            </Select>
+            <Select placeholder="请选择置信度" options={[
+              { value: 'low', label: '低 - 需要进一步验证' },
+              { value: 'medium', label: '中 - 基本确定' },
+              { value: 'high', label: '高 - 经过验证确认' },
+            ]} />
           </Form.Item>
           <Form.Item>
             <Space>
@@ -871,12 +870,12 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             label="方案类型"
             rules={[{ required: true, message: '请选择方案类型' }]}
           >
-            <Select placeholder="请选择方案类型">
-              <Option value="workaround">临时方案 (Workaround)</Option>
-              <Option value="fix">彻底修复 (Fix)</Option>
-              <Option value="prevention">预防措施 (Prevention)</Option>
-              <Option value="process">流程改进 (Process)</Option>
-            </Select>
+            <Select placeholder="请选择方案类型" options={[
+              { value: 'workaround', label: '临时方案 (Workaround)' },
+              { value: 'fix', label: '彻底修复 (Fix)' },
+              { value: 'prevention', label: '预防措施 (Prevention)' },
+              { value: 'process', label: '流程改进 (Process)' },
+            ]} />
           </Form.Item>
           <Form.Item
             name="solutionDescription"
@@ -890,12 +889,12 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             label="优先级"
             rules={[{ required: true, message: '请选择优先级' }]}
           >
-            <Select placeholder="请选择优先级">
-              <Option value="low">低</Option>
-              <Option value="medium">中</Option>
-              <Option value="high">高</Option>
-              <Option value="critical">紧急</Option>
-            </Select>
+            <Select placeholder="请选择优先级" options={[
+              { value: 'low', label: '低' },
+              { value: 'medium', label: '中' },
+              { value: 'high', label: '高' },
+              { value: 'critical', label: '紧急' },
+            ]} />
           </Form.Item>
           <Space style={{ width: '100%' }} size="large">
             <Form.Item name="estimatedEffortHours" label="预估工时(小时)">
@@ -940,12 +939,12 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             label="文章类型"
             rules={[{ required: true, message: '请选择文章类型' }]}
           >
-            <Select placeholder="请选择文章类型">
-              <Option value="troubleshooting">故障排查指南</Option>
-              <Option value="solution">解决方案</Option>
-              <Option value="process">操作流程</Option>
-              <Option value="prevention">预防措施</Option>
-            </Select>
+            <Select placeholder="请选择文章类型" options={[
+              { value: 'troubleshooting', label: '故障排查指南' },
+              { value: 'solution', label: '解决方案' },
+              { value: 'process', label: '操作流程' },
+              { value: 'prevention', label: '预防措施' },
+            ]} />
           </Form.Item>
           <Form.Item
             name="articleContent"
@@ -976,11 +975,11 @@ ${
             />
           </Form.Item>
           <Form.Item name="tags" label="标签">
-            <Select mode="tags" placeholder="添加标签" style={{ width: '100%' }}>
-              <Option value="problem">问题</Option>
-              <Option value="root-cause">根因</Option>
-              <Option value="solution">解决方案</Option>
-            </Select>
+            <Select mode="tags" placeholder="添加标签" style={{ width: '100%' }} options={[
+              { value: 'problem', label: '问题' },
+              { value: 'root-cause', label: '根因' },
+              { value: 'solution', label: '解决方案' },
+            ]} />
           </Form.Item>
           <Form.Item>
             <Space>

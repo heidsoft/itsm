@@ -5,7 +5,6 @@ import { Modal, Form, Input, Select, DatePicker } from 'antd';
 import { PlusCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
-const { Option } = Select;
 
 interface CreateServiceModalProps {
   visible: boolean;
@@ -63,11 +62,11 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
           name="category"
           rules={[{ required: true, message: t('serviceCatalog.serviceCategoryRequired') }]}
         >
-          <Select placeholder={t('serviceCatalog.category')}>
-            <Option value="云资源服务">{t('serviceCatalog.cloudResources')}</Option>
-            <Option value="账号与权限">{t('serviceCatalog.accountPermissions')}</Option>
-            <Option value="安全服务">{t('serviceCatalog.securityServices')}</Option>
-          </Select>
+          <Select placeholder={t('serviceCatalog.category')} options={[
+            { value: "云资源服务", label: t('serviceCatalog.cloudResources') },
+            { value: "账号与权限", label: t('serviceCatalog.accountPermissions') },
+            { value: "安全服务", label: t('serviceCatalog.securityServices') },
+          ]} />
         </Form.Item>
 
         <Form.Item
@@ -83,10 +82,10 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
           name="status"
           rules={[{ required: true, message: t('serviceCatalog.serviceStatusRequired') }]}
         >
-          <Select placeholder={t('serviceCatalog.status')}>
-            <Option value="enabled">{t('serviceCatalog.enabled')}</Option>
-            <Option value="disabled">{t('serviceCatalog.disabled')}</Option>
-          </Select>
+          <Select placeholder={t('serviceCatalog.status')} options={[
+            { value: "enabled", label: t('serviceCatalog.enabled') },
+            { value: "disabled", label: t('serviceCatalog.disabled') },
+          ]} />
         </Form.Item>
 
         <Form.Item label={t('serviceCatalog.serviceDescription')} name="description">

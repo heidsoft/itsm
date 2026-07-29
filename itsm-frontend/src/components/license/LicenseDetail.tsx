@@ -29,7 +29,6 @@ import type { User as UserType } from '@/lib/api/user-api';
 import { UserApi } from '@/lib/api/user-api';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 // 状态颜色映射
 const statusColors: Record<string, string> = {
@@ -306,13 +305,11 @@ const LicenseDetail: React.FC = () => {
           optionFilterProp="children"
           loading={usersLoading}
           notFoundContent={usersLoading ? '加载中...' : '暂无用户'}
-        >
-          {users.map((user) => (
-            <Option key={user.id} value={user.id}>
-              {user.name || user.username}
-            </Option>
-          ))}
-        </Select>
+          options={users.map((user) => ({
+            value: user.id,
+            label: user.name || user.username,
+          }))}
+        />
       </Modal>
     </Space>
   );

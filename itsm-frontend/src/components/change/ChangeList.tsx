@@ -38,8 +38,6 @@ import {
 } from '@/constants/change';
 import type { Change, ChangeQuery } from '@/types/biz/change';
 
-const { Option } = Select;
-
 // 颜色映射
 const statusColors: Record<string, string> = {
   [ChangeStatus.DRAFT]: 'default',
@@ -257,22 +255,16 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
             />
           </Form.Item>
           <Form.Item name="status" className="mb-0">
-            <Select placeholder="状态" className="w-32" allowClear>
-              {Object.entries(ChangeStatusLabels).map(([value, label]) => (
-                <Option key={value} value={value}>
-                  {label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder="状态" className="w-32" allowClear options={Object.entries(ChangeStatusLabels).map(([value, label]) => ({
+                value,
+                label,
+              }))} />
           </Form.Item>
           <Form.Item name="type" className="mb-0">
-            <Select placeholder="类型" className="w-32" allowClear>
-              {Object.entries(ChangeTypeLabels).map(([value, label]) => (
-                <Option key={value} value={value}>
-                  {label}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder="类型" className="w-32" allowClear options={Object.entries(ChangeTypeLabels).map(([value, label]) => ({
+                value,
+                label,
+              }))} />
           </Form.Item>
           <Form.Item className="mb-0">
             <Space>

@@ -4,9 +4,6 @@ import React, { useMemo } from 'react';
 import { Input, Select, Button, Space, Card, Row, Col } from 'antd';
 import { Search, Filter, RefreshCw, Download } from 'lucide-react';
 import { debounce } from '../../lib/utils';
-
-const { Option } = Select;
-
 interface FilterOption {
   key: string;
   label: string;
@@ -87,13 +84,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
               size="large"
               style={{ width: '100%' }}
               onChange={value => handleFilterChange(filter.key, value)}
-            >
-              {filter.options.map(option => (
-                <Option key={option.value} value={option.value}>
-                  {option.label}
-                </Option>
-              ))}
-            </Select>
+             options={filter.options.map(option => ({ value: option.value, label: option.label }))} />
           </Col>
         ))}
 

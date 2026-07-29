@@ -48,7 +48,6 @@ import { SafeTextBlock } from '@/components/common/SafeContent';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 
 // 问题状态颜色映射
 const statusColors: Record<string, string> = {
@@ -699,11 +698,11 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
             <TextArea rows={4} placeholder="请详细描述解决方案" />
           </Form.Item>
           <Form.Item label="预期效果">
-            <Select placeholder="请选择预期效果">
-              <Option value="high">高</Option>
-              <Option value="medium">中</Option>
-              <Option value="low">低</Option>
-            </Select>
+            <Select placeholder="请选择预期效果" options={[
+              { value: 'high', label: '高' },
+              { value: 'medium', label: '中' },
+              { value: 'low', label: '低' },
+            ]} />
           </Form.Item>
           <Form.Item>
             <Space style={{ width: '100%', justifyContent: 'flex-end' }}>

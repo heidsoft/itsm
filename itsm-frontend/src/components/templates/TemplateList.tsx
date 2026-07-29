@@ -38,8 +38,6 @@ import {
   useUnfavoriteTemplateMutation,
   useDuplicateTemplateMutation,
 } from '@/lib/hooks/useTemplateQuery';
-
-const { Option } = Select;
 const { Search } = Input;
 
 export interface TemplateListProps {
@@ -273,37 +271,21 @@ export const TemplateList: React.FC<TemplateListProps> = ({
                 allowClear
                 style={{ width: 150 }}
                 onChange={handleCategoryChange}
-              >
-                <Option value="incident">事件</Option>
-                <Option value="request">服务请求</Option>
-                <Option value="problem">问题</Option>
-                <Option value="change">变更</Option>
-              </Select>
+               options={[{ value: "incident", label: "事件" }, { value: "request", label: "服务请求" }, { value: "problem", label: "问题" }, { value: "change", label: "变更" }]} />
 
               <Select
                 placeholder="可见性"
                 allowClear
                 style={{ width: 120 }}
                 onChange={handleVisibilityChange as any}
-              >
-                <Option value="public">公开</Option>
-                <Option value="private">私有</Option>
-                <Option value="department">部门</Option>
-                <Option value="role">角色</Option>
-              </Select>
+               options={[{ value: "public", label: "公开" }, { value: "private", label: "私有" }, { value: "department", label: "部门" }, { value: "role", label: "角色" }]} />
 
               <Select
                 placeholder="排序方式"
                 defaultValue="usageCount-desc"
                 style={{ width: 150 }}
                 onChange={handleSortChange}
-              >
-                <Option value="usageCount-desc">使用次数 ↓</Option>
-                <Option value="rating-desc">评分 ↓</Option>
-                <Option value="createdAt-desc">创建时间 ↓</Option>
-                <Option value="updatedAt-desc">更新时间 ↓</Option>
-                <Option value="name-asc">名称 A-Z</Option>
-              </Select>
+               options={[{ value: "usageCount-desc", label: "使用次数 ↓" }, { value: "rating-desc", label: "评分 ↓" }, { value: "createdAt-desc", label: "创建时间 ↓" }, { value: "updatedAt-desc", label: "更新时间 ↓" }, { value: "name-asc", label: "名称 A-Z" }]} />
             </Space>
           </Col>
 

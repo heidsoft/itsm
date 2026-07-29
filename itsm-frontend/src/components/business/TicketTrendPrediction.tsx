@@ -46,7 +46,6 @@ import { TicketPredictionApi } from '@/lib/api/ticket-prediction-api';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 const { TextArea } = Input;
 
 interface PredictionData {
@@ -300,16 +299,16 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
               }
             }}
           />
-          <Select value={predictionPeriod} onChange={setPredictionPeriod} style={{ width: 120 }}>
-            <Option value="week">预测一周</Option>
-            <Option value="month">预测一月</Option>
-            <Option value="quarter">预测一季</Option>
-          </Select>
-          <Select value={modelType} onChange={setModelType} style={{ width: 150 }}>
-            <Option value="arima">ARIMA模型</Option>
-            <Option value="exponential">指数平滑</Option>
-            <Option value="linear">线性回归</Option>
-          </Select>
+          <Select value={predictionPeriod} onChange={setPredictionPeriod} style={{ width: 120 }} options={[
+            { value: 'week', label: '预测一周' },
+            { value: 'month', label: '预测一月' },
+            { value: 'quarter', label: '预测一季' },
+          ]} />
+          <Select value={modelType} onChange={setModelType} style={{ width: 150 }} options={[
+            { value: 'arima', label: 'ARIMA模型' },
+            { value: 'exponential', label: '指数平滑' },
+            { value: 'linear', label: '线性回归' },
+          ]} />
         </Space>
       </Card>
 

@@ -29,7 +29,6 @@ import { zhCN } from 'date-fns/locale';
 import SLAApi from '@/lib/api/sla-api';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 const { TextArea } = Input;
 
 interface AlertRule {
@@ -506,11 +505,11 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
             label="预警级别"
             rules={[{ required: true, message: '请选择预警级别' }]}
           >
-            <Select placeholder="请选择预警级别">
-              <Option value="warning">警告</Option>
-              <Option value="critical">严重</Option>
-              <Option value="severe">严重（最高）</Option>
-            </Select>
+            <Select placeholder="请选择预警级别" options={[
+              { value: 'warning', label: '警告' },
+              { value: 'critical', label: '严重' },
+              { value: 'severe', label: '严重（最高）' },
+            ]} />
           </Form.Item>
           <Form.Item
             name="thresholdPercentage"
@@ -527,11 +526,11 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
             label="通知渠道"
             rules={[{ required: true, message: '请至少选择一个通知渠道' }]}
           >
-            <Select mode="multiple" placeholder="请选择通知渠道">
-              <Option value="email">邮件</Option>
-              <Option value="sms">短信</Option>
-              <Option value="in_app">站内消息</Option>
-            </Select>
+            <Select mode="multiple" placeholder="请选择通知渠道" options={[
+              { value: 'email', label: '邮件' },
+              { value: 'sms', label: '短信' },
+              { value: 'in_app', label: '站内消息' },
+            ]} />
           </Form.Item>
           <Form.Item name="escalationEnabled" label="启用升级机制" valuePropName="checked">
             <Switch />

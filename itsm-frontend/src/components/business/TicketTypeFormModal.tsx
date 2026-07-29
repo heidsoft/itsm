@@ -29,7 +29,6 @@ import {
 } from '@/types/ticket-type';
 
 const { TextArea } = Input;
-const { Option } = Select;
 const { Panel } = Collapse;
 
 interface TicketTypeFormModalProps {
@@ -238,23 +237,23 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
 
             <div className="grid grid-cols-2 gap-4">
               <Form.Item label="图标" name="icon">
-                <Select placeholder="选择图标">
-                  <Option value="Bug">🐛 故障</Option>
-                  <Option value="Headphones">🎧 服务</Option>
-                  <Option value="Wrench">🔧 维护</Option>
-                  <Option value="HelpCircle">❓ 问题</Option>
-                  <Option value="Zap">⚡ 紧急</Option>
-                </Select>
+                <Select placeholder="选择图标" options={[
+                  { value: 'Bug', label: '🐛 故障' },
+                  { value: 'Headphones', label: '🎧 服务' },
+                  { value: 'Wrench', label: '🔧 维护' },
+                  { value: 'HelpCircle', label: '❓ 问题' },
+                  { value: 'Zap', label: '⚡ 紧急' },
+                ]} />
               </Form.Item>
 
               <Form.Item label="颜色" name="color">
-                <Select placeholder="选择颜色">
-                  <Option value="#ff4d4f">🔴 红色</Option>
-                  <Option value="#1890ff">🔵 蓝色</Option>
-                  <Option value="#52c41a">🟢 绿色</Option>
-                  <Option value="#faad14">🟡 黄色</Option>
-                  <Option value="#722ed1">🟣 紫色</Option>
-                </Select>
+                <Select placeholder="选择颜色" options={[
+                  { value: '#ff4d4f', label: '🔴 红色' },
+                  { value: '#1890ff', label: '🔵 蓝色' },
+                  { value: '#52c41a', label: '🟢 绿色' },
+                  { value: '#faad14', label: '🟡 黄色' },
+                  { value: '#722ed1', label: '🟣 紫色' },
+                ]} />
               </Form.Item>
             </div>
           </Form>
@@ -324,18 +323,19 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                         placeholder="字段类型"
                         value={field.type}
                         onChange={type => updateCustomField(index, { type })}
-                      >
-                        <Option value={CustomFieldType.TEXT}>单行文本</Option>
-                        <Option value={CustomFieldType.TEXTAREA}>多行文本</Option>
-                        <Option value={CustomFieldType.NUMBER}>数字</Option>
-                        <Option value={CustomFieldType.DATE}>日期</Option>
-                        <Option value={CustomFieldType.DATETIME}>日期时间</Option>
-                        <Option value={CustomFieldType.SELECT}>下拉选择</Option>
-                        <Option value={CustomFieldType.MULTI_SELECT}>多选</Option>
-                        <Option value={CustomFieldType.CHECKBOX}>复选框</Option>
-                        <Option value={CustomFieldType.RADIO}>单选按钮</Option>
-                        <Option value={CustomFieldType.USER_PICKER}>用户选择器</Option>
-                      </Select>
+                        options={[
+                          { value: CustomFieldType.TEXT, label: '单行文本' },
+                          { value: CustomFieldType.TEXTAREA, label: '多行文本' },
+                          { value: CustomFieldType.NUMBER, label: '数字' },
+                          { value: CustomFieldType.DATE, label: '日期' },
+                          { value: CustomFieldType.DATETIME, label: '日期时间' },
+                          { value: CustomFieldType.SELECT, label: '下拉选择' },
+                          { value: CustomFieldType.MULTI_SELECT, label: '多选' },
+                          { value: CustomFieldType.CHECKBOX, label: '复选框' },
+                          { value: CustomFieldType.RADIO, label: '单选按钮' },
+                          { value: CustomFieldType.USER_PICKER, label: '用户选择器' },
+                        ]}
+                      />
                       <div className="flex items-center">
                         <Switch
                           checked={field.required}
@@ -436,13 +436,11 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                               });
                               updateApprovalLevel(index, { approvers });
                             }}
-                          >
-                            {users.map(user => (
-                              <Option key={user.id} value={user.id}>
-                                {user.name || user.username}
-                              </Option>
-                            ))}
-                          </Select>
+                          options={users.map(user => ({
+                            value: user.id,
+                            label: user.name || user.username,
+                          }))}
+                        />
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
@@ -498,13 +496,10 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
 
           {form.getFieldValue('slaEnabled') && (
             <Form.Item label="默认SLA" name="defaultSlaId">
-              <Select placeholder="选择默认SLA">
-                {slas.map(sla => (
-                  <Option key={sla.id} value={sla.id}>
-                    {sla.name}
-                  </Option>
-                ))}
-              </Select>
+              <Select placeholder="选择默认SLA" options={slas.map(sla => ({
+                value: sla.id,
+                label: sla.name,
+              }))} />
             </Form.Item>
           )}
         </Tabs.TabPane>

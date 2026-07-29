@@ -25,7 +25,6 @@ import { AssetApi, type LicenseType } from '@/lib/api/asset-api';
 import type { Dayjs } from 'dayjs';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 const LicenseForm: React.FC = () => {
   const router = useRouter();
@@ -142,13 +141,13 @@ const LicenseForm: React.FC = () => {
         </Form.Item>
 
         <Form.Item name="licenseType" label="许可证类型">
-          <Select>
-            <Option value="perpetual">永久 (Perpetual)</Option>
-            <Option value="subscription">订阅 (Subscription)</Option>
-            <Option value="per-user">按用户 (Per-User)</Option>
-            <Option value="per-seat">按席位 (Per-Seat)</Option>
-            <Option value="site">站点 (Site)</Option>
-          </Select>
+          <Select options={[
+            { value: 'perpetual', label: '永久 (Perpetual)' },
+            { value: 'subscription', label: '订阅 (Subscription)' },
+            { value: 'per-user', label: '按用户 (Per-User)' },
+            { value: 'per-seat', label: '按席位 (Per-Seat)' },
+            { value: 'site', label: '站点 (Site)' },
+          ]} />
         </Form.Item>
 
         <Form.Item name="licenseKey" label="许可证密钥">

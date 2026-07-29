@@ -44,7 +44,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
 const { Search } = Input;
-const { Option } = Select;
 
 interface TicketKanbanBoardProps {
   tickets: Ticket[];
@@ -398,26 +397,24 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
             onChange={setFilterStatus}
             style={{ width: 120 }}
             placeholder="状态"
-          >
-            <Option value="all">全部状态</Option>
-            {statusColumns.map(col => (
-              <Option key={col.id} value={col.status}>
-                {col.title}
-              </Option>
-            ))}
-          </Select>
+            options={[
+              { value: 'all', label: '全部状态' },
+              ...statusColumns.map(col => ({ value: col.status, label: col.title })),
+            ]}
+          />
           <Select
             value={filterPriority}
             onChange={setFilterPriority}
             style={{ width: 120 }}
             placeholder="优先级"
-          >
-            <Option value="all">全部优先级</Option>
-            <Option value="low">低</Option>
-            <Option value="medium">中</Option>
-            <Option value="high">高</Option>
-            <Option value="urgent">紧急</Option>
-          </Select>
+            options={[
+              { value: 'all', label: '全部优先级' },
+              { value: 'low', label: '低' },
+              { value: 'medium', label: '中' },
+              { value: 'high', label: '高' },
+              { value: 'urgent', label: '紧急' },
+            ]}
+          />
         </div>
         <div className="flex items-center gap-2">
           <Dropdown menu={{ items: viewMenuItems }} trigger={['click']}>

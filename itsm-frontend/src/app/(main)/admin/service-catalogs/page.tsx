@@ -50,7 +50,6 @@ import type {
 import type { CIType, CloudService } from '@/types/biz/cmdb';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 const ServiceCatalogManagement = () => {
   const { message } = App.useApp();
@@ -548,10 +547,11 @@ const ServiceCatalogManagement = () => {
               onChange={setStatusFilter}
               allowClear
               style={{ width: '100%' }}
-            >
-              <Option value="enabled">启用</Option>
-              <Option value="disabled">禁用</Option>
-            </Select>
+              options={[
+                { value: 'enabled', label: '启用' },
+                { value: 'disabled', label: '禁用' },
+              ]}
+            />
           </Col>
           <Col xs={24} sm={12} md={4}>
             <Select
@@ -560,12 +560,13 @@ const ServiceCatalogManagement = () => {
               onChange={setCategoryFilter}
               allowClear
               style={{ width: '100%' }}
-            >
-              <Option value="云服务">云服务</Option>
-              <Option value="基础设施">基础设施</Option>
-              <Option value="应用服务">应用服务</Option>
-              <Option value="数据服务">数据服务</Option>
-            </Select>
+              options={[
+                { value: '云服务', label: '云服务' },
+                { value: '基础设施', label: '基础设施' },
+                { value: '应用服务', label: '应用服务' },
+                { value: '数据服务', label: '数据服务' },
+              ]}
+            />
           </Col>
           <Col xs={24} sm={12} md={5}>
             <Select
@@ -575,13 +576,8 @@ const ServiceCatalogManagement = () => {
               allowClear
               loading={optionsLoading}
               style={{ width: '100%' }}
-            >
-              {ciTypes.map(type => (
-                <Option key={type.id} value={type.id}>
-                  {type.name}
-                </Option>
-              ))}
-            </Select>
+              options={ciTypes.map(type => ({ value: type.id, label: type.name }))}
+            />
           </Col>
           <Col xs={24} sm={12} md={5}>
             <Select
@@ -593,17 +589,11 @@ const ServiceCatalogManagement = () => {
               showSearch
               optionFilterProp="label"
               style={{ width: '100%' }}
-            >
-              {cloudServices.map(service => (
-                <Option
-                  key={service.id}
-                  value={service.id}
-                  label={`${service.serviceName} (${service.resourceTypeName})`}
-                >
-                  {service.serviceName} ({service.resourceTypeName})
-                </Option>
-              ))}
-            </Select>
+              options={cloudServices.map(service => ({
+                value: service.id,
+                label: `${service.serviceName} (${service.resourceTypeName})`,
+              }))}
+            />
           </Col>
           <Col xs={24} sm={24} md={24}>
             <Space>
@@ -714,12 +704,12 @@ const ServiceCatalogManagement = () => {
             label="服务分类"
             rules={[{ required: true, message: '请选择服务分类' }]}
           >
-            <Select placeholder="请选择服务分类">
-              <Option value="云服务">云服务</Option>
-              <Option value="基础设施">基础设施</Option>
-              <Option value="应用服务">应用服务</Option>
-              <Option value="数据服务">数据服务</Option>
-            </Select>
+            <Select placeholder="请选择服务分类" options={[
+              { value: '云服务', label: '云服务' },
+              { value: '基础设施', label: '基础设施' },
+              { value: '应用服务', label: '应用服务' },
+              { value: '数据服务', label: '数据服务' },
+            ]} />
           </Form.Item>
 
           <Form.Item
@@ -733,15 +723,15 @@ const ServiceCatalogManagement = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="serviceType" label="服务类型" tooltip="用于动态加载对应的申请表单">
-                <Select placeholder="选择服务类型" allowClear>
-                  <Option value="vm">云服务器 (VM)</Option>
-                  <Option value="rds">数据库 (RDS)</Option>
-                  <Option value="oss">对象存储 (OSS)</Option>
-                  <Option value="network">网络服务</Option>
-                  <Option value="storage">存储服务</Option>
-                  <Option value="security">安全服务</Option>
-                  <Option value="custom">自定义服务</Option>
-                </Select>
+                <Select placeholder="选择服务类型" allowClear options={[
+                  { value: 'vm', label: '云服务器 (VM)' },
+                  { value: 'rds', label: '数据库 (RDS)' },
+                  { value: 'oss', label: '对象存储 (OSS)' },
+                  { value: 'network', label: '网络服务' },
+                  { value: 'storage', label: '存储服务' },
+                  { value: 'security', label: '安全服务' },
+                  { value: 'custom', label: '自定义服务' },
+                ]} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -759,10 +749,10 @@ const ServiceCatalogManagement = () => {
             <Row gutter={16}>
               <Col span={8}>
                 <Form.Item name="requiresApproval" label="需要审批" valuePropName="checked">
-                  <Select placeholder="是否需要审批">
-                    <Option value={true}>是</Option>
-                    <Option value={false}>否</Option>
-                  </Select>
+                  <Select placeholder="是否需要审批" options={[
+                    { value: true, label: '是' },
+                    { value: false, label: '否' },
+                  ]} />
                 </Form.Item>
               </Col>
               <Col span={8}>
@@ -804,13 +794,7 @@ const ServiceCatalogManagement = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="ciTypeId" label="关联CI类型">
-                <Select placeholder="选择CI类型" allowClear loading={optionsLoading}>
-                  {ciTypes.map(type => (
-                    <Option key={type.id} value={type.id}>
-                      {type.name}
-                    </Option>
-                  ))}
-                </Select>
+                <Select placeholder="选择CI类型" allowClear loading={optionsLoading} options={ciTypes.map(type => ({ value: type.id, label: type.name }))} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -821,17 +805,11 @@ const ServiceCatalogManagement = () => {
                   loading={optionsLoading}
                   showSearch
                   optionFilterProp="label"
-                >
-                  {cloudServices.map(service => (
-                    <Option
-                      key={service.id}
-                      value={service.id}
-                      label={`${service.serviceName} (${service.resourceTypeName})`}
-                    >
-                      {service.serviceName} ({service.resourceTypeName})
-                    </Option>
-                  ))}
-                </Select>
+                  options={cloudServices.map(service => ({
+                    value: service.id,
+                    label: `${service.serviceName} (${service.resourceTypeName})`,
+                  }))}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -843,10 +821,10 @@ const ServiceCatalogManagement = () => {
                 label="状态"
                 rules={[{ required: true, message: '请选择状态' }]}
               >
-                <Select>
-                  <Option value="enabled">启用</Option>
-                  <Option value="disabled">禁用</Option>
-                </Select>
+                <Select options={[
+                  { value: 'enabled', label: '启用' },
+                  { value: 'disabled', label: '禁用' },
+                ]} />
               </Form.Item>
             </Col>
           </Row>

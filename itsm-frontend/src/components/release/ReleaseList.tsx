@@ -29,7 +29,7 @@ import dayjs from 'dayjs';
 import { ReleaseApi, ReleaseStatus, ReleaseType } from '@/lib/api/release-api';
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 
-const { Option } = Select;
+
 
 // 状态颜色映射
 const statusColors: Record<string, string> = {
@@ -303,14 +303,15 @@ const ReleaseList: React.FC = () => {
               allowClear
               style={{ width: compact ? '100%' : 150 }}
               onChange={handleSearch}
-            >
-              <Option value="draft">草稿</Option>
-              <Option value="scheduled">已计划</Option>
-              <Option value="in-progress">进行中</Option>
-              <Option value="completed">已完成</Option>
-              <Option value="cancelled">已取消</Option>
-              <Option value="failed">失败</Option>
-            </Select>
+              options={[
+                { value: 'draft', label: '草稿' },
+                { value: 'scheduled', label: '已计划' },
+                { value: 'in-progress', label: '进行中' },
+                { value: 'completed', label: '已完成' },
+                { value: 'cancelled', label: '已取消' },
+                { value: 'failed', label: '失败' },
+              ]}
+            />
           </Form.Item>
           <Form.Item name="type" label="类型">
             <Select
@@ -318,12 +319,13 @@ const ReleaseList: React.FC = () => {
               allowClear
               style={{ width: compact ? '100%' : 150 }}
               onChange={handleSearch}
-            >
-              <Option value="major">主版本</Option>
-              <Option value="minor">次版本</Option>
-              <Option value="patch">补丁</Option>
-              <Option value="hotfix">紧急修复</Option>
-            </Select>
+              options={[
+                { value: 'major', label: '主版本' },
+                { value: 'minor', label: '次版本' },
+                { value: 'patch', label: '补丁' },
+                { value: 'hotfix', label: '紧急修复' },
+              ]}
+            />
           </Form.Item>
           <Form.Item>
             <Space wrap>

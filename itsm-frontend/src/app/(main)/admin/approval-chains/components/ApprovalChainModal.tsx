@@ -32,7 +32,7 @@ import type {
 import { FormField } from '@/types/common';
 
 const { TextArea } = Input;
-const { Option } = Select;
+
 const { Text, Title } = Typography;
 // Step removed - antd 5+ uses items prop instead
 
@@ -178,11 +178,12 @@ export function ApprovalChainModal({
                   value={step.approverType}
                   onChange={value => handleUpdateStep(index, 'approverType', value)}
                   style={{ width: '100%' }}
-                >
-                  <Option value="user">用户</Option>
-                  <Option value="role">角色</Option>
-                  <Option value="group">组</Option>
-                </Select>
+                  options={[
+                    { value: 'user', label: '用户' },
+                    { value: 'role', label: '角色' },
+                    { value: 'group', label: '组' },
+                  ]}
+                />
               </Col>
 
               <Col span={8}>
@@ -289,12 +290,7 @@ export function ApprovalChainModal({
             initialValue="ticket"
             rules={[{ required: true, message: '请选择适用对象' }]}
           >
-            <Select placeholder="请选择适用对象">
-              <Option value="ticket">工单</Option>
-              <Option value="incident">事件</Option>
-              <Option value="problem">问题</Option>
-              <Option value="change">变更</Option>
-            </Select>
+            <Select placeholder="请选择适用对象" options={[{ value: 'ticket', label: '工单' }, { value: 'incident', label: '事件' }, { value: 'problem', label: '问题' }, { value: 'change', label: '变更' }]} />
           </Form.Item>
 
           <Form.Item name="isActive" label="状态" valuePropName="checked" initialValue={true}>

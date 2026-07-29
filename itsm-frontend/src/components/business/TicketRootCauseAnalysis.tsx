@@ -32,7 +32,6 @@ import { TicketRootCauseApi } from '@/lib/api/ticket-root-cause-api';
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 const { Panel } = Collapse;
 
 interface RootCause {

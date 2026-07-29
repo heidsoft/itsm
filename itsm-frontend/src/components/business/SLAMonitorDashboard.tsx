@@ -26,7 +26,6 @@ import { zhCN } from 'date-fns/locale';
 import SLAApi from '@/lib/api/sla-api';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 interface SLAMetrics {
   totalTickets: number;

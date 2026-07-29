@@ -5,9 +5,6 @@ import { Select, Avatar, Spin, message } from 'antd';
 import { UserApi } from '@/lib/api/user-api';
 import type { User } from '@/lib/api/user-api';
 import { User as UserIcon } from 'lucide-react';
-
-const { Option } = Select;
-
 interface UserSelectProps {
   value?: number[];
   onChange?: (userIds: number[]) => void;
@@ -88,10 +85,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
       onSearch={handleSearch}
       notFoundContent={loading ? <Spin size="small" /> : '未找到用户'}
       optionLabelProp="label"
-    >
-      {filteredUsers.map(user => (
-        <Option key={user.id} value={user.id} label={user.name || user.username}>
-          <div className="flex items-center space-x-2">
+     options={filteredUsers.map(user => ({ value: user.id, label: <div className="flex items-center space-x-2">
             <Avatar size="small" icon={<UserIcon size={14} />}>
               {user.name?.[0] || user.username?.[0]}
             </Avatar>
@@ -99,9 +93,6 @@ export const UserSelect: React.FC<UserSelectProps> = ({
               <span className="text-sm font-medium">{user.name || user.username}</span>
               {user.email && <span className="text-xs text-gray-500">{user.email}</span>}
             </div>
-          </div>
-        </Option>
-      ))}
-    </Select>
+          </div> }))} />
   );
 };

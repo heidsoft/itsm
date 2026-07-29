@@ -45,7 +45,6 @@ import {
   Tag,
 } from 'antd';
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 // 升级规则的数据类型
 interface EscalationRule {
@@ -528,14 +527,11 @@ const EscalationRuleManagement = () => {
               value={priorityFilter}
               onChange={setPriorityFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部优先级</Option>
-              {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
-                <Option key={key} value={key}>
-                  {config.label}
-                </Option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: '全部优先级' },
+                ...Object.entries(PRIORITY_CONFIG).map(([key, config]) => ({ value: key, label: config.label })),
+              ]}
+            />
           </Col>
           <Col xs={24} md={4}>
             <Select
@@ -543,14 +539,11 @@ const EscalationRuleManagement = () => {
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部状态</Option>
-              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                <Option key={key} value={key}>
-                  {config.label}
-                </Option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: '全部状态' },
+                ...Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label })),
+              ]}
+            />
           </Col>
           <Col xs={24} md={4}>
             <Select
@@ -558,14 +551,11 @@ const EscalationRuleManagement = () => {
               value={serviceTypeFilter}
               onChange={setServiceTypeFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部类型</Option>
-              {serviceTypes.map(type => (
-                <Option key={type} value={type}>
-                  {type}
-                </Option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: '全部类型' },
+                ...serviceTypes.map(type => ({ value: type, label: type })),
+              ]}
+            />
           </Col>
           <Col xs={24} md={6} className="text-right">
             <Button
@@ -643,13 +633,7 @@ const EscalationRuleManagement = () => {
                 rules={[{ required: true, message: '请选择优先级' }]}
                 initialValue="P3"
               >
-                <Select>
-                  {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
-                    <Option key={key} value={key}>
-                      {config.label}
-                    </Option>
-                  ))}
-                </Select>
+                <Select options={Object.entries(PRIORITY_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -658,24 +642,12 @@ const EscalationRuleManagement = () => {
                 name="serviceType"
                 rules={[{ required: true, message: '请输入服务类型' }]}
               >
-                <Select showSearch optionFilterProp="label" placeholder="选择或输入服务类型">
-                  {serviceTypes.map(type => (
-                    <Option key={type} value={type}>
-                      {type}
-                    </Option>
-                  ))}
-                </Select>
+                <Select showSearch optionFilterProp="label" placeholder="选择或输入服务类型" options={serviceTypes.map(type => ({ value: type, label: type }))} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item label="状态" name="status" initialValue="draft">
-                <Select>
-                  {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                    <Option key={key} value={key}>
-                      {config.label}
-                    </Option>
-                  ))}
-                </Select>
+                <Select options={Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
               </Form.Item>
             </Col>
           </Row>

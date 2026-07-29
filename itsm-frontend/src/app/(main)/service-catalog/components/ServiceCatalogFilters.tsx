@@ -7,7 +7,6 @@ import { useI18n } from '@/lib/i18n';
 import type { CIType, CloudService } from '@/types/biz/cmdb';
 
 const { Search: SearchInput } = Input;
-const { Option } = Select;
 
 interface ServiceCatalogFiltersProps {
   onSearch: (value: string) => void;
@@ -52,11 +51,12 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
             allowClear
             onChange={onCategoryFilterChange}
             style={{ width: '100%' }}
-          >
-            <Option value="云资源服务">{t('serviceCatalog.cloudResources')}</Option>
-            <Option value="账号与权限">{t('serviceCatalog.accountPermissions')}</Option>
-            <Option value="安全服务">{t('serviceCatalog.securityServices')}</Option>
-          </Select>
+            options={[
+              { value: '云资源服务', label: t('serviceCatalog.cloudResources') },
+              { value: '账号与权限', label: t('serviceCatalog.accountPermissions') },
+              { value: '安全服务', label: t('serviceCatalog.securityServices') },
+            ]}
+          />
         </Col>
         <Col xs={24} sm={12} md={3}>
           <Select
@@ -65,11 +65,12 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
             allowClear
             onChange={onPriorityFilterChange}
             style={{ width: '100%' }}
-          >
-            <Option value="高">{t('serviceCatalog.high')}</Option>
-            <Option value="中">{t('serviceCatalog.medium')}</Option>
-            <Option value="低">{t('serviceCatalog.low')}</Option>
-          </Select>
+            options={[
+              { value: '高', label: t('serviceCatalog.high') },
+              { value: '中', label: t('serviceCatalog.medium') },
+              { value: '低', label: t('serviceCatalog.low') },
+            ]}
+          />
         </Col>
         <Col xs={24} sm={12} md={3}>
           <Select
@@ -79,13 +80,8 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
             loading={optionsLoading}
             onChange={onCITypeFilterChange}
             style={{ width: '100%' }}
-          >
-            {ciTypes.map(type => (
-              <Option key={type.id} value={type.id}>
-                {type.name}
-              </Option>
-            ))}
-          </Select>
+            options={ciTypes.map(type => ({ value: type.id, label: type.name }))}
+          />
         </Col>
         <Col xs={24} sm={12} md={4}>
           <Select
@@ -97,17 +93,11 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
             optionFilterProp="label"
             onChange={onCloudServiceFilterChange}
             style={{ width: '100%' }}
-          >
-            {cloudServices.map(service => (
-              <Option
-                key={service.id}
-                value={service.id}
-                label={`${service.serviceName} (${service.resourceTypeName})`}
-              >
-                {service.serviceName} ({service.resourceTypeName})
-              </Option>
-            ))}
-          </Select>
+            options={cloudServices.map(service => ({
+              value: service.id,
+              label: `${service.serviceName} (${service.resourceTypeName})`,
+            }))}
+          />
         </Col>
         <Col xs={24} sm={12} md={2}>
           <Tooltip title="刷新列表">

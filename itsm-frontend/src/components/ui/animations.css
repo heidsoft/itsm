@@ -1,12 +1,7 @@
 /* 微交互动画效果 */
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
+/* 全局 prefers-reduced-motion 降级统一由 globals.css 处理（含 antd 弹层豁免），
+   本文件仅在文末对自身动画类做精确降级，避免通配选择器破坏 antd 弹层定位 */
 
 /* 按钮交互动画 */
 .btn-interactive {

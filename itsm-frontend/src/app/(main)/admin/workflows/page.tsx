@@ -43,7 +43,6 @@ import {
 } from 'antd';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 // 工作流状态枚举
 const WORKFLOW_STATUS = {
@@ -615,14 +614,8 @@ const WorkflowManagement = () => {
               value={typeFilter}
               onChange={setTypeFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部类型</Option>
-              {Object.entries(WORKFLOW_TYPE_CONFIG).map(([key, config]) => (
-                <Option key={key} value={key}>
-                  {config.label}
-                </Option>
-              ))}
-            </Select>
+              options={[{ value: 'all', label: '全部类型' }, ...Object.entries(WORKFLOW_TYPE_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))]}
+            />
           </Col>
           <Col xs={24} md={4}>
             <Select
@@ -630,14 +623,8 @@ const WorkflowManagement = () => {
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部状态</Option>
-              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                <Option key={key} value={key}>
-                  {config.label}
-                </Option>
-              ))}
-            </Select>
+              options={[{ value: 'all', label: '全部状态' }, ...Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))]}
+            />
           </Col>
           <Col xs={24} md={8} className="text-right">
             <Space>
@@ -741,13 +728,7 @@ const WorkflowManagement = () => {
                 name="type"
                 rules={[{ required: true, message: '请选择工作流类型' }]}
               >
-                <Select placeholder="选择工作流类型">
-                  {Object.entries(WORKFLOW_TYPE_CONFIG).map(([key, config]) => (
-                    <Option key={key} value={key}>
-                      {config.label}
-                    </Option>
-                  ))}
-                </Select>
+                <Select placeholder="选择工作流类型" options={Object.entries(WORKFLOW_TYPE_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
               </Form.Item>
             </Col>
           </Row>
@@ -766,13 +747,7 @@ const WorkflowManagement = () => {
             </Col>
             <Col span={12}>
               <Form.Item label="状态" name="status" initialValue={WORKFLOW_STATUS.DRAFT}>
-                <Select>
-                  {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                    <Option key={key} value={key}>
-                      {config.label}
-                    </Option>
-                  ))}
-                </Select>
+                <Select options={Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
               </Form.Item>
             </Col>
           </Row>

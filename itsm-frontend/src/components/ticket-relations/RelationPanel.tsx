@@ -32,8 +32,6 @@ import {
   useRelationStatsQuery,
 } from '@/lib/hooks/useTicketRelations';
 import { TicketRelationType } from '@/types/ticket-relations';
-
-const { Option } = Select;
 const { TextArea } = Input;
 
 export interface RelationPanelProps {
@@ -263,13 +261,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
             name="relationType"
             rules={[{ required: true, message: '请选择关联类型' }]}
           >
-            <Select placeholder="选择关联类型">
-              <Option value={TicketRelationType.RELATES_TO}>相关</Option>
-              <Option value={TicketRelationType.BLOCKS}>阻塞</Option>
-              <Option value={TicketRelationType.DEPENDS_ON}>依赖于</Option>
-              <Option value={TicketRelationType.DUPLICATES}>重复</Option>
-              <Option value={TicketRelationType.PARENT_CHILD}>父子关系</Option>
-            </Select>
+            <Select placeholder="选择关联类型" options={[{ value: TicketRelationType.RELATES_TO, label: "相关" }, { value: TicketRelationType.BLOCKS, label: "阻塞" }, { value: TicketRelationType.DEPENDS_ON, label: "依赖于" }, { value: TicketRelationType.DUPLICATES, label: "重复" }, { value: TicketRelationType.PARENT_CHILD, label: "父子关系" }]} />
           </Form.Item>
 
           <Form.Item

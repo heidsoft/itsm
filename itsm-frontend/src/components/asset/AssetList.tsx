@@ -28,8 +28,6 @@ import dayjs from 'dayjs';
 
 import { AssetApi, AssetStatus, AssetType } from '@/lib/api/asset-api';
 
-const { Option } = Select;
-
 // 状态颜色映射
 const statusColors: Record<string, string> = {
   available: 'success',
@@ -293,13 +291,14 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
-            >
-              <Option value="available">可用</Option>
-              <Option value="in-use">使用中</Option>
-              <Option value="maintenance">维护中</Option>
-              <Option value="retired">已退役</Option>
-              <Option value="disposed">已处置</Option>
-            </Select>
+              options={[
+                { value: 'available', label: '可用' },
+                { value: 'in-use', label: '使用中' },
+                { value: 'maintenance', label: '维护中' },
+                { value: 'retired', label: '已退役' },
+                { value: 'disposed', label: '已处置' },
+              ]}
+            />
           </Form.Item>
           <Form.Item name="type" label="类型">
             <Select
@@ -307,12 +306,13 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
-            >
-              <Option value="hardware">硬件</Option>
-              <Option value="software">软件</Option>
-              <Option value="cloud">云资源</Option>
-              <Option value="license">许可证</Option>
-            </Select>
+              options={[
+                { value: 'hardware', label: '硬件' },
+                { value: 'software', label: '软件' },
+                { value: 'cloud', label: '云资源' },
+                { value: 'license', label: '许可证' },
+              ]}
+            />
           </Form.Item>
           <Form.Item name="category" label="分类">
             <Input placeholder="分类" style={{ width: 150 }} />

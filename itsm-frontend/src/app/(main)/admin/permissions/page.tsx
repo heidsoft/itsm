@@ -38,7 +38,6 @@ import {
 import { RoleAPI } from '@/lib/api/role-api';
 import type { Role } from '@/lib/api/api-config';
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 // 权限模块定义
 const PERMISSION_MODULES = {
@@ -556,13 +555,8 @@ const PermissionConfiguration = () => {
                 style={{ minWidth: 200 }}
                 showSearch
                 optionFilterProp="children"
-              >
-                {roles.map(role => (
-                  <Option key={role.id} value={role.id}>
-                    {role.name}
-                  </Option>
-                ))}
-              </Select>
+                options={roles.map(role => ({ value: role.id, label: role.name }))}
+              />
             </div>
           </Col>
           <Col xs={24} md={6}>
@@ -580,14 +574,11 @@ const PermissionConfiguration = () => {
               value={categoryFilter}
               onChange={setCategoryFilter}
               style={{ width: '100%' }}
-            >
-              <Option value="all">全部分类</Option>
-              {CATEGORIES.map(category => (
-                <Option key={category.id} value={category.id}>
-                  {category.name}
-                </Option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: '全部分类' },
+                ...CATEGORIES.map(category => ({ value: category.id, label: category.name })),
+              ]}
+            />
           </Col>
           <Col xs={24} md={4}>
             <Select
@@ -595,10 +586,11 @@ const PermissionConfiguration = () => {
               value={viewMode}
               onChange={setViewMode}
               style={{ width: '100%' }}
-            >
-              <Option value="card">卡片视图</Option>
-              <Option value="tree">树形视图</Option>
-            </Select>
+              options={[
+                { value: 'card', label: '卡片视图' },
+                { value: 'tree', label: '树形视图' },
+              ]}
+            />
           </Col>
           <Col xs={24} md={4} className="text-right">
             <Space>

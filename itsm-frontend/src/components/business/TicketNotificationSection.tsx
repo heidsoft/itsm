@@ -42,7 +42,6 @@ import { useI18n } from '@/lib/i18n';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 
 interface TicketNotificationSectionProps {
   ticketId: number;
@@ -340,15 +339,15 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
             name="type"
             rules={[{ required: true, message: '请选择通知类型' }]}
           >
-            <Select placeholder="请选择通知类型">
-              <Option value="created">工单创建</Option>
-              <Option value="assigned">工单分配</Option>
-              <Option value="status_changed">状态变更</Option>
-              <Option value="commented">新增评论</Option>
-              <Option value="sla_warning">SLA警告</Option>
-              <Option value="resolved">工单已解决</Option>
-              <Option value="closed">工单已关闭</Option>
-            </Select>
+            <Select placeholder="请选择通知类型" options={[
+              { value: "created", label: "工单创建" },
+              { value: "assigned", label: "工单分配" },
+              { value: "status_changed", label: "状态变更" },
+              { value: "commented", label: "新增评论" },
+              { value: "sla_warning", label: "SLA警告" },
+              { value: "resolved", label: "工单已解决" },
+              { value: "closed", label: "工单已关闭" },
+            ]} />
           </Form.Item>
 
           <Form.Item
@@ -356,26 +355,11 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
             name="channel"
             rules={[{ required: true, message: '请选择通知渠道' }]}
           >
-            <Select placeholder="请选择通知渠道">
-              <Option value="in_app">
-                <Space>
-                  <MessageSquare />
-                  站内消息
-                </Space>
-              </Option>
-              <Option value="email">
-                <Space>
-                  <Mail />
-                  邮件
-                </Space>
-              </Option>
-              <Option value="sms">
-                <Space>
-                  <Smartphone />
-                  短信
-                </Space>
-              </Option>
-            </Select>
+            <Select placeholder="请选择通知渠道" options={[
+              { value: "in_app", label: "站内消息" },
+              { value: "email", label: "邮件" },
+              { value: "sms", label: "短信" },
+            ]} />
           </Form.Item>
 
           <Form.Item

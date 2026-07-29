@@ -30,7 +30,6 @@ import { UserApi } from '@/lib/api/user-api';
 import type { User } from '@/lib/api/user-api';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 export interface Subtask extends Ticket {
   parentId: number;
@@ -464,30 +463,32 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
             <TextArea rows={4} placeholder="请输入任务描述" />
           </Form.Item>
           <Form.Item name="priority" label="优先级" initialValue="medium">
-            <Select>
-              <Option value="low">低</Option>
-              <Option value="medium">中</Option>
-              <Option value="high">高</Option>
-              <Option value="urgent">紧急</Option>
-            </Select>
+            <Select options={[
+              { value: 'low', label: '低' },
+              { value: 'medium', label: '中' },
+              { value: 'high', label: '高' },
+              { value: 'urgent', label: '紧急' },
+            ]} />
           </Form.Item>
           <Form.Item name="status" label="状态" initialValue="open">
-            <Select>
-              <Option value="new">新建</Option>
-              <Option value="open">待处理</Option>
-              <Option value="in_progress">处理中</Option>
-              <Option value="resolved">已解决</Option>
-              <Option value="closed">已关闭</Option>
-            </Select>
+            <Select options={[
+              { value: 'new', label: '新建' },
+              { value: 'open', label: '待处理' },
+              { value: 'in_progress', label: '处理中' },
+              { value: 'resolved', label: '已解决' },
+              { value: 'closed', label: '已关闭' },
+            ]} />
           </Form.Item>
           <Form.Item name="assigneeId" label="处理人">
-            <Select placeholder="请选择处理人" allowClear loading={loadingUsers}>
-              {users.map(user => (
-                <Option key={user.id} value={user.id}>
-                  {user.name || user.username || `用户 ${user.id}`}
-                </Option>
-              ))}
-            </Select>
+            <Select
+              placeholder="请选择处理人"
+              allowClear
+              loading={loadingUsers}
+              options={users.map(user => ({
+                value: user.id,
+                label: user.name || user.username || `用户 ${user.id}`,
+              }))}
+            />
           </Form.Item>
           <Form.Item name="dueDate" label="截止时间">
             <DatePicker style={{ width: '100%' }} />

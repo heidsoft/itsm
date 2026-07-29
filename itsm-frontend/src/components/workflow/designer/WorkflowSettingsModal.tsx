@@ -6,9 +6,6 @@
 import React from 'react';
 import { Modal, Form, Tabs, Select, Input, Checkbox, Row, Col } from 'antd';
 import type { FormInstance } from 'antd';
-
-const { Option } = Select;
-
 interface WorkflowSettingsModalProps {
   visible: boolean;
   onClose: () => void;
@@ -45,12 +42,7 @@ export default function WorkflowSettingsModal({
                     name={['approval_config', 'approval_type']}
                     rules={[{ required: true, message: '请选择审批类型' }]}
                   >
-                    <Select>
-                      <Option value="single">单人审批</Option>
-                      <Option value="parallel">并行审批</Option>
-                      <Option value="sequential">串行审批</Option>
-                      <Option value="conditional">条件审批</Option>
-                    </Select>
+                    <Select options={[{ value: "single", label: "单人审批" }, { value: "parallel", label: "并行审批" }, { value: "sequential", label: "串行审批" }, { value: "conditional", label: "条件审批" }]} />
                   </Form.Item>
 
                   <Form.Item label="审批人" name={['approval_config', 'approvers']}>

@@ -36,8 +36,6 @@ import {
 import { BatchProgressModal } from './BatchProgressModal';
 
 const { TextArea } = Input;
-const { Option } = Select;
-
 export interface BatchOperationModalProps {
   visible: boolean;
   operationType: BatchOperationType;
@@ -158,11 +156,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
                       name="assigneeId"
                       rules={[{ required: true, message: '请选择处理人' }]}
                     >
-                      <Select placeholder="选择处理人" showSearch>
-                        <Option value={1}>张三</Option>
-                        <Option value={2}>李四</Option>
-                        <Option value={3}>王五</Option>
-                      </Select>
+                      <Select placeholder="选择处理人" showSearch options={[{ value: 1, label: "张三" }, { value: 2, label: "李四" }, { value: 3, label: "王五" }]} />
                     </Form.Item>
                   );
                 }
@@ -172,10 +166,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
                     name="teamId"
                     rules={[{ required: true, message: '请选择团队' }]}
                   >
-                    <Select placeholder="选择团队">
-                      <Option value={1}>技术支持团队</Option>
-                      <Option value={2}>运维团队</Option>
-                    </Select>
+                    <Select placeholder="选择团队" options={[{ value: 1, label: "技术支持团队" }, { value: 2, label: "运维团队" }]} />
                   </Form.Item>
                 );
               }}
@@ -191,12 +182,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
               name="status"
               rules={[{ required: true, message: '请选择状态' }]}
             >
-              <Select placeholder="选择状态">
-                <Option value="open">打开</Option>
-                <Option value="in_progress">处理中</Option>
-                <Option value="resolved">已解决</Option>
-                <Option value="closed">已关闭</Option>
-              </Select>
+              <Select placeholder="选择状态" options={[{ value: "open", label: "打开" }, { value: "in_progress", label: "处理中" }, { value: "resolved", label: "已解决" }, { value: "closed", label: "已关闭" }]} />
             </Form.Item>
             <Form.Item label="解决方案" name="resolution">
               <TextArea rows={3} placeholder="输入解决方案..." />
@@ -211,12 +197,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
             name="priority"
             rules={[{ required: true, message: '请选择优先级' }]}
           >
-            <Select placeholder="选择优先级">
-              <Option value="low">低</Option>
-              <Option value="medium">中</Option>
-              <Option value="high">高</Option>
-              <Option value="urgent">紧急</Option>
-            </Select>
+            <Select placeholder="选择优先级" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "urgent", label: "紧急" }]} />
           </Form.Item>
         );
 
@@ -232,12 +213,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
         return (
           <>
             <Form.Item label="关闭原因" name="closureReason">
-              <Select placeholder="选择关闭原因">
-                <Option value="resolved">问题已解决</Option>
-                <Option value="duplicate">重复工单</Option>
-                <Option value="invalid">无效工单</Option>
-                <Option value="wont_fix">不予修复</Option>
-              </Select>
+              <Select placeholder="选择关闭原因" options={[{ value: "resolved", label: "问题已解决" }, { value: "duplicate", label: "重复工单" }, { value: "invalid", label: "无效工单" }, { value: "wont_fix", label: "不予修复" }]} />
             </Form.Item>
             <Form.Item label="解决方案" name="resolution">
               <TextArea rows={3} placeholder="输入解决方案..." />

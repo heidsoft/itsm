@@ -53,7 +53,6 @@ import {
 } from '@/lib/hooks/useTemplateQuery';
 
 const { TextArea } = Input;
-const { Option } = Select;
 // Ant Design v5 不再使用 Steps.Step，改用 items 属性
 const { Panel } = Collapse;
 
@@ -299,13 +298,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   name="categoryId"
                   rules={[{ required: true, message: '请选择分类' }]}
                 >
-                  <Select placeholder="选择模板分类" showSearch optionFilterProp="children">
-                    {categories.map((cat: any) => (
-                      <Option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </Option>
-                    ))}
-                  </Select>
+                  <Select placeholder="选择模板分类" showSearch optionFilterProp="children" options={categories.map((cat: any) => ({ value: cat.id, label: cat.name }))} />
                 </Form.Item>
               </Col>
               <Col span={12}>
@@ -390,22 +383,12 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 <Row gutter={16}>
                   <Col span={12}>
                     <Form.Item label="默认类型" name={['defaults', 'type']}>
-                      <Select placeholder="选择工单类型">
-                        <Option value="incident">事件</Option>
-                        <Option value="request">服务请求</Option>
-                        <Option value="problem">问题</Option>
-                        <Option value="change">变更</Option>
-                      </Select>
+                      <Select placeholder="选择工单类型" options={[{ value: "incident", label: "事件" }, { value: "request", label: "服务请求" }, { value: "problem", label: "问题" }, { value: "change", label: "变更" }]} />
                     </Form.Item>
                   </Col>
                   <Col span={12}>
                     <Form.Item label="默认优先级" name={['defaults', 'priority']}>
-                      <Select placeholder="选择优先级">
-                        <Option value="low">低</Option>
-                        <Option value="medium">中</Option>
-                        <Option value="high">高</Option>
-                        <Option value="urgent">紧急</Option>
-                      </Select>
+                      <Select placeholder="选择优先级" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "urgent", label: "紧急" }]} />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -428,13 +411,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                           ) : field.type === 'number' ? (
                             <InputNumber style={{ width: '100%' }} />
                           ) : field.type === 'select' ? (
-                            <Select placeholder={`选择${field.label}默认值`}>
-                              {field.options?.map(opt => (
-                                <Option key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </Option>
-                              ))}
-                            </Select>
+                            <Select placeholder={`选择${field.label}默认值`} options={field.options?.map(opt => ({ value: opt.value, label: opt.label }))} />
                           ) : (
                             <Input placeholder={`${field.label}的默认值`} />
                           )}
@@ -501,11 +478,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             if (visibility === 'department') {
               return (
                 <Form.Item label="允许的部门" name={['permission', 'allowedDepartments']}>
-                  <Select mode="multiple" placeholder="选择部门">
-                    <Option value="dept1">技术部</Option>
-                    <Option value="dept2">运维部</Option>
-                    <Option value="dept3">产品部</Option>
-                  </Select>
+                  <Select mode="multiple" placeholder="选择部门" options={[{ value: "dept1", label: "技术部" }, { value: "dept2", label: "运维部" }, { value: "dept3", label: "产品部" }]} />
                 </Form.Item>
               );
             }
@@ -513,11 +486,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             if (visibility === 'role') {
               return (
                 <Form.Item label="允许的角色" name={['permission', 'allowedRoles']}>
-                  <Select mode="multiple" placeholder="选择角色">
-                    <Option value="admin">管理员</Option>
-                    <Option value="agent">工程师</Option>
-                    <Option value="user">普通用户</Option>
-                  </Select>
+                  <Select mode="multiple" placeholder="选择角色" options={[{ value: "admin", label: "管理员" }, { value: "agent", label: "工程师" }, { value: "user", label: "普通用户" }]} />
                 </Form.Item>
               );
             }
@@ -525,10 +494,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             if (visibility === 'team') {
               return (
                 <Form.Item label="允许的团队" name={['permission', 'allowedTeams']}>
-                  <Select mode="multiple" placeholder="选择团队">
-                    <Option value="team1">技术支持团队</Option>
-                    <Option value="team2">运维团队</Option>
-                  </Select>
+                  <Select mode="multiple" placeholder="选择团队" options={[{ value: "team1", label: "技术支持团队" }, { value: "team2", label: "运维团队" }]} />
                 </Form.Item>
               );
             }
@@ -540,10 +506,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         <Divider>高级权限</Divider>
 
         <Form.Item label="拒绝的用户" name={['permission', 'denyUsers']}>
-          <Select mode="multiple" placeholder="选择要排除的用户" allowClear>
-            <Option value="user1">用户1</Option>
-            <Option value="user2">用户2</Option>
-          </Select>
+          <Select mode="multiple" placeholder="选择要排除的用户" allowClear options={[{ value: "user1", label: "用户1" }, { value: "user2", label: "用户2" }]} />
         </Form.Item>
       </Form>
     </Card>
@@ -586,22 +549,14 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 return (
                   <>
                     <Form.Item label="分配规则" name={['automation', 'assignmentRule', 'type']}>
-                      <Select placeholder="选择分配规则">
-                        <Option value="round_robin">轮流分配</Option>
-                        <Option value="load_balance">负载均衡</Option>
-                        <Option value="skill_based">技能匹配</Option>
-                        <Option value="random">随机分配</Option>
-                      </Select>
+                      <Select placeholder="选择分配规则" options={[{ value: "round_robin", label: "轮流分配" }, { value: "load_balance", label: "负载均衡" }, { value: "skill_based", label: "技能匹配" }, { value: "random", label: "随机分配" }]} />
                     </Form.Item>
 
                     <Form.Item
                       label="目标团队"
                       name={['automation', 'assignmentRule', 'targetTeamId']}
                     >
-                      <Select placeholder="选择团队">
-                        <Option value="team1">技术支持团队</Option>
-                        <Option value="team2">运维团队</Option>
-                      </Select>
+                      <Select placeholder="选择团队" options={[{ value: "team1", label: "技术支持团队" }, { value: "team2", label: "运维团队" }]} />
                     </Form.Item>
                   </>
                 );
@@ -645,12 +600,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                       label="审批级别"
                       name={['automation', 'approvalWorkflow', 'approvalLevel']}
                     >
-                      <Select placeholder="选择审批级别">
-                        <Option value="manager">经理审批</Option>
-                        <Option value="director">总监审批</Option>
-                        <Option value="executive">高管审批</Option>
-                        <Option value="custom">自定义审批</Option>
-                      </Select>
+                      <Select placeholder="选择审批级别" options={[{ value: "manager", label: "经理审批" }, { value: "director", label: "总监审批" }, { value: "executive", label: "高管审批" }, { value: "custom", label: "自定义审批" }]} />
                     </Form.Item>
 
                     <Form.Item

@@ -25,7 +25,6 @@ import {
 
 const { Text } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 const { Panel } = Collapse;
 
 interface AIAssistantProps {
@@ -313,13 +312,14 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
               value={inputData.category}
               onChange={value => setInputData(prev => ({ ...prev, category: value }))}
               className="flex-1"
-            >
-              <Option value="network">网络问题</Option>
-              <Option value="software">软件问题</Option>
-              <Option value="hardware">硬件问题</Option>
-              <Option value="access">权限问题</Option>
-              <Option value="general">其他</Option>
-            </Select>
+              options={[
+                { value: 'network', label: '网络问题' },
+                { value: 'software', label: '软件问题' },
+                { value: 'hardware', label: '硬件问题' },
+                { value: 'access', label: '权限问题' },
+                { value: 'general', label: '其他' },
+              ]}
+            />
 
             <Button
               type="primary"

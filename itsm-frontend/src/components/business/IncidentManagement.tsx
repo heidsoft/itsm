@@ -41,7 +41,6 @@ dayjs.extend(relativeTime);
 dayjs.locale('zh-cn');
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -392,36 +391,21 @@ export const IncidentManagement: React.FC = () => {
               placeholder="状态"
               allowClear
               onChange={value => handleFilterChange('status', value)}
-            >
-              <Option value="new">新建</Option>
-              <Option value="in_progress">进行中</Option>
-              <Option value="resolved">已解决</Option>
-              <Option value="closed">已关闭</Option>
-            </Select>
+             options={[{ value: "new", label: "新建" }, { value: "in_progress", label: "进行中" }, { value: "resolved", label: "已解决" }, { value: "closed", label: "已关闭" }]} />
           </Col>
           <Col span={4}>
             <Select
               placeholder="优先级"
               allowClear
               onChange={value => handleFilterChange('priority', value)}
-            >
-              <Option value="low">低</Option>
-              <Option value="medium">中</Option>
-              <Option value="high">高</Option>
-              <Option value="urgent">紧急</Option>
-            </Select>
+             options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "urgent", label: "紧急" }]} />
           </Col>
           <Col span={4}>
             <Select
               placeholder="严重程度"
               allowClear
               onChange={value => handleFilterChange('severity', value)}
-            >
-              <Option value="low">低</Option>
-              <Option value="medium">中</Option>
-              <Option value="high">高</Option>
-              <Option value="critical">严重</Option>
-            </Select>
+             options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "critical", label: "严重" }]} />
           </Col>
           <Col span={4}>
             <RangePicker
@@ -1134,12 +1118,7 @@ const IncidentFormModal: React.FC<{
               label="优先级"
               rules={[{ required: true, message: '请选择优先级' }]}
             >
-              <Select placeholder="请选择优先级">
-                <Option value="low">低</Option>
-                <Option value="medium">中</Option>
-                <Option value="high">高</Option>
-                <Option value="urgent">紧急</Option>
-              </Select>
+              <Select placeholder="请选择优先级" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "urgent", label: "紧急" }]} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -1148,12 +1127,7 @@ const IncidentFormModal: React.FC<{
               label="严重程度"
               rules={[{ required: true, message: '请选择严重程度' }]}
             >
-              <Select placeholder="请选择严重程度">
-                <Option value="low">低</Option>
-                <Option value="medium">中</Option>
-                <Option value="high">高</Option>
-                <Option value="critical">严重</Option>
-              </Select>
+              <Select placeholder="请选择严重程度" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "critical", label: "严重" }]} />
             </Form.Item>
           </Col>
         </Row>
@@ -1161,13 +1135,7 @@ const IncidentFormModal: React.FC<{
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item name="category" label="分类">
-              <Select placeholder="请选择分类">
-                <Option value="performance">性能</Option>
-                <Option value="connectivity">连接</Option>
-                <Option value="security">安全</Option>
-                <Option value="storage">存储</Option>
-                <Option value="network">网络</Option>
-              </Select>
+              <Select placeholder="请选择分类" options={[{ value: "performance", label: "性能" }, { value: "connectivity", label: "连接" }, { value: "security", label: "安全" }, { value: "storage", label: "存储" }, { value: "network", label: "网络" }]} />
             </Form.Item>
           </Col>
           <Col span={12}>

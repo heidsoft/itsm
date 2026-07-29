@@ -34,7 +34,6 @@ import type { DashboardOverviewResponse } from '@/lib/services/analytics-service
 import { dashboardService } from '@/lib/services/analytics-service';
 import { ticketService } from '@/lib/services/ticket-service';
 
-const { Option } = Select;
 const { Text, Title } = Typography;
 
 const TicketDashboardPage = () => {
@@ -292,12 +291,12 @@ const TicketDashboardPage = () => {
       <div className="mb-4">
         <Space>
           <Text>筛选团队:</Text>
-          <Select value={selectedTeam} onChange={setSelectedTeam} style={{ width: 120 }}>
-            <Option value="all">全部</Option>
-            <Option value="support">技术支持</Option>
-            <Option value="engineering">工程团队</Option>
-            <Option value="management">管理团队</Option>
-          </Select>
+          <Select value={selectedTeam} onChange={setSelectedTeam} style={{ width: 120 }} options={[
+            { value: 'all', label: '全部' },
+            { value: 'support', label: '技术支持' },
+            { value: 'engineering', label: '工程团队' },
+            { value: 'management', label: '管理团队' },
+          ]} />
           <Button icon={<RefreshCw size={16} />} onClick={loadDashboardData}>
             刷新
           </Button>
@@ -406,11 +405,11 @@ const TicketDashboardPage = () => {
         <div className="mb-4">
           <Space>
             <Text>时间范围:</Text>
-            <Select value={timeRange} onChange={setTimeRange} style={{ width: 120 }}>
-              <Option value="7d">最近7天</Option>
-              <Option value="30d">最近30天</Option>
-              <Option value="90d">最近90天</Option>
-            </Select>
+            <Select value={timeRange} onChange={setTimeRange} style={{ width: 120 }} options={[
+              { value: '7d', label: '最近7天' },
+              { value: '30d', label: '最近30天' },
+              { value: '90d', label: '最近90天' },
+            ]} />
           </Space>
         </div>
 
@@ -505,11 +504,11 @@ const TicketDashboardPage = () => {
           <p className="text-gray-600 mt-1">实时监控工单处理状态、SLA合规率和团队表现</p>
         </div>
         <Space>
-          <Select value={timeRange} onChange={setTimeRange} style={{ width: 120 }}>
-            <Option value="7d">最近7天</Option>
-            <Option value="30d">最近30天</Option>
-            <Option value="90d">最近90天</Option>
-          </Select>
+          <Select value={timeRange} onChange={setTimeRange} style={{ width: 120 }} options={[
+            { value: '7d', label: '最近7天' },
+            { value: '30d', label: '最近30天' },
+            { value: '90d', label: '最近90天' },
+          ]} />
           <Button icon={<RefreshCw size={16} />} onClick={loadDashboardData}>
             刷新
           </Button>

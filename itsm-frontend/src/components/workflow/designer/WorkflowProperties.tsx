@@ -33,9 +33,6 @@ import type {
   GroupInfo,
   SLAConfig,
 } from './WorkflowTypes';
-
-const { Option } = Select;
-
 interface WorkflowPropertiesProps {
   workflow: WorkflowDefinition | null;
   approvalConfig: ApprovalConfig;
@@ -217,12 +214,7 @@ export default function WorkflowProperties({
                   value={approvalConfig.approvalType}
                   onChange={handleApprovalTypeChange}
                   className="w-full"
-                >
-                  <Option value="single">单人审批</Option>
-                  <Option value="parallel">并行审批</Option>
-                  <Option value="sequential">串行审批</Option>
-                  <Option value="conditional">条件审批</Option>
-                </Select>
+                 options={[{ value: "single", label: "单人审批" }, { value: "parallel", label: "并行审批" }, { value: "sequential", label: "串行审批" }, { value: "conditional", label: "条件审批" }]} />
               </div>
 
               {/* 审批人 */}
@@ -238,13 +230,7 @@ export default function WorkflowProperties({
                   className="w-full"
                   loading={loadingUsers}
                   maxTagCount="responsive"
-                >
-                  {userList.map(user => (
-                    <Option key={user.id} value={String(user.id)}>
-                      {user.name}
-                    </Option>
-                  ))}
-                </Select>
+                 options={userList.map(user => ({ value: String(user.id), label: user.name }))} />
               </div>
 
               {/* 审批组说明（节点级） */}
@@ -276,13 +262,7 @@ export default function WorkflowProperties({
                   onChange={handleAutoApproveRolesChange}
                   className="w-full"
                   loading={loadingRoles}
-                >
-                  {roleList.map(role => (
-                    <Option key={role.code} value={role.code}>
-                      {role.name}
-                    </Option>
-                  ))}
-                </Select>
+                 options={roleList.map(role => ({ value: role.code, label: role.name }))} />
               </div>
             </div>
           </Card>

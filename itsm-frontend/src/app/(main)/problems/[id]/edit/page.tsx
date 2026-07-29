@@ -8,8 +8,6 @@ import { ProblemApi } from '@/lib/api/problem-api';
 import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
-const { Option } = Select;
-
 export default function ProblemEditPage() {
   const router = useRouter();
   const params = useParams();
@@ -117,12 +115,7 @@ export default function ProblemEditPage() {
                 label="状态"
                 rules={[{ required: true, message: '请选择状态' }]}
               >
-                <Select placeholder="请选择状态">
-                  <Option value="open">待处理</Option>
-                  <Option value="investigating">调查中</Option>
-                  <Option value="resolved">已解决</Option>
-                  <Option value="closed">已关闭</Option>
-                </Select>
+                <Select placeholder="请选择状态" options={[{ value: "open", label: "待处理" }, { value: "investigating", label: "调查中" }, { value: "resolved", label: "已解决" }, { value: "closed", label: "已关闭" }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -131,12 +124,7 @@ export default function ProblemEditPage() {
                 label="优先级"
                 rules={[{ required: true, message: '请选择优先级' }]}
               >
-                <Select placeholder="请选择优先级">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                  <Option value="critical">紧急</Option>
-                </Select>
+                <Select placeholder="请选择优先级" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "critical", label: "紧急" }]} />
               </Form.Item>
             </Col>
           </Row>
@@ -144,15 +132,7 @@ export default function ProblemEditPage() {
           <Row gutter={24}>
             <Col span={24}>
               <Form.Item name="category" label="分类">
-                <Select placeholder="请选择分类" allowClear>
-                  <Option value="系统问题">系统问题</Option>
-                  <Option value="网络问题">网络问题</Option>
-                  <Option value="数据库问题">数据库问题</Option>
-                  <Option value="应用问题">应用问题</Option>
-                  <Option value="安全问题">安全问题</Option>
-                  <Option value="硬件问题">硬件问题</Option>
-                  <Option value="其他">其他</Option>
-                </Select>
+                <Select placeholder="请选择分类" allowClear options={[{ value: "系统问题", label: "系统问题" }, { value: "网络问题", label: "网络问题" }, { value: "数据库问题", label: "数据库问题" }, { value: "应用问题", label: "应用问题" }, { value: "安全问题", label: "安全问题" }, { value: "硬件问题", label: "硬件问题" }, { value: "其他", label: "其他" }]} />
               </Form.Item>
             </Col>
           </Row>

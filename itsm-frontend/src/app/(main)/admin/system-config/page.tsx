@@ -39,7 +39,6 @@ import {
   Progress,
 } from 'antd';
 const { Title, Text } = Typography;
-const { Option } = Select;
 const { TextArea } = Input;
 const { Password } = Input;
 
@@ -239,12 +238,7 @@ export default function SystemConfiguration() {
               name="timezone"
               rules={[{ required: true, message: '请选择时区' }]}
             >
-              <Select placeholder="请选择时区">
-                <Option value="Asia/Shanghai">亚洲/上海</Option>
-                <Option value="Asia/Tokyo">亚洲/东京</Option>
-                <Option value="Europe/London">欧洲/伦敦</Option>
-                <Option value="America/New_York">美洲/纽约</Option>
-              </Select>
+              <Select placeholder="请选择时区" options={[{ value: "Asia/Shanghai", label: "亚洲/上海" }, { value: "Asia/Tokyo", label: "亚洲/东京" }, { value: "Europe/London", label: "欧洲/伦敦" }, { value: "America/New_York", label: "美洲/纽约" }]} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -253,11 +247,7 @@ export default function SystemConfiguration() {
               name="language"
               rules={[{ required: true, message: '请选择语言' }]}
             >
-              <Select placeholder="请选择语言">
-                <Option value="zh-CN">简体中文</Option>
-                <Option value="en-US">English</Option>
-                <Option value="ja-JP">日本語</Option>
-              </Select>
+              <Select placeholder="请选择语言" options={[{ value: "zh-CN", label: "简体中文" }, { value: "en-US", label: "English" }, { value: "ja-JP", label: "日本語" }]} />
             </Form.Item>
           </Col>
         </Row>
@@ -269,11 +259,7 @@ export default function SystemConfiguration() {
               name="dateFormat"
               rules={[{ required: true, message: '请选择日期格式' }]}
             >
-              <Select placeholder="请选择日期格式">
-                <Option value="YYYY-MM-DD">YYYY-MM-DD</Option>
-                <Option value="DD/MM/YYYY">DD/MM/YYYY</Option>
-                <Option value="MM/DD/YYYY">MM/DD/YYYY</Option>
-              </Select>
+              <Select placeholder="请选择日期格式" options={[{ value: "YYYY-MM-DD", label: "YYYY-MM-DD" }, { value: "DD/MM/YYYY", label: "DD/MM/YYYY" }, { value: "MM/DD/YYYY", label: "MM/DD/YYYY" }]} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -282,10 +268,7 @@ export default function SystemConfiguration() {
               name="timeFormat"
               rules={[{ required: true, message: '请选择时间格式' }]}
             >
-              <Select placeholder="请选择时间格式">
-                <Option value="24h">24小时制</Option>
-                <Option value="12h">12小时制</Option>
-              </Select>
+              <Select placeholder="请选择时间格式" options={[{ value: "24h", label: "24小时制" }, { value: "12h", label: "12小时制" }]} />
             </Form.Item>
           </Col>
         </Row>

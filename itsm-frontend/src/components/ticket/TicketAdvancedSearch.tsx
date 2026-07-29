@@ -24,7 +24,6 @@ import dayjs from 'dayjs';
 import type { RangePickerProps } from 'antd/es/date-picker';
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 const { Panel } = Collapse;
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -213,46 +212,22 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
     <Row gutter={[16, 0]}>
       <Col span={6}>
         <Form.Item label="状态" name="status">
-          <Select mode="multiple" placeholder="选择状态" allowClear>
-            {TICKET_STATUS_OPTIONS.map(option => (
-              <Option key={option.value} value={option.value}>
-                <Tag color={option.color}>{option.label}</Tag>
-              </Option>
-            ))}
-          </Select>
+          <Select mode="multiple" placeholder="选择状态" allowClear options={TICKET_STATUS_OPTIONS.map(option => ({ value: option.value, label: <Tag color={option.color}>{option.label}</Tag> }))} />
         </Form.Item>
       </Col>
       <Col span={6}>
         <Form.Item label="优先级" name="priority">
-          <Select mode="multiple" placeholder="选择优先级" allowClear>
-            {TICKET_PRIORITY_OPTIONS.map(option => (
-              <Option key={option.value} value={option.value}>
-                <Tag color={option.color}>{option.label}</Tag>
-              </Option>
-            ))}
-          </Select>
+          <Select mode="multiple" placeholder="选择优先级" allowClear options={TICKET_PRIORITY_OPTIONS.map(option => ({ value: option.value, label: <Tag color={option.color}>{option.label}</Tag> }))} />
         </Form.Item>
       </Col>
       <Col span={6}>
         <Form.Item label="工单类型" name="type">
-          <Select mode="multiple" placeholder="选择类型" allowClear>
-            {TICKET_TYPE_OPTIONS.map(option => (
-              <Option key={option.value} value={option.value}>
-                {option.label}
-              </Option>
-            ))}
-          </Select>
+          <Select mode="multiple" placeholder="选择类型" allowClear options={TICKET_TYPE_OPTIONS.map(option => ({ value: option.value, label: option.label }))} />
         </Form.Item>
       </Col>
       <Col span={6}>
         <Form.Item label="来源" name="source">
-          <Select mode="multiple" placeholder="选择来源" allowClear>
-            {TICKET_SOURCE_OPTIONS.map(option => (
-              <Option key={option.value} value={option.value}>
-                {option.label}
-              </Option>
-            ))}
-          </Select>
+          <Select mode="multiple" placeholder="选择来源" allowClear options={TICKET_SOURCE_OPTIONS.map(option => ({ value: option.value, label: option.label }))} />
         </Form.Item>
       </Col>
     </Row>
@@ -343,11 +318,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
     <Row gutter={[16, 0]}>
       <Col span={6}>
         <Form.Item label="SLA状态" name="sla_status">
-          <Select placeholder="选择SLA状态" allowClear>
-            <Option value="breach">已超时</Option>
-            <Option value="warning">即将超时</Option>
-            <Option value="normal">正常</Option>
-          </Select>
+          <Select placeholder="选择SLA状态" allowClear options={[{ value: "breach", label: "已超时" }, { value: "warning", label: "即将超时" }, { value: "normal", label: "正常" }]} />
         </Form.Item>
       </Col>
     </Row>
@@ -481,13 +452,9 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
                 }
               }}
               allowClear
-            >
-              {savedSearches.map(search => (
-                <Option key={search.id} value={search.id}>
+             options={savedSearches.map(search => ({ value: search.id, label: <>
                   {search.name} ({dayjs(search.createdAt).fromNow()})
-                </Option>
-              ))}
-            </Select>
+                </> }))} />
           )}
         </div>
       </Form>

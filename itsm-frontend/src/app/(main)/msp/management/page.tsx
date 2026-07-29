@@ -19,9 +19,6 @@ import { Plus } from 'lucide-react';
 import MSPService from '@/lib/services/msp-service';
 import { UserApi } from '@/lib/api/user-api';
 import type { MSPAllocation, CreateAllocationRequest } from '@/types/msp';
-
-const { Option } = Select;
-
 export default function MSPManagementPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -220,13 +217,7 @@ export default function MSPManagementPage() {
             label="MSP 员工"
             rules={[{ required: true, message: '请选择 MSP 员工' }]}
           >
-            <Select placeholder="选择 MSP 员工" showSearch optionFilterProp="children">
-              {mspUsers.map(user => (
-                <Option key={user.id} value={user.id}>
-                  {user.username}
-                </Option>
-              ))}
-            </Select>
+            <Select placeholder="选择 MSP 员工" showSearch optionFilterProp="children" options={mspUsers.map(user => ({ value: user.id, label: user.username }))} />
           </Form.Item>
 
           <Form.Item
@@ -234,13 +225,9 @@ export default function MSPManagementPage() {
             label="客户租户"
             rules={[{ required: true, message: '请选择客户租户' }]}
           >
-            <Select placeholder="选择客户租户" showSearch optionFilterProp="children">
-              {customers.map(cust => (
-                <Option key={cust.id} value={cust.id}>
+            <Select placeholder="选择客户租户" showSearch optionFilterProp="children" options={customers.map(cust => ({ value: cust.id, label: <>
                   {cust.code} - {cust.name}
-                </Option>
-              ))}
-            </Select>
+                </> }))} />
           </Form.Item>
 
           <Form.Item
@@ -249,11 +236,7 @@ export default function MSPManagementPage() {
             initialValue="primary"
             rules={[{ required: true, message: '请选择分配角色' }]}
           >
-            <Select placeholder="选择角色">
-              <Option value="primary">主支持 (Primary)</Option>
-              <Option value="backup">备份 (Backup)</Option>
-              <Option value="specialist">专家 (Specialist)</Option>
-            </Select>
+            <Select placeholder="选择角色" options={[{ value: "primary", label: "主支持 (Primary)" }, { value: "backup", label: "备份 (Backup)" }, { value: "specialist", label: "专家 (Specialist)" }]} />
           </Form.Item>
 
           <Form.Item>

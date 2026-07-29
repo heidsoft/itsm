@@ -35,8 +35,6 @@ import {
 import ReportsCharts from './ReportsCharts';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
-
 interface ReportGeneratorProps {
   onGenerate: (config: Partial<AnalyticsConfig>) => void;
   loading?: boolean;
@@ -157,16 +155,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               name="dimensions"
               rules={[{ required: true, message: '请选择至少一个维度' }]}
             >
-              <Select mode="multiple" placeholder="选择分析维度" style={{ width: '100%' }}>
-                {dimensionOptions.map(option => (
-                  <Option key={option.value} value={option.value}>
-                    <Space>
+              <Select mode="multiple" placeholder="选择分析维度" style={{ width: '100%' }} options={dimensionOptions.map(option => ({ value: option.value, label: <Space>
                       {option.icon}
                       {option.label}
-                    </Space>
-                  </Option>
-                ))}
-              </Select>
+                    </Space> }))} />
             </Form.Item>
           </Col>
 
@@ -177,18 +169,12 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               name="metrics"
               rules={[{ required: true, message: '请选择至少一个指标' }]}
             >
-              <Select mode="multiple" placeholder="选择分析指标" style={{ width: '100%' }}>
-                {metricOptions.map(option => (
-                  <Option key={option.value} value={option.value}>
-                    <div>
+              <Select mode="multiple" placeholder="选择分析指标" style={{ width: '100%' }} options={metricOptions.map(option => ({ value: option.value, label: <div>
                       <div>{option.label}</div>
                       <Text type="secondary" className="text-xs">
                         {option.description}
                       </Text>
-                    </div>
-                  </Option>
-                ))}
-              </Select>
+                    </div> }))} />
             </Form.Item>
           </Col>
 
@@ -199,29 +185,17 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               name="chartType"
               rules={[{ required: true, message: '请选择图表类型' }]}
             >
-              <Select placeholder="选择图表类型" style={{ width: '100%' }}>
-                {chartTypeOptions.map(option => (
-                  <Option key={option.value} value={option.value}>
-                    <Space>
+              <Select placeholder="选择图表类型" style={{ width: '100%' }} options={chartTypeOptions.map(option => ({ value: option.value, label: <Space>
                       {option.icon}
                       {option.label}
-                    </Space>
-                  </Option>
-                ))}
-              </Select>
+                    </Space> }))} />
             </Form.Item>
           </Col>
 
           {/* 分组字段 */}
           <Col xs={24} md={8}>
             <Form.Item label="分组字段（可选）" name="groupBy">
-              <Select placeholder="选择分组字段" allowClear style={{ width: '100%' }}>
-                {dimensionOptions.map(option => (
-                  <Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Option>
-                ))}
-              </Select>
+              <Select placeholder="选择分组字段" allowClear style={{ width: '100%' }} options={dimensionOptions.map(option => ({ value: option.value, label: option.label }))} />
             </Form.Item>
           </Col>
 

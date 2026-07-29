@@ -26,7 +26,6 @@ import { AssetApi } from '@/lib/api/asset-api';
 import type { Dayjs } from 'dayjs';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 // 表单验证规则
 const formRules = {
@@ -223,12 +222,12 @@ const AssetForm: React.FC = () => {
           }
           help={fieldHelps.assetType}
         >
-          <Select>
-            <Option value="hardware">硬件</Option>
-            <Option value="software">软件</Option>
-            <Option value="cloud">云资源</Option>
-            <Option value="license">许可证</Option>
-          </Select>
+          <Select options={[
+            { value: 'hardware', label: '硬件' },
+            { value: 'software', label: '软件' },
+            { value: 'cloud', label: '云资源' },
+            { value: 'license', label: '许可证' },
+          ]} />
         </Form.Item>
 
         <Form.Item

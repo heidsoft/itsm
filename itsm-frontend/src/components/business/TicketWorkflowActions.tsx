@@ -34,7 +34,6 @@ import {
 import type { Ticket } from '@/types/ticket';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 interface TicketWorkflowActionsProps {
   ticket: Ticket;
@@ -163,12 +162,12 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
               name="reason"
               rules={[{ required: true, message: '请输入驳回原因' }]}
             >
-              <Select placeholder="选择驳回原因">
-                <Option value="信息不完整">信息不完整</Option>
-                <Option value="不符合要求">不符合要求</Option>
-                <Option value="需要补充资料">需要补充资料</Option>
-                <Option value="其他">其他</Option>
-              </Select>
+              <Select placeholder="选择驳回原因" options={[
+                { value: '信息不完整', label: '信息不完整' },
+                { value: '不符合要求', label: '不符合要求' },
+                { value: '需要补充资料', label: '需要补充资料' },
+                { value: '其他', label: '其他' },
+              ]} />
             </Form.Item>
             <Form.Item
               label="详细说明"
@@ -201,13 +200,15 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
               name="toUserId"
               rules={[{ required: true, message: '请选择接收人' }]}
             >
-              <Select placeholder="选择接收人" showSearch optionFilterProp="children">
-                {users.map(user => (
-                  <Option key={user.id} value={user.id}>
-                    {user.name || user.username}
-                  </Option>
-                ))}
-              </Select>
+              <Select
+                placeholder="选择接收人"
+                showSearch
+                optionFilterProp="children"
+                options={users.map(user => ({
+                  value: user.id,
+                  label: user.name || user.username,
+                }))}
+              />
             </Form.Item>
             <Form.Item
               label="转发说明"
@@ -217,10 +218,13 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
               <TextArea rows={3} placeholder="请说明转发原因" />
             </Form.Item>
             <Form.Item label="转移所有权" name="transferOwnership" valuePropName="checked">
-              <Select defaultValue={false}>
-                <Option value={true}>是（转移后对方成为负责人）</Option>
-                <Option value={false}>否（仅转发，不转移负责人）</Option>
-              </Select>
+              <Select
+                defaultValue={false}
+                options={[
+                  { value: true, label: '是（转移后对方成为负责人）' },
+                  { value: false, label: '否（仅转发，不转移负责人）' },
+                ]}
+              />
             </Form.Item>
           </Form>
         );
@@ -238,13 +242,11 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
                 placeholder="选择抄送人"
                 showSearch
                 optionFilterProp="children"
-              >
-                {users.map(user => (
-                  <Option key={user.id} value={user.id}>
-                    {user.name || user.username}
-                  </Option>
-                ))}
-              </Select>
+                options={users.map(user => ({
+                  value: user.id,
+                  label: user.name || user.username,
+                }))}
+              />
             </Form.Item>
             <Form.Item label="抄送说明" name="comment">
               <TextArea rows={3} placeholder="可选：添加抄送说明" />
@@ -282,13 +284,13 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
               <TextArea rows={5} placeholder="请详细描述解决方案" />
             </Form.Item>
             <Form.Item label="解决类型" name="resolutionCategory">
-              <Select placeholder="选择解决类型">
-                <Option value="配置更改">配置更改</Option>
-                <Option value="软件修复">软件修复</Option>
-                <Option value="硬件更换">硬件更换</Option>
-                <Option value="用户培训">用户培训</Option>
-                <Option value="其他">其他</Option>
-              </Select>
+              <Select placeholder="选择解决类型" options={[
+                { value: '配置更改', label: '配置更改' },
+                { value: '软件修复', label: '软件修复' },
+                { value: '硬件更换', label: '硬件更换' },
+                { value: '用户培训', label: '用户培训' },
+                { value: '其他', label: '其他' },
+              ]} />
             </Form.Item>
             <Form.Item label="工作笔记" name="workNotes">
               <TextArea rows={3} placeholder="添加内部工作笔记（用户不可见）" />
@@ -300,13 +302,13 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
         return (
           <Form form={form} layout="vertical">
             <Form.Item label="关闭原因" name="closeReason">
-              <Select placeholder="选择关闭原因">
-                <Option value="已解决">已解决</Option>
-                <Option value="重复工单">重复工单</Option>
-                <Option value="无效工单">无效工单</Option>
-                <Option value="用户取消">用户取消</Option>
-                <Option value="其他">其他</Option>
-              </Select>
+              <Select placeholder="选择关闭原因" options={[
+                { value: '已解决', label: '已解决' },
+                { value: '重复工单', label: '重复工单' },
+                { value: '无效工单', label: '无效工单' },
+                { value: '用户取消', label: '用户取消' },
+                { value: '其他', label: '其他' },
+              ]} />
             </Form.Item>
             <Form.Item label="关闭说明" name="closeNotes">
               <TextArea rows={3} placeholder="可选：添加关闭说明" />

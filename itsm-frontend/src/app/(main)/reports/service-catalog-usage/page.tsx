@@ -18,7 +18,6 @@ import {
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const COLORS = ['#1890ff', '#52c41a', '#faad14', '#ff4d4f', '#722ed1', '#13c2c2'];
@@ -123,11 +122,11 @@ const ServiceCatalogUsagePage = () => {
         <Row justify="space-between" align="middle">
           <Col>
             <Space>
-              <Select defaultValue="all" style={{ width: 120 }}>
-                <Option value="all">全部服务</Option>
-                <Option value="published">已发布</Option>
-                <Option value="draft">草稿</Option>
-              </Select>
+              <Select defaultValue="all" style={{ width: 120 }} options={[
+                { value: 'all', label: '全部服务' },
+                { value: 'published', label: '已发布' },
+                { value: 'draft', label: '草稿' },
+              ]} />
               <RangePicker />
             </Space>
           </Col>

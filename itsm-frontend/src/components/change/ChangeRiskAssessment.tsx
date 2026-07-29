@@ -30,7 +30,6 @@ import type { ChangeRisk, ChangeImpact } from '@/lib/api/change-api';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 
 interface ChangeRiskAssessmentProps {
   changeId?: number;
@@ -176,17 +175,16 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
               name="riskLevel"
               rules={[{ required: true, message: '请选择风险等级' }]}
             >
-              <Select placeholder="选择风险等级" onChange={() => setRiskFactors([])}>
-                {Object.entries(riskLevels).map(([key, config]) => (
-                  <Option key={key} value={config.value as ChangeRisk}>
-                    <Space>
-                      {getRiskIcon(config.value as ChangeRisk)}
-                      <span>{config.label}</span>
-                      <Tag color={config.color}>{config.score}分</Tag>
-                    </Space>
-                  </Option>
-                ))}
-              </Select>
+              <Select placeholder="选择风险等级" onChange={() => setRiskFactors([])} options={Object.entries(riskLevels).map(([key, config]) => ({
+                value: config.value as ChangeRisk,
+                label: (
+                  <Space>
+                    {getRiskIcon(config.value as ChangeRisk)}
+                    <span>{config.label}</span>
+                    <Tag color={config.color}>{config.score}分</Tag>
+                  </Space>
+                ),
+              }))} />
             </Form.Item>
 
             {/* 风险分数显示 */}
@@ -253,13 +251,8 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
                 value={riskFactors}
                 onChange={setRiskFactors}
                 style={{ width: '100%' }}
-              >
-                {riskFactorOptions.map(factor => (
-                  <Option key={factor} value={factor}>
-                    {factor}
-                  </Option>
-                ))}
-              </Select>
+                options={riskFactorOptions.map(factor => ({ value: factor, label: factor }))}
+              />
               <Text type="secondary" className="text-xs">
                 选择该变更涉及的风险因子，将影响风险分数计算
               </Text>

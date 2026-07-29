@@ -29,7 +29,6 @@ import type { UserRole, UserStatus, UserFilters } from '@/types/user';
 import { UserApi, type User } from '@/lib/api/user-api'; // 从UserApi导入User类型
 
 const { Search } = Input;
-const { Option } = Select;
 
 interface UserListProps {
   embedded?: boolean;
@@ -427,13 +426,14 @@ const UserList: React.FC<UserListProps> = ({
             style={{ width: '100%' }}
             value={filters.role}
             onChange={value => handleFilterChange('role', value)}
-          >
-            <Option value="admin">管理员</Option>
-            <Option value="manager">经理</Option>
-            <Option value="agent">客服</Option>
-            <Option value="technician">技术员</Option>
-            <Option value="end_user">普通用户</Option>
-          </Select>
+            options={[
+              { value: 'admin', label: '管理员' },
+              { value: 'manager', label: '经理' },
+              { value: 'agent', label: '客服' },
+              { value: 'technician', label: '技术员' },
+              { value: 'end_user', label: '普通用户' },
+            ]}
+          />
         </Col>
         <Col span={6}>
           <Select
@@ -442,12 +442,13 @@ const UserList: React.FC<UserListProps> = ({
             style={{ width: '100%' }}
             value={filters.status}
             onChange={value => handleFilterChange('status', value)}
-          >
-            <Option value="active">正常</Option>
-            <Option value="inactive">禁用</Option>
-            <Option value="suspended">暂停</Option>
-            <Option value="pending">待激活</Option>
-          </Select>
+            options={[
+              { value: 'active', label: '正常' },
+              { value: 'inactive', label: '禁用' },
+              { value: 'suspended', label: '暂停' },
+              { value: 'pending', label: '待激活' },
+            ]}
+          />
         </Col>
         <Col span={6}>
           <Select
@@ -456,12 +457,13 @@ const UserList: React.FC<UserListProps> = ({
             style={{ width: '100%' }}
             value={filters.department}
             onChange={value => handleFilterChange('department', value)}
-          >
-            <Option value="IT部门">IT部门</Option>
-            <Option value="人事部">人事部</Option>
-            <Option value="财务部">财务部</Option>
-            <Option value="市场部">市场部</Option>
-          </Select>
+            options={[
+              { value: 'IT部门', label: 'IT部门' },
+              { value: '人事部', label: '人事部' },
+              { value: '财务部', label: '财务部' },
+              { value: '市场部', label: '市场部' },
+            ]}
+          />
         </Col>
         <Col span={6}>
           <Space>

@@ -36,9 +36,6 @@ import {
   IncidentSeverityLabels,
 } from '@/constants/incident';
 import type { Incident, IncidentQuery } from '@/types/biz/incident';
-
-const { Option } = Select;
-
 // 状态颜色映射
 const statusColors: Record<string, string> = {
   [IncidentStatus.NEW]: 'blue',
@@ -182,22 +179,10 @@ const IncidentList: React.FC = () => {
           <Input placeholder="搜索编号或标题" allowClear prefix={<Search />} />
         </Form.Item>
         <Form.Item name="status">
-          <Select placeholder="状态" style={{ width: 120 }} allowClear>
-            {Object.entries(IncidentStatusLabels).map(([key, label]) => (
-              <Option key={key} value={key}>
-                {label}
-              </Option>
-            ))}
-          </Select>
+          <Select placeholder="状态" style={{ width: 120 }} allowClear options={Object.entries(IncidentStatusLabels).map(([key, label]) => ({ value: key, label: label }))} />
         </Form.Item>
         <Form.Item name="priority">
-          <Select placeholder="优先级" style={{ width: 120 }} allowClear>
-            {Object.entries(IncidentPriorityLabels).map(([key, label]) => (
-              <Option key={key} value={key}>
-                {label}
-              </Option>
-            ))}
-          </Select>
+          <Select placeholder="优先级" style={{ width: 120 }} allowClear options={Object.entries(IncidentPriorityLabels).map(([key, label]) => ({ value: key, label: label }))} />
         </Form.Item>
         <Form.Item>
           <Space>

@@ -6,8 +6,6 @@
 import React from 'react';
 import { Modal, Form, Input, Select } from 'antd';
 import type { FormInstance } from 'antd';
-
-const { Option } = Select;
 const { TextArea } = Input;
 
 interface WorkflowMetadataModalProps {
@@ -51,13 +49,7 @@ export default function WorkflowMetadataModal({
           <TextArea rows={3} placeholder="请输入工作流描述" />
         </Form.Item>
         <Form.Item label="分类" name="category">
-          <Select placeholder="请选择分类">
-            <Option value="general">通用</Option>
-            <Option value="approval">审批流程</Option>
-            <Option value="ticket">工单流程</Option>
-            <Option value="incident">事件流程</Option>
-            <Option value="change">变更流程</Option>
-          </Select>
+          <Select placeholder="请选择分类" options={[{ value: "general", label: "通用" }, { value: "approval", label: "审批流程" }, { value: "ticket", label: "工单流程" }, { value: "incident", label: "事件流程" }, { value: "change", label: "变更流程" }]} />
         </Form.Item>
       </Form>
     </Modal>

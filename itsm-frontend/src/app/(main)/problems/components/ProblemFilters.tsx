@@ -6,7 +6,6 @@ import { RefreshCw } from 'lucide-react';
 import { ProblemStatus } from '@/constants/problem';
 
 const { Search: SearchInput } = Input;
-const { Option } = Select;
 
 interface ProblemFiltersProps {
   loading: boolean;
@@ -57,32 +56,13 @@ export const ProblemFilters: React.FC<ProblemFiltersProps> = ({
               onChange={onFilterChange}
               style={{ width: '100%' }}
               className="rounded-md"
-            >
-              <Option value={ProblemStatus.OPEN}>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  待处理
-                </div>
-              </Option>
-              <Option value={ProblemStatus.INVESTIGATING}>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  处理中
-                </div>
-              </Option>
-              <Option value={ProblemStatus.RESOLVED}>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  已解决
-                </div>
-              </Option>
-              <Option value={ProblemStatus.CLOSED}>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                  已关闭
-                </div>
-              </Option>
-            </Select>
+              options={[
+                { value: ProblemStatus.OPEN, label: '待处理' },
+                { value: ProblemStatus.INVESTIGATING, label: '处理中' },
+                { value: ProblemStatus.RESOLVED, label: '已解决' },
+                { value: ProblemStatus.CLOSED, label: '已关闭' },
+              ]}
+            />
           </div>
         </Col>
         <Col xs={24} sm={12} md={4}>

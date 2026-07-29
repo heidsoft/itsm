@@ -20,8 +20,6 @@ import { Trash2, Download, User as UserIcon, Bell, CheckCircle, Tag, Flag, MoreH
 import type { MenuProps } from 'antd';
 import type { Ticket, TicketStatus, TicketPriority } from '@/lib/api/types';
 import { TicketAPI } from '@/lib/api/ticket-api';
-
-const { Option } = Select;
 const { TextArea } = Input;
 const { Text, Title } = Typography;
 
@@ -282,12 +280,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
               name="assigneeId"
               rules={[{ required: true, message: '请选择处理人' }]}
             >
-              <Select placeholder="选择处理人" showSearch filterOption>
-                {/* 这里应该从API获取用户列表 */}
-                <Option value={1}>张三</Option>
-                <Option value={2}>李四</Option>
-                <Option value={3}>王五</Option>
-              </Select>
+              <Select placeholder="选择处理人" showSearch filterOption options={[{ value: 1, label: "张三" }, { value: 2, label: "李四" }, { value: 3, label: "王五" }]} />
             </Form.Item>
             <Form.Item label="分配备注" name="comment">
               <TextArea rows={3} placeholder="可选的分配备注" />
@@ -302,25 +295,14 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
             name="status"
             rules={[{ required: true, message: '请选择状态' }]}
           >
-            <Select placeholder="选择状态">
-              <Option value="new">新建</Option>
-              <Option value="open">待处理</Option>
-              <Option value="in_progress">处理中</Option>
-              <Option value="pending">等待中</Option>
-              <Option value="resolved">已解决</Option>
-              <Option value="closed">已关闭</Option>
-            </Select>
+            <Select placeholder="选择状态" options={[{ value: "new", label: "新建" }, { value: "open", label: "待处理" }, { value: "in_progress", label: "处理中" }, { value: "pending", label: "等待中" }, { value: "resolved", label: "已解决" }, { value: "closed", label: "已关闭" }]} />
           </Form.Item>
         );
 
       case 'add_tags':
         return (
           <Form.Item label="标签" name="tags" rules={[{ required: true, message: '请输入标签' }]}>
-            <Select mode="tags" placeholder="输入标签，按回车添加" style={{ width: '100%' }}>
-              <Option value="urgent">紧急</Option>
-              <Option value="sla">SLA监控</Option>
-              <Option value="escalation">已升级</Option>
-            </Select>
+            <Select mode="tags" placeholder="输入标签，按回车添加" style={{ width: '100%' }} options={[{ value: "urgent", label: "紧急" }, { value: "sla", label: "SLA监控" }, { value: "escalation", label: "已升级" }]} />
           </Form.Item>
         );
 
@@ -331,13 +313,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
             name="priority"
             rules={[{ required: true, message: '请选择优先级' }]}
           >
-            <Select placeholder="选择优先级">
-              <Option value="low">低</Option>
-              <Option value="medium">中</Option>
-              <Option value="high">高</Option>
-              <Option value="urgent">紧急</Option>
-              <Option value="critical">严重</Option>
-            </Select>
+            <Select placeholder="选择优先级" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "urgent", label: "紧急" }, { value: "critical", label: "严重" }]} />
           </Form.Item>
         );
 
