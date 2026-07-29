@@ -90,21 +90,25 @@ ADMIN_PASSWORD=admin123
 
 ### Backend Structure
 
-- **controller/** - HTTP handlers, receive requests, call services
-- **service/** - Business logic, orchestrate operations
+- **controller/** - HTTP handlers, receive requests, call services (legacy horizontal layering)
+- **service/** - Business logic, orchestrate operations (legacy horizontal layering)
+- **handlers/<domain>/** - Domain-sliced modules (ai, change, cmdb, incident, knowledge, problem, service_catalog, service_request, sla, standard_change, ticket, etc.). Each domain package owns its own vertical slice: `handler.go` (HTTP layer), `service.go` (business logic), `repository.go` + `repository_impl.go` (data access), `entity.go` (domain entities/DTOs). Shared helpers live in `handlers/common/` and `handlers/shared/`.
 - **ent/schema/** - Database schema definitions (Ent ORM)
 - **middleware/** - Auth, logging, CORS, tenant isolation
 - **dto/** - Request/response DTOs
 - **cache/** - Redis integration
 - **router/** - Route registration
 
+Boundary between the two backend layerings: `handlers/<domain>/` is the newer domain-sliced style; `controller/` + `service/` is the older horizontal style and still hosts most existing endpoints. When extending a domain, follow the layering that domain already uses — do not implement the same domain endpoint in both places, and do not call a domain's `repository_impl` from outside its `handlers/<domain>/` package.
+
 ### Frontend Structure
 
 - **src/app/** - Next.js App Router pages and layouts
 - **src/app/(main)/** - Protected page routes
-- **src/app/lib/** - API clients, utilities, stores
-- **src/app/components/** - Reusable UI components
-- **src/app/hooks/** - Custom React hooks
+- **src/components/** - Reusable UI components, organized by business domain (`ticket/`, `incident/`, `cmdb/`, ...) plus shared `ui/`, `common/`, `layout/`
+- **src/lib/** - API clients (`lib/api/`), business hooks (`lib/hooks/`), frontend services (`lib/services/`), Zustand stores (`lib/store/`), utilities (`lib/utils/`)
+- **src/hooks/** - Global custom React hooks
+- **src/types/** - Shared TypeScript type definitions
 
 ### API Response Format
 
@@ -147,8 +151,8 @@ All APIs return `{ code: number, message: string, data: any }`:
 ### Frontend
 
 - Use App Router (no Pages Router)
-- API calls via `src/app/lib/api/*.ts` classes
-- Global state with Zustand in `src/app/lib/stores/`
+- API calls via `src/lib/api/*.ts` classes
+- Global state with Zustand in `src/lib/store/`
 - Tailwind CSS for all styling
 - Treat backend API DTOs as the contract. Do not patch around backend field bugs in UI code without also fixing the DTO/mapper.
 - Keep operational screens dense and scannable: tables, filters, status, owners, timestamps, and actions should be easy to compare.
@@ -464,18 +468,22 @@ func GetTicket(c echo.Context) error {
 ```
 src/
 ├── app/                    # Next.js App Router
-│   ├── (main)/            # 路由组 (括号命名)
-│   ├── tickets/           # 页面目录 (kebab-case)
-│   │   ├── page.tsx
-│   │   └── [id]/
-│   │       └── page.tsx
-│   └── components/        # 组件目录
-│       ├── TicketList/    # 组件文件夹 (PascalCase)
-│       │   └── index.tsx
-│       └── ui/            # 通用组件
+│   └── (main)/            # 路由组 (括号命名)
+│       └── tickets/       # 页面目录 (kebab-case)
+│           ├── page.tsx
+│           └── [ticketId]/
+│               └── page.tsx
+├── components/            # 组件目录 (按业务域分子目录)
+│   ├── ticket/            # 领域组件目录
+│   │   └── TicketList.tsx # 组件文件 (PascalCase)
+│   └── ui/                # 通用组件
+├── hooks/                 # 全局 Hooks
+├── types/                 # 类型定义
 └── lib/
     ├── api/               # API 客户端
-    ├── stores/            # Zustand stores
+    ├── hooks/             # 业务 Hooks
+    ├── services/          # 前端服务层
+    ├── store/             # Zustand stores
     └── utils/             # 工具函数
 ```
 

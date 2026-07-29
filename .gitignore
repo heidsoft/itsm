@@ -217,3 +217,9 @@ itsm-backend/.cache/
 site/
 itsm-backend/itsm-backend-old
 ignored
+
+# Production verification artifacts (contain real credentials)
+.verify_run/
+.qoder/better-harness/
+production-mode-test-report-*.md
+output/
