@@ -75,7 +75,11 @@ flowchart TD
 
 ### 3.1 初始化账本
 
-新增核心表 `initialization_runs`，不得复用面向 Marketplace 的 `tenant_installations`。
+不得复用面向 Marketplace 的 `tenant_installations`。初始化状态拆成三层：
+
+- `initialization_installations`：记录每个 scope/component 当前安装版本和健康状态；
+- `initialization_runs`：记录一次平台或批量租户初始化；
+- `initialization_component_attempts`：追加写每次组件尝试，重试不得覆盖历史。
 
 建议字段：
 
@@ -86,15 +90,16 @@ flowchart TD
 - `target_version`
 - `source_checksum`
 - `status`: `pending | running | succeeded | failed | rolling_back`
-- `attempt`
+- `attempt`、`from_version`
 - `started_at`、`completed_at`
-- `executor_id`
+- `requested_by`、`executor_id`、`fencing_token`
+- `heartbeat_at`、`lease_expires_at`
 - `release_version`
 - `error_code`、`error_message`
 - `result_summary` JSON
 - `created_at`、`updated_at`
 
-唯一约束：`(scope_type, scope_id, component, target_version)`。
+安装状态唯一约束为 `(scope_type, scope_id, component)`；每次 attempt 单独保留。
 
 另设 `managed_records` 或在模板表中统一加入：
 
@@ -104,11 +109,15 @@ flowchart TD
 - `managed_fields`
 - `local_modified_at`
 
-它用于区分系统可升级字段和客户自定义字段。
+它用于区分系统可升级字段和客户自定义字段。还需保存 last-applied manifest 哈希、
+字段 ownership、deprecated/tombstone 和 stable-key alias。升级采用三方合并：
+旧系统值、租户当前值、新系统值；plan 必须输出
+`create/update/revoke/conflict/orphan`，冲突默认停止。
 
 ### 3.2 执行规则
 
-- 使用 PostgreSQL advisory lock 或唯一运行记录实现分布式互斥；
+- 使用 lease、heartbeat 和 fencing token 实现分布式互斥，advisory lock 仅作辅助；
+- 锁粒度为 platform/component 或 tenant/component，无关租户不得相互阻塞；
 - 每个 component 独立事务，组件间按依赖 DAG 执行；
 - 所有步骤返回结构化错误，关键失败立即停止；
 - 使用稳定业务键 upsert，不使用“表内存在任意记录则整体跳过”；
@@ -116,6 +125,7 @@ flowchart TD
 - 客户自定义角色和菜单不得被系统模板删除或覆盖；
 - 所有系统级 bypass 都必须携带 reason、release、component 并写审计；
 - 初始化不得依赖 HTTP 服务、Redis、LLM 或第三方连接器可用。
+- 初始化器采用 P0/T0 表级写入 allowlist，任何 R0 写入立即失败。
 
 ## 4. 发布执行模型
 
@@ -129,6 +139,12 @@ flowchart TD
 6. 执行初始化验证；
 7. 应用实例通过 readiness 后接流量。
 
+首管 token 必须由 CSPRNG 生成，数据库只存哈希，绑定平台 scope/audience，设置短 TTL，
+仅允许 TLS 传输，禁止进入 URL、日志、CLI 参数或初始化结果。创建管理员与消费 token
+必须在同一事务内完成，并通过唯一约束防止并发创建两个首管；同时具备限流、失败次数、
+重放/CSRF 防护和审计。token 过期后只能通过离线、审计化 break-glass 命令恢复。
+平台管理员默认不得绕过客户租户授权边界。
+
 ### 4.2 旧库升级
 
 1. 备份与预检；
@@ -138,6 +154,10 @@ flowchart TD
 5. 升级平台基线和租户模板；
 6. 验证后执行 contract 迁移；
 7. 保存升级报告。
+
+平台 readiness 与 tenant readiness 必须分离。应用版本声明租户模板
+`minCompatibleVersion/maxCompatibleVersion`。租户升级按页限流、断点续跑、单租户锁和
+失败隔离执行；不兼容租户进入 maintenance，其他租户继续服务。
 
 ### 4.3 新租户开通
 
@@ -172,16 +192,42 @@ flowchart TD
 
 禁止在普通 Web 进程启动过程中执行 DDL、Seed、密码重置或全库 backfill。
 
+Readiness 分级：schema 或平台安全基线失败导致全局 Not Ready；单租户必需组件失败只隔离
+该租户；可选组件失败标记 degraded；只有当前目标版本失败影响 readiness。
+
 ## 5. 分步实施计划
 
 依赖图：
 
 ```text
-Step 1 → Step 2 → Step 3 ─┬→ Step 4
-                           ├→ Step 5
-                           └→ Step 6
+Step 0 → Step 1 → Step 2 → Step 3 → Step 4
+                                      ├→ Step 5
+                                      └→ Step 6
 Step 4 + Step 5 + Step 6 → Step 7 → Step 8
 ```
+
+### Step 0：冻结模型分类、RBAC ADR 和升级兼容契约
+
+**目标 PR**：`codex/init-00-contracts`
+
+**任务**
+
+- 为全部 Ent schema 建立数据分类附录：owner、scope、P0/T0/D0/R0、stable key、
+  初始化/升级策略和禁止写入规则；
+- 明确覆盖资产/许可证/供应商/合同、云资源与发现、application/project/microservice、
+  group/engineer skill、incident rule/event/metric/escalation、survey、domain/system config、
+  conversation/message、Feishu sync 等模型；
+- 编写 RBAC ADR：canonical permission identity、平台定义与租户授权关系、Endpoint ACL
+  覆盖策略、`users.role` 冲突优先级、super-admin/break-glass 范围和审计；
+- 定义支持升级的起始版本、数据库类型、固定发布 fixture 和租户模板兼容区间；
+- 定义规范化 fingerprint，排除 ID、时间戳、客户字段和 R0 数据；
+- 冻结 manifest schema 和跨组件依赖 DAG。
+
+**退出标准**
+
+- 全部 schema 均已分类；
+- RBAC 只有一个权威模型和明确迁移路线；
+- 未知旧库 fingerprint 不得自动 baseline，只能进入人工 repair。
 
 ### Step 1：冻结初始化契约并清除生产 P0 风险
 
@@ -189,12 +235,14 @@ Step 4 + Step 5 + Step 6 → Step 7 → Step 8
 
 **上下文**
 
-当前 `SeedAll` 会创建固定密码测试账号、跨租户回填角色，并重复覆盖 admin 密码；默认凭据 Guard 未接入。
+当前 `SeedAll` 会创建固定密码测试账号、跨租户回填角色并重复覆盖 admin 密码；还会进入
+asset/license/release/incident/problem/change/knowledge 等可能写 D0/R0 的路径；默认凭据 Guard 未接入。
 
 **任务**
 
-- 删除产品 Seeder 对测试租户和测试账号的调用；
+- 删除生产入口对全部 D0/R0 Seeder 的调用，不限于测试租户和测试账号；
 - 将演示数据移至独立 `cmd/demo-seed`，要求显式确认；
+- 生产镜像默认不包含或不可到达 demo seed，并建立 P0/T0 写入 allowlist；
 - 已存在 admin 时禁止 Seeder 更新密码或角色；
 - 所有 backfill 添加明确 tenant 条件并迁入版本迁移；
 - 在 bootstrap/启动早期真正执行默认凭据 Guard；
@@ -214,6 +262,8 @@ rg -n '"eng123"|"mgr123"|"ta123456"' --glob '*.go'
 - 生产初始化路径无法创建固定密码账号；
 - 二次初始化不会改变任何现有用户密码；
 - 默认凭据门禁在生产模式下可测试地拒绝启动。
+- 新库生产初始化后逐表断言 ticket、incident、problem、change、release、asset/license、CI、
+  knowledge article、process/workflow instance、notification、audit、AI invocation 等 R0 表为零。
 
 **回滚**
 
@@ -270,9 +320,9 @@ Seeder 当前无错误返回、无事务、无状态记录，也不支持并发�
 
 **任务**
 
-- 新增 `initialization_runs` schema 和迁移；
+- 新增 installation/run/component-attempt 三层账本 schema 和迁移；
 - 定义 `Initializer` 接口：`Plan/Apply/Verify/RollbackMetadata`；
-- 实现组件 DAG、advisory lock、每组件事务和结构化结果；
+- 实现组件 DAG、lease/heartbeat/fencing、每组件事务和结构化结果；
 - 提供 `itsm-cli init plan|apply|status|verify|retry`；
 - 保留 `ITSM_BOOTSTRAP_ONLY` 作为兼容入口，但内部调用新引擎；
 - Web readiness 查询迁移版本和最低平台基线版本；
@@ -294,7 +344,7 @@ go test -race ./internal/initialization/... -count=1
 
 **回滚**
 
-新引擎先包裹现有 Seeder；旧入口保留一个发布周期，禁止双写。
+新引擎只允许适配通过 P0/T0 allowlist 审计的组件；旧 `SeedAll` 不得成为生产执行单元。
 
 ### Step 4：收敛身份、RBAC、ACL 与菜单
 
@@ -308,6 +358,7 @@ go test -race ./internal/initialization/... -count=1
 
 **任务**
 
+- 先按 Step 0 ADR 落地 canonical permission catalog；
 - 明确身份模型：用户通过关联表持有 Role，`users.role` 进入兼容淘汰期；
 - 权限定义和 Endpoint ACL 作为平台级版本化目录；
 - 系统角色、角色权限和菜单作为租户模板；
@@ -319,8 +370,10 @@ go test -race ./internal/initialization/... -count=1
   - user 身份唯一约束按最终登录模型确定；
 - 系统角色权限采用精确集合 reconcile；
 - 删除生产环境硬编码 fallback，权限缺失 fail closed；
+- 建立路由—Endpoint ACL—permission—menu 静态覆盖检查，缺少声明时 CI 失败；
 - 菜单可见性和 API 授权共同依赖相同 permission code；
-- 权限修改和模板升级后主动失效缓存。
+- 权限修改和模板升级后跨实例主动失效缓存；
+- 精确撤权前输出 diff，并保护最后一个平台管理员。
 
 **验证**
 
@@ -345,7 +398,7 @@ go test -race ./middleware ./service -run 'RBAC|Permission|Role|Menu' -count=1
 
 **目标 PR**：`codex/init-05-domain-templates`
 
-**依赖**：Step 3，可与 Step 4/6 并行
+**依赖**：Step 4 的 canonical permission catalog；可与 Step 6 并行
 
 **上下文**
 
@@ -388,7 +441,7 @@ go test ./service ./handlers/... -run 'Process|Workflow|SLA|CMDB|Ticket|Incident
 
 **目标 PR**：`codex/init-06-extension-templates`
 
-**依赖**：Step 3，可与 Step 4/5 并行
+**依赖**：Step 4 的 canonical permission catalog；可与 Step 5 并行
 
 **任务**
 
@@ -495,18 +548,25 @@ npm test -- --runInBand
 
 - [ ] 普通应用启动无 DDL、Seed 或数据 backfill；
 - [ ] 不存在固定密码测试账号和默认生产密码；
+- [ ] 生产镜像中的 demo seed 不可达，全部 R0 表零写入断言通过；
 - [ ] 首次管理员凭据一次性使用，后续初始化不覆盖；
+- [ ] 首管 token 并发消费、过期、重放和 break-glass 测试通过；
 - [ ] 所有初始化组件有版本、checksum、状态和审计；
 - [ ] 初始化支持并发互斥、幂等重试和失败恢复；
 - [ ] private、saas、saas_msp 三模式通过；
 - [ ] 新租户获得完整角色、权限、菜单、流程、SLA 和 CMDB 元模型；
 - [ ] 权限为空时 fail closed；
+- [ ] 路由—ACL—permission—menu 一致性覆盖率 100%；
+- [ ] 最后一个平台管理员不可被撤权；
 - [ ] 系统角色权限可以安全撤销；
 - [ ] 客户自定义角色、菜单、流程和 SLA 不被覆盖；
 - [ ] 不创建业务单据、CI、通知、审计或 AI 调用样例；
 - [ ] RLS enforce 下初始化和业务访问均通过；
 - [ ] 新库与升级库最终 checksum 一致；
+- [ ] fingerprint 只比较规范化 schema、manifest 和托管字段；
 - [ ] 最近两个版本升级测试通过；
+- [ ] 大规模租户滚动升级、单租户失败隔离和 executor 崩溃接管通过；
+- [ ] manifest 降级、篡改和未知版本均被拒绝；
 - [ ] 备份恢复演练通过；
 - [ ] 全量后端测试、前端类型检查、关键 E2E 通过；
 - [ ] 发布报告包含迁移版本、模板版本和已知风险。
@@ -542,4 +602,3 @@ npm test -- --runInBand
 - 任何“暂时保留双写/双读”必须指定删除版本和验证指标；
 - 跳过步骤必须记录风险接受人、截止版本和补偿控制；
 - 每个 PR 合并后更新本蓝图的状态、实际迁移版本和偏差说明。
-

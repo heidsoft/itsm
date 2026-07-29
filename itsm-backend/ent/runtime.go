@@ -2163,7 +2163,11 @@ func init() {
 	// processbinding.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	processbinding.DefaultUpdatedAt = processbindingDescUpdatedAt.Default.(func() time.Time)
 	// processbinding.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	processbinding.UpdateDefaultUpdatedAt = processbindingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	if processbindingDescUpdatedAt.UpdateDefault != nil {
+		processbinding.UpdateDefaultUpdatedAt = processbindingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	} else {
+		processbinding.UpdateDefaultUpdatedAt = func() time.Time { return time.Now() }
+	}
 	processdefinitionFields := schema.ProcessDefinition{}.Fields()
 	_ = processdefinitionFields
 	// processdefinitionDescKey is the schema descriptor for key field.
