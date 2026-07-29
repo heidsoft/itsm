@@ -14,7 +14,7 @@ import (
 	"itsm-backend/database"
 	"itsm-backend/ent"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 func main() {
@@ -34,16 +34,18 @@ func main() {
 	}
 	defer postgresDB.Close()
 
+	databaseName := pq.QuoteIdentifier(cfg.Database.DBName)
+
 	// Drop existing database if it exists
 	fmt.Printf("Dropping database %s if it exists...\n", cfg.Database.DBName)
-	_, err = postgresDB.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", cfg.Database.DBName))
+	_, err = postgresDB.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", databaseName))
 	if err != nil {
 		log.Fatalf("failed to drop database: %v", err)
 	}
 
 	// Create fresh database
 	fmt.Printf("Creating fresh database %s...\n", cfg.Database.DBName)
-	_, err = postgresDB.Exec(fmt.Sprintf("CREATE DATABASE %s", cfg.Database.DBName))
+	_, err = postgresDB.Exec(fmt.Sprintf("CREATE DATABASE %s", databaseName))
 	if err != nil {
 		log.Fatalf("failed to create database: %v", err)
 	}

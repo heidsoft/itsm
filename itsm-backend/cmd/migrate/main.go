@@ -9,6 +9,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"regexp"
 	"sort"
 
 	"itsm-backend/config"
@@ -19,6 +20,15 @@ import (
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 )
+
+var databaseNamePattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+func validateDatabaseName(name string) error {
+	if !databaseNamePattern.MatchString(name) {
+		return fmt.Errorf("invalid database name %q: must start with a letter or underscore and contain only letters, numbers, and underscores", name)
+	}
+	return nil
+}
 
 func main() {
 	// Parse command line flags
@@ -270,6 +280,9 @@ func freshDatabase(migrator *migration.Migrator, sugar *zap.SugaredLogger) {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
+	}
+	if err := validateDatabaseName(cfg.Database.DBName); err != nil {
+		log.Fatalf("Failed to reset database: %v", err)
 	}
 
 	// Connect to postgres to drop/create database
