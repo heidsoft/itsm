@@ -21,16 +21,16 @@ type TicketWorkflowRecordCreate struct {
 	hooks    []Hook
 }
 
-// SetCreateTime sets the "create_time" field.
-func (_c *TicketWorkflowRecordCreate) SetCreateTime(v time.Time) *TicketWorkflowRecordCreate {
-	_c.mutation.SetCreateTime(v)
+// SetCreatedAt sets the "created_at" field.
+func (_c *TicketWorkflowRecordCreate) SetCreatedAt(v time.Time) *TicketWorkflowRecordCreate {
+	_c.mutation.SetCreatedAt(v)
 	return _c
 }
 
-// SetNillableCreateTime sets the "create_time" field if the given value is not nil.
-func (_c *TicketWorkflowRecordCreate) SetNillableCreateTime(v *time.Time) *TicketWorkflowRecordCreate {
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_c *TicketWorkflowRecordCreate) SetNillableCreatedAt(v *time.Time) *TicketWorkflowRecordCreate {
 	if v != nil {
-		_c.SetCreateTime(*v)
+		_c.SetCreatedAt(*v)
 	}
 	return _c
 }
@@ -189,17 +189,14 @@ func (_c *TicketWorkflowRecordCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *TicketWorkflowRecordCreate) defaults() {
-	if _, ok := _c.mutation.CreateTime(); !ok {
-		v := ticketworkflowrecord.DefaultCreateTime()
-		_c.mutation.SetCreateTime(v)
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		v := ticketworkflowrecord.DefaultCreatedAt()
+		_c.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *TicketWorkflowRecordCreate) check() error {
-	if _, ok := _c.mutation.CreateTime(); !ok {
-		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "TicketWorkflowRecord.create_time"`)}
-	}
 	if _, ok := _c.mutation.TicketID(); !ok {
 		return &ValidationError{Name: "ticket_id", err: errors.New(`ent: missing required field "TicketWorkflowRecord.ticket_id"`)}
 	}
@@ -241,9 +238,9 @@ func (_c *TicketWorkflowRecordCreate) createSpec() (*TicketWorkflowRecord, *sqlg
 		_node = &TicketWorkflowRecord{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(ticketworkflowrecord.Table, sqlgraph.NewFieldSpec(ticketworkflowrecord.FieldID, field.TypeInt))
 	)
-	if value, ok := _c.mutation.CreateTime(); ok {
-		_spec.SetField(ticketworkflowrecord.FieldCreateTime, field.TypeTime, value)
-		_node.CreateTime = value
+	if value, ok := _c.mutation.CreatedAt(); ok {
+		_spec.SetField(ticketworkflowrecord.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
 	}
 	if value, ok := _c.mutation.Action(); ok {
 		_spec.SetField(ticketworkflowrecord.FieldAction, field.TypeString, value)

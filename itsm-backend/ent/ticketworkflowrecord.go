@@ -19,8 +19,8 @@ type TicketWorkflowRecord struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// CreateTime holds the value of the "create_time" field.
-	CreateTime time.Time `json:"create_time,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 工单ID
 	TicketID int `json:"ticket_id,omitempty"`
 	// 操作: accept/reject/approve/resolve/close/reopen/forward/cc/withdraw/delegate
@@ -80,7 +80,7 @@ func (*TicketWorkflowRecord) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case ticketworkflowrecord.FieldAction, ticketworkflowrecord.FieldFromStatus, ticketworkflowrecord.FieldToStatus, ticketworkflowrecord.FieldComment, ticketworkflowrecord.FieldReason:
 			values[i] = new(sql.NullString)
-		case ticketworkflowrecord.FieldCreateTime:
+		case ticketworkflowrecord.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -103,11 +103,11 @@ func (_m *TicketWorkflowRecord) assignValues(columns []string, values []any) err
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
-		case ticketworkflowrecord.FieldCreateTime:
+		case ticketworkflowrecord.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field create_time", values[i])
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				_m.CreateTime = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case ticketworkflowrecord.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -218,8 +218,8 @@ func (_m *TicketWorkflowRecord) String() string {
 	var builder strings.Builder
 	builder.WriteString("TicketWorkflowRecord(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
-	builder.WriteString("create_time=")
-	builder.WriteString(_m.CreateTime.Format(time.ANSIC))
+	builder.WriteString("created_at=")
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("ticket_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TicketID))

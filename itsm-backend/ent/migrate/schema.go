@@ -4344,7 +4344,7 @@ var (
 	// TicketWorkflowRecordsColumns holds the columns for the "ticket_workflow_records" table.
 	TicketWorkflowRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "create_time", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
 		{Name: "action", Type: field.TypeString},
 		{Name: "from_status", Type: field.TypeString, Nullable: true},
 		{Name: "to_status", Type: field.TypeString, Nullable: true},

@@ -4,7 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"entgo.io/ent/schema/mixin"
+	"time"
 )
 
 // TicketWorkflowRecord holds the schema definition for the TicketWorkflowRecord entity.
@@ -13,16 +13,20 @@ type TicketWorkflowRecord struct {
 }
 
 // Mixin of the TicketWorkflowRecord
-// 注意：不使用 mixin.Time{}，因为 SQL 迁移只定义了 created_at 字段
+// NOTE: does NOT use mixin.CreateTime{} because the actual DB column is created_at (not create_time).
+// DB column created_at is NOT NULL, managed by the application via SetCreatedAt(time.Now()).
 func (TicketWorkflowRecord) Mixin() []ent.Mixin {
-	return []ent.Mixin{
-		mixin.CreateTime{},
-	}
+	return nil
 }
 
 // Fields of the TicketWorkflowRecord.
 func (TicketWorkflowRecord) Fields() []ent.Field {
 	return []ent.Field{
+		field.Time("created_at").
+			Comment("创建时间（DB column: created_at）").
+			Default(time.Now).
+			Immutable().
+			SchemaType(map[string]string{"postgres": "timestamp with time zone"}),
 		field.Int("ticket_id").
 			Comment("工单ID"),
 		field.String("action").

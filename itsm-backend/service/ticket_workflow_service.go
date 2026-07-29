@@ -849,7 +849,7 @@ func (s *TicketWorkflowService) GetWorkflowHistory(ctx context.Context, ticketID
 	}
 	return s.client.TicketWorkflowRecord.Query().
 		Where(ticketworkflowrecord.TicketID(ticketID), ticketworkflowrecord.TenantID(tenantID)).
-		Order(ent.Desc(ticketworkflowrecord.FieldCreateTime)).
+		Order(ent.Desc(ticketworkflowrecord.FieldCreatedAt)).
 		All(ctx)
 }
 

@@ -19,8 +19,8 @@ server:
 
 deployment:
   mode: "${DEPLOYMENT_MODE:private}"  # private | saas | saas_msp
-  auto_migrate: ${ITSM_AUTO_MIGRATE:true}
-  auto_seed: ${ITSM_AUTO_SEED:true}
+  auto_migrate: ${ITSM_AUTO_MIGRATE:false}
+  auto_seed: ${ITSM_AUTO_SEED:false}
 
 jwt:
   secret: "${JWT_SECRET}"

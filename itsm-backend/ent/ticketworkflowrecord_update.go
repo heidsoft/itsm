@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketworkflowrecord"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -25,6 +26,20 @@ type TicketWorkflowRecordUpdate struct {
 // Where appends a list predicates to the TicketWorkflowRecordUpdate builder.
 func (_u *TicketWorkflowRecordUpdate) Where(ps ...predicate.TicketWorkflowRecord) *TicketWorkflowRecordUpdate {
 	_u.mutation.Where(ps...)
+	return _u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (_u *TicketWorkflowRecordUpdate) SetCreatedAt(v time.Time) *TicketWorkflowRecordUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_u *TicketWorkflowRecordUpdate) SetNillableCreatedAt(v *time.Time) *TicketWorkflowRecordUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
+	}
 	return _u
 }
 
@@ -417,6 +432,20 @@ type TicketWorkflowRecordUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *TicketWorkflowRecordMutation
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (_u *TicketWorkflowRecordUpdateOne) SetCreatedAt(v time.Time) *TicketWorkflowRecordUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_u *TicketWorkflowRecordUpdateOne) SetNillableCreatedAt(v *time.Time) *TicketWorkflowRecordUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
+	}
+	return _u
 }
 
 // SetTicketID sets the "ticket_id" field.

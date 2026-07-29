@@ -139232,7 +139232,7 @@ type TicketWorkflowRecordMutation struct {
 	op              Op
 	typ             string
 	id              *int
-	create_time     *time.Time
+	created_at      *time.Time
 	action          *string
 	from_status     *string
 	to_status       *string
@@ -139353,40 +139353,40 @@ func (m *TicketWorkflowRecordMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
-// SetCreateTime sets the "create_time" field.
-func (m *TicketWorkflowRecordMutation) SetCreateTime(t time.Time) {
-	m.create_time = &t
+// SetCreatedAt sets the "created_at" field.
+func (m *TicketWorkflowRecordMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
 }
 
-// CreateTime returns the value of the "create_time" field in the mutation.
-func (m *TicketWorkflowRecordMutation) CreateTime() (r time.Time, exists bool) {
-	v := m.create_time
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *TicketWorkflowRecordMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCreateTime returns the old "create_time" field's value of the TicketWorkflowRecord entity.
+// OldCreatedAt returns the old "created_at" field's value of the TicketWorkflowRecord entity.
 // If the TicketWorkflowRecord object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TicketWorkflowRecordMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+func (m *TicketWorkflowRecordMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreateTime is only allowed on UpdateOne operations")
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreateTime requires an ID field in the mutation")
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
 	}
-	return oldValue.CreateTime, nil
+	return oldValue.CreatedAt, nil
 }
 
-// ResetCreateTime resets all changes to the "create_time" field.
-func (m *TicketWorkflowRecordMutation) ResetCreateTime() {
-	m.create_time = nil
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *TicketWorkflowRecordMutation) ResetCreatedAt() {
+	m.created_at = nil
 }
 
 // SetTicketID sets the "ticket_id" field.
@@ -140020,8 +140020,8 @@ func (m *TicketWorkflowRecordMutation) Type() string {
 // AddedFields().
 func (m *TicketWorkflowRecordMutation) Fields() []string {
 	fields := make([]string, 0, 12)
-	if m.create_time != nil {
-		fields = append(fields, ticketworkflowrecord.FieldCreateTime)
+	if m.created_at != nil {
+		fields = append(fields, ticketworkflowrecord.FieldCreatedAt)
 	}
 	if m.ticket != nil {
 		fields = append(fields, ticketworkflowrecord.FieldTicketID)
@@ -140064,8 +140064,8 @@ func (m *TicketWorkflowRecordMutation) Fields() []string {
 // schema.
 func (m *TicketWorkflowRecordMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case ticketworkflowrecord.FieldCreateTime:
-		return m.CreateTime()
+	case ticketworkflowrecord.FieldCreatedAt:
+		return m.CreatedAt()
 	case ticketworkflowrecord.FieldTicketID:
 		return m.TicketID()
 	case ticketworkflowrecord.FieldAction:
@@ -140097,8 +140097,8 @@ func (m *TicketWorkflowRecordMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *TicketWorkflowRecordMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case ticketworkflowrecord.FieldCreateTime:
-		return m.OldCreateTime(ctx)
+	case ticketworkflowrecord.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
 	case ticketworkflowrecord.FieldTicketID:
 		return m.OldTicketID(ctx)
 	case ticketworkflowrecord.FieldAction:
@@ -140130,12 +140130,12 @@ func (m *TicketWorkflowRecordMutation) OldField(ctx context.Context, name string
 // type.
 func (m *TicketWorkflowRecordMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case ticketworkflowrecord.FieldCreateTime:
+	case ticketworkflowrecord.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCreateTime(v)
+		m.SetCreatedAt(v)
 		return nil
 	case ticketworkflowrecord.FieldTicketID:
 		v, ok := value.(int)
@@ -140359,8 +140359,8 @@ func (m *TicketWorkflowRecordMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *TicketWorkflowRecordMutation) ResetField(name string) error {
 	switch name {
-	case ticketworkflowrecord.FieldCreateTime:
-		m.ResetCreateTime()
+	case ticketworkflowrecord.FieldCreatedAt:
+		m.ResetCreatedAt()
 		return nil
 	case ticketworkflowrecord.FieldTicketID:
 		m.ResetTicketID()
