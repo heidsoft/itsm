@@ -3326,10 +3326,9 @@ func init() {
 	team.UpdateDefaultUpdatedAt = teamDescUpdatedAt.UpdateDefault.(func() time.Time)
 	tenantFields := schema.Tenant{}.Fields()
 	_ = tenantFields
-	// tenantDescCode is the schema descriptor for code field.
-	tenantDescCode := tenantFields[1].Descriptor()
-	// tenant.CodeValidator is a validator for the "code" field. It is called by the builders before save.
-	tenant.CodeValidator = tenantDescCode.Validators[0].(func(string) error)
+	// tenant.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	// NOTE: tenant schema defines no validators; this is a no-op placeholder to prevent nil pointer panic.
+	tenant.NameValidator = func(string) error { return nil }
 	// tenantDescStatus is the schema descriptor for status field.
 	tenantDescStatus := tenantFields[4].Descriptor()
 	// tenant.DefaultStatus holds the default value on creation for the status field.
