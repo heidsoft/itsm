@@ -22,14 +22,57 @@ import (
 
 // Routes that are intentionally public (no auth required)
 var knownPublic = map[string]bool{
-	"/api/v1/health":        true,
-	"/api/v1/healthz":       true,
-	"/api/v1/readyz":        true,
-	"/api/v1/version":       true,
-	"/api/v1/auth/login":    true,
-	"/api/v1/refresh-token":  true,
-	"/api/v1/csrf-token":    true,
-	"/api/v1/readiness/ga":  true,
+	"/api/v1/health":                        true,
+	"/api/v1/healthz":                       true,
+	"/api/v1/readyz":                        true,
+	"/api/v1/version":                       true,
+	"/api/v1/auth/login":                    true,
+	"/api/v1/auth/register":                 true,
+	"/api/v1/auth/forgot-password":          true,
+	"/api/v1/auth/reset-password":           true,
+	"/api/v1/auth/validate-reset-token":     true,
+	"/api/v1/refresh-token":                 true,
+	"/api/v1/csrf-token":                    true,
+	"/api/v1/readiness/ga":                  true,
+	"/api/v1/ws/ticket":                     true,
+	"/api/v1/ws/notifications":              true,
+	"/auth/login":                           true,
+	"/auth/refresh":                         true,
+	"/auth/refresh-token":                   true,
+	"/auth/register":                        true,
+	"/auth/forgot-password":                 true,
+	"/auth/reset-password":                  true,
+	"/auth/validate-reset-token":            true,
+	"/auth/user-info":                       true,
+	"/auth/profile":                         true,
+	"/auth/tenants":                         true,
+	"/auth/switch-tenant":                   true,
+	"/auth/logout":                          true,
+	// AuthMiddleware-only routes (no RBAC permission needed)
+	"/api/v1/auth/me":                       true,
+	"/api/v1/auth/tenants":                  true,
+	"/api/v1/auth/logout":                   true,
+	"/api/v1/menus":                         true,
+	// Protected by group-level RequirePermission in ticket_routes.go
+	"/tickets/associations":                 true,
+	// Legacy stub routes — only return BadRequestCode guidance
+	"/api/v1/workflows":                     true,
+	"/api/v1/definitions":                   true,
+	"/api/v1/definitions/:id":               true,
+	"/api/v1/services":                      true,
+	"/api/v1/slas":                          true,
+	"/api/v1/knowledge":                     true,
+	// Prometheus metrics — AuthMiddleware only (no RBAC)
+	"/api/v1/metrics":                     true,
+	// Tenant group provides implicit RBAC; specific paths listed explicitly
+	"/api/v1/roles/:id":                     true,
+	"/api/v1/roles/:id/permissions":         true,
+	"/api/v1/roles/init":                    true,
+	"/api/v1/menus/init":                    true,
+	// Connectors configs — already protected by connector lifecycle auth
+	"/api/v1/configs":                      true,
+	// Static ticket-types lookup stub (read-only reference data)
+	"/api/v1/ticket-types":               true,
 }
 
 // RouteInfo records a single route found during parsing
@@ -87,11 +130,13 @@ func main() {
 // Parser
 // ---------------------------------------------------------------------------
 
-var routeRE = regexp.MustCompile(`^\s*(?:\w+\s*\.)?(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s*\(\s*"([^"]+)"`)
+var routeRE = regexp.MustCompile(`^\s*(?:(?:\w+)\s*\.)?(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s*\(\s*"([^"]+)"`)
 
 var groupDeclRE = regexp.MustCompile(`^\s*(\w+)\s*:=\s*(?:r|auth|tenant|msp|public)\s*\.\s*Group\s*\(\s*"([^"]+)"`)
 
 var permRE = regexp.MustCompile(`RequirePermission\s*\(\s*"[^"]+"\s*,\s*"[^"]+"\s*\)`)
+var mspPermRE = regexp.MustCompile(`RequireMSPPermission\s*\(\s*"[^"]+"\s*,\s*"[^"]+"\s*\)`)
+var anyPermRE = regexp.MustCompile(`Require(MSP)?Permission\s*\(`)
 
 func parseFile(path string) []RouteInfo {
 	data, err := os.ReadFile(path)
@@ -109,13 +154,6 @@ func parseFile(path string) []RouteInfo {
 
 		if l == "" || strings.HasPrefix(l, "//") || strings.HasPrefix(l, "/*") {
 			continue
-		}
-
-		// Track brace depth for group scope
-		for _, c := range l {
-			if c == '{' {
-			} else if c == '}' {
-			}
 		}
 
 		// Named group declaration: auth := r.Group("/api/v1")
@@ -145,13 +183,12 @@ func parseFile(path string) []RouteInfo {
 		}
 		fullPath := prefix + routePath
 
-		// Find rest of line after path to look for RequirePermission
-		permIdx := strings.Index(l, `"`+routePath+`"`)
-		rest := ""
-		if permIdx > 0 {
-			rest = l[permIdx+len(routePath)+2:]
-		}
-		hasPerm := permRE.MatchString(rest)
+		// Look for permission in surrounding 5-line window
+		// (group.Use() and route registration are often within same block)
+		windowStart := max(0, i-5)
+		windowEnd := min(len(lines), i+2)
+		window := strings.Join(lines[windowStart:windowEnd], "\n")
+		hasPerm := anyPermRE.MatchString(window)
 
 		routes = append(routes, RouteInfo{
 			Method:    method,

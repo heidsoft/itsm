@@ -21,8 +21,8 @@ func SetupCMDBRoutes(
 	configurationItems := auth.Group("/configuration-items")
 	configurationItems.Use(middleware.RequirePermission("cmdb_ci", "read"))
 	{
-		configurationItems.POST("/search", cmdbController.SearchCI)
-		configurationItems.GET("/stats", cmdbController.GetCIStats)
+		configurationItems.POST("/search", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.SearchCI)
+		configurationItems.GET("/stats", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCIStats)
 		configurationItems.GET("/types", middleware.RequirePermission("cmdb_ci_type", "read"), cmdbController.ListCITypes)
 		configurationItems.POST("/types", middleware.RequirePermission("cmdb_ci_type", "write"), cmdbController.CreateCIType)
 		configurationItems.GET("/types/:id", middleware.RequirePermission("cmdb_ci_type", "read"), cmdbController.GetCIType)
@@ -34,16 +34,16 @@ func SetupCMDBRoutes(
 		configurationItems.PUT("/relationships/:id", middleware.RequirePermission("cmdb_relationship", "write"), cmdbController.UpdateCIRelationship)
 		configurationItems.DELETE("/relationships/:id", middleware.RequirePermission("cmdb_relationship", "delete"), cmdbController.DeleteCIRelationship)
 		configurationItems.GET("/relationship-types", middleware.RequirePermission("cmdb_relationship", "read"), cmdbController.ListRelationshipTypes)
-		configurationItems.GET("", cmdbController.ListCIs)
+		configurationItems.GET("", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.ListCIs)
 		configurationItems.POST("", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.CreateCI)
-		configurationItems.GET("/:id", cmdbController.GetCI)
+		configurationItems.GET("/:id", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCI)
 		configurationItems.PUT("/:id", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.UpdateCI)
 		configurationItems.DELETE("/:id", middleware.RequirePermission("cmdb_ci", "delete"), cmdbController.DeleteCI)
-		configurationItems.GET("/:id/relationships", cmdbController.ListCIRelationshipsByCIID)
-		configurationItems.GET("/:id/topology", cmdbController.GetCITopology)
-		configurationItems.GET("/:id/impact-analysis", cmdbController.GetCIImpactAnalysis)
-		configurationItems.GET("/:id/change-history", cmdbController.GetCIHistory)
-		configurationItems.GET("/:id/history", cmdbController.GetCIHistory)
+		configurationItems.GET("/:id/relationships", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.ListCIRelationshipsByCIID)
+		configurationItems.GET("/:id/topology", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCITopology)
+		configurationItems.GET("/:id/impact-analysis", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCIImpactAnalysis)
+		configurationItems.GET("/:id/change-history", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCIHistory)
+		configurationItems.GET("/:id/history", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCIHistory)
 	}
 
 	// CMDB管理路由（规范前缀）
@@ -144,14 +144,14 @@ func SetupCMDBRoutes(
 			}
 
 			// 统计接口必须放在 /:id 之前
-			cis.GET("/stats", cmdbController.GetCIStats)
+			cis.GET("/stats", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCIStats)
 			// 兼容旧路径：/cmdb/cis/relationships -> /cmdb/relationships，必须放在 /:id 之前
 			cis.POST("/relationships", middleware.RequirePermission("cmdb_relationship", "write"), cmdbController.CreateCIRelationship)
 			cis.GET("/relationships", middleware.RequirePermission("cmdb_relationship", "read"), cmdbController.ListCIRelationships)
 
 			// 基础CRUD
-			cis.GET("", cmdbController.ListCIs)
-			cis.GET("/:id", cmdbController.GetCI)
+			cis.GET("", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.ListCIs)
+			cis.GET("/:id", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCI)
 
 			// 写入权限
 			cis.POST("", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.CreateCI)
@@ -159,14 +159,14 @@ func SetupCMDBRoutes(
 			cis.DELETE("/:id", middleware.RequirePermission("cmdb_ci", "delete"), cmdbController.DeleteCI)
 
 			// 关系查询
-			cis.GET("/:id/relationships", cmdbController.ListCIRelationshipsByCIID)
-			cis.GET("/:id/topology", cmdbController.GetCITopology)
+			cis.GET("/:id/relationships", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.ListCIRelationshipsByCIID)
+			cis.GET("/:id/topology", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCITopology)
 
 			// 影响分析
-			cis.GET("/:id/impact-analysis", cmdbController.GetCIImpactAnalysis)
+			cis.GET("/:id/impact-analysis", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCIImpactAnalysis)
 
 			// 变更历史
-			cis.GET("/:id/history", cmdbController.GetCIHistory)
+			cis.GET("/:id/history", middleware.RequirePermission("cmdb_ci", "read"), cmdbController.GetCIHistory)
 
 			// 版本回滚
 			cis.POST("/:id/revert", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.RevertCIVersion)
@@ -239,7 +239,7 @@ func SetupCMDBRoutes(
 			discovery.GET("/sources", config.CMDBHandler.ListDiscoverySources)
 			discovery.POST("/sources", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoverySource)
 			discovery.POST("/jobs", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoveryJob)
-			discovery.GET("/results", config.CMDBHandler.ListDiscoveryResults)
+			discovery.GET("/results", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListDiscoveryResults)
 		}
 
 		// ------------------------------ 对账相关路由 ------------------------------

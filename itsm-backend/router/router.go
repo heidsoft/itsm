@@ -472,12 +472,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		if config.TicketCategoryController != nil {
 			categories := tenant.(*gin.RouterGroup).Group("/ticket-categories")
 			{
-				categories.GET("", config.TicketCategoryController.ListCategories)
+				categories.GET("", middleware.RequirePermission("ticket_category", "read"), config.TicketCategoryController.ListCategories)
 				categories.POST("", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryController.CreateCategory)
-				categories.GET("/tree", config.TicketCategoryController.GetCategoryTree)
+				categories.GET("/tree", middleware.RequirePermission("ticket_category", "read"), config.TicketCategoryController.GetCategoryTree)
 				categories.POST("/import/preview", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryController.PreviewImport)
 				categories.POST("/import", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryController.ExecuteImport)
-				categories.GET("/:id", config.TicketCategoryController.GetCategory)
+				categories.GET("/:id", middleware.RequirePermission("ticket_category", "read"), config.TicketCategoryController.GetCategory)
 				categories.PUT("/:id", middleware.RequirePermission("ticket_category", "update"), config.TicketCategoryController.UpdateCategory)
 				categories.PUT("/:id/move", middleware.RequirePermission("ticket_category", "update"), config.TicketCategoryController.MoveCategory)
 				categories.DELETE("/:id", middleware.RequirePermission("ticket_category", "delete"), config.TicketCategoryController.DeleteCategory)
@@ -487,9 +487,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		if config.TicketTagController != nil {
 			tags := tenant.(*gin.RouterGroup).Group("/ticket-tags")
 			{
-				tags.GET("", config.TicketTagController.ListTags)
+				tags.GET("", middleware.RequirePermission("ticket_tag", "read"), config.TicketTagController.ListTags)
 				tags.POST("", middleware.RequirePermission("ticket_tag", "create"), config.TicketTagController.CreateTag)
-				tags.GET("/:id", config.TicketTagController.GetTag)
+				tags.GET("/:id", middleware.RequirePermission("ticket_tag", "read"), config.TicketTagController.GetTag)
 				tags.PUT("/:id", middleware.RequirePermission("ticket_tag", "update"), config.TicketTagController.UpdateTag)
 				tags.DELETE("/:id", middleware.RequirePermission("ticket_tag", "delete"), config.TicketTagController.DeleteTag)
 			}
@@ -498,35 +498,35 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Tickets ====================
 		tickets := tenant.(*gin.RouterGroup).Group("/tickets")
 		{
-			tickets.GET("", config.TicketController.ListTickets)
-			tickets.POST("", config.TicketController.CreateTicket)
+			tickets.GET("", middleware.RequirePermission("ticket", "read"), config.TicketController.ListTickets)
+			tickets.POST("", middleware.RequirePermission("ticket", "create"), config.TicketController.CreateTicket)
 
 			if config.TicketViewController != nil {
-				tickets.GET("/views", config.TicketViewController.ListTicketViews)
-				tickets.POST("/views", config.TicketViewController.CreateTicketView)
-				tickets.GET("/views/:id", config.TicketViewController.GetTicketView)
-				tickets.PUT("/views/:id", config.TicketViewController.UpdateTicketView)
-				tickets.DELETE("/views/:id", config.TicketViewController.DeleteTicketView)
+				tickets.GET("/views", middleware.RequirePermission("view", "read"), config.TicketViewController.ListTicketViews)
+				tickets.POST("/views", middleware.RequirePermission("view", "create"), config.TicketViewController.CreateTicketView)
+				tickets.GET("/views/:id", middleware.RequirePermission("view", "read"), config.TicketViewController.GetTicketView)
+				tickets.PUT("/views/:id", middleware.RequirePermission("view", "update"), config.TicketViewController.UpdateTicketView)
+				tickets.DELETE("/views/:id", middleware.RequirePermission("view", "delete"), config.TicketViewController.DeleteTicketView)
 			}
 
-			tickets.GET("/search", config.TicketController.SearchTickets)
-			tickets.GET("/stats", config.TicketController.GetTicketStats)
+			tickets.GET("/search", middleware.RequirePermission("ticket", "read"), config.TicketController.SearchTickets)
+			tickets.GET("/stats", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketStats)
 			tickets.GET("/overdue", middleware.RequirePermission("ticket", "read"), config.TicketController.GetOverdueTickets)
 			tickets.POST("/export", middleware.RequirePermission("ticket", "export"), config.TicketController.ExportTickets)
 			tickets.POST("/batch-delete", middleware.RequirePermission("ticket", "delete"), config.TicketController.BatchDeleteTickets)
 			if config.TicketWorkflowController != nil {
-				tickets.GET("/cc/my", config.TicketWorkflowController.ListMyCCRecords)
+				tickets.GET("/cc/my", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.ListMyCCRecords)
 			}
 
 			// 工单模板
-			tickets.GET("/templates", config.TicketController.GetTicketTemplates)
-			tickets.GET("/templates/categories", config.TicketController.GetTicketTemplateCategories)
-			tickets.POST("/templates", config.TicketController.CreateTicketTemplate)
-			tickets.GET("/templates/:id", config.TicketController.GetTicketTemplate)
-			tickets.PUT("/templates/:id", config.TicketController.UpdateTicketTemplate)
-			tickets.PATCH("/templates/:id/status", config.TicketController.UpdateTicketTemplateStatus)
-			tickets.POST("/templates/:id/copy", config.TicketController.CopyTicketTemplate)
-			tickets.DELETE("/templates/:id", config.TicketController.DeleteTicketTemplate)
+			tickets.GET("/templates", middleware.RequirePermission("template", "read"), config.TicketController.GetTicketTemplates)
+			tickets.GET("/templates/categories", middleware.RequirePermission("template", "read"), config.TicketController.GetTicketTemplateCategories)
+			tickets.POST("/templates", middleware.RequirePermission("template", "create"), config.TicketController.CreateTicketTemplate)
+			tickets.GET("/templates/:id", middleware.RequirePermission("template", "read"), config.TicketController.GetTicketTemplate)
+			tickets.PUT("/templates/:id", middleware.RequirePermission("template", "update"), config.TicketController.UpdateTicketTemplate)
+			tickets.PATCH("/templates/:id/status", middleware.RequirePermission("template", "update"), config.TicketController.UpdateTicketTemplateStatus)
+			tickets.POST("/templates/:id/copy", middleware.RequirePermission("template", "create"), config.TicketController.CopyTicketTemplate)
+			tickets.DELETE("/templates/:id", middleware.RequirePermission("template", "delete"), config.TicketController.DeleteTicketTemplate)
 
 			tickets.POST("/:id/escalate", middleware.RequirePermission("ticket", "escalate"), config.TicketController.EscalateTicket)
 			tickets.GET("/:id/history", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketActivity)
@@ -538,53 +538,53 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					{"id": 4, "name": "Request", "code": "request"},
 				}, "total": 4})
 			})
-			tickets.GET("/:id", config.TicketController.GetTicket)
-			tickets.PUT("/:id", config.TicketController.UpdateTicket)
-			tickets.PUT("/:id/status", config.TicketController.UpdateTicketStatus)
-			tickets.DELETE("/:id", config.TicketController.DeleteTicket)
+			tickets.GET("/:id", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicket)
+			tickets.PUT("/:id", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateTicket)
+			tickets.PUT("/:id/status", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateTicketStatus)
+			tickets.DELETE("/:id", middleware.RequirePermission("ticket", "delete"), config.TicketController.DeleteTicket)
 			tickets.POST("/:id/assign", middleware.RequirePermission("ticket", "assign"), config.TicketController.AssignTicket)
-			tickets.POST("/:id/resolve", config.TicketController.ResolveTicket)
-			tickets.POST("/:id/close", config.TicketController.CloseTicket)
+			tickets.POST("/:id/resolve", middleware.RequirePermission("ticket", "update"), config.TicketController.ResolveTicket)
+			tickets.POST("/:id/close", middleware.RequirePermission("ticket", "update"), config.TicketController.CloseTicket)
 
 			// 工单SLA信息
-			tickets.GET("/:id/sla", config.TicketController.GetTicketSLAInfo)
+			tickets.GET("/:id/sla", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketSLAInfo)
 
 			// 子任务管理
-			tickets.GET("/:id/subtasks", config.TicketController.GetSubtasks)
-			tickets.POST("/:id/subtasks", config.TicketController.CreateSubtask)
-			tickets.PATCH("/:id/subtasks/:subtask_id", config.TicketController.UpdateSubtask)
-			tickets.DELETE("/:id/subtasks/:subtask_id", config.TicketController.DeleteSubtask)
+			tickets.GET("/:id/subtasks", middleware.RequirePermission("ticket", "read"), config.TicketController.GetSubtasks)
+			tickets.POST("/:id/subtasks", middleware.RequirePermission("ticket", "create"), config.TicketController.CreateSubtask)
+			tickets.PATCH("/:id/subtasks/:subtask_id", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateSubtask)
+			tickets.DELETE("/:id/subtasks/:subtask_id", middleware.RequirePermission("ticket", "delete"), config.TicketController.DeleteSubtask)
 
 			// 评论
 			if config.TicketCommentController != nil {
-				tickets.GET("/:id/comments", config.TicketCommentController.ListTicketComments)
-				tickets.POST("/:id/comments", config.TicketCommentController.CreateTicketComment)
-				tickets.PUT("/:id/comments/:comment_id", config.TicketCommentController.UpdateTicketComment)
-				tickets.DELETE("/:id/comments/:comment_id", config.TicketCommentController.DeleteTicketComment)
+				tickets.GET("/:id/comments", middleware.RequirePermission("ticket", "read"), config.TicketCommentController.ListTicketComments)
+				tickets.POST("/:id/comments", middleware.RequirePermission("ticket", "create"), config.TicketCommentController.CreateTicketComment)
+				tickets.PUT("/:id/comments/:comment_id", middleware.RequirePermission("ticket", "update"), config.TicketCommentController.UpdateTicketComment)
+				tickets.DELETE("/:id/comments/:comment_id", middleware.RequirePermission("ticket", "delete"), config.TicketCommentController.DeleteTicketComment)
 			}
 
 			// 附件
 			if config.TicketAttachmentController != nil {
-				tickets.GET("/:id/attachments", config.TicketAttachmentController.ListTicketAttachments)
-				tickets.POST("/:id/attachments", config.TicketAttachmentController.UploadAttachment)
-				tickets.DELETE("/:id/attachments/:attachment_id", config.TicketAttachmentController.DeleteAttachment)
+				tickets.GET("/:id/attachments", middleware.RequirePermission("ticket", "read"), config.TicketAttachmentController.ListTicketAttachments)
+				tickets.POST("/:id/attachments", middleware.RequirePermission("ticket", "create"), config.TicketAttachmentController.UploadAttachment)
+				tickets.DELETE("/:id/attachments/:attachment_id", middleware.RequirePermission("ticket", "delete"), config.TicketAttachmentController.DeleteAttachment)
 			}
 
 			// 审批流程管理
 			if config.ApprovalController != nil {
-				tickets.POST("/approval/submit", config.ApprovalController.SubmitApproval)
-				tickets.GET("/approval/records", config.ApprovalController.GetApprovalRecords)
+				tickets.POST("/approval/submit", middleware.RequirePermission("approval", "create"), config.ApprovalController.SubmitApproval)
+				tickets.GET("/approval/records", middleware.RequirePermission("approval", "read"), config.ApprovalController.GetApprovalRecords)
 
 				// 审批工作流CRUD
 				approvalWorkflows := tenant.(*gin.RouterGroup).Group("/approval-workflows")
 				{
-					approvalWorkflows.GET("", config.ApprovalController.ListWorkflows)
-					approvalWorkflows.POST("", config.ApprovalController.CreateWorkflow)
-					approvalWorkflows.GET("/:id", config.ApprovalController.GetWorkflow)
-					approvalWorkflows.PUT("/:id", config.ApprovalController.UpdateWorkflow)
-					approvalWorkflows.POST("/:id/migrate-to-bpmn", config.ApprovalController.MigrateWorkflowToBPMN)
-					approvalWorkflows.PATCH("/:id", config.ApprovalController.PatchWorkflow)
-					approvalWorkflows.DELETE("/:id", config.ApprovalController.DeleteWorkflow)
+					approvalWorkflows.GET("", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.ListWorkflows)
+					approvalWorkflows.POST("", middleware.RequirePermission("approval_workflow", "create"), config.ApprovalController.CreateWorkflow)
+					approvalWorkflows.GET("/:id", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetWorkflow)
+					approvalWorkflows.PUT("/:id", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalController.UpdateWorkflow)
+					approvalWorkflows.POST("/:id/migrate-to-bpmn", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalController.MigrateWorkflowToBPMN)
+					approvalWorkflows.PATCH("/:id", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalController.PatchWorkflow)
+					approvalWorkflows.DELETE("/:id", middleware.RequirePermission("approval_workflow", "delete"), config.ApprovalController.DeleteWorkflow)
 				}
 				// 兼容旧路径 /approvals
 				approvals := tenant.(*gin.RouterGroup).Group("/approvals")
@@ -607,48 +607,48 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			// 工单流转工作流
 			if config.TicketWorkflowController != nil {
-				tickets.POST("/workflow/accept", config.TicketWorkflowController.AcceptTicket)
-				tickets.POST("/workflow/reject", config.TicketWorkflowController.RejectTicket)
-				tickets.POST("/workflow/withdraw", config.TicketWorkflowController.WithdrawTicket)
-				tickets.POST("/workflow/forward", config.TicketWorkflowController.ForwardTicket)
-				tickets.POST("/workflow/cc", config.TicketWorkflowController.CCTicket)
-				tickets.POST("/workflow/approve", config.TicketWorkflowController.ApproveTicket)
-				tickets.POST("/workflow/resolve", config.TicketWorkflowController.ResolveTicket)
-				tickets.POST("/workflow/close", config.TicketWorkflowController.CloseTicket)
-				tickets.POST("/workflow/reopen", config.TicketWorkflowController.ReopenTicket)
-				tickets.GET("/:id/cc", config.TicketWorkflowController.ListTicketCCRecords)
-				tickets.GET("/:id/workflow/state", config.TicketWorkflowController.GetTicketWorkflowState)
-				tickets.GET("/:id/workflow-history", config.TicketWorkflowController.GetTicketWorkflowHistory)
-				tickets.GET("/:id/workflow_records", config.TicketWorkflowController.GetTicketWorkflowHistory)
+				tickets.POST("/workflow/accept", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.AcceptTicket)
+				tickets.POST("/workflow/reject", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.RejectTicket)
+				tickets.POST("/workflow/withdraw", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.WithdrawTicket)
+				tickets.POST("/workflow/forward", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.ForwardTicket)
+				tickets.POST("/workflow/cc", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.CCTicket)
+				tickets.POST("/workflow/approve", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.ApproveTicket)
+				tickets.POST("/workflow/resolve", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.ResolveTicket)
+				tickets.POST("/workflow/close", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.CloseTicket)
+				tickets.POST("/workflow/reopen", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.ReopenTicket)
+				tickets.GET("/:id/cc", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.ListTicketCCRecords)
+				tickets.GET("/:id/workflow/state", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowState)
+				tickets.GET("/:id/workflow-history", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowHistory)
+				tickets.GET("/:id/workflow_records", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowHistory)
 			}
 
 			// 工单自动化规则
 			if config.TicketAutomationRuleController != nil {
-				tickets.GET("/automation-rules", config.TicketAutomationRuleController.ListAutomationRules)
-				tickets.POST("/automation-rules", config.TicketAutomationRuleController.CreateAutomationRule)
-				tickets.GET("/automation-rules/:id", config.TicketAutomationRuleController.GetAutomationRule)
-				tickets.PUT("/automation-rules/:id", config.TicketAutomationRuleController.UpdateAutomationRule)
-				tickets.DELETE("/automation-rules/:id", config.TicketAutomationRuleController.DeleteAutomationRule)
-				tickets.POST("/automation-rules/:id/test", config.TicketAutomationRuleController.TestAutomationRule)
+				tickets.GET("/automation-rules", middleware.RequirePermission("automation_rule", "read"), config.TicketAutomationRuleController.ListAutomationRules)
+				tickets.POST("/automation-rules", middleware.RequirePermission("automation_rule", "create"), config.TicketAutomationRuleController.CreateAutomationRule)
+				tickets.GET("/automation-rules/:id", middleware.RequirePermission("automation_rule", "read"), config.TicketAutomationRuleController.GetAutomationRule)
+				tickets.PUT("/automation-rules/:id", middleware.RequirePermission("automation_rule", "update"), config.TicketAutomationRuleController.UpdateAutomationRule)
+				tickets.DELETE("/automation-rules/:id", middleware.RequirePermission("automation_rule", "delete"), config.TicketAutomationRuleController.DeleteAutomationRule)
+				tickets.POST("/automation-rules/:id/test", middleware.RequirePermission("automation_rule", "update"), config.TicketAutomationRuleController.TestAutomationRule)
 			}
 
 			// 工单分配规则
 			if config.TicketAssignmentSmartController != nil {
-				tickets.POST("/:id/auto-assign", config.TicketAssignmentSmartController.AutoAssign)
-				tickets.GET("/assign-recommendations/:id", config.TicketAssignmentSmartController.GetAssignRecommendations)
-				tickets.GET("/assignment-rules", config.TicketAssignmentSmartController.ListAssignmentRules)
-				tickets.POST("/assignment-rules", config.TicketAssignmentSmartController.CreateAssignmentRule)
-				tickets.POST("/assignment-rules/test", config.TicketAssignmentSmartController.TestAssignmentRule)
-				tickets.GET("/assignment-rules/:id", config.TicketAssignmentSmartController.GetAssignmentRule)
-				tickets.PUT("/assignment-rules/:id", config.TicketAssignmentSmartController.UpdateAssignmentRule)
-				tickets.DELETE("/assignment-rules/:id", config.TicketAssignmentSmartController.DeleteAssignmentRule)
+				tickets.POST("/:id/auto-assign", middleware.RequirePermission("assignment_rule", "update"), config.TicketAssignmentSmartController.AutoAssign)
+				tickets.GET("/assign-recommendations/:id", middleware.RequirePermission("assignment_rule", "read"), config.TicketAssignmentSmartController.GetAssignRecommendations)
+				tickets.GET("/assignment-rules", middleware.RequirePermission("assignment_rule", "read"), config.TicketAssignmentSmartController.ListAssignmentRules)
+				tickets.POST("/assignment-rules", middleware.RequirePermission("assignment_rule", "create"), config.TicketAssignmentSmartController.CreateAssignmentRule)
+				tickets.POST("/assignment-rules/test", middleware.RequirePermission("assignment_rule", "update"), config.TicketAssignmentSmartController.TestAssignmentRule)
+				tickets.GET("/assignment-rules/:id", middleware.RequirePermission("assignment_rule", "read"), config.TicketAssignmentSmartController.GetAssignmentRule)
+				tickets.PUT("/assignment-rules/:id", middleware.RequirePermission("assignment_rule", "update"), config.TicketAssignmentSmartController.UpdateAssignmentRule)
+				tickets.DELETE("/assignment-rules/:id", middleware.RequirePermission("assignment_rule", "delete"), config.TicketAssignmentSmartController.DeleteAssignmentRule)
 			}
 
 			// 工单评分
 			if config.TicketRatingController != nil {
-				tickets.POST("/:id/rating", config.TicketRatingController.SubmitRating)
-				tickets.GET("/:id/rating", config.TicketRatingController.GetRating)
-				tickets.GET("/rating-stats", config.TicketRatingController.GetRatingStats)
+				tickets.POST("/:id/rating", middleware.RequirePermission("ticket", "update"), config.TicketRatingController.SubmitRating)
+				tickets.GET("/:id/rating", middleware.RequirePermission("ticket", "read"), config.TicketRatingController.GetRating)
+				tickets.GET("/rating-stats", middleware.RequirePermission("ticket", "read"), config.TicketRatingController.GetRatingStats)
 			}
 
 			if config.TicketTagController != nil {
@@ -658,30 +658,30 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			// 工单分析与预测 (Alias for frontend compatibility)
 			if config.AIHandler != nil {
-				tickets.POST("/analytics/deep", config.AIHandler.GetDeepAnalytics)
-				tickets.POST("/prediction/trend", config.AIHandler.GetTrendPrediction)
+				tickets.POST("/analytics/deep", middleware.RequirePermission("report", "read"), config.AIHandler.GetDeepAnalytics)
+				tickets.POST("/prediction/trend", middleware.RequirePermission("report", "read"), config.AIHandler.GetTrendPrediction)
 			}
 
 			if config.AnalyticsController != nil {
-				tickets.POST("/analytics/export", config.AnalyticsController.ExportAnalytics)
+				tickets.POST("/analytics/export", middleware.RequirePermission("report", "read"), config.AnalyticsController.ExportAnalytics)
 				// B8: GET /api/v1/analytics/tickets - 工单分析概览
 				// 挂在 tenant 顶层 group，路径 = /api/v1/analytics/tickets
 			}
 
 			if config.PredictionController != nil {
-				tickets.POST("/prediction/export", config.PredictionController.ExportPredictionReport)
+				tickets.POST("/prediction/export", middleware.RequirePermission("report", "read"), config.PredictionController.ExportPredictionReport)
 			}
 		}
 
 		// ==================== 顶层分析别名 ====================
 		if config.AnalyticsController != nil {
-			tenant.(*gin.RouterGroup).GET("/analytics/tickets", config.AnalyticsController.GetTicketAnalytics)
+			tenant.(*gin.RouterGroup).GET("/analytics/tickets", middleware.RequirePermission("report", "read"), config.AnalyticsController.GetTicketAnalytics)
 		}
 
 		// B9: AI 工单总结 /ai/tickets/{id}/summary
 		aiGroup := tenant.(*gin.RouterGroup).Group("/ai")
 		{
-			aiGroup.GET("/tickets/:id/summary", config.AIHandler.SummarizeTicket)
+			aiGroup.GET("/tickets/:id/summary", middleware.RequirePermission("ticket", "read"), config.AIHandler.SummarizeTicket)
 		}
 
 		// ==================== System Configs ====================
@@ -689,15 +689,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			sysConfigs := tenant.(*gin.RouterGroup).Group("/system-configs")
 			{
 				// 配置管理
-				sysConfigs.GET("", config.SystemConfigController.ListConfigs)
-				sysConfigs.GET("/init", config.SystemConfigController.InitDefaultConfigs)
-				sysConfigs.GET("/:id", config.SystemConfigController.GetConfig)
-				sysConfigs.GET("/key/:key", config.SystemConfigController.GetConfigByKey)
-				sysConfigs.PUT("/:id", config.SystemConfigController.UpdateConfig)
-				sysConfigs.PUT("/batch", config.SystemConfigController.BatchUpdateConfigs)
+				sysConfigs.GET("", middleware.RequirePermission("config", "read"), config.SystemConfigController.ListConfigs)
+				sysConfigs.GET("/init", middleware.RequirePermission("config", "read"), config.SystemConfigController.InitDefaultConfigs)
+				sysConfigs.GET("/:id", middleware.RequirePermission("config", "read"), config.SystemConfigController.GetConfig)
+				sysConfigs.GET("/key/:key", middleware.RequirePermission("config", "read"), config.SystemConfigController.GetConfigByKey)
+				sysConfigs.PUT("/:id", middleware.RequirePermission("config", "update"), config.SystemConfigController.UpdateConfig)
+				sysConfigs.PUT("/batch", middleware.RequirePermission("config", "update"), config.SystemConfigController.BatchUpdateConfigs)
 
 				// 系统状态
-				sysConfigs.GET("/status", func(c *gin.Context) {
+				sysConfigs.GET("/status", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
 					var m runtime.MemStats
 					runtime.ReadMemStats(&m)
 
@@ -723,13 +723,13 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				// 兼容旧路径：/configs → /system-configs
 				configs := tenant.(*gin.RouterGroup).Group("/configs")
 				{
-					configs.GET("", config.SystemConfigController.ListConfigs)
-					configs.GET("/init", config.SystemConfigController.InitDefaultConfigs)
-					configs.GET("/:id", config.SystemConfigController.GetConfig)
-					configs.GET("/key/:key", config.SystemConfigController.GetConfigByKey)
-					configs.PUT("/:id", config.SystemConfigController.UpdateConfig)
-					configs.PUT("/batch", config.SystemConfigController.BatchUpdateConfigs)
-					configs.GET("/status", func(c *gin.Context) {
+					configs.GET("", middleware.RequirePermission("config", "read"), config.SystemConfigController.ListConfigs)
+					configs.GET("/init", middleware.RequirePermission("config", "read"), config.SystemConfigController.InitDefaultConfigs)
+					configs.GET("/:id", middleware.RequirePermission("config", "read"), config.SystemConfigController.GetConfig)
+					configs.GET("/key/:key", middleware.RequirePermission("config", "read"), config.SystemConfigController.GetConfigByKey)
+					configs.PUT("/:id", middleware.RequirePermission("config", "update"), config.SystemConfigController.UpdateConfig)
+					configs.PUT("/batch", middleware.RequirePermission("config", "update"), config.SystemConfigController.BatchUpdateConfigs)
+					configs.GET("/status", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
 						var m runtime.MemStats
 						runtime.ReadMemStats(&m)
 						c.JSON(200, gin.H{
@@ -746,15 +746,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 							"timestamp":  time.Now(),
 						})
 					})
-				}
+					}
 
-				sysRoot.GET("/config", func(c *gin.Context) {
+					sysRoot.GET("/config", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
 					c.JSON(200, gin.H{
 						"status":    "ok",
 						"version":   "1.0.0",
 						"timestamp": time.Now(),
 					})
-				})
+					})
 			}
 		}
 
@@ -762,12 +762,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		if config.ApprovalChainController != nil {
 			approvalChains := tenant.(*gin.RouterGroup).Group("/approval-chains")
 			{
-				approvalChains.GET("", config.ApprovalChainController.ListChains)
-				approvalChains.GET("/stats", config.ApprovalChainController.GetStats)
-				approvalChains.POST("", config.ApprovalChainController.CreateChain)
-				approvalChains.GET("/:id", config.ApprovalChainController.GetChain)
-				approvalChains.PUT("/:id", config.ApprovalChainController.UpdateChain)
-				approvalChains.DELETE("/:id", config.ApprovalChainController.DeleteChain)
+				approvalChains.GET("", middleware.RequirePermission("approval", "read"), config.ApprovalChainController.ListChains)
+				approvalChains.GET("/stats", middleware.RequirePermission("approval", "read"), config.ApprovalChainController.GetStats)
+				approvalChains.POST("", middleware.RequirePermission("approval", "create"), config.ApprovalChainController.CreateChain)
+				approvalChains.GET("/:id", middleware.RequirePermission("approval", "read"), config.ApprovalChainController.GetChain)
+				approvalChains.PUT("/:id", middleware.RequirePermission("approval", "update"), config.ApprovalChainController.UpdateChain)
+				approvalChains.DELETE("/:id", middleware.RequirePermission("approval", "delete"), config.ApprovalChainController.DeleteChain)
 			}
 			// ==================== Escalation Matrix ====================
 			if config.EscalationMatrixController != nil {
@@ -858,8 +858,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			// 简化的服务项路由
 			scServices := tenant.(*gin.RouterGroup).Group("/service-catalog-services")
 			{
-				scServices.GET("", config.ServiceCatalogHandler.List)
-				scServices.GET("/:id", config.ServiceCatalogHandler.Get)
+				scServices.GET("", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.List)
+				scServices.GET("/:id", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.Get)
 			}
 		}
 
@@ -1201,16 +1201,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			// Organization
 			org := tenant.(*gin.RouterGroup).Group("/org")
 			{
-				org.GET("/departments/tree", middleware.RequirePermission("org", "read"), config.CommonHandler.GetDepartmentTree)
-				org.GET("/departments/:id", middleware.RequirePermission("org", "read"), config.CommonHandler.GetDepartment)
-				org.POST("/departments", middleware.RequirePermission("org", "write"), config.CommonHandler.CreateDepartment)
-				org.PUT("/departments/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.UpdateDepartment)
-				org.DELETE("/departments/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.DeleteDepartment)
-				org.GET("/teams", middleware.RequirePermission("org", "read"), config.CommonHandler.ListTeams)
-				org.GET("/teams/:id", middleware.RequirePermission("org", "read"), config.CommonHandler.GetTeam)
-				org.POST("/teams", middleware.RequirePermission("org", "write"), config.CommonHandler.CreateTeam)
-				org.PUT("/teams/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.UpdateTeam)
-				org.DELETE("/teams/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.DeleteTeam)
+				org.GET("/departments/tree", middleware.RequirePermission("department", "read"), config.CommonHandler.GetDepartmentTree)
+				org.GET("/departments/:id", middleware.RequirePermission("department", "read"), config.CommonHandler.GetDepartment)
+				org.POST("/departments", middleware.RequirePermission("department", "create"), config.CommonHandler.CreateDepartment)
+				org.PUT("/departments/:id", middleware.RequirePermission("department", "update"), config.CommonHandler.UpdateDepartment)
+				org.DELETE("/departments/:id", middleware.RequirePermission("department", "delete"), config.CommonHandler.DeleteDepartment)
+				org.GET("/teams", middleware.RequirePermission("team", "read"), config.CommonHandler.ListTeams)
+				org.GET("/teams/:id", middleware.RequirePermission("team", "read"), config.CommonHandler.GetTeam)
+				org.POST("/teams", middleware.RequirePermission("team", "create"), config.CommonHandler.CreateTeam)
+				org.PUT("/teams/:id", middleware.RequirePermission("team", "update"), config.CommonHandler.UpdateTeam)
+				org.DELETE("/teams/:id", middleware.RequirePermission("team", "delete"), config.CommonHandler.DeleteTeam)
 			}
 
 			// Projects
@@ -1240,46 +1240,46 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.ServiceController != nil {
 				services := tenant.(*gin.RouterGroup).Group("/services")
 				{
-					services.GET("/catalogs", config.ServiceController.GetServiceCatalogs)
-					services.POST("/catalogs", config.ServiceController.CreateServiceCatalog)
-					services.GET("/catalogs/:id", config.ServiceController.GetServiceCatalogByID)
-					services.PUT("/catalogs/:id", config.ServiceController.UpdateServiceCatalog)
-					services.DELETE("/catalogs/:id", config.ServiceController.DeleteServiceCatalog)
-					services.GET("/requests", config.ServiceController.GetUserServiceRequests)
-					services.POST("/requests", config.ServiceController.CreateServiceRequest)
-					services.GET("/requests/:id", config.ServiceController.GetServiceRequestByID)
-					services.PUT("/requests/:id/status", config.ServiceController.UpdateServiceRequestStatus)
-					services.POST("/requests/approval", config.ServiceController.ApplyServiceRequestApproval)
-					services.GET("/requests/approvals", config.ServiceController.GetServiceRequestApprovals)
-					services.GET("/requests/approvals/pending", config.ServiceController.GetPendingServiceRequestApprovals)
+					services.GET("/catalogs", middleware.RequirePermission("service_catalog", "read"), config.ServiceController.GetServiceCatalogs)
+					services.POST("/catalogs", middleware.RequirePermission("service_catalog", "write"), config.ServiceController.CreateServiceCatalog)
+					services.GET("/catalogs/:id", middleware.RequirePermission("service_catalog", "read"), config.ServiceController.GetServiceCatalogByID)
+					services.PUT("/catalogs/:id", middleware.RequirePermission("service_catalog", "write"), config.ServiceController.UpdateServiceCatalog)
+					services.DELETE("/catalogs/:id", middleware.RequirePermission("service_catalog", "delete"), config.ServiceController.DeleteServiceCatalog)
+					services.GET("/requests", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetUserServiceRequests)
+					services.POST("/requests", middleware.RequirePermission("service_request", "write"), config.ServiceController.CreateServiceRequest)
+					services.GET("/requests/:id", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetServiceRequestByID)
+					services.PUT("/requests/:id/status", middleware.RequirePermission("service_request", "write"), config.ServiceController.UpdateServiceRequestStatus)
+					services.POST("/requests/approval", middleware.RequirePermission("service_request", "write"), config.ServiceController.ApplyServiceRequestApproval)
+					services.GET("/requests/approvals", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetServiceRequestApprovals)
+					services.GET("/requests/approvals/pending", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetPendingServiceRequestApprovals)
 				}
 			}
 
 			// Ticket Dependencies
 			if config.TicketDependencyController != nil {
-				tickets.GET("/:id/dependencies", config.TicketDependencyController.AnalyzeDependencyImpact)
+				tickets.GET("/:id/dependencies", middleware.RequirePermission("ticket", "read"), config.TicketDependencyController.AnalyzeDependencyImpact)
 			}
 
 			// Ticket Notifications
 			if config.TicketNotificationController != nil {
-				tickets.GET("/:id/notifications", config.TicketNotificationController.ListTicketNotifications)
-				tickets.POST("/:id/notifications", config.TicketNotificationController.SendTicketNotification)
+				tickets.GET("/:id/notifications", middleware.RequirePermission("notification", "read"), config.TicketNotificationController.ListTicketNotifications)
+				tickets.POST("/:id/notifications", middleware.RequirePermission("notification", "create"), config.TicketNotificationController.SendTicketNotification)
 			}
 
 			// System
 			sys := tenant.(*gin.RouterGroup).Group("/system")
 			{
-				sys.GET("/tags", config.CommonHandler.ListTags)
-				sys.GET("/audit-logs", config.CommonHandler.GetAuditLogs)
+				sys.GET("/tags", middleware.RequirePermission("tag", "read"), config.CommonHandler.ListTags)
+				sys.GET("/audit-logs", middleware.RequirePermission("audit_log", "read"), config.CommonHandler.GetAuditLogs)
 			}
 
 			// B7/Bug10: 顶层路由别名（兼容前端 /api/v1/{departments,teams,tags,admin/tenants} 旧路径）
 			// 实际业务仍在 /org/* 与 /system/* 与 /tenants，旧路径保持只读 GET，避免破坏现有调用方
 			{
-				tenant.GET("/departments", config.CommonHandler.ListDepartments)
-				tenant.GET("/departments/tree", config.CommonHandler.GetDepartmentTree)
-				tenant.GET("/teams", config.CommonHandler.ListTeams)
-				tenant.GET("/tags", config.CommonHandler.ListTags)
+				tenant.GET("/departments", middleware.RequirePermission("department", "read"), config.CommonHandler.ListDepartments)
+				tenant.GET("/departments/tree", middleware.RequirePermission("department", "read"), config.CommonHandler.GetDepartmentTree)
+				tenant.GET("/teams", middleware.RequirePermission("team", "read"), config.CommonHandler.ListTeams)
+				tenant.GET("/tags", middleware.RequirePermission("tag", "read"), config.CommonHandler.ListTags)
 			}
 			if config.TenantController != nil {
 				admin := tenant.(*gin.RouterGroup).Group("/admin")
@@ -1292,21 +1292,21 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.RoleController != nil {
 				roles := tenant.(*gin.RouterGroup).Group("/roles")
 				{
-					roles.GET("", config.RoleController.ListRoles)
-					roles.POST("", config.RoleController.CreateRole)
-					roles.GET("/:id", config.RoleController.GetRole)
-					roles.PUT("/:id", config.RoleController.UpdateRole)
-					roles.DELETE("/:id", config.RoleController.DeleteRole)
-					roles.POST("/:id/permissions", config.RoleController.AssignPermissions)
+					roles.GET("", middleware.RequirePermission("role", "read"), config.RoleController.ListRoles)
+					roles.POST("", middleware.RequirePermission("role", "create"), config.RoleController.CreateRole)
+					roles.GET("/:id", middleware.RequirePermission("role", "read"), config.RoleController.GetRole)
+					roles.PUT("/:id", middleware.RequirePermission("role", "update"), config.RoleController.UpdateRole)
+					roles.DELETE("/:id", middleware.RequirePermission("role", "delete"), config.RoleController.DeleteRole)
+					roles.POST("/:id/permissions", middleware.RequirePermission("role", "update"), config.RoleController.AssignPermissions)
 				}
 			}
 
 			if config.PermissionController != nil {
 				permissions := tenant.(*gin.RouterGroup).Group("/permissions")
 				{
-					permissions.GET("", config.PermissionController.ListPermissions)
-					permissions.POST("", config.PermissionController.CreatePermission)
-					permissions.POST("/init", config.PermissionController.InitDefaultPermissions)
+					permissions.GET("", middleware.RequirePermission("permission", "read"), config.PermissionController.ListPermissions)
+					permissions.POST("", middleware.RequirePermission("permission", "create"), config.PermissionController.CreatePermission)
+					permissions.POST("/init", middleware.RequirePermission("permission", "create"), config.PermissionController.InitDefaultPermissions)
 				}
 			}
 
@@ -1314,12 +1314,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.MenuController != nil {
 				menus := tenant.(*gin.RouterGroup).Group("/menus")
 				{
-					menus.GET("", config.MenuController.ListMenus)
-					menus.POST("", config.MenuController.CreateMenu)
-					menus.GET("/:id", config.MenuController.GetMenu)
-					menus.PUT("/:id", config.MenuController.UpdateMenu)
-					menus.DELETE("/:id", config.MenuController.DeleteMenu)
-					menus.POST("/init", config.MenuController.InitDefaultMenus)
+					menus.GET("", middleware.RequirePermission("menu", "read"), config.MenuController.ListMenus)
+					menus.POST("", middleware.RequirePermission("menu", "create"), config.MenuController.CreateMenu)
+					menus.GET("/:id", middleware.RequirePermission("menu", "read"), config.MenuController.GetMenu)
+					menus.PUT("/:id", middleware.RequirePermission("menu", "update"), config.MenuController.UpdateMenu)
+					menus.DELETE("/:id", middleware.RequirePermission("menu", "delete"), config.MenuController.DeleteMenu)
+					menus.POST("/init", middleware.RequirePermission("menu", "create"), config.MenuController.InitDefaultMenus)
 				}
 			}
 
@@ -1327,12 +1327,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.TenantController != nil {
 				tenants := tenant.(*gin.RouterGroup).Group("/tenants")
 				{
-					tenants.GET("", config.TenantController.ListTenants)
-					tenants.POST("", config.TenantController.CreateTenant)
-					tenants.GET("/:id", config.TenantController.GetTenant)
-					tenants.PUT("/:id", config.TenantController.UpdateTenant)
-					tenants.DELETE("/:id", config.TenantController.DeleteTenant)
-					tenants.PUT("/:id/status", config.TenantController.UpdateTenantStatus)
+					tenants.GET("", middleware.RequirePermission("tenant", "read"), config.TenantController.ListTenants)
+					tenants.POST("", middleware.RequirePermission("tenant", "create"), config.TenantController.CreateTenant)
+					tenants.GET("/:id", middleware.RequirePermission("tenant", "read"), config.TenantController.GetTenant)
+					tenants.PUT("/:id", middleware.RequirePermission("tenant", "update"), config.TenantController.UpdateTenant)
+					tenants.DELETE("/:id", middleware.RequirePermission("tenant", "delete"), config.TenantController.DeleteTenant)
+					tenants.PUT("/:id/status", middleware.RequirePermission("tenant", "update"), config.TenantController.UpdateTenantStatus)
 				}
 			}
 
@@ -1342,14 +1342,14 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				config.Logger.Info("Registering notification-preferences routes")
 				notifPrefs := tenant.(*gin.RouterGroup).Group("/notification-preferences")
 				{
-					notifPrefs.GET("", config.NotificationPreferenceController.ListPreferences)
-					notifPrefs.GET("/event-types", config.NotificationPreferenceController.ListEventTypes)
-					notifPrefs.GET("/:event_type", config.NotificationPreferenceController.GetPreference)
-					notifPrefs.POST("", config.NotificationPreferenceController.CreateOrUpdatePreference)
-					notifPrefs.PUT("", config.NotificationPreferenceController.BulkUpdatePreferences)
-					notifPrefs.DELETE("/:event_type", config.NotificationPreferenceController.DeletePreference)
-					notifPrefs.POST("/reset", config.NotificationPreferenceController.ResetPreferences)
-					notifPrefs.POST("/init", config.NotificationPreferenceController.InitializeDefaultPreferences)
+					notifPrefs.GET("", middleware.RequirePermission("notification", "read"), config.NotificationPreferenceController.ListPreferences)
+					notifPrefs.GET("/event-types", middleware.RequirePermission("notification", "read"), config.NotificationPreferenceController.ListEventTypes)
+					notifPrefs.GET("/:event_type", middleware.RequirePermission("notification", "read"), config.NotificationPreferenceController.GetPreference)
+					notifPrefs.POST("", middleware.RequirePermission("notification", "create"), config.NotificationPreferenceController.CreateOrUpdatePreference)
+					notifPrefs.PUT("", middleware.RequirePermission("notification", "update"), config.NotificationPreferenceController.BulkUpdatePreferences)
+					notifPrefs.DELETE("/:event_type", middleware.RequirePermission("notification", "delete"), config.NotificationPreferenceController.DeletePreference)
+					notifPrefs.POST("/reset", middleware.RequirePermission("notification", "update"), config.NotificationPreferenceController.ResetPreferences)
+					notifPrefs.POST("/init", middleware.RequirePermission("notification", "create"), config.NotificationPreferenceController.InitializeDefaultPreferences)
 				}
 			}
 
@@ -1357,12 +1357,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.NotificationController != nil {
 				notifications := tenant.(*gin.RouterGroup).Group("/notifications")
 				{
-					notifications.GET("", config.NotificationController.GetNotifications)
-					notifications.GET("/unread-count", config.NotificationController.GetUnreadCount)
-					notifications.PUT("/:id/read", config.NotificationController.MarkNotificationRead)
-					notifications.PUT("/read-all", config.NotificationController.MarkAllNotificationsRead)
-					notifications.DELETE("/:id", config.NotificationController.DeleteNotification)
-					notifications.POST("", config.NotificationController.CreateNotification)
+					notifications.GET("", middleware.RequirePermission("notification", "read"), config.NotificationController.GetNotifications)
+					notifications.GET("/unread-count", middleware.RequirePermission("notification", "read"), config.NotificationController.GetUnreadCount)
+					notifications.PUT("/:id/read", middleware.RequirePermission("notification", "update"), config.NotificationController.MarkNotificationRead)
+					notifications.PUT("/read-all", middleware.RequirePermission("notification", "update"), config.NotificationController.MarkAllNotificationsRead)
+					notifications.DELETE("/:id", middleware.RequirePermission("notification", "delete"), config.NotificationController.DeleteNotification)
+					notifications.POST("", middleware.RequirePermission("notification", "create"), config.NotificationController.CreateNotification)
 				}
 			}
 		}
@@ -1372,24 +1372,24 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			problemInvestigation := tenant.(*gin.RouterGroup).Group("/problem-investigation")
 			{
 				// 问题调查管理
-				problemInvestigation.POST("/investigations", config.ProblemInvestigationController.CreateProblemInvestigation)
-				problemInvestigation.GET("/investigations/:id", config.ProblemInvestigationController.GetProblemInvestigation)
-				problemInvestigation.PUT("/investigations/:id", config.ProblemInvestigationController.UpdateProblemInvestigation)
+				problemInvestigation.POST("/investigations", middleware.RequirePermission("investigation", "create"), config.ProblemInvestigationController.CreateProblemInvestigation)
+				problemInvestigation.GET("/investigations/:id", middleware.RequirePermission("investigation", "read"), config.ProblemInvestigationController.GetProblemInvestigation)
+				problemInvestigation.PUT("/investigations/:id", middleware.RequirePermission("investigation", "update"), config.ProblemInvestigationController.UpdateProblemInvestigation)
 
 				// 调查步骤管理
-				problemInvestigation.POST("/steps", config.ProblemInvestigationController.CreateInvestigationStep)
-				problemInvestigation.PUT("/steps/:id", config.ProblemInvestigationController.UpdateInvestigationStep)
-				problemInvestigation.GET("/investigations/:investigation_id/steps", config.ProblemInvestigationController.GetInvestigationSteps)
+				problemInvestigation.POST("/steps", middleware.RequirePermission("step", "create"), config.ProblemInvestigationController.CreateInvestigationStep)
+				problemInvestigation.PUT("/steps/:id", middleware.RequirePermission("step", "update"), config.ProblemInvestigationController.UpdateInvestigationStep)
+				problemInvestigation.GET("/investigations/:investigation_id/steps", middleware.RequirePermission("investigation", "read"), config.ProblemInvestigationController.GetInvestigationSteps)
 
 				// 根本原因分析
-				problemInvestigation.POST("/root-cause-analysis", config.ProblemInvestigationController.CreateRootCauseAnalysis)
+				problemInvestigation.POST("/root-cause-analysis", middleware.RequirePermission("root_cause", "create"), config.ProblemInvestigationController.CreateRootCauseAnalysis)
 
 				// 解决方案管理
-				problemInvestigation.POST("/solutions", config.ProblemInvestigationController.CreateProblemSolution)
-				problemInvestigation.GET("/problems/:id/solutions", config.ProblemInvestigationController.GetProblemSolutions)
+				problemInvestigation.POST("/solutions", middleware.RequirePermission("solution", "create"), config.ProblemInvestigationController.CreateProblemSolution)
+				problemInvestigation.GET("/problems/:id/solutions", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemSolutions)
 
 				// 问题调查摘要
-				problemInvestigation.GET("/problems/:id/summary", config.ProblemInvestigationController.GetProblemInvestigationSummary)
+				problemInvestigation.GET("/problems/:id/summary", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemInvestigationSummary)
 			}
 		}
 
@@ -1401,16 +1401,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// 简化路由：/workflow/* -> /bpmn/*
 		workflow := tenant.(*gin.RouterGroup).Group("/workflow")
 		{
-			workflow.GET("/instances", config.BPMNWorkflowController.ListProcessInstances)
-			workflow.GET("/instances/:id", config.BPMNWorkflowController.GetProcessInstance)
-			workflow.POST("/instances", config.BPMNWorkflowController.StartProcess)
-			workflow.PUT("/instances/:id/terminate", config.BPMNWorkflowController.TerminateProcess)
-			workflow.PUT("/instances/:id/suspend", config.BPMNWorkflowController.SuspendProcess)
-			workflow.PUT("/instances/:id/resume", config.BPMNWorkflowController.ResumeProcess)
+			workflow.GET("/instances", middleware.RequirePermission("process_instance", "read"), config.BPMNWorkflowController.ListProcessInstances)
+			workflow.GET("/instances/:id", middleware.RequirePermission("process_instance", "read"), config.BPMNWorkflowController.GetProcessInstance)
+			workflow.POST("/instances", middleware.RequirePermission("process_instance", "create"), config.BPMNWorkflowController.StartProcess)
+			workflow.PUT("/instances/:id/terminate", middleware.RequirePermission("process_instance", "update"), config.BPMNWorkflowController.TerminateProcess)
+			workflow.PUT("/instances/:id/suspend", middleware.RequirePermission("process_instance", "update"), config.BPMNWorkflowController.SuspendProcess)
+			workflow.PUT("/instances/:id/resume", middleware.RequirePermission("process_instance", "update"), config.BPMNWorkflowController.ResumeProcess)
 			// 任务
-			workflow.GET("/tasks", config.BPMNWorkflowController.ListUserTasks)
-			workflow.PUT("/tasks/:id/complete", config.BPMNWorkflowController.CompleteTask)
-			workflow.POST("/tasks/:id/claim", config.BPMNWorkflowController.ClaimTask)
+			workflow.GET("/tasks", middleware.RequirePermission("task", "read"), config.BPMNWorkflowController.ListUserTasks)
+			workflow.PUT("/tasks/:id/complete", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.CompleteTask)
+			workflow.POST("/tasks/:id/claim", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.ClaimTask)
 		}
 
 		// BPMN Process Trigger Controller (统一流程触发接口)
@@ -1478,24 +1478,24 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			dashboard := tenant.(*gin.RouterGroup).Group("/dashboard")
 			{
 				// B5: 别名，/api/v1/dashboard 直接返回 overview 数据（前端默认调用）
-				dashboard.GET("", config.DashboardHandler.GetOverview)
-				dashboard.GET("/overview", config.DashboardHandler.GetOverview)
-				dashboard.GET("/config", func(c *gin.Context) {
+				dashboard.GET("", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetOverview)
+				dashboard.GET("/overview", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetOverview)
+				dashboard.GET("/config", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, defaultDashboardConfig())
 				})
-				dashboard.POST("/config", func(c *gin.Context) {
+				dashboard.POST("/config", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
 					common.Success(c, gin.H{"success": true})
 				})
-				dashboard.GET("/layout", func(c *gin.Context) {
+				dashboard.GET("/layout", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, defaultDashboardLayout())
 				})
-				dashboard.POST("/layout", func(c *gin.Context) {
+				dashboard.POST("/layout", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
 					common.Success(c, gin.H{"success": true})
 				})
-				dashboard.GET("/widgets/available", func(c *gin.Context) {
+				dashboard.GET("/widgets/available", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, defaultDashboardWidgets())
 				})
-				dashboard.POST("/widgets", func(c *gin.Context) {
+				dashboard.POST("/widgets", middleware.RequirePermission("widget", "create"), func(c *gin.Context) {
 					widget := dashboardWidgetByID("custom_widget")
 					var payload map[string]interface{}
 					if err := c.ShouldBindJSON(&payload); err == nil {
@@ -1508,13 +1508,13 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					}
 					common.Success(c, gin.H{"widget": widget})
 				})
-				dashboard.GET("/widgets/:widget_id/data", func(c *gin.Context) {
+				dashboard.GET("/widgets/:widget_id/data", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, dashboardWidgetByID(c.Param("widget_id")))
 				})
-				dashboard.POST("/widgets/:widget_id/refresh", func(c *gin.Context) {
+				dashboard.POST("/widgets/:widget_id/refresh", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
 					common.Success(c, dashboardWidgetByID(c.Param("widget_id")))
 				})
-				dashboard.PUT("/widgets/:widget_id", func(c *gin.Context) {
+				dashboard.PUT("/widgets/:widget_id", middleware.RequirePermission("widget", "update"), func(c *gin.Context) {
 					widget := dashboardWidgetByID(c.Param("widget_id"))
 					var payload map[string]interface{}
 					if err := c.ShouldBindJSON(&payload); err == nil {
@@ -1524,32 +1524,32 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					}
 					common.Success(c, gin.H{"widget": widget})
 				})
-				dashboard.DELETE("/widgets/:widget_id", func(c *gin.Context) {
+				dashboard.DELETE("/widgets/:widget_id", middleware.RequirePermission("widget", "delete"), func(c *gin.Context) {
 					common.Success(c, gin.H{"success": true})
 				})
-				dashboard.GET("/charts/:chart_type", func(c *gin.Context) {
+				dashboard.GET("/charts/:chart_type", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, gin.H{
 						"labels":   []string{},
 						"datasets": []gin.H{{"label": c.Param("chart_type"), "data": []int{}}},
 					})
 				})
-				dashboard.GET("/realtime/:data_type", func(c *gin.Context) {
+				dashboard.GET("/realtime/:data_type", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, gin.H{
 						"type":      c.Param("data_type"),
 						"data":      gin.H{},
 						"timestamp": time.Now().Format(time.RFC3339),
 					})
 				})
-				dashboard.GET("/stats", config.DashboardHandler.GetStats)
+				dashboard.GET("/stats", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
 				if config.TicketController != nil {
-					dashboard.GET("/stats/tickets", config.TicketController.GetTicketStats)
+					dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), config.TicketController.GetTicketStats)
 				} else {
-					dashboard.GET("/stats/tickets", config.DashboardHandler.GetStats)
+					dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
 				}
-				dashboard.GET("/stats/users", config.DashboardHandler.GetUserStats)
-				dashboard.GET("/stats/system", config.DashboardHandler.GetSystemStats)
-				dashboard.GET("/kpi-metrics", config.DashboardHandler.GetKPIMetrics)
-				dashboard.GET("/metrics/performance", func(c *gin.Context) {
+				dashboard.GET("/stats/users", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetUserStats)
+				dashboard.GET("/stats/system", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetSystemStats)
+				dashboard.GET("/kpi-metrics", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetKPIMetrics)
+				dashboard.GET("/metrics/performance", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, gin.H{
 						"loadTime":      0,
 						"renderTime":    0,
@@ -1558,7 +1558,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 						"memoryUsage":   0,
 					})
 				})
-				dashboard.GET("/metrics/usage", func(c *gin.Context) {
+				dashboard.GET("/metrics/usage", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, gin.H{
 						"totalViews":         0,
 						"uniqueUsers":        0,
@@ -1568,17 +1568,17 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					})
 				})
 				// P1-01 别名：/dashboard/metrics → 通用 stats（前端默认 fetch 路径）
-				dashboard.GET("/metrics", config.DashboardHandler.GetStats)
-				dashboard.GET("/ticket-trend", config.DashboardHandler.GetTicketTrend)
-				dashboard.GET("/incident-distribution", config.DashboardHandler.GetIncidentDistribution)
-				dashboard.GET("/sla-data", config.DashboardHandler.GetSLAData)
-				dashboard.GET("/satisfaction-data", config.DashboardHandler.GetSatisfactionData)
-				dashboard.GET("/quick-actions", config.DashboardHandler.GetQuickActions)
-				dashboard.GET("/recent-activities", config.DashboardHandler.GetRecentActivities)
-				dashboard.GET("/reports", func(c *gin.Context) {
+				dashboard.GET("/metrics", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
+				dashboard.GET("/ticket-trend", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetTicketTrend)
+				dashboard.GET("/incident-distribution", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetIncidentDistribution)
+				dashboard.GET("/sla-data", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetSLAData)
+				dashboard.GET("/satisfaction-data", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetSatisfactionData)
+				dashboard.GET("/quick-actions", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetQuickActions)
+				dashboard.GET("/recent-activities", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetRecentActivities)
+				dashboard.GET("/reports", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, gin.H{"reports": []gin.H{}, "total": 0, "page": 1, "pageSize": 20})
 				})
-				dashboard.POST("/reports/:report_type", func(c *gin.Context) {
+				dashboard.POST("/reports/:report_type", middleware.RequirePermission("report", "create"), func(c *gin.Context) {
 					common.Success(c, gin.H{
 						"id":         0,
 						"name":       c.Param("report_type"),
@@ -1591,19 +1591,19 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 						"updatedAt":  time.Now().Format(time.RFC3339),
 					})
 				})
-				dashboard.GET("/reports/:report_id/download", func(c *gin.Context) {
+				dashboard.GET("/reports/:report_id/download", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					c.Data(200, "text/plain; charset=utf-8", []byte("report is not generated yet"))
 				})
-				dashboard.POST("/export", func(c *gin.Context) {
+				dashboard.POST("/export", middleware.RequirePermission("report", "create"), func(c *gin.Context) {
 					common.Success(c, gin.H{"download_url": ""})
 				})
-				dashboard.GET("/templates", func(c *gin.Context) {
+				dashboard.GET("/templates", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, []gin.H{defaultDashboardTemplate()})
 				})
-				dashboard.POST("/templates", func(c *gin.Context) {
+				dashboard.POST("/templates", middleware.RequirePermission("report", "create"), func(c *gin.Context) {
 					common.Success(c, gin.H{"template": defaultDashboardTemplate()})
 				})
-				dashboard.POST("/templates/:template_id/apply", func(c *gin.Context) {
+				dashboard.POST("/templates/:template_id/apply", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
 					common.Success(c, gin.H{"success": true, "config": defaultDashboardConfig()})
 				})
 			}
@@ -1612,7 +1612,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Reports 报表 ====================
 		reports := tenant.(*gin.RouterGroup).Group("/reports")
 		{
-			reports.GET("", func(c *gin.Context) {
+			reports.GET("", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 				common.Success(c, gin.H{
 					"reports": []gin.H{
 						{"id": "tickets", "name": "工单报表", "path": "/reports/tickets"},
@@ -1625,24 +1625,24 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					},
 				})
 			})
-			reports.GET("/tickets", config.DashboardHandler.GetStats)
-			reports.GET("/incidents", config.DashboardHandler.GetIncidentDistribution)
-			reports.GET("/problems", config.DashboardHandler.GetTicketTrend)
-			reports.GET("/changes", config.DashboardHandler.GetTicketTrend)
-			reports.GET("/sla", config.DashboardHandler.GetSLAData)
+			reports.GET("/tickets", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
+			reports.GET("/incidents", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetIncidentDistribution)
+			reports.GET("/problems", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetTicketTrend)
+			reports.GET("/changes", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetTicketTrend)
+			reports.GET("/sla", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetSLAData)
 		}
 
 		// ==================== Surveys 客户满意度调查 ====================
 		if config.SurveyController != nil {
 			surveys := tenant.(*gin.RouterGroup).Group("/surveys")
 			{
-				surveys.GET("", config.SurveyController.ListSurveys)
+				surveys.GET("", middleware.RequirePermission("survey", "read"), config.SurveyController.ListSurveys)
 				surveys.POST("", middleware.RequirePermission("survey", "write"), config.SurveyController.CreateSurvey)
-				surveys.GET("/:id", config.SurveyController.GetSurvey)
+				surveys.GET("/:id", middleware.RequirePermission("survey", "read"), config.SurveyController.GetSurvey)
 				surveys.PUT("/:id", middleware.RequirePermission("survey", "write"), config.SurveyController.UpdateSurvey)
-				surveys.GET("/:id/responses", config.SurveyController.GetSurveyResponses)
-				surveys.GET("/:id/analytics", config.SurveyController.GetAnalytics)
-				surveys.POST("/responses", config.SurveyController.SubmitResponse)
+				surveys.GET("/:id/responses", middleware.RequirePermission("survey", "read"), config.SurveyController.GetSurveyResponses)
+				surveys.GET("/:id/analytics", middleware.RequirePermission("survey", "read"), config.SurveyController.GetAnalytics)
+				surveys.POST("/responses", middleware.RequirePermission("survey", "write"), config.SurveyController.SubmitResponse)
 			}
 		}
 
