@@ -1,0 +1,82 @@
+name: acl-gate
+
+# Purpose:
+#   Static ACL coverage gate for PRs touching router files.
+#   Ensures every non-public route has an explicit RequirePermission declaration.
+#
+# Gates:
+#   1. All non-public routes have RequirePermission (100% coverage)
+#   2. manifest version matches router file version
+#   3. New routes must have permission declarations (checked via diff analysis)
+#
+# Fail: PR blocked if coverage < 100%
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'itsm-backend/router/**'
+      - '.github/workflows/acl-gate.yml'
+      - 'scripts/generate-acl-manifest.js'
+  pull_request:
+    paths:
+      - 'itsm-backend/router/**'
+      - '.github/workflows/acl-gate.yml'
+      - 'scripts/generate-acl-manifest.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: acl-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acl-coverage:
+    name: ACL Coverage Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
+
+      - name: Generate ACL manifest
+        run: node scripts/generate-acl-manifest.js
+
+      - name: Check ACL coverage
+        run: node scripts/generate-acl-manifest.js --check
+        # Exit 1 if any non-public route is missing RequirePermission
+
+      - name: Upload manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: acl-manifest
+          path: docs/acl-manifest.yaml
+          retention-days: 30
+
+      - name: Read coverage
+        id: coverage
+        run: |
+          COVERAGE=$(grep 'permission_coverage:' docs/acl-manifest.yaml | awk -F'"' '{print $2}')
+          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          echo "Current ACL coverage: $COVERAGE"
+          echo "## ACL Coverage: $COVERAGE" >> $GITHUB_STEP_SUMMARY
+
+      - name: Coverage gate
+        run: |
+          COVERAGE_NUM=$(grep 'permission_coverage:' docs/acl-manifest.yaml | awk -F'"' '{print $2}' | tr -d '%')
+          if (( $(echo "$COVERAGE_NUM < 100" | bc -l) )); then
+            echo "FAIL: ACL coverage is $COVERAGE_NUM% (must be 100%)"
+            echo ""
+            echo "The following routes are missing RequirePermission declarations:"
+            grep 'MISSING ACL' docs/acl-manifest.yaml | head -30
+            exit 1
+          fi
+          echo "PASS: ACL coverage is 100%"
