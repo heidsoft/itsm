@@ -42,6 +42,10 @@ const (
 	FieldAssignedTo = "assigned_to"
 	// FieldOwnedBy holds the string denoting the owned_by field in the database.
 	FieldOwnedBy = "owned_by"
+	// FieldOwnershipMode holds the string denoting the ownership_mode field in the database.
+	FieldOwnershipMode = "ownership_mode"
+	// FieldLocalModifiedAt holds the string denoting the local_modified_at field in the database.
+	FieldLocalModifiedAt = "local_modified_at"
 	// FieldDiscoverySource holds the string denoting the discovery_source field in the database.
 	FieldDiscoverySource = "discovery_source"
 	// FieldLastDiscovered holds the string denoting the last_discovered field in the database.
@@ -177,6 +181,8 @@ var Columns = []string{
 	FieldLocation,
 	FieldAssignedTo,
 	FieldOwnedBy,
+	FieldOwnershipMode,
+	FieldLocalModifiedAt,
 	FieldDiscoverySource,
 	FieldLastDiscovered,
 	FieldSource,
@@ -245,6 +251,8 @@ var (
 	DefaultEnvironment string
 	// DefaultCriticality holds the default value on creation for the "criticality" field.
 	DefaultCriticality string
+	// DefaultOwnershipMode holds the default value on creation for the "ownership_mode" field.
+	DefaultOwnershipMode string
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultVersion holds the default value on creation for the "version" field.
@@ -335,6 +343,16 @@ func ByAssignedTo(opts ...sql.OrderTermOption) OrderOption {
 // ByOwnedBy orders the results by the owned_by field.
 func ByOwnedBy(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOwnedBy, opts...).ToFunc()
+}
+
+// ByOwnershipMode orders the results by the ownership_mode field.
+func ByOwnershipMode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOwnershipMode, opts...).ToFunc()
+}
+
+// ByLocalModifiedAt orders the results by the local_modified_at field.
+func ByLocalModifiedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLocalModifiedAt, opts...).ToFunc()
 }
 
 // ByDiscoverySource orders the results by the discovery_source field.

@@ -48,6 +48,10 @@ type ConfigurationItem struct {
 	AssignedTo string `json:"assigned_to,omitempty"`
 	// 拥有者
 	OwnedBy string `json:"owned_by,omitempty"`
+	// ownership模式: managed(平台管理)/customer(客户托管)/sla(SLA覆盖)
+	OwnershipMode string `json:"ownership_mode,omitempty"`
+	// 客户本地修改时间，用于三方合并冲突检测
+	LocalModifiedAt time.Time `json:"local_modified_at,omitempty"`
 	// 发现源
 	DiscoverySource string `json:"discovery_source,omitempty"`
 	// 最后发现时间
@@ -209,9 +213,9 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID, configurationitem.FieldVersion:
 			values[i] = new(sql.NullInt64)
-		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus, configurationitem.FieldLifecycleStatus:
+		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldOwnershipMode, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus, configurationitem.FieldLifecycleStatus:
 			values[i] = new(sql.NullString)
-		case configurationitem.FieldLastDiscovered, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt, configurationitem.FieldEffectiveAt, configurationitem.FieldExpireAt:
+		case configurationitem.FieldLocalModifiedAt, configurationitem.FieldLastDiscovered, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt, configurationitem.FieldEffectiveAt, configurationitem.FieldExpireAt:
 			values[i] = new(sql.NullTime)
 		case configurationitem.ForeignKeys[0]: // asset_configuration_item
 			values[i] = new(sql.NullInt64)
@@ -319,6 +323,18 @@ func (_m *ConfigurationItem) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field owned_by", values[i])
 			} else if value.Valid {
 				_m.OwnedBy = value.String
+			}
+		case configurationitem.FieldOwnershipMode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ownership_mode", values[i])
+			} else if value.Valid {
+				_m.OwnershipMode = value.String
+			}
+		case configurationitem.FieldLocalModifiedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field local_modified_at", values[i])
+			} else if value.Valid {
+				_m.LocalModifiedAt = value.Time
 			}
 		case configurationitem.FieldDiscoverySource:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -590,6 +606,12 @@ func (_m *ConfigurationItem) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("owned_by=")
 	builder.WriteString(_m.OwnedBy)
+	builder.WriteString(", ")
+	builder.WriteString("ownership_mode=")
+	builder.WriteString(_m.OwnershipMode)
+	builder.WriteString(", ")
+	builder.WriteString("local_modified_at=")
+	builder.WriteString(_m.LocalModifiedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("discovery_source=")
 	builder.WriteString(_m.DiscoverySource)

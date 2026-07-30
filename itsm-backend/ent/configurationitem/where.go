@@ -125,6 +125,16 @@ func OwnedBy(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldOwnedBy, v))
 }
 
+// OwnershipMode applies equality check predicate on the "ownership_mode" field. It's identical to OwnershipModeEQ.
+func OwnershipMode(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldOwnershipMode, v))
+}
+
+// LocalModifiedAt applies equality check predicate on the "local_modified_at" field. It's identical to LocalModifiedAtEQ.
+func LocalModifiedAt(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldLocalModifiedAt, v))
+}
+
 // DiscoverySource applies equality check predicate on the "discovery_source" field. It's identical to DiscoverySourceEQ.
 func DiscoverySource(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldDiscoverySource, v))
@@ -1163,6 +1173,121 @@ func OwnedByEqualFold(v string) predicate.ConfigurationItem {
 // OwnedByContainsFold applies the ContainsFold predicate on the "owned_by" field.
 func OwnedByContainsFold(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldOwnedBy, v))
+}
+
+// OwnershipModeEQ applies the EQ predicate on the "ownership_mode" field.
+func OwnershipModeEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldOwnershipMode, v))
+}
+
+// OwnershipModeNEQ applies the NEQ predicate on the "ownership_mode" field.
+func OwnershipModeNEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldOwnershipMode, v))
+}
+
+// OwnershipModeIn applies the In predicate on the "ownership_mode" field.
+func OwnershipModeIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldOwnershipMode, vs...))
+}
+
+// OwnershipModeNotIn applies the NotIn predicate on the "ownership_mode" field.
+func OwnershipModeNotIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldOwnershipMode, vs...))
+}
+
+// OwnershipModeGT applies the GT predicate on the "ownership_mode" field.
+func OwnershipModeGT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldOwnershipMode, v))
+}
+
+// OwnershipModeGTE applies the GTE predicate on the "ownership_mode" field.
+func OwnershipModeGTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldOwnershipMode, v))
+}
+
+// OwnershipModeLT applies the LT predicate on the "ownership_mode" field.
+func OwnershipModeLT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldOwnershipMode, v))
+}
+
+// OwnershipModeLTE applies the LTE predicate on the "ownership_mode" field.
+func OwnershipModeLTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldOwnershipMode, v))
+}
+
+// OwnershipModeContains applies the Contains predicate on the "ownership_mode" field.
+func OwnershipModeContains(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContains(FieldOwnershipMode, v))
+}
+
+// OwnershipModeHasPrefix applies the HasPrefix predicate on the "ownership_mode" field.
+func OwnershipModeHasPrefix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldOwnershipMode, v))
+}
+
+// OwnershipModeHasSuffix applies the HasSuffix predicate on the "ownership_mode" field.
+func OwnershipModeHasSuffix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldOwnershipMode, v))
+}
+
+// OwnershipModeEqualFold applies the EqualFold predicate on the "ownership_mode" field.
+func OwnershipModeEqualFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldOwnershipMode, v))
+}
+
+// OwnershipModeContainsFold applies the ContainsFold predicate on the "ownership_mode" field.
+func OwnershipModeContainsFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldOwnershipMode, v))
+}
+
+// LocalModifiedAtEQ applies the EQ predicate on the "local_modified_at" field.
+func LocalModifiedAtEQ(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldLocalModifiedAt, v))
+}
+
+// LocalModifiedAtNEQ applies the NEQ predicate on the "local_modified_at" field.
+func LocalModifiedAtNEQ(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldLocalModifiedAt, v))
+}
+
+// LocalModifiedAtIn applies the In predicate on the "local_modified_at" field.
+func LocalModifiedAtIn(vs ...time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldLocalModifiedAt, vs...))
+}
+
+// LocalModifiedAtNotIn applies the NotIn predicate on the "local_modified_at" field.
+func LocalModifiedAtNotIn(vs ...time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldLocalModifiedAt, vs...))
+}
+
+// LocalModifiedAtGT applies the GT predicate on the "local_modified_at" field.
+func LocalModifiedAtGT(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldLocalModifiedAt, v))
+}
+
+// LocalModifiedAtGTE applies the GTE predicate on the "local_modified_at" field.
+func LocalModifiedAtGTE(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldLocalModifiedAt, v))
+}
+
+// LocalModifiedAtLT applies the LT predicate on the "local_modified_at" field.
+func LocalModifiedAtLT(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldLocalModifiedAt, v))
+}
+
+// LocalModifiedAtLTE applies the LTE predicate on the "local_modified_at" field.
+func LocalModifiedAtLTE(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldLocalModifiedAt, v))
+}
+
+// LocalModifiedAtIsNil applies the IsNil predicate on the "local_modified_at" field.
+func LocalModifiedAtIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldLocalModifiedAt))
+}
+
+// LocalModifiedAtNotNil applies the NotNil predicate on the "local_modified_at" field.
+func LocalModifiedAtNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldLocalModifiedAt))
 }
 
 // DiscoverySourceEQ applies the EQ predicate on the "discovery_source" field.

@@ -279,6 +279,40 @@ func (_u *ConfigurationItemUpdate) ClearOwnedBy() *ConfigurationItemUpdate {
 	return _u
 }
 
+// SetOwnershipMode sets the "ownership_mode" field.
+func (_u *ConfigurationItemUpdate) SetOwnershipMode(v string) *ConfigurationItemUpdate {
+	_u.mutation.SetOwnershipMode(v)
+	return _u
+}
+
+// SetNillableOwnershipMode sets the "ownership_mode" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableOwnershipMode(v *string) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetOwnershipMode(*v)
+	}
+	return _u
+}
+
+// SetLocalModifiedAt sets the "local_modified_at" field.
+func (_u *ConfigurationItemUpdate) SetLocalModifiedAt(v time.Time) *ConfigurationItemUpdate {
+	_u.mutation.SetLocalModifiedAt(v)
+	return _u
+}
+
+// SetNillableLocalModifiedAt sets the "local_modified_at" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableLocalModifiedAt(v *time.Time) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetLocalModifiedAt(*v)
+	}
+	return _u
+}
+
+// ClearLocalModifiedAt clears the value of the "local_modified_at" field.
+func (_u *ConfigurationItemUpdate) ClearLocalModifiedAt() *ConfigurationItemUpdate {
+	_u.mutation.ClearLocalModifiedAt()
+	return _u
+}
+
 // SetDiscoverySource sets the "discovery_source" field.
 func (_u *ConfigurationItemUpdate) SetDiscoverySource(v string) *ConfigurationItemUpdate {
 	_u.mutation.SetDiscoverySource(v)
@@ -1066,6 +1100,15 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 	if _u.mutation.OwnedByCleared() {
 		_spec.ClearField(configurationitem.FieldOwnedBy, field.TypeString)
 	}
+	if value, ok := _u.mutation.OwnershipMode(); ok {
+		_spec.SetField(configurationitem.FieldOwnershipMode, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.LocalModifiedAt(); ok {
+		_spec.SetField(configurationitem.FieldLocalModifiedAt, field.TypeTime, value)
+	}
+	if _u.mutation.LocalModifiedAtCleared() {
+		_spec.ClearField(configurationitem.FieldLocalModifiedAt, field.TypeTime)
+	}
 	if value, ok := _u.mutation.DiscoverySource(); ok {
 		_spec.SetField(configurationitem.FieldDiscoverySource, field.TypeString, value)
 	}
@@ -1778,6 +1821,40 @@ func (_u *ConfigurationItemUpdateOne) SetNillableOwnedBy(v *string) *Configurati
 // ClearOwnedBy clears the value of the "owned_by" field.
 func (_u *ConfigurationItemUpdateOne) ClearOwnedBy() *ConfigurationItemUpdateOne {
 	_u.mutation.ClearOwnedBy()
+	return _u
+}
+
+// SetOwnershipMode sets the "ownership_mode" field.
+func (_u *ConfigurationItemUpdateOne) SetOwnershipMode(v string) *ConfigurationItemUpdateOne {
+	_u.mutation.SetOwnershipMode(v)
+	return _u
+}
+
+// SetNillableOwnershipMode sets the "ownership_mode" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableOwnershipMode(v *string) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetOwnershipMode(*v)
+	}
+	return _u
+}
+
+// SetLocalModifiedAt sets the "local_modified_at" field.
+func (_u *ConfigurationItemUpdateOne) SetLocalModifiedAt(v time.Time) *ConfigurationItemUpdateOne {
+	_u.mutation.SetLocalModifiedAt(v)
+	return _u
+}
+
+// SetNillableLocalModifiedAt sets the "local_modified_at" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableLocalModifiedAt(v *time.Time) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetLocalModifiedAt(*v)
+	}
+	return _u
+}
+
+// ClearLocalModifiedAt clears the value of the "local_modified_at" field.
+func (_u *ConfigurationItemUpdateOne) ClearLocalModifiedAt() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearLocalModifiedAt()
 	return _u
 }
 
@@ -2597,6 +2674,15 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 	}
 	if _u.mutation.OwnedByCleared() {
 		_spec.ClearField(configurationitem.FieldOwnedBy, field.TypeString)
+	}
+	if value, ok := _u.mutation.OwnershipMode(); ok {
+		_spec.SetField(configurationitem.FieldOwnershipMode, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.LocalModifiedAt(); ok {
+		_spec.SetField(configurationitem.FieldLocalModifiedAt, field.TypeTime, value)
+	}
+	if _u.mutation.LocalModifiedAtCleared() {
+		_spec.ClearField(configurationitem.FieldLocalModifiedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.DiscoverySource(); ok {
 		_spec.SetField(configurationitem.FieldDiscoverySource, field.TypeString, value)

@@ -207,6 +207,34 @@ func (_c *ConfigurationItemCreate) SetNillableOwnedBy(v *string) *ConfigurationI
 	return _c
 }
 
+// SetOwnershipMode sets the "ownership_mode" field.
+func (_c *ConfigurationItemCreate) SetOwnershipMode(v string) *ConfigurationItemCreate {
+	_c.mutation.SetOwnershipMode(v)
+	return _c
+}
+
+// SetNillableOwnershipMode sets the "ownership_mode" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableOwnershipMode(v *string) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetOwnershipMode(*v)
+	}
+	return _c
+}
+
+// SetLocalModifiedAt sets the "local_modified_at" field.
+func (_c *ConfigurationItemCreate) SetLocalModifiedAt(v time.Time) *ConfigurationItemCreate {
+	_c.mutation.SetLocalModifiedAt(v)
+	return _c
+}
+
+// SetNillableLocalModifiedAt sets the "local_modified_at" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableLocalModifiedAt(v *time.Time) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetLocalModifiedAt(*v)
+	}
+	return _c
+}
+
 // SetDiscoverySource sets the "discovery_source" field.
 func (_c *ConfigurationItemCreate) SetDiscoverySource(v string) *ConfigurationItemCreate {
 	_c.mutation.SetDiscoverySource(v)
@@ -646,6 +674,10 @@ func (_c *ConfigurationItemCreate) defaults() {
 		v := configurationitem.DefaultCriticality
 		_c.mutation.SetCriticality(v)
 	}
+	if _, ok := _c.mutation.OwnershipMode(); !ok {
+		v := configurationitem.DefaultOwnershipMode
+		_c.mutation.SetOwnershipMode(v)
+	}
 	if _, ok := _c.mutation.Version(); !ok {
 		v := configurationitem.DefaultVersion
 		_c.mutation.SetVersion(v)
@@ -693,6 +725,9 @@ func (_c *ConfigurationItemCreate) check() error {
 	}
 	if _, ok := _c.mutation.Criticality(); !ok {
 		return &ValidationError{Name: "criticality", err: errors.New(`ent: missing required field "ConfigurationItem.criticality"`)}
+	}
+	if _, ok := _c.mutation.OwnershipMode(); !ok {
+		return &ValidationError{Name: "ownership_mode", err: errors.New(`ent: missing required field "ConfigurationItem.ownership_mode"`)}
 	}
 	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ConfigurationItem.tenant_id"`)}
@@ -794,6 +829,14 @@ func (_c *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.C
 	if value, ok := _c.mutation.OwnedBy(); ok {
 		_spec.SetField(configurationitem.FieldOwnedBy, field.TypeString, value)
 		_node.OwnedBy = value
+	}
+	if value, ok := _c.mutation.OwnershipMode(); ok {
+		_spec.SetField(configurationitem.FieldOwnershipMode, field.TypeString, value)
+		_node.OwnershipMode = value
+	}
+	if value, ok := _c.mutation.LocalModifiedAt(); ok {
+		_spec.SetField(configurationitem.FieldLocalModifiedAt, field.TypeTime, value)
+		_node.LocalModifiedAt = value
 	}
 	if value, ok := _c.mutation.DiscoverySource(); ok {
 		_spec.SetField(configurationitem.FieldDiscoverySource, field.TypeString, value)

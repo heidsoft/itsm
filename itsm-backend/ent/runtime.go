@@ -895,26 +895,30 @@ func init() {
 	configurationitemDescCriticality := configurationitemFields[6].Descriptor()
 	// configurationitem.DefaultCriticality holds the default value on creation for the criticality field.
 	configurationitem.DefaultCriticality = configurationitemDescCriticality.Default.(string)
+	// configurationitemDescOwnershipMode is the schema descriptor for ownership_mode field.
+	configurationitemDescOwnershipMode := configurationitemFields[14].Descriptor()
+	// configurationitem.DefaultOwnershipMode holds the default value on creation for the ownership_mode field.
+	configurationitem.DefaultOwnershipMode = configurationitemDescOwnershipMode.Default.(string)
 	// configurationitemDescTenantID is the schema descriptor for tenant_id field.
-	configurationitemDescTenantID := configurationitemFields[30].Descriptor()
+	configurationitemDescTenantID := configurationitemFields[32].Descriptor()
 	// configurationitem.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	configurationitem.TenantIDValidator = configurationitemDescTenantID.Validators[0].(func(int) error)
 	// configurationitemDescVersion is the schema descriptor for version field.
-	configurationitemDescVersion := configurationitemFields[31].Descriptor()
+	configurationitemDescVersion := configurationitemFields[33].Descriptor()
 	// configurationitem.DefaultVersion holds the default value on creation for the version field.
 	configurationitem.DefaultVersion = configurationitemDescVersion.Default.(int)
 	// configurationitemDescCreatedAt is the schema descriptor for created_at field.
-	configurationitemDescCreatedAt := configurationitemFields[32].Descriptor()
+	configurationitemDescCreatedAt := configurationitemFields[34].Descriptor()
 	// configurationitem.DefaultCreatedAt holds the default value on creation for the created_at field.
 	configurationitem.DefaultCreatedAt = configurationitemDescCreatedAt.Default.(func() time.Time)
 	// configurationitemDescUpdatedAt is the schema descriptor for updated_at field.
-	configurationitemDescUpdatedAt := configurationitemFields[33].Descriptor()
+	configurationitemDescUpdatedAt := configurationitemFields[35].Descriptor()
 	// configurationitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	configurationitem.DefaultUpdatedAt = configurationitemDescUpdatedAt.Default.(func() time.Time)
 	// configurationitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	configurationitem.UpdateDefaultUpdatedAt = configurationitemDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// configurationitemDescLifecycleStatus is the schema descriptor for lifecycle_status field.
-	configurationitemDescLifecycleStatus := configurationitemFields[34].Descriptor()
+	configurationitemDescLifecycleStatus := configurationitemFields[36].Descriptor()
 	// configurationitem.DefaultLifecycleStatus holds the default value on creation for the lifecycle_status field.
 	configurationitem.DefaultLifecycleStatus = configurationitemDescLifecycleStatus.Default.(string)
 	configurationitemhistoryFields := schema.ConfigurationItemHistory{}.Fields()

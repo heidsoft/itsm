@@ -996,6 +996,8 @@ var (
 		{Name: "location", Type: field.TypeString, Nullable: true},
 		{Name: "assigned_to", Type: field.TypeString, Nullable: true},
 		{Name: "owned_by", Type: field.TypeString, Nullable: true},
+		{Name: "ownership_mode", Type: field.TypeString, Default: "managed"},
+		{Name: "local_modified_at", Type: field.TypeTime, Nullable: true},
 		{Name: "discovery_source", Type: field.TypeString, Nullable: true},
 		{Name: "last_discovered", Type: field.TypeTime, Nullable: true},
 		{Name: "source", Type: field.TypeString, Nullable: true},
@@ -1030,19 +1032,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "configuration_items_assets_configuration_item",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[36]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[38]},
 				RefColumns: []*schema.Column{AssetsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "configuration_items_ci_types_cis",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[37]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[39]},
 				RefColumns: []*schema.Column{CiTypesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "configuration_items_cloud_resources_cis",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[38]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[40]},
 				RefColumns: []*schema.Column{CloudResourcesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1056,7 +1058,7 @@ var (
 			{
 				Name:    "configurationitem_ci_type_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[37]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[39]},
 			},
 			{
 				Name:    "configurationitem_status",
@@ -1071,27 +1073,32 @@ var (
 			{
 				Name:    "configurationitem_cloud_provider",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[18]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[20]},
 			},
 			{
 				Name:    "configurationitem_cloud_account_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[19]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[21]},
 			},
 			{
 				Name:    "configurationitem_cloud_region",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[20]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[22]},
 			},
 			{
 				Name:    "configurationitem_cloud_resource_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[22]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[24]},
 			},
 			{
 				Name:    "configurationitem_tenant_id_serial_number",
 				Unique:  true,
-				Columns: []*schema.Column{ConfigurationItemsColumns[29], ConfigurationItemsColumns[8]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[31], ConfigurationItemsColumns[8]},
+			},
+			{
+				Name:    "configurationitem_ownership_mode",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[14]},
 			},
 		},
 	}

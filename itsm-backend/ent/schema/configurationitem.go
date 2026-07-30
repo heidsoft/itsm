@@ -61,6 +61,12 @@ func (ConfigurationItem) Fields() []ent.Field {
 		field.String("owned_by").
 			Comment("拥有者").
 			Optional(),
+		field.String("ownership_mode").
+			Comment("ownership模式: managed(平台管理)/customer(客户托管)/sla(SLA覆盖)").
+			Default("managed"),
+		field.Time("local_modified_at").
+			Comment("客户本地修改时间，用于三方合并冲突检测").
+			Optional(),
 
 		// 发现属性
 		field.String("discovery_source").
@@ -182,5 +188,6 @@ func (ConfigurationItem) Indexes() []ent.Index {
 		index.Fields("cloud_region"),
 		index.Fields("cloud_resource_id"),
 		index.Fields("tenant_id", "serial_number").Unique(),
+		index.Fields("ownership_mode"),
 	}
 }

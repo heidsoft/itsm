@@ -29186,6 +29186,8 @@ type ConfigurationItemMutation struct {
 	location                  *string
 	assigned_to               *string
 	owned_by                  *string
+	ownership_mode            *string
+	local_modified_at         *time.Time
 	discovery_source          *string
 	last_discovered           *time.Time
 	source                    *string
@@ -29942,6 +29944,91 @@ func (m *ConfigurationItemMutation) OwnedByCleared() bool {
 func (m *ConfigurationItemMutation) ResetOwnedBy() {
 	m.owned_by = nil
 	delete(m.clearedFields, configurationitem.FieldOwnedBy)
+}
+
+// SetOwnershipMode sets the "ownership_mode" field.
+func (m *ConfigurationItemMutation) SetOwnershipMode(s string) {
+	m.ownership_mode = &s
+}
+
+// OwnershipMode returns the value of the "ownership_mode" field in the mutation.
+func (m *ConfigurationItemMutation) OwnershipMode() (r string, exists bool) {
+	v := m.ownership_mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnershipMode returns the old "ownership_mode" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldOwnershipMode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnershipMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnershipMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnershipMode: %w", err)
+	}
+	return oldValue.OwnershipMode, nil
+}
+
+// ResetOwnershipMode resets all changes to the "ownership_mode" field.
+func (m *ConfigurationItemMutation) ResetOwnershipMode() {
+	m.ownership_mode = nil
+}
+
+// SetLocalModifiedAt sets the "local_modified_at" field.
+func (m *ConfigurationItemMutation) SetLocalModifiedAt(t time.Time) {
+	m.local_modified_at = &t
+}
+
+// LocalModifiedAt returns the value of the "local_modified_at" field in the mutation.
+func (m *ConfigurationItemMutation) LocalModifiedAt() (r time.Time, exists bool) {
+	v := m.local_modified_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLocalModifiedAt returns the old "local_modified_at" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldLocalModifiedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLocalModifiedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLocalModifiedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLocalModifiedAt: %w", err)
+	}
+	return oldValue.LocalModifiedAt, nil
+}
+
+// ClearLocalModifiedAt clears the value of the "local_modified_at" field.
+func (m *ConfigurationItemMutation) ClearLocalModifiedAt() {
+	m.local_modified_at = nil
+	m.clearedFields[configurationitem.FieldLocalModifiedAt] = struct{}{}
+}
+
+// LocalModifiedAtCleared returns if the "local_modified_at" field was cleared in this mutation.
+func (m *ConfigurationItemMutation) LocalModifiedAtCleared() bool {
+	_, ok := m.clearedFields[configurationitem.FieldLocalModifiedAt]
+	return ok
+}
+
+// ResetLocalModifiedAt resets all changes to the "local_modified_at" field.
+func (m *ConfigurationItemMutation) ResetLocalModifiedAt() {
+	m.local_modified_at = nil
+	delete(m.clearedFields, configurationitem.FieldLocalModifiedAt)
 }
 
 // SetDiscoverySource sets the "discovery_source" field.
@@ -31471,7 +31558,7 @@ func (m *ConfigurationItemMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ConfigurationItemMutation) Fields() []string {
-	fields := make([]string, 0, 37)
+	fields := make([]string, 0, 39)
 	if m.name != nil {
 		fields = append(fields, configurationitem.FieldName)
 	}
@@ -31513,6 +31600,12 @@ func (m *ConfigurationItemMutation) Fields() []string {
 	}
 	if m.owned_by != nil {
 		fields = append(fields, configurationitem.FieldOwnedBy)
+	}
+	if m.ownership_mode != nil {
+		fields = append(fields, configurationitem.FieldOwnershipMode)
+	}
+	if m.local_modified_at != nil {
+		fields = append(fields, configurationitem.FieldLocalModifiedAt)
 	}
 	if m.discovery_source != nil {
 		fields = append(fields, configurationitem.FieldDiscoverySource)
@@ -31619,6 +31712,10 @@ func (m *ConfigurationItemMutation) Field(name string) (ent.Value, bool) {
 		return m.AssignedTo()
 	case configurationitem.FieldOwnedBy:
 		return m.OwnedBy()
+	case configurationitem.FieldOwnershipMode:
+		return m.OwnershipMode()
+	case configurationitem.FieldLocalModifiedAt:
+		return m.LocalModifiedAt()
 	case configurationitem.FieldDiscoverySource:
 		return m.DiscoverySource()
 	case configurationitem.FieldLastDiscovered:
@@ -31702,6 +31799,10 @@ func (m *ConfigurationItemMutation) OldField(ctx context.Context, name string) (
 		return m.OldAssignedTo(ctx)
 	case configurationitem.FieldOwnedBy:
 		return m.OldOwnedBy(ctx)
+	case configurationitem.FieldOwnershipMode:
+		return m.OldOwnershipMode(ctx)
+	case configurationitem.FieldLocalModifiedAt:
+		return m.OldLocalModifiedAt(ctx)
 	case configurationitem.FieldDiscoverySource:
 		return m.OldDiscoverySource(ctx)
 	case configurationitem.FieldLastDiscovered:
@@ -31854,6 +31955,20 @@ func (m *ConfigurationItemMutation) SetField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetOwnedBy(v)
+		return nil
+	case configurationitem.FieldOwnershipMode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnershipMode(v)
+		return nil
+	case configurationitem.FieldLocalModifiedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLocalModifiedAt(v)
 		return nil
 	case configurationitem.FieldDiscoverySource:
 		v, ok := value.(string)
@@ -32097,6 +32212,9 @@ func (m *ConfigurationItemMutation) ClearedFields() []string {
 	if m.FieldCleared(configurationitem.FieldOwnedBy) {
 		fields = append(fields, configurationitem.FieldOwnedBy)
 	}
+	if m.FieldCleared(configurationitem.FieldLocalModifiedAt) {
+		fields = append(fields, configurationitem.FieldLocalModifiedAt)
+	}
 	if m.FieldCleared(configurationitem.FieldDiscoverySource) {
 		fields = append(fields, configurationitem.FieldDiscoverySource)
 	}
@@ -32188,6 +32306,9 @@ func (m *ConfigurationItemMutation) ClearField(name string) error {
 		return nil
 	case configurationitem.FieldOwnedBy:
 		m.ClearOwnedBy()
+		return nil
+	case configurationitem.FieldLocalModifiedAt:
+		m.ClearLocalModifiedAt()
 		return nil
 	case configurationitem.FieldDiscoverySource:
 		m.ClearDiscoverySource()
@@ -32292,6 +32413,12 @@ func (m *ConfigurationItemMutation) ResetField(name string) error {
 		return nil
 	case configurationitem.FieldOwnedBy:
 		m.ResetOwnedBy()
+		return nil
+	case configurationitem.FieldOwnershipMode:
+		m.ResetOwnershipMode()
+		return nil
+	case configurationitem.FieldLocalModifiedAt:
+		m.ResetLocalModifiedAt()
 		return nil
 	case configurationitem.FieldDiscoverySource:
 		m.ResetDiscoverySource()
