@@ -32,8 +32,10 @@ func (w *WeCom) Manifest() connector.Manifest {
 			connector.CapSendMessage,
 			connector.CapSendCard,
 		},
-		Tags:     []string{"im", "wecom", "wechat", "china"},
-		Homepage: "https://developer.work.weixin.qq.com",
+		Tags:                []string{"im", "wecom", "wechat", "china"},
+		Homepage:            "https://developer.work.weixin.qq.com",
+		IsOfficial:          true,
+		RequiredPermissions: []string{"connector:write"},
 	}
 }
 

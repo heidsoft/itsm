@@ -11,7 +11,7 @@ import (
 )
 
 func TestDepartmentService_CreateDepartment(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	deptService := NewDepartmentService(client)
@@ -77,7 +77,7 @@ func TestDepartmentService_CreateDepartment(t *testing.T) {
 }
 
 func TestDepartmentService_GetDepartmentTree(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	deptService := NewDepartmentService(client)

@@ -12,7 +12,7 @@ import (
 )
 
 func TestProjectService_CreateProject(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	projectService := NewProjectService(client)
@@ -83,7 +83,7 @@ func TestProjectService_CreateProject(t *testing.T) {
 }
 
 func TestProjectService_ListProjects(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	projectService := NewProjectService(client)
@@ -133,7 +133,7 @@ func TestProjectService_ListProjects(t *testing.T) {
 }
 
 func TestProjectService_UpdateProject(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	projectService := NewProjectService(client)
@@ -176,7 +176,7 @@ func TestProjectService_UpdateProject(t *testing.T) {
 }
 
 func TestProjectService_DeleteProject(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	projectService := NewProjectService(client)

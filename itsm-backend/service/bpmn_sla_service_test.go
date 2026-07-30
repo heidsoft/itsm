@@ -23,7 +23,7 @@ const testBPMNXML = `<?xml version="1.0" encoding="UTF-8"?>
 
 // TestBPMNSLAService_GetProcessSLA 测试获取流程SLA配置
 func TestBPMNSLAService_GetProcessSLA(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -103,7 +103,7 @@ func TestBPMNSLAService_GetProcessSLA(t *testing.T) {
 
 // TestBPMNSLAService_GetTaskSLA 测试获取任务SLA配置
 func TestBPMNSLAService_GetTaskSLA(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -211,7 +211,7 @@ func TestBPMNSLAService_GetTaskSLA(t *testing.T) {
 
 // TestBPMNSLAService_CalculateSLAStatus 测试SLA状态计算
 func TestBPMNSLAService_CalculateSLAStatus(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -272,7 +272,7 @@ func TestBPMNSLAService_CalculateSLAStatus(t *testing.T) {
 
 // TestBPMNSLAService_BusinessHoursCalculation 测试工作时间计算
 func TestBPMNSLAService_BusinessHoursCalculation(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -310,7 +310,7 @@ func TestBPMNSLAService_BusinessHoursCalculation(t *testing.T) {
 
 // TestBPMNSLAService_GetProcessInstanceSLAInfo 测试获取流程实例SLA信息
 func TestBPMNSLAService_GetProcessInstanceSLAInfo(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -377,7 +377,7 @@ func TestBPMNSLAService_GetProcessInstanceSLAInfo(t *testing.T) {
 
 // TestBPMNSLAService_GetTaskSLAInfo 测试获取任务SLA信息
 func TestBPMNSLAService_GetTaskSLAInfo(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -468,7 +468,7 @@ func TestBPMNSLAService_GetTaskSLAInfo(t *testing.T) {
 
 // TestBPMNSLAService_CheckSLAViolations 测试检查SLA违规
 func TestBPMNSLAService_CheckSLAViolations(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -574,7 +574,7 @@ func TestBPMNSLAService_CheckSLAViolations(t *testing.T) {
 
 // TestBPMNSLAService_GetSLAComplianceRate 测试SLA合规率统计
 func TestBPMNSLAService_GetSLAComplianceRate(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -665,7 +665,7 @@ func TestBPMNSLAService_GetSLAComplianceRate(t *testing.T) {
 
 // TestBPMNSLAService_RecordSLAAlert 测试记录SLA告警
 func TestBPMNSLAService_RecordSLAAlert(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -693,7 +693,7 @@ func TestBPMNSLAService_RecordSLAAlert(t *testing.T) {
 
 // TestBPMNSLAService_TenantIsolation 测试租户隔离
 func TestBPMNSLAService_TenantIsolation(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

@@ -12,7 +12,7 @@ import (
 )
 
 func TestTicketLifecycleService_ResolveTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -115,7 +115,7 @@ func TestTicketLifecycleService_ResolveTicket(t *testing.T) {
 }
 
 func TestTicketLifecycleService_CloseTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -215,7 +215,7 @@ func TestTicketLifecycleService_CloseTicket(t *testing.T) {
 }
 
 func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -328,7 +328,7 @@ func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
 }
 
 func TestTicketLifecycleService_EscalateTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -442,7 +442,7 @@ func TestTicketLifecycleService_EscalateTicket(t *testing.T) {
 }
 
 func TestTicketLifecycleService_isValidStatusTransition(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -479,7 +479,7 @@ func TestTicketLifecycleService_isValidStatusTransition(t *testing.T) {
 }
 
 func TestTicketLifecycleService_mapProcessStatus(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -506,7 +506,7 @@ func TestTicketLifecycleService_mapProcessStatus(t *testing.T) {
 }
 
 func TestTicketLifecycleService_CancelWorkflow(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

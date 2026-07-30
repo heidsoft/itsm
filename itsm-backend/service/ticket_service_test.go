@@ -19,7 +19,7 @@ import (
 )
 
 func TestTicketService_CreateTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -314,7 +314,7 @@ func TestTicketService_GetTicketStatsCountsNewAsPending(t *testing.T) {
 }
 
 func TestTicketService_GetTickets(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -429,7 +429,7 @@ func TestTicketService_GetTickets(t *testing.T) {
 }
 
 func TestTicketService_GetTicketByID(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -513,7 +513,7 @@ func TestTicketService_GetTicketByID(t *testing.T) {
 }
 
 func TestTicketService_UpdateTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -666,7 +666,7 @@ func TestTicketService_UpdateTicketPersistsTypeCategoryAndTags(t *testing.T) {
 }
 
 func TestTicketService_DeleteTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -746,7 +746,7 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 }
 
 func TestTicketService_DeleteTicket_CascadeTenantIsolation(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -834,7 +834,7 @@ func TestTicketService_DeleteTicket_CascadeTenantIsolation(t *testing.T) {
 }
 
 func TestTicketService_SearchTickets(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -939,7 +939,7 @@ func TestTicketService_SearchTickets(t *testing.T) {
 }
 
 func TestTicketService_GetMSPCustomerReports_AllocationAware(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -1002,7 +1002,7 @@ func TestTicketService_GetMSPCustomerReports_AllocationAware(t *testing.T) {
 
 // 基准测试
 func BenchmarkTicketService_CreateTicket(b *testing.B) {
-	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(b, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(b).Sugar()

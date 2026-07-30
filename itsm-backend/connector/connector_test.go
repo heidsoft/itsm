@@ -14,7 +14,7 @@ type fakeConnector struct {
 }
 
 func (f *fakeConnector) Manifest() Manifest {
-	return Manifest{Name: "fake", Title: "Fake", Type: TypeCustom, Capabilities: []Capability{CapSendMessage}}
+	return Manifest{Name: "fake", Version: "1.0.0", Title: "Fake", Type: TypeCustom, Capabilities: []Capability{CapSendMessage}, RequiredPermissions: []string{"connector:write"}}
 }
 func (f *fakeConnector) Init(_ context.Context, cfg Config) error { f.cfg = cfg; return nil }
 func (f *fakeConnector) Send(_ context.Context, _ *Message) error {
@@ -28,7 +28,7 @@ func (f *fakeConnector) Close() error                               { return nil
 type errorConnector struct{}
 
 func (e *errorConnector) Manifest() Manifest {
-	return Manifest{Name: "error-c", Title: "Err", Type: TypeCustom}
+	return Manifest{Name: "error-c", Version: "1.0.0", Title: "Err", Type: TypeCustom, RequiredPermissions: []string{"connector:write"}}
 }
 func (e *errorConnector) Init(_ context.Context, _ Config) error { return nil }
 func (e *errorConnector) Send(_ context.Context, _ *Message) error {

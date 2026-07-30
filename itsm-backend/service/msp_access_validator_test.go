@@ -11,7 +11,7 @@ import (
 )
 
 func TestMSPAccessValidator_ValidateCustomerAccess(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	validator := NewMSPAccessValidator(client)
@@ -67,7 +67,7 @@ func TestMSPAccessValidator_ValidateCustomerAccess(t *testing.T) {
 }
 
 func TestMSPAccessValidator_GetAllowedCustomerIDs(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	validator := NewMSPAccessValidator(client)
@@ -121,7 +121,7 @@ func TestMSPAccessValidator_GetAllowedCustomerIDs(t *testing.T) {
 }
 
 func TestMSPAccessValidator_FilterByMSPAllocation(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	validator := NewMSPAccessValidator(client)
@@ -183,7 +183,7 @@ func TestMSPAccessValidator_FilterByMSPAllocation(t *testing.T) {
 }
 
 func TestMSPAccessValidator_DeassignedAllocationNoLongerValid(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	validator := NewMSPAccessValidator(client)

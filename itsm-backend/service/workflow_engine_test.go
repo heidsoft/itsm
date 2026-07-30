@@ -18,7 +18,7 @@ import (
 // ==================== 测试设置辅助函数 ====================
 
 func setupWorkflowEngineTest(t *testing.T) (*ent.Client, *WorkflowEngine, context.Context) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	engine := NewWorkflowEngine(client)
 	ctx := context.Background()
 	return client, engine, ctx
@@ -470,7 +470,7 @@ func TestContainsString(t *testing.T) {
 // ==================== 审批工作流服务测试 ====================
 
 func TestWorkflowApprovalService_CreateApprovalTask(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	engine := NewWorkflowEngine(client)

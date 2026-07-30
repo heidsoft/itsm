@@ -18,7 +18,7 @@ import (
 // ==================== 测试设置辅助函数 ====================
 
 func setupNotificationTest(t *testing.T) (*ent.Client, *NotificationService, context.Context) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	service := NewNotificationService(client)
 	ctx := context.Background()
 	return client, service, ctx

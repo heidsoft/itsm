@@ -13,7 +13,7 @@ import (
 )
 
 func TestAssetService_CreateAsset(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -86,7 +86,7 @@ func TestAssetService_CreateAsset(t *testing.T) {
 }
 
 func TestAssetService_GetAssetByID(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -128,7 +128,7 @@ func TestAssetService_GetAssetByID(t *testing.T) {
 }
 
 func TestAssetService_UpdateAssetStatus(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -170,7 +170,7 @@ func TestAssetService_UpdateAssetStatus(t *testing.T) {
 }
 
 func TestAssetService_AssignAsset(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -219,7 +219,7 @@ func TestAssetService_AssignAsset(t *testing.T) {
 }
 
 func TestAssetService_RetireAsset(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -254,7 +254,7 @@ func TestAssetService_RetireAsset(t *testing.T) {
 }
 
 func TestAssetService_GetAssetStats(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

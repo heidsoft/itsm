@@ -13,12 +13,14 @@ type docFakeC struct{}
 
 func (f *docFakeC) Manifest() connector.Manifest {
 	return connector.Manifest{
-		Name:        "mailer",
-		Title:       "邮件告警",
-		Description: "用于发送邮件告警通知",
-		Provider:    "Acme",
-		Type:        connector.TypeIM,
-		Tags:        []string{"mail", "alert"},
+		Name:                "mailer",
+		Version:             "1.0.0",
+		Title:               "邮件告警",
+		Description:         "用于发送邮件告警通知",
+		Provider:            "Acme",
+		Type:                connector.TypeIM,
+		Tags:                []string{"mail", "alert"},
+		RequiredPermissions: []string{"connector:write"},
 	}
 }
 func (f *docFakeC) Init(_ context.Context, _ connector.Config) error   { return nil }

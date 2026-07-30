@@ -10,7 +10,7 @@ import (
 type fakeC struct{}
 
 func (f *fakeC) Manifest() connector.Manifest {
-	return connector.Manifest{Name: "fake", Title: "Fake", Type: connector.TypeCustom}
+	return connector.Manifest{Name: "fake", Version: "1.0.0", Title: "Fake", Type: connector.TypeCustom, RequiredPermissions: []string{"connector:write"}}
 }
 func (f *fakeC) Init(_ context.Context, _ connector.Config) error   { return nil }
 func (f *fakeC) Send(_ context.Context, _ *connector.Message) error { return nil }

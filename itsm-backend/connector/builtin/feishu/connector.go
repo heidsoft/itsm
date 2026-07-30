@@ -59,8 +59,10 @@ func (f *Feishu) Manifest() connector.Manifest {
 			connector.CapUpdateTicket,
 			connector.CapSyncAssets,
 		},
-		Tags:     []string{"im", "feishu", "lark", "china"},
-		Homepage: "https://open.feishu.cn",
+		Tags:                []string{"im", "feishu", "lark", "china"},
+		Homepage:            "https://open.feishu.cn",
+		IsOfficial:          true,
+		RequiredPermissions: []string{"connector:write", "ticket:write", "cmdb:write"},
 	}
 }
 

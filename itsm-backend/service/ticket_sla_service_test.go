@@ -13,7 +13,7 @@ import (
 )
 
 func TestTicketSLAService_GetTicketSLAInfo(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -107,7 +107,7 @@ func TestTicketSLAService_GetTicketSLAInfo(t *testing.T) {
 }
 
 func TestTicketSLAService_GetTicketStats(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -162,7 +162,7 @@ func TestTicketSLAService_GetTicketStats(t *testing.T) {
 }
 
 func TestTicketSLAService_CalculateSLADeadline(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -200,7 +200,7 @@ func TestTicketSLAService_CalculateSLADeadline(t *testing.T) {
 }
 
 func TestTicketSLAService_CalculateSLADeadlineFromRequest(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -282,7 +282,7 @@ func TestTicketSLAService_CalculateSLADeadlineFromRequest(t *testing.T) {
 }
 
 func TestTicketSLAService_AdjustToBusinessHours(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -349,7 +349,7 @@ func TestTicketSLAService_AdjustToBusinessHours(t *testing.T) {
 }
 
 func TestTicketSLAService_getSLADefinition(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -432,7 +432,7 @@ func TestTicketSLAService_getSLADefinition(t *testing.T) {
 }
 
 func TestTicketSLAService_calculateDeadline(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

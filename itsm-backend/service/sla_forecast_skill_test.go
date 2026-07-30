@@ -13,7 +13,7 @@ import (
 )
 
 func TestSLAForecastSkill_Execute(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -38,7 +38,7 @@ func TestSLAForecastSkill_Execute(t *testing.T) {
 }
 
 func TestSLAForecastSkill_CalculateConfidenceInterval(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -72,7 +72,7 @@ func TestSLAForecastSkill_CalculateConfidenceInterval(t *testing.T) {
 }
 
 func TestSLAForecastSkill_CalculateOverallConfidence(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -101,7 +101,7 @@ func TestSLAForecastSkill_CalculateOverallConfidence(t *testing.T) {
 }
 
 func TestSLAForecastSkill_DetermineTrend(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -128,7 +128,7 @@ func TestSLAForecastSkill_DetermineTrend(t *testing.T) {
 }
 
 func TestSLAForecastSkill_DetectSeasonality(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

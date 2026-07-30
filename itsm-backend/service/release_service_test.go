@@ -13,7 +13,7 @@ import (
 )
 
 func TestReleaseService_CreateRelease(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -103,7 +103,7 @@ func TestReleaseService_CreateRelease(t *testing.T) {
 }
 
 func TestReleaseService_GetReleaseByID(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -156,7 +156,7 @@ func TestReleaseService_GetReleaseByID(t *testing.T) {
 }
 
 func TestReleaseService_UpdateReleaseStatus(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -217,7 +217,7 @@ func TestReleaseService_UpdateReleaseStatus(t *testing.T) {
 }
 
 func TestReleaseService_GetReleaseStats(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

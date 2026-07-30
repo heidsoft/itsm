@@ -13,7 +13,7 @@ import (
 )
 
 func TestBPMNPermissionService_RevokePermission_TenantIsolation(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -80,7 +80,7 @@ func TestBPMNPermissionService_RevokePermission_TenantIsolation(t *testing.T) {
 }
 
 func TestBPMNPermissionService_RevokePermission_SameTenant(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

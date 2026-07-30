@@ -34,17 +34,20 @@ func NewRegistry() *Registry {
 func Default() *Registry { return defaultRegistry }
 
 // Register 注册一个连接器工厂
+// fail closed：manifest 缺少 name/version/required_permissions 时拒绝注册；
+// checksum 由注册表统一计算，连接器自身无法伪造。
 func (r *Registry) Register(f Factory) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	c := f()
 	m := c.Manifest()
-	if m.Name == "" {
-		panic("connector: Manifest().Name must not be empty")
+	if err := m.ValidateForRegistration(); err != nil {
+		panic("connector: " + err.Error())
 	}
 	if _, exists := r.factories[m.Name]; exists {
 		panic(fmt.Sprintf("connector: duplicate registration for %q", m.Name))
 	}
+	m.Checksum = m.ComputeChecksum()
 	r.factories[m.Name] = f
 	r.manifests[m.Name] = m
 }

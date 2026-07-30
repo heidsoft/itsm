@@ -14,7 +14,7 @@ import (
 )
 
 func TestUserService_CreateUser(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -99,7 +99,7 @@ func TestUserService_CreateUser(t *testing.T) {
 }
 
 func TestUserService_GetUserByID(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -166,7 +166,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 }
 
 func TestUserService_UpdateUser(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -260,7 +260,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 }
 
 func TestUserService_DeleteUser(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -325,7 +325,7 @@ func TestUserService_DeleteUser(t *testing.T) {
 }
 
 func TestUserService_SearchUsers(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -432,7 +432,7 @@ func TestUserService_SearchUsers(t *testing.T) {
 }
 
 func TestUserService_ResetPassword(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -502,7 +502,7 @@ func TestUserService_ResetPassword(t *testing.T) {
 }
 
 func TestUserService_ChangeUserStatus(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -581,7 +581,7 @@ func TestUserService_ChangeUserStatus(t *testing.T) {
 
 // 基准测试
 func TestUserService_UpdateUser_TenantIsolation(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -640,7 +640,7 @@ func TestUserService_UpdateUser_TenantIsolation(t *testing.T) {
 }
 
 func BenchmarkUserService_CreateUser(b *testing.B) {
-	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(b, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(b).Sugar()
@@ -673,7 +673,7 @@ func BenchmarkUserService_CreateUser(b *testing.B) {
 }
 
 func BenchmarkUserService_GetUserByID(b *testing.B) {
-	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(b, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(b).Sugar()

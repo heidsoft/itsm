@@ -19,7 +19,7 @@ import (
 // ============================================================
 
 func setupApplicationTest(t *testing.T) (*ent.Client, *ApplicationService, context.Context) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	service := NewApplicationService(client)
 	ctx := context.Background()
 	return client, service, ctx

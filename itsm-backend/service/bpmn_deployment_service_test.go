@@ -14,7 +14,7 @@ import (
 
 // TestBPMNDeploymentService_DeployProcessDefinition 测试部署流程定义
 func TestBPMNDeploymentService_DeployProcessDefinition(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	deployService := NewBPMNDeploymentService(client)
@@ -109,7 +109,7 @@ func TestBPMNDeploymentService_DeployProcessDefinition(t *testing.T) {
 
 // TestBPMNDeploymentService_DeployWithVersioning 测试版本管理
 func TestBPMNDeploymentService_DeployWithVersioning(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	deployService := NewBPMNDeploymentService(client)
@@ -196,7 +196,7 @@ func TestBPMNDeploymentService_DeployWithVersioning(t *testing.T) {
 
 // TestBPMNDeploymentService_GetDeployment 测试获取部署记录
 func TestBPMNDeploymentService_GetDeployment(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	deployService := NewBPMNDeploymentService(client)
@@ -237,7 +237,7 @@ func TestBPMNDeploymentService_GetDeployment(t *testing.T) {
 
 // TestBPMNDeploymentService_ListDeployments 测试列出部署记录
 func TestBPMNDeploymentService_ListDeployments(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	deployService := NewBPMNDeploymentService(client)
@@ -326,7 +326,7 @@ func TestBPMNDeploymentService_ListDeployments(t *testing.T) {
 
 // TestBPMNDeploymentService_UndeployProcessDefinition 测试取消部署
 func TestBPMNDeploymentService_UndeployProcessDefinition(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	deployService := NewBPMNDeploymentService(client)
@@ -468,7 +468,7 @@ func TestBPMNDeploymentService_GetDeploymentHistory(t *testing.T) {
 
 // TestBPMNDeploymentService_RedeployProcessDefinition 测试重新部署
 func TestBPMNDeploymentService_RedeployProcessDefinition(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	deployService := NewBPMNDeploymentService(client)
@@ -496,7 +496,7 @@ func TestBPMNDeploymentService_RedeployProcessDefinition(t *testing.T) {
 
 // TestBPMNDeploymentService_GenerateNextVersion 测试版本号生成
 func TestBPMNDeploymentService_GenerateNextVersion(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	deployService := NewBPMNDeploymentService(client)
@@ -522,7 +522,7 @@ func TestBPMNDeploymentService_GenerateNextVersion(t *testing.T) {
 
 // TestBPMNDeploymentService_TenantIsolation 测试租户隔离
 func TestBPMNDeploymentService_TenantIsolation(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	deployService := NewBPMNDeploymentService(client)

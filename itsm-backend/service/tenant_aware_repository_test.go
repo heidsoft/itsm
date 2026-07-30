@@ -11,7 +11,7 @@ import (
 )
 
 func TestTenantAwareRepository_ValidateTenantAccess(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	repo := NewTenantAwareRepository(client, 100)

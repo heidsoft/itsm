@@ -13,7 +13,7 @@ import (
 )
 
 func TestServiceCatalogService_GetServiceCatalogs(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	// 适配新的构造函数签名

@@ -18,7 +18,7 @@ func testStringPtr(value string) *string {
 }
 
 func TestKnowledgeService_CreateArticle(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -140,7 +140,7 @@ func TestKnowledgeService_CreateArticle(t *testing.T) {
 }
 
 func TestKnowledgeService_GetArticle(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -233,7 +233,7 @@ func TestKnowledgeService_GetArticle(t *testing.T) {
 }
 
 func TestKnowledgeService_UpdateArticle(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -372,7 +372,7 @@ func TestKnowledgeService_UpdateArticle(t *testing.T) {
 }
 
 func TestKnowledgeService_ListArticles(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -512,7 +512,7 @@ func TestKnowledgeService_ListArticles(t *testing.T) {
 }
 
 func TestKnowledgeService_DeleteArticle(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -591,7 +591,7 @@ func TestKnowledgeService_DeleteArticle(t *testing.T) {
 }
 
 func TestKnowledgeService_LikeArticle(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -666,7 +666,7 @@ func TestKnowledgeService_LikeArticle(t *testing.T) {
 }
 
 func TestKnowledgeService_SearchArticles(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -775,7 +775,7 @@ func TestKnowledgeService_SearchArticles(t *testing.T) {
 
 // 基准测试
 func BenchmarkKnowledgeService_CreateArticle(b *testing.B) {
-	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(b, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(b).Sugar()
@@ -819,7 +819,7 @@ func BenchmarkKnowledgeService_CreateArticle(b *testing.B) {
 }
 
 func BenchmarkKnowledgeService_ListArticles(b *testing.B) {
-	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(b, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(b).Sugar()

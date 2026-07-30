@@ -175,7 +175,7 @@ func TestTicketCoreService_CreateTicketBasic_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 
 			logger := zaptest.NewLogger(t).Sugar()
@@ -291,7 +291,7 @@ func TestTicketCoreService_ListTickets_TableDriven(t *testing.T) {
 			req: &dto.ListTicketsRequest{
 				Page:       1,
 				PageSize:   10,
-				AssigneeID: intPtr(0), // 将在 setup 后更新
+				AssigneeID: testIntPtr(0), // 将在 setup 后更新
 			},
 			setup: func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int) {
 				user := createTicketTestUser(t, ctx, client, tenantID, "assignee_filter")
@@ -361,7 +361,7 @@ func TestTicketCoreService_ListTickets_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 
 			logger := zaptest.NewLogger(t).Sugar()
@@ -558,7 +558,7 @@ func TestTicketLifecycleService_StatusTransitions_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 
 			logger := zaptest.NewLogger(t).Sugar()
@@ -624,7 +624,7 @@ func TestTicketLifecycleService_IsValidStatusTransition_TableDriven(t *testing.T
 		{"open to resolved", "open", "resolved", true},
 	}
 
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -656,7 +656,7 @@ func TestTicketLifecycleService_GetEscalatedPriority_TableDriven(t *testing.T) {
 		{"unknown stays unknown", "unknown", "unknown"},
 	}
 
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -838,7 +838,7 @@ func TestTicketCoreService_UpdateTicketBasic_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 
 			logger := zaptest.NewLogger(t).Sugar()
@@ -911,7 +911,7 @@ func TestTicketCoreService_CountTickets_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 
 			logger := zaptest.NewLogger(t).Sugar()
@@ -961,7 +961,8 @@ func createTicketTestUser(t *testing.T, ctx context.Context, client *ent.Client,
 	return user
 }
 
-func intPtr(i int) *int {
+// testIntPtr 返回指向给定值的指针（与生产代码 intPtr 不同，0 也返回非 nil 指针，用作占位符）
+func testIntPtr(i int) *int {
 	return &i
 }
 

@@ -14,7 +14,7 @@ import (
 )
 
 func TestTicketSearchService_SearchTickets(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -88,7 +88,7 @@ func TestTicketSearchService_SearchTickets(t *testing.T) {
 }
 
 func TestTicketSearchService_GetOverdueTickets(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -143,7 +143,7 @@ func TestTicketSearchService_GetOverdueTickets(t *testing.T) {
 }
 
 func TestTicketSearchService_GetTicketStats(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

@@ -79,7 +79,7 @@ func TestConnectorController_Lifecycle(t *testing.T) {
 type provisionFake struct{ cfg connector.Config }
 
 func (f *provisionFake) Manifest() connector.Manifest {
-	return connector.Manifest{Name: "fakeconn", Title: "Fake Conn", Provider: "fakep", Type: connector.TypeCustom}
+	return connector.Manifest{Name: "fakeconn", Version: "1.0.0", Title: "Fake Conn", Provider: "fakep", Type: connector.TypeCustom, RequiredPermissions: []string{"connector:write"}}
 }
 
 func (f *provisionFake) Init(_ context.Context, cfg connector.Config) error { f.cfg = cfg; return nil }

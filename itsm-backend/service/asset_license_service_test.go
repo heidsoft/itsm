@@ -13,7 +13,7 @@ import (
 )
 
 func TestAssetLicenseService_CreateLicense(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -89,7 +89,7 @@ func TestAssetLicenseService_CreateLicense(t *testing.T) {
 }
 
 func TestAssetLicenseService_GetLicenseByID(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -132,7 +132,7 @@ func TestAssetLicenseService_GetLicenseByID(t *testing.T) {
 }
 
 func TestAssetLicenseService_ListLicenses(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -193,7 +193,7 @@ func TestAssetLicenseService_ListLicenses(t *testing.T) {
 }
 
 func TestAssetLicenseService_UpdateLicense(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -248,7 +248,7 @@ func TestAssetLicenseService_UpdateLicense(t *testing.T) {
 }
 
 func TestAssetLicenseService_DeleteLicense(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -285,7 +285,7 @@ func TestAssetLicenseService_DeleteLicense(t *testing.T) {
 }
 
 func TestAssetLicenseService_AssignUsers(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -337,7 +337,7 @@ func TestAssetLicenseService_AssignUsers(t *testing.T) {
 }
 
 func TestAssetLicenseService_GetLicenseStats(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

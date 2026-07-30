@@ -13,7 +13,7 @@ import (
 )
 
 func TestTicketAssignmentService_AssignTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -119,7 +119,7 @@ func TestTicketAssignmentService_AssignTicket(t *testing.T) {
 }
 
 func TestTicketAssignmentService_GetUserWorkload(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -223,7 +223,7 @@ func TestTicketAssignmentService_GetUserWorkload(t *testing.T) {
 }
 
 func TestTicketAssignmentService_GetTeamWorkload(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -262,7 +262,7 @@ func TestTicketAssignmentService_GetTeamWorkload(t *testing.T) {
 }
 
 func TestTicketAssignmentService_ReassignTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -325,7 +325,7 @@ func TestTicketAssignmentService_ReassignTicket(t *testing.T) {
 }
 
 func TestTicketAssignmentService_GetTicketsByAssignee(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -389,7 +389,7 @@ func TestTicketAssignmentService_GetTicketsByAssignee(t *testing.T) {
 }
 
 func TestTicketAssignmentService_CalculateSkillScore(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -436,7 +436,7 @@ func TestTicketAssignmentService_CalculateSkillScore(t *testing.T) {
 }
 
 func TestTicketAssignmentService_CalculateWorkloadScore(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -475,7 +475,7 @@ func TestTicketAssignmentService_CalculateWorkloadScore(t *testing.T) {
 }
 
 func TestTicketAssignmentService_GetMaxActiveTickets(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -501,7 +501,7 @@ func TestTicketAssignmentService_GetMaxActiveTickets(t *testing.T) {
 }
 
 func TestTicketAssignmentService_AssignTickets(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

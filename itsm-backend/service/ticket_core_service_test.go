@@ -15,7 +15,7 @@ import (
 )
 
 func TestTicketCoreService_CreateTicketBasic(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -122,7 +122,7 @@ func TestTicketCoreService_CreateTicketBasic(t *testing.T) {
 }
 
 func TestTicketCoreService_GetTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -177,7 +177,7 @@ func TestTicketCoreService_GetTicket(t *testing.T) {
 }
 
 func TestTicketCoreService_ListTickets(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -238,7 +238,7 @@ func TestTicketCoreService_ListTickets(t *testing.T) {
 }
 
 func TestTicketCoreService_GenerateTicketNumber(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -297,7 +297,7 @@ func TestTicketCoreService_GenerateTicketNumber(t *testing.T) {
 }
 
 func TestTicketCoreService_DeleteTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -355,7 +355,7 @@ func TestTicketCoreService_DeleteTicket(t *testing.T) {
 }
 
 func TestTicketCoreService_BatchDeleteTickets(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -421,7 +421,7 @@ func TestTicketCoreService_BatchDeleteTickets(t *testing.T) {
 }
 
 func TestTicketCoreService_addTagsToTicket(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -500,7 +500,7 @@ func TestTicketCoreService_addTagsToTicket(t *testing.T) {
 // ==================== 乐观锁版本控制测试 ====================
 
 func TestTicketCoreService_UpdateTicketBasic_VersionControl(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -593,7 +593,7 @@ func TestTicketCoreService_UpdateTicketBasic_VersionControl(t *testing.T) {
 }
 
 func TestTicketCoreService_UpdateTicketBasic_StatusTransition(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()

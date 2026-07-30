@@ -35,14 +35,16 @@ func New() *Webhook { return &Webhook{client: &http.Client{Timeout: 10 * time.Se
 
 func (w *Webhook) Manifest() connector.Manifest {
 	return connector.Manifest{
-		Name:         "webhook",
-		Version:      "1.0.0",
-		Title:        "通用 Webhook 出站",
-		Provider:     "generic",
-		Type:         connector.TypeWebhook,
-		Description:  "把 ITSM 事件以 HTTP POST 推送到任意端点，支持 HMAC-SHA256 签名",
-		Capabilities: []connector.Capability{connector.CapSendMessage, connector.CapCreateTicket, connector.CapUpdateTicket},
-		Tags:         []string{"webhook", "outbound", "generic"},
+		Name:                "webhook",
+		Version:             "1.0.0",
+		Title:               "通用 Webhook 出站",
+		Provider:            "generic",
+		Type:                connector.TypeWebhook,
+		Description:         "把 ITSM 事件以 HTTP POST 推送到任意端点，支持 HMAC-SHA256 签名",
+		Capabilities:        []connector.Capability{connector.CapSendMessage, connector.CapCreateTicket, connector.CapUpdateTicket},
+		Tags:                []string{"webhook", "outbound", "generic"},
+		IsOfficial:          true,
+		RequiredPermissions: []string{"connector:write", "ticket:write"},
 	}
 }
 

@@ -11,7 +11,7 @@ import (
 )
 
 func TestTagService_CreateTag(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	tagService := NewTagService(client)
@@ -74,7 +74,7 @@ func TestTagService_CreateTag(t *testing.T) {
 }
 
 func TestTagService_ListTags(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	tagService := NewTagService(client)
@@ -114,7 +114,7 @@ func TestTagService_ListTags(t *testing.T) {
 }
 
 func TestTagService_UpdateTag(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	tagService := NewTagService(client)
@@ -150,7 +150,7 @@ func TestTagService_UpdateTag(t *testing.T) {
 }
 
 func TestTagService_DeleteTag(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	tagService := NewTagService(client)

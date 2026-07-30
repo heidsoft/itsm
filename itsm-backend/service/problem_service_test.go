@@ -20,7 +20,7 @@ import (
 // ==================== 测试设置辅助函数 ====================
 
 func setupProblemTest(t *testing.T) (*ent.Client, *ProblemService, context.Context) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	logger := zaptest.NewLogger(t).Sugar()
 	service := NewProblemService(client, logger)
 	ctx := context.Background()

@@ -7,8 +7,12 @@ package connector
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -164,6 +168,46 @@ type Manifest struct {
 	IsOfficial          bool          `json:"is_official,omitempty"`          // 是否是官方组件
 	Category            string        `json:"category,omitempty"`             // 分类
 	RequiredPermissions []string      `json:"required_permissions,omitempty"` // 需要的系统权限列表
+	Checksum            string        `json:"checksum,omitempty"`             // manifest 完整性校验和（注册时自动计算，sha256:...）
+}
+
+// ComputeChecksum 基于 manifest 的身份与安全关键字段计算确定性校验和。
+// 只覆盖影响运行行为的字段（name/version/provider/type/capabilities/required_permissions/min_itsm_ver），
+// 展示类字段（描述、截图、评分）变化不影响校验和。
+func (m Manifest) ComputeChecksum() string {
+	caps := make([]string, 0, len(m.Capabilities))
+	for _, c := range m.Capabilities {
+		caps = append(caps, string(c))
+	}
+	sort.Strings(caps)
+	perms := append([]string(nil), m.RequiredPermissions...)
+	sort.Strings(perms)
+	payload := strings.Join([]string{
+		m.Name,
+		m.Version,
+		m.Provider,
+		string(m.Type),
+		strings.Join(caps, ","),
+		strings.Join(perms, ","),
+		m.MinITSMVer,
+	}, "|")
+	sum := sha256.Sum256([]byte(payload))
+	return "sha256:" + hex.EncodeToString(sum[:])
+}
+
+// ValidateForRegistration 注册前的 manifest 完整性校验（fail closed）：
+// 所有连接器必须声明 name、version 和所需系统权限，否则拒绝注册。
+func (m Manifest) ValidateForRegistration() error {
+	if m.Name == "" {
+		return errors.New("connector manifest: name must not be empty")
+	}
+	if m.Version == "" {
+		return errors.New("connector manifest: version must not be empty for " + m.Name)
+	}
+	if len(m.RequiredPermissions) == 0 {
+		return errors.New("connector manifest: required_permissions must be declared for " + m.Name)
+	}
+	return nil
 }
 
 // InboundMessage 入站消息（来自 IM 回调 / Webhook）

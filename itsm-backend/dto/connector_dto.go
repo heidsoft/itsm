@@ -4,26 +4,29 @@ import "time"
 
 // ConnectorManifestDTO 连接器清单（用于插件/技能/连接器市场）
 type ConnectorManifestDTO struct {
-	Name          string     `json:"name"`
-	Version       string     `json:"version"`
-	Title         string     `json:"title"`
-	Provider      string     `json:"provider"`
-	Type          string     `json:"type"`
-	Description   string     `json:"description"`
-	Author        string     `json:"author,omitempty"`
-	Homepage      string     `json:"homepage,omitempty"`
-	IconURL       string     `json:"iconUrl,omitempty"`
-	Capabilities  []string   `json:"capabilities"`
-	Tags          []string   `json:"tags,omitempty"`
-	MinITSMVer    string     `json:"minItsmVer,omitempty"`
-	Local         bool       `json:"local"`     // 是否本地内置
-	Installed     bool       `json:"installed"` // 当前租户是否已安装
-	Enabled       bool       `json:"enabled"`
-	Healthy       bool       `json:"healthy"`
-	LastCheckedAt *time.Time `json:"lastCheckedAt,omitempty"`
-	LastError     string     `json:"lastError,omitempty"`
-	Lifecycle     string     `json:"lifecycle"` // available / installed / enabled / healthy / unhealthy
-	Category      string     `json:"category"`
+	Name                string     `json:"name"`
+	Version             string     `json:"version"`
+	Title               string     `json:"title"`
+	Provider            string     `json:"provider"`
+	Type                string     `json:"type"`
+	Description         string     `json:"description"`
+	Author              string     `json:"author,omitempty"`
+	Homepage            string     `json:"homepage,omitempty"`
+	IconURL             string     `json:"iconUrl,omitempty"`
+	Capabilities        []string   `json:"capabilities"`
+	Tags                []string   `json:"tags,omitempty"`
+	MinITSMVer          string     `json:"minItsmVer,omitempty"`
+	Local               bool       `json:"local"`     // 是否本地内置
+	Installed           bool       `json:"installed"` // 当前租户是否已安装
+	Enabled             bool       `json:"enabled"`
+	Healthy             bool       `json:"healthy"`
+	LastCheckedAt       *time.Time `json:"lastCheckedAt,omitempty"`
+	LastError           string     `json:"lastError,omitempty"`
+	Lifecycle           string     `json:"lifecycle"` // available / installed / enabled / healthy / unhealthy
+	Category            string     `json:"category"`
+	IsOfficial          bool       `json:"isOfficial"`                    // 是否官方组件
+	RequiredPermissions []string   `json:"requiredPermissions,omitempty"` // 需要的系统权限声明
+	Checksum            string     `json:"checksum,omitempty"`            // manifest 完整性校验和
 }
 
 // ProvisionConnectorRequest 配置/启用一个连接器实例

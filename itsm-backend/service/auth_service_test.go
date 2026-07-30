@@ -16,7 +16,7 @@ import (
 
 func TestAuthService_Login(t *testing.T) {
 	// 创建测试数据库客户端
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	// 创建测试logger
@@ -125,7 +125,7 @@ func TestAuthService_Login(t *testing.T) {
 }
 
 func TestAuthService_RefreshToken(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -212,7 +212,7 @@ func TestAuthService_RefreshToken(t *testing.T) {
 }
 
 func TestAuthService_GetUserTenants(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -297,7 +297,7 @@ func TestAuthService_GetUserTenants(t *testing.T) {
 }
 
 func TestAuthService_GetUserInfo(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -374,7 +374,7 @@ func TestAuthService_GetUserInfo(t *testing.T) {
 
 // TestAuthService_RefreshToken_EdgeCases 测试 RefreshToken 的边界情况
 func TestAuthService_RefreshToken_EdgeCases(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -504,7 +504,7 @@ func TestAuthService_RefreshToken_EdgeCases(t *testing.T) {
 
 // TestAuthService_RefreshToken_ExpiredToken 测试过期的 refresh token
 func TestAuthService_RefreshToken_ExpiredToken(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -568,7 +568,7 @@ func TestAuthService_RefreshToken_ExpiredToken(t *testing.T) {
 
 // TestAuthService_RefreshToken_MultipleRefreshes 测试多次刷新 token
 func TestAuthService_RefreshToken_MultipleRefreshes(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
@@ -639,7 +639,7 @@ func TestAuthService_RefreshToken_MultipleRefreshes(t *testing.T) {
 
 // 基准测试
 func BenchmarkAuthService_Login(b *testing.B) {
-	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(b, "sqlite3", testDSN())
 	defer client.Close()
 
 	logger := zaptest.NewLogger(b).Sugar()

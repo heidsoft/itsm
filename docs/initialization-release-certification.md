@@ -1,13 +1,13 @@
 # 数据初始化生产发布认证
 
-当前状态：**未认证，不得据此声明生产发布就绪**。
+当前状态：**阻断项已全部关闭，v1.1.0 发布证据见 `docs/release-v1.1.0-certification-evidence.md`，待发布/安全/数据库负责人签字**。
 
-最近一次自动验证（2026-07-29）：
+最近一次自动验证（2026-07-30）：
 
-- `go test ./... -count=1 -timeout=300s`：通过；
-- `go test -race ./internal/initialization ./middleware -count=1 -timeout=300s`：通过；
-- `go vet ./...`：通过；
-- `npm run type-check`：通过。
+- `go test ./... -count=1`：34 个包全部通过（0 FAIL）；
+- `npm run type-check` + `npm run build`：通过；
+- `npm run test:unit`：189 suites / 3300 passed / 0 failed；
+- 生产栈 `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d`：7 服务 healthy，init exit 0，health check 通过。
 
 ## 自动化已覆盖
 
@@ -27,9 +27,9 @@
 - ~~ticket_types 仍通过独立 RawDB 连接写入，尚未纳入 `itil-core` 的同一业务事务和稳定键完整性验证。~~ ✅ #3a TicketType 事务合并
 - ~~托管记录三方合并、字段 ownership、客户流程/SLA override 冲突处理尚未完成。~~ ✅ #3b 托管记录三方合并
 - [P6] ~~fencing token 当前保护初始化账本完成动作，但尚未在同一业务事务提交前锁定并复核 owner、token 与租约有效期；stale writer 仍需 PostgreSQL 故障注入证明。~~ ✅ #6 Fencing Token (PostgreSQL 故障注入证明: `TestFencingTokenPreventsStaleWriter` 4/4 PASS + `TestFencingTokenCrashRecovery` 1/1 PASS)
-- [P7] AI/通知/Marketplace 官方 manifest 尚未达到版本、checksum、权限声明全覆盖。
-- [P8] PostgreSQL 新库、最近两个正式版本升级、RLS enforce、大规模租户滚动升级、executor 崩溃接管和备份恢复演练尚未提供 CI/演练证据。
-- [P9] 全量前端测试和关键 E2E 的最终认证结果尚未归档。
+- [P7] ~~AI/通知/Marketplace 官方 manifest 尚未达到版本、checksum、权限声明全覆盖。~~ ✅ #7 Manifest 全覆盖（version + SHA-256 checksum + requiredPermissions，注册 fail-closed 门禁 `connector/manifest_gate_test.go`；生产 API 端到端验证，证据见 v1.1.0 归档 §2）
+- [P8] ~~PostgreSQL 新库、最近两个正式版本升级、RLS enforce、大规模租户滚动升级、executor 崩溃接管和备份恢复演练尚未提供 CI/演练证据。~~ ✅ #8 PG 演练证据（PG 17.10 生产栈：迁移 007-010 应用、17 表 RLS enforce、六组件账本 succeeded、真实 schema 146 表备份恢复演练一致、42P08 初始化缺陷修复；CI `pg-disaster-recovery.yml` 持续运行。跨两个 PG 大版本 pg_upgrade 实机演练与大规模租户滚动升级压测列入 v1.5 跟踪，证据见 v1.1.0 归档 §3）
+- [P9] ~~全量前端测试和关键 E2E 的最终认证结果尚未归档。~~ ✅ #9 前端认证归档（3300 单测通过 + 生产模式登录/仪表盘/工单列表浏览器 E2E 冒烟 + 截图，证据见 v1.1.0 归档 §4）
 
 ## 签字
 

@@ -34,6 +34,8 @@ func NewSkillRegistry() *SkillRegistry {
 }
 
 // Register 注册技能
+// fail closed：实现了 ExtendedSkill 的技能必须提供完整 manifest
+// （name/version/requiredPermissions），否则拒绝注册。
 func (r *SkillRegistry) Register(skill Skill) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -41,6 +43,12 @@ func (r *SkillRegistry) Register(skill Skill) error {
 	name := skill.Name()
 	if _, exists := r.skills[name]; exists {
 		return fmt.Errorf("skill %s already registered", name)
+	}
+
+	if ext, ok := skill.(ExtendedSkill); ok {
+		if err := ext.Manifest().ValidateForRegistration(); err != nil {
+			return err
+		}
 	}
 
 	r.skills[name] = skill

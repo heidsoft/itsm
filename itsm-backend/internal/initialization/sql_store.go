@@ -180,9 +180,9 @@ func (s *SQLStore) StartAttempt(
 			(run_id, scope_type, scope_id, component, attempt, from_version,
 			 target_version, source_checksum, fencing_token, status)
 		VALUES (
-			$1, $2, $3, $4,
+			$1, $2::text, $3, $4::text,
 			COALESCE((SELECT MAX(attempt) + 1 FROM initialization_component_attempts
-			          WHERE scope_type = $2 AND scope_id = $3 AND component = $4), 1),
+			          WHERE scope_type = $2::text AND scope_id = $3 AND component = $4::text), 1),
 			$5, $6, $7, $8, 'running'
 		)
 		RETURNING id
@@ -250,9 +250,9 @@ func (s *SQLStore) CompleteComponent(
 	}
 	installationResult, err := tx.ExecContext(ctx, `
 		UPDATE initialization_installations
-		SET installed_version = CASE WHEN $1 = 'succeeded' THEN $2 ELSE installed_version END,
-		    source_checksum = CASE WHEN $1 = 'succeeded' THEN $3 ELSE source_checksum END,
-		    status = $1, last_run_id = $4, result_summary = $5,
+		SET installed_version = CASE WHEN $1::text = 'succeeded' THEN $2 ELSE installed_version END,
+		    source_checksum = CASE WHEN $1::text = 'succeeded' THEN $3 ELSE source_checksum END,
+		    status = $1::text, last_run_id = $4, result_summary = $5,
 		    error_message = $6, lease_owner = '', lease_expires_at = NULL,
 		    heartbeat_at = NOW(), updated_at = NOW()
 		WHERE scope_type = $7 AND scope_id = $8 AND component = $9
@@ -281,9 +281,9 @@ func (s *SQLStore) MarkInstallation(
 	status := statusFor(applyErr)
 	resultSQL, err := s.db.ExecContext(ctx, `
 		UPDATE initialization_installations
-		SET installed_version = CASE WHEN $1 = 'succeeded' THEN $2 ELSE installed_version END,
-		    source_checksum = CASE WHEN $1 = 'succeeded' THEN $3 ELSE source_checksum END,
-		    status = $1, last_run_id = $4, result_summary = $5,
+		SET installed_version = CASE WHEN $1::text = 'succeeded' THEN $2 ELSE installed_version END,
+		    source_checksum = CASE WHEN $1::text = 'succeeded' THEN $3 ELSE source_checksum END,
+		    status = $1::text, last_run_id = $4, result_summary = $5,
 		    error_message = $6, updated_at = NOW()
 		WHERE scope_type = $7 AND scope_id = $8 AND component = $9
 		  AND fencing_token = $10

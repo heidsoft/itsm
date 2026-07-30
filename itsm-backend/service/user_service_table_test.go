@@ -142,7 +142,7 @@ func TestCreateUser_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 			ctx := context.Background()
 			logger := zaptest.NewLogger(t).Sugar()
@@ -313,7 +313,7 @@ func TestListUsers_WithFilters_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 			ctx := context.Background()
 			logger := zaptest.NewLogger(t).Sugar()
@@ -426,7 +426,7 @@ func TestUpdateUser_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 			ctx := context.Background()
 			logger := zaptest.NewLogger(t).Sugar()
@@ -516,7 +516,7 @@ func TestChangeUserStatus_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 			ctx := context.Background()
 			logger := zaptest.NewLogger(t).Sugar()
@@ -605,7 +605,7 @@ func TestGetUserStats_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 			ctx := context.Background()
 			logger := zaptest.NewLogger(t).Sugar()
@@ -672,7 +672,7 @@ func TestDeleteUser_TableDriven(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			client := enttest.Open(t, "sqlite3", testDSN())
 			defer client.Close()
 			ctx := context.Background()
 			logger := zaptest.NewLogger(t).Sugar()

@@ -1,6 +1,13 @@
 package service
 
-import "context"
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"sort"
+	"strings"
+)
 
 // SkillManifest 技能自描述信息，用于市场展示和自动装配
 type SkillManifest struct {
@@ -23,6 +30,41 @@ type SkillManifest struct {
 	Rating              float64     `json:"rating,omitempty"`              // 评分
 	InstallCount        int         `json:"installCount,omitempty"`        // 安装次数
 	IsOfficial          bool        `json:"isOfficial,omitempty"`          // 是否是官方技能
+	Checksum            string      `json:"checksum,omitempty"`            // manifest 完整性校验和（注册时自动计算，sha256:...）
+}
+
+// ComputeChecksum 基于身份与安全关键字段计算确定性校验和，
+// 与 connector.Manifest.ComputeChecksum 保持同样的覆盖范围约定。
+func (m SkillManifest) ComputeChecksum() string {
+	caps := append([]string(nil), m.Capabilities...)
+	sort.Strings(caps)
+	perms := append([]string(nil), m.RequiredPermissions...)
+	sort.Strings(perms)
+	payload := strings.Join([]string{
+		m.Name,
+		m.Version,
+		m.Provider,
+		strings.Join(caps, ","),
+		strings.Join(perms, ","),
+		m.MinSystemVersion,
+	}, "|")
+	sum := sha256.Sum256([]byte(payload))
+	return "sha256:" + hex.EncodeToString(sum[:])
+}
+
+// ValidateForRegistration 注册前的 manifest 完整性校验（fail closed）：
+// 所有技能必须声明 name、version 和所需系统权限，否则拒绝注册。
+func (m SkillManifest) ValidateForRegistration() error {
+	if m.Name == "" {
+		return errors.New("skill manifest: name must not be empty")
+	}
+	if m.Version == "" {
+		return errors.New("skill manifest: version must not be empty for " + m.Name)
+	}
+	if len(m.RequiredPermissions) == 0 {
+		return errors.New("skill manifest: requiredPermissions must be declared for " + m.Name)
+	}
+	return nil
 }
 
 // SkillMetrics 技能运行指标

@@ -33,8 +33,10 @@ func (d *DingTalk) Manifest() connector.Manifest {
 			connector.CapSendCard,
 			connector.CapReplyMessage,
 		},
-		Tags:     []string{"im", "dingtalk", "china"},
-		Homepage: "https://open.dingtalk.com",
+		Tags:                []string{"im", "dingtalk", "china"},
+		Homepage:            "https://open.dingtalk.com",
+		IsOfficial:          true,
+		RequiredPermissions: []string{"connector:write"},
 	}
 }
 

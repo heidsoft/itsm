@@ -17,7 +17,7 @@ import (
 // ==================== 测试设置辅助函数 ====================
 
 func setupEscalationTest(t *testing.T) (*ent.Client, *EscalationService, context.Context) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(t, "sqlite3", testDSN())
 	logger := zaptest.NewLogger(t).Sugar()
 	service := NewEscalationService(client, logger)
 	ctx := context.Background()
