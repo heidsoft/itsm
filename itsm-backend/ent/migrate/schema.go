@@ -4346,6 +4346,55 @@ var (
 		Columns:    TicketTemplatesColumns,
 		PrimaryKey: []*schema.Column{TicketTemplatesColumns[0]},
 	}
+	// TicketTypesColumns holds the columns for the "ticket_types" table.
+	TicketTypesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "code", Type: field.TypeString, Size: 50},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "description", Type: field.TypeString, Size: 2147483647},
+		{Name: "icon", Type: field.TypeString, Size: 50},
+		{Name: "color", Type: field.TypeString, Size: 20},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "custom_fields", Type: field.TypeJSON},
+		{Name: "approval_enabled", Type: field.TypeBool, Default: false},
+		{Name: "approval_workflow_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "approval_chain", Type: field.TypeJSON},
+		{Name: "sla_enabled", Type: field.TypeBool, Default: false},
+		{Name: "default_sla_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "auto_assign_enabled", Type: field.TypeBool, Default: false},
+		{Name: "assignment_rules", Type: field.TypeJSON},
+		{Name: "notification_config", Type: field.TypeJSON},
+		{Name: "permission_config", Type: field.TypeJSON},
+		{Name: "tenant_id", Type: field.TypeInt64},
+		{Name: "created_by", Type: field.TypeInt64},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeInt64, Nullable: true},
+		{Name: "usage_count", Type: field.TypeInt, Default: 0},
+	}
+	// TicketTypesTable holds the schema information for the "ticket_types" table.
+	TicketTypesTable = &schema.Table{
+		Name:       "ticket_types",
+		Columns:    TicketTypesColumns,
+		PrimaryKey: []*schema.Column{TicketTypesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tickettype_code_tenant_id",
+				Unique:  true,
+				Columns: []*schema.Column{TicketTypesColumns[1], TicketTypesColumns[17]},
+			},
+			{
+				Name:    "tickettype_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{TicketTypesColumns[17]},
+			},
+			{
+				Name:    "tickettype_status",
+				Unique:  false,
+				Columns: []*schema.Column{TicketTypesColumns[6]},
+			},
+		},
+	}
 	// TicketViewsColumns holds the columns for the "ticket_views" table.
 	TicketViewsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -5153,6 +5202,7 @@ var (
 		TicketNotificationsTable,
 		TicketTagsTable,
 		TicketTemplatesTable,
+		TicketTypesTable,
 		TicketViewsTable,
 		TicketWorkflowRecordsTable,
 		ToolInvocationsTable,

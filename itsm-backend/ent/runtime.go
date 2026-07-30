@@ -110,6 +110,7 @@ import (
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
+	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/toolinvocation"
@@ -3732,6 +3733,72 @@ func init() {
 	tickettemplate.DefaultUpdatedAt = tickettemplateDescUpdatedAt.Default.(func() time.Time)
 	// tickettemplate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	tickettemplate.UpdateDefaultUpdatedAt = tickettemplateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	tickettypeFields := schema.TicketType{}.Fields()
+	_ = tickettypeFields
+	// tickettypeDescCode is the schema descriptor for code field.
+	tickettypeDescCode := tickettypeFields[0].Descriptor()
+	// tickettype.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	tickettype.CodeValidator = func() func(string) error {
+		validators := tickettypeDescCode.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(code string) error {
+			for _, fn := range fns {
+				if err := fn(code); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// tickettypeDescName is the schema descriptor for name field.
+	tickettypeDescName := tickettypeFields[1].Descriptor()
+	// tickettype.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	tickettype.NameValidator = func() func(string) error {
+		validators := tickettypeDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// tickettypeDescIcon is the schema descriptor for icon field.
+	tickettypeDescIcon := tickettypeFields[3].Descriptor()
+	// tickettype.IconValidator is a validator for the "icon" field. It is called by the builders before save.
+	tickettype.IconValidator = tickettypeDescIcon.Validators[0].(func(string) error)
+	// tickettypeDescColor is the schema descriptor for color field.
+	tickettypeDescColor := tickettypeFields[4].Descriptor()
+	// tickettype.ColorValidator is a validator for the "color" field. It is called by the builders before save.
+	tickettype.ColorValidator = tickettypeDescColor.Validators[0].(func(string) error)
+	// tickettypeDescStatus is the schema descriptor for status field.
+	tickettypeDescStatus := tickettypeFields[5].Descriptor()
+	// tickettype.DefaultStatus holds the default value on creation for the status field.
+	tickettype.DefaultStatus = tickettypeDescStatus.Default.(string)
+	// tickettypeDescApprovalEnabled is the schema descriptor for approval_enabled field.
+	tickettypeDescApprovalEnabled := tickettypeFields[7].Descriptor()
+	// tickettype.DefaultApprovalEnabled holds the default value on creation for the approval_enabled field.
+	tickettype.DefaultApprovalEnabled = tickettypeDescApprovalEnabled.Default.(bool)
+	// tickettypeDescSLAEnabled is the schema descriptor for sla_enabled field.
+	tickettypeDescSLAEnabled := tickettypeFields[10].Descriptor()
+	// tickettype.DefaultSLAEnabled holds the default value on creation for the sla_enabled field.
+	tickettype.DefaultSLAEnabled = tickettypeDescSLAEnabled.Default.(bool)
+	// tickettypeDescAutoAssignEnabled is the schema descriptor for auto_assign_enabled field.
+	tickettypeDescAutoAssignEnabled := tickettypeFields[12].Descriptor()
+	// tickettype.DefaultAutoAssignEnabled holds the default value on creation for the auto_assign_enabled field.
+	tickettype.DefaultAutoAssignEnabled = tickettypeDescAutoAssignEnabled.Default.(bool)
+	// tickettypeDescUsageCount is the schema descriptor for usage_count field.
+	tickettypeDescUsageCount := tickettypeFields[21].Descriptor()
+	// tickettype.DefaultUsageCount holds the default value on creation for the usage_count field.
+	tickettype.DefaultUsageCount = tickettypeDescUsageCount.Default.(int)
 	ticketviewFields := schema.TicketView{}.Fields()
 	_ = ticketviewFields
 	// ticketviewDescName is the schema descriptor for name field.

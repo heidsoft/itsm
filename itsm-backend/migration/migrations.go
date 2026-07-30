@@ -54,6 +54,11 @@ var RegisteredMigrations = []Migration{
 		Description: "Enable RLS row-level tenant isolation on all tenant-scoped tables",
 		RollbackSQL: "",
 	},
+	{
+		Version:     "010_add_ticket_types",
+		Description: "Add ticket_types table for structured ticket type definitions with JSON config fields",
+		RollbackSQL: "",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -521,6 +526,39 @@ CREATE POLICY tenant_isolation_ticket_views ON ticket_views
 
 COMMENT ON FUNCTION get_current_tenant_id() IS
     'Returns the current tenant ID from session settings, used by RLS policies for tenant isolation';
+`
+	case "010_add_ticket_types":
+		return `
+CREATE TABLE IF NOT EXISTS ticket_types (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    icon VARCHAR(50),
+    color VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'archived')),
+    custom_fields JSONB DEFAULT '{}',
+    approval_enabled BOOLEAN NOT NULL DEFAULT false,
+    approval_workflow_id BIGINT,
+    approval_chain JSONB DEFAULT '[]',
+    sla_enabled BOOLEAN NOT NULL DEFAULT false,
+    default_sla_id BIGINT,
+    auto_assign_enabled BOOLEAN NOT NULL DEFAULT false,
+    assignment_rules JSONB DEFAULT '[]',
+    notification_config JSONB DEFAULT '{}',
+    permission_config JSONB DEFAULT '{}',
+    created_by BIGINT NOT NULL REFERENCES users(id),
+    tenant_id BIGINT NOT NULL REFERENCES tenant(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT REFERENCES users(id),
+    usage_count INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(code, tenant_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ticket_types_tenant ON ticket_types(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ticket_types_code ON ticket_types(code);
+CREATE INDEX IF NOT EXISTS idx_ticket_types_status ON ticket_types(status);
 `
 	default:
 		return ""

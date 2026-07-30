@@ -118,6 +118,7 @@ import (
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
+	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/toolinvocation"
@@ -353,6 +354,8 @@ type Client struct {
 	TicketTag *TicketTagClient
 	// TicketTemplate is the client for interacting with the TicketTemplate builders.
 	TicketTemplate *TicketTemplateClient
+	// TicketType is the client for interacting with the TicketType builders.
+	TicketType *TicketTypeClient
 	// TicketView is the client for interacting with the TicketView builders.
 	TicketView *TicketViewClient
 	// TicketWorkflowRecord is the client for interacting with the TicketWorkflowRecord builders.
@@ -489,6 +492,7 @@ func (c *Client) init() {
 	c.TicketNotification = NewTicketNotificationClient(c.config)
 	c.TicketTag = NewTicketTagClient(c.config)
 	c.TicketTemplate = NewTicketTemplateClient(c.config)
+	c.TicketType = NewTicketTypeClient(c.config)
 	c.TicketView = NewTicketViewClient(c.config)
 	c.TicketWorkflowRecord = NewTicketWorkflowRecordClient(c.config)
 	c.ToolInvocation = NewToolInvocationClient(c.config)
@@ -697,6 +701,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		TicketNotification:          NewTicketNotificationClient(cfg),
 		TicketTag:                   NewTicketTagClient(cfg),
 		TicketTemplate:              NewTicketTemplateClient(cfg),
+		TicketType:                  NewTicketTypeClient(cfg),
 		TicketView:                  NewTicketViewClient(cfg),
 		TicketWorkflowRecord:        NewTicketWorkflowRecordClient(cfg),
 		ToolInvocation:              NewToolInvocationClient(cfg),
@@ -832,6 +837,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		TicketNotification:          NewTicketNotificationClient(cfg),
 		TicketTag:                   NewTicketTagClient(cfg),
 		TicketTemplate:              NewTicketTemplateClient(cfg),
+		TicketType:                  NewTicketTypeClient(cfg),
 		TicketView:                  NewTicketViewClient(cfg),
 		TicketWorkflowRecord:        NewTicketWorkflowRecordClient(cfg),
 		ToolInvocation:              NewToolInvocationClient(cfg),
@@ -895,9 +901,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
 		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
 		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
-		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketType,
+		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
+		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -932,9 +938,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
 		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
 		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
-		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketType,
+		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
+		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -1157,6 +1163,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.TicketTag.mutate(ctx, m)
 	case *TicketTemplateMutation:
 		return c.TicketTemplate.mutate(ctx, m)
+	case *TicketTypeMutation:
+		return c.TicketType.mutate(ctx, m)
 	case *TicketViewMutation:
 		return c.TicketView.mutate(ctx, m)
 	case *TicketWorkflowRecordMutation:
@@ -18211,6 +18219,139 @@ func (c *TicketTemplateClient) mutate(ctx context.Context, m *TicketTemplateMuta
 	}
 }
 
+// TicketTypeClient is a client for the TicketType schema.
+type TicketTypeClient struct {
+	config
+}
+
+// NewTicketTypeClient returns a client for the TicketType from the given config.
+func NewTicketTypeClient(c config) *TicketTypeClient {
+	return &TicketTypeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tickettype.Hooks(f(g(h())))`.
+func (c *TicketTypeClient) Use(hooks ...Hook) {
+	c.hooks.TicketType = append(c.hooks.TicketType, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tickettype.Intercept(f(g(h())))`.
+func (c *TicketTypeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TicketType = append(c.inters.TicketType, interceptors...)
+}
+
+// Create returns a builder for creating a TicketType entity.
+func (c *TicketTypeClient) Create() *TicketTypeCreate {
+	mutation := newTicketTypeMutation(c.config, OpCreate)
+	return &TicketTypeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TicketType entities.
+func (c *TicketTypeClient) CreateBulk(builders ...*TicketTypeCreate) *TicketTypeCreateBulk {
+	return &TicketTypeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TicketTypeClient) MapCreateBulk(slice any, setFunc func(*TicketTypeCreate, int)) *TicketTypeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TicketTypeCreateBulk{err: fmt.Errorf("calling to TicketTypeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TicketTypeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TicketTypeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TicketType.
+func (c *TicketTypeClient) Update() *TicketTypeUpdate {
+	mutation := newTicketTypeMutation(c.config, OpUpdate)
+	return &TicketTypeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TicketTypeClient) UpdateOne(_m *TicketType) *TicketTypeUpdateOne {
+	mutation := newTicketTypeMutation(c.config, OpUpdateOne, withTicketType(_m))
+	return &TicketTypeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TicketTypeClient) UpdateOneID(id int) *TicketTypeUpdateOne {
+	mutation := newTicketTypeMutation(c.config, OpUpdateOne, withTicketTypeID(id))
+	return &TicketTypeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TicketType.
+func (c *TicketTypeClient) Delete() *TicketTypeDelete {
+	mutation := newTicketTypeMutation(c.config, OpDelete)
+	return &TicketTypeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TicketTypeClient) DeleteOne(_m *TicketType) *TicketTypeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TicketTypeClient) DeleteOneID(id int) *TicketTypeDeleteOne {
+	builder := c.Delete().Where(tickettype.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TicketTypeDeleteOne{builder}
+}
+
+// Query returns a query builder for TicketType.
+func (c *TicketTypeClient) Query() *TicketTypeQuery {
+	return &TicketTypeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTicketType},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TicketType entity by its id.
+func (c *TicketTypeClient) Get(ctx context.Context, id int) (*TicketType, error) {
+	return c.Query().Where(tickettype.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TicketTypeClient) GetX(ctx context.Context, id int) *TicketType {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TicketTypeClient) Hooks() []Hook {
+	return c.hooks.TicketType
+}
+
+// Interceptors returns the client interceptors.
+func (c *TicketTypeClient) Interceptors() []Interceptor {
+	return c.inters.TicketType
+}
+
+func (c *TicketTypeClient) mutate(ctx context.Context, m *TicketTypeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TicketTypeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TicketTypeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TicketTypeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TicketTypeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TicketType mutation op: %q", m.Op())
+	}
+}
+
 // TicketViewClient is a client for the TicketView schema.
 type TicketViewClient struct {
 	config
@@ -19866,8 +20007,8 @@ type (
 		Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
 		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
 		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
-		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
+		TicketType, TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor,
+		Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
@@ -19893,7 +20034,7 @@ type (
 		Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
 		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
 		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
-		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
+		TicketType, TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor,
+		Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )
