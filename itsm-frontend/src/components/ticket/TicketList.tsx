@@ -49,8 +49,9 @@ interface TicketListProps {
 const TICKET_STATUS_CONFIG: Record<string, { color: string; text: string }> = {
   new: { color: 'blue', text: '新建' },
   open: { color: 'blue', text: '待处理' },
-  inProgress: { color: 'orange', text: '处理中' },
+  in_progress: { color: 'orange', text: '处理中' },
   pending: { color: 'yellow', text: '等待中' },
+  pending_approval: { color: 'gold', text: '待审批' },
   resolved: { color: 'green', text: '已解决' },
   closed: { color: 'default', text: '已关闭' },
   cancelled: { color: 'red', text: '已取消' },
@@ -69,6 +70,7 @@ const PRIORITY_CONFIG: Record<string, { color: string; text: string }> = {
 const TICKET_TYPE_CONFIG: Record<string, string> = {
   incident: '事件',
   request: '请求',
+  service_request: '服务请求',
   problem: '问题',
   change: '变更',
   task: '任务',

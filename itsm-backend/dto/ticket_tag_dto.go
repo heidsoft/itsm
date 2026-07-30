@@ -16,18 +16,18 @@ type TicketTagResponse struct {
 
 // TicketCategoryResponse 分类响应
 type TicketCategoryResponse struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Code        string    `json:"code"`
-	Description string    `json:"description"`
-	ParentID    *int      `json:"parentId,omitempty"`
-	SortOrder   int       `json:"sortOrder"`
-	IsActive    bool      `json:"isActive"`
-	WorkflowID  *int      `json:"workflowId,omitempty"`
-	DepartmentID *int     `json:"departmentId,omitempty"`
-	TenantID    int       `json:"tenantId"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID           int       `json:"id"`
+	Name         string    `json:"name"`
+	Code         string    `json:"code"`
+	Description  string    `json:"description"`
+	ParentID     *int      `json:"parentId,omitempty"`
+	SortOrder    int       `json:"sortOrder"`
+	IsActive     bool      `json:"isActive"`
+	WorkflowID   *int      `json:"workflowId,omitempty"`
+	DepartmentID *int      `json:"departmentId,omitempty"`
+	TenantID     int       `json:"tenantId"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // TicketCategoryTreeResponse 分类树响应

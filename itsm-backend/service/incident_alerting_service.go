@@ -267,7 +267,6 @@ func (s *IncidentAlertingService) sendAlertNotifications(ctx context.Context, al
 				"alert_id", alert.ID)
 		}
 	}
-
 }
 
 // getAlertChannels 获取告警渠道

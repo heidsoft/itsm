@@ -132,7 +132,8 @@ func prepareRolePermissionTenantMigration(
 	}
 
 	var unresolved int
-	if err := tx.QueryRowContext(ctx,
+	if err := tx.QueryRowContext(
+		ctx,
 		`SELECT COUNT(*) FROM role_permissions WHERE tenant_id IS NULL`,
 	).Scan(&unresolved); err != nil {
 		return fmt.Errorf("verify role_permissions.tenant_id: %w", err)

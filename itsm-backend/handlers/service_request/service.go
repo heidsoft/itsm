@@ -274,7 +274,8 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	// 若存在待办流程任务但完成失败（如操作人不是流程任务审批人），则中止业务审批，避免双轨分叉。
 	if s.approvalBridge != nil {
 		if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
-			ctx, tenantID, actorID, string(dto.BusinessTypeServiceRequest), id, action, comment); bridgeErr != nil {
+			ctx, tenantID, actorID, string(dto.BusinessTypeServiceRequest), id, action, comment,
+		); bridgeErr != nil {
 			return nil, nil, common.NewInternalError("同步流程审批任务失败", bridgeErr)
 		}
 	}

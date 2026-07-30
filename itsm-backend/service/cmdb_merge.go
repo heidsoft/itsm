@@ -40,37 +40,37 @@ const (
 // defaultManagedFields returns the standard merge strategies for CMDB CI fields.
 func defaultManagedFields() []ManagedField {
 	return []ManagedField{
-		{FieldName: "Name",               Strategy: AlwaysUseIncoming,              CanBeEmpty: false},
-		{FieldName: "Description",        Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "CiTypeID",          Strategy: AlwaysUseIncoming,              CanBeEmpty: false},
-		{FieldName: "CiType",            Strategy: AlwaysUseIncoming,              CanBeEmpty: false},
-		{FieldName: "Status",            Strategy: AlwaysUseIncoming,              CanBeEmpty: false},
-		{FieldName: "Environment",       Strategy: AlwaysUseIncoming,              CanBeEmpty: false},
-		{FieldName: "Criticality",       Strategy: AlwaysUseIncoming,              CanBeEmpty: false},
-		{FieldName: "AssetTag",          Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
-		{FieldName: "SerialNumber",      Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
-		{FieldName: "Model",             Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
-		{FieldName: "Vendor",            Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
-		{FieldName: "Location",          Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
-		{FieldName: "AssignedTo",        Strategy: UseExistingOrDefault,           CanBeEmpty: true},
-		{FieldName: "OwnedBy",           Strategy: UseExistingOrDefault,            CanBeEmpty: true},
-		{FieldName: "DiscoverySource",   Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "Source",            Strategy: AlwaysUseIncoming,              CanBeEmpty: false},
-		{FieldName: "Attributes",        Strategy: UseIncomingOrExistingOrDefault,  CanBeEmpty: true},
-		{FieldName: "CloudProvider",     Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "CloudAccountID",    Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "CloudRegion",       Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "CloudZone",         Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "CloudResourceID",   Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "CloudResourceType", Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "CloudMetadata",     Strategy: UseIncomingOrExistingOrDefault,  CanBeEmpty: true},
-		{FieldName: "CloudTags",          Strategy: UseIncomingOrExistingOrDefault,  CanBeEmpty: true},
-		{FieldName: "CloudMetrics",      Strategy: UseIncomingOrExistingOrDefault,  CanBeEmpty: true},
-		{FieldName: "CloudSyncTime",      Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "CloudSyncStatus",   Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "LifecycleStatus",   Strategy: AlwaysUseIncoming,              CanBeEmpty: false},
-		{FieldName: "EffectiveAt",       Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
-		{FieldName: "ExpireAt",          Strategy: AlwaysUseIncoming,              CanBeEmpty: true},
+		{FieldName: "Name", Strategy: AlwaysUseIncoming, CanBeEmpty: false},
+		{FieldName: "Description", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "CiTypeID", Strategy: AlwaysUseIncoming, CanBeEmpty: false},
+		{FieldName: "CiType", Strategy: AlwaysUseIncoming, CanBeEmpty: false},
+		{FieldName: "Status", Strategy: AlwaysUseIncoming, CanBeEmpty: false},
+		{FieldName: "Environment", Strategy: AlwaysUseIncoming, CanBeEmpty: false},
+		{FieldName: "Criticality", Strategy: AlwaysUseIncoming, CanBeEmpty: false},
+		{FieldName: "AssetTag", Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "SerialNumber", Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "Model", Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "Vendor", Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "Location", Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "AssignedTo", Strategy: UseExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "OwnedBy", Strategy: UseExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "DiscoverySource", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "Source", Strategy: AlwaysUseIncoming, CanBeEmpty: false},
+		{FieldName: "Attributes", Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "CloudProvider", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "CloudAccountID", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "CloudRegion", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "CloudZone", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "CloudResourceID", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "CloudResourceType", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "CloudMetadata", Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "CloudTags", Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "CloudMetrics", Strategy: UseIncomingOrExistingOrDefault, CanBeEmpty: true},
+		{FieldName: "CloudSyncTime", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "CloudSyncStatus", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "LifecycleStatus", Strategy: AlwaysUseIncoming, CanBeEmpty: false},
+		{FieldName: "EffectiveAt", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
+		{FieldName: "ExpireAt", Strategy: AlwaysUseIncoming, CanBeEmpty: true},
 	}
 }
 
@@ -270,39 +270,72 @@ func getFieldValue(ci *ent.ConfigurationItem, fieldName string) interface{} {
 		return nil
 	}
 	switch fieldName {
-	case "Name":               return ci.Name
-	case "Description":        return ci.Description
-	case "CiTypeID":          return ci.CiTypeID
-	case "CiType":            return ci.CiType
-	case "Status":            return ci.Status
-	case "Environment":       return ci.Environment
-	case "Criticality":       return ci.Criticality
-	case "AssetTag":          return ci.AssetTag
-	case "SerialNumber":      return ci.SerialNumber
-	case "Model":             return ci.Model
-	case "Vendor":            return ci.Vendor
-	case "Location":          return ci.Location
-	case "AssignedTo":        return ci.AssignedTo
-	case "OwnedBy":           return ci.OwnedBy
-	case "DiscoverySource":   return ci.DiscoverySource
-	case "Source":            return ci.Source
-	case "Attributes":        return ci.Attributes
-	case "CloudProvider":     return ci.CloudProvider
-	case "CloudAccountID":    return ci.CloudAccountID
-	case "CloudRegion":       return ci.CloudRegion
-	case "CloudZone":         return ci.CloudZone
-	case "CloudResourceID":   return ci.CloudResourceID
-	case "CloudResourceType": return ci.CloudResourceType
-	case "CloudMetadata":     return ci.CloudMetadata
-	case "CloudTags":          return ci.CloudTags
-	case "CloudMetrics":       return ci.CloudMetrics
-	case "CloudSyncTime":      return ci.CloudSyncTime
-	case "CloudSyncStatus":   return ci.CloudSyncStatus
-	case "LifecycleStatus":   return ci.LifecycleStatus
-	case "EffectiveAt":       return ci.EffectiveAt
-	case "ExpireAt":          return ci.ExpireAt
-	case "OwnershipMode":      return ci.OwnershipMode
-	case "LocalModifiedAt":  return ci.LocalModifiedAt
+	case "Name":
+		return ci.Name
+	case "Description":
+		return ci.Description
+	case "CiTypeID":
+		return ci.CiTypeID
+	case "CiType":
+		return ci.CiType
+	case "Status":
+		return ci.Status
+	case "Environment":
+		return ci.Environment
+	case "Criticality":
+		return ci.Criticality
+	case "AssetTag":
+		return ci.AssetTag
+	case "SerialNumber":
+		return ci.SerialNumber
+	case "Model":
+		return ci.Model
+	case "Vendor":
+		return ci.Vendor
+	case "Location":
+		return ci.Location
+	case "AssignedTo":
+		return ci.AssignedTo
+	case "OwnedBy":
+		return ci.OwnedBy
+	case "DiscoverySource":
+		return ci.DiscoverySource
+	case "Source":
+		return ci.Source
+	case "Attributes":
+		return ci.Attributes
+	case "CloudProvider":
+		return ci.CloudProvider
+	case "CloudAccountID":
+		return ci.CloudAccountID
+	case "CloudRegion":
+		return ci.CloudRegion
+	case "CloudZone":
+		return ci.CloudZone
+	case "CloudResourceID":
+		return ci.CloudResourceID
+	case "CloudResourceType":
+		return ci.CloudResourceType
+	case "CloudMetadata":
+		return ci.CloudMetadata
+	case "CloudTags":
+		return ci.CloudTags
+	case "CloudMetrics":
+		return ci.CloudMetrics
+	case "CloudSyncTime":
+		return ci.CloudSyncTime
+	case "CloudSyncStatus":
+		return ci.CloudSyncStatus
+	case "LifecycleStatus":
+		return ci.LifecycleStatus
+	case "EffectiveAt":
+		return ci.EffectiveAt
+	case "ExpireAt":
+		return ci.ExpireAt
+	case "OwnershipMode":
+		return ci.OwnershipMode
+	case "LocalModifiedAt":
+		return ci.LocalModifiedAt
 	}
 	return nil
 }
@@ -313,33 +346,60 @@ func setFieldValue(ci *ent.ConfigurationItem, fieldName string, value interface{
 		return
 	}
 	switch fieldName {
-	case "Name":               ci.Name, _ = value.(string)
-	case "Description":        ci.Description, _ = value.(string)
-	case "Status":            ci.Status, _ = value.(string)
-	case "Environment":       ci.Environment, _ = value.(string)
-	case "Criticality":       ci.Criticality, _ = value.(string)
-	case "AssetTag":          ci.AssetTag, _ = value.(string)
-	case "SerialNumber":      ci.SerialNumber, _ = value.(string)
-	case "Model":             ci.Model, _ = value.(string)
-	case "Vendor":            ci.Vendor, _ = value.(string)
-	case "Location":          ci.Location, _ = value.(string)
-	case "AssignedTo":        ci.AssignedTo, _ = value.(string)
-	case "OwnedBy":           ci.OwnedBy, _ = value.(string)
-	case "DiscoverySource":   ci.DiscoverySource, _ = value.(string)
-	case "Source":            ci.Source, _ = value.(string)
-	case "Attributes":         ci.Attributes, _ = value.(map[string]interface{})
-	case "CloudProvider":     ci.CloudProvider, _ = value.(string)
-	case "CloudAccountID":    ci.CloudAccountID, _ = value.(string)
-	case "CloudRegion":       ci.CloudRegion, _ = value.(string)
-	case "CloudZone":         ci.CloudZone, _ = value.(string)
-	case "CloudResourceID":   ci.CloudResourceID, _ = value.(string)
-	case "CloudResourceType": ci.CloudResourceType, _ = value.(string)
-	case "CloudMetadata":     ci.CloudMetadata, _ = value.(map[string]interface{})
-	case "CloudTags":          ci.CloudTags, _ = value.(map[string]interface{})
-	case "CloudMetrics":       ci.CloudMetrics, _ = value.(map[string]interface{})
-	case "CloudSyncStatus":   ci.CloudSyncStatus, _ = value.(string)
-	case "LifecycleStatus":   ci.LifecycleStatus, _ = value.(string)
-	case "OwnershipMode":     ci.OwnershipMode, _ = value.(string)
+	case "Name":
+		ci.Name, _ = value.(string)
+	case "Description":
+		ci.Description, _ = value.(string)
+	case "Status":
+		ci.Status, _ = value.(string)
+	case "Environment":
+		ci.Environment, _ = value.(string)
+	case "Criticality":
+		ci.Criticality, _ = value.(string)
+	case "AssetTag":
+		ci.AssetTag, _ = value.(string)
+	case "SerialNumber":
+		ci.SerialNumber, _ = value.(string)
+	case "Model":
+		ci.Model, _ = value.(string)
+	case "Vendor":
+		ci.Vendor, _ = value.(string)
+	case "Location":
+		ci.Location, _ = value.(string)
+	case "AssignedTo":
+		ci.AssignedTo, _ = value.(string)
+	case "OwnedBy":
+		ci.OwnedBy, _ = value.(string)
+	case "DiscoverySource":
+		ci.DiscoverySource, _ = value.(string)
+	case "Source":
+		ci.Source, _ = value.(string)
+	case "Attributes":
+		ci.Attributes, _ = value.(map[string]interface{})
+	case "CloudProvider":
+		ci.CloudProvider, _ = value.(string)
+	case "CloudAccountID":
+		ci.CloudAccountID, _ = value.(string)
+	case "CloudRegion":
+		ci.CloudRegion, _ = value.(string)
+	case "CloudZone":
+		ci.CloudZone, _ = value.(string)
+	case "CloudResourceID":
+		ci.CloudResourceID, _ = value.(string)
+	case "CloudResourceType":
+		ci.CloudResourceType, _ = value.(string)
+	case "CloudMetadata":
+		ci.CloudMetadata, _ = value.(map[string]interface{})
+	case "CloudTags":
+		ci.CloudTags, _ = value.(map[string]interface{})
+	case "CloudMetrics":
+		ci.CloudMetrics, _ = value.(map[string]interface{})
+	case "CloudSyncStatus":
+		ci.CloudSyncStatus, _ = value.(string)
+	case "LifecycleStatus":
+		ci.LifecycleStatus, _ = value.(string)
+	case "OwnershipMode":
+		ci.OwnershipMode, _ = value.(string)
 	}
 }
 

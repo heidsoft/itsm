@@ -323,7 +323,8 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 	// P0-1：审批先桥接完成对应的 BPMN 待办任务，失败则中止（fail-closed）
 	if s.approvalBridge != nil {
 		if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
-			ctx, tenantID, actorID, string(dto.BusinessTypeRelease), id, action, comment); bridgeErr != nil {
+			ctx, tenantID, actorID, string(dto.BusinessTypeRelease), id, action, comment,
+		); bridgeErr != nil {
 			return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
 		}
 	}

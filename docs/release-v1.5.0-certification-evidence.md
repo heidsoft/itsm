@@ -1,4 +1,4 @@
-# v1.1.0 发布认证证据归档（2026-07-30）
+# v1.5.0 发布认证证据归档（2026-07-30）
 
 本文档归档 `docs/initialization-release-certification.md` 中 P7/P8/P9 阻断项的关闭证据，以及生产模式部署验证结果。
 
@@ -81,4 +81,4 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 - 7 服务全部 Up：postgres/redis/minio healthy，itsm-init exit 0，
   itsm-backend-prod healthy（`GET /api/v1/health` → `{"status":"ok"}`），frontend healthy。
 - 认证 fail-closed：错误密码 → `{"code":2001,"message":"invalid credentials"}`。
-- 版本对齐：CHANGELOG 切版 `[1.1.0] - 2026-07-30`；`itsm-frontend/package.json` → `1.1.0`。
+- 版本对齐：CHANGELOG 切版 `[1.5.0] - 2026-07-30`；`itsm-frontend/package.json` → `1.5.0`。

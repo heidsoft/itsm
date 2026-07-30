@@ -22,6 +22,7 @@ func (i *testInitializer) Dependencies() []string { return i.dependencies }
 func (i *testInitializer) Plan(context.Context, Scope) (Plan, error) {
 	return Plan{TargetVersion: "1", SourceChecksum: i.name + "-checksum"}, nil
 }
+
 func (i *testInitializer) Apply(context.Context, Scope, Plan, int64) (Result, error) {
 	if i.apply != nil {
 		i.apply()
@@ -47,6 +48,7 @@ type memoryStore struct {
 func newMemoryStore() *memoryStore {
 	return &memoryStore{leases: map[string]memoryLease{}, runStatuses: map[int64]string{}}
 }
+
 func (s *memoryStore) BeginRun(context.Context, Request) (int64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -54,15 +56,18 @@ func (s *memoryStore) BeginRun(context.Context, Request) (int64, error) {
 	s.runStatuses[s.nextID] = "running"
 	return s.nextID, nil
 }
+
 func (s *memoryStore) FinishRun(_ context.Context, id int64, status string, _ map[string]any, _ error) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.runStatuses[id] = status
 	return nil
 }
+
 func leaseKey(scope Scope, component string) string {
 	return scope.Type + ":" + component + ":" + strconv.FormatInt(scope.ID, 10)
 }
+
 func (s *memoryStore) AcquireLease(_ context.Context, scope Scope, component, owner string, ttl time.Duration) (Lease, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -77,6 +82,7 @@ func (s *memoryStore) AcquireLease(_ context.Context, scope Scope, component, ow
 	s.leases[key] = current
 	return Lease{FencingToken: current.token}, nil
 }
+
 func (s *memoryStore) Heartbeat(_ context.Context, scope Scope, component, owner string, token int64, ttl time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -88,6 +94,7 @@ func (s *memoryStore) Heartbeat(_ context.Context, scope Scope, component, owner
 	s.leases[leaseKey(scope, component)] = current
 	return nil
 }
+
 func (s *memoryStore) ReleaseLease(_ context.Context, scope Scope, component, owner string, token int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -99,6 +106,7 @@ func (s *memoryStore) ReleaseLease(_ context.Context, scope Scope, component, ow
 	delete(s.leases, key)
 	return nil
 }
+
 func (s *memoryStore) StartAttempt(context.Context, int64, Scope, Plan, int64) (int64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -106,6 +114,7 @@ func (s *memoryStore) StartAttempt(context.Context, int64, Scope, Plan, int64) (
 	s.attemptCount++
 	return s.nextID, nil
 }
+
 func (s *memoryStore) CompleteComponent(
 	_ context.Context,
 	_, _ int64,

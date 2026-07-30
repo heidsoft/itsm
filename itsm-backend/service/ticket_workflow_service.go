@@ -381,7 +381,8 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 	bpmnHandled := false
 	if (req.Action == "approve" || req.Action == "reject") && s.approvalBridge != nil {
 		handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
-			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment)
+			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment,
+		)
 		if bridgeErr != nil {
 			return fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
 		}
@@ -408,7 +409,8 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 	// 同步失败时中止业务侧委派，避免流程任务仍停留在原审批人造成双轨分叉。
 	if req.Action == "delegate" && s.approvalBridge != nil {
 		handled, bridgeErr := s.approvalBridge.DelegateBusinessApprovalTask(
-			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID)
+			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID,
+		)
 		if bridgeErr != nil {
 			return fmt.Errorf("同步流程委派任务失败: %w", bridgeErr)
 		}

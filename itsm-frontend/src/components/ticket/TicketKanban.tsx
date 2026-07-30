@@ -44,7 +44,7 @@ interface TicketKanbanProps {
 const KANBAN_STATUS_CONFIG = [
   { key: 'new', title: '新建', color: '#1890ff' },
   { key: 'open', title: '待处理', color: '#1890ff' },
-  { key:'inProgress', title: '处理中', color: '#fa8c16' },
+  { key: 'in_progress', title: '处理中', color: '#fa8c16' },
   { key: 'pending', title: '等待中', color: '#faad14' },
   { key: 'resolved', title: '已解决', color: '#52c41a' },
   { key: 'closed', title: '已关闭', color: '#d9d9d9' },

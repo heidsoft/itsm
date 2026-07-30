@@ -1021,7 +1021,6 @@ func (s *Seeder) backfillUserRole(ctx context.Context) {
 	} else if n > 0 {
 		s.sugar.Infow("backfilled roles", "updated", n)
 	}
-
 }
 
 // seedCloudServiceTemplates, seedAssets, seedAssets, seedReleases

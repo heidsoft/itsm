@@ -152,6 +152,7 @@ func (i *productionComponentInitializer) Name() string { return i.name }
 func (i *productionComponentInitializer) Dependencies() []string {
 	return append([]string(nil), i.dependencies...)
 }
+
 func (i *productionComponentInitializer) Plan(
 	_ context.Context,
 	_ initialization.Scope,
@@ -166,6 +167,7 @@ func (i *productionComponentInitializer) Plan(
 		}},
 	}, nil
 }
+
 func (i *productionComponentInitializer) Apply(
 	ctx context.Context,
 	scope initialization.Scope,
@@ -219,6 +221,7 @@ func (s *Seeder) withClient(client *ent.Client) *Seeder {
 		expectedRolePermissions: s.expectedRolePermissions,
 	}
 }
+
 func (i *productionComponentInitializer) Verify(
 	ctx context.Context,
 	_ initialization.Scope,

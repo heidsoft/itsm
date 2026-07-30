@@ -259,4 +259,3 @@ func TestBPMNApprovalBridge_DelegateUnauthorizedActorFailsClosed(t *testing.T) {
 	assert.Equal(t, "assigned", task.Status)
 	assert.Equal(t, strconv.Itoa(actorID+1000), task.Assignee)
 }
-

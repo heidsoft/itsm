@@ -530,7 +530,8 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 				action = "reject"
 			}
 			if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
-				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, action, comment); bridgeErr != nil {
+				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, action, comment,
+			); bridgeErr != nil {
 				return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
 			}
 		}

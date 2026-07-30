@@ -36,6 +36,7 @@ func (CIAttributeDefinition) Fields() []ent.Field {
 		field.Time("updated_at").Comment("更新时间").Default(time.Now).UpdateDefault(time.Now),
 	}
 }
+
 func (CIAttributeDefinition) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("ci_type", CIType.Type).

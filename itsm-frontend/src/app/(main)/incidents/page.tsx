@@ -38,7 +38,7 @@ const KANBAN_COLUMNS: KanbanColumnConfig<Incident>[] = [
   { key: 'new', title: '新建', color: '#3b82f6' },
   { key: 'acknowledged', title: '已确认', color: '#722ed1' },
   { key: 'assigned', title: '已分配', color: '#13c2c2' },
-  { key: 'inProgress', title: '处理中', color: '#3b82f6' },
+  { key: 'in_progress', title: '处理中', color: '#3b82f6' },
   { key: 'resolved', title: '已解决', color: '#52c41a' },
   { key: 'closed', title: '已关闭', color: '#d9d9d9' },
 ];

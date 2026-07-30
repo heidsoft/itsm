@@ -746,15 +746,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 							"timestamp":  time.Now(),
 						})
 					})
-					}
+				}
 
-					sysRoot.GET("/config", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
+				sysRoot.GET("/config", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
 					c.JSON(200, gin.H{
 						"status":    "ok",
 						"version":   "1.0.0",
 						"timestamp": time.Now(),
 					})
-					})
+				})
 			}
 		}
 

@@ -466,7 +466,7 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 		UpstreamImpact: upstream, DownstreamImpact: downstream,
 		CriticalDependencies: criticalDeps, AffectedTickets: affectedTickets,
 		AffectedIncidents: affectedIncidents, RiskLevel: riskLevel,
-		Summary: fmt.Sprintf("%d configuration items may be impacted, %d upstream dependencies", len(downstream), len(upstream)),
+		Summary:       fmt.Sprintf("%d configuration items may be impacted, %d upstream dependencies", len(downstream), len(upstream)),
 		TotalImpacted: len(downstream),
 	}, nil
 }
