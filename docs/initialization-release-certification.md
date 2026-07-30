@@ -22,19 +22,14 @@
 
 ## 发布阻断项
 
-- 首位管理员仍使用环境变量密码创建，尚未实现一次性 bootstrap token 的哈希存储、
-  TTL、并发消费、重放防护和 break-glass 流程。
-- Endpoint ACL 尚未形成覆盖全部受保护路由的版本化 manifest，路由—ACL—permission—
-  menu 的 100% 静态覆盖门禁尚未建立。
-- 托管记录三方合并、字段 ownership、客户流程/SLA override 冲突处理尚未完成。
-- `ticket_types` 仍通过独立 RawDB 连接写入，尚未纳入 `itil-core` 的同一业务事务和
-  稳定键完整性验证。
-- fencing token 当前保护初始化账本完成动作，但尚未在同一业务事务提交前锁定并复核
-  owner、token 与租约有效期；stale writer 仍需 PostgreSQL 故障注入证明。
-- AI/通知/Marketplace 官方 manifest 尚未达到版本、checksum、权限声明全覆盖。
-- PostgreSQL 新库、最近两个正式版本升级、RLS enforce、大规模租户滚动升级、
-  executor 崩溃接管和备份恢复演练尚未提供 CI/演练证据。
-- 全量前端测试和关键 E2E 的最终认证结果尚未归档。
+- ~~首位管理员仍使用环境变量密码创建，尚未实现一次性 bootstrap token 的哈希存储、TTL、并发消费、重放防护和 break-glass 流程。~~ ✅ #1 Bootstrap Token
+- ~~Endpoint ACL 尚未形成覆盖全部受保护路由的版本化 manifest，路由—ACL—permission—menu 的 100% 静态覆盖门禁尚未建立。~~ ✅ #2 ACL Manifest 100%
+- ~~ticket_types 仍通过独立 RawDB 连接写入，尚未纳入 `itil-core` 的同一业务事务和稳定键完整性验证。~~ ✅ #3a TicketType 事务合并
+- ~~托管记录三方合并、字段 ownership、客户流程/SLA override 冲突处理尚未完成。~~ ✅ #3b 托管记录三方合并
+- [P6] fencing token 当前保护初始化账本完成动作，但尚未在同一业务事务提交前锁定并复核 owner、token 与租约有效期；stale writer 仍需 PostgreSQL 故障注入证明。
+- [P7] AI/通知/Marketplace 官方 manifest 尚未达到版本、checksum、权限声明全覆盖。
+- [P8] PostgreSQL 新库、最近两个正式版本升级、RLS enforce、大规模租户滚动升级、executor 崩溃接管和备份恢复演练尚未提供 CI/演练证据。
+- [P9] 全量前端测试和关键 E2E 的最终认证结果尚未归档。
 
 ## 签字
 
