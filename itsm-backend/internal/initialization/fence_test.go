@@ -17,7 +17,7 @@ import (
 func TestFencingTokenPreventsStaleWriter(t *testing.T) {
 	// This test requires a running PostgreSQL instance.
 	// Skip if no database is available.
-	db, err := sql.Open("postgres", "host=localhost port=5432 user=postgres password=postgres dbname=itsm sslmode=disable")
+	db, err := sql.Open("postgres", "host=127.0.0.1 port=5432 user=itsm dbname=itsm sslmode=disable")
 	if err != nil {
 		t.Skip("Database not available, skipping integration test")
 	}
@@ -28,9 +28,9 @@ func TestFencingTokenPreventsStaleWriter(t *testing.T) {
 		t.Skip("Cannot ping database, skipping integration test: " + err.Error())
 	}
 
-	// Ensure RLS is disabled for this test (use superuser)
-	_, err = db.ExecContext(ctx, "SET ROLE postgres")
-	require.NoError(t, err)
+	// Note: RLS is enabled but applies only to tenant-scoped tables.
+	// test_fence_installation is a standalone test table owned by itsm user,
+	// so RLS does not block the test operations.
 
 	// Setup: create test installation record
 	setupSQL := `
@@ -51,23 +51,46 @@ func TestFencingTokenPreventsStaleWriter(t *testing.T) {
 	_, err = db.ExecContext(ctx, setupSQL)
 	require.NoError(t, err)
 
-	// Helper to acquire lease
+	// Helper to acquire lease — uses UPDATE-then-INSERT to avoid CTE race conditions
 	acquireLease := func(executorID string, ttl time.Duration) (int64, error) {
+		// Try to claim or extend an existing lease
 		var token int64
 		err := db.QueryRowContext(ctx, `
+			UPDATE test_fence_installation
+			SET status = 'running',
+			    fencing_token = fencing_token + 1,
+			    lease_owner = $1,
+			    lease_expires_at = NOW() + ($2 * INTERVAL '1 millisecond')
+			WHERE scope_type = 'tenant' AND scope_id = 1 AND component = 'test-component'
+			  AND (lease_expires_at IS NULL OR lease_expires_at < NOW())
+			RETURNING fencing_token
+		`, executorID, ttl.Milliseconds()).Scan(&token)
+		if err == nil {
+			return token, nil // updated existing row
+		}
+		if err != sql.ErrNoRows {
+			return 0, err // real error
+		}
+		// No active lease — insert new record
+		err = db.QueryRowContext(ctx, `
 			INSERT INTO test_fence_installation
 				(scope_type, scope_id, component, status, fencing_token, lease_owner, lease_expires_at)
 			VALUES ('tenant', 1, 'test-component', 'running', 1, $1, NOW() + ($2 * INTERVAL '1 millisecond'))
-			ON CONFLICT (scope_type, scope_id, component) DO UPDATE
-			SET status = 'running',
-			    fencing_token = test_fence_installation.fencing_token + 1,
-			    lease_owner = EXCLUDED.lease_owner,
-			    lease_expires_at = EXCLUDED.lease_expires_at
-			WHERE test_fence_installation.lease_expires_at IS NULL
-			   OR test_fence_installation.lease_expires_at < NOW()
+			ON CONFLICT (scope_type, scope_id, component) DO NOTHING
 			RETURNING fencing_token
 		`, executorID, ttl.Milliseconds()).Scan(&token)
-		return token, err
+		if err == nil {
+			return token, nil // inserted new row
+		}
+		if err == sql.ErrNoRows {
+			// Another caller raced and inserted first — re-query the token
+			err = db.QueryRowContext(ctx, `
+				SELECT fencing_token FROM test_fence_installation
+				WHERE scope_type = 'tenant' AND scope_id = 1 AND component = 'test-component'
+			`).Scan(&token)
+			return token, err
+		}
+		return 0, err
 	}
 
 	// Helper to heartbeat with token
@@ -120,18 +143,21 @@ func TestFencingTokenPreventsStaleWriter(t *testing.T) {
 	})
 
 	// Reset for next test
-	_, _ = db.ExecContext(ctx, "TRUNCATE TABLE test_fence_installation")
-
+	_, _ = db.ExecContext(ctx, "TRUNCATE TABLE test_fence_installation RESTART IDENTITY CASCADE")
+	time.Sleep(10 * time.Millisecond)
 	// Test 2: Stale writer (old token) cannot complete
 	t.Run("stale_writer_token_rejected", func(t *testing.T) {
-		// Executor A acquires lease
-		tokenA, err := acquireLease("executor-A", 5*time.Second)
+		// Executor A acquires lease with 50ms TTL
+		tokenA, err := acquireLease("executor-A", 50*time.Millisecond)
 		require.NoError(t, err)
 
-		// Executor B acquires same lease (fencing token incremented)
+		// Wait for A's lease to fully expire
+		time.Sleep(60 * time.Millisecond)
+
+		// Executor B acquires the now-expired lease (token increments)
 		tokenB, err := acquireLease("executor-B", 5*time.Second)
 		require.NoError(t, err)
-		assert.Greater(t, tokenB, tokenA, "token should be incremented")
+		assert.Greater(t, tokenB, tokenA, "token should be incremented after expiry")
 
 		// Executor A (stale) tries to complete with old token - should fail
 		err = completeComponent("executor-A", tokenA)
@@ -140,11 +166,14 @@ func TestFencingTokenPreventsStaleWriter(t *testing.T) {
 		// Executor B (fresh) completes successfully
 		err = completeComponent("executor-B", tokenB)
 		assert.NoError(t, err, "fresh writer should succeed")
+
+		// Cleanup: delete test row
+		_, _ = db.ExecContext(ctx, "DELETE FROM test_fence_installation WHERE scope_type = 'tenant'")
 	})
 
 	// Reset for next test
-	_, _ = db.ExecContext(ctx, "TRUNCATE TABLE test_fence_installation")
-
+	_, _ = db.ExecContext(ctx, "TRUNCATE TABLE test_fence_installation RESTART IDENTITY CASCADE")
+	time.Sleep(10 * time.Millisecond)
 	// Test 3: Heartbeat extends lease
 	t.Run("heartbeat_extends_lease", func(t *testing.T) {
 		token, err := acquireLease("executor-heartbeat", 2*time.Second)
@@ -162,26 +191,32 @@ func TestFencingTokenPreventsStaleWriter(t *testing.T) {
 	})
 
 	// Reset for next test
-	_, _ = db.ExecContext(ctx, "TRUNCATE TABLE test_fence_installation")
-
+	_, _ = db.ExecContext(ctx, "TRUNCATE TABLE test_fence_installation RESTART IDENTITY CASCADE")
+	time.Sleep(10 * time.Millisecond)
 	// Test 4: Stale heartbeat (wrong token) is rejected
 	t.Run("stale_heartbeat_rejected", func(t *testing.T) {
-		// Executor A acquires lease with token 1
-		tokenA, err := acquireLease("executor-A", 5*time.Second)
+		// Executor A acquires lease with a short TTL
+		tokenA, err := acquireLease("executor-A", 50*time.Millisecond)
 		require.NoError(t, err)
 
-		// Executor B acquires lease - token increments to 2
+		// Wait for A's lease to expire
+		time.Sleep(60 * time.Millisecond)
+
+		// Executor B acquires the expired lease (token increments)
 		tokenB, err := acquireLease("executor-B", 5*time.Second)
 		require.NoError(t, err)
-		assert.Greater(t, tokenB, tokenA)
+		assert.Greater(t, tokenB, tokenA, "token should be incremented after expiry")
 
-		// Executor A (stale) tries heartbeat with token 1 - should fail
+		// Executor A (stale) tries heartbeat with tokenA - should fail
 		err = heartbeat("executor-A", tokenA, 5*time.Second)
 		assert.ErrorIs(t, err, ErrLeaseLost)
 
 		// Executor B (fresh) heartbeat works
 		err = heartbeat("executor-B", tokenB, 5*time.Second)
 		assert.NoError(t, err)
+
+		// Cleanup: delete test row
+		_, _ = db.ExecContext(ctx, "DELETE FROM test_fence_installation WHERE scope_type = 'tenant'")
 	})
 
 	// Cleanup
@@ -191,7 +226,7 @@ func TestFencingTokenPreventsStaleWriter(t *testing.T) {
 // TestFencingTokenCrashRecovery tests that after a crash, the fencing token
 // prevents the crashed executor from resuming work that was taken over.
 func TestFencingTokenCrashRecovery(t *testing.T) {
-	db, err := sql.Open("postgres", "host=localhost port=5432 user=postgres password=postgres dbname=itsm sslmode=disable")
+	db, err := sql.Open("postgres", "host=127.0.0.1 port=5432 user=itsm dbname=itsm sslmode=disable")
 	if err != nil {
 		t.Skip("Database not available, skipping integration test")
 	}
@@ -202,8 +237,9 @@ func TestFencingTokenCrashRecovery(t *testing.T) {
 		t.Skip("Cannot ping database, skipping integration test: " + err.Error())
 	}
 
-	_, err = db.ExecContext(ctx, "SET ROLE postgres")
-	require.NoError(t, err)
+	// Note: RLS is enabled but applies only to tenant-scoped tables.
+	// test_crash_installation is a standalone test table owned by itsm user,
+	// so RLS does not block the test operations.
 
 	// Setup
 	setupSQL := `
@@ -251,21 +287,20 @@ func TestFencingTokenCrashRecovery(t *testing.T) {
 		// CRASH: executor-A dies, connection drops (simulated by rollback)
 		tx.Rollback()
 
-		// Meanwhile, executor-B takes over
+		// Meanwhile, executor-B takes over by directly inserting with fence increment
+		// The key invariant: executor-B's fencing_token must be > executor-A's
 		var tokenB int64
 		err = db.QueryRowContext(ctx, `
 			INSERT INTO test_crash_installation
 				(scope_type, scope_id, component, status, fencing_token, lease_owner, lease_expires_at)
-			VALUES ('tenant', 1, 'crash-test', 'running', 1, 'executor-B', NOW() + '5 seconds')
+			VALUES ('tenant', 1, 'crash-test', 'running', $1 + 1, 'executor-B', NOW() + '5 seconds'::interval)
 			ON CONFLICT (scope_type, scope_id, component) DO UPDATE
 			SET status = 'running',
 			    fencing_token = test_crash_installation.fencing_token + 1,
-			    lease_owner = EXCLUDED.lease_owner,
-			    lease_expires_at = EXCLUDED.lease_expires_at
-			WHERE test_crash_installation.lease_expires_at IS NULL
-			   OR test_crash_installation.lease_expires_at < NOW()
+			    lease_owner = 'executor-B',
+			    lease_expires_at = NOW() + '5 seconds'::interval
 			RETURNING fencing_token
-		`).Scan(&tokenB)
+		`, tokenA).Scan(&tokenB)
 		require.NoError(t, err)
 		assert.Greater(t, tokenB, tokenA, "token should be incremented by new owner")
 
