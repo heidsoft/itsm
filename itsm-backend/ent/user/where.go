@@ -120,6 +120,11 @@ func AssignedByMspID(v int) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAssignedByMspID, v))
 }
 
+// IsBootstrapAdmin applies equality check predicate on the "is_bootstrap_admin" field. It's identical to IsBootstrapAdminEQ.
+func IsBootstrapAdmin(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIsBootstrapAdmin, v))
+}
+
 // UsernameEQ applies the EQ predicate on the "username" field.
 func UsernameEQ(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldUsername, v))
@@ -843,6 +848,16 @@ func AssignedByMspIDIsNil() predicate.User {
 // AssignedByMspIDNotNil applies the NotNil predicate on the "assigned_by_msp_id" field.
 func AssignedByMspIDNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldAssignedByMspID))
+}
+
+// IsBootstrapAdminEQ applies the EQ predicate on the "is_bootstrap_admin" field.
+func IsBootstrapAdminEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIsBootstrapAdmin, v))
+}
+
+// IsBootstrapAdminNEQ applies the NEQ predicate on the "is_bootstrap_admin" field.
+func IsBootstrapAdminNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldIsBootstrapAdmin, v))
 }
 
 // HasDepartmentRef applies the HasEdge predicate on the "department_ref" edge.

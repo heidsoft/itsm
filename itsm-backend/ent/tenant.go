@@ -53,8 +53,9 @@ type Tenant struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TenantQuery when eager-loading is set.
-	Edges        TenantEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                  TenantEdges `json:"edges"`
+	bootstrap_token_tenant *int
+	selectValues           sql.SelectValues
 }
 
 // TenantEdges holds the relations/edges for other nodes in the graph.
@@ -63,9 +64,11 @@ type TenantEdges struct {
 	Users []*User `json:"users,omitempty"`
 	// MSP客户分配
 	MspCustomerAllocations []*MSPAllocation `json:"msp_customer_allocations,omitempty"`
+	// bootstrap token
+	BootstrapTokens []*BootstrapToken `json:"bootstrap_tokens,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -86,6 +89,15 @@ func (e TenantEdges) MspCustomerAllocationsOrErr() ([]*MSPAllocation, error) {
 	return nil, &NotLoadedError{edge: "msp_customer_allocations"}
 }
 
+// BootstrapTokensOrErr returns the BootstrapTokens value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) BootstrapTokensOrErr() ([]*BootstrapToken, error) {
+	if e.loadedTypes[2] {
+		return e.BootstrapTokens, nil
+	}
+	return nil, &NotLoadedError{edge: "bootstrap_tokens"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Tenant) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -99,6 +111,8 @@ func (*Tenant) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case tenant.FieldExpiresAt, tenant.FieldCreatedAt, tenant.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case tenant.ForeignKeys[0]: // bootstrap_token_tenant
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -222,6 +236,13 @@ func (_m *Tenant) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
+		case tenant.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field bootstrap_token_tenant", value)
+			} else if value.Valid {
+				_m.bootstrap_token_tenant = new(int)
+				*_m.bootstrap_token_tenant = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -243,6 +264,11 @@ func (_m *Tenant) QueryUsers() *UserQuery {
 // QueryMspCustomerAllocations queries the "msp_customer_allocations" edge of the Tenant entity.
 func (_m *Tenant) QueryMspCustomerAllocations() *MSPAllocationQuery {
 	return NewTenantClient(_m.config).QueryMspCustomerAllocations(_m)
+}
+
+// QueryBootstrapTokens queries the "bootstrap_tokens" edge of the Tenant entity.
+func (_m *Tenant) QueryBootstrapTokens() *BootstrapTokenQuery {
+	return NewTenantClient(_m.config).QueryBootstrapTokens(_m)
 }
 
 // Update returns a builder for updating this Tenant.

@@ -1161,6 +1161,29 @@ func HasMspCustomerAllocationsWith(preds ...predicate.MSPAllocation) predicate.T
 	})
 }
 
+// HasBootstrapTokens applies the HasEdge predicate on the "bootstrap_tokens" edge.
+func HasBootstrapTokens() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BootstrapTokensTable, BootstrapTokensColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBootstrapTokensWith applies the HasEdge predicate on the "bootstrap_tokens" edge with a given conditions (other predicates).
+func HasBootstrapTokensWith(preds ...predicate.BootstrapToken) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newBootstrapTokensStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Tenant) predicate.Tenant {
 	return predicate.Tenant(sql.AndPredicates(predicates...))

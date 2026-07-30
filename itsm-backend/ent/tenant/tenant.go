@@ -53,6 +53,8 @@ const (
 	EdgeUsers = "users"
 	// EdgeMspCustomerAllocations holds the string denoting the msp_customer_allocations edge name in mutations.
 	EdgeMspCustomerAllocations = "msp_customer_allocations"
+	// EdgeBootstrapTokens holds the string denoting the bootstrap_tokens edge name in mutations.
+	EdgeBootstrapTokens = "bootstrap_tokens"
 	// Table holds the table name of the tenant in the database.
 	Table = "tenants"
 	// UsersTable is the table that holds the users relation/edge.
@@ -69,6 +71,13 @@ const (
 	MspCustomerAllocationsInverseTable = "msp_allocations"
 	// MspCustomerAllocationsColumn is the table column denoting the msp_customer_allocations relation/edge.
 	MspCustomerAllocationsColumn = "customer_tenant_id"
+	// BootstrapTokensTable is the table that holds the bootstrap_tokens relation/edge.
+	BootstrapTokensTable = "bootstrap_tokens"
+	// BootstrapTokensInverseTable is the table name for the BootstrapToken entity.
+	// It exists in this package in order to avoid circular dependency with the "bootstraptoken" package.
+	BootstrapTokensInverseTable = "bootstrap_tokens"
+	// BootstrapTokensColumn is the table column denoting the bootstrap_tokens relation/edge.
+	BootstrapTokensColumn = "tenant_bootstrap_tokens"
 )
 
 // Columns holds all SQL columns for tenant fields.
@@ -93,10 +102,21 @@ var Columns = []string{
 	FieldUpdatedAt,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "tenants"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"bootstrap_token_tenant",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -271,6 +291,20 @@ func ByMspCustomerAllocations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderO
 		sqlgraph.OrderByNeighborTerms(s, newMspCustomerAllocationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByBootstrapTokensCount orders the results by bootstrap_tokens count.
+func ByBootstrapTokensCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBootstrapTokensStep(), opts...)
+	}
+}
+
+// ByBootstrapTokens orders the results by bootstrap_tokens terms.
+func ByBootstrapTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBootstrapTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -283,5 +317,12 @@ func newMspCustomerAllocationsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MspCustomerAllocationsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MspCustomerAllocationsTable, MspCustomerAllocationsColumn),
+	)
+}
+func newBootstrapTokensStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BootstrapTokensInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BootstrapTokensTable, BootstrapTokensColumn),
 	)
 }

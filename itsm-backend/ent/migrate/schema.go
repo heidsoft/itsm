@@ -362,6 +362,31 @@ var (
 			},
 		},
 	}
+	// BootstrapTokensColumns holds the columns for the "bootstrap_tokens" table.
+	BootstrapTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "token_hash", Type: field.TypeString},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "used", Type: field.TypeBool, Default: false},
+		{Name: "used_by", Type: field.TypeInt, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "tenant_bootstrap_tokens", Type: field.TypeInt, Nullable: true},
+	}
+	// BootstrapTokensTable holds the schema information for the "bootstrap_tokens" table.
+	BootstrapTokensTable = &schema.Table{
+		Name:       "bootstrap_tokens",
+		Columns:    BootstrapTokensColumns,
+		PrimaryKey: []*schema.Column{BootstrapTokensColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "bootstrap_tokens_tenants_bootstrap_tokens",
+				Columns:    []*schema.Column{BootstrapTokensColumns[7]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// CabMembersColumns holds the columns for the "cab_members" table.
 	CabMembersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -3795,12 +3820,21 @@ var (
 		{Name: "owner_contact", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "bootstrap_token_tenant", Type: field.TypeInt, Nullable: true},
 	}
 	// TenantsTable holds the schema information for the "tenants" table.
 	TenantsTable = &schema.Table{
 		Name:       "tenants",
 		Columns:    TenantsColumns,
 		PrimaryKey: []*schema.Column{TenantsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tenants_bootstrap_tokens_tenant",
+				Columns:    []*schema.Column{TenantsColumns[18]},
+				RefColumns: []*schema.Column{BootstrapTokensColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// TenantInstallationsColumns holds the columns for the "tenant_installations" table.
 	TenantInstallationsColumns = []*schema.Column{
@@ -4419,6 +4453,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "msp_role", Type: field.TypeEnum, Nullable: true, Enums: []string{"provider_admin", "provider_agent", "customer_user"}},
 		{Name: "assigned_by_msp_id", Type: field.TypeInt, Nullable: true},
+		{Name: "is_bootstrap_admin", Type: field.TypeBool, Default: false},
 		{Name: "asset_assigned_to_user", Type: field.TypeInt, Nullable: true},
 		{Name: "department_id", Type: field.TypeInt, Nullable: true},
 		{Name: "group_members", Type: field.TypeInt, Nullable: true},
@@ -4433,31 +4468,31 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "users_assets_assigned_to_user",
-				Columns:    []*schema.Column{UsersColumns[14]},
+				Columns:    []*schema.Column{UsersColumns[15]},
 				RefColumns: []*schema.Column{AssetsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "users_departments_users",
-				Columns:    []*schema.Column{UsersColumns[15]},
+				Columns:    []*schema.Column{UsersColumns[16]},
 				RefColumns: []*schema.Column{DepartmentsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "users_groups_members",
-				Columns:    []*schema.Column{UsersColumns[16]},
+				Columns:    []*schema.Column{UsersColumns[17]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "users_teams_users",
-				Columns:    []*schema.Column{UsersColumns[17]},
+				Columns:    []*schema.Column{UsersColumns[18]},
 				RefColumns: []*schema.Column{TeamsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "users_tenants_users",
-				Columns:    []*schema.Column{UsersColumns[18]},
+				Columns:    []*schema.Column{UsersColumns[19]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -5019,6 +5054,7 @@ var (
 		AssetLicensesTable,
 		AuditLogsTable,
 		BpmnPermissionsTable,
+		BootstrapTokensTable,
 		CabMembersTable,
 		CiAttributeDefinitionsTable,
 		CiRelationshipsTable,
@@ -5150,6 +5186,7 @@ func init() {
 	ApprovalRecordsTable.ForeignKeys[0].RefTable = ApprovalWorkflowsTable
 	ApprovalRecordsTable.ForeignKeys[1].RefTable = TicketsTable
 	AssetsTable.ForeignKeys[0].RefTable = VendorsTable
+	BootstrapTokensTable.ForeignKeys[0].RefTable = TenantsTable
 	CiAttributeDefinitionsTable.ForeignKeys[0].RefTable = CiTypesTable
 	CiRelationshipsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	CiRelationshipsTable.ForeignKeys[1].RefTable = ConfigurationItemsTable
@@ -5208,6 +5245,7 @@ func init() {
 	SLAViolationsTable.ForeignKeys[1].RefTable = TicketsTable
 	ServiceCatalogItemsTable.ForeignKeys[0].RefTable = ServiceCatalogsTable
 	SurveyResponsesTable.ForeignKeys[0].RefTable = SurveysTable
+	TenantsTable.ForeignKeys[0].RefTable = BootstrapTokensTable
 	TenantInstallationsTable.ForeignKeys[0].RefTable = MarketplaceItemsTable
 	TicketsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	TicketsTable.ForeignKeys[1].RefTable = DepartmentsTable

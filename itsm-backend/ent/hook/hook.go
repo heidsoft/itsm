@@ -104,6 +104,18 @@ func (f BPMNPermissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BPMNPermissionMutation", m)
 }
 
+// The BootstrapTokenFunc type is an adapter to allow the use of ordinary
+// function as BootstrapToken mutator.
+type BootstrapTokenFunc func(context.Context, *ent.BootstrapTokenMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BootstrapTokenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BootstrapTokenMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BootstrapTokenMutation", m)
+}
+
 // The CABMemberFunc type is an adapter to allow the use of ordinary
 // function as CABMember mutator.
 type CABMemberFunc func(context.Context, *ent.CABMemberMutation) (ent.Value, error)

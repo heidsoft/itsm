@@ -775,6 +775,17 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 		return
 	}
 
+	// Check if bootstrap token mode is enabled.
+	bootstrapEnabled := os.Getenv("BOOTSTRAP_TOKEN_ENABLED") == "1"
+	if bootstrapEnabled {
+		// Generate and output bootstrap token for first-time setup.
+		// The token must be consumed via API call, not自动 created here.
+		// This is handled by cmd/initialize CLI which prints the token.
+		s.sugar.Infow("bootstrap mode enabled; use initialize CLI to generate token and create admin")
+		return
+	}
+
+	// Fallback: ADMIN_PASSWORD (backward compatible).
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
 	if adminPassword == "" {
 		s.sugar.Warnw("ADMIN_PASSWORD env var not set; skip admin seed")

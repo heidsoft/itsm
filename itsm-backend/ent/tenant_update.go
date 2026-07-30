@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/bootstraptoken"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/tenant"
@@ -364,6 +365,21 @@ func (_u *TenantUpdate) AddMspCustomerAllocations(v ...*MSPAllocation) *TenantUp
 	return _u.AddMspCustomerAllocationIDs(ids...)
 }
 
+// AddBootstrapTokenIDs adds the "bootstrap_tokens" edge to the BootstrapToken entity by IDs.
+func (_u *TenantUpdate) AddBootstrapTokenIDs(ids ...int) *TenantUpdate {
+	_u.mutation.AddBootstrapTokenIDs(ids...)
+	return _u
+}
+
+// AddBootstrapTokens adds the "bootstrap_tokens" edges to the BootstrapToken entity.
+func (_u *TenantUpdate) AddBootstrapTokens(v ...*BootstrapToken) *TenantUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBootstrapTokenIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (_u *TenantUpdate) Mutation() *TenantMutation {
 	return _u.mutation
@@ -409,6 +425,27 @@ func (_u *TenantUpdate) RemoveMspCustomerAllocations(v ...*MSPAllocation) *Tenan
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMspCustomerAllocationIDs(ids...)
+}
+
+// ClearBootstrapTokens clears all "bootstrap_tokens" edges to the BootstrapToken entity.
+func (_u *TenantUpdate) ClearBootstrapTokens() *TenantUpdate {
+	_u.mutation.ClearBootstrapTokens()
+	return _u
+}
+
+// RemoveBootstrapTokenIDs removes the "bootstrap_tokens" edge to BootstrapToken entities by IDs.
+func (_u *TenantUpdate) RemoveBootstrapTokenIDs(ids ...int) *TenantUpdate {
+	_u.mutation.RemoveBootstrapTokenIDs(ids...)
+	return _u
+}
+
+// RemoveBootstrapTokens removes "bootstrap_tokens" edges to BootstrapToken entities.
+func (_u *TenantUpdate) RemoveBootstrapTokens(v ...*BootstrapToken) *TenantUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBootstrapTokenIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -649,6 +686,51 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BootstrapTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.BootstrapTokensTable,
+			Columns: []string{tenant.BootstrapTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bootstraptoken.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBootstrapTokensIDs(); len(nodes) > 0 && !_u.mutation.BootstrapTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.BootstrapTokensTable,
+			Columns: []string{tenant.BootstrapTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bootstraptoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BootstrapTokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.BootstrapTokensTable,
+			Columns: []string{tenant.BootstrapTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bootstraptoken.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1010,6 +1092,21 @@ func (_u *TenantUpdateOne) AddMspCustomerAllocations(v ...*MSPAllocation) *Tenan
 	return _u.AddMspCustomerAllocationIDs(ids...)
 }
 
+// AddBootstrapTokenIDs adds the "bootstrap_tokens" edge to the BootstrapToken entity by IDs.
+func (_u *TenantUpdateOne) AddBootstrapTokenIDs(ids ...int) *TenantUpdateOne {
+	_u.mutation.AddBootstrapTokenIDs(ids...)
+	return _u
+}
+
+// AddBootstrapTokens adds the "bootstrap_tokens" edges to the BootstrapToken entity.
+func (_u *TenantUpdateOne) AddBootstrapTokens(v ...*BootstrapToken) *TenantUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBootstrapTokenIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (_u *TenantUpdateOne) Mutation() *TenantMutation {
 	return _u.mutation
@@ -1055,6 +1152,27 @@ func (_u *TenantUpdateOne) RemoveMspCustomerAllocations(v ...*MSPAllocation) *Te
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMspCustomerAllocationIDs(ids...)
+}
+
+// ClearBootstrapTokens clears all "bootstrap_tokens" edges to the BootstrapToken entity.
+func (_u *TenantUpdateOne) ClearBootstrapTokens() *TenantUpdateOne {
+	_u.mutation.ClearBootstrapTokens()
+	return _u
+}
+
+// RemoveBootstrapTokenIDs removes the "bootstrap_tokens" edge to BootstrapToken entities by IDs.
+func (_u *TenantUpdateOne) RemoveBootstrapTokenIDs(ids ...int) *TenantUpdateOne {
+	_u.mutation.RemoveBootstrapTokenIDs(ids...)
+	return _u
+}
+
+// RemoveBootstrapTokens removes "bootstrap_tokens" edges to BootstrapToken entities.
+func (_u *TenantUpdateOne) RemoveBootstrapTokens(v ...*BootstrapToken) *TenantUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBootstrapTokenIDs(ids...)
 }
 
 // Where appends a list predicates to the TenantUpdate builder.
@@ -1325,6 +1443,51 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BootstrapTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.BootstrapTokensTable,
+			Columns: []string{tenant.BootstrapTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bootstraptoken.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBootstrapTokensIDs(); len(nodes) > 0 && !_u.mutation.BootstrapTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.BootstrapTokensTable,
+			Columns: []string{tenant.BootstrapTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bootstraptoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BootstrapTokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.BootstrapTokensTable,
+			Columns: []string{tenant.BootstrapTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bootstraptoken.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

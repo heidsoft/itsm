@@ -12,16 +12,19 @@ import (
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/config"
 	"itsm-backend/database"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/internal/initialization"
+	"itsm-backend/pkg/bootstrap"
 	"itsm-backend/pkg/seeder"
 
 	"go.uber.org/zap"
 )
 
 func main() {
-	action := flag.String("action", "status", "plan|apply|status|verify|retry")
+	action := flag.String("action", "status", "plan|apply|status|verify|retry|generate-bootstrap-token")
 	releaseVersion := flag.String("release-version", os.Getenv("ITSM_RELEASE_VERSION"), "release version")
 	requestedBy := flag.String("requested-by", "operator", "audited requester identity")
+	bootstrapToken := flag.String("bootstrap-token", "", "bootstrap token for first admin creation (used with apply action)")
 	flag.Parse()
 
 	cfg, err := config.LoadConfig()
@@ -63,6 +66,24 @@ func main() {
 	)
 
 	switch strings.ToLower(strings.TrimSpace(*action)) {
+	case "generate-bootstrap-token":
+		// Generate a new bootstrap token for first admin creation.
+		tenantID := flag.Int("tenant-id", 1, "tenant ID for the bootstrap token")
+		flag.Parse()
+		tokenMgr := bootstrap.NewBootstrapTokenManager(client, sugar)
+		rawToken, err := tokenMgr.GenerateToken(ctx, *tenantID)
+		if err != nil {
+			exitf("generate bootstrap token: %v", err)
+		}
+		// Output only the raw token (shown once).
+		fmt.Printf("=== BOOTSTRAP TOKEN (shown only once) ===\n%s\n=== USE THIS TOKEN TO CREATE FIRST ADMIN ===\n", rawToken)
+		writeJSON(map[string]any{
+			"token":     rawToken,
+			"tenant_id": *tenantID,
+			"ttl_hours": "24",
+			"usage":     "POST /api/v1/bootstrap/create-admin with {\"token\": \"<token>\", \"password\": \"<admin_password>\"}",
+		})
+
 	case "plan":
 		plans, err := engine.Plan(ctx, scope)
 		if err != nil {
@@ -73,6 +94,27 @@ func main() {
 		if strings.TrimSpace(*releaseVersion) == "" {
 			exitf("-release-version or ITSM_RELEASE_VERSION is required")
 		}
+
+		// If bootstrap token is provided, consume it to create admin.
+		if *bootstrapToken != "" {
+			tokenMgr := bootstrap.NewBootstrapTokenManager(client, sugar)
+			adminPassword := os.Getenv("ADMIN_PASSWORD")
+			if adminPassword == "" {
+				exitf("ADMIN_PASSWORD env var is required when using bootstrap token")
+			}
+			// Get default tenant ID.
+			t, err := client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+			if err != nil {
+				exitf("get default tenant: %v", err)
+			}
+			userID, err := tokenMgr.ConsumeToken(ctx, *bootstrapToken, t.ID, adminPassword)
+			if err != nil {
+				exitf("consume bootstrap token: %v", err)
+			}
+			writeJSON(map[string]any{"user_id": userID, "status": "admin_created_via_bootstrap_token"})
+			return
+		}
+
 		executorID, _ := os.Hostname()
 		executorID, err = initialization.NewExecutorID(executorID)
 		if err != nil {

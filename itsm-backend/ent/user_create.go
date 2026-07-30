@@ -204,6 +204,20 @@ func (_c *UserCreate) SetNillableAssignedByMspID(v *int) *UserCreate {
 	return _c
 }
 
+// SetIsBootstrapAdmin sets the "is_bootstrap_admin" field.
+func (_c *UserCreate) SetIsBootstrapAdmin(v bool) *UserCreate {
+	_c.mutation.SetIsBootstrapAdmin(v)
+	return _c
+}
+
+// SetNillableIsBootstrapAdmin sets the "is_bootstrap_admin" field if the given value is not nil.
+func (_c *UserCreate) SetNillableIsBootstrapAdmin(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetIsBootstrapAdmin(*v)
+	}
+	return _c
+}
+
 // SetDepartmentRefID sets the "department_ref" edge to the Department entity by ID.
 func (_c *UserCreate) SetDepartmentRefID(id int) *UserCreate {
 	_c.mutation.SetDepartmentRefID(id)
@@ -474,6 +488,10 @@ func (_c *UserCreate) defaults() {
 		v := user.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.IsBootstrapAdmin(); !ok {
+		v := user.DefaultIsBootstrapAdmin
+		_c.mutation.SetIsBootstrapAdmin(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -539,6 +557,9 @@ func (_c *UserCreate) check() error {
 		if err := user.MspRoleValidator(v); err != nil {
 			return &ValidationError{Name: "msp_role", err: fmt.Errorf(`ent: validator failed for field "User.msp_role": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.IsBootstrapAdmin(); !ok {
+		return &ValidationError{Name: "is_bootstrap_admin", err: errors.New(`ent: missing required field "User.is_bootstrap_admin"`)}
 	}
 	if len(_c.mutation.TenantIDs()) == 0 {
 		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "User.tenant"`)}
@@ -620,6 +641,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.AssignedByMspID(); ok {
 		_spec.SetField(user.FieldAssignedByMspID, field.TypeInt, value)
 		_node.AssignedByMspID = value
+	}
+	if value, ok := _c.mutation.IsBootstrapAdmin(); ok {
+		_spec.SetField(user.FieldIsBootstrapAdmin, field.TypeBool, value)
+		_node.IsBootstrapAdmin = value
 	}
 	if nodes := _c.mutation.DepartmentRefIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

@@ -45,6 +45,8 @@ const (
 	FieldMspRole = "msp_role"
 	// FieldAssignedByMspID holds the string denoting the assigned_by_msp_id field in the database.
 	FieldAssignedByMspID = "assigned_by_msp_id"
+	// FieldIsBootstrapAdmin holds the string denoting the is_bootstrap_admin field in the database.
+	FieldIsBootstrapAdmin = "is_bootstrap_admin"
 	// EdgeDepartmentRef holds the string denoting the department_ref edge name in mutations.
 	EdgeDepartmentRef = "department_ref"
 	// EdgeTenant holds the string denoting the tenant edge name in mutations.
@@ -196,6 +198,7 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldMspRole,
 	FieldAssignedByMspID,
+	FieldIsBootstrapAdmin,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "users"
@@ -252,6 +255,8 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultIsBootstrapAdmin holds the default value on creation for the "is_bootstrap_admin" field.
+	DefaultIsBootstrapAdmin bool
 )
 
 // Role defines the type for the "role" enum field.
@@ -390,6 +395,11 @@ func ByMspRole(opts ...sql.OrderTermOption) OrderOption {
 // ByAssignedByMspID orders the results by the assigned_by_msp_id field.
 func ByAssignedByMspID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAssignedByMspID, opts...).ToFunc()
+}
+
+// ByIsBootstrapAdmin orders the results by the is_bootstrap_admin field.
+func ByIsBootstrapAdmin(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsBootstrapAdmin, opts...).ToFunc()
 }
 
 // ByDepartmentRefField orders the results by department_ref field.

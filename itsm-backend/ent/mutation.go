@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/asset"
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/auditlog"
+	"itsm-backend/ent/bootstraptoken"
 	"itsm-backend/ent/bpmnpermission"
 	"itsm-backend/ent/cabmember"
 	"itsm-backend/ent/change"
@@ -147,6 +148,7 @@ const (
 	TypeAssetLicense                = "AssetLicense"
 	TypeAuditLog                    = "AuditLog"
 	TypeBPMNPermission              = "BPMNPermission"
+	TypeBootstrapToken              = "BootstrapToken"
 	TypeCABMember                   = "CABMember"
 	TypeCIAttributeDefinition       = "CIAttributeDefinition"
 	TypeCIRelationship              = "CIRelationship"
@@ -11599,6 +11601,787 @@ func (m *BPMNPermissionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *BPMNPermissionMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown BPMNPermission edge %s", name)
+}
+
+// BootstrapTokenMutation represents an operation that mutates the BootstrapToken nodes in the graph.
+type BootstrapTokenMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	token_hash    *string
+	expires_at    *time.Time
+	used          *bool
+	used_by       *int
+	addused_by    *int
+	created_at    *time.Time
+	tenant_id     *int
+	addtenant_id  *int
+	clearedFields map[string]struct{}
+	tenant        map[int]struct{}
+	removedtenant map[int]struct{}
+	clearedtenant bool
+	done          bool
+	oldValue      func(context.Context) (*BootstrapToken, error)
+	predicates    []predicate.BootstrapToken
+}
+
+var _ ent.Mutation = (*BootstrapTokenMutation)(nil)
+
+// bootstraptokenOption allows management of the mutation configuration using functional options.
+type bootstraptokenOption func(*BootstrapTokenMutation)
+
+// newBootstrapTokenMutation creates new mutation for the BootstrapToken entity.
+func newBootstrapTokenMutation(c config, op Op, opts ...bootstraptokenOption) *BootstrapTokenMutation {
+	m := &BootstrapTokenMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBootstrapToken,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBootstrapTokenID sets the ID field of the mutation.
+func withBootstrapTokenID(id int) bootstraptokenOption {
+	return func(m *BootstrapTokenMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BootstrapToken
+		)
+		m.oldValue = func(ctx context.Context) (*BootstrapToken, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BootstrapToken.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBootstrapToken sets the old BootstrapToken of the mutation.
+func withBootstrapToken(node *BootstrapToken) bootstraptokenOption {
+	return func(m *BootstrapTokenMutation) {
+		m.oldValue = func(context.Context) (*BootstrapToken, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BootstrapTokenMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BootstrapTokenMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BootstrapTokenMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BootstrapTokenMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BootstrapToken.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTokenHash sets the "token_hash" field.
+func (m *BootstrapTokenMutation) SetTokenHash(s string) {
+	m.token_hash = &s
+}
+
+// TokenHash returns the value of the "token_hash" field in the mutation.
+func (m *BootstrapTokenMutation) TokenHash() (r string, exists bool) {
+	v := m.token_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTokenHash returns the old "token_hash" field's value of the BootstrapToken entity.
+// If the BootstrapToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BootstrapTokenMutation) OldTokenHash(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTokenHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTokenHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTokenHash: %w", err)
+	}
+	return oldValue.TokenHash, nil
+}
+
+// ResetTokenHash resets all changes to the "token_hash" field.
+func (m *BootstrapTokenMutation) ResetTokenHash() {
+	m.token_hash = nil
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *BootstrapTokenMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *BootstrapTokenMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the BootstrapToken entity.
+// If the BootstrapToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BootstrapTokenMutation) OldExpiresAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *BootstrapTokenMutation) ResetExpiresAt() {
+	m.expires_at = nil
+}
+
+// SetUsed sets the "used" field.
+func (m *BootstrapTokenMutation) SetUsed(b bool) {
+	m.used = &b
+}
+
+// Used returns the value of the "used" field in the mutation.
+func (m *BootstrapTokenMutation) Used() (r bool, exists bool) {
+	v := m.used
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUsed returns the old "used" field's value of the BootstrapToken entity.
+// If the BootstrapToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BootstrapTokenMutation) OldUsed(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUsed is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUsed requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUsed: %w", err)
+	}
+	return oldValue.Used, nil
+}
+
+// ResetUsed resets all changes to the "used" field.
+func (m *BootstrapTokenMutation) ResetUsed() {
+	m.used = nil
+}
+
+// SetUsedBy sets the "used_by" field.
+func (m *BootstrapTokenMutation) SetUsedBy(i int) {
+	m.used_by = &i
+	m.addused_by = nil
+}
+
+// UsedBy returns the value of the "used_by" field in the mutation.
+func (m *BootstrapTokenMutation) UsedBy() (r int, exists bool) {
+	v := m.used_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUsedBy returns the old "used_by" field's value of the BootstrapToken entity.
+// If the BootstrapToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BootstrapTokenMutation) OldUsedBy(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUsedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUsedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUsedBy: %w", err)
+	}
+	return oldValue.UsedBy, nil
+}
+
+// AddUsedBy adds i to the "used_by" field.
+func (m *BootstrapTokenMutation) AddUsedBy(i int) {
+	if m.addused_by != nil {
+		*m.addused_by += i
+	} else {
+		m.addused_by = &i
+	}
+}
+
+// AddedUsedBy returns the value that was added to the "used_by" field in this mutation.
+func (m *BootstrapTokenMutation) AddedUsedBy() (r int, exists bool) {
+	v := m.addused_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearUsedBy clears the value of the "used_by" field.
+func (m *BootstrapTokenMutation) ClearUsedBy() {
+	m.used_by = nil
+	m.addused_by = nil
+	m.clearedFields[bootstraptoken.FieldUsedBy] = struct{}{}
+}
+
+// UsedByCleared returns if the "used_by" field was cleared in this mutation.
+func (m *BootstrapTokenMutation) UsedByCleared() bool {
+	_, ok := m.clearedFields[bootstraptoken.FieldUsedBy]
+	return ok
+}
+
+// ResetUsedBy resets all changes to the "used_by" field.
+func (m *BootstrapTokenMutation) ResetUsedBy() {
+	m.used_by = nil
+	m.addused_by = nil
+	delete(m.clearedFields, bootstraptoken.FieldUsedBy)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BootstrapTokenMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BootstrapTokenMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BootstrapToken entity.
+// If the BootstrapToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BootstrapTokenMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BootstrapTokenMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *BootstrapTokenMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *BootstrapTokenMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the BootstrapToken entity.
+// If the BootstrapToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BootstrapTokenMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *BootstrapTokenMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *BootstrapTokenMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *BootstrapTokenMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// AddTenantIDs adds the "tenant" edge to the Tenant entity by ids.
+func (m *BootstrapTokenMutation) AddTenantIDs(ids ...int) {
+	if m.tenant == nil {
+		m.tenant = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tenant[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (m *BootstrapTokenMutation) ClearTenant() {
+	m.clearedtenant = true
+}
+
+// TenantCleared reports if the "tenant" edge to the Tenant entity was cleared.
+func (m *BootstrapTokenMutation) TenantCleared() bool {
+	return m.clearedtenant
+}
+
+// RemoveTenantIDs removes the "tenant" edge to the Tenant entity by IDs.
+func (m *BootstrapTokenMutation) RemoveTenantIDs(ids ...int) {
+	if m.removedtenant == nil {
+		m.removedtenant = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tenant, ids[i])
+		m.removedtenant[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTenant returns the removed IDs of the "tenant" edge to the Tenant entity.
+func (m *BootstrapTokenMutation) RemovedTenantIDs() (ids []int) {
+	for id := range m.removedtenant {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TenantIDs returns the "tenant" edge IDs in the mutation.
+func (m *BootstrapTokenMutation) TenantIDs() (ids []int) {
+	for id := range m.tenant {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTenant resets all changes to the "tenant" edge.
+func (m *BootstrapTokenMutation) ResetTenant() {
+	m.tenant = nil
+	m.clearedtenant = false
+	m.removedtenant = nil
+}
+
+// Where appends a list predicates to the BootstrapTokenMutation builder.
+func (m *BootstrapTokenMutation) Where(ps ...predicate.BootstrapToken) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BootstrapTokenMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BootstrapTokenMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BootstrapToken, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BootstrapTokenMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BootstrapTokenMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BootstrapToken).
+func (m *BootstrapTokenMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BootstrapTokenMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.token_hash != nil {
+		fields = append(fields, bootstraptoken.FieldTokenHash)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, bootstraptoken.FieldExpiresAt)
+	}
+	if m.used != nil {
+		fields = append(fields, bootstraptoken.FieldUsed)
+	}
+	if m.used_by != nil {
+		fields = append(fields, bootstraptoken.FieldUsedBy)
+	}
+	if m.created_at != nil {
+		fields = append(fields, bootstraptoken.FieldCreatedAt)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, bootstraptoken.FieldTenantID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BootstrapTokenMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case bootstraptoken.FieldTokenHash:
+		return m.TokenHash()
+	case bootstraptoken.FieldExpiresAt:
+		return m.ExpiresAt()
+	case bootstraptoken.FieldUsed:
+		return m.Used()
+	case bootstraptoken.FieldUsedBy:
+		return m.UsedBy()
+	case bootstraptoken.FieldCreatedAt:
+		return m.CreatedAt()
+	case bootstraptoken.FieldTenantID:
+		return m.TenantID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BootstrapTokenMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case bootstraptoken.FieldTokenHash:
+		return m.OldTokenHash(ctx)
+	case bootstraptoken.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	case bootstraptoken.FieldUsed:
+		return m.OldUsed(ctx)
+	case bootstraptoken.FieldUsedBy:
+		return m.OldUsedBy(ctx)
+	case bootstraptoken.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case bootstraptoken.FieldTenantID:
+		return m.OldTenantID(ctx)
+	}
+	return nil, fmt.Errorf("unknown BootstrapToken field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BootstrapTokenMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case bootstraptoken.FieldTokenHash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTokenHash(v)
+		return nil
+	case bootstraptoken.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	case bootstraptoken.FieldUsed:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUsed(v)
+		return nil
+	case bootstraptoken.FieldUsedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUsedBy(v)
+		return nil
+	case bootstraptoken.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case bootstraptoken.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BootstrapToken field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BootstrapTokenMutation) AddedFields() []string {
+	var fields []string
+	if m.addused_by != nil {
+		fields = append(fields, bootstraptoken.FieldUsedBy)
+	}
+	if m.addtenant_id != nil {
+		fields = append(fields, bootstraptoken.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BootstrapTokenMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case bootstraptoken.FieldUsedBy:
+		return m.AddedUsedBy()
+	case bootstraptoken.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BootstrapTokenMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case bootstraptoken.FieldUsedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUsedBy(v)
+		return nil
+	case bootstraptoken.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BootstrapToken numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BootstrapTokenMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(bootstraptoken.FieldUsedBy) {
+		fields = append(fields, bootstraptoken.FieldUsedBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BootstrapTokenMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BootstrapTokenMutation) ClearField(name string) error {
+	switch name {
+	case bootstraptoken.FieldUsedBy:
+		m.ClearUsedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown BootstrapToken nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BootstrapTokenMutation) ResetField(name string) error {
+	switch name {
+	case bootstraptoken.FieldTokenHash:
+		m.ResetTokenHash()
+		return nil
+	case bootstraptoken.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	case bootstraptoken.FieldUsed:
+		m.ResetUsed()
+		return nil
+	case bootstraptoken.FieldUsedBy:
+		m.ResetUsedBy()
+		return nil
+	case bootstraptoken.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case bootstraptoken.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	}
+	return fmt.Errorf("unknown BootstrapToken field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BootstrapTokenMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.tenant != nil {
+		edges = append(edges, bootstraptoken.EdgeTenant)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BootstrapTokenMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case bootstraptoken.EdgeTenant:
+		ids := make([]ent.Value, 0, len(m.tenant))
+		for id := range m.tenant {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BootstrapTokenMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedtenant != nil {
+		edges = append(edges, bootstraptoken.EdgeTenant)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BootstrapTokenMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case bootstraptoken.EdgeTenant:
+		ids := make([]ent.Value, 0, len(m.removedtenant))
+		for id := range m.removedtenant {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BootstrapTokenMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedtenant {
+		edges = append(edges, bootstraptoken.EdgeTenant)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BootstrapTokenMutation) EdgeCleared(name string) bool {
+	switch name {
+	case bootstraptoken.EdgeTenant:
+		return m.clearedtenant
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BootstrapTokenMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown BootstrapToken unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BootstrapTokenMutation) ResetEdge(name string) error {
+	switch name {
+	case bootstraptoken.EdgeTenant:
+		m.ResetTenant()
+		return nil
+	}
+	return fmt.Errorf("unknown BootstrapToken edge %s", name)
 }
 
 // CABMemberMutation represents an operation that mutates the CABMember nodes in the graph.
@@ -120817,6 +121600,9 @@ type TenantMutation struct {
 	msp_customer_allocations        map[int]struct{}
 	removedmsp_customer_allocations map[int]struct{}
 	clearedmsp_customer_allocations bool
+	bootstrap_tokens                map[int]struct{}
+	removedbootstrap_tokens         map[int]struct{}
+	clearedbootstrap_tokens         bool
 	done                            bool
 	oldValue                        func(context.Context) (*Tenant, error)
 	predicates                      []predicate.Tenant
@@ -121812,6 +122598,60 @@ func (m *TenantMutation) ResetMspCustomerAllocations() {
 	m.removedmsp_customer_allocations = nil
 }
 
+// AddBootstrapTokenIDs adds the "bootstrap_tokens" edge to the BootstrapToken entity by ids.
+func (m *TenantMutation) AddBootstrapTokenIDs(ids ...int) {
+	if m.bootstrap_tokens == nil {
+		m.bootstrap_tokens = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.bootstrap_tokens[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBootstrapTokens clears the "bootstrap_tokens" edge to the BootstrapToken entity.
+func (m *TenantMutation) ClearBootstrapTokens() {
+	m.clearedbootstrap_tokens = true
+}
+
+// BootstrapTokensCleared reports if the "bootstrap_tokens" edge to the BootstrapToken entity was cleared.
+func (m *TenantMutation) BootstrapTokensCleared() bool {
+	return m.clearedbootstrap_tokens
+}
+
+// RemoveBootstrapTokenIDs removes the "bootstrap_tokens" edge to the BootstrapToken entity by IDs.
+func (m *TenantMutation) RemoveBootstrapTokenIDs(ids ...int) {
+	if m.removedbootstrap_tokens == nil {
+		m.removedbootstrap_tokens = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.bootstrap_tokens, ids[i])
+		m.removedbootstrap_tokens[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBootstrapTokens returns the removed IDs of the "bootstrap_tokens" edge to the BootstrapToken entity.
+func (m *TenantMutation) RemovedBootstrapTokensIDs() (ids []int) {
+	for id := range m.removedbootstrap_tokens {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BootstrapTokensIDs returns the "bootstrap_tokens" edge IDs in the mutation.
+func (m *TenantMutation) BootstrapTokensIDs() (ids []int) {
+	for id := range m.bootstrap_tokens {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBootstrapTokens resets all changes to the "bootstrap_tokens" edge.
+func (m *TenantMutation) ResetBootstrapTokens() {
+	m.bootstrap_tokens = nil
+	m.clearedbootstrap_tokens = false
+	m.removedbootstrap_tokens = nil
+}
+
 // Where appends a list predicates to the TenantMutation builder.
 func (m *TenantMutation) Where(ps ...predicate.Tenant) {
 	m.predicates = append(m.predicates, ps...)
@@ -122307,12 +123147,15 @@ func (m *TenantMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TenantMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.users != nil {
 		edges = append(edges, tenant.EdgeUsers)
 	}
 	if m.msp_customer_allocations != nil {
 		edges = append(edges, tenant.EdgeMspCustomerAllocations)
+	}
+	if m.bootstrap_tokens != nil {
+		edges = append(edges, tenant.EdgeBootstrapTokens)
 	}
 	return edges
 }
@@ -122333,18 +123176,27 @@ func (m *TenantMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case tenant.EdgeBootstrapTokens:
+		ids := make([]ent.Value, 0, len(m.bootstrap_tokens))
+		for id := range m.bootstrap_tokens {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TenantMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedusers != nil {
 		edges = append(edges, tenant.EdgeUsers)
 	}
 	if m.removedmsp_customer_allocations != nil {
 		edges = append(edges, tenant.EdgeMspCustomerAllocations)
+	}
+	if m.removedbootstrap_tokens != nil {
+		edges = append(edges, tenant.EdgeBootstrapTokens)
 	}
 	return edges
 }
@@ -122365,18 +123217,27 @@ func (m *TenantMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case tenant.EdgeBootstrapTokens:
+		ids := make([]ent.Value, 0, len(m.removedbootstrap_tokens))
+		for id := range m.removedbootstrap_tokens {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TenantMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedusers {
 		edges = append(edges, tenant.EdgeUsers)
 	}
 	if m.clearedmsp_customer_allocations {
 		edges = append(edges, tenant.EdgeMspCustomerAllocations)
+	}
+	if m.clearedbootstrap_tokens {
+		edges = append(edges, tenant.EdgeBootstrapTokens)
 	}
 	return edges
 }
@@ -122389,6 +123250,8 @@ func (m *TenantMutation) EdgeCleared(name string) bool {
 		return m.clearedusers
 	case tenant.EdgeMspCustomerAllocations:
 		return m.clearedmsp_customer_allocations
+	case tenant.EdgeBootstrapTokens:
+		return m.clearedbootstrap_tokens
 	}
 	return false
 }
@@ -122410,6 +123273,9 @@ func (m *TenantMutation) ResetEdge(name string) error {
 		return nil
 	case tenant.EdgeMspCustomerAllocations:
 		m.ResetMspCustomerAllocations()
+		return nil
+	case tenant.EdgeBootstrapTokens:
+		m.ResetBootstrapTokens()
 		return nil
 	}
 	return fmt.Errorf("unknown Tenant edge %s", name)
@@ -141710,6 +142576,7 @@ type UserMutation struct {
 	msp_role                        *user.MspRole
 	assigned_by_msp_id              *int
 	addassigned_by_msp_id           *int
+	is_bootstrap_admin              *bool
 	clearedFields                   map[string]struct{}
 	department_ref                  *int
 	cleareddepartment_ref           bool
@@ -142494,6 +143361,42 @@ func (m *UserMutation) ResetAssignedByMspID() {
 	m.assigned_by_msp_id = nil
 	m.addassigned_by_msp_id = nil
 	delete(m.clearedFields, user.FieldAssignedByMspID)
+}
+
+// SetIsBootstrapAdmin sets the "is_bootstrap_admin" field.
+func (m *UserMutation) SetIsBootstrapAdmin(b bool) {
+	m.is_bootstrap_admin = &b
+}
+
+// IsBootstrapAdmin returns the value of the "is_bootstrap_admin" field in the mutation.
+func (m *UserMutation) IsBootstrapAdmin() (r bool, exists bool) {
+	v := m.is_bootstrap_admin
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsBootstrapAdmin returns the old "is_bootstrap_admin" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldIsBootstrapAdmin(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsBootstrapAdmin is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsBootstrapAdmin requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsBootstrapAdmin: %w", err)
+	}
+	return oldValue.IsBootstrapAdmin, nil
+}
+
+// ResetIsBootstrapAdmin resets all changes to the "is_bootstrap_admin" field.
+func (m *UserMutation) ResetIsBootstrapAdmin() {
+	m.is_bootstrap_admin = nil
 }
 
 // SetDepartmentRefID sets the "department_ref" edge to the Department entity by id.
@@ -143299,7 +144202,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 16)
 	if m.username != nil {
 		fields = append(fields, user.FieldUsername)
 	}
@@ -143345,6 +144248,9 @@ func (m *UserMutation) Fields() []string {
 	if m.assigned_by_msp_id != nil {
 		fields = append(fields, user.FieldAssignedByMspID)
 	}
+	if m.is_bootstrap_admin != nil {
+		fields = append(fields, user.FieldIsBootstrapAdmin)
+	}
 	return fields
 }
 
@@ -143383,6 +144289,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.MspRole()
 	case user.FieldAssignedByMspID:
 		return m.AssignedByMspID()
+	case user.FieldIsBootstrapAdmin:
+		return m.IsBootstrapAdmin()
 	}
 	return nil, false
 }
@@ -143422,6 +144330,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldMspRole(ctx)
 	case user.FieldAssignedByMspID:
 		return m.OldAssignedByMspID(ctx)
+	case user.FieldIsBootstrapAdmin:
+		return m.OldIsBootstrapAdmin(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -143535,6 +144445,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAssignedByMspID(v)
+		return nil
+	case user.FieldIsBootstrapAdmin:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsBootstrapAdmin(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -143683,6 +144600,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldAssignedByMspID:
 		m.ResetAssignedByMspID()
+		return nil
+	case user.FieldIsBootstrapAdmin:
+		m.ResetIsBootstrapAdmin()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

@@ -18,6 +18,7 @@ import (
 	"itsm-backend/ent/asset"
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/auditlog"
+	"itsm-backend/ent/bootstraptoken"
 	"itsm-backend/ent/bpmnpermission"
 	"itsm-backend/ent/cabmember"
 	"itsm-backend/ent/change"
@@ -154,6 +155,8 @@ type Client struct {
 	AuditLog *AuditLogClient
 	// BPMNPermission is the client for interacting with the BPMNPermission builders.
 	BPMNPermission *BPMNPermissionClient
+	// BootstrapToken is the client for interacting with the BootstrapToken builders.
+	BootstrapToken *BootstrapTokenClient
 	// CABMember is the client for interacting with the CABMember builders.
 	CABMember *CABMemberClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
@@ -387,6 +390,7 @@ func (c *Client) init() {
 	c.AssetLicense = NewAssetLicenseClient(c.config)
 	c.AuditLog = NewAuditLogClient(c.config)
 	c.BPMNPermission = NewBPMNPermissionClient(c.config)
+	c.BootstrapToken = NewBootstrapTokenClient(c.config)
 	c.CABMember = NewCABMemberClient(c.config)
 	c.CIAttributeDefinition = NewCIAttributeDefinitionClient(c.config)
 	c.CIRelationship = NewCIRelationshipClient(c.config)
@@ -594,6 +598,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AssetLicense:                NewAssetLicenseClient(cfg),
 		AuditLog:                    NewAuditLogClient(cfg),
 		BPMNPermission:              NewBPMNPermissionClient(cfg),
+		BootstrapToken:              NewBootstrapTokenClient(cfg),
 		CABMember:                   NewCABMemberClient(cfg),
 		CIAttributeDefinition:       NewCIAttributeDefinitionClient(cfg),
 		CIRelationship:              NewCIRelationshipClient(cfg),
@@ -728,6 +733,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AssetLicense:                NewAssetLicenseClient(cfg),
 		AuditLog:                    NewAuditLogClient(cfg),
 		BPMNPermission:              NewBPMNPermissionClient(cfg),
+		BootstrapToken:              NewBootstrapTokenClient(cfg),
 		CABMember:                   NewCABMemberClient(cfg),
 		CIAttributeDefinition:       NewCIAttributeDefinitionClient(cfg),
 		CIRelationship:              NewCIRelationshipClient(cfg),
@@ -865,7 +871,7 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset,
-		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CABMember,
+		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.BootstrapToken, c.CABMember,
 		c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType, c.CMDBExportTask,
 		c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR, c.CloudAccount,
 		c.CloudResource, c.CloudService, c.ConfigurationItem,
@@ -902,7 +908,7 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset,
-		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CABMember,
+		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.BootstrapToken, c.CABMember,
 		c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType, c.CMDBExportTask,
 		c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR, c.CloudAccount,
 		c.CloudResource, c.CloudService, c.ConfigurationItem,
@@ -953,6 +959,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.AuditLog.mutate(ctx, m)
 	case *BPMNPermissionMutation:
 		return c.BPMNPermission.mutate(ctx, m)
+	case *BootstrapTokenMutation:
+		return c.BootstrapToken.mutate(ctx, m)
 	case *CABMemberMutation:
 		return c.CABMember.mutate(ctx, m)
 	case *CIAttributeDefinitionMutation:
@@ -2361,6 +2369,155 @@ func (c *BPMNPermissionClient) mutate(ctx context.Context, m *BPMNPermissionMuta
 		return (&BPMNPermissionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown BPMNPermission mutation op: %q", m.Op())
+	}
+}
+
+// BootstrapTokenClient is a client for the BootstrapToken schema.
+type BootstrapTokenClient struct {
+	config
+}
+
+// NewBootstrapTokenClient returns a client for the BootstrapToken from the given config.
+func NewBootstrapTokenClient(c config) *BootstrapTokenClient {
+	return &BootstrapTokenClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `bootstraptoken.Hooks(f(g(h())))`.
+func (c *BootstrapTokenClient) Use(hooks ...Hook) {
+	c.hooks.BootstrapToken = append(c.hooks.BootstrapToken, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `bootstraptoken.Intercept(f(g(h())))`.
+func (c *BootstrapTokenClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BootstrapToken = append(c.inters.BootstrapToken, interceptors...)
+}
+
+// Create returns a builder for creating a BootstrapToken entity.
+func (c *BootstrapTokenClient) Create() *BootstrapTokenCreate {
+	mutation := newBootstrapTokenMutation(c.config, OpCreate)
+	return &BootstrapTokenCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BootstrapToken entities.
+func (c *BootstrapTokenClient) CreateBulk(builders ...*BootstrapTokenCreate) *BootstrapTokenCreateBulk {
+	return &BootstrapTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BootstrapTokenClient) MapCreateBulk(slice any, setFunc func(*BootstrapTokenCreate, int)) *BootstrapTokenCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BootstrapTokenCreateBulk{err: fmt.Errorf("calling to BootstrapTokenClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BootstrapTokenCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BootstrapTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BootstrapToken.
+func (c *BootstrapTokenClient) Update() *BootstrapTokenUpdate {
+	mutation := newBootstrapTokenMutation(c.config, OpUpdate)
+	return &BootstrapTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BootstrapTokenClient) UpdateOne(_m *BootstrapToken) *BootstrapTokenUpdateOne {
+	mutation := newBootstrapTokenMutation(c.config, OpUpdateOne, withBootstrapToken(_m))
+	return &BootstrapTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BootstrapTokenClient) UpdateOneID(id int) *BootstrapTokenUpdateOne {
+	mutation := newBootstrapTokenMutation(c.config, OpUpdateOne, withBootstrapTokenID(id))
+	return &BootstrapTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BootstrapToken.
+func (c *BootstrapTokenClient) Delete() *BootstrapTokenDelete {
+	mutation := newBootstrapTokenMutation(c.config, OpDelete)
+	return &BootstrapTokenDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BootstrapTokenClient) DeleteOne(_m *BootstrapToken) *BootstrapTokenDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BootstrapTokenClient) DeleteOneID(id int) *BootstrapTokenDeleteOne {
+	builder := c.Delete().Where(bootstraptoken.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BootstrapTokenDeleteOne{builder}
+}
+
+// Query returns a query builder for BootstrapToken.
+func (c *BootstrapTokenClient) Query() *BootstrapTokenQuery {
+	return &BootstrapTokenQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBootstrapToken},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BootstrapToken entity by its id.
+func (c *BootstrapTokenClient) Get(ctx context.Context, id int) (*BootstrapToken, error) {
+	return c.Query().Where(bootstraptoken.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BootstrapTokenClient) GetX(ctx context.Context, id int) *BootstrapToken {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTenant queries the tenant edge of a BootstrapToken.
+func (c *BootstrapTokenClient) QueryTenant(_m *BootstrapToken) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(bootstraptoken.Table, bootstraptoken.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, bootstraptoken.TenantTable, bootstraptoken.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *BootstrapTokenClient) Hooks() []Hook {
+	return c.hooks.BootstrapToken
+}
+
+// Interceptors returns the client interceptors.
+func (c *BootstrapTokenClient) Interceptors() []Interceptor {
+	return c.inters.BootstrapToken
+}
+
+func (c *BootstrapTokenClient) mutate(ctx context.Context, m *BootstrapTokenMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BootstrapTokenCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BootstrapTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BootstrapTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BootstrapTokenDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BootstrapToken mutation op: %q", m.Op())
 	}
 }
 
@@ -15889,6 +16046,22 @@ func (c *TenantClient) QueryMspCustomerAllocations(_m *Tenant) *MSPAllocationQue
 	return query
 }
 
+// QueryBootstrapTokens queries the bootstrap_tokens edge of a Tenant.
+func (c *TenantClient) QueryBootstrapTokens(_m *Tenant) *BootstrapTokenQuery {
+	query := (&BootstrapTokenClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(bootstraptoken.Table, bootstraptoken.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.BootstrapTokensTable, tenant.BootstrapTokensColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TenantClient) Hooks() []Hook {
 	return c.hooks.Tenant
@@ -19671,56 +19844,56 @@ func (c *WorkflowVersionClient) mutate(ctx context.Context, m *WorkflowVersionMu
 type (
 	hooks struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
-		AssetLicense, AuditLog, BPMNPermission, CABMember, CIAttributeDefinition,
-		CIRelationship, CITag, CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView,
-		Change, ChangePIR, CloudAccount, CloudResource, CloudService,
-		ConfigurationItem, ConfigurationItemHistory, Contract, Conversation,
-		Department, DiscoveryJob, DiscoveryResult, DiscoverySource, DomainConfig,
-		EndpointACL, EngineerSkill, FeishuTicketSync, Group, Incident, IncidentAlert,
-		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
-		IncidentRuleExecution, ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
-		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
-		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
-		Notification, NotificationPreference, PasswordResetToken, Permission,
-		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
-		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
-		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
-		ServiceCatalogItem, ServiceRequest, ServiceRequestApproval, StandardChange,
-		Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant, TenantInstallation,
-		Ticket, TicketApproval, TicketAssignmentRule, TicketAttachment,
-		TicketAutomationRule, TicketCC, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView,
-		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
-		WorkflowTask, WorkflowVersion []ent.Hook
+		AssetLicense, AuditLog, BPMNPermission, BootstrapToken, CABMember,
+		CIAttributeDefinition, CIRelationship, CITag, CIType, CMDBExportTask,
+		CMDBImportTask, CMDBSavedView, Change, ChangePIR, CloudAccount, CloudResource,
+		CloudService, ConfigurationItem, ConfigurationItemHistory, Contract,
+		Conversation, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
+		DomainConfig, EndpointACL, EngineerSkill, FeishuTicketSync, Group, Incident,
+		IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
+		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
+		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
+		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
+		Message, Microservice, Notification, NotificationPreference,
+		PasswordResetToken, Permission, PermissionDefinition, Problem,
+		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
+		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
+		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
+		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
+		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceRequest,
+		ServiceRequestApproval, StandardChange, Survey, SurveyResponse, SystemConfig,
+		Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
+		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
-		AssetLicense, AuditLog, BPMNPermission, CABMember, CIAttributeDefinition,
-		CIRelationship, CITag, CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView,
-		Change, ChangePIR, CloudAccount, CloudResource, CloudService,
-		ConfigurationItem, ConfigurationItemHistory, Contract, Conversation,
-		Department, DiscoveryJob, DiscoveryResult, DiscoverySource, DomainConfig,
-		EndpointACL, EngineerSkill, FeishuTicketSync, Group, Incident, IncidentAlert,
-		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
-		IncidentRuleExecution, ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
-		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
-		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
-		Notification, NotificationPreference, PasswordResetToken, Permission,
-		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
-		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
-		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
-		ServiceCatalogItem, ServiceRequest, ServiceRequestApproval, StandardChange,
-		Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant, TenantInstallation,
-		Ticket, TicketApproval, TicketAssignmentRule, TicketAttachment,
-		TicketAutomationRule, TicketCC, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView,
-		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
-		WorkflowTask, WorkflowVersion []ent.Interceptor
+		AssetLicense, AuditLog, BPMNPermission, BootstrapToken, CABMember,
+		CIAttributeDefinition, CIRelationship, CITag, CIType, CMDBExportTask,
+		CMDBImportTask, CMDBSavedView, Change, ChangePIR, CloudAccount, CloudResource,
+		CloudService, ConfigurationItem, ConfigurationItemHistory, Contract,
+		Conversation, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
+		DomainConfig, EndpointACL, EngineerSkill, FeishuTicketSync, Group, Incident,
+		IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
+		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
+		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
+		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
+		Message, Microservice, Notification, NotificationPreference,
+		PasswordResetToken, Permission, PermissionDefinition, Problem,
+		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
+		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
+		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
+		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
+		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceRequest,
+		ServiceRequestApproval, StandardChange, Survey, SurveyResponse, SystemConfig,
+		Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
+		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )

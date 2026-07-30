@@ -30,6 +30,9 @@ type AuditLog func(*sql.Selector)
 // BPMNPermission is the predicate function for bpmnpermission builders.
 type BPMNPermission func(*sql.Selector)
 
+// BootstrapToken is the predicate function for bootstraptoken builders.
+type BootstrapToken func(*sql.Selector)
+
 // CABMember is the predicate function for cabmember builders.
 type CABMember func(*sql.Selector)
 

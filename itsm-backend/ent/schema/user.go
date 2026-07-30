@@ -67,6 +67,9 @@ func (User) Fields() []ent.Field {
 		field.Int("assigned_by_msp_id").
 			Comment("MSP分配人ID").
 			Optional(),
+		field.Bool("is_bootstrap_admin").
+			Comment("是否通过bootstrap token创建").
+			Default(false),
 	}
 }
 

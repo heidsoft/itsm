@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/asset"
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/auditlog"
+	"itsm-backend/ent/bootstraptoken"
 	"itsm-backend/ent/bpmnpermission"
 	"itsm-backend/ent/cabmember"
 	"itsm-backend/ent/change"
@@ -195,6 +196,7 @@ func checkColumn(t, c string) error {
 			assetlicense.Table:                assetlicense.ValidColumn,
 			auditlog.Table:                    auditlog.ValidColumn,
 			bpmnpermission.Table:              bpmnpermission.ValidColumn,
+			bootstraptoken.Table:              bootstraptoken.ValidColumn,
 			cabmember.Table:                   cabmember.ValidColumn,
 			ciattributedefinition.Table:       ciattributedefinition.ValidColumn,
 			cirelationship.Table:              cirelationship.ValidColumn,

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/bootstraptoken"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
@@ -274,6 +275,21 @@ func (_c *TenantCreate) AddMspCustomerAllocations(v ...*MSPAllocation) *TenantCr
 	return _c.AddMspCustomerAllocationIDs(ids...)
 }
 
+// AddBootstrapTokenIDs adds the "bootstrap_tokens" edge to the BootstrapToken entity by IDs.
+func (_c *TenantCreate) AddBootstrapTokenIDs(ids ...int) *TenantCreate {
+	_c.mutation.AddBootstrapTokenIDs(ids...)
+	return _c
+}
+
+// AddBootstrapTokens adds the "bootstrap_tokens" edges to the BootstrapToken entity.
+func (_c *TenantCreate) AddBootstrapTokens(v ...*BootstrapToken) *TenantCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBootstrapTokenIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (_c *TenantCreate) Mutation() *TenantMutation {
 	return _c.mutation
@@ -488,6 +504,22 @@ func (_c *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.BootstrapTokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.BootstrapTokensTable,
+			Columns: []string{tenant.BootstrapTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(bootstraptoken.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

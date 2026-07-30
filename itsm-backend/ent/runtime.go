@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/asset"
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/auditlog"
+	"itsm-backend/ent/bootstraptoken"
 	"itsm-backend/ent/bpmnpermission"
 	"itsm-backend/ent/cabmember"
 	"itsm-backend/ent/change"
@@ -397,6 +398,24 @@ func init() {
 	bpmnpermission.DefaultUpdatedAt = bpmnpermissionDescUpdatedAt.Default.(func() time.Time)
 	// bpmnpermission.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	bpmnpermission.UpdateDefaultUpdatedAt = bpmnpermissionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	bootstraptokenFields := schema.BootstrapToken{}.Fields()
+	_ = bootstraptokenFields
+	// bootstraptokenDescTokenHash is the schema descriptor for token_hash field.
+	bootstraptokenDescTokenHash := bootstraptokenFields[0].Descriptor()
+	// bootstraptoken.TokenHashValidator is a validator for the "token_hash" field. It is called by the builders before save.
+	bootstraptoken.TokenHashValidator = bootstraptokenDescTokenHash.Validators[0].(func(string) error)
+	// bootstraptokenDescUsed is the schema descriptor for used field.
+	bootstraptokenDescUsed := bootstraptokenFields[2].Descriptor()
+	// bootstraptoken.DefaultUsed holds the default value on creation for the used field.
+	bootstraptoken.DefaultUsed = bootstraptokenDescUsed.Default.(bool)
+	// bootstraptokenDescCreatedAt is the schema descriptor for created_at field.
+	bootstraptokenDescCreatedAt := bootstraptokenFields[4].Descriptor()
+	// bootstraptoken.DefaultCreatedAt holds the default value on creation for the created_at field.
+	bootstraptoken.DefaultCreatedAt = bootstraptokenDescCreatedAt.Default.(func() time.Time)
+	// bootstraptokenDescTenantID is the schema descriptor for tenant_id field.
+	bootstraptokenDescTenantID := bootstraptokenFields[5].Descriptor()
+	// bootstraptoken.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	bootstraptoken.TenantIDValidator = bootstraptokenDescTenantID.Validators[0].(func(int) error)
 	cabmemberFields := schema.CABMember{}.Fields()
 	_ = cabmemberFields
 	// cabmemberDescUserID is the schema descriptor for user_id field.
@@ -2160,11 +2179,7 @@ func init() {
 	// processbinding.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	processbinding.DefaultUpdatedAt = processbindingDescUpdatedAt.Default.(func() time.Time)
 	// processbinding.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	if processbindingDescUpdatedAt.UpdateDefault != nil {
-		processbinding.UpdateDefaultUpdatedAt = processbindingDescUpdatedAt.UpdateDefault.(func() time.Time)
-	} else {
-		processbinding.UpdateDefaultUpdatedAt = func() time.Time { return time.Now() }
-	}
+	processbinding.UpdateDefaultUpdatedAt = processbindingDescUpdatedAt.UpdateDefault.(func() time.Time)
 	processdefinitionFields := schema.ProcessDefinition{}.Fields()
 	_ = processdefinitionFields
 	// processdefinitionDescKey is the schema descriptor for key field.
@@ -3330,19 +3345,11 @@ func init() {
 	// tenantDescName is the schema descriptor for name field.
 	tenantDescName := tenantFields[0].Descriptor()
 	// tenant.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	if len(tenantDescName.Validators) > 0 && tenantDescName.Validators[0] != nil {
-		tenant.NameValidator = tenantDescName.Validators[0].(func(string) error)
-	} else {
-		tenant.NameValidator = func(string) error { return nil }
-	}
+	tenant.NameValidator = tenantDescName.Validators[0].(func(string) error)
 	// tenantDescCode is the schema descriptor for code field.
 	tenantDescCode := tenantFields[1].Descriptor()
 	// tenant.CodeValidator is a validator for the "code" field. It is called by the builders before save.
-	if len(tenantDescCode.Validators) > 0 && tenantDescCode.Validators[0] != nil {
-		tenant.CodeValidator = tenantDescCode.Validators[0].(func(string) error)
-	} else {
-		tenant.CodeValidator = func(string) error { return nil }
-	}
+	tenant.CodeValidator = tenantDescCode.Validators[0].(func(string) error)
 	// tenantDescStatus is the schema descriptor for status field.
 	tenantDescStatus := tenantFields[4].Descriptor()
 	// tenant.DefaultStatus holds the default value on creation for the status field.
@@ -3825,6 +3832,10 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userDescIsBootstrapAdmin is the schema descriptor for is_bootstrap_admin field.
+	userDescIsBootstrapAdmin := userFields[15].Descriptor()
+	// user.DefaultIsBootstrapAdmin holds the default value on creation for the is_bootstrap_admin field.
+	user.DefaultIsBootstrapAdmin = userDescIsBootstrapAdmin.Default.(bool)
 	vendorFields := schema.Vendor{}.Fields()
 	_ = vendorFields
 	// vendorDescName is the schema descriptor for name field.
