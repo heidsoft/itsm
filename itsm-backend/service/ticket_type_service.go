@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -45,7 +46,8 @@ func (s *TicketTypeService) CreateTicketType(ctx context.Context, req *dto.Creat
 	notificationConfigMap := structToMap(req.NotificationConfig)
 	permissionConfigMap := structToMap(req.PermissionConfig)
 
-	// Build create mutation via ent client
+	// Build create mutation via ent client（schema 中 created_at/updated_at 为必填字段，必须显式设置）
+	now := time.Now()
 	obj, err := s.client.TicketType.Create().
 		SetCode(req.Code).
 		SetName(req.Name).
@@ -63,6 +65,8 @@ func (s *TicketTypeService) CreateTicketType(ctx context.Context, req *dto.Creat
 		SetPermissionConfig(permissionConfigMap).
 		SetTenantID(int64(tenantID)).
 		SetCreatedBy(int64(userID)).
+		SetCreatedAt(now).
+		SetUpdatedAt(now).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create ticket type", "error", err)
@@ -130,6 +134,7 @@ func (s *TicketTypeService) UpdateTicketType(ctx context.Context, id int, req *d
 		update.SetPermissionConfig(structToMap(req.PermissionConfig))
 	}
 	update.SetUpdatedBy(int64(userID))
+	update.SetUpdatedAt(time.Now())
 
 	updatedObj, err := update.Save(ctx)
 	if err != nil {

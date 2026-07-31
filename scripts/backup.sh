@@ -11,7 +11,8 @@ PGHOST="${PGHOST:-localhost}"
 PGPORT="${PGPORT:-5432}"
 PGDATABASE="${PGDATABASE:-itsm}"
 PGUSER="${PGUSER:-postgres}"
-WAL_DIR="${WAL_DIR:-/var/lib/postgresql/wal}"
+# WAL 归档目录默认跟随 BACKUP_DIR，保证在 CI/非 postgres 用户环境下也可写
+WAL_DIR="${WAL_DIR:-${BACKUP_DIR}/wal}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -179,7 +180,7 @@ Commands:
 
 Environment Variables:
     BACKUP_DIR  - Backup directory (default: /var/backups/itsm)
-    WAL_DIR     - WAL archive directory (default: /var/lib/postgresql/wal)
+    WAL_DIR     - WAL archive directory (default: \$BACKUP_DIR/wal)
     PGHOST      - PostgreSQL host (default: localhost)
     PGPORT      - PostgreSQL port (default: 5432)
     PGDATABASE  - Database name (default: itsm)

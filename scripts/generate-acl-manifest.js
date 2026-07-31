@@ -104,7 +104,10 @@ let prefixStack = ["/api/v1"];
 const groupCloseDepth = [];  // parallel to prefixStack
 
 function currentPrefix() {
-  return prefixStack.join("");
+  // 栈内存的已经是完整前缀（pushPrefix 时已拼接），取栈顶即可。
+  // 之前用 join("") 会把所有历史前缀重复拼接，每遇到一个 Group
+  // 前缀长度翻倍，导致正则在超长字符串上回溯直至 OOM。
+  return prefixStack[prefixStack.length - 1];
 }
 
 function pushPrefix(p, depth) {
