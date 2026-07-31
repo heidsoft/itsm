@@ -214,7 +214,13 @@ function discoverRouterFiles(dir) {
 const KNOWN_PUBLIC = new Set([
   "/api/v1/health", "/api/v1/healthz", "/api/v1/readyz",
   "/api/v1/version", "/api/v1/auth/login", "/api/v1/refresh-token",
+  "/api/v1/auth/refresh",
   "/api/v1/csrf-token", "/api/v1/readiness/ga",
+  // 注册与密码重置：无需登录
+  "/api/v1/auth/register",
+  "/api/v1/auth/forgot-password",
+  "/api/v1/auth/reset-password",
+  "/api/v1/auth/validate-reset-token",
   // 外部系统回调：由独立签名/事件校验保护，无法要求登录态 RBAC
   "/api/v1/connectors/feishu/callback",
   "/api/v1/feishu/oauth/callback",
@@ -233,6 +239,7 @@ const AUTH_ONLY = new Set([
   "/api/v1/auth/tenants",
   "/api/v1/auth/logout",
   "/api/v1/auth/menus",
+  "/api/v1/auth/switch-tenant",  // 租户切换：JWT 认证即可，无需 RBAC 资源权限
   "/api/v1/users/profile",
   "/api/v1/users/me",
 ]);
