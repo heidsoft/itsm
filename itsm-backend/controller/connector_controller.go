@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"itsm-backend/common"
@@ -244,9 +243,11 @@ func (c *ConnectorController) Lifecycle(ctx *gin.Context) {
 // 实际签名校验和负载解析由该连接器自身完成。
 func (c *ConnectorController) FeishuCallback(ctx *gin.Context) {
 	body, _ := ctx.GetRawData()
-	tenantID, _ := strconv.Atoi(ctx.Query("tenant_id"))
-	if tenantID == 0 {
-		tenantID = ctx.GetInt("tenant_id")
+	tenantID := ctx.GetInt("tenant_id")
+	if tenantID <= 0 {
+		zap.S().Warnw("Connector FeishuCallback: tenant_id missing in context", "remote_ip", ctx.ClientIP())
+		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		return
 	}
 	conn, ok := c.manager.Get(tenantID, "feishu")
 	if !ok {

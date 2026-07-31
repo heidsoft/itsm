@@ -9,8 +9,8 @@ type FeishuOAuthAuthURLResponse struct {
 }
 
 type FeishuOAuthCallbackResponse struct {
-	AccessToken  string `json:"accessToken,omitempty"`
-	RefreshToken string `json:"refreshToken,omitempty"`
+	AccessToken  string `json:"-"`
+	RefreshToken string `json:"-"`
 	ExpiresIn    int    `json:"expiresIn,omitempty"`
 	TokenType    string `json:"tokenType,omitempty"`
 	Scope        string `json:"scope,omitempty"`

@@ -3,7 +3,6 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strconv"
 
 	"itsm-backend/common"
@@ -51,7 +50,7 @@ func (c *FeishuController) getFeishuConnector(ctx *gin.Context) (*feishuConn.Fei
 // 无认证上下文时允许通过 query/state 解析 tenant_id 做路由，
 // 后续必须经过签名/令牌校验才会处理事件。
 func (c *FeishuController) getFeishuConnectorPublic(ctx *gin.Context) (*feishuConn.Feishu, int, bool) {
-	tenantID := getTenantIDFromContextOrQuery(ctx)
+	tenantID := getTenantIDFromContext(ctx)
 	if tenantID == 0 {
 		return nil, 0, false
 	}
@@ -123,14 +122,12 @@ func (c *FeishuController) OAuthCallback(ctx *gin.Context) {
 		}
 	}
 	common.Success(ctx, &dto.FeishuOAuthCallbackResponse{
-		AccessToken:  token.AccessToken,
-		RefreshToken: token.RefreshToken,
-		ExpiresIn:    token.ExpiresIn,
-		TokenType:    token.TokenType,
-		Scope:        token.Scope,
-		UserID:       token.UserID,
-		OpenID:       token.OpenID,
-		UnionID:      token.UnionID,
+		ExpiresIn: token.ExpiresIn,
+		TokenType: token.TokenType,
+		Scope:     token.Scope,
+		UserID:    token.UserID,
+		OpenID:    token.OpenID,
+		UnionID:   token.UnionID,
 	})
 }
 
@@ -229,19 +226,11 @@ func (c *FeishuController) handleURLVerification(ctx *gin.Context, fc *feishuCon
 	return true
 }
 
-func getTenantIDFromContextOrQuery(ctx *gin.Context) int {
+func getTenantIDFromContext(ctx *gin.Context) int {
 	if tenantID := ctx.GetInt("tenant_id"); tenantID > 0 {
 		return tenantID
 	}
-	if tenantID, _ := strconv.Atoi(ctx.Query("tenant_id")); tenantID > 0 {
-		return tenantID
-	}
-	stateValues, err := url.ParseQuery(ctx.Query("state"))
-	if err != nil {
-		return 0
-	}
-	tenantID, _ := strconv.Atoi(stateValues.Get("tenant_id"))
-	return tenantID
+	return 0
 }
 
 func requestScheme(ctx *gin.Context) string {
