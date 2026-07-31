@@ -76,6 +76,10 @@ jobs:
       - name: Verify skill package
         working-directory: itsm-skill
         run: |
+          if [ ! -f package.json ]; then
+            echo "itsm-skill not tracked in this checkout (.gitignored), skipping"
+            exit 0
+          fi
           node -e "const p=require('./package.json'); if (!p.name || !p.version || !Array.isArray(p.openclaw?.skills) || !p.openclaw.skills.length) process.exit(1)"
           node --check index.js
           node -e "const p=require('./package.json'); if (!p.license) process.exit(1)"
