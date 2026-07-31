@@ -46,7 +46,8 @@ jobs:
         run: npm run type-check
       - name: Unit tests
         working-directory: itsm-frontend
-        run: npm test -- --runInBand
+        # --forceExit: Jest 全量测试通过后进程因残留句柄不退出，导致 job 挂到 30min 超时
+        run: npm test -- --runInBand --forceExit
       - name: Production build
         working-directory: itsm-frontend
         env:
