@@ -19,6 +19,7 @@ import {
 import { Pencil, Eye, Clock, MessageSquare, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { SafeContent } from '@/components/common/SafeContent';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import { ArticleStatus } from '@/types/knowledge-base';
 import type { ReviewArticleRequest } from '@/types/knowledge-base';
@@ -361,13 +362,13 @@ export default function KnowledgeReviewListPage() {
             {selectedArticle.content && (
               <>
                 <Divider>内容预览</Divider>
-                <div
+                <SafeContent
                   className="prose max-w-none"
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      selectedArticle.content.substring(0, 500) +
-                      (selectedArticle.content.length > 500 ? '...' : ''),
-                  }}
+                  sanitizeHtml
+                  content={
+                    selectedArticle.content.substring(0, 500) +
+                    (selectedArticle.content.length > 500 ? '...' : '')
+                  }
                 />
               </>
             )}

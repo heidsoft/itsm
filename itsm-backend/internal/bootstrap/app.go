@@ -548,6 +548,10 @@ func NewApplication() *Application {
 	}
 	commonHandler := domainCommon.NewHandler(commonServiceDomain)
 
+	// Auth Controller（装配缺失的 register / forgot-password / reset-password / validate-reset-token / switch-tenant 路由）
+	authService := service.NewAuthService(client, cfg.JWT.Secret, sugar, nil)
+	authController := controller.NewAuthController(authService)
+
 	// Role Handler (in-memory for now)
 	roleHandler := common.NewRoleHandler(client, sugar)
 
@@ -723,6 +727,7 @@ func NewApplication() *Application {
 		SLATemplateController: slaTemplateController,
 		AIHandler:             aiHandler, // Added AI domain handler
 		CommonHandler:         commonHandler,
+		AuthController:        authController,
 		RoleHandler:           roleHandler,
 
 		// Global Search

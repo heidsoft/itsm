@@ -20,8 +20,38 @@ export class AuthService {
     }
 
     const data = await response.json();
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    // 不将令牌/用户信息写入 localStorage（避免 XSS 窃取）。
+    // 令牌由后端 httpOnly cookie 管理；前端仅设置 auth-token cookie 供 middleware 路由守卫使用。
+    if (typeof window !== 'undefined' && data.token) {
+      const secure = location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = `auth-token=${data.token}; path=/; max-age=0; SameSite=Lax${secure}`;
+    }
+    if (data.user) {
+      const { login } = useAuthStore.getState();
+      const u = data.user as any;
+      login(
+        {
+          id: Number(u?.id || 0),
+          username: String(u?.username || ''),
+          role: String(u?.role || 'end_user'),
+          email: String(u?.email || ''),
+          name: String(u?.name || u?.fullName || ''),
+          tenantId: u?.tenantId ? Number(u.tenantId) : undefined,
+          department: u?.department,
+          permissions: u?.permissions,
+        },
+        String(data.token || 'authenticated'),
+        {
+          id: Number(u?.tenantId || 1),
+          name: '默认租户',
+          code: 'default',
+          type: 'standard' as any,
+          status: 'active' as any,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } as Tenant
+      );
+    }
   }
 
   private static getCookie(name: string): string | null {
@@ -142,7 +172,8 @@ export class AuthService {
       }).catch(() => {});
     } finally {
       // 清除 auth-token cookie（middleware 路由守卫使用）
-      document.cookie = 'auth-token=; path=/; max-age=0; SameSite=Lax';
+      const secure = location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = `auth-token=; path=/; max-age=0; SameSite=Lax${secure}`;
       logout();
     }
   }
@@ -173,7 +204,8 @@ export class AuthService {
       // 前端仅设置 auth-token cookie 供 middleware 路由守卫使用
       if (typeof window !== 'undefined' && data.accessToken) {
         const cookieMaxAge = rememberMe ? 7 * 24 * 60 * 60 : 0; // 7天或会话级
-        document.cookie = `auth-token=${data.accessToken}; path=/; max-age=${cookieMaxAge}; SameSite=Lax`;
+        const secure = location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `auth-token=${data.accessToken}; path=/; max-age=${cookieMaxAge}; SameSite=Lax${secure}`;
       }
 
       // 使用store管理登录状态

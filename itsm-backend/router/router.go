@@ -268,6 +268,7 @@ type RouterConfig struct {
 	SLATemplateController *controller.SLATemplateController
 	AIHandler             *ai.Handler
 	CommonHandler         *domainCommon.Handler
+	AuthController        *controller.AuthController
 	RoleHandler           *common.RoleHandler
 
 	// WebSocket Service
@@ -342,6 +343,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		if config.CommonHandler != nil {
 			public.POST("/auth/login", config.CommonHandler.Login)
 			public.POST("/refresh-token", config.CommonHandler.RefreshToken)
+			public.POST("/auth/refresh", config.CommonHandler.RefreshToken)
+		}
+
+		// 无需认证的账号自助端点（注册/密码找回/重置）
+		if config.AuthController != nil {
+			public.POST("/auth/register", config.AuthController.Register)
+			public.POST("/auth/forgot-password", config.AuthController.ForgotPassword)
+			public.POST("/auth/reset-password", config.AuthController.ResetPassword)
+			public.POST("/auth/validate-reset-token", config.AuthController.ValidateResetToken)
 		}
 
 		// CSRF token 获取端点（无需认证）
@@ -1150,6 +1160,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				authGrp.GET("/me", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe)
 				authGrp.GET("/tenants", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetUserTenants)
 				authGrp.POST("/logout", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.Logout)
+				if config.AuthController != nil {
+					authGrp.POST("/switch-tenant", middleware.AuthMiddleware(config.JWTSecret), config.AuthController.SwitchTenant)
+				}
 			}
 
 			// User Menu (no permission required, will be filtered by role)

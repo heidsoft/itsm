@@ -9,6 +9,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/user"
 )
 
@@ -71,8 +72,10 @@ func (s *RootCauseAnalysisService) AnalyzeProblemFromIncidents(ctx context.Conte
 		Findings:     []string{},
 	}
 
-	// 获取相关事件 - filter manually
-	allIncidents, err := s.client.Incident.Query().All(ctx)
+	// 获取相关事件（数据库层按租户过滤，避免跨租户数据加载）
+	tenantIncidents, err := s.client.Incident.Query().
+		Where(incident.TenantIDEQ(problem.TenantID)).
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -80,12 +83,9 @@ func (s *RootCauseAnalysisService) AnalyzeProblemFromIncidents(ctx context.Conte
 	// 分析事件的共同特征
 	var commonCategories []string
 
-	for _, incident := range allIncidents {
-		if incident.TenantID != problem.TenantID {
-			continue
-		}
-		if incident.Category != "" {
-			commonCategories = append(commonCategories, incident.Category)
+	for _, inc := range tenantIncidents {
+		if inc.Category != "" {
+			commonCategories = append(commonCategories, inc.Category)
 		}
 	}
 
@@ -102,17 +102,16 @@ func (s *RootCauseAnalysisService) AnalyzeProblemFromIncidents(ctx context.Conte
 
 // MatchKnownErrors 匹配已知错误库
 func (s *RootCauseAnalysisService) MatchKnownErrors(ctx context.Context, tenantID int, keywords []string) ([]*ent.KnownError, error) {
-	// Get all known errors and filter manually
-	all, err := s.client.KnownError.Query().All(ctx)
+	// 数据库层按租户和状态过滤，避免跨租户数据加载
+	all, err := s.client.KnownError.Query().
+		Where(knownerror.TenantIDEQ(tenantID), knownerror.StatusEQ("active")).
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var result []*ent.KnownError
 	for _, ke := range all {
-		if ke.TenantID != tenantID || ke.Status != "active" {
-			continue
-		}
 		// Simple keyword match
 		for _, kw := range keywords {
 			if ke.Keywords != nil {

@@ -27,6 +27,19 @@ const protectedRoutes = [
   '/applications',
   '/tags',
   '/msp',
+  '/ai',
+  '/approvals',
+  '/improvements',
+  '/installations',
+  '/marketplace',
+  '/my-requests',
+  '/notifications',
+  '/profile',
+  '/service-requests',
+  '/standard-changes',
+  '/system',
+  '/teams',
+  '/templates',
 ];
 
 // 公开路由（不需要认证）

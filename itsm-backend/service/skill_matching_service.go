@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/engineerskill"
 )
 
 // SkillMatchingService 技能匹配服务
@@ -40,45 +41,34 @@ func (s *SkillMatchingService) CreateEngineerSkill(ctx context.Context, input dt
 	return build.Save(ctx)
 }
 
-// GetEngineerSkillByID 获取工程师技能
-func (s *SkillMatchingService) GetEngineerSkillByID(ctx context.Context, id int) (*ent.EngineerSkill, error) {
-	return s.client.EngineerSkill.Get(ctx, id)
+// GetEngineerSkillByID 获取工程师技能（租户隔离）
+func (s *SkillMatchingService) GetEngineerSkillByID(ctx context.Context, id, tenantID int) (*ent.EngineerSkill, error) {
+	return s.client.EngineerSkill.Query().
+		Where(engineerskill.IDEQ(id), engineerskill.TenantIDEQ(tenantID)).
+		Only(ctx)
 }
 
 // QueryEngineerSkills 查询工程师技能列表
 func (s *SkillMatchingService) QueryEngineerSkills(ctx context.Context, tenantID int) ([]*ent.EngineerSkill, error) {
-	all, err := s.client.EngineerSkill.Query().All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []*ent.EngineerSkill
-	for _, e := range all {
-		if e.TenantID == tenantID {
-			result = append(result, e)
-		}
-	}
-	return result, nil
+	return s.client.EngineerSkill.Query().
+		Where(engineerskill.TenantIDEQ(tenantID)).
+		All(ctx)
 }
 
 // GetEngineerSkillsByUserID 根据用户ID获取技能列表
 func (s *SkillMatchingService) GetEngineerSkillsByUserID(ctx context.Context, userID, tenantID int) ([]*ent.EngineerSkill, error) {
-	all, err := s.client.EngineerSkill.Query().All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []*ent.EngineerSkill
-	for _, e := range all {
-		if e.UserID == userID && e.TenantID == tenantID {
-			result = append(result, e)
-		}
-	}
-	return result, nil
+	return s.client.EngineerSkill.Query().
+		Where(engineerskill.UserIDEQ(userID), engineerskill.TenantIDEQ(tenantID)).
+		All(ctx)
 }
 
-// UpdateEngineerSkill 更新工程师技能
-func (s *SkillMatchingService) UpdateEngineerSkill(ctx context.Context, id int, input dto.UpdateEngineerSkillRequest) (*ent.EngineerSkill, error) {
+// UpdateEngineerSkill 更新工程师技能（先校验租户归属，防止跨租户更新）
+func (s *SkillMatchingService) UpdateEngineerSkill(ctx context.Context, id, tenantID int, input dto.UpdateEngineerSkillRequest) (*ent.EngineerSkill, error) {
+	if _, err := s.client.EngineerSkill.Query().
+		Where(engineerskill.IDEQ(id), engineerskill.TenantIDEQ(tenantID)).
+		Only(ctx); err != nil {
+		return nil, err
+	}
 	update := s.client.EngineerSkill.UpdateOneID(id)
 	if input.Category != nil {
 		update.SetCategory(*input.Category)
@@ -113,25 +103,23 @@ func (s *SkillMatchingService) UpdateEngineerSkill(ctx context.Context, id int, 
 	return update.Save(ctx)
 }
 
-// DeleteEngineerSkill 删除工程师技能
-func (s *SkillMatchingService) DeleteEngineerSkill(ctx context.Context, id int) error {
-	return s.client.EngineerSkill.DeleteOneID(id).Exec(ctx)
+// DeleteEngineerSkill 删除工程师技能（租户隔离）
+func (s *SkillMatchingService) DeleteEngineerSkill(ctx context.Context, id, tenantID int) error {
+	_, err := s.client.EngineerSkill.Delete().
+		Where(engineerskill.IDEQ(id), engineerskill.TenantIDEQ(tenantID)).
+		Exec(ctx)
+	return err
 }
 
 // MatchBestEngineer 根据工单属性匹配最佳工程师
 // 匹配因素: 技能匹配度 > 负载情况 > 经验年限
 func (s *SkillMatchingService) MatchBestEngineer(ctx context.Context, tenantID int, category, skillName string, priority string) (*ent.EngineerSkill, error) {
-	// 查询所有可用工程师
-	all, err := s.client.EngineerSkill.Query().All(ctx)
+	// 查询本租户可用工程师（数据库层过滤，避免跨租户加载）
+	engineers, err := s.client.EngineerSkill.Query().
+		Where(engineerskill.TenantIDEQ(tenantID), engineerskill.IsAvailable(true)).
+		All(ctx)
 	if err != nil {
 		return nil, err
-	}
-
-	var engineers []*ent.EngineerSkill
-	for _, e := range all {
-		if e.TenantID == tenantID && e.IsAvailable {
-			engineers = append(engineers, e)
-		}
 	}
 
 	if len(engineers) == 0 {
@@ -238,20 +226,12 @@ func (s *SkillMatchingService) UpdateEngineerLoad(ctx context.Context, userID, t
 
 // GetAvailableEngineers 获取可用工程师列表(按技能分类)
 func (s *SkillMatchingService) GetAvailableEngineers(ctx context.Context, tenantID int, category string) ([]*ent.EngineerSkill, error) {
-	all, err := s.client.EngineerSkill.Query().All(ctx)
-	if err != nil {
-		return nil, err
+	query := s.client.EngineerSkill.Query().
+		Where(engineerskill.TenantIDEQ(tenantID), engineerskill.IsAvailable(true))
+	if category != "" {
+		query = query.Where(engineerskill.CategoryEQ(category))
 	}
-
-	var result []*ent.EngineerSkill
-	for _, e := range all {
-		if e.TenantID == tenantID && e.IsAvailable {
-			if category == "" || e.Category == category {
-				result = append(result, e)
-			}
-		}
-	}
-	return result, nil
+	return query.All(ctx)
 }
 
 // CheckEngineerAvailability 检查工程师是否可接单

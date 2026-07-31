@@ -33,8 +33,24 @@ func NewFeishuController(connectorManager *connector.Manager, syncService *servi
 	}
 }
 
-// getFeishuConnector 获取当前租户的飞书连接器
+// getFeishuConnector 获取当前租户的飞书连接器（仅从认证上下文取 tenant_id，禁止 query 参数绕过）
 func (c *FeishuController) getFeishuConnector(ctx *gin.Context) (*feishuConn.Feishu, int, bool) {
+	tenantID := ctx.GetInt("tenant_id")
+	if tenantID <= 0 {
+		return nil, 0, false
+	}
+	conn, ok := c.connectorManager.Get(tenantID, "feishu")
+	if !ok {
+		return nil, tenantID, false
+	}
+	fc, ok := conn.(*feishuConn.Feishu)
+	return fc, tenantID, ok
+}
+
+// getFeishuConnectorPublic 公开回调路由（webhook/oauth callback）专用：
+// 无认证上下文时允许通过 query/state 解析 tenant_id 做路由，
+// 后续必须经过签名/令牌校验才会处理事件。
+func (c *FeishuController) getFeishuConnectorPublic(ctx *gin.Context) (*feishuConn.Feishu, int, bool) {
 	tenantID := getTenantIDFromContextOrQuery(ctx)
 	if tenantID == 0 {
 		return nil, 0, false
@@ -76,9 +92,9 @@ func (c *FeishuController) OAuthCallback(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "code is required")
 		return
 	}
-	fc, tenantID, ok := c.getFeishuConnector(ctx)
+	fc, tenantID, ok := c.getFeishuConnectorPublic(ctx)
 	if !ok {
-		common.Fail(ctx, common.InternalErrorCode, "Feishu connector not configured")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid request")
 		return
 	}
 	token, err := fc.ExchangeOAuthCode(ctx.Request.Context(), code)
@@ -142,9 +158,9 @@ func (c *FeishuController) SyncTicketToFeishu(ctx *gin.Context) {
 
 // Webhook handles Feishu webhook events
 func (c *FeishuController) Webhook(ctx *gin.Context) {
-	fc, tenantID, ok := c.getFeishuConnector(ctx)
+	fc, tenantID, ok := c.getFeishuConnectorPublic(ctx)
 	if !ok {
-		common.Fail(ctx, common.InternalErrorCode, "Feishu connector not configured")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid request")
 		return
 	}
 

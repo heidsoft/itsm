@@ -206,8 +206,8 @@ func (s *ProblemInvestigationService) UpdateProblemInvestigation(ctx context.Con
 		argIndex++
 	}
 
-	query += fmt.Sprintf(" WHERE id = $%d", argIndex)
-	args = append(args, investigationID)
+	query += fmt.Sprintf(" WHERE id = $%d AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $%d)", argIndex, argIndex+1)
+	args = append(args, investigationID, tenantID)
 
 	_, err = s.db.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -607,8 +607,9 @@ func (s *ProblemInvestigationService) UpdateRootCauseAnalysis(ctx context.Contex
 		FROM problem_root_cause_analyses prca
 		JOIN users u1 ON prca.analyst_id = u1.id
 		LEFT JOIN users u2 ON prca.reviewed_by = u2.id
-		WHERE prca.id = $1
-	`, id).Scan(
+		JOIN problems p ON prca.problem_id = p.id
+		WHERE prca.id = $1 AND p.tenant_id = $2
+	`, id, tenantID).Scan(
 		&existingAnalysis.ID, &existingAnalysis.ProblemID, &existingAnalysis.AnalystID, &existingAnalysis.AnalystName,
 		&existingAnalysis.AnalysisMethod, &existingAnalysis.RootCauseDescription, &existingAnalysis.ContributingFactors,
 		&existingAnalysis.Evidence, &existingAnalysis.ConfidenceLevel, &existingAnalysis.AnalysisDate,
@@ -658,8 +659,8 @@ func (s *ProblemInvestigationService) UpdateRootCauseAnalysis(ctx context.Contex
 		paramIndex++
 	}
 
-	updateSQL += fmt.Sprintf(" WHERE id = $%d", paramIndex)
-	params = append(params, id)
+	updateSQL += fmt.Sprintf(" WHERE id = $%d AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $%d)", paramIndex, paramIndex+1)
+	params = append(params, id, tenantID)
 
 	now := time.Now()
 	params[0] = now
@@ -679,7 +680,7 @@ func (s *ProblemInvestigationService) DeleteRootCauseAnalysis(ctx context.Contex
 
 	// 检查是否存在
 	var count int
-	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM problem_root_cause_analyses WHERE id = $1", id).Scan(&count)
+	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM problem_root_cause_analyses WHERE id = $1 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $2)", id, tenantID).Scan(&count)
 	if err != nil {
 		return fmt.Errorf("查询根因分析失败: %v", err)
 	}
@@ -688,7 +689,7 @@ func (s *ProblemInvestigationService) DeleteRootCauseAnalysis(ctx context.Contex
 	}
 
 	// 删除
-	_, err = s.db.ExecContext(ctx, "DELETE FROM problem_root_cause_analyses WHERE id = $1", id)
+	_, err = s.db.ExecContext(ctx, "DELETE FROM problem_root_cause_analyses WHERE id = $1 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $2)", id, tenantID)
 	if err != nil {
 		return fmt.Errorf("删除根因分析失败: %v", err)
 	}
@@ -710,8 +711,9 @@ func (s *ProblemInvestigationService) UpdateProblemSolution(ctx context.Context,
 		FROM problem_solutions ps
 		JOIN users u1 ON ps.proposed_by = u1.id
 		LEFT JOIN users u2 ON ps.approved_by = u2.id
-		WHERE ps.id = $1
-	`, id).Scan(
+		JOIN problems p ON ps.problem_id = p.id
+		WHERE ps.id = $1 AND p.tenant_id = $2
+	`, id, tenantID).Scan(
 		&existingSolution.ID, &existingSolution.ProblemID, &existingSolution.SolutionType, &existingSolution.SolutionDescription,
 		&existingSolution.ProposedBy, &existingSolution.ProposedByName, &existingSolution.ProposedDate, &existingSolution.Status,
 		&existingSolution.Priority, &existingSolution.EstimatedEffortHours, &existingSolution.EstimatedCost,
@@ -766,8 +768,8 @@ func (s *ProblemInvestigationService) UpdateProblemSolution(ctx context.Context,
 		paramIndex++
 	}
 
-	updateSQL += fmt.Sprintf(" WHERE id = $%d", paramIndex)
-	params = append(params, id)
+	updateSQL += fmt.Sprintf(" WHERE id = $%d AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $%d)", paramIndex, paramIndex+1)
+	params = append(params, id, tenantID)
 
 	now := time.Now()
 	params[0] = now
@@ -787,7 +789,7 @@ func (s *ProblemInvestigationService) DeleteProblemSolution(ctx context.Context,
 
 	// 检查是否存在
 	var count int
-	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM problem_solutions WHERE id = $1", id).Scan(&count)
+	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM problem_solutions WHERE id = $1 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $2)", id, tenantID).Scan(&count)
 	if err != nil {
 		return fmt.Errorf("查询解决方案失败: %v", err)
 	}
@@ -796,7 +798,7 @@ func (s *ProblemInvestigationService) DeleteProblemSolution(ctx context.Context,
 	}
 
 	// 删除
-	_, err = s.db.ExecContext(ctx, "DELETE FROM problem_solutions WHERE id = $1", id)
+	_, err = s.db.ExecContext(ctx, "DELETE FROM problem_solutions WHERE id = $1 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $2)", id, tenantID)
 	if err != nil {
 		return fmt.Errorf("删除解决方案失败: %v", err)
 	}
@@ -818,8 +820,9 @@ func (s *ProblemInvestigationService) ApproveSolution(ctx context.Context, id in
 		FROM problem_solutions ps
 		JOIN users u1 ON ps.proposed_by = u1.id
 		LEFT JOIN users u2 ON ps.approved_by = u2.id
-		WHERE ps.id = $1
-	`, id).Scan(
+		JOIN problems p ON ps.problem_id = p.id
+		WHERE ps.id = $1 AND p.tenant_id = $2
+	`, id, tenantID).Scan(
 		&solution.ID, &solution.ProblemID, &solution.SolutionType, &solution.SolutionDescription,
 		&solution.ProposedBy, &solution.ProposedByName, &solution.ProposedDate, &solution.Status,
 		&solution.Priority, &solution.EstimatedEffortHours, &solution.EstimatedCost,
@@ -843,8 +846,8 @@ func (s *ProblemInvestigationService) ApproveSolution(ctx context.Context, id in
 	_, err = s.db.ExecContext(ctx, `
 		UPDATE problem_solutions
 		SET approval_status = $1, approved_by = $2, approval_date = $3, updated_at = $3
-		WHERE id = $4
-	`, approvalStatus, approverID, now, id)
+		WHERE id = $4 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $5)
+	`, approvalStatus, approverID, now, id, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("更新审批状态失败: %v", err)
 	}
@@ -852,8 +855,8 @@ func (s *ProblemInvestigationService) ApproveSolution(ctx context.Context, id in
 	// 如果批准，更新解决方案状态为待实施
 	if approved {
 		_, err = s.db.ExecContext(ctx, `
-			UPDATE problem_solutions SET status = $1, updated_at = $2 WHERE id = $3
-		`, dto.SolutionStatusPendingImplementation, now, id)
+			UPDATE problem_solutions SET status = $1, updated_at = $2 WHERE id = $3 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $4)
+		`, dto.SolutionStatusPendingImplementation, now, id, tenantID)
 		if err != nil {
 			s.logger.Warnw("Failed to update solution status after approval", "error", err)
 		}
