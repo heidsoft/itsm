@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: itsm-agent/go.mod
           cache-dependency-path: itsm-agent/go.sum

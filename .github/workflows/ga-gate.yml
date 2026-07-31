@@ -76,7 +76,7 @@ jobs:
 
       - name: Save failure logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ga-gate-compose-logs
           path: ga-gate-compose.log
