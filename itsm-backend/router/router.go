@@ -530,7 +530,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			tickets.POST("/:id/escalate", middleware.RequirePermission("ticket", "escalate"), config.TicketController.EscalateTicket)
 			tickets.GET("/:id/history", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketActivity)
-			tickets.GET("/types", func(c *gin.Context) {
+			tickets.GET("/types", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
 				common.Success(c, gin.H{"types": []gin.H{
 					{"id": 1, "name": " Incident", "code": "incident"},
 					{"id": 2, "name": "Problem", "code": "problem"},
@@ -1284,7 +1284,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.TenantController != nil {
 				admin := tenant.(*gin.RouterGroup).Group("/admin")
 				{
-					admin.GET("/tenants", config.TenantController.ListTenants)
+					admin.GET("/tenants", middleware.RequirePermission("tenant", "read"), config.TenantController.ListTenants)
 				}
 			}
 
@@ -1461,14 +1461,14 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		if config.ConnectorController != nil {
 			conns := tenant.(*gin.RouterGroup).Group("/connectors")
 			{
-				conns.GET("", config.ConnectorController.ListMarket)
-				conns.GET("/configs", config.ConnectorController.ListConfigs)
-				conns.GET("/lifecycle", config.ConnectorController.Lifecycle)
+				conns.GET("", middleware.RequirePermission("connector", "read"), config.ConnectorController.ListMarket)
+				conns.GET("/configs", middleware.RequirePermission("connector", "read"), config.ConnectorController.ListConfigs)
+				conns.GET("/lifecycle", middleware.RequirePermission("connector", "read"), config.ConnectorController.Lifecycle)
 				conns.POST("/configs", middleware.RequirePermission("connector", "write"), config.ConnectorController.Provision)
 				conns.DELETE("/configs/:name", middleware.RequirePermission("connector", "write"), config.ConnectorController.Revoke)
 				conns.POST("/:name/send", middleware.RequirePermission("connector", "write"), config.ConnectorController.Send)
 				conns.POST("/:name/test", middleware.RequirePermission("connector", "write"), config.ConnectorController.Test)
-				conns.GET("/health", config.ConnectorController.Health)
+				conns.GET("/health", middleware.RequirePermission("connector", "read"), config.ConnectorController.Health)
 				// 飞书事件回调（独立签名校验）
 				conns.POST("/feishu/callback", config.ConnectorController.FeishuCallback)
 			}
@@ -1685,10 +1685,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Legacy Compatibility Routes ====================
 		// These old paths are kept only to return explicit guidance. They must
 		// not pretend that writes succeeded before a real backend is wired.
-		tenant.GET("/workflows", func(c *gin.Context) {
+		tenant.GET("/workflows", middleware.RequirePermission("workflow", "read"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/bpmn/process-definitions")
 		})
-		tenant.POST("/workflows", func(c *gin.Context) {
+		tenant.POST("/workflows", middleware.RequirePermission("workflow", "create"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/bpmn/process-definitions")
 		})
 
@@ -1696,48 +1696,48 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// registered by BPMNWorkflowController under /api/v1/bpmn/process-*.
 		bpmn := tenant.(*gin.RouterGroup).Group("/bpmn")
 		{
-			bpmn.GET("/definitions", func(c *gin.Context) {
+			bpmn.GET("/definitions", middleware.RequirePermission("workflow", "read"), func(c *gin.Context) {
 				common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/bpmn/process-definitions")
 			})
-			bpmn.POST("/definitions", func(c *gin.Context) {
+			bpmn.POST("/definitions", middleware.RequirePermission("workflow", "create"), func(c *gin.Context) {
 				common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/bpmn/process-definitions")
 			})
-			bpmn.GET("/definitions/:id", func(c *gin.Context) {
+			bpmn.GET("/definitions/:id", middleware.RequirePermission("workflow", "read"), func(c *gin.Context) {
 				common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/bpmn/process-definitions/"+c.Param("id"))
 			})
-			bpmn.PUT("/definitions/:id", func(c *gin.Context) {
+			bpmn.PUT("/definitions/:id", middleware.RequirePermission("workflow", "update"), func(c *gin.Context) {
 				common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/bpmn/process-definitions/"+c.Param("id"))
 			})
 		}
 
 		// Legacy service catalog path. Canonical APIs are /service-catalogs and
 		// /service-catalog-services.
-		tenant.GET("/services", func(c *gin.Context) {
+		tenant.GET("/services", middleware.RequirePermission("service_catalog", "read"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/service-catalogs")
 		})
-		tenant.POST("/services", func(c *gin.Context) {
+		tenant.POST("/services", middleware.RequirePermission("service_catalog", "create"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/service-catalogs")
 		})
 
 		// Legacy SLA path. Canonical SLA APIs are registered under /sla.
-		tenant.GET("/slas", func(c *gin.Context) {
+		tenant.GET("/slas", middleware.RequirePermission("sla", "read"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/sla/definitions")
 		})
-		tenant.POST("/slas", func(c *gin.Context) {
+		tenant.POST("/slas", middleware.RequirePermission("sla", "create"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/sla/definitions")
 		})
 
 		// Legacy knowledge path. Canonical knowledge APIs are registered under
 		// /knowledge/articles and /knowledge-articles.
-		tenant.GET("/knowledge", func(c *gin.Context) {
+		tenant.GET("/knowledge", middleware.RequirePermission("knowledge", "read"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/knowledge/articles")
 		})
-		tenant.POST("/knowledge", func(c *gin.Context) {
+		tenant.POST("/knowledge", middleware.RequirePermission("knowledge", "create"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/knowledge/articles")
 		})
 
 		// Static ticket type lookup kept for old clients.
-		tenant.GET("/ticket-types", func(c *gin.Context) {
+		tenant.GET("/ticket-types", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{"types": []gin.H{
 				{"id": 1, "name": " Incident", "code": "incident"},
 				{"id": 2, "name": "Problem", "code": "problem"},
@@ -1745,7 +1745,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				{"id": 4, "name": "Request", "code": "request"},
 			}, "total": 4})
 		})
-		tenant.POST("/ticket-types", func(c *gin.Context) {
+		tenant.POST("/ticket-types", middleware.RequirePermission("ticket", "create"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，工单类型由系统配置和分类接口维护")
 		})
 	}

@@ -25,10 +25,9 @@ const OUTPUT_FILE = path.resolve(__dirname, "../docs/acl-manifest.yaml");
 // ---------------------------------------------------------------------------
 
 function extractPermission(arg) {
-  const m = arg.match(/middleware\.RequirePermission\s*\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']\s*\)/);
+  // RequirePermission / RequireMSPPermission 都是权限中间件
+  const m = arg.match(/Require(?:MSP)?Permission\s*\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']\s*\)/);
   if (m) return `${m[1]}.${m[2]}`;
-  const m2 = arg.match(/RequirePermission\s*\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']\s*\)/);
-  if (m2) return `${m2[1]}.${m2[2]}`;
   return null;
 }
 
@@ -95,46 +94,32 @@ function inferDescription(method, p) {
 const routes = [];
 let currentFile = "";
 
-// prefixStack: chain of path prefixes for nested groups
-// e.g. ["/api/v1", "/ticket-categories"] for /api/v1/ticket-categories/...
-let prefixStack = ["/api/v1"];
-
-// groupCloseDepth: for each prefix in prefixStack, the brace depth when it should be popped
-// pop whenever currentBraceDepth < groupCloseDepth[stack.length - 1]
-const groupCloseDepth = [];  // parallel to prefixStack
-
-function currentPrefix() {
-  // 栈内存的已经是完整前缀（pushPrefix 时已拼接），取栈顶即可。
-  // 之前用 join("") 会把所有历史前缀重复拼接，每遇到一个 Group
-  // 前缀长度翻倍，导致正则在超长字符串上回溯直至 OOM。
-  return prefixStack[prefixStack.length - 1];
-}
-
-function pushPrefix(p, depth) {
-  prefixStack.push(p);
-  groupCloseDepth.push(depth);
-}
-
-function popToDepth(depth) {
-  while (prefixStack.length > 1 && groupCloseDepth[groupCloseDepth.length - 1] > depth) {
-    prefixStack.pop();
-    groupCloseDepth.pop();
-  }
-}
-
 // ---------------------------------------------------------------------------
 // File parser
 // ---------------------------------------------------------------------------
 
 function parseFile(filePath) {
   currentFile = path.basename(filePath);
-  prefixStack = ["/api/v1"];
-  groupCloseDepth.length = 0;
 
   const lines = fs.readFileSync(filePath, "utf8").split("\n");
 
-  // Named group variables → their prefix (for chained calls like tickets.GET)
-  const namedGroups = {};
+  // 已知分组变量 → 完整路径前缀。
+  // 基础变量约定（router.go 与各 Setup* 函数参数的实际挂载点）：
+  //   r      → engine 根（""）
+  //   auth / tenant / public → /api/v1（见 router.go SetupRoutes）
+  const namedGroups = {
+    r: "",
+    auth: "/api/v1",
+    tenant: "/api/v1",
+    public: "/api/v1",
+  };
+  // 分组级 .Use(RequirePermission(...)) → 作为该分组下路由的默认权限
+  const groupPermissions = {};
+
+  function resolveVar(name) {
+    if (namedGroups[name] !== undefined) return namedGroups[name];
+    return "/api/v1"; // 未知变量保守回退
+  }
 
   for (let lineNum = 0; lineNum < lines.length; lineNum++) {
     const raw = lines[lineNum];
@@ -143,82 +128,53 @@ function parseFile(filePath) {
 
     if (!l || l.startsWith("//") || l.startsWith("/*")) continue;
 
-    // Update brace depth for the whole line
-    for (const c of l) {
-      if (c === '{') {
-        // increment handled below via count
-      } else if (c === '}') {
-        popToDepth(0); // will be refined below
-      }
-    }
-
-    // Count brace depth changes on this line for group-close tracking
-    let bd = 0;
-    for (const c of l) { if (c === '{') bd++; else if (c === '}') bd--; }
-
-    // -------------------------------------------------------------------------
-    // Named group declarations: auth := r.Group("/api/v1")
-    //                           categories := tenant.Group("/ticket-categories")
-    // -------------------------------------------------------------------------
-    const groupDecl = l.match(/^\s*(\w+)\s*:=\s*(?:r|auth|tenant|msp|public)\s*\.\s*Group\s*\(\s*"([^"]+)"\s*\)/);
+    // -----------------------------------------------------------------------
+    // 分组声明：name := parent.Group("/x") 或 name := parent.(*gin.RouterGroup).Group("/x")
+    // -----------------------------------------------------------------------
+    const groupDecl = l.match(/^(\w+)\s*:=\s*(\w+)(?:\.\(\*gin\.RouterGroup\))?\s*\.\s*Group\s*\(\s*"([^"]*)"\s*\)/);
     if (groupDecl) {
-      const name = groupDecl[1];
-      const prefix = groupDecl[2];
-      namedGroups[name] = prefix;
-
-      // Compute full prefix for this new group
-      const fullPrefix = (currentPrefix() + "/" + prefix).replace(/\/+/g, "/");
-
-      // The group block closes at the matching brace depth.
-      // We need to track what depth this block closes at.
-      // Since we're INSIDE the Group() call's { ... } block already in the
-      // source, we need to count braces from here.
-      // A simpler approach: track cumulative depth and pop when we return to
-      // the depth we were at BEFORE this line (which may be harder to track).
-      // Instead: find the closing brace depth by counting braces from the start.
-      // We already push "" as placeholder; we'll track depth-based closes below.
-      pushPrefix(fullPrefix, 0); // depth placeholder, corrected below
+      const [, name, parent, prefix] = groupDecl;
+      const base = parent === "r" ? "" : resolveVar(parent);
+      namedGroups[name] = (base + (prefix ? "/" + prefix : "")).replace(/\/+/g, "/") || "/";
+      // 继承父分组的分组级权限
+      if (groupPermissions[parent]) groupPermissions[name] = groupPermissions[parent];
       continue;
     }
 
-    // Handle Group() calls that don't use := (inline chaining)
-    // e.g.  tenant.(*gin.RouterGroup).Group("/tickets")
-    const inlineGroup = l.match(/\.\s*Group\s*\(\s*"([^"]+)"\s*\)/);
-    if (inlineGroup && !groupDecl) {
-      const prefix = inlineGroup[1];
-      const fullPrefix = (currentPrefix() + "/" + prefix).replace(/\/+/g, "/");
-      pushPrefix(fullPrefix, 0);
+    // name := parent.Use(...) → 同前缀（gin 的 .Use 返回同一分组）
+    const useAssign = l.match(/^(\w+)\s*:=\s*(\w+)(?:\.\(\*gin\.RouterGroup\))?\s*\.\s*(?:Group\s*\(\s*"([^"]*)"\s*\)\s*\.\s*)?Use\s*\(/);
+    if (useAssign) {
+      const [, name, parent, grpPrefix] = useAssign;
+      const base = parent === "r" ? "" : resolveVar(parent);
+      namedGroups[name] = (base + (grpPrefix ? "/" + grpPrefix : "")).replace(/\/+/g, "/") || base;
+      const perm = extractPermission(l);
+      if (perm) groupPermissions[name] = perm;
       continue;
     }
 
-    // -------------------------------------------------------------------------
-    // Route registration: groupVar.METHOD("/path", ...) or METHOD("/path", ...)
-    // -------------------------------------------------------------------------
+    // 分组级权限：name.Use(middleware.RequirePermission(...))
+    const groupUse = l.match(/^(\w+)\s*\.\s*Use\s*\(/);
+    if (groupUse && namedGroups[groupUse[1]] !== undefined) {
+      const perm = extractPermission(l);
+      if (perm) groupPermissions[groupUse[1]] = perm;
+      continue;
+    }
+
+    // -----------------------------------------------------------------------
+    // 路由注册：groupVar.METHOD("/path", ...)
+    // -----------------------------------------------------------------------
     const routeInfo = extractRouteCall(l);
     if (routeInfo) {
       const { method, routePath, groupVar } = routeInfo;
 
-      // Determine prefix: use named group variable if available, else current stack
-      let prefix;
-      if (groupVar && namedGroups[groupVar] !== undefined) {
-        // Named group variable — use its assigned prefix
-        prefix = namedGroups[groupVar];
-      } else {
-        prefix = currentPrefix();
-      }
-
-      const rp = routePath.startsWith("/") ? routePath : "/" + routePath;
+      const prefix = groupVar ? resolveVar(groupVar) : "/api/v1";
+      const rp = routePath === "" ? "" : (routePath.startsWith("/") ? routePath : "/" + routePath);
       const fullPath = (prefix + rp).replace(/\/+/g, "/");
 
-      // Extract RequirePermission from the arguments after the path
-      const pathIdx = l.indexOf(routePath);
-      const rest = l.slice(pathIdx + routePath.length + 1);
-      // Split on commas that precede middleware/func/handler tokens
-      const argsRaw = rest.split(/,(?=\s*(?:middleware|func|[A-Z]))/);
-      let permission = null;
-      for (const arg of argsRaw) {
-        const p = extractPermission(arg.trim());
-        if (p) { permission = p; break; }
+      // 从路径后的参数中提取 RequirePermission；无则回退到分组级权限
+      let permission = extractPermission(l.slice(l.indexOf(routePath) + routePath.length));
+      if (!permission && groupVar && groupPermissions[groupVar]) {
+        permission = groupPermissions[groupVar];
       }
 
       routes.push({
@@ -232,27 +188,6 @@ function parseFile(filePath) {
       });
       continue;
     }
-
-    // -------------------------------------------------------------------------
-    // Group.Use() that creates a new sub-group:  tenant := auth.Use(...)
-    // (Gin .Use() returns *RouterGroup but same prefix)
-    // -------------------------------------------------------------------------
-    const useAssign = l.match(/^\s*(\w+)\s*:=\s*(\w+)\s*\.\s*Use\s*\(/);
-    if (useAssign) {
-      const name = useAssign[1];
-      const baseGroup = useAssign[2];
-      // .Use() returns the same group — same prefix
-      namedGroups[name] = namedGroups[baseGroup] || currentPrefix();
-      continue;
-    }
-
-    // -------------------------------------------------------------------------
-    // Track brace depth changes to pop group scopes
-    // pop when we close a block that was opened within the current group
-    // -------------------------------------------------------------------------
-    // Simple: for each '{' on this line, increment a "local depth"
-    // for each '}', decrement and check if we should pop
-    // We use a cumulative depth counter
   }
 }
 
@@ -280,6 +215,26 @@ const KNOWN_PUBLIC = new Set([
   "/api/v1/health", "/api/v1/healthz", "/api/v1/readyz",
   "/api/v1/version", "/api/v1/auth/login", "/api/v1/refresh-token",
   "/api/v1/csrf-token", "/api/v1/readiness/ga",
+  // 外部系统回调：由独立签名/事件校验保护，无法要求登录态 RBAC
+  "/api/v1/connectors/feishu/callback",
+  "/api/v1/feishu/oauth/callback",
+  "/api/v1/feishu/webhook",
+]);
+
+// 认证即可访问的身份/自服务类端点：登录后任意角色都需要，
+// 无法绑定具体 RBAC 资源权限（否则新用户拿不到菜单/个人信息）。
+// 变更此清单需评审：只允许身份、会话、WS 票据类端点。
+const AUTH_ONLY = new Set([
+  "/metrics",                    // Prometheus，JWT 认证后暴露
+  "/api/v1/ws/ticket",           // WS 短期票据颁发（JWT 认证）
+  "/api/v1/ws/notifications",    // WS 连接（一次性票据认证）
+  "/api/v1/msp/status",          // MSP 基础状态（MSP 中间件已限制）
+  "/api/v1/auth/me",
+  "/api/v1/auth/tenants",
+  "/api/v1/auth/logout",
+  "/api/v1/auth/menus",
+  "/api/v1/users/profile",
+  "/api/v1/users/me",
 ]);
 
 // ---------------------------------------------------------------------------
@@ -318,6 +273,12 @@ for (const r of routes) {
     covered++;
     continue;
   }
+  if (AUTH_ONLY.has(r.path)) {
+    r.isAuthOnly = true;
+    r.permission = null;
+    covered++;
+    continue;
+  }
   if (r.permission) {
     r.isProtected = true;
     covered++;
@@ -351,6 +312,8 @@ for (const r of routes) {
     y(`    permission: ${r.permission}`);
   } else if (r.isPublic) {
     y(`    permission: null  # PUBLIC`);
+  } else if (r.isAuthOnly) {
+    y(`    permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)`);
   } else {
     y(`    permission: null  # MISSING ACL`);
   }
