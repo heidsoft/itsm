@@ -43,6 +43,27 @@ func (_u *ToolInvocationUpdate) SetNillableCreatedAt(v *time.Time) *ToolInvocati
 	return _u
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (_u *ToolInvocationUpdate) SetTenantID(v int) *ToolInvocationUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (_u *ToolInvocationUpdate) SetNillableTenantID(v *int) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
+	}
+	return _u
+}
+
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ToolInvocationUpdate) AddTenantID(v int) *ToolInvocationUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
+}
+
 // SetConversationID sets the "conversation_id" field.
 func (_u *ToolInvocationUpdate) SetConversationID(v int) *ToolInvocationUpdate {
 	_u.mutation.SetConversationID(v)
@@ -54,6 +75,12 @@ func (_u *ToolInvocationUpdate) SetNillableConversationID(v *int) *ToolInvocatio
 	if v != nil {
 		_u.SetConversationID(*v)
 	}
+	return _u
+}
+
+// ClearConversationID clears the value of the "conversation_id" field.
+func (_u *ToolInvocationUpdate) ClearConversationID() *ToolInvocationUpdate {
+	_u.mutation.ClearConversationID()
 	return _u
 }
 
@@ -305,18 +332,7 @@ func (_u *ToolInvocationUpdate) ExecX(ctx context.Context) {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (_u *ToolInvocationUpdate) check() error {
-	if _u.mutation.ConversationCleared() && len(_u.mutation.ConversationIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ToolInvocation.conversation"`)
-	}
-	return nil
-}
-
 func (_u *ToolInvocationUpdate) sqlSave(ctx context.Context) (_node int, err error) {
-	if err := _u.check(); err != nil {
-		return _node, err
-	}
 	_spec := sqlgraph.NewUpdateSpec(toolinvocation.Table, toolinvocation.Columns, sqlgraph.NewFieldSpec(toolinvocation.FieldID, field.TypeInt))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -327,6 +343,12 @@ func (_u *ToolInvocationUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(toolinvocation.FieldCreatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.TenantID(); ok {
+		_spec.SetField(toolinvocation.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTenantID(); ok {
+		_spec.AddField(toolinvocation.FieldTenantID, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.ToolName(); ok {
 		_spec.SetField(toolinvocation.FieldToolName, field.TypeString, value)
@@ -445,6 +467,27 @@ func (_u *ToolInvocationUpdateOne) SetNillableCreatedAt(v *time.Time) *ToolInvoc
 	return _u
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (_u *ToolInvocationUpdateOne) SetTenantID(v int) *ToolInvocationUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (_u *ToolInvocationUpdateOne) SetNillableTenantID(v *int) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
+	}
+	return _u
+}
+
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ToolInvocationUpdateOne) AddTenantID(v int) *ToolInvocationUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
+}
+
 // SetConversationID sets the "conversation_id" field.
 func (_u *ToolInvocationUpdateOne) SetConversationID(v int) *ToolInvocationUpdateOne {
 	_u.mutation.SetConversationID(v)
@@ -456,6 +499,12 @@ func (_u *ToolInvocationUpdateOne) SetNillableConversationID(v *int) *ToolInvoca
 	if v != nil {
 		_u.SetConversationID(*v)
 	}
+	return _u
+}
+
+// ClearConversationID clears the value of the "conversation_id" field.
+func (_u *ToolInvocationUpdateOne) ClearConversationID() *ToolInvocationUpdateOne {
+	_u.mutation.ClearConversationID()
 	return _u
 }
 
@@ -720,18 +769,7 @@ func (_u *ToolInvocationUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (_u *ToolInvocationUpdateOne) check() error {
-	if _u.mutation.ConversationCleared() && len(_u.mutation.ConversationIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ToolInvocation.conversation"`)
-	}
-	return nil
-}
-
 func (_u *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolInvocation, err error) {
-	if err := _u.check(); err != nil {
-		return _node, err
-	}
 	_spec := sqlgraph.NewUpdateSpec(toolinvocation.Table, toolinvocation.Columns, sqlgraph.NewFieldSpec(toolinvocation.FieldID, field.TypeInt))
 	id, ok := _u.mutation.ID()
 	if !ok {
@@ -759,6 +797,12 @@ func (_u *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolInvo
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(toolinvocation.FieldCreatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.TenantID(); ok {
+		_spec.SetField(toolinvocation.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTenantID(); ok {
+		_spec.AddField(toolinvocation.FieldTenantID, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.ToolName(); ok {
 		_spec.SetField(toolinvocation.FieldToolName, field.TypeString, value)

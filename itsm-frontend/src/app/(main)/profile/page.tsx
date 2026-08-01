@@ -52,7 +52,6 @@ import { useI18n } from '@/lib/i18n';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 // 独特的设计系统
 const DESIGN = {

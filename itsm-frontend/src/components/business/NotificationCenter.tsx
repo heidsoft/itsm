@@ -54,7 +54,6 @@ import { TicketNotificationApi } from '@/lib/api/ticket-notification-api';
 import { PRODUCT_CAPABILITIES } from '@/config/product-capabilities';
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
 const { TextArea } = Input;
 
 interface Notification {
@@ -653,175 +652,13 @@ const NotificationCenter: React.FC<{
         },
       }}
     >
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab="通知列表" key="notifications">
-          <div className="space-y-4">
-            {/* 统计卡片 */}
-            <Row gutter={[16, 16]}>
-              <Col span={6}>
-                <Card size="small">
-                  <Statistic
-                    title="总通知"
-                    value={stats.total}
-                    prefix={<Bell className="w-4 h-4" />}
-                  />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card size="small">
-                  <Statistic
-                    title="未读"
-                    value={stats.unread}
-                    styles={{ content: { color: '#1890ff' } }}
-                    prefix={<AlertCircle className="w-4 h-4" />}
-                  />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card size="small">
-                  <Statistic
-                    title="今日发送"
-                    value={stats.sentToday}
-                    styles={{ content: { color: '#52c41a' } }}
-                    prefix={<CheckCircle className="w-4 h-4" />}
-                  />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card size="small">
-                  <Statistic
-                    title="发送成功率"
-                    value={stats.deliveryRate}
-                    suffix="%"
-                    styles={{ content: { color: '#52c41a' } }}
-                    prefix={<Progress type="circle" size={24} percent={stats.deliveryRate} />}
-                  />
-                </Card>
-              </Col>
-            </Row>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={[
 
-            {/* 操作按钮 */}
-            <div className="flex justify-between items-center">
-              <Space>
-                <Button
-                  icon={<Filter className="w-4 h-4" />}
-                  onClick={() => setActiveTab('settings')}
-                >
-                  筛选
-                </Button>
-                <Button icon={<Download className="w-4 h-4" />} onClick={handleExport}>
-                  导出
-                </Button>
-              </Space>
-              <Space>
-                <Tooltip title={stats.unread === 0 ? '暂无未读通知' : ''}>
-                  <Button onClick={handleMarkAllRead} disabled={stats.unread === 0}>
-                    全部标记已读
-                  </Button>
-                </Tooltip>
-              </Space>
-            </div>
-
-            {/* 筛选表单 */}
-            <Card size="small" className="mb-4">
-              <Space wrap>
-                <Select
-                  placeholder="通知类型"
-                  allowClear
-                  style={{ width: 120 }}
-                  value={filterType || undefined}
-                  onChange={setFilterType}
-                 options={[{ value: "info", label: "通知" }, { value: "success", label: "成功" }, { value: "warning", label: "警告" }, { value: "error", label: "错误" }]} />
-                <Select
-                  placeholder="通知状态"
-                  allowClear
-                  style={{ width: 120 }}
-                  value={filterStatus || undefined}
-                  onChange={setFilterStatus}
-                 options={[{ value: "pending", label: "待处理" }, { value: "sent", label: "已发送" }, { value: "failed", label: "失败" }, { value: "read", label: "已读" }]} />
-                <Button
-                  onClick={() => {
-                    setFilterType('');
-                    setFilterStatus('');
-                  }}
-                >
-                  重置
-                </Button>
-              </Space>
-            </Card>
-
-            {/* 通知列表 */}
-            <Table
-              columns={notificationColumns}
-              dataSource={filteredNotifications}
-              rowKey="id"
-              loading={loading}
-              scroll={{ x: 'max-content' }}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: total => `共 ${total} 条记录`,
-              }}
-              size="small"
-            />
-          </div>
-        </TabPane>
-
-        {PRODUCT_CAPABILITIES.notificationTemplateManagement && <TabPane tab="通知模板" key="templates">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Title level={5}>通知模板管理</Title>
-              <Button
-                type="primary"
-                icon={<Plus className="w-4 h-4" />}
-                onClick={() => {
-                  setSelectedTemplate(null);
-                  form.resetFields();
-                  setShowTemplateModal(true);
-                }}
-              >
-                新建模板
-              </Button>
-            </div>
-
-            <Table
-              columns={templateColumns}
-              dataSource={templates}
-              rowKey="id"
-              size="small"
-              scroll={{ x: 'max-content' }}
-            />
-          </div>
-        </TabPane>}
-
-        {PRODUCT_CAPABILITIES.notificationChannelManagement && <TabPane tab="通知通道" key="channels">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Title level={5}>通知通道配置</Title>
-              <Button
-                type="primary"
-                icon={<Plus className="w-4 h-4" />}
-                onClick={() => {
-                  setSelectedChannel(null);
-                  channelForm.resetFields();
-                  setShowChannelModal(true);
-                }}
-              >
-                添加通道
-              </Button>
-            </div>
-
-            <Table
-              columns={channelColumns}
-              dataSource={channels}
-              rowKey="id"
-              size="small"
-              scroll={{ x: 'max-content' }}
-            />
-          </div>
-        </TabPane>}
-      </Tabs>
+        ]}
+      />
 
       {/* 模板编辑模态框 */}
       {PRODUCT_CAPABILITIES.notificationTemplateManagement && <Modal

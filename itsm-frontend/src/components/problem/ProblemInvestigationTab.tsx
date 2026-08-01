@@ -770,6 +770,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         onCancel={() => setStepModalOpen(false)}
         footer={null}
         width={600}
+        destroyOnHidden
       >
         <Form form={stepForm} layout="vertical" onFinish={handleCreateStep}>
           <Form.Item
@@ -807,6 +808,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         onCancel={() => setRootCauseModalOpen(false)}
         footer={null}
         width={700}
+        destroyOnHidden
       >
         <Form form={rootCauseForm} layout="vertical" onFinish={handleCreateRootCause}>
           <Form.Item

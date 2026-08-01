@@ -143231,6 +143231,8 @@ type ToolInvocationMutation struct {
 	typ                 string
 	id                  *int
 	created_at          *time.Time
+	tenant_id           *int
+	addtenant_id        *int
 	tool_name           *string
 	arguments           *string
 	result              *string
@@ -143386,6 +143388,62 @@ func (m *ToolInvocationMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (m *ToolInvocationMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *ToolInvocationMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the ToolInvocation entity.
+// If the ToolInvocation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ToolInvocationMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *ToolInvocationMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *ToolInvocationMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *ToolInvocationMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
 // SetConversationID sets the "conversation_id" field.
 func (m *ToolInvocationMutation) SetConversationID(i int) {
 	m.conversation = &i
@@ -143417,9 +143475,22 @@ func (m *ToolInvocationMutation) OldConversationID(ctx context.Context) (v int, 
 	return oldValue.ConversationID, nil
 }
 
+// ClearConversationID clears the value of the "conversation_id" field.
+func (m *ToolInvocationMutation) ClearConversationID() {
+	m.conversation = nil
+	m.clearedFields[toolinvocation.FieldConversationID] = struct{}{}
+}
+
+// ConversationIDCleared returns if the "conversation_id" field was cleared in this mutation.
+func (m *ToolInvocationMutation) ConversationIDCleared() bool {
+	_, ok := m.clearedFields[toolinvocation.FieldConversationID]
+	return ok
+}
+
 // ResetConversationID resets all changes to the "conversation_id" field.
 func (m *ToolInvocationMutation) ResetConversationID() {
 	m.conversation = nil
+	delete(m.clearedFields, toolinvocation.FieldConversationID)
 }
 
 // SetToolName sets the "tool_name" field.
@@ -143948,7 +144019,7 @@ func (m *ToolInvocationMutation) ClearConversation() {
 
 // ConversationCleared reports if the "conversation" edge to the Conversation entity was cleared.
 func (m *ToolInvocationMutation) ConversationCleared() bool {
-	return m.clearedconversation
+	return m.ConversationIDCleared() || m.clearedconversation
 }
 
 // ConversationIDs returns the "conversation" edge IDs in the mutation.
@@ -144001,9 +144072,12 @@ func (m *ToolInvocationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ToolInvocationMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 15)
 	if m.created_at != nil {
 		fields = append(fields, toolinvocation.FieldCreatedAt)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, toolinvocation.FieldTenantID)
 	}
 	if m.conversation != nil {
 		fields = append(fields, toolinvocation.FieldConversationID)
@@ -144054,6 +144128,8 @@ func (m *ToolInvocationMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case toolinvocation.FieldCreatedAt:
 		return m.CreatedAt()
+	case toolinvocation.FieldTenantID:
+		return m.TenantID()
 	case toolinvocation.FieldConversationID:
 		return m.ConversationID()
 	case toolinvocation.FieldToolName:
@@ -144091,6 +144167,8 @@ func (m *ToolInvocationMutation) OldField(ctx context.Context, name string) (ent
 	switch name {
 	case toolinvocation.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
+	case toolinvocation.FieldTenantID:
+		return m.OldTenantID(ctx)
 	case toolinvocation.FieldConversationID:
 		return m.OldConversationID(ctx)
 	case toolinvocation.FieldToolName:
@@ -144132,6 +144210,13 @@ func (m *ToolInvocationMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedAt(v)
+		return nil
+	case toolinvocation.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
 		return nil
 	case toolinvocation.FieldConversationID:
 		v, ok := value.(int)
@@ -144232,6 +144317,9 @@ func (m *ToolInvocationMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *ToolInvocationMutation) AddedFields() []string {
 	var fields []string
+	if m.addtenant_id != nil {
+		fields = append(fields, toolinvocation.FieldTenantID)
+	}
 	if m.addapproved_by != nil {
 		fields = append(fields, toolinvocation.FieldApprovedBy)
 	}
@@ -144243,6 +144331,8 @@ func (m *ToolInvocationMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ToolInvocationMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case toolinvocation.FieldTenantID:
+		return m.AddedTenantID()
 	case toolinvocation.FieldApprovedBy:
 		return m.AddedApprovedBy()
 	}
@@ -144254,6 +144344,13 @@ func (m *ToolInvocationMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ToolInvocationMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case toolinvocation.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
 	case toolinvocation.FieldApprovedBy:
 		v, ok := value.(int)
 		if !ok {
@@ -144269,6 +144366,9 @@ func (m *ToolInvocationMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *ToolInvocationMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(toolinvocation.FieldConversationID) {
+		fields = append(fields, toolinvocation.FieldConversationID)
+	}
 	if m.FieldCleared(toolinvocation.FieldResult) {
 		fields = append(fields, toolinvocation.FieldResult)
 	}
@@ -144298,6 +144398,9 @@ func (m *ToolInvocationMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *ToolInvocationMutation) ClearField(name string) error {
 	switch name {
+	case toolinvocation.FieldConversationID:
+		m.ClearConversationID()
+		return nil
 	case toolinvocation.FieldResult:
 		m.ClearResult()
 		return nil
@@ -144323,6 +144426,9 @@ func (m *ToolInvocationMutation) ResetField(name string) error {
 	switch name {
 	case toolinvocation.FieldCreatedAt:
 		m.ResetCreatedAt()
+		return nil
+	case toolinvocation.FieldTenantID:
+		m.ResetTenantID()
 		return nil
 	case toolinvocation.FieldConversationID:
 		m.ResetConversationID()

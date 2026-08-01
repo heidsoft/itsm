@@ -298,7 +298,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
                 status: stepStatus(l.status),
                 icon: iconFor(l.status),
                 description: node ? (
-                  <Space direction="vertical" size={0} className="text-xs">
+                  <Space orientation="vertical" size={0} className="text-xs">
                     <Tag color={modeColors[node.approvalMode]}>
                       {modeLabels[node.approvalMode]}
                     </Tag>

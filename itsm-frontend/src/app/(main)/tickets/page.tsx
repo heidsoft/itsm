@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Card, Typography, Space, Button, Tabs, Badge, Alert } from 'antd';
-import { Search, Plus, LayoutGrid, Bell, BarChart3, Table } from 'lucide-react';
+import React, { Suspense, useState, useEffect, useCallback } from 'react';
+import { Card, Typography, Space, Button, Tabs, Badge, Skeleton } from 'antd';
+import { Search, Plus, LayoutGrid, Bell, Table } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import TicketList from '@/components/ticket/TicketList';
@@ -20,7 +20,8 @@ import {
 
 const { Title, Text } = Typography;
 
-export default function TicketsPage() {
+// 内容组件，使用 useSearchParams
+function TicketsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('list');
@@ -294,5 +295,35 @@ export default function TicketsPage() {
         </Space>
       </div>
     </div>
+  );
+}
+
+// Loading fallback 组件
+function TicketsPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <Card className="mb-6">
+        <Skeleton active paragraph={{ rows: 2 }} />
+      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {[1, 2, 3, 4].map(i => (
+          <Card key={i} size="small">
+            <Skeleton active paragraph={{ rows: 1 }} />
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <Skeleton active paragraph={{ rows: 10 }} />
+      </Card>
+    </div>
+  );
+}
+
+// 主页面组件，用 Suspense 包裹
+export default function TicketsPage() {
+  return (
+    <Suspense fallback={<TicketsPageSkeleton />}>
+      <TicketsPageContent />
+    </Suspense>
   );
 }

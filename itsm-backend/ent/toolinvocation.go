@@ -20,6 +20,8 @@ type ToolInvocation struct {
 	ID int `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
+	// TenantID holds the value of the "tenant_id" field.
+	TenantID int `json:"tenant_id,omitempty"`
 	// ConversationID holds the value of the "conversation_id" field.
 	ConversationID int `json:"conversation_id,omitempty"`
 	// ToolName holds the value of the "tool_name" field.
@@ -79,7 +81,7 @@ func (*ToolInvocation) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case toolinvocation.FieldNeedsApproval, toolinvocation.FieldDryRun:
 			values[i] = new(sql.NullBool)
-		case toolinvocation.FieldID, toolinvocation.FieldConversationID, toolinvocation.FieldApprovedBy:
+		case toolinvocation.FieldID, toolinvocation.FieldTenantID, toolinvocation.FieldConversationID, toolinvocation.FieldApprovedBy:
 			values[i] = new(sql.NullInt64)
 		case toolinvocation.FieldToolName, toolinvocation.FieldArguments, toolinvocation.FieldResult, toolinvocation.FieldStatus, toolinvocation.FieldRequestID, toolinvocation.FieldApprovalState, toolinvocation.FieldApprovalReason, toolinvocation.FieldError:
 			values[i] = new(sql.NullString)
@@ -111,6 +113,12 @@ func (_m *ToolInvocation) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				_m.CreatedAt = value.Time
+			}
+		case toolinvocation.FieldTenantID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
+			} else if value.Valid {
+				_m.TenantID = int(value.Int64)
 			}
 		case toolinvocation.FieldConversationID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -235,6 +243,9 @@ func (_m *ToolInvocation) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("tenant_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("conversation_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ConversationID))

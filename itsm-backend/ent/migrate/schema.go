@@ -4465,6 +4465,7 @@ var (
 	ToolInvocationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "tool_name", Type: field.TypeString},
 		{Name: "arguments", Type: field.TypeString, Size: 2147483647, Default: ""},
 		{Name: "result", Type: field.TypeString, Nullable: true, Size: 2147483647},
@@ -4477,7 +4478,7 @@ var (
 		{Name: "approved_at", Type: field.TypeTime, Nullable: true},
 		{Name: "dry_run", Type: field.TypeBool, Default: false},
 		{Name: "error", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "conversation_id", Type: field.TypeInt},
+		{Name: "conversation_id", Type: field.TypeInt, Nullable: true},
 	}
 	// ToolInvocationsTable holds the schema information for the "tool_invocations" table.
 	ToolInvocationsTable = &schema.Table{
@@ -4487,9 +4488,9 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tool_invocations_conversations_tool_invocations",
-				Columns:    []*schema.Column{ToolInvocationsColumns[14]},
+				Columns:    []*schema.Column{ToolInvocationsColumns[15]},
 				RefColumns: []*schema.Column{ConversationsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.SetNull,
 			},
 		},
 	}

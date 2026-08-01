@@ -93,6 +93,7 @@ func (s *Service) ExecuteTool(ctx context.Context, tenantID int, name string, ar
 	// Create pending invocation
 	argsStr, _ := json.Marshal(args)
 	inv, err := s.repo.CreateToolInvocation(ctx, &ToolInvocation{
+		TenantID:      tenantID,
 		ToolName:      name,
 		Arguments:     string(argsStr),
 		Status:        "pending",
@@ -107,7 +108,7 @@ func (s *Service) ExecuteTool(ctx context.Context, tenantID int, name string, ar
 }
 
 func (s *Service) ApproveTool(ctx context.Context, id int, tenantID, userID int, approve bool, reason string) (string, error) {
-	inv, err := s.repo.GetToolInvocation(ctx, id)
+	inv, err := s.repo.GetToolInvocation(ctx, id, tenantID)
 	if err != nil {
 		return "", err
 	}

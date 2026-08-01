@@ -143,6 +143,8 @@ const TicketDashboardPage = () => {
         resolutionTimeCompliance: 0,
         atRiskTickets: 0,
         breachedTickets: 0,
+        totalTickets: 0,
+        compliantTickets: 0,
       }
     );
   };
@@ -217,9 +219,9 @@ const TicketDashboardPage = () => {
           <Card title="SLA概览" className="h-full">
             <div className="text-center mb-4">
               <div className="text-3xl font-bold text-blue-600 mb-2">
-                {stats.total - (slaData.breachedTickets || 0)}
+                {slaData.compliantTickets}
               </div>
-              <Text type="secondary">SLA合规工单数</Text>
+              <Text type="secondary">SLA合规工单数（近30天）</Text>
             </div>
             <Progress
               percent={slaData.complianceRate || 0}
@@ -228,7 +230,7 @@ const TicketDashboardPage = () => {
             />
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span>总工单: {stats.total}</span>
+                <span>总工单: {slaData.totalTickets}</span>
                 <span>已违规: {slaData.breachedTickets || 0}</span>
               </div>
             </div>
@@ -525,28 +527,54 @@ const TicketDashboardPage = () => {
         </div>
       ) : (
         <div>
-          <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-6">
-            <Tabs.TabPane tab="概览" key="overview">
-              {renderOverviewCards()}
-              {renderSLAMetrics()}
-              {renderRecentActivities()}
-            </Tabs.TabPane>
-
-            <Tabs.TabPane tab="团队表现" key="performance">
-              {renderTeamPerformance()}
-              {renderTrends()}
-            </Tabs.TabPane>
-
-            <Tabs.TabPane tab="SLA监控" key="sla">
-              {renderSLAMetrics()}
-              {renderAdvancedMetrics()}
-            </Tabs.TabPane>
-
-            <Tabs.TabPane tab="趋势分析" key="trends">
-              {renderTrends()}
-              {renderAdvancedMetrics()}
-            </Tabs.TabPane>
-          </Tabs>
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            className="mb-6"
+            items={[
+              {
+                key: 'overview',
+                label: '概览',
+                children: (
+                  <>
+                    {renderOverviewCards()}
+                    {renderSLAMetrics()}
+                    {renderRecentActivities()}
+                  </>
+                ),
+              },
+              {
+                key: 'performance',
+                label: '团队表现',
+                children: (
+                  <>
+                    {renderTeamPerformance()}
+                    {renderTrends()}
+                  </>
+                ),
+              },
+              {
+                key: 'sla',
+                label: 'SLA监控',
+                children: (
+                  <>
+                    {renderSLAMetrics()}
+                    {renderAdvancedMetrics()}
+                  </>
+                ),
+              },
+              {
+                key: 'trends',
+                label: '趋势分析',
+                children: (
+                  <>
+                    {renderTrends()}
+                    {renderAdvancedMetrics()}
+                  </>
+                ),
+              },
+            ]}
+          />
         </div>
       )}
     </>

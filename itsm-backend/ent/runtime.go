@@ -3844,27 +3844,27 @@ func init() {
 	// toolinvocation.DefaultCreatedAt holds the default value on creation for the created_at field.
 	toolinvocation.DefaultCreatedAt = toolinvocationDescCreatedAt.Default.(func() time.Time)
 	// toolinvocationDescArguments is the schema descriptor for arguments field.
-	toolinvocationDescArguments := toolinvocationFields[3].Descriptor()
+	toolinvocationDescArguments := toolinvocationFields[4].Descriptor()
 	// toolinvocation.DefaultArguments holds the default value on creation for the arguments field.
 	toolinvocation.DefaultArguments = toolinvocationDescArguments.Default.(string)
 	// toolinvocationDescStatus is the schema descriptor for status field.
-	toolinvocationDescStatus := toolinvocationFields[5].Descriptor()
+	toolinvocationDescStatus := toolinvocationFields[6].Descriptor()
 	// toolinvocation.DefaultStatus holds the default value on creation for the status field.
 	toolinvocation.DefaultStatus = toolinvocationDescStatus.Default.(string)
 	// toolinvocationDescNeedsApproval is the schema descriptor for needs_approval field.
-	toolinvocationDescNeedsApproval := toolinvocationFields[7].Descriptor()
+	toolinvocationDescNeedsApproval := toolinvocationFields[8].Descriptor()
 	// toolinvocation.DefaultNeedsApproval holds the default value on creation for the needs_approval field.
 	toolinvocation.DefaultNeedsApproval = toolinvocationDescNeedsApproval.Default.(bool)
 	// toolinvocationDescApprovalState is the schema descriptor for approval_state field.
-	toolinvocationDescApprovalState := toolinvocationFields[8].Descriptor()
+	toolinvocationDescApprovalState := toolinvocationFields[9].Descriptor()
 	// toolinvocation.DefaultApprovalState holds the default value on creation for the approval_state field.
 	toolinvocation.DefaultApprovalState = toolinvocationDescApprovalState.Default.(string)
 	// toolinvocationDescApprovalReason is the schema descriptor for approval_reason field.
-	toolinvocationDescApprovalReason := toolinvocationFields[9].Descriptor()
+	toolinvocationDescApprovalReason := toolinvocationFields[10].Descriptor()
 	// toolinvocation.DefaultApprovalReason holds the default value on creation for the approval_reason field.
 	toolinvocation.DefaultApprovalReason = toolinvocationDescApprovalReason.Default.(string)
 	// toolinvocationDescDryRun is the schema descriptor for dry_run field.
-	toolinvocationDescDryRun := toolinvocationFields[12].Descriptor()
+	toolinvocationDescDryRun := toolinvocationFields[13].Descriptor()
 	// toolinvocation.DefaultDryRun holds the default value on creation for the dry_run field.
 	toolinvocation.DefaultDryRun = toolinvocationDescDryRun.Default.(bool)
 	userFields := schema.User{}.Fields()

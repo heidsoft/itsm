@@ -35,9 +35,23 @@ func (_c *ToolInvocationCreate) SetNillableCreatedAt(v *time.Time) *ToolInvocati
 	return _c
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (_c *ToolInvocationCreate) SetTenantID(v int) *ToolInvocationCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
+}
+
 // SetConversationID sets the "conversation_id" field.
 func (_c *ToolInvocationCreate) SetConversationID(v int) *ToolInvocationCreate {
 	_c.mutation.SetConversationID(v)
+	return _c
+}
+
+// SetNillableConversationID sets the "conversation_id" field if the given value is not nil.
+func (_c *ToolInvocationCreate) SetNillableConversationID(v *int) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetConversationID(*v)
+	}
 	return _c
 }
 
@@ -276,8 +290,8 @@ func (_c *ToolInvocationCreate) check() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ToolInvocation.created_at"`)}
 	}
-	if _, ok := _c.mutation.ConversationID(); !ok {
-		return &ValidationError{Name: "conversation_id", err: errors.New(`ent: missing required field "ToolInvocation.conversation_id"`)}
+	if _, ok := _c.mutation.TenantID(); !ok {
+		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ToolInvocation.tenant_id"`)}
 	}
 	if _, ok := _c.mutation.ToolName(); !ok {
 		return &ValidationError{Name: "tool_name", err: errors.New(`ent: missing required field "ToolInvocation.tool_name"`)}
@@ -299,9 +313,6 @@ func (_c *ToolInvocationCreate) check() error {
 	}
 	if _, ok := _c.mutation.DryRun(); !ok {
 		return &ValidationError{Name: "dry_run", err: errors.New(`ent: missing required field "ToolInvocation.dry_run"`)}
-	}
-	if len(_c.mutation.ConversationIDs()) == 0 {
-		return &ValidationError{Name: "conversation", err: errors.New(`ent: missing required edge "ToolInvocation.conversation"`)}
 	}
 	return nil
 }
@@ -332,6 +343,10 @@ func (_c *ToolInvocationCreate) createSpec() (*ToolInvocation, *sqlgraph.CreateS
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(toolinvocation.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
+	}
+	if value, ok := _c.mutation.TenantID(); ok {
+		_spec.SetField(toolinvocation.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
 	}
 	if value, ok := _c.mutation.ToolName(); ok {
 		_spec.SetField(toolinvocation.FieldToolName, field.TypeString, value)

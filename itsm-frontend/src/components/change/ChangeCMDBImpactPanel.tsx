@@ -75,7 +75,7 @@ export default function ChangeCMDBImpactPanel({ changeId }: ChangeCMDBImpactPane
   }
 
   return (
-    <Space direction="vertical" size="middle" className="w-full">
+    <Space orientation="vertical" size="middle" className="w-full">
       <Card size="small" title={<><Zap /> 总体评估</>}>
         <Descriptions column={2} size="small">
           <Descriptions.Item label="推荐风险等级">

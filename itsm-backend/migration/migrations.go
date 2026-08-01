@@ -59,6 +59,11 @@ var RegisteredMigrations = []Migration{
 		Description: "Add ticket_types table for structured ticket type definitions with JSON config fields",
 		RollbackSQL: "",
 	},
+	{
+		Version:     "011_add_tool_invocation_tenant_id",
+		Description: "Add tenant_id column to tool_invocations for cross-tenant IDOR isolation",
+		RollbackSQL: "ALTER TABLE tool_invocations DROP COLUMN IF EXISTS tenant_id; DROP INDEX IF EXISTS idx_tool_invocations_tenant;",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -559,6 +564,26 @@ CREATE TABLE IF NOT EXISTS ticket_types (
 CREATE INDEX IF NOT EXISTS idx_ticket_types_tenant ON ticket_types(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_ticket_types_code ON ticket_types(code);
 CREATE INDEX IF NOT EXISTS idx_ticket_types_status ON ticket_types(status);
+`
+	case "011_add_tool_invocation_tenant_id":
+		return `
+-- P0-1: Add tenant_id to tool_invocations for IDOR protection
+-- Step 1: Add column with temporary default so existing rows are backfilled
+ALTER TABLE tool_invocations ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 0;
+
+-- Step 2: Backfill from conversations table where possible
+UPDATE tool_invocations ti
+SET tenant_id = c.tenant_id
+FROM conversations c
+WHERE ti.conversation_id = c.id
+  AND ti.tenant_id = 0
+  AND c.tenant_id IS NOT NULL AND c.tenant_id > 0;
+
+-- Step 3: Index for efficient tenant-scoped queries
+CREATE INDEX IF NOT EXISTS idx_tool_invocations_tenant ON tool_invocations(tenant_id);
+
+-- NOTE: rows with tenant_id = 0 are orphan records (conversation_id=0 or conversation
+-- without a valid tenant). They will only be accessible via system-bypass queries.
 `
 	default:
 		return ""

@@ -490,3 +490,69 @@ func (h *Handler) CreateTicketByAI(c *gin.Context) {
 func (h *Handler) SummarizeTicketPost(c *gin.Context) {
 	h.SummarizeTicket(c)
 }
+
+// GetToolInvocation handles GET /api/v1/agent/tools/:id
+// 查询工具执行记录（跨租户隔离）
+func (h *Handler) GetToolInvocation(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		common.Fail(c, common.ParamErrorCode, "invalid invocation id")
+		return
+	}
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	inv, err := h.svc.repo.GetToolInvocation(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, common.NotFoundCode, "invocation not found")
+		return
+	}
+	common.Success(c, gin.H{
+		"id":             inv.ID,
+		"status":         inv.Status,
+		"result":         inv.Result,
+		"error":          inv.Error,
+		"needsApproval":  inv.NeedsApproval,
+		"approvalState":  inv.ApprovalState,
+		"requestId":      inv.RequestID,
+		"createdAt":      inv.CreatedAt,
+		"conversationId": inv.ConversationID,
+		"toolName":       inv.ToolName,
+	})
+}
+
+// ApproveTool handles POST /api/v1/agent/tools/:id/approve
+// 审批危险工具执行请求（RBAC 由路由中间件强制）
+func (h *Handler) ApproveTool(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		common.Fail(c, common.ParamErrorCode, "invalid invocation id")
+		return
+	}
+	var req struct {
+		Approve bool   `json:"approve"`
+		Reason  string `json:"reason"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误")
+		return
+	}
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	userID := c.GetInt("user_id")
+
+	state, err := h.svc.ApproveTool(c.Request.Context(), id, tenantID, userID, req.Approve, req.Reason)
+	if err != nil {
+		common.Fail(c, common.NotFoundCode, "invocation not found or operation failed")
+		return
+	}
+	common.Success(c, gin.H{"invocationId": id, "approvalState": state})
+}

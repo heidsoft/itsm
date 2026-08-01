@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { App } from 'antd';
 import {
   AlertCircle,
   CheckCircle2,
@@ -108,6 +109,7 @@ const InstallationsPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [loadError, setLoadError] = useState<string | null>(null);
+  const { message, modal } = App.useApp();
 
   const loadInstallations = async () => {
     setLoading(true);
@@ -160,7 +162,7 @@ const InstallationsPage = () => {
       setInstallations(items => items.filter(item => item.id !== installation.id));
     } catch (error) {
       console.error('Failed to uninstall item:', error);
-      alert(error instanceof Error ? error.message : '卸载失败');
+      message.error(error instanceof Error ? error.message : '卸载失败');
     }
   };
 
@@ -201,7 +203,7 @@ const InstallationsPage = () => {
       setConnectorConfigs(configRes);
     } catch (error) {
       console.error('Failed to save installation config:', error);
-      alert(error instanceof Error ? error.message : '保存配置失败');
+      message.error(error instanceof Error ? error.message : '保存配置失败');
     } finally {
       setSavingId(null);
     }
@@ -215,7 +217,7 @@ const InstallationsPage = () => {
       }
     } catch (error) {
       console.error('Failed to start Feishu OAuth:', error);
-      alert(error instanceof Error ? error.message : '无法获取飞书授权链接，请先保存 App ID 和 App Secret');
+      message.error(error instanceof Error ? error.message : '无法获取飞书授权链接，请先保存 App ID 和 App Secret');
     }
   };
 

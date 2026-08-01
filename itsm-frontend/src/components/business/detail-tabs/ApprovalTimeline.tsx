@@ -178,7 +178,7 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
               color={approvalStatusColors[app.status] || 'gray'}
               dot={iconFor(app.status)}
             >
-              <Space direction="vertical" size={2}>
+              <Space orientation="vertical" size={2}>
                 <Text strong>
                   {`第 ${app.level} 级`} {app.step ? `${app.step.toUpperCase()} ` : ''}审批
                 </Text>
@@ -240,7 +240,7 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
         onCancel={() => setModalOpen(false)}
         okText="提交"
         cancelText="取消"
-        destroyOnClose
+        destroyOnHidden
       >
         {currentAction === 'delegate' && (
           <div className="mb-3">

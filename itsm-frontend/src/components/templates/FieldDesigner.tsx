@@ -466,9 +466,14 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
       styles={{ body: { height: 'calc(100% - 57px)', overflowY: 'auto' } }}
     >
       <Form form={form} layout="vertical">
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          {/* 基础设置 */}
-          <Tabs.TabPane tab="基础设置" key="basic">
+        <Tabs
+          activeKey={activeTab} onChange={setActiveTab}
+          items={[
+                  {
+                    key: 'basic',
+                    label: '基础设置',
+                    children: (
+                      <>
             <Form.Item
               label="字段名称"
               name="name"
@@ -538,10 +543,14 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
             <Form.Item label="默认值" name="defaultValue">
               <Input placeholder="字段的默认值" />
             </Form.Item>
-          </Tabs.TabPane>
-
-          {/* 验证规则 */}
-          <Tabs.TabPane tab="验证规则" key="validation">
+                      </>
+                    ),
+                  },
+                  {
+                    key: 'validation',
+                    label: '验证规则',
+                    children: (
+                      <>
             <Alert
               message="配置字段的验证规则，确保用户输入符合要求"
               type="info"
@@ -590,11 +599,14 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                 </Form.Item>
               </Col>
             </Row>
-          </Tabs.TabPane>
-
-          {/* 选项配置 */}
-          {hasOptions && (
-            <Tabs.TabPane tab="选项配置" key="options">
+                      </>
+                    ),
+                  },
+                  {
+                    key: 'options',
+                    label: '选项配置',
+                    children: (
+                      <>
               <Alert
                 message="配置下拉选择、单选、多选等字段的选项"
                 type="info"
@@ -660,11 +672,14 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                   </>
                 )}
               </Form.List>
-            </Tabs.TabPane>
-          )}
-
-          {/* 条件显示 */}
-          <Tabs.TabPane tab="条件显示" key="conditional">
+                      </>
+                    ),
+                  },
+                  {
+                    key: 'conditional',
+                    label: '条件显示',
+                    children: (
+                      <>
             <Alert
               message="根据其他字段的值决定是否显示此字段"
               type="info"
@@ -706,10 +721,14 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
             <Form.Item label="比较值" name={['conditional', 'value']}>
               <Input placeholder="要比较的值" />
             </Form.Item>
-          </Tabs.TabPane>
-
-          {/* 高级配置 */}
-          <Tabs.TabPane tab="高级配置" key="advanced">
+                      </>
+                    ),
+                  },
+                  {
+                    key: 'advanced',
+                    label: '高级配置',
+                    children: (
+                      <>
             {field.type === 'file_upload' && (
               <>
                 <Form.Item label="最大文件大小（MB）" name="maxFileSize">
@@ -780,8 +799,11 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                 </Form.Item>
               </>
             )}
-          </Tabs.TabPane>
-        </Tabs>
+                      </>
+                    ),
+                  },
+          ]}
+        />
       </Form>
     </Card>
   );

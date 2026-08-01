@@ -8,6 +8,7 @@ import (
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/rootcauseanalysis"
+	"itsm-backend/ent/toolinvocation"
 )
 
 type EntRepository struct {
@@ -127,6 +128,7 @@ func toToolInvocationDomain(e *ent.ToolInvocation) *ToolInvocation {
 	}
 	return &ToolInvocation{
 		ID:             e.ID,
+		TenantID:       e.TenantID,
 		ConversationID: e.ConversationID,
 		ToolName:       e.ToolName,
 		Arguments:      e.Arguments,
@@ -145,7 +147,7 @@ func toToolInvocationDomain(e *ent.ToolInvocation) *ToolInvocation {
 
 func (r *EntRepository) CreateToolInvocation(ctx context.Context, i *ToolInvocation) (*ToolInvocation, error) {
 	e, err := r.client.ToolInvocation.Create().
-		SetConversationID(i.ConversationID).
+		SetTenantID(i.TenantID).
 		SetToolName(i.ToolName).
 		SetArguments(i.Arguments).
 		SetStatus(i.Status).
@@ -159,8 +161,10 @@ func (r *EntRepository) CreateToolInvocation(ctx context.Context, i *ToolInvocat
 	return toToolInvocationDomain(e), nil
 }
 
-func (r *EntRepository) GetToolInvocation(ctx context.Context, id int) (*ToolInvocation, error) {
-	e, err := r.client.ToolInvocation.Get(ctx, id)
+func (r *EntRepository) GetToolInvocation(ctx context.Context, id int, tenantID int) (*ToolInvocation, error) {
+	e, err := r.client.ToolInvocation.Query().
+		Where(toolinvocation.ID(id), toolinvocation.TenantID(tenantID)).
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}

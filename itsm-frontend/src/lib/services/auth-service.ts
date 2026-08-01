@@ -244,7 +244,7 @@ export class AuthService {
       return true;
     } catch (error) {
       console.error('Login failed:', error);
-      return false;
+      throw error instanceof Error ? error : new Error('登录失败');
     }
   }
 

@@ -159,12 +159,9 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     try {
       setLoading(true);
       setError(null);
-      console.log('[TicketDetail] Fetching ticket:', ticketId);
       const data = await TicketApi.getTicket(ticketId);
-      console.log('[TicketDetail] Received ticket data:', data);
       setTicket(data as Ticket);
     } catch (error) {
-      console.error('[TicketDetail] Fetch error:', error);
       setError(error instanceof Error ? error.message : 'Network error');
     } finally {
       setLoading(false);
@@ -200,13 +197,13 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     if (ticketId) {
       fetchTicket();
     }
-  }, [ticketId, fetchTicket]);
+  }, [ticketId]);
 
   useEffect(() => {
     if (ticketId) {
       fetchSLAInfo();
     }
-  }, [ticketId, fetchSLAInfo]);
+  }, [ticketId]);
 
   useEffect(() => {
     fetchUsers();

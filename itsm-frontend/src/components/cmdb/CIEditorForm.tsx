@@ -97,7 +97,15 @@ const renderSchemaFieldInput = (field: SchemaField) => {
     case 'integer':
     case 'int':
     case 'float':
-      return <InputNumber className='w-full' placeholder={placeholder} />;
+      return (
+        <InputNumber
+          className='w-full'
+          placeholder={placeholder}
+          min={field.validation?.minValue}
+          max={field.validation?.maxValue}
+          precision={field.type === 'integer' || field.type === 'int' ? 0 : undefined}
+        />
+      );
     case 'boolean':
     case 'bool':
       return <Switch checkedChildren='是' unCheckedChildren='否' />;

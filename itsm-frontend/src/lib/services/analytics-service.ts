@@ -99,6 +99,8 @@ export interface DashboardOverviewResponse {
     resolutionTimeCompliance: number;
     atRiskTickets: number;
     breachedTickets: number;
+    totalTickets: number;
+    compliantTickets: number;
   };
   satisfactionData: {
     averageRating: number;

@@ -1,7 +1,7 @@
 version: "1.0"
-generated_at: "2026-07-31T00:17:15.404Z"
+generated_at: "2026-07-31T22:50:11.853Z"
 router_version: "1.0"
-total_routes: 556
+total_routes: 562
 permission_coverage: "100.00%"
 routes:
   - method: POST
@@ -9,2875 +9,2911 @@ routes:
     permission: null  # PUBLIC
     menu: v1
     description: 创建
-    source: router.go:343
+    source: router.go:344
   - method: POST
     path: /api/v1/refresh-token
     permission: null  # PUBLIC
     menu: v1
     description: 创建
-    source: router.go:344
+    source: router.go:345
+  - method: POST
+    path: /api/v1/auth/refresh
+    permission: null  # PUBLIC
+    menu: v1
+    description: 创建
+    source: router.go:346
+  - method: POST
+    path: /api/v1/auth/register
+    permission: null  # PUBLIC
+    menu: v1
+    description: 创建
+    source: router.go:351
+  - method: POST
+    path: /api/v1/auth/forgot-password
+    permission: null  # PUBLIC
+    menu: v1
+    description: 创建
+    source: router.go:352
+  - method: POST
+    path: /api/v1/auth/reset-password
+    permission: null  # PUBLIC
+    menu: v1
+    description: 创建
+    source: router.go:353
+  - method: POST
+    path: /api/v1/auth/validate-reset-token
+    permission: null  # PUBLIC
+    menu: v1
+    description: 创建
+    source: router.go:354
   - method: GET
     path: /api/v1/csrf-token
     permission: null  # PUBLIC
     menu: v1
     description: 列表
-    source: router.go:349
+    source: router.go:359
   - method: GET
     path: /api/v1/health
     permission: null  # PUBLIC
     menu: v1
     description: 列表
-    source: router.go:353
+    source: router.go:363
   - method: GET
     path: /api/v1/healthz
     permission: null  # PUBLIC
     menu: v1
     description: 列表
-    source: router.go:357
+    source: router.go:367
   - method: GET
     path: /api/v1/readyz
     permission: null  # PUBLIC
     menu: v1
     description: 列表
-    source: router.go:360
+    source: router.go:370
   - method: GET
     path: /api/v1/version
     permission: null  # PUBLIC
     menu: v1
     description: 列表
-    source: router.go:368
+    source: router.go:378
   - method: GET
     path: /api/v1/readiness/ga
     permission: null  # PUBLIC
     menu: v1
     description: 列表
-    source: router.go:371
+    source: router.go:381
   - method: GET
     path: /metrics
     permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
     menu: system
     description: 列表
-    source: router.go:378
+    source: router.go:388
   - method: POST
     path: /api/v1/ws/ticket
     permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
     menu: v1
     description: 创建
-    source: router.go:404
+    source: router.go:414
   - method: GET
     path: /api/v1/ws/notifications
     permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
     menu: v1
     description: 列表
-    source: router.go:419
+    source: router.go:429
   - method: GET
     path: /api/v1/msp/status
     permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
     menu: v1
     description: 列表
-    source: router.go:446
+    source: router.go:456
   - method: GET
     path: /api/v1/msp/context
     permission: msp.read
     menu: v1
     description: 列表
-    source: router.go:447
+    source: router.go:457
   - method: GET
     path: /api/v1/msp/allocations
     permission: msp_allocation.read
     menu: v1
     description: 列表
-    source: router.go:450
+    source: router.go:460
   - method: POST
     path: /api/v1/msp/allocations
     permission: msp_allocation.write
     menu: v1
     description: 创建
-    source: router.go:451
+    source: router.go:461
   - method: POST
     path: /api/v1/msp/allocations/deallocate
     permission: msp_allocation.write
     menu: v1
     description: 创建
-    source: router.go:452
+    source: router.go:462
   - method: GET
     path: /api/v1/msp/customers
     permission: msp_customer.read
     menu: v1
     description: 列表
-    source: router.go:455
+    source: router.go:465
   - method: GET
     path: /api/v1/msp/customers/:customer_tenant_id/tickets
     permission: msp_ticket.read
     menu: v1
     description: 列表
-    source: router.go:456
+    source: router.go:466
   - method: POST
     path: /api/v1/msp/tickets/:id/assign
     permission: msp_ticket.write
     menu: v1
     description: 创建
-    source: router.go:459
+    source: router.go:469
   - method: GET
     path: /api/v1/msp/reports/customers
     permission: msp_report.read
     menu: v1
     description: 列表
-    source: router.go:462
+    source: router.go:472
   - method: GET
     path: /api/v1/msp/reports/performance
     permission: msp_report.read
     menu: v1
     description: 列表
-    source: router.go:463
+    source: router.go:473
   - method: GET
     path: /api/v1/ticket-categories/tree
     permission: ticket_category.read
     menu: v1
     description: 列表
-    source: router.go:477
+    source: router.go:487
   - method: POST
     path: /api/v1/ticket-categories/import/preview
     permission: ticket_category.create
     menu: v1
     description: 创建
-    source: router.go:478
+    source: router.go:488
   - method: POST
     path: /api/v1/ticket-categories/import
     permission: ticket_category.create
     menu: v1
     description: 创建
-    source: router.go:479
+    source: router.go:489
   - method: GET
     path: /api/v1/ticket-categories/:id
     permission: ticket_category.read
     menu: v1
     description: 列表
-    source: router.go:480
+    source: router.go:490
   - method: PUT
     path: /api/v1/ticket-categories/:id
     permission: ticket_category.update
     menu: v1
     description: 更新
-    source: router.go:481
+    source: router.go:491
   - method: PUT
     path: /api/v1/ticket-categories/:id/move
     permission: ticket_category.update
     menu: v1
     description: 更新
-    source: router.go:482
+    source: router.go:492
   - method: DELETE
     path: /api/v1/ticket-categories/:id
     permission: ticket_category.delete
     menu: v1
     description: 删除
-    source: router.go:483
+    source: router.go:493
   - method: GET
     path: /api/v1/ticket-tags/:id
     permission: ticket_tag.read
     menu: v1
     description: 列表
-    source: router.go:492
+    source: router.go:502
   - method: PUT
     path: /api/v1/ticket-tags/:id
     permission: ticket_tag.update
     menu: v1
     description: 更新
-    source: router.go:493
+    source: router.go:503
   - method: DELETE
     path: /api/v1/ticket-tags/:id
     permission: ticket_tag.delete
     menu: v1
     description: 删除
-    source: router.go:494
+    source: router.go:504
   - method: GET
     path: /api/v1/tickets/views
     permission: view.read
     menu: v1
     description: 列表
-    source: router.go:505
+    source: router.go:515
   - method: POST
     path: /api/v1/tickets/views
     permission: view.create
     menu: v1
     description: 创建
-    source: router.go:506
+    source: router.go:516
   - method: GET
     path: /api/v1/tickets/views/:id
     permission: view.read
     menu: v1
     description: 列表
-    source: router.go:507
+    source: router.go:517
   - method: PUT
     path: /api/v1/tickets/views/:id
     permission: view.update
     menu: v1
     description: 更新
-    source: router.go:508
+    source: router.go:518
   - method: DELETE
     path: /api/v1/tickets/views/:id
     permission: view.delete
     menu: v1
     description: 删除
-    source: router.go:509
+    source: router.go:519
   - method: GET
     path: /api/v1/tickets/search
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:512
+    source: router.go:522
   - method: GET
     path: /api/v1/tickets/stats
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:513
+    source: router.go:523
   - method: GET
     path: /api/v1/tickets/overdue
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:514
+    source: router.go:524
   - method: POST
     path: /api/v1/tickets/export
     permission: ticket.export
     menu: v1
     description: 创建
-    source: router.go:515
+    source: router.go:525
   - method: POST
     path: /api/v1/tickets/batch-delete
     permission: ticket.delete
     menu: v1
     description: 创建
-    source: router.go:516
+    source: router.go:526
   - method: GET
     path: /api/v1/tickets/cc/my
     permission: workflow.read
     menu: v1
     description: 列表
-    source: router.go:518
+    source: router.go:528
   - method: GET
     path: /api/v1/tickets/templates
     permission: template.read
     menu: v1
     description: 列表
-    source: router.go:522
+    source: router.go:532
   - method: GET
     path: /api/v1/tickets/templates/categories
     permission: template.read
     menu: v1
     description: 列表
-    source: router.go:523
+    source: router.go:533
   - method: POST
     path: /api/v1/tickets/templates
     permission: template.create
     menu: v1
     description: 创建
-    source: router.go:524
+    source: router.go:534
   - method: GET
     path: /api/v1/tickets/templates/:id
     permission: template.read
     menu: v1
     description: 列表
-    source: router.go:525
+    source: router.go:535
   - method: PUT
     path: /api/v1/tickets/templates/:id
     permission: template.update
     menu: v1
     description: 更新
-    source: router.go:526
+    source: router.go:536
   - method: PATCH
     path: /api/v1/tickets/templates/:id/status
     permission: template.update
     menu: v1
     description: 部分更新
-    source: router.go:527
+    source: router.go:537
   - method: POST
     path: /api/v1/tickets/templates/:id/copy
     permission: template.create
     menu: v1
     description: 创建
-    source: router.go:528
+    source: router.go:538
   - method: DELETE
     path: /api/v1/tickets/templates/:id
     permission: template.delete
     menu: v1
     description: 删除
-    source: router.go:529
+    source: router.go:539
   - method: POST
     path: /api/v1/tickets/:id/escalate
     permission: ticket.escalate
     menu: v1
     description: 创建
-    source: router.go:531
+    source: router.go:541
   - method: GET
     path: /api/v1/tickets/:id/history
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:532
+    source: router.go:542
   - method: GET
     path: /api/v1/tickets/types
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:533
+    source: router.go:543
   - method: GET
     path: /api/v1/tickets/:id
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:541
+    source: router.go:551
   - method: PUT
     path: /api/v1/tickets/:id
     permission: ticket.update
     menu: v1
     description: 更新
-    source: router.go:542
+    source: router.go:552
   - method: PUT
     path: /api/v1/tickets/:id/status
     permission: ticket.update
     menu: v1
     description: 更新
-    source: router.go:543
+    source: router.go:553
   - method: DELETE
     path: /api/v1/tickets/:id
     permission: ticket.delete
     menu: v1
     description: 删除
-    source: router.go:544
+    source: router.go:554
   - method: POST
     path: /api/v1/tickets/:id/assign
     permission: ticket.assign
     menu: v1
     description: 创建
-    source: router.go:545
+    source: router.go:555
   - method: POST
     path: /api/v1/tickets/:id/resolve
     permission: ticket.update
     menu: v1
     description: 创建
-    source: router.go:546
+    source: router.go:556
   - method: POST
     path: /api/v1/tickets/:id/close
     permission: ticket.update
     menu: v1
     description: 创建
-    source: router.go:547
+    source: router.go:557
   - method: GET
     path: /api/v1/tickets/:id/sla
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:550
+    source: router.go:560
   - method: GET
     path: /api/v1/tickets/:id/subtasks
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:553
+    source: router.go:563
   - method: POST
     path: /api/v1/tickets/:id/subtasks
     permission: ticket.create
     menu: v1
     description: 创建
-    source: router.go:554
+    source: router.go:564
   - method: PATCH
     path: /api/v1/tickets/:id/subtasks/:subtask_id
     permission: ticket.update
     menu: v1
     description: 部分更新
-    source: router.go:555
+    source: router.go:565
   - method: DELETE
     path: /api/v1/tickets/:id/subtasks/:subtask_id
     permission: ticket.delete
     menu: v1
     description: 删除
-    source: router.go:556
+    source: router.go:566
   - method: GET
     path: /api/v1/tickets/:id/comments
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:560
+    source: router.go:570
   - method: POST
     path: /api/v1/tickets/:id/comments
     permission: ticket.create
     menu: v1
     description: 创建
-    source: router.go:561
+    source: router.go:571
   - method: PUT
     path: /api/v1/tickets/:id/comments/:comment_id
     permission: ticket.update
     menu: v1
     description: 更新
-    source: router.go:562
+    source: router.go:572
   - method: DELETE
     path: /api/v1/tickets/:id/comments/:comment_id
     permission: ticket.delete
     menu: v1
     description: 删除
-    source: router.go:563
+    source: router.go:573
   - method: GET
     path: /api/v1/tickets/:id/attachments
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:568
+    source: router.go:578
   - method: POST
     path: /api/v1/tickets/:id/attachments
     permission: ticket.create
     menu: v1
     description: 创建
-    source: router.go:569
+    source: router.go:579
   - method: DELETE
     path: /api/v1/tickets/:id/attachments/:attachment_id
     permission: ticket.delete
     menu: v1
     description: 删除
-    source: router.go:570
+    source: router.go:580
   - method: POST
     path: /api/v1/tickets/approval/submit
     permission: approval.create
     menu: v1
     description: 创建
-    source: router.go:575
+    source: router.go:585
   - method: GET
     path: /api/v1/tickets/approval/records
     permission: approval.read
     menu: v1
     description: 列表
-    source: router.go:576
+    source: router.go:586
   - method: GET
     path: /api/v1/approval-workflows/:id
     permission: approval_workflow.read
     menu: v1
     description: 列表
-    source: router.go:583
+    source: router.go:593
   - method: PUT
     path: /api/v1/approval-workflows/:id
     permission: approval_workflow.update
     menu: v1
     description: 更新
-    source: router.go:584
+    source: router.go:594
   - method: POST
     path: /api/v1/approval-workflows/:id/migrate-to-bpmn
     permission: approval_workflow.update
     menu: v1
     description: 创建
-    source: router.go:585
+    source: router.go:595
   - method: PATCH
     path: /api/v1/approval-workflows/:id
     permission: approval_workflow.update
     menu: v1
     description: 部分更新
-    source: router.go:586
+    source: router.go:596
   - method: DELETE
     path: /api/v1/approval-workflows/:id
     permission: approval_workflow.delete
     menu: v1
     description: 删除
-    source: router.go:587
+    source: router.go:597
   - method: GET
     path: /api/v1/approvals/:id
     permission: approval_workflow.read
     menu: v1
     description: 列表
-    source: router.go:594
+    source: router.go:604
   - method: PUT
     path: /api/v1/approvals/:id
     permission: approval_workflow.write
     menu: v1
     description: 更新
-    source: router.go:595
+    source: router.go:605
   - method: PATCH
     path: /api/v1/approvals/:id
     permission: approval_workflow.write
     menu: v1
     description: 部分更新
-    source: router.go:596
+    source: router.go:606
   - method: DELETE
     path: /api/v1/approvals/:id
     permission: approval_workflow.delete
     menu: v1
     description: 删除
-    source: router.go:597
+    source: router.go:607
   - method: GET
     path: /api/v1/approvals/records
     permission: approval_workflow.read
     menu: v1
     description: 列表
-    source: router.go:598
+    source: router.go:608
   - method: POST
     path: /api/v1/approvals/submit
     permission: approval_workflow.write
     menu: v1
     description: 创建
-    source: router.go:599
+    source: router.go:609
   - method: GET
     path: /api/v1/approval-records
     permission: approval_workflow.read
     menu: v1
     description: 列表
-    source: router.go:601
+    source: router.go:611
   - method: GET
     path: /api/v1/my-approvals
     permission: approval_workflow.read
     menu: v1
     description: 列表
-    source: router.go:602
+    source: router.go:612
   - method: POST
     path: /api/v1/tickets/workflow/accept
     permission: workflow.update
     menu: v1
     description: 创建
-    source: router.go:610
+    source: router.go:620
   - method: POST
     path: /api/v1/tickets/workflow/reject
     permission: workflow.update
     menu: v1
     description: 创建
-    source: router.go:611
+    source: router.go:621
   - method: POST
     path: /api/v1/tickets/workflow/withdraw
     permission: workflow.update
     menu: v1
     description: 创建
-    source: router.go:612
+    source: router.go:622
   - method: POST
     path: /api/v1/tickets/workflow/forward
     permission: workflow.update
     menu: v1
     description: 创建
-    source: router.go:613
+    source: router.go:623
   - method: POST
     path: /api/v1/tickets/workflow/cc
     permission: workflow.update
     menu: v1
     description: 创建
-    source: router.go:614
+    source: router.go:624
   - method: POST
     path: /api/v1/tickets/workflow/approve
     permission: workflow.update
     menu: v1
     description: 创建
-    source: router.go:615
+    source: router.go:625
   - method: POST
     path: /api/v1/tickets/workflow/resolve
     permission: workflow.update
     menu: v1
     description: 创建
-    source: router.go:616
+    source: router.go:626
   - method: POST
     path: /api/v1/tickets/workflow/close
     permission: workflow.update
     menu: v1
     description: 创建
-    source: router.go:617
+    source: router.go:627
   - method: POST
     path: /api/v1/tickets/workflow/reopen
     permission: workflow.update
     menu: v1
     description: 创建
-    source: router.go:618
+    source: router.go:628
   - method: GET
     path: /api/v1/tickets/:id/cc
     permission: workflow.read
     menu: v1
     description: 列表
-    source: router.go:619
+    source: router.go:629
   - method: GET
     path: /api/v1/tickets/:id/workflow/state
     permission: workflow.read
     menu: v1
     description: 列表
-    source: router.go:620
+    source: router.go:630
   - method: GET
     path: /api/v1/tickets/:id/workflow-history
     permission: workflow.read
     menu: v1
     description: 列表
-    source: router.go:621
+    source: router.go:631
   - method: GET
     path: /api/v1/tickets/:id/workflow_records
     permission: workflow.read
     menu: v1
     description: 列表
-    source: router.go:622
+    source: router.go:632
   - method: GET
     path: /api/v1/tickets/automation-rules
     permission: automation_rule.read
     menu: v1
     description: 列表
-    source: router.go:627
+    source: router.go:637
   - method: POST
     path: /api/v1/tickets/automation-rules
     permission: automation_rule.create
     menu: v1
     description: 创建
-    source: router.go:628
+    source: router.go:638
   - method: GET
     path: /api/v1/tickets/automation-rules/:id
     permission: automation_rule.read
     menu: v1
     description: 列表
-    source: router.go:629
+    source: router.go:639
   - method: PUT
     path: /api/v1/tickets/automation-rules/:id
     permission: automation_rule.update
     menu: v1
     description: 更新
-    source: router.go:630
+    source: router.go:640
   - method: DELETE
     path: /api/v1/tickets/automation-rules/:id
     permission: automation_rule.delete
     menu: v1
     description: 删除
-    source: router.go:631
+    source: router.go:641
   - method: POST
     path: /api/v1/tickets/automation-rules/:id/test
     permission: automation_rule.update
     menu: v1
     description: 创建
-    source: router.go:632
+    source: router.go:642
   - method: POST
     path: /api/v1/tickets/:id/auto-assign
     permission: assignment_rule.update
     menu: v1
     description: 创建
-    source: router.go:637
+    source: router.go:647
   - method: GET
     path: /api/v1/tickets/assign-recommendations/:id
     permission: assignment_rule.read
     menu: v1
     description: 列表
-    source: router.go:638
+    source: router.go:648
   - method: GET
     path: /api/v1/tickets/assignment-rules
     permission: assignment_rule.read
     menu: v1
     description: 列表
-    source: router.go:639
+    source: router.go:649
   - method: POST
     path: /api/v1/tickets/assignment-rules
     permission: assignment_rule.create
     menu: v1
     description: 创建
-    source: router.go:640
+    source: router.go:650
   - method: POST
     path: /api/v1/tickets/assignment-rules/test
     permission: assignment_rule.update
     menu: v1
     description: 创建
-    source: router.go:641
+    source: router.go:651
   - method: GET
     path: /api/v1/tickets/assignment-rules/:id
     permission: assignment_rule.read
     menu: v1
     description: 列表
-    source: router.go:642
+    source: router.go:652
   - method: PUT
     path: /api/v1/tickets/assignment-rules/:id
     permission: assignment_rule.update
     menu: v1
     description: 更新
-    source: router.go:643
+    source: router.go:653
   - method: DELETE
     path: /api/v1/tickets/assignment-rules/:id
     permission: assignment_rule.delete
     menu: v1
     description: 删除
-    source: router.go:644
+    source: router.go:654
   - method: POST
     path: /api/v1/tickets/:id/rating
     permission: ticket.update
     menu: v1
     description: 创建
-    source: router.go:649
+    source: router.go:659
   - method: GET
     path: /api/v1/tickets/:id/rating
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:650
+    source: router.go:660
   - method: GET
     path: /api/v1/tickets/rating-stats
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:651
+    source: router.go:661
   - method: POST
     path: /api/v1/tickets/:id/tags
     permission: ticket_tag.create
     menu: v1
     description: 创建
-    source: router.go:655
+    source: router.go:665
   - method: DELETE
     path: /api/v1/tickets/:id/tags
     permission: ticket_tag.delete
     menu: v1
     description: 删除
-    source: router.go:656
+    source: router.go:666
   - method: POST
     path: /api/v1/tickets/analytics/deep
     permission: report.read
     menu: v1
     description: 创建
-    source: router.go:661
+    source: router.go:671
   - method: POST
     path: /api/v1/tickets/prediction/trend
     permission: report.read
     menu: v1
     description: 创建
-    source: router.go:662
+    source: router.go:672
   - method: POST
     path: /api/v1/tickets/analytics/export
     permission: report.read
     menu: v1
     description: 创建
-    source: router.go:666
+    source: router.go:676
   - method: POST
     path: /api/v1/tickets/prediction/export
     permission: report.read
     menu: v1
     description: 创建
-    source: router.go:672
+    source: router.go:682
   - method: GET
     path: /api/v1/ai/tickets/:id/summary
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:684
+    source: router.go:694
   - method: GET
     path: /api/v1/system-configs/init
     permission: config.read
     menu: v1
     description: 列表
-    source: router.go:693
+    source: router.go:703
   - method: GET
     path: /api/v1/system-configs/:id
     permission: config.read
     menu: v1
     description: 列表
-    source: router.go:694
+    source: router.go:704
   - method: GET
     path: /api/v1/system-configs/key/:key
     permission: config.read
     menu: v1
     description: 列表
-    source: router.go:695
+    source: router.go:705
   - method: PUT
     path: /api/v1/system-configs/:id
     permission: config.update
     menu: v1
     description: 更新
-    source: router.go:696
+    source: router.go:706
   - method: PUT
     path: /api/v1/system-configs/batch
     permission: config.update
     menu: v1
     description: 更新
-    source: router.go:697
+    source: router.go:707
   - method: GET
     path: /api/v1/system-configs/status
     permission: config.read
     menu: v1
     description: 列表
-    source: router.go:700
+    source: router.go:710
   - method: GET
     path: /api/v1/configs/init
     permission: config.read
     menu: v1
     description: 列表
-    source: router.go:727
+    source: router.go:737
   - method: GET
     path: /api/v1/configs/:id
     permission: config.read
     menu: v1
     description: 列表
-    source: router.go:728
+    source: router.go:738
   - method: GET
     path: /api/v1/configs/key/:key
     permission: config.read
     menu: v1
     description: 列表
-    source: router.go:729
+    source: router.go:739
   - method: PUT
     path: /api/v1/configs/:id
     permission: config.update
     menu: v1
     description: 更新
-    source: router.go:730
+    source: router.go:740
   - method: PUT
     path: /api/v1/configs/batch
     permission: config.update
     menu: v1
     description: 更新
-    source: router.go:731
+    source: router.go:741
   - method: GET
     path: /api/v1/configs/status
     permission: config.read
     menu: v1
     description: 列表
-    source: router.go:732
+    source: router.go:742
   - method: GET
     path: /api/v1/system/config
     permission: config.read
     menu: v1
     description: 列表
-    source: router.go:751
+    source: router.go:761
   - method: GET
     path: /api/v1/approval-chains/stats
     permission: approval.read
     menu: v1
     description: 列表
-    source: router.go:766
+    source: router.go:776
   - method: GET
     path: /api/v1/approval-chains/:id
     permission: approval.read
     menu: v1
     description: 列表
-    source: router.go:768
+    source: router.go:778
   - method: PUT
     path: /api/v1/approval-chains/:id
     permission: approval.update
     menu: v1
     description: 更新
-    source: router.go:769
+    source: router.go:779
   - method: DELETE
     path: /api/v1/approval-chains/:id
     permission: approval.delete
     menu: v1
     description: 删除
-    source: router.go:770
+    source: router.go:780
   - method: GET
     path: /api/v1/incidents/stats
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:786
+    source: router.go:796
   - method: GET
     path: /api/v1/incidents/:id
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:787
+    source: router.go:797
   - method: PUT
     path: /api/v1/incidents/:id
     permission: incident.write
     menu: v1
     description: 更新
-    source: router.go:788
+    source: router.go:798
   - method: DELETE
     path: /api/v1/incidents/:id
     permission: incident.delete
     menu: v1
     description: 删除
-    source: router.go:789
+    source: router.go:799
   - method: POST
     path: /api/v1/incidents/:id/escalate
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:792
+    source: router.go:802
   - method: POST
     path: /api/v1/incidents/:id/acknowledge
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:793
+    source: router.go:803
   - method: POST
     path: /api/v1/incidents/:id/resolve
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:794
+    source: router.go:804
   - method: POST
     path: /api/v1/incidents/:id/close
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:795
+    source: router.go:805
   - method: POST
     path: /api/v1/incidents/:id/reopen
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:796
+    source: router.go:806
   - method: POST
     path: /api/v1/incidents/:id/assign
     permission: incident.assign
     menu: v1
     description: 创建
-    source: router.go:797
+    source: router.go:807
   - method: POST
     path: /api/v1/incidents/:id/major-incident
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:798
+    source: router.go:808
   - method: POST
     path: /api/v1/incidents/:id/convert-to-problem
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:799
+    source: router.go:809
   - method: GET
     path: /api/v1/incidents/:id/impact
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:800
+    source: router.go:810
   - method: GET
     path: /api/v1/incidents/:id/events
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:803
+    source: router.go:813
   - method: POST
     path: /api/v1/incidents/events
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:804
+    source: router.go:814
   - method: GET
     path: /api/v1/incidents/:id/alerts
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:805
+    source: router.go:815
   - method: GET
     path: /api/v1/incidents/:id/metrics
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:806
+    source: router.go:816
   - method: POST
     path: /api/v1/incidents/root-cause
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:809
+    source: router.go:819
   - method: GET
     path: /api/v1/incidents/:id/root-cause
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:810
+    source: router.go:820
   - method: POST
     path: /api/v1/incidents/:id/root-cause
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:811
+    source: router.go:821
   - method: PUT
     path: /api/v1/incidents/:id/root-cause
     permission: incident.write
     menu: v1
     description: 更新
-    source: router.go:812
+    source: router.go:822
   - method: POST
     path: /api/v1/incidents/impact-assessment
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:815
+    source: router.go:825
   - method: GET
     path: /api/v1/incidents/:id/impact-assessment
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:816
+    source: router.go:826
   - method: PUT
     path: /api/v1/incidents/:id/impact-assessment
     permission: incident.write
     menu: v1
     description: 更新
-    source: router.go:817
+    source: router.go:827
   - method: POST
     path: /api/v1/incidents/classification
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:820
+    source: router.go:830
   - method: GET
     path: /api/v1/incidents/:id/classification
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:821
+    source: router.go:831
   - method: PUT
     path: /api/v1/incidents/:id/classification
     permission: incident.write
     menu: v1
     description: 更新
-    source: router.go:822
+    source: router.go:832
   - method: PUT
     path: /api/v1/incidents/:id/status
     permission: incident.write
     menu: v1
     description: 更新
-    source: router.go:823
+    source: router.go:833
   - method: GET
     path: /api/v1/incidents/:id/comments
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:826
+    source: router.go:836
   - method: POST
     path: /api/v1/incidents/:id/comments
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:827
+    source: router.go:837
   - method: POST
     path: /api/v1/incidents/monitoring
     permission: incident.read
     menu: v1
     description: 创建
-    source: router.go:830
+    source: router.go:840
   - method: POST
     path: /api/v1/incidents/alerts
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:833
+    source: router.go:843
   - method: GET
     path: /api/v1/incidents/alerts/active
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:834
+    source: router.go:844
   - method: GET
     path: /api/v1/incidents/alerts/statistics
     permission: incident.read
     menu: v1
     description: 列表
-    source: router.go:835
+    source: router.go:845
   - method: POST
     path: /api/v1/incidents/alerts/:id/acknowledge
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:836
+    source: router.go:846
   - method: POST
     path: /api/v1/incidents/alerts/:id/resolve
     permission: incident.write
     menu: v1
     description: 创建
-    source: router.go:837
+    source: router.go:847
   - method: GET
     path: /api/v1/incidents/configuration-items
     permission: cmdb.read
     menu: v1
     description: 列表
-    source: router.go:841
+    source: router.go:851
   - method: GET
     path: /api/v1/service-catalogs/search
     permission: service_catalog.read
     menu: v1
     description: 列表
-    source: router.go:852
+    source: router.go:862
   - method: GET
     path: /api/v1/service-catalogs/stats
     permission: service_catalog.read
     menu: v1
     description: 列表
-    source: router.go:853
+    source: router.go:863
   - method: GET
     path: /api/v1/service-catalogs/:id
     permission: service_catalog.read
     menu: v1
     description: 列表
-    source: router.go:854
+    source: router.go:864
   - method: PUT
     path: /api/v1/service-catalogs/:id
     permission: service_catalog.write
     menu: v1
     description: 更新
-    source: router.go:855
+    source: router.go:865
   - method: DELETE
     path: /api/v1/service-catalogs/:id
     permission: service_catalog.delete
     menu: v1
     description: 删除
-    source: router.go:856
+    source: router.go:866
   - method: GET
     path: /api/v1/service-catalog-services/:id
     permission: service_catalog.read
     menu: v1
     description: 列表
-    source: router.go:862
+    source: router.go:872
   - method: GET
     path: /api/v1/service-requests/me
     permission: service_request.read
     menu: v1
     description: 列表
-    source: router.go:871
+    source: router.go:881
   - method: GET
     path: /api/v1/service-requests/approvals/pending
     permission: service_request.read
     menu: v1
     description: 列表
-    source: router.go:872
+    source: router.go:882
   - method: GET
     path: /api/v1/service-requests/:id
     permission: service_request.read
     menu: v1
     description: 列表
-    source: router.go:873
+    source: router.go:883
   - method: PUT
     path: /api/v1/service-requests/:id
     permission: service_request.write
     menu: v1
     description: 更新
-    source: router.go:874
+    source: router.go:884
   - method: PUT
     path: /api/v1/service-requests/:id/status
     permission: service_request.write
     menu: v1
     description: 更新
-    source: router.go:875
+    source: router.go:885
   - method: DELETE
     path: /api/v1/service-requests/:id
     permission: service_request.delete
     menu: v1
     description: 删除
-    source: router.go:876
+    source: router.go:886
   - method: POST
     path: /api/v1/service-requests/:id/approval
     permission: service_request.write
     menu: v1
     description: 创建
-    source: router.go:877
+    source: router.go:887
   - method: POST
     path: /api/v1/service-requests/:id/approvals
     permission: service_request.write
     menu: v1
     description: 创建
-    source: router.go:878
+    source: router.go:888
   - method: POST
     path: /api/v1/service-requests/:id/provision
     permission: service_request.write
     menu: v1
     description: 创建
-    source: router.go:883
+    source: router.go:893
   - method: GET
     path: /api/v1/service-requests/:id/provisioning-tasks
     permission: service_request.read
     menu: v1
     description: 列表
-    source: router.go:884
+    source: router.go:894
   - method: POST
     path: /api/v1/provisioning-tasks/:id/execute
     permission: service_request.write
     menu: v1
     description: 创建
-    source: router.go:890
+    source: router.go:900
   - method: GET
     path: /api/v1/problems/stats
     permission: problem.read
     menu: v1
     description: 列表
-    source: router.go:900
+    source: router.go:910
   - method: GET
     path: /api/v1/problems/:id
     permission: problem.read
     menu: v1
     description: 列表
-    source: router.go:901
+    source: router.go:911
   - method: PUT
     path: /api/v1/problems/:id
     permission: problem.write
     menu: v1
     description: 更新
-    source: router.go:902
+    source: router.go:912
   - method: DELETE
     path: /api/v1/problems/:id
     permission: problem.delete
     menu: v1
     description: 删除
-    source: router.go:903
+    source: router.go:913
   - method: POST
     path: /api/v1/problems/:id/investigate
     permission: problem.write
     menu: v1
     description: 创建
-    source: router.go:904
+    source: router.go:914
   - method: PUT
     path: /api/v1/problems/:id/root-cause
     permission: problem.write
     menu: v1
     description: 更新
-    source: router.go:905
+    source: router.go:915
   - method: PUT
     path: /api/v1/problems/:id/solution
     permission: problem.write
     menu: v1
     description: 更新
-    source: router.go:906
+    source: router.go:916
   - method: POST
     path: /api/v1/problems/:id/close
     permission: problem.write
     menu: v1
     description: 创建
-    source: router.go:907
+    source: router.go:917
   - method: GET
     path: /api/v1/problems/:id/associations
     permission: problem.read
     menu: v1
     description: 列表
-    source: router.go:909
+    source: router.go:919
   - method: POST
     path: /api/v1/problems/:id/associations
     permission: problem.write
     menu: v1
     description: 创建
-    source: router.go:910
+    source: router.go:920
   - method: DELETE
     path: /api/v1/problems/:id/associations
     permission: problem.write
     menu: v1
     description: 删除
-    source: router.go:911
+    source: router.go:921
   - method: GET
     path: /api/v1/changes/stats
     permission: change.read
     menu: v1
     description: 列表
-    source: router.go:921
+    source: router.go:931
   - method: GET
     path: /api/v1/changes/:id
     permission: change.read
     menu: v1
     description: 列表
-    source: router.go:922
+    source: router.go:932
   - method: PUT
     path: /api/v1/changes/:id
     permission: change.write
     menu: v1
     description: 更新
-    source: router.go:923
+    source: router.go:933
   - method: DELETE
     path: /api/v1/changes/:id
     permission: change.delete
     menu: v1
     description: 删除
-    source: router.go:924
+    source: router.go:934
   - method: POST
     path: /api/v1/changes/:id/submit
     permission: change.write
     menu: v1
     description: 创建
-    source: router.go:925
+    source: router.go:935
   - method: POST
     path: /api/v1/changes/:id/assign
     permission: change.write
     menu: v1
     description: 创建
-    source: router.go:926
+    source: router.go:936
   - method: POST
     path: /api/v1/changes/:id/approve
     permission: change.write
     menu: v1
     description: 创建
-    source: router.go:928
+    source: router.go:938
   - method: POST
     path: /api/v1/changes/:id/reject
     permission: change.write
     menu: v1
     description: 创建
-    source: router.go:929
+    source: router.go:939
   - method: POST
     path: /api/v1/changes/:id/start
     permission: change.write
     menu: v1
     description: 创建
-    source: router.go:930
+    source: router.go:940
   - method: POST
     path: /api/v1/changes/:id/complete
     permission: change.write
     menu: v1
     description: 创建
-    source: router.go:931
+    source: router.go:941
   - method: POST
     path: /api/v1/changes/:id/rollback
     permission: change.write
     menu: v1
     description: 创建
-    source: router.go:932
+    source: router.go:942
   - method: POST
     path: /api/v1/changes/:id/cancel
     permission: change.write
     menu: v1
     description: 创建
-    source: router.go:933
+    source: router.go:943
   - method: GET
     path: /api/v1/changes/:id/approvals
     permission: change.read
     menu: v1
     description: 列表
-    source: router.go:935
+    source: router.go:945
   - method: POST
     path: /api/v1/changes/:id/approvals
     permission: change.write
     menu: v1
     description: 创建
-    source: router.go:936
+    source: router.go:946
   - method: GET
     path: /api/v1/changes/:id/approval-summary
     permission: change.read
     menu: v1
     description: 列表
-    source: router.go:937
+    source: router.go:947
   - method: GET
     path: /api/v1/changes/:id/risk-assessment
     permission: change.read
     menu: v1
     description: 列表
-    source: router.go:939
+    source: router.go:949
   - method: GET
     path: /api/v1/changes/:id/risk
     permission: change.read
     menu: v1
     description: 列表
-    source: router.go:940
+    source: router.go:950
   - method: PUT
     path: /api/v1/changes/:id/risk
     permission: change.write
     menu: v1
     description: 更新
-    source: router.go:941
+    source: router.go:951
   - method: GET
     path: /api/v1/changes/:id/cmdb-impact
     permission: change.read
     menu: v1
     description: 列表
-    source: router.go:942
+    source: router.go:952
   - method: GET
     path: /api/v1/changes/calendar
     permission: change.read
     menu: v1
     description: 列表
-    source: router.go:944
+    source: router.go:954
   - method: GET
     path: /api/v1/changes/pirs
     permission: change.read
     menu: v1
     description: 列表
-    source: router.go:946
+    source: router.go:956
   - method: GET
     path: /api/v1/changes/:id/pir
     permission: change.read
     menu: v1
     description: 列表
-    source: router.go:947
+    source: router.go:957
   - method: POST
     path: /api/v1/changes/:id/pir
     permission: change.write
     menu: v1
     description: 创建
-    source: router.go:948
+    source: router.go:958
   - method: PUT
     path: /api/v1/changes/pir/:id
     permission: change.write
     menu: v1
     description: 更新
-    source: router.go:949
+    source: router.go:959
   - method: DELETE
     path: /api/v1/changes/pir/:id
     permission: change.delete
     menu: v1
     description: 删除
-    source: router.go:950
+    source: router.go:960
   - method: GET
     path: /api/v1/releases/stats
     permission: release.read
     menu: v1
     description: 列表
-    source: router.go:960
+    source: router.go:970
   - method: GET
     path: /api/v1/releases/:id
     permission: release.read
     menu: v1
     description: 列表
-    source: router.go:961
+    source: router.go:971
   - method: PUT
     path: /api/v1/releases/:id
     permission: release.write
     menu: v1
     description: 更新
-    source: router.go:962
+    source: router.go:972
   - method: PUT
     path: /api/v1/releases/:id/status
     permission: release.write
     menu: v1
     description: 更新
-    source: router.go:963
+    source: router.go:973
   - method: POST
     path: /api/v1/releases/:id/approve
     permission: release.write
     menu: v1
     description: 创建
-    source: router.go:964
+    source: router.go:974
   - method: POST
     path: /api/v1/releases/:id/reject
     permission: release.write
     menu: v1
     description: 创建
-    source: router.go:965
+    source: router.go:975
   - method: POST
     path: /api/v1/releases/:id/rollback
     permission: release.write
     menu: v1
     description: 创建
-    source: router.go:966
+    source: router.go:976
   - method: DELETE
     path: /api/v1/releases/:id
     permission: release.delete
     menu: v1
     description: 删除
-    source: router.go:967
+    source: router.go:977
   - method: GET
     path: /api/v1/assets/stats
     permission: asset.read
     menu: v1
     description: 列表
-    source: router.go:977
+    source: router.go:987
   - method: GET
     path: /api/v1/assets/:id
     permission: asset.read
     menu: v1
     description: 列表
-    source: router.go:978
+    source: router.go:988
   - method: PUT
     path: /api/v1/assets/:id
     permission: asset.write
     menu: v1
     description: 更新
-    source: router.go:979
+    source: router.go:989
   - method: PUT
     path: /api/v1/assets/:id/status
     permission: asset.write
     menu: v1
     description: 更新
-    source: router.go:980
+    source: router.go:990
   - method: PUT
     path: /api/v1/assets/:id/assign
     permission: asset.write
     menu: v1
     description: 更新
-    source: router.go:981
+    source: router.go:991
   - method: PUT
     path: /api/v1/assets/:id/retire
     permission: asset.write
     menu: v1
     description: 更新
-    source: router.go:982
+    source: router.go:992
   - method: DELETE
     path: /api/v1/assets/:id
     permission: asset.delete
     menu: v1
     description: 删除
-    source: router.go:983
+    source: router.go:993
   - method: GET
     path: /api/v1/licenses/stats
     permission: license.read
     menu: v1
     description: 列表
-    source: router.go:997
+    source: router.go:1007
   - method: GET
     path: /api/v1/licenses/:id
     permission: license.read
     menu: v1
     description: 列表
-    source: router.go:998
+    source: router.go:1008
   - method: PUT
     path: /api/v1/licenses/:id
     permission: license.write
     menu: v1
     description: 更新
-    source: router.go:999
+    source: router.go:1009
   - method: PUT
     path: /api/v1/licenses/:id/assign
     permission: license.write
     menu: v1
     description: 更新
-    source: router.go:1000
+    source: router.go:1010
   - method: DELETE
     path: /api/v1/licenses/:id
     permission: license.delete
     menu: v1
     description: 删除
-    source: router.go:1001
+    source: router.go:1011
   - method: GET
     path: /api/v1/vendors/:id
     permission: vendor.read
     menu: v1
     description: 列表
-    source: router.go:1011
+    source: router.go:1021
   - method: DELETE
     path: /api/v1/vendors/:id
     permission: vendor.delete
     menu: v1
     description: 删除
-    source: router.go:1012
+    source: router.go:1022
   - method: GET
     path: /api/v1/knowledge/articles/:id
     permission: knowledge.read
     menu: v1
     description: 列表
-    source: router.go:1026
+    source: router.go:1036
   - method: PUT
     path: /api/v1/knowledge/articles/:id
     permission: knowledge.write
     menu: v1
     description: 更新
-    source: router.go:1027
+    source: router.go:1037
   - method: DELETE
     path: /api/v1/knowledge/articles/:id
     permission: knowledge.delete
     menu: v1
     description: 删除
-    source: router.go:1028
+    source: router.go:1038
   - method: POST
     path: /api/v1/knowledge/articles/:id/publish
     permission: knowledge.write
     menu: v1
     description: 创建
-    source: router.go:1029
+    source: router.go:1039
   - method: POST
     path: /api/v1/knowledge/articles/:id/unpublish
     permission: knowledge.write
     menu: v1
     description: 创建
-    source: router.go:1030
+    source: router.go:1040
   - method: GET
     path: /api/v1/knowledge/articles/:id/comments
     permission: knowledge.read
     menu: v1
     description: 列表
-    source: router.go:1033
+    source: router.go:1043
   - method: POST
     path: /api/v1/knowledge/articles/:id/comments
     permission: knowledge.write
     menu: v1
     description: 创建
-    source: router.go:1034
+    source: router.go:1044
   - method: GET
     path: /api/v1/knowledge/categories
     permission: knowledge.read
     menu: v1
     description: 列表
-    source: router.go:1038
+    source: router.go:1048
   - method: POST
     path: /api/v1/knowledge/search
     permission: knowledge.read
     menu: v1
     description: 创建
-    source: router.go:1041
+    source: router.go:1051
   - method: GET
     path: /api/v1/knowledge/recommendations
     permission: knowledge.read
     menu: v1
     description: 列表
-    source: router.go:1044
+    source: router.go:1054
   - method: GET
     path: /api/v1/knowledge/recent
     permission: knowledge.read
     menu: v1
     description: 列表
-    source: router.go:1045
+    source: router.go:1055
   - method: GET
     path: /api/v1/knowledge/stats
     permission: knowledge.read
     menu: v1
     description: 列表
-    source: router.go:1048
+    source: router.go:1058
   - method: GET
     path: /api/v1/knowledge-articles/categories
     permission: knowledge.read
     menu: v1
     description: 列表
-    source: router.go:1057
+    source: router.go:1067
   - method: GET
     path: /api/v1/knowledge-articles/:id
     permission: knowledge.read
     menu: v1
     description: 列表
-    source: router.go:1058
+    source: router.go:1068
   - method: GET
     path: /api/v1/sla/stats
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1067
+    source: router.go:1077
   - method: GET
     path: /api/v1/sla/definitions
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1068
+    source: router.go:1078
   - method: POST
     path: /api/v1/sla/definitions
     permission: sla.write
     menu: v1
     description: 创建
-    source: router.go:1069
+    source: router.go:1079
   - method: GET
     path: /api/v1/sla/policies
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1071
+    source: router.go:1081
   - method: POST
     path: /api/v1/sla/policies
     permission: sla.write
     menu: v1
     description: 创建
-    source: router.go:1072
+    source: router.go:1082
   - method: GET
     path: /api/v1/sla/policies/:id
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1073
+    source: router.go:1083
   - method: PUT
     path: /api/v1/sla/policies/:id
     permission: sla.write
     menu: v1
     description: 更新
-    source: router.go:1074
+    source: router.go:1084
   - method: DELETE
     path: /api/v1/sla/policies/:id
     permission: sla.delete
     menu: v1
     description: 删除
-    source: router.go:1075
+    source: router.go:1085
   - method: POST
     path: /api/v1/sla/monitor
     permission: sla.read
     menu: v1
     description: 创建
-    source: router.go:1078
+    source: router.go:1088
   - method: GET
     path: /api/v1/sla/definitions/:id
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1080
+    source: router.go:1090
   - method: PUT
     path: /api/v1/sla/definitions/:id
     permission: sla.write
     menu: v1
     description: 更新
-    source: router.go:1081
+    source: router.go:1091
   - method: DELETE
     path: /api/v1/sla/definitions/:id
     permission: sla.delete
     menu: v1
     description: 删除
-    source: router.go:1082
+    source: router.go:1092
   - method: POST
     path: /api/v1/sla/alert-rules
     permission: sla.write
     menu: v1
     description: 创建
-    source: router.go:1085
+    source: router.go:1095
   - method: GET
     path: /api/v1/sla/alert-rules
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1086
+    source: router.go:1096
   - method: GET
     path: /api/v1/sla/alert-rules/:id
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1087
+    source: router.go:1097
   - method: PUT
     path: /api/v1/sla/alert-rules/:id
     permission: sla.write
     menu: v1
     description: 更新
-    source: router.go:1088
+    source: router.go:1098
   - method: DELETE
     path: /api/v1/sla/alert-rules/:id
     permission: sla.delete
     menu: v1
     description: 删除
-    source: router.go:1089
+    source: router.go:1099
   - method: GET
     path: /api/v1/sla/metrics
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1092
+    source: router.go:1102
   - method: GET
     path: /api/v1/sla/violations
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1095
+    source: router.go:1105
   - method: PUT
     path: /api/v1/sla/violations/:id
     permission: sla.write
     menu: v1
     description: 更新
-    source: router.go:1096
+    source: router.go:1106
   - method: POST
     path: /api/v1/sla/monitoring
     permission: sla.read
     menu: v1
     description: 创建
-    source: router.go:1099
+    source: router.go:1109
   - method: POST
     path: /api/v1/sla/check-compliance/:ticketId
     permission: sla.read
     menu: v1
     description: 创建
-    source: router.go:1102
+    source: router.go:1112
   - method: GET
     path: /api/v1/sla/alert-history
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1105
+    source: router.go:1115
   - method: GET
     path: /api/v1/sla/compliance-report
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1106
+    source: router.go:1116
   - method: POST
     path: /api/v1/ai/chat
     permission: ai.read
     menu: v1
     description: 创建
-    source: router.go:1119
+    source: router.go:1129
   - method: POST
     path: /api/v1/ai/chat/stream
     permission: ai.read
     menu: v1
     description: 创建
-    source: router.go:1120
+    source: router.go:1130
   - method: POST
     path: /api/v1/ai/analytics
     permission: ai.read
     menu: v1
     description: 创建
-    source: router.go:1121
+    source: router.go:1131
   - method: POST
     path: /api/v1/ai/predictions
     permission: ai.read
     menu: v1
     description: 创建
-    source: router.go:1122
+    source: router.go:1132
   - method: POST
     path: /api/v1/ai/tickets/:id/analyze
     permission: ai.read
     menu: v1
     description: 创建
-    source: router.go:1123
+    source: router.go:1133
   - method: POST
     path: /api/v1/ai/feedback
     permission: ai.write
     menu: v1
     description: 创建
-    source: router.go:1124
+    source: router.go:1134
   - method: POST
     path: /api/v1/ai/audit
     permission: ai.write
     menu: v1
     description: 创建
-    source: router.go:1125
+    source: router.go:1135
   - method: GET
     path: /api/v1/ai/metrics
     permission: ai.read
     menu: v1
     description: 列表
-    source: router.go:1126
+    source: router.go:1136
   - method: POST
     path: /api/v1/ai/triage
     permission: ai.read
     menu: v1
     description: 创建
-    source: router.go:1127
+    source: router.go:1137
   - method: GET
     path: /api/v1/ai/rag/search
     permission: ai.read
     menu: v1
     description: 列表
-    source: router.go:1129
+    source: router.go:1139
   - method: POST
     path: /api/v1/ai/rag/ask
     permission: ai.read
     menu: v1
     description: 创建
-    source: router.go:1130
+    source: router.go:1140
   - method: POST
     path: /api/v1/ai/ticket/create
     permission: ticket.create
     menu: v1
     description: 创建
-    source: router.go:1132
+    source: router.go:1142
   - method: POST
     path: /api/v1/ai/tickets/:id/summarize
     permission: ticket.read
     menu: v1
     description: 创建
-    source: router.go:1133
+    source: router.go:1143
   - method: GET
     path: /api/v1/agent/tools
     permission: ai.read
     menu: v1
     description: 列表
-    source: router.go:1138
+    source: router.go:1148
   - method: POST
     path: /api/v1/agent/tools/execute
     permission: ai.read
     menu: v1
     description: 创建
-    source: router.go:1139
+    source: router.go:1149
   - method: GET
     path: /api/v1/auth/me
     permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
     menu: v1
     description: 列表
-    source: router.go:1150
+    source: router.go:1160
   - method: GET
     path: /api/v1/auth/tenants
     permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
     menu: v1
     description: 列表
-    source: router.go:1151
+    source: router.go:1161
   - method: POST
     path: /api/v1/auth/logout
     permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
     menu: v1
     description: 创建
-    source: router.go:1152
+    source: router.go:1162
+  - method: POST
+    path: /api/v1/auth/switch-tenant
+    permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
+    menu: v1
+    description: 创建
+    source: router.go:1164
   - method: GET
     path: /api/v1/auth/menus
     permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
     menu: v1
     description: 列表
-    source: router.go:1157
+    source: router.go:1170
   - method: GET
     path: /api/v1/users/profile
     permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
     menu: v1
     description: 列表
-    source: router.go:1169
+    source: router.go:1182
   - method: GET
     path: /api/v1/users/me
     permission: null  # AUTH_ONLY (登录即可，身份/自服务端点)
     menu: v1
     description: 列表
-    source: router.go:1170
+    source: router.go:1183
   - method: GET
     path: /api/v1/users/:id
     permission: user.read
     menu: v1
     description: 列表
-    source: router.go:1171
+    source: router.go:1184
   - method: PUT
     path: /api/v1/users/:id
     permission: user.write
     menu: v1
     description: 更新
-    source: router.go:1172
+    source: router.go:1185
   - method: DELETE
     path: /api/v1/users/:id
     permission: user.delete
     menu: v1
     description: 删除
-    source: router.go:1173
+    source: router.go:1186
   - method: PUT
     path: /api/v1/users/:id/status
     permission: user.write
     menu: v1
     description: 更新
-    source: router.go:1174
+    source: router.go:1187
   - method: PUT
     path: /api/v1/users/:id/reset-password
     permission: user.write
     menu: v1
     description: 更新
-    source: router.go:1175
+    source: router.go:1188
   - method: GET
     path: /api/v1/users/stats
     permission: user.read
     menu: v1
     description: 列表
-    source: router.go:1176
+    source: router.go:1189
   - method: POST
     path: /api/v1/users/batch
     permission: user.write
     menu: v1
     description: 创建
-    source: router.go:1177
+    source: router.go:1190
   - method: GET
     path: /api/v1/groups/:id
     permission: groups.read
     menu: v1
     description: 列表
-    source: router.go:1192
+    source: router.go:1205
   - method: PUT
     path: /api/v1/groups/:id
     permission: groups.write
     menu: v1
     description: 更新
-    source: router.go:1193
+    source: router.go:1206
   - method: DELETE
     path: /api/v1/groups/:id
     permission: groups.write
     menu: v1
     description: 删除
-    source: router.go:1194
+    source: router.go:1207
   - method: POST
     path: /api/v1/groups/:id/members
     permission: groups.write
     menu: v1
     description: 创建
-    source: router.go:1195
+    source: router.go:1208
   - method: DELETE
     path: /api/v1/groups/:id/members
     permission: groups.write
     menu: v1
     description: 删除
-    source: router.go:1196
+    source: router.go:1209
   - method: GET
     path: /api/v1/groups/:id/members
     permission: groups.read
     menu: v1
     description: 列表
-    source: router.go:1197
+    source: router.go:1210
   - method: GET
     path: /api/v1/org/departments/tree
     permission: department.read
     menu: v1
     description: 列表
-    source: router.go:1204
+    source: router.go:1217
   - method: GET
     path: /api/v1/org/departments/:id
     permission: department.read
     menu: v1
     description: 列表
-    source: router.go:1205
+    source: router.go:1218
   - method: POST
     path: /api/v1/org/departments
     permission: department.create
     menu: v1
     description: 创建
-    source: router.go:1206
+    source: router.go:1219
   - method: PUT
     path: /api/v1/org/departments/:id
     permission: department.update
     menu: v1
     description: 更新
-    source: router.go:1207
+    source: router.go:1220
   - method: DELETE
     path: /api/v1/org/departments/:id
     permission: department.delete
     menu: v1
     description: 删除
-    source: router.go:1208
+    source: router.go:1221
   - method: GET
     path: /api/v1/org/teams
     permission: team.read
     menu: v1
     description: 列表
-    source: router.go:1209
+    source: router.go:1222
   - method: GET
     path: /api/v1/org/teams/:id
     permission: team.read
     menu: v1
     description: 列表
-    source: router.go:1210
+    source: router.go:1223
   - method: POST
     path: /api/v1/org/teams
     permission: team.create
     menu: v1
     description: 创建
-    source: router.go:1211
+    source: router.go:1224
   - method: PUT
     path: /api/v1/org/teams/:id
     permission: team.update
     menu: v1
     description: 更新
-    source: router.go:1212
+    source: router.go:1225
   - method: DELETE
     path: /api/v1/org/teams/:id
     permission: team.delete
     menu: v1
     description: 删除
-    source: router.go:1213
+    source: router.go:1226
   - method: GET
     path: /api/v1/projects/:id
     permission: project.read
     menu: v1
     description: 列表
-    source: router.go:1222
+    source: router.go:1235
   - method: PUT
     path: /api/v1/projects/:id
     permission: project.write
     menu: v1
     description: 更新
-    source: router.go:1223
+    source: router.go:1236
   - method: DELETE
     path: /api/v1/projects/:id
     permission: project.write
     menu: v1
     description: 删除
-    source: router.go:1224
+    source: router.go:1237
   - method: GET
     path: /api/v1/applications/microservices
     permission: application.read
     menu: v1
     description: 列表
-    source: router.go:1234
+    source: router.go:1247
   - method: POST
     path: /api/v1/applications/microservices
     permission: application.write
     menu: v1
     description: 创建
-    source: router.go:1235
+    source: router.go:1248
   - method: GET
     path: /api/v1/services/catalogs
     permission: service_catalog.read
     menu: v1
     description: 列表
-    source: router.go:1243
+    source: router.go:1256
   - method: POST
     path: /api/v1/services/catalogs
     permission: service_catalog.write
     menu: v1
     description: 创建
-    source: router.go:1244
+    source: router.go:1257
   - method: GET
     path: /api/v1/services/catalogs/:id
     permission: service_catalog.read
     menu: v1
     description: 列表
-    source: router.go:1245
+    source: router.go:1258
   - method: PUT
     path: /api/v1/services/catalogs/:id
     permission: service_catalog.write
     menu: v1
     description: 更新
-    source: router.go:1246
+    source: router.go:1259
   - method: DELETE
     path: /api/v1/services/catalogs/:id
     permission: service_catalog.delete
     menu: v1
     description: 删除
-    source: router.go:1247
+    source: router.go:1260
   - method: GET
     path: /api/v1/services/requests
     permission: service_request.read
     menu: v1
     description: 列表
-    source: router.go:1248
+    source: router.go:1261
   - method: POST
     path: /api/v1/services/requests
     permission: service_request.write
     menu: v1
     description: 创建
-    source: router.go:1249
+    source: router.go:1262
   - method: GET
     path: /api/v1/services/requests/:id
     permission: service_request.read
     menu: v1
     description: 列表
-    source: router.go:1250
+    source: router.go:1263
   - method: PUT
     path: /api/v1/services/requests/:id/status
     permission: service_request.write
     menu: v1
     description: 更新
-    source: router.go:1251
+    source: router.go:1264
   - method: POST
     path: /api/v1/services/requests/approval
     permission: service_request.write
     menu: v1
     description: 创建
-    source: router.go:1252
+    source: router.go:1265
   - method: GET
     path: /api/v1/services/requests/approvals
     permission: service_request.read
     menu: v1
     description: 列表
-    source: router.go:1253
+    source: router.go:1266
   - method: GET
     path: /api/v1/services/requests/approvals/pending
     permission: service_request.read
     menu: v1
     description: 列表
-    source: router.go:1254
+    source: router.go:1267
   - method: GET
     path: /api/v1/tickets/:id/dependencies
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:1260
+    source: router.go:1273
   - method: GET
     path: /api/v1/tickets/:id/notifications
     permission: notification.read
     menu: v1
     description: 列表
-    source: router.go:1265
+    source: router.go:1278
   - method: POST
     path: /api/v1/tickets/:id/notifications
     permission: notification.create
     menu: v1
     description: 创建
-    source: router.go:1266
+    source: router.go:1279
   - method: GET
     path: /api/v1/system/tags
     permission: tag.read
     menu: v1
     description: 列表
-    source: router.go:1272
+    source: router.go:1285
   - method: GET
     path: /api/v1/system/audit-logs
     permission: audit_log.read
     menu: v1
     description: 列表
-    source: router.go:1273
+    source: router.go:1286
   - method: GET
     path: /api/v1/departments
     permission: department.read
     menu: v1
     description: 列表
-    source: router.go:1279
+    source: router.go:1292
   - method: GET
     path: /api/v1/departments/tree
     permission: department.read
     menu: v1
     description: 列表
-    source: router.go:1280
+    source: router.go:1293
   - method: GET
     path: /api/v1/teams
     permission: team.read
     menu: v1
     description: 列表
-    source: router.go:1281
+    source: router.go:1294
   - method: GET
     path: /api/v1/tags
     permission: tag.read
     menu: v1
     description: 列表
-    source: router.go:1282
+    source: router.go:1295
   - method: GET
     path: /api/v1/admin/tenants
     permission: tenant.read
     menu: v1
     description: 列表
-    source: router.go:1287
+    source: router.go:1300
   - method: GET
     path: /api/v1/roles/:id
     permission: role.read
     menu: v1
     description: 列表
-    source: router.go:1297
+    source: router.go:1310
   - method: PUT
     path: /api/v1/roles/:id
     permission: role.update
     menu: v1
     description: 更新
-    source: router.go:1298
+    source: router.go:1311
   - method: DELETE
     path: /api/v1/roles/:id
     permission: role.delete
     menu: v1
     description: 删除
-    source: router.go:1299
+    source: router.go:1312
   - method: POST
     path: /api/v1/roles/:id/permissions
     permission: role.update
     menu: v1
     description: 创建
-    source: router.go:1300
+    source: router.go:1313
   - method: POST
     path: /api/v1/permissions/init
     permission: permission.create
     menu: v1
     description: 创建
-    source: router.go:1309
+    source: router.go:1322
   - method: GET
     path: /api/v1/menus/:id
     permission: menu.read
     menu: v1
     description: 列表
-    source: router.go:1319
+    source: router.go:1332
   - method: PUT
     path: /api/v1/menus/:id
     permission: menu.update
     menu: v1
     description: 更新
-    source: router.go:1320
+    source: router.go:1333
   - method: DELETE
     path: /api/v1/menus/:id
     permission: menu.delete
     menu: v1
     description: 删除
-    source: router.go:1321
+    source: router.go:1334
   - method: POST
     path: /api/v1/menus/init
     permission: menu.create
     menu: v1
     description: 创建
-    source: router.go:1322
+    source: router.go:1335
   - method: GET
     path: /api/v1/tenants/:id
     permission: tenant.read
     menu: v1
     description: 列表
-    source: router.go:1332
+    source: router.go:1345
   - method: PUT
     path: /api/v1/tenants/:id
     permission: tenant.update
     menu: v1
     description: 更新
-    source: router.go:1333
+    source: router.go:1346
   - method: DELETE
     path: /api/v1/tenants/:id
     permission: tenant.delete
     menu: v1
     description: 删除
-    source: router.go:1334
+    source: router.go:1347
   - method: PUT
     path: /api/v1/tenants/:id/status
     permission: tenant.update
     menu: v1
     description: 更新
-    source: router.go:1335
+    source: router.go:1348
   - method: GET
     path: /api/v1/notification-preferences/event-types
     permission: notification.read
     menu: v1
     description: 列表
-    source: router.go:1346
+    source: router.go:1359
   - method: GET
     path: /api/v1/notification-preferences/:event_type
     permission: notification.read
     menu: v1
     description: 列表
-    source: router.go:1347
+    source: router.go:1360
   - method: DELETE
     path: /api/v1/notification-preferences/:event_type
     permission: notification.delete
     menu: v1
     description: 删除
-    source: router.go:1350
+    source: router.go:1363
   - method: POST
     path: /api/v1/notification-preferences/reset
     permission: notification.update
     menu: v1
     description: 创建
-    source: router.go:1351
+    source: router.go:1364
   - method: POST
     path: /api/v1/notification-preferences/init
     permission: notification.create
     menu: v1
     description: 创建
-    source: router.go:1352
+    source: router.go:1365
   - method: GET
     path: /api/v1/notifications/unread-count
     permission: notification.read
     menu: v1
     description: 列表
-    source: router.go:1361
+    source: router.go:1374
   - method: PUT
     path: /api/v1/notifications/:id/read
     permission: notification.update
     menu: v1
     description: 更新
-    source: router.go:1362
+    source: router.go:1375
   - method: PUT
     path: /api/v1/notifications/read-all
     permission: notification.update
     menu: v1
     description: 更新
-    source: router.go:1363
+    source: router.go:1376
   - method: DELETE
     path: /api/v1/notifications/:id
     permission: notification.delete
     menu: v1
     description: 删除
-    source: router.go:1364
+    source: router.go:1377
   - method: POST
     path: /api/v1/problem-investigation/investigations
     permission: investigation.create
     menu: v1
     description: 创建
-    source: router.go:1375
+    source: router.go:1388
   - method: GET
     path: /api/v1/problem-investigation/investigations/:id
     permission: investigation.read
     menu: v1
     description: 列表
-    source: router.go:1376
+    source: router.go:1389
   - method: PUT
     path: /api/v1/problem-investigation/investigations/:id
     permission: investigation.update
     menu: v1
     description: 更新
-    source: router.go:1377
+    source: router.go:1390
   - method: POST
     path: /api/v1/problem-investigation/steps
     permission: step.create
     menu: v1
     description: 创建
-    source: router.go:1380
+    source: router.go:1393
   - method: PUT
     path: /api/v1/problem-investigation/steps/:id
     permission: step.update
     menu: v1
     description: 更新
-    source: router.go:1381
+    source: router.go:1394
   - method: GET
     path: /api/v1/problem-investigation/investigations/:investigation_id/steps
     permission: investigation.read
     menu: v1
     description: 列表
-    source: router.go:1382
+    source: router.go:1395
   - method: POST
     path: /api/v1/problem-investigation/root-cause-analysis
     permission: root_cause.create
     menu: v1
     description: 创建
-    source: router.go:1385
+    source: router.go:1398
   - method: POST
     path: /api/v1/problem-investigation/solutions
     permission: solution.create
     menu: v1
     description: 创建
-    source: router.go:1388
+    source: router.go:1401
   - method: GET
     path: /api/v1/problem-investigation/problems/:id/solutions
     permission: problem.read
     menu: v1
     description: 列表
-    source: router.go:1389
+    source: router.go:1402
   - method: GET
     path: /api/v1/problem-investigation/problems/:id/summary
     permission: problem.read
     menu: v1
     description: 列表
-    source: router.go:1392
+    source: router.go:1405
   - method: GET
     path: /api/v1/workflow/instances
     permission: process_instance.read
     menu: v1
     description: 列表
-    source: router.go:1404
+    source: router.go:1417
   - method: GET
     path: /api/v1/workflow/instances/:id
     permission: process_instance.read
     menu: v1
     description: 列表
-    source: router.go:1405
+    source: router.go:1418
   - method: POST
     path: /api/v1/workflow/instances
     permission: process_instance.create
     menu: v1
     description: 创建
-    source: router.go:1406
+    source: router.go:1419
   - method: PUT
     path: /api/v1/workflow/instances/:id/terminate
     permission: process_instance.update
     menu: v1
     description: 更新
-    source: router.go:1407
+    source: router.go:1420
   - method: PUT
     path: /api/v1/workflow/instances/:id/suspend
     permission: process_instance.update
     menu: v1
     description: 更新
-    source: router.go:1408
+    source: router.go:1421
   - method: PUT
     path: /api/v1/workflow/instances/:id/resume
     permission: process_instance.update
     menu: v1
     description: 更新
-    source: router.go:1409
+    source: router.go:1422
   - method: GET
     path: /api/v1/workflow/tasks
     permission: task.read
     menu: v1
     description: 列表
-    source: router.go:1411
+    source: router.go:1424
   - method: PUT
     path: /api/v1/workflow/tasks/:id/complete
     permission: task.update
     menu: v1
     description: 更新
-    source: router.go:1412
+    source: router.go:1425
   - method: POST
     path: /api/v1/workflow/tasks/:id/claim
     permission: task.update
     menu: v1
     description: 创建
-    source: router.go:1413
+    source: router.go:1426
   - method: GET
     path: /api/v1/connectors/configs
     permission: connector.read
     menu: v1
     description: 列表
-    source: router.go:1465
+    source: router.go:1478
   - method: GET
     path: /api/v1/connectors/lifecycle
     permission: connector.read
     menu: v1
     description: 列表
-    source: router.go:1466
+    source: router.go:1479
   - method: POST
     path: /api/v1/connectors/configs
     permission: connector.write
     menu: v1
     description: 创建
-    source: router.go:1467
+    source: router.go:1480
   - method: DELETE
     path: /api/v1/connectors/configs/:name
     permission: connector.write
     menu: v1
     description: 删除
-    source: router.go:1468
+    source: router.go:1481
   - method: POST
     path: /api/v1/connectors/:name/send
     permission: connector.write
     menu: v1
     description: 创建
-    source: router.go:1469
+    source: router.go:1482
   - method: POST
     path: /api/v1/connectors/:name/test
     permission: connector.write
     menu: v1
     description: 创建
-    source: router.go:1470
+    source: router.go:1483
   - method: GET
     path: /api/v1/connectors/health
     permission: connector.read
     menu: v1
     description: 列表
-    source: router.go:1471
+    source: router.go:1484
   - method: POST
     path: /api/v1/connectors/feishu/callback
     permission: null  # PUBLIC
     menu: v1
     description: 创建
-    source: router.go:1473
+    source: router.go:1486
   - method: GET
     path: /api/v1/dashboard/overview
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1482
+    source: router.go:1495
   - method: GET
     path: /api/v1/dashboard/config
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1483
+    source: router.go:1496
   - method: POST
     path: /api/v1/dashboard/config
     permission: report.update
     menu: v1
     description: 创建
-    source: router.go:1486
+    source: router.go:1499
   - method: GET
     path: /api/v1/dashboard/layout
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1489
+    source: router.go:1502
   - method: POST
     path: /api/v1/dashboard/layout
     permission: report.update
     menu: v1
     description: 创建
-    source: router.go:1492
+    source: router.go:1505
   - method: GET
     path: /api/v1/dashboard/widgets/available
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1495
+    source: router.go:1508
   - method: POST
     path: /api/v1/dashboard/widgets
     permission: widget.create
     menu: v1
     description: 创建
-    source: router.go:1498
+    source: router.go:1511
   - method: GET
     path: /api/v1/dashboard/widgets/:widget_id/data
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1511
+    source: router.go:1524
   - method: POST
     path: /api/v1/dashboard/widgets/:widget_id/refresh
     permission: report.update
     menu: v1
     description: 创建
-    source: router.go:1514
+    source: router.go:1527
   - method: PUT
     path: /api/v1/dashboard/widgets/:widget_id
     permission: widget.update
     menu: v1
     description: 更新
-    source: router.go:1517
+    source: router.go:1530
   - method: DELETE
     path: /api/v1/dashboard/widgets/:widget_id
     permission: widget.delete
     menu: v1
     description: 删除
-    source: router.go:1527
+    source: router.go:1540
   - method: GET
     path: /api/v1/dashboard/charts/:chart_type
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1530
+    source: router.go:1543
   - method: GET
     path: /api/v1/dashboard/realtime/:data_type
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1536
+    source: router.go:1549
   - method: GET
     path: /api/v1/dashboard/stats
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1543
+    source: router.go:1556
   - method: GET
     path: /api/v1/dashboard/stats/tickets
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1545
+    source: router.go:1558
   - method: GET
     path: /api/v1/dashboard/stats/tickets
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1547
+    source: router.go:1560
   - method: GET
     path: /api/v1/dashboard/stats/users
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1549
+    source: router.go:1562
   - method: GET
     path: /api/v1/dashboard/stats/system
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1550
+    source: router.go:1563
   - method: GET
     path: /api/v1/dashboard/kpi-metrics
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1551
+    source: router.go:1564
   - method: GET
     path: /api/v1/dashboard/metrics/performance
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1552
+    source: router.go:1565
   - method: GET
     path: /api/v1/dashboard/metrics/usage
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1561
+    source: router.go:1574
   - method: GET
     path: /api/v1/dashboard/metrics
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1571
+    source: router.go:1584
   - method: GET
     path: /api/v1/dashboard/ticket-trend
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1572
+    source: router.go:1585
   - method: GET
     path: /api/v1/dashboard/incident-distribution
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1573
+    source: router.go:1586
   - method: GET
     path: /api/v1/dashboard/sla-data
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1574
+    source: router.go:1587
   - method: GET
     path: /api/v1/dashboard/satisfaction-data
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1575
+    source: router.go:1588
   - method: GET
     path: /api/v1/dashboard/quick-actions
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1576
+    source: router.go:1589
   - method: GET
     path: /api/v1/dashboard/recent-activities
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1577
+    source: router.go:1590
   - method: GET
     path: /api/v1/dashboard/reports
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1578
+    source: router.go:1591
   - method: POST
     path: /api/v1/dashboard/reports/:report_type
     permission: report.create
     menu: v1
     description: 创建
-    source: router.go:1581
+    source: router.go:1594
   - method: GET
     path: /api/v1/dashboard/reports/:report_id/download
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1594
+    source: router.go:1607
   - method: POST
     path: /api/v1/dashboard/export
     permission: report.create
     menu: v1
     description: 创建
-    source: router.go:1597
+    source: router.go:1610
   - method: GET
     path: /api/v1/dashboard/templates
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1600
+    source: router.go:1613
   - method: POST
     path: /api/v1/dashboard/templates
     permission: report.create
     menu: v1
     description: 创建
-    source: router.go:1603
+    source: router.go:1616
   - method: POST
     path: /api/v1/dashboard/templates/:template_id/apply
     permission: report.update
     menu: v1
     description: 创建
-    source: router.go:1606
+    source: router.go:1619
   - method: GET
     path: /api/v1/reports/tickets
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1628
+    source: router.go:1641
   - method: GET
     path: /api/v1/reports/incidents
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1629
+    source: router.go:1642
   - method: GET
     path: /api/v1/reports/problems
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1630
+    source: router.go:1643
   - method: GET
     path: /api/v1/reports/changes
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1631
+    source: router.go:1644
   - method: GET
     path: /api/v1/reports/sla
     permission: report.read
     menu: v1
     description: 列表
-    source: router.go:1632
+    source: router.go:1645
   - method: GET
     path: /api/v1/surveys/:id
     permission: survey.read
     menu: v1
     description: 列表
-    source: router.go:1641
+    source: router.go:1654
   - method: PUT
     path: /api/v1/surveys/:id
     permission: survey.write
     menu: v1
     description: 更新
-    source: router.go:1642
+    source: router.go:1655
   - method: GET
     path: /api/v1/surveys/:id/responses
     permission: survey.read
     menu: v1
     description: 列表
-    source: router.go:1643
+    source: router.go:1656
   - method: GET
     path: /api/v1/surveys/:id/analytics
     permission: survey.read
     menu: v1
     description: 列表
-    source: router.go:1644
+    source: router.go:1657
   - method: POST
     path: /api/v1/surveys/responses
     permission: survey.write
     menu: v1
     description: 创建
-    source: router.go:1645
+    source: router.go:1658
   - method: GET
     path: /api/v1/cloud/accounts/:id
     permission: cloud_account.read
     menu: v1
     description: 列表
-    source: router.go:1658
+    source: router.go:1671
   - method: PUT
     path: /api/v1/cloud/accounts/:id
     permission: cloud_account.write
     menu: v1
     description: 更新
-    source: router.go:1659
+    source: router.go:1672
   - method: DELETE
     path: /api/v1/cloud/accounts/:id
     permission: cloud_account.delete
     menu: v1
     description: 删除
-    source: router.go:1660
+    source: router.go:1673
   - method: GET
     path: /api/v1/cloud/services/:id
     permission: cloud_service.read
     menu: v1
     description: 列表
-    source: router.go:1668
+    source: router.go:1681
   - method: PUT
     path: /api/v1/cloud/services/:id
     permission: cloud_service.write
     menu: v1
     description: 更新
-    source: router.go:1669
+    source: router.go:1682
   - method: DELETE
     path: /api/v1/cloud/services/:id
     permission: cloud_service.delete
     menu: v1
     description: 删除
-    source: router.go:1670
+    source: router.go:1683
   - method: GET
     path: /api/v1/cloud/resources/:id
     permission: cloud_resource.read
     menu: v1
     description: 列表
-    source: router.go:1678
+    source: router.go:1691
   - method: PUT
     path: /api/v1/cloud/resources/:id
     permission: cloud_resource.write
     menu: v1
     description: 更新
-    source: router.go:1679
+    source: router.go:1692
   - method: DELETE
     path: /api/v1/cloud/resources/:id
     permission: cloud_resource.delete
     menu: v1
     description: 删除
-    source: router.go:1680
+    source: router.go:1693
   - method: GET
     path: /api/v1/workflows
     permission: workflow.read
     menu: v1
     description: 列表
-    source: router.go:1688
+    source: router.go:1701
   - method: POST
     path: /api/v1/workflows
     permission: workflow.create
     menu: v1
     description: 创建
-    source: router.go:1691
+    source: router.go:1704
   - method: GET
     path: /api/v1/bpmn/definitions
     permission: workflow.read
     menu: v1
     description: 列表
-    source: router.go:1699
+    source: router.go:1712
   - method: POST
     path: /api/v1/bpmn/definitions
     permission: workflow.create
     menu: v1
     description: 创建
-    source: router.go:1702
+    source: router.go:1715
   - method: GET
     path: /api/v1/bpmn/definitions/:id
     permission: workflow.read
     menu: v1
     description: 列表
-    source: router.go:1705
+    source: router.go:1718
   - method: PUT
     path: /api/v1/bpmn/definitions/:id
     permission: workflow.update
     menu: v1
     description: 更新
-    source: router.go:1708
+    source: router.go:1721
   - method: GET
     path: /api/v1/services
     permission: service_catalog.read
     menu: v1
     description: 列表
-    source: router.go:1715
+    source: router.go:1728
   - method: POST
     path: /api/v1/services
     permission: service_catalog.create
     menu: v1
     description: 创建
-    source: router.go:1718
+    source: router.go:1731
   - method: GET
     path: /api/v1/slas
     permission: sla.read
     menu: v1
     description: 列表
-    source: router.go:1723
+    source: router.go:1736
   - method: POST
     path: /api/v1/slas
     permission: sla.create
     menu: v1
     description: 创建
-    source: router.go:1726
+    source: router.go:1739
   - method: GET
     path: /api/v1/knowledge
     permission: knowledge.read
     menu: v1
     description: 列表
-    source: router.go:1732
+    source: router.go:1745
   - method: POST
     path: /api/v1/knowledge
     permission: knowledge.create
     menu: v1
     description: 创建
-    source: router.go:1735
+    source: router.go:1748
   - method: GET
     path: /api/v1/ticket-types
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:1740
+    source: router.go:1753
   - method: POST
     path: /api/v1/ticket-types
     permission: ticket.create
     menu: v1
     description: 创建
-    source: router.go:1748
+    source: router.go:1761
   - method: GET
     path: /api/v1/audit-logs
     permission: audit.read

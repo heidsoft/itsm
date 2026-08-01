@@ -40,6 +40,8 @@ type SLAComplianceData struct {
 	ResolutionTimeCompliance float64 `json:"resolutionTimeCompliance"`
 	AtRiskTickets            int     `json:"atRiskTickets"`
 	BreachedTickets          int     `json:"breachedTickets"`
+	TotalTickets             int     `json:"totalTickets"`
+	CompliantTickets         int     `json:"compliantTickets"`
 }
 
 // NewDashboardService 创建仪表盘服务实例
@@ -66,17 +68,6 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 		return nil, fmt.Errorf("failed to count tickets: %w", err)
 	}
 
-	// 有未解决SLA违规的工单数（distinct ticket_id，避免一个工单多个违规导致重复计算）
-	breachedTickets, err := s.client.SLAViolation.Query().
-		Where(
-			slaviolation.TenantID(tenantID),
-			slaviolation.ResolvedAtIsNil(),
-		).
-		Count(ctx)
-	if err != nil {
-		breachedTickets = 0
-	}
-
 	// 即将超时（24小时内到期的有SLA工单）
 	atRiskTickets, err := s.client.Ticket.Query().
 		Where(
@@ -93,20 +84,21 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 
 	var breachedTicketCount int
 
-	// 修正：SLAViolation 是独立表，一个工单可能有多条违规记录
-	// 查出有未解决违规的工单并去重
+	// SLAViolation 是独立表，一个工单可能有多条违规记录，按 ticket_id 去重
+	// 分子必须与分母同口径：只统计近30天内创建且未删除的工单的违规
 	violations, err := s.client.SLAViolation.Query().
 		Where(
 			slaviolation.TenantID(tenantID),
 			slaviolation.ResolvedAtIsNil(),
+			slaviolation.HasTicketWith(
+				ticket.CreatedAtGTE(thirtyDaysAgo),
+				ticket.DeletedAtIsNil(),
+			),
 		).
 		All(ctx)
 	if err != nil {
-		// 查询失败时用 SLAViolation count 作为上限（确保不会负数）
-		breachedTicketCount = breachedTickets
-		if breachedTicketCount > totalTickets {
-			breachedTicketCount = totalTickets
-		}
+		s.logger.Warnw("failed to query sla violations for compliance data", "error", err)
+		breachedTicketCount = 0
 	} else {
 		// 用 map 对 ticket_id 去重
 		uniqueTickets := make(map[int]struct{})
@@ -115,15 +107,15 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 		}
 		breachedTicketCount = len(uniqueTickets)
 	}
+	if breachedTicketCount > totalTickets {
+		breachedTicketCount = totalTickets
+	}
 
+	compliantTickets := totalTickets - breachedTicketCount
 	var complianceRate, responseCompliance, resolutionCompliance float64
 	if totalTickets > 0 {
 		// 合规率 = (总工单 - 有违规的工单) / 总工单
-		compliant := totalTickets - breachedTicketCount
-		if compliant < 0 {
-			compliant = 0
-		}
-		complianceRate = float64(compliant) / float64(totalTickets) * 100
+		complianceRate = float64(compliantTickets) / float64(totalTickets) * 100
 		responseCompliance = complianceRate
 		resolutionCompliance = complianceRate
 	} else {
@@ -138,6 +130,8 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 		ResolutionTimeCompliance: math.Round(resolutionCompliance*10) / 10,
 		AtRiskTickets:            atRiskTickets,
 		BreachedTickets:          breachedTicketCount,
+		TotalTickets:             totalTickets,
+		CompliantTickets:         compliantTickets,
 	}, nil
 }
 

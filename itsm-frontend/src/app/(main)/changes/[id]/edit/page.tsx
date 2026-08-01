@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
+  Alert,
   App,
   Button,
   Card,
@@ -15,7 +16,7 @@ import {
   Space,
   Typography,
 } from 'antd';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Lock, Save } from 'lucide-react';
 import dayjs, { type Dayjs } from 'dayjs';
 import { ChangeApi, type ChangeRequest } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n';
@@ -62,6 +63,9 @@ const RISK_OPTIONS: Array<{ value: ChangeRequest['riskLevel']; label: string }> 
   { value: 'low', label: '低' },
 ];
 
+// 不允许编辑的状态列表（已审批通过/实施中/已完成）
+const READONLY_STATUSES = ['approved', 'implementing', 'completed', 'closed'];
+
 const EditChangePage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
@@ -72,6 +76,7 @@ const EditChangePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [changeData, setChangeData] = useState<any>(null);
+  const [isReadonly, setIsReadonly] = useState(false);
 
   // Fetch change data
   useEffect(() => {
@@ -83,6 +88,13 @@ const EditChangePage: React.FC = () => {
         const resp = await ChangeApi.getChange(Number(id));
         const data = resp as any;
         setChangeData(data);
+
+        // 状态守卫：已审批/实施中/已完成的变更不允许编辑
+        if (READONLY_STATUSES.includes(data.status)) {
+          setIsReadonly(true);
+          message.warning('该变更已进入不可编辑状态，仅可查看');
+          return;
+        }
 
         // 解析 affectedCis
         const cisText = Array.isArray(data.affectedCis)
@@ -183,12 +195,29 @@ const EditChangePage: React.FC = () => {
         <Text type="secondary">修改 IT 基础设施或服务变更请求</Text>
       </div>
 
+      {/* 状态守卫提示 */}
+      {isReadonly && (
+        <Alert
+          type="warning"
+          showIcon
+          icon={<Lock />}
+          message="该变更已进入不可编辑状态"
+          description="已审批通过、实施中或已完成的变更不允许修改。如需修改，请发起变更申请。"
+          className="mb-4"
+          action={
+            <Button size="small" onClick={() => router.push(`/changes/${id}`)}>
+              返回详情
+            </Button>
+          }
+        />
+      )}
+
       <Card className="shadow-sm rounded-lg" loading={fetching}>
         <Form<ChangeFormValues>
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          disabled={loading}
+          disabled={loading || isReadonly}
           scrollToFirstError
         >
           <Form.Item
@@ -340,9 +369,11 @@ const EditChangePage: React.FC = () => {
               <Button onClick={() => router.back()} disabled={loading}>
                 取消
               </Button>
-              <Button type="primary" htmlType="submit" loading={loading} icon={<Save size={16} />}>
-                保存修改
-              </Button>
+              {!isReadonly && (
+                <Button type="primary" htmlType="submit" loading={loading} icon={<Save size={16} />}>
+                  保存修改
+                </Button>
+              )}
             </Space>
           </Form.Item>
         </Form>

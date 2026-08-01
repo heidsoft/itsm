@@ -44,6 +44,12 @@ export type SchemaField = {
   required?: boolean;
   options?: string[];
   placeholder?: string;
+  validation?: {
+    minValue?: number;
+    maxValue?: number;
+    precision?: number;
+    pattern?: string;
+  };
 };
 
 export interface CIFormValues {

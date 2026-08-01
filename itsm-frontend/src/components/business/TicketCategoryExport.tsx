@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Modal,
   Button,
@@ -73,6 +73,20 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
   const [form] = Form.useForm();
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // 默认导出选项
   const defaultOptions: ExportOptions = {
@@ -112,20 +126,22 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
 
   // 处理导出
   const handleExport = async (values: ExportOptions) => {
+    let progressInterval: NodeJS.Timeout | null = null;
     try {
       setExporting(true);
       setExportProgress(0);
 
       // 模拟导出进度
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setExportProgress(prev => {
           if (prev >= 90) {
-            clearInterval(progressInterval);
+            if (progressInterval) clearInterval(progressInterval);
             return 90;
           }
           return prev + 10;
         });
       }, 200);
+      progressIntervalRef.current = progressInterval;
 
       // 获取分类数据
       const categories = await ticketCategoryService.getCategoryTree();
@@ -136,7 +152,11 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
       // 执行导出
       await performExport(processedData, values);
 
-      clearInterval(progressInterval);
+      // 清理进度定时器
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressIntervalRef.current = null;
+      }
       setExportProgress(100);
 
       message.success('导出完成');
@@ -146,14 +166,22 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
       }
 
       // 延迟关闭模态框
-      setTimeout(() => {
+      closeTimeoutRef.current = setTimeout(() => {
         onCancel();
       }, 1000);
     } catch (error) {
+      // 确保清理进度定时器
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressIntervalRef.current = null;
+      }
       message.error('导出失败: ' + (error instanceof Error ? error.message : '未知错误'));
     } finally {
       setExporting(false);
-      setExportProgress(0);
+      // 只在失败时重置进度，成功时保持 100 显示完成状态
+      if (exportProgress < 100) {
+        setExportProgress(0);
+      }
     }
   };
 

@@ -43,7 +43,6 @@ dayjs.locale('zh-cn');
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 // 事件接口定义
 interface IncidentEvent {
@@ -547,23 +546,16 @@ const IncidentDetailDrawer: React.FC<{
         </Space>
       }
     >
-      <Tabs defaultActiveKey="overview">
-        <TabPane tab="概览" key="overview">
-          <IncidentOverview incident={incident} />
-        </TabPane>
-        <TabPane tab="活动记录" key="events">
-          <IncidentEvents events={events} loading={loading} />
-        </TabPane>
-        <TabPane tab="告警" key="alerts">
-          <IncidentAlerts alerts={alerts} loading={loading} />
-        </TabPane>
-        <TabPane tab="指标" key="metrics">
-          <IncidentMetrics metrics={metrics} loading={loading} />
-        </TabPane>
-        <TabPane tab="影响分析" key="impact">
-          <IncidentImpactAnalysis incident={incident} />
-        </TabPane>
-      </Tabs>
+      <Tabs
+        defaultActiveKey="overview"
+        items={[
+          { key: 'overview', label: '概览', children: <IncidentOverview incident={incident} /> },
+          { key: 'events', label: '活动记录', children: <IncidentEvents events={events} loading={loading} /> },
+          { key: 'alerts', label: '告警', children: <IncidentAlerts alerts={alerts} loading={loading} /> },
+          { key: 'metrics', label: '指标', children: <IncidentMetrics metrics={metrics} loading={loading} /> },
+          { key: 'impact', label: '影响分析', children: <IncidentImpactAnalysis incident={incident} /> },
+        ]}
+      />
     </Drawer>
   );
 };

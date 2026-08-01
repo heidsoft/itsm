@@ -60,6 +60,11 @@ func CreatedAt(v time.Time) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldEQ(FieldCreatedAt, v))
 }
 
+// TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
+func TenantID(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldTenantID, v))
+}
+
 // ConversationID applies equality check predicate on the "conversation_id" field. It's identical to ConversationIDEQ.
 func ConversationID(v int) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldEQ(FieldConversationID, v))
@@ -165,6 +170,46 @@ func CreatedAtLTE(v time.Time) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldLTE(FieldCreatedAt, v))
 }
 
+// TenantIDEQ applies the EQ predicate on the "tenant_id" field.
+func TenantIDEQ(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldTenantID, v))
+}
+
+// TenantIDNEQ applies the NEQ predicate on the "tenant_id" field.
+func TenantIDNEQ(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNEQ(FieldTenantID, v))
+}
+
+// TenantIDIn applies the In predicate on the "tenant_id" field.
+func TenantIDIn(vs ...int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIn(FieldTenantID, vs...))
+}
+
+// TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
+func TenantIDNotIn(vs ...int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
+// TenantIDGT applies the GT predicate on the "tenant_id" field.
+func TenantIDGT(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGT(FieldTenantID, v))
+}
+
+// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
+func TenantIDGTE(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGTE(FieldTenantID, v))
+}
+
+// TenantIDLT applies the LT predicate on the "tenant_id" field.
+func TenantIDLT(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLT(FieldTenantID, v))
+}
+
+// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
+func TenantIDLTE(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLTE(FieldTenantID, v))
+}
+
 // ConversationIDEQ applies the EQ predicate on the "conversation_id" field.
 func ConversationIDEQ(v int) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldEQ(FieldConversationID, v))
@@ -183,6 +228,16 @@ func ConversationIDIn(vs ...int) predicate.ToolInvocation {
 // ConversationIDNotIn applies the NotIn predicate on the "conversation_id" field.
 func ConversationIDNotIn(vs ...int) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldNotIn(FieldConversationID, vs...))
+}
+
+// ConversationIDIsNil applies the IsNil predicate on the "conversation_id" field.
+func ConversationIDIsNil() predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIsNull(FieldConversationID))
+}
+
+// ConversationIDNotNil applies the NotNil predicate on the "conversation_id" field.
+func ConversationIDNotNil() predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotNull(FieldConversationID))
 }
 
 // ToolNameEQ applies the EQ predicate on the "tool_name" field.

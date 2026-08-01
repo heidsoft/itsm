@@ -70,7 +70,7 @@ export default function MyTicketCCPage() {
       dataIndex: 'title',
       key: 'title',
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Link href={`/tickets/${record.ticketId}`}>{record.title || record.ticketNumber}</Link>
           <Text type="secondary" className="text-xs">
             {record.ticketNumber}

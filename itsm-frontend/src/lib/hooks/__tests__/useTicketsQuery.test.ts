@@ -66,9 +66,10 @@ describe('useTicketsQuery hooks', () => {
 
     it('should generate list key with filters and pagination', () => {
       const filters = { status: 'open' as any };
-      const pagination = { current: 1, pageSize: 20, total: 0 };
-      expect(ticketKeys.list(filters, pagination)).toEqual([
-        'tickets', 'list', filters, pagination,
+      const current = 1;
+      const pageSize = 20;
+      expect(ticketKeys.list(filters, current, pageSize)).toEqual([
+        'tickets', 'list', filters, { current, pageSize },
       ]);
     });
   });

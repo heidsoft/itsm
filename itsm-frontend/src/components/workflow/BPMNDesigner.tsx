@@ -796,7 +796,6 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       const errorCount = errors.filter(e => e.type === 'error').length;
       const warningCount = errors.filter(e => e.type === 'warning').length;
       message.warning(`验证完成，发现 ${errorCount} 个错误，${warningCount} 个警告`);
-      console.log('验证结果:', errors);
     }
     
     return errors;

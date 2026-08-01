@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
+  Alert,
   Card,
   Form,
   Input,
@@ -20,7 +21,7 @@ import {
 } from 'antd';
 import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Lock, Save } from 'lucide-react';
 
 import type { Release, ReleaseRequest } from '@/lib/api/release-api';
 import { ReleaseApi } from '@/lib/api/release-api';
@@ -59,12 +60,16 @@ const splitLines = (value?: string): string[] | undefined => {
   return items?.length ? items : undefined;
 };
 
+// 不允许编辑的状态列表（已发布/已部署/已完成）
+const READONLY_STATUSES = ['released', 'deployed', 'completed', 'cancelled'];
+
 const ReleaseForm: React.FC = () => {
   const router = useRouter();
   const { id } = useParams() as { id: string };
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState<Release | null>(null);
+  const [isReadonly, setIsReadonly] = useState(false);
   const isEdit = !!id;
 
   useEffect(() => {
@@ -78,6 +83,14 @@ const ReleaseForm: React.FC = () => {
     try {
       const data = await ReleaseApi.getRelease(Number(id));
       setDetail(data);
+
+      // 状态守卫：已发布/已部署/已完成的发布不允许编辑
+      if (READONLY_STATUSES.includes(data.status)) {
+        setIsReadonly(true);
+        message.warning('该发布已进入不可编辑状态，仅可查看');
+        return;
+      }
+
       // 设置表单值
       form.setFieldsValue({
         ...data,
@@ -140,11 +153,29 @@ const ReleaseForm: React.FC = () => {
 
   return (
     <Card>
+      {/* 状态守卫提示 */}
+      {isReadonly && (
+        <Alert
+          type="warning"
+          showIcon
+          icon={<Lock />}
+          message="该发布已进入不可编辑状态"
+          description="已发布、已部署或已完成的发布不允许修改。"
+          className="mb-4"
+          action={
+            <Button size="small" onClick={() => router.push(`/releases/${id}`)}>
+              返回详情
+            </Button>
+          }
+        />
+      )}
+
       <Form
         form={form}
         data-testid="release-form"
         layout="vertical"
         onFinish={onFinish}
+        disabled={isReadonly}
         initialValues={{
           type: 'minor',
           environment: 'staging',

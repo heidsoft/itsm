@@ -14,7 +14,8 @@ type ToolInvocation struct{ ent.Schema }
 func (ToolInvocation) Fields() []ent.Field {
 	return []ent.Field{
 		field.Time("created_at").Default(time.Now),
-		field.Int("conversation_id"),
+		field.Int("tenant_id"),
+		field.Int("conversation_id").Optional(),
 		field.String("tool_name"),
 		field.Text("arguments").Default(""),
 		field.Text("result").Optional().Nillable(),
@@ -32,6 +33,6 @@ func (ToolInvocation) Fields() []ent.Field {
 
 func (ToolInvocation) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("conversation", Conversation.Type).Ref("tool_invocations").Unique().Field("conversation_id").Required(),
+		edge.From("conversation", Conversation.Type).Ref("tool_invocations").Unique().Field("conversation_id"),
 	}
 }

@@ -207,9 +207,14 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
         </Button>,
       ]}
     >
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        {/* 基本信息 */}
-        <Tabs.TabPane tab="基本信息" key="basic">
+      <Tabs
+        activeKey={activeTab} onChange={setActiveTab}
+        items={[
+                {
+                  key: 'basic',
+                  label: '基本信息',
+                  children: (
+                    <>
           <Form form={form} layout="vertical">
             <Form.Item
               label="类型编码"
@@ -257,10 +262,14 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
               </Form.Item>
             </div>
           </Form>
-        </Tabs.TabPane>
-
-        {/* 自定义字段 */}
-        <Tabs.TabPane tab="自定义字段" key="fields">
+                    </>
+                  ),
+                },
+                {
+                  key: 'fields',
+                  label: '自定义字段',
+                  children: (
+                    <>
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">
               <span className="text-gray-600">
@@ -355,10 +364,14 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
               </div>
             )}
           </div>
-        </Tabs.TabPane>
-
-        {/* 审批流程 */}
-        <Tabs.TabPane tab="审批流程" key="approval">
+                    </>
+                  ),
+                },
+                {
+                  key: 'approval',
+                  label: '审批流程',
+                  children: (
+                    <>
           <Form.Item label="启用审批流程" name="approvalEnabled" valuePropName="checked">
             <Switch />
           </Form.Item>
@@ -486,10 +499,14 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
               )}
             </div>
           )}
-        </Tabs.TabPane>
-
-        {/* SLA配置 */}
-        <Tabs.TabPane tab="SLA配置" key="sla">
+                    </>
+                  ),
+                },
+                {
+                  key: 'sla',
+                  label: 'SLA配置',
+                  children: (
+                    <>
           <Form.Item label="启用SLA" name="slaEnabled" valuePropName="checked">
             <Switch />
           </Form.Item>
@@ -502,10 +519,14 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
               }))} />
             </Form.Item>
           )}
-        </Tabs.TabPane>
-
-        {/* 自动分配 */}
-        <Tabs.TabPane tab="自动分配" key="assignment">
+                    </>
+                  ),
+                },
+                {
+                  key: 'assignment',
+                  label: '自动分配',
+                  children: (
+                    <>
           <Form.Item label="启用自动分配" name="autoAssignEnabled" valuePropName="checked">
             <Switch />
           </Form.Item>
@@ -521,8 +542,11 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
               </Button>
             </div>
           )}
-        </Tabs.TabPane>
-      </Tabs>
+                    </>
+                  ),
+                },
+        ]}
+      />
     </Modal>
   );
 };

@@ -145,7 +145,7 @@ const ReleaseDetail: React.FC = () => {
   const currentStep = ['draft', 'scheduled', 'in-progress', 'completed'].indexOf(release.status);
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
+    <Space orientation="vertical" style={{ width: '100%' }} size="large">
       <Card>
         <div style={{ marginBottom: 24 }}>
           <Button

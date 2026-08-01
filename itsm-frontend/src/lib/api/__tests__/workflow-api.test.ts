@@ -615,11 +615,10 @@ describe('WorkflowApi', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('should return empty on error', async () => {
+    it('should throw error on failure', async () => {
       (httpClient.get as jest.Mock).mockRejectedValueOnce(new Error('fail'));
       (httpClient.getTenantId as jest.Mock).mockReturnValue(1);
-      const result = await WorkflowApi.listWorkflowTasks('inst1');
-      expect(result).toEqual([]);
+      await expect(WorkflowApi.listWorkflowTasks('inst1')).rejects.toThrow('fail');
     });
   });
 

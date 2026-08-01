@@ -9,7 +9,6 @@ import { applicationService } from '@/lib/services/application-service';
 import { projectService } from '@/lib/services/project-service';
 import { useI18n } from '@/lib/i18n';
 
-const { TabPane } = Tabs;
 
 export default function ApplicationsPage() {
   const { t } = useI18n();
@@ -250,14 +249,23 @@ const handleDelete = (record: RecordData) => {
         </Button>,
       ]}
     >
-      <Tabs activeKey={activeTab} onChange={setActiveTab} type="card">
-        <TabPane tab="应用系统" key="applications">
-          <Table columns={appColumns} dataSource={applications} rowKey="id" loading={fetching} />
-        </TabPane>
-        <TabPane tab="微服务" key="microservices">
-          <Table columns={msColumns} dataSource={microservices} rowKey="id" loading={fetching} />
-        </TabPane>
-      </Tabs>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        type="card"
+        items={[
+          {
+            key: 'applications',
+            label: '应用系统',
+            children: <Table columns={appColumns} dataSource={applications} rowKey="id" loading={fetching} />,
+          },
+          {
+            key: 'microservices',
+            label: '微服务',
+            children: <Table columns={msColumns} dataSource={microservices} rowKey="id" loading={fetching} />,
+          },
+        ]}
+      />
 
       <Modal
         title={modalType === 'application' ? (editingRecord ? '编辑应用' : '新建应用') : (editingRecord ? '编辑微服务' : '新建微服务')}

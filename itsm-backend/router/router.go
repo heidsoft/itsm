@@ -1147,6 +1147,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			{
 				agentGrp.GET("/tools", middleware.RequirePermission("ai", "read"), config.AIHandler.ListTools)
 				agentGrp.POST("/tools/execute", middleware.RequirePermission("ai", "read"), config.AIHandler.ExecuteTool)
+				agentGrp.GET("/tools/:id", middleware.RequirePermission("ai", "read"), config.AIHandler.GetToolInvocation)
+				agentGrp.POST("/tools/:id/approve", middleware.RequirePermission("ai", "write"), config.AIHandler.ApproveTool)
 			}
 		}
 

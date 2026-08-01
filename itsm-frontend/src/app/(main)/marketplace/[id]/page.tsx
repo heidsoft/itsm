@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { App } from 'antd';
 import {
   AlertCircle,
   ArrowLeft,
@@ -42,6 +43,7 @@ const MarketplaceDetailPage = () => {
   const params = useParams();
   const router = useRouter();
   const itemId = Number(params.id);
+  const { message, modal } = App.useApp();
 
   const [item, setItem] = useState<MarketplaceItem | null>(null);
   const [installation, setInstallation] = useState<TenantInstallation | null>(null);
@@ -52,7 +54,18 @@ const MarketplaceDetailPage = () => {
   const versions = useMemo(() => item?.edges?.versions || [], [item]);
   const isInstalled = Boolean(installation);
 
+  // NaN 守卫：验证 itemId 有效性
   useEffect(() => {
+    if (!Number.isInteger(itemId) || itemId <= 0) {
+      setLoadError('无效的项目 ID');
+      setLoading(false);
+    }
+  }, [itemId]);
+
+  useEffect(() => {
+    // 如果 ID 无效，不发起请求
+    if (!Number.isInteger(itemId) || itemId <= 0) return;
+
     let cancelled = false;
     const load = async () => {
       setLoading(true);
@@ -90,20 +103,28 @@ const MarketplaceDetailPage = () => {
       router.push('/installations');
     } catch (error) {
       console.error('Failed to install item:', error);
-      alert(error instanceof Error ? error.message : '安装失败');
+      message.error(error instanceof Error ? error.message : '安装失败');
     } finally {
       setInstalling(false);
     }
   };
 
   const handleUninstall = async () => {
-    if (!item || !confirm(`确定要卸载「${item.title}」吗？卸载后相关功能将无法使用。`)) return;
+    if (!item) return;
+    const confirmed = await modal.confirm({
+      title: '确认卸载',
+      content: `确定要卸载「${item.title}」吗？卸载后相关功能将无法使用。`,
+      okText: '确认',
+      cancelText: '取消',
+    });
+    if (!confirmed) return;
     try {
       await marketplaceService.uninstallItem(itemId);
       setInstallation(null);
+      message.success('卸载成功');
     } catch (error) {
       console.error('Failed to uninstall item:', error);
-      alert(error instanceof Error ? error.message : '卸载失败');
+      message.error(error instanceof Error ? error.message : '卸载失败');
     }
   };
 

@@ -39,11 +39,13 @@ export interface PaginationState {
 }
 
 // Query Keys
+// 注意：queryKey 只包含请求参数，不包含响应数据（如 total）
+// total 是服务端返回的，不应该作为缓存 key 的一部分
 export const ticketKeys = {
   all: ['tickets'] as const,
   lists: () => [...ticketKeys.all, 'list'] as const,
-  list: (filters: Partial<TicketQueryFilters>, pagination: PaginationState) =>
-    [...ticketKeys.lists(), filters, pagination] as const,
+  list: (filters: Partial<TicketQueryFilters>, current: number, pageSize: number) =>
+    [...ticketKeys.lists(), filters, { current, pageSize }] as const,
   details: () => [...ticketKeys.all, 'detail'] as const,
   detail: (id: number) => [...ticketKeys.details(), id] as const,
   stats: () => [...ticketKeys.all, 'stats'] as const,
@@ -55,7 +57,7 @@ export const useTicketsQuery = (
   pagination: PaginationState = { current: 1, pageSize: 20, total: 0 }
 ) => {
   return useQuery({
-    queryKey: ticketKeys.list(filters, pagination),
+    queryKey: ticketKeys.list(filters, pagination.current, pagination.pageSize),
     queryFn: async () => {
       try {
         const response = await ticketService.listTickets({

@@ -154,9 +154,17 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         token: null, // token 在 httpOnly cookie 中，不持久化
         currentTenant: state.currentTenant,
-        isAuthenticated: state.isAuthenticated,
+        // 不持久化 isAuthenticated，由启动时的 /api/v1/auth/me 探活接口决定
+        // 避免 cookie 过期后前端仍显示已登录的伪登录态
       }),
       skipHydration: true, // 手动处理 SSR hydration
+      onRehydrateStorage: () => (state) => {
+        // hydration 完成后，强制将 isAuthenticated 设为 false
+        // 后续通过 /api/v1/auth/me 接口验证真实登录状态
+        if (state) {
+          state.isAuthenticated = false;
+        }
+      },
     }
   )
 );

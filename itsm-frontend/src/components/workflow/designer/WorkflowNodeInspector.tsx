@@ -143,7 +143,7 @@ export default function WorkflowNodeInspector({
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
-            <Space direction="vertical" size={0} align="center">
+            <Space orientation="vertical" size={0} align="center">
               <span className="text-xs text-gray-500">
                 点击画布上的节点查看/编辑属性
               </span>
@@ -156,7 +156,7 @@ export default function WorkflowNodeInspector({
         {/* 快捷操作提示 */}
         <div className="mt-4 p-3 bg-gray-50 rounded-lg">
           <Text strong className="text-xs block mb-2">💡 快捷操作</Text>
-          <Space direction="vertical" size={2} className="w-full">
+          <Space orientation="vertical" size={2} className="w-full">
             <Text type="secondary" className="text-xs">• 双击节点可快速编辑名称</Text>
             <Text type="secondary" className="text-xs">• 点击连接线设置流转条件</Text>
             <Text type="secondary" className="text-xs">• 拖拽节点左侧/右侧创建新流程</Text>

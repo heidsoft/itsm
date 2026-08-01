@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"strconv"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/middleware"
@@ -283,7 +284,7 @@ func convertRecentActivities(activities []service.RecentActivityData) []RecentAc
 			Title:       a.TicketTitle,
 			Description: a.TicketNumber,
 			User:        a.Operator,
-			Timestamp:   a.UpdatedAt.Format("2006-01-02 15:04:05"),
+			Timestamp:   a.UpdatedAt.Format(time.RFC3339),
 			Priority:    "",
 			Status:      a.StatusName,
 		}

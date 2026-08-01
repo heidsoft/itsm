@@ -26,6 +26,7 @@ type Message struct {
 // ToolInvocation represents an AI tool execution
 type ToolInvocation struct {
 	ID             int        `json:"id"`
+	TenantID       int        `json:"tenantId"`
 	ConversationID int        `json:"conversationId"`
 	ToolName       string     `json:"toolName"`
 	Arguments      string     `json:"arguments"` // JSON string

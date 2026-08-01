@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Modal,
   Button,
@@ -68,6 +68,16 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [previewData, setPreviewData] = useState<any[]>([]);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, []);
 
   // 处理文件上传
   const handleUpload = async (file: File) => {
@@ -114,30 +124,41 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
       return;
     }
 
+    let progressInterval: NodeJS.Timeout | null = null;
     try {
       setUploading(true);
       setImportProgress(0);
       setImportResult(null);
 
       const file = fileList[0].originFileObj;
+      if (!file) {
+        message.warning('请先选择文件');
+        return;
+      }
+
       const formData = new FormData();
       formData.append('file', file);
 
       // 模拟导入进度
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setImportProgress(prev => {
           if (prev >= 90) {
-            clearInterval(progressInterval);
+            if (progressInterval) clearInterval(progressInterval);
             return 90;
           }
           return prev + 10;
         });
       }, 200);
+      progressIntervalRef.current = progressInterval;
 
       // 调用后端 API 执行导入
       const response = await TicketCategoryApi.executeImport(formData);
 
-      clearInterval(progressInterval);
+      // 清理进度定时器
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressIntervalRef.current = null;
+      }
       setImportProgress(100);
 
       // 转换 API 返回结果
@@ -152,6 +173,11 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
       setImportResult(importResult);
       message.success('导入完成');
     } catch (error) {
+      // 确保清理进度定时器
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressIntervalRef.current = null;
+      }
       message.error('导入失败: ' + (error instanceof Error ? error.message : '未知错误'));
     } finally {
       setUploading(false);

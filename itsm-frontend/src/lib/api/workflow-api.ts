@@ -354,8 +354,8 @@ export class WorkflowApi {
         nodeName: task.taskName || '',
         nodeType: task.taskType || 'user_task',
         status: (task.status || 'pending') as NodeInstance['status'],
-        assignee: task.assignee ? parseInt(task.assignee, 10) : undefined,
-        assigneeId: task.assignee ? parseInt(task.assignee, 10) : undefined,
+        assignee: task.assignee ? (Number.isFinite(Number(task.assignee)) ? Number(task.assignee) : undefined) : undefined,
+        assigneeId: task.assignee ? (Number.isFinite(Number(task.assignee)) ? Number(task.assignee) : undefined) : undefined,
         createdAt: task.createdTime || task.createdAt || new Date().toISOString(),
         dueDate: task.dueDate || null,
         variables: task.taskVariables || task.variables || {},
@@ -363,7 +363,7 @@ export class WorkflowApi {
       }));
     } catch (error) {
       console.error('Failed to fetch workflow tasks:', error);
-      return [];
+      throw error; // 不再静默返回空数组，让调用方处理错误
     }
   }
 
