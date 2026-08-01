@@ -11,6 +11,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.0] - 2026-08-01
+
+### Fixed
+
+- **Critical: Form Boundary Issue** - Fixed TicketTypeFormModal where approval/SLA tab fields were outside `<Form>` component, causing form validation failures.
+- **Critical: Auth State Persistence** - Removed `isAuthenticated` from Zustand persist partialize to prevent false login state after browser refresh.
+- **High: Timer Leak in Export/Import** - Fixed memory leaks in TicketCategoryExport and TicketCategoryImport with proper useRef cleanup on unmount and error paths.
+- **High: ITIL Status Guard** - Added readonly protection on change/edit and release forms to prevent editing approved/completed records.
+- **High: Suspense Boundary** - Added Suspense wrapper for useSearchParams in tickets page to fix CSR bailout.
+- **High: Query Key Normalization** - Fixed useTicketsQuery to only include request params in queryKey, not response data.
+- **High: NaN Route Guard** - Added Number.isFinite check for marketplace/[id] route parameter.
+- **High: Error Handling** - Fixed workflow-api to throw errors instead of silently returning empty arrays.
+- **Medium: useFormMemory** - Added debounce (500ms), enabled flag for edit mode, and dayjs serialization.
+- **Medium: CIEditorForm** - Added min/max/precision props to InputNumber for numeric fields.
+- **Medium: ChangeDetail Null Guard** - Added null check for createdAt before dayjs conversion.
+
+### Changed
+
+- **Ant Design destroyOnHidden** - Added to ProblemInvestigationTab modals.
+- **SchemaField Type** - Added validation property with minValue/maxValue/precision/pattern.
+
+---
+
 ## [1.5.2] - 2026-07-31
 
 ### Fixed
