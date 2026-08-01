@@ -320,9 +320,9 @@ func (s *IncidentService) ListIncidents(ctx context.Context, tenantID int, page,
 }
 
 // LinkIncidentCIs links configuration items to an incident.
-func (s *IncidentService) LinkIncidentCIs(ctx context.Context, incidentID int, ciIDs []int) error {
+func (s *IncidentService) LinkIncidentCIs(ctx context.Context, incidentID int, ciIDs []int, tenantID int) error {
 	incidentEntity, err := s.client.Incident.Query().
-		Where(incident.IDEQ(incidentID), incident.DeletedAtIsNil()).
+		Where(incident.IDEQ(incidentID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -354,9 +354,9 @@ func (s *IncidentService) LinkIncidentCIs(ctx context.Context, incidentID int, c
 }
 
 // GetIncidentCIs returns the configuration items linked to an incident.
-func (s *IncidentService) GetIncidentCIs(ctx context.Context, incidentID int) ([]dto.CIInfo, error) {
+func (s *IncidentService) GetIncidentCIs(ctx context.Context, incidentID int, tenantID int) ([]dto.CIInfo, error) {
 	incidentEntity, err := s.client.Incident.Query().
-		Where(incident.IDEQ(incidentID), incident.DeletedAtIsNil()).
+		Where(incident.IDEQ(incidentID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		WithConfigurationItems().
 		Only(ctx)
 	if err != nil {
