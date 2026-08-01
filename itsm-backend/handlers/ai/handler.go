@@ -40,7 +40,8 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		tenantID = 1
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
 	}
 
 	readOnly := false
@@ -468,9 +469,6 @@ func (h *Handler) CreateTicketByAI(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
-		tenantID = req.TenantID
-	}
 	if tenantID == 0 {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return

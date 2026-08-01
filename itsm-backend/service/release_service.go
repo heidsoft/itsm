@@ -61,18 +61,32 @@ func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateRelea
 		return nil, fmt.Errorf("failed to create release: %w", err)
 	}
 
-	// 设置关联字段
+	// 设置关联字段（Update() 返回构造器，必须 Save(ctx) 才落库）
+	updater := releaseEntity.Update()
+	needsUpdate := false
 	if len(req.AffectedSystems) > 0 {
-		releaseEntity.Update().SetAffectedSystems(req.AffectedSystems)
+		updater = updater.SetAffectedSystems(req.AffectedSystems)
+		needsUpdate = true
 	}
 	if len(req.AffectedComponents) > 0 {
-		releaseEntity.Update().SetAffectedComponents(req.AffectedComponents)
+		updater = updater.SetAffectedComponents(req.AffectedComponents)
+		needsUpdate = true
 	}
 	if len(req.DeploymentSteps) > 0 {
-		releaseEntity.Update().SetDeploymentSteps(req.DeploymentSteps)
+		updater = updater.SetDeploymentSteps(req.DeploymentSteps)
+		needsUpdate = true
 	}
 	if len(req.Tags) > 0 {
-		releaseEntity.Update().SetTags(req.Tags)
+		updater = updater.SetTags(req.Tags)
+		needsUpdate = true
+	}
+	if needsUpdate {
+		updated, err := updater.Save(ctx)
+		if err != nil {
+			s.logger.Errorw("Failed to set release associations", "error", err, "release_id", releaseEntity.ID)
+			return nil, fmt.Errorf("failed to set release associations: %w", err)
+		}
+		releaseEntity = updated
 	}
 
 	// 获取创建人信息

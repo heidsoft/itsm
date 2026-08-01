@@ -257,7 +257,7 @@ func (s *ProblemInvestigationService) CreateInvestigationStep(ctx context.Contex
 	var assignedToName *string
 	if req.AssignedTo != nil {
 		var name string
-		err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1", *req.AssignedTo).Scan(&name)
+		err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1 AND tenant_id = $2", *req.AssignedTo, tenantID).Scan(&name)
 		if err == nil {
 			assignedToName = &name
 		}
@@ -345,20 +345,22 @@ func (s *ProblemInvestigationService) UpdateInvestigationStep(ctx context.Contex
 	}
 
 	// 返回更新后的步骤
-	return s.getInvestigationStep(ctx, stepID)
+	return s.getInvestigationStep(ctx, stepID, tenantID)
 }
 
 // getInvestigationStep 获取调查步骤详情
-func (s *ProblemInvestigationService) getInvestigationStep(ctx context.Context, stepID int) (*dto.InvestigationStepResponse, error) {
+func (s *ProblemInvestigationService) getInvestigationStep(ctx context.Context, stepID, tenantID int) (*dto.InvestigationStepResponse, error) {
 	var step dto.InvestigationStepResponse
 	err := s.db.QueryRowContext(ctx, `
 		SELECT pis.id, pis.investigation_id, pis.step_number, pis.step_title, pis.step_description,
 		       pis.status, pis.assigned_to, u.name, pis.start_date, pis.completion_date, pis.notes,
 		       pis.created_at, pis.updated_at
 		FROM problem_investigation_steps pis
-		LEFT JOIN users u ON pis.assigned_to = u.id
-		WHERE pis.id = $1
-	`, stepID).Scan(
+		JOIN problem_investigations pi ON pis.investigation_id = pi.id
+		JOIN problems p ON pi.problem_id = p.id
+		LEFT JOIN users u ON pis.assigned_to = u.id AND u.tenant_id = p.tenant_id
+		WHERE pis.id = $1 AND p.tenant_id = $2
+	`, stepID, tenantID).Scan(
 		&step.ID, &step.InvestigationID, &step.StepNumber, &step.StepTitle, &step.StepDescription,
 		&step.Status, &step.AssignedTo, &step.AssignedToName, &step.StartDate, &step.CompletionDate, &step.Notes,
 		&step.CreatedAt, &step.UpdatedAt,
@@ -384,7 +386,7 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 
 	// 检查是否已存在根本原因分析
 	var existingID int
-	err = s.db.QueryRowContext(ctx, "SELECT id FROM problem_root_cause_analyses WHERE problem_id = $1", req.ProblemID).Scan(&existingID)
+	err = s.db.QueryRowContext(ctx, "SELECT rca.id FROM problem_root_cause_analyses rca JOIN problems p ON rca.problem_id = p.id WHERE rca.problem_id = $1 AND p.tenant_id = $2", req.ProblemID, tenantID).Scan(&existingID)
 	if err == nil {
 		return nil, fmt.Errorf("该问题已存在根本原因分析")
 	}
@@ -404,7 +406,7 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 
 	// 获取分析师姓名
 	var analystName string
-	err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1", req.AnalystID).Scan(&analystName)
+	err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1 AND tenant_id = $2", req.AnalystID, tenantID).Scan(&analystName)
 	if err != nil {
 		analystName = "未知用户"
 	}
@@ -454,7 +456,7 @@ func (s *ProblemInvestigationService) CreateProblemSolution(ctx context.Context,
 
 	// 获取提议者姓名
 	var proposedByName string
-	err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1", req.ProposedBy).Scan(&proposedByName)
+	err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1 AND tenant_id = $2", req.ProposedBy, tenantID).Scan(&proposedByName)
 	if err != nil {
 		proposedByName = "未知用户"
 	}
@@ -494,7 +496,7 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 
 	// 获取调查记录
 	var investigationID int
-	err = s.db.QueryRowContext(ctx, "SELECT id FROM problem_investigations WHERE problem_id = $1", problemID).Scan(&investigationID)
+	err = s.db.QueryRowContext(ctx, "SELECT pi.id FROM problem_investigations pi JOIN problems p ON pi.problem_id = p.id WHERE pi.problem_id = $1 AND p.tenant_id = $2", problemID, tenantID).Scan(&investigationID)
 	if err == nil {
 		investigation, err := s.GetProblemInvestigation(ctx, investigationID, tenantID)
 		if err == nil {
@@ -509,10 +511,12 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 			       pis.status, pis.assigned_to, u.name, pis.start_date, pis.completion_date, pis.notes,
 			       pis.created_at, pis.updated_at
 			FROM problem_investigation_steps pis
-			LEFT JOIN users u ON pis.assigned_to = u.id
-			WHERE pis.investigation_id = $1
+			JOIN problem_investigations pi ON pis.investigation_id = pi.id
+			JOIN problems p ON pi.problem_id = p.id
+			LEFT JOIN users u ON pis.assigned_to = u.id AND u.tenant_id = p.tenant_id
+			WHERE pis.investigation_id = $1 AND p.tenant_id = $2
 			ORDER BY pis.step_number
-		`, investigationID)
+		`, investigationID, tenantID)
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {
@@ -531,7 +535,7 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 
 	// 获取根本原因分析
 	var analysisID int
-	err = s.db.QueryRowContext(ctx, "SELECT id FROM problem_root_cause_analyses WHERE problem_id = $1", problemID).Scan(&analysisID)
+	err = s.db.QueryRowContext(ctx, "SELECT rca.id FROM problem_root_cause_analyses rca JOIN problems p ON rca.problem_id = p.id WHERE rca.problem_id = $1 AND p.tenant_id = $2", problemID, tenantID).Scan(&analysisID)
 	if err == nil {
 		rows, err := s.db.QueryContext(ctx, `
 			SELECT prca.id, prca.problem_id, prca.analyst_id, u1.name, prca.analysis_method,
@@ -539,10 +543,11 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 			       prca.analysis_date, prca.reviewed_by, u2.name, prca.review_date,
 			       prca.created_at, prca.updated_at
 			FROM problem_root_cause_analyses prca
-			JOIN users u1 ON prca.analyst_id = u1.id
-			LEFT JOIN users u2 ON prca.reviewed_by = u2.id
-			WHERE prca.problem_id = $1
-		`, problemID)
+			JOIN problems p ON prca.problem_id = p.id
+			JOIN users u1 ON prca.analyst_id = u1.id AND u1.tenant_id = p.tenant_id
+			LEFT JOIN users u2 ON prca.reviewed_by = u2.id AND (u2.id IS NULL OR u2.tenant_id = p.tenant_id)
+			WHERE prca.problem_id = $1 AND p.tenant_id = $2
+		`, problemID, tenantID)
 		if err == nil {
 			defer rows.Close()
 			if rows.Next() {
@@ -568,11 +573,12 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 		       ps.risk_assessment, ps.approval_status, ps.approved_by, u2.name, ps.approval_date,
 		       ps.created_at, ps.updated_at
 		FROM problem_solutions ps
-		JOIN users u1 ON ps.proposed_by = u1.id
-		LEFT JOIN users u2 ON ps.approved_by = u2.id
-		WHERE ps.problem_id = $1
+		JOIN problems p ON ps.problem_id = p.id
+		JOIN users u1 ON ps.proposed_by = u1.id AND u1.tenant_id = p.tenant_id
+		LEFT JOIN users u2 ON ps.approved_by = u2.id AND (u2.id IS NULL OR u2.tenant_id = p.tenant_id)
+		WHERE ps.problem_id = $1 AND p.tenant_id = $2
 		ORDER BY ps.created_at DESC
-	`, problemID)
+	`, problemID, tenantID)
 	if err == nil {
 		defer rows.Close()
 		for rows.Next() {
