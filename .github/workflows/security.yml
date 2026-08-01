@@ -46,8 +46,8 @@ jobs:
           sarif_file: gosec-results.sarif
           category: gosec
 
-  trivy:
-    name: Container Security Scan
+  trivy-report:
+    name: Trivy Vulnerability Report
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -68,6 +68,43 @@ jobs:
           sarif_file: 'trivy-results.sarif'
           category: trivy
 
+  trivy-gate:
+    name: Trivy Gate (Critical Only)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run Trivy gate
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL'
+          exit-code: '1'
+
+  govulncheck:
+    name: Go Vulnerability Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: itsm-backend/go.mod
+          cache: true
+          cache-dependency-path: itsm-backend/go.sum
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run govulncheck
+        working-directory: itsm-backend
+        run: govulncheck ./...
+
   npm-audit:
     name: NPM Security Audit
     runs-on: ubuntu-latest
@@ -86,7 +123,21 @@ jobs:
 
       - name: Audit
         working-directory: itsm-frontend
-        run: npm audit --omit=dev --audit-level=critical
+        run: npm audit --omit=dev --audit-level=high
+
+  pnpm-guard:
+    name: pnpm Lockfile Guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check for stale pnpm lockfile
+        run: |
+          if [ -f "itsm-frontend/pnpm-lock.yaml" ]; then
+            echo "::error::Stale pnpm-lock.yaml detected. This project uses npm, not pnpm."
+            exit 1
+          fi
 
   secrets-scan:
     name: Secret Detection
