@@ -178,14 +178,14 @@ describe('tenant-context', () => {
 });
 
 describe('mock-auth-service', () => {
-  let mockAuth: typeof import('./mock-auth-service');
+  let mockAuth: typeof import('../mock-auth-service');
 
   beforeEach(() => {
     jest.resetModules();
   });
 
   it('login succeeds for admin', async () => {
-    mockAuth = await import('./mock-auth-service');
+    mockAuth = await import('../mock-auth-service');
     const service = mockAuth.createMockAuthService();
     const result = await service.login('admin', 'pass');
     expect(result.success).toBe(true);
@@ -194,14 +194,14 @@ describe('mock-auth-service', () => {
   });
 
   it('login succeeds for test user', async () => {
-    mockAuth = await import('./mock-auth-service');
+    mockAuth = await import('../mock-auth-service');
     const service = mockAuth.createMockAuthService();
     const result = await service.login('test', 'pass');
     expect(result.success).toBe(true);
   });
 
   it('login fails for unknown user', async () => {
-    mockAuth = await import('./mock-auth-service');
+    mockAuth = await import('../mock-auth-service');
     const service = mockAuth.createMockAuthService();
     const result = await service.login('unknown', 'pass');
     expect(result.success).toBe(false);
@@ -209,7 +209,7 @@ describe('mock-auth-service', () => {
   });
 
   it('logout clears current user', async () => {
-    mockAuth = await import('./mock-auth-service');
+    mockAuth = await import('../mock-auth-service');
     const service = mockAuth.createMockAuthService();
     await service.login('admin', 'pass');
     await service.logout();
@@ -217,7 +217,7 @@ describe('mock-auth-service', () => {
   });
 
   it('validateToken returns auth status', async () => {
-    mockAuth = await import('./mock-auth-service');
+    mockAuth = await import('../mock-auth-service');
     const service = mockAuth.createMockAuthService();
     expect(await service.validateToken('any')).toBe(true);
     await service.logout();
@@ -225,7 +225,7 @@ describe('mock-auth-service', () => {
   });
 
   it('getCurrentUser returns default user initially', async () => {
-    mockAuth = await import('./mock-auth-service');
+    mockAuth = await import('../mock-auth-service');
     const service = mockAuth.createMockAuthService();
     const user = service.getCurrentUser();
     expect(user).not.toBeNull();
@@ -233,7 +233,7 @@ describe('mock-auth-service', () => {
   });
 
   it('exports singleton MockAuthService', async () => {
-    mockAuth = await import('./mock-auth-service');
+    mockAuth = await import('../mock-auth-service');
     expect(mockAuth.MockAuthService).toBeDefined();
     expect(mockAuth.MockAuthService.login).toBeDefined();
   });
