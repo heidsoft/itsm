@@ -8,7 +8,7 @@ replace github.com/heidsoft/itsm/itsm-backend => ./
 replace itsm-backend => ./
 
 require (
-	entgo.io/ent v0.14.5
+	entgo.io/ent v0.14.6
 	github.com/ThreeDotsLabs/watermill v1.5.2
 	github.com/ThreeDotsLabs/watermill-redisstream v1.4.5
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.2
@@ -44,7 +44,7 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.32.1-0.20250325101103-175b25e1c1b9 // indirect
+	ariga.io/atlas v0.36.2-0.20250730182955-2c6300d0a3e1 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
