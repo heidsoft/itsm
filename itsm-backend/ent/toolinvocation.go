@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/toolinvocation"
+	"itsm-backend/ent/user"
 	"strings"
 	"time"
 
@@ -48,6 +49,14 @@ type ToolInvocation struct {
 	DryRun bool `json:"dry_run,omitempty"`
 	// Error holds the value of the "error" field.
 	Error *string `json:"error,omitempty"`
+	// 工具触发者用户 ID
+	UserID int `json:"user_id,omitempty"`
+	// 权限校验结果: passed|denied|skipped
+	PermissionCheck string `json:"permission_check,omitempty"`
+	// 权限校验原因/拒绝原因
+	PermissionReason string `json:"permission_reason,omitempty"`
+	// 调用时角色快照，便于事后审计
+	RoleSnapshot string `json:"role_snapshot,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ToolInvocationQuery when eager-loading is set.
 	Edges        ToolInvocationEdges `json:"edges"`
@@ -58,9 +67,11 @@ type ToolInvocation struct {
 type ToolInvocationEdges struct {
 	// Conversation holds the value of the conversation edge.
 	Conversation *Conversation `json:"conversation,omitempty"`
+	// User holds the value of the user edge.
+	User *User `json:"user,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // ConversationOrErr returns the Conversation value or an error if the edge
@@ -74,6 +85,17 @@ func (e ToolInvocationEdges) ConversationOrErr() (*Conversation, error) {
 	return nil, &NotLoadedError{edge: "conversation"}
 }
 
+// UserOrErr returns the User value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ToolInvocationEdges) UserOrErr() (*User, error) {
+	if e.User != nil {
+		return e.User, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "user"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*ToolInvocation) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -81,9 +103,9 @@ func (*ToolInvocation) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case toolinvocation.FieldNeedsApproval, toolinvocation.FieldDryRun:
 			values[i] = new(sql.NullBool)
-		case toolinvocation.FieldID, toolinvocation.FieldTenantID, toolinvocation.FieldConversationID, toolinvocation.FieldApprovedBy:
+		case toolinvocation.FieldID, toolinvocation.FieldTenantID, toolinvocation.FieldConversationID, toolinvocation.FieldApprovedBy, toolinvocation.FieldUserID:
 			values[i] = new(sql.NullInt64)
-		case toolinvocation.FieldToolName, toolinvocation.FieldArguments, toolinvocation.FieldResult, toolinvocation.FieldStatus, toolinvocation.FieldRequestID, toolinvocation.FieldApprovalState, toolinvocation.FieldApprovalReason, toolinvocation.FieldError:
+		case toolinvocation.FieldToolName, toolinvocation.FieldArguments, toolinvocation.FieldResult, toolinvocation.FieldStatus, toolinvocation.FieldRequestID, toolinvocation.FieldApprovalState, toolinvocation.FieldApprovalReason, toolinvocation.FieldError, toolinvocation.FieldPermissionCheck, toolinvocation.FieldPermissionReason, toolinvocation.FieldRoleSnapshot:
 			values[i] = new(sql.NullString)
 		case toolinvocation.FieldCreatedAt, toolinvocation.FieldApprovedAt:
 			values[i] = new(sql.NullTime)
@@ -200,6 +222,30 @@ func (_m *ToolInvocation) assignValues(columns []string, values []any) error {
 				_m.Error = new(string)
 				*_m.Error = value.String
 			}
+		case toolinvocation.FieldUserID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+			} else if value.Valid {
+				_m.UserID = int(value.Int64)
+			}
+		case toolinvocation.FieldPermissionCheck:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field permission_check", values[i])
+			} else if value.Valid {
+				_m.PermissionCheck = value.String
+			}
+		case toolinvocation.FieldPermissionReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field permission_reason", values[i])
+			} else if value.Valid {
+				_m.PermissionReason = value.String
+			}
+		case toolinvocation.FieldRoleSnapshot:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field role_snapshot", values[i])
+			} else if value.Valid {
+				_m.RoleSnapshot = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -216,6 +262,11 @@ func (_m *ToolInvocation) Value(name string) (ent.Value, error) {
 // QueryConversation queries the "conversation" edge of the ToolInvocation entity.
 func (_m *ToolInvocation) QueryConversation() *ConversationQuery {
 	return NewToolInvocationClient(_m.config).QueryConversation(_m)
+}
+
+// QueryUser queries the "user" edge of the ToolInvocation entity.
+func (_m *ToolInvocation) QueryUser() *UserQuery {
+	return NewToolInvocationClient(_m.config).QueryUser(_m)
 }
 
 // Update returns a builder for updating this ToolInvocation.
@@ -289,6 +340,18 @@ func (_m *ToolInvocation) String() string {
 		builder.WriteString("error=")
 		builder.WriteString(*v)
 	}
+	builder.WriteString(", ")
+	builder.WriteString("user_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
+	builder.WriteString(", ")
+	builder.WriteString("permission_check=")
+	builder.WriteString(_m.PermissionCheck)
+	builder.WriteString(", ")
+	builder.WriteString("permission_reason=")
+	builder.WriteString(_m.PermissionReason)
+	builder.WriteString(", ")
+	builder.WriteString("role_snapshot=")
+	builder.WriteString(_m.RoleSnapshot)
 	builder.WriteByte(')')
 	return builder.String()
 }

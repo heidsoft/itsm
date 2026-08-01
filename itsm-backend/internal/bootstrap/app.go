@@ -524,6 +524,8 @@ func NewApplication() *Application {
 	aiRepo := ai.NewEntRepository(client)
 	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, slaForecastSkill, triageService, rootCauseService, aiTelemetryService)
 	aiServiceDomain.SetLLMGateway(llmGateway)
+	// P2-6: 注入 ent client 供 AI 工具 RBAC 校验复用 hasResourcePermission
+	aiServiceDomain.SetEntClient(client)
 	aiHandler := ai.NewHandler(aiServiceDomain)
 
 	// Common Domain

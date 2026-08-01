@@ -77,6 +77,8 @@ const (
 	EdgeArticleParticipations = "article_participations"
 	// EdgePirReviews holds the string denoting the pir_reviews edge name in mutations.
 	EdgePirReviews = "pir_reviews"
+	// EdgeToolInvocations holds the string denoting the tool_invocations edge name in mutations.
+	EdgeToolInvocations = "tool_invocations"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// DepartmentRefTable is the table that holds the department_ref relation/edge.
@@ -178,6 +180,13 @@ const (
 	PirReviewsInverseTable = "change_pi_rs"
 	// PirReviewsColumn is the table column denoting the pir_reviews relation/edge.
 	PirReviewsColumn = "user_pir_reviews"
+	// ToolInvocationsTable is the table that holds the tool_invocations relation/edge.
+	ToolInvocationsTable = "tool_invocations"
+	// ToolInvocationsInverseTable is the table name for the ToolInvocation entity.
+	// It exists in this package in order to avoid circular dependency with the "toolinvocation" package.
+	ToolInvocationsInverseTable = "tool_invocations"
+	// ToolInvocationsColumn is the table column denoting the tool_invocations relation/edge.
+	ToolInvocationsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -597,6 +606,20 @@ func ByPirReviews(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPirReviewsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByToolInvocationsCount orders the results by tool_invocations count.
+func ByToolInvocationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newToolInvocationsStep(), opts...)
+	}
+}
+
+// ByToolInvocations orders the results by tool_invocations terms.
+func ByToolInvocations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newToolInvocationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newDepartmentRefStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -700,5 +723,12 @@ func newPirReviewsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PirReviewsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PirReviewsTable, PirReviewsColumn),
+	)
+}
+func newToolInvocationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ToolInvocationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ToolInvocationsTable, ToolInvocationsColumn),
 	)
 }

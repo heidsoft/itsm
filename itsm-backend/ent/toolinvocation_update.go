@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/toolinvocation"
+	"itsm-backend/ent/user"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -289,9 +290,76 @@ func (_u *ToolInvocationUpdate) ClearError() *ToolInvocationUpdate {
 	return _u
 }
 
+// SetUserID sets the "user_id" field.
+func (_u *ToolInvocationUpdate) SetUserID(v int) *ToolInvocationUpdate {
+	_u.mutation.SetUserID(v)
+	return _u
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (_u *ToolInvocationUpdate) SetNillableUserID(v *int) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
+	}
+	return _u
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (_u *ToolInvocationUpdate) ClearUserID() *ToolInvocationUpdate {
+	_u.mutation.ClearUserID()
+	return _u
+}
+
+// SetPermissionCheck sets the "permission_check" field.
+func (_u *ToolInvocationUpdate) SetPermissionCheck(v string) *ToolInvocationUpdate {
+	_u.mutation.SetPermissionCheck(v)
+	return _u
+}
+
+// SetNillablePermissionCheck sets the "permission_check" field if the given value is not nil.
+func (_u *ToolInvocationUpdate) SetNillablePermissionCheck(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetPermissionCheck(*v)
+	}
+	return _u
+}
+
+// SetPermissionReason sets the "permission_reason" field.
+func (_u *ToolInvocationUpdate) SetPermissionReason(v string) *ToolInvocationUpdate {
+	_u.mutation.SetPermissionReason(v)
+	return _u
+}
+
+// SetNillablePermissionReason sets the "permission_reason" field if the given value is not nil.
+func (_u *ToolInvocationUpdate) SetNillablePermissionReason(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetPermissionReason(*v)
+	}
+	return _u
+}
+
+// SetRoleSnapshot sets the "role_snapshot" field.
+func (_u *ToolInvocationUpdate) SetRoleSnapshot(v string) *ToolInvocationUpdate {
+	_u.mutation.SetRoleSnapshot(v)
+	return _u
+}
+
+// SetNillableRoleSnapshot sets the "role_snapshot" field if the given value is not nil.
+func (_u *ToolInvocationUpdate) SetNillableRoleSnapshot(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetRoleSnapshot(*v)
+	}
+	return _u
+}
+
 // SetConversation sets the "conversation" edge to the Conversation entity.
 func (_u *ToolInvocationUpdate) SetConversation(v *Conversation) *ToolInvocationUpdate {
 	return _u.SetConversationID(v.ID)
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (_u *ToolInvocationUpdate) SetUser(v *User) *ToolInvocationUpdate {
+	return _u.SetUserID(v.ID)
 }
 
 // Mutation returns the ToolInvocationMutation object of the builder.
@@ -302,6 +370,12 @@ func (_u *ToolInvocationUpdate) Mutation() *ToolInvocationMutation {
 // ClearConversation clears the "conversation" edge to the Conversation entity.
 func (_u *ToolInvocationUpdate) ClearConversation() *ToolInvocationUpdate {
 	_u.mutation.ClearConversation()
+	return _u
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (_u *ToolInvocationUpdate) ClearUser() *ToolInvocationUpdate {
+	_u.mutation.ClearUser()
 	return _u
 }
 
@@ -404,6 +478,15 @@ func (_u *ToolInvocationUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if _u.mutation.ErrorCleared() {
 		_spec.ClearField(toolinvocation.FieldError, field.TypeString)
 	}
+	if value, ok := _u.mutation.PermissionCheck(); ok {
+		_spec.SetField(toolinvocation.FieldPermissionCheck, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.PermissionReason(); ok {
+		_spec.SetField(toolinvocation.FieldPermissionReason, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RoleSnapshot(); ok {
+		_spec.SetField(toolinvocation.FieldRoleSnapshot, field.TypeString, value)
+	}
 	if _u.mutation.ConversationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -426,6 +509,35 @@ func (_u *ToolInvocationUpdate) sqlSave(ctx context.Context) (_node int, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(conversation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   toolinvocation.UserTable,
+			Columns: []string{toolinvocation.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   toolinvocation.UserTable,
+			Columns: []string{toolinvocation.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -713,9 +825,76 @@ func (_u *ToolInvocationUpdateOne) ClearError() *ToolInvocationUpdateOne {
 	return _u
 }
 
+// SetUserID sets the "user_id" field.
+func (_u *ToolInvocationUpdateOne) SetUserID(v int) *ToolInvocationUpdateOne {
+	_u.mutation.SetUserID(v)
+	return _u
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (_u *ToolInvocationUpdateOne) SetNillableUserID(v *int) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
+	}
+	return _u
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (_u *ToolInvocationUpdateOne) ClearUserID() *ToolInvocationUpdateOne {
+	_u.mutation.ClearUserID()
+	return _u
+}
+
+// SetPermissionCheck sets the "permission_check" field.
+func (_u *ToolInvocationUpdateOne) SetPermissionCheck(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetPermissionCheck(v)
+	return _u
+}
+
+// SetNillablePermissionCheck sets the "permission_check" field if the given value is not nil.
+func (_u *ToolInvocationUpdateOne) SetNillablePermissionCheck(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetPermissionCheck(*v)
+	}
+	return _u
+}
+
+// SetPermissionReason sets the "permission_reason" field.
+func (_u *ToolInvocationUpdateOne) SetPermissionReason(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetPermissionReason(v)
+	return _u
+}
+
+// SetNillablePermissionReason sets the "permission_reason" field if the given value is not nil.
+func (_u *ToolInvocationUpdateOne) SetNillablePermissionReason(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetPermissionReason(*v)
+	}
+	return _u
+}
+
+// SetRoleSnapshot sets the "role_snapshot" field.
+func (_u *ToolInvocationUpdateOne) SetRoleSnapshot(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetRoleSnapshot(v)
+	return _u
+}
+
+// SetNillableRoleSnapshot sets the "role_snapshot" field if the given value is not nil.
+func (_u *ToolInvocationUpdateOne) SetNillableRoleSnapshot(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetRoleSnapshot(*v)
+	}
+	return _u
+}
+
 // SetConversation sets the "conversation" edge to the Conversation entity.
 func (_u *ToolInvocationUpdateOne) SetConversation(v *Conversation) *ToolInvocationUpdateOne {
 	return _u.SetConversationID(v.ID)
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (_u *ToolInvocationUpdateOne) SetUser(v *User) *ToolInvocationUpdateOne {
+	return _u.SetUserID(v.ID)
 }
 
 // Mutation returns the ToolInvocationMutation object of the builder.
@@ -726,6 +905,12 @@ func (_u *ToolInvocationUpdateOne) Mutation() *ToolInvocationMutation {
 // ClearConversation clears the "conversation" edge to the Conversation entity.
 func (_u *ToolInvocationUpdateOne) ClearConversation() *ToolInvocationUpdateOne {
 	_u.mutation.ClearConversation()
+	return _u
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (_u *ToolInvocationUpdateOne) ClearUser() *ToolInvocationUpdateOne {
+	_u.mutation.ClearUser()
 	return _u
 }
 
@@ -858,6 +1043,15 @@ func (_u *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolInvo
 	if _u.mutation.ErrorCleared() {
 		_spec.ClearField(toolinvocation.FieldError, field.TypeString)
 	}
+	if value, ok := _u.mutation.PermissionCheck(); ok {
+		_spec.SetField(toolinvocation.FieldPermissionCheck, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.PermissionReason(); ok {
+		_spec.SetField(toolinvocation.FieldPermissionReason, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RoleSnapshot(); ok {
+		_spec.SetField(toolinvocation.FieldRoleSnapshot, field.TypeString, value)
+	}
 	if _u.mutation.ConversationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -880,6 +1074,35 @@ func (_u *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolInvo
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(conversation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   toolinvocation.UserTable,
+			Columns: []string{toolinvocation.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   toolinvocation.UserTable,
+			Columns: []string{toolinvocation.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

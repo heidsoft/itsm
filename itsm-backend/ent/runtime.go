@@ -3867,6 +3867,18 @@ func init() {
 	toolinvocationDescDryRun := toolinvocationFields[13].Descriptor()
 	// toolinvocation.DefaultDryRun holds the default value on creation for the dry_run field.
 	toolinvocation.DefaultDryRun = toolinvocationDescDryRun.Default.(bool)
+	// toolinvocationDescPermissionCheck is the schema descriptor for permission_check field.
+	toolinvocationDescPermissionCheck := toolinvocationFields[16].Descriptor()
+	// toolinvocation.DefaultPermissionCheck holds the default value on creation for the permission_check field.
+	toolinvocation.DefaultPermissionCheck = toolinvocationDescPermissionCheck.Default.(string)
+	// toolinvocationDescPermissionReason is the schema descriptor for permission_reason field.
+	toolinvocationDescPermissionReason := toolinvocationFields[17].Descriptor()
+	// toolinvocation.DefaultPermissionReason holds the default value on creation for the permission_reason field.
+	toolinvocation.DefaultPermissionReason = toolinvocationDescPermissionReason.Default.(string)
+	// toolinvocationDescRoleSnapshot is the schema descriptor for role_snapshot field.
+	toolinvocationDescRoleSnapshot := toolinvocationFields[18].Descriptor()
+	// toolinvocation.DefaultRoleSnapshot holds the default value on creation for the role_snapshot field.
+	toolinvocation.DefaultRoleSnapshot = toolinvocationDescRoleSnapshot.Default.(string)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescUsername is the schema descriptor for username field.

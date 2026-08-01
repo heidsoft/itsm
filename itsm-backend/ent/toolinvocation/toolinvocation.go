@@ -44,8 +44,18 @@ const (
 	FieldDryRun = "dry_run"
 	// FieldError holds the string denoting the error field in the database.
 	FieldError = "error"
+	// FieldUserID holds the string denoting the user_id field in the database.
+	FieldUserID = "user_id"
+	// FieldPermissionCheck holds the string denoting the permission_check field in the database.
+	FieldPermissionCheck = "permission_check"
+	// FieldPermissionReason holds the string denoting the permission_reason field in the database.
+	FieldPermissionReason = "permission_reason"
+	// FieldRoleSnapshot holds the string denoting the role_snapshot field in the database.
+	FieldRoleSnapshot = "role_snapshot"
 	// EdgeConversation holds the string denoting the conversation edge name in mutations.
 	EdgeConversation = "conversation"
+	// EdgeUser holds the string denoting the user edge name in mutations.
+	EdgeUser = "user"
 	// Table holds the table name of the toolinvocation in the database.
 	Table = "tool_invocations"
 	// ConversationTable is the table that holds the conversation relation/edge.
@@ -55,6 +65,13 @@ const (
 	ConversationInverseTable = "conversations"
 	// ConversationColumn is the table column denoting the conversation relation/edge.
 	ConversationColumn = "conversation_id"
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "tool_invocations"
+	// UserInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	UserInverseTable = "users"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_id"
 )
 
 // Columns holds all SQL columns for toolinvocation fields.
@@ -75,6 +92,10 @@ var Columns = []string{
 	FieldApprovedAt,
 	FieldDryRun,
 	FieldError,
+	FieldUserID,
+	FieldPermissionCheck,
+	FieldPermissionReason,
+	FieldRoleSnapshot,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -102,6 +123,12 @@ var (
 	DefaultApprovalReason string
 	// DefaultDryRun holds the default value on creation for the "dry_run" field.
 	DefaultDryRun bool
+	// DefaultPermissionCheck holds the default value on creation for the "permission_check" field.
+	DefaultPermissionCheck string
+	// DefaultPermissionReason holds the default value on creation for the "permission_reason" field.
+	DefaultPermissionReason string
+	// DefaultRoleSnapshot holds the default value on creation for the "role_snapshot" field.
+	DefaultRoleSnapshot string
 )
 
 // OrderOption defines the ordering options for the ToolInvocation queries.
@@ -187,10 +214,37 @@ func ByError(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldError, opts...).ToFunc()
 }
 
+// ByUserID orders the results by the user_id field.
+func ByUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserID, opts...).ToFunc()
+}
+
+// ByPermissionCheck orders the results by the permission_check field.
+func ByPermissionCheck(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPermissionCheck, opts...).ToFunc()
+}
+
+// ByPermissionReason orders the results by the permission_reason field.
+func ByPermissionReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPermissionReason, opts...).ToFunc()
+}
+
+// ByRoleSnapshot orders the results by the role_snapshot field.
+func ByRoleSnapshot(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRoleSnapshot, opts...).ToFunc()
+}
+
 // ByConversationField orders the results by conversation field.
 func ByConversationField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newConversationStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByUserField orders the results by user field.
+func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newConversationStep() *sqlgraph.Step {
@@ -198,5 +252,12 @@ func newConversationStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ConversationInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ConversationTable, ConversationColumn),
+	)
+}
+func newUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 	)
 }

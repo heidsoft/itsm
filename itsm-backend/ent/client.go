@@ -18774,6 +18774,22 @@ func (c *ToolInvocationClient) QueryConversation(_m *ToolInvocation) *Conversati
 	return query
 }
 
+// QueryUser queries the user edge of a ToolInvocation.
+func (c *ToolInvocationClient) QueryUser(_m *ToolInvocation) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(toolinvocation.Table, toolinvocation.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, toolinvocation.UserTable, toolinvocation.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ToolInvocationClient) Hooks() []Hook {
 	return c.hooks.ToolInvocation
@@ -19140,6 +19156,22 @@ func (c *UserClient) QueryPirReviews(_m *User) *ChangePIRQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(changepir.Table, changepir.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.PirReviewsTable, user.PirReviewsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryToolInvocations queries the tool_invocations edge of a User.
+func (c *UserClient) QueryToolInvocations(_m *User) *ToolInvocationQuery {
+	query := (&ToolInvocationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(toolinvocation.Table, toolinvocation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ToolInvocationsTable, user.ToolInvocationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

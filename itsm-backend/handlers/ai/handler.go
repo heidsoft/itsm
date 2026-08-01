@@ -2,6 +2,7 @@ package ai
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -9,6 +10,8 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
+	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,9 +25,26 @@ func NewHandler(svc *Service) *Handler {
 }
 
 // ListTools handles GET /api/v1/agent/tools
+// P2-6: 按 ToolDefinition.Resource/Action 过滤，仅返回当前角色有权限的工具
 func (h *Handler) ListTools(c *gin.Context) {
-	tools := h.svc.ListTools()
-	common.Success(c, gin.H{"tools": tools})
+	allTools := h.svc.ListTools()
+
+	role := c.GetString("role")
+	tenantID := c.GetInt("tenant_id")
+
+	// Flag 未开启或无 ent client 时，返回全部工具（兼容历史行为）
+	if !IsToolRBACEnabled() || h.svc.entClient == nil || role == "" || role == "super_admin" {
+		common.Success(c, gin.H{"tools": allTools})
+		return
+	}
+
+	visible := make([]service.ToolDefinition, 0, len(allTools))
+	for _, t := range allTools {
+		if middleware.HasResourcePermission(h.svc.entClient, role, t.Resource, t.Action, tenantID) {
+			visible = append(visible, t)
+		}
+	}
+	common.Success(c, gin.H{"tools": visible})
 }
 
 // ExecuteTool handles POST /api/v1/agent/tools/execute
@@ -44,14 +64,13 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 		return
 	}
 
-	readOnly := false
-	for _, t := range h.svc.ListTools() {
-		if t.Name == req.Name {
-			readOnly = t.ReadOnly
-			break
-		}
+	// P2-6: 写工具（!ReadOnly）目前仍走审批流，agent v1 直接拒绝执行
+	toolDef := h.svc.tools.GetTool(req.Name)
+	if toolDef == nil {
+		common.Fail(c, common.UnknownToolCode, "unknown tool: "+req.Name)
+		return
 	}
-	if !readOnly {
+	if !toolDef.ReadOnly {
 		common.Fail(c, common.ForbiddenCode, "tool requires approval; write tools are not enabled in agent v1")
 		return
 	}
@@ -60,8 +79,20 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 		req.Args = map[string]interface{}{}
 	}
 
-	res, _, err := h.svc.ExecuteTool(c.Request.Context(), tenantID, req.Name, req.Args)
+	userID := c.GetInt("user_id")
+	role := c.GetString("role")
+
+	res, _, err := h.svc.ExecuteTool(c.Request.Context(), userID, tenantID, role, req.Name, req.Args)
 	if err != nil {
+		// P2-6: 区分权限拒绝与未知工具的错误码
+		if errors.Is(err, ErrToolPermissionDenied) {
+			common.Fail(c, common.ToolPermissionDeniedCode, err.Error())
+			return
+		}
+		if errors.Is(err, ErrUnknownTool) {
+			common.Fail(c, common.UnknownToolCode, err.Error())
+			return
+		}
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}

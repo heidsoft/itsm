@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"itsm-backend/dto"
+	"itsm-backend/ent"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"go.uber.org/zap"
@@ -26,6 +28,8 @@ type Service struct {
 	triageService      *service.TriageService
 	rca                *service.RootCauseService
 	aiTelemetryService *service.AITelemetryService
+	// P2-6: ent client，用于复用 RBAC hasResourcePermission
+	entClient *ent.Client
 }
 
 func NewService(
@@ -62,6 +66,12 @@ func (s *Service) SetLLMGateway(gateway *service.LLMGateway) {
 	s.llmGateway = gateway
 }
 
+// SetEntClient wires the ent client for RBAC permission checks.
+// P2-6: AI 工具执行前调用 hasResourcePermission 校验用户对工具 Resource/Action 的权限
+func (s *Service) SetEntClient(client *ent.Client) {
+	s.entClient = client
+}
+
 // Tool Methods
 
 func (s *Service) ListTools() []service.ToolDefinition {
@@ -71,52 +81,105 @@ func (s *Service) ListTools() []service.ToolDefinition {
 	return s.tools.ListTools()
 }
 
-func (s *Service) ExecuteTool(ctx context.Context, tenantID int, name string, args map[string]interface{}) (interface{}, int, error) {
+// ErrToolPermissionDenied 工具权限不足（P2-6 Gate 2）
+var ErrToolPermissionDenied = fmt.Errorf("tool permission denied")
+
+// ErrUnknownTool 未知工具（P2-6 Gate 2）
+var ErrUnknownTool = fmt.Errorf("unknown tool")
+
+// ExecuteTool 执行 AI 工具
+// P2-6: 新增 userID 和 role 参数用于 Gate 2 RBAC 校验
+//
+// 校验分层：
+//   Gate 1: 路由级 RBACMiddleware（/api/v1/agent/* 检查 ai:read/ai:write）— 调用前已完成
+//   Gate 2: 工具级 RBAC（本方法）— 按 ToolDefinition.Resource/Action 校验
+//   Gate 3: 审批流（写工具 !ReadOnly）— 由 NeedsApproval 处理
+func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, name string, args map[string]interface{}) (interface{}, int, error) {
 	if s.tools == nil {
 		return nil, 0, fmt.Errorf("tool registry not initialized")
 	}
 
-	// Check if needs approval
-	needsApproval := false
-	for _, t := range s.tools.ListTools() {
-		if t.Name == name {
-			needsApproval = !t.ReadOnly
-			break
+	// === P2-6 Gate 2: 工具级 RBAC 校验 ===
+	permCheck := "skipped"
+	permReason := ""
+	allowed := true
+
+	toolDef := s.tools.GetTool(name)
+	if toolDef == nil {
+		// 未知工具：记录 denied 审计，返回错误
+		s.recordToolAudit(ctx, tenantID, userID, role, name, args, "denied", "unknown tool", "", nil, false)
+		return nil, 0, ErrUnknownTool
+	}
+
+	if IsToolRBACEnabled() && s.entClient != nil && role != "" && role != "super_admin" {
+		if middleware.HasResourcePermission(s.entClient, role, toolDef.Resource, toolDef.Action, tenantID) {
+			permCheck = "passed"
+		} else {
+			permCheck = "denied"
+			permReason = fmt.Sprintf("role=%s lacks %s:%s", role, toolDef.Resource, toolDef.Action)
+			allowed = false
+			s.logger.Warnw("AI tool RBAC denied",
+				"user_id", userID, "tenant_id", tenantID, "role", role,
+				"tool", name, "resource", toolDef.Resource, "action", toolDef.Action,
+				"enforce", IsToolRBACEnforce())
 		}
 	}
+
+	// 影子模式：只记录日志，不拦截；执行模式：拒绝请求
+	if !allowed && IsToolRBACEnforce() {
+		s.recordToolAudit(ctx, tenantID, userID, role, name, args, permCheck, permReason, "", nil, false)
+		return nil, 0, fmt.Errorf("%w: %s", ErrToolPermissionDenied, permReason)
+	}
+
+	// Check if needs approval
+	needsApproval := !toolDef.ReadOnly
 
 	if !needsApproval {
 		res, err := s.tools.Execute(ctx, tenantID, name, args)
 		// 只读工具执行也记录审计（AGENTS.md: AI tool invocation must produce audit logs）
+		// P2-6: 同步写入 RBAC 校验结果字段
 		if err == nil {
-			argsStr, _ := json.Marshal(args)
-			_, _ = s.repo.CreateToolInvocation(ctx, &ToolInvocation{
-				TenantID:      tenantID,
-				ToolName:      name,
-				Arguments:     string(argsStr),
-				Status:        "executed",
-				NeedsApproval: false,
-				ApprovalState: "auto",
-			})
+			s.recordToolAudit(ctx, tenantID, userID, role, name, args, permCheck, permReason, "executed", nil, false)
 		}
 		return res, 0, err
 	}
 
-	// Create pending invocation
+	// 写工具：创建 pending invocation，等待审批
 	argsStr, _ := json.Marshal(args)
 	inv, err := s.repo.CreateToolInvocation(ctx, &ToolInvocation{
-		TenantID:      tenantID,
-		ToolName:      name,
-		Arguments:     string(argsStr),
-		Status:        "pending",
-		NeedsApproval: true,
-		ApprovalState: "pending",
+		TenantID:          tenantID,
+		ToolName:          name,
+		Arguments:         string(argsStr),
+		Status:            "pending",
+		NeedsApproval:     true,
+		ApprovalState:     "pending",
+		UserID:            userID,
+		PermissionCheck:   permCheck,
+		PermissionReason:  permReason,
+		RoleSnapshot:      role,
 	})
 	if err != nil {
 		return nil, 0, err
 	}
 
 	return nil, inv.ID, nil
+}
+
+// recordToolAudit 统一记录只读工具执行审计，包含 P2-6 RBAC 校验结果
+func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, role, toolName string, args map[string]interface{}, permCheck, permReason, status string, result *string, needsApproval bool) {
+	argsStr, _ := json.Marshal(args)
+	_, _ = s.repo.CreateToolInvocation(ctx, &ToolInvocation{
+		TenantID:          tenantID,
+		ToolName:          toolName,
+		Arguments:         string(argsStr),
+		Status:            status,
+		NeedsApproval:     needsApproval,
+		ApprovalState:     "auto",
+		UserID:            userID,
+		PermissionCheck:   permCheck,
+		PermissionReason:  permReason,
+		RoleSnapshot:      role,
+	})
 }
 
 func (s *Service) ApproveTool(ctx context.Context, id int, tenantID, userID int, approve bool, reason string) (string, error) {
