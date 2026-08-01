@@ -1,7 +1,6 @@
 module itsm-backend
 
-go 1.25.12
-toolchain go1.25.12
+go 1.25.6
 
 // Replace itsm-backend imports to use local packages
 replace github.com/heidsoft/itsm/itsm-backend => ./
