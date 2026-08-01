@@ -21,10 +21,12 @@ export class AuthService {
 
     const data = await response.json();
     // 不将令牌/用户信息写入 localStorage（避免 XSS 窃取）。
-    // 令牌由后端 httpOnly cookie 管理；前端仅设置 auth-token cookie 供 middleware 路由守卫使用。
+    // 令牌由后端 httpOnly cookie 管理；前端仅写入 auth-token 标记位供 middleware 路由守卫使用。
     if (typeof window !== 'undefined' && data.token) {
       const secure = location.protocol === 'https:' ? '; Secure' : '';
-      document.cookie = `auth-token=${data.token}; path=/; max-age=0; SameSite=Lax${secure}`;
+      // 仅写入标记位（非真值 token），供 middleware 路由守卫判断登录态
+      // 真值 token 由后端 httpOnly cookie 管理，JS 不可读，防 XSS 窃取
+      document.cookie = `auth-token=1; path=/; max-age=0; SameSite=Lax${secure}`;
     }
     if (data.user) {
       const { login } = useAuthStore.getState();
@@ -66,9 +68,9 @@ export class AuthService {
     return null;
   }
 
-  // 设置tokens
-  // 注意: access_token存储在localStorage用于Authorization header
-  // 同时后端也会设置httpOnly cookie作为安全备份
+  // 设置tokens（空实现，保留向后兼容）
+  // 安全：access_token 由后端 httpOnly cookie 管理，前端不存储 token 真值
+  // middleware 路由守卫依赖 auth-token 标记位 cookie（非真值）
   static setTokens(accessToken: string, refreshToken: string) {
     void accessToken;
     void refreshToken;
@@ -205,7 +207,8 @@ export class AuthService {
       if (typeof window !== 'undefined' && data.accessToken) {
         const cookieMaxAge = rememberMe ? 7 * 24 * 60 * 60 : 0; // 7天或会话级
         const secure = location.protocol === 'https:' ? '; Secure' : '';
-        document.cookie = `auth-token=${data.accessToken}; path=/; max-age=${cookieMaxAge}; SameSite=Lax${secure}`;
+        // 仅写入 auth-token 标记位供 middleware 路由守卫使用，不写真值 token
+        document.cookie = `auth-token=1; path=/; max-age=${cookieMaxAge}; SameSite=Lax${secure}`;
       }
 
       // 使用store管理登录状态

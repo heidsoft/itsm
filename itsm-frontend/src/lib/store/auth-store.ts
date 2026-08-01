@@ -151,10 +151,10 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       partialize: state => ({
-        user: state.user,
+        // 安全：不持久化 user（含 PII/permissions），避免 XSS 读取与跨用户残留
         token: null, // token 在 httpOnly cookie 中，不持久化
         currentTenant: state.currentTenant,
-        // 不持久化 isAuthenticated，由启动时的 /api/v1/auth/me 探活接口决定
+        // 不持久化 isAuthenticated/user，由启动时的 /api/v1/auth/me 探活接口决定
         // 避免 cookie 过期后前端仍显示已登录的伪登录态
       }),
       skipHydration: true, // 手动处理 SSR hydration

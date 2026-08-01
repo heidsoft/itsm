@@ -324,10 +324,25 @@ describe('WorkflowApi', () => {
   });
 
   describe('validateWorkflow', () => {
-    it('should return valid result', async () => {
+    it('should return backend validation result when API succeeds', async () => {
+      (httpClient.post as jest.Mock).mockResolvedValueOnce({ isValid: true, errors: [], warnings: [] });
       const result = await WorkflowApi.validateWorkflow({ name: 'Test' } as any);
       expect(result.isValid).toBe(true);
       expect(result.errors).toEqual([]);
+    });
+
+    it('should fallback to frontend validation when API fails', async () => {
+      (httpClient.post as jest.Mock).mockRejectedValueOnce(new Error('not supported'));
+      const result = await WorkflowApi.validateWorkflow({ id: 'wf1', name: 'Test', nodes: [{ id: 'n1' }] } as any);
+      expect(result.isValid).toBe(true);
+      expect(result.warnings.length).toBeGreaterThan(0);
+    });
+
+    it('should report errors for invalid workflow in fallback', async () => {
+      (httpClient.post as jest.Mock).mockRejectedValueOnce(new Error('not supported'));
+      const result = await WorkflowApi.validateWorkflow({} as any);
+      expect(result.isValid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(0);
     });
   });
 
@@ -494,10 +509,22 @@ describe('WorkflowApi', () => {
   });
 
   describe('getWorkflowStats', () => {
-    it('should return mock stats', async () => {
+    it('should fetch stats from backend API', async () => {
+      const mockStats = {
+        workflowId: 'wf1',
+        totalInstances: 10,
+        runningInstances: 2,
+        completedInstances: 7,
+        failedInstances: 1,
+        avgDuration: 3600,
+        successRate: 0.7,
+        bottlenecks: [],
+      };
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockStats);
       const result = await WorkflowApi.getWorkflowStats('wf1');
       expect(result.workflowId).toBe('wf1');
-      expect(result.totalInstances).toBe(0);
+      expect(result.totalInstances).toBe(10);
+      expect(httpClient.get).toHaveBeenCalledWith('/api/v1/workflows/wf1/stats', undefined);
     });
   });
 

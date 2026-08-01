@@ -19,7 +19,7 @@ import type {
   NodeExecutionStats,
   InstanceStats,
 } from '@/types/workflow';
-import { WorkflowStatus, WorkflowType, WorkflowInstanceStatus } from '@/types/workflow';
+import { WorkflowStatus, WorkflowType, WorkflowInstanceStatus, ValidationError } from '@/types/workflow';
 
 // Re-export commonly used workflow types for page imports
 export type {
@@ -559,8 +559,27 @@ export class WorkflowApi {
    * 验证工作流
    */
   static async validateWorkflow(workflow: Partial<WorkflowDefinition>): Promise<ValidationResult> {
-    // Mock validation or call backend if supported
-    return { isValid: true, errors: [], warnings: [] };
+    // 调用后端校验接口；后端暂未提供时降级为前端基础结构校验
+    try {
+      return await httpClient.post(`/api/v1/workflows/validate`, workflow);
+    } catch {
+      // 降级：前端基础结构校验（非空、节点存在）
+      const errors: ValidationError[] = [];
+      const warnings: ValidationError[] = [];
+      if (!workflow.id) {
+        errors.push({ type: 'error', message: '工作流 ID 不能为空' });
+      }
+      if (!workflow.name) {
+        errors.push({ type: 'error', message: '工作流名称不能为空' });
+      }
+      if (!workflow.nodes?.length) {
+        errors.push({ type: 'error', message: '工作流必须包含至少一个节点' });
+      }
+      if (workflow.nodes?.length && !workflow.connections?.length) {
+        warnings.push({ type: 'warning', message: '工作流有节点但无连线，请确认流程是否完整' });
+      }
+      return { isValid: errors.length === 0, errors, warnings };
+    }
   }
 
   /**
@@ -1147,22 +1166,7 @@ export class WorkflowApi {
       endDate?: string;
     }
   ): Promise<WorkflowStats> {
-    // return httpClient.get(`/api/v1/workflows/${workflowId}/stats`, params);
-    // Return mock for now
-     
-    const _unused = workflowId;
-     
-    const _unused2 = params;
-    return {
-      workflowId,
-      totalInstances: 0,
-      runningInstances: 0,
-      completedInstances: 0,
-      failedInstances: 0,
-      avgDuration: 0,
-      successRate: 0,
-      bottlenecks: [],
-    };
+    return httpClient.get(`/api/v1/workflows/${workflowId}/stats`, params);
   }
 
   /**
