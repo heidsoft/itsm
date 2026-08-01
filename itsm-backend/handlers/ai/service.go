@@ -87,6 +87,18 @@ func (s *Service) ExecuteTool(ctx context.Context, tenantID int, name string, ar
 
 	if !needsApproval {
 		res, err := s.tools.Execute(ctx, tenantID, name, args)
+		// 只读工具执行也记录审计（AGENTS.md: AI tool invocation must produce audit logs）
+		if err == nil {
+			argsStr, _ := json.Marshal(args)
+			_, _ = s.repo.CreateToolInvocation(ctx, &ToolInvocation{
+				TenantID:      tenantID,
+				ToolName:      name,
+				Arguments:     string(argsStr),
+				Status:        "executed",
+				NeedsApproval: false,
+				ApprovalState: "auto",
+			})
+		}
 		return res, 0, err
 	}
 
