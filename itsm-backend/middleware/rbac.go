@@ -952,6 +952,12 @@ func hasPermission(client *ent.Client, role, method, path string, userID, tenant
 	return SmartCheckPermission(c, db, client, role, method, path, tenantID)
 }
 
+// HasResourcePermission 检查角色是否有指定资源的操作权限（导出供 AI 工具 RBAC 校验复用）
+// P2-6: AI 工具执行前的 Gate 2 校验入口
+func HasResourcePermission(client *ent.Client, role, resource, action string, tenantID int) bool {
+	return hasResourcePermission(client, role, resource, action, tenantID)
+}
+
 // hasResourcePermission 检查角色是否有指定资源的操作权限（支持多种配置模式）
 func hasResourcePermission(client *ent.Client, role, resource, action string, tenantID int) bool {
 	// 超级管理员拥有所有权限

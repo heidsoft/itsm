@@ -8,6 +8,7 @@ import (
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/toolinvocation"
+	"itsm-backend/ent/user"
 	"math"
 
 	"entgo.io/ent"
@@ -24,6 +25,7 @@ type ToolInvocationQuery struct {
 	inters           []Interceptor
 	predicates       []predicate.ToolInvocation
 	withConversation *ConversationQuery
+	withUser         *UserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,6 +77,28 @@ func (_q *ToolInvocationQuery) QueryConversation() *ConversationQuery {
 			sqlgraph.From(toolinvocation.Table, toolinvocation.FieldID, selector),
 			sqlgraph.To(conversation.Table, conversation.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, toolinvocation.ConversationTable, toolinvocation.ConversationColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUser chains the current query on the "user" edge.
+func (_q *ToolInvocationQuery) QueryUser() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(toolinvocation.Table, toolinvocation.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, toolinvocation.UserTable, toolinvocation.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -275,6 +299,7 @@ func (_q *ToolInvocationQuery) Clone() *ToolInvocationQuery {
 		inters:           append([]Interceptor{}, _q.inters...),
 		predicates:       append([]predicate.ToolInvocation{}, _q.predicates...),
 		withConversation: _q.withConversation.Clone(),
+		withUser:         _q.withUser.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -289,6 +314,17 @@ func (_q *ToolInvocationQuery) WithConversation(opts ...func(*ConversationQuery)
 		opt(query)
 	}
 	_q.withConversation = query
+	return _q
+}
+
+// WithUser tells the query-builder to eager-load the nodes that are connected to
+// the "user" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ToolInvocationQuery) WithUser(opts ...func(*UserQuery)) *ToolInvocationQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUser = query
 	return _q
 }
 
@@ -370,8 +406,9 @@ func (_q *ToolInvocationQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	var (
 		nodes       = []*ToolInvocation{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withConversation != nil,
+			_q.withUser != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -395,6 +432,12 @@ func (_q *ToolInvocationQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	if query := _q.withConversation; query != nil {
 		if err := _q.loadConversation(ctx, query, nodes, nil,
 			func(n *ToolInvocation, e *Conversation) { n.Edges.Conversation = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUser; query != nil {
+		if err := _q.loadUser(ctx, query, nodes, nil,
+			func(n *ToolInvocation, e *User) { n.Edges.User = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -430,6 +473,35 @@ func (_q *ToolInvocationQuery) loadConversation(ctx context.Context, query *Conv
 	}
 	return nil
 }
+func (_q *ToolInvocationQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*ToolInvocation, init func(*ToolInvocation), assign func(*ToolInvocation, *User)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*ToolInvocation)
+	for i := range nodes {
+		fk := nodes[i].UserID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (_q *ToolInvocationQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -458,6 +530,9 @@ func (_q *ToolInvocationQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withConversation != nil {
 			_spec.Node.AddColumnOnce(toolinvocation.FieldConversationID)
+		}
+		if _q.withUser != nil {
+			_spec.Node.AddColumnOnce(toolinvocation.FieldUserID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

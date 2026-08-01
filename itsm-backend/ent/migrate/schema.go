@@ -4478,7 +4478,11 @@ var (
 		{Name: "approved_at", Type: field.TypeTime, Nullable: true},
 		{Name: "dry_run", Type: field.TypeBool, Default: false},
 		{Name: "error", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "permission_check", Type: field.TypeString, Default: "skipped"},
+		{Name: "permission_reason", Type: field.TypeString, Default: ""},
+		{Name: "role_snapshot", Type: field.TypeString, Default: ""},
 		{Name: "conversation_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
 	}
 	// ToolInvocationsTable holds the schema information for the "tool_invocations" table.
 	ToolInvocationsTable = &schema.Table{
@@ -4488,8 +4492,14 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tool_invocations_conversations_tool_invocations",
-				Columns:    []*schema.Column{ToolInvocationsColumns[15]},
+				Columns:    []*schema.Column{ToolInvocationsColumns[18]},
 				RefColumns: []*schema.Column{ConversationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tool_invocations_users_tool_invocations",
+				Columns:    []*schema.Column{ToolInvocationsColumns[19]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -5330,6 +5340,7 @@ func init() {
 	TicketViewsTable.ForeignKeys[0].RefTable = UsersTable
 	TicketWorkflowRecordsTable.ForeignKeys[0].RefTable = TicketsTable
 	ToolInvocationsTable.ForeignKeys[0].RefTable = ConversationsTable
+	ToolInvocationsTable.ForeignKeys[1].RefTable = UsersTable
 	UsersTable.ForeignKeys[0].RefTable = AssetsTable
 	UsersTable.ForeignKeys[1].RefTable = DepartmentsTable
 	UsersTable.ForeignKeys[2].RefTable = GroupsTable

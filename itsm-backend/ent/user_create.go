@@ -20,6 +20,7 @@ import (
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
+	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
 	"time"
 
@@ -435,6 +436,21 @@ func (_c *UserCreate) AddPirReviews(v ...*ChangePIR) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddPirReviewIDs(ids...)
+}
+
+// AddToolInvocationIDs adds the "tool_invocations" edge to the ToolInvocation entity by IDs.
+func (_c *UserCreate) AddToolInvocationIDs(ids ...int) *UserCreate {
+	_c.mutation.AddToolInvocationIDs(ids...)
+	return _c
+}
+
+// AddToolInvocations adds the "tool_invocations" edges to the ToolInvocation entity.
+func (_c *UserCreate) AddToolInvocations(v ...*ToolInvocation) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddToolInvocationIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -881,6 +897,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ToolInvocationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ToolInvocationsTable,
+			Columns: []string{user.ToolInvocationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(toolinvocation.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

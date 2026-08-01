@@ -29,6 +29,18 @@ func NewToolRegistry(rag *RAGService, incident *IncidentService, cmdb *Configura
 	return &ToolRegistry{rag: rag, incident: incident, cmdb: cmdb, client: client}
 }
 
+// GetTool 按名称查找工具定义，找不到返回 nil
+// P2-6: AI 工具 RBAC 校验入口需要查询 ToolDefinition.Resource/Action
+func (t *ToolRegistry) GetTool(name string) *ToolDefinition {
+	for _, td := range t.ListTools() {
+		if td.Name == name {
+			tdCopy := td
+			return &tdCopy
+		}
+	}
+	return nil
+}
+
 func (t *ToolRegistry) ListTools() []ToolDefinition {
 	return []ToolDefinition{
 		{

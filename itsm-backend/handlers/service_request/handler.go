@@ -123,13 +123,13 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
 		common.Fail(c, 2001, "Tenant ID missing")
 		return
 	}
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := c.GetInt("user_id")
+	if userID == 0 {
 		common.Fail(c, 2001, "User ID missing")
 		return
 	}
@@ -148,13 +148,13 @@ func (h *Handler) Create(c *gin.Context) {
 		ExpireAt:           expireAt,
 	}
 
-	created, err := h.service.Create(c.Request.Context(), tenantID.(int), userID.(int), req.CatalogID, domainReq)
+	created, err := h.service.Create(c.Request.Context(), tenantID, userID, req.CatalogID, domainReq)
 	if err != nil {
 		failServiceRequest(c, err)
 		return
 	}
 
-	fullReq, approvals, err := h.service.Get(c.Request.Context(), created.ID, tenantID.(int))
+	fullReq, approvals, err := h.service.Get(c.Request.Context(), created.ID, tenantID)
 	if err != nil {
 		h.service.logger.Errorw("Create: failed to get created service request", "error", err, "id", created.ID)
 		// Return the created object even if Get fails - created.ID is valid
@@ -171,9 +171,9 @@ func (h *Handler) Get(c *gin.Context) {
 		common.Fail(c, 1001, "Invalid ID")
 		return
 	}
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
-	req, approvals, err := h.service.Get(c.Request.Context(), id, tenantID.(int))
+	req, approvals, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, 404, "Not Found")
@@ -193,20 +193,17 @@ func (h *Handler) List(c *gin.Context) {
 		common.Fail(c, 1001, "Invalid parameters")
 		return
 	}
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	// If listing "me", we need user ID
 	userID := 0
 	if c.Request.URL.Path == "/me" || c.Query("scope") == "me" {
-		uid, exists := c.Get("user_id")
-		if exists {
-			userID = uid.(int)
-		}
+		userID = c.GetInt("user_id")
 	}
 	// For compatibility with legacy controller which injects UserID from token into DTO if needed
 	if req.UserID == 0 && (c.Request.URL.Path == "/api/v1/service-requests/me" || strings.Contains(c.Request.URL.Path, "/me")) {
-		uid, _ := c.Get("user_id")
-		userID = uid.(int)
+		uid := c.GetInt("user_id")
+		userID = uid
 	}
 
 	filters := ListFilters{
@@ -222,7 +219,7 @@ func (h *Handler) List(c *gin.Context) {
 		filters.Size = 10
 	}
 
-	list, total, err := h.service.List(c.Request.Context(), tenantID.(int), filters)
+	list, total, err := h.service.List(c.Request.Context(), tenantID, filters)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -255,15 +252,15 @@ func (h *Handler) ApplyApproval(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	userID, _ := c.Get("user_id")
+	tenantID := c.GetInt("tenant_id")
+	userID := c.GetInt("user_id")
 	role, _ := c.Get("role")
 	dept, _ := c.Get("department")
 
 	roleStr, _ := role.(string)
 	deptStr, _ := dept.(string)
 
-	res, approvals, err := h.service.ApplyApproval(c.Request.Context(), id, tenantID.(int), userID.(int), req.Action, req.Comment, roleStr, deptStr)
+	res, approvals, err := h.service.ApplyApproval(c.Request.Context(), id, tenantID, userID, req.Action, req.Comment, roleStr, deptStr)
 	if err != nil {
 		failServiceRequest(c, err)
 		return
@@ -278,8 +275,8 @@ func (h *Handler) ListPending(c *gin.Context) {
 		common.Fail(c, 1001, "Invalid parameters")
 		return
 	}
-	tenantID, _ := c.Get("tenant_id")
-	userID, _ := c.Get("user_id")
+	tenantID := c.GetInt("tenant_id")
+	userID := c.GetInt("user_id")
 	role, _ := c.Get("role")
 	roleStr, _ := role.(string)
 
@@ -290,7 +287,7 @@ func (h *Handler) ListPending(c *gin.Context) {
 		req.Size = 10
 	}
 
-	list, total, err := h.service.ListPendingApprovals(c.Request.Context(), tenantID.(int), userID.(int), roleStr, req.Page, req.Size)
+	list, total, err := h.service.ListPendingApprovals(c.Request.Context(), tenantID, userID, roleStr, req.Page, req.Size)
 	if err != nil {
 		failServiceRequest(c, err)
 		return
@@ -324,8 +321,8 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
 		common.Fail(c, 2001, "Tenant ID missing")
 		return
 	}
@@ -357,13 +354,13 @@ func (h *Handler) Update(c *gin.Context) {
 
 	userID := c.GetInt("user_id")
 	role := c.GetString("role")
-	updated, err := h.service.Update(c.Request.Context(), id, tenantID.(int), userID, role, domainReq)
+	updated, err := h.service.Update(c.Request.Context(), id, tenantID, userID, role, domainReq)
 	if err != nil {
 		failServiceRequest(c, err)
 		return
 	}
 
-	fullReq, approvals, _ := h.service.Get(c.Request.Context(), updated.ID, tenantID.(int))
+	fullReq, approvals, _ := h.service.Get(c.Request.Context(), updated.ID, tenantID)
 	common.Success(c, h.toDTO(fullReq, approvals))
 }
 
@@ -386,20 +383,20 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
 		common.Fail(c, 2001, "Tenant ID missing")
 		return
 	}
 
 	userID := c.GetInt("user_id")
 	role := c.GetString("role")
-	if err := h.service.UpdateStatus(c.Request.Context(), id, tenantID.(int), userID, role, status); err != nil {
+	if err := h.service.UpdateStatus(c.Request.Context(), id, tenantID, userID, role, status); err != nil {
 		failServiceRequest(c, err)
 		return
 	}
 
-	fullReq, approvals, err := h.service.Get(c.Request.Context(), id, tenantID.(int))
+	fullReq, approvals, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Success(c, gin.H{"id": id, "status": status})
 		return
@@ -415,13 +412,13 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
 		common.Fail(c, 2001, "Tenant ID missing")
 		return
 	}
 
-	err = h.service.Delete(c.Request.Context(), id, tenantID.(int), c.GetInt("user_id"), c.GetString("role"))
+	err = h.service.Delete(c.Request.Context(), id, tenantID, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		failServiceRequest(c, err)
 		return

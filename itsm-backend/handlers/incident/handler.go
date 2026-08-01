@@ -33,13 +33,13 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
 		common.Fail(c, common.AuthErrorCode, "Tenant ID missing")
 		return
 	}
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := c.GetInt("user_id")
+	if userID == 0 {
 		common.Fail(c, common.AuthErrorCode, "User ID missing")
 		return
 	}
@@ -54,7 +54,7 @@ func (h *Handler) Create(c *gin.Context) {
 		ImpactAnalysis: dto.StructToMap(req.ImpactAnalysis),
 		Source:         req.Source,
 		Metadata:       req.Metadata,
-		ReporterID:     userID.(int),
+		ReporterID:     userID,
 		IsAutomated:    false,
 	}
 
@@ -65,7 +65,7 @@ func (h *Handler) Create(c *gin.Context) {
 		incident.DetectedAt = *req.DetectedAt
 	}
 
-	created, err := h.service.Create(c.Request.Context(), tenantID.(int), incident)
+	created, err := h.service.Create(c.Request.Context(), tenantID, incident)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -83,8 +83,8 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	incident, err := h.service.Get(c.Request.Context(), id, tenantID.(int))
+	tenantID := c.GetInt("tenant_id")
+	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Incident not found")
@@ -101,7 +101,7 @@ func (h *Handler) Get(c *gin.Context) {
 func (h *Handler) List(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	filters := make(map[string]interface{})
 	if v := c.Query("status"); v != "" {
@@ -116,11 +116,11 @@ func (h *Handler) List(c *gin.Context) {
 
 	// Scope handling (optional, if we want my incidents)
 	if c.Query("scope") == "me" || strings.Contains(c.Request.URL.Path, "/me") {
-		userID, _ := c.Get("user_id")
-		filters["assignee_id"] = userID.(int) // Service needs to support this filter
+		userID := c.GetInt("user_id")
+		filters["assignee_id"] = userID // Service needs to support this filter
 	}
 
-	incidents, total, err := h.service.List(c.Request.Context(), tenantID.(int), page, size, filters)
+	incidents, total, err := h.service.List(c.Request.Context(), tenantID, page, size, filters)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -152,7 +152,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	updates := &Incident{}
 	if req.Title != nil {
@@ -192,7 +192,7 @@ func (h *Handler) Update(c *gin.Context) {
 		updates.ResolutionSteps = dto.StructSliceToMapSlice(req.ResolutionSteps)
 	}
 
-	updated, err := h.service.Update(c.Request.Context(), tenantID.(int), id, updates)
+	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -216,9 +216,9 @@ func (h *Handler) Escalate(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
-	updated, err := h.service.Escalate(c.Request.Context(), tenantID.(int), id, req.EscalationLevel, req.Reason)
+	updated, err := h.service.Escalate(c.Request.Context(), tenantID, id, req.EscalationLevel, req.Reason)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -280,8 +280,7 @@ func (h *Handler) toDTO(i *Incident) *dto.IncidentResponse {
 
 // GetStats 获取事件统计数据（兼容前端）
 func (h *Handler) GetStats(c *gin.Context) {
-	tenantID, _ := c.Get("tenant_id")
-	tenantIDInt := tenantID.(int)
+		tenantIDInt := c.GetInt("tenant_id")
 
 	client, exists := c.Get("client")
 	if !exists {
@@ -396,8 +395,8 @@ func (h *Handler) GetRootCause(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	incident, err := h.service.Get(c.Request.Context(), id, tenantID.(int))
+	tenantID := c.GetInt("tenant_id")
+	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		return
@@ -427,13 +426,13 @@ func (h *Handler) UpdateRootCause(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 	updates := &Incident{}
 	if req.RootCause != nil {
 		updates.RootCause = req.RootCause
 	}
 
-	_, err = h.service.Update(c.Request.Context(), tenantID.(int), id, updates)
+	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -451,8 +450,8 @@ func (h *Handler) GetImpactAssessment(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	incident, err := h.service.Get(c.Request.Context(), id, tenantID.(int))
+	tenantID := c.GetInt("tenant_id")
+	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		return
@@ -481,13 +480,13 @@ func (h *Handler) UpdateImpactAssessment(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 	updates := &Incident{}
 	if req.ImpactAnalysis != nil {
 		updates.ImpactAnalysis = req.ImpactAnalysis
 	}
 
-	_, err = h.service.Update(c.Request.Context(), tenantID.(int), id, updates)
+	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -505,8 +504,8 @@ func (h *Handler) GetClassification(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	incident, err := h.service.Get(c.Request.Context(), id, tenantID.(int))
+	tenantID := c.GetInt("tenant_id")
+	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		return
@@ -537,10 +536,10 @@ func (h *Handler) UpdateClassification(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 	updates := &Incident{Category: req.Category, Subcategory: req.Subcategory}
 
-	_, err = h.service.Update(c.Request.Context(), tenantID.(int), id, updates)
+	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -558,7 +557,7 @@ func (h *Handler) GetIncidentEvents(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 	client, exists := c.Get("client")
 	if !exists {
 		common.Fail(c, common.InternalErrorCode, "Database client not found")
@@ -568,7 +567,7 @@ func (h *Handler) GetIncidentEvents(c *gin.Context) {
 
 	// 使用 Edge 查询事件活动记录
 	inc, err := entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID.(int))).
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
 		WithIncidentEvents().
 		Only(c.Request.Context())
 	if err != nil {
@@ -601,7 +600,7 @@ func (h *Handler) GetIncidentAlerts(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 	client, exists := c.Get("client")
 	if !exists {
 		common.Fail(c, common.InternalErrorCode, "Database client not found")
@@ -611,7 +610,7 @@ func (h *Handler) GetIncidentAlerts(c *gin.Context) {
 
 	// 使用 Edge 查询事件告警
 	inc, err := entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID.(int))).
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
 		WithIncidentAlerts().
 		Only(c.Request.Context())
 	if err != nil {
@@ -644,7 +643,7 @@ func (h *Handler) GetIncidentMetrics(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 	client, exists := c.Get("client")
 	if !exists {
 		common.Fail(c, common.InternalErrorCode, "Database client not found")
@@ -654,7 +653,7 @@ func (h *Handler) GetIncidentMetrics(c *gin.Context) {
 
 	// 获取事件信息及指标
 	inc, err := entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID.(int))).
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
 		WithIncidentMetrics().
 		Only(c.Request.Context())
 	if err != nil {
@@ -673,7 +672,7 @@ func (h *Handler) GetIncidentMetrics(c *gin.Context) {
 	// 获取 SLA 违规数（按租户过滤）
 	// 注意：SLAViolation 关联的是 ticket，如需关联 incident 需要通过 ticket 过滤
 	violations, err := entClient.SLAViolation.Query().
-		Where(slaviolation.TenantIDEQ(tenantID.(int))).
+		Where(slaviolation.TenantIDEQ(tenantID)).
 		Count(c.Request.Context())
 	if err != nil {
 		zap.S().Errorw("GetIncidentMetrics: failed to count SLA violations", "error", err)
@@ -701,7 +700,7 @@ func (h *Handler) GetIncidentComments(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 	client, exists := c.Get("client")
 	if !exists {
 		common.Fail(c, common.InternalErrorCode, "Database client not found")
@@ -711,7 +710,7 @@ func (h *Handler) GetIncidentComments(c *gin.Context) {
 
 	// 验证事件存在且属于该租户
 	_, err = entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID.(int))).
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
 		Only(c.Request.Context())
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -726,7 +725,7 @@ func (h *Handler) GetIncidentComments(c *gin.Context) {
 	events, err := entClient.IncidentEvent.Query().
 		Where(
 			incidentevent.IncidentIDEQ(id),
-			incidentevent.TenantIDEQ(tenantID.(int)),
+			incidentevent.TenantIDEQ(tenantID),
 			incidentevent.EventType("comment"),
 		).
 		WithIncident().
@@ -776,8 +775,8 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	userID, _ := c.Get("user_id")
+	tenantID := c.GetInt("tenant_id")
+	userID := c.GetInt("user_id")
 	client, exists := c.Get("client")
 	if !exists {
 		common.Fail(c, common.InternalErrorCode, "Database client not found")
@@ -787,7 +786,7 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 
 	// 验证事件存在且属于该租户
 	_, err = entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID.(int))).
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
 		Only(c.Request.Context())
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -806,10 +805,10 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 		SetEventName("用户评论").
 		SetDescription(req.Content).
 		SetStatus("active").
-		SetUserID(userID.(int)).
+		SetUserID(userID).
 		SetSource("user").
 		SetData(data).
-		SetTenantID(tenantID.(int)).
+		SetTenantID(tenantID).
 		SetOccurredAt(time.Now()).
 		Save(c.Request.Context())
 	if err != nil {

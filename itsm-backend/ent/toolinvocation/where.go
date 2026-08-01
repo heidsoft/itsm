@@ -130,6 +130,26 @@ func Error(v string) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldEQ(FieldError, v))
 }
 
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldUserID, v))
+}
+
+// PermissionCheck applies equality check predicate on the "permission_check" field. It's identical to PermissionCheckEQ.
+func PermissionCheck(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldPermissionCheck, v))
+}
+
+// PermissionReason applies equality check predicate on the "permission_reason" field. It's identical to PermissionReasonEQ.
+func PermissionReason(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldPermissionReason, v))
+}
+
+// RoleSnapshot applies equality check predicate on the "role_snapshot" field. It's identical to RoleSnapshotEQ.
+func RoleSnapshot(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldRoleSnapshot, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldEQ(FieldCreatedAt, v))
@@ -910,6 +930,231 @@ func ErrorContainsFold(v string) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldContainsFold(FieldError, v))
 }
 
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldUserID, v))
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNEQ(FieldUserID, v))
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIn(FieldUserID, vs...))
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotIn(FieldUserID, vs...))
+}
+
+// UserIDIsNil applies the IsNil predicate on the "user_id" field.
+func UserIDIsNil() predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIsNull(FieldUserID))
+}
+
+// UserIDNotNil applies the NotNil predicate on the "user_id" field.
+func UserIDNotNil() predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotNull(FieldUserID))
+}
+
+// PermissionCheckEQ applies the EQ predicate on the "permission_check" field.
+func PermissionCheckEQ(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldPermissionCheck, v))
+}
+
+// PermissionCheckNEQ applies the NEQ predicate on the "permission_check" field.
+func PermissionCheckNEQ(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNEQ(FieldPermissionCheck, v))
+}
+
+// PermissionCheckIn applies the In predicate on the "permission_check" field.
+func PermissionCheckIn(vs ...string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIn(FieldPermissionCheck, vs...))
+}
+
+// PermissionCheckNotIn applies the NotIn predicate on the "permission_check" field.
+func PermissionCheckNotIn(vs ...string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotIn(FieldPermissionCheck, vs...))
+}
+
+// PermissionCheckGT applies the GT predicate on the "permission_check" field.
+func PermissionCheckGT(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGT(FieldPermissionCheck, v))
+}
+
+// PermissionCheckGTE applies the GTE predicate on the "permission_check" field.
+func PermissionCheckGTE(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGTE(FieldPermissionCheck, v))
+}
+
+// PermissionCheckLT applies the LT predicate on the "permission_check" field.
+func PermissionCheckLT(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLT(FieldPermissionCheck, v))
+}
+
+// PermissionCheckLTE applies the LTE predicate on the "permission_check" field.
+func PermissionCheckLTE(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLTE(FieldPermissionCheck, v))
+}
+
+// PermissionCheckContains applies the Contains predicate on the "permission_check" field.
+func PermissionCheckContains(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldContains(FieldPermissionCheck, v))
+}
+
+// PermissionCheckHasPrefix applies the HasPrefix predicate on the "permission_check" field.
+func PermissionCheckHasPrefix(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldHasPrefix(FieldPermissionCheck, v))
+}
+
+// PermissionCheckHasSuffix applies the HasSuffix predicate on the "permission_check" field.
+func PermissionCheckHasSuffix(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldHasSuffix(FieldPermissionCheck, v))
+}
+
+// PermissionCheckEqualFold applies the EqualFold predicate on the "permission_check" field.
+func PermissionCheckEqualFold(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEqualFold(FieldPermissionCheck, v))
+}
+
+// PermissionCheckContainsFold applies the ContainsFold predicate on the "permission_check" field.
+func PermissionCheckContainsFold(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldContainsFold(FieldPermissionCheck, v))
+}
+
+// PermissionReasonEQ applies the EQ predicate on the "permission_reason" field.
+func PermissionReasonEQ(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldPermissionReason, v))
+}
+
+// PermissionReasonNEQ applies the NEQ predicate on the "permission_reason" field.
+func PermissionReasonNEQ(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNEQ(FieldPermissionReason, v))
+}
+
+// PermissionReasonIn applies the In predicate on the "permission_reason" field.
+func PermissionReasonIn(vs ...string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIn(FieldPermissionReason, vs...))
+}
+
+// PermissionReasonNotIn applies the NotIn predicate on the "permission_reason" field.
+func PermissionReasonNotIn(vs ...string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotIn(FieldPermissionReason, vs...))
+}
+
+// PermissionReasonGT applies the GT predicate on the "permission_reason" field.
+func PermissionReasonGT(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGT(FieldPermissionReason, v))
+}
+
+// PermissionReasonGTE applies the GTE predicate on the "permission_reason" field.
+func PermissionReasonGTE(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGTE(FieldPermissionReason, v))
+}
+
+// PermissionReasonLT applies the LT predicate on the "permission_reason" field.
+func PermissionReasonLT(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLT(FieldPermissionReason, v))
+}
+
+// PermissionReasonLTE applies the LTE predicate on the "permission_reason" field.
+func PermissionReasonLTE(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLTE(FieldPermissionReason, v))
+}
+
+// PermissionReasonContains applies the Contains predicate on the "permission_reason" field.
+func PermissionReasonContains(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldContains(FieldPermissionReason, v))
+}
+
+// PermissionReasonHasPrefix applies the HasPrefix predicate on the "permission_reason" field.
+func PermissionReasonHasPrefix(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldHasPrefix(FieldPermissionReason, v))
+}
+
+// PermissionReasonHasSuffix applies the HasSuffix predicate on the "permission_reason" field.
+func PermissionReasonHasSuffix(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldHasSuffix(FieldPermissionReason, v))
+}
+
+// PermissionReasonEqualFold applies the EqualFold predicate on the "permission_reason" field.
+func PermissionReasonEqualFold(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEqualFold(FieldPermissionReason, v))
+}
+
+// PermissionReasonContainsFold applies the ContainsFold predicate on the "permission_reason" field.
+func PermissionReasonContainsFold(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldContainsFold(FieldPermissionReason, v))
+}
+
+// RoleSnapshotEQ applies the EQ predicate on the "role_snapshot" field.
+func RoleSnapshotEQ(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldRoleSnapshot, v))
+}
+
+// RoleSnapshotNEQ applies the NEQ predicate on the "role_snapshot" field.
+func RoleSnapshotNEQ(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNEQ(FieldRoleSnapshot, v))
+}
+
+// RoleSnapshotIn applies the In predicate on the "role_snapshot" field.
+func RoleSnapshotIn(vs ...string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIn(FieldRoleSnapshot, vs...))
+}
+
+// RoleSnapshotNotIn applies the NotIn predicate on the "role_snapshot" field.
+func RoleSnapshotNotIn(vs ...string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotIn(FieldRoleSnapshot, vs...))
+}
+
+// RoleSnapshotGT applies the GT predicate on the "role_snapshot" field.
+func RoleSnapshotGT(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGT(FieldRoleSnapshot, v))
+}
+
+// RoleSnapshotGTE applies the GTE predicate on the "role_snapshot" field.
+func RoleSnapshotGTE(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGTE(FieldRoleSnapshot, v))
+}
+
+// RoleSnapshotLT applies the LT predicate on the "role_snapshot" field.
+func RoleSnapshotLT(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLT(FieldRoleSnapshot, v))
+}
+
+// RoleSnapshotLTE applies the LTE predicate on the "role_snapshot" field.
+func RoleSnapshotLTE(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLTE(FieldRoleSnapshot, v))
+}
+
+// RoleSnapshotContains applies the Contains predicate on the "role_snapshot" field.
+func RoleSnapshotContains(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldContains(FieldRoleSnapshot, v))
+}
+
+// RoleSnapshotHasPrefix applies the HasPrefix predicate on the "role_snapshot" field.
+func RoleSnapshotHasPrefix(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldHasPrefix(FieldRoleSnapshot, v))
+}
+
+// RoleSnapshotHasSuffix applies the HasSuffix predicate on the "role_snapshot" field.
+func RoleSnapshotHasSuffix(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldHasSuffix(FieldRoleSnapshot, v))
+}
+
+// RoleSnapshotEqualFold applies the EqualFold predicate on the "role_snapshot" field.
+func RoleSnapshotEqualFold(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEqualFold(FieldRoleSnapshot, v))
+}
+
+// RoleSnapshotContainsFold applies the ContainsFold predicate on the "role_snapshot" field.
+func RoleSnapshotContainsFold(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldContainsFold(FieldRoleSnapshot, v))
+}
+
 // HasConversation applies the HasEdge predicate on the "conversation" edge.
 func HasConversation() predicate.ToolInvocation {
 	return predicate.ToolInvocation(func(s *sql.Selector) {
@@ -925,6 +1170,29 @@ func HasConversation() predicate.ToolInvocation {
 func HasConversationWith(preds ...predicate.Conversation) predicate.ToolInvocation {
 	return predicate.ToolInvocation(func(s *sql.Selector) {
 		step := newConversationStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUser applies the HasEdge predicate on the "user" edge.
+func HasUser() predicate.ToolInvocation {
+	return predicate.ToolInvocation(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
+func HasUserWith(preds ...predicate.User) predicate.ToolInvocation {
+	return predicate.ToolInvocation(func(s *sql.Selector) {
+		step := newUserStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

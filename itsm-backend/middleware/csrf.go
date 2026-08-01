@@ -4,10 +4,12 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 const (
@@ -129,9 +131,18 @@ func CSRFProtectionMiddleware(config *CSRFConfig) gin.HandlerFunc {
 
 		// 如果没有 cookie token，说明还没有初始化，先放行让前端获取
 		if cookieToken == "" {
-			// 首次请求或 token 过期，生成新 token
-			GenerateCSRFToken(c, config)
-			c.Next()
+			method := strings.ToUpper(c.Request.Method)
+			// 安全方法（GET/HEAD/OPTIONS）可以生成新 token；写操作必须已有 token，否则拒绝（防止首次 POST 绕过）
+			if method == "GET" || method == "HEAD" || method == "OPTIONS" {
+				GenerateCSRFToken(c, config)
+				c.Next()
+				return
+			}
+			zap.S().Warnw("CSRF: missing csrf cookie for write operation, rejected",
+				"method", method,
+				"path", c.Request.URL.Path,
+				"remote_ip", c.ClientIP())
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": 4031, "message": "CSRF token missing"})
 			return
 		}
 

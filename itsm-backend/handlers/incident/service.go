@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common/tenantctx"
+
 	"go.uber.org/zap"
 )
 
@@ -66,8 +68,8 @@ func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incid
 		TenantID:    tenantID,
 	})
 
-	// Execute Rules Async
-	go s.executeRules(context.Background(), created, tenantID) // Use background context for async
+	// Execute Rules Async（派生带租户上下文的独立 context，避免 RLS enforce 后异步规则失效）
+	go s.executeRules(tenantctx.WithTenantID(context.Background(), tenantID), created, tenantID)
 
 	return created, nil
 }

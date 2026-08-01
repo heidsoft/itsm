@@ -93,10 +93,16 @@ func main() {
 		c.Next()
 	})
 
-	// API Key 认证中间件
+	// API Key 认证中间件：生产/私有部署/SaaS/SaaS-MSP 环境必须显式配置
+	envTier := strings.ToLower(os.Getenv("ENV"))
+	isProdTier := envTier == "production" || envTier == "private" || envTier == "saas" || envTier == "saas_msp"
 	apiKey := os.Getenv("API_KEY")
 	if apiKey == "" {
-		sugar.Warn("API_KEY 环境变量未设置，API 无认证保护！生产环境请务必设置")
+		if isProdTier {
+			sugar.Fatal("API_KEY 环境变量缺失！生产级部署（ENV=production/private/saas/saas_msp）必须设置 API_KEY，拒绝以无认证模式启动")
+		} else {
+			sugar.Warn("API_KEY 环境变量未设置，开发环境下临时以无认证模式启动；生产环境请务必设置")
+		}
 	}
 	r.Use(func(c *gin.Context) {
 		if apiKey == "" {

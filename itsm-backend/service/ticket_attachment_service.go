@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"mime"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -85,7 +86,7 @@ func (s *TicketAttachmentService) UploadAttachment(
 		return nil, fmt.Errorf("file size exceeds maximum allowed size (%d bytes)", s.maxFileSize)
 	}
 
-	// 验证文件类型
+	// 验证文件类型（Client-provided Content-Type 可被伪造，仅作初筛）
 	mimeType := fileHeader.ContentType
 	if mimeType == "" {
 		// 尝试从文件扩展名推断
@@ -97,8 +98,41 @@ func (s *TicketAttachmentService) UploadAttachment(
 		return nil, fmt.Errorf("file type not allowed: %s", mimeType)
 	}
 
-	// 生成唯一文件名
-	fileName := fmt.Sprintf("%d_%d_%s", ticketID, time.Now().Unix(), fileHeader.Filename)
+	// 1) 文件名清洗：拒绝路径遍历/控制字符，限制长度，防止 XSS/覆盖/目录穿越
+	safeName := sanitizeFilename(fileHeader.Filename)
+	if safeName == "" {
+		return nil, fmt.Errorf("invalid filename: empty after sanitization")
+	}
+
+	// 2) Magic bytes / 实际内容嗅探：避免 Content-Type/扩展名 与 真实内容不一致
+	//    从文件头最多读取 512 字节，调用 net/http.DetectContentType。
+	//    注意：fileHeader.Reader 通常是一次性的，因此需要将嗅探过的字节 prepend 回去以便后续 saveFile 读取。
+	if fileHeader.Reader != nil {
+		sniffBuf := make([]byte, 0, 512)
+		tmp := make([]byte, 512)
+		for len(sniffBuf) < 512 {
+			n, rerr := fileHeader.Reader.Read(tmp)
+			if n > 0 {
+				sniffBuf = append(sniffBuf, tmp[:n]...)
+			}
+			if rerr != nil {
+				break
+			}
+		}
+		if len(sniffBuf) > 0 {
+			detected := http.DetectContentType(sniffBuf)
+			// 以 sniff 出的类型为准，校验是否仍在白名单内
+			if !s.isAllowedType(detected) {
+				return nil, fmt.Errorf("detected file type not allowed: %s (claimed: %s)", detected, mimeType)
+			}
+			mimeType = detected
+			// 把嗅探过的字节塞回 Reader 的前面，保证 saveFile 读得到完整内容
+			fileHeader.Reader = &prefixedReader{prefix: sniffBuf, r: fileHeader.Reader}
+		}
+	}
+
+	// 生成唯一文件名（使用清洗后的文件名）
+	fileName := fmt.Sprintf("%d_%d_%s", ticketID, time.Now().Unix(), safeName)
 	filePath := filepath.Join(s.uploadDir, fileName)
 
 	// 保存文件
@@ -365,4 +399,68 @@ func (s *TicketAttachmentService) isAllowedType(mimeType string) bool {
 	}
 
 	return false
+}
+
+// sanitizeFilename cleans an upload filename for safe on-disk + header usage.
+// - disallows path separators, control chars, NUL, leading dots, relative segments
+// - limits length to 200 runes
+func sanitizeFilename(name string) string {
+	if name == "" {
+		return ""
+	}
+	// 路径遍历防御：剥掉任何目录部分
+	name = filepath.Base(name)
+	// 去掉 Windows 驱动器前缀和反斜杠路径段
+	if strings.ContainsRune(name, '\\') {
+		parts := strings.FieldsFunc(name, func(r rune) bool { return r == '\\' })
+		if len(parts) > 0 {
+			name = parts[len(parts)-1]
+		}
+	}
+	// 剥掉控制字符、NUL、以及可能触发 shell/URL 二次解析的危险字符
+	var b strings.Builder
+	for _, r := range name {
+		switch {
+		case r < 0x20 || r == 0x7f:
+			continue // control / DEL
+		case r == '/' || r == '\\' || r == 0:
+			continue
+		case r == '%' || r == '`' || r == '|' || r == '&' || r == ';' || r == '>' || r == '<' || r == '"' || r == '\'' || r == '*' || r == '?':
+			continue
+		}
+		b.WriteRune(r)
+	}
+	out := b.String()
+	out = strings.TrimLeft(out, ". ") // 防 ../ 和 dotfiles
+	if out == "" || out == "." || out == ".." {
+		return ""
+	}
+	// 截断到 200 runes
+	runes := []rune(out)
+	if len(runes) > 200 {
+		out = string(runes[:200])
+	}
+	return out
+}
+
+// prefixedReader prepends sniffed bytes back onto the original reader so
+// downstream consumers of fileHeader.Reader see the full stream.
+type prefixedReader struct {
+	prefix []byte
+	off    int
+	r      io.Reader
+}
+
+func (p *prefixedReader) Read(b []byte) (int, error) {
+	if p.off < len(p.prefix) {
+		n := copy(b, p.prefix[p.off:])
+		p.off += n
+		if n == len(b) {
+			return n, nil
+		}
+		// 继续从底层 reader 填剩下的空间
+		n2, err := p.r.Read(b[n:])
+		return n + n2, err
+	}
+	return p.r.Read(b)
 }

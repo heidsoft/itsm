@@ -49,7 +49,7 @@ func (h *Handler) CreateSLADefinition(c *gin.Context) {
 		return
 	}
 
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 	def := &SLADefinition{
 		Name:            req.Name,
 		Description:     req.Description,
@@ -61,7 +61,7 @@ func (h *Handler) CreateSLADefinition(c *gin.Context) {
 		EscalationRules: req.EscalationRules,
 		Conditions:      req.Conditions,
 		IsActive:        req.IsActive,
-		TenantID:        tenantIDVal.(int),
+		TenantID:        tenantIDVal,
 	}
 
 	res, err := h.svc.CreateDefinition(c.Request.Context(), def)
@@ -77,9 +77,9 @@ func (h *Handler) CreateSLADefinition(c *gin.Context) {
 func (h *Handler) GetSLADefinition(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 
-	res, err := h.svc.GetDefinition(c.Request.Context(), id, tenantIDVal.(int))
+	res, err := h.svc.GetDefinition(c.Request.Context(), id, tenantIDVal)
 	if err != nil {
 		common.NotFound(c, "SLA Definition not found")
 		return
@@ -92,9 +92,9 @@ func (h *Handler) GetSLADefinition(c *gin.Context) {
 func (h *Handler) ListSLADefinitions(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 
-	list, total, err := h.svc.ListDefinitions(c.Request.Context(), tenantIDVal.(int), page, size)
+	list, total, err := h.svc.ListDefinitions(c.Request.Context(), tenantIDVal, page, size)
 	if err != nil {
 		common.InternalError(c, "查询SLA定义列表失败: "+err.Error())
 		return
@@ -117,7 +117,7 @@ func (h *Handler) ListSLADefinitions(c *gin.Context) {
 func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 
 	var req dto.UpdateSLADefinitionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -125,7 +125,7 @@ func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 		return
 	}
 
-	existing, err := h.svc.GetDefinition(c.Request.Context(), id, tenantIDVal.(int))
+	existing, err := h.svc.GetDefinition(c.Request.Context(), id, tenantIDVal)
 	if err != nil {
 		common.NotFound(c, "SLA Definition not found")
 		return
@@ -155,9 +155,9 @@ func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 func (h *Handler) DeleteSLADefinition(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 
-	if err := h.svc.DeleteDefinition(c.Request.Context(), id, tenantIDVal.(int)); err != nil {
+	if err := h.svc.DeleteDefinition(c.Request.Context(), id, tenantIDVal); err != nil {
 		common.InternalError(c, "删除SLA定义失败: "+err.Error())
 		return
 	}
@@ -172,7 +172,7 @@ func (h *Handler) CreateAlertRule(c *gin.Context) {
 		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 	rule := &SLAAlertRule{
 		SLADefinitionID:      req.SLADefinitionID,
 		Name:                 req.Name,
@@ -180,7 +180,7 @@ func (h *Handler) CreateAlertRule(c *gin.Context) {
 		AlertLevel:           req.AlertLevel,
 		NotificationChannels: req.NotificationChannels,
 		IsActive:             req.IsActive,
-		TenantID:             tenantIDVal.(int),
+		TenantID:             tenantIDVal,
 	}
 	res, err := h.svc.CreateAlertRule(c.Request.Context(), rule)
 	if err != nil {
@@ -192,13 +192,13 @@ func (h *Handler) CreateAlertRule(c *gin.Context) {
 
 // ListAlertRules handles GET /api/v1/sla/alert-rules
 func (h *Handler) ListAlertRules(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 	filters := make(map[string]interface{})
 	if slaID := c.Query("sla_definition_id"); slaID != "" {
 		id, _ := strconv.Atoi(slaID)
 		filters["sla_definition_id"] = id
 	}
-	res, err := h.svc.ListAlertRules(c.Request.Context(), tenantIDVal.(int), filters)
+	res, err := h.svc.ListAlertRules(c.Request.Context(), tenantIDVal, filters)
 	if err != nil {
 		common.InternalError(c, "查询SLA告警规则列表失败: "+err.Error())
 		return
@@ -210,9 +210,9 @@ func (h *Handler) ListAlertRules(c *gin.Context) {
 func (h *Handler) GetAlertRule(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 
-	res, err := h.svc.GetAlertRule(c.Request.Context(), id, tenantIDVal.(int))
+	res, err := h.svc.GetAlertRule(c.Request.Context(), id, tenantIDVal)
 	if err != nil {
 		common.NotFound(c, "SLA Alert Rule not found")
 		return
@@ -224,7 +224,7 @@ func (h *Handler) GetAlertRule(c *gin.Context) {
 func (h *Handler) UpdateAlertRule(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 
 	var req dto.UpdateSLAAlertRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -232,7 +232,7 @@ func (h *Handler) UpdateAlertRule(c *gin.Context) {
 		return
 	}
 
-	existing, err := h.svc.GetAlertRule(c.Request.Context(), id, tenantIDVal.(int))
+	existing, err := h.svc.GetAlertRule(c.Request.Context(), id, tenantIDVal)
 	if err != nil {
 		common.NotFound(c, "SLA Alert Rule not found")
 		return
@@ -266,9 +266,9 @@ func (h *Handler) UpdateAlertRule(c *gin.Context) {
 func (h *Handler) DeleteAlertRule(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 
-	if err := h.svc.DeleteAlertRule(c.Request.Context(), id, tenantIDVal.(int)); err != nil {
+	if err := h.svc.DeleteAlertRule(c.Request.Context(), id, tenantIDVal); err != nil {
 		common.InternalError(c, "删除SLA告警规则失败: "+err.Error())
 		return
 	}
@@ -277,7 +277,7 @@ func (h *Handler) DeleteAlertRule(c *gin.Context) {
 
 // GetSLAMetrics handles GET /api/v1/sla/metrics
 func (h *Handler) GetSLAMetrics(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 	filters := make(map[string]interface{})
 	if slaID := c.Query("sla_definition_id"); slaID != "" {
 		id, _ := strconv.Atoi(slaID)
@@ -287,7 +287,7 @@ func (h *Handler) GetSLAMetrics(c *gin.Context) {
 		filters["metric_type"] = metricType
 	}
 
-	res, err := h.svc.GetSLAMetrics(c.Request.Context(), tenantIDVal.(int), filters)
+	res, err := h.svc.GetSLAMetrics(c.Request.Context(), tenantIDVal, filters)
 	if err != nil {
 		common.InternalError(c, "获取SLA指标失败: "+err.Error())
 		return
@@ -300,7 +300,7 @@ func (h *Handler) GetSLAMetrics(c *gin.Context) {
 
 // GetSLAViolations handles GET /api/v1/sla/violations
 func (h *Handler) GetSLAViolations(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 	filters := make(map[string]interface{})
 	if isResolved := c.Query("is_resolved"); isResolved != "" {
 		if val, err := strconv.ParseBool(isResolved); err == nil {
@@ -322,7 +322,7 @@ func (h *Handler) GetSLAViolations(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
 
-	res, total, err := h.svc.GetSLAViolations(c.Request.Context(), tenantIDVal.(int), page, size, filters)
+	res, total, err := h.svc.GetSLAViolations(c.Request.Context(), tenantIDVal, page, size, filters)
 	if err != nil {
 		common.InternalError(c, "查询SLA违规记录失败: "+err.Error())
 		return
@@ -339,7 +339,7 @@ func (h *Handler) GetSLAViolations(c *gin.Context) {
 func (h *Handler) UpdateViolationStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 
 	var req struct {
 		IsResolved bool   `json:"isResolved"`
@@ -350,7 +350,7 @@ func (h *Handler) UpdateViolationStatus(c *gin.Context) {
 		return
 	}
 
-	res, err := h.svc.UpdateSLAViolationStatus(c.Request.Context(), id, req.IsResolved, req.Notes, tenantIDVal.(int))
+	res, err := h.svc.UpdateSLAViolationStatus(c.Request.Context(), id, req.IsResolved, req.Notes, tenantIDVal)
 	if err != nil {
 		common.InternalError(c, "更新SLA违规状态失败: "+err.Error())
 		return
@@ -365,7 +365,7 @@ func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 
 	// Use request times or default to last 30 days
 	startTime := req.StartTime
@@ -377,7 +377,7 @@ func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 		endTime = "now"
 	}
 
-	res, err := h.svc.GetSLAMonitoring(c.Request.Context(), tenantIDVal.(int), startTime, endTime)
+	res, err := h.svc.GetSLAMonitoring(c.Request.Context(), tenantIDVal, startTime, endTime)
 	if err != nil {
 		common.InternalError(c, "获取SLA监控数据失败: "+err.Error())
 		return
@@ -391,9 +391,9 @@ func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 func (h *Handler) CheckSLACompliance(c *gin.Context) {
 	ticketIDStr := c.Param("ticketId")
 	ticketID, _ := strconv.Atoi(ticketIDStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 
-	res, err := h.svc.CheckSLACompliance(c.Request.Context(), ticketID, tenantIDVal.(int))
+	res, err := h.svc.CheckSLACompliance(c.Request.Context(), ticketID, tenantIDVal)
 	if err != nil {
 		common.InternalError(c, "检查SLA合规性失败: "+err.Error())
 		return
@@ -403,7 +403,7 @@ func (h *Handler) CheckSLACompliance(c *gin.Context) {
 
 // GetAlertHistory handles GET /api/v1/sla/alert-history
 func (h *Handler) GetAlertHistory(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal := c.GetInt("tenant_id")
 	filters := make(map[string]interface{})
 	if slaID := c.Query("sla_definition_id"); slaID != "" {
 		if id, _ := strconv.Atoi(slaID); id > 0 {
@@ -422,7 +422,7 @@ func (h *Handler) GetAlertHistory(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 
-	res, total, err := h.svc.GetAlertHistory(c.Request.Context(), tenantIDVal.(int), page, size, filters)
+	res, total, err := h.svc.GetAlertHistory(c.Request.Context(), tenantIDVal, page, size, filters)
 	if err != nil {
 		common.InternalError(c, "查询告警历史失败: "+err.Error())
 		return
@@ -437,8 +437,7 @@ func (h *Handler) GetAlertHistory(c *gin.Context) {
 
 // GetSLAStats handles GET /api/v1/sla/stats
 func (h *Handler) GetSLAStats(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 
 	stats, err := h.svc.GetSLAStats(c.Request.Context(), tenantID)
 	if err != nil {
@@ -451,8 +450,7 @@ func (h *Handler) GetSLAStats(c *gin.Context) {
 
 // GetSLAComplianceReport handles GET /api/v1/sla/compliance-report
 func (h *Handler) GetSLAComplianceReport(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 
 	// Parse query parameters
 	startDateStr := c.Query("start_date")

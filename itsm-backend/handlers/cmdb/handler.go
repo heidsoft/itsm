@@ -90,8 +90,7 @@ func toCloudResourceDTO(resource *CloudResource) *dto.CloudResourceResponse {
 
 // GetReconciliation handles GET /api/v1/cmdb/reconciliation
 func (h *Handler) GetReconciliation(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 
 	result, err := h.svc.GetReconciliation(c.Request.Context(), tenantID)
 	if err != nil {
@@ -132,8 +131,7 @@ func (h *Handler) GetReconciliation(c *gin.Context) {
 
 // Cloud services
 func (h *Handler) ListCloudServices(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	provider := c.Query("provider")
 
 	list, err := h.svc.ListCloudServices(c.Request.Context(), tenantID, provider)
@@ -176,8 +174,7 @@ func (h *Handler) CreateCloudService(c *gin.Context) {
 		common.ParamError(c, err.Error())
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	isActive := true
 	if req.IsActive != nil {
 		isActive = *req.IsActive
@@ -267,8 +264,7 @@ func validateAttributeSchema(schema map[string]interface{}) error {
 
 // Cloud accounts
 func (h *Handler) ListCloudAccounts(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	provider := c.Query("provider")
 
 	list, err := h.svc.ListCloudAccounts(c.Request.Context(), tenantID, provider)
@@ -300,8 +296,7 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	isActive := true
 	if req.IsActive != nil {
 		isActive = *req.IsActive
@@ -336,8 +331,7 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 
 // Cloud resources
 func (h *Handler) ListCloudResources(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	provider := c.Query("provider")
 	// Bug 修复：使用 camelCase serviceId 保持与 API 字段命名约定一致（AGENTS.md）。
 	// 同时兼容旧的 snake_case service_id 查询参数，避免破坏现有调用方。
@@ -378,8 +372,7 @@ func (h *Handler) ListCloudResources(c *gin.Context) {
 
 // GetCloudService handles GET /api/v1/cmdb/cloud-services/:id
 func (h *Handler) GetCloudService(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
@@ -415,8 +408,7 @@ func (h *Handler) UpdateCloudService(c *gin.Context) {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
@@ -465,8 +457,7 @@ func (h *Handler) UpdateCloudService(c *gin.Context) {
 
 // DeleteCloudService handles DELETE /api/v1/cmdb/cloud-services/:id
 func (h *Handler) DeleteCloudService(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
@@ -481,8 +472,7 @@ func (h *Handler) DeleteCloudService(c *gin.Context) {
 
 // GetCloudAccount handles GET /api/v1/cmdb/cloud-accounts/:id
 func (h *Handler) GetCloudAccount(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
@@ -513,8 +503,7 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
@@ -558,8 +547,7 @@ func (h *Handler) DeleteCloudAccount(c *gin.Context) {
 	if !ok {
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 
 	err := h.svc.DeleteCloudAccount(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -575,8 +563,7 @@ func (h *Handler) GetCloudResource(c *gin.Context) {
 	if !ok {
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 
 	result, err := h.svc.GetCloudResource(c.Request.Context(), tenantID, id)
 	if err != nil {
@@ -604,8 +591,7 @@ func (h *Handler) CreateCloudResource(c *gin.Context) {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	now := time.Now()
 	cr := &CloudResource{
 		CloudAccountID: req.CloudAccountID,
@@ -652,8 +638,7 @@ func (h *Handler) UpdateCloudResource(c *gin.Context) {
 	if !ok {
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 
 	cr := &CloudResource{
 		ID:             id,
@@ -683,8 +668,7 @@ func (h *Handler) DeleteCloudResource(c *gin.Context) {
 	if !ok {
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 
 	err := h.svc.DeleteCloudResource(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -696,8 +680,7 @@ func (h *Handler) DeleteCloudResource(c *gin.Context) {
 
 // Discovery sources
 func (h *Handler) ListDiscoverySources(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	list, err := h.svc.ListDiscoverySources(c.Request.Context(), tenantID)
 	if err != nil {
 		common.InternalError(c, err.Error())
@@ -726,8 +709,7 @@ func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	isActive := true
 	if req.IsActive != nil {
 		isActive = *req.IsActive
@@ -766,8 +748,7 @@ func (h *Handler) CreateDiscoveryJob(c *gin.Context) {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	startedAt := time.Now()
 	job := &DiscoveryJob{
 		SourceID:  req.SourceID,
@@ -794,8 +775,7 @@ func (h *Handler) CreateDiscoveryJob(c *gin.Context) {
 }
 
 func (h *Handler) ListDiscoveryResults(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
+		tenantID := c.GetInt("tenant_id")
 	jobID, _ := common.ParsePositiveIDFromQuery(c, "job_id")
 	list, err := h.svc.ListDiscoveryResults(c.Request.Context(), tenantID, jobID)
 	if err != nil {

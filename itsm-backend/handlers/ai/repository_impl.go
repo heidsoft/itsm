@@ -139,9 +139,13 @@ func toToolInvocationDomain(e *ent.ToolInvocation) *ToolInvocation {
 		ApprovalState:  e.ApprovalState,
 		ApprovedBy:     e.ApprovedBy,
 		ApprovalReason: e.ApprovalReason,
-		ApprovedAt:     approvedAt,
-		RequestID:      e.RequestID,
-		CreatedAt:      e.CreatedAt,
+		ApprovedAt:      approvedAt,
+		RequestID:       e.RequestID,
+		CreatedAt:       e.CreatedAt,
+		UserID:          e.UserID,
+		PermissionCheck: e.PermissionCheck,
+		PermissionReason: e.PermissionReason,
+		RoleSnapshot:    e.RoleSnapshot,
 	}
 }
 
@@ -154,6 +158,10 @@ func (r *EntRepository) CreateToolInvocation(ctx context.Context, i *ToolInvocat
 		SetNeedsApproval(i.NeedsApproval).
 		SetApprovalState(i.ApprovalState).
 		SetRequestID(i.RequestID).
+		SetUserID(i.UserID).
+		SetPermissionCheck(i.PermissionCheck).
+		SetPermissionReason(i.PermissionReason).
+		SetRoleSnapshot(i.RoleSnapshot).
 		Save(ctx)
 	if err != nil {
 		return nil, err
@@ -176,7 +184,9 @@ func (r *EntRepository) UpdateToolInvocation(ctx context.Context, i *ToolInvocat
 		SetStatus(i.Status).
 		SetApprovalState(i.ApprovalState).
 		SetApprovalReason(i.ApprovalReason).
-		SetApprovedBy(i.ApprovedBy)
+		SetApprovedBy(i.ApprovedBy).
+		SetPermissionCheck(i.PermissionCheck).
+		SetPermissionReason(i.PermissionReason)
 
 	if i.Result != nil {
 		update.SetResult(*i.Result)

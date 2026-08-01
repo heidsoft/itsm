@@ -28,11 +28,17 @@ func (ToolInvocation) Fields() []ent.Field {
 		field.Time("approved_at").Optional(),
 		field.Bool("dry_run").Default(false),
 		field.Text("error").Optional().Nillable(),
+		// P2-6 AI 工具 RBAC 校验审计字段（向后兼容，所有字段均带默认值）
+		field.Int("user_id").Optional().Comment("工具触发者用户 ID"),
+		field.String("permission_check").Default("skipped").Comment("权限校验结果: passed|denied|skipped"),
+		field.String("permission_reason").Default("").Comment("权限校验原因/拒绝原因"),
+		field.String("role_snapshot").Default("").Comment("调用时角色快照，便于事后审计"),
 	}
 }
 
 func (ToolInvocation) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("conversation", Conversation.Type).Ref("tool_invocations").Unique().Field("conversation_id"),
+		edge.From("user", User.Type).Ref("tool_invocations").Unique().Field("user_id"),
 	}
 }

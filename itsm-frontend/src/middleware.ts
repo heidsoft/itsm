@@ -40,6 +40,7 @@ const protectedRoutes = [
   '/system',
   '/teams',
   '/templates',
+  '/agent-ops-demo',
 ];
 
 // 公开路由（不需要认证）

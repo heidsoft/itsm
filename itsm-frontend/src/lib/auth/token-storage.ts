@@ -145,4 +145,6 @@ export function clearAuthStorage(): void {
   safeRemove(STORAGE_KEYS.LEGACY_ITSM_TOKEN);
   safeRemove(STORAGE_KEYS.LEGACY_TOKEN);
   safeRemove(STORAGE_KEYS.LEGACY_TENANT_CODE);
+  // 清理 Zustand persist 的 auth-storage key（避免跨用户/跨租户残留 user 信息）
+  safeRemove('auth-storage');
 }

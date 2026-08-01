@@ -8,6 +8,7 @@ import (
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // BPMNDashboardController BPMN监控仪表盘控制器
@@ -31,6 +32,20 @@ func NewBPMNDashboardController(
 		tenantService:  tenantService,
 		slaService:     slaService,
 	}
+}
+
+// resolveTenantID resolves tenant_id from the authenticated context and enforces fail-closed.
+// Must NOT trust query parameters for tenant isolation (would allow cross-tenant enumeration).
+func resolveTenantID(ctx *gin.Context) (int, bool) {
+	tenantID := ctx.GetInt("tenant_id")
+	if tenantID <= 0 {
+		zap.S().Warnw("BPMN Dashboard: tenant_id missing in context, rejecting request",
+			"path", ctx.Request.URL.Path,
+			"remote_ip", ctx.ClientIP())
+		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		return 0, false
+	}
+	return tenantID, true
 }
 
 // RegisterRoutes 注册路由
@@ -67,9 +82,8 @@ func (c *BPMNDashboardController) RegisterRoutes(r *gin.RouterGroup) {
 // @Param end_time query string false "结束时间"
 // @Success 200 {object} common.Response
 func (c *BPMNDashboardController) GetDashboardMetrics(ctx *gin.Context) {
-	tenantID, err := strconv.Atoi(ctx.Query("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, 1001, "无效的租户ID")
+	tenantID, ok := resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -114,9 +128,8 @@ func (c *BPMNDashboardController) GetProcessMetrics(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := strconv.Atoi(ctx.Query("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, 1001, "无效的租户ID")
+	tenantID, ok := resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -160,9 +173,8 @@ func (c *BPMNDashboardController) GetProcessMetrics(ctx *gin.Context) {
 // @Param page_size query int false "每页数量"
 // @Success 200 {object} common.Response
 func (c *BPMNDashboardController) GetAuditLogs(ctx *gin.Context) {
-	tenantID, err := strconv.Atoi(ctx.Query("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, 1001, "无效的租户ID")
+	tenantID, ok := resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -276,9 +288,8 @@ func (c *BPMNDashboardController) GetUserActivity(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := strconv.Atoi(ctx.Query("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, 1001, "无效的租户ID")
+	tenantID, ok := resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -314,9 +325,8 @@ func (c *BPMNDashboardController) GetUserActivity(ctx *gin.Context) {
 // @Param tenant_id query int true "租户ID"
 // @Success 200 {object} common.Response
 func (c *BPMNDashboardController) GetSLAViolations(ctx *gin.Context) {
-	tenantID, err := strconv.Atoi(ctx.Query("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, 1001, "无效的租户ID")
+	tenantID, ok := resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -345,9 +355,8 @@ func (c *BPMNDashboardController) GetSLACompliance(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := strconv.Atoi(ctx.Query("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, 1001, "无效的租户ID")
+	tenantID, ok := resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -387,9 +396,8 @@ func (c *BPMNDashboardController) GetSLACompliance(ctx *gin.Context) {
 // @Param tenant_id query int true "租户ID"
 // @Success 200 {object} common.Response
 func (c *BPMNDashboardController) GetTenantStats(ctx *gin.Context) {
-	tenantID, err := strconv.Atoi(ctx.Query("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, 1001, "无效的租户ID")
+	tenantID, ok := resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 
@@ -416,9 +424,8 @@ func (c *BPMNDashboardController) GetBottleneckAnalysis(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := strconv.Atoi(ctx.Query("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, 1001, "无效的租户ID")
+	tenantID, ok := resolveTenantID(ctx)
+	if !ok {
 		return
 	}
 

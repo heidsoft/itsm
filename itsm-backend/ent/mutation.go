@@ -143246,9 +143246,14 @@ type ToolInvocationMutation struct {
 	approved_at         *time.Time
 	dry_run             *bool
 	error               *string
+	permission_check    *string
+	permission_reason   *string
+	role_snapshot       *string
 	clearedFields       map[string]struct{}
 	conversation        *int
 	clearedconversation bool
+	user                *int
+	cleareduser         bool
 	done                bool
 	oldValue            func(context.Context) (*ToolInvocation, error)
 	predicates          []predicate.ToolInvocation
@@ -144011,6 +144016,163 @@ func (m *ToolInvocationMutation) ResetError() {
 	delete(m.clearedFields, toolinvocation.FieldError)
 }
 
+// SetUserID sets the "user_id" field.
+func (m *ToolInvocationMutation) SetUserID(i int) {
+	m.user = &i
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *ToolInvocationMutation) UserID() (r int, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the ToolInvocation entity.
+// If the ToolInvocation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ToolInvocationMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (m *ToolInvocationMutation) ClearUserID() {
+	m.user = nil
+	m.clearedFields[toolinvocation.FieldUserID] = struct{}{}
+}
+
+// UserIDCleared returns if the "user_id" field was cleared in this mutation.
+func (m *ToolInvocationMutation) UserIDCleared() bool {
+	_, ok := m.clearedFields[toolinvocation.FieldUserID]
+	return ok
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *ToolInvocationMutation) ResetUserID() {
+	m.user = nil
+	delete(m.clearedFields, toolinvocation.FieldUserID)
+}
+
+// SetPermissionCheck sets the "permission_check" field.
+func (m *ToolInvocationMutation) SetPermissionCheck(s string) {
+	m.permission_check = &s
+}
+
+// PermissionCheck returns the value of the "permission_check" field in the mutation.
+func (m *ToolInvocationMutation) PermissionCheck() (r string, exists bool) {
+	v := m.permission_check
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPermissionCheck returns the old "permission_check" field's value of the ToolInvocation entity.
+// If the ToolInvocation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ToolInvocationMutation) OldPermissionCheck(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPermissionCheck is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPermissionCheck requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPermissionCheck: %w", err)
+	}
+	return oldValue.PermissionCheck, nil
+}
+
+// ResetPermissionCheck resets all changes to the "permission_check" field.
+func (m *ToolInvocationMutation) ResetPermissionCheck() {
+	m.permission_check = nil
+}
+
+// SetPermissionReason sets the "permission_reason" field.
+func (m *ToolInvocationMutation) SetPermissionReason(s string) {
+	m.permission_reason = &s
+}
+
+// PermissionReason returns the value of the "permission_reason" field in the mutation.
+func (m *ToolInvocationMutation) PermissionReason() (r string, exists bool) {
+	v := m.permission_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPermissionReason returns the old "permission_reason" field's value of the ToolInvocation entity.
+// If the ToolInvocation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ToolInvocationMutation) OldPermissionReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPermissionReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPermissionReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPermissionReason: %w", err)
+	}
+	return oldValue.PermissionReason, nil
+}
+
+// ResetPermissionReason resets all changes to the "permission_reason" field.
+func (m *ToolInvocationMutation) ResetPermissionReason() {
+	m.permission_reason = nil
+}
+
+// SetRoleSnapshot sets the "role_snapshot" field.
+func (m *ToolInvocationMutation) SetRoleSnapshot(s string) {
+	m.role_snapshot = &s
+}
+
+// RoleSnapshot returns the value of the "role_snapshot" field in the mutation.
+func (m *ToolInvocationMutation) RoleSnapshot() (r string, exists bool) {
+	v := m.role_snapshot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRoleSnapshot returns the old "role_snapshot" field's value of the ToolInvocation entity.
+// If the ToolInvocation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ToolInvocationMutation) OldRoleSnapshot(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRoleSnapshot is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRoleSnapshot requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRoleSnapshot: %w", err)
+	}
+	return oldValue.RoleSnapshot, nil
+}
+
+// ResetRoleSnapshot resets all changes to the "role_snapshot" field.
+func (m *ToolInvocationMutation) ResetRoleSnapshot() {
+	m.role_snapshot = nil
+}
+
 // ClearConversation clears the "conversation" edge to the Conversation entity.
 func (m *ToolInvocationMutation) ClearConversation() {
 	m.clearedconversation = true
@@ -144036,6 +144198,33 @@ func (m *ToolInvocationMutation) ConversationIDs() (ids []int) {
 func (m *ToolInvocationMutation) ResetConversation() {
 	m.conversation = nil
 	m.clearedconversation = false
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *ToolInvocationMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[toolinvocation.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *ToolInvocationMutation) UserCleared() bool {
+	return m.UserIDCleared() || m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *ToolInvocationMutation) UserIDs() (ids []int) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *ToolInvocationMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
 }
 
 // Where appends a list predicates to the ToolInvocationMutation builder.
@@ -144072,7 +144261,7 @@ func (m *ToolInvocationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ToolInvocationMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 19)
 	if m.created_at != nil {
 		fields = append(fields, toolinvocation.FieldCreatedAt)
 	}
@@ -144118,6 +144307,18 @@ func (m *ToolInvocationMutation) Fields() []string {
 	if m.error != nil {
 		fields = append(fields, toolinvocation.FieldError)
 	}
+	if m.user != nil {
+		fields = append(fields, toolinvocation.FieldUserID)
+	}
+	if m.permission_check != nil {
+		fields = append(fields, toolinvocation.FieldPermissionCheck)
+	}
+	if m.permission_reason != nil {
+		fields = append(fields, toolinvocation.FieldPermissionReason)
+	}
+	if m.role_snapshot != nil {
+		fields = append(fields, toolinvocation.FieldRoleSnapshot)
+	}
 	return fields
 }
 
@@ -144156,6 +144357,14 @@ func (m *ToolInvocationMutation) Field(name string) (ent.Value, bool) {
 		return m.DryRun()
 	case toolinvocation.FieldError:
 		return m.Error()
+	case toolinvocation.FieldUserID:
+		return m.UserID()
+	case toolinvocation.FieldPermissionCheck:
+		return m.PermissionCheck()
+	case toolinvocation.FieldPermissionReason:
+		return m.PermissionReason()
+	case toolinvocation.FieldRoleSnapshot:
+		return m.RoleSnapshot()
 	}
 	return nil, false
 }
@@ -144195,6 +144404,14 @@ func (m *ToolInvocationMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldDryRun(ctx)
 	case toolinvocation.FieldError:
 		return m.OldError(ctx)
+	case toolinvocation.FieldUserID:
+		return m.OldUserID(ctx)
+	case toolinvocation.FieldPermissionCheck:
+		return m.OldPermissionCheck(ctx)
+	case toolinvocation.FieldPermissionReason:
+		return m.OldPermissionReason(ctx)
+	case toolinvocation.FieldRoleSnapshot:
+		return m.OldRoleSnapshot(ctx)
 	}
 	return nil, fmt.Errorf("unknown ToolInvocation field %s", name)
 }
@@ -144309,6 +144526,34 @@ func (m *ToolInvocationMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetError(v)
 		return nil
+	case toolinvocation.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case toolinvocation.FieldPermissionCheck:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPermissionCheck(v)
+		return nil
+	case toolinvocation.FieldPermissionReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPermissionReason(v)
+		return nil
+	case toolinvocation.FieldRoleSnapshot:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRoleSnapshot(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation field %s", name)
 }
@@ -144384,6 +144629,9 @@ func (m *ToolInvocationMutation) ClearedFields() []string {
 	if m.FieldCleared(toolinvocation.FieldError) {
 		fields = append(fields, toolinvocation.FieldError)
 	}
+	if m.FieldCleared(toolinvocation.FieldUserID) {
+		fields = append(fields, toolinvocation.FieldUserID)
+	}
 	return fields
 }
 
@@ -144415,6 +144663,9 @@ func (m *ToolInvocationMutation) ClearField(name string) error {
 		return nil
 	case toolinvocation.FieldError:
 		m.ClearError()
+		return nil
+	case toolinvocation.FieldUserID:
+		m.ClearUserID()
 		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation nullable field %s", name)
@@ -144469,15 +144720,30 @@ func (m *ToolInvocationMutation) ResetField(name string) error {
 	case toolinvocation.FieldError:
 		m.ResetError()
 		return nil
+	case toolinvocation.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case toolinvocation.FieldPermissionCheck:
+		m.ResetPermissionCheck()
+		return nil
+	case toolinvocation.FieldPermissionReason:
+		m.ResetPermissionReason()
+		return nil
+	case toolinvocation.FieldRoleSnapshot:
+		m.ResetRoleSnapshot()
+		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ToolInvocationMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.conversation != nil {
 		edges = append(edges, toolinvocation.EdgeConversation)
+	}
+	if m.user != nil {
+		edges = append(edges, toolinvocation.EdgeUser)
 	}
 	return edges
 }
@@ -144490,13 +144756,17 @@ func (m *ToolInvocationMutation) AddedIDs(name string) []ent.Value {
 		if id := m.conversation; id != nil {
 			return []ent.Value{*id}
 		}
+	case toolinvocation.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ToolInvocationMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -144508,9 +144778,12 @@ func (m *ToolInvocationMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ToolInvocationMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedconversation {
 		edges = append(edges, toolinvocation.EdgeConversation)
+	}
+	if m.cleareduser {
+		edges = append(edges, toolinvocation.EdgeUser)
 	}
 	return edges
 }
@@ -144521,6 +144794,8 @@ func (m *ToolInvocationMutation) EdgeCleared(name string) bool {
 	switch name {
 	case toolinvocation.EdgeConversation:
 		return m.clearedconversation
+	case toolinvocation.EdgeUser:
+		return m.cleareduser
 	}
 	return false
 }
@@ -144532,6 +144807,9 @@ func (m *ToolInvocationMutation) ClearEdge(name string) error {
 	case toolinvocation.EdgeConversation:
 		m.ClearConversation()
 		return nil
+	case toolinvocation.EdgeUser:
+		m.ClearUser()
+		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation unique edge %s", name)
 }
@@ -144542,6 +144820,9 @@ func (m *ToolInvocationMutation) ResetEdge(name string) error {
 	switch name {
 	case toolinvocation.EdgeConversation:
 		m.ResetConversation()
+		return nil
+	case toolinvocation.EdgeUser:
+		m.ResetUser()
 		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation edge %s", name)
@@ -144612,6 +144893,9 @@ type UserMutation struct {
 	pir_reviews                     map[int]struct{}
 	removedpir_reviews              map[int]struct{}
 	clearedpir_reviews              bool
+	tool_invocations                map[int]struct{}
+	removedtool_invocations         map[int]struct{}
+	clearedtool_invocations         bool
 	done                            bool
 	oldValue                        func(context.Context) (*User, error)
 	predicates                      []predicate.User
@@ -146159,6 +146443,60 @@ func (m *UserMutation) ResetPirReviews() {
 	m.removedpir_reviews = nil
 }
 
+// AddToolInvocationIDs adds the "tool_invocations" edge to the ToolInvocation entity by ids.
+func (m *UserMutation) AddToolInvocationIDs(ids ...int) {
+	if m.tool_invocations == nil {
+		m.tool_invocations = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tool_invocations[ids[i]] = struct{}{}
+	}
+}
+
+// ClearToolInvocations clears the "tool_invocations" edge to the ToolInvocation entity.
+func (m *UserMutation) ClearToolInvocations() {
+	m.clearedtool_invocations = true
+}
+
+// ToolInvocationsCleared reports if the "tool_invocations" edge to the ToolInvocation entity was cleared.
+func (m *UserMutation) ToolInvocationsCleared() bool {
+	return m.clearedtool_invocations
+}
+
+// RemoveToolInvocationIDs removes the "tool_invocations" edge to the ToolInvocation entity by IDs.
+func (m *UserMutation) RemoveToolInvocationIDs(ids ...int) {
+	if m.removedtool_invocations == nil {
+		m.removedtool_invocations = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tool_invocations, ids[i])
+		m.removedtool_invocations[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedToolInvocations returns the removed IDs of the "tool_invocations" edge to the ToolInvocation entity.
+func (m *UserMutation) RemovedToolInvocationsIDs() (ids []int) {
+	for id := range m.removedtool_invocations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ToolInvocationsIDs returns the "tool_invocations" edge IDs in the mutation.
+func (m *UserMutation) ToolInvocationsIDs() (ids []int) {
+	for id := range m.tool_invocations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetToolInvocations resets all changes to the "tool_invocations" edge.
+func (m *UserMutation) ResetToolInvocations() {
+	m.tool_invocations = nil
+	m.clearedtool_invocations = false
+	m.removedtool_invocations = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -146601,7 +146939,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 15)
+	edges := make([]string, 0, 16)
 	if m.department_ref != nil {
 		edges = append(edges, user.EdgeDepartmentRef)
 	}
@@ -146646,6 +146984,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.pir_reviews != nil {
 		edges = append(edges, user.EdgePirReviews)
+	}
+	if m.tool_invocations != nil {
+		edges = append(edges, user.EdgeToolInvocations)
 	}
 	return edges
 }
@@ -146740,13 +147081,19 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeToolInvocations:
+		ids := make([]ent.Value, 0, len(m.tool_invocations))
+		for id := range m.tool_invocations {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 15)
+	edges := make([]string, 0, 16)
 	if m.removedtickets != nil {
 		edges = append(edges, user.EdgeTickets)
 	}
@@ -146785,6 +147132,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedpir_reviews != nil {
 		edges = append(edges, user.EdgePirReviews)
+	}
+	if m.removedtool_invocations != nil {
+		edges = append(edges, user.EdgeToolInvocations)
 	}
 	return edges
 }
@@ -146871,13 +147221,19 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeToolInvocations:
+		ids := make([]ent.Value, 0, len(m.removedtool_invocations))
+		for id := range m.removedtool_invocations {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 15)
+	edges := make([]string, 0, 16)
 	if m.cleareddepartment_ref {
 		edges = append(edges, user.EdgeDepartmentRef)
 	}
@@ -146923,6 +147279,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	if m.clearedpir_reviews {
 		edges = append(edges, user.EdgePirReviews)
 	}
+	if m.clearedtool_invocations {
+		edges = append(edges, user.EdgeToolInvocations)
+	}
 	return edges
 }
 
@@ -146960,6 +147319,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedarticle_participations
 	case user.EdgePirReviews:
 		return m.clearedpir_reviews
+	case user.EdgeToolInvocations:
+		return m.clearedtool_invocations
 	}
 	return false
 }
@@ -147026,6 +147387,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgePirReviews:
 		m.ResetPirReviews()
+		return nil
+	case user.EdgeToolInvocations:
+		m.ResetToolInvocations()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

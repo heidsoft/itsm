@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,11 +35,18 @@ func CORSMiddleware() gin.HandlerFunc {
 			if reqOrigin != "" {
 				originHeader = reqOrigin
 			}
-		} else if os.Getenv("ITSM_ALLOW_ALL_ORIGINS") == "true" {
-			if reqOrigin != "" {
-				originHeader = reqOrigin
-			} else {
-				originHeader = "*"
+		} else {
+			env := strings.ToLower(os.Getenv("ENV"))
+			isProd := env == "production" || env == "private" || env == "saas" || env == "saas_msp"
+			if isProd && os.Getenv("ITSM_ALLOW_ALL_ORIGINS") == "true" {
+				zap.S().Warnw("ITSM_ALLOW_ALL_ORIGINS ignored in production mode")
+			}
+			if !isProd && os.Getenv("ITSM_ALLOW_ALL_ORIGINS") == "true" {
+				if reqOrigin != "" {
+					originHeader = reqOrigin
+				} else {
+					originHeader = "*"
+				}
 			}
 		}
 		// else: 默认不设置 Allow-Origin，拒绝跨域请求

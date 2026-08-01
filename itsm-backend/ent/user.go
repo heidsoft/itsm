@@ -92,9 +92,11 @@ type UserEdges struct {
 	ArticleParticipations []*KnowledgeArticleParticipant `json:"article_participations,omitempty"`
 	// PIR审查记录
 	PirReviews []*ChangePIR `json:"pir_reviews,omitempty"`
+	// AI 工具调用记录
+	ToolInvocations []*ToolInvocation `json:"tool_invocations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [15]bool
+	loadedTypes [16]bool
 }
 
 // DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
@@ -234,6 +236,15 @@ func (e UserEdges) PirReviewsOrErr() ([]*ChangePIR, error) {
 		return e.PirReviews, nil
 	}
 	return nil, &NotLoadedError{edge: "pir_reviews"}
+}
+
+// ToolInvocationsOrErr returns the ToolInvocations value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ToolInvocationsOrErr() ([]*ToolInvocation, error) {
+	if e.loadedTypes[15] {
+		return e.ToolInvocations, nil
+	}
+	return nil, &NotLoadedError{edge: "tool_invocations"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -479,6 +490,11 @@ func (_m *User) QueryArticleParticipations() *KnowledgeArticleParticipantQuery {
 // QueryPirReviews queries the "pir_reviews" edge of the User entity.
 func (_m *User) QueryPirReviews() *ChangePIRQuery {
 	return NewUserClient(_m.config).QueryPirReviews(_m)
+}
+
+// QueryToolInvocations queries the "tool_invocations" edge of the User entity.
+func (_m *User) QueryToolInvocations() *ToolInvocationQuery {
+	return NewUserClient(_m.config).QueryToolInvocations(_m)
 }
 
 // Update returns a builder for updating this User.
