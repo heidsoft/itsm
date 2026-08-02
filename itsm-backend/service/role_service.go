@@ -368,6 +368,8 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 }
 
 // AssignPermissions 给角色分配权限（直接操作 role_permissions 联表）
+// C-4 修复：使用事务包裹 Delete+CreateBulk，循环内 err 必须 return 触发 Rollback，
+// 防止"旧权限已清空、新权限只写入部分"的越权/失权静默故障。
 func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permissionIDs []int, tenantID int) error {
 	s.logger.Infow("Assigning permissions to role", "role_id", roleID, "permission_count", len(permissionIDs))
 
@@ -393,8 +395,15 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 		}
 	}
 
+	// 开启事务：DELETE + CREATE BULK 必须原子化
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	defer tx.Rollback()
+
 	// 清除现有权限关联
-	_, err = s.client.RolePermission.Delete().
+	_, err = tx.RolePermission.Delete().
 		Where(
 			rolepermission.RoleID(roleID),
 			rolepermission.TenantID(tenantID),
@@ -404,16 +413,24 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 		return fmt.Errorf("清除权限关联失败: %w", err)
 	}
 
-	// 添加新权限关联
-	for _, pid := range permissionIDs {
-		_, err = s.client.RolePermission.Create().
-			SetRoleID(roleID).
-			SetPermissionID(pid).
-			SetTenantID(tenantID).
-			Save(ctx)
-		if err != nil {
-			s.logger.Warnw("Failed to create role-permission association", "role_id", roleID, "permission_id", pid, "error", err)
+	// 批量添加新权限关联（使用 CreateBulk 避免循环）
+	if len(permissionIDs) > 0 {
+		bulk := make([]*ent.RolePermissionCreate, 0, len(permissionIDs))
+		for _, pid := range permissionIDs {
+			bulk = append(bulk, tx.RolePermission.Create().
+				SetRoleID(roleID).
+				SetPermissionID(pid).
+				SetTenantID(tenantID),
+			)
 		}
+		if err := tx.RolePermission.CreateBulk(bulk...).Exec(ctx); err != nil {
+			// CreateBulk 任何一条失败全部回滚，避免部分写入
+			return fmt.Errorf("创建权限关联失败: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %w", err)
 	}
 
 	middleware.InvalidateRolePermissionCache(roleEntity.Code, tenantID)

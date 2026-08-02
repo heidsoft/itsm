@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/database"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
@@ -617,6 +618,8 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 }
 
 // UpdateChangeStatus 更新变更状态
+// H-2 修复：进入终态（rejected/completed/cancelled/rolled_back）时在事务内收口残留的 pending 审批节点，
+// 防止后续新增审批节点把已终态变更“复活”。
 func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status dto.ChangeStatus, tenantID int) error {
 	persistedStatus := persistedChangeStatus(string(status))
 	// 获取当前变更状态，验证租户所有权
@@ -634,12 +637,22 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 	}
 
 	// 验证状态转换
-	if !isValidChangeStatusTransition(changeEntity.Status, persistedStatus, changeEntity.Type) {
+	if !IsValidChangeStatusTransition(changeEntity.Status, persistedStatus, changeEntity.Type) {
 		return fmt.Errorf("invalid status transition from '%s' to '%s'", changeEntity.Status, status)
 	}
 
+	// 是否进入终态，若是则收口 pending 审批链
+	isTerminal := isTerminalChangeStatus(persistedStatus)
+
+	// 开启事务：状态更新 + 收口 pending chains 必须原子
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	defer tx.Rollback()
+
 	// 使用租户过滤进行更新，防止跨租户更新
-	update := s.client.Change.Update().
+	update := tx.Change.Update().
 		Where(
 			change.ID(id),
 			change.TenantID(tenantID),
@@ -657,13 +670,61 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 		s.logger.Errorw("Failed to update change status", "error", err, "change_id", id, "status", status, "tenant_id", tenantID)
 		return fmt.Errorf("failed to update change status: %w", err)
 	}
-
 	if result == 0 {
 		return fmt.Errorf("cross-tenant access denied: change not found or access denied")
 	}
 
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %w", err)
+	}
+
+	// 收口残留 pending 审批链节点：放在事务提交后用 rawDB 执行。
+	// change_approval_chains 未接入 Ent schema（独立 migration 表），*ent.Tx 不提供
+	// ExecContext。此处单独 SQL 收口，即使失败也只是残留 pending 节点，C-2 修复中的
+	// 状态机校验会禁止它们再次复活变更状态，属于 fail-closed。
+	if isTerminal {
+		rawDB := database.GetRawDB()
+		if rawDB != nil {
+			if _, closeErr := rawDB.ExecContext(ctx, `
+				UPDATE change_approval_chains
+				SET status = 'obsolete', updated_at = CURRENT_TIMESTAMP
+				WHERE change_id = $1 AND tenant_id = $2 AND status = 'pending'
+			`, id, tenantID); closeErr != nil {
+				s.logger.Errorw("收口 change_approval_chains 失败（非致命，后续状态机兜底）",
+					"error", closeErr, "change_id", id, "tenant_id", tenantID)
+			}
+		}
+	}
+
 	s.logger.Infow("Change status updated successfully", "change_id", id, "status", status, "tenant_id", tenantID)
 	return nil
+}
+
+// isTerminalChangeStatus 判断变更状态是否为终态（不可再转换）
+func isTerminalChangeStatus(status string) bool {
+	switch status {
+	case common.ChangeStatusRejected,
+		common.ChangeStatusCompleted,
+		common.ChangeStatusCancelled,
+		string(dto.ChangeStatusRolledBack):
+		return true
+	}
+	return false
+}
+
+// CloseChangeApprovalChains 在变更进入终态时收口残留 pending 审批链节点（对外导出，handlers 包直接复用）。
+// 注意：调用方需自行保证已通过状态机校验且已将变更写入终态。
+func CloseChangeApprovalChains(ctx context.Context, changeID, tenantID int) error {
+	rawDB := database.GetRawDB()
+	if rawDB == nil {
+		return fmt.Errorf("raw database handle unavailable, skip closing change_approval_chains")
+	}
+	_, err := rawDB.ExecContext(ctx, `
+		UPDATE change_approval_chains
+		SET status = 'obsolete', updated_at = CURRENT_TIMESTAMP
+		WHERE change_id = $1 AND tenant_id = $2 AND status = 'pending'
+	`, changeID, tenantID)
+	return err
 }
 
 // isValidChangeStatusTransition 检查变更状态转换是否合法
@@ -677,9 +738,15 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 // completed -> (不允许转换到其他状态)
 // failed -> scheduled, cancelled
 // cancelled -> (不允许转换到其他状态)
-// isValidChangeStatusTransition 检查变更状态转换是否合法
+// IsValidChangeStatusTransition 检查变更状态转换是否合法
 // 根据ITIL标准，不同类型的变更有不同的状态转换规则
-func isValidChangeStatusTransition(currentStatus, newStatus, changeType string) bool {
+func IsValidChangeStatusTransition(currentStatus, newStatus, changeType string) bool {
+	// 历史兼容：handlers/change 模块使用 "pending"，而 common 常量用 "submitted"，
+	// 两者是等价的状态（变更已提交等待CAB审批）。在此处做归一化，避免状态机误判。
+	if currentStatus == "pending" {
+		currentStatus = common.ChangeStatusSubmitted
+	}
+
 	// 基础转换规则（适用于所有变更类型）
 	baseTransitions := map[string][]string{
 		common.ChangeStatusRejected:        {}, // 被拒绝后不允许转换

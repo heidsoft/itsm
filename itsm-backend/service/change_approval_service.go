@@ -732,11 +732,24 @@ func (s *ChangeApprovalService) ExecuteChangeRollback(ctx context.Context, chang
 }
 
 // checkAndUpdateChangeStatus 根据审批链重新计算并更新变更状态。
+// C-2 修复：在写入前先调用 isValidChangeStatusTransition 校验，防止
+// 终态变更被残留 pending 审批节点复活（如 cancelled→approved）。
 // 规则：
 //   - 任一「必需」审批人驳回 -> 变更整体驳回(rejected)
 //   - 全部「必需」审批人都已批准 -> 变更批准(approved)
 //   - 否则保持现状（仍有待审批节点）
 func (s *ChangeApprovalService) checkAndUpdateChangeStatus(ctx context.Context, changeID, tenantID int) error {
+	// 先读取当前变更状态 + 类型，用于后续状态机校验
+	changeEntity, err := s.client.Change.Query().
+		Where(change.ID(changeID), change.TenantID(tenantID)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("变更不存在或跨租户: change_id=%d", changeID)
+		}
+		return fmt.Errorf("查询变更失败: %w", err)
+	}
+
 	query := `
 		SELECT COUNT(*) as total_required,
 		       COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
@@ -746,16 +759,22 @@ func (s *ChangeApprovalService) checkAndUpdateChangeStatus(ctx context.Context, 
 	`
 
 	var totalRequired, approvedCount, rejectedCount int
-	err := s.rawDB.QueryRowContext(ctx, query, changeID, tenantID).Scan(&totalRequired, &approvedCount, &rejectedCount)
+	err = s.rawDB.QueryRowContext(ctx, query, changeID, tenantID).Scan(&totalRequired, &approvedCount, &rejectedCount)
 	if err != nil {
 		return fmt.Errorf("failed to check approval status: %w", err)
 	}
 
-	// 任一必需审批人驳回，整体驳回（tenant 过滤）
+	// 任一必需审批人驳回，整体驳回
 	if rejectedCount > 0 {
+		targetStatus := string(dto.ChangeStatusRejected)
+		if !IsValidChangeStatusTransition(changeEntity.Status, persistedChangeStatus(targetStatus), changeEntity.Type) {
+			s.logger.Warnw("Skip invalid change status transition (reject branch)",
+				"change_id", changeID, "from", changeEntity.Status, "to", targetStatus)
+			return nil
+		}
 		_, err = s.client.Change.Update().
 			Where(change.ID(changeID), change.TenantID(tenantID)).
-			SetStatus(string(dto.ChangeStatusRejected)).
+			SetStatus(persistedChangeStatus(targetStatus)).
 			Save(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to update change status: %w", err)
@@ -764,11 +783,17 @@ func (s *ChangeApprovalService) checkAndUpdateChangeStatus(ctx context.Context, 
 		return nil
 	}
 
-	// 所有必需审批人都已批准，更新变更状态为已批准（tenant 过滤）
+	// 所有必需审批人都已批准，更新变更状态为已批准
 	if totalRequired > 0 && totalRequired == approvedCount {
+		targetStatus := string(dto.ChangeStatusApproved)
+		if !IsValidChangeStatusTransition(changeEntity.Status, persistedChangeStatus(targetStatus), changeEntity.Type) {
+			s.logger.Warnw("Skip invalid change status transition (approve branch)",
+				"change_id", changeID, "from", changeEntity.Status, "to", targetStatus)
+			return nil
+		}
 		_, err = s.client.Change.Update().
 			Where(change.ID(changeID), change.TenantID(tenantID)).
-			SetStatus(string(dto.ChangeStatusApproved)).
+			SetStatus(persistedChangeStatus(targetStatus)).
 			Save(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to update change status: %w", err)
@@ -792,9 +817,15 @@ func (s *ChangeApprovalService) checkAndUpdateChangeStatus(ctx context.Context, 
 			return fmt.Errorf("failed to fallback check approval status: %w", err)
 		}
 		if totalAll > 0 && approvedAll > 0 {
+			targetStatus := string(dto.ChangeStatusApproved)
+			if !IsValidChangeStatusTransition(changeEntity.Status, persistedChangeStatus(targetStatus), changeEntity.Type) {
+				s.logger.Warnw("Skip invalid change status transition (fallback approve branch)",
+					"change_id", changeID, "from", changeEntity.Status, "to", targetStatus)
+				return nil
+			}
 			if _, err = s.client.Change.Update().
 				Where(change.ID(changeID), change.TenantID(tenantID)).
-				SetStatus(string(dto.ChangeStatusApproved)).
+				SetStatus(persistedChangeStatus(targetStatus)).
 				Save(ctx); err != nil {
 				return fmt.Errorf("failed to update change status (fallback): %w", err)
 			}

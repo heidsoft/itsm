@@ -49,6 +49,10 @@ const (
 	SRStatusITApproved       = "it_approved"
 	SRStatusSecurityApproved = "security_approved"
 	SRStatusRejected         = "rejected"
+	SRStatusProvisioning     = "provisioning"
+	SRStatusDelivered        = "delivered"
+	SRStatusFailed           = "failed"
+	SRStatusCancelled        = "cancelled"
 
 	ApprovalStatusPending  = "pending"
 	ApprovalStatusApproved = "approved"
@@ -410,8 +414,71 @@ func (s *ServiceRequestService) ListServiceRequests(ctx context.Context, req *dt
 }
 
 // UpdateServiceRequestStatus 更新服务请求状态
+// C-3 修复：加入状态机白名单校验 + 枚举合法性校验，禁止外部接口直接跳到 *_approved 终审态。
+// 审批推进（submitted→manager_approved→it_approved→security_approved）只允许由
+// ApplyApprovalAction 内部推进，防止绕过三级审批直接开通云资源。
 func (s *ServiceRequestService) UpdateServiceRequestStatus(ctx context.Context, id int, status string, tenantID int) error {
-	err := s.client.ServiceRequest.Update().
+	status = strings.TrimSpace(status)
+	if status == "" {
+		return fmt.Errorf("状态不能为空")
+	}
+
+	// 1. 枚举合法性校验
+	validStatuses := map[string]struct{}{
+		SRStatusSubmitted:        {},
+		SRStatusManagerApproved:  {},
+		SRStatusITApproved:       {},
+		SRStatusSecurityApproved: {},
+		SRStatusRejected:         {},
+		SRStatusProvisioning:     {},
+		SRStatusDelivered:        {},
+		SRStatusFailed:           {},
+		SRStatusCancelled:        {},
+	}
+	if _, ok := validStatuses[status]; !ok {
+		return fmt.Errorf("无效的服务请求状态: %s", status)
+	}
+
+	// 2. 读取当前记录，校验前置状态 + 租户隔离
+	reqEnt, err := s.client.ServiceRequest.Query().
+		Where(servicerequest.ID(id)).
+		Where(servicerequest.TenantID(tenantID)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("服务请求不存在或跨租户")
+		}
+		return fmt.Errorf("查询服务请求失败: %w", err)
+	}
+
+	// 3. 外部可执行的状态转换白名单（与 handlers/service_request 的
+	//    isValidServiceRequestOperationalTransition 保持一致）。
+	//    审批推进（manager_approved/it_approved/security_approved）必须走 ApplyApprovalAction，
+	//    不允许外部直接写。
+	operationalTransitions := map[string]map[string]struct{}{
+		SRStatusSubmitted:        {SRStatusCancelled: {}},
+		SRStatusManagerApproved:  {SRStatusCancelled: {}},
+		SRStatusITApproved:       {SRStatusCancelled: {}},
+		SRStatusSecurityApproved: {SRStatusProvisioning: {}, SRStatusCancelled: {}},
+		SRStatusProvisioning:     {SRStatusDelivered: {}, SRStatusFailed: {}},
+		SRStatusFailed:           {SRStatusProvisioning: {}, SRStatusCancelled: {}},
+		SRStatusRejected:         {},
+		SRStatusDelivered:        {},
+		SRStatusCancelled:        {},
+	}
+	if reqEnt.Status == status {
+		// 幂等：相同状态无需更新
+		return nil
+	}
+	allowed, ok := operationalTransitions[string(reqEnt.Status)]
+	if !ok {
+		return fmt.Errorf("未知的当前状态: %s", reqEnt.Status)
+	}
+	if _, ok := allowed[status]; !ok {
+		return fmt.Errorf("非法的服务请求状态转换: %s -> %s（审批推进请通过审批接口执行）", reqEnt.Status, status)
+	}
+
+	err = s.client.ServiceRequest.Update().
 		Where(servicerequest.ID(id)).
 		Where(servicerequest.TenantID(tenantID)).
 		SetStatus(status).

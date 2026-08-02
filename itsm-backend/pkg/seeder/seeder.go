@@ -1327,10 +1327,14 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		{"change:read", "查看变更", "change", "read", "查看变更列表和详情"},
 		{"change:write", "管理变更", "change", "write", "创建、编辑变更"},
 		{"change:delete", "删除变更", "change", "delete", "删除变更"},
+		{"change:approve", "审批变更", "change", "approve", "变更CAB审批/驳回/回滚"},
+		{"change:rollback", "回滚变更", "change", "rollback", "变更实施后回滚"},
 		// 发布权限
 		{"release:read", "查看发布", "release", "read", "查看发布列表和详情"},
 		{"release:write", "管理发布", "release", "write", "创建、编辑发布"},
 		{"release:delete", "删除发布", "release", "delete", "删除发布"},
+		{"release:approve", "审批发布", "release", "approve", "发布审批/驳回"},
+		{"release:rollback", "回滚发布", "release", "rollback", "发布回滚"},
 		// 资产权限
 		{"asset:read", "查看资产", "asset", "read", "查看资产列表和详情"},
 		{"asset:write", "管理资产", "asset", "write", "创建、编辑资产"},
@@ -1739,9 +1743,9 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		// 变更经理：负责变更生命周期、审批协同和发布联动
 		"change_manager": {
 			"ticket:read",
-			"change:read", "change:write", "change:delete",
+			"change:read", "change:write", "change:delete", "change:approve", "change:rollback",
 			"approval:read", "approval:write",
-			"release:read", "release:write",
+			"release:read", "release:write", "release:approve", "release:rollback",
 			"cmdb:read",
 			"workflow:read", "workflow:write",
 			"sla:read",
@@ -1925,8 +1929,8 @@ func allPermissionCodes() []string {
 		"ticket_template:read", "ticket_template:create", "ticket_template:update", "ticket_template:delete",
 		"incident:read", "incident:write", "incident:delete",
 		"problem:read", "problem:write", "problem:delete",
-		"change:read", "change:write", "change:delete",
-		"release:read", "release:write", "release:delete",
+		"change:read", "change:write", "change:delete", "change:approve", "change:rollback",
+		"release:read", "release:write", "release:delete", "release:approve", "release:rollback",
 		"asset:read", "asset:write", "asset:delete",
 		"cmdb:read", "cmdb:write", "cmdb:delete",
 		"report:read", "report:write",

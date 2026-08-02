@@ -192,7 +192,10 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 	// ent.NewClient 创建Ent ORM客户端
 	// ent.Driver(drv) 设置数据库驱动
 	rawDB = db
-	return ent.NewClient(ent.Driver(drv)), nil
+	client := ent.NewClient(ent.Driver(drv))
+	// 注册软删除查询拦截器：读路径默认过滤 deleted_at IS NOT NULL 记录
+	RegisterSoftDeleteInterceptors(client)
+	return client, nil
 }
 
 // InitDatabaseWithRLS 与 InitDatabase 行为完全一致，但在返回 Ent Client 之前
@@ -235,7 +238,9 @@ func InitDatabaseWithRLS(cfg *config.DatabaseConfig, rlsCfg *config.RLSConfig, l
 			"tenant_var", rlsCfg.TenantVarName,
 		)
 	}
-	return ent.NewClient(ent.Driver(deco)), nil
+	rlsClient := ent.NewClient(ent.Driver(deco))
+	RegisterSoftDeleteInterceptors(rlsClient)
+	return rlsClient, nil
 }
 
 func normalizeMarketplaceItemDefaults(ctx context.Context, db *sql.DB) error {

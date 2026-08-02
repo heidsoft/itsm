@@ -934,12 +934,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				changes.DELETE("/:id", middleware.RequirePermission("change", "delete"), config.ChangeHandler.DeleteChange)
 				changes.POST("/:id/submit", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitChange)
 				changes.POST("/:id/assign", middleware.RequirePermission("change", "write"), config.ChangeHandler.AssignChange)
-				// 状态转换
-				changes.POST("/:id/approve", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
-				changes.POST("/:id/reject", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
+				// 状态转换：approve/reject 需要独立审批权限，rollback 需要独立回滚权限（H-15 修复：禁止 write 权限泛化为审批/回滚）
+				changes.POST("/:id/approve", middleware.RequirePermission("change", "approve"), config.ChangeHandler.TransitionStatus)
+				changes.POST("/:id/reject", middleware.RequirePermission("change", "approve"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/start", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/complete", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
-				changes.POST("/:id/rollback", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
+				changes.POST("/:id/rollback", middleware.RequirePermission("change", "rollback"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/cancel", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
 				// 审批
 				changes.GET("/:id/approvals", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetApprovals)
@@ -971,9 +971,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				releases.GET("/:id", middleware.RequirePermission("release", "read"), config.ReleaseController.GetRelease)
 				releases.PUT("/:id", middleware.RequirePermission("release", "write"), config.ReleaseController.UpdateRelease)
 				releases.PUT("/:id/status", middleware.RequirePermission("release", "write"), config.ReleaseController.UpdateReleaseStatus)
-				releases.POST("/:id/approve", middleware.RequirePermission("release", "write"), config.ReleaseController.ApproveRelease)
-				releases.POST("/:id/reject", middleware.RequirePermission("release", "write"), config.ReleaseController.RejectRelease)
-				releases.POST("/:id/rollback", middleware.RequirePermission("release", "write"), config.ReleaseController.RollbackRelease)
+				releases.POST("/:id/approve", middleware.RequirePermission("release", "approve"), config.ReleaseController.ApproveRelease)
+				releases.POST("/:id/reject", middleware.RequirePermission("release", "approve"), config.ReleaseController.RejectRelease)
+				releases.POST("/:id/rollback", middleware.RequirePermission("release", "rollback"), config.ReleaseController.RollbackRelease)
 				releases.DELETE("/:id", middleware.RequirePermission("release", "delete"), config.ReleaseController.DeleteRelease)
 			}
 		}

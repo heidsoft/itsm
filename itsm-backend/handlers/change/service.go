@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
@@ -203,10 +204,33 @@ func (s *Service) ProcessApproval(ctx context.Context, recordID int, status stri
 			return nil, fmt.Errorf("failed to get change: %w", err)
 		}
 		if c != nil {
-			c.Status = "rejected"
-			if _, err := s.repo.Update(ctx, c); err != nil {
-				s.logger.Errorw("ProcessApproval: failed to update change status to rejected", "error", err, "change_id", res.ChangeID)
-				return nil, fmt.Errorf("failed to update change status: %w", err)
+			// C-2 修复：通过状态机校验禁止非法转换（例如 cancelled → rejected 终态互跳）
+			target := "rejected"
+			if !service.IsValidChangeStatusTransition(c.Status, target, c.Type) {
+				s.logger.Warnw("ProcessApproval: skip invalid change status transition",
+					"change_id", res.ChangeID, "from", c.Status, "to", target)
+				return res, nil
+			}
+			// H-2 修复：事务化更新 change 为终态；提交成功后单独收口 pending chains（CloseChangeApprovalChains 内部使用 rawDB，*ent.Tx 不提供 ExecContext）
+			tx, txErr := s.entClient.Tx(ctx)
+			if txErr != nil {
+				return nil, fmt.Errorf("开启事务失败: %w", txErr)
+			}
+			defer tx.Rollback()
+
+			if _, updateErr := tx.Change.UpdateOneID(c.ID).
+				Where(change.TenantID(tenantID)).
+				SetStatus(target).
+				Save(ctx); updateErr != nil {
+				s.logger.Errorw("ProcessApproval: failed to update change status to rejected", "error", updateErr, "change_id", res.ChangeID)
+				return nil, fmt.Errorf("failed to update change status: %w", updateErr)
+			}
+			if commitErr := tx.Commit(); commitErr != nil {
+				return nil, fmt.Errorf("提交事务失败: %w", commitErr)
+			}
+			if closeErr := service.CloseChangeApprovalChains(ctx, res.ChangeID, tenantID); closeErr != nil {
+				s.logger.Errorw("ProcessApproval: 收口审批链失败（非致命，后续状态机兜底）",
+					"error", closeErr, "change_id", res.ChangeID, "tenant_id", tenantID)
 			}
 		}
 	}
@@ -253,7 +277,14 @@ func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenant
 			return err
 		}
 		if c != nil {
-			c.Status = "approved"
+			// C-2 修复：通过状态机校验禁止非法转换（如 cancelled → approved 终态复活）
+			target := "approved"
+			if !service.IsValidChangeStatusTransition(c.Status, target, c.Type) {
+				s.logger.Warnw("checkAndTransitionChange: skip invalid change status transition",
+					"change_id", changeID, "from", c.Status, "to", target)
+				return nil
+			}
+			c.Status = target
 			if _, err := s.repo.Update(ctx, c); err != nil {
 				s.logger.Errorw("checkAndTransitionChange: failed to update change status to approved", "error", err, "change_id", changeID)
 				return err
@@ -498,8 +529,8 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		return nil, fmt.Errorf("change not found")
 	}
 
-	// Validate state transition
-	if !isValidChangeStatusTransition(c.Status, targetStatus) {
+	// Validate state transition (使用 service 包的 canonical 状态机，保证与 legacy service 一致)
+	if !service.IsValidChangeStatusTransition(c.Status, targetStatus, c.Type) {
 		return nil, fmt.Errorf("无效的状态转换: 从 '%s' 到 '%s'", c.Status, targetStatus)
 	}
 
@@ -557,6 +588,35 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 				}
 			}
 		}
+	}
+
+	// H-2 / C-2 修复：
+	// 1. 终态（rejected/completed/cancelled/rolled_back）需要事务化：写 change + 收口 pending chains
+	// 2. 非终态直接更新
+	isTerminal := targetStatus == "rejected" || targetStatus == "completed" ||
+		targetStatus == "cancelled" || targetStatus == "rolled_back"
+	if isTerminal {
+		tx, txErr := s.entClient.Tx(ctx)
+		if txErr != nil {
+			return nil, fmt.Errorf("开启事务失败: %w", txErr)
+		}
+		defer tx.Rollback()
+
+		if _, updateErr := tx.Change.UpdateOneID(c.ID).
+			Where(change.TenantID(tenantID)).
+			SetStatus(targetStatus).
+			Save(ctx); updateErr != nil {
+			return nil, fmt.Errorf("failed to update change status: %w", updateErr)
+		}
+		if commitErr := tx.Commit(); commitErr != nil {
+			return nil, fmt.Errorf("提交事务失败: %w", commitErr)
+		}
+		if closeErr := service.CloseChangeApprovalChains(ctx, id, tenantID); closeErr != nil {
+			s.logger.Errorw("TransitionStatus: 收口审批链失败（非致命，后续状态机兜底）",
+				"error", closeErr, "change_id", id, "tenant_id", tenantID)
+		}
+		c.Status = targetStatus
+		return c, nil
 	}
 
 	c.Status = targetStatus

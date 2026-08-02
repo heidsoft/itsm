@@ -362,10 +362,12 @@ func (r *EntRepository) SubmitForApproval(
 }
 
 func (r *EntRepository) UpdateApprovalRecord(ctx context.Context, rec *ApprovalRecord) (*ApprovalRecord, error) {
+	// C-5 修复：必须加 AND status = 'pending' 条件，防止已驳回/已批准的审批被重复修改
+	// 校验 RowsAffected == 1，否则返回 409 冲突，避免幂等问题
 	query := `
 		UPDATE change_approvals 
 		SET status = $1, comment = $2, approved_at = $3, updated_at = $4
-		WHERE id = $5 AND tenant_id = $6
+		WHERE id = $5 AND tenant_id = $6 AND status = 'pending'
 		RETURNING id, change_id, tenant_id, approver_id, status, comment, approved_at, created_at
 	`
 	var approvedAt sql.NullTime
@@ -373,6 +375,16 @@ func (r *EntRepository) UpdateApprovalRecord(ctx context.Context, rec *ApprovalR
 	err := r.db.QueryRowContext(ctx, query, rec.Status, rec.Comment, now, now, rec.ID, rec.TenantID).
 		Scan(&rec.ID, &rec.ChangeID, &rec.TenantID, &rec.ApproverID, &rec.Status, &rec.Comment, &approvedAt, &rec.CreatedAt)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			// 没有匹配的 pending 记录：要么记录不存在，要么已被处理过（已批准/已驳回）
+			// 先读一下当前记录状态，返回更精确的错误
+			var curStatus string
+			_ = r.db.QueryRowContext(ctx, `SELECT status FROM change_approvals WHERE id = $1 AND tenant_id = $2`, rec.ID, rec.TenantID).Scan(&curStatus)
+			if curStatus != "" {
+				return nil, fmt.Errorf("审批记录已处理（当前状态=%s），不可重复审批", curStatus)
+			}
+			return nil, fmt.Errorf("审批记录不存在或跨租户")
+		}
 		return nil, err
 	}
 	if approvedAt.Valid {

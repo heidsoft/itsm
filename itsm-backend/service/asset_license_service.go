@@ -235,8 +235,37 @@ func (s *AssetLicenseService) GetLicenseStats(ctx context.Context, tenantID int)
 }
 
 // AssignUsers 分配许可证给用户
+// C-6 修复：read-modify-write 用事务 + 原子 UPDATE 条件检查，避免并发请求下席位超发。
+// 同时对传入的 userIDs 去重，避免重复分配的用户计入新增席位。
 func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int, userIDs []int) (*dto.LicenseResponse, error) {
-	licenseEntity, err := s.client.AssetLicense.Query().
+	// 1. 传入 userIDs 先去重（本次请求中的重复用户）
+	seen := make(map[int]struct{}, len(userIDs))
+	deduped := make([]int, 0, len(userIDs))
+	for _, uid := range userIDs {
+		if _, ok := seen[uid]; !ok {
+			seen[uid] = struct{}{}
+			deduped = append(deduped, uid)
+		}
+	}
+	if len(deduped) == 0 {
+		// 无有效新增用户，直接返回原记录
+		licenseEntity, err := s.client.AssetLicense.Query().
+			Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
+			First(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get license: %w", err)
+		}
+		return dto.ToLicenseResponse(licenseEntity), nil
+	}
+
+	// 2. 事务：在同一事务内 FOR UPDATE 读 + 条件 UPDATE，防止并发超发
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("开启事务失败: %w", err)
+	}
+	defer tx.Rollback()
+
+	licenseEntity, err := tx.AssetLicense.Query().
 		Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
 		First(ctx)
 	if err != nil {
@@ -247,30 +276,82 @@ func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int,
 		return nil, fmt.Errorf("failed to get license: %w", err)
 	}
 
-	// 检查是否超过可用数量
-	availableQty := licenseEntity.TotalQuantity - licenseEntity.UsedQuantity
-	if len(userIDs) > availableQty {
-		return nil, fmt.Errorf("insufficient license quantity: available %d, requested %d", availableQty, len(userIDs))
+	// 3. 计算真正需要新增的用户（剔除已在列表中的）
+	existing := make(map[int]struct{}, len(licenseEntity.Users))
+	for _, u := range licenseEntity.Users {
+		existing[u] = struct{}{}
+	}
+	newUsers := make([]int, 0, len(licenseEntity.Users)+len(deduped))
+	newUsers = append(newUsers, licenseEntity.Users...)
+	needed := 0
+	for _, uid := range deduped {
+		if _, ok := existing[uid]; !ok {
+			existing[uid] = struct{}{}
+			newUsers = append(newUsers, uid)
+			needed++
+		}
 	}
 
-	// 合并用户列表
-	newUsers := append(licenseEntity.Users, userIDs...)
-	updated, err := licenseEntity.Update().
+	// 没有真正需要新增的用户，直接返回
+	if needed == 0 {
+		_ = tx.Rollback()
+		return dto.ToLicenseResponse(licenseEntity), nil
+	}
+
+	// 4. 检查可用数量
+	availableQty := licenseEntity.TotalQuantity - licenseEntity.UsedQuantity
+	if needed > availableQty {
+		_ = tx.Rollback()
+		return nil, fmt.Errorf("insufficient license quantity: available %d, requested %d", availableQty, needed)
+	}
+
+	// 5. 原子 UPDATE：WHERE 条件包含 used_quantity + needed <= total_quantity + tenant 过滤
+	// 这保证了即使在 SERIALIZABLE 之外的隔离级别下也不会超发
+	newUsed := licenseEntity.UsedQuantity + needed
+	result, err := tx.AssetLicense.Update().
+		Where(
+			assetlicense.IDEQ(id),
+			assetlicense.TenantIDEQ(tenantID),
+			// 乐观条件：当前 used_quantity 必须等于我们刚读出的值（隐式 CAS + 总量保护）
+			assetlicense.UsedQuantityEQ(licenseEntity.UsedQuantity),
+			assetlicense.TotalQuantityGTE(newUsed),
+		).
 		SetUsers(newUsers).
-		SetUsedQuantity(len(newUsers)).
+		SetUsedQuantity(newUsed).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to assign users to license", "error", err, "license_id", id)
 		return nil, fmt.Errorf("failed to assign users: %w", err)
 	}
-
-	// 检查是否已耗尽
-	if updated.UsedQuantity >= updated.TotalQuantity {
-		updated.Update().SetStatus(string(dto.LicenseStatusDepleted)).Exec(ctx)
+	if result == 0 {
+		_ = tx.Rollback()
+		return nil, fmt.Errorf("席位已被其他请求占用，请重试")
 	}
 
-	s.logger.Infow("Users assigned to license", "license_id", id, "user_count", len(userIDs))
-	return dto.ToLicenseResponse(updated), nil
+	// 6. 检查是否已耗尽（在同一事务内 UPDATE，避免读已提交时的不一致）
+	if newUsed >= licenseEntity.TotalQuantity {
+		_, err = tx.AssetLicense.Update().
+			Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
+			SetStatus(string(dto.LicenseStatusDepleted)).
+			Save(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("更新 depleted 状态失败: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交事务失败: %w", err)
+	}
+
+	// 返回最终记录
+	finalEntity, err := s.client.AssetLicense.Query().
+		Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
+		First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get final license: %w", err)
+	}
+	s.logger.Infow("Users assigned to license", "license_id", id, "new_user_count", needed)
+	return dto.ToLicenseResponse(finalEntity), nil
 }
 
 // CheckAndUpdateLicenseStatus 检查并更新许可证状态

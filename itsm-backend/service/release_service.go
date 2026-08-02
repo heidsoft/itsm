@@ -262,7 +262,13 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 }
 
 // UpdateReleaseStatus 更新发布状态
+// C-1 修复：新增 isValidReleaseStatusTransition 白名单校验，防止审批被绕过：
+//  - draft → scheduled / cancelled
+//  - scheduled → in-progress / cancelled
+//  - in-progress → completed / failed / rolled_back / cancelled
+//  - completed / cancelled / rolled_back / failed 为终态（不可被复活）
 func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID int, status string) (*dto.ReleaseResponse, error) {
+	status = func() string { s1 := status; return s1 }()
 	releaseEntity, err := s.client.Release.Query().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
 		First(ctx)
@@ -272,6 +278,11 @@ func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID i
 		}
 		s.logger.Errorw("Failed to get release", "error", err, "release_id", id)
 		return nil, fmt.Errorf("failed to get release: %w", err)
+	}
+
+	// 1. 状态机白名单校验
+	if !isValidReleaseStatusTransition(releaseEntity.Status, status) {
+		return nil, fmt.Errorf("非法的发布状态转换: %s -> %s", releaseEntity.Status, status)
 	}
 
 	update := releaseEntity.Update().SetStatus(status)
@@ -290,6 +301,46 @@ func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID i
 
 	s.logger.Infow("Release status updated", "release_id", id, "status", status)
 	return dto.ToReleaseResponse(updated), nil
+}
+
+// isValidReleaseStatusTransition 发布状态转换白名单校验
+func isValidReleaseStatusTransition(current, newStatus string) bool {
+	if current == newStatus {
+		// 幂等：同一状态不报错
+		return true
+	}
+	baseTransitions := map[string]map[string]struct{}{
+		string(dto.ReleaseStatusDraft): {
+			string(dto.ReleaseStatusScheduled): {},
+			string(dto.ReleaseStatusCancelled): {},
+		},
+		string(dto.ReleaseStatusScheduled): {
+			string(dto.ReleaseStatusInProgress): {},
+			string(dto.ReleaseStatusCancelled):  {},
+		},
+		string(dto.ReleaseStatusInProgress): {
+			string(dto.ReleaseStatusCompleted):  {},
+			string(dto.ReleaseStatusFailed):     {},
+			string(dto.ReleaseStatusRolledBack): {},
+			string(dto.ReleaseStatusCancelled):  {},
+		},
+		string(dto.ReleaseStatusFailed): {
+			// 失败后允许重新排期或标记为回滚/取消
+			string(dto.ReleaseStatusScheduled):  {},
+			string(dto.ReleaseStatusRolledBack): {},
+			string(dto.ReleaseStatusCancelled):  {},
+		},
+		// 终态：completed / cancelled / rolled_back 不允许再转换
+		string(dto.ReleaseStatusCompleted):  {},
+		string(dto.ReleaseStatusCancelled):  {},
+		string(dto.ReleaseStatusRolledBack): {},
+	}
+	allowed, ok := baseTransitions[current]
+	if !ok {
+		return false
+	}
+	_, ok = allowed[newStatus]
+	return ok
 }
 
 // ApplyReleaseApproval 处理发布审批（approve/reject）：校验审批人身份后先桥接完成对应的
