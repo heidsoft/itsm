@@ -400,8 +400,10 @@ func checkRoleBasedPermission(role, method, path string) bool {
 // using the database-driven approach
 // SEC-005 修复：真正查询数据库获取角色权限，而非仅使用硬编码权限
 func checkRolePermissionFromDB(client *ent.Client, role, resource, action string, tenantID int) bool {
-	// Super admin has all permissions
-	if role == "super_admin" || role == "sysadmin" {
+	// 修复：统一超管白名单——仅 super_admin 直接放行。
+	// sysadmin 不再硬编码短路，必须走数据库权限校验，
+	// 否则 DBOnly 模式下对 sysadmin 的任何权限收回/降级完全失效。
+	if role == "super_admin" {
 		return true
 	}
 

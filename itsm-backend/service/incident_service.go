@@ -1180,45 +1180,11 @@ func (s *IncidentService) executeAssignmentAction(ctx context.Context, action ma
 	}
 }
 
-// isValidIncidentStatusTransition 检查事件状态转换是否合法
-// Incident状态转换规则:
-// new -> acknowledged, assigned, in_progress
-// acknowledged -> in_progress, closed, on_hold
-// assigned -> in_progress, escalated, closed, on_hold
-// in_progress -> resolved, escalated, pending, closed, on_hold
-// on_hold -> in_progress, closed
-// escalated -> in_progress, closed
-// resolved -> closed, in_progress (reopen)
-// closed -> (不允许转换到其他状态)
-// cancelled -> (不允许转换到其他状态)
+// isValidIncidentStatusTransition 检查事件状态转换是否合法。
+// 阻断6 修复：委托给 common.IsValidIncidentStatusTransition，保持单一事实来源，
+// 避免 service 层与 handlers/incident 层两套白名单漂移。
 func isValidIncidentStatusTransition(currentStatus, newStatus string) bool {
-	if currentStatus == newStatus {
-		return true
-	}
-	validTransitions := map[string][]string{
-		common.IncidentStatusNew:          {common.IncidentStatusAcknowledged, common.IncidentStatusAssigned, common.IncidentStatusInProgress, common.IncidentStatusCancelled},
-		common.IncidentStatusAcknowledged: {common.IncidentStatusInProgress, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
-		common.IncidentStatusAssigned:     {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
-		common.IncidentStatusInProgress:   {common.IncidentStatusResolved, common.IncidentStatusEscalated, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
-		common.IncidentStatusTriaged:      {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
-		common.IncidentStatusEscalated:    {common.IncidentStatusInProgress, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
-		common.IncidentStatusOnHold:       {common.IncidentStatusInProgress, common.IncidentStatusCancelled},
-		common.IncidentStatusResolved:     {common.IncidentStatusClosed, common.IncidentStatusInProgress, common.IncidentStatusCancelled}, // 重新打开
-		common.IncidentStatusClosed:       {},                                                                                             // 已关闭不允许转换
-		common.IncidentStatusCancelled:    {},                                                                                             // 已取消不允许转换
-	}
-
-	allowed, ok := validTransitions[currentStatus]
-	if !ok {
-		return false
-	}
-
-	for _, status := range allowed {
-		if status == newStatus {
-			return true
-		}
-	}
-	return false
+	return common.IsValidIncidentStatusTransition(currentStatus, newStatus)
 }
 
 // 转换为响应DTO

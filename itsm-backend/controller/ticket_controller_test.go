@@ -54,8 +54,15 @@ func setupTestTicketController(t *testing.T) (*gin.Engine, *ent.Client, *TicketC
 				userID = v
 			}
 		}
+		// 阻断8：测试中间件需注入 role，否则 DataScope 会按空角色收窄到
+		// OwnedOrAssigned 并使用默认 userID=1，导致列表测试返回 0 条。
+		role := "admin"
+		if h := c.GetHeader("X-Test-Role"); h != "" {
+			role = h
+		}
 		c.Set("tenant_id", tenantID)
 		c.Set("user_id", userID)
+		c.Set("role", role)
 		c.Next()
 	})
 

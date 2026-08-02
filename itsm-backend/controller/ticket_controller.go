@@ -162,6 +162,12 @@ func (tc *TicketController) UpdateTicket(c *gin.Context) {
 			common.Fail(c, common.NotFoundCode, "工单不存在")
 			return
 		}
+		// 用户输入错误（分类/标签/处理人等）应映射到 400，而不是 500
+		if isUserInputUpdateError(err) {
+			tc.logger.Warnw("Ticket update rejected for invalid input", "error", err, "ticket_id", ticketID)
+			common.Fail(c, common.ParamErrorCode, err.Error())
+			return
+		}
 		tc.logger.Errorw("Failed to update ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -220,8 +226,13 @@ func (tc *TicketController) ListTickets(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	// 阻断8：注入行级数据权限所需的当前用户 ID 与角色。
+	// service 层根据角色决定 DataScope：管理角色可见全租户工单，
+	// 普通角色仅可见本人创建或分配给自己的工单。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 
-	response, err := tc.ticketService.ListTickets(c.Request.Context(), &req, tenantID)
+	response, err := tc.ticketService.ListTickets(c.Request.Context(), &req, tenantID, currentUserID, currentRole)
 	if err != nil {
 		tc.logger.Errorw("Failed to list tickets", "error", err, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -898,11 +909,15 @@ func (tc *TicketController) GetSubtasks(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	// 阻断8：子任务列表同样注入行级数据权限，
+	// 普通用户只能看到本人创建或分配给自己的子任务。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 
 	// 查询所有parent_ticket_id等于当前工单ID的工单
 	tickets, err := tc.ticketService.ListTickets(c.Request.Context(), &dto.ListTicketsRequest{
 		ParentTicketID: &parentID,
-	}, tenantID)
+	}, tenantID, currentUserID, currentRole)
 	if err != nil {
 		tc.logger.Errorw("Failed to get subtasks", "error", err, "parent_id", parentID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -1036,4 +1051,29 @@ func (tc *TicketController) DeleteSubtask(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{"message": "子任务删除成功"})
+}
+
+// isUserInputUpdateError 判断工单更新失败是否为用户输入错误（分类/标签/处理人不存在等），
+// 这种错误应返回 400 而不是 500。
+func isUserInputUpdateError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	patterns := []string{
+		"工单分类不存在或不可用",
+		"处理人不存在或不可用",
+		"验证处理人失败",
+		"验证工单分类失败",
+		"无法解析工单分类",
+		"解析工单标签失败",
+		"无法解析工单标签",
+		"工单分类名称不存在",
+	}
+	for _, p := range patterns {
+		if strings.Contains(msg, p) {
+			return true
+		}
+	}
+	return false
 }

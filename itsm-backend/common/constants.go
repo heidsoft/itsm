@@ -85,6 +85,47 @@ const (
 	IncidentStatusCancelled    = "cancelled" // 已取消
 )
 
+// IsValidIncidentStatusTransition 校验事件状态转换是否合法。
+// 阻断6 修复：事件状态机原先只在 service/incident_service.go 私有实现，
+// handlers/incident/service.go 的 Update 方法绕过校验直接 SetStatus，
+// 导致终态事件可被任意改写。此函数统一为共享白名单。
+// 规则：
+//   - new → acknowledged/assigned/in_progress/cancelled
+//   - acknowledged → in_progress/on_hold/cancelled
+//   - assigned → in_progress/escalated/on_hold/cancelled
+//   - in_progress/triaged → resolved/escalated/on_hold/cancelled
+//   - escalated → in_progress/on_hold/cancelled
+//   - on_hold → in_progress/cancelled
+//   - resolved → closed/in_progress(reopen)/cancelled
+//   - closed/cancelled → 终态，不允许转换
+func IsValidIncidentStatusTransition(currentStatus, newStatus string) bool {
+	if currentStatus == newStatus {
+		return true
+	}
+	validTransitions := map[string][]string{
+		IncidentStatusNew:          {IncidentStatusAcknowledged, IncidentStatusAssigned, IncidentStatusInProgress, IncidentStatusCancelled},
+		IncidentStatusAcknowledged: {IncidentStatusInProgress, IncidentStatusOnHold, IncidentStatusCancelled},
+		IncidentStatusAssigned:     {IncidentStatusInProgress, IncidentStatusEscalated, IncidentStatusOnHold, IncidentStatusCancelled},
+		IncidentStatusInProgress:   {IncidentStatusResolved, IncidentStatusEscalated, IncidentStatusOnHold, IncidentStatusCancelled},
+		IncidentStatusTriaged:      {IncidentStatusInProgress, IncidentStatusEscalated, IncidentStatusOnHold, IncidentStatusCancelled},
+		IncidentStatusEscalated:    {IncidentStatusInProgress, IncidentStatusOnHold, IncidentStatusCancelled},
+		IncidentStatusOnHold:       {IncidentStatusInProgress, IncidentStatusCancelled},
+		IncidentStatusResolved:     {IncidentStatusClosed, IncidentStatusInProgress, IncidentStatusCancelled},
+		IncidentStatusClosed:       {},
+		IncidentStatusCancelled:    {},
+	}
+	allowed, ok := validTransitions[currentStatus]
+	if !ok {
+		return false
+	}
+	for _, s := range allowed {
+		if s == newStatus {
+			return true
+		}
+	}
+	return false
+}
+
 // ===================================
 // Problem Status Constants
 // ===================================

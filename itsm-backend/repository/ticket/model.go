@@ -172,6 +172,18 @@ func (e *StateError) Error() string {
 	return e.Message
 }
 
+// DataScope 行级数据权限范围。
+// 阻断8 修复：原 ListTickets 仅按 tenantID 过滤，普通员工（end_user）可读取全租户工单，
+// 含 HR/薪酬/安全事件工单。引入 DataScope 由中间件解析角色后注入，service 层统一消费。
+type DataScope int
+
+const (
+	// DataScopeAll 全租户可见（admin/manager/super_admin 等管理角色）。
+	DataScopeAll DataScope = iota
+	// DataScopeOwnedOrAssigned 仅可见本人创建或分配给本人的工单（end_user/agent）。
+	DataScopeOwnedOrAssigned
+)
+
 // FilterParams 工单查询过滤参数
 type FilterParams struct {
 	Status         *Status
@@ -187,6 +199,11 @@ type FilterParams struct {
 	Keyword        string
 	DateFrom       *time.Time
 	DateTo         *time.Time
+	// DataScope 行级数据权限（阻断8）。
+	// DataScopeOwnedOrAssigned 时，CurrentUserID 必须非零，
+	// repository 会强制追加 Or(RequesterIDEQ(uid), AssigneeIDEQ(uid)) 谓词。
+	DataScope     DataScope
+	CurrentUserID int
 }
 
 // CreateParams 工单创建参数

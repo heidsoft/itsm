@@ -64,9 +64,13 @@ type SLAComplianceResult struct {
 }
 
 // CheckSLACompliance P1-07 修复：真正计算 actual_response_minutes。
+// 阻断3 修复：合规判定必须基于 SLA 截止时间，而非"是否已首次响应"。
+// 旧逻辑 `res.Compliant = !firstResponseAt.IsZero()` 把"已响应"等同于"合规"，
+// 导致超时响应的工单仍被判为合规；同时未解决工单永远判为"不合规"，
+// 与 SLA 定义中"未到截止时间即合规"的语义相悖。
 func (s *Service) CheckSLACompliance(ctx context.Context, ticketID int, tenantID int) (*SLAComplianceResult, error) {
 	s.logger.Infow("Checking SLA Compliance", "ticketID", ticketID)
-	createdAt, firstResponseAt, resolvedAt, found, err := s.repo.GetTicketSLA(ctx, ticketID, tenantID)
+	createdAt, firstResponseAt, resolvedAt, slaResponseDeadline, slaResolutionDeadline, found, err := s.repo.GetTicketSLA(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -90,11 +94,48 @@ func (s *Service) CheckSLACompliance(ctx context.Context, ticketID int, tenantID
 		res.ResolvedAt = &t
 		res.ActualResolutionMinutes = resolvedAt.Sub(createdAt).Minutes()
 	}
-	res.Compliant = !firstResponseAt.IsZero()
-	if res.Compliant {
-		res.Message = fmt.Sprintf("SLA计时正常，首次响应 %.1f 分钟", res.ActualResponseMinutes)
-	} else {
-		res.Message = "工单尚未首次响应"
+
+	// 合规判定：
+	// 1) 响应合规：已首次响应 且 响应时间 <= slaResponseDeadline（deadline 未配置时视为合规）
+	// 2) 解决合规：已解决 且 解决时间 <= slaResolutionDeadline（deadline 未配置时视为合规）
+	// 3) 仍处于处理中（未解决）：若当前时间未超过 slaResolutionDeadline，则视为临时合规
+	responseCompliant := true
+	resolutionCompliant := true
+
+	if !slaResponseDeadline.IsZero() {
+		// 已配置响应截止时间
+		if firstResponseAt.IsZero() {
+			// 尚未响应：截止时间已过则违规
+			responseCompliant = time.Now().Before(slaResponseDeadline)
+		} else {
+			// 已响应：比对响应时间与截止时间
+			responseCompliant = !firstResponseAt.After(slaResponseDeadline)
+		}
+	}
+
+	if !slaResolutionDeadline.IsZero() {
+		// 已配置解决截止时间
+		if resolvedAt.IsZero() {
+			// 尚未解决：截止时间已过则违规
+			resolutionCompliant = time.Now().Before(slaResolutionDeadline)
+		} else {
+			// 已解决：比对解决时间与截止时间
+			resolutionCompliant = !resolvedAt.After(slaResolutionDeadline)
+		}
+	}
+
+	res.Compliant = responseCompliant && resolutionCompliant
+	switch {
+	case !res.Compliant:
+		res.Message = fmt.Sprintf("SLA 违规：响应合规=%v 解决合规=%v", responseCompliant, resolutionCompliant)
+	case !firstResponseAt.IsZero() && !resolvedAt.IsZero():
+		res.Message = fmt.Sprintf("SLA 计时正常，首次响应 %.1f 分钟，解决 %.1f 分钟",
+			res.ActualResponseMinutes, res.ActualResolutionMinutes)
+	case !firstResponseAt.IsZero():
+		res.Message = fmt.Sprintf("SLA 计时正常，首次响应 %.1f 分钟，待解决",
+			res.ActualResponseMinutes)
+	default:
+		res.Message = "SLA 计时正常，等待首次响应"
 	}
 	return res, nil
 }

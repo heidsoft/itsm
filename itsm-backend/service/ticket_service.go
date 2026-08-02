@@ -374,6 +374,18 @@ func isSupportedTicketType(value string) bool {
 	}
 }
 
+// isTicketDataScopeAllRole 判断角色是否拥有全租户工单可见权限（DataScopeAll）。
+// 阻断8：管理角色（super_admin/admin/manager/sysadmin）可见全租户工单，
+// 其余角色（end_user/agent 等）只能查看本人创建或分配给自己的工单。
+func isTicketDataScopeAllRole(role string) bool {
+	switch role {
+	case "super_admin", "admin", "manager", "sysadmin":
+		return true
+	default:
+		return false
+	}
+}
+
 // triggerWorkflowForTicket 异步触发工单关联的 BPMN 流程
 // 逻辑参考 V1 (ticket_service.go:221-279)，适配 V2 的 DDD 领域模型
 func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, tkt *ticket.Ticket, tenantID int, workflowDefinitionKey string) error {
@@ -758,8 +770,12 @@ func (s *TicketService) DeleteTicket(ctx context.Context, id int, tenantID int) 
 	return s.repo.Delete(ctx, id, tenantID)
 }
 
-// ListTickets 列表查询工单
-func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsRequest, tenantID int) (*dto.ListTicketsResponse, error) {
+// ListTickets 列表查询工单。
+// 阻断8 修复：新增 currentUserID + currentRole 参数，按角色注入行级数据权限。
+// - 管理角色（super_admin/admin/manager）：DataScopeAll，可见全租户工单。
+// - 普通角色（end_user/agent）：DataScopeOwnedOrAssigned，仅可见本人创建或分配给自己的工单。
+// 这是安全关键路径：即使前端不传 RequesterID 过滤，service 层也会强制收窄。
+func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsRequest, tenantID int, currentUserID int, currentRole string) (*dto.ListTicketsResponse, error) {
 	// 构建过滤参数
 	filters := &ticket.FilterParams{}
 	if req.Status != "" {
@@ -798,6 +814,15 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 	}
 	if req.DateTo != nil {
 		filters.DateTo = req.DateTo
+	}
+
+	// 阻断8：按角色注入行级数据权限。
+	// 管理角色放行全租户；普通角色强制收窄到本人创建或分配给自己的工单。
+	filters.CurrentUserID = currentUserID
+	if isTicketDataScopeAllRole(currentRole) {
+		filters.DataScope = ticket.DataScopeAll
+	} else {
+		filters.DataScope = ticket.DataScopeOwnedOrAssigned
 	}
 
 	// 分页参数

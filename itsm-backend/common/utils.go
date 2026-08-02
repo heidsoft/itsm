@@ -51,6 +51,50 @@ func MD5Hash(text string) string {
 	return hex.EncodeToString(hash[:])
 }
 
+// MaskSecret 对敏感字符串（API Key、Token、密码等）做脱敏处理，仅保留首尾少量字符。
+// 用于日志输出和启动诊断信息，防止明文密钥泄露到日志。
+//   - 长度 < 8：返回 "***"
+//   - 长度 8-15：返回 "前2..**..后2"
+//   - 长度 >= 16：返回 "前4..****..后4"
+//
+// 阻断1 修复：LLM API Key 等敏感凭据在启动诊断日志中必须脱敏。
+func MaskSecret(s string) string {
+	n := len(s)
+	switch {
+	case n == 0:
+		return ""
+	case n < 8:
+		return "***"
+	case n < 16:
+		return s[:2] + "****" + s[n-2:]
+	default:
+		return s[:4] + "****" + s[n-4:]
+	}
+}
+
+// IsPlaceholderSecret 判断 API Key 是否为占位符或明显无效值。
+// 用于启动时检测未配置的真实密钥，避免误用占位符进入生产。
+// 阻断1 修复：启动期检测占位符密钥，防止误用。
+func IsPlaceholderSecret(s string) bool {
+	t := strings.TrimSpace(s)
+	if t == "" {
+		return true
+	}
+	lower := strings.ToLower(t)
+	placeholders := []string{
+		"sk-your", "sk-xxx", "your-api-key", "your_api_key",
+		"change-me", "changeme", "placeholder", "example",
+		"sk-xxxxxxxxxxxx", "sk-ant-xxxxxxxxxxxx",
+		"rotated-please-set",
+	}
+	for _, p := range placeholders {
+		if strings.Contains(lower, p) {
+			return true
+		}
+	}
+	return false
+}
+
 // StringToInt 字符串转整数，带默认值
 func StringToInt(s string, defaultValue int) int {
 	if i, err := strconv.Atoi(s); err == nil {

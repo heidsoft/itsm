@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"strings"
 	"time"
@@ -116,6 +117,9 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		// write asynchronously to reduce latency
 		go func() {
+			// 修复：使用 context.Background() 而非 c.Request.Context()。
+			// 请求结束后 c.Request.Context() 会被取消，导致审计记录写入失败。
+			auditCtx := context.Background()
 			auditCreate := client.AuditLog.Create().
 				SetCreatedAt(time.Now()).
 				SetTenantID(tenantID).
@@ -129,7 +133,7 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 				SetAction(action).
 				SetRequestBody(requestBody)
 
-			err := auditCreate.Exec(c.Request.Context())
+			err := auditCreate.Exec(auditCtx)
 			if err != nil && globalLogger != nil {
 				globalLogger.Errorw("Failed to save audit log", "error", err)
 			}

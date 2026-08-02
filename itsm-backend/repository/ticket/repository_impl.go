@@ -297,6 +297,21 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters *FilterP
 		if filters.DateTo != nil {
 			query = query.Where(ticket.CreatedAtLTE(*filters.DateTo))
 		}
+		// 阻断8 修复：行级数据权限。
+		// DataScopeOwnedOrAssigned 强制追加 Or(RequesterIDEQ(uid), AssigneeIDEQ(uid))，
+		// 使普通员工只能看到自己创建或分配给自己的工单。
+		// 这是安全关键路径：即使上层忘记传 RequesterID 过滤，这里仍会兜底收窄。
+		if filters.DataScope == DataScopeOwnedOrAssigned {
+			if filters.CurrentUserID <= 0 {
+				// 防御性：未提供用户 ID 时 fail closed，返回空集而非全量。
+				query = query.Where(ticket.IDEQ(-1))
+			} else {
+				query = query.Where(ticket.Or(
+					ticket.RequesterIDEQ(filters.CurrentUserID),
+					ticket.AssigneeIDEQ(filters.CurrentUserID),
+				))
+			}
+		}
 	}
 
 	// 获取总数

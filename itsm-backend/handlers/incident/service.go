@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 
 	"go.uber.org/zap"
@@ -100,6 +101,12 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, updates *Inc
 		current.Description = updates.Description
 	}
 	if updates.Status != "" {
+		// 阻断6 修复：必须走事件状态机白名单校验，禁止裸写 SetStatus。
+		// 旧逻辑允许终态（closed/cancelled）事件被任意改写回 active，
+		// 也允许从 new 直接跳到 resolved 绕过处理流程。
+		if !common.IsValidIncidentStatusTransition(current.Status, updates.Status) {
+			return nil, fmt.Errorf("invalid incident status transition from '%s' to '%s'", current.Status, updates.Status)
+		}
 		current.Status = updates.Status
 		if updates.Status == "resolved" {
 			now := time.Now()

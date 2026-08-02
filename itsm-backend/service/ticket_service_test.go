@@ -411,7 +411,10 @@ func TestTicketService_GetTickets(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := ticketService.ListTickets(ctx, tt.request, tt.tenantID)
+			// 阻断8：以 testUser（end_user）身份查询，
+			// DataScope=OwnedOrAssigned 应仅返回本人创建/分配的工单。
+			// 测试数据中 3 张工单均由 testUser 创建，故总数仍为 3。
+			response, err := ticketService.ListTickets(ctx, tt.request, tt.tenantID, testUser.ID, "end_user")
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -426,6 +429,160 @@ func TestTicketService_GetTickets(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestTicketService_ListTickets_DataScope 阻断8 回归测试：
+// 验证行级数据权限。end_user 只能看到自己创建或分配给自己的工单，
+// admin/manager 可见全租户工单。这是安全关键路径，防止越权读取 HR/薪酬/安全工单。
+func TestTicketService_ListTickets_DataScope(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	ticketService := NewTicketServiceForTest(client, logger)
+
+	ctx := context.Background()
+
+	// 创建租户
+	testTenant, err := client.Tenant.Create().
+		SetName("DataScope Tenant").
+		SetCode("dscope").
+		SetDomain("dscope.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 创建两个 end_user 和一个 admin
+	alice, err := client.User.Create().
+		SetUsername("alice").
+		SetEmail("alice@example.com").
+		SetName("Alice").
+		SetPasswordHash("hashed").
+		SetRole("end_user").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	bob, err := client.User.Create().
+		SetUsername("bob").
+		SetEmail("bob@example.com").
+		SetName("Bob").
+		SetPasswordHash("hashed").
+		SetRole("end_user").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	admin, err := client.User.Create().
+		SetUsername("admin").
+		SetEmail("admin@example.com").
+		SetName("Admin").
+		SetPasswordHash("hashed").
+		SetRole("admin").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Alice 创建 2 张工单，Bob 创建 1 张工单（含敏感信息）
+	_, err = client.Ticket.Create().
+		SetTicketNumber("DSCOPE-1").
+		SetTitle("Alice 的工单 1").
+		SetDescription("desc").
+		SetPriority("medium").
+		SetStatus("open").
+		SetType("incident").
+		SetRequesterID(alice.ID).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.Ticket.Create().
+		SetTicketNumber("DSCOPE-2").
+		SetTitle("Alice 的工单 2").
+		SetDescription("desc").
+		SetPriority("medium").
+		SetStatus("open").
+		SetType("incident").
+		SetRequesterID(alice.ID).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	bobTicket, err := client.Ticket.Create().
+		SetTicketNumber("DSCOPE-3").
+		SetTitle("Bob 的薪酬工单（敏感）").
+		SetDescription("salary info").
+		SetPriority("high").
+		SetStatus("open").
+		SetType("incident").
+		SetRequesterID(bob.ID).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 将一张 Bob 的工单分配给 Alice，验证"分配给自己"也可见
+	_, err = client.Ticket.Create().
+		SetTicketNumber("DSCOPE-4").
+		SetTitle("Bob 创建但分配给 Alice").
+		SetDescription("assigned to alice").
+		SetPriority("medium").
+		SetStatus("open").
+		SetType("incident").
+		SetRequesterID(bob.ID).
+		SetAssigneeID(alice.ID).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	req := &dto.ListTicketsRequest{Page: 1, PageSize: 100}
+
+	// 场景1：Alice（end_user）只能看到自己创建的 2 张 + 分配给自己的 1 张 = 3 张，
+	// 看不到 Bob 的 DSCOPE-3（薪酬敏感工单）。
+	aliceResp, err := ticketService.ListTickets(ctx, req, testTenant.ID, alice.ID, "end_user")
+	require.NoError(t, err)
+	assert.Equal(t, 3, aliceResp.Total, "Alice 应只看到自己创建或分配给自己的工单")
+	for _, tk := range aliceResp.Tickets {
+		assert.NotEqual(t, "DSCOPE-3", tk.TicketNumber,
+			"Alice 不应看到 Bob 的薪酬敏感工单")
+	}
+
+	// 场景2：Bob（end_user）只能看到自己创建的 2 张（DSCOPE-3 + DSCOPE-4）。
+	bobResp, err := ticketService.ListTickets(ctx, req, testTenant.ID, bob.ID, "end_user")
+	require.NoError(t, err)
+	assert.Equal(t, 2, bobResp.Total, "Bob 应只看到自己创建的工单")
+
+	// 场景3：Admin 可见全租户全部 4 张工单。
+	adminResp, err := ticketService.ListTickets(ctx, req, testTenant.ID, admin.ID, "admin")
+	require.NoError(t, err)
+	assert.Equal(t, 4, adminResp.Total, "Admin 应看到全租户所有工单")
+
+	// 场景4：空角色 + 未提供 userID，fail closed 返回空集。
+	emptyResp, err := ticketService.ListTickets(ctx, req, testTenant.ID, 0, "")
+	require.NoError(t, err)
+	assert.Equal(t, 0, emptyResp.Total, "未提供身份时应 fail closed 返回空集")
+
+	// 场景5：Alice 不能通过 RequesterID=bob 过滤绕过 DataScope 查看 Bob 独有的工单。
+	// 即使 Alice 传入 requesterID=bob.ID，DataScope 仍会强制收窄到"本人可见"。
+	// DSCOPE-4 虽由 Bob 创建但分配给 Alice，Alice 有权看到（assignee 路径）；
+	// 但 DSCOPE-3（Bob 独有）对 Alice 不可见。
+	bobIDFilter := bob.ID
+	aliceBypassResp, err := ticketService.ListTickets(ctx, &dto.ListTicketsRequest{
+		Page:       1,
+		PageSize:   100,
+		RequesterID: &bobIDFilter,
+	}, testTenant.ID, alice.ID, "end_user")
+	require.NoError(t, err)
+	// Alice 只能看到 DSCOPE-4（分配给自己），看不到 DSCOPE-3（Bob 独有）。
+	assert.Equal(t, 1, aliceBypassResp.Total,
+		"Alice 以 requesterID=bob 过滤时只应看到分配给自己的 DSCOPE-4")
+	for _, tk := range aliceBypassResp.Tickets {
+		assert.NotEqual(t, "DSCOPE-3", tk.TicketNumber,
+			"Alice 不应通过 RequesterID 过滤绕过 DataScope 看到 Bob 的薪酬敏感工单")
+	}
+	_ = bobTicket // keep linter happy
 }
 
 func TestTicketService_GetTicketByID(t *testing.T) {

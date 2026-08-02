@@ -592,16 +592,18 @@ func (r *EntRepository) GetTicketStats(ctx context.Context, tenantID int) (total
 
 // GetTicketSLA retrieves per-ticket SLA timing fields used by check-compliance.
 // P1-07 修复：返回创建的首次响应 / 解决时间点，让 Service 能计算 actual_response_minutes。
-func (r *EntRepository) GetTicketSLA(ctx context.Context, ticketID int, tenantID int) (createdAt, firstResponseAt, resolvedAt time.Time, found bool, err error) {
+// 修复：同时返回 SLA 截止时间，让 Service 判断合规时对比 deadline 而非仅检查是否有响应。
+func (r *EntRepository) GetTicketSLA(ctx context.Context, ticketID int, tenantID int) (createdAt, firstResponseAt, resolvedAt, slaResponseDeadline, slaResolutionDeadline time.Time, found bool, err error) {
 	t, err := r.client.Ticket.Query().
 		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
-		Select(ticket.FieldCreatedAt, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt).
+		Select(ticket.FieldCreatedAt, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt,
+			ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return time.Time{}, time.Time{}, time.Time{}, false, nil
+			return time.Time{}, time.Time{}, time.Time{}, time.Time{}, time.Time{}, false, nil
 		}
-		return time.Time{}, time.Time{}, time.Time{}, false, err
+		return time.Time{}, time.Time{}, time.Time{}, time.Time{}, time.Time{}, false, err
 	}
-	return t.CreatedAt, t.FirstResponseAt, t.ResolvedAt, true, nil
+	return t.CreatedAt, t.FirstResponseAt, t.ResolvedAt, t.SLAResponseDeadline, t.SLAResolutionDeadline, true, nil
 }

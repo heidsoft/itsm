@@ -288,6 +288,23 @@ func NewApplication() *Application {
 
 	// Create LLM Gateway for AI services
 	llmConfig := service.LoadLLMConfig()
+	// 阻断1 修复：启动期检测 LLM API Key 配置状态。
+	// - 占位符/空值：在开发环境 Warn，在生产环境终止启动（生产硬约束见 memory）。
+	// - 真实密钥：仅输出 MaskSecret 脱敏值，便于诊断配置是否生效，绝不输出明文。
+	if common.IsPlaceholderSecret(llmConfig.APIKey) {
+		if os.Getenv("ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+			sugar.Errorw("LLM API Key 未配置或为占位符，生产环境禁止以此状态启动",
+				"provider", llmConfig.Provider, "api_key", common.MaskSecret(llmConfig.APIKey))
+			// NewApplication 返回 *Application（无 error），生产硬约束用 log.Fatalf 终止。
+			log.Fatalf("LLM API Key 未配置：生产环境必须设置真实的 LLM_API_KEY (provider=%s, api_key=%s)",
+				llmConfig.Provider, common.MaskSecret(llmConfig.APIKey))
+		}
+		sugar.Warnw("LLM API Key 未配置或为占位符，AI 功能将降级为禁用",
+			"provider", llmConfig.Provider, "api_key", common.MaskSecret(llmConfig.APIKey))
+	} else {
+		sugar.Infow("LLM API Key 已配置",
+			"provider", llmConfig.Provider, "api_key_masked", common.MaskSecret(llmConfig.APIKey))
+	}
 	llmProvider := service.NewProviderFromConfig(llmConfig)
 	// Token limiter guards against runaway prompt cost. Default 4000 rune-tokens/request
 	// (roughly matches most model context windows). Override via llm.token_cap.
