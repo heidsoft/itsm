@@ -241,6 +241,7 @@ services:
     environment:
       - NODE_ENV=development
       - ITSM_BACKEND_URL=http://backend:8090
+      - NEXT_PUBLIC_API_URL=http://localhost:8090
       - NEXT_PUBLIC_ENABLE_AI=true
       - NEXT_PUBLIC_ENABLE_SWAGGER=true
 
