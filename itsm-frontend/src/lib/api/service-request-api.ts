@@ -97,6 +97,17 @@ class ServiceRequestAPI {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const tenantCode = getTenantCode();
+    // 兼容多端：从 cookie 中读取 access_token 并补到 Authorization。
+    let authToken: string | null = null;
+    if (typeof document !== 'undefined') {
+      const match = document.cookie
+        .split(';')
+        .map(c => c.trim())
+        .find(c => c.startsWith('access_token='));
+      if (match) {
+        authToken = decodeURIComponent(match.split('=')[1] || '');
+      }
+    }
 
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
@@ -105,6 +116,7 @@ class ServiceRequestAPI {
         headers: {
           'Content-Type': 'application/json',
           ...(tenantCode && { 'X-Tenant-Code': tenantCode }),
+          ...(authToken && { Authorization: `Bearer ${authToken}` }),
           ...options.headers,
         },
       });

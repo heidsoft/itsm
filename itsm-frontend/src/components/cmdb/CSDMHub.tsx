@@ -69,7 +69,7 @@ const normalizeList = <T,>(response: unknown): T[] => {
   return [];
 };
 
-function HubCard({ title, description, accent, icon, metrics, actions }: HubCardProps) {
+function HubCard({ title, description, accent, icon, metrics, actions, onAction }: HubCardProps & { onAction?: (href: string) => void }) {
   return (
     <Card
       className="h-full border-slate-200 shadow-sm"
@@ -107,7 +107,15 @@ function HubCard({ title, description, accent, icon, metrics, actions }: HubCard
 
       <div className="flex flex-wrap gap-2">
         {actions.map(action => (
-          <Button key={action.href} href={action.href} icon={action.icon} type="default">
+          <Button
+            key={action.href}
+            icon={action.icon}
+            type="default"
+            onClick={() => {
+              if (onAction) onAction(action.href);
+              else if (typeof window !== 'undefined') window.location.href = action.href;
+            }}
+          >
             {action.label}
           </Button>
         ))}
@@ -408,10 +416,18 @@ export function CSDMHub() {
       >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {workbenchActions.map(action => (
-            <a
+            <button
+              type="button"
               key={action.href}
-              href={action.href}
-              className="block rounded-lg border border-slate-200 p-4 text-inherit transition hover:border-blue-300 hover:bg-blue-50/40"
+              onClick={() => {
+                if (!action.href) return;
+                try {
+                  router.push(action.href);
+                } catch (e) {
+                  if (typeof window !== 'undefined') window.location.href = action.href;
+                }
+              }}
+              className="block w-full rounded-lg border border-slate-200 p-4 text-left text-inherit transition hover:border-blue-300 hover:bg-blue-50/40"
             >
               <div className="flex items-start gap-3">
                 <div
@@ -429,7 +445,7 @@ export function CSDMHub() {
                   <div className="mt-1 text-sm text-slate-500">{action.description}</div>
                 </div>
               </div>
-            </a>
+            </button>
           ))}
         </div>
       </Card>
@@ -453,6 +469,18 @@ export function CSDMHub() {
               icon={card.icon}
               metrics={card.metrics}
               actions={card.actions}
+              onAction={href => {
+                if (!href) return;
+                if (href.startsWith('http')) {
+                  if (typeof window !== 'undefined') window.location.href = href;
+                  return;
+                }
+                try {
+                  router.push(href);
+                } catch (e) {
+                  if (typeof window !== 'undefined') window.location.href = href;
+                }
+              }}
             />
           ))}
         </div>

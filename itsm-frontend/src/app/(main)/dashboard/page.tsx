@@ -13,10 +13,16 @@ import {
   Dropdown,
   Tabs,
   Divider,
+  Drawer,
+  Form,
+  Select as AntSelect,
   Row,
   Col,
   Skeleton,
   Select,
+  Radio,
+  ColorPicker,
+  Checkbox,
 } from 'antd';
 import { useRouter } from 'next/navigation';
 import {
@@ -36,6 +42,10 @@ import { ChartsSection } from './components/ChartsSection';
 import { QuickActions } from './components/QuickActions';
 import { useDashboardData } from './hooks/useDashboardData';
 import type { QuickAction } from './types/dashboard.types';
+import { useTheme } from '@/lib/design-system/theme';
+import { userPreferences } from '@/lib/user-preferences';
+
+type DashboardUserPreferences = ReturnType<typeof userPreferences.get>;
 
 // 动态导入图表组件 - 按需加载，减少初始 bundle 大小
 const TicketTrendChart = dynamic(() => import('./components/TicketTrendChart'), {
@@ -90,6 +100,21 @@ export default function DashboardPage() {
   } = useDashboardData();
 
   const [activeChartTab, setActiveChartTab] = useState('tickets');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [prefs, setPrefs] = useState<DashboardUserPreferences | null>(null);
+  const { mode: themeMode, setMode: setThemeMode } = useTheme();
+
+  // 同步用户偏好
+  React.useEffect(() => {
+    setPrefs(userPreferences.get());
+    const unsub = userPreferences.subscribe(p => setPrefs(p));
+    return () => unsub();
+  }, []);
+
+  const updatePref = (patch: Partial<DashboardUserPreferences>) => {
+    userPreferences.update(patch);
+    setPrefs(userPreferences.get());
+  };
 
   // 处理快速操作点击
   const handleQuickActionClick = useCallback(
@@ -260,9 +285,13 @@ export default function DashboardPage() {
             刷新
           </Button>
 
-          <Dropdown menu={{ items: controlMenuItems }} trigger={['click']} placement='bottomRight'>
-            <Button icon={<Settings />}>设置</Button>
-          </Dropdown>
+          <Button
+            type='default'
+            icon={<Settings />}
+            onClick={() => setSettingsOpen(true)}
+          >
+            设置
+          </Button>
         </Space>
       </div>
 
@@ -495,6 +524,146 @@ export default function DashboardPage() {
           </div>
         </>
       )}
+
+      {/* 仪表盘设置抽屉 */}
+      <Drawer
+        title='仪表盘设置'
+        placement='right'
+        width={420}
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        destroyOnClose
+        extra={
+          <Space>
+            <Button
+              onClick={() => {
+                userPreferences.reset();
+                setPrefs(userPreferences.get());
+                message.success('设置已重置为默认');
+              }}
+            >
+              重置
+            </Button>
+            <Button type='primary' onClick={() => setSettingsOpen(false)}>
+              完成
+            </Button>
+          </Space>
+        }
+      >
+        {prefs ? (
+          <Form layout='vertical'>
+            <Form.Item label='主题模式'>
+              <Radio.Group
+                value={themeMode}
+                onChange={e => {
+                  setThemeMode(e.target.value);
+                  updatePref({ theme: e.target.value });
+                }}
+              >
+                <Radio.Button value='light'>浅色</Radio.Button>
+                <Radio.Button value='dark'>深色</Radio.Button>
+                <Radio.Button value='system'>跟随系统</Radio.Button>
+              </Radio.Group>
+            </Form.Item>
+
+            <Form.Item label='语言'>
+              <Select
+                value={prefs.language}
+                onChange={v => updatePref({ language: v })}
+                options={[
+                  { value: 'zh-CN', label: '简体中文' },
+                  { value: 'en-US', label: 'English' },
+                ]}
+              />
+            </Form.Item>
+
+            <Form.Item label='时区'>
+              <Select
+                value={prefs.timezone}
+                onChange={v => updatePref({ timezone: v })}
+                options={[
+                  { value: 'Asia/Shanghai', label: '(UTC+8) 上海' },
+                  { value: 'Asia/Tokyo', label: '(UTC+9) 东京' },
+                  { value: 'UTC', label: '(UTC+0) 协调世界时' },
+                  { value: 'America/New_York', label: '(UTC-5) 纽约' },
+                ]}
+              />
+            </Form.Item>
+
+            <Form.Item label='日期格式'>
+              <Select
+                value={prefs.dateFormat}
+                onChange={v => updatePref({ dateFormat: v })}
+                options={[
+                  { value: 'YYYY-MM-DD HH:mm:ss', label: '2026-08-02 14:30:00' },
+                  { value: 'MM/DD/YYYY HH:mm', label: '08/02/2026 14:30' },
+                  { value: 'DD/MM/YYYY HH:mm', label: '02/08/2026 14:30' },
+                ]}
+              />
+            </Form.Item>
+
+            <Form.Item label='表格每页条数'>
+              <Select
+                value={prefs.pageSize}
+                onChange={v => updatePref({ pageSize: Number(v) })}
+                options={[10, 20, 50, 100].map(n => ({ value: n, label: `${n} 条/页` }))}
+              />
+            </Form.Item>
+
+            <Divider>数据刷新</Divider>
+            <Form.Item label='自动刷新'>
+              <Switch
+                checked={autoRefresh}
+                onChange={checked => {
+                  setAutoRefresh(checked);
+                  message.success(`自动刷新已${checked ? '启用' : '关闭'}`);
+                }}
+              />
+            </Form.Item>
+            <Form.Item label='刷新间隔'>
+              <Select
+                value={refreshInterval}
+                disabled={!autoRefresh}
+                onChange={v => {
+                  setRefreshInterval(Number(v));
+                  message.success(`刷新间隔已更新为 ${Number(v) / 1000} 秒`);
+                }}
+                options={[
+                  { value: 10000, label: '10 秒' },
+                  { value: 30000, label: '30 秒' },
+                  { value: 60000, label: '1 分钟' },
+                  { value: 300000, label: '5 分钟' },
+                ]}
+              />
+            </Form.Item>
+
+            <Divider>通知</Divider>
+            <Form.Item label='通知渠道'>
+              <Checkbox.Group
+                value={Object.entries(prefs.notifications || {})
+                  .filter(([k, v]) => k !== 'types' && v)
+                  .map(([k]) => k)}
+                onChange={vals => {
+                  updatePref({
+                    notifications: {
+                      ...prefs.notifications,
+                      email: (vals as string[]).includes('email'),
+                      browser: (vals as string[]).includes('browser'),
+                      mobile: (vals as string[]).includes('mobile'),
+                    },
+                  });
+                }}
+              >
+                <Checkbox value='email'>邮件</Checkbox>
+                <Checkbox value='browser'>浏览器</Checkbox>
+                <Checkbox value='mobile'>移动端</Checkbox>
+              </Checkbox.Group>
+            </Form.Item>
+          </Form>
+        ) : (
+          <Skeleton active />
+        )}
+      </Drawer>
     </div>
   );
 }

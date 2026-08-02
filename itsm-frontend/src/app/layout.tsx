@@ -7,8 +7,9 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AntdProvider } from '@/lib/providers/AntdProvider';
-import { ThemeProvider, ThemeConfig } from '@/lib/design-system/theme';
+import { ThemeProvider, ThemeConfig, useTheme } from '@/lib/design-system/theme';
 import { RecentVisitTracker } from '@/components/layout/RecentVisitTracker';
+import { ThemeHtmlClassSync } from '@/components/layout/ThemeHtmlClassSync';
 
 dayjs.locale('zh-cn');
 import ErrorBoundary from '@/components/common/ErrorBoundary';
@@ -95,6 +96,7 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <RecentVisitTracker />
+          <ThemeHtmlClassSync />
           <ThemeConfig>
             <AntdProvider>
               <QueryProvider>

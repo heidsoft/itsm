@@ -457,15 +457,19 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               return;
             }
             try {
-              await TicketApi.updateTicket(ticketId, {
+              const updated = await TicketApi.updateTicket(ticketId, {
                 category: suggestion.category,
                 priority: toTicketPriority(suggestion.priority),
                 version: ticket.version,
-              });
+              } as any);
               antMessage.success(
                 `已采纳AI建议：分类 ${suggestion.category}，优先级 ${suggestion.priority}`,
               );
-              fetchTicket();
+              // Update local state immediately with the server response, then refetch in background
+              if (updated && (updated as any).id) {
+                setTicket(prev => (prev ? { ...prev, ...(updated as Partial<Ticket>) } : prev));
+              }
+              await fetchTicket();
             } catch (err) {
               handleError(err, 'applyAISuggestion', '采纳建议失败');
             }

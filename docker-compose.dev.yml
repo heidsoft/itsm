@@ -188,6 +188,10 @@ services:
       # 其他
       - ENABLE_SWAGGER=true
       - ENABLE_CORS=true
+      # CORS 白名单：开发环境允许前端 3000 以及常用调试端口；避免 TRAE 代理导致的 ERR_FAILED
+      - ITSM_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://0.0.0.0:3000
+      # GIN_MODE=debug -> gin.Mode() != release -> default echo reqOrigin; kept as defense in depth
+      - GIN_MODE=debug
 
       # 清除代理（避免 Docker Desktop 代理干扰容器内请求）
       - HTTP_PROXY=
@@ -241,7 +245,9 @@ services:
     environment:
       - NODE_ENV=development
       - ITSM_BACKEND_URL=http://backend:8090
-      - NEXT_PUBLIC_API_URL=http://localhost:8090
+      # 使用同源代理模式：浏览器请求 /api/v1/... 通过 Next.js 代理路由转发到后端
+      # 这样避免了跨域 cookie (SameSite=Lax) 和 CORS 预检问题
+      # - NEXT_PUBLIC_API_URL=http://localhost:8090
       - NEXT_PUBLIC_ENABLE_AI=true
       - NEXT_PUBLIC_ENABLE_SWAGGER=true
 

@@ -17,8 +17,9 @@ import {
   message,
   Divider,
   Tabs,
+  Modal,
 } from 'antd';
-import { ArrowLeft, Pencil, User, Folder, Calendar } from 'lucide-react';
+import { ArrowLeft, Pencil, User, Folder, Calendar, CheckCircle, Archive } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -38,12 +39,13 @@ const ArticleDetail: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [article, setArticle] = useState<KnowledgeArticle | null>(null);
+  const [actionLoading, setActionLoading] = useState<'publish' | 'unpublish' | 'archive' | null>(null);
 
   useEffect(() => {
     if (id) {
       loadDetail();
     }
-     
+
   }, [id]);
 
   const loadDetail = async () => {
@@ -61,6 +63,72 @@ const ArticleDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePublish = () => {
+    if (!article) return;
+    Modal.confirm({
+      title: '确认发布该文章？',
+      content: '发布后将对所有有权限的用户可见。',
+      okText: '发布',
+      cancelText: '取消',
+      onOk: async () => {
+        setActionLoading('publish');
+        try {
+          const updated = await KnowledgeBaseApi.publishArticle(article.id);
+          setArticle(updated as unknown as KnowledgeArticle);
+          message.success('文章已发布');
+        } catch (e: any) {
+          message.error('发布失败：' + (e?.message || '未知错误'));
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
+  };
+
+  const handleUnpublish = () => {
+    if (!article) return;
+    Modal.confirm({
+      title: '确认取消发布？',
+      content: '取消发布后文章将变回草稿状态。',
+      okText: '取消发布',
+      cancelText: '返回',
+      onOk: async () => {
+        setActionLoading('unpublish');
+        try {
+          const updated = await KnowledgeBaseApi.unpublishArticle(article.id);
+          setArticle(updated as unknown as KnowledgeArticle);
+          message.success('已取消发布');
+        } catch (e: any) {
+          message.error('操作失败：' + (e?.message || '未知错误'));
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
+  };
+
+  const handleArchive = () => {
+    if (!article) return;
+    Modal.confirm({
+      title: '确认归档该文章？',
+      content: '归档后将从默认列表中隐藏，可在归档管理中找回。',
+      okText: '归档',
+      cancelText: '取消',
+      onOk: async () => {
+        setActionLoading('archive');
+        try {
+          const updated = await KnowledgeBaseApi.archiveArticle(article.id.toString());
+          setArticle(updated as unknown as KnowledgeArticle);
+          message.success('文章已归档');
+        } catch (e: any) {
+          message.error('归档失败：' + (e?.message || '未知错误'));
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
   };
 
   if (loading)
@@ -114,13 +182,41 @@ const ArticleDetail: React.FC = () => {
             <Button icon={<ArrowLeft />} onClick={() => router.push('/knowledge')}>
               返回列表
             </Button>
-            <Button
-              type="primary"
-              icon={<Pencil />}
-              onClick={() => router.push(`/knowledge/articles/${article.id}/edit`)}
-            >
-              编辑文章
-            </Button>
+            <Space>
+              {status === KnowledgeStatus.DRAFT && (
+                <Button
+                  type="primary"
+                  icon={<CheckCircle />}
+                  onClick={handlePublish}
+                  loading={actionLoading === 'publish'}
+                >
+                  发布文章
+                </Button>
+              )}
+              {status === KnowledgeStatus.PUBLISHED && (
+                <Button
+                  icon={<CheckCircle />}
+                  onClick={handleUnpublish}
+                  loading={actionLoading === 'unpublish'}
+                >
+                  取消发布
+                </Button>
+              )}
+              <Button
+                icon={<Archive />}
+                onClick={handleArchive}
+                loading={actionLoading === 'archive'}
+              >
+                归档
+              </Button>
+              <Button
+                type="primary"
+                icon={<Pencil />}
+                onClick={() => router.push(`/knowledge/articles/${article.id}/edit`)}
+              >
+                编辑文章
+              </Button>
+            </Space>
           </div>
 
           <Title level={2}>{article.title}</Title>

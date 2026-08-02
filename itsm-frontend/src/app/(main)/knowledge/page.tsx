@@ -153,17 +153,22 @@ export default function KnowledgePage() {
     setAiSearchError(null);
 
     try {
-      const response = await httpClient.post<any[]>('/api/ai/knowledge/search', {
+      const response = await httpClient.post<any[]>('/api/v1/ai/knowledge/search', {
         query: aiSearchQuery,
         limit: 10,
         type: 'kb',
       });
 
-      setAiSearchResults(response || []);
+      const answers = (response as any)?.answers || response || [];
+      setAiSearchResults(Array.isArray(answers) ? answers : []);
       setShowAiSearch(true);
+      if (Array.isArray(answers) && answers.length === 0) {
+        message.info('未找到与查询匹配的内容，可尝试更换关键词');
+      }
     } catch (error) {
       console.error('AI search error:', error);
       setAiSearchError('智能搜索服务暂时不可用，请使用普通搜索');
+      setShowAiSearch(true);
     } finally {
       setAiSearchLoading(false);
     }

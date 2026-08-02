@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Layout, Button, Tooltip, Badge, Dropdown, message, Breadcrumb } from 'antd';
-import { PanelLeftClose, PanelLeftOpen, Bell, Globe, Home, Moon, Sun } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, Bell, Bot, Globe, Home, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/lib/design-system/theme';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, token } = useAuthStore();
+  const { user, token, hasPermission, isAdmin } = useAuthStore();
   const { isDark, toggleTheme } = useTheme();
   const { language, changeLanguage } = useI18n();
   useAuthStoreHydration();
@@ -250,6 +250,21 @@ export const Header: React.FC<HeaderProps> = ({
             onSearch={handleSearch}
             onOpen={handleOpenSearch}
           />
+
+          {/* AI 助手入口：与侧边栏使用相同的 ai:use 权限，admin 默认放行 */}
+          {hasPermission('ai:use') || isAdmin() ? (
+            <Tooltip title="AI助手">
+              <Button
+                type="text"
+                className={styles.actionButton}
+                onClick={() => router.push('/ai/chat')}
+                aria-label="AI助手"
+                title="AI助手"
+              >
+                <Bot size={18} />
+              </Button>
+            </Tooltip>
+          ) : null}
 
           {/* 通知 */}
           <Tooltip title="通知中心">

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -173,11 +172,17 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
 
       <div className="mt-4 pt-4 border-t border-gray-100">
         <div className="flex items-center justify-between gap-2">
-          <Link href={`/service-catalog/request/${catalog.id}`} className="no-underline flex-1">
-            <Button type="primary" block icon={<ArrowRight size={16} />}>
-              {t('serviceCatalog.applyService')}
-            </Button>
-          </Link>
+          <Button
+            type="primary"
+            block
+            icon={<ArrowRight size={16} />}
+            onClick={e => {
+              e.stopPropagation();
+              router.push(`/service-catalog/request/${catalog.id}`);
+            }}
+          >
+            {t('serviceCatalog.applyService')}
+          </Button>
           <Dropdown menu={{ items: actionItems }} trigger={['click']} placement="bottomRight">
             <Button
               icon={<MoreHorizontal size={16} />}

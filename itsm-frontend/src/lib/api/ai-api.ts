@@ -137,9 +137,38 @@ export async function aiChatStream(
   req: AIChatStreamRequest,
   callbacks: AIChatStreamCallbacks = {}
 ): Promise<number> {
-  const url = `${httpClient.getBaseURL()}/api/v1/ai/chat/stream`;
+  const baseUrl = httpClient.getBaseURL();
   const token = httpClient.getAuthToken();
   const tenantId = httpClient.getTenantId();
+
+  // 优先走前端同源代理，避开直连后端的 CORS/CSRF 问题。
+  const candidates: Array<{ url: string; useCredentials: boolean; appendCSRF: boolean }> = [
+    { url: '/api/v1/ai/chat/stream', useCredentials: true, appendCSRF: true },
+  ];
+  if (baseUrl && !baseUrl.startsWith('/')) {
+    candidates.push({
+      url: `${baseUrl}/api/v1/ai/chat/stream`,
+      useCredentials: true,
+      appendCSRF: true,
+    });
+  }
+
+  // 读取 CSRF token（可能不存在于某些环境，缺失时不会阻塞请求）。
+  let csrfToken: string | null = null;
+  try {
+    // httpClient 在内部从 cookie 提取，下面这段只用于为 fetch 头补充
+    // 与 httpClient 自身一致：避免再次调用 security 抽象以免循环依赖。
+    csrfToken =
+      typeof document !== 'undefined'
+        ? (document.cookie
+            .split(';')
+            .map(c => c.trim())
+            .find(c => c.startsWith('csrf_token=') || c.startsWith('XSRF-TOKEN='))
+            ?.split('=')[1] ?? null)
+        : null;
+  } catch {
+    csrfToken = null;
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -147,104 +176,128 @@ export async function aiChatStream(
   };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (tenantId) headers['X-Tenant-ID'] = String(tenantId);
+  if (csrfToken) headers['X-CSRF-Token'] = decodeURIComponent(csrfToken);
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    credentials: 'include',
-    signal: req.signal,
-    body: JSON.stringify({
-      query: req.query,
-      limit: req.limit,
-      conversationId: req.conversationId,
-    }),
+  const body = JSON.stringify({
+    query: req.query,
+    limit: req.limit,
+    conversationId: req.conversationId,
   });
 
-  if (!response.ok || !response.body) {
-    const message = `AI chat stream failed: HTTP ${response.status}`;
-    callbacks.onError?.(message);
-    throw new Error(message);
-  }
+  let lastError: Error | null = null;
+  for (const candidate of candidates) {
+    const controller = new AbortController();
+    if (req.signal) {
+      if (req.signal.aborted) {
+        controller.abort();
+      } else {
+        req.signal.addEventListener('abort', () => controller.abort(), { once: true });
+      }
+    }
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder('utf-8');
-  let buffer = '';
-  let finalConversationId = 0;
-
-  const dispatch = (event: string, dataRaw: string) => {
-    let data: unknown;
     try {
-      data = JSON.parse(dataRaw);
-    } catch {
-      return;
-    }
-    switch (event) {
-      case 'sources': {
-        const sources = Array.isArray(data) ? (data as RagAnswer[]) : [];
-        callbacks.onSources?.(sources);
-        break;
+      const response = await fetch(candidate.url, {
+        method: 'POST',
+        headers,
+        credentials: candidate.useCredentials ? 'include' : 'omit',
+        signal: controller.signal,
+        body,
+      });
+
+      if (!response.ok || !response.body) {
+        // 4xx/5xx 走 fallback 而非抛错
+        lastError = new Error(`AI chat stream failed: HTTP ${response.status}`);
+        continue;
       }
-      case 'delta': {
-        const payload = data as { content?: string };
-        if (payload && typeof payload.content === 'string') {
-          callbacks.onDelta?.(payload.content);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let finalConversationId = 0;
+
+      const dispatch = (event: string, dataRaw: string) => {
+        let data: unknown;
+        try {
+          data = JSON.parse(dataRaw);
+        } catch {
+          return;
         }
-        break;
-      }
-      case 'done': {
-        const payload = data as { conversationId?: number };
-        finalConversationId = payload?.conversationId ?? finalConversationId;
-        callbacks.onDone?.(finalConversationId);
-        break;
-      }
-      case 'error': {
-        const payload = data as { message?: string };
-        callbacks.onError?.(payload?.message ?? 'unknown stream error');
-        break;
-      }
-      default:
-        break;
-    }
-  };
+        switch (event) {
+          case 'sources': {
+            const sources = Array.isArray(data) ? (data as RagAnswer[]) : [];
+            callbacks.onSources?.(sources);
+            break;
+          }
+          case 'delta': {
+            const payload = data as { content?: string };
+            if (payload && typeof payload.content === 'string') {
+              callbacks.onDelta?.(payload.content);
+            }
+            break;
+          }
+          case 'done': {
+            const payload = data as { conversationId?: number };
+            finalConversationId = payload?.conversationId ?? finalConversationId;
+            callbacks.onDone?.(finalConversationId);
+            break;
+          }
+          case 'error': {
+            const payload = data as { message?: string };
+            callbacks.onError?.(payload?.message ?? 'unknown stream error');
+            break;
+          }
+          default:
+            break;
+        }
+      };
 
-  const flushBlock = (block: string) => {
-    let event = 'message';
-    const dataLines: string[] = [];
-    for (const line of block.split('\n')) {
-      if (line.startsWith('event:')) {
-        event = line.slice(6).trim();
-      } else if (line.startsWith('data:')) {
-        dataLines.push(line.slice(5).trim());
-      }
-    }
-    if (dataLines.length > 0) {
-      dispatch(event, dataLines.join('\n'));
-    }
-  };
+      const flushBlock = (block: string) => {
+        let event = 'message';
+        const dataLines: string[] = [];
+        for (const line of block.split('\n')) {
+          if (line.startsWith('event:')) {
+            event = line.slice(6).trim();
+          } else if (line.startsWith('data:')) {
+            dataLines.push(line.slice(5).trim());
+          }
+        }
+        if (dataLines.length > 0) {
+          dispatch(event, dataLines.join('\n'));
+        }
+      };
 
-  // Standard SSE frames are separated by "\n\n". Buffer until we see one.
-  // We support "\r\n\r\n" as well for CRLF servers.
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
 
-    let boundary = buffer.indexOf('\n\n');
-    while (boundary !== -1) {
-      const block = buffer.slice(0, boundary);
-      buffer = buffer.slice(boundary + 2);
-      if (block.trim().length > 0) {
-        flushBlock(block);
+        let boundary = buffer.indexOf('\n\n');
+        while (boundary !== -1) {
+          const block = buffer.slice(0, boundary);
+          buffer = buffer.slice(boundary + 2);
+          if (block.trim().length > 0) {
+            flushBlock(block);
+          }
+          boundary = buffer.indexOf('\n\n');
+        }
       }
-      boundary = buffer.indexOf('\n\n');
+      if (buffer.trim().length > 0) {
+        flushBlock(buffer);
+      }
+
+      return finalConversationId;
+    } catch (err) {
+      const aborted = (err as Error)?.name === 'AbortError';
+      if (aborted) throw err;
+      lastError = err instanceof Error ? err : new Error('stream request failed');
+      // 继续尝试下一个 candidate
     }
   }
-  // Flush any trailing partial block (e.g. server closed without final \n\n).
-  if (buffer.trim().length > 0) {
-    flushBlock(buffer);
-  }
 
-  return finalConversationId;
+  // 走到这里表示所有 candidate 都失败，抛给调用方做 fallback
+  const message = lastError?.message || 'AI chat stream failed: no candidate succeeded';
+  callbacks.onError?.(message);
+  throw lastError || new Error(message);
 }
 
 // ==================== 兼容类包装器 ====================

@@ -177,20 +177,32 @@ export default function ServiceCatalogPage() {
           onChange={handleCategoryChange}
           type="card"
           size="large"
-          items={categoryConfig.map(cat => ({
-            key: cat.key,
-            label: (
-              <span className="flex items-center gap-2">
-                {cat.icon}
-                {cat.label}
-                {cat.key !== 'all' && (
-                  <span className="text-xs text-gray-400 ml-1">
-                    ({filteredCatalogs.length})
-                  </span>
-                )}
-              </span>
-            ),
-          }))}
+          items={categoryConfig.map(cat => {
+            const categoryMap: Record<string, string[]> = {
+              cloud: ['云资源服务', 'Cloud Service'],
+              account: ['账号与权限', 'Account Service'],
+              security: ['安全服务', 'Security Service'],
+              database: ['数据库服务', 'Database Service'],
+              network: ['网络服务', 'Network Service'],
+            };
+            const keywords = categoryMap[cat.key] || [];
+            const count =
+              cat.key === 'all'
+                ? catalogs.length
+                : catalogs.filter(c =>
+                    keywords.some(k => String(c.category).includes(k))
+                  ).length;
+            return {
+              key: cat.key,
+              label: (
+                <span className="flex items-center gap-2">
+                  {cat.icon}
+                  {cat.label}
+                  <span className="text-xs text-gray-400 ml-1">({count})</span>
+                </span>
+              ),
+            };
+          })}
         />
       </Card>
 

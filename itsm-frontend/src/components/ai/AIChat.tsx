@@ -292,8 +292,15 @@ const AIChat: React.FC = () => {
             onChange={e => setQuery(e.target.value)}
             onPressEnter={handleSend}
             disabled={streaming}
+            allowClear
           />
-          <Button type="primary" icon={<Send size={14} />} onClick={handleSend} loading={streaming}>
+          <Button
+            type="primary"
+            icon={<Send size={14} />}
+            onClick={handleSend}
+            loading={streaming}
+            disabled={streaming || !query.trim()}
+          >
             发送
           </Button>
         </Space.Compact>
