@@ -339,7 +339,7 @@ describe('API Integration Tests', () => {
   });
 
   describe('Authentication Integration', () => {
-    it('should include authorization header when token exists', async () => {
+    it('should use browser credentials without exposing an HttpOnly cookie as a header', async () => {
       const mockToken = 'mock-jwt-token';
       const originalCookieDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
       let cookieValue = `access_token=${encodeURIComponent(mockToken)}`;
@@ -371,9 +371,8 @@ describe('API Integration Tests', () => {
       expect(fetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: `Bearer ${mockToken}`,
-          }),
+          credentials: 'include',
+          headers: expect.not.objectContaining({ Authorization: expect.any(String) }),
         })
       );
       if (originalCookieDescriptor) {

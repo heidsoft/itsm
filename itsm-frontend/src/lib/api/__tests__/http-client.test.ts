@@ -254,14 +254,15 @@ describe('httpClient', () => {
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
-    it('adds Bearer token from cookie when present', async () => {
+    it('uses browser credentials instead of reading a token cookie', async () => {
       document.cookie = 'access_token=cookie-jwt; path=/';
       fetchMock.mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: {} }));
 
       await httpClient.get('/api/v1/tickets');
 
       const [, init] = fetchMock.mock.calls[0];
-      expect(init.headers['Authorization']).toBe('Bearer cookie-jwt');
+      expect(init.credentials).toBe('include');
+      expect(init.headers['Authorization']).toBeUndefined();
     });
 
     it('adds tenant headers when TenantContext is populated', async () => {

@@ -57,7 +57,7 @@ func buildGAReadiness(ctx context.Context, client *ent.Client) gaReadinessRespon
 	}
 
 	return gaReadinessResponse{
-		Version:     "1.6.5",
+		Version:     "1.6.6",
 		Target:      "production-release",
 		Status:      "ready",
 		GeneratedAt: time.Now(),
