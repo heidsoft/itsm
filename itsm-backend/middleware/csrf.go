@@ -45,7 +45,9 @@ func DefaultCSRFConfig() *CSRFConfig {
 		Secure:       gin.Mode() == gin.ReleaseMode, // 生产环境启用 Secure
 		SkipPaths: []string{
 			"/api/v1/auth/login",
+			"/api/v1/auth/refresh",
 			"/api/v1/auth/refresh-token",
+			"/api/v1/refresh-token",
 			"/metrics",
 			"/version",
 			"/api/v1/health",

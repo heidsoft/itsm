@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"net/http"
+	"strings"
+
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
@@ -12,6 +15,26 @@ type AuthController struct {
 	authService *service.AuthService
 }
 
+func authCookieSecure(c *gin.Context) bool {
+	return c.Request.TLS != nil || strings.EqualFold(c.GetHeader("X-Forwarded-Proto"), "https")
+}
+
+func setAuthCookies(c *gin.Context, accessToken, refreshToken string) {
+	c.SetSameSite(http.SameSiteLaxMode)
+	secure := authCookieSecure(c)
+	c.SetCookie("access_token", accessToken, 900, "/", "", secure, true)
+	if refreshToken != "" {
+		c.SetCookie("refresh_token", refreshToken, 604800, "/", "", secure, true)
+	}
+}
+
+func clearAuthCookies(c *gin.Context) {
+	c.SetSameSite(http.SameSiteLaxMode)
+	secure := authCookieSecure(c)
+	c.SetCookie("access_token", "", -1, "/", "", secure, true)
+	c.SetCookie("refresh_token", "", -1, "/", "", secure, true)
+}
+
 func NewAuthController(authService *service.AuthService) *AuthController {
 	return &AuthController{
 		authService: authService,
@@ -20,12 +43,12 @@ func NewAuthController(authService *service.AuthService) *AuthController {
 
 // Login 登录接口
 // @Summary 用户登录
-// @Description 使用用户名/邮箱和密码登录，返回访问令牌和刷新令牌
+// @Description 使用用户名/邮箱和密码登录，通过 HttpOnly Cookie 建立会话
 // @Tags 认证
 // @Accept json
 // @Produce json
 // @Param request body dto.LoginRequest true "登录请求（username/email + password）"
-// @Success 200 {object} dto.LoginResponse "登录成功，返回 tokens 和用户信息"
+// @Success 200 {object} dto.LoginResponse "登录成功，返回用户和租户信息"
 // @Failure 400 {object} map[string]interface{} "请求参数错误"
 // @Failure 401 {object} map[string]interface{} "认证失败（用户名或密码错误）"
 // @Router /api/v1/auth/login [post]
@@ -43,29 +66,35 @@ func (ac *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	// 设置 httpOnly cookies (secure=false for HTTP localhost, httpOnly=true)
-	c.SetCookie("access_token", response.AccessToken, 900, "/", "", false, true)
-	// Refresh token: 7天
-	c.SetCookie("refresh_token", response.RefreshToken, 604800, "/", "", false, true)
+	setAuthCookies(c, response.AccessToken, response.RefreshToken)
 
 	common.Success(c, response)
 }
 
 // RefreshToken 刷新 token 接口
 // @Summary 刷新访问令牌
-// @Description 使用刷新令牌获取新的访问令牌
+// @Description 使用 HttpOnly 刷新令牌 Cookie 获取新的访问令牌
 // @Tags 认证
 // @Accept json
 // @Produce json
-// @Param request body dto.RefreshTokenRequest true "刷新令牌请求"
-// @Success 200 {object} dto.RefreshTokenResponse "刷新成功，返回新的访问令牌"
+// @Param request body dto.RefreshTokenRequest false "非浏览器客户端的刷新令牌（兼容）"
+// @Success 200 {object} dto.RefreshTokenResponse "刷新成功，Cookie 已更新"
 // @Failure 400 {object} map[string]interface{} "请求参数错误"
 // @Failure 401 {object} map[string]interface{} "刷新令牌无效或已过期"
 // @Router /api/v1/auth/refresh [post]
 func (ac *AuthController) RefreshToken(c *gin.Context) {
 	var req dto.RefreshTokenRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			common.ParamError(c, "参数错误: "+err.Error())
+			return
+		}
+	}
+	if req.RefreshToken == "" {
+		req.RefreshToken, _ = c.Cookie("refresh_token")
+	}
+	if req.RefreshToken == "" {
+		common.ParamError(c, "缺少刷新令牌")
 		return
 	}
 
@@ -76,13 +105,7 @@ func (ac *AuthController) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	// 更新 httpOnly cookie (secure=false, httpOnly=true)
-	c.SetCookie("access_token", response.AccessToken, 900, "/", "", false, true)
-
-	// 如果实现了 refresh token rotation，更新 refresh_token cookie
-	if response.RefreshToken != "" {
-		c.SetCookie("refresh_token", response.RefreshToken, 604800, "/", "", false, true)
-	}
+	setAuthCookies(c, response.AccessToken, response.RefreshToken)
 
 	common.Success(c, response)
 }
@@ -121,7 +144,7 @@ func (ac *AuthController) GetUserTenants(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body dto.SwitchTenantRequest true "切换租户请求（tenant_id）"
-// @Success 200 {object} dto.LoginResponse "切换成功，返回新的租户信息"
+// @Success 200 {object} dto.LoginResponse "切换成功，Cookie 已更新并返回新的租户信息"
 // @Failure 400 {object} map[string]interface{} "请求参数错误"
 // @Failure 401 {object} map[string]interface{} "用户未认证"
 // @Failure 403 {object} map[string]interface{} "无权访问该租户"
@@ -147,9 +170,7 @@ func (ac *AuthController) SwitchTenant(c *gin.Context) {
 		return
 	}
 
-	// 更新 httpOnly cookies (secure=false, httpOnly=true)
-	c.SetCookie("access_token", response.AccessToken, 900, "/", "", false, true)
-	c.SetCookie("refresh_token", response.RefreshToken, 604800, "/", "", false, true)
+	setAuthCookies(c, response.AccessToken, response.RefreshToken)
 
 	common.Success(c, response)
 }
@@ -209,9 +230,7 @@ func (ac *AuthController) Logout(c *gin.Context) {
 		return
 	}
 
-	// 清除 httpOnly cookies (设置过期时间为 -1, secure=false, httpOnly=true)
-	c.SetCookie("access_token", "", -1, "/", "", false, true)
-	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+	clearAuthCookies(c)
 
 	common.Success(c, nil)
 }

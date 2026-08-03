@@ -193,9 +193,9 @@ describe('Auth Token Refresh Mechanism', () => {
         expect(AuthService.getRefreshToken()).toBeNull();
       });
 
-      it('should return token value when cookie exists', () => {
+      it('should not expose token value when cookie exists', () => {
         document.cookie = 'refresh_token=test-refresh-value';
-        expect(AuthService.getRefreshToken()).toBe('test-refresh-value');
+        expect(AuthService.getRefreshToken()).toBeNull();
       });
     });
 
@@ -212,10 +212,10 @@ describe('Auth Token Refresh Mechanism', () => {
         expect(AuthService.isAuthenticated()).toBe(true);
       });
 
-      it('should return true when access_token cookie exists', () => {
+      it('should not treat a JavaScript-readable access token as authenticated', () => {
         mockAuthState.isAuthenticated = false;
         document.cookie = 'access_token=some-token';
-        expect(AuthService.isAuthenticated()).toBe(true);
+        expect(AuthService.isAuthenticated()).toBe(false);
       });
 
       it('should return false when no auth state or cookie', () => {

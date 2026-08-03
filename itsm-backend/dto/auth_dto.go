@@ -13,8 +13,10 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken  string             `json:"accessToken"`
-	RefreshToken string             `json:"refreshToken"`
+	// Tokens are transport-only values. Controllers place them in HttpOnly
+	// cookies and must never serialize them into a browser-readable response.
+	AccessToken  string             `json:"-"`
+	RefreshToken string             `json:"-"`
 	User         *LoginUserResponse `json:"user"`
 	Tenant       *ent.Tenant        `json:"tenant"`
 }
@@ -38,12 +40,14 @@ type LoginUserResponse struct {
 }
 
 type RefreshTokenRequest struct {
-	RefreshToken string `json:"refreshToken" binding:"required"`
+	// Kept for non-browser clients during the migration to cookie-only browser
+	// sessions. Browser requests obtain this value from the HttpOnly cookie.
+	RefreshToken string `json:"refreshToken,omitempty"`
 }
 
 type RefreshTokenResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken,omitempty"`
+	AccessToken  string `json:"-"`
+	RefreshToken string `json:"-"`
 }
 
 type UserInfo struct {

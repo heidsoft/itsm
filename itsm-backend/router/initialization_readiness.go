@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"itsm-backend/migration"
 	"itsm-backend/pkg/seeder"
 
 	"github.com/lib/pq"
@@ -20,8 +21,9 @@ type initializationReadiness struct {
 }
 
 func checkInitializationReadiness(ctx context.Context, db *sql.DB) initializationReadiness {
+	requiredSchemaVersion := migration.RegisteredMigrations[len(migration.RegisteredMigrations)-1].Version
 	result := initializationReadiness{
-		RequiredSchemaVersion:   "008_add_initialization_ledger",
+		RequiredSchemaVersion:   requiredSchemaVersion,
 		RequiredBaselineVersion: seeder.CurrentTenantTemplateVersion,
 	}
 	if db == nil {

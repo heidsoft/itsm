@@ -84,6 +84,18 @@ func createTestTenantAndUser(t *testing.T, client *ent.Client) (*ent.Tenant, *en
 	return tenant, user
 }
 
+func responseCookieValue(t testing.TB, w *httptest.ResponseRecorder, name string) string {
+	t.Helper()
+	for _, cookie := range w.Result().Cookies() {
+		if cookie.Name == name {
+			require.NotEmpty(t, cookie.Value)
+			return cookie.Value
+		}
+	}
+	t.Fatalf("expected %q cookie", name)
+	return ""
+}
+
 func TestAuthController_Login(t *testing.T) {
 	r, client, _ := setupTestAuthController(t)
 	defer client.Close()
@@ -178,9 +190,11 @@ func TestAuthController_Login(t *testing.T) {
 				data, ok := response.Data.(map[string]interface{})
 				require.True(t, ok)
 
-				// 验证返回的字段
-				assert.NotEmpty(t, data["accessToken"])
-				assert.NotEmpty(t, data["refreshToken"])
+				// Tokens must only be delivered through HttpOnly cookies.
+				assert.NotContains(t, data, "accessToken")
+				assert.NotContains(t, data, "refreshToken")
+				assert.NotEmpty(t, responseCookieValue(t, w, "access_token"))
+				assert.NotEmpty(t, responseCookieValue(t, w, "refresh_token"))
 				// user / tenant 为对象
 				u, ok := data["user"].(map[string]interface{})
 				require.True(t, ok)
@@ -225,9 +239,7 @@ func TestAuthController_RefreshToken(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, common.SuccessCode, loginResponse.Code)
 
-	loginData, ok := loginResponse.Data.(map[string]interface{})
-	require.True(t, ok)
-	refreshToken := loginData["refreshToken"].(string)
+	refreshToken := responseCookieValue(t, loginW, "refresh_token")
 
 	tests := []struct {
 		name           string
@@ -295,9 +307,10 @@ func TestAuthController_RefreshToken(t *testing.T) {
 				data, ok := response.Data.(map[string]interface{})
 				require.True(t, ok)
 
-				// 验证返回的字段
-				assert.NotEmpty(t, data["accessToken"])
-				// RefreshTokenResponse 仅返回 access_token（不做 refresh token 轮换）
+				// Refresh responses never expose tokens in JSON.
+				assert.NotContains(t, data, "accessToken")
+				assert.NotContains(t, data, "refreshToken")
+				assert.NotEmpty(t, responseCookieValue(t, w, "access_token"))
 			}
 		})
 	}
@@ -618,8 +631,7 @@ func BenchmarkAuthController_RefreshToken(b *testing.B) {
 
 	var loginResponse common.Response
 	json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
-	loginData := loginResponse.Data.(map[string]interface{})
-	refreshToken := loginData["refreshToken"].(string)
+	refreshToken := responseCookieValue(b, loginW, "refresh_token")
 
 	refreshRequest := dto.RefreshTokenRequest{
 		RefreshToken: refreshToken,
@@ -695,9 +707,7 @@ func TestAuthController_RefreshTokenWithInactiveUser(t *testing.T) {
 	err = json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
 	require.NoError(t, err)
 
-	loginData, ok := loginResponse.Data.(map[string]interface{})
-	require.True(t, ok)
-	refreshToken := loginData["refreshToken"].(string)
+	refreshToken := responseCookieValue(t, loginW, "refresh_token")
 
 	// 将用户设置为非活跃
 	_, err = client.User.UpdateOneID(user.ID).
@@ -761,9 +771,7 @@ func TestAuthController_RefreshTokenWithExpiredToken(t *testing.T) {
 	err = json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
 	require.NoError(t, err)
 
-	loginData, ok := loginResponse.Data.(map[string]interface{})
-	require.True(t, ok)
-	_ = loginData["refreshToken"].(string) // 提取但不使用（仅为演示）
+	_ = responseCookieValue(t, loginW, "refresh_token") // 验证登录仅通过 Cookie 下发令牌
 
 	// 使用过期的 token 格式（模拟过期 token）
 	expiredToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjB9.expired"
@@ -822,9 +830,7 @@ func TestAuthController_RefreshTokenMultipleTimes(t *testing.T) {
 	err = json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
 	require.NoError(t, err)
 
-	loginData, ok := loginResponse.Data.(map[string]interface{})
-	require.True(t, ok)
-	refreshToken := loginData["refreshToken"].(string)
+	refreshToken := responseCookieValue(t, loginW, "refresh_token")
 
 	// 第一次刷新
 	refreshRequest := dto.RefreshTokenRequest{
@@ -848,10 +854,7 @@ func TestAuthController_RefreshTokenMultipleTimes(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, common.SuccessCode, response1.Code)
 
-	response1Data, ok := response1.Data.(map[string]interface{})
-	require.True(t, ok)
-	newAccessToken1 := response1Data["accessToken"].(string)
-	assert.NotEmpty(t, newAccessToken1)
+	newAccessToken1 := responseCookieValue(t, w1, "access_token")
 
 	// 第二次刷新（使用同一个 refresh token）
 	req2, err := http.NewRequest("POST", "/api/v1/refresh-token", bytes.NewBuffer(requestBody))
@@ -868,10 +871,7 @@ func TestAuthController_RefreshTokenMultipleTimes(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, common.SuccessCode, response2.Code)
 
-	response2Data, ok := response2.Data.(map[string]interface{})
-	require.True(t, ok)
-	newAccessToken2 := response2Data["accessToken"].(string)
-	assert.NotEmpty(t, newAccessToken2)
+	newAccessToken2 := responseCookieValue(t, w2, "access_token")
 
 	// 两次刷新返回的 access token 可能不同（因为时间戳不同）
 	assert.NotEmpty(t, newAccessToken1)
@@ -907,9 +907,7 @@ func TestAuthController_RefreshTokenConcurrent(t *testing.T) {
 	err = json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
 	require.NoError(t, err)
 
-	loginData, ok := loginResponse.Data.(map[string]interface{})
-	require.True(t, ok)
-	refreshToken := loginData["refreshToken"].(string)
+	refreshToken := responseCookieValue(t, loginW, "refresh_token")
 
 	// 并发刷新请求
 	numRequests := 5
@@ -986,9 +984,7 @@ func TestAuthController_RefreshTokenResponseFormat(t *testing.T) {
 	err = json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
 	require.NoError(t, err)
 
-	loginData, ok := loginResponse.Data.(map[string]interface{})
-	require.True(t, ok)
-	refreshToken := loginData["refreshToken"].(string)
+	refreshToken := responseCookieValue(t, loginW, "refresh_token")
 
 	// 刷新 token
 	refreshRequest := dto.RefreshTokenRequest{
@@ -1021,10 +1017,11 @@ func TestAuthController_RefreshTokenResponseFormat(t *testing.T) {
 	data, ok := response.Data.(map[string]interface{})
 	require.True(t, ok)
 
-	// RefreshTokenResponse 返回 access_token 和 refresh_token（实现 token rotation 安全机制）
-	assert.NotEmpty(t, data["accessToken"])
-	// 应该返回新的 refresh_token（token rotation 防止 replay 攻击）
-	assert.NotEmpty(t, data["refreshToken"], "RefreshTokenResponse 应该返回新的 refresh_token (token rotation)")
+	// Token rotation is observable through Set-Cookie, never the JSON body.
+	assert.NotContains(t, data, "accessToken")
+	assert.NotContains(t, data, "refreshToken")
+	assert.NotEmpty(t, responseCookieValue(t, w, "access_token"))
+	assert.NotEmpty(t, responseCookieValue(t, w, "refresh_token"))
 }
 
 func TestAuthController_RefreshTokenWithDifferentUserTokens(t *testing.T) {
@@ -1096,8 +1093,7 @@ func TestAuthController_RefreshTokenWithDifferentUserTokens(t *testing.T) {
 
 	var loginResponse1 common.Response
 	json.Unmarshal(loginW1.Body.Bytes(), &loginResponse1)
-	loginData1 := loginResponse1.Data.(map[string]interface{})
-	refreshToken1 := loginData1["refreshToken"].(string)
+	refreshToken1 := responseCookieValue(t, loginW1, "refresh_token")
 
 	// 用户 2 登录
 	loginRequest2 := dto.LoginRequest{
@@ -1114,8 +1110,7 @@ func TestAuthController_RefreshTokenWithDifferentUserTokens(t *testing.T) {
 
 	var loginResponse2 common.Response
 	json.Unmarshal(loginW2.Body.Bytes(), &loginResponse2)
-	loginData2 := loginResponse2.Data.(map[string]interface{})
-	refreshToken2 := loginData2["refreshToken"].(string)
+	refreshToken2 := responseCookieValue(t, loginW2, "refresh_token")
 
 	// 用用户 1 的 refresh token 刷新，应该成功
 	refreshRequest1 := dto.RefreshTokenRequest{

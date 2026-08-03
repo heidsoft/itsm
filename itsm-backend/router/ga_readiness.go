@@ -57,9 +57,9 @@ func buildGAReadiness(ctx context.Context, client *ent.Client) gaReadinessRespon
 	}
 
 	return gaReadinessResponse{
-		Version:     "1.0.0",
-		Target:      "open-source-v1.0-ga",
-		Status:      "ga_candidate",
+		Version:     "1.6.3",
+		Target:      "production-release",
+		Status:      "ready",
 		GeneratedAt: time.Now(),
 		Modules:     modules,
 		Checks: []gaReadinessCheck{

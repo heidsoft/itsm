@@ -67,9 +67,9 @@ describe('AuthService', () => {
         expect(AuthService.getAccessToken()).toBeNull();
       });
 
-      it('should return access token from cookie', () => {
+      it('should not expose an access token even if a test cookie is present', () => {
         mockCookieStore['access_token'] = 'test-access-token';
-        expect(AuthService.getAccessToken()).toBe('test-access-token');
+        expect(AuthService.getAccessToken()).toBeNull();
       });
     });
 
@@ -78,16 +78,16 @@ describe('AuthService', () => {
         expect(AuthService.getRefreshToken()).toBeNull();
       });
 
-      it('should return refresh token from cookie', () => {
+      it('should not expose a refresh token even if a test cookie is present', () => {
         mockCookieStore['refresh_token'] = 'test-refresh-token';
-        expect(AuthService.getRefreshToken()).toBe('test-refresh-token');
+        expect(AuthService.getRefreshToken()).toBeNull();
       });
     });
 
     describe('getToken', () => {
-      it('should return token (backward compatible)', () => {
+      it('should not expose a token through the backward-compatible helper', () => {
         mockCookieStore['access_token'] = 'test-token';
-        expect(AuthService.getToken()).toBe('test-token');
+        expect(AuthService.getToken()).toBeNull();
       });
     });
   });

@@ -324,22 +324,25 @@ describe('WorkflowApi', () => {
   });
 
   describe('validateWorkflow', () => {
-    it('should return backend validation result when API succeeds', async () => {
-      (httpClient.post as jest.Mock).mockResolvedValueOnce({ isValid: true, errors: [], warnings: [] });
-      const result = await WorkflowApi.validateWorkflow({ name: 'Test' } as any);
+    it('should validate complete workflow without calling an unavailable endpoint', async () => {
+      const result = await WorkflowApi.validateWorkflow({
+        id: 'wf1',
+        name: 'Test',
+        nodes: [{ id: 'n1' }],
+        connections: [{ id: 'c1' }],
+      } as any);
       expect(result.isValid).toBe(true);
       expect(result.errors).toEqual([]);
+      expect(httpClient.post).not.toHaveBeenCalled();
     });
 
-    it('should fallback to frontend validation when API fails', async () => {
-      (httpClient.post as jest.Mock).mockRejectedValueOnce(new Error('not supported'));
+    it('should warn when workflow has nodes but no connections', async () => {
       const result = await WorkflowApi.validateWorkflow({ id: 'wf1', name: 'Test', nodes: [{ id: 'n1' }] } as any);
       expect(result.isValid).toBe(true);
       expect(result.warnings.length).toBeGreaterThan(0);
     });
 
-    it('should report errors for invalid workflow in fallback', async () => {
-      (httpClient.post as jest.Mock).mockRejectedValueOnce(new Error('not supported'));
+    it('should report errors for invalid workflow', async () => {
       const result = await WorkflowApi.validateWorkflow({} as any);
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);

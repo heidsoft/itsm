@@ -3,29 +3,6 @@ import { security } from '@/lib/security';
 import { logger } from '@/lib/env';
 import { getTenantId, getTenantCode, subscribe } from '@/lib/auth/tenant-context';
 
-// Cookie utility functions for secure token storage
-function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null;
-  const cookies = document.cookie.split(';');
-  for (const cookie of cookies) {
-    const [cookieName, cookieValue] = cookie.trim().split('=');
-    if (cookieName === name) {
-      return decodeURIComponent(cookieValue || '');
-    }
-  }
-  return null;
-}
-
-function setCookie(name: string, value: string, maxAge: number): void {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
-}
-
-function deleteCookie(name: string): void {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=; path=/; max-age=-1;`;
-}
-
 // 递归将对象的 key 从 snake_case 转换为 camelCase
 const toCamelCase = (obj: unknown): unknown => {
   if (obj === null || obj === undefined) {
@@ -81,10 +58,8 @@ class HttpClient {
     this.baseURL =
       typeof window === 'undefined' ? process.env.ITSM_BACKEND_URL || baseURL : baseURL;
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
-    // Token is read from cookie only (httpOnly from backend) — never stored in localStorage
-    if (typeof window !== 'undefined') {
-      this.token = getCookie('access_token');
-    }
+	// Browser authentication uses HttpOnly cookies. JavaScript deliberately never
+	// reads the token value; non-browser callers may still set this field.
   }
 
   setToken(token: string) {
@@ -95,11 +70,6 @@ class HttpClient {
 
   clearToken() {
     this.token = null;
-    if (typeof window !== 'undefined') {
-      // Clear the httpOnly cookies via Set-Cookie header from backend logout endpoint
-      deleteCookie('access_token');
-      deleteCookie('refresh_token');
-    }
   }
 
   setTenantId(tenantId: number | null) {
@@ -140,9 +110,9 @@ class HttpClient {
       ...security.network.getSecureHeaders(),
     };
 
-    // Get token from cookie only (backend sets httpOnly cookies)
-    // localStorage does NOT store tokens (security policy)
-    const currentToken = typeof window !== 'undefined' ? getCookie('access_token') : this.token;
+    // Browser requests authenticate with HttpOnly cookies. Only non-browser
+    // callers that explicitly set a token use the Authorization header.
+    const currentToken = typeof window === 'undefined' ? this.token : null;
     // Tenant state — read from TenantContext (single source of truth)
     const currentTenantId = getTenantId();
     const currentTenantCode = getTenantCode();
@@ -204,12 +174,6 @@ class HttpClient {
 
   // Independent token refresh method to avoid circular dependencies
   private async refreshTokenInternal(): Promise<boolean> {
-    // Get refresh token from cookie only (httpOnly)
-    const refreshToken = typeof window !== 'undefined' ? getCookie('refresh_token') : null;
-    if (!refreshToken) {
-      return false;
-    }
-
     try {
       const response = await fetch(`${this.baseURL}/api/v1/refresh-token`, {
         method: 'POST',
@@ -217,9 +181,7 @@ class HttpClient {
           'Content-Type': 'application/json',
         },
         credentials: 'include', // Include httpOnly cookies
-        body: JSON.stringify({
-          refreshToken: refreshToken,
-        }),
+		body: '{}',
       });
 
       if (response?.ok) {

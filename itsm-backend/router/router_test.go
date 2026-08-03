@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/migration"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -118,6 +119,12 @@ func TestSetupRoutes_ReadinessFailsClosedWithoutInitializationLedger(t *testing.
 
 	assert.Equal(t, http.StatusServiceUnavailable, w.Code)
 	assert.Contains(t, w.Body.String(), `"ready":false`)
+}
+
+func TestInitializationReadinessRequiresLatestRegisteredMigration(t *testing.T) {
+	readiness := checkInitializationReadiness(context.Background(), nil)
+	require.NotEmpty(t, migration.RegisteredMigrations)
+	assert.Equal(t, migration.RegisteredMigrations[len(migration.RegisteredMigrations)-1].Version, readiness.RequiredSchemaVersion)
 }
 
 func TestSetupRoutes_VersionEndpoint(t *testing.T) {

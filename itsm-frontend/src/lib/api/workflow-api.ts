@@ -559,27 +559,26 @@ export class WorkflowApi {
    * 验证工作流
    */
   static async validateWorkflow(workflow: Partial<WorkflowDefinition>): Promise<ValidationResult> {
-    // 调用后端校验接口；后端暂未提供时降级为前端基础结构校验
-    try {
-      return await httpClient.post(`/api/v1/workflows/validate`, workflow);
-    } catch {
-      // 降级：前端基础结构校验（非空、节点存在）
-      const errors: ValidationError[] = [];
-      const warnings: ValidationError[] = [];
-      if (!workflow.id) {
-        errors.push({ type: 'error', message: '工作流 ID 不能为空' });
-      }
-      if (!workflow.name) {
-        errors.push({ type: 'error', message: '工作流名称不能为空' });
-      }
-      if (!workflow.nodes?.length) {
-        errors.push({ type: 'error', message: '工作流必须包含至少一个节点' });
-      }
-      if (workflow.nodes?.length && !workflow.connections?.length) {
-        warnings.push({ type: 'warning', message: '工作流有节点但无连线，请确认流程是否完整' });
-      }
-      return { isValid: errors.length === 0, errors, warnings };
+    // Workflow definitions are saved to BPMN process-definition endpoints.
+    // There is no server-side validation endpoint in that contract, so avoid
+    // making a request that would always return 404. Server-side validation is
+    // still performed on create/update; this keeps the designer's preflight
+    // validation deterministic while offline as well.
+    const errors: ValidationError[] = [];
+    const warnings: ValidationError[] = [];
+    if (!workflow.id) {
+      errors.push({ type: 'error', message: '工作流 ID 不能为空' });
     }
+    if (!workflow.name) {
+      errors.push({ type: 'error', message: '工作流名称不能为空' });
+    }
+    if (!workflow.nodes?.length) {
+      errors.push({ type: 'error', message: '工作流必须包含至少一个节点' });
+    }
+    if (workflow.nodes?.length && !workflow.connections?.length) {
+      warnings.push({ type: 'warning', message: '工作流有节点但无连线，请确认流程是否完整' });
+    }
+    return { isValid: errors.length === 0, errors, warnings };
   }
 
   /**

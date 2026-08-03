@@ -22,11 +22,11 @@ export class AuthService {
     const data = await response.json();
     // 不将令牌/用户信息写入 localStorage（避免 XSS 窃取）。
     // 令牌由后端 httpOnly cookie 管理；前端仅写入 auth-token 标记位供 middleware 路由守卫使用。
-    if (typeof window !== 'undefined' && data.token) {
+    if (typeof window !== 'undefined' && data.user) {
       const secure = location.protocol === 'https:' ? '; Secure' : '';
       // 仅写入标记位（非真值 token），供 middleware 路由守卫判断登录态
       // 真值 token 由后端 httpOnly cookie 管理，JS 不可读，防 XSS 窃取
-      document.cookie = `auth-token=1; path=/; max-age=0; SameSite=Lax${secure}`;
+      document.cookie = `auth-token=1; path=/; SameSite=Lax${secure}`;
     }
     if (data.user) {
       const { login } = useAuthStore.getState();
@@ -56,14 +56,13 @@ export class AuthService {
     }
   }
 
+  // Only non-sensitive UI marker cookies may be inspected in the browser.
+  // Authentication tokens are intentionally not read through this helper.
   private static getCookie(name: string): string | null {
     if (typeof document === 'undefined') return null;
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
+    for (const cookie of document.cookie.split(';')) {
       const [cookieName, cookieValue] = cookie.trim().split('=');
-      if (cookieName === name) {
-        return decodeURIComponent(cookieValue || '');
-      }
+      if (cookieName === name) return decodeURIComponent(cookieValue || '');
     }
     return null;
   }
@@ -78,7 +77,7 @@ export class AuthService {
 
   // 获取access token
   static getAccessToken(): string | null {
-    return this.getCookie('access_token');
+	return null;
   }
 
   // Backward-compatible helpers used by some UI providers
@@ -93,14 +92,14 @@ export class AuthService {
 
   // 获取refresh token
   static getRefreshToken(): string | null {
-    return this.getCookie('refresh_token');
+	return null;
   }
 
   // 检查是否已认证
   static isAuthenticated(): boolean {
     const { isAuthenticated } = useAuthStore.getState();
     if (isAuthenticated) return true;
-    return !!this.getAccessToken();
+	return false;
   }
 
   // 直接使用fetch进行HTTP请求，避免循环依赖
@@ -132,24 +131,12 @@ export class AuthService {
 
   // 刷新token
   static async refreshToken(): Promise<boolean> {
-    const refreshToken = this.getRefreshToken();
-    if (!refreshToken) {
-      return false;
-    }
-
     try {
-      const data = await this.makeRequest<{
-        accessToken: string;
-        refreshToken?: string;
-      }>('/api/v1/auth/refresh', {
+      await this.makeRequest<Record<string, never>>('/api/v1/auth/refresh', {
         method: 'POST',
         credentials: 'include', // Include httpOnly cookies
-        body: JSON.stringify({
-          refreshToken: refreshToken,
-        }),
+		body: '{}',
       });
-
-      void data;
       return true;
     } catch (error) {
       console.error('Token refresh failed:', error);
@@ -204,11 +191,11 @@ export class AuthService {
 
       // Token 仅通过 httpOnly cookie 管理（由后端设置）
       // 前端仅设置 auth-token cookie 供 middleware 路由守卫使用
-      if (typeof window !== 'undefined' && data.accessToken) {
-        const cookieMaxAge = rememberMe ? 7 * 24 * 60 * 60 : 0; // 7天或会话级
+      if (typeof window !== 'undefined' && data.user) {
+        const cookieMaxAge = rememberMe ? `; max-age=${7 * 24 * 60 * 60}` : '';
         const secure = location.protocol === 'https:' ? '; Secure' : '';
         // 仅写入 auth-token 标记位供 middleware 路由守卫使用，不写真值 token
-        document.cookie = `auth-token=1; path=/; max-age=${cookieMaxAge}; SameSite=Lax${secure}`;
+		document.cookie = `auth-token=1; path=/; SameSite=Lax${cookieMaxAge}${secure}`;
       }
 
       // 使用store管理登录状态
@@ -232,7 +219,7 @@ export class AuthService {
           createdAt: u?.createdAt || u?.createdAt,
           updatedAt: u?.updatedAt || u?.updatedAt,
         },
-        data.accessToken || 'authenticated',
+		'authenticated',
         {
           id: Number(t?.id || u?.tenantId || 1),
           name: String(t?.name || '默认租户'),
@@ -247,7 +234,7 @@ export class AuthService {
       return true;
     } catch (error) {
       console.error('Login failed:', error);
-      throw error instanceof Error ? error : new Error('登录失败');
+      return false;
     }
   }
 
