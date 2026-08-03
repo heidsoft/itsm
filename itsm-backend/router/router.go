@@ -376,7 +376,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			c.JSON(status, readiness)
 		})
 		public.GET("/version", func(c *gin.Context) {
-			c.JSON(200, gin.H{"version": "1.6.6", "build": "release"})
+			c.JSON(200, gin.H{"version": "1.6.7", "build": "release"})
 		})
 		public.GET("/readiness/ga", func(c *gin.Context) {
 			common.Success(c, buildGAReadiness(c.Request.Context(), config.Client))
@@ -761,7 +761,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sysRoot.GET("/config", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
 					c.JSON(200, gin.H{
 						"status":    "ok",
-						"version":   "1.6.6",
+						"version":   "1.6.7",
 						"timestamp": time.Now(),
 					})
 				})

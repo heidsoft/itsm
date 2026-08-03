@@ -293,7 +293,7 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 	// Scheduled is reported separately so the frontend can distinguish "已排期" from "实施中".
 	// (The previous implementation summed Scheduled + Implementing, but Implementing was
 	// never written anywhere — see canonical statuses in dto.ChangeStatus and the
-	// isValidChangeStatusTransition table.)
+	// canonical change status definitions.)
 
 	return stats, nil
 }

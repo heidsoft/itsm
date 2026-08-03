@@ -623,33 +623,6 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	return s.repo.Update(ctx, c)
 }
 
-// isValidChangeStatusTransition validates state transitions for Change entities
-func isValidChangeStatusTransition(currentStatus, newStatus string) bool {
-	validTransitions := map[string][]string{
-		"draft":       {"pending", "cancelled"},
-		"pending":     {"approved", "rejected", "cancelled"},
-		"approved":    {"scheduled", "in_progress", "cancelled"},
-		"rejected":    {},
-		"scheduled":   {"in_progress", "cancelled"},
-		"in_progress": {"completed", "failed", "cancelled"},
-		"completed":   {},
-		"failed":      {"in_progress", "cancelled"},
-		"cancelled":   {},
-	}
-
-	allowed, ok := validTransitions[currentStatus]
-	if !ok {
-		return false
-	}
-
-	for _, status := range allowed {
-		if status == newStatus {
-			return true
-		}
-	}
-	return false
-}
-
 // GetApprovalHistory returns approval records for a change
 func (s *Service) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
 	return s.repo.GetApprovalHistory(ctx, changeID, tenantID)

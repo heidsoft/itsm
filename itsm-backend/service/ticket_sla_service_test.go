@@ -431,7 +431,7 @@ func TestTicketSLAService_getSLADefinition(t *testing.T) {
 	}
 }
 
-func TestTicketSLAService_calculateDeadline(t *testing.T) {
+func TestTicketSLAService_calculateDeadlineWithBusinessHours_EmptyCalendarUses24x7(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 
@@ -440,7 +440,7 @@ func TestTicketSLAService_calculateDeadline(t *testing.T) {
 
 	startTime := time.Date(2024, time.January, 8, 9, 0, 0, 0, time.UTC) // 2024-01-08 是周一
 
-	result := slaService.calculateDeadline(startTime, 60, false)
+	result := slaService.calculateDeadlineWithBusinessHours(startTime, 60, nil)
 
 	// 应该正好是1小时后
 	assert.Equal(t, startTime.Add(1*time.Hour), result)

@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.7] - 2026-08-04
+
+### Security
+
+- **Go runtime baseline** — Raised the backend build and release toolchain to Go 1.25.10, which contains the standard-library security fixes required by the production vulnerability gate.
+
+### Fixed
+
+- **SLA calendar enforcement** — SLA deadlines now apply each definition's configured business calendar consistently across creation, lookup, and overdue detection; the prior unused implementation was removed.
+- **Backend quality gate** — Removed obsolete change-status validation code so the release static-analysis gate has no dead-code findings.
+
+---
+
 ## [1.6.6] - 2026-08-03
 
 ### Fixed

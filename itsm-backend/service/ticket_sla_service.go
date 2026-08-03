@@ -120,14 +120,13 @@ func (s *TicketSLAService) GetTicketSLAInfo(ctx context.Context, ticketID int, t
 	// 计算截止时间。
 	// 阻断7/C-8 修复：统一读取 slaDef.BusinessHours 配置，与 CalculateSLADeadlineFromRequest
 	// 使用同一口径，消除"建单落库调整 / 查询展示不调整"的两路径结论相反问题。
-	businessHoursOnly := len(slaDef.BusinessHours) > 0
 	var responseDeadline, resolutionDeadline *time.Time
 	if slaDef.ResponseTime > 0 {
-		respDeadline := s.calculateDeadline(t.CreatedAt, slaDef.ResponseTime, businessHoursOnly)
+		respDeadline := s.calculateDeadlineWithBusinessHours(t.CreatedAt, slaDef.ResponseTime, slaDef.BusinessHours)
 		responseDeadline = &respDeadline
 	}
 	if slaDef.ResolutionTime > 0 {
-		resDeadline := s.calculateDeadline(t.CreatedAt, slaDef.ResolutionTime, businessHoursOnly)
+		resDeadline := s.calculateDeadlineWithBusinessHours(t.CreatedAt, slaDef.ResolutionTime, slaDef.BusinessHours)
 		resolutionDeadline = &resDeadline
 	}
 
@@ -196,7 +195,7 @@ func (s *TicketSLAService) GetOverdueTickets(ctx context.Context, tenantID int) 
 		}
 
 		if slaDef.ResolutionTime > 0 {
-			deadline := s.calculateDeadline(t.CreatedAt, slaDef.ResolutionTime, false)
+			deadline := s.calculateDeadlineWithBusinessHours(t.CreatedAt, slaDef.ResolutionTime, slaDef.BusinessHours)
 			if now.After(deadline) {
 				overdueTickets = append(overdueTickets, t)
 			}
@@ -274,12 +273,12 @@ func (s *TicketSLAService) CalculateSLADeadline(ctx context.Context, tenantID in
 	now := time.Now()
 
 	if slaDef.ResponseTime > 0 {
-		respDeadline := s.calculateDeadline(now, slaDef.ResponseTime, false)
+		respDeadline := s.calculateDeadlineWithBusinessHours(now, slaDef.ResponseTime, slaDef.BusinessHours)
 		result.ResponseDeadline = &respDeadline
 	}
 
 	if slaDef.ResolutionTime > 0 {
-		resDeadline := s.calculateDeadline(now, slaDef.ResolutionTime, false)
+		resDeadline := s.calculateDeadlineWithBusinessHours(now, slaDef.ResolutionTime, slaDef.BusinessHours)
 		result.ResolutionDeadline = &resDeadline
 	}
 
@@ -321,16 +320,13 @@ func (s *TicketSLAService) getSLADefinition(ctx context.Context, tenantID int, t
 	}, nil
 }
 
-// calculateDeadline 计算截止时间。
-// 阻断7 修复：当 businessHoursOnly=true 时，必须只在工作时段内消耗 duration，
-// 而非把"落在非工作时间的截止时刻"平移到最近的工作时段起点（旧 AdjustToBusinessHours 行为）。
-// 旧算法：周六 10:00 + 480min = 周六 18:00 → 平移到周一 9:00（实际给了 0 分钟有效工作时间）。
-// 新算法：从 startTime 开始，只在 9:00-18:00 内消耗 duration，跨日/跨周末跳过非工作时段。
-func (s *TicketSLAService) calculateDeadline(startTime time.Time, durationMinutes int, businessHoursOnly bool) time.Time {
-	if !businessHoursOnly || durationMinutes <= 0 {
+// calculateDeadlineWithBusinessHours applies an SLA definition's configured
+// business calendar. An empty calendar intentionally preserves 24x7 SLA time.
+func (s *TicketSLAService) calculateDeadlineWithBusinessHours(startTime time.Time, durationMinutes int, businessHours map[string]interface{}) time.Time {
+	if len(businessHours) == 0 || durationMinutes <= 0 {
 		return startTime.Add(time.Duration(durationMinutes) * time.Minute)
 	}
-	return addBusinessMinutes(startTime, durationMinutes, defaultBusinessHoursConfig())
+	return addBusinessMinutes(startTime, durationMinutes, parseBusinessHoursConfig(businessHours))
 }
 
 // AdjustToBusinessHours 调整到工作时间（公开方法，供外部调用）。
@@ -562,12 +558,12 @@ func (s *TicketSLAService) CalculateSLADeadlineFromRequest(ctx context.Context, 
 	}
 
 	// 计算截止时间（单位是分钟）。
-	// 阻断7/C-8 修复：统一走 calculateDeadline，依据 sla.BusinessHours 决定是否启用工作时间口径。
+	// 阻断7/C-8 修复：统一走 SLA 配置的工作日历。
 	// 旧逻辑用 AdjustToBusinessHours 平移截止时刻，导致非工作时段被当作顺延而非排除，
 	// 且与 GetTicketSLAInfo 路径使用不同口径，造成同一工单"是否违规"两路径结论相反。
 	businessHoursOnly := len(sla.BusinessHours) > 0
-	responseDeadline := s.calculateDeadline(now, sla.ResponseTime, businessHoursOnly)
-	resolutionDeadline := s.calculateDeadline(now, sla.ResolutionTime, businessHoursOnly)
+	responseDeadline := s.calculateDeadlineWithBusinessHours(now, sla.ResponseTime, sla.BusinessHours)
+	resolutionDeadline := s.calculateDeadlineWithBusinessHours(now, sla.ResolutionTime, sla.BusinessHours)
 
 	return &SLADeadlineResult{
 		SLADefinitionID:    sla.ID,
