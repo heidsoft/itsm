@@ -280,7 +280,7 @@ func (h *Handler) toDTO(i *Incident) *dto.IncidentResponse {
 
 // GetStats 获取事件统计数据（兼容前端）
 func (h *Handler) GetStats(c *gin.Context) {
-		tenantIDInt := c.GetInt("tenant_id")
+	tenantIDInt := c.GetInt("tenant_id")
 
 	client, exists := c.Get("client")
 	if !exists {

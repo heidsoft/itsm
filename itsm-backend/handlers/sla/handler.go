@@ -437,7 +437,7 @@ func (h *Handler) GetAlertHistory(c *gin.Context) {
 
 // GetSLAStats handles GET /api/v1/sla/stats
 func (h *Handler) GetSLAStats(c *gin.Context) {
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	stats, err := h.svc.GetSLAStats(c.Request.Context(), tenantID)
 	if err != nil {
@@ -450,7 +450,7 @@ func (h *Handler) GetSLAStats(c *gin.Context) {
 
 // GetSLAComplianceReport handles GET /api/v1/sla/compliance-report
 func (h *Handler) GetSLAComplianceReport(c *gin.Context) {
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	// Parse query parameters
 	startDateStr := c.Query("start_date")

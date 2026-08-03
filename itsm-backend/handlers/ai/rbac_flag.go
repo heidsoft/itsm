@@ -17,9 +17,9 @@ import (
 // 两个开关均为 off 时，Gate 2 跳过校验，permission_check 写入 "skipped"。
 
 var (
-	rbacFlagOnce     sync.Once
-	rbacFlagEnabled  bool
-	rbacFlagEnforce  bool
+	rbacFlagOnce    sync.Once
+	rbacFlagEnabled bool
+	rbacFlagEnforce bool
 )
 
 // loadRBACFlag 从环境变量读取开关，只执行一次

@@ -570,8 +570,8 @@ func TestTicketService_ListTickets_DataScope(t *testing.T) {
 	// 但 DSCOPE-3（Bob 独有）对 Alice 不可见。
 	bobIDFilter := bob.ID
 	aliceBypassResp, err := ticketService.ListTickets(ctx, &dto.ListTicketsRequest{
-		Page:       1,
-		PageSize:   100,
+		Page:        1,
+		PageSize:    100,
 		RequesterID: &bobIDFilter,
 	}, testTenant.ID, alice.ID, "end_user")
 	require.NoError(t, err)

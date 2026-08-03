@@ -91,9 +91,10 @@ var ErrUnknownTool = fmt.Errorf("unknown tool")
 // P2-6: 新增 userID 和 role 参数用于 Gate 2 RBAC 校验
 //
 // 校验分层：
-//   Gate 1: 路由级 RBACMiddleware（/api/v1/agent/* 检查 ai:read/ai:write）— 调用前已完成
-//   Gate 2: 工具级 RBAC（本方法）— 按 ToolDefinition.Resource/Action 校验
-//   Gate 3: 审批流（写工具 !ReadOnly）— 由 NeedsApproval 处理
+//
+//	Gate 1: 路由级 RBACMiddleware（/api/v1/agent/* 检查 ai:read/ai:write）— 调用前已完成
+//	Gate 2: 工具级 RBAC（本方法）— 按 ToolDefinition.Resource/Action 校验
+//	Gate 3: 审批流（写工具 !ReadOnly）— 由 NeedsApproval 处理
 func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, name string, args map[string]interface{}) (interface{}, int, error) {
 	if s.tools == nil {
 		return nil, 0, fmt.Errorf("tool registry not initialized")
@@ -147,16 +148,16 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 	// 写工具：创建 pending invocation，等待审批
 	argsStr, _ := json.Marshal(args)
 	inv, err := s.repo.CreateToolInvocation(ctx, &ToolInvocation{
-		TenantID:          tenantID,
-		ToolName:          name,
-		Arguments:         string(argsStr),
-		Status:            "pending",
-		NeedsApproval:     true,
-		ApprovalState:     "pending",
-		UserID:            userID,
-		PermissionCheck:   permCheck,
-		PermissionReason:  permReason,
-		RoleSnapshot:      role,
+		TenantID:         tenantID,
+		ToolName:         name,
+		Arguments:        string(argsStr),
+		Status:           "pending",
+		NeedsApproval:    true,
+		ApprovalState:    "pending",
+		UserID:           userID,
+		PermissionCheck:  permCheck,
+		PermissionReason: permReason,
+		RoleSnapshot:     role,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -169,16 +170,16 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, role, toolName string, args map[string]interface{}, permCheck, permReason, status string, result *string, needsApproval bool) {
 	argsStr, _ := json.Marshal(args)
 	_, _ = s.repo.CreateToolInvocation(ctx, &ToolInvocation{
-		TenantID:          tenantID,
-		ToolName:          toolName,
-		Arguments:         string(argsStr),
-		Status:            status,
-		NeedsApproval:     needsApproval,
-		ApprovalState:     "auto",
-		UserID:            userID,
-		PermissionCheck:   permCheck,
-		PermissionReason:  permReason,
-		RoleSnapshot:      role,
+		TenantID:         tenantID,
+		ToolName:         toolName,
+		Arguments:        string(argsStr),
+		Status:           status,
+		NeedsApproval:    needsApproval,
+		ApprovalState:    "auto",
+		UserID:           userID,
+		PermissionCheck:  permCheck,
+		PermissionReason: permReason,
+		RoleSnapshot:     role,
 	})
 }
 

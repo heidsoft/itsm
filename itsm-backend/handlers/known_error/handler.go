@@ -62,7 +62,7 @@ func (h *Handler) ListKnownErrors(c *gin.Context) {
 	severity := c.Query("severity")
 	keyword := c.Query("keyword")
 
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	ctx := c.Request.Context()
 
@@ -129,7 +129,7 @@ func (h *Handler) GetKnownError(c *gin.Context) {
 		return
 	}
 
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	ctx := c.Request.Context()
 
@@ -160,9 +160,9 @@ func (h *Handler) CreateKnownError(c *gin.Context) {
 		return
 	}
 
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
-		userID := c.GetInt("user_id")
+	userID := c.GetInt("user_id")
 
 	ctx := c.Request.Context()
 
@@ -210,7 +210,7 @@ func (h *Handler) UpdateKnownError(c *gin.Context) {
 		return
 	}
 
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	var req dto.KEDBUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -294,7 +294,7 @@ func (h *Handler) DeleteKnownError(c *gin.Context) {
 		return
 	}
 
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	ctx := c.Request.Context()
 
@@ -330,7 +330,7 @@ func (h *Handler) DeleteKnownError(c *gin.Context) {
 
 // GetStats handles GET /api/v1/known-errors/stats
 func (h *Handler) GetStats(c *gin.Context) {
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	ctx := c.Request.Context()
 
@@ -450,7 +450,7 @@ func (h *Handler) SearchKnownErrors(c *gin.Context) {
 		return
 	}
 
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	ctx := c.Request.Context()
 
@@ -486,7 +486,7 @@ func (h *Handler) SearchKnownErrors(c *gin.Context) {
 
 // GetCategories handles GET /api/v1/known-errors/categories
 func (h *Handler) GetCategories(c *gin.Context) {
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	ctx := c.Request.Context()
 
@@ -524,7 +524,7 @@ func (h *Handler) PromoteToKnownError(c *gin.Context) {
 		return
 	}
 
-		tenantID := c.GetInt("tenant_id")
+	tenantID := c.GetInt("tenant_id")
 
 	ctx := c.Request.Context()
 

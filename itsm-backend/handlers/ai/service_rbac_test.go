@@ -56,30 +56,39 @@ func (m *rbacMockRepo) invocations() []ai.ToolInvocation {
 func (m *rbacMockRepo) CreateConversation(_ context.Context, c *ai.Conversation) (*ai.Conversation, error) {
 	return c, nil
 }
+
 func (m *rbacMockRepo) GetConversation(_ context.Context, _ int, _ int) (*ai.Conversation, error) {
 	return nil, nil
 }
+
 func (m *rbacMockRepo) ListConversations(_ context.Context, _ int, _ int) ([]*ai.Conversation, error) {
 	return nil, nil
 }
+
 func (m *rbacMockRepo) CreateMessage(_ context.Context, msg *ai.Message) (*ai.Message, error) {
 	return msg, nil
 }
+
 func (m *rbacMockRepo) GetMessages(_ context.Context, _ int) ([]*ai.Message, error) {
 	return nil, nil
 }
+
 func (m *rbacMockRepo) GetToolInvocation(_ context.Context, _ int, _ int) (*ai.ToolInvocation, error) {
 	return nil, nil
 }
+
 func (m *rbacMockRepo) UpdateToolInvocation(_ context.Context, i *ai.ToolInvocation) (*ai.ToolInvocation, error) {
 	return i, nil
 }
+
 func (m *rbacMockRepo) CreateRCA(_ context.Context, r *ai.RootCauseAnalysis) (*ai.RootCauseAnalysis, error) {
 	return r, nil
 }
+
 func (m *rbacMockRepo) GetRCAByTicket(_ context.Context, _ int, _ int) (*ai.RootCauseAnalysis, error) {
 	return nil, nil
 }
+
 func (m *rbacMockRepo) UpdateRCA(_ context.Context, r *ai.RootCauseAnalysis) (*ai.RootCauseAnalysis, error) {
 	return r, nil
 }

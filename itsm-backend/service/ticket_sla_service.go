@@ -343,12 +343,12 @@ func (s *TicketSLAService) AdjustToBusinessHours(t time.Time) time.Time {
 // businessHoursConfig 业务时间配置。
 // 默认：周一至周五 9:00-18:00，无节假日。
 type businessHoursConfig struct {
-	workDays    map[time.Weekday]bool // 工作日集合
-	startHour   int                   // 工作时段起始小时（含），9 表示 09:00
-	startMin    int                   // 工作时段起始分钟
-	endHour     int                   // 工作时段结束小时（不含），18 表示 18:00
-	endMin      int                   // 工作时段结束分钟
-	holidays    map[string]bool       // 节假日集合，格式 "2006-01-02"
+	workDays  map[time.Weekday]bool // 工作日集合
+	startHour int                   // 工作时段起始小时（含），9 表示 09:00
+	startMin  int                   // 工作时段起始分钟
+	endHour   int                   // 工作时段结束小时（不含），18 表示 18:00
+	endMin    int                   // 工作时段结束分钟
+	holidays  map[string]bool       // 节假日集合，格式 "2006-01-02"
 }
 
 // defaultBusinessHoursConfig 返回默认业务时间配置（周一至周五 9:00-18:00）。
@@ -366,8 +366,10 @@ func defaultBusinessHoursConfig() businessHoursConfig {
 
 // parseBusinessHoursConfig 从 SLADefinition.BusinessHours (map[string]interface{}) 解析配置。
 // 配置格式参考 ent/schema/sla_policy.go 的 BusinessHoursConfig：
-//   { "work_days": [1,2,3,4,5], "start_time": "09:00", "end_time": "18:00",
-//     "time_zone": "Asia/Shanghai", "holiday_list": ["2026-01-01"] }
+//
+//	{ "work_days": [1,2,3,4,5], "start_time": "09:00", "end_time": "18:00",
+//	  "time_zone": "Asia/Shanghai", "holiday_list": ["2026-01-01"] }
+//
 // 空或解析失败时返回默认配置（不阻断 SLA 计算）。
 func parseBusinessHoursConfig(raw map[string]interface{}) businessHoursConfig {
 	cfg := defaultBusinessHoursConfig()
@@ -377,8 +379,10 @@ func parseBusinessHoursConfig(raw map[string]interface{}) businessHoursConfig {
 	if days, ok := raw["work_days"].([]interface{}); ok && len(days) > 0 {
 		cfg.workDays = map[time.Weekday]bool{}
 		// work_days 用 1-7 表示周一到周日（与 time.Weekday 0=Sunday 不同）
-		dayMap := map[int]time.Weekday{1: time.Monday, 2: time.Tuesday, 3: time.Wednesday,
-			4: time.Thursday, 5: time.Friday, 6: time.Saturday, 7: time.Sunday}
+		dayMap := map[int]time.Weekday{
+			1: time.Monday, 2: time.Tuesday, 3: time.Wednesday,
+			4: time.Thursday, 5: time.Friday, 6: time.Saturday, 7: time.Sunday,
+		}
 		for _, d := range days {
 			if dv, ok := d.(float64); ok {
 				if wd, ok := dayMap[int(dv)]; ok {

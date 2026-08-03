@@ -263,10 +263,10 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 
 // UpdateReleaseStatus 更新发布状态
 // C-1 修复：新增 isValidReleaseStatusTransition 白名单校验，防止审批被绕过：
-//  - draft → scheduled / cancelled
-//  - scheduled → in-progress / cancelled
-//  - in-progress → completed / failed / rolled_back / cancelled
-//  - completed / cancelled / rolled_back / failed 为终态（不可被复活）
+//   - draft → scheduled / cancelled
+//   - scheduled → in-progress / cancelled
+//   - in-progress → completed / failed / rolled_back / cancelled
+//   - completed / cancelled / rolled_back / failed 为终态（不可被复活）
 func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID int, status string) (*dto.ReleaseResponse, error) {
 	status = func() string { s1 := status; return s1 }()
 	releaseEntity, err := s.client.Release.Query().
