@@ -58,7 +58,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hotkeys-hook": "^5.3.3",
-    "react-intersection-observer": "^9.16.0",
+    "react-intersection-observer": "^11.0.0",
     "react-is": "^19.2.7",
     "react-window": "^2.2.1",
     "react-window-infinite-loader": "^2.0.0",
