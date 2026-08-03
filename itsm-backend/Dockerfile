@@ -3,7 +3,7 @@
 # ITSM Backend — development image (multi-stage)
 #
 # Optimizations vs. the previous version:
-#   - Pinned base image (golang:1.25.10-alpine) instead of floating "golang:alpine"
+#   - Pinned base image (golang:1.25.12-alpine) instead of floating "golang:alpine"
 #   - BuildKit cache mounts for go modules + build cache (repeat builds are fast)
 #   - trimpath + "-s -w" linker flags to shrink the binary
 #   - Static, non-root runtime on a pinned alpine:3.20
@@ -15,7 +15,7 @@
 # ============================================================
 # Stage 1: Build
 # ============================================================
-FROM --platform=$BUILDPLATFORM golang:1.25.10-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25.12-alpine AS builder
 
 WORKDIR /src
 

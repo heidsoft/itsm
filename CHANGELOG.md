@@ -11,11 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.8] - 2026-08-04
+
+### Security
+
+- **Go runtime baseline** — Raised the backend build and release toolchain to Go 1.25.12 to include the latest TLS, X.509, and MIME-header security fixes required by the production vulnerability gate.
+
+---
+
 ## [1.6.7] - 2026-08-04
 
 ### Security
 
-- **Go runtime baseline** — Raised the backend build and release toolchain to Go 1.25.10, which contains the standard-library security fixes required by the production vulnerability gate.
+- **Go runtime baseline** — Raised the backend build and release toolchain to Go 1.25.10 as an intermediate production security baseline.
 
 ### Fixed
 

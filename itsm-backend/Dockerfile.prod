@@ -3,7 +3,7 @@
 # ITSM Backend — production image (multi-stage)
 #
 # Optimizations vs. the previous version:
-#   - Pinned base images (golang:1.25.10-alpine, alpine:3.20)
+#   - Pinned base images (golang:1.25.12-alpine, alpine:3.20)
 #   - BuildKit cache mounts for go modules + build cache
 #   - Cross-platform build via TARGETOS/TARGETARCH
 #   - trimpath + "-s -w" to strip debug info and shrink the binary
@@ -13,7 +13,7 @@
 # ============================================================
 # Stage 1: Build
 # ============================================================
-FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.25.10-alpine AS builder
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.25.12-alpine AS builder
 
 WORKDIR /src
 
