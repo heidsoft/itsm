@@ -302,14 +302,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	if config.RedisRateLimiter != nil {
 		// 使用 Redis 限流器（分布式环境）
 		config.Logger.Info("Using Redis-based distributed rate limiter")
+		// Redis 故障时使用更严格的本地限制（10/min），禁止故障放行。
+		fallbackLimiter := middleware.NewRateLimiter(10, time.Minute)
 		r.Use(func(limiter RateLimiterInterface) gin.HandlerFunc {
 			return func(c *gin.Context) {
 				clientIP := c.ClientIP()
 				allowed, err := limiter.Allow(c.Request.Context(), clientIP)
 				if err != nil {
-					config.Logger.Warnw("Rate limiter error, allowing request", "error", err)
-					c.Next()
-					return
+					config.Logger.Warnw("Redis rate limiter unavailable, using strict in-memory fallback", "error", err)
+					allowed = fallbackLimiter.Allow(clientIP)
 				}
 				if !allowed {
 					common.Fail(c, 429, "请求过于频繁，请稍后再试")
@@ -348,7 +349,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// 无需认证的账号自助端点（注册/密码找回/重置）
 		if config.AuthController != nil {
-			public.POST("/auth/register", config.AuthController.Register)
+			public.POST("/auth/register", middleware.LoginRateLimiter(), config.AuthController.Register)
 			public.POST("/auth/forgot-password", middleware.LoginRateLimiter(), config.AuthController.ForgotPassword)
 			public.POST("/auth/reset-password", middleware.LoginRateLimiter(), config.AuthController.ResetPassword)
 			public.POST("/auth/validate-reset-token", middleware.LoginRateLimiter(), config.AuthController.ValidateResetToken)
@@ -1488,8 +1489,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				conns.POST("/:name/send", middleware.RequirePermission("connector", "write"), config.ConnectorController.Send)
 				conns.POST("/:name/test", middleware.RequirePermission("connector", "write"), config.ConnectorController.Test)
 				conns.GET("/health", middleware.RequirePermission("connector", "read"), config.ConnectorController.Health)
-				// 飞书事件回调（独立签名校验）
-				conns.POST("/feishu/callback", config.ConnectorController.FeishuCallback)
 			}
 		}
 

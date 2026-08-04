@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"sync"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/connector"
@@ -21,6 +23,8 @@ type FeishuController struct {
 	syncService      *service.FeishuSyncService
 	marketplace      *marketplaceService.Service
 	logger           *zap.SugaredLogger
+	replayMu         sync.Mutex
+	replayed         map[string]time.Time
 }
 
 func NewFeishuController(connectorManager *connector.Manager, syncService *service.FeishuSyncService, marketplace *marketplaceService.Service, logger *zap.SugaredLogger) *FeishuController {
@@ -29,6 +33,7 @@ func NewFeishuController(connectorManager *connector.Manager, syncService *servi
 		syncService:      syncService,
 		marketplace:      marketplace,
 		logger:           logger,
+		replayed:         make(map[string]time.Time),
 	}
 }
 
@@ -46,15 +51,11 @@ func (c *FeishuController) getFeishuConnector(ctx *gin.Context) (*feishuConn.Fei
 	return fc, tenantID, ok
 }
 
-// getFeishuConnectorPublic 公开回调路由（webhook/oauth callback）专用：
-// 无认证上下文时允许通过 query/state 解析 tenant_id 做路由，
-// 后续必须经过签名/令牌校验才会处理事件。
+// getFeishuConnectorPublic uses a high-entropy connector instance ID; public
+// callbacks never accept an enumerable tenant ID.
 func (c *FeishuController) getFeishuConnectorPublic(ctx *gin.Context) (*feishuConn.Feishu, int, bool) {
-	tenantID := getTenantIDFromContext(ctx)
-	if tenantID == 0 {
-		return nil, 0, false
-	}
-	conn, ok := c.connectorManager.Get(tenantID, "feishu")
+	instanceID := ctx.Param("instance_id")
+	conn, tenantID, ok := c.connectorManager.GetByCallbackInstanceID("feishu", instanceID)
 	if !ok {
 		return nil, tenantID, false
 	}
@@ -71,7 +72,7 @@ func (c *FeishuController) GetOAuthAuthURL(ctx *gin.Context) {
 	}
 	redirectURI := ctx.Query("redirectUri")
 	if redirectURI == "" {
-		redirectURI = fmt.Sprintf("%s://%s/api/v1/feishu/oauth/callback", requestScheme(ctx), ctx.Request.Host)
+		redirectURI = fmt.Sprintf("%s://%s/api/v1/feishu/oauth/callback/%s", requestScheme(ctx), ctx.Request.Host, fc.CallbackInstanceID())
 	}
 	state := ctx.Query("state")
 	if state == "" {
@@ -162,9 +163,6 @@ func (c *FeishuController) Webhook(ctx *gin.Context) {
 	}
 
 	rawData, _ := ctx.GetRawData()
-	if handled := c.handleURLVerification(ctx, fc, rawData); handled {
-		return
-	}
 
 	// 将 http.Header 转换为 map[string]string
 	headers := make(map[string]string)
@@ -178,6 +176,13 @@ func (c *FeishuController) Webhook(ctx *gin.Context) {
 	if err != nil {
 		c.logger.Errorw("Invalid Feishu webhook signature", "err", err)
 		common.Fail(ctx, common.ForbiddenCode, "Invalid signature")
+		return
+	}
+	if !c.consumeWebhookNonce(headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"], headers["X-Lark-Signature"]) {
+		common.Fail(ctx, common.ForbiddenCode, "Replay detected")
+		return
+	}
+	if handled := c.handleURLVerification(ctx, fc, rawData); handled {
 		return
 	}
 
@@ -209,6 +214,23 @@ func (c *FeishuController) Webhook(ctx *gin.Context) {
 	common.Success(ctx, &dto.FeishuWebhookResponse{EventType: msg.Type, Action: "ignored"})
 }
 
+func (c *FeishuController) consumeWebhookNonce(timestamp, nonce, signature string) bool {
+	key := timestamp + ":" + nonce + ":" + signature
+	now := time.Now()
+	c.replayMu.Lock()
+	defer c.replayMu.Unlock()
+	for k, expires := range c.replayed {
+		if now.After(expires) {
+			delete(c.replayed, k)
+		}
+	}
+	if _, exists := c.replayed[key]; exists {
+		return false
+	}
+	c.replayed[key] = now.Add(5 * time.Minute)
+	return true
+}
+
 func (c *FeishuController) handleURLVerification(ctx *gin.Context, fc *feishuConn.Feishu, rawData []byte) bool {
 	var req struct {
 		Type      string `json:"type"`
@@ -224,13 +246,6 @@ func (c *FeishuController) handleURLVerification(ctx *gin.Context, fc *feishuCon
 	}
 	ctx.JSON(200, gin.H{"challenge": req.Challenge})
 	return true
-}
-
-func getTenantIDFromContext(ctx *gin.Context) int {
-	if tenantID := ctx.GetInt("tenant_id"); tenantID > 0 {
-		return tenantID
-	}
-	return 0
 }
 
 func requestScheme(ctx *gin.Context) string {

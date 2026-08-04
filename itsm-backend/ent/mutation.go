@@ -277,6 +277,7 @@ type ApplicationMutation struct {
 	addtenant_id         *int
 	created_at           *time.Time
 	updated_at           *time.Time
+	deleted_at           *time.Time
 	clearedFields        map[string]struct{}
 	project              *int
 	clearedproject       bool
@@ -829,6 +830,55 @@ func (m *ApplicationMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ApplicationMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ApplicationMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Application entity.
+// If the Application object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApplicationMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ApplicationMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[application.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ApplicationMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[application.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ApplicationMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, application.FieldDeletedAt)
+}
+
 // ClearProject clears the "project" edge to the Project entity.
 func (m *ApplicationMutation) ClearProject() {
 	m.clearedproject = true
@@ -998,7 +1048,7 @@ func (m *ApplicationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ApplicationMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.name != nil {
 		fields = append(fields, application.FieldName)
 	}
@@ -1029,6 +1079,9 @@ func (m *ApplicationMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, application.FieldUpdatedAt)
 	}
+	if m.deleted_at != nil {
+		fields = append(fields, application.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -1057,6 +1110,8 @@ func (m *ApplicationMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case application.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case application.FieldDeletedAt:
+		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -1086,6 +1141,8 @@ func (m *ApplicationMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldCreatedAt(ctx)
 	case application.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case application.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Application field %s", name)
 }
@@ -1165,6 +1222,13 @@ func (m *ApplicationMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case application.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Application field %s", name)
 }
@@ -1231,6 +1295,9 @@ func (m *ApplicationMutation) ClearedFields() []string {
 	if m.FieldCleared(application.FieldProjectID) {
 		fields = append(fields, application.FieldProjectID)
 	}
+	if m.FieldCleared(application.FieldDeletedAt) {
+		fields = append(fields, application.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -1253,6 +1320,9 @@ func (m *ApplicationMutation) ClearField(name string) error {
 		return nil
 	case application.FieldProjectID:
 		m.ClearProjectID()
+		return nil
+	case application.FieldDeletedAt:
+		m.ClearDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Application nullable field %s", name)
@@ -1291,6 +1361,9 @@ func (m *ApplicationMutation) ResetField(name string) error {
 		return nil
 	case application.FieldUpdatedAt:
 		m.ResetUpdatedAt()
+		return nil
+	case application.FieldDeletedAt:
+		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Application field %s", name)
@@ -35736,6 +35809,7 @@ type DepartmentMutation struct {
 	addtenant_id      *int
 	created_at        *time.Time
 	updated_at        *time.Time
+	deleted_at        *time.Time
 	clearedFields     map[string]struct{}
 	parent            *int
 	clearedparent     bool
@@ -36231,6 +36305,55 @@ func (m *DepartmentMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (m *DepartmentMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *DepartmentMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Department entity.
+// If the Department object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DepartmentMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *DepartmentMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[department.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *DepartmentMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[department.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *DepartmentMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, department.FieldDeletedAt)
+}
+
 // ClearParent clears the "parent" edge to the Department entity.
 func (m *DepartmentMutation) ClearParent() {
 	m.clearedparent = true
@@ -36670,7 +36793,7 @@ func (m *DepartmentMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *DepartmentMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.name != nil {
 		fields = append(fields, department.FieldName)
 	}
@@ -36694,6 +36817,9 @@ func (m *DepartmentMutation) Fields() []string {
 	}
 	if m.updated_at != nil {
 		fields = append(fields, department.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, department.FieldDeletedAt)
 	}
 	return fields
 }
@@ -36719,6 +36845,8 @@ func (m *DepartmentMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case department.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case department.FieldDeletedAt:
+		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -36744,6 +36872,8 @@ func (m *DepartmentMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldCreatedAt(ctx)
 	case department.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case department.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Department field %s", name)
 }
@@ -36808,6 +36938,13 @@ func (m *DepartmentMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
+		return nil
+	case department.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Department field %s", name)
@@ -36875,6 +37012,9 @@ func (m *DepartmentMutation) ClearedFields() []string {
 	if m.FieldCleared(department.FieldParentID) {
 		fields = append(fields, department.FieldParentID)
 	}
+	if m.FieldCleared(department.FieldDeletedAt) {
+		fields = append(fields, department.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -36897,6 +37037,9 @@ func (m *DepartmentMutation) ClearField(name string) error {
 		return nil
 	case department.FieldParentID:
 		m.ClearParentID()
+		return nil
+	case department.FieldDeletedAt:
+		m.ClearDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Department nullable field %s", name)
@@ -36929,6 +37072,9 @@ func (m *DepartmentMutation) ResetField(name string) error {
 		return nil
 	case department.FieldUpdatedAt:
 		m.ResetUpdatedAt()
+		return nil
+	case department.FieldDeletedAt:
+		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Department field %s", name)
@@ -57120,6 +57266,7 @@ type KnowledgeArticleMutation struct {
 	addlike_count     *int
 	created_at        *time.Time
 	updated_at        *time.Time
+	deleted_at        *time.Time
 	clearedFields     map[string]struct{}
 	user_likes        map[int]struct{}
 	removeduser_likes map[int]struct{}
@@ -57748,6 +57895,55 @@ func (m *KnowledgeArticleMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (m *KnowledgeArticleMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *KnowledgeArticleMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *KnowledgeArticleMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[knowledgearticle.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *KnowledgeArticleMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[knowledgearticle.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *KnowledgeArticleMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, knowledgearticle.FieldDeletedAt)
+}
+
 // AddUserLikeIDs adds the "user_likes" edge to the KnowledgeArticleLike entity by ids.
 func (m *KnowledgeArticleMutation) AddUserLikeIDs(ids ...int) {
 	if m.user_likes == nil {
@@ -57944,7 +58140,7 @@ func (m *KnowledgeArticleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *KnowledgeArticleMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.title != nil {
 		fields = append(fields, knowledgearticle.FieldTitle)
 	}
@@ -57978,6 +58174,9 @@ func (m *KnowledgeArticleMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, knowledgearticle.FieldUpdatedAt)
 	}
+	if m.deleted_at != nil {
+		fields = append(fields, knowledgearticle.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -58008,6 +58207,8 @@ func (m *KnowledgeArticleMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case knowledgearticle.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case knowledgearticle.FieldDeletedAt:
+		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -58039,6 +58240,8 @@ func (m *KnowledgeArticleMutation) OldField(ctx context.Context, name string) (e
 		return m.OldCreatedAt(ctx)
 	case knowledgearticle.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case knowledgearticle.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown KnowledgeArticle field %s", name)
 }
@@ -58124,6 +58327,13 @@ func (m *KnowledgeArticleMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
+		return nil
+	case knowledgearticle.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticle field %s", name)
@@ -58215,6 +58425,9 @@ func (m *KnowledgeArticleMutation) ClearedFields() []string {
 	if m.FieldCleared(knowledgearticle.FieldTags) {
 		fields = append(fields, knowledgearticle.FieldTags)
 	}
+	if m.FieldCleared(knowledgearticle.FieldDeletedAt) {
+		fields = append(fields, knowledgearticle.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -58237,6 +58450,9 @@ func (m *KnowledgeArticleMutation) ClearField(name string) error {
 		return nil
 	case knowledgearticle.FieldTags:
 		m.ClearTags()
+		return nil
+	case knowledgearticle.FieldDeletedAt:
+		m.ClearDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticle nullable field %s", name)
@@ -58278,6 +58494,9 @@ func (m *KnowledgeArticleMutation) ResetField(name string) error {
 		return nil
 	case knowledgearticle.FieldUpdatedAt:
 		m.ResetUpdatedAt()
+		return nil
+	case knowledgearticle.FieldDeletedAt:
+		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticle field %s", name)
@@ -118621,6 +118840,7 @@ type SystemConfigMutation struct {
 	addtenant_id  *int
 	created_at    *time.Time
 	updated_at    *time.Time
+	deleted_at    *time.Time
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*SystemConfig, error)
@@ -119122,6 +119342,55 @@ func (m *SystemConfigMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (m *SystemConfigMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *SystemConfigMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the SystemConfig entity.
+// If the SystemConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SystemConfigMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *SystemConfigMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[systemconfig.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *SystemConfigMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[systemconfig.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *SystemConfigMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, systemconfig.FieldDeletedAt)
+}
+
 // Where appends a list predicates to the SystemConfigMutation builder.
 func (m *SystemConfigMutation) Where(ps ...predicate.SystemConfig) {
 	m.predicates = append(m.predicates, ps...)
@@ -119156,7 +119425,7 @@ func (m *SystemConfigMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SystemConfigMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.key != nil {
 		fields = append(fields, systemconfig.FieldKey)
 	}
@@ -119184,6 +119453,9 @@ func (m *SystemConfigMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, systemconfig.FieldUpdatedAt)
 	}
+	if m.deleted_at != nil {
+		fields = append(fields, systemconfig.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -119210,6 +119482,8 @@ func (m *SystemConfigMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case systemconfig.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case systemconfig.FieldDeletedAt:
+		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -119237,6 +119511,8 @@ func (m *SystemConfigMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldCreatedAt(ctx)
 	case systemconfig.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case systemconfig.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown SystemConfig field %s", name)
 }
@@ -119309,6 +119585,13 @@ func (m *SystemConfigMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case systemconfig.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown SystemConfig field %s", name)
 }
@@ -119366,6 +119649,9 @@ func (m *SystemConfigMutation) ClearedFields() []string {
 	if m.FieldCleared(systemconfig.FieldTenantID) {
 		fields = append(fields, systemconfig.FieldTenantID)
 	}
+	if m.FieldCleared(systemconfig.FieldDeletedAt) {
+		fields = append(fields, systemconfig.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -119391,6 +119677,9 @@ func (m *SystemConfigMutation) ClearField(name string) error {
 		return nil
 	case systemconfig.FieldTenantID:
 		m.ClearTenantID()
+		return nil
+	case systemconfig.FieldDeletedAt:
+		m.ClearDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown SystemConfig nullable field %s", name)
@@ -119426,6 +119715,9 @@ func (m *SystemConfigMutation) ResetField(name string) error {
 		return nil
 	case systemconfig.FieldUpdatedAt:
 		m.ResetUpdatedAt()
+		return nil
+	case systemconfig.FieldDeletedAt:
+		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown SystemConfig field %s", name)
@@ -120628,6 +120920,7 @@ type TeamMutation struct {
 	addtenant_id  *int
 	created_at    *time.Time
 	updated_at    *time.Time
+	deleted_at    *time.Time
 	clearedFields map[string]struct{}
 	users         map[int]struct{}
 	removedusers  map[int]struct{}
@@ -121093,6 +121386,55 @@ func (m *TeamMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (m *TeamMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *TeamMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Team entity.
+// If the Team object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TeamMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *TeamMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[team.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *TeamMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[team.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *TeamMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, team.FieldDeletedAt)
+}
+
 // AddUserIDs adds the "users" edge to the User entity by ids.
 func (m *TeamMutation) AddUserIDs(ids ...int) {
 	if m.users == nil {
@@ -121235,7 +121577,7 @@ func (m *TeamMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TeamMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.name != nil {
 		fields = append(fields, team.FieldName)
 	}
@@ -121259,6 +121601,9 @@ func (m *TeamMutation) Fields() []string {
 	}
 	if m.updated_at != nil {
 		fields = append(fields, team.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, team.FieldDeletedAt)
 	}
 	return fields
 }
@@ -121284,6 +121629,8 @@ func (m *TeamMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case team.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case team.FieldDeletedAt:
+		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -121309,6 +121656,8 @@ func (m *TeamMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldCreatedAt(ctx)
 	case team.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case team.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Team field %s", name)
 }
@@ -121374,6 +121723,13 @@ func (m *TeamMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case team.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Team field %s", name)
 }
@@ -121437,6 +121793,9 @@ func (m *TeamMutation) ClearedFields() []string {
 	if m.FieldCleared(team.FieldManagerID) {
 		fields = append(fields, team.FieldManagerID)
 	}
+	if m.FieldCleared(team.FieldDeletedAt) {
+		fields = append(fields, team.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -121456,6 +121815,9 @@ func (m *TeamMutation) ClearField(name string) error {
 		return nil
 	case team.FieldManagerID:
 		m.ClearManagerID()
+		return nil
+	case team.FieldDeletedAt:
+		m.ClearDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Team nullable field %s", name)
@@ -121488,6 +121850,9 @@ func (m *TeamMutation) ResetField(name string) error {
 		return nil
 	case team.FieldUpdatedAt:
 		m.ResetUpdatedAt()
+		return nil
+	case team.FieldDeletedAt:
+		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Team field %s", name)

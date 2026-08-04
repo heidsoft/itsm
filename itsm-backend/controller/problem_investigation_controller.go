@@ -7,6 +7,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -467,6 +468,7 @@ func (pc *ProblemInvestigationController) GetProblemKnowledgeArticles(c *gin.Con
 
 	// 获取知识库文章列表 (按创建时间倒序)
 	articles, err := entClient.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantIDEQ(tenantID), knowledgearticle.DeletedAtIsNil()).
 		Order(ent.Desc("created_at")).
 		All(c.Request.Context())
 	if err != nil {

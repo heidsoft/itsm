@@ -2,6 +2,8 @@ package common
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/auditlog"
@@ -194,6 +196,15 @@ func (r *EntRepository) UpdateUser(ctx context.Context, u *User) (*User, error) 
 // Department methods
 
 func (r *EntRepository) CreateDepartment(ctx context.Context, d *Department) (*Department, error) {
+	exists, err := r.client.Department.Query().
+		Where(department.Code(d.Code), department.TenantID(d.TenantID), department.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, fmt.Errorf("department code already exists: %s", d.Code)
+	}
 	builder := r.client.Department.Create().
 		SetName(d.Name).
 		SetCode(d.Code).
@@ -214,8 +225,8 @@ func (r *EntRepository) CreateDepartment(ctx context.Context, d *Department) (*D
 
 func (r *EntRepository) GetDepartment(ctx context.Context, id int, tenantID int) (*Department, error) {
 	e, err := r.client.Department.Query().
-		Where(department.ID(id), department.TenantID(tenantID)).
-		WithChildren().
+		Where(department.ID(id), department.TenantID(tenantID), department.DeletedAtIsNil()).
+		WithChildren(func(q *ent.DepartmentQuery) { q.Where(department.DeletedAtIsNil()) }).
 		Only(ctx)
 	if err != nil {
 		return nil, err
@@ -224,7 +235,7 @@ func (r *EntRepository) GetDepartment(ctx context.Context, id int, tenantID int)
 }
 
 func (r *EntRepository) ListDepartments(ctx context.Context, tenantID int) ([]*Department, error) {
-	es, err := r.client.Department.Query().Where(department.TenantID(tenantID)).All(ctx)
+	es, err := r.client.Department.Query().Where(department.TenantID(tenantID), department.DeletedAtIsNil()).All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -237,8 +248,8 @@ func (r *EntRepository) ListDepartments(ctx context.Context, tenantID int) ([]*D
 
 func (r *EntRepository) GetDepartmentTree(ctx context.Context, tenantID int) ([]*Department, error) {
 	es, err := r.client.Department.Query().
-		Where(department.TenantID(tenantID), department.ParentIDIsNil()).
-		WithChildren().
+		Where(department.TenantID(tenantID), department.ParentIDIsNil(), department.DeletedAtIsNil()).
+		WithChildren(func(q *ent.DepartmentQuery) { q.Where(department.DeletedAtIsNil()) }).
 		All(ctx)
 	if err != nil {
 		return nil, err
@@ -251,7 +262,17 @@ func (r *EntRepository) GetDepartmentTree(ctx context.Context, tenantID int) ([]
 }
 
 func (r *EntRepository) UpdateDepartment(ctx context.Context, d *Department) (*Department, error) {
+	exists, err := r.client.Department.Query().
+		Where(department.Code(d.Code), department.TenantID(d.TenantID), department.DeletedAtIsNil(), department.IDNEQ(d.ID)).
+		Exist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, fmt.Errorf("department code already exists: %s", d.Code)
+	}
 	builder := r.client.Department.UpdateOneID(d.ID).
+		Where(department.TenantID(d.TenantID), department.DeletedAtIsNil()).
 		SetName(d.Name).
 		SetCode(d.Code).
 		SetDescription(d.Description).
@@ -271,13 +292,25 @@ func (r *EntRepository) UpdateDepartment(ctx context.Context, d *Department) (*D
 }
 
 func (r *EntRepository) DeleteDepartment(ctx context.Context, id int, tenantID int) error {
-	_, err := r.client.Department.Delete().Where(department.ID(id), department.TenantID(tenantID)).Exec(ctx)
+	_, err := r.client.Department.Update().
+		Where(department.ID(id), department.TenantID(tenantID), department.DeletedAtIsNil()).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	return err
 }
 
 // Team methods
 
 func (r *EntRepository) CreateTeam(ctx context.Context, t *Team) (*Team, error) {
+	exists, err := r.client.Team.Query().
+		Where(team.Code(t.Code), team.TenantID(t.TenantID), team.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, fmt.Errorf("team code already exists: %s", t.Code)
+	}
 	e, err := r.client.Team.Create().
 		SetName(t.Name).
 		SetCode(t.Code).
@@ -292,7 +325,7 @@ func (r *EntRepository) CreateTeam(ctx context.Context, t *Team) (*Team, error) 
 }
 
 func (r *EntRepository) GetTeam(ctx context.Context, id int, tenantID int) (*Team, error) {
-	e, err := r.client.Team.Query().Where(team.ID(id), team.TenantID(tenantID)).Only(ctx)
+	e, err := r.client.Team.Query().Where(team.ID(id), team.TenantID(tenantID), team.DeletedAtIsNil()).Only(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +333,7 @@ func (r *EntRepository) GetTeam(ctx context.Context, id int, tenantID int) (*Tea
 }
 
 func (r *EntRepository) ListTeams(ctx context.Context, tenantID int) ([]*Team, error) {
-	es, err := r.client.Team.Query().Where(team.TenantID(tenantID)).All(ctx)
+	es, err := r.client.Team.Query().Where(team.TenantID(tenantID), team.DeletedAtIsNil()).All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +345,17 @@ func (r *EntRepository) ListTeams(ctx context.Context, tenantID int) ([]*Team, e
 }
 
 func (r *EntRepository) UpdateTeam(ctx context.Context, t *Team) (*Team, error) {
+	exists, err := r.client.Team.Query().
+		Where(team.Code(t.Code), team.TenantID(t.TenantID), team.DeletedAtIsNil(), team.IDNEQ(t.ID)).
+		Exist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, fmt.Errorf("team code already exists: %s", t.Code)
+	}
 	e, err := r.client.Team.UpdateOneID(t.ID).
+		Where(team.TenantID(t.TenantID), team.DeletedAtIsNil()).
 		SetName(t.Name).
 		SetCode(t.Code).
 		SetDescription(t.Description).
@@ -326,12 +369,15 @@ func (r *EntRepository) UpdateTeam(ctx context.Context, t *Team) (*Team, error) 
 }
 
 func (r *EntRepository) DeleteTeam(ctx context.Context, id int, tenantID int) error {
-	_, err := r.client.Team.Delete().Where(team.ID(id), team.TenantID(tenantID)).Exec(ctx)
+	_, err := r.client.Team.Update().
+		Where(team.ID(id), team.TenantID(tenantID), team.DeletedAtIsNil()).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	return err
 }
 
 func (r *EntRepository) AddTeamMember(ctx context.Context, teamID int, userID int) error {
-	return r.client.Team.UpdateOneID(teamID).AddUserIDs(userID).Exec(ctx)
+	return r.client.Team.UpdateOneID(teamID).Where(team.DeletedAtIsNil()).AddUserIDs(userID).Exec(ctx)
 }
 
 // Tag methods

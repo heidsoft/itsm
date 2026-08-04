@@ -92,6 +92,22 @@ func (m *Manager) Get(tenantID int, name string) (Connector, bool) {
 	return nil, false
 }
 
+// GetByCallbackInstanceID resolves a public webhook without exposing an enumerable tenant ID.
+func (m *Manager) GetByCallbackInstanceID(name, callbackInstanceID string) (Connector, int, bool) {
+	if callbackInstanceID == "" {
+		return nil, 0, false
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, inst := range m.instances {
+		id, _ := inst.cfg.Settings["callbackInstanceId"].(string)
+		if inst.cfg.Name == name && inst.cfg.Enabled && id == callbackInstanceID {
+			return inst.conn, inst.cfg.TenantID, true
+		}
+	}
+	return nil, 0, false
+}
+
 // ListByTenant 列出某租户所有运行中的连接器
 func (m *Manager) ListByTenant(tenantID int) []Config {
 	m.mu.RLock()

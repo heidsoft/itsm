@@ -46,7 +46,8 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	res, err := h.svc.Login(c.Request.Context(), req.Username, req.Password, req.TenantID, req.TenantCode)
+	auditCtx := middleware.WithLoginAuditRequest(c.Request.Context(), c.ClientIP(), c.Request.UserAgent())
+	res, err := h.svc.Login(auditCtx, req.Username, req.Password, req.TenantID, req.TenantCode)
 	if err != nil {
 		common.AuthFailed(c, err.Error())
 		return

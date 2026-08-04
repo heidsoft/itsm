@@ -2,6 +2,8 @@ package controller
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -104,6 +106,27 @@ func (c *ConnectorController) Provision(ctx *gin.Context) {
 		return
 	}
 	tenantID := ctx.GetInt("tenant_id")
+	if req.Settings == nil {
+		req.Settings = make(map[string]interface{})
+	}
+	// Never trust a client-provided callback identifier. Preserve the existing
+	// server-generated value on updates, otherwise generate 192 bits of entropy.
+	callbackInstanceID := ""
+	for _, existing := range c.manager.ListByTenant(tenantID) {
+		if existing.Name == req.Name {
+			callbackInstanceID, _ = existing.Settings["callbackInstanceId"].(string)
+			break
+		}
+	}
+	if callbackInstanceID == "" {
+		buf := make([]byte, 24)
+		if _, err := rand.Read(buf); err != nil {
+			common.Fail(ctx, common.InternalErrorCode, "无法生成回调实例标识")
+			return
+		}
+		callbackInstanceID = hex.EncodeToString(buf)
+	}
+	req.Settings["callbackInstanceId"] = callbackInstanceID
 	cfg := connector.Config{
 		TenantID:    tenantID,
 		Name:        req.Name,

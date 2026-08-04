@@ -582,8 +582,11 @@ func TestKnowledgeService_DeleteArticle(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				// 验证文章已被删除
-				_, err := client.KnowledgeArticle.Get(ctx, tt.articleID)
+				// 物理记录及其关联仍保留，但业务查询不可见。
+				stored, err := client.KnowledgeArticle.Get(ctx, tt.articleID)
+				require.NoError(t, err)
+				assert.NotNil(t, stored.DeletedAt)
+				_, err = knowledgeService.GetArticle(ctx, tt.articleID, tt.tenantID)
 				assert.Error(t, err)
 			}
 		})

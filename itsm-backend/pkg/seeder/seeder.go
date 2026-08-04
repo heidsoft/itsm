@@ -820,7 +820,7 @@ func (s *Seeder) seedDepartments(ctx context.Context) {
 		return
 	}
 
-	existing, err := s.client.Department.Query().Where(department.TenantIDEQ(t.ID)).Count(ctx)
+	existing, err := s.client.Department.Query().Where(department.TenantIDEQ(t.ID), department.DeletedAtIsNil()).Count(ctx)
 	if err != nil {
 		s.sugar.Warnw("check existing departments failed", "error", err)
 		return
@@ -851,7 +851,7 @@ func (s *Seeder) seedTeams(ctx context.Context) {
 		return
 	}
 
-	existing, err := s.client.Team.Query().Where(team.TenantIDEQ(t.ID)).Count(ctx)
+	existing, err := s.client.Team.Query().Where(team.TenantIDEQ(t.ID), team.DeletedAtIsNil()).Count(ctx)
 	if err != nil {
 		s.sugar.Warnw("check existing teams failed", "error", err)
 		return

@@ -237,6 +237,7 @@ func (s *DepartmentProcessService) GetDepartmentInfo(
 		Where(
 			department.IDEQ(departmentID),
 			department.TenantIDEQ(tenantID),
+			department.DeletedAtIsNil(),
 		).
 		Only(ctx)
 }

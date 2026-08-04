@@ -139,6 +139,20 @@ func (_c *ApplicationCreate) SetNillableUpdatedAt(v *time.Time) *ApplicationCrea
 	return _c
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *ApplicationCreate) SetDeletedAt(v time.Time) *ApplicationCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *ApplicationCreate) SetNillableDeletedAt(v *time.Time) *ApplicationCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
+	}
+	return _c
+}
+
 // SetProject sets the "project" edge to the Project entity.
 func (_c *ApplicationCreate) SetProject(v *Project) *ApplicationCreate {
 	return _c.SetProjectID(v.ID)
@@ -326,6 +340,10 @@ func (_c *ApplicationCreate) createSpec() (*Application, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(application.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(application.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
 	}
 	if nodes := _c.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

@@ -166,7 +166,7 @@ func (s *KnowledgeIntegrationService) searchKnowledgeArticles(ctx context.Contex
 
 	// 构建搜索查询
 	query := s.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantIDEQ(tenantID)).
+		Where(knowledgearticle.TenantIDEQ(tenantID), knowledgearticle.DeletedAtIsNil()).
 		Where(knowledgearticle.IsPublishedEQ(true))
 
 	// 添加关键词搜索条件
@@ -259,7 +259,9 @@ func (s *KnowledgeIntegrationService) AssociateWithKnowledge(ctx context.Context
 		return nil, fmt.Errorf("工单不存在: %w", err)
 	}
 
-	article, err := s.client.KnowledgeArticle.Get(ctx, articleID)
+	article, err := s.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.IDEQ(articleID), knowledgearticle.DeletedAtIsNil()).
+		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("知识库文章不存在: %w", err)
 	}

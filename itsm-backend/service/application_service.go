@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/application"
@@ -20,6 +21,15 @@ func NewApplicationService(client *ent.Client) *ApplicationService {
 // Application Methods
 
 func (s *ApplicationService) CreateApplication(ctx context.Context, name, code, appType string, projectID, tenantID int) (*ent.Application, error) {
+	codeExists, err := s.client.Application.Query().
+		Where(application.CodeEQ(code), application.TenantIDEQ(tenantID), application.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("检查应用代码失败: %w", err)
+	}
+	if codeExists {
+		return nil, fmt.Errorf("应用代码已存在: %s", code)
+	}
 	query := s.client.Application.Create().
 		SetName(name).
 		SetCode(code).
@@ -34,7 +44,7 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, name, code, 
 
 func (s *ApplicationService) ListApplications(ctx context.Context, tenantID int) ([]*ent.Application, error) {
 	return s.client.Application.Query().
-		Where(application.TenantID(tenantID)).
+		Where(application.TenantID(tenantID), application.DeletedAtIsNil()).
 		WithMicroservices().
 		All(ctx)
 }
@@ -59,17 +69,27 @@ func (s *ApplicationService) UpdateApplication(ctx context.Context, id int, name
 		Where(
 			application.IDEQ(id),
 			application.TenantIDEQ(tenantID),
+			application.DeletedAtIsNil(),
 		).
 		First(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	update := s.client.Application.UpdateOneID(id)
+	update := s.client.Application.UpdateOneID(id).Where(application.DeletedAtIsNil())
 	if name != nil {
 		update = update.SetName(*name)
 	}
 	if code != nil {
+		codeExists, err := s.client.Application.Query().
+			Where(application.CodeEQ(*code), application.TenantIDEQ(tenantID), application.DeletedAtIsNil(), application.IDNEQ(id)).
+			Exist(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("检查应用代码失败: %w", err)
+		}
+		if codeExists {
+			return nil, fmt.Errorf("应用代码已存在: %s", *code)
+		}
 		update = update.SetCode(*code)
 	}
 	if appType != nil {
@@ -89,6 +109,7 @@ func (s *ApplicationService) DeleteApplication(ctx context.Context, id int, tena
 		Where(
 			application.IDEQ(id),
 			application.TenantIDEQ(tenantID),
+			application.DeletedAtIsNil(),
 		).
 		Exist(ctx)
 	if err != nil {
@@ -98,8 +119,11 @@ func (s *ApplicationService) DeleteApplication(ctx context.Context, id int, tena
 		return fmt.Errorf("应用不存在: id=%d", id)
 	}
 
-	// 删除应用
-	return s.client.Application.DeleteOneID(id).Exec(ctx)
+	_, err = s.client.Application.UpdateOneID(id).
+		Where(application.TenantIDEQ(tenantID), application.DeletedAtIsNil()).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
+	return err
 }
 
 // ListMicroservices 获取微服务列表

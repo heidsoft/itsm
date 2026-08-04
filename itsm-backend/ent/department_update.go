@@ -170,6 +170,26 @@ func (_u *DepartmentUpdate) SetUpdatedAt(v time.Time) *DepartmentUpdate {
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *DepartmentUpdate) SetDeletedAt(v time.Time) *DepartmentUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *DepartmentUpdate) SetNillableDeletedAt(v *time.Time) *DepartmentUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *DepartmentUpdate) ClearDeletedAt() *DepartmentUpdate {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // SetParent sets the "parent" edge to the Department entity.
 func (_u *DepartmentUpdate) SetParent(v *Department) *DepartmentUpdate {
 	return _u.SetParentID(v.ID)
@@ -538,6 +558,12 @@ func (_u *DepartmentUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(department.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(department.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(department.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.ParentCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1039,6 +1065,26 @@ func (_u *DepartmentUpdateOne) SetUpdatedAt(v time.Time) *DepartmentUpdateOne {
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *DepartmentUpdateOne) SetDeletedAt(v time.Time) *DepartmentUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *DepartmentUpdateOne) SetNillableDeletedAt(v *time.Time) *DepartmentUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *DepartmentUpdateOne) ClearDeletedAt() *DepartmentUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // SetParent sets the "parent" edge to the Department entity.
 func (_u *DepartmentUpdateOne) SetParent(v *Department) *DepartmentUpdateOne {
 	return _u.SetParentID(v.ID)
@@ -1437,6 +1483,12 @@ func (_u *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department, 
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(department.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(department.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(department.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.ParentCleared() {
 		edge := &sqlgraph.EdgeSpec{

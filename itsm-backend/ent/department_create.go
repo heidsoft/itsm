@@ -114,6 +114,20 @@ func (_c *DepartmentCreate) SetNillableUpdatedAt(v *time.Time) *DepartmentCreate
 	return _c
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *DepartmentCreate) SetDeletedAt(v time.Time) *DepartmentCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *DepartmentCreate) SetNillableDeletedAt(v *time.Time) *DepartmentCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
+	}
+	return _c
+}
+
 // SetParent sets the "parent" edge to the Department entity.
 func (_c *DepartmentCreate) SetParent(v *Department) *DepartmentCreate {
 	return _c.SetParentID(v.ID)
@@ -354,6 +368,10 @@ func (_c *DepartmentCreate) createSpec() (*Department, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(department.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(department.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
 	}
 	if nodes := _c.mutation.ParentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

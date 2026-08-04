@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 	"strings"
+	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
@@ -74,7 +75,7 @@ func (r *EntRepository) Create(ctx context.Context, a *Article) (*Article, error
 
 func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Article, error) {
 	e, err := r.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.ID(id), knowledgearticle.TenantID(tenantID)).
+		Where(knowledgearticle.ID(id), knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
 		First(ctx)
 	if err != nil {
 		return nil, err
@@ -83,7 +84,7 @@ func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Article
 }
 
 func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, category, search, status string) ([]*Article, int, error) {
-	q := r.client.KnowledgeArticle.Query().Where(knowledgearticle.TenantID(tenantID))
+	q := r.client.KnowledgeArticle.Query().Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil())
 
 	if category != "" {
 		q = q.Where(knowledgearticle.Category(category))
@@ -124,7 +125,7 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 func (r *EntRepository) Update(ctx context.Context, a *Article) (*Article, error) {
 	tagsStr := strings.Join(a.Tags, ",")
 	e, err := r.client.KnowledgeArticle.UpdateOneID(a.ID).
-		Where(knowledgearticle.TenantID(a.TenantID)).
+		Where(knowledgearticle.TenantID(a.TenantID), knowledgearticle.DeletedAtIsNil()).
 		SetTitle(a.Title).
 		SetContent(a.Content).
 		SetCategory(a.Category).
@@ -138,15 +139,16 @@ func (r *EntRepository) Update(ctx context.Context, a *Article) (*Article, error
 }
 
 func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error {
-	_, err := r.client.KnowledgeArticle.Delete().
-		Where(knowledgearticle.ID(id), knowledgearticle.TenantID(tenantID)).
-		Exec(ctx)
+	_, err := r.client.KnowledgeArticle.Update().
+		Where(knowledgearticle.ID(id), knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	return err
 }
 
 func (r *EntRepository) GetCategories(ctx context.Context, tenantID int) ([]string, error) {
 	existing, err := r.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantID(tenantID)).
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
 		GroupBy(knowledgearticle.FieldCategory).
 		Strings(ctx)
 	if err != nil {
@@ -184,7 +186,7 @@ func (r *EntRepository) GetCategories(ctx context.Context, tenantID int) ([]stri
 
 func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, error) {
 	// Query all articles for this tenant
-	query := r.client.KnowledgeArticle.Query().Where(knowledgearticle.TenantID(tenantID))
+	query := r.client.KnowledgeArticle.Query().Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil())
 
 	// Get total count
 	total, err := query.Count(ctx)
@@ -210,7 +212,7 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 	}
 	var viewResult []ViewSum
 	err = r.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantID(tenantID)).
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
 		Aggregate(ent.As(ent.Sum(knowledgearticle.FieldViewCount), "total_views")).
 		Scan(ctx, &viewResult)
 	if err != nil {
@@ -227,7 +229,7 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 	}
 	var likeResult []LikeSum
 	err = r.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantID(tenantID)).
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
 		Aggregate(ent.As(ent.Sum(knowledgearticle.FieldLikeCount), "total_likes")).
 		Scan(ctx, &likeResult)
 	if err != nil {
@@ -245,7 +247,7 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 	}
 	var categoryResults []CategoryGroup
 	err = r.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantID(tenantID)).
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
 		GroupBy(knowledgearticle.FieldCategory).
 		Aggregate(ent.Count()).
 		Scan(ctx, &categoryResults)

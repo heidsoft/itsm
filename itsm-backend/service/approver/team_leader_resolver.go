@@ -33,6 +33,7 @@ func (r *TeamLeaderResolver) Resolve(ctx context.Context, client *ent.Client, ap
 		Where(
 			team.IDEQ(appCtx.TeamID),
 			team.TenantIDEQ(appCtx.TenantID),
+			team.DeletedAtIsNil(),
 		).
 		Only(ctx)
 	if err != nil {

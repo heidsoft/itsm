@@ -202,7 +202,7 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 
 		// Enrich with knowledge article metadata
 		if objType == "kb" {
-			if a, err := r.client.KnowledgeArticle.Get(ctx, objID); err == nil {
+			if a, err := r.client.KnowledgeArticle.Query().Where(ka.IDEQ(objID), ka.DeletedAtIsNil()).Only(ctx); err == nil {
 				item["title"] = a.Title
 				item["category"] = a.Category
 			}
@@ -220,7 +220,7 @@ func (r *RAGService) keywordSearch(ctx context.Context, tenantID int, query stri
 		return nil, fmt.Errorf("keyword search not available")
 	}
 
-	q := r.client.KnowledgeArticle.Query().Where(ka.TenantIDEQ(tenantID))
+	q := r.client.KnowledgeArticle.Query().Where(ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil())
 	if qq := strings.TrimSpace(query); qq != "" {
 		// Use OR for broader search
 		q = q.Where(ka.Or(

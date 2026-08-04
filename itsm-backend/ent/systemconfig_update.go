@@ -177,6 +177,26 @@ func (_u *SystemConfigUpdate) SetUpdatedAt(v time.Time) *SystemConfigUpdate {
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *SystemConfigUpdate) SetDeletedAt(v time.Time) *SystemConfigUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *SystemConfigUpdate) SetNillableDeletedAt(v *time.Time) *SystemConfigUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *SystemConfigUpdate) ClearDeletedAt() *SystemConfigUpdate {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // Mutation returns the SystemConfigMutation object of the builder.
 func (_u *SystemConfigUpdate) Mutation() *SystemConfigMutation {
 	return _u.mutation
@@ -281,6 +301,12 @@ func (_u *SystemConfigUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(systemconfig.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(systemconfig.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(systemconfig.FieldDeletedAt, field.TypeTime)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -451,6 +477,26 @@ func (_u *SystemConfigUpdateOne) SetUpdatedAt(v time.Time) *SystemConfigUpdateOn
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *SystemConfigUpdateOne) SetDeletedAt(v time.Time) *SystemConfigUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *SystemConfigUpdateOne) SetNillableDeletedAt(v *time.Time) *SystemConfigUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *SystemConfigUpdateOne) ClearDeletedAt() *SystemConfigUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // Mutation returns the SystemConfigMutation object of the builder.
 func (_u *SystemConfigUpdateOne) Mutation() *SystemConfigMutation {
 	return _u.mutation
@@ -585,6 +631,12 @@ func (_u *SystemConfigUpdateOne) sqlSave(ctx context.Context) (_node *SystemConf
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(systemconfig.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(systemconfig.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(systemconfig.FieldDeletedAt, field.TypeTime)
 	}
 	_node = &SystemConfig{config: _u.config}
 	_spec.Assign = _node.assignValues

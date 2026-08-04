@@ -33,6 +33,7 @@ func (r *DeptManagerResolver) Resolve(ctx context.Context, client *ent.Client, a
 		Where(
 			department.IDEQ(appCtx.DepartmentID),
 			department.TenantIDEQ(appCtx.TenantID),
+			department.DeletedAtIsNil(),
 		).
 		Only(ctx)
 	if err != nil {

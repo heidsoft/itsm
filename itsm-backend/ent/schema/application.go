@@ -21,7 +21,6 @@ func (Application) Fields() []ent.Field {
 			NotEmpty(),
 		field.String("code").
 			Comment("应用代码").
-			Unique().
 			NotEmpty(),
 		field.Text("description").
 			Comment("应用描述").
@@ -48,6 +47,10 @@ func (Application) Fields() []ent.Field {
 			Comment("更新时间").
 			Default(time.Now).
 			UpdateDefault(time.Now),
+		field.Time("deleted_at").
+			Comment("软删除时间").
+			Optional().
+			Nillable(),
 	}
 }
 

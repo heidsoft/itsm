@@ -158,6 +158,7 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 	articles, err := c.client.KnowledgeArticle.Query().
 		Where(
 			knowledgearticle.TenantID(tenantID),
+			knowledgearticle.DeletedAtIsNil(),
 			knowledgearticle.Or(
 				knowledgearticle.TitleContainsFold(keyword),
 				knowledgearticle.ContentContainsFold(keyword),

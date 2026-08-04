@@ -62,6 +62,7 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 			First(ctx)
 		if err != nil {
 			s.logger.Warnw("Tenant not found", "tenant_code", req.TenantCode, "error", err)
+			middleware.RecordLoginAudit(ctx, s.client, 0, 0, req.Username, "LOGIN_FAILED", "用户不存在")
 			return nil, fmt.Errorf("用户名或密码错误")
 		}
 		userQuery = userQuery.Where(user.TenantIDEQ(tenantEntity.ID))
@@ -70,18 +71,21 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	userEntity, err := userQuery.First(ctx)
 	if err != nil {
 		s.logger.Warnw("User not found", "username", req.Username, "error", err)
+		middleware.RecordLoginAudit(ctx, s.client, 0, 0, req.Username, "LOGIN_FAILED", "用户不存在")
 		return nil, fmt.Errorf("用户名或密码错误")
 	}
 
 	// 验证密码
 	if err := bcrypt.CompareHashAndPassword([]byte(userEntity.PasswordHash), []byte(req.Password)); err != nil {
 		s.logger.Warnw("Password verification failed", "user_id", userEntity.ID, "username", req.Username)
+		middleware.RecordLoginAudit(ctx, s.client, 0, userEntity.TenantID, req.Username, "LOGIN_FAILED", "密码错误")
 		return nil, fmt.Errorf("用户名或密码错误")
 	}
 
 	// 检查用户是否激活
 	if !userEntity.Active {
 		s.logger.Warnw("User account is inactive", "user_id", userEntity.ID, "username", req.Username)
+		middleware.RecordLoginAudit(ctx, s.client, 0, userEntity.TenantID, req.Username, "LOGIN_FAILED", "账户锁定")
 		return nil, fmt.Errorf("用户已被禁用")
 	}
 
@@ -89,11 +93,13 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	tenantEntity, err := s.client.Tenant.Get(ctx, userEntity.TenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get tenant", "tenant_id", userEntity.TenantID, "error", err)
+		middleware.RecordLoginAudit(ctx, s.client, 0, userEntity.TenantID, req.Username, "LOGIN_FAILED", "账户锁定")
 		return nil, fmt.Errorf("租户不存在")
 	}
 
 	if tenantEntity.Status != "active" {
 		s.logger.Warnw("Tenant is not active", "tenant_id", tenantEntity.ID, "status", tenantEntity.Status)
+		middleware.RecordLoginAudit(ctx, s.client, 0, userEntity.TenantID, req.Username, "LOGIN_FAILED", "账户锁定")
 		return nil, fmt.Errorf("租户已被暂停或过期")
 	}
 
@@ -132,6 +138,7 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	}
 
 	s.logger.Infow("User login successful", "user_id", userEntity.ID, "username", userEntity.Username, "tenant_id", userEntity.TenantID)
+	middleware.RecordLoginAudit(ctx, s.client, userEntity.ID, userEntity.TenantID, userEntity.Username, "LOGIN_SUCCESS", "")
 
 	// 获取用户权限列表
 	permissions := s.getUserPermissions(userEntity)
@@ -699,63 +706,57 @@ func (s *AuthService) ResetPassword(ctx context.Context, req *dto.PasswordResetR
 		return nil, fmt.Errorf("两次输入的密码不一致")
 	}
 
-	// 查找重置令牌
-	tokenEntity, err := s.client.PasswordResetToken.Query().
+	// 加密新密码
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		s.logger.Errorw("Failed to hash new password", "error", err)
+		return nil, fmt.Errorf("密码加密失败")
+	}
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("启动密码重置事务失败")
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// 单条条件 UPDATE 原子消费令牌；并发请求中只允许一个事务影响一行。
+	affected, err := tx.PasswordResetToken.Update().
 		Where(
 			passwordresettoken.TokenEQ(req.Token),
 			passwordresettoken.EmailEQ(req.Email),
 			passwordresettoken.Used(false),
+			passwordresettoken.ExpiresAtGT(time.Now()),
 		).
-		First(ctx)
-	if err != nil {
-		s.logger.Warnw("Invalid or used reset token", "email", req.Email, "error", err)
-		return nil, fmt.Errorf("重置令牌无效或已过期")
-	}
-
-	// 检查令牌是否过期
-	if time.Now().After(tokenEntity.ExpiresAt) {
-		return nil, fmt.Errorf("重置令牌已过期")
-	}
-
-	// 获取用户
-	userEntity, err := s.client.User.Get(ctx, tokenEntity.UserID)
-	if err != nil {
-		s.logger.Errorw("User not found for password reset", "user_id", tokenEntity.UserID, "error", err)
-		return nil, fmt.Errorf("用户不存在")
-	}
-
-	// 加密新密码
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		s.logger.Errorw("Failed to hash new password", "user_id", userEntity.ID, "error", err)
-		return nil, fmt.Errorf("密码加密失败")
-	}
-
-	// 更新用户密码
-	_, err = s.client.User.UpdateOneID(userEntity.ID).
-		SetPasswordHash(string(hashedPassword)).
-		Save(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to update password", "user_id", userEntity.ID, "error", err)
-		return nil, fmt.Errorf("更新密码失败")
-	}
-
-	// 标记令牌为已使用
-	_, err = s.client.PasswordResetToken.UpdateOneID(tokenEntity.ID).
 		SetUsed(true).
 		Save(ctx)
+	if err != nil || affected != 1 {
+		return nil, fmt.Errorf("令牌无效或已使用")
+	}
+
+	tokenEntity, err := tx.PasswordResetToken.Query().
+		Where(passwordresettoken.TokenEQ(req.Token), passwordresettoken.EmailEQ(req.Email)).
+		Only(ctx)
 	if err != nil {
-		s.logger.Warnw("Failed to mark token as used", "token_id", tokenEntity.ID, "error", err)
+		return nil, fmt.Errorf("令牌无效或已使用")
+	}
+	if _, err = tx.User.UpdateOneID(tokenEntity.UserID).
+		SetPasswordHash(string(hashedPassword)).
+		Save(ctx); err != nil {
+		s.logger.Errorw("Failed to update password", "user_id", tokenEntity.UserID, "error", err)
+		return nil, fmt.Errorf("更新密码失败")
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交密码重置失败")
 	}
 
 	// 撤销用户的所有token
 	if s.tokenBlacklist != nil {
-		if err := s.tokenBlacklist.RevokeUserTokens(ctx, userEntity.ID); err != nil {
-			s.logger.Warnw("Failed to revoke user tokens", "user_id", userEntity.ID, "error", err)
+		if err := s.tokenBlacklist.RevokeUserTokens(ctx, tokenEntity.UserID); err != nil {
+			s.logger.Warnw("Failed to revoke user tokens", "user_id", tokenEntity.UserID, "error", err)
 		}
 	}
 
-	s.logger.Infow("Password reset successfully", "user_id", userEntity.ID)
+	s.logger.Infow("Password reset successfully", "user_id", tokenEntity.UserID)
 
 	return &dto.PasswordResetResponse{
 		Message: "密码重置成功，请使用新密码登录",

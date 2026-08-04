@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/department"
@@ -24,6 +25,7 @@ func (s *DepartmentService) GetDepartmentByID(ctx context.Context, id, tenantID 
 		Where(
 			department.IDEQ(id),
 			department.TenantIDEQ(tenantID),
+			department.DeletedAtIsNil(),
 		).
 		First(ctx)
 	if err != nil {
@@ -41,6 +43,15 @@ func (s *DepartmentService) CreateDepartment(ctx context.Context, name, code, de
 	name, code = strings.TrimSpace(name), strings.TrimSpace(code)
 	if name == "" || code == "" {
 		return nil, fmt.Errorf("部门名称和代码不能为空")
+	}
+	codeExists, err := s.client.Department.Query().
+		Where(department.CodeEQ(code), department.TenantIDEQ(tenantID), department.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("检查部门代码失败: %w", err)
+	}
+	if codeExists {
+		return nil, fmt.Errorf("部门代码已存在: %s", code)
 	}
 	if parentID > 0 {
 		if _, err := s.GetDepartmentByID(ctx, parentID, tenantID); err != nil {
@@ -72,7 +83,7 @@ func (s *DepartmentService) CreateDepartment(ctx context.Context, name, code, de
 func (s *DepartmentService) GetDepartmentTree(ctx context.Context, tenantID int) ([]*ent.Department, error) {
 	// 1. 获取该租户下所有部门
 	allDepts, err := s.client.Department.Query().
-		Where(department.TenantID(tenantID)).
+		Where(department.TenantID(tenantID), department.DeletedAtIsNil()).
 		All(ctx)
 	if err != nil {
 		return nil, err
@@ -115,6 +126,7 @@ func (s *DepartmentService) UpdateDepartment(ctx context.Context, id int, name, 
 		Where(
 			department.IDEQ(id),
 			department.TenantIDEQ(tenantID),
+			department.DeletedAtIsNil(),
 		).
 		First(ctx)
 	if err != nil {
@@ -127,6 +139,15 @@ func (s *DepartmentService) UpdateDepartment(ctx context.Context, id int, name, 
 	}
 	if code == "" {
 		code = oldDept.Code
+	}
+	codeExists, err := s.client.Department.Query().
+		Where(department.CodeEQ(code), department.TenantIDEQ(tenantID), department.DeletedAtIsNil(), department.IDNEQ(id)).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("检查部门代码失败: %w", err)
+	}
+	if codeExists {
+		return nil, fmt.Errorf("部门代码已存在: %s", code)
 	}
 	if description == "" {
 		description = oldDept.Description
@@ -166,7 +187,7 @@ func (s *DepartmentService) UpdateDepartment(ctx context.Context, id int, name, 
 	}
 
 	update := s.client.Department.UpdateOneID(id).
-		Where(department.TenantIDEQ(tenantID)).
+		Where(department.TenantIDEQ(tenantID), department.DeletedAtIsNil()).
 		SetName(name).
 		SetCode(code).
 		SetDescription(description).
@@ -183,6 +204,7 @@ func (s *DepartmentService) DeleteDepartment(ctx context.Context, id int, tenant
 		Where(
 			department.IDEQ(id),
 			department.TenantIDEQ(tenantID),
+			department.DeletedAtIsNil(),
 		).
 		Exist(ctx)
 	if err != nil {
@@ -194,7 +216,7 @@ func (s *DepartmentService) DeleteDepartment(ctx context.Context, id int, tenant
 
 	// 检查是否有子部门
 	hasChildren, err := s.client.Department.Query().
-		Where(department.ParentIDEQ(id), department.TenantIDEQ(tenantID)).
+		Where(department.ParentIDEQ(id), department.TenantIDEQ(tenantID), department.DeletedAtIsNil()).
 		Exist(ctx)
 	if err != nil {
 		return err
@@ -210,6 +232,10 @@ func (s *DepartmentService) DeleteDepartment(ctx context.Context, id int, tenant
 		return fmt.Errorf("无法删除部门：请先转移或清空该部门下的用户")
 	}
 
-	// 删除部门
-	return s.client.Department.DeleteOneID(id).Exec(ctx)
+	// 软删除部门，保留历史关联和审计数据。
+	_, err = s.client.Department.UpdateOneID(id).
+		Where(department.TenantIDEQ(tenantID), department.DeletedAtIsNil()).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
+	return err
 }

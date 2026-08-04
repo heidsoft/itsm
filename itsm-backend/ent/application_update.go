@@ -195,6 +195,26 @@ func (_u *ApplicationUpdate) SetUpdatedAt(v time.Time) *ApplicationUpdate {
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *ApplicationUpdate) SetDeletedAt(v time.Time) *ApplicationUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *ApplicationUpdate) SetNillableDeletedAt(v *time.Time) *ApplicationUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *ApplicationUpdate) ClearDeletedAt() *ApplicationUpdate {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // SetProject sets the "project" edge to the Project entity.
 func (_u *ApplicationUpdate) SetProject(v *Project) *ApplicationUpdate {
 	return _u.SetProjectID(v.ID)
@@ -389,6 +409,12 @@ func (_u *ApplicationUpdate) sqlSave(ctx context.Context) (_node int, err error)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(application.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(application.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(application.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.ProjectCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -693,6 +719,26 @@ func (_u *ApplicationUpdateOne) SetUpdatedAt(v time.Time) *ApplicationUpdateOne 
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *ApplicationUpdateOne) SetDeletedAt(v time.Time) *ApplicationUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *ApplicationUpdateOne) SetNillableDeletedAt(v *time.Time) *ApplicationUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *ApplicationUpdateOne) ClearDeletedAt() *ApplicationUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // SetProject sets the "project" edge to the Project entity.
 func (_u *ApplicationUpdateOne) SetProject(v *Project) *ApplicationUpdateOne {
 	return _u.SetProjectID(v.ID)
@@ -917,6 +963,12 @@ func (_u *ApplicationUpdateOne) sqlSave(ctx context.Context) (_node *Application
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(application.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(application.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(application.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.ProjectCleared() {
 		edge := &sqlgraph.EdgeSpec{

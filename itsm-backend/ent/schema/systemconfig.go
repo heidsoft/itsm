@@ -16,7 +16,7 @@ type SystemConfig struct {
 // Fields of the SystemConfig.
 func (SystemConfig) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("key").NotEmpty().Unique(),
+		field.String("key").NotEmpty(),
 		field.String("value").Optional(),
 		field.String("value_type").Default("string"), // string, number, boolean, json
 		field.String("category").Default("general"),
@@ -25,6 +25,7 @@ func (SystemConfig) Fields() []ent.Field {
 		field.Int("tenant_id").Optional(),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
+		field.Time("deleted_at").Optional().Nillable(),
 	}
 }
 
@@ -37,5 +38,6 @@ func (SystemConfig) Edges() []ent.Edge {
 func (SystemConfig) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("tenant_id", "category"),
+		index.Fields("tenant_id", "key"),
 	}
 }

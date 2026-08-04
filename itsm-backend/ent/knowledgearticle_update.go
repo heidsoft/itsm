@@ -223,6 +223,26 @@ func (_u *KnowledgeArticleUpdate) SetUpdatedAt(v time.Time) *KnowledgeArticleUpd
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *KnowledgeArticleUpdate) SetDeletedAt(v time.Time) *KnowledgeArticleUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdate) SetNillableDeletedAt(v *time.Time) *KnowledgeArticleUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *KnowledgeArticleUpdate) ClearDeletedAt() *KnowledgeArticleUpdate {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // AddUserLikeIDs adds the "user_likes" edge to the KnowledgeArticleLike entity by IDs.
 func (_u *KnowledgeArticleUpdate) AddUserLikeIDs(ids ...int) *KnowledgeArticleUpdate {
 	_u.mutation.AddUserLikeIDs(ids...)
@@ -457,6 +477,12 @@ func (_u *KnowledgeArticleUpdate) sqlSave(ctx context.Context) (_node int, err e
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(knowledgearticle.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(knowledgearticle.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.UserLikesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -805,6 +831,26 @@ func (_u *KnowledgeArticleUpdateOne) SetUpdatedAt(v time.Time) *KnowledgeArticle
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *KnowledgeArticleUpdateOne) SetDeletedAt(v time.Time) *KnowledgeArticleUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdateOne) SetNillableDeletedAt(v *time.Time) *KnowledgeArticleUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *KnowledgeArticleUpdateOne) ClearDeletedAt() *KnowledgeArticleUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // AddUserLikeIDs adds the "user_likes" edge to the KnowledgeArticleLike entity by IDs.
 func (_u *KnowledgeArticleUpdateOne) AddUserLikeIDs(ids ...int) *KnowledgeArticleUpdateOne {
 	_u.mutation.AddUserLikeIDs(ids...)
@@ -1069,6 +1115,12 @@ func (_u *KnowledgeArticleUpdateOne) sqlSave(ctx context.Context) (_node *Knowle
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(knowledgearticle.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(knowledgearticle.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.UserLikesCleared() {
 		edge := &sqlgraph.EdgeSpec{

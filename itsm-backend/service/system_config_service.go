@@ -28,7 +28,7 @@ func NewSystemConfigService(client *ent.Client, logger *zap.SugaredLogger) *Syst
 func (s *SystemConfigService) CreateSystemConfig(ctx context.Context, req *dto.SystemConfigRequest, tenantID int) (*ent.SystemConfig, error) {
 	// 检查key是否已存在
 	exists, err := s.client.SystemConfig.Query().
-		Where(systemconfig.KeyEQ(req.Key)).
+		Where(systemconfig.KeyEQ(req.Key), systemconfig.DeletedAtIsNil()).
 		Where(systemconfig.TenantIDEQ(tenantID)).
 		Exist(ctx)
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *SystemConfigService) CreateSystemConfig(ctx context.Context, req *dto.S
 // GetSystemConfig 获取系统配置
 func (s *SystemConfigService) GetSystemConfig(ctx context.Context, id int, tenantID int) (*ent.SystemConfig, error) {
 	config, err := s.client.SystemConfig.Query().
-		Where(systemconfig.ID(id)).
+		Where(systemconfig.ID(id), systemconfig.DeletedAtIsNil()).
 		Where(systemconfig.TenantIDEQ(tenantID)).
 		First(ctx)
 	if err != nil {
@@ -76,7 +76,7 @@ func (s *SystemConfigService) GetSystemConfig(ctx context.Context, id int, tenan
 // GetSystemConfigByKey 根据key获取配置
 func (s *SystemConfigService) GetSystemConfigByKey(ctx context.Context, key string, tenantID int) (*ent.SystemConfig, error) {
 	config, err := s.client.SystemConfig.Query().
-		Where(systemconfig.KeyEQ(key)).
+		Where(systemconfig.KeyEQ(key), systemconfig.DeletedAtIsNil()).
 		Where(systemconfig.TenantIDEQ(tenantID)).
 		First(ctx)
 	if err != nil {
@@ -92,7 +92,7 @@ func (s *SystemConfigService) GetSystemConfigByKey(ctx context.Context, key stri
 // ListSystemConfigs 获取系统配置列表
 func (s *SystemConfigService) ListSystemConfigs(ctx context.Context, tenantID int, category string, page, pageSize int) ([]*ent.SystemConfig, int, error) {
 	query := s.client.SystemConfig.Query().
-		Where(systemconfig.TenantIDEQ(tenantID))
+		Where(systemconfig.TenantIDEQ(tenantID), systemconfig.DeletedAtIsNil())
 
 	if category != "" {
 		query = query.Where(systemconfig.CategoryEQ(category))
@@ -121,7 +121,7 @@ func (s *SystemConfigService) ListSystemConfigs(ctx context.Context, tenantID in
 func (s *SystemConfigService) UpdateSystemConfig(ctx context.Context, id int, req *dto.UpdateSystemConfigRequest, tenantID int) (*ent.SystemConfig, error) {
 	// 检查配置是否存在
 	exists, err := s.client.SystemConfig.Query().
-		Where(systemconfig.ID(id)).
+		Where(systemconfig.ID(id), systemconfig.DeletedAtIsNil()).
 		Where(systemconfig.TenantIDEQ(tenantID)).
 		Exist(ctx)
 	if err != nil {
@@ -133,7 +133,7 @@ func (s *SystemConfigService) UpdateSystemConfig(ctx context.Context, id int, re
 	}
 
 	update := s.client.SystemConfig.UpdateOneID(id).
-		Where(systemconfig.TenantIDEQ(tenantID)).
+		Where(systemconfig.TenantIDEQ(tenantID), systemconfig.DeletedAtIsNil()).
 		SetUpdatedAt(time.Now())
 
 	if req.Value != "" {
@@ -162,7 +162,7 @@ func (s *SystemConfigService) BatchUpdateSystemConfigs(ctx context.Context, conf
 	for _, cfg := range configs {
 		// 尝试查找现有配置
 		existing, err := s.client.SystemConfig.Query().
-			Where(systemconfig.KeyEQ(cfg.Key)).
+			Where(systemconfig.KeyEQ(cfg.Key), systemconfig.DeletedAtIsNil()).
 			Where(systemconfig.TenantIDEQ(tenantID)).
 			First(ctx)
 
@@ -205,7 +205,7 @@ func (s *SystemConfigService) BatchUpdateSystemConfigs(ctx context.Context, conf
 // DeleteSystemConfig 删除系统配置
 func (s *SystemConfigService) DeleteSystemConfig(ctx context.Context, id int, tenantID int) error {
 	exists, err := s.client.SystemConfig.Query().
-		Where(systemconfig.ID(id)).
+		Where(systemconfig.ID(id), systemconfig.DeletedAtIsNil()).
 		Where(systemconfig.TenantIDEQ(tenantID)).
 		Exist(ctx)
 	if err != nil {
@@ -216,7 +216,10 @@ func (s *SystemConfigService) DeleteSystemConfig(ctx context.Context, id int, te
 		return fmt.Errorf("配置不存在: %d", id)
 	}
 
-	err = s.client.SystemConfig.DeleteOneID(id).Exec(ctx)
+	_, err = s.client.SystemConfig.UpdateOneID(id).
+		Where(systemconfig.TenantIDEQ(tenantID), systemconfig.DeletedAtIsNil()).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		s.logger.Errorf("删除系统配置失败: %v", err)
 		return fmt.Errorf("删除系统配置失败: %w", err)
@@ -242,7 +245,7 @@ func (s *SystemConfigService) InitDefaultConfigs(ctx context.Context, tenantID i
 	for _, cfg := range defaultConfigs {
 		// 检查是否已存在
 		exists, err := s.client.SystemConfig.Query().
-			Where(systemconfig.KeyEQ(cfg.Key)).
+			Where(systemconfig.KeyEQ(cfg.Key), systemconfig.DeletedAtIsNil()).
 			Where(systemconfig.TenantIDEQ(tenantID)).
 			Exist(ctx)
 		if err != nil {

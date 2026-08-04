@@ -153,6 +153,20 @@ func (_c *KnowledgeArticleCreate) SetNillableUpdatedAt(v *time.Time) *KnowledgeA
 	return _c
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *KnowledgeArticleCreate) SetDeletedAt(v time.Time) *KnowledgeArticleCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableDeletedAt(v *time.Time) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
+	}
+	return _c
+}
+
 // AddUserLikeIDs adds the "user_likes" edge to the KnowledgeArticleLike entity by IDs.
 func (_c *KnowledgeArticleCreate) AddUserLikeIDs(ids ...int) *KnowledgeArticleCreate {
 	_c.mutation.AddUserLikeIDs(ids...)
@@ -365,6 +379,10 @@ func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cre
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(knowledgearticle.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
 	}
 	if nodes := _c.mutation.UserLikesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

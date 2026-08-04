@@ -138,6 +138,20 @@ func (_c *SystemConfigCreate) SetNillableUpdatedAt(v *time.Time) *SystemConfigCr
 	return _c
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *SystemConfigCreate) SetDeletedAt(v time.Time) *SystemConfigCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *SystemConfigCreate) SetNillableDeletedAt(v *time.Time) *SystemConfigCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
+	}
+	return _c
+}
+
 // Mutation returns the SystemConfigMutation object of the builder.
 func (_c *SystemConfigCreate) Mutation() *SystemConfigMutation {
 	return _c.mutation
@@ -274,6 +288,10 @@ func (_c *SystemConfigCreate) createSpec() (*SystemConfig, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(systemconfig.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(systemconfig.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
 	}
 	return _node, _spec
 }

@@ -34,7 +34,7 @@ func (p *EmbeddingPipeline) RunOnce(ctx context.Context, tenantID int, limit int
 	if limit <= 0 {
 		limit = 20
 	}
-	arts, err := p.client.KnowledgeArticle.Query().Where(ka.TenantIDEQ(tenantID)).Limit(limit).All(ctx)
+	arts, err := p.client.KnowledgeArticle.Query().Where(ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil()).Limit(limit).All(ctx)
 	if err != nil {
 		return err
 	}

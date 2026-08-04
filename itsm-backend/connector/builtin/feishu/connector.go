@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -118,6 +119,11 @@ func (f *Feishu) GetOAuthAuthURL(redirectURI, state string) string {
 	return f.client.GetOAuthAuthURL(redirectURI, state)
 }
 
+func (f *Feishu) CallbackInstanceID() string {
+	id, _ := f.cfg.Settings["callbackInstanceId"].(string)
+	return id
+}
+
 // ExchangeOAuthCode exchanges an authorization code for an access token
 func (f *Feishu) ExchangeOAuthCode(ctx context.Context, code string) (*OAuthTokenResponse, error) {
 	if f.client == nil {
@@ -160,8 +166,12 @@ func (f *Feishu) VerifySignature(headers map[string]string, body []byte) error {
 	ts := headers["X-Lark-Request-Timestamp"]
 	nonce := headers["X-Lark-Request-Nonce"]
 	sig := headers["X-Lark-Signature"]
-	if ts == "" || sig == "" {
+	if ts == "" || nonce == "" || sig == "" {
 		return fmt.Errorf("feishu: missing signature headers")
+	}
+	unixTS, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil || time.Since(time.Unix(unixTS, 0)) > 5*time.Minute || time.Until(time.Unix(unixTS, 0)) > time.Minute {
+		return fmt.Errorf("feishu: stale request timestamp")
 	}
 	if !f.client.VerifyEventSignature(ts, nonce, sig, body) {
 		return fmt.Errorf("feishu: signature mismatch")

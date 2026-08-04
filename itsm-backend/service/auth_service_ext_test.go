@@ -479,7 +479,7 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		}
 		_, err := fx.service.ResetPassword(fx.ctx, req)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "重置令牌无效或已过期")
+		assert.Contains(t, err.Error(), "令牌无效或已使用")
 	})
 
 	t.Run("成功重置密码并标记 token 已使用", func(t *testing.T) {
@@ -533,12 +533,7 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		}
 		_, err = fx.service.ResetPassword(fx.ctx, req)
 		require.Error(t, err)
-		// 源码：先尝试查 token（已过期但未 used → 仍可能查到），查到后判断过期再返回。
-		// 实际：First 找到后检查 ExpiresAt < now 返回 "重置令牌已过期"
-		assert.True(t,
-			strings.Contains(err.Error(), "重置令牌已过期") ||
-				strings.Contains(err.Error(), "重置令牌无效或已过期"),
-			"期望过期错误，实际: %v", err)
+		assert.Contains(t, err.Error(), "令牌无效或已使用")
 	})
 }
 

@@ -110,6 +110,20 @@ func (_c *TeamCreate) SetNillableUpdatedAt(v *time.Time) *TeamCreate {
 	return _c
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *TeamCreate) SetDeletedAt(v time.Time) *TeamCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *TeamCreate) SetNillableDeletedAt(v *time.Time) *TeamCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
+	}
+	return _c
+}
+
 // AddUserIDs adds the "users" edge to the User entity by IDs.
 func (_c *TeamCreate) AddUserIDs(ids ...int) *TeamCreate {
 	_c.mutation.AddUserIDs(ids...)
@@ -281,6 +295,10 @@ func (_c *TeamCreate) createSpec() (*Team, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(team.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(team.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
 	}
 	if nodes := _c.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

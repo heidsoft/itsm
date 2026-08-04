@@ -254,10 +254,13 @@ func TestTeamService_DeleteTeam_Success(t *testing.T) {
 	err = service.DeleteTeam(ctx, team.ID, testTenant.ID)
 	require.NoError(t, err)
 
-	// 验证已删除
-	_, err = client.Team.Get(ctx, team.ID)
-	require.Error(t, err)
-	assert.True(t, ent.IsNotFound(err))
+	// 物理记录保留，但业务列表不可见。
+	stored, err := client.Team.Get(ctx, team.ID)
+	require.NoError(t, err)
+	assert.NotNil(t, stored.DeletedAt)
+	teams, err := service.ListTeams(ctx, testTenant.ID)
+	require.NoError(t, err)
+	assert.Empty(t, teams)
 }
 
 func TestTeamService_DeleteTeam_NotFound(t *testing.T) {

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/team"
@@ -19,6 +20,15 @@ func NewTeamService(client *ent.Client) *TeamService {
 
 // CreateTeam 创建团队
 func (s *TeamService) CreateTeam(ctx context.Context, name, code, description string, managerID, tenantID int) (*ent.Team, error) {
+	codeExists, err := s.client.Team.Query().
+		Where(team.CodeEQ(code), team.TenantIDEQ(tenantID), team.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("检查团队代码失败: %w", err)
+	}
+	if codeExists {
+		return nil, fmt.Errorf("团队代码已存在: %s", code)
+	}
 	if managerID > 0 {
 		if err := s.validateTenantUser(ctx, managerID, tenantID); err != nil {
 			return nil, fmt.Errorf("团队负责人无效: %w", err)
@@ -41,7 +51,7 @@ func (s *TeamService) CreateTeam(ctx context.Context, name, code, description st
 // AddMember 添加成员
 func (s *TeamService) AddMember(ctx context.Context, teamID, userID, tenantID int) error {
 	exists, err := s.client.Team.Query().
-		Where(team.IDEQ(teamID), team.TenantIDEQ(tenantID)).
+		Where(team.IDEQ(teamID), team.TenantIDEQ(tenantID), team.DeletedAtIsNil()).
 		Exist(ctx)
 	if err != nil {
 		return fmt.Errorf("检查团队失败: %w", err)
@@ -54,6 +64,7 @@ func (s *TeamService) AddMember(ctx context.Context, teamID, userID, tenantID in
 	}
 
 	return s.client.Team.UpdateOneID(teamID).
+		Where(team.DeletedAtIsNil()).
 		AddUserIDs(userID).
 		Exec(ctx)
 }
@@ -74,7 +85,7 @@ func (s *TeamService) validateTenantUser(ctx context.Context, userID, tenantID i
 // ListTeams 获取团队列表
 func (s *TeamService) ListTeams(ctx context.Context, tenantID int) ([]*ent.Team, error) {
 	return s.client.Team.Query().
-		Where(team.TenantID(tenantID)).
+		Where(team.TenantID(tenantID), team.DeletedAtIsNil()).
 		WithUsers().
 		All(ctx)
 }
@@ -86,17 +97,27 @@ func (s *TeamService) UpdateTeam(ctx context.Context, id int, name, code, descri
 		Where(
 			team.IDEQ(id),
 			team.TenantIDEQ(tenantID),
+			team.DeletedAtIsNil(),
 		).
 		First(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	update := s.client.Team.UpdateOneID(id)
+	update := s.client.Team.UpdateOneID(id).Where(team.DeletedAtIsNil())
 	if name != nil {
 		update = update.SetName(*name)
 	}
 	if code != nil {
+		codeExists, err := s.client.Team.Query().
+			Where(team.CodeEQ(*code), team.TenantIDEQ(tenantID), team.DeletedAtIsNil(), team.IDNEQ(id)).
+			Exist(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("检查团队代码失败: %w", err)
+		}
+		if codeExists {
+			return nil, fmt.Errorf("团队代码已存在: %s", *code)
+		}
 		update = update.SetCode(*code)
 	}
 	if description != nil {
@@ -121,6 +142,7 @@ func (s *TeamService) DeleteTeam(ctx context.Context, id int, tenantID int) erro
 		Where(
 			team.IDEQ(id),
 			team.TenantIDEQ(tenantID),
+			team.DeletedAtIsNil(),
 		).
 		Exist(ctx)
 	if err != nil {
@@ -130,6 +152,9 @@ func (s *TeamService) DeleteTeam(ctx context.Context, id int, tenantID int) erro
 		return fmt.Errorf("团队不存在: id=%d", id)
 	}
 
-	// 删除团队
-	return s.client.Team.DeleteOneID(id).Exec(ctx)
+	_, err = s.client.Team.UpdateOneID(id).
+		Where(team.TenantIDEQ(tenantID), team.DeletedAtIsNil()).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
+	return err
 }

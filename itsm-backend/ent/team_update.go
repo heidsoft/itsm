@@ -160,6 +160,26 @@ func (_u *TeamUpdate) SetUpdatedAt(v time.Time) *TeamUpdate {
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *TeamUpdate) SetDeletedAt(v time.Time) *TeamUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *TeamUpdate) SetNillableDeletedAt(v *time.Time) *TeamUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *TeamUpdate) ClearDeletedAt() *TeamUpdate {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // AddUserIDs adds the "users" edge to the User entity by IDs.
 func (_u *TeamUpdate) AddUserIDs(ids ...int) *TeamUpdate {
 	_u.mutation.AddUserIDs(ids...)
@@ -340,6 +360,12 @@ func (_u *TeamUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(team.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(team.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(team.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -581,6 +607,26 @@ func (_u *TeamUpdateOne) SetUpdatedAt(v time.Time) *TeamUpdateOne {
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *TeamUpdateOne) SetDeletedAt(v time.Time) *TeamUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *TeamUpdateOne) SetNillableDeletedAt(v *time.Time) *TeamUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *TeamUpdateOne) ClearDeletedAt() *TeamUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // AddUserIDs adds the "users" edge to the User entity by IDs.
 func (_u *TeamUpdateOne) AddUserIDs(ids ...int) *TeamUpdateOne {
 	_u.mutation.AddUserIDs(ids...)
@@ -791,6 +837,12 @@ func (_u *TeamUpdateOne) sqlSave(ctx context.Context) (_node *Team, err error) {
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(team.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(team.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(team.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{

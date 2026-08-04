@@ -178,6 +178,7 @@ func (s *ConfigInheritanceService) getDepartmentAncestors(
 			Where(
 				department.IDEQ(currentID),
 				department.TenantIDEQ(tenantID),
+				department.DeletedAtIsNil(),
 			).
 			Only(ctx)
 		if err != nil {

@@ -19,12 +19,12 @@ func SetupFeishuRoutes(
 		// OAuth授权URL获取（需要登录）
 		feishu.GET("/oauth/auth-url", middleware.RequirePermission("feishu", "use"), feishuController.GetOAuthAuthURL)
 		// OAuth回调（公开访问，因为是从飞书跳转回来）
-		public.GET("/feishu/oauth/callback", feishuController.OAuthCallback)
+		public.GET("/feishu/oauth/callback/:instance_id", feishuController.OAuthCallback)
 
 		// 工单同步路由
 		feishu.POST("/sync/ticket/:ticket_id", middleware.RequirePermission("ticket", "update"), feishuController.SyncTicketToFeishu)
 
 		// Webhook路由（公开访问，飞书调用）
-		public.POST("/feishu/webhook", feishuController.Webhook)
+		public.POST("/feishu/webhook/:instance_id", feishuController.Webhook)
 	}
 }

@@ -143,7 +143,7 @@ func (s *Seeder) ProvisionTenant(ctx context.Context, tenantID int, templateVers
 		return fmt.Errorf("validate tenant template before commit: %w", err)
 	}
 	versionKey := fmt.Sprintf("tenant.bootstrap.version.%d", tenantID)
-	version, err := c.SystemConfig.Query().Where(systemconfig.KeyEQ(versionKey)).Only(ctx)
+	version, err := c.SystemConfig.Query().Where(systemconfig.KeyEQ(versionKey), systemconfig.DeletedAtIsNil()).Only(ctx)
 	if ent.IsNotFound(err) {
 		_, err = c.SystemConfig.Create().
 			SetKey(versionKey).SetValue(templateVersion).SetCategory("bootstrap").

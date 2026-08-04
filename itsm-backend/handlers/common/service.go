@@ -106,6 +106,7 @@ func (s *Service) Login(ctx context.Context, username, password string, tenantID
 		// Look for user by username without tenant filter
 		entUser, err = s.client.User.Query().Where(entuser.UsernameEQ(username)).Only(ctx)
 		if err != nil {
+			middleware.RecordLoginAudit(ctx, s.client, 0, tenantID, username, "LOGIN_FAILED", "用户不存在")
 			return nil, fmt.Errorf("invalid credentials")
 		}
 		u = toUserDomain(entUser)
@@ -114,6 +115,7 @@ func (s *Service) Login(ctx context.Context, username, password string, tenantID
 			Where(entuser.UsernameEQ(username), entuser.TenantID(tenantID)).
 			Only(ctx)
 		if err != nil {
+			middleware.RecordLoginAudit(ctx, s.client, 0, tenantID, username, "LOGIN_FAILED", "用户不存在")
 			return nil, fmt.Errorf("invalid credentials")
 		}
 		u = toUserDomain(entUser)
@@ -127,10 +129,12 @@ func (s *Service) Login(ctx context.Context, username, password string, tenantID
 
 	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(entUser.PasswordHash), []byte(password)); err != nil {
+		middleware.RecordLoginAudit(ctx, s.client, 0, entUser.TenantID, username, "LOGIN_FAILED", "密码错误")
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
 	if !u.Active {
+		middleware.RecordLoginAudit(ctx, s.client, 0, entUser.TenantID, username, "LOGIN_FAILED", "账户锁定")
 		return nil, fmt.Errorf("user account is inactive")
 	}
 
@@ -156,6 +160,7 @@ func (s *Service) Login(ctx context.Context, username, password string, tenantID
 
 	// 获取用户权限
 	u.Permissions = s.getUserPermissions(u.Role)
+	middleware.RecordLoginAudit(ctx, s.client, entUser.ID, entUser.TenantID, username, "LOGIN_SUCCESS", "")
 
 	return &AuthResult{
 		AccessToken:  accessToken,
