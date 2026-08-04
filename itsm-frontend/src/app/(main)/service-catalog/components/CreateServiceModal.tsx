@@ -11,6 +11,7 @@ interface CreateServiceModalProps {
   onCancel: () => void;
   onConfirm: () => void;
   form: any;
+  loading?: boolean;
 }
 
 export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
@@ -18,6 +19,7 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
   onCancel,
   onConfirm,
   form,
+  loading = false,
 }) => {
   const { t } = useI18n();
   return (
@@ -46,6 +48,8 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
       open={visible}
       onCancel={onCancel}
       onOk={onConfirm}
+      confirmLoading={loading}
+      okButtonProps={{ disabled: loading }}
       width={600}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 20 }}>

@@ -995,7 +995,7 @@ func (s *CMDBImportExportService) generateCSVExport(items []*dto.CIResponse, fie
 
 	// 写入数据
 	for _, item := range items {
-		row := s.convertCIToRow(item, fields)
+		row := sanitizeSpreadsheetRow(s.convertCIToRow(item, fields))
 		if err := writer.Write(row); err != nil {
 			return "", 0, err
 		}
@@ -1033,7 +1033,7 @@ func (s *CMDBImportExportService) generateExcelExport(items []*dto.CIResponse, f
 
 	// 写入数据
 	for rowIdx, item := range items {
-		row := s.convertCIToRow(item, fields)
+		row := sanitizeSpreadsheetRow(s.convertCIToRow(item, fields))
 		for colIdx, value := range row {
 			cellName, _ := excelize.CoordinatesToCellName(colIdx+1, rowIdx+2)
 			f.SetCellValue(sheetName, cellName, value)

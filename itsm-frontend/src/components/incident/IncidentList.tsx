@@ -56,6 +56,7 @@ const IncidentList: React.FC = () => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [data, setData] = useState<Incident[]>([]);
   const [total, setTotal] = useState(0);
   const [form] = Form.useForm();
@@ -68,6 +69,7 @@ const IncidentList: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const values = await form.validateFields();
       const apiQuery = {
@@ -78,6 +80,7 @@ const IncidentList: React.FC = () => {
       setData((resp.incidents || []) as Incident[]);
       setTotal(resp.total || 0);
     } catch (error) {
+      setLoadError(true);
       // console.error(error);
       message.error('加载事件列表失败');
     } finally {
@@ -185,7 +188,7 @@ const IncidentList: React.FC = () => {
 
   return (
     <Card>
-      <Form form={form} layout="inline" style={{ marginBottom: 24 }}>
+      <Form form={form} layout="inline" className="mb-6 flex flex-wrap gap-y-3">
         <Form.Item name="keyword">
           <Input placeholder="搜索编号或标题" allowClear prefix={<Search />} />
         </Form.Item>
@@ -197,13 +200,13 @@ const IncidentList: React.FC = () => {
         </Form.Item>
         <Form.Item>
           <Space>
-            <Button type="primary" onClick={handleSearch}>
+            <Button type="primary" htmlType="submit" onClick={handleSearch} loading={loading}>
               查询
             </Button>
             <Button onClick={handleReset}>重置</Button>
           </Space>
         </Form.Item>
-        <div style={{ flex: 1, textAlign: 'right' }}>
+        <div className="flex-1 text-left sm:text-right">
           <Button
             type="primary"
             icon={<Plus />}
@@ -222,10 +225,9 @@ const IncidentList: React.FC = () => {
         scroll={{ x: 'max-content' }}
         locale={{
           emptyText: (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无事件数据">
-              <Button type="primary" onClick={() => router.push('/incidents/create')}>
-                创建第一个事件
-              </Button>
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={loadError ? '事件列表加载失败' : '暂无事件数据'}>
+              {loadError ? <Button type="primary" onClick={loadData}>重新加载</Button> :
+                <Button type="primary" onClick={() => router.push('/incidents/create')}>创建第一个事件</Button>}
             </Empty>
           ),
         }}

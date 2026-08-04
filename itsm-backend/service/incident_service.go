@@ -404,6 +404,10 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 		if !isValidIncidentStatusTransition(currentIncident.Status, *req.Status) {
 			return nil, fmt.Errorf("invalid status transition from '%s' to '%s'", currentIncident.Status, *req.Status)
 		}
+		// 解决与关闭必须走专用动作，确保解决说明、关闭备注和审计事件不可被通用更新绕过。
+		if *req.Status == common.IncidentStatusResolved || *req.Status == common.IncidentStatusClosed {
+			return nil, fmt.Errorf("use the dedicated resolve or close action for this status transition")
+		}
 	}
 	if req.AssigneeID != nil {
 		if err := s.validateIncidentAssignee(ctx, *req.AssigneeID, tenantID); err != nil {
@@ -1342,6 +1346,9 @@ func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenan
 
 // CloseIncident 流转事件状态到 closed
 func (s *IncidentService) CloseIncident(ctx context.Context, id, userID, tenantID int, closeNotes string) error {
+	if strings.TrimSpace(closeNotes) == "" {
+		return fmt.Errorf("close notes are required")
+	}
 	// 获取当前事件状态进行验证
 	incidentEntity, err := s.client.Incident.Query().
 		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).

@@ -179,7 +179,7 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
               {data.some(item => item.avgTime) && (
                 <Line
                   type="monotone"
-                  dataKey="avg_time"
+                  dataKey="avgTime"
                   stroke="#52c41a"
                   strokeWidth={2}
                   name="平均时间(小时)"

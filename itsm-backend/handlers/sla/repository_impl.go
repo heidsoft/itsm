@@ -97,6 +97,7 @@ func (r *EntRepository) ListDefinitions(ctx context.Context, tenantID int, page,
 
 func (r *EntRepository) UpdateDefinition(ctx context.Context, s *SLADefinition) (*SLADefinition, error) {
 	e, err := r.client.SLADefinition.UpdateOneID(s.ID).
+		Where(sladefinition.TenantID(s.TenantID)).
 		SetName(s.Name).
 		SetDescription(s.Description).
 		SetServiceType(s.ServiceType).

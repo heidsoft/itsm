@@ -23,6 +23,7 @@ import {
   Badge,
   Empty,
   Spin,
+  Alert,
 } from 'antd';
 import { ArrowUp, Plus, Save, Pencil, FileText, Clock, AlertCircle, CheckCircle, Plug, AreaChart, UserCheck, Siren } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
@@ -88,6 +89,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const id = propId || (params?.id as string);
   const { handleError } = useErrorHandler();
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [data, setData] = useState<Incident | null>(null);
   const [escalateModalVisible, setEscalateModalVisible] = useState(false);
   const [resolveModalVisible, setResolveModalVisible] = useState(false);
@@ -133,10 +135,12 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const loadData = async () => {
     if (!id) return;
     setLoading(true);
+    setLoadError(false);
     try {
       const resp = await IncidentAPI.getIncident(Number(id));
       setData(resp as unknown as Incident);
     } catch (error) {
+      setLoadError(true);
       handleError(error, 'loadIncident', '加载事件详情失败');
     } finally {
       setLoading(false);
@@ -496,7 +500,13 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   }
 
   if (!data) {
-    return <Card>未找到事件</Card>;
+    return (
+      <Card>
+        <Empty description={loadError ? '事件详情加载失败' : '未找到事件'}>
+          {loadError && <Button type="primary" onClick={loadData}>重新加载</Button>}
+        </Empty>
+      </Card>
+    );
   }
 
   return (
@@ -504,8 +514,8 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       <Space orientation="vertical" style={{ width: '100%' }} size="middle">
         {/* 头部操作栏 */}
         <Card styles={{ body: { padding: '16px 24px' } }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
               <span style={{ fontSize: 20, fontWeight: 500, marginRight: 16 }}>
                 {data.incidentNumber} {data.title}
               </span>
@@ -518,7 +528,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 {IncidentStatusLabels[data.status]}
               </Tag>
             </div>
-            <Space>
+            <Space wrap>
               <Button
                 icon={<Pencil />}
                 onClick={() => router.push(`/incidents/${data.id}/edit`)}
@@ -557,11 +567,15 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               )}
             </Space>
           </div>
+          {(data.escalationLevel ?? 0) > 0 && (
+            <Alert className="mt-4" type="warning" showIcon
+              message={`该事件已升级至 ${data.escalationLevel} 级，请优先处理并保持沟通记录。`} />
+          )}
         </Card>
 
         {/* 基本信息 */}
         <Card title="基本信息" extra={<Button type="link" icon={<Pencil />} onClick={handleEditCategory}>编辑分类</Button>}>
-          <Descriptions column={2}>
+          <Descriptions column={{ xs: 1, sm: 2 }}>
             <Descriptions.Item label="报告人">{getUserName(data.reporterId)}</Descriptions.Item>
             <Descriptions.Item label="负责人">{getUserName(data.assigneeId)}</Descriptions.Item>
             <Descriptions.Item label="优先级">
@@ -576,6 +590,13 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               {data.detectedAt ? dayjs(data.detectedAt).format('YYYY-MM-DD HH:mm:ss') : '-'}
             </Descriptions.Item>
             <Descriptions.Item label="来源">{data.source}</Descriptions.Item>
+            {data.problemId && (
+              <Descriptions.Item label="关联问题">
+                <Button type="link" className="h-auto p-0" onClick={() => router.push(`/problems/${data.problemId}`)}>
+                  查看问题 #{data.problemId}
+                </Button>
+              </Descriptions.Item>
+            )}
           </Descriptions>
           <Divider />
           <Descriptions title="详细描述" column={1}>

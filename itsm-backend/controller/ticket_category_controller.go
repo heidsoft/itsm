@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -183,9 +184,13 @@ func (tc *TicketCategoryController) ExecuteImport(c *gin.Context) {
 }
 
 func (tc *TicketCategoryController) parseImportRows(c *gin.Context) ([]ticketCategoryImportRow, error) {
+	const maxCategoryImportSize = 2 << 20 // 2 MiB
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
 		return nil, err
+	}
+	if fileHeader.Size <= 0 || fileHeader.Size > maxCategoryImportSize {
+		return nil, fmt.Errorf("导入文件大小必须在 1 字节到 2 MiB 之间")
 	}
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -193,9 +198,12 @@ func (tc *TicketCategoryController) parseImportRows(c *gin.Context) ([]ticketCat
 	}
 	defer file.Close()
 
-	content, err := io.ReadAll(file)
+	content, err := io.ReadAll(io.LimitReader(file, maxCategoryImportSize+1))
 	if err != nil {
 		return nil, err
+	}
+	if len(content) > maxCategoryImportSize {
+		return nil, fmt.Errorf("导入文件超过 2 MiB 限制")
 	}
 	if len(content) == 0 {
 		return nil, io.ErrUnexpectedEOF

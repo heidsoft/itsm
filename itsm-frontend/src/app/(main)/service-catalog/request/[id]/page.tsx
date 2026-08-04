@@ -54,17 +54,22 @@ export default function ServiceCatalogRequestPage() {
     }
     setFetching(true);
     setFetchError(null);
+    // 拉取服务目录详情
     httpClient
       .get<any>(`/api/v1/service-catalogs/${id}`)
       .then((data: any) => {
         setCatalog(data?.data || data);
       })
       .catch(() => {
+        // 兜底：列表接口
         return httpClient.get<any>('/api/v1/service-catalogs', { page: 1, size: 100 }).then((list: any) => {
           const items = list?.data?.items || list?.items || [];
           const found = items.find((it: any) => it.id === id);
-          if (found) setCatalog(found);
-          else setFetchError('未找到所选服务，该服务可能已下架');
+          if (found) {
+            setCatalog(found);
+          } else {
+            setFetchError('未找到所选服务，该服务可能已下架');
+          }
         });
       })
       .catch(() => setFetchError('服务信息加载失败，请稍后重试'))

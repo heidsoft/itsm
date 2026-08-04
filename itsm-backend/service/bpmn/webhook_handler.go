@@ -5,7 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
+	"net/netip"
+	"net/url"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
@@ -24,11 +28,67 @@ type WebhookHandler struct {
 
 // NewWebhookHandler 创建Webhook处理器
 func NewWebhookHandler(client *ent.Client, logger *zap.SugaredLogger) *WebhookHandler {
-	return &WebhookHandler{
-		client:     client,
-		logger:     logger,
-		httpClient: &http.Client{Timeout: 30 * time.Second},
+	transport := &http.Transport{
+		Proxy: nil,
+		DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
+			host, port, err := net.SplitHostPort(address)
+			if err != nil {
+				return nil, fmt.Errorf("invalid webhook address: %w", err)
+			}
+			ips, err := net.DefaultResolver.LookupNetIP(ctx, "ip", host)
+			if err != nil {
+				return nil, fmt.Errorf("resolve webhook host: %w", err)
+			}
+			for _, ip := range ips {
+				if isPrivateWebhookIP(ip) {
+					return nil, fmt.Errorf("webhook target resolves to a private or reserved address")
+				}
+			}
+			if len(ips) == 0 {
+				return nil, fmt.Errorf("webhook host has no address")
+			}
+			return (&net.Dialer{Timeout: 10 * time.Second}).DialContext(ctx, network, net.JoinHostPort(ips[0].String(), port))
+		},
 	}
+	return &WebhookHandler{
+		client: client,
+		logger: logger,
+		httpClient: &http.Client{
+			Timeout:   30 * time.Second,
+			Transport: transport,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				if len(via) >= 5 {
+					return fmt.Errorf("too many webhook redirects")
+				}
+				return validateWebhookURL(req.URL.String())
+			},
+		},
+	}
+}
+
+func validateWebhookURL(rawURL string) error {
+	u, err := url.Parse(rawURL)
+	if err != nil || u.Hostname() == "" {
+		return fmt.Errorf("invalid webhook URL")
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return fmt.Errorf("webhook URL must use http or https")
+	}
+	host := strings.TrimSuffix(strings.ToLower(u.Hostname()), ".")
+	if host == "localhost" || strings.HasSuffix(host, ".localhost") {
+		return fmt.Errorf("webhook target is not allowed")
+	}
+	if ip, err := netip.ParseAddr(host); err == nil && isPrivateWebhookIP(ip) {
+		return fmt.Errorf("webhook target is not allowed")
+	}
+	return nil
+}
+
+func isPrivateWebhookIP(ip netip.Addr) bool {
+	ip = ip.Unmap()
+	return ip.IsPrivate() || ip.IsLoopback() || ip.IsLinkLocalUnicast() ||
+		ip.IsLinkLocalMulticast() || ip.IsMulticast() || ip.IsUnspecified() ||
+		!ip.IsGlobalUnicast()
 }
 
 // GetTaskType 返回任务类型
@@ -69,6 +129,9 @@ func (h *WebhookHandler) callWebhook(ctx context.Context, variables map[string]i
 
 	if webhookURL == "" {
 		return nil, fmt.Errorf("webhook URL不能为空")
+	}
+	if err := validateWebhookURL(webhookURL); err != nil {
+		return nil, err
 	}
 
 	// 设置默认方法

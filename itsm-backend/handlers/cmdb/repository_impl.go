@@ -176,6 +176,7 @@ func (r *EntRepository) GetCloudService(ctx context.Context, tenantID int, id in
 
 func (r *EntRepository) UpdateCloudService(ctx context.Context, cs *CloudService) (*CloudService, error) {
 	e, err := r.client.CloudService.UpdateOneID(cs.ID).
+		Where(cloudservice.TenantID(cs.TenantID)).
 		SetProvider(cs.Provider).
 		SetCategory(cs.Category).
 		SetServiceCode(cs.ServiceCode).
@@ -295,6 +296,7 @@ func (r *EntRepository) GetCloudAccount(ctx context.Context, tenantID int, id in
 
 func (r *EntRepository) UpdateCloudAccount(ctx context.Context, ca *CloudAccount) (*CloudAccount, error) {
 	e, err := r.client.CloudAccount.UpdateOneID(ca.ID).
+		Where(cloudaccount.TenantID(ca.TenantID)).
 		SetProvider(ca.Provider).
 		SetAccountID(ca.AccountID).
 		SetAccountName(ca.AccountName).
@@ -459,6 +461,7 @@ func (r *EntRepository) CreateCloudResource(ctx context.Context, cr *CloudResour
 
 func (r *EntRepository) UpdateCloudResource(ctx context.Context, cr *CloudResource) (*CloudResource, error) {
 	update := r.client.CloudResource.UpdateOneID(cr.ID).
+		Where(cloudresource.TenantID(cr.TenantID)).
 		SetCloudAccountID(cr.CloudAccountID).
 		SetServiceID(cr.ServiceID).
 		SetResourceID(cr.ResourceID).

@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   Form,
@@ -21,7 +21,7 @@ import {
   Checkbox,
 } from 'antd';
 import { Eye, AlertCircle, Rocket } from 'lucide-react';
-import { BatchOperationType, type BatchOperationData } from '@/types/batch-operations';
+import { BatchOperationType } from '@/types/batch-operations';
 import {
   useBatchAssignMutation,
   useBatchUpdateStatusMutation,
@@ -34,6 +34,8 @@ import {
   useBatchExportMutation,
 } from '@/lib/hooks/useBatchOperations';
 import { BatchProgressModal } from './BatchProgressModal';
+import { UserApi } from '@/lib/api/user-api';
+import { CommonApi } from '@/lib/api/common-api';
 
 const { TextArea } = Input;
 export interface BatchOperationModalProps {
@@ -54,6 +56,28 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
   const [form] = Form.useForm();
   const [progressVisible, setProgressVisible] = useState(false);
   const [operationId, setOperationId] = useState<string | null>(null);
+  const [assignmentOptionsLoading, setAssignmentOptionsLoading] = useState(false);
+  const [userOptions, setUserOptions] = useState<Array<{ value: number; label: string }>>([]);
+  const [teamOptions, setTeamOptions] = useState<Array<{ value: number; label: string }>>([]);
+
+  useEffect(() => {
+    if (!visible || operationType !== BatchOperationType.ASSIGN) return;
+    let active = true;
+    setAssignmentOptionsLoading(true);
+    Promise.all([UserApi.getUsers({ page: 1, pageSize: 100 }), CommonApi.getTeams()])
+      .then(([userResponse, teams]) => {
+        if (!active) return;
+        setUserOptions((userResponse.users || []).map(user => ({ value: user.id, label: user.name || user.username })));
+        setTeamOptions((Array.isArray(teams) ? teams : []).map(team => ({ value: team.id, label: team.name })));
+      })
+      .catch(() => {
+        if (!active) return;
+        setUserOptions([]);
+        setTeamOptions([]);
+      })
+      .finally(() => active && setAssignmentOptionsLoading(false));
+    return () => { active = false; };
+  }, [visible, operationType]);
 
   // Mutations
   const assignMutation = useBatchAssignMutation();
@@ -117,7 +141,12 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
       const values = await form.validateFields();
       const data = { ticketIds, ...values };
 
-      await mutation.mutateAsync(data);
+      const result = await mutation.mutateAsync(data as never);
+      const nextOperationId = (result as { operationId?: string })?.operationId;
+      if (nextOperationId) {
+        setOperationId(nextOperationId);
+        setProgressVisible(true);
+      }
       onSuccess();
     } catch (error) {
       console.error('批量操作失败:', error);
@@ -156,7 +185,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
                       name="assigneeId"
                       rules={[{ required: true, message: '请选择处理人' }]}
                     >
-                      <Select placeholder="选择处理人" showSearch options={[{ value: 1, label: "张三" }, { value: 2, label: "李四" }, { value: 3, label: "王五" }]} />
+                      <Select placeholder="选择处理人" showSearch optionFilterProp="label" loading={assignmentOptionsLoading} options={userOptions} />
                     </Form.Item>
                   );
                 }
@@ -166,7 +195,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
                     name="teamId"
                     rules={[{ required: true, message: '请选择团队' }]}
                   >
-                    <Select placeholder="选择团队" options={[{ value: 1, label: "技术支持团队" }, { value: 2, label: "运维团队" }]} />
+                    <Select placeholder="选择团队" showSearch optionFilterProp="label" loading={assignmentOptionsLoading} options={teamOptions} />
                   </Form.Item>
                 );
               }}
@@ -233,10 +262,22 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
               className="mb-4"
             />
             <Form.Item label="删除原因" name="reason">
-              <TextArea rows={2} placeholder="请说明删除原因..." />
+              <TextArea rows={2} placeholder="请说明删除原因..." showCount maxLength={500} />
             </Form.Item>
             <Form.Item name="hardDelete" valuePropName="checked">
               <Checkbox>永久删除（不可恢复）</Checkbox>
+            </Form.Item>
+            <Form.Item
+              noStyle
+              shouldUpdate={(previous, current) => previous.hardDelete !== current.hardDelete}
+            >
+              {({ getFieldValue }) => getFieldValue('hardDelete') ? (
+                <Form.Item name="confirmPermanentDelete" valuePropName="checked"
+                  rules={[{ validator: (_, checked) => checked ? Promise.resolve() : Promise.reject(new Error('请确认永久删除风险')) }]}
+                >
+                  <Checkbox>我已了解永久删除不可恢复，并确认继续</Checkbox>
+                </Form.Item>
+              ) : null}
             </Form.Item>
           </>
         );
@@ -277,6 +318,8 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
         title={getTitle()}
         open={visible}
         onCancel={onCancel}
+        maskClosable={!mutation.isPending}
+        closable={!mutation.isPending}
         width={600}
         footer={[
           <Button key="cancel" onClick={onCancel}>
@@ -287,6 +330,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
             type="primary"
             icon={<Rocket />}
             loading={mutation.isPending}
+            disabled={mutation.isPending || ticketIds.length === 0}
             onClick={handleSubmit}
           >
             执行
@@ -300,7 +344,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
           className="mb-4"
         />
 
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" requiredMark="optional">
           {renderFormFields()}
 
           <Divider />

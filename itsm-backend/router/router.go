@@ -341,7 +341,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	public := r.Group("/api/v1")
 	{
 		if config.CommonHandler != nil {
-			public.POST("/auth/login", config.CommonHandler.Login)
+			public.POST("/auth/login", middleware.LoginRateLimiter(), config.CommonHandler.Login)
 			public.POST("/refresh-token", config.CommonHandler.RefreshToken)
 			public.POST("/auth/refresh", config.CommonHandler.RefreshToken)
 		}
@@ -349,9 +349,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// 无需认证的账号自助端点（注册/密码找回/重置）
 		if config.AuthController != nil {
 			public.POST("/auth/register", config.AuthController.Register)
-			public.POST("/auth/forgot-password", config.AuthController.ForgotPassword)
-			public.POST("/auth/reset-password", config.AuthController.ResetPassword)
-			public.POST("/auth/validate-reset-token", config.AuthController.ValidateResetToken)
+			public.POST("/auth/forgot-password", middleware.LoginRateLimiter(), config.AuthController.ForgotPassword)
+			public.POST("/auth/reset-password", middleware.LoginRateLimiter(), config.AuthController.ResetPassword)
+			public.POST("/auth/validate-reset-token", middleware.LoginRateLimiter(), config.AuthController.ValidateResetToken)
 		}
 
 		// CSRF token 获取端点（无需认证）

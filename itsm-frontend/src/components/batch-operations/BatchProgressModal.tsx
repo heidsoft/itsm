@@ -22,7 +22,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
   operationId,
   onClose,
 }) => {
-  const { data: progress, isLoading } = useBatchOperationProgressQuery(operationId, {
+  const { data: progress, isLoading, isError, refetch } = useBatchOperationProgressQuery(operationId, {
     enabled: visible,
     refetchInterval: 2000,
   });
@@ -78,9 +78,12 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
         </Button>,
       ]}
     >
-      {isLoading || !progress ? (
+      {isError ? (
+        <Alert type="error" showIcon message="进度加载失败" description="操作仍可能在后台执行，请重试获取最新结果。"
+          action={<Button onClick={() => refetch()}>重试</Button>} />
+      ) : isLoading || !progress ? (
         <div className="flex justify-center items-center py-12">
-          <Spin size="large" />
+          <Spin size="large" description="正在获取执行进度" />
         </div>
       ) : (
         <Space orientation="vertical" size="large" className="w-full">
@@ -96,15 +99,15 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
           </div>
 
           {/* 统计信息 */}
-          <Row gutter={16}>
-            <Col span={8}>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={8}>
               <Statistic
                 title="总数"
                 value={progress.totalCount}
                 prefix={<CheckCircle />}
               />
             </Col>
-            <Col span={8}>
+            <Col xs={24} sm={8}>
               <Statistic
                 title="成功"
                 value={progress.successCount}
@@ -112,7 +115,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
                 prefix={<CheckCircle />}
               />
             </Col>
-            <Col span={8}>
+            <Col xs={24} sm={8}>
               <Statistic
                 title="失败"
                 value={progress.failedCount}

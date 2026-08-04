@@ -13,8 +13,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -45,6 +47,8 @@ type SMSService struct {
 	config SMSConfig
 	logger *zap.SugaredLogger
 	client *http.Client
+	mu     sync.Mutex
+	recent map[string][]time.Time
 }
 
 // NewSMSService 创建短信服务
@@ -55,11 +59,18 @@ func NewSMSService(config SMSConfig, logger *zap.SugaredLogger) *SMSService {
 		client: &http.Client{
 			Timeout: time.Duration(config.Timeout) * time.Second,
 		},
+		recent: make(map[string][]time.Time),
 	}
 }
 
 // Send 发送短信
 func (s *SMSService) Send(ctx context.Context, msg *SMSMessage) error {
+	if err := s.validateMessage(msg); err != nil {
+		return err
+	}
+	if err := s.checkRateLimit(msg.PhoneNumbers, 5, time.Minute); err != nil {
+		return err
+	}
 	s.logger.Infow(
 		"Sending SMS",
 		"provider", s.config.Provider,
@@ -76,6 +87,42 @@ func (s *SMSService) Send(ctx context.Context, msg *SMSMessage) error {
 	default:
 		return s.sendMock(ctx, msg)
 	}
+}
+
+var smsPhonePattern = regexp.MustCompile(`^\+?[1-9][0-9]{6,14}$`)
+
+func (s *SMSService) validateMessage(msg *SMSMessage) error {
+	if msg == nil || len(msg.PhoneNumbers) == 0 {
+		return fmt.Errorf("SMS recipient is required")
+	}
+	if msg.TemplateCode == "" && strings.TrimSpace(msg.Content) == "" {
+		return fmt.Errorf("SMS template or content is required")
+	}
+	for _, phone := range msg.PhoneNumbers {
+		if !smsPhonePattern.MatchString(phone) {
+			return fmt.Errorf("invalid phone number")
+		}
+	}
+	return nil
+}
+func (s *SMSService) checkRateLimit(keys []string, limit int, window time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now()
+	for _, key := range keys {
+		kept := s.recent[key][:0]
+		for _, sent := range s.recent[key] {
+			if now.Sub(sent) < window {
+				kept = append(kept, sent)
+			}
+		}
+		if len(kept) >= limit {
+			s.recent[key] = kept
+			return fmt.Errorf("SMS rate limit exceeded")
+		}
+		s.recent[key] = append(kept, now)
+	}
+	return nil
 }
 
 // sendAliyun 阿里云短信发送

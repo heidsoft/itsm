@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketattachment"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -25,7 +26,15 @@ type TicketAttachmentService struct {
 	uploadDir    string
 	maxFileSize  int64    // 最大文件大小（字节），默认10MB
 	allowedTypes []string // 允许的文件类型
+	virusScanner AttachmentVirusScanner
 }
+
+type AttachmentVirusScanner interface {
+	Scan(context.Context, string) error
+}
+type noopAttachmentVirusScanner struct{}
+
+func (noopAttachmentVirusScanner) Scan(context.Context, string) error { return nil }
 
 func NewTicketAttachmentService(client *ent.Client, logger *zap.SugaredLogger) *TicketAttachmentService {
 	uploadDir := "uploads/tickets"
@@ -54,6 +63,13 @@ func NewTicketAttachmentService(client *ent.Client, logger *zap.SugaredLogger) *
 			// 压缩文件
 			"application/zip", "application/x-rar-compressed",
 		},
+		virusScanner: noopAttachmentVirusScanner{},
+	}
+}
+
+func (s *TicketAttachmentService) SetVirusScanner(scanner AttachmentVirusScanner) {
+	if scanner != nil {
+		s.virusScanner = scanner
 	}
 }
 
@@ -132,13 +148,17 @@ func (s *TicketAttachmentService) UploadAttachment(
 	}
 
 	// 生成唯一文件名（使用清洗后的文件名）
-	fileName := fmt.Sprintf("%d_%d_%s", ticketID, time.Now().Unix(), safeName)
+	fileName := fmt.Sprintf("%d_%d_%s", ticketID, time.Now().UnixNano(), safeName)
 	filePath := filepath.Join(s.uploadDir, fileName)
 
 	// 保存文件
 	if err := s.saveFile(fileHeader, filePath); err != nil {
 		s.logger.Errorw("Failed to save file", "error", err)
 		return nil, fmt.Errorf("failed to save file: %w", err)
+	}
+	if err := s.virusScanner.Scan(ctx, filePath); err != nil {
+		_ = os.Remove(filePath)
+		return nil, fmt.Errorf("file rejected by malware scan")
 	}
 
 	// 生成文件URL（相对路径，实际URL由前端或CDN提供）
@@ -147,7 +167,7 @@ func (s *TicketAttachmentService) UploadAttachment(
 	// 创建附件记录
 	attachment, err := s.client.TicketAttachment.Create().
 		SetTicketID(ticketID).
-		SetFileName(fileHeader.Filename).
+		SetFileName(safeName).
 		SetFilePath(filePath).
 		SetFileURL(fileURL).
 		SetFileSize(int(fileHeader.Size)).
@@ -174,8 +194,11 @@ func (s *TicketAttachmentService) UploadAttachment(
 }
 
 // ListAttachments 获取附件列表
-func (s *TicketAttachmentService) ListAttachments(ctx context.Context, ticketID, tenantID int) ([]*dto.TicketAttachmentResponse, error) {
+func (s *TicketAttachmentService) ListAttachments(ctx context.Context, ticketID, tenantID, userID int) ([]*dto.TicketAttachmentResponse, error) {
 	s.logger.Infow("Listing attachments", "ticket_id", ticketID)
+	if err := s.authorizeTicketAttachmentAccess(ctx, ticketID, tenantID, userID); err != nil {
+		return nil, err
+	}
 
 	// 验证工单是否存在且属于当前租户
 	ticketExists, err := s.client.Ticket.Query().
@@ -304,7 +327,10 @@ func (s *TicketAttachmentService) DeleteAttachment(ctx context.Context, ticketID
 }
 
 // GetAttachmentFile 获取附件文件（用于下载）
-func (s *TicketAttachmentService) GetAttachmentFile(ctx context.Context, ticketID, attachmentID, tenantID int) (*AttachmentFile, error) {
+func (s *TicketAttachmentService) GetAttachmentFile(ctx context.Context, ticketID, attachmentID, tenantID, userID int) (*AttachmentFile, error) {
+	if err := s.authorizeTicketAttachmentAccess(ctx, ticketID, tenantID, userID); err != nil {
+		return nil, err
+	}
 	attachment, err := s.client.TicketAttachment.Query().
 		Where(
 			ticketattachment.ID(attachmentID),
@@ -367,12 +393,45 @@ func (s *TicketAttachmentService) saveFile(fileHeader *FileHeader, filePath stri
 	defer dst.Close()
 
 	// 复制文件内容
-	if _, err := io.Copy(dst, fileHeader.Reader); err != nil {
+	written, err := io.Copy(dst, io.LimitReader(fileHeader.Reader, s.maxFileSize+1))
+	if err != nil {
 		return fmt.Errorf("failed to copy file: %w", err)
+	}
+	if written > s.maxFileSize {
+		_ = os.Remove(filePath)
+		return fmt.Errorf("file size exceeds maximum allowed size (%d bytes)", s.maxFileSize)
+	}
+	if fileHeader.Size >= 0 && written != fileHeader.Size {
+		_ = os.Remove(filePath)
+		return fmt.Errorf("uploaded file size does not match declared size")
 	}
 
 	return nil
 }
+
+func (s *TicketAttachmentService) authorizeTicketAttachmentAccess(ctx context.Context, ticketID, tenantID, userID int) error {
+	if userID <= 0 {
+		return fmt.Errorf("authentication required")
+	}
+	t, err := s.client.Ticket.Query().Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("ticket not found")
+	}
+	if t.RequesterID == userID || (t.AssigneeID > 0 && t.AssigneeID == userID) {
+		return nil
+	}
+	u, err := s.client.User.Query().Where(user.ID(userID), user.TenantID(tenantID), user.Active(true)).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("permission denied")
+	}
+	switch string(u.Role) {
+	case "super_admin", "admin", "manager", "agent", "technician", "security":
+		return nil
+	}
+	return fmt.Errorf("permission denied")
+}
+
+func SanitizeDownloadFilename(name string) string { return sanitizeFilename(name) }
 
 // isAllowedType 检查文件类型是否允许
 func (s *TicketAttachmentService) isAllowedType(mimeType string) bool {

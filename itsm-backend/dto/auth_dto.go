@@ -114,7 +114,7 @@ type ForgotPasswordResponse struct {
 type PasswordResetRequest struct {
 	Token           string `json:"token" binding:"required"`
 	Email           string `json:"email" binding:"required,email"`
-	Password        string `json:"password" binding:"required,min=8"`
+	Password        string `json:"password" binding:"required,min=12,max=128"`
 	PasswordConfirm string `json:"passwordConfirm" binding:"required"`
 }
 

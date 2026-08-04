@@ -176,6 +176,7 @@ func (r *EntRepository) CreateUser(ctx context.Context, u *User) (*User, error) 
 
 func (r *EntRepository) UpdateUser(ctx context.Context, u *User) (*User, error) {
 	e, err := r.client.User.UpdateOneID(u.ID).
+		Where(user.TenantID(u.TenantID)).
 		SetEmail(u.Email).
 		SetName(u.Name).
 		SetRole(user.Role(u.Role)).

@@ -3,11 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -47,6 +50,20 @@ func (s *TicketCommentService) CreateTicketComment(ctx context.Context, ticketID
 	}
 	if !ticketExists {
 		return nil, fmt.Errorf("ticket not found")
+	}
+	req.Content = strings.TrimSpace(req.Content)
+	if req.Content == "" {
+		return nil, fmt.Errorf("comment content is required")
+	}
+	privileged, err := s.canManageInternalComments(ctx, userID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if req.IsInternal && !privileged {
+		return nil, fmt.Errorf("permission denied: internal notes are restricted to support staff")
+	}
+	if err := s.validateCommentReferences(ctx, ticketID, tenantID, req.Mentions, req.Attachments); err != nil {
+		return nil, err
 	}
 
 	// 创建评论
@@ -129,9 +146,12 @@ func (s *TicketCommentService) ListTicketComments(ctx context.Context, ticketID,
 	}
 
 	// 判断当前用户是否有权限查看内部备注
-	// 只有工单处理人、申请人或管理员可以查看内部备注
-	canViewInternal := currentUserID == ticketInfo.RequesterID ||
-		(currentUserID == ticketInfo.AssigneeID && ticketInfo.AssigneeID > 0)
+	// 内部备注只对处理人员和具备支持角色的用户可见，申请人不能因是创建者而查看内部备注。
+	privileged, privilegeErr := s.canManageInternalComments(ctx, currentUserID, tenantID)
+	if privilegeErr != nil {
+		return nil, privilegeErr
+	}
+	canViewInternal := privileged || (currentUserID == ticketInfo.AssigneeID && ticketInfo.AssigneeID > 0)
 
 	// 转换为 DTO
 	responses := make([]*dto.TicketCommentResponse, 0, len(comments))
@@ -201,9 +221,21 @@ func (s *TicketCommentService) UpdateTicketComment(ctx context.Context, ticketID
 		update = update.SetContent(req.Content)
 	}
 	if req.IsInternal != nil {
+		if *req.IsInternal {
+			privileged, privilegeErr := s.canManageInternalComments(ctx, userID, tenantID)
+			if privilegeErr != nil {
+				return nil, privilegeErr
+			}
+			if !privileged {
+				return nil, fmt.Errorf("permission denied: internal notes are restricted to support staff")
+			}
+		}
 		update = update.SetIsInternal(*req.IsInternal)
 	}
 	if req.Mentions != nil {
+		if err := s.validateCommentReferences(ctx, ticketID, tenantID, req.Mentions, nil); err != nil {
+			return nil, err
+		}
 		update = update.SetMentions(req.Mentions)
 	}
 
@@ -222,6 +254,42 @@ func (s *TicketCommentService) UpdateTicketComment(ctx context.Context, ticketID
 	}
 
 	return dto.ToTicketCommentResponse(updatedComment, userEntity), nil
+}
+
+func (s *TicketCommentService) canManageInternalComments(ctx context.Context, userID, tenantID int) (bool, error) {
+	u, err := s.client.User.Query().Where(user.ID(userID), user.TenantID(tenantID), user.Active(true)).Only(ctx)
+	if err != nil {
+		return false, fmt.Errorf("authenticated user not found")
+	}
+	switch string(u.Role) {
+	case "super_admin", "admin", "manager", "agent", "technician", "security":
+		return true, nil
+	}
+	return false, nil
+}
+
+func (s *TicketCommentService) validateCommentReferences(ctx context.Context, ticketID, tenantID int, mentions, attachments []int) error {
+	seen := make(map[int]struct{}, len(mentions))
+	for _, id := range mentions {
+		if id <= 0 {
+			return fmt.Errorf("invalid mentioned user")
+		}
+		if _, duplicate := seen[id]; duplicate {
+			continue
+		}
+		seen[id] = struct{}{}
+		exists, err := s.client.User.Query().Where(user.ID(id), user.TenantID(tenantID), user.Active(true)).Exist(ctx)
+		if err != nil || !exists {
+			return fmt.Errorf("mentioned user %d not found or inactive", id)
+		}
+	}
+	for _, id := range attachments {
+		exists, err := s.client.TicketAttachment.Query().Where(ticketattachment.ID(id), ticketattachment.TicketID(ticketID), ticketattachment.TenantID(tenantID)).Exist(ctx)
+		if err != nil || !exists {
+			return fmt.Errorf("attachment %d does not belong to this ticket", id)
+		}
+	}
+	return nil
 }
 
 // DeleteTicketComment 删除工单评论

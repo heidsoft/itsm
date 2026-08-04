@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"context"
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -79,7 +81,9 @@ func (c *AnalyticsController) ExportAnalytics(ctx *gin.Context) {
 		return
 	}
 
-	data, filename, err := c.analyticsService.ExportAnalytics(ctx.Request.Context(), &req, format, tenantID.(int))
+	exportCtx, cancel := context.WithTimeout(ctx.Request.Context(), 60*time.Second)
+	defer cancel()
+	data, filename, err := c.analyticsService.ExportAnalytics(exportCtx, &req, format, tenantID.(int))
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "导出分析数据失败")
 		return

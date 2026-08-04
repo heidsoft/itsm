@@ -61,11 +61,11 @@ func (h *Handler) Create(c *gin.Context) {
 	if req.AssigneeID != nil {
 		incident.AssigneeID = req.AssigneeID
 	}
-	if incident.Priority == "" {
-		incident.Priority = autoPriorityByKeyword(req.Title, req.Description)
-	}
 	if req.DetectedAt != nil {
 		incident.DetectedAt = *req.DetectedAt
+	}
+	if incident.Priority == "" {
+		incident.Priority = autoPriorityByKeyword(req.Title, req.Description)
 	}
 
 	created, err := h.service.Create(c.Request.Context(), tenantID, incident)
@@ -831,7 +831,7 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 func autoPriorityByKeyword(title, description string) string {
 	text := strings.ToLower(title + " " + description)
 	switch {
-	case containsAny(text, []string{"down", "outage", "critical", "production", "宕机", "严重", "紧急"}):
+	case containsAny(text, []string{"down", "outage", "critical", "production", "宕机", "严重", "紧急", "critical"}):
 		return "critical"
 	case containsAny(text, []string{"high", "urgent", "高", "高优先"}):
 		return "high"

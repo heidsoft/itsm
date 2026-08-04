@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
@@ -29,6 +30,16 @@ func NewTicketTypeService(client *ent.Client, logger *zap.SugaredLogger) *Ticket
 // CreateTicketType creates a new ticket type using ent (supports transaction via ctx)
 func (s *TicketTypeService) CreateTicketType(ctx context.Context, req *dto.CreateTicketTypeRequest, tenantID, userID int) (*dto.TicketTypeDefinition, error) {
 	s.logger.Infow("Creating ticket type", "code", req.Code, "tenant_id", tenantID)
+	req.Code, req.Name = strings.TrimSpace(req.Code), strings.TrimSpace(req.Name)
+	if req.Code == "" || req.Name == "" {
+		return nil, fmt.Errorf("工单类型编码和名称不能为空")
+	}
+	if len(req.Code) > 64 || len(req.Name) > 128 {
+		return nil, fmt.Errorf("工单类型编码或名称过长")
+	}
+	if req.ApprovalEnabled && len(req.ApprovalChain) == 0 {
+		return nil, fmt.Errorf("启用审批时必须配置审批链")
+	}
 
 	// Check code uniqueness within tenant
 	exists, err := s.checkCodeExists(ctx, req.Code, tenantID)
@@ -95,6 +106,9 @@ func (s *TicketTypeService) UpdateTicketType(ctx context.Context, id int, req *d
 	// Build update mutation using UpdateOne(existing) which supports chaining and returns *TicketType
 	update := s.client.TicketType.UpdateOne(existing)
 	if req.Name != nil {
+		if strings.TrimSpace(*req.Name) == "" {
+			return nil, fmt.Errorf("工单类型名称不能为空")
+		}
 		update.SetName(*req.Name)
 	}
 	if req.Description != nil {
@@ -117,6 +131,17 @@ func (s *TicketTypeService) UpdateTicketType(ctx context.Context, id int, req *d
 	}
 	if req.ApprovalChain != nil {
 		update.SetApprovalChain(toInterfaceSlice(*req.ApprovalChain))
+	}
+	approvalEnabled := existing.ApprovalEnabled
+	if req.ApprovalEnabled != nil {
+		approvalEnabled = *req.ApprovalEnabled
+	}
+	approvalChainEmpty := len(existing.ApprovalChain) == 0
+	if req.ApprovalChain != nil {
+		approvalChainEmpty = len(*req.ApprovalChain) == 0
+	}
+	if approvalEnabled && approvalChainEmpty {
+		return nil, fmt.Errorf("启用审批时必须配置审批链")
 	}
 	if req.SLAEnabled != nil {
 		update.SetSLAEnabled(*req.SLAEnabled)

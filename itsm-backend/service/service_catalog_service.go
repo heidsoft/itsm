@@ -8,6 +8,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/servicecatalog"
+	"itsm-backend/ent/servicecatalogitem"
 
 	"go.uber.org/zap"
 )
@@ -26,6 +27,15 @@ func NewServiceCatalogService(client *ent.Client, logger *zap.SugaredLogger) *Se
 
 // ListServiceCatalogs 获取服务目录列表
 func (s *ServiceCatalogService) ListServiceCatalogs(ctx context.Context, req *dto.GetServiceCatalogsRequest, tenantID int) (*dto.ServiceCatalogListResponse, error) {
+	if req.Page < 1 {
+		req.Page = 1
+	}
+	if req.Size < 1 {
+		req.Size = 20
+	}
+	if req.Size > 200 {
+		req.Size = 200
+	}
 	query := s.client.ServiceCatalog.Query().
 		Where(servicecatalog.TenantID(tenantID))
 
@@ -72,9 +82,14 @@ func (s *ServiceCatalogService) CreateServiceCatalog(ctx context.Context, req *d
 	// 将DeliveryTime字符串转换为整数
 	deliveryTime := 0
 	if req.DeliveryTime != "" {
-		if parsed, err := strconv.Atoi(req.DeliveryTime); err == nil {
-			deliveryTime = parsed
+		parsed, err := strconv.Atoi(req.DeliveryTime)
+		if err != nil || parsed < 0 || parsed > 3650 {
+			return nil, fmt.Errorf("交付时间必须是 0 到 3650 之间的整数天数")
 		}
+		deliveryTime = parsed
+	}
+	if req.Status != "" && req.Status != "active" && req.Status != "inactive" && req.Status != "enabled" && req.Status != "disabled" {
+		return nil, fmt.Errorf("无效的服务目录状态")
 	}
 
 	catalog, err := s.client.ServiceCatalog.Create().
@@ -107,11 +122,16 @@ func (s *ServiceCatalogService) UpdateServiceCatalog(ctx context.Context, id int
 		update = update.SetDescription(req.Description)
 	}
 	if req.DeliveryTime != "" {
-		if deliveryTime, err := strconv.Atoi(req.DeliveryTime); err == nil {
-			update = update.SetDeliveryTime(deliveryTime)
+		deliveryTime, parseErr := strconv.Atoi(req.DeliveryTime)
+		if parseErr != nil || deliveryTime < 0 || deliveryTime > 3650 {
+			return nil, fmt.Errorf("交付时间必须是 0 到 3650 之间的整数天数")
 		}
+		update = update.SetDeliveryTime(deliveryTime)
 	}
 	if req.Status != "" {
+		if req.Status != "active" && req.Status != "inactive" && req.Status != "enabled" && req.Status != "disabled" {
+			return nil, fmt.Errorf("无效的服务目录状态")
+		}
 		update = update.SetStatus(req.Status)
 	}
 
@@ -126,7 +146,14 @@ func (s *ServiceCatalogService) UpdateServiceCatalog(ctx context.Context, id int
 
 // DeleteServiceCatalog 删除服务目录
 func (s *ServiceCatalogService) DeleteServiceCatalog(ctx context.Context, id int, tenantID int) error {
-	_, err := s.client.ServiceCatalog.Delete().
+	itemCount, err := s.client.ServiceCatalogItem.Query().Where(servicecatalogitem.CatalogID(id), servicecatalogitem.TenantID(tenantID)).Count(ctx)
+	if err != nil {
+		return fmt.Errorf("检查目录项失败: %w", err)
+	}
+	if itemCount > 0 {
+		return fmt.Errorf("无法删除服务目录：请先下架或迁移其目录项")
+	}
+	_, err = s.client.ServiceCatalog.Delete().
 		Where(
 			servicecatalog.IDEQ(id),
 			servicecatalog.TenantID(tenantID),

@@ -133,6 +133,7 @@ func (s *SystemConfigService) UpdateSystemConfig(ctx context.Context, id int, re
 	}
 
 	update := s.client.SystemConfig.UpdateOneID(id).
+		Where(systemconfig.TenantIDEQ(tenantID)).
 		SetUpdatedAt(time.Now())
 
 	if req.Value != "" {

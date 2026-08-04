@@ -6,6 +6,8 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/approvalchain"
+	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicecatalogitem"
 
 	"go.uber.org/zap"
@@ -28,13 +30,30 @@ func NewServiceCatalogItemService(client *ent.Client, logger *zap.SugaredLogger)
 // CreateServiceCatalogItem 创建服务目录项
 func (s *ServiceCatalogItemService) CreateServiceCatalogItem(ctx context.Context, req *dto.CreateServiceCatalogItemRequest, tenantID int) (*dto.ServiceCatalogItemResponse, error) {
 	// 验证目录是否存在
-	_, err := s.client.ServiceCatalog.Get(ctx, req.CatalogID)
+	_, err := s.client.ServiceCatalog.Query().Where(
+		servicecatalog.ID(req.CatalogID), servicecatalog.TenantID(tenantID),
+	).Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("service catalog not found: %w", err)
+		return nil, fmt.Errorf("service catalog not found")
+	}
+	if req.EstimatedDays < 0 || req.EstimatedDays > 3650 {
+		return nil, fmt.Errorf("estimated days must be between 0 and 3650")
+	}
+	if req.RequiresApproval && req.ApprovalChainID <= 0 {
+		return nil, fmt.Errorf("approval chain is required when approval is enabled")
+	}
+	if req.ApprovalChainID > 0 {
+		exists, queryErr := s.client.ApprovalChain.Query().Where(
+			approvalchain.ID(req.ApprovalChainID), approvalchain.TenantID(tenantID), approvalchain.Status("active"),
+		).Exist(ctx)
+		if queryErr != nil || !exists {
+			return nil, fmt.Errorf("active approval chain not found")
+		}
 	}
 
 	// 创建服务项
 	item, err := s.client.ServiceCatalogItem.Create().
+		SetCatalogID(req.CatalogID).
 		SetName(req.Name).
 		SetDescription(req.Description).
 		SetDetails(req.Details).
@@ -77,13 +96,16 @@ func (s *ServiceCatalogItemService) GetServiceCatalogItem(ctx context.Context, i
 // ListServiceCatalogItems 列出服务目录下的所有项
 func (s *ServiceCatalogItemService) ListServiceCatalogItems(ctx context.Context, catalogID int, tenantID int) ([]*dto.ServiceCatalogItemResponse, error) {
 	// 验证目录是否存在
-	_, err := s.client.ServiceCatalog.Get(ctx, catalogID)
+	_, err := s.client.ServiceCatalog.Query().Where(
+		servicecatalog.ID(catalogID), servicecatalog.TenantID(tenantID),
+	).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("service catalog not found: %w", err)
 	}
 
 	items, err := s.client.ServiceCatalogItem.Query().
 		Where(
+			servicecatalogitem.CatalogID(catalogID),
 			servicecatalogitem.TenantID(tenantID),
 			servicecatalogitem.IsActive(true),
 		).
@@ -151,6 +173,9 @@ func (s *ServiceCatalogItemService) UpdateServiceCatalogItem(ctx context.Context
 		update.SetRequiresApproval(*req.RequiresApproval)
 	}
 	if req.EstimatedDays != nil {
+		if *req.EstimatedDays < 0 || *req.EstimatedDays > 3650 {
+			return nil, fmt.Errorf("estimated days must be between 0 and 3650")
+		}
 		update.SetEstimatedDays(*req.EstimatedDays)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
@@ -62,7 +63,7 @@ func (s *ReportExportService) ExportToExcel(ctx context.Context, data *dto.DeepA
 	// 数据
 	row := 5
 	for _, point := range data.Data {
-		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), point.Name)
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), neutralizeSpreadsheetFormula(point.Name))
 		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), fmt.Sprintf("%.2f", point.Value))
 		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), point.Count)
 		avgTime := ""
@@ -149,7 +150,7 @@ func (s *ReportExportService) ExportToPDF(ctx context.Context, data *dto.DeepAna
 	content.WriteString("BT\n")
 	content.WriteString("/F1 10 Tf\n")
 	for _, point := range data.Data {
-		line := fmt.Sprintf("%s - 数值: %.2f, 数量: %d", point.Name, point.Value, point.Count)
+		line := fmt.Sprintf("%s - 数值: %.2f, 数量: %d", escapePDFText(point.Name), point.Value, point.Count)
 		content.WriteString(fmt.Sprintf("100 %d Td\n", y))
 		content.WriteString(fmt.Sprintf("(%s) Tj\n", line))
 		y -= 20
@@ -207,6 +208,19 @@ func (s *ReportExportService) ExportToPDF(ctx context.Context, data *dto.DeepAna
 
 	filename := fmt.Sprintf("analytics_report_%s.pdf", time.Now().Format("20060102_150405"))
 	return content.Bytes(), filename, nil
+}
+
+func neutralizeSpreadsheetFormula(value string) string {
+	trimmed := strings.TrimLeft(value, " \t\r\n")
+	if trimmed != "" && strings.ContainsRune("=+-@", rune(trimmed[0])) {
+		return "'" + value
+	}
+	return value
+}
+
+func escapePDFText(value string) string {
+	r := strings.NewReplacer("\\", "\\\\", "(", "\\(", ")", "\\)", "\r", " ", "\n", " ")
+	return r.Replace(value)
 }
 
 // ExportPredictionToExcel 导出预测报告为Excel

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"io"
+	"mime"
 	"strconv"
 
 	"itsm-backend/common"
@@ -40,16 +41,16 @@ func (tac *TicketAttachmentController) ListTicketAttachments(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+	tenantID, userID := c.GetInt("tenant_id"), c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
 		return
 	}
 
-	attachments, err := tac.attachmentService.ListAttachments(c.Request.Context(), ticketID, tenantID)
+	attachments, err := tac.attachmentService.ListAttachments(c.Request.Context(), ticketID, tenantID, userID)
 	if err != nil {
 		tac.logger.Errorw("Failed to list ticket attachments", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.InternalErrorCode, "获取附件列表失败")
 		return
 	}
 
@@ -102,7 +103,7 @@ func (tac *TicketAttachmentController) UploadAttachment(c *gin.Context) {
 	attachment, err := tac.attachmentService.UploadAttachment(c.Request.Context(), ticketID, fileHeader, userID, tenantID)
 	if err != nil {
 		tac.logger.Errorw("Failed to upload attachment", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.ParamErrorCode, "附件上传失败，请检查文件类型和大小")
 		return
 	}
 
@@ -124,16 +125,16 @@ func (tac *TicketAttachmentController) DownloadAttachment(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+	tenantID, userID := c.GetInt("tenant_id"), c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
 		return
 	}
 
-	attachmentFile, err := tac.attachmentService.GetAttachmentFile(c.Request.Context(), ticketID, attachmentID, tenantID)
+	attachmentFile, err := tac.attachmentService.GetAttachmentFile(c.Request.Context(), ticketID, attachmentID, tenantID, userID)
 	if err != nil {
 		tac.logger.Errorw("Failed to get attachment file", "error", err, "ticket_id", ticketID, "attachment_id", attachmentID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.InternalErrorCode, "附件不存在或无法访问")
 		return
 	}
 	defer attachmentFile.File.Close()
@@ -144,7 +145,7 @@ func (tac *TicketAttachmentController) DownloadAttachment(c *gin.Context) {
 		mimeType = *attachmentFile.MimeType
 	}
 	c.Header("Content-Type", mimeType)
-	c.Header("Content-Disposition", `attachment; filename="`+attachmentFile.FileName+`"`)
+	c.Header("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": attachmentFile.FileName}))
 	c.Header("Content-Length", strconv.FormatInt(attachmentFile.Size, 10))
 
 	// 复制文件内容到响应
@@ -170,16 +171,16 @@ func (tac *TicketAttachmentController) PreviewAttachment(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+	tenantID, userID := c.GetInt("tenant_id"), c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
 		return
 	}
 
-	attachmentFile, err := tac.attachmentService.GetAttachmentFile(c.Request.Context(), ticketID, attachmentID, tenantID)
+	attachmentFile, err := tac.attachmentService.GetAttachmentFile(c.Request.Context(), ticketID, attachmentID, tenantID, userID)
 	if err != nil {
 		tac.logger.Errorw("Failed to get attachment file", "error", err, "ticket_id", ticketID, "attachment_id", attachmentID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.InternalErrorCode, "附件不存在或无法访问")
 		return
 	}
 	defer attachmentFile.File.Close()
@@ -190,7 +191,7 @@ func (tac *TicketAttachmentController) PreviewAttachment(c *gin.Context) {
 		mimeType = *attachmentFile.MimeType
 	}
 	c.Header("Content-Type", mimeType)
-	c.Header("Content-Disposition", `inline; filename="`+attachmentFile.FileName+`"`)
+	c.Header("Content-Disposition", mime.FormatMediaType("inline", map[string]string{"filename": attachmentFile.FileName}))
 	c.Header("Content-Length", strconv.FormatInt(attachmentFile.Size, 10))
 
 	// 复制文件内容到响应
@@ -226,7 +227,7 @@ func (tac *TicketAttachmentController) DeleteAttachment(c *gin.Context) {
 	err = tac.attachmentService.DeleteAttachment(c.Request.Context(), ticketID, attachmentID, tenantID, userID)
 	if err != nil {
 		tac.logger.Errorw("Failed to delete attachment", "error", err, "ticket_id", ticketID, "attachment_id", attachmentID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.InternalErrorCode, "删除附件失败")
 		return
 	}
 

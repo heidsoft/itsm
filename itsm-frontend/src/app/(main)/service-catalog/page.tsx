@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Empty, Form, App, Tabs, Card, Typography, Button, Tag } from 'antd';
+import { Row, Col, Empty, Form, App, Tabs, Card, Typography, Button, Tag, Alert } from 'antd';
 import { Cloud, UserCog, ShieldCheck, Server, Database, Lock, Flame } from 'lucide-react';
 import { useServiceCatalogData } from './hooks/useServiceCatalogData';
 import { ServiceCatalogStats } from './components/ServiceCatalogStats';
@@ -49,14 +49,18 @@ export default function ServiceCatalogPage() {
   const { message } = App.useApp();
   const { t } = useI18n();
   const [activeCategory, setActiveCategory] = useState('all');
+  const [creating, setCreating] = useState(false);
 
   const {
     catalogs,
     loading,
+    error,
+    categoryFilter,
+    ciTypeFilter,
+    cloudServiceFilter,
     stats,
     setSearchText,
     setCategoryFilter,
-    setPriorityFilter,
     setCiTypeFilter,
     setCloudServiceFilter,
     loadServiceCatalogs,
@@ -70,9 +74,7 @@ export default function ServiceCatalogPage() {
 
   // 根据选中分类过滤服务
   const filteredCatalogs = React.useMemo(() => {
-    if (activeCategory === 'all') {
-      return catalogs;
-    }
+    let result = catalogs;
 
     const categoryMap: Record<string, string[]> = {
       cloud: ['云资源服务', 'Cloud Service'],
@@ -83,10 +85,14 @@ export default function ServiceCatalogPage() {
     };
 
     const targetCategories = categoryMap[activeCategory] || [];
-    return catalogs.filter(catalog =>
-      targetCategories.some(cat => String(catalog.category).includes(cat))
-    );
-  }, [catalogs, activeCategory]);
+    if (activeCategory !== 'all') {
+      result = result.filter(catalog => targetCategories.some(cat => String(catalog.category).includes(cat)));
+    }
+    if (categoryFilter) result = result.filter(catalog => String(catalog.category).includes(categoryFilter));
+    if (ciTypeFilter) result = result.filter(catalog => catalog.ciTypeId === ciTypeFilter);
+    if (cloudServiceFilter) result = result.filter(catalog => catalog.cloudServiceId === cloudServiceFilter);
+    return result;
+  }, [catalogs, activeCategory, categoryFilter, ciTypeFilter, cloudServiceFilter]);
 
   const popularCatalogs = React.useMemo(
     () => [...catalogs]
@@ -137,7 +143,9 @@ export default function ServiceCatalogPage() {
   };
 
   const handleCreateServiceConfirm = async () => {
+    if (creating) return;
     try {
+      setCreating(true);
       const values = await createForm.validateFields();
       await ServiceCatalogApi.createService({
         name: values.name,
@@ -156,6 +164,8 @@ export default function ServiceCatalogPage() {
     } catch (error) {
       console.error(t('serviceCatalog.createServiceFailed'), error);
       message.error(t('serviceCatalog.createServiceFailed'));
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -246,16 +256,20 @@ export default function ServiceCatalogPage() {
       </Card>
 
       {/* 筛选和搜索 */}
+      {error && (
+        <Alert className="mb-4" type="error" showIcon message="服务目录加载失败" description={error}
+          action={<Button onClick={loadServiceCatalogs}>重新加载</Button>} />
+      )}
       <ServiceCatalogFilters
         onSearch={setSearchText}
         onCategoryFilterChange={setCategoryFilter}
-        onPriorityFilterChange={setPriorityFilter}
         onCITypeFilterChange={setCiTypeFilter}
         onCloudServiceFilterChange={setCloudServiceFilter}
         ciTypes={ciTypes}
         cloudServices={cloudServices}
         optionsLoading={optionsLoading}
         onCreateService={handleCreateService}
+        onRefresh={loadServiceCatalogs}
       />
 
       {/* 服务列表 */}
@@ -291,6 +305,7 @@ export default function ServiceCatalogPage() {
         }}
         onConfirm={handleCreateServiceConfirm}
         form={createForm}
+        loading={creating}
       />
     </div>
   );

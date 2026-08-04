@@ -50,6 +50,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
   const [form] = Form.useForm();
   const [previewData, setPreviewData] = useState<AnalyticsResponse | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   // 维度选项
   const dimensionOptions = [
@@ -84,7 +85,9 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 
   // 生成预览
   const handleGeneratePreview = async () => {
+    if (previewLoading) return;
     try {
+      setPreviewLoading(true);
       const values = await form.validateFields();
 
       const config: Partial<AnalyticsConfig> = {
@@ -103,6 +106,8 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       message.success('预览生成成功');
     } catch (error) {
       message.error('生成预览失败');
+    } finally {
+      setPreviewLoading(false);
     }
   };
 
@@ -221,7 +226,8 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
                   type="primary"
                   icon={<PlayCircle size={16} />}
                   onClick={handleGeneratePreview}
-                  loading={loading}
+                  loading={previewLoading}
+                  disabled={loading || previewLoading}
                 >
                   预览
                 </Button>
@@ -250,7 +256,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 
           <ReportsCharts
             data={previewData.data}
-            chartType={form.getFieldValue('chart_type')}
+            chartType={form.getFieldValue('chartType')}
             height={300}
           />
 

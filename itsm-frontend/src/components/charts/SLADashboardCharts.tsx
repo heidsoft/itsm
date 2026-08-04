@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Select, DatePicker, Space, Typography, Spin, App } from 'antd';
+import { Card, Row, Col, Select, DatePicker, Space, Typography, Spin, App, Empty, Button } from 'antd';
 import {
   LineChart,
   Line,
@@ -55,6 +55,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
   );
   const [selectedSla, setSelectedSla] = useState<number | undefined>(slaDefinitionId);
   const [slaDefinitions, setSlaDefinitions] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState(false);
 
   // 颜色配置
   const colors = {
@@ -82,6 +83,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
   const loadChartData = async () => {
     try {
       setLoading(true);
+      setLoadError(false);
       const metrics = await SLAApi.getSLAMetrics({
         period: selectedPeriod === '7d' ? 'day' : selectedPeriod === '30d' ? 'week' : 'month',
       });
@@ -103,6 +105,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
     } catch (error) {
       console.error('加载图表数据失败:', error);
       message.error('加载图表数据失败');
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -188,9 +191,9 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
     <div className="sla-dashboard-charts space-y-6">
       {/* 控制面板 */}
       <Card>
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Space>
+        <Row justify="space-between" align="middle" gutter={[12, 12]}>
+          <Col xs={24}>
+            <Space wrap className="w-full">
               <Select value={selectedPeriod} onChange={setSelectedPeriod} style={{ width: 120 }} options={[
                 { value: '7d', label: '最近7天' },
                 { value: '30d', label: '最近30天' },
@@ -214,13 +217,22 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
                     setDateRange([dates[0], dates[1]]);
                   }
                 }}
+                aria-label="SLA 报表日期范围"
               />
+              <Button onClick={loadChartData} loading={loading} aria-label="刷新 SLA 图表">刷新</Button>
             </Space>
           </Col>
         </Row>
       </Card>
 
       {/* 图表网格 */}
+      {chartData.length === 0 && !loading ? (
+        <Card>
+          <Empty description={loadError ? '图表数据加载失败' : '所选范围内暂无 SLA 数据'}>
+            <Button type="primary" onClick={loadChartData}>重新加载</Button>
+          </Empty>
+        </Card>
+      ) : (
       <Row gutter={[16, 16]}>
         {/* SLA合规趋势 */}
         <Col xs={24} lg={12}>
@@ -242,7 +254,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
                 <Legend />
                 <Area
                   type="monotone"
-                  dataKey="compliance_rate"
+                  dataKey="complianceRate"
                   stroke={colors.success}
                   fill={colors.success}
                   fillOpacity={0.3}
@@ -341,13 +353,14 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
                 <YAxis />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                <Bar dataKey="ticket_count" fill={colors.primary} name="工单数量" />
-                <Bar dataKey="violation_count" fill={colors.error} name="违规数量" />
+                <Bar dataKey="ticketCount" fill={colors.primary} name="工单数量" />
+                <Bar dataKey="violationCount" fill={colors.error} name="违规数量" />
               </BarChart>
             </ResponsiveContainer>
           </Card>
         </Col>
       </Row>
+      )}
 
       {/* 统计摘要 */}
       <Card title="数据统计摘要">

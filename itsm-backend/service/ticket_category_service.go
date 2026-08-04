@@ -193,7 +193,17 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 		update.SetCode(req.Code)
 	}
 	if req.ParentID != nil {
+		if *req.ParentID == id {
+			return nil, errors.New("不能将分类设置为自身的父分类")
+		}
 		if *req.ParentID > 0 {
+			isDescendant, err := s.isDescendantCategory(ctx, *req.ParentID, id, tenantID)
+			if err != nil {
+				return nil, err
+			}
+			if isDescendant {
+				return nil, errors.New("不能将分类移动到其子分类下")
+			}
 			// 验证父分类
 			parent, err := s.client.TicketCategory.Query().
 				Where(ticketcategory.ID(*req.ParentID), ticketcategory.TenantID(tenantID)).
@@ -231,7 +241,16 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 
 	update.SetUpdatedAt(time.Now())
 
-	return update.Save(ctx)
+	updated, err := update.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if req.ParentID != nil {
+		if err := s.refreshDescendantLevels(ctx, updated.ID, updated.Level, tenantID); err != nil {
+			return nil, err
+		}
+	}
+	return updated, nil
 }
 
 // DeleteCategory 删除工单分类

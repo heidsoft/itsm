@@ -6,8 +6,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"html/template"
+	"net/mail"
 	"net/smtp"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -27,6 +29,8 @@ type EmailConfig struct {
 type EmailService struct {
 	config EmailConfig
 	logger *zap.SugaredLogger
+	mu     sync.Mutex
+	recent map[string][]time.Time
 }
 
 // EmailMessage 邮件消息
@@ -51,11 +55,18 @@ func NewEmailService(config EmailConfig, logger *zap.SugaredLogger) *EmailServic
 	return &EmailService{
 		config: config,
 		logger: logger,
+		recent: make(map[string][]time.Time),
 	}
 }
 
 // Send 发送邮件
 func (s *EmailService) Send(ctx context.Context, msg *EmailMessage) error {
+	if err := s.validateMessage(msg); err != nil {
+		return err
+	}
+	if err := s.checkRateLimit(msg.To, 20, time.Minute); err != nil {
+		return err
+	}
 	s.logger.Infow(
 		"Sending email",
 		"to", msg.To,
@@ -116,7 +127,20 @@ func (s *EmailService) Send(ctx context.Context, msg *EmailMessage) error {
 	auth := smtp.PlainAuth("", s.config.Username, s.config.Password, s.config.Host)
 	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
 
-	err := smtp.SendMail(addr, auth, s.config.From, msg.To, []byte(emailBody.String()))
+	var err error
+	for attempt := 0; attempt < 3; attempt++ {
+		err = smtp.SendMail(addr, auth, s.config.From, append(append([]string{}, msg.To...), msg.CC...), []byte(emailBody.String()))
+		if err == nil {
+			break
+		}
+		if attempt < 2 {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(time.Duration(attempt+1) * 200 * time.Millisecond):
+			}
+		}
+	}
 	if err != nil {
 		s.logger.Errorw("Failed to send email", "error", err, "to", msg.To)
 		return fmt.Errorf("failed to send email: %w", err)
@@ -126,12 +150,47 @@ func (s *EmailService) Send(ctx context.Context, msg *EmailMessage) error {
 	return nil
 }
 
+func (s *EmailService) validateMessage(msg *EmailMessage) error {
+	if msg == nil || len(msg.To) == 0 {
+		return fmt.Errorf("email recipient is required")
+	}
+	if strings.ContainsAny(msg.Subject, "\r\n") {
+		return fmt.Errorf("email subject contains invalid characters")
+	}
+	for _, address := range append(append([]string{}, msg.To...), msg.CC...) {
+		if _, err := mail.ParseAddress(address); err != nil {
+			return fmt.Errorf("invalid email recipient")
+		}
+	}
+	return nil
+}
+
+func (s *EmailService) checkRateLimit(keys []string, limit int, window time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now()
+	for _, key := range keys {
+		kept := s.recent[key][:0]
+		for _, sent := range s.recent[key] {
+			if now.Sub(sent) < window {
+				kept = append(kept, sent)
+			}
+		}
+		if len(kept) >= limit {
+			s.recent[key] = kept
+			return fmt.Errorf("email rate limit exceeded")
+		}
+		s.recent[key] = append(kept, now)
+	}
+	return nil
+}
+
 // SendTemplate 发送模板邮件
 func (s *EmailService) SendTemplate(ctx context.Context, msg *EmailMessage, templateName string, data interface{}) error {
 	s.logger.Infow("Sending template email", "template", templateName, "to", msg.To)
 
 	// 解析模板
-	tmpl, err := template.New(templateName).Parse(msg.Body)
+	tmpl, err := template.New(templateName).Option("missingkey=error").Parse(msg.Body)
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %w", err)
 	}
@@ -144,6 +203,17 @@ func (s *EmailService) SendTemplate(ctx context.Context, msg *EmailMessage, temp
 	}
 
 	msg.Body = buf.String()
+	if msg.BodyText != "" {
+		textTmpl, parseErr := template.New(templateName + "_text").Option("missingkey=error").Parse(msg.BodyText)
+		if parseErr != nil {
+			return fmt.Errorf("failed to parse text template: %w", parseErr)
+		}
+		buf.Reset()
+		if executeErr := textTmpl.Execute(&buf, data); executeErr != nil {
+			return fmt.Errorf("failed to execute text template: %w", executeErr)
+		}
+		msg.BodyText = buf.String()
+	}
 
 	return s.Send(ctx, msg)
 }

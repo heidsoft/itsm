@@ -1,7 +1,9 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
 	"fmt"
 	"time"
 
@@ -280,10 +282,12 @@ func (s *AnalyticsService) ExportAnalytics(ctx context.Context, req *dto.DeepAna
 
 // exportToCSV 导出为CSV格式
 func (s *AnalyticsService) exportToCSV(response *dto.DeepAnalyticsResponse) ([]byte, string, error) {
-	var csvData string
-
-	// CSV头部
-	csvData = "名称,数值,数量,平均时间\n"
+	var csvData bytes.Buffer
+	csvData.WriteString("\xEF\xBB\xBF")
+	w := csv.NewWriter(&csvData)
+	if err := w.Write([]string{"名称", "数值", "数量", "平均时间"}); err != nil {
+		return nil, "", err
+	}
 
 	// 数据行
 	for _, point := range response.Data {
@@ -291,20 +295,27 @@ func (s *AnalyticsService) exportToCSV(response *dto.DeepAnalyticsResponse) ([]b
 		if point.AvgTime != nil {
 			avgTime = fmt.Sprintf("%.2f", *point.AvgTime)
 		}
-		csvData += fmt.Sprintf("%s,%.2f,%d,%s\n", point.Name, point.Value, point.Count, avgTime)
+		if err := w.Write([]string{neutralizeSpreadsheetFormula(point.Name), fmt.Sprintf("%.2f", point.Value), fmt.Sprint(point.Count), avgTime}); err != nil {
+			return nil, "", err
+		}
 	}
 
 	// 添加汇总信息
-	csvData += "\n汇总信息\n"
-	csvData += fmt.Sprintf("总计,%d\n", response.Summary.Total)
-	csvData += fmt.Sprintf("已解决,%d\n", response.Summary.Resolved)
-	csvData += fmt.Sprintf("平均响应时间,%.2f\n", response.Summary.AvgResponseTime)
-	csvData += fmt.Sprintf("平均解决时间,%.2f\n", response.Summary.AvgResolutionTime)
-	csvData += fmt.Sprintf("SLA合规率,%.2f%%\n", response.Summary.SLACompliance)
-	csvData += fmt.Sprintf("客户满意度,%.2f\n", response.Summary.CustomerSatisfaction)
+	_ = w.Write([]string{})
+	_ = w.Write([]string{"汇总信息"})
+	_ = w.Write([]string{"总计", fmt.Sprint(response.Summary.Total)})
+	_ = w.Write([]string{"已解决", fmt.Sprint(response.Summary.Resolved)})
+	_ = w.Write([]string{"平均响应时间", fmt.Sprintf("%.2f", response.Summary.AvgResponseTime)})
+	_ = w.Write([]string{"平均解决时间", fmt.Sprintf("%.2f", response.Summary.AvgResolutionTime)})
+	_ = w.Write([]string{"SLA合规率", fmt.Sprintf("%.2f%%", response.Summary.SLACompliance)})
+	_ = w.Write([]string{"客户满意度", fmt.Sprintf("%.2f", response.Summary.CustomerSatisfaction)})
+	w.Flush()
+	if err := w.Error(); err != nil {
+		return nil, "", err
+	}
 
 	filename := fmt.Sprintf("analytics_%s.csv", time.Now().Format("20060102_150405"))
-	return []byte(csvData), filename, nil
+	return csvData.Bytes(), filename, nil
 }
 
 // exportToExcel 导出为Excel格式

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, Row, Col, Input, Select, Button, Tooltip } from 'antd';
-import { Search, PlusCircle } from 'lucide-react';
+import { RefreshCw, PlusCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import type { CIType, CloudService } from '@/types/biz/cmdb';
 
@@ -11,30 +11,30 @@ const { Search: SearchInput } = Input;
 interface ServiceCatalogFiltersProps {
   onSearch: (value: string) => void;
   onCategoryFilterChange: (value: string) => void;
-  onPriorityFilterChange: (value: string) => void;
   onCITypeFilterChange: (value: number) => void;
   onCloudServiceFilterChange: (value: number) => void;
   ciTypes: CIType[];
   cloudServices: CloudService[];
   optionsLoading?: boolean;
   onCreateService: () => void;
+  onRefresh: () => void;
 }
 
 export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
   onSearch,
   onCategoryFilterChange,
-  onPriorityFilterChange,
   onCITypeFilterChange,
   onCloudServiceFilterChange,
   ciTypes,
   cloudServices,
   optionsLoading,
   onCreateService,
+  onRefresh,
 }) => {
   const { t } = useI18n();
   return (
     <Card style={{ marginBottom: 24 }}>
-      <Row gutter={20} align="middle">
+      <Row gutter={[12, 12]} align="middle">
         <Col xs={24} sm={12} md={6}>
           <SearchInput
             placeholder={t('serviceCatalog.searchPlaceholder')}
@@ -42,6 +42,7 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
             onSearch={onSearch}
             size="large"
             enterButton
+            aria-label="搜索服务目录"
           />
         </Col>
         <Col xs={24} sm={12} md={4}>
@@ -55,20 +56,6 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
               { value: '云资源服务', label: t('serviceCatalog.cloudResources') },
               { value: '账号与权限', label: t('serviceCatalog.accountPermissions') },
               { value: '安全服务', label: t('serviceCatalog.securityServices') },
-            ]}
-          />
-        </Col>
-        <Col xs={24} sm={12} md={3}>
-          <Select
-            placeholder={t('serviceCatalog.priorityFilter')}
-            size="large"
-            allowClear
-            onChange={onPriorityFilterChange}
-            style={{ width: '100%' }}
-            options={[
-              { value: '高', label: t('serviceCatalog.high') },
-              { value: '中', label: t('serviceCatalog.medium') },
-              { value: '低', label: t('serviceCatalog.low') },
             ]}
           />
         </Col>
@@ -102,11 +89,9 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
         <Col xs={24} sm={12} md={2}>
           <Tooltip title="刷新列表">
             <Button
-              icon={<Search size={20} />}
-              onClick={() => {
-                // Trigger a page reload by dispatching a custom event
-                window.dispatchEvent(new CustomEvent('refresh-service-catalog'));
-              }}
+              icon={<RefreshCw size={20} />}
+              onClick={onRefresh}
+              aria-label="刷新服务目录"
               size="large"
               style={{ width: '100%' }}
             >

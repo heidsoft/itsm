@@ -3,6 +3,7 @@ package incident
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -46,6 +47,9 @@ func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incid
 	i.IncidentNumber = number
 	i.TenantID = tenantID
 	i.Status = "new" // default
+	if strings.TrimSpace(i.Priority) == "" {
+		i.Priority = inferIncidentPriority(i.Title, i.Description)
+	}
 	if i.DetectedAt.IsZero() {
 		i.DetectedAt = time.Now()
 	}
@@ -73,6 +77,24 @@ func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incid
 	go s.executeRules(tenantctx.WithTenantID(context.Background(), tenantID), created, tenantID)
 
 	return created, nil
+}
+
+// inferIncidentPriority provides a deterministic fallback when an operator or
+// integration does not specify priority. Explicit priorities are never
+// overwritten; automation rules can still refine the result after creation.
+func inferIncidentPriority(title, description string) string {
+	content := strings.ToLower(title + " " + description)
+	for _, keyword := range []string{"down", "outage", "critical", "production"} {
+		if strings.Contains(content, keyword) {
+			return "urgent"
+		}
+	}
+	for _, keyword := range []string{"slow", "error", "issue"} {
+		if strings.Contains(content, keyword) {
+			return "medium"
+		}
+	}
+	return "low"
 }
 
 func (s *Service) Get(ctx context.Context, id int, tenantID int) (*Incident, error) {

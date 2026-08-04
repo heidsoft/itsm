@@ -124,6 +124,7 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 func (r *EntRepository) Update(ctx context.Context, a *Article) (*Article, error) {
 	tagsStr := strings.Join(a.Tags, ",")
 	e, err := r.client.KnowledgeArticle.UpdateOneID(a.ID).
+		Where(knowledgearticle.TenantID(a.TenantID)).
 		SetTitle(a.Title).
 		SetContent(a.Content).
 		SetCategory(a.Category).

@@ -1,7 +1,5 @@
 import { httpClient } from './http-client';
-import type {
-  ListQueryParams,
-  PaginationResponse} from './types';
+import type { ListQueryParams, PaginationResponse } from './types';
 import { API_URLS } from './types';
 
 // 事件管理API接口
@@ -250,6 +248,16 @@ export interface ListIncidentsResponse extends PaginationResponse<Incident> {
   items?: Incident[]; // 保持向后兼容
 }
 
+interface IncidentListPayload {
+  incidents?: Incident[];
+  items?: Incident[];
+  data?: Incident[];
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+}
+
 export interface IncidentMetrics {
   // camelCase
   totalIncidents?: number;
@@ -346,37 +354,42 @@ export interface ListIncidentAlertsParams {
 export class IncidentAPI {
   // 获取事件列表
   static async listIncidents(params: ListIncidentsRequest = {}): Promise<ListIncidentsResponse> {
-    const normalizedParams: Record<string, unknown> = { ...params };
-    // The incident handler uses size; translate pageSize here
-    if (params.pageSize !== undefined) {
-      normalizedParams.size = params.pageSize;
-      delete normalizedParams.pageSize;
+    try {
+      // 标准化参数
+      const normalizedParams: Record<string, unknown> = { ...params };
+      // The incident handler uses `size`; keep the public client API aligned
+      // with the rest of the frontend by translating `pageSize` here.
+      if (params.pageSize !== undefined) {
+        normalizedParams.size = params.pageSize;
+        delete normalizedParams.pageSize;
+      }
+
+      // 过滤掉undefined值
+      const cleanParams = Object.fromEntries(
+        Object.entries(normalizedParams).filter(([_, value]) => value !== undefined)
+      );
+
+      const response = await httpClient.get<IncidentListPayload>(
+        API_URLS.INCIDENTS(),
+        cleanParams
+      );
+      const incidents = response.incidents ?? response.items ?? response.data ?? [];
+      const page = response.page ?? params.page ?? 1;
+      const pageSize = response.pageSize ?? params.pageSize ?? incidents.length;
+      const total = response.total ?? incidents.length;
+      return {
+        incidents,
+        items: incidents,
+        data: incidents,
+        total,
+        page,
+        pageSize,
+        totalPages: response.totalPages ?? (pageSize > 0 ? Math.ceil(total / pageSize) : 0),
+      };
+    } catch (error) {
+      console.error('IncidentAPI.listIncidents error:', error);
+      throw error;
     }
-    const cleanParams = Object.fromEntries(
-      Object.entries(normalizedParams).filter(([_, value]) => value !== undefined)
-    );
-    const response = await httpClient.get<{
-      incidents?: Incident[];
-      items?: Incident[];
-      data?: Incident[];
-      total?: number;
-      page?: number;
-      pageSize?: number;
-      totalPages?: number;
-    }>(API_URLS.INCIDENTS(), cleanParams);
-    const incidents = response.incidents ?? response.items ?? response.data ?? [];
-    const page = response.page ?? params.page ?? 1;
-    const pageSize = response.pageSize ?? params.pageSize ?? incidents.length;
-    const total = response.total ?? incidents.length;
-    return {
-      incidents,
-      items: incidents,
-      data: incidents,
-      total,
-      page,
-      pageSize,
-      totalPages: response.totalPages ?? (pageSize > 0 ? Math.ceil(total / pageSize) : 0),
-    };
   }
 
   // 获取事件详情

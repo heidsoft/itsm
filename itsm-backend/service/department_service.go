@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/user"
 )
 
 type DepartmentService struct {
@@ -36,6 +38,21 @@ func (s *DepartmentService) GetDepartmentByID(ctx context.Context, id, tenantID 
 // Department Methods
 
 func (s *DepartmentService) CreateDepartment(ctx context.Context, name, code, description string, managerID, parentID, tenantID int) (*ent.Department, error) {
+	name, code = strings.TrimSpace(name), strings.TrimSpace(code)
+	if name == "" || code == "" {
+		return nil, fmt.Errorf("部门名称和代码不能为空")
+	}
+	if parentID > 0 {
+		if _, err := s.GetDepartmentByID(ctx, parentID, tenantID); err != nil {
+			return nil, fmt.Errorf("父部门不存在或不属于当前租户")
+		}
+	}
+	if managerID > 0 {
+		exists, err := s.client.User.Query().Where(user.ID(managerID), user.TenantID(tenantID), user.Active(true)).Exist(ctx)
+		if err != nil || !exists {
+			return nil, fmt.Errorf("部门负责人不存在、不活跃或不属于当前租户")
+		}
+	}
 	query := s.client.Department.Create().
 		SetName(name).
 		SetCode(code).
@@ -120,8 +137,36 @@ func (s *DepartmentService) UpdateDepartment(ctx context.Context, id int, name, 
 	if parentID < 0 {
 		parentID = oldDept.ParentID
 	}
+	if parentID == id {
+		return nil, fmt.Errorf("部门不能将自身设为父部门")
+	}
+	if parentID > 0 {
+		if _, err := s.GetDepartmentByID(ctx, parentID, tenantID); err != nil {
+			return nil, fmt.Errorf("父部门不存在或不属于当前租户")
+		}
+		seen := map[int]bool{id: true}
+		cursor := parentID
+		for cursor > 0 {
+			if seen[cursor] {
+				return nil, fmt.Errorf("父部门设置会形成循环引用")
+			}
+			seen[cursor] = true
+			parent, err := s.GetDepartmentByID(ctx, cursor, tenantID)
+			if err != nil {
+				return nil, fmt.Errorf("部门层级数据不完整")
+			}
+			cursor = parent.ParentID
+		}
+	}
+	if managerID > 0 {
+		exists, err := s.client.User.Query().Where(user.ID(managerID), user.TenantID(tenantID), user.Active(true)).Exist(ctx)
+		if err != nil || !exists {
+			return nil, fmt.Errorf("部门负责人不存在、不活跃或不属于当前租户")
+		}
+	}
 
 	update := s.client.Department.UpdateOneID(id).
+		Where(department.TenantIDEQ(tenantID)).
 		SetName(name).
 		SetCode(code).
 		SetDescription(description).
@@ -149,13 +194,20 @@ func (s *DepartmentService) DeleteDepartment(ctx context.Context, id int, tenant
 
 	// 检查是否有子部门
 	hasChildren, err := s.client.Department.Query().
-		Where(department.ParentIDEQ(id)).
+		Where(department.ParentIDEQ(id), department.TenantIDEQ(tenantID)).
 		Exist(ctx)
 	if err != nil {
 		return err
 	}
 	if hasChildren {
 		return fmt.Errorf("无法删除部门：该部门下存在子部门")
+	}
+	hasUsers, err := s.client.User.Query().Where(user.DepartmentID(id), user.TenantID(tenantID)).Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("检查部门用户失败: %w", err)
+	}
+	if hasUsers {
+		return fmt.Errorf("无法删除部门：请先转移或清空该部门下的用户")
 	}
 
 	// 删除部门

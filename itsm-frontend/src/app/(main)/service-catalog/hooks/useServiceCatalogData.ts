@@ -7,9 +7,9 @@ import type { ServiceItem } from '@/types/service-catalog';
 export const useServiceCatalogData = () => {
   const [catalogs, setCatalogs] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
   const [ciTypeFilter, setCiTypeFilter] = useState<number | undefined>(undefined);
   const [cloudServiceFilter, setCloudServiceFilter] = useState<number | undefined>(undefined);
   const [stats, setStats] = useState({
@@ -22,6 +22,7 @@ export const useServiceCatalogData = () => {
   const loadServiceCatalogs = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await ServiceCatalogApi.getServices({
         page: 1,
         pageSize: 100,
@@ -31,6 +32,7 @@ export const useServiceCatalogData = () => {
       setCatalogs(data.services || []);
     } catch (error) {
       console.error('加载服务目录失败:', error);
+      setError(error instanceof Error ? error.message : '服务目录加载失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -65,12 +67,15 @@ export const useServiceCatalogData = () => {
   return {
     catalogs,
     loading,
+    error,
     stats,
     searchText,
     setSearchText,
+    categoryFilter,
     setCategoryFilter,
-    setPriorityFilter,
+    ciTypeFilter,
     setCiTypeFilter,
+    cloudServiceFilter,
     setCloudServiceFilter,
     loadServiceCatalogs,
   };
