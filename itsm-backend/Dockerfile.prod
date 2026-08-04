@@ -34,7 +34,7 @@ ENV CGO_ENABLED=0 \
     GOGC=50 \
     GOMEMLIMIT=2GiB
 
-RUN apt-get update && apt-get install -y ca-certificates git
+RUN apk add --no-cache ca-certificates git bash
 
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
