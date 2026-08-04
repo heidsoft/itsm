@@ -64,6 +64,9 @@ func (h *Handler) Create(c *gin.Context) {
 	if req.DetectedAt != nil {
 		incident.DetectedAt = *req.DetectedAt
 	}
+	if incident.Priority == "" {
+		incident.Priority = autoPriorityByKeyword(req.Title, req.Description)
+	}
 
 	created, err := h.service.Create(c.Request.Context(), tenantID, incident)
 	if err != nil {
@@ -823,4 +826,27 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 		"is_internal": req.IsInternal,
 		"created_at":  event.CreatedAt,
 	})
+}
+
+func autoPriorityByKeyword(title, description string) string {
+	text := strings.ToLower(title + " " + description)
+	switch {
+	case containsAny(text, []string{"down", "outage", "critical", "production", "宕机", "严重", "紧急", "critical"}):
+		return "critical"
+	case containsAny(text, []string{"high", "urgent", "高", "高优先"}):
+		return "high"
+	case containsAny(text, []string{"slow", "error", "bug", "issue", "故障", "异常", "问题"}):
+		return "medium"
+	default:
+		return "low"
+	}
+}
+
+func containsAny(text string, keywords []string) bool {
+	for _, kw := range keywords {
+		if strings.Contains(text, kw) {
+			return true
+		}
+	}
+	return false
 }

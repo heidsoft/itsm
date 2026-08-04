@@ -14,6 +14,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/processinstance"
 	entTicket "itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
@@ -30,14 +31,15 @@ import (
 // TicketService 改进版的工单服务
 // 使用构造函数注入和 Repository 模式
 type TicketService struct {
-	repo              ticket.Repository
-	client            *ent.Client // 用于 ProcessInstance 等系统级查询（不走 Repository）
-	logger            *zap.SugaredLogger
-	notificationSvc   *TicketNotificationService
-	approvalSvc       *ApprovalService
-	automationRuleSvc *TicketAutomationRuleService
-	slaSvc            *TicketSLAService
-	connectorManager  *connector.Manager // 连接器管理器，用于飞书等外部集成
+	repo                   ticket.Repository
+	client                 *ent.Client // 用于 ProcessInstance 等系统级查询（不走 Repository）
+	logger                 *zap.SugaredLogger
+	notificationSvc        *TicketNotificationService
+	approvalSvc            *ApprovalService
+	automationRuleSvc      *TicketAutomationRuleService
+	slaSvc                 *TicketSLAService
+	assignmentSmartService *TicketAssignmentSmartService
+	connectorManager       *connector.Manager // 连接器管理器，用于飞书等外部集成
 
 	// 流程触发（V1 兼容语义）
 	processTriggerSvc ProcessTriggerServiceInterface
@@ -69,7 +71,7 @@ func NewTicketService(cfg *TicketServiceConfig) *TicketService {
 		panic("Logger is required")
 	}
 
-	return &TicketService{
+	s := &TicketService{
 		repo:              cfg.Repository,
 		client:            cfg.Client,
 		logger:            cfg.Logger,
@@ -81,6 +83,12 @@ func NewTicketService(cfg *TicketServiceConfig) *TicketService {
 		processResolver:   cfg.ProcessResolver,
 		connectorManager:  cfg.ConnectorManager,
 	}
+	if cfg.Client != nil {
+		assignmentService := NewTicketAssignmentService(cfg.Client, cfg.Logger)
+		assignmentRuleService := NewTicketAssignmentRuleService(cfg.Client, cfg.Logger)
+		s.assignmentSmartService = NewTicketAssignmentSmartService(cfg.Client, cfg.Logger, assignmentService, assignmentRuleService)
+	}
+	return s
 }
 
 // NewTicketServiceForTest 构造一个最小可运行的 TicketService（仅用于测试）
@@ -130,6 +138,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	ticketType := normalizeCreateTicketType(req.Type, req.FormFields)
 	assigneeID := req.AssigneeID
+	if assigneeID == 0 {
+		assigneeID = s.defaultTierOneAssignee(ctx, tenantID)
+	}
 	categoryID := req.CategoryID
 	workflowDefinitionKey := req.WorkflowDefinitionKey
 
@@ -157,6 +168,15 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	if err != nil {
 		s.logger.Errorw("Failed to create ticket", "error", err)
 		return nil, err
+	}
+
+	if tkt.AssigneeID == nil && s.assignmentSmartService != nil {
+		assignment, err := s.assignmentSmartService.AutoAssign(ctx, tkt.ID, tenantID)
+		if err != nil {
+			s.logger.Warnw("Automatic ticket assignment failed", "error", err, "ticket_id", tkt.ID)
+		} else {
+			tkt.AssigneeID = assignment.AssignedTo
+		}
 	}
 
 	// 计算 SLA（如果配置了 SLA 服务）
@@ -269,6 +289,28 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	}
 
 	return tkt, nil
+}
+
+// defaultTierOneAssignee selects a stable, active member of the tenant's
+// tier1-support group. A missing or empty group leaves the ticket unassigned
+// rather than making ticket creation unavailable.
+func (s *TicketService) defaultTierOneAssignee(ctx context.Context, tenantID int) int {
+	if s.client == nil {
+		return 0
+	}
+	member, err := s.client.Group.Query().
+		Where(group.TenantIDEQ(tenantID), group.NameEQ("tier1-support")).
+		QueryMembers().
+		Where(user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+		Order(ent.Asc(user.FieldID)).
+		First(ctx)
+	if err != nil {
+		if !ent.IsNotFound(err) {
+			s.logger.Warnw("Failed to resolve tier-1 support assignee", "error", err, "tenant_id", tenantID)
+		}
+		return 0
+	}
+	return member.ID
 }
 
 func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) error {

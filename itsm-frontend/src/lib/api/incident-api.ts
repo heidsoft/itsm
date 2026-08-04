@@ -2,11 +2,7 @@ import { httpClient } from './http-client';
 import type {
   ListQueryParams,
   PaginationResponse} from './types';
-import {
-  API_URLS,
-  normalizePaginationParams,
-  normalizeDateRangeParams
-} from './types';
+import { API_URLS } from './types';
 
 // 事件管理API接口
 export interface Incident {
@@ -350,27 +346,37 @@ export interface ListIncidentAlertsParams {
 export class IncidentAPI {
   // 获取事件列表
   static async listIncidents(params: ListIncidentsRequest = {}): Promise<ListIncidentsResponse> {
-    try {
-      // 标准化参数
-      const normalizedParams = {
-        ...normalizePaginationParams(params),
-        ...normalizeDateRangeParams(params),
-      };
-
-      // 过滤掉undefined值
-      const cleanParams = Object.fromEntries(
-        Object.entries(normalizedParams).filter(([_, value]) => value !== undefined)
-      );
-
-      const response = await httpClient.get<ListIncidentsResponse>(
-        API_URLS.INCIDENTS(),
-        cleanParams
-      );
-      return response;
-    } catch (error) {
-      console.error('IncidentAPI.listIncidents error:', error);
-      throw error;
+    const normalizedParams: Record<string, unknown> = { ...params };
+    // The incident handler uses size; translate pageSize here
+    if (params.pageSize !== undefined) {
+      normalizedParams.size = params.pageSize;
+      delete normalizedParams.pageSize;
     }
+    const cleanParams = Object.fromEntries(
+      Object.entries(normalizedParams).filter(([_, value]) => value !== undefined)
+    );
+    const response = await httpClient.get<{
+      incidents?: Incident[];
+      items?: Incident[];
+      data?: Incident[];
+      total?: number;
+      page?: number;
+      pageSize?: number;
+      totalPages?: number;
+    }>(API_URLS.INCIDENTS(), cleanParams);
+    const incidents = response.incidents ?? response.items ?? response.data ?? [];
+    const page = response.page ?? params.page ?? 1;
+    const pageSize = response.pageSize ?? params.pageSize ?? incidents.length;
+    const total = response.total ?? incidents.length;
+    return {
+      incidents,
+      items: incidents,
+      data: incidents,
+      total,
+      page,
+      pageSize,
+      totalPages: response.totalPages ?? (pageSize > 0 ? Math.ceil(total / pageSize) : 0),
+    };
   }
 
   // 获取事件详情

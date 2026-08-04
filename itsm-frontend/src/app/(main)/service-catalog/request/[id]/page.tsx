@@ -30,6 +30,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { httpClient } from '@/lib/api/http-client';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -42,26 +43,39 @@ export default function ServiceCatalogRequestPage() {
   const [loading, setLoading] = useState(false);
   const [catalog, setCatalog] = useState<any>(null);
   const [fetching, setFetching] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const user = useAuthStore(state => state.user);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setFetching(false);
+      setFetchError('服务标识无效，请返回服务目录重新选择');
+      return;
+    }
     setFetching(true);
-    // 拉取服务目录详情
+    setFetchError(null);
     httpClient
       .get<any>(`/api/v1/service-catalogs/${id}`)
       .then((data: any) => {
         setCatalog(data?.data || data);
       })
       .catch(() => {
-        // 兜底：列表接口
         return httpClient.get<any>('/api/v1/service-catalogs', { page: 1, size: 100 }).then((list: any) => {
           const items = list?.data?.items || list?.items || [];
           const found = items.find((it: any) => it.id === id);
           if (found) setCatalog(found);
+          else setFetchError('未找到所选服务，该服务可能已下架');
         });
       })
+      .catch(() => setFetchError('服务信息加载失败，请稍后重试'))
       .finally(() => setFetching(false));
   }, [id]);
+
+  useEffect(() => {
+    if (user) {
+      form.setFieldsValue({ requesterName: user.name, requesterEmail: user.email });
+    }
+  }, [form, user]);
 
   const onFinish = async (values: any) => {
     setLoading(true);
@@ -70,6 +84,8 @@ export default function ServiceCatalogRequestPage() {
       const payload: any = {
         serviceId: id,
         formData: {
+          requesterName: values.requesterName,
+          requesterEmail: values.requesterEmail,
           title: values.title,
           reason: values.reason,
           quantity: values.quantity || 1,
@@ -123,6 +139,16 @@ export default function ServiceCatalogRequestPage() {
           </Title>
         </Space>
 
+        {fetchError && (
+          <Alert
+            type="error"
+            showIcon
+            className="mb-4"
+            message={fetchError}
+            action={<Button onClick={() => router.push('/service-catalog')}>返回服务目录</Button>}
+          />
+        )}
+
         {catalog && (
           <Alert
             type="info"
@@ -146,6 +172,14 @@ export default function ServiceCatalogRequestPage() {
         <Divider />
 
         <Form form={form} layout="vertical" onFinish={onFinish}>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="requesterName" label="申请人">
+              <Input disabled placeholder="当前登录用户" />
+            </Form.Item>
+            <Form.Item name="requesterEmail" label="联系邮箱">
+              <Input disabled placeholder="当前用户邮箱" />
+            </Form.Item>
+          </div>
           <Form.Item
             name="title"
             label="申请标题"
@@ -241,6 +275,7 @@ export default function ServiceCatalogRequestPage() {
                 htmlType="submit"
                 icon={<Send />}
                 loading={loading}
+                disabled={!catalog || !!fetchError}
               >
                 提交申请
               </Button>
