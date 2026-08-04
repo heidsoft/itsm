@@ -31,15 +31,14 @@ import (
 // TicketService 改进版的工单服务
 // 使用构造函数注入和 Repository 模式
 type TicketService struct {
-	repo                   ticket.Repository
-	client                 *ent.Client // 用于 ProcessInstance 等系统级查询（不走 Repository）
-	logger                 *zap.SugaredLogger
-	notificationSvc        *TicketNotificationService
-	approvalSvc            *ApprovalService
-	automationRuleSvc      *TicketAutomationRuleService
-	slaSvc                 *TicketSLAService
-	assignmentSmartService *TicketAssignmentSmartService
-	connectorManager       *connector.Manager // 连接器管理器，用于飞书等外部集成
+	repo              ticket.Repository
+	client            *ent.Client // 用于 ProcessInstance 等系统级查询（不走 Repository）
+	logger            *zap.SugaredLogger
+	notificationSvc   *TicketNotificationService
+	approvalSvc       *ApprovalService
+	automationRuleSvc *TicketAutomationRuleService
+	slaSvc            *TicketSLAService
+	connectorManager  *connector.Manager // 连接器管理器，用于飞书等外部集成
 
 	// 流程触发（V1 兼容语义）
 	processTriggerSvc ProcessTriggerServiceInterface
@@ -71,7 +70,7 @@ func NewTicketService(cfg *TicketServiceConfig) *TicketService {
 		panic("Logger is required")
 	}
 
-	s := &TicketService{
+	return &TicketService{
 		repo:              cfg.Repository,
 		client:            cfg.Client,
 		logger:            cfg.Logger,
@@ -83,12 +82,6 @@ func NewTicketService(cfg *TicketServiceConfig) *TicketService {
 		processResolver:   cfg.ProcessResolver,
 		connectorManager:  cfg.ConnectorManager,
 	}
-	if cfg.Client != nil {
-		assignmentService := NewTicketAssignmentService(cfg.Client, cfg.Logger)
-		assignmentRuleService := NewTicketAssignmentRuleService(cfg.Client, cfg.Logger)
-		s.assignmentSmartService = NewTicketAssignmentSmartService(cfg.Client, cfg.Logger, assignmentService, assignmentRuleService)
-	}
-	return s
 }
 
 // NewTicketServiceForTest 构造一个最小可运行的 TicketService（仅用于测试）
@@ -168,15 +161,6 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	if err != nil {
 		s.logger.Errorw("Failed to create ticket", "error", err)
 		return nil, err
-	}
-
-	if tkt.AssigneeID == nil && s.assignmentSmartService != nil {
-		assignment, err := s.assignmentSmartService.AutoAssign(ctx, tkt.ID, tenantID)
-		if err != nil {
-			s.logger.Warnw("Automatic ticket assignment failed", "error", err, "ticket_id", tkt.ID)
-		} else {
-			tkt.AssigneeID = assignment.AssignedTo
-		}
 	}
 
 	// 计算 SLA（如果配置了 SLA 服务）
@@ -291,9 +275,6 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	return tkt, nil
 }
 
-// defaultTierOneAssignee selects a stable, active member of the tenant's
-// tier1-support group. A missing or empty group leaves the ticket unassigned
-// rather than making ticket creation unavailable.
 func (s *TicketService) defaultTierOneAssignee(ctx context.Context, tenantID int) int {
 	if s.client == nil {
 		return 0
