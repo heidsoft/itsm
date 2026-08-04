@@ -8,8 +8,21 @@ import dayjs from 'dayjs';
 const { Title, Paragraph } = Typography;
 
 interface BasicInfoCardProps {
-   
-  data: any;
+  data: {
+    id: number;
+    description: string;
+    status: string;
+    priority: string;
+    severity?: string;
+    category?: string;
+    rootCause?: string;
+    impact?: string;
+    reporterId?: number;
+    createdBy?: number;
+    assigneeId?: number;
+    createdAt: string;
+    updatedAt: string;
+  };
 }
 
 /**

@@ -46,8 +46,16 @@ func (ac *AssetController) ListAssets(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		common.Fail(c, common.BadRequestCode, "page 必须是正整数")
+		return
+	}
+	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	if err != nil || pageSize < 1 || pageSize > 200 {
+		common.Fail(c, common.BadRequestCode, "pageSize 必须在 1 到 200 之间")
+		return
+	}
 	assetType := c.Query("type")
 	status := c.Query("status")
 	category := c.Query("category")

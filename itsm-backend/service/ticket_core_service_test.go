@@ -44,6 +44,11 @@ func TestTicketCoreService_CreateTicketBasic(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	_, err = client.TicketCategory.Create().
+		SetName("incident").
+		SetCode("incident").
+		SetTenantID(testTenant.ID).
+		Save(ctx)
 	require.NoError(t, err)
 
 	tests := []struct {

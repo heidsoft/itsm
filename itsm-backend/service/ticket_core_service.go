@@ -6,9 +6,9 @@ import (
 	"database/sql"
 	"fmt"
 	"math/big"
-	mrand "math/rand"
 	"os"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"itsm-backend/common"
@@ -16,6 +16,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/tickettag"
+	"itsm-backend/ent/tickettemplate"
 	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
@@ -70,42 +72,85 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 
 	var categoryID *int
 	if req.CategoryID != nil && *req.CategoryID > 0 {
+		exists, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.IDEQ(*req.CategoryID), ticketcategory.TenantIDEQ(tenantID)).
+			Exist(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("校验分类失败: %w", err)
+		}
+		if !exists {
+			return nil, fmt.Errorf("分类不存在或不属于当前租户")
+		}
 		categoryID = req.CategoryID
 	} else if req.Category != "" {
-		if catID, err := s.findCategoryID(ctx, req.Category, tenantID); err == nil {
-			categoryID = &catID
-		} else {
-			s.logger.Warnw("Category not found", "category", req.Category, "error", err)
+		catID, err := s.findCategoryID(ctx, req.Category, tenantID)
+		if err != nil {
+			return nil, fmt.Errorf("校验分类失败: %w", err)
 		}
+		categoryID = &catID
 	}
 
-	createBuilder := s.client.Ticket.Create().
-		SetTitle(req.Title).
-		SetDescription(req.Description).
-		SetPriority(req.Priority).
-		SetType(ticketType).
-		SetStatus("open").
-		SetTicketNumber(ticketNumber).
-		SetTenantID(tenantID).
-		SetRequesterID(req.RequesterID)
-
-	if categoryID != nil {
-		createBuilder = createBuilder.SetCategoryID(*categoryID)
-	}
 	if req.AssigneeID > 0 {
 		if err := s.validateAssignee(ctx, req.AssigneeID, tenantID); err != nil {
 			return nil, fmt.Errorf("验证分配人失败: %w", err)
 		}
-		createBuilder = createBuilder.SetAssigneeID(req.AssigneeID)
+	}
+	tagIDs, err := s.validateTagIDs(ctx, req.TagIDs, tenantID)
+	if err != nil {
+		return nil, err
 	}
 	if req.ParentTicketID != nil && *req.ParentTicketID > 0 {
-		createBuilder = createBuilder.SetParentTicketID(*req.ParentTicketID)
+		exists, err := s.client.Ticket.Query().
+			Where(ticket.IDEQ(*req.ParentTicketID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
+			Exist(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("校验父工单失败: %w", err)
+		}
+		if !exists {
+			return nil, fmt.Errorf("父工单不存在或不属于当前租户")
+		}
 	}
 	if req.TemplateID != nil && *req.TemplateID > 0 {
-		createBuilder = createBuilder.SetTemplateID(*req.TemplateID)
+		exists, err := s.client.TicketTemplate.Query().
+			Where(tickettemplate.IDEQ(*req.TemplateID), tickettemplate.TenantIDEQ(tenantID)).
+			Exist(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("校验模板失败: %w", err)
+		}
+		if !exists {
+			return nil, fmt.Errorf("模板不存在或不属于当前租户")
+		}
 	}
 
-	ticket, err := createBuilder.Save(ctx)
+	newCreateBuilder := func(number string) *ent.TicketCreate {
+		builder := s.client.Ticket.Create().
+			SetTitle(req.Title).
+			SetDescription(req.Description).
+			SetPriority(req.Priority).
+			SetType(ticketType).
+			SetStatus("open").
+			SetTicketNumber(number).
+			SetTenantID(tenantID).
+			SetRequesterID(req.RequesterID)
+		if categoryID != nil {
+			builder.SetCategoryID(*categoryID)
+		}
+		if req.AssigneeID > 0 {
+			builder.SetAssigneeID(req.AssigneeID)
+		}
+		if req.ParentTicketID != nil && *req.ParentTicketID > 0 {
+			builder.SetParentTicketID(*req.ParentTicketID)
+		}
+		if req.TemplateID != nil && *req.TemplateID > 0 {
+			builder.SetTemplateID(*req.TemplateID)
+		}
+		if len(tagIDs) > 0 {
+			builder.AddTagIDs(tagIDs...)
+		}
+		return builder
+	}
+
+	ticket, err := newCreateBuilder(ticketNumber).Save(ctx)
 	if err != nil {
 		// 检查是否是唯一约束冲突，如果是则重试（最多3次）
 		if strings.Contains(err.Error(), "unique constraint") ||
@@ -118,16 +163,7 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 				if err != nil {
 					break
 				}
-				ticket, err = s.client.Ticket.Create().
-					SetTitle(req.Title).
-					SetDescription(req.Description).
-					SetPriority(req.Priority).
-					SetType(ticketType).
-					SetStatus("open").
-					SetTicketNumber(newTicketNumber).
-					SetTenantID(tenantID).
-					SetRequesterID(req.RequesterID).
-					Save(ctx)
+				ticket, err = newCreateBuilder(newTicketNumber).Save(ctx)
 				if err == nil {
 					goto created
 				}
@@ -143,19 +179,12 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 	}
 
 created:
-
-	if len(req.TagIDs) > 0 {
-		if _, err := ticket.Update().AddTagIDs(req.TagIDs...).Save(ctx); err != nil {
-			s.logger.Warnw("failed to associate tags with ticket", "ticketID", ticket.ID, "tagIDs", req.TagIDs, "error", err)
-		}
-	}
-
 	return ticket, nil
 }
 
 func (s *TicketCoreService) GetTicket(ctx context.Context, ticketID int, tenantID int) (*ent.Ticket, error) {
 	t, err := s.client.Ticket.Query().
-		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
+		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("工单不存在: %w", err)
@@ -164,7 +193,7 @@ func (s *TicketCoreService) GetTicket(ctx context.Context, ticketID int, tenantI
 }
 
 func (s *TicketCoreService) ListTickets(ctx context.Context, req *dto.ListTicketsRequest, tenantID int) ([]*ent.Ticket, error) {
-	query := s.client.Ticket.Query().Where(ticket.TenantID(tenantID))
+	query := s.client.Ticket.Query().Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil())
 
 	if req.Status != "" {
 		query = query.Where(ticket.StatusEQ(req.Status))
@@ -239,7 +268,7 @@ func (s *TicketCoreService) ListTickets(ctx context.Context, req *dto.ListTicket
 }
 
 func (s *TicketCoreService) CountTickets(ctx context.Context, tenantID int, filters ...func(*ent.TicketQuery)) (int, error) {
-	query := s.client.Ticket.Query().Where(ticket.TenantID(tenantID))
+	query := s.client.Ticket.Query().Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil())
 	for _, filter := range filters {
 		filter(query)
 	}
@@ -252,7 +281,7 @@ func (s *TicketCoreService) CountTickets(ctx context.Context, tenantID int, filt
 
 func (s *TicketCoreService) UpdateTicketBasic(ctx context.Context, ticketID int, req *dto.UpdateTicketRequest, tenantID int) (*ent.Ticket, error) {
 	t, err := s.client.Ticket.Query().
-		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
+		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("工单不存在: %w", err)
@@ -318,6 +347,7 @@ func (s *TicketCoreService) DeleteTicket(ctx context.Context, ticketID int, tena
 	}
 	// 软删除：设置deleted_at时间戳
 	_, err = s.client.Ticket.UpdateOneID(ticketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 		SetDeletedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
@@ -504,6 +534,33 @@ func (s *TicketCoreService) validateAssignee(ctx context.Context, userID, tenant
 	return nil
 }
 
+func (s *TicketCoreService) validateTagIDs(ctx context.Context, tagIDs []int, tenantID int) ([]int, error) {
+	uniqueIDs := make(map[int]struct{}, len(tagIDs))
+	for _, tagID := range tagIDs {
+		if tagID <= 0 {
+			return nil, fmt.Errorf("无效标签ID: %d", tagID)
+		}
+		uniqueIDs[tagID] = struct{}{}
+	}
+	if len(uniqueIDs) == 0 {
+		return nil, nil
+	}
+	ids := make([]int, 0, len(uniqueIDs))
+	for tagID := range uniqueIDs {
+		ids = append(ids, tagID)
+	}
+	count, err := s.client.TicketTag.Query().
+		Where(tickettag.IDIn(ids...), tickettag.TenantIDEQ(tenantID)).
+		Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("校验标签失败: %w", err)
+	}
+	if count != len(ids) {
+		return nil, fmt.Errorf("标签不存在或不属于当前租户")
+	}
+	return ids, nil
+}
+
 func (s *TicketCoreService) findCategoryID(ctx context.Context, name string, tenantID int) (int, error) {
 	cat, err := s.client.TicketCategory.Query().
 		Where(ticketcategory.NameEQ(name), ticketcategory.TenantID(tenantID)).
@@ -526,10 +583,17 @@ func (s *TicketCoreService) addTagsToTicket(ctx context.Context, t *ent.Ticket, 
 // uniqueFallbackSuffix 生成真正唯一的备选后缀（用于无历史记录时）
 // 使用 crypto/rand + PID 种子确保并发进程间不碰撞
 func uniqueFallbackSuffix() string {
-	// 种子：PID + nanoseconds，保证同进程同微秒内每次调用不同
-	src := mrand.NewSource(time.Now().UnixNano() + int64(os.Getpid())*1000000000)
-	mrand.New(src) // 每次调用产生不同种子，增强多样性
 	// 6位随机数，范围 0~999999（使用 crypto/rand 保证真随机）
-	n, _ := rand.Int(rand.Reader, big.NewInt(1000000))
+	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		// crypto/rand 极少失败；降级路径仍保证同进程并发调用不会复用同一序号。
+		fallback := time.Now().UnixNano() + int64(os.Getpid()) + int64(atomic.AddUint64(&fallbackSequence, 1))
+		if fallback < 0 {
+			fallback = -fallback
+		}
+		return fmt.Sprintf("%06d", fallback%1000000)
+	}
 	return fmt.Sprintf("%06d", n)
 }
+
+var fallbackSequence uint64

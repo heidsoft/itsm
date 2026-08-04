@@ -183,8 +183,13 @@ func (rc *ReleaseController) ApproveRelease(c *gin.Context) {
 	var req struct {
 		Comment string `json:"comment"`
 	}
-	// approve 的审批意见可选，允许空请求体
-	_ = c.ShouldBindJSON(&req)
+	// approve 的审批意见可选，允许空请求体；非空但格式错误的请求仍应拒绝。
+	if c.Request.ContentLength != 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+			return
+		}
+	}
 	rc.applyReleaseApproval(c, "approve", req.Comment)
 }
 

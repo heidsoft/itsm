@@ -190,8 +190,16 @@ func (wc *WorkflowController) ListWorkflows(c *gin.Context) {
 	workflowType := c.Query("type")
 	isActiveStr := c.Query("is_active")
 
-	page, _ := strconv.Atoi(pageStr)
-	pageSize, _ := strconv.Atoi(pageSizeStr)
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		common.Fail(c, common.ParamErrorCode, "page 必须是正整数")
+		return
+	}
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 || pageSize > 200 {
+		common.Fail(c, common.ParamErrorCode, "page_size 必须在 1 到 200 之间")
+		return
+	}
 
 	var active *bool
 	if isActiveStr != "" {
@@ -306,8 +314,16 @@ func (wc *WorkflowController) GetApprovalTasks(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	pageSizeStr := c.DefaultQuery("page_size", "10")
 
-	page, _ := strconv.Atoi(pageStr)
-	pageSize, _ := strconv.Atoi(pageSizeStr)
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		common.Fail(c, common.ParamErrorCode, "page 必须是正整数")
+		return
+	}
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 || pageSize > 200 {
+		common.Fail(c, common.ParamErrorCode, "page_size 必须在 1 到 200 之间")
+		return
+	}
 
 	req := &service.GetApprovalTasksRequest{
 		AssigneeID: assigneeID,
@@ -380,12 +396,24 @@ func (wc *WorkflowController) GetWorkflowTasks(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	pageSizeStr := c.DefaultQuery("page_size", "10")
 
-	page, _ := strconv.Atoi(pageStr)
-	pageSize, _ := strconv.Atoi(pageSizeStr)
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		common.Fail(c, common.ParamErrorCode, "page 必须是正整数")
+		return
+	}
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 || pageSize > 200 {
+		common.Fail(c, common.ParamErrorCode, "page_size 必须在 1 到 200 之间")
+		return
+	}
 
 	var instanceID int
 	if instanceIDStr != "" {
-		instanceID, _ = strconv.Atoi(instanceIDStr)
+		instanceID, err = strconv.Atoi(instanceIDStr)
+		if err != nil || instanceID < 1 {
+			common.Fail(c, common.ParamErrorCode, "instance_id 必须是正整数")
+			return
+		}
 	}
 
 	req := &service.GetTasksRequest{
@@ -531,12 +559,24 @@ func (wc *WorkflowController) GetAlerts(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	pageSizeStr := c.DefaultQuery("page_size", "10")
 
-	page, _ := strconv.Atoi(pageStr)
-	pageSize, _ := strconv.Atoi(pageSizeStr)
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		common.Fail(c, common.ParamErrorCode, "page 必须是正整数")
+		return
+	}
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 || pageSize > 200 {
+		common.Fail(c, common.ParamErrorCode, "page_size 必须在 1 到 200 之间")
+		return
+	}
 
 	var workflowID int
 	if workflowIDStr != "" {
-		workflowID, _ = strconv.Atoi(workflowIDStr)
+		workflowID, err = strconv.Atoi(workflowIDStr)
+		if err != nil || workflowID < 1 {
+			common.Fail(c, common.ParamErrorCode, "workflow_id 必须是正整数")
+			return
+		}
 	}
 
 	req := &service.GetAlertsRequest{

@@ -69,7 +69,14 @@ export interface AdvancedSearchFilters {
 
   // 自定义字段
   tags?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
+}
+
+interface SavedSearch {
+  id: number;
+  name: string;
+  filters: Partial<AdvancedSearchFilters>;
+  createdAt: string;
 }
 
 export interface TicketAdvancedSearchProps {
@@ -165,7 +172,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [activeTemplate, setActiveTemplate] = useState<string>('');
-  const [savedSearches, setSavedSearches] = useState<any[]>([]);
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
 
   // 快速日期范围（需要在面板定义之前）
   const quickDateRanges: RangePickerProps['ranges'] = {
@@ -335,7 +342,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
 
   // 保存当前搜索条件
   const saveSearch = useCallback(() => {
-    const values = form.getFieldsValue();
+    const values = form.getFieldsValue() as Partial<AdvancedSearchFilters>;
     const searchName = `搜索_${dayjs().format('YYYY-MM-DD_HH-mm-ss')}`;
 
     setSavedSearches(prev => [
@@ -352,7 +359,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
 
   // 执行搜索
   const handleSearch = useCallback(() => {
-    const values = form.getFieldsValue();
+    const values = form.getFieldsValue() as Record<string, unknown>;
 
     // 处理日期范围
     const processedValues: AdvancedSearchFilters = {};
@@ -365,7 +372,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         value !== '' &&
         (Array.isArray(value) ? value.length > 0 : true)
       ) {
-        processedValues[key as keyof AdvancedSearchFilters] = value;
+        Object.assign(processedValues, { [key]: value });
       }
     });
 

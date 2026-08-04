@@ -5,7 +5,7 @@
  * 添加解决方案、关联事件、变更管理、知识库集成、审批工作流
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Card,
   Tag,
@@ -40,8 +40,9 @@ import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { ProblemApi } from '@/lib/api/';
+import type { Problem } from '@/lib/api/problem-api';
+import ProblemInvestigationAPI from '@/lib/api/problem-investigation';
 import { ProblemStatus, ProblemStatusLabels } from '@/constants/problem';
-import type { Problem } from '@/types/biz/problem';
 import ProblemInvestigationTab from './ProblemInvestigationTab';
 import BasicInfoCard from './BasicInfoCard';
 import { SafeTextBlock } from '@/components/common/SafeContent';
@@ -72,8 +73,8 @@ interface RelatedIncident {
   incidentNumber: string;
   title: string;
   status: string;
-  priority: string;
-  createdAt: string;
+  priority?: string;
+  createdAt?: string;
 }
 
 // 解决方案接口
@@ -84,7 +85,7 @@ interface Solution {
   implementedAt: string;
   implementedBy: string;
   effectiveness: 'high' | 'medium' | 'low';
-  status: 'proposed' | 'approved' | 'implemented' | 'rejected';
+  status: string;
 }
 
 // 知识库文章接口
@@ -101,8 +102,8 @@ interface ChangeRequest {
   changeNumber: string;
   title: string;
   status: string;
-  riskLevel: string;
-  plannedStartDate: string;
+  riskLevel?: string;
+  plannedStartDate?: string;
 }
 
 interface EnhancedProblemDetailProps {
@@ -115,6 +116,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
   const id = propId || (params?.id as string);
 
   const [loading, setLoading] = useState(false);
+  const requestIdRef = useRef(0);
   const [data, setData] = useState<Problem | null>(null);
   const [activeTab, setActiveTab] = useState('basic');
 
@@ -129,107 +131,107 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
   const [linkingIncidentModalVisible, setLinkingIncidentModalVisible] = useState(false);
 
   // 加载数据
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!id) return;
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     try {
-      const problem = await ProblemApi.getProblem(Number(id));
-      setData(problem as unknown as Problem);
-    } catch (error) {
-      message.error('加载问题详情失败');
+      const problemId = Number(id);
+      const [problemResult, associationsResult, solutionsResult, articlesResult] =
+        await Promise.allSettled([
+          ProblemApi.getProblem(problemId),
+          ProblemApi.getAssociations(problemId),
+          ProblemInvestigationAPI.getSolutions(problemId),
+          ProblemInvestigationAPI.getKnowledgeArticles(problemId),
+        ]);
+
+      if (requestId !== requestIdRef.current) return;
+      if (problemResult.status === 'rejected') throw problemResult.reason;
+
+      setData(problemResult.value);
+
+      if (associationsResult.status === 'fulfilled') {
+        setRelatedIncidents(
+          associationsResult.value.incidents.map(item => ({
+            id: item.id,
+            incidentNumber: item.number ?? String(item.id),
+            title: item.title,
+            status: item.status,
+            createdAt: item.createdAt,
+          }))
+        );
+        setChangeRequests(
+          associationsResult.value.changes.map(item => ({
+            id: item.id,
+            changeNumber: item.number ?? String(item.id),
+            title: item.title,
+            status: item.status,
+            plannedStartDate: item.createdAt,
+          }))
+        );
+      } else {
+        setRelatedIncidents([]);
+        setChangeRequests([]);
+      }
+
+      if (solutionsResult.status === 'fulfilled') {
+        setSolutions(
+          solutionsResult.value.map(solution => ({
+            id: solution.id,
+            title: solution.solutionType,
+            description: solution.solutionDescription,
+            implementedAt: solution.updatedAt,
+            implementedBy: solution.proposedByName ?? String(solution.proposedBy),
+            effectiveness:
+              solution.priority === 'high'
+                ? 'high'
+                : solution.priority === 'low'
+                  ? 'low'
+                  : 'medium',
+            status: solution.status,
+          }))
+        );
+      } else {
+        setSolutions([]);
+      }
+
+      if (articlesResult.status === 'fulfilled') {
+        setKbArticles(
+          articlesResult.value.map(article => ({
+            id: article.id,
+            title: article.articleTitle,
+            category: article.articleType,
+            relevanceScore: 0,
+          }))
+        );
+      } else {
+        setKbArticles([]);
+      }
+
+      const optionalFailures = [associationsResult, solutionsResult, articlesResult].filter(
+        result => result.status === 'rejected'
+      ).length;
+      if (optionalFailures > 0) {
+        message.warning(`问题详情已加载，${optionalFailures} 项关联数据暂不可用`);
+      }
+    } catch {
+      if (requestId === requestIdRef.current) {
+        setData(null);
+        message.error('加载问题详情失败');
+      }
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
-  };
-
-  // 加载关联事件
-  const loadRelatedIncidents = async () => {
-    try {
-      // 模拟API调用 - 实际应该从后端获取
-      setRelatedIncidents([
-        {
-          id: 1,
-          incidentNumber: 'INC-2026-001',
-          title: '数据库连接超时',
-          status: 'resolved',
-          priority: 'high',
-          createdAt: '2026-06-15T10:00:00Z',
-        },
-        {
-          id: 2,
-          incidentNumber: 'INC-2026-002',
-          title: '应用响应缓慢',
-          status: 'closed',
-          priority: 'medium',
-          createdAt: '2026-06-16T14:30:00Z',
-        },
-      ]);
-    } catch (error) {
-      console.error('Failed to load related incidents:', error);
-    }
-  };
-
-  // 加载解决方案
-  const loadSolutions = async () => {
-    try {
-      // 模拟数据
-      setSolutions([
-        {
-          id: 1,
-          title: '升级数据库连接池配置',
-          description: '将连接池大小从50增加到100，并优化超时设置',
-          implementedAt: '2026-07-01T09:00:00Z',
-          implementedBy: '张三',
-          effectiveness: 'high',
-          status: 'implemented',
-        },
-      ]);
-    } catch (error) {
-      console.error('Failed to load solutions:', error);
-    }
-  };
-
-  // 加载知识库文章
-  const loadKbArticles = async () => {
-    try {
-      // 模拟数据
-      setKbArticles([
-        { id: 1, title: '数据库连接池最佳实践', category: '运维', relevanceScore: 0.95 },
-        { id: 2, title: 'MySQL性能优化指南', category: '数据库', relevanceScore: 0.88 },
-      ]);
-    } catch (error) {
-      console.error('Failed to load KB articles:', error);
-    }
-  };
-
-  // 加载关联变更
-  const loadChangeRequests = async () => {
-    try {
-      // 模拟数据
-      setChangeRequests([
-        {
-          id: 1,
-          changeNumber: 'CR-2026-015',
-          title: '数据库架构优化',
-          status: 'completed',
-          riskLevel: 'medium',
-          plannedStartDate: '2026-07-02T00:00:00Z',
-        },
-      ]);
-    } catch (error) {
-      console.error('Failed to load change requests:', error);
-    }
-  };
+  }, [id]);
 
   useEffect(() => {
     if (id) {
-      loadData();
-      loadRelatedIncidents();
-      loadSolutions();
-      loadKbArticles();
-      loadChangeRequests();
+      void loadData();
     }
-  }, [id]);
+    return () => {
+      requestIdRef.current++;
+    };
+  }, [id, loadData]);
 
   // 处理状态更新
   const handleUpdateStatus = async (status: ProblemStatus) => {
@@ -237,7 +239,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
     try {
       await ProblemApi.updateProblem(Number(id), { status });
       message.success('状态更新成功');
-      loadData();
+      void loadData();
     } catch (error) {
       message.error('状态更新失败');
     }
@@ -457,7 +459,9 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
                     }
                     description={
                       <Space>
-                        <Tag color={priorityColors[incident.priority]}>{incident.priority}</Tag>
+                        {incident.priority && (
+                          <Tag color={priorityColors[incident.priority]}>{incident.priority}</Tag>
+                        )}
                         <Tag color={statusColors[incident.status] || 'default'}>
                           {incident.status}
                         </Tag>
@@ -511,7 +515,9 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
                     }
                     description={
                       <Space>
-                        <Tag color={priorityColors[cr.riskLevel]}>{cr.riskLevel}风险</Tag>
+                        {cr.riskLevel && (
+                          <Tag color={priorityColors[cr.riskLevel]}>{cr.riskLevel}风险</Tag>
+                        )}
                         <Tag color={statusColors[cr.status] || 'default'}>{cr.status}</Tag>
                         <Text type="secondary">
                           计划开始: {dayjs(cr.plannedStartDate).format('YYYY-MM-DD')}
@@ -587,7 +593,9 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
             <Title level={4} style={{ margin: 0 }}>
               {data.title}
             </Title>
-            <Tag color={statusColors[data.status]}>{ProblemStatusLabels[data.status]}</Tag>
+            <Tag color={statusColors[data.status]}>
+              {ProblemStatusLabels[data.status as ProblemStatus] ?? data.status}
+            </Tag>
           </Space>
           <Space>
             <Button icon={<Pencil />} onClick={() => router.push(`/problems/${data.id}/edit`)}>

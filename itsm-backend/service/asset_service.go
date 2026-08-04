@@ -52,15 +52,11 @@ func (s *AssetService) CreateAsset(ctx context.Context, req *dto.CreateAssetRequ
 		SetNillableParentAssetID(req.ParentAssetID).
 		SetSpecifications(req.Specifications).
 		SetCustomFields(req.CustomFields).
+		SetTags(req.Tags).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create asset", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to create asset: %w", err)
-	}
-
-	// 设置标签
-	if len(req.Tags) > 0 {
-		assetEntity.Update().SetTags(req.Tags).Exec(ctx)
 	}
 
 	response := dto.ToAssetResponse(assetEntity)
@@ -87,6 +83,12 @@ func (s *AssetService) GetAssetByID(ctx context.Context, id, tenantID int) (*dto
 
 // ListAssets 获取资产列表
 func (s *AssetService) ListAssets(ctx context.Context, tenantID int, page, pageSize int, assetType, status, category string) (*dto.AssetListResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 200 {
+		pageSize = 20
+	}
 	query := s.client.Asset.Query().Where(asset.TenantIDEQ(tenantID))
 
 	if assetType != "" {
@@ -106,11 +108,9 @@ func (s *AssetService) ListAssets(ctx context.Context, tenantID int, page, pageS
 		return nil, fmt.Errorf("failed to count assets: %w", err)
 	}
 
-	// 分页查询
-	if page > 0 && pageSize > 0 {
-		offset := (page - 1) * pageSize
-		query = query.Offset(offset).Limit(pageSize)
-	}
+	// 分页查询。服务层强制上限，避免调用方绕过 controller 触发无界查询。
+	offset := (page - 1) * pageSize
+	query = query.Offset(offset).Limit(pageSize)
 
 	assetEntities, err := query.Order(ent.Desc(asset.FieldCreatedAt)).All(ctx)
 	if err != nil {
@@ -280,11 +280,33 @@ func (s *AssetService) GetAssetStats(ctx context.Context, tenantID int) (*dto.As
 	stats.Total = total
 
 	// 统计各状态数量
-	available, _ := s.client.Asset.Query().Where(asset.TenantIDEQ(tenantID), asset.StatusEQ(string(dto.AssetStatusAvailable))).Count(ctx)
-	inUse, _ := s.client.Asset.Query().Where(asset.TenantIDEQ(tenantID), asset.StatusEQ(string(dto.AssetStatusInUse))).Count(ctx)
-	maintenance, _ := s.client.Asset.Query().Where(asset.TenantIDEQ(tenantID), asset.StatusEQ(string(dto.AssetStatusMaintenance))).Count(ctx)
-	retired, _ := s.client.Asset.Query().Where(asset.TenantIDEQ(tenantID), asset.StatusEQ(string(dto.AssetStatusRetired))).Count(ctx)
-	disposed, _ := s.client.Asset.Query().Where(asset.TenantIDEQ(tenantID), asset.StatusEQ(string(dto.AssetStatusDisposed))).Count(ctx)
+	countByStatus := func(status dto.AssetStatus) (int, error) {
+		count, err := s.client.Asset.Query().Where(asset.TenantIDEQ(tenantID), asset.StatusEQ(string(status))).Count(ctx)
+		if err != nil {
+			return 0, fmt.Errorf("count assets with status %q: %w", status, err)
+		}
+		return count, nil
+	}
+	available, err := countByStatus(dto.AssetStatusAvailable)
+	if err != nil {
+		return nil, err
+	}
+	inUse, err := countByStatus(dto.AssetStatusInUse)
+	if err != nil {
+		return nil, err
+	}
+	maintenance, err := countByStatus(dto.AssetStatusMaintenance)
+	if err != nil {
+		return nil, err
+	}
+	retired, err := countByStatus(dto.AssetStatusRetired)
+	if err != nil {
+		return nil, err
+	}
+	disposed, err := countByStatus(dto.AssetStatusDisposed)
+	if err != nil {
+		return nil, err
+	}
 
 	stats.Available = available
 	stats.InUse = inUse

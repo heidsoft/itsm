@@ -27,6 +27,13 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	cmdbTaskTimeout       = 30 * time.Minute
+	maxCMDBImportFileSize = 50 << 20 // 50 MiB
+)
+
+var cmdbImportHTTPClient = &http.Client{Timeout: 2 * time.Minute}
+
 // CMDBImportExportService handles asynchronous CMDB import/export tasks.
 type CMDBImportExportService struct {
 	client     *ent.Client
@@ -66,7 +73,8 @@ func (s *CMDBImportExportService) CreateImportTask(ctx context.Context, req *dto
 	}
 
 	// 异步执行导入
-	go s.processImportTask(taskID, req, tenantID, operatorID, operatorName)
+	reqCopy := *req
+	go s.processImportTask(taskID, &reqCopy, tenantID, operatorID, operatorName)
 
 	return s.convertToImportDTO(task), nil
 }
@@ -126,11 +134,12 @@ func (s *CMDBImportExportService) ListImportTasks(ctx context.Context, tenantID 
 
 // processImportTask 处理导入任务
 func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.ImportCIRequest, tenantID int, operatorID int, operatorName string) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), cmdbTaskTimeout)
+	defer cancel()
 
 	// 更新任务状态为处理中
 	_, err := s.client.CMDBImportTask.Update().
-		Where(cmdbimporttask.TaskID(taskID)).
+		Where(cmdbimporttask.TaskID(taskID), cmdbimporttask.TenantID(tenantID)).
 		SetStatus("processing").
 		SetStartedAt(time.Now()).
 		Save(ctx)
@@ -143,16 +152,30 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 	var headers []string
 
 	// 下载文件
-	resp, err := http.Get(req.FileURL)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, req.FileURL, nil)
+	if err != nil {
+		s.failImportTask(ctx, taskID, fmt.Sprintf("创建下载请求失败: %v", err))
+		return
+	}
+	resp, err := cmdbImportHTTPClient.Do(httpReq)
 	if err != nil {
 		s.failImportTask(ctx, taskID, fmt.Sprintf("下载文件失败: %v", err))
 		return
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		s.failImportTask(ctx, taskID, fmt.Sprintf("下载文件失败: HTTP %d", resp.StatusCode))
+		return
+	}
+	if resp.ContentLength > maxCMDBImportFileSize {
+		s.failImportTask(ctx, taskID, "导入文件超过 50 MiB 限制")
+		return
+	}
+	limitedBody := http.MaxBytesReader(nil, resp.Body, maxCMDBImportFileSize)
 
 	// 解析文件
 	if req.FileType == "csv" {
-		reader := csv.NewReader(resp.Body)
+		reader := csv.NewReader(limitedBody)
 		records, err = reader.ReadAll()
 		if err != nil {
 			s.failImportTask(ctx, taskID, fmt.Sprintf("解析CSV文件失败: %v", err))
@@ -167,7 +190,7 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 		}
 		defer os.Remove(tmpFile.Name())
 
-		_, err = io.Copy(tmpFile, resp.Body)
+		_, err = io.Copy(tmpFile, limitedBody)
 		if err != nil {
 			tmpFile.Close()
 			s.failImportTask(ctx, taskID, fmt.Sprintf("保存Excel文件失败: %v", err))
@@ -308,7 +331,7 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 	}
 
 	_, err = s.client.CMDBImportTask.Update().
-		Where(cmdbimporttask.TaskID(taskID)).
+		Where(cmdbimporttask.TaskID(taskID), cmdbimporttask.TenantID(tenantID)).
 		SetStatus("completed").
 		SetTotalCount(len(dataRows)).
 		SetSuccessCount(successCount).
@@ -357,7 +380,20 @@ func (s *CMDBImportExportService) CreateExportTask(ctx context.Context, req *dto
 	}
 
 	// 异步执行导出
-	go s.processExportTask(taskID, req, tenantID)
+	reqCopy := *req
+	reqCopy.ExportFields = append([]string(nil), req.ExportFields...)
+	if req.Filters != nil {
+		filtersCopy := *req.Filters
+		filtersCopy.TagIDs = append([]int(nil), req.Filters.TagIDs...)
+		if req.Filters.Attributes != nil {
+			filtersCopy.Attributes = make(map[string]interface{}, len(req.Filters.Attributes))
+			for key, value := range req.Filters.Attributes {
+				filtersCopy.Attributes[key] = value
+			}
+		}
+		reqCopy.Filters = &filtersCopy
+	}
+	go s.processExportTask(taskID, &reqCopy, tenantID)
 
 	return s.convertToExportDTO(task), nil
 }
@@ -417,11 +453,12 @@ func (s *CMDBImportExportService) ListExportTasks(ctx context.Context, tenantID 
 
 // processExportTask 处理导出任务
 func (s *CMDBImportExportService) processExportTask(taskID string, req *dto.ExportCIRequest, tenantID int) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), cmdbTaskTimeout)
+	defer cancel()
 
 	// 更新任务状态为处理中
 	_, err := s.client.CMDBExportTask.Update().
-		Where(cmdbexporttask.TaskID(taskID)).
+		Where(cmdbexporttask.TaskID(taskID), cmdbexporttask.TenantID(tenantID)).
 		SetStatus("processing").
 		SetStartedAt(time.Now()).
 		Save(ctx)
@@ -431,8 +468,12 @@ func (s *CMDBImportExportService) processExportTask(taskID string, req *dto.Expo
 	}
 
 	// 查询所有符合条件的CI
+	filters := dto.CISearchFilter{}
+	if req.Filters != nil {
+		filters = *req.Filters
+	}
 	searchReq := &dto.CISearchRequest{
-		Filters:   *req.Filters,
+		Filters:   filters,
 		Page:      1,
 		PageSize:  10000, // 最多导出1万条
 		SortBy:    "id",
@@ -478,7 +519,7 @@ func (s *CMDBImportExportService) processExportTask(taskID string, req *dto.Expo
 
 	// 更新任务结果
 	_, err = s.client.CMDBExportTask.Update().
-		Where(cmdbexporttask.TaskID(taskID)).
+		Where(cmdbexporttask.TaskID(taskID), cmdbexporttask.TenantID(tenantID)).
 		SetStatus("completed").
 		SetTotalCount(len(searchResult.Items)).
 		SetFileURL(fileURL).

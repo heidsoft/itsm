@@ -40,7 +40,7 @@ const cache = new Map<string, { data: unknown; timestamp: number }>();
 /**
  * 数据获取Hook
  */
-export function useDataFetch<T = any>(
+export function useDataFetch<T = unknown>(
   fetchFn: () => Promise<T>,
   options: UseFetchOptions<T> = {}
 ): UseFetchResult<T> {
@@ -62,8 +62,15 @@ export function useDataFetch<T = any>(
   const cacheKey = useRef(fetchFn.toString());
   const retryCountRef = useRef(0);
   const mountedRef = useRef(true);
+  const requestIdRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const executeFetch = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
     // 检查缓存
     if (cacheTime > 0) {
       const cached = cache.get(cacheKey.current);
@@ -80,7 +87,7 @@ export function useDataFetch<T = any>(
     try {
       const result = await fetchFn();
 
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || requestId !== requestIdRef.current) return;
 
       setData(result);
       setError(null);
@@ -96,15 +103,17 @@ export function useDataFetch<T = any>(
 
       onSuccess?.(result);
     } catch (err) {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || requestId !== requestIdRef.current) return;
 
       const error = err instanceof Error ? err : new Error(String(err));
 
       // 重试逻辑
       if (retryCountRef.current < retryCount) {
         retryCountRef.current++;
-        setTimeout(() => {
-          executeFetch();
+        retryTimerRef.current = setTimeout(() => {
+          if (mountedRef.current && requestId === requestIdRef.current) {
+            void executeFetch();
+          }
         }, retryDelay);
         return;
       }
@@ -112,7 +121,11 @@ export function useDataFetch<T = any>(
       setError(error);
       onError?.(error);
     } finally {
-      if (mountedRef.current) {
+      if (
+        mountedRef.current &&
+        requestId === requestIdRef.current &&
+        retryCountRef.current >= retryCount
+      ) {
         setLoading(false);
       }
     }
@@ -148,8 +161,13 @@ export function useDataFetch<T = any>(
 
     return () => {
       mountedRef.current = false;
+      requestIdRef.current++;
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
     };
-  }, dependencies);  
+  }, dependencies);
 
   return {
     data,
@@ -186,7 +204,7 @@ export interface UsePaginationResult<T> extends Omit<UseFetchResult<PaginatedDat
   setPageSize: (size: number) => void;
 }
 
-export function usePagination<T = any>(
+export function usePagination<T = unknown>(
   fetchFn: (page: number, pageSize: number) => Promise<PaginatedData<T>>,
   options: UsePaginationOptions<PaginatedData<T>> = {}
 ): UsePaginationResult<T> {

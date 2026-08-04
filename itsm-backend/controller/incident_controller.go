@@ -173,6 +173,9 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	if page <= 0 {
 		page = 1
 	}
+	if size > 200 {
+		size = 200
+	}
 
 	// 构建筛选条件
 	filters := make(map[string]interface{})
@@ -195,9 +198,12 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 		filters["keyword"] = keyword
 	}
 	if assigneeIDStr := ctx.Query("assignee_id"); assigneeIDStr != "" {
-		if assigneeID, err := strconv.Atoi(assigneeIDStr); err == nil {
-			filters["assignee_id"] = assigneeID
+		assigneeID, err := strconv.Atoi(assigneeIDStr)
+		if err != nil || assigneeID <= 0 {
+			common.Fail(ctx, common.ParamErrorCode, "无效的处理人ID")
+			return
 		}
+		filters["assignee_id"] = assigneeID
 	}
 
 	tenantID, ok := c.resolveTenantID(ctx)
@@ -1331,11 +1337,16 @@ func (c *IncidentController) GetIncidentComments(ctx *gin.Context) {
 		common.Fail(ctx, common.InternalErrorCode, "数据库客户端未找到")
 		return
 	}
-	entClient := client.(*ent.Client)
+	entClient, ok := client.(*ent.Client)
+	if !ok || entClient == nil {
+		c.logger.Errorw("Invalid database client in request context")
+		common.Fail(ctx, common.InternalErrorCode, "数据库客户端无效")
+		return
+	}
 
 	// 验证事件存在且属于该租户
 	_, err = entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		Only(ctx.Request.Context())
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -1435,11 +1446,16 @@ func (c *IncidentController) CreateIncidentComment(ctx *gin.Context) {
 		common.Fail(ctx, common.InternalErrorCode, "数据库客户端未找到")
 		return
 	}
-	entClient := client.(*ent.Client)
+	entClient, ok := client.(*ent.Client)
+	if !ok || entClient == nil {
+		c.logger.Errorw("Invalid database client in request context")
+		common.Fail(ctx, common.InternalErrorCode, "数据库客户端无效")
+		return
+	}
 
 	// 验证事件存在且属于该租户
 	_, err = entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		Only(ctx.Request.Context())
 	if err != nil {
 		if ent.IsNotFound(err) {

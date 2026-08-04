@@ -82,7 +82,7 @@ func NewTicketSLAService(client *ent.Client, logger *zap.SugaredLogger) *TicketS
 func (s *TicketSLAService) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID int) (*TicketSLAInfoResult, error) {
 	// 查询工单
 	t, err := s.client.Ticket.Query().
-		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
+		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to find ticket", "ticketID", ticketID, "error", err)
@@ -170,12 +170,16 @@ func (s *TicketSLAService) GetTicketSLAInfo(ctx context.Context, ticketID int, t
 
 // GetOverdueTickets 获取逾期工单
 func (s *TicketSLAService) GetOverdueTickets(ctx context.Context, tenantID int) ([]*ent.Ticket, error) {
-	// 获取所有未关闭的工单
+	// SLA 截止时间在建单时已落库，直接由数据库筛选，避免逐工单查询 SLA 定义的 N+1。
+	now := time.Now()
 	tickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
 			ticket.StatusNEQ(common.TicketStatusClosed),
 			ticket.StatusNEQ(common.TicketStatusResolved),
+			ticket.SLAResolutionDeadlineNotNil(),
+			ticket.SLAResolutionDeadlineLT(now),
 		).
 		All(ctx)
 	if err != nil {
@@ -183,26 +187,7 @@ func (s *TicketSLAService) GetOverdueTickets(ctx context.Context, tenantID int) 
 		return nil, err
 	}
 
-	// 筛选逾期工单
-	var overdueTickets []*ent.Ticket
-	now := time.Now()
-
-	for _, t := range tickets {
-		// 获取SLA定义
-		slaDef, err := s.getSLADefinition(ctx, tenantID, t.Type, t.Priority)
-		if err != nil {
-			continue
-		}
-
-		if slaDef.ResolutionTime > 0 {
-			deadline := s.calculateDeadlineWithBusinessHours(t.CreatedAt, slaDef.ResolutionTime, slaDef.BusinessHours)
-			if now.After(deadline) {
-				overdueTickets = append(overdueTickets, t)
-			}
-		}
-	}
-
-	return overdueTickets, nil
+	return tickets, nil
 }
 
 // GetTicketStats 获取工单统计
@@ -211,7 +196,7 @@ func (s *TicketSLAService) GetTicketStats(ctx context.Context, tenantID int) (*T
 
 	// 统计总数
 	total, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID)).
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Count(ctx)
 	if err != nil {
 		return nil, err
@@ -220,7 +205,7 @@ func (s *TicketSLAService) GetTicketStats(ctx context.Context, tenantID int) (*T
 
 	// 统计各状态数量
 	openCount, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.Status(common.TicketStatusOpen)).
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil(), ticket.Status(common.TicketStatusOpen)).
 		Count(ctx)
 	if err != nil {
 		return nil, err
@@ -228,7 +213,7 @@ func (s *TicketSLAService) GetTicketStats(ctx context.Context, tenantID int) (*T
 	stats.OpenTickets = openCount
 
 	inProgressCount, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.Status(common.TicketStatusInProgress)).
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil(), ticket.Status(common.TicketStatusInProgress)).
 		Count(ctx)
 	if err != nil {
 		return nil, err
@@ -236,7 +221,7 @@ func (s *TicketSLAService) GetTicketStats(ctx context.Context, tenantID int) (*T
 	stats.InProgressTickets = inProgressCount
 
 	resolvedCount, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.Status(common.TicketStatusResolved)).
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil(), ticket.Status(common.TicketStatusResolved)).
 		Count(ctx)
 	if err != nil {
 		return nil, err
@@ -244,7 +229,7 @@ func (s *TicketSLAService) GetTicketStats(ctx context.Context, tenantID int) (*T
 	stats.ResolvedTickets = resolvedCount
 
 	closedCount, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.Status(common.TicketStatusClosed)).
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil(), ticket.Status(common.TicketStatusClosed)).
 		Count(ctx)
 	if err != nil {
 		return nil, err

@@ -655,7 +655,11 @@ func (s *AuthService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 	}
 
 	// 生成重置令牌
-	token := generateResetToken()
+	token, err := generateResetToken()
+	if err != nil {
+		s.logger.Errorw("Failed to generate password reset token", "user_id", userEntity.ID, "error", err)
+		return nil, fmt.Errorf("生成重置令牌失败: %w", err)
+	}
 	expiresAt := time.Now().Add(1 * time.Hour) // 1小时后过期
 
 	// 保存重置令牌
@@ -789,13 +793,12 @@ func (s *AuthService) ValidateResetToken(ctx context.Context, req *dto.ValidateR
 }
 
 // generateResetToken generates a cryptographically secure password reset token
-func generateResetToken() string {
+func generateResetToken() (string, error) {
 	bytes := make([]byte, 32)
 	if _, err := rand.Read(bytes); err != nil {
-		// Fallback to panic on crypto failure - this should never happen
-		panic("failed to generate random token: " + err.Error())
+		return "", fmt.Errorf("read cryptographic random bytes: %w", err)
 	}
-	return hex.EncodeToString(bytes)
+	return hex.EncodeToString(bytes), nil
 }
 
 // CleanupExpiredTokens 清理过期的重置令牌
@@ -805,7 +808,7 @@ func (s *AuthService) CleanupExpiredTokens(ctx context.Context) error {
 		Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to cleanup expired tokens", "error", err)
-		return err
+		return fmt.Errorf("cleanup expired password reset tokens: %w", err)
 	}
 	return nil
 }

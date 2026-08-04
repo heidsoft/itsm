@@ -4,7 +4,8 @@
  * 发布列表组件
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import type { TableColumnsType } from 'antd';
 import {
   Table,
   Tag,
@@ -26,7 +27,13 @@ import { Search, Plus, Pencil, Eye, Rocket } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
-import { ReleaseApi, ReleaseStatus, ReleaseType } from '@/lib/api/release-api';
+import {
+  ReleaseApi,
+  type Release,
+  type ReleaseStatsResponse,
+  type ReleaseStatus,
+  type ReleaseType,
+} from '@/lib/api/release-api';
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 
 
@@ -54,9 +61,9 @@ const ReleaseList: React.FC = () => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<Release[]>([]);
   const [total, setTotal] = useState(0);
-  const [stats, setStats] = useState<any>({});
+  const [stats, setStats] = useState<ReleaseStatsResponse | null>(null);
   const [form] = Form.useForm();
   const screens = Grid.useBreakpoint();
   const requestIdRef = useRef(0);
@@ -68,7 +75,7 @@ const ReleaseList: React.FC = () => {
     pageSize: 10,
   });
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const requestId = ++requestIdRef.current;
     setLoading(true);
     try {
@@ -95,21 +102,21 @@ const ReleaseList: React.FC = () => {
         setLoading(false);
       }
     }
-  };
+  }, [form, message, query]);
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const resp = await ReleaseApi.getReleaseStats();
       setStats(resp);
     } catch (error) {
       message.error('加载统计数据失败');
     }
-  };
+  }, [message]);
 
   useEffect(() => {
-    loadData();
-    loadStats();
-  }, [query]);
+    void loadData();
+    void loadStats();
+  }, [loadData, loadStats]);
 
   const handleSearch = () => {
     setQuery(prev => ({ ...prev, page: 1 }));
@@ -124,7 +131,7 @@ const ReleaseList: React.FC = () => {
     setQuery({ ...query, page, pageSize });
   };
 
-  const columns = [
+  const columns = useMemo<TableColumnsType<Release>>(() => [
     {
       title: '发布编号',
       dataIndex:'releaseNumber',
@@ -215,7 +222,7 @@ const ReleaseList: React.FC = () => {
       key: 'action',
       width: 120,
       fixed: 'right' as const,
-      render: (_: any, record: any) => (
+      render: (_, record) => (
         <Space aria-label="操作按钮">
           <Tooltip title="查看发布详情">
             <Button
@@ -236,7 +243,7 @@ const ReleaseList: React.FC = () => {
         </Space>
       ),
     },
-  ];
+  ], []);
 
   return (
     <div className="p-3 md:p-6">
@@ -258,14 +265,14 @@ const ReleaseList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="总发布数" value={stats.total || 0} prefix={<Rocket />} />
+            <Statistic title="总发布数" value={stats?.total ?? 0} prefix={<Rocket />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
               title="进行中"
-              value={stats.inProgress || 0}
+              value={stats?.inProgress ?? 0}
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
@@ -274,19 +281,19 @@ const ReleaseList: React.FC = () => {
           <Card>
             <Statistic
               title="已完成"
-              value={stats.completed || 0}
+              value={stats?.completed ?? 0}
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="已取消" value={stats.cancelled || 0} />
+            <Statistic title="已取消" value={stats?.cancelled ?? 0} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="失败" value={stats.failed || 0} styles={{ content: { color: '#ff4d4f' } }} />
+            <Statistic title="失败" value={stats?.failed ?? 0} styles={{ content: { color: '#ff4d4f' } }} />
           </Card>
         </Col>
       </Row>

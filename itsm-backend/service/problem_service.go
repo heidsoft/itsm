@@ -70,7 +70,7 @@ func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProbl
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create problem", "error", err, "tenant_id", tenantID)
-		return nil, fmt.Errorf("创建问题失败: %v", err)
+		return nil, fmt.Errorf("创建问题失败: %w", err)
 	}
 
 	s.logger.Infow("Problem created successfully", "id", problem.ID, "tenant_id", tenantID)
@@ -102,7 +102,7 @@ func (s *ProblemService) GetProblem(ctx context.Context, id int, tenantID int) (
 			return nil, fmt.Errorf("问题不存在")
 		}
 		s.logger.Errorw("Failed to get problem", "error", err, "id", id)
-		return nil, fmt.Errorf("获取问题失败: %v", err)
+		return nil, fmt.Errorf("获取问题失败: %w", err)
 	}
 
 	return dto.ToProblemResponse(problem), nil
@@ -138,7 +138,7 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 	// 获取总数
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取问题总数失败: %v", err)
+		return nil, fmt.Errorf("获取问题总数失败: %w", err)
 	}
 
 	// 分页
@@ -160,7 +160,7 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 		Order(ent.Desc(problem.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取问题列表失败: %v", err)
+		return nil, fmt.Errorf("获取问题列表失败: %w", err)
 	}
 
 	// map ent -> dto
@@ -188,7 +188,7 @@ func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.Upd
 			return nil, fmt.Errorf("问题不存在")
 		}
 		s.logger.Errorw("Failed to get problem for update", "error", err, "id", id)
-		return nil, fmt.Errorf("获取问题失败: %v", err)
+		return nil, fmt.Errorf("获取问题失败: %w", err)
 	}
 
 	// 构建更新字段
@@ -235,7 +235,7 @@ func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.Upd
 	updatedProblem, err := update.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update problem", "error", err, "id", id, "tenant_id", tenantID)
-		return nil, fmt.Errorf("更新问题失败: %v", err)
+		return nil, fmt.Errorf("更新问题失败: %w", err)
 	}
 
 	s.logger.Infow("Problem updated successfully", "id", id, "tenant_id", tenantID)
@@ -253,7 +253,7 @@ func (s *ProblemService) DeleteProblem(ctx context.Context, id int, tenantID int
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to delete problem", "error", err, "id", id, "tenant_id", tenantID)
-		return fmt.Errorf("删除问题失败: %v", err)
+		return fmt.Errorf("删除问题失败: %w", err)
 	}
 
 	s.logger.Infow("Problem deleted successfully", "id", id, "tenant_id", tenantID)

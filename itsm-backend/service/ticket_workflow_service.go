@@ -74,9 +74,11 @@ func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.Accep
 	// P1-07 修复：接单同时设置 first_response_at，供 SLA 计时使用
 	now := time.Now()
 	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(tk.Version), ticket.StatusIn("new", "open")).
 		SetAssigneeID(userID).
 		SetStatus("in_progress").
 		SetFirstResponseAt(now).
+		SetVersion(tk.Version + 1).
 		Save(ctx)
 	if err != nil {
 		txErr = fmt.Errorf("failed to accept ticket: %w", err)
@@ -99,6 +101,9 @@ func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.Accep
 	}
 
 	txErr = tx.Commit()
+	if txErr != nil {
+		return fmt.Errorf("提交接单事务失败: %w", txErr)
+	}
 	return txErr
 }
 
@@ -132,7 +137,9 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 	txClient := tx.Client()
 
 	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(tk.Version)).
 		SetStatus(returnToStatus).
+		SetVersion(tk.Version + 1).
 		Save(ctx)
 	if err != nil {
 		txErr = fmt.Errorf("failed to reject ticket: %w", err)
@@ -156,6 +163,9 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 	}
 
 	txErr = tx.Commit()
+	if txErr != nil {
+		return fmt.Errorf("提交驳回事务失败: %w", txErr)
+	}
 	return txErr
 }
 
@@ -1201,7 +1211,7 @@ func (s *TicketWorkflowService) buildCCListResponse(ctx context.Context, records
 
 func (s *TicketWorkflowService) getTicket(ctx context.Context, ticketID, tenantID int) (*ent.Ticket, error) {
 	tk, err := s.client.Ticket.Query().
-		Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).
+		Where(ticket.ID(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {

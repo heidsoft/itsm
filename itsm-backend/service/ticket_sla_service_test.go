@@ -149,6 +149,17 @@ func TestTicketSLAService_GetTicketStats(t *testing.T) {
 			Save(ctx)
 		require.NoError(t, err)
 	}
+	_, err = client.Ticket.Create().
+		SetTitle("已删除工单").
+		SetDescription("不应计入统计").
+		SetPriority("medium").
+		SetStatus("open").
+		SetTicketNumber("TICKET-DELETED").
+		SetRequesterID(testUser.ID).
+		SetTenantID(testTenant.ID).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
 
 	stats, err := slaService.GetTicketStats(ctx, testTenant.ID)
 
@@ -159,6 +170,39 @@ func TestTicketSLAService_GetTicketStats(t *testing.T) {
 	assert.Equal(t, 2, stats.InProgressTickets)
 	assert.Equal(t, 1, stats.ResolvedTickets)
 	assert.Equal(t, 1, stats.ClosedTickets)
+}
+
+func TestTicketSLAService_GetOverdueTicketsUsesPersistedDeadline(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, err := client.Tenant.Create().
+		SetName("SLA Tenant").SetCode("sla").SetDomain("sla.example.com").SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+	requester, err := client.User.Create().
+		SetUsername("sla-user").SetEmail("sla@example.com").SetName("SLA User").
+		SetPasswordHash("hash").SetRole("end_user").SetActive(true).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	overdue, err := client.Ticket.Create().
+		SetTitle("逾期").SetDescription("逾期工单").SetPriority("high").SetStatus("open").
+		SetTicketNumber("SLA-OVERDUE").SetRequesterID(requester.ID).SetTenantID(tenant.ID).
+		SetSLAResolutionDeadline(time.Now().Add(-time.Minute)).Save(ctx)
+	require.NoError(t, err)
+	_, err = client.Ticket.Create().
+		SetTitle("未逾期").SetDescription("未逾期工单").SetPriority("high").SetStatus("open").
+		SetTicketNumber("SLA-ACTIVE").SetRequesterID(requester.ID).SetTenantID(tenant.ID).
+		SetSLAResolutionDeadline(time.Now().Add(time.Hour)).Save(ctx)
+	require.NoError(t, err)
+
+	service := NewTicketSLAService(client, zaptest.NewLogger(t).Sugar())
+	tickets, err := service.GetOverdueTickets(ctx, tenant.ID)
+	require.NoError(t, err)
+	require.Len(t, tickets, 1)
+	assert.Equal(t, overdue.ID, tickets[0].ID)
 }
 
 func TestTicketSLAService_CalculateSLADeadline(t *testing.T) {
