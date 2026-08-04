@@ -75,19 +75,9 @@ func (_c *KnowledgeArticleSessionCreate) SetNillableCreatedAt(v *time.Time) *Kno
 	return _c
 }
 
-// AddArticleIDs adds the "article" edge to the KnowledgeArticle entity by IDs.
-func (_c *KnowledgeArticleSessionCreate) AddArticleIDs(ids ...int) *KnowledgeArticleSessionCreate {
-	_c.mutation.AddArticleIDs(ids...)
-	return _c
-}
-
-// AddArticle adds the "article" edges to the KnowledgeArticle entity.
-func (_c *KnowledgeArticleSessionCreate) AddArticle(v ...*KnowledgeArticle) *KnowledgeArticleSessionCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddArticleIDs(ids...)
+// SetArticle sets the "article" edge to the KnowledgeArticle entity.
+func (_c *KnowledgeArticleSessionCreate) SetArticle(v *KnowledgeArticle) *KnowledgeArticleSessionCreate {
+	return _c.SetArticleID(v.ID)
 }
 
 // AddUserIDs adds the "user" edge to the User entity by IDs.
@@ -198,6 +188,9 @@ func (_c *KnowledgeArticleSessionCreate) check() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "KnowledgeArticleSession.created_at"`)}
 	}
+	if len(_c.mutation.ArticleIDs()) == 0 {
+		return &ValidationError{Name: "article", err: errors.New(`ent: missing required edge "KnowledgeArticleSession.article"`)}
+	}
 	return nil
 }
 
@@ -224,10 +217,6 @@ func (_c *KnowledgeArticleSessionCreate) createSpec() (*KnowledgeArticleSession,
 		_node = &KnowledgeArticleSession{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(knowledgearticlesession.Table, sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt))
 	)
-	if value, ok := _c.mutation.ArticleID(); ok {
-		_spec.SetField(knowledgearticlesession.FieldArticleID, field.TypeInt, value)
-		_node.ArticleID = value
-	}
 	if value, ok := _c.mutation.UserID(); ok {
 		_spec.SetField(knowledgearticlesession.FieldUserID, field.TypeInt, value)
 		_node.UserID = value
@@ -250,7 +239,7 @@ func (_c *KnowledgeArticleSessionCreate) createSpec() (*KnowledgeArticleSession,
 	}
 	if nodes := _c.mutation.ArticleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   knowledgearticlesession.ArticleTable,
 			Columns: []string{knowledgearticlesession.ArticleColumn},
@@ -262,6 +251,7 @@ func (_c *KnowledgeArticleSessionCreate) createSpec() (*KnowledgeArticleSession,
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.ArticleID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {

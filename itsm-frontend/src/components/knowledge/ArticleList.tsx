@@ -4,7 +4,7 @@
  * 知识库文章列表组件
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table,
   Tag,
@@ -19,6 +19,8 @@ import {
   Breadcrumb,
   Empty,
   App,
+  Alert,
+  Skeleton,
 } from 'antd';
 import { Search, Plus, Pencil, Trash2, Eye, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -42,6 +44,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
   const [data, setData] = useState<KnowledgeArticle[]>([]);
   const [total, setTotal] = useState(0);
   const [categories, setCategories] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [form] = Form.useForm();
 
   const [query, setQuery] = useState<ArticleQuery>({
@@ -60,8 +63,9 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
     }
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       let values = {};
       try {
@@ -80,20 +84,28 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
       setData(articles as unknown as KnowledgeArticle[]);
       setTotal(total);
     } catch (error) {
-      message.error('加载文章列表失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      setError(error instanceof Error ? error.message : '未知错误');
+      message.error('加载文章列表失败');
     } finally {
       setLoading(false);
     }
-  };
+  }, [form, query, message]);
 
   useEffect(() => {
     loadCategories();
     loadData();
      
-  }, [query]);
+  }, [loadData]);
 
   const handleSearch = () => {
-    setQuery(prev => ({ ...prev, page: 1 }));
+    if (query.page === 1) loadData();
+    else setQuery(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleReset = () => {
+    form.resetFields();
+    if (query.page === 1) loadData();
+    else setQuery(prev => ({ ...prev, page: 1 }));
   };
 
   const handleDelete = (id: string | number) => {
@@ -200,13 +212,14 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
       )}
 
       <Card className="rounded-lg shadow-sm border border-gray-200">
-        <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">
+        <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4" onFinish={handleSearch}>
           <Form.Item name="search" className="mb-0">
             <Input
               placeholder="搜索标题/内容"
               allowClear
               prefix={<Search className="text-gray-400" />}
               className="w-64"
+              aria-label="搜索知识库文章"
             />
           </Form.Item>
           <Form.Item name="category" className="mb-0">
@@ -229,15 +242,25 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
           </Form.Item>
           <Form.Item className="mb-0">
             <Space>
-              <Button type="primary" onClick={handleSearch}>
+              <Button type="primary" htmlType="submit" loading={loading}>
                 查询
               </Button>
-              <Button onClick={loadData}>重置</Button>
+              <Button onClick={handleReset} disabled={loading}>重置</Button>
             </Space>
           </Form.Item>
         </Form>
 
-        {data.length === 0 && !loading ? (
+        {error ? (
+          <Alert
+            type="error"
+            showIcon
+            message="知识库文章加载失败"
+            description={error}
+            action={<Button size="small" onClick={loadData}>重试</Button>}
+          />
+        ) : loading && data.length === 0 ? (
+          <Skeleton active paragraph={{ rows: 8 }} />
+        ) : data.length === 0 ? (
           <Empty description="暂无知识库文章" image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type="primary" onClick={() => router.push('/knowledge/articles/new')}>
               创建第一篇文章

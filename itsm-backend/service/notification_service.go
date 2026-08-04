@@ -56,6 +56,17 @@ func (s *NotificationService) CreateNotification(ctx context.Context, req *dto.C
 
 // GetNotifications 获取通知列表
 func (s *NotificationService) GetNotifications(ctx context.Context, req *dto.GetNotificationsRequest) (*dto.NotificationListResponse, error) {
+	if req.UserID <= 0 || req.TenantID <= 0 {
+		return nil, fmt.Errorf("用户或租户信息无效")
+	}
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.Size <= 0 {
+		req.Size = 20
+	} else if req.Size > 100 {
+		req.Size = 100
+	}
 	query := s.client.Notification.Query().
 		Where(notification.UserID(req.UserID)).
 		Where(notification.TenantID(req.TenantID))
@@ -100,22 +111,15 @@ func (s *NotificationService) GetNotifications(ctx context.Context, req *dto.Get
 
 // MarkNotificationRead 标记通知为已读
 func (s *NotificationService) MarkNotificationRead(ctx context.Context, req *dto.MarkNotificationReadRequest) error {
-	// 验证通知是否存在且属于该用户
-	_, err := s.client.Notification.Query().
-		Where(notification.ID(req.NotificationID)).
-		Where(notification.UserID(req.UserID)).
-		Where(notification.TenantID(req.TenantID)).
-		Only(ctx)
-	if err != nil {
-		return fmt.Errorf("通知不存在或无权限: %w", err)
-	}
-
-	// 更新为已读
-	_, err = s.client.Notification.UpdateOneID(req.NotificationID).
+	_, err := s.client.Notification.UpdateOneID(req.NotificationID).
+		Where(notification.UserID(req.UserID), notification.TenantID(req.TenantID)).
 		SetRead(true).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("通知不存在或无权限")
+		}
 		return fmt.Errorf("标记已读失败: %w", err)
 	}
 
@@ -140,23 +144,49 @@ func (s *NotificationService) MarkAllNotificationsRead(ctx context.Context, req 
 
 // DeleteNotification 删除通知
 func (s *NotificationService) DeleteNotification(ctx context.Context, req *dto.DeleteNotificationRequest) error {
-	// 验证通知是否存在且属于该用户
-	_, err := s.client.Notification.Query().
-		Where(notification.ID(req.NotificationID)).
-		Where(notification.UserID(req.UserID)).
-		Where(notification.TenantID(req.TenantID)).
-		Only(ctx)
+	err := s.client.Notification.DeleteOneID(req.NotificationID).
+		Where(notification.UserID(req.UserID), notification.TenantID(req.TenantID)).
+		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("通知不存在或无权限: %w", err)
-	}
-
-	// 删除通知
-	err = s.client.Notification.DeleteOneID(req.NotificationID).Exec(ctx)
-	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("通知不存在或无权限")
+		}
 		return fmt.Errorf("删除通知失败: %w", err)
 	}
 
 	return nil
+}
+
+// MarkNotificationsRead 批量标记已读，只影响当前租户的当前用户。
+func (s *NotificationService) MarkNotificationsRead(ctx context.Context, notificationIDs []int, userID, tenantID int) (int, error) {
+	ids := uniquePositiveIDs(notificationIDs)
+	if len(ids) == 0 {
+		return 0, fmt.Errorf("通知ID列表不能为空")
+	}
+	count, err := s.client.Notification.Update().
+		Where(notification.IDIn(ids...), notification.UserID(userID), notification.TenantID(tenantID), notification.Read(false)).
+		SetRead(true).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("批量标记已读失败: %w", err)
+	}
+	return count, nil
+}
+
+// DeleteNotifications 批量删除，只影响当前租户的当前用户。
+func (s *NotificationService) DeleteNotifications(ctx context.Context, notificationIDs []int, userID, tenantID int) (int, error) {
+	ids := uniquePositiveIDs(notificationIDs)
+	if len(ids) == 0 {
+		return 0, fmt.Errorf("通知ID列表不能为空")
+	}
+	count, err := s.client.Notification.Delete().
+		Where(notification.IDIn(ids...), notification.UserID(userID), notification.TenantID(tenantID)).
+		Exec(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("批量删除通知失败: %w", err)
+	}
+	return count, nil
 }
 
 // GetUnreadCount 获取未读通知数量
@@ -175,8 +205,19 @@ func (s *NotificationService) GetUnreadCount(ctx context.Context, userID, tenant
 
 // CreateSystemNotification 创建系统通知
 func (s *NotificationService) CreateSystemNotification(ctx context.Context, title, message, notificationType string, userIDs []int, tenantID int) error {
-	notifications := make([]*ent.NotificationCreate, len(userIDs))
-	for i, userID := range userIDs {
+	ids := uniquePositiveIDs(userIDs)
+	if tenantID <= 0 || len(ids) == 0 {
+		return fmt.Errorf("租户和收件人不能为空")
+	}
+	validCount, err := s.client.User.Query().Where(user.IDIn(ids...), user.TenantID(tenantID), user.Active(true)).Count(ctx)
+	if err != nil {
+		return fmt.Errorf("校验通知收件人失败: %w", err)
+	}
+	if validCount != len(ids) {
+		return fmt.Errorf("部分收件人不存在、不属于当前租户或已停用")
+	}
+	notifications := make([]*ent.NotificationCreate, len(ids))
+	for i, userID := range ids {
 		notifications[i] = s.client.Notification.Create().
 			SetTitle(title).
 			SetMessage(message).
@@ -185,12 +226,28 @@ func (s *NotificationService) CreateSystemNotification(ctx context.Context, titl
 			SetTenantID(tenantID)
 	}
 
-	_, err := s.client.Notification.CreateBulk(notifications...).Save(ctx)
+	_, err = s.client.Notification.CreateBulk(notifications...).Save(ctx)
 	if err != nil {
 		return fmt.Errorf("创建系统通知失败: %w", err)
 	}
 
 	return nil
+}
+
+func uniquePositiveIDs(ids []int) []int {
+	seen := make(map[int]struct{}, len(ids))
+	result := make([]int, 0, len(ids))
+	for _, id := range ids {
+		if id <= 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		result = append(result, id)
+	}
+	return result
 }
 
 // convertToDTO 转换为DTO
@@ -224,7 +281,11 @@ func (s *NotificationService) GetCurrentUserID(c *gin.Context) (int, error) {
 	if !exists {
 		return 0, fmt.Errorf("用户ID不存在")
 	}
-	return userID.(int), nil
+	id, ok := userID.(int)
+	if !ok || id <= 0 {
+		return 0, fmt.Errorf("用户ID无效")
+	}
+	return id, nil
 }
 
 // GetCurrentTenantID 从上下文获取当前租户ID
@@ -233,5 +294,9 @@ func (s *NotificationService) GetCurrentTenantID(c *gin.Context) (int, error) {
 	if !exists {
 		return 0, fmt.Errorf("租户ID不存在")
 	}
-	return tenantID.(int), nil
+	id, ok := tenantID.(int)
+	if !ok || id <= 0 {
+		return 0, fmt.Errorf("租户ID无效")
+	}
+	return id, nil
 }

@@ -33,6 +33,10 @@ func NewDashboardController(dashboardService *service.DashboardService, logger *
 // @RouterIgnore /api/dashboard [get]
 func (dc *DashboardController) GetDashboardData(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
+	if tenantID <= 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		return
+	}
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get dashboard data", "error", err)
@@ -54,6 +58,10 @@ func (dc *DashboardController) GetDashboardData(c *gin.Context) {
 // @RouterIgnore /api/dashboard/kpis [get]
 func (dc *DashboardController) GetKPIMetrics(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
+	if tenantID <= 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		return
+	}
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get KPI metrics", "error", err)
@@ -75,6 +83,10 @@ func (dc *DashboardController) GetKPIMetrics(c *gin.Context) {
 // @RouterIgnore /api/dashboard/resources/distribution [get]
 func (dc *DashboardController) GetResourceDistribution(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
+	if tenantID <= 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		return
+	}
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get resource distribution", "error", err)
@@ -96,6 +108,10 @@ func (dc *DashboardController) GetResourceDistribution(c *gin.Context) {
 // @RouterIgnore /api/dashboard/resources/health [get]
 func (dc *DashboardController) GetResourceHealth(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
+	if tenantID <= 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		return
+	}
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get resource health", "error", err)

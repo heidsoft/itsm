@@ -28,7 +28,7 @@ type Webhook struct {
 }
 
 func init() {
-	connector.MustRegister(func() connector.Connector { return &Webhook{client: http.DefaultClient} })
+	connector.MustRegister(func() connector.Connector { return New() })
 }
 
 func New() *Webhook { return &Webhook{client: &http.Client{Timeout: 10 * time.Second}} }

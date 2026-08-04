@@ -41,6 +41,7 @@ import {
   Select,
   Input,
   Tabs,
+  Skeleton,
 } from 'antd';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
@@ -344,14 +345,44 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     }
   };
 
+  // 工单操作快捷键：Alt+R 刷新，Alt+E 编辑，Esc 关闭当前弹窗。
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+      if (event.key === 'Escape') {
+        setAssignModalVisible(false);
+        setEditModalVisible(false);
+        setCCModalVisible(false);
+        setDeleteModalVisible(false);
+        return;
+      }
+      if (!event.altKey) return;
+      if (event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        fetchTicket();
+      } else if (event.key.toLowerCase() === 'e' && ticket && !isTicketFinal) {
+        event.preventDefault();
+        editForm.setFieldsValue({
+          title: ticket.title,
+          description: ticket.description,
+          priority: ticket.priority,
+          status: ticket.status,
+        });
+        setEditModalVisible(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [editForm, fetchTicket, isTicketFinal, ticket]);
+
   if (loading) {
     return (
       <div className="p-6">
         <Card>
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <Text className="mt-4 block">加载中...</Text>
-          </div>
+          <Skeleton active title={{ width: '45%' }} paragraph={{ rows: 10 }} />
         </Card>
       </div>
     );
@@ -400,24 +431,24 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Page header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+          <div className="flex min-w-0 items-start sm:items-center space-x-2 sm:space-x-4">
             <Link href="/tickets">
               <Button icon={<ArrowLeft />} type="text">
                 返回列表
               </Button>
             </Link>
-            <div>
+            <div className="min-w-0">
               <Title level={2} className="!mb-1 !text-gray-900">
                 工单详情 #{ticket.id}
               </Title>
-              <Text type="secondary">{ticket.title}</Text>
+              <Text type="secondary" className="block truncate">{ticket.title}</Text>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge
               status={statusMap[ticket.status]?.status || 'default'}
               text={statusMap[ticket.status]?.text || ticket.status}

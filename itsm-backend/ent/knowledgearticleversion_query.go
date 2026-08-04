@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticleversion"
@@ -75,7 +74,7 @@ func (_q *KnowledgeArticleVersionQuery) QueryArticle() *KnowledgeArticleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(knowledgearticleversion.Table, knowledgearticleversion.FieldID, selector),
 			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, knowledgearticleversion.ArticleTable, knowledgearticleversion.ArticleColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, knowledgearticleversion.ArticleTable, knowledgearticleversion.ArticleColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -394,9 +393,8 @@ func (_q *KnowledgeArticleVersionQuery) sqlAll(ctx context.Context, hooks ...que
 		return nodes, nil
 	}
 	if query := _q.withArticle; query != nil {
-		if err := _q.loadArticle(ctx, query, nodes,
-			func(n *KnowledgeArticleVersion) { n.Edges.Article = []*KnowledgeArticle{} },
-			func(n *KnowledgeArticleVersion, e *KnowledgeArticle) { n.Edges.Article = append(n.Edges.Article, e) }); err != nil {
+		if err := _q.loadArticle(ctx, query, nodes, nil,
+			func(n *KnowledgeArticleVersion, e *KnowledgeArticle) { n.Edges.Article = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -404,33 +402,31 @@ func (_q *KnowledgeArticleVersionQuery) sqlAll(ctx context.Context, hooks ...que
 }
 
 func (_q *KnowledgeArticleVersionQuery) loadArticle(ctx context.Context, query *KnowledgeArticleQuery, nodes []*KnowledgeArticleVersion, init func(*KnowledgeArticleVersion), assign func(*KnowledgeArticleVersion, *KnowledgeArticle)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*KnowledgeArticleVersion)
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*KnowledgeArticleVersion)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		fk := nodes[i].ArticleID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
 		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.withFKs = true
-	query.Where(predicate.KnowledgeArticle(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(knowledgearticleversion.ArticleColumn), fks...))
-	}))
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(knowledgearticle.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.knowledge_article_versions
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "knowledge_article_versions" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "knowledge_article_versions" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "article_id" returned %v`, n.ID)
 		}
-		assign(node, n)
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }
@@ -459,6 +455,9 @@ func (_q *KnowledgeArticleVersionQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != knowledgearticleversion.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if _q.withArticle != nil {
+			_spec.Node.AddColumnOnce(knowledgearticleversion.FieldArticleID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

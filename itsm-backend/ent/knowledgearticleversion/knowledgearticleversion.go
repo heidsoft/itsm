@@ -37,12 +37,12 @@ const (
 	// Table holds the table name of the knowledgearticleversion in the database.
 	Table = "knowledge_article_versions"
 	// ArticleTable is the table that holds the article relation/edge.
-	ArticleTable = "knowledge_articles"
+	ArticleTable = "knowledge_article_versions"
 	// ArticleInverseTable is the table name for the KnowledgeArticle entity.
 	// It exists in this package in order to avoid circular dependency with the "knowledgearticle" package.
 	ArticleInverseTable = "knowledge_articles"
 	// ArticleColumn is the table column denoting the article relation/edge.
-	ArticleColumn = "knowledge_article_versions"
+	ArticleColumn = "article_id"
 )
 
 // Columns holds all SQL columns for knowledgearticleversion fields.
@@ -135,23 +135,16 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByArticleCount orders the results by article count.
-func ByArticleCount(opts ...sql.OrderTermOption) OrderOption {
+// ByArticleField orders the results by article field.
+func ByArticleField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newArticleStep(), opts...)
-	}
-}
-
-// ByArticle orders the results by article terms.
-func ByArticle(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newArticleStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newArticleStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newArticleStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ArticleInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, true, ArticleTable, ArticleColumn),
+		sqlgraph.Edge(sqlgraph.M2O, true, ArticleTable, ArticleColumn),
 	)
 }

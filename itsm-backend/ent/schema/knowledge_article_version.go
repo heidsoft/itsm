@@ -31,7 +31,10 @@ func (KnowledgeArticleVersion) Fields() []ent.Field {
 func (KnowledgeArticleVersion) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("article", KnowledgeArticle.Type).
-			Ref("versions"),
+			Ref("versions").
+			Field("article_id").
+			Required().
+			Unique(),
 	}
 }
 

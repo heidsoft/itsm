@@ -115,19 +115,9 @@ func (_c *KnowledgeArticleVersionCreate) SetNillableCreatedAt(v *time.Time) *Kno
 	return _c
 }
 
-// AddArticleIDs adds the "article" edge to the KnowledgeArticle entity by IDs.
-func (_c *KnowledgeArticleVersionCreate) AddArticleIDs(ids ...int) *KnowledgeArticleVersionCreate {
-	_c.mutation.AddArticleIDs(ids...)
-	return _c
-}
-
-// AddArticle adds the "article" edges to the KnowledgeArticle entity.
-func (_c *KnowledgeArticleVersionCreate) AddArticle(v ...*KnowledgeArticle) *KnowledgeArticleVersionCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddArticleIDs(ids...)
+// SetArticle sets the "article" edge to the KnowledgeArticle entity.
+func (_c *KnowledgeArticleVersionCreate) SetArticle(v *KnowledgeArticle) *KnowledgeArticleVersionCreate {
+	return _c.SetArticleID(v.ID)
 }
 
 // Mutation returns the KnowledgeArticleVersionMutation object of the builder.
@@ -208,6 +198,9 @@ func (_c *KnowledgeArticleVersionCreate) check() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "KnowledgeArticleVersion.created_at"`)}
 	}
+	if len(_c.mutation.ArticleIDs()) == 0 {
+		return &ValidationError{Name: "article", err: errors.New(`ent: missing required edge "KnowledgeArticleVersion.article"`)}
+	}
 	return nil
 }
 
@@ -234,10 +227,6 @@ func (_c *KnowledgeArticleVersionCreate) createSpec() (*KnowledgeArticleVersion,
 		_node = &KnowledgeArticleVersion{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(knowledgearticleversion.Table, sqlgraph.NewFieldSpec(knowledgearticleversion.FieldID, field.TypeInt))
 	)
-	if value, ok := _c.mutation.ArticleID(); ok {
-		_spec.SetField(knowledgearticleversion.FieldArticleID, field.TypeInt, value)
-		_node.ArticleID = value
-	}
 	if value, ok := _c.mutation.Version(); ok {
 		_spec.SetField(knowledgearticleversion.FieldVersion, field.TypeInt, value)
 		_node.Version = value
@@ -272,7 +261,7 @@ func (_c *KnowledgeArticleVersionCreate) createSpec() (*KnowledgeArticleVersion,
 	}
 	if nodes := _c.mutation.ArticleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   knowledgearticleversion.ArticleTable,
 			Columns: []string{knowledgearticleversion.ArticleColumn},
@@ -284,6 +273,7 @@ func (_c *KnowledgeArticleVersionCreate) createSpec() (*KnowledgeArticleVersion,
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.ArticleID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

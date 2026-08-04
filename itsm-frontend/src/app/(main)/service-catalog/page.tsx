@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Empty, Form, App, Tabs, Card, Typography, Button } from 'antd';
-import { PlusCircle, Cloud, UserCog, ShieldCheck, Server, Database, Lock } from 'lucide-react';
+import { Row, Col, Empty, Form, App, Tabs, Card, Typography, Button, Tag } from 'antd';
+import { Cloud, UserCog, ShieldCheck, Server, Database, Lock, Flame } from 'lucide-react';
 import { useServiceCatalogData } from './hooks/useServiceCatalogData';
 import { ServiceCatalogStats } from './components/ServiceCatalogStats';
 import { ServiceCatalogFilters } from './components/ServiceCatalogFilters';
@@ -88,6 +88,14 @@ export default function ServiceCatalogPage() {
     );
   }, [catalogs, activeCategory]);
 
+  const popularCatalogs = React.useMemo(
+    () => [...catalogs]
+      .filter(catalog => catalog.status === 'published')
+      .sort((a, b) => (b.requestCount ?? 0) - (a.requestCount ?? 0))
+      .slice(0, 3),
+    [catalogs]
+  );
+
   // 加载选项数据
   useEffect(() => {
     const loadOptions = async () => {
@@ -170,8 +178,39 @@ export default function ServiceCatalogPage() {
       {/* 统计卡片 */}
       <ServiceCatalogStats stats={stats} />
 
+      {popularCatalogs.length > 0 && (
+        <Card
+          className="mb-6"
+          title={<span className="flex items-center gap-2"><Flame size={18} className="text-orange-500" />热门服务</span>}
+          extra={<Text type="secondary">按申请热度推荐</Text>}
+        >
+          <Row gutter={[16, 16]}>
+            {popularCatalogs.map((catalog, index) => (
+              <Col key={catalog.id} xs={24} md={8}>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white p-4 text-left transition-colors hover:border-blue-400 hover:bg-blue-50"
+                  onClick={() => window.location.assign(`/service-catalog/request/${catalog.id}`)}
+                >
+                  <span><span className="block font-medium">{catalog.name}</span><span className="text-xs text-gray-500">{catalog.category}</span></span>
+                  <Tag color={index === 0 ? 'volcano' : 'blue'}>{catalog.requestCount ?? 0} 次申请</Tag>
+                </button>
+              </Col>
+            ))}
+          </Row>
+        </Card>
+      )}
+
       {/* 分类标签页 */}
       <Card className="mb-6">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Text strong>快速选择：</Text>
+          {categoryConfig.slice(1).map(category => (
+            <Button key={category.key} size="small" type={activeCategory === category.key ? 'primary' : 'default'} onClick={() => handleCategoryChange(category.key)}>
+              {category.label}
+            </Button>
+          ))}
+        </div>
         <Tabs
           activeKey={activeCategory}
           onChange={handleCategoryChange}

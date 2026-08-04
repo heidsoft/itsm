@@ -33,7 +33,6 @@ func (_u *KnowledgeArticleSessionUpdate) Where(ps ...predicate.KnowledgeArticleS
 
 // SetArticleID sets the "article_id" field.
 func (_u *KnowledgeArticleSessionUpdate) SetArticleID(v int) *KnowledgeArticleSessionUpdate {
-	_u.mutation.ResetArticleID()
 	_u.mutation.SetArticleID(v)
 	return _u
 }
@@ -43,12 +42,6 @@ func (_u *KnowledgeArticleSessionUpdate) SetNillableArticleID(v *int) *Knowledge
 	if v != nil {
 		_u.SetArticleID(*v)
 	}
-	return _u
-}
-
-// AddArticleID adds value to the "article_id" field.
-func (_u *KnowledgeArticleSessionUpdate) AddArticleID(v int) *KnowledgeArticleSessionUpdate {
-	_u.mutation.AddArticleID(v)
 	return _u
 }
 
@@ -135,19 +128,9 @@ func (_u *KnowledgeArticleSessionUpdate) SetNillableCreatedAt(v *time.Time) *Kno
 	return _u
 }
 
-// AddArticleIDs adds the "article" edge to the KnowledgeArticle entity by IDs.
-func (_u *KnowledgeArticleSessionUpdate) AddArticleIDs(ids ...int) *KnowledgeArticleSessionUpdate {
-	_u.mutation.AddArticleIDs(ids...)
-	return _u
-}
-
-// AddArticle adds the "article" edges to the KnowledgeArticle entity.
-func (_u *KnowledgeArticleSessionUpdate) AddArticle(v ...*KnowledgeArticle) *KnowledgeArticleSessionUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddArticleIDs(ids...)
+// SetArticle sets the "article" edge to the KnowledgeArticle entity.
+func (_u *KnowledgeArticleSessionUpdate) SetArticle(v *KnowledgeArticle) *KnowledgeArticleSessionUpdate {
+	return _u.SetArticleID(v.ID)
 }
 
 // AddUserIDs adds the "user" edge to the User entity by IDs.
@@ -185,25 +168,10 @@ func (_u *KnowledgeArticleSessionUpdate) Mutation() *KnowledgeArticleSessionMuta
 	return _u.mutation
 }
 
-// ClearArticle clears all "article" edges to the KnowledgeArticle entity.
+// ClearArticle clears the "article" edge to the KnowledgeArticle entity.
 func (_u *KnowledgeArticleSessionUpdate) ClearArticle() *KnowledgeArticleSessionUpdate {
 	_u.mutation.ClearArticle()
 	return _u
-}
-
-// RemoveArticleIDs removes the "article" edge to KnowledgeArticle entities by IDs.
-func (_u *KnowledgeArticleSessionUpdate) RemoveArticleIDs(ids ...int) *KnowledgeArticleSessionUpdate {
-	_u.mutation.RemoveArticleIDs(ids...)
-	return _u
-}
-
-// RemoveArticle removes "article" edges to KnowledgeArticle entities.
-func (_u *KnowledgeArticleSessionUpdate) RemoveArticle(v ...*KnowledgeArticle) *KnowledgeArticleSessionUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemoveArticleIDs(ids...)
 }
 
 // ClearUser clears all "user" edges to the User entity.
@@ -297,6 +265,9 @@ func (_u *KnowledgeArticleSessionUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticleSession.status": %w`, err)}
 		}
 	}
+	if _u.mutation.ArticleCleared() && len(_u.mutation.ArticleIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "KnowledgeArticleSession.article"`)
+	}
 	return nil
 }
 
@@ -311,12 +282,6 @@ func (_u *KnowledgeArticleSessionUpdate) sqlSave(ctx context.Context) (_node int
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := _u.mutation.ArticleID(); ok {
-		_spec.SetField(knowledgearticlesession.FieldArticleID, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedArticleID(); ok {
-		_spec.AddField(knowledgearticlesession.FieldArticleID, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(knowledgearticlesession.FieldUserID, field.TypeInt, value)
@@ -341,7 +306,7 @@ func (_u *KnowledgeArticleSessionUpdate) sqlSave(ctx context.Context) (_node int
 	}
 	if _u.mutation.ArticleCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   knowledgearticlesession.ArticleTable,
 			Columns: []string{knowledgearticlesession.ArticleColumn},
@@ -349,28 +314,12 @@ func (_u *KnowledgeArticleSessionUpdate) sqlSave(ctx context.Context) (_node int
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(knowledgearticle.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedArticleIDs(); len(nodes) > 0 && !_u.mutation.ArticleCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   knowledgearticlesession.ArticleTable,
-			Columns: []string{knowledgearticlesession.ArticleColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(knowledgearticle.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.ArticleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   knowledgearticlesession.ArticleTable,
 			Columns: []string{knowledgearticlesession.ArticleColumn},
@@ -496,7 +445,6 @@ type KnowledgeArticleSessionUpdateOne struct {
 
 // SetArticleID sets the "article_id" field.
 func (_u *KnowledgeArticleSessionUpdateOne) SetArticleID(v int) *KnowledgeArticleSessionUpdateOne {
-	_u.mutation.ResetArticleID()
 	_u.mutation.SetArticleID(v)
 	return _u
 }
@@ -506,12 +454,6 @@ func (_u *KnowledgeArticleSessionUpdateOne) SetNillableArticleID(v *int) *Knowle
 	if v != nil {
 		_u.SetArticleID(*v)
 	}
-	return _u
-}
-
-// AddArticleID adds value to the "article_id" field.
-func (_u *KnowledgeArticleSessionUpdateOne) AddArticleID(v int) *KnowledgeArticleSessionUpdateOne {
-	_u.mutation.AddArticleID(v)
 	return _u
 }
 
@@ -598,19 +540,9 @@ func (_u *KnowledgeArticleSessionUpdateOne) SetNillableCreatedAt(v *time.Time) *
 	return _u
 }
 
-// AddArticleIDs adds the "article" edge to the KnowledgeArticle entity by IDs.
-func (_u *KnowledgeArticleSessionUpdateOne) AddArticleIDs(ids ...int) *KnowledgeArticleSessionUpdateOne {
-	_u.mutation.AddArticleIDs(ids...)
-	return _u
-}
-
-// AddArticle adds the "article" edges to the KnowledgeArticle entity.
-func (_u *KnowledgeArticleSessionUpdateOne) AddArticle(v ...*KnowledgeArticle) *KnowledgeArticleSessionUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddArticleIDs(ids...)
+// SetArticle sets the "article" edge to the KnowledgeArticle entity.
+func (_u *KnowledgeArticleSessionUpdateOne) SetArticle(v *KnowledgeArticle) *KnowledgeArticleSessionUpdateOne {
+	return _u.SetArticleID(v.ID)
 }
 
 // AddUserIDs adds the "user" edge to the User entity by IDs.
@@ -648,25 +580,10 @@ func (_u *KnowledgeArticleSessionUpdateOne) Mutation() *KnowledgeArticleSessionM
 	return _u.mutation
 }
 
-// ClearArticle clears all "article" edges to the KnowledgeArticle entity.
+// ClearArticle clears the "article" edge to the KnowledgeArticle entity.
 func (_u *KnowledgeArticleSessionUpdateOne) ClearArticle() *KnowledgeArticleSessionUpdateOne {
 	_u.mutation.ClearArticle()
 	return _u
-}
-
-// RemoveArticleIDs removes the "article" edge to KnowledgeArticle entities by IDs.
-func (_u *KnowledgeArticleSessionUpdateOne) RemoveArticleIDs(ids ...int) *KnowledgeArticleSessionUpdateOne {
-	_u.mutation.RemoveArticleIDs(ids...)
-	return _u
-}
-
-// RemoveArticle removes "article" edges to KnowledgeArticle entities.
-func (_u *KnowledgeArticleSessionUpdateOne) RemoveArticle(v ...*KnowledgeArticle) *KnowledgeArticleSessionUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemoveArticleIDs(ids...)
 }
 
 // ClearUser clears all "user" edges to the User entity.
@@ -773,6 +690,9 @@ func (_u *KnowledgeArticleSessionUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticleSession.status": %w`, err)}
 		}
 	}
+	if _u.mutation.ArticleCleared() && len(_u.mutation.ArticleIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "KnowledgeArticleSession.article"`)
+	}
 	return nil
 }
 
@@ -805,12 +725,6 @@ func (_u *KnowledgeArticleSessionUpdateOne) sqlSave(ctx context.Context) (_node 
 			}
 		}
 	}
-	if value, ok := _u.mutation.ArticleID(); ok {
-		_spec.SetField(knowledgearticlesession.FieldArticleID, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedArticleID(); ok {
-		_spec.AddField(knowledgearticlesession.FieldArticleID, field.TypeInt, value)
-	}
 	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(knowledgearticlesession.FieldUserID, field.TypeInt, value)
 	}
@@ -834,7 +748,7 @@ func (_u *KnowledgeArticleSessionUpdateOne) sqlSave(ctx context.Context) (_node 
 	}
 	if _u.mutation.ArticleCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   knowledgearticlesession.ArticleTable,
 			Columns: []string{knowledgearticlesession.ArticleColumn},
@@ -842,28 +756,12 @@ func (_u *KnowledgeArticleSessionUpdateOne) sqlSave(ctx context.Context) (_node 
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(knowledgearticle.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedArticleIDs(); len(nodes) > 0 && !_u.mutation.ArticleCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   knowledgearticlesession.ArticleTable,
-			Columns: []string{knowledgearticlesession.ArticleColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(knowledgearticle.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.ArticleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   knowledgearticlesession.ArticleTable,
 			Columns: []string{knowledgearticlesession.ArticleColumn},

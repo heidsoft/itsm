@@ -422,6 +422,7 @@ func (uc *UserController) BatchUpdateUsers(c *gin.Context) {
 		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
+	req.OperatorID = c.GetInt("user_id")
 
 	err := uc.userService.BatchUpdateUsers(c.Request.Context(), &req, tenantID)
 	if err != nil {

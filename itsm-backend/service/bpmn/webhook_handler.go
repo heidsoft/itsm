@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -26,7 +27,7 @@ func NewWebhookHandler(client *ent.Client, logger *zap.SugaredLogger) *WebhookHa
 	return &WebhookHandler{
 		client:     client,
 		logger:     logger,
-		httpClient: &http.Client{},
+		httpClient: &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
@@ -111,8 +112,12 @@ func (h *WebhookHandler) callWebhook(ctx context.Context, variables map[string]i
 	if timeout > 0 {
 		timeoutValue = timeout
 	}
-
-	_ = timeoutValue // 保留用于后续使用（设置 httpClient 的超时）
+	if timeoutValue > 120 {
+		timeoutValue = 120
+	}
+	requestCtx, cancel := context.WithTimeout(req.Context(), time.Duration(timeoutValue)*time.Second)
+	defer cancel()
+	req = req.WithContext(requestCtx)
 
 	// 发送请求
 	resp, err := h.httpClient.Do(req)

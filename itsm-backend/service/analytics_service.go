@@ -31,6 +31,9 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 	s.logger.Infow("Getting deep analytics", "tenant_id", tenantID, "dimensions", req.Dimensions)
 
 	// 解析时间范围
+	if len(req.TimeRange) != 2 {
+		return nil, fmt.Errorf("timeRange must contain exactly two dates")
+	}
 	startTime, err := time.Parse("2006-01-02", req.TimeRange[0])
 	if err != nil {
 		return nil, fmt.Errorf("invalid start time format: %w", err)
@@ -57,7 +60,12 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 		if priority, ok := req.Filters["priority"].(string); ok && priority != "" {
 			query = query.Where(ticket.PriorityEQ(priority))
 		}
-		if assigneeID, ok := req.Filters["assignee_id"].(float64); ok {
+		assigneeValue, ok := req.Filters["assigneeId"]
+		if !ok {
+			// 兼容历史调用方；新 API 契约统一使用 camelCase。
+			assigneeValue = req.Filters["assignee_id"]
+		}
+		if assigneeID, ok := assigneeValue.(float64); ok {
 			query = query.Where(ticket.AssigneeIDEQ(int(assigneeID)))
 		}
 	}

@@ -100,26 +100,6 @@ func ArticleIDNotIn(vs ...int) predicate.KnowledgeArticleSession {
 	return predicate.KnowledgeArticleSession(sql.FieldNotIn(FieldArticleID, vs...))
 }
 
-// ArticleIDGT applies the GT predicate on the "article_id" field.
-func ArticleIDGT(v int) predicate.KnowledgeArticleSession {
-	return predicate.KnowledgeArticleSession(sql.FieldGT(FieldArticleID, v))
-}
-
-// ArticleIDGTE applies the GTE predicate on the "article_id" field.
-func ArticleIDGTE(v int) predicate.KnowledgeArticleSession {
-	return predicate.KnowledgeArticleSession(sql.FieldGTE(FieldArticleID, v))
-}
-
-// ArticleIDLT applies the LT predicate on the "article_id" field.
-func ArticleIDLT(v int) predicate.KnowledgeArticleSession {
-	return predicate.KnowledgeArticleSession(sql.FieldLT(FieldArticleID, v))
-}
-
-// ArticleIDLTE applies the LTE predicate on the "article_id" field.
-func ArticleIDLTE(v int) predicate.KnowledgeArticleSession {
-	return predicate.KnowledgeArticleSession(sql.FieldLTE(FieldArticleID, v))
-}
-
 // UserIDEQ applies the EQ predicate on the "user_id" field.
 func UserIDEQ(v int) predicate.KnowledgeArticleSession {
 	return predicate.KnowledgeArticleSession(sql.FieldEQ(FieldUserID, v))
@@ -340,7 +320,7 @@ func HasArticle() predicate.KnowledgeArticleSession {
 	return predicate.KnowledgeArticleSession(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, ArticleTable, ArticleColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, ArticleTable, ArticleColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

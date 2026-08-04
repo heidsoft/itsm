@@ -57124,9 +57124,11 @@ type KnowledgeArticleMutation struct {
 	user_likes        map[int]struct{}
 	removeduser_likes map[int]struct{}
 	cleareduser_likes bool
-	versions          *int
+	versions          map[int]struct{}
+	removedversions   map[int]struct{}
 	clearedversions   bool
-	sessions          *int
+	sessions          map[int]struct{}
+	removedsessions   map[int]struct{}
 	clearedsessions   bool
 	done              bool
 	oldValue          func(context.Context) (*KnowledgeArticle, error)
@@ -57800,9 +57802,14 @@ func (m *KnowledgeArticleMutation) ResetUserLikes() {
 	m.removeduser_likes = nil
 }
 
-// SetVersionsID sets the "versions" edge to the KnowledgeArticleVersion entity by id.
-func (m *KnowledgeArticleMutation) SetVersionsID(id int) {
-	m.versions = &id
+// AddVersionIDs adds the "versions" edge to the KnowledgeArticleVersion entity by ids.
+func (m *KnowledgeArticleMutation) AddVersionIDs(ids ...int) {
+	if m.versions == nil {
+		m.versions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.versions[ids[i]] = struct{}{}
+	}
 }
 
 // ClearVersions clears the "versions" edge to the KnowledgeArticleVersion entity.
@@ -57815,20 +57822,29 @@ func (m *KnowledgeArticleMutation) VersionsCleared() bool {
 	return m.clearedversions
 }
 
-// VersionsID returns the "versions" edge ID in the mutation.
-func (m *KnowledgeArticleMutation) VersionsID() (id int, exists bool) {
-	if m.versions != nil {
-		return *m.versions, true
+// RemoveVersionIDs removes the "versions" edge to the KnowledgeArticleVersion entity by IDs.
+func (m *KnowledgeArticleMutation) RemoveVersionIDs(ids ...int) {
+	if m.removedversions == nil {
+		m.removedversions = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.versions, ids[i])
+		m.removedversions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedVersions returns the removed IDs of the "versions" edge to the KnowledgeArticleVersion entity.
+func (m *KnowledgeArticleMutation) RemovedVersionsIDs() (ids []int) {
+	for id := range m.removedversions {
+		ids = append(ids, id)
 	}
 	return
 }
 
 // VersionsIDs returns the "versions" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// VersionsID instead. It exists only for internal usage by the builders.
 func (m *KnowledgeArticleMutation) VersionsIDs() (ids []int) {
-	if id := m.versions; id != nil {
-		ids = append(ids, *id)
+	for id := range m.versions {
+		ids = append(ids, id)
 	}
 	return
 }
@@ -57837,11 +57853,17 @@ func (m *KnowledgeArticleMutation) VersionsIDs() (ids []int) {
 func (m *KnowledgeArticleMutation) ResetVersions() {
 	m.versions = nil
 	m.clearedversions = false
+	m.removedversions = nil
 }
 
-// SetSessionsID sets the "sessions" edge to the KnowledgeArticleSession entity by id.
-func (m *KnowledgeArticleMutation) SetSessionsID(id int) {
-	m.sessions = &id
+// AddSessionIDs adds the "sessions" edge to the KnowledgeArticleSession entity by ids.
+func (m *KnowledgeArticleMutation) AddSessionIDs(ids ...int) {
+	if m.sessions == nil {
+		m.sessions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.sessions[ids[i]] = struct{}{}
+	}
 }
 
 // ClearSessions clears the "sessions" edge to the KnowledgeArticleSession entity.
@@ -57854,20 +57876,29 @@ func (m *KnowledgeArticleMutation) SessionsCleared() bool {
 	return m.clearedsessions
 }
 
-// SessionsID returns the "sessions" edge ID in the mutation.
-func (m *KnowledgeArticleMutation) SessionsID() (id int, exists bool) {
-	if m.sessions != nil {
-		return *m.sessions, true
+// RemoveSessionIDs removes the "sessions" edge to the KnowledgeArticleSession entity by IDs.
+func (m *KnowledgeArticleMutation) RemoveSessionIDs(ids ...int) {
+	if m.removedsessions == nil {
+		m.removedsessions = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.sessions, ids[i])
+		m.removedsessions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedSessions returns the removed IDs of the "sessions" edge to the KnowledgeArticleSession entity.
+func (m *KnowledgeArticleMutation) RemovedSessionsIDs() (ids []int) {
+	for id := range m.removedsessions {
+		ids = append(ids, id)
 	}
 	return
 }
 
 // SessionsIDs returns the "sessions" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// SessionsID instead. It exists only for internal usage by the builders.
 func (m *KnowledgeArticleMutation) SessionsIDs() (ids []int) {
-	if id := m.sessions; id != nil {
-		ids = append(ids, *id)
+	for id := range m.sessions {
+		ids = append(ids, id)
 	}
 	return
 }
@@ -57876,6 +57907,7 @@ func (m *KnowledgeArticleMutation) SessionsIDs() (ids []int) {
 func (m *KnowledgeArticleMutation) ResetSessions() {
 	m.sessions = nil
 	m.clearedsessions = false
+	m.removedsessions = nil
 }
 
 // Where appends a list predicates to the KnowledgeArticleMutation builder.
@@ -58277,13 +58309,17 @@ func (m *KnowledgeArticleMutation) AddedIDs(name string) []ent.Value {
 		}
 		return ids
 	case knowledgearticle.EdgeVersions:
-		if id := m.versions; id != nil {
-			return []ent.Value{*id}
+		ids := make([]ent.Value, 0, len(m.versions))
+		for id := range m.versions {
+			ids = append(ids, id)
 		}
+		return ids
 	case knowledgearticle.EdgeSessions:
-		if id := m.sessions; id != nil {
-			return []ent.Value{*id}
+		ids := make([]ent.Value, 0, len(m.sessions))
+		for id := range m.sessions {
+			ids = append(ids, id)
 		}
+		return ids
 	}
 	return nil
 }
@@ -58293,6 +58329,12 @@ func (m *KnowledgeArticleMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
 	if m.removeduser_likes != nil {
 		edges = append(edges, knowledgearticle.EdgeUserLikes)
+	}
+	if m.removedversions != nil {
+		edges = append(edges, knowledgearticle.EdgeVersions)
+	}
+	if m.removedsessions != nil {
+		edges = append(edges, knowledgearticle.EdgeSessions)
 	}
 	return edges
 }
@@ -58304,6 +58346,18 @@ func (m *KnowledgeArticleMutation) RemovedIDs(name string) []ent.Value {
 	case knowledgearticle.EdgeUserLikes:
 		ids := make([]ent.Value, 0, len(m.removeduser_likes))
 		for id := range m.removeduser_likes {
+			ids = append(ids, id)
+		}
+		return ids
+	case knowledgearticle.EdgeVersions:
+		ids := make([]ent.Value, 0, len(m.removedversions))
+		for id := range m.removedversions {
+			ids = append(ids, id)
+		}
+		return ids
+	case knowledgearticle.EdgeSessions:
+		ids := make([]ent.Value, 0, len(m.removedsessions))
+		for id := range m.removedsessions {
 			ids = append(ids, id)
 		}
 		return ids
@@ -58344,12 +58398,6 @@ func (m *KnowledgeArticleMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *KnowledgeArticleMutation) ClearEdge(name string) error {
 	switch name {
-	case knowledgearticle.EdgeVersions:
-		m.ClearVersions()
-		return nil
-	case knowledgearticle.EdgeSessions:
-		m.ClearSessions()
-		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticle unique edge %s", name)
 }
@@ -59884,8 +59932,6 @@ type KnowledgeArticleSessionMutation struct {
 	op                  Op
 	typ                 string
 	id                  *int
-	article_id          *int
-	addarticle_id       *int
 	user_id             *int
 	adduser_id          *int
 	session_token       *string
@@ -59893,8 +59939,7 @@ type KnowledgeArticleSessionMutation struct {
 	last_heartbeat      *time.Time
 	created_at          *time.Time
 	clearedFields       map[string]struct{}
-	article             map[int]struct{}
-	removedarticle      map[int]struct{}
+	article             *int
 	clearedarticle      bool
 	user                map[int]struct{}
 	removeduser         map[int]struct{}
@@ -60007,13 +60052,12 @@ func (m *KnowledgeArticleSessionMutation) IDs(ctx context.Context) ([]int, error
 
 // SetArticleID sets the "article_id" field.
 func (m *KnowledgeArticleSessionMutation) SetArticleID(i int) {
-	m.article_id = &i
-	m.addarticle_id = nil
+	m.article = &i
 }
 
 // ArticleID returns the value of the "article_id" field in the mutation.
 func (m *KnowledgeArticleSessionMutation) ArticleID() (r int, exists bool) {
-	v := m.article_id
+	v := m.article
 	if v == nil {
 		return
 	}
@@ -60037,28 +60081,9 @@ func (m *KnowledgeArticleSessionMutation) OldArticleID(ctx context.Context) (v i
 	return oldValue.ArticleID, nil
 }
 
-// AddArticleID adds i to the "article_id" field.
-func (m *KnowledgeArticleSessionMutation) AddArticleID(i int) {
-	if m.addarticle_id != nil {
-		*m.addarticle_id += i
-	} else {
-		m.addarticle_id = &i
-	}
-}
-
-// AddedArticleID returns the value that was added to the "article_id" field in this mutation.
-func (m *KnowledgeArticleSessionMutation) AddedArticleID() (r int, exists bool) {
-	v := m.addarticle_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetArticleID resets all changes to the "article_id" field.
 func (m *KnowledgeArticleSessionMutation) ResetArticleID() {
-	m.article_id = nil
-	m.addarticle_id = nil
+	m.article = nil
 }
 
 // SetUserID sets the "user_id" field.
@@ -60274,19 +60299,10 @@ func (m *KnowledgeArticleSessionMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// AddArticleIDs adds the "article" edge to the KnowledgeArticle entity by ids.
-func (m *KnowledgeArticleSessionMutation) AddArticleIDs(ids ...int) {
-	if m.article == nil {
-		m.article = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.article[ids[i]] = struct{}{}
-	}
-}
-
 // ClearArticle clears the "article" edge to the KnowledgeArticle entity.
 func (m *KnowledgeArticleSessionMutation) ClearArticle() {
 	m.clearedarticle = true
+	m.clearedFields[knowledgearticlesession.FieldArticleID] = struct{}{}
 }
 
 // ArticleCleared reports if the "article" edge to the KnowledgeArticle entity was cleared.
@@ -60294,29 +60310,12 @@ func (m *KnowledgeArticleSessionMutation) ArticleCleared() bool {
 	return m.clearedarticle
 }
 
-// RemoveArticleIDs removes the "article" edge to the KnowledgeArticle entity by IDs.
-func (m *KnowledgeArticleSessionMutation) RemoveArticleIDs(ids ...int) {
-	if m.removedarticle == nil {
-		m.removedarticle = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.article, ids[i])
-		m.removedarticle[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedArticle returns the removed IDs of the "article" edge to the KnowledgeArticle entity.
-func (m *KnowledgeArticleSessionMutation) RemovedArticleIDs() (ids []int) {
-	for id := range m.removedarticle {
-		ids = append(ids, id)
-	}
-	return
-}
-
 // ArticleIDs returns the "article" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ArticleID instead. It exists only for internal usage by the builders.
 func (m *KnowledgeArticleSessionMutation) ArticleIDs() (ids []int) {
-	for id := range m.article {
-		ids = append(ids, id)
+	if id := m.article; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -60325,7 +60324,6 @@ func (m *KnowledgeArticleSessionMutation) ArticleIDs() (ids []int) {
 func (m *KnowledgeArticleSessionMutation) ResetArticle() {
 	m.article = nil
 	m.clearedarticle = false
-	m.removedarticle = nil
 }
 
 // AddUserIDs adds the "user" edge to the User entity by ids.
@@ -60471,7 +60469,7 @@ func (m *KnowledgeArticleSessionMutation) Type() string {
 // AddedFields().
 func (m *KnowledgeArticleSessionMutation) Fields() []string {
 	fields := make([]string, 0, 6)
-	if m.article_id != nil {
+	if m.article != nil {
 		fields = append(fields, knowledgearticlesession.FieldArticleID)
 	}
 	if m.user_id != nil {
@@ -60589,9 +60587,6 @@ func (m *KnowledgeArticleSessionMutation) SetField(name string, value ent.Value)
 // this mutation.
 func (m *KnowledgeArticleSessionMutation) AddedFields() []string {
 	var fields []string
-	if m.addarticle_id != nil {
-		fields = append(fields, knowledgearticlesession.FieldArticleID)
-	}
 	if m.adduser_id != nil {
 		fields = append(fields, knowledgearticlesession.FieldUserID)
 	}
@@ -60603,8 +60598,6 @@ func (m *KnowledgeArticleSessionMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *KnowledgeArticleSessionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case knowledgearticlesession.FieldArticleID:
-		return m.AddedArticleID()
 	case knowledgearticlesession.FieldUserID:
 		return m.AddedUserID()
 	}
@@ -60616,13 +60609,6 @@ func (m *KnowledgeArticleSessionMutation) AddedField(name string) (ent.Value, bo
 // type.
 func (m *KnowledgeArticleSessionMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case knowledgearticlesession.FieldArticleID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddArticleID(v)
-		return nil
 	case knowledgearticlesession.FieldUserID:
 		v, ok := value.(int)
 		if !ok {
@@ -60708,11 +60694,9 @@ func (m *KnowledgeArticleSessionMutation) AddedEdges() []string {
 func (m *KnowledgeArticleSessionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case knowledgearticlesession.EdgeArticle:
-		ids := make([]ent.Value, 0, len(m.article))
-		for id := range m.article {
-			ids = append(ids, id)
+		if id := m.article; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case knowledgearticlesession.EdgeUser:
 		ids := make([]ent.Value, 0, len(m.user))
 		for id := range m.user {
@@ -60732,9 +60716,6 @@ func (m *KnowledgeArticleSessionMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *KnowledgeArticleSessionMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.removedarticle != nil {
-		edges = append(edges, knowledgearticlesession.EdgeArticle)
-	}
 	if m.removeduser != nil {
 		edges = append(edges, knowledgearticlesession.EdgeUser)
 	}
@@ -60748,12 +60729,6 @@ func (m *KnowledgeArticleSessionMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *KnowledgeArticleSessionMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case knowledgearticlesession.EdgeArticle:
-		ids := make([]ent.Value, 0, len(m.removedarticle))
-		for id := range m.removedarticle {
-			ids = append(ids, id)
-		}
-		return ids
 	case knowledgearticlesession.EdgeUser:
 		ids := make([]ent.Value, 0, len(m.removeduser))
 		for id := range m.removeduser {
@@ -60803,6 +60778,9 @@ func (m *KnowledgeArticleSessionMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *KnowledgeArticleSessionMutation) ClearEdge(name string) error {
 	switch name {
+	case knowledgearticlesession.EdgeArticle:
+		m.ClearArticle()
+		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticleSession unique edge %s", name)
 }
@@ -60830,8 +60808,6 @@ type KnowledgeArticleVersionMutation struct {
 	op             Op
 	typ            string
 	id             *int
-	article_id     *int
-	addarticle_id  *int
 	version        *int
 	addversion     *int
 	title          *string
@@ -60843,8 +60819,7 @@ type KnowledgeArticleVersionMutation struct {
 	change_summary *string
 	created_at     *time.Time
 	clearedFields  map[string]struct{}
-	article        map[int]struct{}
-	removedarticle map[int]struct{}
+	article        *int
 	clearedarticle bool
 	done           bool
 	oldValue       func(context.Context) (*KnowledgeArticleVersion, error)
@@ -60951,13 +60926,12 @@ func (m *KnowledgeArticleVersionMutation) IDs(ctx context.Context) ([]int, error
 
 // SetArticleID sets the "article_id" field.
 func (m *KnowledgeArticleVersionMutation) SetArticleID(i int) {
-	m.article_id = &i
-	m.addarticle_id = nil
+	m.article = &i
 }
 
 // ArticleID returns the value of the "article_id" field in the mutation.
 func (m *KnowledgeArticleVersionMutation) ArticleID() (r int, exists bool) {
-	v := m.article_id
+	v := m.article
 	if v == nil {
 		return
 	}
@@ -60981,28 +60955,9 @@ func (m *KnowledgeArticleVersionMutation) OldArticleID(ctx context.Context) (v i
 	return oldValue.ArticleID, nil
 }
 
-// AddArticleID adds i to the "article_id" field.
-func (m *KnowledgeArticleVersionMutation) AddArticleID(i int) {
-	if m.addarticle_id != nil {
-		*m.addarticle_id += i
-	} else {
-		m.addarticle_id = &i
-	}
-}
-
-// AddedArticleID returns the value that was added to the "article_id" field in this mutation.
-func (m *KnowledgeArticleVersionMutation) AddedArticleID() (r int, exists bool) {
-	v := m.addarticle_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetArticleID resets all changes to the "article_id" field.
 func (m *KnowledgeArticleVersionMutation) ResetArticleID() {
-	m.article_id = nil
-	m.addarticle_id = nil
+	m.article = nil
 }
 
 // SetVersion sets the "version" field.
@@ -61385,19 +61340,10 @@ func (m *KnowledgeArticleVersionMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// AddArticleIDs adds the "article" edge to the KnowledgeArticle entity by ids.
-func (m *KnowledgeArticleVersionMutation) AddArticleIDs(ids ...int) {
-	if m.article == nil {
-		m.article = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.article[ids[i]] = struct{}{}
-	}
-}
-
 // ClearArticle clears the "article" edge to the KnowledgeArticle entity.
 func (m *KnowledgeArticleVersionMutation) ClearArticle() {
 	m.clearedarticle = true
+	m.clearedFields[knowledgearticleversion.FieldArticleID] = struct{}{}
 }
 
 // ArticleCleared reports if the "article" edge to the KnowledgeArticle entity was cleared.
@@ -61405,29 +61351,12 @@ func (m *KnowledgeArticleVersionMutation) ArticleCleared() bool {
 	return m.clearedarticle
 }
 
-// RemoveArticleIDs removes the "article" edge to the KnowledgeArticle entity by IDs.
-func (m *KnowledgeArticleVersionMutation) RemoveArticleIDs(ids ...int) {
-	if m.removedarticle == nil {
-		m.removedarticle = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.article, ids[i])
-		m.removedarticle[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedArticle returns the removed IDs of the "article" edge to the KnowledgeArticle entity.
-func (m *KnowledgeArticleVersionMutation) RemovedArticleIDs() (ids []int) {
-	for id := range m.removedarticle {
-		ids = append(ids, id)
-	}
-	return
-}
-
 // ArticleIDs returns the "article" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ArticleID instead. It exists only for internal usage by the builders.
 func (m *KnowledgeArticleVersionMutation) ArticleIDs() (ids []int) {
-	for id := range m.article {
-		ids = append(ids, id)
+	if id := m.article; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -61436,7 +61365,6 @@ func (m *KnowledgeArticleVersionMutation) ArticleIDs() (ids []int) {
 func (m *KnowledgeArticleVersionMutation) ResetArticle() {
 	m.article = nil
 	m.clearedarticle = false
-	m.removedarticle = nil
 }
 
 // Where appends a list predicates to the KnowledgeArticleVersionMutation builder.
@@ -61474,7 +61402,7 @@ func (m *KnowledgeArticleVersionMutation) Type() string {
 // AddedFields().
 func (m *KnowledgeArticleVersionMutation) Fields() []string {
 	fields := make([]string, 0, 9)
-	if m.article_id != nil {
+	if m.article != nil {
 		fields = append(fields, knowledgearticleversion.FieldArticleID)
 	}
 	if m.version != nil {
@@ -61634,9 +61562,6 @@ func (m *KnowledgeArticleVersionMutation) SetField(name string, value ent.Value)
 // this mutation.
 func (m *KnowledgeArticleVersionMutation) AddedFields() []string {
 	var fields []string
-	if m.addarticle_id != nil {
-		fields = append(fields, knowledgearticleversion.FieldArticleID)
-	}
 	if m.addversion != nil {
 		fields = append(fields, knowledgearticleversion.FieldVersion)
 	}
@@ -61651,8 +61576,6 @@ func (m *KnowledgeArticleVersionMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *KnowledgeArticleVersionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case knowledgearticleversion.FieldArticleID:
-		return m.AddedArticleID()
 	case knowledgearticleversion.FieldVersion:
 		return m.AddedVersion()
 	case knowledgearticleversion.FieldAuthorID:
@@ -61666,13 +61589,6 @@ func (m *KnowledgeArticleVersionMutation) AddedField(name string) (ent.Value, bo
 // type.
 func (m *KnowledgeArticleVersionMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case knowledgearticleversion.FieldArticleID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddArticleID(v)
-		return nil
 	case knowledgearticleversion.FieldVersion:
 		v, ok := value.(int)
 		if !ok {
@@ -61786,11 +61702,9 @@ func (m *KnowledgeArticleVersionMutation) AddedEdges() []string {
 func (m *KnowledgeArticleVersionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case knowledgearticleversion.EdgeArticle:
-		ids := make([]ent.Value, 0, len(m.article))
-		for id := range m.article {
-			ids = append(ids, id)
+		if id := m.article; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -61798,23 +61712,12 @@ func (m *KnowledgeArticleVersionMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *KnowledgeArticleVersionMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removedarticle != nil {
-		edges = append(edges, knowledgearticleversion.EdgeArticle)
-	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *KnowledgeArticleVersionMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case knowledgearticleversion.EdgeArticle:
-		ids := make([]ent.Value, 0, len(m.removedarticle))
-		for id := range m.removedarticle {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
@@ -61841,6 +61744,9 @@ func (m *KnowledgeArticleVersionMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *KnowledgeArticleVersionMutation) ClearEdge(name string) error {
 	switch name {
+	case knowledgearticleversion.EdgeArticle:
+		m.ClearArticle()
+		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticleVersion unique edge %s", name)
 }

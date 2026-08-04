@@ -104,7 +104,11 @@ const IncidentList: React.FC = () => {
       title: '编号',
       dataIndex:'incidentNumber',
       width: 120,
-      render: (text: string) => <a>{text}</a>,
+      render: (text: string, record: Incident) => (
+        <Button type="link" onClick={() => router.push(`/incidents/${record.id}`)}>
+          {text}
+        </Button>
+      ),
     },
     {
       title: '标题',
@@ -138,6 +142,13 @@ const IncidentList: React.FC = () => {
       title: '报告人',
       dataIndex:'reporterId', // 暂时显示ID，后续关联User
       width: 100,
+      responsive: ['lg'],
+    },
+    {
+      title: '处理人',
+      dataIndex: 'assigneeId',
+      width: 100,
+      render: (id: number) => id ? `ID:${id}` : '-',
       responsive: ['lg'],
     },
     {

@@ -60,6 +60,8 @@ func (c *NotificationController) GetNotifications(ctx *gin.Context) {
 	}
 	if req.Size <= 0 {
 		req.Size = 20
+	} else if req.Size > 100 {
+		req.Size = 100
 	}
 
 	result, err := c.notificationService.GetNotifications(ctx, &req)
@@ -223,6 +225,13 @@ func (c *NotificationController) CreateNotification(ctx *gin.Context) {
 		return
 	}
 
+	tenantID, err := c.notificationService.GetCurrentTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.AuthFailedCode, "无法确认当前租户")
+		return
+	}
+	// 租户只能来自认证上下文，禁止管理员通过请求体跨租户投递。
+	req.TenantID = tenantID
 	notification, err := c.notificationService.CreateNotification(ctx, &req)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "创建通知失败: "+err.Error())
@@ -230,4 +239,52 @@ func (c *NotificationController) CreateNotification(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, notification)
+}
+
+func (c *NotificationController) MarkNotificationsRead(ctx *gin.Context) {
+	var req dto.BatchNotificationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请选择要标记的通知（最多100条）")
+		return
+	}
+	userID, err := c.notificationService.GetCurrentUserID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.AuthFailedCode, "用户未登录")
+		return
+	}
+	tenantID, err := c.notificationService.GetCurrentTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.AuthFailedCode, "无法确认当前租户")
+		return
+	}
+	count, err := c.notificationService.MarkNotificationsRead(ctx, req.NotificationIDs, userID, tenantID)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "批量标记已读失败")
+		return
+	}
+	common.Success(ctx, gin.H{"updated": count})
+}
+
+func (c *NotificationController) DeleteNotifications(ctx *gin.Context) {
+	var req dto.BatchNotificationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请选择要删除的通知（最多100条）")
+		return
+	}
+	userID, err := c.notificationService.GetCurrentUserID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.AuthFailedCode, "用户未登录")
+		return
+	}
+	tenantID, err := c.notificationService.GetCurrentTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.AuthFailedCode, "无法确认当前租户")
+		return
+	}
+	count, err := c.notificationService.DeleteNotifications(ctx, req.NotificationIDs, userID, tenantID)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "批量删除通知失败")
+		return
+	}
+	common.Success(ctx, gin.H{"deleted": count})
 }

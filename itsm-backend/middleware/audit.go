@@ -115,56 +115,53 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 		// 检查是否为敏感操作
 		isSensitive := isSensitiveOperation(action, resource, status)
 
-		// write asynchronously to reduce latency
-		go func() {
-			// 修复：使用 context.Background() 而非 c.Request.Context()。
-			// 请求结束后 c.Request.Context() 会被取消，导致审计记录写入失败。
-			auditCtx := context.Background()
-			auditCreate := client.AuditLog.Create().
-				SetCreatedAt(time.Now()).
-				SetTenantID(tenantID).
-				SetUserID(userID).
-				SetRequestID(rid).
-				SetIP(ip).
-				SetPath(path).
-				SetMethod(methodStr).
-				SetStatusCode(status).
-				SetResource(resource).
-				SetAction(action).
-				SetRequestBody(requestBody)
+		// 审计记录是企业合规数据，不能使用无确认的 goroutine（进程退出时会静默丢失）。
+		auditCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		auditCreate := client.AuditLog.Create().
+			SetCreatedAt(time.Now()).
+			SetTenantID(tenantID).
+			SetUserID(userID).
+			SetRequestID(rid).
+			SetIP(ip).
+			SetPath(path).
+			SetMethod(methodStr).
+			SetStatusCode(status).
+			SetResource(resource).
+			SetAction(action).
+			SetRequestBody(requestBody)
 
-			err := auditCreate.Exec(auditCtx)
-			if err != nil && globalLogger != nil {
-				globalLogger.Errorw("Failed to save audit log", "error", err)
-			}
+		err := auditCreate.Exec(auditCtx)
+		if err != nil && globalLogger != nil {
+			globalLogger.Errorw("Failed to save audit log", "error", err)
+		}
 
-			// 记录结构化日志
-			logFields := []interface{}{
-				"audit_type", "user_action",
-				"request_id", rid,
-				"tenant_id", tenantID,
-				"user_id", userID,
-				"username", username,
-				"action", action,
-				"resource", resource,
-				"path", path,
-				"method", methodStr,
-				"status_code", status,
-				"client_ip", ip,
-				"user_agent", userAgent,
-				"latency_ms", duration.Milliseconds(),
-				"success", status < 400,
-				"sensitive", isSensitive,
-			}
+		// 记录结构化日志
+		logFields := []interface{}{
+			"audit_type", "user_action",
+			"request_id", rid,
+			"tenant_id", tenantID,
+			"user_id", userID,
+			"username", username,
+			"action", action,
+			"resource", resource,
+			"path", path,
+			"method", methodStr,
+			"status_code", status,
+			"client_ip", ip,
+			"user_agent", userAgent,
+			"latency_ms", duration.Milliseconds(),
+			"success", status < 400,
+			"sensitive", isSensitive,
+		}
 
-			if globalLogger != nil {
-				if isSensitive || status >= 400 {
-					globalLogger.Warnw("Audit log - Sensitive/Failed operation", logFields...)
-				} else {
-					globalLogger.Infow("Audit log", logFields...)
-				}
+		if globalLogger != nil {
+			if isSensitive || status >= 400 {
+				globalLogger.Warnw("Audit log - Sensitive/Failed operation", logFields...)
+			} else {
+				globalLogger.Infow("Audit log", logFields...)
 			}
-		}()
+		}
 	}
 }
 

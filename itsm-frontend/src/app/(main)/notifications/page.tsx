@@ -149,6 +149,7 @@ export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [preferences, setPreferences] = useState<NotificationPreferenceItem[]>([]);
   const [preferencesLoading, setPreferencesLoading] = useState(false);
+  const [actionKey, setActionKey] = useState<string | null>(null);
   const [form] = Form.useForm();
 
   // 筛选状态
@@ -246,16 +247,26 @@ export default function NotificationsPage() {
     loadPreferences();
   }, [loadNotifications, loadPreferences]);
 
+  // WebSocket 不可用时降级为低频轮询，避免通知长期过期。
+  useEffect(() => {
+    if (wsConnected || !user?.id) return;
+    const timer = window.setInterval(loadNotifications, 60000);
+    return () => window.clearInterval(timer);
+  }, [wsConnected, user?.id, loadNotifications]);
+
   // 标记已读
   const handleMarkRead = useCallback(
     async (notificationId: number) => {
       try {
+        setActionKey(`read-${notificationId}`);
         await TicketNotificationApi.markNotificationRead(notificationId);
         message.success(t('notifications.markSuccess'));
         loadNotifications();
       } catch (error) {
         message.error(t('notifications.loadFailed'));
         console.error('Failed to mark notification as read:', error);
+      } finally {
+        setActionKey(null);
       }
     },
     [t, loadNotifications]
@@ -264,18 +275,22 @@ export default function NotificationsPage() {
   // 标记全部已读
   const handleMarkAllRead = useCallback(async () => {
     try {
+      setActionKey('read-all');
       await TicketNotificationApi.markAllNotificationsRead();
       message.success(t('notifications.markSuccess'));
       loadNotifications();
     } catch (error) {
       message.error(t('notifications.loadFailed'));
       console.error('Failed to mark all notifications as read:', error);
+    } finally {
+      setActionKey(null);
     }
   }, [t, loadNotifications]);
 
   // 保存偏好设置
   const handleSavePreferences = useCallback(async () => {
     try {
+      setActionKey('save-preferences');
       const values = form.getFieldsValue();
       const prefs: NotificationPreferenceItem[] = [];
 
@@ -294,6 +309,8 @@ export default function NotificationsPage() {
     } catch (error) {
       message.error(t('notifications.saveFailed'));
       console.error('Failed to update preferences:', error);
+    } finally {
+      setActionKey(null);
     }
   }, [t, form, loadPreferences]);
 
@@ -453,6 +470,8 @@ export default function NotificationsPage() {
                   size="small"
                   icon={<Eye className="w-4 h-4" />}
                   onClick={() => handleMarkRead(notification.id)}
+                  loading={actionKey === `read-${notification.id}`}
+                  aria-label={`${t('notifications.markRead')}: ${getNotificationTypeLabel(notification.type)}`}
                 >
                   {t('notifications.markRead')}
                 </Button>
@@ -606,7 +625,9 @@ export default function NotificationsPage() {
             </Text>
             <Space>
               {filteredUnreadNotifications.length > 0 && (
-                <Button onClick={handleMarkAllRead}>{t('notifications.markAllRead')}</Button>
+                <Button onClick={handleMarkAllRead} loading={actionKey === 'read-all'}>
+                  {t('notifications.markAllRead')}
+                </Button>
               )}
               {filteredNotifications.length > 0 && (
                 <Popconfirm
@@ -621,7 +642,7 @@ export default function NotificationsPage() {
               )}
             </Space>
           </div>
-          <Spin spinning={loading}>{renderNotificationList(filteredNotifications)}</Spin>
+          <Spin spinning={loading} tip={t('workflow.loading')}>{renderNotificationList(filteredNotifications)}</Spin>
         </Card>
       ),
     },
@@ -738,7 +759,7 @@ export default function NotificationsPage() {
               <Divider />
 
               <Form.Item>
-                <Button type="primary" htmlType="submit">
+                <Button type="primary" htmlType="submit" loading={actionKey === 'save-preferences'}>
                   {t('notifications.saveSettings')}
                 </Button>
               </Form.Item>

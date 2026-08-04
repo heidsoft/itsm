@@ -57,6 +57,9 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 	if password == "" {
 		password = fmt.Sprintf("P@ssw0rd%08d", time.Now().UnixNano()%100000000)
 	}
+	if err := validatePassword(password); err != nil {
+		return nil, err
+	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("密码加密失败: %w", err)
@@ -338,6 +341,9 @@ func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword str
 	if err != nil {
 		return err
 	}
+	if err := validatePassword(newPassword); err != nil {
+		return err
+	}
 
 	// 加密新密码
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
@@ -361,10 +367,10 @@ func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword str
 func (s *UserService) GetUserStats(ctx context.Context, tenantID int) (*dto.UserStatsResponse, error) {
 	s.logger.Infof("获取用户统计: tenantID=%d", tenantID)
 
-	query := s.client.User.Query()
-	if tenantID > 0 {
-		query = query.Where(user.TenantIDEQ(tenantID))
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("租户信息无效")
 	}
+	query := s.client.User.Query().Where(user.TenantIDEQ(tenantID))
 
 	// 总用户数
 	total, err := query.Count(ctx)
@@ -373,21 +379,29 @@ func (s *UserService) GetUserStats(ctx context.Context, tenantID int) (*dto.User
 	}
 
 	// 活跃用户数
-	active, err := query.Where(user.ActiveEQ(true)).Count(ctx)
+	active, err := query.Clone().Where(user.ActiveEQ(true)).Count(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("统计活跃用户数失败: %w", err)
 	}
 
-	// 在线用户数（非活跃 = total - active）
-	online := active
+	monthStart := time.Now().In(time.Local)
+	monthStart = time.Date(monthStart.Year(), monthStart.Month(), 1, 0, 0, 0, 0, monthStart.Location())
+	newThisMonth, err := query.Clone().Where(user.CreatedAtGTE(monthStart)).Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("统计本月新增用户失败: %w", err)
+	}
 
 	response := &dto.UserStatsResponse{
 		Total:  total,
 		Active: active,
-		Online: online,
+		// 当前模型没有登录会话/心跳数据，返回0，避免把“启用”误报为“在线”。
+		Online:       0,
+		ByRole:       map[string]int{},
+		ByDepartment: map[string]int{},
+		NewThisMonth: newThisMonth,
 	}
 
-	s.logger.Infof("用户统计获取成功: total=%d, active=%d, online=%d", total, active, online)
+	s.logger.Infow("用户统计获取成功", "total", total, "active", active, "online", 0, "new_this_month", newThisMonth)
 	return response, nil
 }
 
@@ -399,9 +413,28 @@ func (s *UserService) BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdate
 		return fmt.Errorf("用户ID列表不能为空")
 	}
 
+	ids := uniquePositiveIDs(req.UserIDs)
+	if len(ids) == 0 {
+		return fmt.Errorf("用户ID列表不能为空")
+	}
+	if req.Action == "deactivate" && req.OperatorID > 0 {
+		for _, id := range ids {
+			if id == req.OperatorID {
+				return fmt.Errorf("批量停用不能包含当前登录用户")
+			}
+		}
+	}
+	matched, err := s.client.User.Query().Where(user.IDIn(ids...), user.TenantIDEQ(tenantID)).Count(ctx)
+	if err != nil {
+		return fmt.Errorf("校验批量用户失败: %w", err)
+	}
+	if matched != len(ids) {
+		return fmt.Errorf("部分用户不存在或不属于当前租户，请刷新列表后重试")
+	}
+
 	update := s.client.User.Update().
 		Where(
-			user.IDIn(req.UserIDs...),
+			user.IDIn(ids...),
 			user.TenantIDEQ(tenantID),
 		)
 
@@ -426,6 +459,29 @@ func (s *UserService) BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdate
 	}
 
 	s.logger.Infof("批量更新用户成功: updated=%d", count)
+	return nil
+}
+
+func validatePassword(password string) error {
+	if len(password) < 12 || len(password) > 128 {
+		return fmt.Errorf("密码长度必须为12到128位")
+	}
+	var upper, lower, digit, special bool
+	for _, r := range password {
+		switch {
+		case r >= 'A' && r <= 'Z':
+			upper = true
+		case r >= 'a' && r <= 'z':
+			lower = true
+		case r >= '0' && r <= '9':
+			digit = true
+		default:
+			special = true
+		}
+	}
+	if !upper || !lower || !digit || !special {
+		return fmt.Errorf("密码必须同时包含大写字母、小写字母、数字和特殊字符")
+	}
 	return nil
 }
 

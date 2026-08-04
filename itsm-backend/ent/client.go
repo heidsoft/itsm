@@ -8095,7 +8095,7 @@ func (c *KnowledgeArticleClient) QueryVersions(_m *KnowledgeArticle) *KnowledgeA
 		step := sqlgraph.NewStep(
 			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, id),
 			sqlgraph.To(knowledgearticleversion.Table, knowledgearticleversion.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, knowledgearticle.VersionsTable, knowledgearticle.VersionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, knowledgearticle.VersionsTable, knowledgearticle.VersionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -8111,7 +8111,7 @@ func (c *KnowledgeArticleClient) QuerySessions(_m *KnowledgeArticle) *KnowledgeA
 		step := sqlgraph.NewStep(
 			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, id),
 			sqlgraph.To(knowledgearticlesession.Table, knowledgearticlesession.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, knowledgearticle.SessionsTable, knowledgearticle.SessionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, knowledgearticle.SessionsTable, knowledgearticle.SessionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -8574,7 +8574,7 @@ func (c *KnowledgeArticleSessionClient) QueryArticle(_m *KnowledgeArticleSession
 		step := sqlgraph.NewStep(
 			sqlgraph.From(knowledgearticlesession.Table, knowledgearticlesession.FieldID, id),
 			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, knowledgearticlesession.ArticleTable, knowledgearticlesession.ArticleColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, knowledgearticlesession.ArticleTable, knowledgearticlesession.ArticleColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -8755,7 +8755,7 @@ func (c *KnowledgeArticleVersionClient) QueryArticle(_m *KnowledgeArticleVersion
 		step := sqlgraph.NewStep(
 			sqlgraph.From(knowledgearticleversion.Table, knowledgearticleversion.FieldID, id),
 			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, knowledgearticleversion.ArticleTable, knowledgearticleversion.ArticleColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, knowledgearticleversion.ArticleTable, knowledgearticleversion.ArticleColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

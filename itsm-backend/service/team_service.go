@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/team"
+	"itsm-backend/ent/user"
 )
 
 type TeamService struct {
@@ -18,6 +19,12 @@ func NewTeamService(client *ent.Client) *TeamService {
 
 // CreateTeam 创建团队
 func (s *TeamService) CreateTeam(ctx context.Context, name, code, description string, managerID, tenantID int) (*ent.Team, error) {
+	if managerID > 0 {
+		if err := s.validateTenantUser(ctx, managerID, tenantID); err != nil {
+			return nil, fmt.Errorf("团队负责人无效: %w", err)
+		}
+	}
+
 	query := s.client.Team.Create().
 		SetName(name).
 		SetCode(code).
@@ -32,10 +39,36 @@ func (s *TeamService) CreateTeam(ctx context.Context, name, code, description st
 }
 
 // AddMember 添加成员
-func (s *TeamService) AddMember(ctx context.Context, teamID, userID int) error {
+func (s *TeamService) AddMember(ctx context.Context, teamID, userID, tenantID int) error {
+	exists, err := s.client.Team.Query().
+		Where(team.IDEQ(teamID), team.TenantIDEQ(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("检查团队失败: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("团队不存在或不属于当前租户: id=%d", teamID)
+	}
+	if err := s.validateTenantUser(ctx, userID, tenantID); err != nil {
+		return fmt.Errorf("团队成员无效: %w", err)
+	}
+
 	return s.client.Team.UpdateOneID(teamID).
 		AddUserIDs(userID).
 		Exec(ctx)
+}
+
+func (s *TeamService) validateTenantUser(ctx context.Context, userID, tenantID int) error {
+	exists, err := s.client.User.Query().
+		Where(user.IDEQ(userID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("检查用户失败: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("用户不存在、已停用或不属于当前租户: id=%d", userID)
+	}
+	return nil
 }
 
 // ListTeams 获取团队列表
@@ -70,6 +103,11 @@ func (s *TeamService) UpdateTeam(ctx context.Context, id int, name, code, descri
 		update = update.SetDescription(*description)
 	}
 	if managerID != nil {
+		if *managerID > 0 {
+			if err := s.validateTenantUser(ctx, *managerID, tenantID); err != nil {
+				return nil, fmt.Errorf("团队负责人无效: %w", err)
+			}
+		}
 		update = update.SetManagerID(*managerID)
 	}
 

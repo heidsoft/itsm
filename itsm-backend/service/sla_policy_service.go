@@ -29,6 +29,9 @@ func NewSLAPolicyService(client *ent.Client) *SLAPolicyService {
 
 // CreateSLAPolicy 创建SLA策略
 func (s *SLAPolicyService) CreateSLAPolicy(ctx context.Context, input dto.CreateSLAPolicyRequest) (*ent.SLAPolicy, error) {
+	if err := validateCreateSLAPolicy(input); err != nil {
+		return nil, err
+	}
 	build := s.client.SLAPolicy.Create().
 		SetName(input.Name).
 		SetResponseTimeMinutes(input.ResponseTimeMinutes).
@@ -81,6 +84,9 @@ func (s *SLAPolicyService) QuerySLAPolicies(ctx context.Context, tenantID int) (
 
 // UpdateSLAPolicy 更新SLA策略
 func (s *SLAPolicyService) UpdateSLAPolicy(ctx context.Context, id int, input dto.UpdateSLAPolicyRequest) (*ent.SLAPolicy, error) {
+	if err := validateUpdateSLAPolicy(input); err != nil {
+		return nil, err
+	}
 	update := s.client.SLAPolicy.UpdateOneID(id)
 	s.applyUpdateFields(update, input)
 	return update.Save(ctx)
@@ -88,9 +94,44 @@ func (s *SLAPolicyService) UpdateSLAPolicy(ctx context.Context, id int, input dt
 
 // UpdateSLAPolicyForTenant 按租户约束更新SLA策略
 func (s *SLAPolicyService) UpdateSLAPolicyForTenant(ctx context.Context, id, tenantID int, input dto.UpdateSLAPolicyRequest) (*ent.SLAPolicy, error) {
+	if err := validateUpdateSLAPolicy(input); err != nil {
+		return nil, err
+	}
 	update := s.client.SLAPolicy.UpdateOneID(id).Where(slapolicy.TenantID(tenantID))
 	s.applyUpdateFields(update, input)
 	return update.Save(ctx)
+}
+
+func validateCreateSLAPolicy(input dto.CreateSLAPolicyRequest) error {
+	if strings.TrimSpace(input.Name) == "" {
+		return fmt.Errorf("SLA策略名称不能为空")
+	}
+	if input.TenantID <= 0 {
+		return fmt.Errorf("租户信息无效")
+	}
+	if input.ResponseTimeMinutes <= 0 || input.ResolutionTimeMinutes <= 0 {
+		return fmt.Errorf("响应时间和解决时间必须大于0分钟")
+	}
+	if input.ResolutionTimeMinutes < input.ResponseTimeMinutes {
+		return fmt.Errorf("解决时间不能短于响应时间")
+	}
+	return nil
+}
+
+func validateUpdateSLAPolicy(input dto.UpdateSLAPolicyRequest) error {
+	if input.Name != nil && strings.TrimSpace(*input.Name) == "" {
+		return fmt.Errorf("SLA策略名称不能为空")
+	}
+	if input.ResponseTimeMinutes != nil && *input.ResponseTimeMinutes <= 0 {
+		return fmt.Errorf("响应时间必须大于0分钟")
+	}
+	if input.ResolutionTimeMinutes != nil && *input.ResolutionTimeMinutes <= 0 {
+		return fmt.Errorf("解决时间必须大于0分钟")
+	}
+	if input.ResponseTimeMinutes != nil && input.ResolutionTimeMinutes != nil && *input.ResolutionTimeMinutes < *input.ResponseTimeMinutes {
+		return fmt.Errorf("解决时间不能短于响应时间")
+	}
+	return nil
 }
 
 func (s *SLAPolicyService) applyUpdateFields(update *ent.SLAPolicyUpdateOne, input dto.UpdateSLAPolicyRequest) {

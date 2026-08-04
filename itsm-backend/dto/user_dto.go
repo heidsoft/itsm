@@ -11,7 +11,7 @@ type CreateUserRequest struct {
 	Name       string `json:"name" binding:"required,min=1,max=100"`
 	Department string `json:"department"`
 	Phone      string `json:"phone"`
-	Password   string `json:"password" binding:"required,min=6"`
+	Password   string `json:"password" binding:"required,min=12,max=128"`
 	TenantID   int    `json:"tenantId"`
 	// 角色，可选；不提供时使用后端默认值（end_user）
 	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user user"`
@@ -77,7 +77,7 @@ type ChangeUserStatusRequest struct {
 
 // ResetPasswordRequest 重置密码请求
 type ResetPasswordRequest struct {
-	NewPassword string `json:"newPassword" binding:"required,min=6"`
+	NewPassword string `json:"newPassword" binding:"required,min=12,max=128"`
 }
 
 // UserStatsResponse 用户统计响应
@@ -111,6 +111,7 @@ type BatchUpdateUsersRequest struct {
 	UserIDs    []int  `json:"userIds" binding:"required,min=1"`
 	Action     string `json:"action" binding:"required,oneof=activate deactivate department"`
 	Department string `json:"department,omitempty"`
+	OperatorID int    `json:"-"`
 }
 
 // SearchUsersRequest 搜索用户请求

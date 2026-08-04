@@ -75,3 +75,8 @@ type DeleteNotificationRequest struct {
 	UserID         int `json:"userId" binding:"required"`
 	TenantID       int `json:"tenantId" binding:"required"`
 }
+
+// BatchNotificationRequest 批量操作当前用户的通知。
+type BatchNotificationRequest struct {
+	NotificationIDs []int `json:"notificationIds" binding:"required,min=1,max=100"`
+}

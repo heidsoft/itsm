@@ -10,7 +10,6 @@ import {
   Space,
   Tag,
   Tooltip,
-  Dropdown,
   Modal,
   App,
   DatePicker,
@@ -18,9 +17,8 @@ import {
   Col,
   Divider,
 } from 'antd';
-import { Filter, Plus, Pencil, Trash2, Download, Eye, RotateCcw, AlertCircle, MoreHorizontal } from 'lucide-react';
+import { Filter, Plus, Pencil, Trash2, Download, Eye, RotateCcw, AlertCircle, CheckCircle } from 'lucide-react';
 import type { ColumnsType, TableProps, TablePaginationConfig } from 'antd/es/table';
-import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
@@ -103,6 +101,7 @@ const TicketList: React.FC<TicketListProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
+  const [activeRowIndex, setActiveRowIndex] = useState(0);
 
   // 防抖搜索 - 延迟300ms触发搜索，减少API调用
   const debouncedSearchValue = useDebounce(searchValue, 300);
@@ -205,6 +204,39 @@ const TicketList: React.FC<TicketListProps> = ({
       message.error('批量删除失败');
     }
   }, [selectedTickets, batchDeleteTickets, deselectAll]);
+
+  const openTicket = useCallback((ticket: Ticket) => {
+    if (onTicketSelect) onTicketSelect(ticket);
+    else router.push(`/tickets/${ticket.id}`);
+  }, [onTicketSelect, router]);
+
+  const handleClose = useCallback((ticket: Ticket) => {
+    Modal.confirm({
+      title: `关闭工单 ${ticket.ticketNumber}？`,
+      content: '关闭后工单将进入终态，请确认处理结果已经记录。',
+      okText: '确认关闭',
+      cancelText: '取消',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        await TicketApi.closeTicket(ticket.id);
+        message.success('工单已关闭');
+        await fetchTickets(filters);
+      },
+    });
+  }, [fetchTickets, filters, message]);
+
+  // 列表操作快捷键：在输入控件中不抢占按键。
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.matches('input, textarea, select') || target.isContentEditable || tickets.length === 0) return;
+      if (event.key === 'j') setActiveRowIndex(index => Math.min(index + 1, tickets.length - 1));
+      if (event.key === 'k') setActiveRowIndex(index => Math.max(index - 1, 0));
+      if (event.key === 'o') openTicket(tickets[Math.min(activeRowIndex, tickets.length - 1)]);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeRowIndex, openTicket, tickets]);
 
   // 导出数据
   const handleExport = useCallback(async () => {
@@ -334,6 +366,12 @@ const TicketList: React.FC<TicketListProps> = ({
         render: (source: string) => <Tag color="blue">{source}</Tag>,
       },
       {
+        title: '处理人',
+        key: 'assignee',
+        width: 120,
+        render: (_, record: Ticket) => record.assignee?.name || (record.assigneeId ? `用户 #${record.assigneeId}` : '未分配'),
+      },
+      {
         title: '创建时间',
         dataIndex: 'createdAt',
         key: 'createdAt',
@@ -350,46 +388,20 @@ const TicketList: React.FC<TicketListProps> = ({
       {
         title: '操作',
         key: 'actions',
-        width: 120,
+        width: 150,
         fixed: 'right',
         render: (_, record: Ticket) => {
-          const items: MenuProps['items'] = [
-            {
-              key: 'view',
-              icon: <Eye />,
-              label: '查看详情',
-              onClick: () => router.push(`/tickets/${record.id}`),
-            },
-            {
-              key: 'edit',
-              icon: <Pencil />,
-              label: '编辑',
-              onClick: () => router.push(`/tickets/${record.id}`),
-            },
-            {
-              type: 'divider',
-            },
-            {
-              key: 'delete',
-              icon: <Trash2 />,
-              label: '删除',
-              danger: true,
-              onClick: () => {
-                setTicketToDelete(record);
-                setDeleteModalVisible(true);
-              },
-            },
-          ];
-
           return (
-            <Dropdown menu={{ items }} trigger={['click']}>
-              <Button type="text" icon={<MoreHorizontal />} />
-            </Dropdown>
+            <Space size={0} className="opacity-70 transition-opacity hover:opacity-100">
+              <Tooltip title="查看 (o)"><Button type="text" aria-label="查看工单" icon={<Eye size={16} />} onClick={() => openTicket(record)} /></Tooltip>
+              <Tooltip title="编辑"><Button type="text" aria-label="编辑工单" icon={<Pencil size={16} />} onClick={() => router.push(`/tickets/${record.id}?mode=edit`)} /></Tooltip>
+              {!['closed', 'cancelled'].includes(record.status) && <Tooltip title="关闭"><Button type="text" aria-label="关闭工单" icon={<CheckCircle size={16} />} onClick={() => handleClose(record)} /></Tooltip>}
+            </Space>
           );
         },
       },
     ],
-    [onTicketSelect, router]
+    [handleClose, openTicket, router]
   );
 
   // 行选择配置
@@ -514,6 +526,9 @@ const TicketList: React.FC<TicketListProps> = ({
       )}
 
       <Card className="rounded-lg shadow-sm">
+        <div className="mb-3 flex justify-end text-xs text-gray-500" aria-label="键盘快捷键">
+          快捷键：<kbd className="mx-1 rounded border bg-gray-50 px-1.5">j</kbd>/<kbd className="mx-1 rounded border bg-gray-50 px-1.5">k</kbd> 导航，<kbd className="mx-1 rounded border bg-gray-50 px-1.5">o</kbd> 打开
+        </div>
         <Table<Ticket>
           columns={columns}
           dataSource={tickets}
@@ -532,6 +547,8 @@ const TicketList: React.FC<TicketListProps> = ({
           onChange={handleTableChange}
           scroll={{ x: 1200 }}
           size="middle"
+          onRow={(_, index) => ({ onMouseEnter: () => setActiveRowIndex(index ?? 0) })}
+          rowClassName={(_, index) => index === activeRowIndex ? 'bg-blue-50/60' : ''}
           getPopupContainer={node => node.parentElement || document.body}
         />
       </Card>

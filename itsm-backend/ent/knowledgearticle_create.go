@@ -168,42 +168,34 @@ func (_c *KnowledgeArticleCreate) AddUserLikes(v ...*KnowledgeArticleLike) *Know
 	return _c.AddUserLikeIDs(ids...)
 }
 
-// SetVersionsID sets the "versions" edge to the KnowledgeArticleVersion entity by ID.
-func (_c *KnowledgeArticleCreate) SetVersionsID(id int) *KnowledgeArticleCreate {
-	_c.mutation.SetVersionsID(id)
+// AddVersionIDs adds the "versions" edge to the KnowledgeArticleVersion entity by IDs.
+func (_c *KnowledgeArticleCreate) AddVersionIDs(ids ...int) *KnowledgeArticleCreate {
+	_c.mutation.AddVersionIDs(ids...)
 	return _c
 }
 
-// SetNillableVersionsID sets the "versions" edge to the KnowledgeArticleVersion entity by ID if the given value is not nil.
-func (_c *KnowledgeArticleCreate) SetNillableVersionsID(id *int) *KnowledgeArticleCreate {
-	if id != nil {
-		_c = _c.SetVersionsID(*id)
+// AddVersions adds the "versions" edges to the KnowledgeArticleVersion entity.
+func (_c *KnowledgeArticleCreate) AddVersions(v ...*KnowledgeArticleVersion) *KnowledgeArticleCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
+	return _c.AddVersionIDs(ids...)
+}
+
+// AddSessionIDs adds the "sessions" edge to the KnowledgeArticleSession entity by IDs.
+func (_c *KnowledgeArticleCreate) AddSessionIDs(ids ...int) *KnowledgeArticleCreate {
+	_c.mutation.AddSessionIDs(ids...)
 	return _c
 }
 
-// SetVersions sets the "versions" edge to the KnowledgeArticleVersion entity.
-func (_c *KnowledgeArticleCreate) SetVersions(v *KnowledgeArticleVersion) *KnowledgeArticleCreate {
-	return _c.SetVersionsID(v.ID)
-}
-
-// SetSessionsID sets the "sessions" edge to the KnowledgeArticleSession entity by ID.
-func (_c *KnowledgeArticleCreate) SetSessionsID(id int) *KnowledgeArticleCreate {
-	_c.mutation.SetSessionsID(id)
-	return _c
-}
-
-// SetNillableSessionsID sets the "sessions" edge to the KnowledgeArticleSession entity by ID if the given value is not nil.
-func (_c *KnowledgeArticleCreate) SetNillableSessionsID(id *int) *KnowledgeArticleCreate {
-	if id != nil {
-		_c = _c.SetSessionsID(*id)
+// AddSessions adds the "sessions" edges to the KnowledgeArticleSession entity.
+func (_c *KnowledgeArticleCreate) AddSessions(v ...*KnowledgeArticleSession) *KnowledgeArticleCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return _c
-}
-
-// SetSessions sets the "sessions" edge to the KnowledgeArticleSession entity.
-func (_c *KnowledgeArticleCreate) SetSessions(v *KnowledgeArticleSession) *KnowledgeArticleCreate {
-	return _c.SetSessionsID(v.ID)
+	return _c.AddSessionIDs(ids...)
 }
 
 // Mutation returns the KnowledgeArticleMutation object of the builder.
@@ -392,7 +384,7 @@ func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cre
 	}
 	if nodes := _c.mutation.VersionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   knowledgearticle.VersionsTable,
 			Columns: []string{knowledgearticle.VersionsColumn},
@@ -404,12 +396,11 @@ func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cre
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.knowledge_article_versions = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.SessionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   knowledgearticle.SessionsTable,
 			Columns: []string{knowledgearticle.SessionsColumn},
@@ -421,7 +412,6 @@ func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cre
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.knowledge_article_sessions = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

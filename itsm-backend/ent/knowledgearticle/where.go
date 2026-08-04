@@ -678,7 +678,7 @@ func HasVersions() predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, VersionsTable, VersionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, VersionsTable, VersionsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -701,7 +701,7 @@ func HasSessions() predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, SessionsTable, SessionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, SessionsTable, SessionsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

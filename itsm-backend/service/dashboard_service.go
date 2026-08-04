@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"sort"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
@@ -221,7 +224,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, tenantID int) (
 	}
 
 	// 获取资源指标
-	resourceMetrics, err := s.getResourceMetrics(ctx)
+	resourceMetrics, err := s.getResourceMetrics(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get resource metrics", "error", err)
 		return nil, fmt.Errorf("获取资源指标失败: %w", err)
@@ -230,32 +233,24 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, tenantID int) (
 	// 构建KPI数据
 	kpis := []dto.DashboardKPIResponse{
 		{
-			Title:  "SLA 达成率",
-			Value:  fmt.Sprintf("%.1f%%", slaMetrics.AchievementRate),
-			Trend:  s.stringPtr("+1.2%"),
-			Period: s.stringPtr("上月"),
-			Color:  "text-green-500",
+			Title: "SLA 达成率",
+			Value: fmt.Sprintf("%.1f%%", slaMetrics.AchievementRate),
+			Color: "text-green-500",
 		},
 		{
-			Title:  "高优先级事件",
-			Value:  fmt.Sprintf("%d", incidentMetrics.HighPriorityCount),
-			Trend:  s.stringPtr("-3"),
-			Period: s.stringPtr("上周"),
-			Color:  "text-red-500",
+			Title: "高优先级事件",
+			Value: fmt.Sprintf("%d", incidentMetrics.HighPriorityCount),
+			Color: "text-red-500",
 		},
 		{
-			Title:  "待审批变更",
-			Value:  fmt.Sprintf("%d", changeMetrics.PendingApproval),
-			Trend:  s.stringPtr("+1"),
-			Period: s.stringPtr("昨天"),
-			Color:  "text-yellow-500",
+			Title: "待审批变更",
+			Value: fmt.Sprintf("%d", changeMetrics.PendingApproval),
+			Color: "text-yellow-500",
 		},
 		{
-			Title:  "纳管云资源",
-			Value:  fmt.Sprintf("%d", resourceMetrics.TotalResources),
-			Trend:  s.stringPtr("+28"),
-			Period: s.stringPtr("上周"),
-			Color:  "text-blue-500",
+			Title: "纳管云资源",
+			Value: fmt.Sprintf("%d", resourceMetrics.TotalResources),
+			Color: "text-blue-500",
 		},
 	}
 
@@ -371,50 +366,68 @@ func (s *DashboardService) getChangeMetrics(ctx context.Context, tenantID int) (
 }
 
 // getResourceMetrics 获取资源指标
-func (s *DashboardService) getResourceMetrics(ctx context.Context) (*dto.ResourceMetrics, error) {
-	// 这里使用模拟数据，实际应该从CMDB或资源管理系统获取
-	distribution := []dto.MultiCloudResourceData{
-		{Name: "虚拟机", AliCloud: 40, Tencent: 24, Private: 20},
-		{Name: "数据库", AliCloud: 22, Tencent: 18, Private: 30},
-		{Name: "存储桶", AliCloud: 55, Tencent: 32, Private: 15},
-		{Name: "网络", AliCloud: 30, Tencent: 20, Private: 25},
+func (s *DashboardService) getResourceMetrics(ctx context.Context, tenantID int) (*dto.ResourceMetrics, error) {
+	type distributionRow struct {
+		CIType        string `json:"ci_type"`
+		CloudProvider string `json:"cloud_provider"`
+		Count         int    `json:"count"`
+	}
+	var distributionRows []distributionRow
+	if err := s.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID)).
+		GroupBy(configurationitem.FieldCiType, configurationitem.FieldCloudProvider).
+		Aggregate(ent.Count()).Scan(ctx, &distributionRows); err != nil {
+		return nil, err
 	}
 
-	healthStatus := []dto.ResourceHealthData{
-		{Name: "运行中", Value: 400},
-		{Name: "已停止", Value: 78},
-		{Name: "警告", Value: 32},
-		{Name: "错误", Value: 15},
+	type statusRow struct {
+		Status string `json:"status"`
+		Count  int    `json:"count"`
+	}
+	var statusRows []statusRow
+	if err := s.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID)).
+		GroupBy(configurationitem.FieldStatus).Aggregate(ent.Count()).Scan(ctx, &statusRows); err != nil {
+		return nil, err
 	}
 
-	// 计算总资源数
+	byType := make(map[string]int)
+	byCloud := map[string]int{"阿里云": 0, "腾讯云": 0, "私有云": 0}
+	distributionByType := make(map[string]*dto.MultiCloudResourceData)
+	for _, row := range distributionRows {
+		byType[row.CIType] += row.Count
+		item := distributionByType[row.CIType]
+		if item == nil {
+			item = &dto.MultiCloudResourceData{Name: row.CIType}
+			distributionByType[row.CIType] = item
+		}
+		switch strings.ToLower(strings.TrimSpace(row.CloudProvider)) {
+		case "aliyun", "alicloud", "阿里云":
+			item.AliCloud += row.Count
+			byCloud["阿里云"] += row.Count
+		case "tencent", "tencentcloud", "腾讯云":
+			item.Tencent += row.Count
+			byCloud["腾讯云"] += row.Count
+		default:
+			item.Private += row.Count
+			byCloud["私有云"] += row.Count
+		}
+	}
+	distribution := make([]dto.MultiCloudResourceData, 0, len(distributionByType))
+	for _, item := range distributionByType {
+		distribution = append(distribution, *item)
+	}
+	sort.Slice(distribution, func(i, j int) bool { return distribution[i].Name < distribution[j].Name })
+
+	byStatus := make(map[string]int)
+	healthStatus := make([]dto.ResourceHealthData, 0, len(statusRows))
 	totalResources := 0
-	for _, health := range healthStatus {
-		totalResources += health.Value
+	for _, row := range statusRows {
+		byStatus[row.Status] = row.Count
+		healthStatus = append(healthStatus, dto.ResourceHealthData{Name: row.Status, Value: row.Count})
+		totalResources += row.Count
 	}
+	sort.Slice(healthStatus, func(i, j int) bool { return healthStatus[i].Name < healthStatus[j].Name })
 
-	return &dto.ResourceMetrics{
-		TotalResources: totalResources,
-		ByCloud: map[string]int{
-			"阿里云": 147,
-			"腾讯云": 94,
-			"私有云": 90,
-		},
-		ByType: map[string]int{
-			"虚拟机": 84,
-			"数据库": 70,
-			"存储桶": 102,
-			"网络":  75,
-		},
-		ByStatus: map[string]int{
-			"运行中": 400,
-			"已停止": 78,
-			"警告":  32,
-			"错误":  15,
-		},
-		Distribution: distribution,
-		HealthStatus: healthStatus,
-	}, nil
+	return &dto.ResourceMetrics{TotalResources: totalResources, ByCloud: byCloud, ByType: byType, ByStatus: byStatus, Distribution: distribution, HealthStatus: healthStatus}, nil
 }
 
 // stringPtr 返回字符串指针

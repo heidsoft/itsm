@@ -171,6 +171,22 @@ func TestAnalyticsService_GetDeepAnalytics_InvalidTimeFormat(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid start time format")
 }
 
+func TestAnalyticsService_GetDeepAnalytics_RejectsIncompleteTimeRange(t *testing.T) {
+	client, service, ctx := setupAnalyticsTest(t)
+	defer client.Close()
+
+	testTenant, err := createAnalyticsTestTenant(ctx, client, "incomplete-range")
+	require.NoError(t, err)
+	req := &dto.DeepAnalyticsRequest{
+		TimeRange:  []string{"2024-01-01"},
+		Dimensions: []string{"status"},
+		Metrics:    []string{"count"},
+	}
+
+	_, err = service.GetDeepAnalytics(ctx, req, testTenant.ID)
+	require.ErrorContains(t, err, "exactly two dates")
+}
+
 func TestAnalyticsService_GetDeepAnalytics_GroupBy(t *testing.T) {
 	client, service, ctx := setupAnalyticsTest(t)
 	defer client.Close()

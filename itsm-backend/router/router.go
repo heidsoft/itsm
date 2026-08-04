@@ -477,6 +477,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	{
 		// 租户中间件
 		tenant := auth.Use(middleware.TenantMiddleware(config.Client))
+		// 审计必须位于租户解析之后，确保所有租户内写操作都有可靠的租户和操作者上下文。
+		tenant.(*gin.RouterGroup).Use(middleware.AuditMiddleware(config.Client))
 
 		// ==================== Ticket Categories & Tags ====================
 		if config.TicketCategoryController != nil {
@@ -673,7 +675,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 
 			if config.AnalyticsController != nil {
-				tickets.POST("/analytics/export", middleware.RequirePermission("report", "read"), config.AnalyticsController.ExportAnalytics)
+				tickets.POST("/analytics/export", middleware.RequirePermission("report", "export"), config.AnalyticsController.ExportAnalytics)
 				// B8: GET /api/v1/analytics/tickets - 工单分析概览
 				// 挂在 tenant 顶层 group，路径 = /api/v1/analytics/tickets
 			}
@@ -1376,6 +1378,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					notifications.GET("/unread-count", middleware.RequirePermission("notification", "read"), config.NotificationController.GetUnreadCount)
 					notifications.PUT("/:id/read", middleware.RequirePermission("notification", "update"), config.NotificationController.MarkNotificationRead)
 					notifications.PUT("/read-all", middleware.RequirePermission("notification", "update"), config.NotificationController.MarkAllNotificationsRead)
+					notifications.PUT("/batch/read", middleware.RequirePermission("notification", "update"), config.NotificationController.MarkNotificationsRead)
+					notifications.DELETE("/batch", middleware.RequirePermission("notification", "delete"), config.NotificationController.DeleteNotifications)
 					notifications.DELETE("/:id", middleware.RequirePermission("notification", "delete"), config.NotificationController.DeleteNotification)
 					notifications.POST("", middleware.RequirePermission("notification", "create"), config.NotificationController.CreateNotification)
 				}

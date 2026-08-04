@@ -1770,8 +1770,6 @@ var (
 		{Name: "like_count", Type: field.TypeInt, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "knowledge_article_versions", Type: field.TypeInt, Nullable: true},
-		{Name: "knowledge_article_sessions", Type: field.TypeInt, Nullable: true},
 		{Name: "known_error_knowledge_articles", Type: field.TypeInt, Nullable: true},
 	}
 	// KnowledgeArticlesTable holds the schema information for the "knowledge_articles" table.
@@ -1781,20 +1779,8 @@ var (
 		PrimaryKey: []*schema.Column{KnowledgeArticlesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "knowledge_articles_knowledge_article_versions_versions",
-				Columns:    []*schema.Column{KnowledgeArticlesColumns[12]},
-				RefColumns: []*schema.Column{KnowledgeArticleVersionsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "knowledge_articles_knowledge_article_sessions_sessions",
-				Columns:    []*schema.Column{KnowledgeArticlesColumns[13]},
-				RefColumns: []*schema.Column{KnowledgeArticleSessionsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
 				Symbol:     "knowledge_articles_known_errors_knowledge_articles",
-				Columns:    []*schema.Column{KnowledgeArticlesColumns[14]},
+				Columns:    []*schema.Column{KnowledgeArticlesColumns[12]},
 				RefColumns: []*schema.Column{KnownErrorsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1858,40 +1844,47 @@ var (
 	// KnowledgeArticleSessionsColumns holds the columns for the "knowledge_article_sessions" table.
 	KnowledgeArticleSessionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "article_id", Type: field.TypeInt},
 		{Name: "user_id", Type: field.TypeInt},
 		{Name: "session_token", Type: field.TypeString, Size: 64},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "idle", "inactive"}},
 		{Name: "last_heartbeat", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "article_id", Type: field.TypeInt},
 	}
 	// KnowledgeArticleSessionsTable holds the schema information for the "knowledge_article_sessions" table.
 	KnowledgeArticleSessionsTable = &schema.Table{
 		Name:       "knowledge_article_sessions",
 		Columns:    KnowledgeArticleSessionsColumns,
 		PrimaryKey: []*schema.Column{KnowledgeArticleSessionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "knowledge_article_sessions_knowledge_articles_sessions",
+				Columns:    []*schema.Column{KnowledgeArticleSessionsColumns[6]},
+				RefColumns: []*schema.Column{KnowledgeArticlesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "knowledgearticlesession_session_token",
 				Unique:  true,
-				Columns: []*schema.Column{KnowledgeArticleSessionsColumns[3]},
+				Columns: []*schema.Column{KnowledgeArticleSessionsColumns[2]},
 			},
 			{
 				Name:    "knowledgearticlesession_article_id",
 				Unique:  false,
-				Columns: []*schema.Column{KnowledgeArticleSessionsColumns[1]},
+				Columns: []*schema.Column{KnowledgeArticleSessionsColumns[6]},
 			},
 			{
 				Name:    "knowledgearticlesession_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{KnowledgeArticleSessionsColumns[2]},
+				Columns: []*schema.Column{KnowledgeArticleSessionsColumns[1]},
 			},
 		},
 	}
 	// KnowledgeArticleVersionsColumns holds the columns for the "knowledge_article_versions" table.
 	KnowledgeArticleVersionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "article_id", Type: field.TypeInt},
 		{Name: "version", Type: field.TypeInt},
 		{Name: "title", Type: field.TypeString},
 		{Name: "content", Type: field.TypeString, Nullable: true, Size: 2147483647},
@@ -1900,17 +1893,26 @@ var (
 		{Name: "author_id", Type: field.TypeInt},
 		{Name: "change_summary", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "article_id", Type: field.TypeInt},
 	}
 	// KnowledgeArticleVersionsTable holds the schema information for the "knowledge_article_versions" table.
 	KnowledgeArticleVersionsTable = &schema.Table{
 		Name:       "knowledge_article_versions",
 		Columns:    KnowledgeArticleVersionsColumns,
 		PrimaryKey: []*schema.Column{KnowledgeArticleVersionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "knowledge_article_versions_knowledge_articles_versions",
+				Columns:    []*schema.Column{KnowledgeArticleVersionsColumns[9]},
+				RefColumns: []*schema.Column{KnowledgeArticlesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "knowledgearticleversion_article_id_version",
 				Unique:  true,
-				Columns: []*schema.Column{KnowledgeArticleVersionsColumns[1], KnowledgeArticleVersionsColumns[2]},
+				Columns: []*schema.Column{KnowledgeArticleVersionsColumns[9], KnowledgeArticleVersionsColumns[1]},
 			},
 		},
 	}
@@ -5280,10 +5282,10 @@ func init() {
 	IncidentMetricsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentRuleExecutionsTable.ForeignKeys[0].RefTable = IncidentRulesTable
 	ItemVersionsTable.ForeignKeys[0].RefTable = MarketplaceItemsTable
-	KnowledgeArticlesTable.ForeignKeys[0].RefTable = KnowledgeArticleVersionsTable
-	KnowledgeArticlesTable.ForeignKeys[1].RefTable = KnowledgeArticleSessionsTable
-	KnowledgeArticlesTable.ForeignKeys[2].RefTable = KnownErrorsTable
+	KnowledgeArticlesTable.ForeignKeys[0].RefTable = KnownErrorsTable
 	KnowledgeArticleLikesTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
+	KnowledgeArticleSessionsTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
+	KnowledgeArticleVersionsTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
 	MspAllocationsTable.ForeignKeys[0].RefTable = TenantsTable
 	MspAllocationsTable.ForeignKeys[1].RefTable = UsersTable
 	MenusTable.ForeignKeys[0].RefTable = MenusTable

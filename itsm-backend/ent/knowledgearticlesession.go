@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlesession"
 	"strings"
 	"time"
@@ -38,7 +39,7 @@ type KnowledgeArticleSession struct {
 // KnowledgeArticleSessionEdges holds the relations/edges for other nodes in the graph.
 type KnowledgeArticleSessionEdges struct {
 	// Article holds the value of the article edge.
-	Article []*KnowledgeArticle `json:"article,omitempty"`
+	Article *KnowledgeArticle `json:"article,omitempty"`
 	// User holds the value of the user edge.
 	User []*User `json:"user,omitempty"`
 	// Participants holds the value of the participants edge.
@@ -49,10 +50,12 @@ type KnowledgeArticleSessionEdges struct {
 }
 
 // ArticleOrErr returns the Article value or an error if the edge
-// was not loaded in eager-loading.
-func (e KnowledgeArticleSessionEdges) ArticleOrErr() ([]*KnowledgeArticle, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e KnowledgeArticleSessionEdges) ArticleOrErr() (*KnowledgeArticle, error) {
+	if e.Article != nil {
 		return e.Article, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: knowledgearticle.Label}
 	}
 	return nil, &NotLoadedError{edge: "article"}
 }

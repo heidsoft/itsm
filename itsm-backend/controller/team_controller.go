@@ -69,7 +69,13 @@ func (c *TeamController) AddMember(ctx *gin.Context) {
 		return
 	}
 
-	err := c.service.AddMember(ctx.Request.Context(), req.TeamID, req.UserID)
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.UnauthorizedCode, "获取租户ID失败")
+		return
+	}
+
+	err = c.service.AddMember(ctx.Request.Context(), req.TeamID, req.UserID, tenantID)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, err.Error())
 		return

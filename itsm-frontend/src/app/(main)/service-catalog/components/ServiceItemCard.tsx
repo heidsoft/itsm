@@ -12,7 +12,6 @@ import {
   Dropdown,
   Popconfirm,
   App,
-  message,
 } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -83,7 +82,8 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
     router.push(`/service-catalog/detail/${catalog.id}`);
   };
 
-  const isPublished = catalog.status === 'published';
+  const estimatedResolution = catalog.availability?.resolutionTime
+    ?? catalog.availability?.responseTime;
 
   // 删除服务
   const handleDelete = async () => {
@@ -162,7 +162,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
         <div className="flex items-center">
           <Clock size={14} className="mr-1 text-gray-500" />
           <Text type="secondary" className="!text-xs">
-            {catalog.slaTime || catalog.estimatedTime || ''}
+            预计解决：{catalog.slaTime || catalog.estimatedTime || (estimatedResolution ? `${estimatedResolution} 天` : '待确认')}
           </Text>
         </div>
         <div>

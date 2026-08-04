@@ -52,19 +52,19 @@ const (
 	// UserLikesColumn is the table column denoting the user_likes relation/edge.
 	UserLikesColumn = "article_id"
 	// VersionsTable is the table that holds the versions relation/edge.
-	VersionsTable = "knowledge_articles"
+	VersionsTable = "knowledge_article_versions"
 	// VersionsInverseTable is the table name for the KnowledgeArticleVersion entity.
 	// It exists in this package in order to avoid circular dependency with the "knowledgearticleversion" package.
 	VersionsInverseTable = "knowledge_article_versions"
 	// VersionsColumn is the table column denoting the versions relation/edge.
-	VersionsColumn = "knowledge_article_versions"
+	VersionsColumn = "article_id"
 	// SessionsTable is the table that holds the sessions relation/edge.
-	SessionsTable = "knowledge_articles"
+	SessionsTable = "knowledge_article_sessions"
 	// SessionsInverseTable is the table name for the KnowledgeArticleSession entity.
 	// It exists in this package in order to avoid circular dependency with the "knowledgearticlesession" package.
 	SessionsInverseTable = "knowledge_article_sessions"
 	// SessionsColumn is the table column denoting the sessions relation/edge.
-	SessionsColumn = "knowledge_article_sessions"
+	SessionsColumn = "article_id"
 )
 
 // Columns holds all SQL columns for knowledgearticle fields.
@@ -86,8 +86,6 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "knowledge_articles"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"knowledge_article_versions",
-	"knowledge_article_sessions",
 	"known_error_knowledge_articles",
 }
 
@@ -204,17 +202,31 @@ func ByUserLikes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByVersionsField orders the results by versions field.
-func ByVersionsField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByVersionsCount orders the results by versions count.
+func ByVersionsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newVersionsStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborsCount(s, newVersionsStep(), opts...)
 	}
 }
 
-// BySessionsField orders the results by sessions field.
-func BySessionsField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByVersions orders the results by versions terms.
+func ByVersions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSessionsStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newVersionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// BySessionsCount orders the results by sessions count.
+func BySessionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSessionsStep(), opts...)
+	}
+}
+
+// BySessions orders the results by sessions terms.
+func BySessions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSessionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newUserLikesStep() *sqlgraph.Step {
@@ -228,13 +240,13 @@ func newVersionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(VersionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, VersionsTable, VersionsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, false, VersionsTable, VersionsColumn),
 	)
 }
 func newSessionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SessionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, SessionsTable, SessionsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, false, SessionsTable, SessionsColumn),
 	)
 }

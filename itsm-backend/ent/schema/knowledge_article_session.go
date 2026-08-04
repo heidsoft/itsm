@@ -28,7 +28,10 @@ func (KnowledgeArticleSession) Fields() []ent.Field {
 func (KnowledgeArticleSession) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("article", KnowledgeArticle.Type).
-			Ref("sessions"),
+			Ref("sessions").
+			Field("article_id").
+			Required().
+			Unique(),
 		edge.From("user", User.Type).
 			Ref("article_sessions"),
 		edge.To("participants", KnowledgeArticleParticipant.Type),

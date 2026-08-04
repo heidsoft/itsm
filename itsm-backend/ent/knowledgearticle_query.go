@@ -102,7 +102,7 @@ func (_q *KnowledgeArticleQuery) QueryVersions() *KnowledgeArticleVersionQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, selector),
 			sqlgraph.To(knowledgearticleversion.Table, knowledgearticleversion.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, knowledgearticle.VersionsTable, knowledgearticle.VersionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, knowledgearticle.VersionsTable, knowledgearticle.VersionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -124,7 +124,7 @@ func (_q *KnowledgeArticleQuery) QuerySessions() *KnowledgeArticleSessionQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, selector),
 			sqlgraph.To(knowledgearticlesession.Table, knowledgearticlesession.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, knowledgearticle.SessionsTable, knowledgearticle.SessionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, knowledgearticle.SessionsTable, knowledgearticle.SessionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -451,9 +451,6 @@ func (_q *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 			_q.withSessions != nil,
 		}
 	)
-	if _q.withVersions != nil || _q.withSessions != nil {
-		withFKs = true
-	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, knowledgearticle.ForeignKeys...)
 	}
@@ -483,14 +480,16 @@ func (_q *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 		}
 	}
 	if query := _q.withVersions; query != nil {
-		if err := _q.loadVersions(ctx, query, nodes, nil,
-			func(n *KnowledgeArticle, e *KnowledgeArticleVersion) { n.Edges.Versions = e }); err != nil {
+		if err := _q.loadVersions(ctx, query, nodes,
+			func(n *KnowledgeArticle) { n.Edges.Versions = []*KnowledgeArticleVersion{} },
+			func(n *KnowledgeArticle, e *KnowledgeArticleVersion) { n.Edges.Versions = append(n.Edges.Versions, e) }); err != nil {
 			return nil, err
 		}
 	}
 	if query := _q.withSessions; query != nil {
-		if err := _q.loadSessions(ctx, query, nodes, nil,
-			func(n *KnowledgeArticle, e *KnowledgeArticleSession) { n.Edges.Sessions = e }); err != nil {
+		if err := _q.loadSessions(ctx, query, nodes,
+			func(n *KnowledgeArticle) { n.Edges.Sessions = []*KnowledgeArticleSession{} },
+			func(n *KnowledgeArticle, e *KnowledgeArticleSession) { n.Edges.Sessions = append(n.Edges.Sessions, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -528,66 +527,62 @@ func (_q *KnowledgeArticleQuery) loadUserLikes(ctx context.Context, query *Knowl
 	return nil
 }
 func (_q *KnowledgeArticleQuery) loadVersions(ctx context.Context, query *KnowledgeArticleVersionQuery, nodes []*KnowledgeArticle, init func(*KnowledgeArticle), assign func(*KnowledgeArticle, *KnowledgeArticleVersion)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*KnowledgeArticle)
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*KnowledgeArticle)
 	for i := range nodes {
-		if nodes[i].knowledge_article_versions == nil {
-			continue
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
 		}
-		fk := *nodes[i].knowledge_article_versions
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(ids) == 0 {
-		return nil
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(knowledgearticleversion.FieldArticleID)
 	}
-	query.Where(knowledgearticleversion.IDIn(ids...))
+	query.Where(predicate.KnowledgeArticleVersion(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(knowledgearticle.VersionsColumn), fks...))
+	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
+		fk := n.ArticleID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "knowledge_article_versions" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "article_id" returned %v for node %v`, fk, n.ID)
 		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
+		assign(node, n)
 	}
 	return nil
 }
 func (_q *KnowledgeArticleQuery) loadSessions(ctx context.Context, query *KnowledgeArticleSessionQuery, nodes []*KnowledgeArticle, init func(*KnowledgeArticle), assign func(*KnowledgeArticle, *KnowledgeArticleSession)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*KnowledgeArticle)
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*KnowledgeArticle)
 	for i := range nodes {
-		if nodes[i].knowledge_article_sessions == nil {
-			continue
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
 		}
-		fk := *nodes[i].knowledge_article_sessions
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(ids) == 0 {
-		return nil
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(knowledgearticlesession.FieldArticleID)
 	}
-	query.Where(knowledgearticlesession.IDIn(ids...))
+	query.Where(predicate.KnowledgeArticleSession(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(knowledgearticle.SessionsColumn), fks...))
+	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
+		fk := n.ArticleID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "knowledge_article_sessions" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "article_id" returned %v for node %v`, fk, n.ID)
 		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
+		assign(node, n)
 	}
 	return nil
 }
