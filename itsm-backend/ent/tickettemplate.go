@@ -26,8 +26,6 @@ type TicketTemplate struct {
 	Category string `json:"category,omitempty"`
 	// 默认优先级
 	Priority string `json:"priority,omitempty"`
-	// 表单字段定义
-	FormFields []uint8 `json:"form_fields,omitempty"`
 	// 工作流步骤定义
 	WorkflowSteps []uint8 `json:"workflow_steps,omitempty"`
 	// 是否启用
@@ -67,7 +65,7 @@ func (*TicketTemplate) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case tickettemplate.FieldFormFields, tickettemplate.FieldWorkflowSteps:
+		case tickettemplate.FieldWorkflowSteps:
 			values[i] = new([]byte)
 		case tickettemplate.FieldIsActive:
 			values[i] = new(sql.NullBool)
@@ -121,14 +119,6 @@ func (_m *TicketTemplate) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
 				_m.Priority = value.String
-			}
-		case tickettemplate.FieldFormFields:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field form_fields", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &_m.FormFields); err != nil {
-					return fmt.Errorf("unmarshal field form_fields: %w", err)
-				}
 			}
 		case tickettemplate.FieldWorkflowSteps:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -214,9 +204,6 @@ func (_m *TicketTemplate) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
 	builder.WriteString(_m.Priority)
-	builder.WriteString(", ")
-	builder.WriteString("form_fields=")
-	builder.WriteString(fmt.Sprintf("%v", _m.FormFields))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_steps=")
 	builder.WriteString(fmt.Sprintf("%v", _m.WorkflowSteps))

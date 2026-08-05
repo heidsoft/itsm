@@ -61,12 +61,6 @@ func (_c *TicketTemplateCreate) SetNillablePriority(v *string) *TicketTemplateCr
 	return _c
 }
 
-// SetFormFields sets the "form_fields" field.
-func (_c *TicketTemplateCreate) SetFormFields(v []uint8) *TicketTemplateCreate {
-	_c.mutation.SetFormFields(v)
-	return _c
-}
-
 // SetWorkflowSteps sets the "workflow_steps" field.
 func (_c *TicketTemplateCreate) SetWorkflowSteps(v []uint8) *TicketTemplateCreate {
 	_c.mutation.SetWorkflowSteps(v)
@@ -268,10 +262,6 @@ func (_c *TicketTemplateCreate) createSpec() (*TicketTemplate, *sqlgraph.CreateS
 	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(tickettemplate.FieldPriority, field.TypeString, value)
 		_node.Priority = value
-	}
-	if value, ok := _c.mutation.FormFields(); ok {
-		_spec.SetField(tickettemplate.FieldFormFields, field.TypeJSON, value)
-		_node.FormFields = value
 	}
 	if value, ok := _c.mutation.WorkflowSteps(); ok {
 		_spec.SetField(tickettemplate.FieldWorkflowSteps, field.TypeJSON, value)

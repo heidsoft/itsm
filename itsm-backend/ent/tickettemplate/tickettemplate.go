@@ -22,8 +22,6 @@ const (
 	FieldCategory = "category"
 	// FieldPriority holds the string denoting the priority field in the database.
 	FieldPriority = "priority"
-	// FieldFormFields holds the string denoting the form_fields field in the database.
-	FieldFormFields = "form_fields"
 	// FieldWorkflowSteps holds the string denoting the workflow_steps field in the database.
 	FieldWorkflowSteps = "workflow_steps"
 	// FieldIsActive holds the string denoting the is_active field in the database.
@@ -54,7 +52,6 @@ var Columns = []string{
 	FieldDescription,
 	FieldCategory,
 	FieldPriority,
-	FieldFormFields,
 	FieldWorkflowSteps,
 	FieldIsActive,
 	FieldTenantID,

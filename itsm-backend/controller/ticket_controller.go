@@ -876,10 +876,9 @@ func normalizeTicketTemplate(template interface{}) gin.H {
 	if !ok || tmpl == nil {
 		return gin.H{}
 	}
-	formFields := tmpl.FormFields
-	if formFields == nil {
-		formFields = gin.H{}
-	}
+	// FormFields 已废弃：模板字段定义现在存在 field_definitions 表，通过 tmpl.Fields 返回。
+	// 这两个 key 仍保留在响应里以兼容旧前端，但内容始终为空对象。
+	formFields := gin.H{}
 	isActive := tmpl.IsActive
 	return gin.H{
 		"id":             tmpl.ID,

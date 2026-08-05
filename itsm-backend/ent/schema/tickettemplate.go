@@ -28,9 +28,6 @@ func (TicketTemplate) Fields() []ent.Field {
 		field.String("priority").
 			Comment("默认优先级").
 			Default("medium"),
-		field.JSON("form_fields", []byte{}).
-			Comment("表单字段定义").
-			Optional(),
 		field.JSON("workflow_steps", []byte{}).
 			Comment("工作流步骤定义").
 			Optional(),

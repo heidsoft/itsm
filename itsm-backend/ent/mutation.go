@@ -140474,8 +140474,6 @@ type TicketTemplateMutation struct {
 	description          *string
 	category             *string
 	priority             *string
-	form_fields          *[]uint8
-	appendform_fields    []uint8
 	workflow_steps       *[]uint8
 	appendworkflow_steps []uint8
 	is_active            *bool
@@ -140745,71 +140743,6 @@ func (m *TicketTemplateMutation) OldPriority(ctx context.Context) (v string, err
 // ResetPriority resets all changes to the "priority" field.
 func (m *TicketTemplateMutation) ResetPriority() {
 	m.priority = nil
-}
-
-// SetFormFields sets the "form_fields" field.
-func (m *TicketTemplateMutation) SetFormFields(u []uint8) {
-	m.form_fields = &u
-	m.appendform_fields = nil
-}
-
-// FormFields returns the value of the "form_fields" field in the mutation.
-func (m *TicketTemplateMutation) FormFields() (r []uint8, exists bool) {
-	v := m.form_fields
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldFormFields returns the old "form_fields" field's value of the TicketTemplate entity.
-// If the TicketTemplate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TicketTemplateMutation) OldFormFields(ctx context.Context) (v []uint8, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldFormFields is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldFormFields requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldFormFields: %w", err)
-	}
-	return oldValue.FormFields, nil
-}
-
-// AppendFormFields adds u to the "form_fields" field.
-func (m *TicketTemplateMutation) AppendFormFields(u []uint8) {
-	m.appendform_fields = append(m.appendform_fields, u...)
-}
-
-// AppendedFormFields returns the list of values that were appended to the "form_fields" field in this mutation.
-func (m *TicketTemplateMutation) AppendedFormFields() ([]uint8, bool) {
-	if len(m.appendform_fields) == 0 {
-		return nil, false
-	}
-	return m.appendform_fields, true
-}
-
-// ClearFormFields clears the value of the "form_fields" field.
-func (m *TicketTemplateMutation) ClearFormFields() {
-	m.form_fields = nil
-	m.appendform_fields = nil
-	m.clearedFields[tickettemplate.FieldFormFields] = struct{}{}
-}
-
-// FormFieldsCleared returns if the "form_fields" field was cleared in this mutation.
-func (m *TicketTemplateMutation) FormFieldsCleared() bool {
-	_, ok := m.clearedFields[tickettemplate.FieldFormFields]
-	return ok
-}
-
-// ResetFormFields resets all changes to the "form_fields" field.
-func (m *TicketTemplateMutation) ResetFormFields() {
-	m.form_fields = nil
-	m.appendform_fields = nil
-	delete(m.clearedFields, tickettemplate.FieldFormFields)
 }
 
 // SetWorkflowSteps sets the "workflow_steps" field.
@@ -141129,7 +141062,7 @@ func (m *TicketTemplateMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TicketTemplateMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 9)
 	if m.name != nil {
 		fields = append(fields, tickettemplate.FieldName)
 	}
@@ -141141,9 +141074,6 @@ func (m *TicketTemplateMutation) Fields() []string {
 	}
 	if m.priority != nil {
 		fields = append(fields, tickettemplate.FieldPriority)
-	}
-	if m.form_fields != nil {
-		fields = append(fields, tickettemplate.FieldFormFields)
 	}
 	if m.workflow_steps != nil {
 		fields = append(fields, tickettemplate.FieldWorkflowSteps)
@@ -141176,8 +141106,6 @@ func (m *TicketTemplateMutation) Field(name string) (ent.Value, bool) {
 		return m.Category()
 	case tickettemplate.FieldPriority:
 		return m.Priority()
-	case tickettemplate.FieldFormFields:
-		return m.FormFields()
 	case tickettemplate.FieldWorkflowSteps:
 		return m.WorkflowSteps()
 	case tickettemplate.FieldIsActive:
@@ -141205,8 +141133,6 @@ func (m *TicketTemplateMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldCategory(ctx)
 	case tickettemplate.FieldPriority:
 		return m.OldPriority(ctx)
-	case tickettemplate.FieldFormFields:
-		return m.OldFormFields(ctx)
 	case tickettemplate.FieldWorkflowSteps:
 		return m.OldWorkflowSteps(ctx)
 	case tickettemplate.FieldIsActive:
@@ -141253,13 +141179,6 @@ func (m *TicketTemplateMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetPriority(v)
-		return nil
-	case tickettemplate.FieldFormFields:
-		v, ok := value.([]uint8)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetFormFields(v)
 		return nil
 	case tickettemplate.FieldWorkflowSteps:
 		v, ok := value.([]uint8)
@@ -141344,9 +141263,6 @@ func (m *TicketTemplateMutation) ClearedFields() []string {
 	if m.FieldCleared(tickettemplate.FieldDescription) {
 		fields = append(fields, tickettemplate.FieldDescription)
 	}
-	if m.FieldCleared(tickettemplate.FieldFormFields) {
-		fields = append(fields, tickettemplate.FieldFormFields)
-	}
 	if m.FieldCleared(tickettemplate.FieldWorkflowSteps) {
 		fields = append(fields, tickettemplate.FieldWorkflowSteps)
 	}
@@ -141366,9 +141282,6 @@ func (m *TicketTemplateMutation) ClearField(name string) error {
 	switch name {
 	case tickettemplate.FieldDescription:
 		m.ClearDescription()
-		return nil
-	case tickettemplate.FieldFormFields:
-		m.ClearFormFields()
 		return nil
 	case tickettemplate.FieldWorkflowSteps:
 		m.ClearWorkflowSteps()
@@ -141392,9 +141305,6 @@ func (m *TicketTemplateMutation) ResetField(name string) error {
 		return nil
 	case tickettemplate.FieldPriority:
 		m.ResetPriority()
-		return nil
-	case tickettemplate.FieldFormFields:
-		m.ResetFormFields()
 		return nil
 	case tickettemplate.FieldWorkflowSteps:
 		m.ResetWorkflowSteps()

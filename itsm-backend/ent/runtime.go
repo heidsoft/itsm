@@ -3800,19 +3800,19 @@ func init() {
 	// tickettemplate.DefaultPriority holds the default value on creation for the priority field.
 	tickettemplate.DefaultPriority = tickettemplateDescPriority.Default.(string)
 	// tickettemplateDescIsActive is the schema descriptor for is_active field.
-	tickettemplateDescIsActive := tickettemplateFields[6].Descriptor()
+	tickettemplateDescIsActive := tickettemplateFields[5].Descriptor()
 	// tickettemplate.DefaultIsActive holds the default value on creation for the is_active field.
 	tickettemplate.DefaultIsActive = tickettemplateDescIsActive.Default.(bool)
 	// tickettemplateDescTenantID is the schema descriptor for tenant_id field.
-	tickettemplateDescTenantID := tickettemplateFields[7].Descriptor()
+	tickettemplateDescTenantID := tickettemplateFields[6].Descriptor()
 	// tickettemplate.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	tickettemplate.TenantIDValidator = tickettemplateDescTenantID.Validators[0].(func(int) error)
 	// tickettemplateDescCreatedAt is the schema descriptor for created_at field.
-	tickettemplateDescCreatedAt := tickettemplateFields[8].Descriptor()
+	tickettemplateDescCreatedAt := tickettemplateFields[7].Descriptor()
 	// tickettemplate.DefaultCreatedAt holds the default value on creation for the created_at field.
 	tickettemplate.DefaultCreatedAt = tickettemplateDescCreatedAt.Default.(func() time.Time)
 	// tickettemplateDescUpdatedAt is the schema descriptor for updated_at field.
-	tickettemplateDescUpdatedAt := tickettemplateFields[9].Descriptor()
+	tickettemplateDescUpdatedAt := tickettemplateFields[8].Descriptor()
 	// tickettemplate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	tickettemplate.DefaultUpdatedAt = tickettemplateDescUpdatedAt.Default.(func() time.Time)
 	// tickettemplate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

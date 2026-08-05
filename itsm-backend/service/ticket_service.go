@@ -1865,6 +1865,34 @@ func (s *TicketService) GetTicketAnalytics(ctx context.Context, tenantID int, da
 
 // ==================== 模板 CRUD ====================
 
+// toFieldDefinitionInputs 把前端提交的模板字段（[]map[string]interface{}）转换成
+// FieldDefinitionService 消费的 []FieldDefinitionInput。
+func toFieldDefinitionInputs(fields []map[string]interface{}) []FieldDefinitionInput {
+	result := make([]FieldDefinitionInput, 0, len(fields))
+	for i, f := range fields {
+		name, _ := f["name"].(string)
+		if name == "" {
+			continue
+		}
+		label, _ := f["label"].(string)
+		fieldType, _ := f["type"].(string)
+		required, _ := f["required"].(bool)
+		var options []interface{}
+		if raw, ok := f["options"].([]interface{}); ok {
+			options = raw
+		}
+		result = append(result, FieldDefinitionInput{
+			Name:      name,
+			Label:     label,
+			FieldType: fieldType,
+			Required:  required,
+			Options:   options,
+			SortOrder: i,
+		})
+	}
+	return result
+}
+
 // CreateTicketTemplate 创建工单模板
 func (s *TicketService) CreateTicketTemplate(ctx context.Context, tenantID int, req interface{}) (interface{}, error) {
 	createReq, ok := req.(*dto.TicketTemplate)
@@ -1873,13 +1901,6 @@ func (s *TicketService) CreateTicketTemplate(ctx context.Context, tenantID int, 
 	}
 	if s.client == nil {
 		return nil, fmt.Errorf("ent client not available for template")
-	}
-	formFields := createReq.FormFields
-	if formFields == nil {
-		formFields = make(map[string]interface{})
-	}
-	if len(createReq.Fields) > 0 {
-		formFields["fields"] = createReq.Fields
 	}
 	isActive := true
 	priority := strings.TrimSpace(createReq.Priority)
@@ -1893,7 +1914,7 @@ func (s *TicketService) CreateTicketTemplate(ctx context.Context, tenantID int, 
 		Description:   createReq.Description,
 		Category:      createReq.Category,
 		Priority:      priority,
-		FormFields:    formFields,
+		Fields:        toFieldDefinitionInputs(createReq.Fields),
 		WorkflowSteps: createReq.WorkflowSteps,
 		IsActive:      isActive,
 		TenantID:      tenantID,
@@ -1902,7 +1923,7 @@ func (s *TicketService) CreateTicketTemplate(ctx context.Context, tenantID int, 
 	if err != nil {
 		return nil, err
 	}
-	return s.toTicketTemplateDTO(template)
+	return s.toTicketTemplateDTO(ctx, template)
 }
 
 // UpdateTicketTemplate 更新工单模板
@@ -1914,24 +1935,22 @@ func (s *TicketService) UpdateTicketTemplate(ctx context.Context, tenantID int, 
 	if s.client == nil {
 		return nil, fmt.Errorf("ent client not available for template")
 	}
-	formFields := updateReq.FormFields
-	if formFields == nil && len(updateReq.Fields) > 0 {
-		formFields = map[string]interface{}{"fields": updateReq.Fields}
-	} else if len(updateReq.Fields) > 0 {
-		formFields["fields"] = updateReq.Fields
-	}
 	var isActive *bool
 	if updateReq.IsActiveAlt != nil {
 		isActive = updateReq.IsActiveAlt
 	}
 	priority := strings.TrimSpace(updateReq.Priority)
 	templateService := NewTicketTemplateService(s.client)
+	var fields []FieldDefinitionInput
+	if updateReq.Fields != nil {
+		fields = toFieldDefinitionInputs(updateReq.Fields)
+	}
 	serviceReq := &UpdateTemplateRequest{
 		Name:          updateReq.Name,
 		Description:   updateReq.Description,
 		Category:      updateReq.Category,
 		Priority:      priority,
-		FormFields:    formFields,
+		Fields:        fields,
 		WorkflowSteps: updateReq.WorkflowSteps,
 		IsActive:      isActive,
 	}
@@ -1939,7 +1958,7 @@ func (s *TicketService) UpdateTicketTemplate(ctx context.Context, tenantID int, 
 	if err != nil {
 		return nil, err
 	}
-	return s.toTicketTemplateDTO(template)
+	return s.toTicketTemplateDTO(ctx, template)
 }
 
 // DeleteTicketTemplate 删除工单模板
@@ -1969,7 +1988,7 @@ func (s *TicketService) GetTicketTemplates(ctx context.Context, tenantID int) ([
 	}
 	result := make([]interface{}, 0, len(templates))
 	for _, template := range templates {
-		templateDTO, err := s.toTicketTemplateDTO(template)
+		templateDTO, err := s.toTicketTemplateDTO(ctx, template)
 		if err != nil {
 			return nil, err
 		}
@@ -1988,7 +2007,7 @@ func (s *TicketService) GetTicketTemplate(ctx context.Context, tenantID int, tem
 	if err != nil {
 		return nil, err
 	}
-	return s.toTicketTemplateDTO(template)
+	return s.toTicketTemplateDTO(ctx, template)
 }
 
 // UpdateTicketTemplateStatus 启用或停用工单模板
@@ -2021,7 +2040,6 @@ func (s *TicketService) CopyTicketTemplate(ctx context.Context, tenantID int, te
 		Category:      source.Category,
 		Priority:      source.Priority,
 		Fields:        source.Fields,
-		FormFields:    source.FormFields,
 		WorkflowSteps: source.WorkflowSteps,
 		IsActive:      source.IsActive,
 	})
@@ -2056,15 +2074,21 @@ func (s *TicketService) GetTicketTemplateCategories(ctx context.Context, tenantI
 	return categories, nil
 }
 
-func (s *TicketService) toTicketTemplateDTO(template *ent.TicketTemplate) (*dto.TicketTemplate, error) {
-	var formFields map[string]interface{}
-	if len(template.FormFields) > 0 {
-		if err := json.Unmarshal(template.FormFields, &formFields); err != nil {
-			s.logger.Warnw("反序列化表单字段失败", "error", err, "template_id", template.ID)
-			formFields = make(map[string]interface{})
-		}
-	} else {
-		formFields = make(map[string]interface{})
+func (s *TicketService) toTicketTemplateDTO(ctx context.Context, template *ent.TicketTemplate) (*dto.TicketTemplate, error) {
+	defs, err := NewFieldDefinitionService(s.client).ListDefinitions(ctx, template.TenantID, "ticket_template", template.ID)
+	if err != nil {
+		s.logger.Warnw("加载模板字段定义失败", "error", err, "template_id", template.ID)
+		defs = nil
+	}
+	fields := make([]map[string]interface{}, 0, len(defs))
+	for _, d := range defs {
+		fields = append(fields, map[string]interface{}{
+			"name":     d.Name,
+			"label":    d.Label,
+			"type":     d.FieldType,
+			"required": d.Required,
+			"options":  d.Options,
+		})
 	}
 
 	var workflowSteps []map[string]interface{}
@@ -2072,13 +2096,6 @@ func (s *TicketService) toTicketTemplateDTO(template *ent.TicketTemplate) (*dto.
 		if err := json.Unmarshal(template.WorkflowSteps, &workflowSteps); err != nil {
 			s.logger.Warnw("反序列化工作流步骤失败", "error", err, "template_id", template.ID)
 			workflowSteps = nil
-		}
-	}
-
-	fields := make([]map[string]interface{}, 0)
-	if rawFields, ok := formFields["fields"]; ok {
-		if encoded, err := json.Marshal(rawFields); err == nil {
-			_ = json.Unmarshal(encoded, &fields)
 		}
 	}
 
@@ -2090,7 +2107,6 @@ func (s *TicketService) toTicketTemplateDTO(template *ent.TicketTemplate) (*dto.
 		Category:      template.Category,
 		Priority:      template.Priority,
 		Fields:        fields,
-		FormFields:    formFields,
 		WorkflowSteps: workflowSteps,
 		IsActive:      isActive,
 		CreatedAt:     template.CreatedAt,

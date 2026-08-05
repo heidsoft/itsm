@@ -365,16 +365,6 @@ func PriorityContainsFold(v string) predicate.TicketTemplate {
 	return predicate.TicketTemplate(sql.FieldContainsFold(FieldPriority, v))
 }
 
-// FormFieldsIsNil applies the IsNil predicate on the "form_fields" field.
-func FormFieldsIsNil() predicate.TicketTemplate {
-	return predicate.TicketTemplate(sql.FieldIsNull(FieldFormFields))
-}
-
-// FormFieldsNotNil applies the NotNil predicate on the "form_fields" field.
-func FormFieldsNotNil() predicate.TicketTemplate {
-	return predicate.TicketTemplate(sql.FieldNotNull(FieldFormFields))
-}
-
 // WorkflowStepsIsNil applies the IsNil predicate on the "workflow_steps" field.
 func WorkflowStepsIsNil() predicate.TicketTemplate {
 	return predicate.TicketTemplate(sql.FieldIsNull(FieldWorkflowSteps))

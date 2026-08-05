@@ -92,24 +92,6 @@ func (_u *TicketTemplateUpdate) SetNillablePriority(v *string) *TicketTemplateUp
 	return _u
 }
 
-// SetFormFields sets the "form_fields" field.
-func (_u *TicketTemplateUpdate) SetFormFields(v []uint8) *TicketTemplateUpdate {
-	_u.mutation.SetFormFields(v)
-	return _u
-}
-
-// AppendFormFields appends value to the "form_fields" field.
-func (_u *TicketTemplateUpdate) AppendFormFields(v []uint8) *TicketTemplateUpdate {
-	_u.mutation.AppendFormFields(v)
-	return _u
-}
-
-// ClearFormFields clears the value of the "form_fields" field.
-func (_u *TicketTemplateUpdate) ClearFormFields() *TicketTemplateUpdate {
-	_u.mutation.ClearFormFields()
-	return _u
-}
-
 // SetWorkflowSteps sets the "workflow_steps" field.
 func (_u *TicketTemplateUpdate) SetWorkflowSteps(v []uint8) *TicketTemplateUpdate {
 	_u.mutation.SetWorkflowSteps(v)
@@ -307,17 +289,6 @@ func (_u *TicketTemplateUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(tickettemplate.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.FormFields(); ok {
-		_spec.SetField(tickettemplate.FieldFormFields, field.TypeJSON, value)
-	}
-	if value, ok := _u.mutation.AppendedFormFields(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, tickettemplate.FieldFormFields, value)
-		})
-	}
-	if _u.mutation.FormFieldsCleared() {
-		_spec.ClearField(tickettemplate.FieldFormFields, field.TypeJSON)
-	}
 	if value, ok := _u.mutation.WorkflowSteps(); ok {
 		_spec.SetField(tickettemplate.FieldWorkflowSteps, field.TypeJSON, value)
 	}
@@ -468,24 +439,6 @@ func (_u *TicketTemplateUpdateOne) SetNillablePriority(v *string) *TicketTemplat
 	if v != nil {
 		_u.SetPriority(*v)
 	}
-	return _u
-}
-
-// SetFormFields sets the "form_fields" field.
-func (_u *TicketTemplateUpdateOne) SetFormFields(v []uint8) *TicketTemplateUpdateOne {
-	_u.mutation.SetFormFields(v)
-	return _u
-}
-
-// AppendFormFields appends value to the "form_fields" field.
-func (_u *TicketTemplateUpdateOne) AppendFormFields(v []uint8) *TicketTemplateUpdateOne {
-	_u.mutation.AppendFormFields(v)
-	return _u
-}
-
-// ClearFormFields clears the value of the "form_fields" field.
-func (_u *TicketTemplateUpdateOne) ClearFormFields() *TicketTemplateUpdateOne {
-	_u.mutation.ClearFormFields()
 	return _u
 }
 
@@ -715,17 +668,6 @@ func (_u *TicketTemplateUpdateOne) sqlSave(ctx context.Context) (_node *TicketTe
 	}
 	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(tickettemplate.FieldPriority, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.FormFields(); ok {
-		_spec.SetField(tickettemplate.FieldFormFields, field.TypeJSON, value)
-	}
-	if value, ok := _u.mutation.AppendedFormFields(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, tickettemplate.FieldFormFields, value)
-		})
-	}
-	if _u.mutation.FormFieldsCleared() {
-		_spec.ClearField(tickettemplate.FieldFormFields, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.WorkflowSteps(); ok {
 		_spec.SetField(tickettemplate.FieldWorkflowSteps, field.TypeJSON, value)

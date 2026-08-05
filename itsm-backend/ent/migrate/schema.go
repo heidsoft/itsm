@@ -4413,7 +4413,6 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "category", Type: field.TypeString},
 		{Name: "priority", Type: field.TypeString, Default: "medium"},
-		{Name: "form_fields", Type: field.TypeJSON, Nullable: true},
 		{Name: "workflow_steps", Type: field.TypeJSON, Nullable: true},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "tenant_id", Type: field.TypeInt},
