@@ -77,3 +77,32 @@ func TestFieldDefinitionService_TenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, listed)
 }
+
+func TestFieldDefinitionService_ReplaceDefinitions_TransactionRollback(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:field_definition_rollback?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	svc := NewFieldDefinitionService(client)
+
+	// 初始化一个字段定义
+	initial, err := svc.ReplaceDefinitions(ctx, 1, "ticket_template", 5, []FieldDefinitionInput{
+		{Name: "original_field", Label: "原始字段", FieldType: "text", SortOrder: 0},
+	})
+	require.NoError(t, err)
+	require.Len(t, initial, 1)
+	assert.Equal(t, "original_field", initial[0].Name)
+
+	// 尝试替换为包含重复名字的定义，应该失败
+	_, err = svc.ReplaceDefinitions(ctx, 1, "ticket_template", 5, []FieldDefinitionInput{
+		{Name: "new_field_a", Label: "新字段A", FieldType: "text", SortOrder: 0},
+		{Name: "new_field_a", Label: "新字段A重复", FieldType: "text", SortOrder: 1}, // 重复的名字
+	})
+	require.Error(t, err)
+
+	// 验证原始定义仍然存在（事务已回滚）
+	listed, err := svc.ListDefinitions(ctx, 1, "ticket_template", 5)
+	require.NoError(t, err)
+	require.Len(t, listed, 1)
+	assert.Equal(t, "original_field", listed[0].Name)
+	assert.Equal(t, "原始字段", listed[0].Label)
+}
