@@ -21,6 +21,8 @@ func NewFieldValueService(client *ent.Client) *FieldValueService {
 // CreateValues 把提交的 values（fieldName -> 原始值）跟 (defEntityType, defEntityID) 下的
 // 字段定义匹配，快照 name/label/顺序后写入 field_values，挂在 (valueEntityType, valueEntityID) 上。
 // values 里不匹配任何字段定义的 key 会被忽略（例如 presetTypeId 这类路由元数据）。
+// 多条 insert 包在一个事务里：中途某一条失败（比如瞬时 DB 错误）不应该留下"插了一半"的
+// 半成品提交记录——field_values 代表的是一次完整的表单提交，要么整体成功要么整体不落库。
 func (s *FieldValueService) CreateValues(ctx context.Context, tenantID int, defEntityType string, defEntityID int, valueEntityType string, valueEntityID int, values map[string]interface{}) error {
 	if len(values) == 0 {
 		return nil
@@ -37,6 +39,12 @@ func (s *FieldValueService) CreateValues(ctx context.Context, tenantID int, defE
 	if err != nil {
 		return err
 	}
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+
 	for _, def := range defs {
 		raw, ok := values[def.Name]
 		if !ok {
@@ -44,10 +52,10 @@ func (s *FieldValueService) CreateValues(ctx context.Context, tenantID int, defE
 		}
 		encoded, err := json.Marshal(raw)
 		if err != nil {
-			return err
+			return rollback(tx, err)
 		}
 		defID := def.ID
-		_, err = s.client.FieldValue.Create().
+		_, err = tx.FieldValue.Create().
 			SetTenantID(tenantID).
 			SetEntityType(valueEntityType).
 			SetEntityID(valueEntityID).
@@ -58,10 +66,10 @@ func (s *FieldValueService) CreateValues(ctx context.Context, tenantID int, defE
 			SetValue(encoded).
 			Save(ctx)
 		if err != nil {
-			return err
+			return rollback(tx, err)
 		}
 	}
-	return nil
+	return tx.Commit()
 }
 
 // FieldValueDTO 展示用的已解析字段值。
