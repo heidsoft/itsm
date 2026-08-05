@@ -144,6 +144,7 @@ const TicketTemplatesPage = () => {
           name: string;
           description: string;
           category: string;
+          priority?: string;
           content?: Record<string, unknown>;
           fields?: unknown;
           isActive?: boolean;
@@ -156,7 +157,7 @@ const TicketTemplatesPage = () => {
           type: (item.content?.type as string) || item.category?.toLowerCase() || 'incident',
           category: item.category,
           subcategory: (item.content?.subcategory as string) || undefined,
-          priority: (item.content?.priority as string) || 'medium',
+          priority: item.priority || 'medium',
           estimatedTime: (item.content?.estimatedTime as string) || '1 hour',
           sla: (item.content?.sla as string) || '4 hours',
           slaType: (item.content?.slaType as 'hours' | 'days' | 'business_hours') || 'hours',

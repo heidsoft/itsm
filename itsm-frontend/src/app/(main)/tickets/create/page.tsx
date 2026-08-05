@@ -198,12 +198,12 @@ export default function CreateTicketPage() {
       const priority = values.priority || (selectedType ? selectedType.priority : 'medium');
 
       // 收集自定义字段的结构化值，供后端结构化落库（与上面拼进 description 的可读摘要并行，互不替代）
-      const customFieldValues: Record<string, unknown> = {};
+      const customFieldValues: Array<{ name: string; value: unknown }> = [];
       if (selectedType?.fields && selectedType.fields.length > 0) {
         selectedType.fields.forEach(field => {
           const value = values[field.name];
           if (value !== undefined && value !== null && value !== '') {
-            customFieldValues[field.name] = value;
+            customFieldValues.push({ name: field.name, value });
           }
         });
       }

@@ -189,6 +189,22 @@ describe('httpClient', () => {
       const result = await httpClient.get<{ ok: boolean }>('/api/v1/bpmn/processes');
       expect(result).toEqual({ ok: true });
     });
+
+    it('preserves custom field names inside array-shaped values (map-shaped keys would be corrupted by camelCase normalization)', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: {} }));
+
+      await httpClient.post('/api/v1/tickets', {
+        formFields: {
+          values: [{ name: 'current_replicas', value: 5 }],
+        },
+      });
+
+      const [, init] = fetchMock.mock.calls[0];
+      const sentBody = JSON.parse(init.body);
+      // 数组元素里的 name 是字符串值，不是 object key，不会被请求体的驼峰转换改写。
+      expect(sentBody.formFields.values[0].name).toBe('current_replicas');
+      expect(sentBody.formFields.values[0].value).toBe(5);
+    });
   });
 
   describe('put / patch / delete', () => {
