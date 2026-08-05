@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"itsm-backend/ent/fieldvalue"
@@ -79,7 +80,7 @@ func (_c *FieldValueCreate) SetNillableSortOrder(v *int) *FieldValueCreate {
 }
 
 // SetValue sets the "value" field.
-func (_c *FieldValueCreate) SetValue(v []uint8) *FieldValueCreate {
+func (_c *FieldValueCreate) SetValue(v json.RawMessage) *FieldValueCreate {
 	_c.mutation.SetValue(v)
 	return _c
 }

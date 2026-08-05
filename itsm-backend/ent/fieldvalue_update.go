@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"itsm-backend/ent/fieldvalue"
@@ -162,13 +163,13 @@ func (_u *FieldValueUpdate) AddSortOrder(v int) *FieldValueUpdate {
 }
 
 // SetValue sets the "value" field.
-func (_u *FieldValueUpdate) SetValue(v []uint8) *FieldValueUpdate {
+func (_u *FieldValueUpdate) SetValue(v json.RawMessage) *FieldValueUpdate {
 	_u.mutation.SetValue(v)
 	return _u
 }
 
 // AppendValue appends value to the "value" field.
-func (_u *FieldValueUpdate) AppendValue(v []uint8) *FieldValueUpdate {
+func (_u *FieldValueUpdate) AppendValue(v json.RawMessage) *FieldValueUpdate {
 	_u.mutation.AppendValue(v)
 	return _u
 }
@@ -470,13 +471,13 @@ func (_u *FieldValueUpdateOne) AddSortOrder(v int) *FieldValueUpdateOne {
 }
 
 // SetValue sets the "value" field.
-func (_u *FieldValueUpdateOne) SetValue(v []uint8) *FieldValueUpdateOne {
+func (_u *FieldValueUpdateOne) SetValue(v json.RawMessage) *FieldValueUpdateOne {
 	_u.mutation.SetValue(v)
 	return _u
 }
 
 // AppendValue appends value to the "value" field.
-func (_u *FieldValueUpdateOne) AppendValue(v []uint8) *FieldValueUpdateOne {
+func (_u *FieldValueUpdateOne) AppendValue(v json.RawMessage) *FieldValueUpdateOne {
 	_u.mutation.AppendValue(v)
 	return _u
 }

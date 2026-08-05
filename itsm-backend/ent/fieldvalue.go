@@ -33,7 +33,7 @@ type FieldValue struct {
 	// 提交时快照的顺序
 	SortOrder int `json:"sort_order,omitempty"`
 	// 字段值，JSON 编码，原始类型（数字/字符串/布尔/数组）
-	Value []uint8 `json:"value,omitempty"`
+	Value json.RawMessage `json:"value,omitempty"`
 	// 创建时间
 	CreatedAt    time.Time `json:"created_at,omitempty"`
 	selectValues sql.SelectValues

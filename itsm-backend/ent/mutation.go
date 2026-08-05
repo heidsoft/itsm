@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"itsm-backend/ent/application"
@@ -45774,8 +45775,8 @@ type FieldValueMutation struct {
 	field_label            *string
 	sort_order             *int
 	addsort_order          *int
-	value                  *[]uint8
-	appendvalue            []uint8
+	value                  *json.RawMessage
+	appendvalue            json.RawMessage
 	created_at             *time.Time
 	clearedFields          map[string]struct{}
 	done                   bool
@@ -46228,13 +46229,13 @@ func (m *FieldValueMutation) ResetSortOrder() {
 }
 
 // SetValue sets the "value" field.
-func (m *FieldValueMutation) SetValue(u []uint8) {
-	m.value = &u
+func (m *FieldValueMutation) SetValue(jm json.RawMessage) {
+	m.value = &jm
 	m.appendvalue = nil
 }
 
 // Value returns the value of the "value" field in the mutation.
-func (m *FieldValueMutation) Value() (r []uint8, exists bool) {
+func (m *FieldValueMutation) Value() (r json.RawMessage, exists bool) {
 	v := m.value
 	if v == nil {
 		return
@@ -46245,7 +46246,7 @@ func (m *FieldValueMutation) Value() (r []uint8, exists bool) {
 // OldValue returns the old "value" field's value of the FieldValue entity.
 // If the FieldValue object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FieldValueMutation) OldValue(ctx context.Context) (v []uint8, err error) {
+func (m *FieldValueMutation) OldValue(ctx context.Context) (v json.RawMessage, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldValue is only allowed on UpdateOne operations")
 	}
@@ -46259,13 +46260,13 @@ func (m *FieldValueMutation) OldValue(ctx context.Context) (v []uint8, err error
 	return oldValue.Value, nil
 }
 
-// AppendValue adds u to the "value" field.
-func (m *FieldValueMutation) AppendValue(u []uint8) {
-	m.appendvalue = append(m.appendvalue, u...)
+// AppendValue adds jm to the "value" field.
+func (m *FieldValueMutation) AppendValue(jm json.RawMessage) {
+	m.appendvalue = append(m.appendvalue, jm...)
 }
 
 // AppendedValue returns the list of values that were appended to the "value" field in this mutation.
-func (m *FieldValueMutation) AppendedValue() ([]uint8, bool) {
+func (m *FieldValueMutation) AppendedValue() (json.RawMessage, bool) {
 	if len(m.appendvalue) == 0 {
 		return nil, false
 	}
@@ -46502,7 +46503,7 @@ func (m *FieldValueMutation) SetField(name string, value ent.Value) error {
 		m.SetSortOrder(v)
 		return nil
 	case fieldvalue.FieldValue:
-		v, ok := value.([]uint8)
+		v, ok := value.(json.RawMessage)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

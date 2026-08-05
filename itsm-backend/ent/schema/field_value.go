@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/json"
 	"time"
 
 	"entgo.io/ent"
@@ -24,7 +25,7 @@ func (FieldValue) Fields() []ent.Field {
 		field.String("field_name").Comment("提交时快照的字段名").NotEmpty(),
 		field.String("field_label").Comment("提交时快照的显示名").NotEmpty(),
 		field.Int("sort_order").Comment("提交时快照的顺序").Default(0),
-		field.JSON("value", []byte{}).Comment("字段值，JSON 编码，原始类型（数字/字符串/布尔/数组）").Optional(),
+		field.JSON("value", json.RawMessage{}).Comment("字段值，JSON 编码，原始类型（数字/字符串/布尔/数组）").Optional(),
 		field.Time("created_at").Comment("创建时间").Default(time.Now),
 	}
 }
