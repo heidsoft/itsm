@@ -2167,6 +2167,301 @@ git commit -m "fix(frontend): send templateId on ticket create (was silently dis
 
 ---
 
+---
+
+### Task 12: 第二轮修复——`formFields.values` 改数组格式避开全局驼峰转换，修 priority 清空 bug
+
+**背景**：Task 11 的修复经复查（opus）发现只解决了一半。真正的根因比 templateId 更底层：`itsm-frontend/src/lib/api/http-client.ts` 有一个全局逻辑，对**每一个** HTTP 请求体做递归 snake_case→camelCase key 转换，不区分"这是接口契约字段"还是"这是用户数据"。`formFields.values` 这个 map 的 key 就是用户填的自定义字段名（不是接口契约字段），会被这个全局转换悄悄改写——比如 `current_replicas` 变成 `currentReplicas`，导致后端 `extractCustomFieldValues`/`extractAdHocFieldValues` 用原始字段名去 `values[name]` 匹配时永远匹配不上，静默丢弃、没有任何报错。`ticket-type-presets.ts` 里 75 个预设字段名有 47 个带下划线，Task 11 新加的测试之所以能过纯粹是因为凑巧用了个不带下划线的字段名。这个问题同时影响数据库模板路径（`CreateValues`）和新加的即席路径（`CreateAdHocValues`）。
+
+不去动 `http-client.ts` 的全局转换（改动面是整个 App 每个接口调用，风险太大），而是把 `formFields.values` 的线上格式从"字段名作 key 的 map"改成"`{name, value}` 的数组"——字段名变成数组元素里的字符串**值**而不是对象的 **key**，天然绕开这个全局转换（`fieldDefs` 已经是这个形状，从没受影响，这次是照抄这个已验证有效的模式）。
+
+同一轮复查还发现 `templates/page.tsx` 的 `priority` 字段有和 Task 11 刚修的 `customFields` 一模一样的清空 bug（`item.content?.priority` 永远不存在、读成默认值 `medium`，且这个字段真的会在保存时写回后端），顺手一起修。
+
+**Files:**
+- Modify: `itsm-backend/service/ticket_service.go`（`extractCustomFieldValues`、`extractAdHocFieldValues` 改成优先解析数组格式，保留 map 格式作为向后兼容——现有测试直接用 Go 构造 map 调用 service 层，不能破坏）
+- Modify: `itsm-frontend/src/app/(main)/tickets/create/page.tsx`（`customFieldValues` 从对象改成数组）
+- Modify: `itsm-frontend/src/app/(main)/tickets/templates/page.tsx`（修 `priority` 清空 bug）
+- Test: `itsm-backend/service/ticket_service_test.go`（新增数组格式 + 带下划线字段名的测试）
+- Test: `itsm-frontend/src/lib/api/__tests__/http-client.test.ts`（新增一条证明数组形状的自定义字段名能在请求体里存活，反证 map 形状会被破坏）
+
+**Interfaces:**
+- Consumes: Task 11 的 `extractAdHocFieldValues`、既有的 `extractCustomFieldValues`
+- Produces: `formFields.values` 新的线上形状 `Array<{name: string, value: unknown}>`（前端发送、后端解析都要认这个新形状；后端同时继续兼容旧的 map 形状，因为现有测试和任何直接调后端的调用方还在用它）
+
+- [ ] **Step 1: 写失败测试，断言数组格式里带下划线的字段名能正确落库**
+
+```go
+// 追加到 itsm-backend/service/ticket_service_test.go
+func TestTicketService_CreateTicket_ValuesArrayFormatSurvivesUnderscoreNames(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ticket_create_values_array?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant := createTicketAssociationTenant(t, ctx, client, "create-values-array")
+	requester := createTicketAssociationUser(t, ctx, client, tenant.ID, "create-values-array-requester")
+	template, err := client.TicketTemplate.Create().
+		SetName("云主机申请").SetCategory("云").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	_, err = NewFieldDefinitionService(client).ReplaceDefinitions(ctx, tenant.ID, "ticket_template", template.ID, []FieldDefinitionInput{
+		{Name: "current_replicas", Label: "当前副本数", FieldType: "number", SortOrder: 0},
+	})
+	require.NoError(t, err)
+
+	service := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	created, err := service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "扩容申请", Description: "测试", Priority: "medium",
+		RequesterID: requester.ID, TemplateID: &template.ID,
+		FormFields: map[string]interface{}{
+			// 数组形状——模拟前端发送、经过 http-client.ts 全局驼峰转换后的真实线上形态。
+			// 注意：这里故意用数组而不是 map，因为这正是这次要修的 bug 场景。
+			"values": []interface{}{
+				map[string]interface{}{"name": "current_replicas", "value": float64(5)},
+			},
+		},
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	values, err := NewFieldValueService(client).ListValues(ctx, tenant.ID, "ticket", created.ID)
+	require.NoError(t, err)
+	require.Len(t, values, 1)
+	assert.Equal(t, "current_replicas", values[0].Name)
+	assert.Equal(t, float64(5), values[0].Value)
+}
+
+func TestTicketService_CreateTicket_ValuesMapFormatStillWorks(t *testing.T) {
+	// 向后兼容：直接调 service 层（不经过前端/http-client）的现有测试和调用方，
+	// 传的还是 map 形状，这条要继续通过。
+	client := enttest.Open(t, "sqlite3", "file:ticket_create_values_map_compat?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant := createTicketAssociationTenant(t, ctx, client, "create-values-map-compat")
+	requester := createTicketAssociationUser(t, ctx, client, tenant.ID, "create-values-map-compat-requester")
+	template, err := client.TicketTemplate.Create().
+		SetName("模板").SetCategory("c").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	_, err = NewFieldDefinitionService(client).ReplaceDefinitions(ctx, tenant.ID, "ticket_template", template.ID, []FieldDefinitionInput{
+		{Name: "office_location", Label: "办公地点", FieldType: "text", SortOrder: 0},
+	})
+	require.NoError(t, err)
+
+	service := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	created, err := service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "t", Description: "d", Priority: "medium",
+		RequesterID: requester.ID, TemplateID: &template.ID,
+		FormFields: map[string]interface{}{
+			"values": map[string]interface{}{"office_location": "北京"},
+		},
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	values, err := NewFieldValueService(client).ListValues(ctx, tenant.ID, "ticket", created.ID)
+	require.NoError(t, err)
+	require.Len(t, values, 1)
+	assert.Equal(t, "北京", values[0].Value)
+}
+```
+
+- [ ] **Step 2: 跑测试确认第一个失败、第二个通过**
+
+Run: `cd itsm-backend && go test ./service/... -run "TestTicketService_CreateTicket_ValuesArrayFormatSurvivesUnderscoreNames|TestTicketService_CreateTicket_ValuesMapFormatStillWorks" -v`
+Expected: 第一个 FAIL（`extractCustomFieldValues` 还只认 map，数组格式解析不出东西，`ListValues` 返回空）；第二个 PASS（现有 map 路径没动）
+
+- [ ] **Step 3: 实现——加一个共享的数组解析 helper，`extractCustomFieldValues`/`extractAdHocFieldValues` 都改成优先用它**
+
+`itsm-backend/service/ticket_service.go`，在 `extractCustomFieldValues` 定义之前加：
+
+```go
+// parseFieldValuesArray 把 formFields["values"] 解析成 [{name,value}] 数组形状，
+// 转成内部用的 map[name]value。数组形状是必须的——字段名作为数组元素里的字符串值
+// （而不是对象的 key）传输，这样才能绕开前端 http-client.ts 那个全局的、不区分
+// 契约字段和用户数据的 snake_case→camelCase 请求体转换（那个转换会把 map 形状里
+// 带下划线的字段名 key 悄悄改写，导致匹配失败、值静默丢失）。
+// 解析不出数组形状返回 nil，调用方会退回到兼容 map 形状的旧逻辑。
+func parseFieldValuesArray(formFields map[string]interface{}) map[string]interface{} {
+	if formFields == nil {
+		return nil
+	}
+	rawValues, ok := formFields["values"].([]interface{})
+	if !ok {
+		return nil
+	}
+	result := make(map[string]interface{}, len(rawValues))
+	for _, raw := range rawValues {
+		entry, ok := raw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		name, _ := entry["name"].(string)
+		if name == "" {
+			continue
+		}
+		if val, ok := entry["value"]; ok {
+			result[name] = val
+		}
+	}
+	return result
+}
+```
+
+`extractCustomFieldValues` 现在这样：
+
+```go
+func extractCustomFieldValues(formFields map[string]interface{}) map[string]interface{} {
+	if formFields == nil {
+		return nil
+	}
+	if values, ok := formFields["values"].(map[string]interface{}); ok {
+		return values
+	}
+	return nil
+}
+```
+
+改成：
+
+```go
+func extractCustomFieldValues(formFields map[string]interface{}) map[string]interface{} {
+	if formFields == nil {
+		return nil
+	}
+	if values := parseFieldValuesArray(formFields); values != nil {
+		return values
+	}
+	// 兼容旧的 map 形状——直接调用 service 层的测试/调用方还在用。
+	if values, ok := formFields["values"].(map[string]interface{}); ok {
+		return values
+	}
+	return nil
+}
+```
+
+`extractAdHocFieldValues`（Task 11 加的）里解析 `values` 那一行：
+
+```go
+values, _ := formFields["values"].(map[string]interface{})
+if len(values) == 0 {
+    return nil
+}
+```
+
+改成：
+
+```go
+values := parseFieldValuesArray(formFields)
+if len(values) == 0 {
+    if mapValues, ok := formFields["values"].(map[string]interface{}); ok {
+        values = mapValues
+    }
+}
+if len(values) == 0 {
+    return nil
+}
+```
+
+- [ ] **Step 4: 跑测试确认两个都通过**
+
+Run: `cd itsm-backend && go test ./service/... -run "TestTicketService_CreateTicket_ValuesArrayFormatSurvivesUnderscoreNames|TestTicketService_CreateTicket_ValuesMapFormatStillWorks" -v`
+Expected: 两个都 PASS
+
+- [ ] **Step 5: 前端改 `create/page.tsx`，`customFieldValues` 从对象改数组**
+
+`handleSubmit` 里现在这段：
+
+```ts
+const customFieldValues: Record<string, unknown> = {};
+if (selectedType?.fields && selectedType.fields.length > 0) {
+  selectedType.fields.forEach(field => {
+    const value = values[field.name];
+    if (value !== undefined && value !== null && value !== '') {
+      customFieldValues[field.name] = value;
+    }
+  });
+}
+```
+
+改成：
+
+```ts
+const customFieldValues: Array<{ name: string; value: unknown }> = [];
+if (selectedType?.fields && selectedType.fields.length > 0) {
+  selectedType.fields.forEach(field => {
+    const value = values[field.name];
+    if (value !== undefined && value !== null && value !== '') {
+      customFieldValues.push({ name: field.name, value });
+    }
+  });
+}
+```
+
+（后面构造 `TicketApi.createTicket({...formFields: {..., values: customFieldValues, ...}})` 那段不用改——`customFieldValues` 类型变了，直接传下去就行，Task 11 已经接好的 `fieldDefs`/`templateId` 逻辑不受影响。）
+
+- [ ] **Step 6: 前端改 `templates/page.tsx`，修 `priority` 清空 bug**
+
+第 159 行（当前）：
+
+```ts
+priority: (item.content?.priority as string) || 'medium',
+```
+
+改成：
+
+```ts
+priority: item.priority || 'medium',
+```
+
+- [ ] **Step 7: 加一条 http-client 层面的回归测试，证明数组形状能在请求体转换里存活**
+
+`itsm-frontend/src/lib/api/__tests__/http-client.test.ts` 的 `describe('post', ...)` 块里追加：
+
+```ts
+it('preserves custom field names inside array-shaped values (map-shaped keys would be corrupted by camelCase normalization)', async () => {
+  let capturedBody: string | undefined;
+  mockFetch.mockImplementationOnce((_url, init) => {
+    capturedBody = init?.body as string;
+    return Promise.resolve(
+      new Response(JSON.stringify({ code: 0, message: 'ok', data: {} }), { status: 200 })
+    );
+  });
+
+  await httpClient.post('/api/v1/tickets', {
+    formFields: {
+      values: [{ name: 'current_replicas', value: 5 }],
+    },
+  });
+
+  const sentBody = JSON.parse(capturedBody!);
+  // 数组元素里的 name 是字符串值，不是 object key，不会被请求体的驼峰转换改写。
+  expect(sentBody.formFields.values[0].name).toBe('current_replicas');
+  expect(sentBody.formFields.values[0].value).toBe(5);
+});
+```
+
+（照抄这个文件里已有的 `post` 测试用的 mock 方式——先读一下同一个 `describe('post', ...)` 块里其它测试是怎么 mock `fetch`/构造 `Response` 的，跟那个写法保持一致，不要发明新的 mock 方式。）
+
+- [ ] **Step 8: 跑全部相关测试**
+
+Run: `cd itsm-backend && go build ./... && go test ./... 2>&1 | tail -60`
+Expected: 全部 `ok`，无 `FAIL`
+
+Run: `cd itsm-frontend && npx tsc --noEmit && npx jest src/lib/api/__tests__/http-client.test.ts`
+Expected: 0 类型错误，新加的 http-client 测试通过
+
+- [ ] **Step 9: Commit**
+
+```bash
+cd itsm-backend
+gofmt -l .
+git add service/ticket_service.go service/ticket_service_test.go
+git commit -m "fix(backend): accept formFields.values as array of {name,value} (backward-compat with map), fixing snake_case field names silently dropped by frontend's request-body camelCase normalization"
+```
+
+```bash
+cd itsm-frontend
+git add "src/app/(main)/tickets/create/page.tsx" "src/app/(main)/tickets/templates/page.tsx" src/lib/api/__tests__/http-client.test.ts
+git commit -m "fix(frontend): send custom field values as array (not name-keyed map) so underscore field names survive http-client's camelCase normalization; fix template-edit page resetting priority to medium on every save"
+```
+
+---
+
 ## Self-Review 记录
 
 - **Spec 覆盖检查**：设计文档的"数据模型""API 集成""清理范围""顺手偿还的技术债""测试计划"五节，分别对应 Task 1-2 / Task 3-4-7 / Task 3-4-6-7 / Task 4 / Task 10，`ServiceRequest.form_data` 按已批准的范围收窄不动（未创建对应 Task）。任务编号不连续（没有"Task 5"——已并入 Task 4）是有意为之，`task-brief` 按标题文本匹配、不依赖连续编号，不影响执行。
