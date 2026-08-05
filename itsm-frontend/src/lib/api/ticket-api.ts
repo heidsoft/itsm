@@ -605,16 +605,20 @@ export class TicketApi {
     pageSize?: number;
     category?: string;
   }): Promise<{
-    items: Array<{
+    templates: Array<{
       id: number;
       name: string;
       description: string;
       category: string;
-      content: Record<string, unknown>;
+      priority: string;
+      fields?: Array<Record<string, unknown>>;
+      workflowSteps?: Array<Record<string, unknown>>;
+      isActive: boolean;
       createdAt: string;
       updatedAt: string;
     }>;
-    total: number;
+    page: number;
+    pageSize: number;
   }> {
     return httpClient.get('/api/v1/tickets/templates', params);
   }

@@ -105,8 +105,48 @@ export default function CreateTicketPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  // 过滤后的类型列表
-  const filteredTypes = getTicketTypesByCategory(categoryFilter);
+  // 从数据库动态拉取的自定义模板列表
+  const [dbTemplates, setDbTemplates] = useState<TicketTypePreset[]>([]);
+
+  useEffect(() => {
+    // 从后端 API 加载之前由用户在 /tickets/templates 保存的模板
+    TicketApi.getTemplates({ page: 1, pageSize: 100 })
+      .then(res => {
+        if (res && res.templates && Array.isArray(res.templates)) {
+          const mapped: TicketTypePreset[] = res.templates.map((item: any) => {
+            const rawFields = item.fields || item.content?.fields || item.content?.customFields || [];
+            const fieldsArr = Array.isArray(rawFields) ? rawFields.map((f: any) => ({
+              name: f.name || f.id,
+              label: f.label || f.name,
+              type: f.type || 'text',
+              required: !!f.required,
+              placeholder: f.placeholder || `请输入${f.label || f.name}`,
+              options: f.options || (f.optionsStr ? f.optionsStr.split(',').map((o: string) => ({ label: o.trim(), value: o.trim() })) : undefined),
+            })) : [];
+
+            return {
+              id: `db_${item.id}`,
+              name: item.name,
+              code: `TMPL_${item.id}`,
+              category: item.category || '自定义模板',
+              categoryKey: 'custom',
+              description: item.description || '用户保存的自定义表单模板',
+              icon: 'FileText',
+              color: '#1677ff',
+              priority: item.priority || 'medium',
+              fields: fieldsArr,
+            };
+          });
+          setDbTemplates(mapped);
+        }
+      })
+      .catch(err => {
+        console.warn('Failed to load DB templates in create page:', err);
+      });
+  }, []);
+
+  // 合并静态预设与数据库动态保存的自定义模板
+  const allAvailableTypes = [...dbTemplates, ...getTicketTypesByCategory(categoryFilter)];
 
   // 选中类型时自动设置优先级
   useEffect(() => {
@@ -290,7 +330,7 @@ export default function CreateTicketPage() {
               title={
                 <Space>
                   <span>选择工单类型</span>
-                  <Tag color="blue">{filteredTypes.length} 种</Tag>
+                  <Tag color="blue">{allAvailableTypes.length} 种</Tag>
                 </Space>
               }
               styles={{ body: { padding: '12px' } }}
@@ -333,7 +373,7 @@ export default function CreateTicketPage() {
                   size={8}
                   role="presentation"
                 >
-                  {filteredTypes.map(type => renderTypeCard(type))}
+                  {allAvailableTypes.map(type => renderTypeCard(type))}
                 </Space>
               </div>
             </Card>

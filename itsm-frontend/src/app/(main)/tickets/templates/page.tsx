@@ -138,7 +138,7 @@ const TicketTemplatesPage = () => {
       });
 
       // 将API响应转换为组件期望的格式
-      const apiTemplates: TicketTemplate[] = (response.items || []).map(
+      const apiTemplates: TicketTemplate[] = (response.templates || []).map(
         (item: {
           id: number;
           name: string;
