@@ -112,7 +112,7 @@ export interface Ticket extends BaseTicket {
   escalationLevel?: number;
   source?: string;
   businessValue?: string;
-  customFields?: Record<string, unknown>;
+  customFields?: Array<{ name: string; label: string; value: unknown }>;
 }
 
 // 附件接口

@@ -520,6 +520,11 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             <Descriptions.Item label="描述" span={2}>
               <SafeTextBlock content={ticket.description} fallback="暂无描述" />
             </Descriptions.Item>
+            {ticket.customFields?.map(field => (
+              <Descriptions.Item key={field.name} label={field.label}>
+                {String(field.value)}
+              </Descriptions.Item>
+            ))}
           </Descriptions>
 
           {/* SLA Information */}
