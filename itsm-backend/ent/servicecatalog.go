@@ -48,8 +48,6 @@ type ServiceCatalog struct {
 	CiTypeID int `json:"ci_type_id,omitempty"`
 	// 关联云服务ID
 	CloudServiceID int `json:"cloud_service_id,omitempty"`
-	// 表单JSON配置
-	FormSchema map[string]interface{} `json:"form_schema,omitempty"`
 	// 可选区域
 	AvailableRegions []string `json:"available_regions,omitempty"`
 	// 可选规格
@@ -95,7 +93,7 @@ func (*ServiceCatalog) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case servicecatalog.FieldApprovers, servicecatalog.FieldFormSchema, servicecatalog.FieldAvailableRegions, servicecatalog.FieldAvailableSpecs:
+		case servicecatalog.FieldApprovers, servicecatalog.FieldAvailableRegions, servicecatalog.FieldAvailableSpecs:
 			values[i] = new([]byte)
 		case servicecatalog.FieldRequiresApproval, servicecatalog.FieldIsActive:
 			values[i] = new(sql.NullBool)
@@ -219,14 +217,6 @@ func (_m *ServiceCatalog) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field cloud_service_id", values[i])
 			} else if value.Valid {
 				_m.CloudServiceID = int(value.Int64)
-			}
-		case servicecatalog.FieldFormSchema:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field form_schema", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &_m.FormSchema); err != nil {
-					return fmt.Errorf("unmarshal field form_schema: %w", err)
-				}
 			}
 		case servicecatalog.FieldAvailableRegions:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -365,9 +355,6 @@ func (_m *ServiceCatalog) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("cloud_service_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CloudServiceID))
-	builder.WriteString(", ")
-	builder.WriteString("form_schema=")
-	builder.WriteString(fmt.Sprintf("%v", _m.FormSchema))
 	builder.WriteString(", ")
 	builder.WriteString("available_regions=")
 	builder.WriteString(fmt.Sprintf("%v", _m.AvailableRegions))

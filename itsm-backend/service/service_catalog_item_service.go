@@ -59,7 +59,6 @@ func (s *ServiceCatalogItemService) CreateServiceCatalogItem(ctx context.Context
 		SetDetails(req.Details).
 		SetCategory(req.Category).
 		SetIcon(req.Icon).
-		SetFormSchema(req.FormSchema).
 		SetNillableSLAID(&req.SlaID).
 		SetNillableApprovalChainID(&req.ApprovalChainID).
 		SetRequiresApproval(req.RequiresApproval).
@@ -71,8 +70,12 @@ func (s *ServiceCatalogItemService) CreateServiceCatalogItem(ctx context.Context
 		return nil, fmt.Errorf("failed to create service item: %w", err)
 	}
 
+	if _, err := NewFieldDefinitionService(s.client).ReplaceDefinitions(ctx, tenantID, "service_catalog_item", item.ID, toFieldDefinitionInputs(req.Fields)); err != nil {
+		return nil, fmt.Errorf("failed to save field definitions: %w", err)
+	}
+
 	s.logger.Infow("Service catalog item created", "item_id", item.ID, "name", item.Name)
-	return s.toItemResponse(item), nil
+	return s.toItemResponse(ctx, item), nil
 }
 
 // GetServiceCatalogItem 获取服务目录项
@@ -90,7 +93,7 @@ func (s *ServiceCatalogItemService) GetServiceCatalogItem(ctx context.Context, i
 		return nil, fmt.Errorf("failed to get service item: %w", err)
 	}
 
-	return s.toItemResponse(item), nil
+	return s.toItemResponse(ctx, item), nil
 }
 
 // ListServiceCatalogItems 列出服务目录下的所有项
@@ -118,7 +121,7 @@ func (s *ServiceCatalogItemService) ListServiceCatalogItems(ctx context.Context,
 
 	var response []*dto.ServiceCatalogItemResponse
 	for _, item := range items {
-		response = append(response, s.toItemResponse(item))
+		response = append(response, s.toItemResponse(ctx, item))
 	}
 
 	return response, nil
@@ -157,9 +160,6 @@ func (s *ServiceCatalogItemService) UpdateServiceCatalogItem(ctx context.Context
 	if req.Icon != nil {
 		update.SetIcon(*req.Icon)
 	}
-	if req.FormSchema != nil {
-		update.SetFormSchema(*req.FormSchema)
-	}
 	if req.SlaID != nil {
 		update.SetSLAID(*req.SlaID)
 	}
@@ -186,8 +186,14 @@ func (s *ServiceCatalogItemService) UpdateServiceCatalogItem(ctx context.Context
 		return nil, fmt.Errorf("failed to update service item: %w", err)
 	}
 
+	if req.Fields != nil {
+		if _, err := NewFieldDefinitionService(s.client).ReplaceDefinitions(ctx, tenantID, "service_catalog_item", id, toFieldDefinitionInputs(*req.Fields)); err != nil {
+			return nil, fmt.Errorf("failed to save field definitions: %w", err)
+		}
+	}
+
 	s.logger.Infow("Service catalog item updated", "item_id", id)
-	return s.toItemResponse(updatedItem), nil
+	return s.toItemResponse(ctx, updatedItem), nil
 }
 
 // DeleteServiceCatalogItem 删除服务目录项
@@ -220,22 +226,21 @@ func (s *ServiceCatalogItemService) DeleteServiceCatalogItem(ctx context.Context
 }
 
 // toItemResponse 转换为响应对象
-func (s *ServiceCatalogItemService) toItemResponse(item *ent.ServiceCatalogItem) *dto.ServiceCatalogItemResponse {
+func (s *ServiceCatalogItemService) toItemResponse(ctx context.Context, item *ent.ServiceCatalogItem) *dto.ServiceCatalogItemResponse {
+	fields := make([]map[string]interface{}, 0)
+	if defs, err := NewFieldDefinitionService(s.client).ListDefinitions(ctx, item.TenantID, "service_catalog_item", item.ID); err == nil {
+		for _, d := range defs {
+			fields = append(fields, map[string]interface{}{
+				"name": d.Name, "label": d.Label, "type": d.FieldType,
+				"required": d.Required, "options": d.Options,
+			})
+		}
+	}
 	return &dto.ServiceCatalogItemResponse{
-		ID:               item.ID,
-		Name:             item.Name,
-		Description:      item.Description,
-		Details:          item.Details,
-		Category:         item.Category,
-		Icon:             item.Icon,
-		FormSchema:       item.FormSchema,
-		SlaID:            item.SLAID,
-		ApprovalChainID:  item.ApprovalChainID,
-		IsActive:         item.IsActive,
-		RequiresApproval: item.RequiresApproval,
-		EstimatedDays:    item.EstimatedDays,
-		TenantID:         item.TenantID,
-		CreatedAt:        item.CreatedAt,
-		UpdatedAt:        item.UpdatedAt,
+		ID: item.ID, Name: item.Name, Description: item.Description, Details: item.Details,
+		Category: item.Category, Icon: item.Icon, Fields: fields,
+		SlaID: item.SLAID, ApprovalChainID: item.ApprovalChainID, IsActive: item.IsActive,
+		RequiresApproval: item.RequiresApproval, EstimatedDays: item.EstimatedDays,
+		TenantID: item.TenantID, CreatedAt: item.CreatedAt, UpdatedAt: item.UpdatedAt,
 	}
 }

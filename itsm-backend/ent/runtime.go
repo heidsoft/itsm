@@ -3102,27 +3102,27 @@ func init() {
 	// servicecatalog.DefaultApprovalLevel holds the default value on creation for the approval_level field.
 	servicecatalog.DefaultApprovalLevel = servicecatalogDescApprovalLevel.Default.(int)
 	// servicecatalogDescStatus is the schema descriptor for status field.
-	servicecatalogDescStatus := servicecatalogFields[18].Descriptor()
+	servicecatalogDescStatus := servicecatalogFields[17].Descriptor()
 	// servicecatalog.DefaultStatus holds the default value on creation for the status field.
 	servicecatalog.DefaultStatus = servicecatalogDescStatus.Default.(string)
 	// servicecatalogDescTenantID is the schema descriptor for tenant_id field.
-	servicecatalogDescTenantID := servicecatalogFields[19].Descriptor()
+	servicecatalogDescTenantID := servicecatalogFields[18].Descriptor()
 	// servicecatalog.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	servicecatalog.TenantIDValidator = servicecatalogDescTenantID.Validators[0].(func(int) error)
 	// servicecatalogDescIsActive is the schema descriptor for is_active field.
-	servicecatalogDescIsActive := servicecatalogFields[20].Descriptor()
+	servicecatalogDescIsActive := servicecatalogFields[19].Descriptor()
 	// servicecatalog.DefaultIsActive holds the default value on creation for the is_active field.
 	servicecatalog.DefaultIsActive = servicecatalogDescIsActive.Default.(bool)
 	// servicecatalogDescSortOrder is the schema descriptor for sort_order field.
-	servicecatalogDescSortOrder := servicecatalogFields[21].Descriptor()
+	servicecatalogDescSortOrder := servicecatalogFields[20].Descriptor()
 	// servicecatalog.DefaultSortOrder holds the default value on creation for the sort_order field.
 	servicecatalog.DefaultSortOrder = servicecatalogDescSortOrder.Default.(int)
 	// servicecatalogDescCreatedAt is the schema descriptor for created_at field.
-	servicecatalogDescCreatedAt := servicecatalogFields[22].Descriptor()
+	servicecatalogDescCreatedAt := servicecatalogFields[21].Descriptor()
 	// servicecatalog.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servicecatalog.DefaultCreatedAt = servicecatalogDescCreatedAt.Default.(func() time.Time)
 	// servicecatalogDescUpdatedAt is the schema descriptor for updated_at field.
-	servicecatalogDescUpdatedAt := servicecatalogFields[23].Descriptor()
+	servicecatalogDescUpdatedAt := servicecatalogFields[22].Descriptor()
 	// servicecatalog.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	servicecatalog.DefaultUpdatedAt = servicecatalogDescUpdatedAt.Default.(func() time.Time)
 	// servicecatalog.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -3138,27 +3138,27 @@ func init() {
 	// servicecatalogitem.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	servicecatalogitem.NameValidator = servicecatalogitemDescName.Validators[0].(func(string) error)
 	// servicecatalogitemDescIsActive is the schema descriptor for is_active field.
-	servicecatalogitemDescIsActive := servicecatalogitemFields[9].Descriptor()
+	servicecatalogitemDescIsActive := servicecatalogitemFields[8].Descriptor()
 	// servicecatalogitem.DefaultIsActive holds the default value on creation for the is_active field.
 	servicecatalogitem.DefaultIsActive = servicecatalogitemDescIsActive.Default.(bool)
 	// servicecatalogitemDescRequiresApproval is the schema descriptor for requires_approval field.
-	servicecatalogitemDescRequiresApproval := servicecatalogitemFields[10].Descriptor()
+	servicecatalogitemDescRequiresApproval := servicecatalogitemFields[9].Descriptor()
 	// servicecatalogitem.DefaultRequiresApproval holds the default value on creation for the requires_approval field.
 	servicecatalogitem.DefaultRequiresApproval = servicecatalogitemDescRequiresApproval.Default.(bool)
 	// servicecatalogitemDescEstimatedDays is the schema descriptor for estimated_days field.
-	servicecatalogitemDescEstimatedDays := servicecatalogitemFields[11].Descriptor()
+	servicecatalogitemDescEstimatedDays := servicecatalogitemFields[10].Descriptor()
 	// servicecatalogitem.DefaultEstimatedDays holds the default value on creation for the estimated_days field.
 	servicecatalogitem.DefaultEstimatedDays = servicecatalogitemDescEstimatedDays.Default.(int)
 	// servicecatalogitemDescTenantID is the schema descriptor for tenant_id field.
-	servicecatalogitemDescTenantID := servicecatalogitemFields[12].Descriptor()
+	servicecatalogitemDescTenantID := servicecatalogitemFields[11].Descriptor()
 	// servicecatalogitem.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	servicecatalogitem.TenantIDValidator = servicecatalogitemDescTenantID.Validators[0].(func(int) error)
 	// servicecatalogitemDescCreatedAt is the schema descriptor for created_at field.
-	servicecatalogitemDescCreatedAt := servicecatalogitemFields[13].Descriptor()
+	servicecatalogitemDescCreatedAt := servicecatalogitemFields[12].Descriptor()
 	// servicecatalogitem.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servicecatalogitem.DefaultCreatedAt = servicecatalogitemDescCreatedAt.Default.(func() time.Time)
 	// servicecatalogitemDescUpdatedAt is the schema descriptor for updated_at field.
-	servicecatalogitemDescUpdatedAt := servicecatalogitemFields[14].Descriptor()
+	servicecatalogitemDescUpdatedAt := servicecatalogitemFields[13].Descriptor()
 	// servicecatalogitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	servicecatalogitem.DefaultUpdatedAt = servicecatalogitemDescUpdatedAt.Default.(func() time.Time)
 	// servicecatalogitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

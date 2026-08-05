@@ -44,8 +44,6 @@ const (
 	FieldCiTypeID = "ci_type_id"
 	// FieldCloudServiceID holds the string denoting the cloud_service_id field in the database.
 	FieldCloudServiceID = "cloud_service_id"
-	// FieldFormSchema holds the string denoting the form_schema field in the database.
-	FieldFormSchema = "form_schema"
 	// FieldAvailableRegions holds the string denoting the available_regions field in the database.
 	FieldAvailableRegions = "available_regions"
 	// FieldAvailableSpecs holds the string denoting the available_specs field in the database.
@@ -93,7 +91,6 @@ var Columns = []string{
 	FieldSLAResolutionTime,
 	FieldCiTypeID,
 	FieldCloudServiceID,
-	FieldFormSchema,
 	FieldAvailableRegions,
 	FieldAvailableSpecs,
 	FieldStatus,

@@ -215,12 +215,6 @@ func (_c *ServiceCatalogCreate) SetNillableCloudServiceID(v *int) *ServiceCatalo
 	return _c
 }
 
-// SetFormSchema sets the "form_schema" field.
-func (_c *ServiceCatalogCreate) SetFormSchema(v map[string]interface{}) *ServiceCatalogCreate {
-	_c.mutation.SetFormSchema(v)
-	return _c
-}
-
 // SetAvailableRegions sets the "available_regions" field.
 func (_c *ServiceCatalogCreate) SetAvailableRegions(v []string) *ServiceCatalogCreate {
 	_c.mutation.SetAvailableRegions(v)
@@ -520,10 +514,6 @@ func (_c *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.CreateS
 	if value, ok := _c.mutation.CloudServiceID(); ok {
 		_spec.SetField(servicecatalog.FieldCloudServiceID, field.TypeInt, value)
 		_node.CloudServiceID = value
-	}
-	if value, ok := _c.mutation.FormSchema(); ok {
-		_spec.SetField(servicecatalog.FieldFormSchema, field.TypeJSON, value)
-		_node.FormSchema = value
 	}
 	if value, ok := _c.mutation.AvailableRegions(); ok {
 		_spec.SetField(servicecatalog.FieldAvailableRegions, field.TypeJSON, value)

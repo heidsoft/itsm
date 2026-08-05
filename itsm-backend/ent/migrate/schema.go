@@ -3508,7 +3508,6 @@ var (
 		{Name: "sla_resolution_time", Type: field.TypeInt, Nullable: true},
 		{Name: "ci_type_id", Type: field.TypeInt, Nullable: true},
 		{Name: "cloud_service_id", Type: field.TypeInt, Nullable: true},
-		{Name: "form_schema", Type: field.TypeJSON, Nullable: true},
 		{Name: "available_regions", Type: field.TypeJSON, Nullable: true},
 		{Name: "available_specs", Type: field.TypeJSON, Nullable: true},
 		{Name: "status", Type: field.TypeString, Default: "active"},
@@ -3547,7 +3546,7 @@ var (
 			{
 				Name:    "servicecatalog_tenant_id_status",
 				Unique:  false,
-				Columns: []*schema.Column{ServiceCatalogsColumns[20], ServiceCatalogsColumns[19]},
+				Columns: []*schema.Column{ServiceCatalogsColumns[19], ServiceCatalogsColumns[18]},
 			},
 		},
 	}
@@ -3559,7 +3558,6 @@ var (
 		{Name: "details", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "category", Type: field.TypeString, Nullable: true},
 		{Name: "icon", Type: field.TypeString, Nullable: true},
-		{Name: "form_schema", Type: field.TypeJSON, Nullable: true},
 		{Name: "sla_id", Type: field.TypeInt, Nullable: true},
 		{Name: "approval_chain_id", Type: field.TypeInt, Nullable: true},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
@@ -3578,7 +3576,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "service_catalog_items_service_catalogs_items",
-				Columns:    []*schema.Column{ServiceCatalogItemsColumns[15]},
+				Columns:    []*schema.Column{ServiceCatalogItemsColumns[14]},
 				RefColumns: []*schema.Column{ServiceCatalogsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

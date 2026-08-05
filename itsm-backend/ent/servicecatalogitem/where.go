@@ -510,16 +510,6 @@ func IconContainsFold(v string) predicate.ServiceCatalogItem {
 	return predicate.ServiceCatalogItem(sql.FieldContainsFold(FieldIcon, v))
 }
 
-// FormSchemaIsNil applies the IsNil predicate on the "form_schema" field.
-func FormSchemaIsNil() predicate.ServiceCatalogItem {
-	return predicate.ServiceCatalogItem(sql.FieldIsNull(FieldFormSchema))
-}
-
-// FormSchemaNotNil applies the NotNil predicate on the "form_schema" field.
-func FormSchemaNotNil() predicate.ServiceCatalogItem {
-	return predicate.ServiceCatalogItem(sql.FieldNotNull(FieldFormSchema))
-}
-
 // SLAIDEQ applies the EQ predicate on the "sla_id" field.
 func SLAIDEQ(v int) predicate.ServiceCatalogItem {
 	return predicate.ServiceCatalogItem(sql.FieldEQ(FieldSLAID, v))

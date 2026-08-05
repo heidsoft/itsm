@@ -3,7 +3,6 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicecatalogitem"
@@ -31,8 +30,6 @@ type ServiceCatalogItem struct {
 	Category string `json:"category,omitempty"`
 	// 图标URL
 	Icon string `json:"icon,omitempty"`
-	// 表单Schema，用于动态渲染申请表单
-	FormSchema map[string]interface{} `json:"form_schema,omitempty"`
 	// 关联的SLA ID
 	SLAID int `json:"sla_id,omitempty"`
 	// 关联的审批链ID
@@ -80,8 +77,6 @@ func (*ServiceCatalogItem) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case servicecatalogitem.FieldFormSchema:
-			values[i] = new([]byte)
 		case servicecatalogitem.FieldIsActive, servicecatalogitem.FieldRequiresApproval:
 			values[i] = new(sql.NullBool)
 		case servicecatalogitem.FieldID, servicecatalogitem.FieldCatalogID, servicecatalogitem.FieldSLAID, servicecatalogitem.FieldApprovalChainID, servicecatalogitem.FieldEstimatedDays, servicecatalogitem.FieldTenantID:
@@ -146,14 +141,6 @@ func (_m *ServiceCatalogItem) assignValues(columns []string, values []any) error
 				return fmt.Errorf("unexpected type %T for field icon", values[i])
 			} else if value.Valid {
 				_m.Icon = value.String
-			}
-		case servicecatalogitem.FieldFormSchema:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field form_schema", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &_m.FormSchema); err != nil {
-					return fmt.Errorf("unmarshal field form_schema: %w", err)
-				}
 			}
 		case servicecatalogitem.FieldSLAID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -261,9 +248,6 @@ func (_m *ServiceCatalogItem) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("icon=")
 	builder.WriteString(_m.Icon)
-	builder.WriteString(", ")
-	builder.WriteString("form_schema=")
-	builder.WriteString(fmt.Sprintf("%v", _m.FormSchema))
 	builder.WriteString(", ")
 	builder.WriteString("sla_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.SLAID))

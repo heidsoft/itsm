@@ -26,8 +26,6 @@ const (
 	FieldCategory = "category"
 	// FieldIcon holds the string denoting the icon field in the database.
 	FieldIcon = "icon"
-	// FieldFormSchema holds the string denoting the form_schema field in the database.
-	FieldFormSchema = "form_schema"
 	// FieldSLAID holds the string denoting the sla_id field in the database.
 	FieldSLAID = "sla_id"
 	// FieldApprovalChainID holds the string denoting the approval_chain_id field in the database.
@@ -66,7 +64,6 @@ var Columns = []string{
 	FieldDetails,
 	FieldCategory,
 	FieldIcon,
-	FieldFormSchema,
 	FieldSLAID,
 	FieldApprovalChainID,
 	FieldIsActive,

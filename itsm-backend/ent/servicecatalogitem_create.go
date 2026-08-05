@@ -89,12 +89,6 @@ func (_c *ServiceCatalogItemCreate) SetNillableIcon(v *string) *ServiceCatalogIt
 	return _c
 }
 
-// SetFormSchema sets the "form_schema" field.
-func (_c *ServiceCatalogItemCreate) SetFormSchema(v map[string]interface{}) *ServiceCatalogItemCreate {
-	_c.mutation.SetFormSchema(v)
-	return _c
-}
-
 // SetSLAID sets the "sla_id" field.
 func (_c *ServiceCatalogItemCreate) SetSLAID(v int) *ServiceCatalogItemCreate {
 	_c.mutation.SetSLAID(v)
@@ -350,10 +344,6 @@ func (_c *ServiceCatalogItemCreate) createSpec() (*ServiceCatalogItem, *sqlgraph
 	if value, ok := _c.mutation.Icon(); ok {
 		_spec.SetField(servicecatalogitem.FieldIcon, field.TypeString, value)
 		_node.Icon = value
-	}
-	if value, ok := _c.mutation.FormSchema(); ok {
-		_spec.SetField(servicecatalogitem.FieldFormSchema, field.TypeJSON, value)
-		_node.FormSchema = value
 	}
 	if value, ok := _c.mutation.SLAID(); ok {
 		_spec.SetField(servicecatalogitem.FieldSLAID, field.TypeInt, value)

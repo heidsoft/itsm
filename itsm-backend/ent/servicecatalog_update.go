@@ -353,18 +353,6 @@ func (_u *ServiceCatalogUpdate) ClearCloudServiceID() *ServiceCatalogUpdate {
 	return _u
 }
 
-// SetFormSchema sets the "form_schema" field.
-func (_u *ServiceCatalogUpdate) SetFormSchema(v map[string]interface{}) *ServiceCatalogUpdate {
-	_u.mutation.SetFormSchema(v)
-	return _u
-}
-
-// ClearFormSchema clears the value of the "form_schema" field.
-func (_u *ServiceCatalogUpdate) ClearFormSchema() *ServiceCatalogUpdate {
-	_u.mutation.ClearFormSchema()
-	return _u
-}
-
 // SetAvailableRegions sets the "available_regions" field.
 func (_u *ServiceCatalogUpdate) SetAvailableRegions(v []string) *ServiceCatalogUpdate {
 	_u.mutation.SetAvailableRegions(v)
@@ -698,12 +686,6 @@ func (_u *ServiceCatalogUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if _u.mutation.CloudServiceIDCleared() {
 		_spec.ClearField(servicecatalog.FieldCloudServiceID, field.TypeInt)
-	}
-	if value, ok := _u.mutation.FormSchema(); ok {
-		_spec.SetField(servicecatalog.FieldFormSchema, field.TypeJSON, value)
-	}
-	if _u.mutation.FormSchemaCleared() {
-		_spec.ClearField(servicecatalog.FieldFormSchema, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.AvailableRegions(); ok {
 		_spec.SetField(servicecatalog.FieldAvailableRegions, field.TypeJSON, value)
@@ -1139,18 +1121,6 @@ func (_u *ServiceCatalogUpdateOne) ClearCloudServiceID() *ServiceCatalogUpdateOn
 	return _u
 }
 
-// SetFormSchema sets the "form_schema" field.
-func (_u *ServiceCatalogUpdateOne) SetFormSchema(v map[string]interface{}) *ServiceCatalogUpdateOne {
-	_u.mutation.SetFormSchema(v)
-	return _u
-}
-
-// ClearFormSchema clears the value of the "form_schema" field.
-func (_u *ServiceCatalogUpdateOne) ClearFormSchema() *ServiceCatalogUpdateOne {
-	_u.mutation.ClearFormSchema()
-	return _u
-}
-
 // SetAvailableRegions sets the "available_regions" field.
 func (_u *ServiceCatalogUpdateOne) SetAvailableRegions(v []string) *ServiceCatalogUpdateOne {
 	_u.mutation.SetAvailableRegions(v)
@@ -1514,12 +1484,6 @@ func (_u *ServiceCatalogUpdateOne) sqlSave(ctx context.Context) (_node *ServiceC
 	}
 	if _u.mutation.CloudServiceIDCleared() {
 		_spec.ClearField(servicecatalog.FieldCloudServiceID, field.TypeInt)
-	}
-	if value, ok := _u.mutation.FormSchema(); ok {
-		_spec.SetField(servicecatalog.FieldFormSchema, field.TypeJSON, value)
-	}
-	if _u.mutation.FormSchemaCleared() {
-		_spec.ClearField(servicecatalog.FieldFormSchema, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.AvailableRegions(); ok {
 		_spec.SetField(servicecatalog.FieldAvailableRegions, field.TypeJSON, value)

@@ -137,18 +137,6 @@ func (_u *ServiceCatalogItemUpdate) ClearIcon() *ServiceCatalogItemUpdate {
 	return _u
 }
 
-// SetFormSchema sets the "form_schema" field.
-func (_u *ServiceCatalogItemUpdate) SetFormSchema(v map[string]interface{}) *ServiceCatalogItemUpdate {
-	_u.mutation.SetFormSchema(v)
-	return _u
-}
-
-// ClearFormSchema clears the value of the "form_schema" field.
-func (_u *ServiceCatalogItemUpdate) ClearFormSchema() *ServiceCatalogItemUpdate {
-	_u.mutation.ClearFormSchema()
-	return _u
-}
-
 // SetSLAID sets the "sla_id" field.
 func (_u *ServiceCatalogItemUpdate) SetSLAID(v int) *ServiceCatalogItemUpdate {
 	_u.mutation.ResetSLAID()
@@ -407,12 +395,6 @@ func (_u *ServiceCatalogItemUpdate) sqlSave(ctx context.Context) (_node int, err
 	if _u.mutation.IconCleared() {
 		_spec.ClearField(servicecatalogitem.FieldIcon, field.TypeString)
 	}
-	if value, ok := _u.mutation.FormSchema(); ok {
-		_spec.SetField(servicecatalogitem.FieldFormSchema, field.TypeJSON, value)
-	}
-	if _u.mutation.FormSchemaCleared() {
-		_spec.ClearField(servicecatalogitem.FieldFormSchema, field.TypeJSON)
-	}
 	if value, ok := _u.mutation.SLAID(); ok {
 		_spec.SetField(servicecatalogitem.FieldSLAID, field.TypeInt, value)
 	}
@@ -609,18 +591,6 @@ func (_u *ServiceCatalogItemUpdateOne) SetNillableIcon(v *string) *ServiceCatalo
 // ClearIcon clears the value of the "icon" field.
 func (_u *ServiceCatalogItemUpdateOne) ClearIcon() *ServiceCatalogItemUpdateOne {
 	_u.mutation.ClearIcon()
-	return _u
-}
-
-// SetFormSchema sets the "form_schema" field.
-func (_u *ServiceCatalogItemUpdateOne) SetFormSchema(v map[string]interface{}) *ServiceCatalogItemUpdateOne {
-	_u.mutation.SetFormSchema(v)
-	return _u
-}
-
-// ClearFormSchema clears the value of the "form_schema" field.
-func (_u *ServiceCatalogItemUpdateOne) ClearFormSchema() *ServiceCatalogItemUpdateOne {
-	_u.mutation.ClearFormSchema()
 	return _u
 }
 
@@ -911,12 +881,6 @@ func (_u *ServiceCatalogItemUpdateOne) sqlSave(ctx context.Context) (_node *Serv
 	}
 	if _u.mutation.IconCleared() {
 		_spec.ClearField(servicecatalogitem.FieldIcon, field.TypeString)
-	}
-	if value, ok := _u.mutation.FormSchema(); ok {
-		_spec.SetField(servicecatalogitem.FieldFormSchema, field.TypeJSON, value)
-	}
-	if _u.mutation.FormSchemaCleared() {
-		_spec.ClearField(servicecatalogitem.FieldFormSchema, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.SLAID(); ok {
 		_spec.SetField(servicecatalogitem.FieldSLAID, field.TypeInt, value)

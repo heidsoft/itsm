@@ -35,9 +35,6 @@ func (ServiceCatalogItem) Fields() []ent.Field {
 		field.String("icon").
 			Comment("图标URL").
 			Optional(),
-		field.JSON("form_schema", map[string]interface{}{}).
-			Comment("表单Schema，用于动态渲染申请表单").
-			Optional(),
 		field.Int("sla_id").
 			Comment("关联的SLA ID").
 			Optional(),

@@ -39,7 +39,6 @@ func (ServiceCatalog) Fields() []ent.Field {
 		field.Int("cloud_service_id").Comment("关联云服务ID").Optional(),
 
 		// 表单配置
-		field.JSON("form_schema", map[string]interface{}{}).Comment("表单JSON配置").Optional(),
 		field.JSON("available_regions", []string{}).Comment("可选区域").Optional(),
 		field.JSON("available_specs", []string{}).Comment("可选规格").Optional(),
 

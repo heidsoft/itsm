@@ -109636,7 +109636,6 @@ type ServiceCatalogMutation struct {
 	addci_type_id           *int
 	cloud_service_id        *int
 	addcloud_service_id     *int
-	form_schema             *map[string]interface{}
 	available_regions       *[]string
 	appendavailable_regions []string
 	available_specs         *[]string
@@ -110601,55 +110600,6 @@ func (m *ServiceCatalogMutation) ResetCloudServiceID() {
 	delete(m.clearedFields, servicecatalog.FieldCloudServiceID)
 }
 
-// SetFormSchema sets the "form_schema" field.
-func (m *ServiceCatalogMutation) SetFormSchema(value map[string]interface{}) {
-	m.form_schema = &value
-}
-
-// FormSchema returns the value of the "form_schema" field in the mutation.
-func (m *ServiceCatalogMutation) FormSchema() (r map[string]interface{}, exists bool) {
-	v := m.form_schema
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldFormSchema returns the old "form_schema" field's value of the ServiceCatalog entity.
-// If the ServiceCatalog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServiceCatalogMutation) OldFormSchema(ctx context.Context) (v map[string]interface{}, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldFormSchema is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldFormSchema requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldFormSchema: %w", err)
-	}
-	return oldValue.FormSchema, nil
-}
-
-// ClearFormSchema clears the value of the "form_schema" field.
-func (m *ServiceCatalogMutation) ClearFormSchema() {
-	m.form_schema = nil
-	m.clearedFields[servicecatalog.FieldFormSchema] = struct{}{}
-}
-
-// FormSchemaCleared returns if the "form_schema" field was cleared in this mutation.
-func (m *ServiceCatalogMutation) FormSchemaCleared() bool {
-	_, ok := m.clearedFields[servicecatalog.FieldFormSchema]
-	return ok
-}
-
-// ResetFormSchema resets all changes to the "form_schema" field.
-func (m *ServiceCatalogMutation) ResetFormSchema() {
-	m.form_schema = nil
-	delete(m.clearedFields, servicecatalog.FieldFormSchema)
-}
-
 // SetAvailableRegions sets the "available_regions" field.
 func (m *ServiceCatalogMutation) SetAvailableRegions(s []string) {
 	m.available_regions = &s
@@ -111124,7 +111074,7 @@ func (m *ServiceCatalogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ServiceCatalogMutation) Fields() []string {
-	fields := make([]string, 0, 24)
+	fields := make([]string, 0, 23)
 	if m.name != nil {
 		fields = append(fields, servicecatalog.FieldName)
 	}
@@ -111169,9 +111119,6 @@ func (m *ServiceCatalogMutation) Fields() []string {
 	}
 	if m.cloud_service_id != nil {
 		fields = append(fields, servicecatalog.FieldCloudServiceID)
-	}
-	if m.form_schema != nil {
-		fields = append(fields, servicecatalog.FieldFormSchema)
 	}
 	if m.available_regions != nil {
 		fields = append(fields, servicecatalog.FieldAvailableRegions)
@@ -111235,8 +111182,6 @@ func (m *ServiceCatalogMutation) Field(name string) (ent.Value, bool) {
 		return m.CiTypeID()
 	case servicecatalog.FieldCloudServiceID:
 		return m.CloudServiceID()
-	case servicecatalog.FieldFormSchema:
-		return m.FormSchema()
 	case servicecatalog.FieldAvailableRegions:
 		return m.AvailableRegions()
 	case servicecatalog.FieldAvailableSpecs:
@@ -111292,8 +111237,6 @@ func (m *ServiceCatalogMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldCiTypeID(ctx)
 	case servicecatalog.FieldCloudServiceID:
 		return m.OldCloudServiceID(ctx)
-	case servicecatalog.FieldFormSchema:
-		return m.OldFormSchema(ctx)
 	case servicecatalog.FieldAvailableRegions:
 		return m.OldAvailableRegions(ctx)
 	case servicecatalog.FieldAvailableSpecs:
@@ -111423,13 +111366,6 @@ func (m *ServiceCatalogMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCloudServiceID(v)
-		return nil
-	case servicecatalog.FieldFormSchema:
-		v, ok := value.(map[string]interface{})
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetFormSchema(v)
 		return nil
 	case servicecatalog.FieldAvailableRegions:
 		v, ok := value.([]string)
@@ -111661,9 +111597,6 @@ func (m *ServiceCatalogMutation) ClearedFields() []string {
 	if m.FieldCleared(servicecatalog.FieldCloudServiceID) {
 		fields = append(fields, servicecatalog.FieldCloudServiceID)
 	}
-	if m.FieldCleared(servicecatalog.FieldFormSchema) {
-		fields = append(fields, servicecatalog.FieldFormSchema)
-	}
 	if m.FieldCleared(servicecatalog.FieldAvailableRegions) {
 		fields = append(fields, servicecatalog.FieldAvailableRegions)
 	}
@@ -111716,9 +111649,6 @@ func (m *ServiceCatalogMutation) ClearField(name string) error {
 		return nil
 	case servicecatalog.FieldCloudServiceID:
 		m.ClearCloudServiceID()
-		return nil
-	case servicecatalog.FieldFormSchema:
-		m.ClearFormSchema()
 		return nil
 	case servicecatalog.FieldAvailableRegions:
 		m.ClearAvailableRegions()
@@ -111778,9 +111708,6 @@ func (m *ServiceCatalogMutation) ResetField(name string) error {
 		return nil
 	case servicecatalog.FieldCloudServiceID:
 		m.ResetCloudServiceID()
-		return nil
-	case servicecatalog.FieldFormSchema:
-		m.ResetFormSchema()
 		return nil
 	case servicecatalog.FieldAvailableRegions:
 		m.ResetAvailableRegions()
@@ -111905,7 +111832,6 @@ type ServiceCatalogItemMutation struct {
 	details              *string
 	category             *string
 	icon                 *string
-	form_schema          *map[string]interface{}
 	sla_id               *int
 	addsla_id            *int
 	approval_chain_id    *int
@@ -112290,55 +112216,6 @@ func (m *ServiceCatalogItemMutation) IconCleared() bool {
 func (m *ServiceCatalogItemMutation) ResetIcon() {
 	m.icon = nil
 	delete(m.clearedFields, servicecatalogitem.FieldIcon)
-}
-
-// SetFormSchema sets the "form_schema" field.
-func (m *ServiceCatalogItemMutation) SetFormSchema(value map[string]interface{}) {
-	m.form_schema = &value
-}
-
-// FormSchema returns the value of the "form_schema" field in the mutation.
-func (m *ServiceCatalogItemMutation) FormSchema() (r map[string]interface{}, exists bool) {
-	v := m.form_schema
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldFormSchema returns the old "form_schema" field's value of the ServiceCatalogItem entity.
-// If the ServiceCatalogItem object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServiceCatalogItemMutation) OldFormSchema(ctx context.Context) (v map[string]interface{}, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldFormSchema is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldFormSchema requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldFormSchema: %w", err)
-	}
-	return oldValue.FormSchema, nil
-}
-
-// ClearFormSchema clears the value of the "form_schema" field.
-func (m *ServiceCatalogItemMutation) ClearFormSchema() {
-	m.form_schema = nil
-	m.clearedFields[servicecatalogitem.FieldFormSchema] = struct{}{}
-}
-
-// FormSchemaCleared returns if the "form_schema" field was cleared in this mutation.
-func (m *ServiceCatalogItemMutation) FormSchemaCleared() bool {
-	_, ok := m.clearedFields[servicecatalogitem.FieldFormSchema]
-	return ok
-}
-
-// ResetFormSchema resets all changes to the "form_schema" field.
-func (m *ServiceCatalogItemMutation) ResetFormSchema() {
-	m.form_schema = nil
-	delete(m.clearedFields, servicecatalogitem.FieldFormSchema)
 }
 
 // SetSLAID sets the "sla_id" field.
@@ -112798,7 +112675,7 @@ func (m *ServiceCatalogItemMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ServiceCatalogItemMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 14)
 	if m.catalog != nil {
 		fields = append(fields, servicecatalogitem.FieldCatalogID)
 	}
@@ -112816,9 +112693,6 @@ func (m *ServiceCatalogItemMutation) Fields() []string {
 	}
 	if m.icon != nil {
 		fields = append(fields, servicecatalogitem.FieldIcon)
-	}
-	if m.form_schema != nil {
-		fields = append(fields, servicecatalogitem.FieldFormSchema)
 	}
 	if m.sla_id != nil {
 		fields = append(fields, servicecatalogitem.FieldSLAID)
@@ -112864,8 +112738,6 @@ func (m *ServiceCatalogItemMutation) Field(name string) (ent.Value, bool) {
 		return m.Category()
 	case servicecatalogitem.FieldIcon:
 		return m.Icon()
-	case servicecatalogitem.FieldFormSchema:
-		return m.FormSchema()
 	case servicecatalogitem.FieldSLAID:
 		return m.SLAID()
 	case servicecatalogitem.FieldApprovalChainID:
@@ -112903,8 +112775,6 @@ func (m *ServiceCatalogItemMutation) OldField(ctx context.Context, name string) 
 		return m.OldCategory(ctx)
 	case servicecatalogitem.FieldIcon:
 		return m.OldIcon(ctx)
-	case servicecatalogitem.FieldFormSchema:
-		return m.OldFormSchema(ctx)
 	case servicecatalogitem.FieldSLAID:
 		return m.OldSLAID(ctx)
 	case servicecatalogitem.FieldApprovalChainID:
@@ -112971,13 +112841,6 @@ func (m *ServiceCatalogItemMutation) SetField(name string, value ent.Value) erro
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIcon(v)
-		return nil
-	case servicecatalogitem.FieldFormSchema:
-		v, ok := value.(map[string]interface{})
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetFormSchema(v)
 		return nil
 	case servicecatalogitem.FieldSLAID:
 		v, ok := value.(int)
@@ -113128,9 +112991,6 @@ func (m *ServiceCatalogItemMutation) ClearedFields() []string {
 	if m.FieldCleared(servicecatalogitem.FieldIcon) {
 		fields = append(fields, servicecatalogitem.FieldIcon)
 	}
-	if m.FieldCleared(servicecatalogitem.FieldFormSchema) {
-		fields = append(fields, servicecatalogitem.FieldFormSchema)
-	}
 	if m.FieldCleared(servicecatalogitem.FieldSLAID) {
 		fields = append(fields, servicecatalogitem.FieldSLAID)
 	}
@@ -113163,9 +113023,6 @@ func (m *ServiceCatalogItemMutation) ClearField(name string) error {
 	case servicecatalogitem.FieldIcon:
 		m.ClearIcon()
 		return nil
-	case servicecatalogitem.FieldFormSchema:
-		m.ClearFormSchema()
-		return nil
 	case servicecatalogitem.FieldSLAID:
 		m.ClearSLAID()
 		return nil
@@ -113197,9 +113054,6 @@ func (m *ServiceCatalogItemMutation) ResetField(name string) error {
 		return nil
 	case servicecatalogitem.FieldIcon:
 		m.ResetIcon()
-		return nil
-	case servicecatalogitem.FieldFormSchema:
-		m.ResetFormSchema()
 		return nil
 	case servicecatalogitem.FieldSLAID:
 		m.ResetSLAID()
