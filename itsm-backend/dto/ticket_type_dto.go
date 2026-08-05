@@ -50,22 +50,6 @@ type CustomFieldConditionalDisplay struct {
 	Value    interface{} `json:"value"`
 }
 
-// CustomFieldDefinition 自定义字段定义
-type CustomFieldDefinition struct {
-	ID                 string                         `json:"id"`
-	Name               string                         `json:"name"`
-	Label              string                         `json:"label"`
-	Type               CustomFieldType                `json:"type"`
-	Required           bool                           `json:"required"`
-	Description        string                         `json:"description,omitempty"`
-	Placeholder        string                         `json:"placeholder,omitempty"`
-	DefaultValue       interface{}                    `json:"defaultValue,omitempty"`
-	Options            []CustomFieldOption            `json:"options,omitempty"`
-	Validation         *CustomFieldValidation         `json:"validation,omitempty"`
-	ConditionalDisplay *CustomFieldConditionalDisplay `json:"conditionalDisplay,omitempty"`
-	Order              int                            `json:"order"`
-}
-
 // ApproverInfo 审批人信息
 type ApproverInfo struct {
 	Type  string      `json:"type"`  // user, role, department, dynamic
