@@ -272,6 +272,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/fielddefinition"
@@ -299,10 +300,26 @@ type FieldDefinitionInput struct {
 // ReplaceDefinitions 删除 (tenantID, entityType, entityID) 下所有既有字段定义，
 // 按 defs 的顺序重新插入。字段值（field_values）已经快照了 name/label/顺序，
 // 不依赖这里的行 ID 存续，所以用"删除重建"而不是逐字段 diff。
+// 删除+插入包在一个事务里：field_definitions 上有 (tenant_id, entity_type, entity_id, name)
+// 唯一约束，如果 defs 里有重名字段导致某次 insert 撞约束失败，没有事务的话旧定义已经被删掉、
+// 新定义插了一半——比"什么都没做"更糟。事务保证要么全部生效，要么整体回滚。
 func (s *FieldDefinitionService) ReplaceDefinitions(ctx context.Context, tenantID int, entityType string, entityID int, defs []FieldDefinitionInput) ([]*ent.FieldDefinition, error) {
-	if err := s.DeleteDefinitions(ctx, tenantID, entityType, entityID); err != nil {
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
 		return nil, err
 	}
+
+	_, err = tx.FieldDefinition.Delete().
+		Where(
+			fielddefinition.TenantID(tenantID),
+			fielddefinition.EntityType(entityType),
+			fielddefinition.EntityID(entityID),
+		).
+		Exec(ctx)
+	if err != nil {
+		return nil, rollback(tx, err)
+	}
+
 	result := make([]*ent.FieldDefinition, 0, len(defs))
 	for i, d := range defs {
 		sortOrder := d.SortOrder
@@ -313,7 +330,7 @@ func (s *FieldDefinitionService) ReplaceDefinitions(ctx context.Context, tenantI
 		if options == nil {
 			options = []interface{}{}
 		}
-		created, err := s.client.FieldDefinition.Create().
+		created, err := tx.FieldDefinition.Create().
 			SetTenantID(tenantID).
 			SetEntityType(entityType).
 			SetEntityID(entityID).
@@ -325,11 +342,23 @@ func (s *FieldDefinitionService) ReplaceDefinitions(ctx context.Context, tenantI
 			SetSortOrder(sortOrder).
 			Save(ctx)
 		if err != nil {
-			return nil, err
+			return nil, rollback(tx, err)
 		}
 		result = append(result, created)
 	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
 	return result, nil
+}
+
+// rollback aborts tx and wraps the rollback error (if any) around the original cause.
+func rollback(tx *ent.Tx, cause error) error {
+	if rbErr := tx.Rollback(); rbErr != nil {
+		return fmt.Errorf("%w (rollback also failed: %v)", cause, rbErr)
+	}
+	return cause
 }
 
 // ListDefinitions 按 sort_order 返回 (tenantID, entityType, entityID) 下的字段定义。
@@ -482,6 +511,8 @@ func NewFieldValueService(client *ent.Client) *FieldValueService {
 // CreateValues 把提交的 values（fieldName -> 原始值）跟 (defEntityType, defEntityID) 下的
 // 字段定义匹配，快照 name/label/顺序后写入 field_values，挂在 (valueEntityType, valueEntityID) 上。
 // values 里不匹配任何字段定义的 key 会被忽略（例如 presetTypeId 这类路由元数据）。
+// 多条 insert 包在一个事务里：中途某一条失败（比如瞬时 DB 错误）不应该留下"插了一半"的
+// 半成品提交记录——field_values 代表的是一次完整的表单提交，要么整体成功要么整体不落库。
 func (s *FieldValueService) CreateValues(ctx context.Context, tenantID int, defEntityType string, defEntityID int, valueEntityType string, valueEntityID int, values map[string]interface{}) error {
 	if len(values) == 0 {
 		return nil
@@ -498,6 +529,12 @@ func (s *FieldValueService) CreateValues(ctx context.Context, tenantID int, defE
 	if err != nil {
 		return err
 	}
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+
 	for _, def := range defs {
 		raw, ok := values[def.Name]
 		if !ok {
@@ -505,10 +542,10 @@ func (s *FieldValueService) CreateValues(ctx context.Context, tenantID int, defE
 		}
 		encoded, err := json.Marshal(raw)
 		if err != nil {
-			return err
+			return rollback(tx, err)
 		}
 		defID := def.ID
-		_, err = s.client.FieldValue.Create().
+		_, err = tx.FieldValue.Create().
 			SetTenantID(tenantID).
 			SetEntityType(valueEntityType).
 			SetEntityID(valueEntityID).
@@ -519,10 +556,10 @@ func (s *FieldValueService) CreateValues(ctx context.Context, tenantID int, defE
 			SetValue(encoded).
 			Save(ctx)
 		if err != nil {
-			return err
+			return rollback(tx, err)
 		}
 	}
-	return nil
+	return tx.Commit()
 }
 
 // FieldValueDTO 展示用的已解析字段值。
