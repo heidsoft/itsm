@@ -1293,3 +1293,70 @@ func BenchmarkTicketService_CreateTicket(b *testing.B) {
 		}
 	}
 }
+
+func TestTicketService_CreateTicket_ValuesArrayFormatSurvivesUnderscoreNames(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ticket_create_values_array?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant := createTicketAssociationTenant(t, ctx, client, "create-values-array")
+	requester := createTicketAssociationUser(t, ctx, client, tenant.ID, "create-values-array-requester")
+	template, err := client.TicketTemplate.Create().
+		SetName("云主机申请").SetCategory("云").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	_, err = NewFieldDefinitionService(client).ReplaceDefinitions(ctx, tenant.ID, "ticket_template", template.ID, []FieldDefinitionInput{
+		{Name: "current_replicas", Label: "当前副本数", FieldType: "number", SortOrder: 0},
+	})
+	require.NoError(t, err)
+
+	service := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	created, err := service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "扩容申请", Description: "测试", Priority: "medium",
+		RequesterID: requester.ID, TemplateID: &template.ID,
+		FormFields: map[string]interface{}{
+			// 数组形状——模拟前端发送、经过 http-client.ts 全局驼峰转换后的真实线上形态。
+			// 注意：这里故意用数组而不是 map，因为这正是这次要修的 bug 场景。
+			"values": []interface{}{
+				map[string]interface{}{"name": "current_replicas", "value": float64(5)},
+			},
+		},
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	values, err := NewFieldValueService(client).ListValues(ctx, tenant.ID, "ticket", created.ID)
+	require.NoError(t, err)
+	require.Len(t, values, 1)
+	assert.Equal(t, "current_replicas", values[0].Name)
+	assert.Equal(t, float64(5), values[0].Value)
+}
+
+func TestTicketService_CreateTicket_ValuesMapFormatStillWorks(t *testing.T) {
+	// 向后兼容：直接调 service 层（不经过前端/http-client）的现有测试和调用方，
+	// 传的还是 map 形状，这条要继续通过。
+	client := enttest.Open(t, "sqlite3", "file:ticket_create_values_map_compat?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant := createTicketAssociationTenant(t, ctx, client, "create-values-map-compat")
+	requester := createTicketAssociationUser(t, ctx, client, tenant.ID, "create-values-map-compat-requester")
+	template, err := client.TicketTemplate.Create().
+		SetName("模板").SetCategory("c").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	_, err = NewFieldDefinitionService(client).ReplaceDefinitions(ctx, tenant.ID, "ticket_template", template.ID, []FieldDefinitionInput{
+		{Name: "office_location", Label: "办公地点", FieldType: "text", SortOrder: 0},
+	})
+	require.NoError(t, err)
+
+	service := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	created, err := service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "t", Description: "d", Priority: "medium",
+		RequesterID: requester.ID, TemplateID: &template.ID,
+		FormFields: map[string]interface{}{
+			"values": map[string]interface{}{"office_location": "北京"},
+		},
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	values, err := NewFieldValueService(client).ListValues(ctx, tenant.ID, "ticket", created.ID)
+	require.NoError(t, err)
+	require.Len(t, values, 1)
+	assert.Equal(t, "北京", values[0].Value)
+}

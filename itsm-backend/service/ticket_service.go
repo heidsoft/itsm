@@ -404,12 +404,47 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 	return nil
 }
 
+// parseFieldValuesArray 把 formFields["values"] 解析成 [{name,value}] 数组形状，
+// 转成内部用的 map[name]value。数组形状是必须的——字段名作为数组元素里的字符串值
+// （而不是对象的 key）传输，这样才能绕开前端 http-client.ts 那个全局的、不区分
+// 契约字段和用户数据的 snake_case→camelCase 请求体转换（那个转换会把 map 形状里
+// 带下划线的字段名 key 悄悄改写，导致匹配失败、值静默丢失）。
+// 解析不出数组形状返回 nil，调用方会退回到兼容 map 形状的旧逻辑。
+func parseFieldValuesArray(formFields map[string]interface{}) map[string]interface{} {
+	if formFields == nil {
+		return nil
+	}
+	rawValues, ok := formFields["values"].([]interface{})
+	if !ok {
+		return nil
+	}
+	result := make(map[string]interface{}, len(rawValues))
+	for _, raw := range rawValues {
+		entry, ok := raw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		name, _ := entry["name"].(string)
+		if name == "" {
+			continue
+		}
+		if val, ok := entry["value"]; ok {
+			result[name] = val
+		}
+	}
+	return result
+}
+
 // extractCustomFieldValues 从提交的 formFields 中取出用户实际填写的自定义字段值（"values" 键），
 // 忽略 presetTypeId 等仅用于类型推断/路由的元数据键。
 func extractCustomFieldValues(formFields map[string]interface{}) map[string]interface{} {
 	if formFields == nil {
 		return nil
 	}
+	if values := parseFieldValuesArray(formFields); values != nil {
+		return values
+	}
+	// 兼容旧的 map 形状——直接调用 service 层的测试/调用方还在用。
 	if values, ok := formFields["values"].(map[string]interface{}); ok {
 		return values
 	}
@@ -427,7 +462,12 @@ func extractAdHocFieldValues(formFields map[string]interface{}) []AdHocFieldValu
 	if !ok || len(rawDefs) == 0 {
 		return nil
 	}
-	values, _ := formFields["values"].(map[string]interface{})
+	values := parseFieldValuesArray(formFields)
+	if len(values) == 0 {
+		if mapValues, ok := formFields["values"].(map[string]interface{}); ok {
+			values = mapValues
+		}
+	}
 	if len(values) == 0 {
 		return nil
 	}
