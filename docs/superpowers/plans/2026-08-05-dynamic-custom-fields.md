@@ -29,7 +29,7 @@
 - Test: `itsm-backend/service/field_definition_service_test.go`（本 Task 只验证 Ent CRUD 能跑通，真正的业务逻辑测试在 Task 2）
 
 **Interfaces:**
-- Produces: `ent.FieldDefinition`（字段：TenantID, EntityType, EntityID, Name, Label, FieldType, Required, Options, SortOrder, Config, IsActive, CreatedAt, UpdatedAt）、`ent.FieldValue`（字段：TenantID, EntityType, EntityID, FieldDefinitionID *int, FieldName, FieldLabel, SortOrder, Value []byte, CreatedAt）。后续所有 Task 都依赖这两个生成的类型。
+- Produces: `ent.FieldDefinition`（字段：TenantID, EntityType, EntityID, Name, Label, FieldType, Required, Options, SortOrder, Config, IsActive, CreatedAt, UpdatedAt）、`ent.FieldValue`（字段：TenantID, EntityType, EntityID, FieldDefinitionID *int, FieldName, FieldLabel, SortOrder, Value json.RawMessage, CreatedAt——`json.RawMessage` 底层就是 `[]byte`，`json.Marshal`/`json.Unmarshal` 可以直接传参不用显式转换）。后续所有 Task 都依赖这两个生成的类型。
 
 - [ ] **Step 1: 写 `field_definition.go`**
 
@@ -84,6 +84,7 @@ func (FieldDefinition) Indexes() []ent.Index {
 package schema
 
 import (
+	"encoding/json"
 	"time"
 
 	"entgo.io/ent"
@@ -107,7 +108,7 @@ func (FieldValue) Fields() []ent.Field {
 		field.String("field_name").Comment("提交时快照的字段名").NotEmpty(),
 		field.String("field_label").Comment("提交时快照的显示名").NotEmpty(),
 		field.Int("sort_order").Comment("提交时快照的顺序").Default(0),
-		field.JSON("value", []byte{}).Comment("字段值，JSON 编码，原始类型（数字/字符串/布尔/数组）").Optional(),
+		field.JSON("value", json.RawMessage{}).Comment("字段值，JSON 编码，原始类型（数字/字符串/布尔/数组）。用 json.RawMessage 而不是 []byte——Ent 生成的 assignValues 会对 []byte 目标做 encoding/json 的 base64 特判，导致普通 JSON 值读不回来；json.RawMessage 自带 Marshal/Unmarshal 方法绕过这个坑，同时仍然是 Postgres JSONB 列（不是 field.Bytes 那样的 BYTEA，保留以后建 GIN 索引的可能性）。").Optional(),
 		field.Time("created_at").Comment("创建时间").Default(time.Now),
 	}
 }
