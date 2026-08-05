@@ -210,6 +210,7 @@ export interface CreateTicketRequest {
   type?: 'incident' | 'service_request' | 'change' | 'problem' | string;
   category?: string;
   categoryId?: number;
+  templateId?: number;
   formFields?: Record<string, unknown>;
   assigneeId?: number;
   workflowDefinitionKey?: string;

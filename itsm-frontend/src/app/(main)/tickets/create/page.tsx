@@ -197,13 +197,44 @@ export default function CreateTicketPage() {
       // 构建 priority：如果没有选择类型，使用表单中的 priority；否则使用预设优先级
       const priority = values.priority || (selectedType ? selectedType.priority : 'medium');
 
+      // 收集自定义字段的结构化值，供后端结构化落库（与上面拼进 description 的可读摘要并行，互不替代）
+      const customFieldValues: Record<string, unknown> = {};
+      if (selectedType?.fields && selectedType.fields.length > 0) {
+        selectedType.fields.forEach(field => {
+          const value = values[field.name];
+          if (value !== undefined && value !== null && value !== '') {
+            customFieldValues[field.name] = value;
+          }
+        });
+      }
+
+      // 数据库模板的 id 形如 `db_${item.id}`（见本文件 useEffect 里 dbTemplates 的构造逻辑）；
+      // 静态预设（ticket-type-presets.ts 里代码写死的那些）没有这个前缀，也没有对应的
+      // field_definitions 行，走即席提交路径。
+      const isDbTemplate = selectedType?.id.startsWith('db_') ?? false;
+      const templateId = isDbTemplate ? Number(selectedType!.id.slice(3)) : undefined;
+
       const created = await TicketApi.createTicket({
         title: title,
         description: description,
         priority: priority,
         type: inferTicketType(selectedType),
         category: values.category || (selectedType ? selectedType.category : undefined),
-        formFields: selectedType ? { presetTypeId: selectedType.id } : undefined,
+        templateId,
+        formFields: selectedType
+          ? {
+              presetTypeId: selectedType.id,
+              values: customFieldValues,
+              ...(isDbTemplate
+                ? {}
+                : {
+                    fieldDefs: (selectedType.fields || []).map(f => ({
+                      name: f.name,
+                      label: f.label,
+                    })),
+                  }),
+            }
+          : undefined,
         workflowDefinitionKey: selectedType?.workflowTemplateId,
       });
 

@@ -145,6 +145,7 @@ const TicketTemplatesPage = () => {
           description: string;
           category: string;
           content?: Record<string, unknown>;
+          fields?: unknown;
           isActive?: boolean;
           createdAt?: string;
           updatedAt?: string;
@@ -167,7 +168,7 @@ const TicketTemplatesPage = () => {
           autoAssign: (item.content?.autoAssign as boolean) || false,
           requiresApproval: (item.content?.requiresApproval as boolean) || false,
           approvalLevel: (item.content?.approvalLevel as string) || 'none',
-          customFields: (item.content?.customFields as CustomField[]) || [],
+          customFields: (item.fields as CustomField[]) || [],
           tags: (item.content?.tags as string[]) || [],
           isActive: item.isActive ?? true,
           createdAt: item.createdAt || new Date().toISOString(),
