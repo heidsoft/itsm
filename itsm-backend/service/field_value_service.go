@@ -72,6 +72,47 @@ func (s *FieldValueService) CreateValues(ctx context.Context, tenantID int, defE
 	return tx.Commit()
 }
 
+// AdHocFieldValue 是没有对应 field_definitions 行的自描述字段值——
+// 用于前端静态预设（代码里写死、不对应数据库模板）提交自定义字段的场景。
+type AdHocFieldValue struct {
+	Name      string
+	Label     string
+	SortOrder int
+	Value     interface{}
+}
+
+// CreateAdHocValues 直接按调用方提供的 name/label 写入 field_values，跳过
+// CreateValues 那种"先查 field_definitions 再匹配"的步骤——静态预设没有
+// field_definitions 行可以匹配。
+func (s *FieldValueService) CreateAdHocValues(ctx context.Context, tenantID int, valueEntityType string, valueEntityID int, fields []AdHocFieldValue) error {
+	if len(fields) == 0 {
+		return nil
+	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	for _, f := range fields {
+		encoded, err := json.Marshal(f.Value)
+		if err != nil {
+			return rollback(tx, err)
+		}
+		_, err = tx.FieldValue.Create().
+			SetTenantID(tenantID).
+			SetEntityType(valueEntityType).
+			SetEntityID(valueEntityID).
+			SetFieldName(f.Name).
+			SetFieldLabel(f.Label).
+			SetSortOrder(f.SortOrder).
+			SetValue(encoded).
+			Save(ctx)
+		if err != nil {
+			return rollback(tx, err)
+		}
+	}
+	return tx.Commit()
+}
+
 // FieldValueDTO 展示用的已解析字段值。
 type FieldValueDTO struct {
 	Name  string      `json:"name"`

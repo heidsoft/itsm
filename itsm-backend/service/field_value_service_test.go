@@ -51,6 +51,26 @@ func TestFieldValueService_ListValues_EmptyWhenNoValues(t *testing.T) {
 	assert.Empty(t, values)
 }
 
+func TestFieldValueService_CreateAdHocValues_NoFieldDefinitionRequired(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:field_value_adhoc?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	valSvc := NewFieldValueService(client)
+
+	// 没有任何 field_definitions 行——静态预设场景。
+	err := valSvc.CreateAdHocValues(ctx, 1, "ticket", 200, []AdHocFieldValue{
+		{Name: "replicas", Label: "副本数", SortOrder: 0, Value: float64(3)},
+	})
+	require.NoError(t, err)
+
+	values, err := valSvc.ListValues(ctx, 1, "ticket", 200)
+	require.NoError(t, err)
+	require.Len(t, values, 1)
+	assert.Equal(t, "replicas", values[0].Name)
+	assert.Equal(t, "副本数", values[0].Label)
+	assert.Equal(t, float64(3), values[0].Value)
+}
+
 func TestFieldValueService_CreateValues_SurvivesDefinitionDeletion(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:field_value_survive?mode=memory&cache=shared&_fk=1")
 	defer client.Close()

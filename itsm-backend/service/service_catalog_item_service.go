@@ -228,7 +228,10 @@ func (s *ServiceCatalogItemService) DeleteServiceCatalogItem(ctx context.Context
 // toItemResponse 转换为响应对象
 func (s *ServiceCatalogItemService) toItemResponse(ctx context.Context, item *ent.ServiceCatalogItem) *dto.ServiceCatalogItemResponse {
 	fields := make([]map[string]interface{}, 0)
-	if defs, err := NewFieldDefinitionService(s.client).ListDefinitions(ctx, item.TenantID, "service_catalog_item", item.ID); err == nil {
+	defs, err := NewFieldDefinitionService(s.client).ListDefinitions(ctx, item.TenantID, "service_catalog_item", item.ID)
+	if err != nil {
+		s.logger.Warnw("Failed to load field definitions for service catalog item", "error", err, "item_id", item.ID)
+	} else {
 		for _, d := range defs {
 			fields = append(fields, map[string]interface{}{
 				"name": d.Name, "label": d.Label, "type": d.FieldType,

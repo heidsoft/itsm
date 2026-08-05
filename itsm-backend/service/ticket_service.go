@@ -184,8 +184,12 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	if req.TemplateID != nil {
 		if fieldValues := extractCustomFieldValues(req.FormFields); len(fieldValues) > 0 {
 			if err := NewFieldValueService(s.client).CreateValues(ctx, tenantID, "ticket_template", *req.TemplateID, "ticket", tkt.ID, fieldValues); err != nil {
-				s.logger.Warnw("Failed to persist custom field values", "error", err, "ticket_id", tkt.ID)
+				s.logger.Errorw("Failed to persist custom field values", "error", err, "ticket_id", tkt.ID, "template_id", *req.TemplateID)
 			}
+		}
+	} else if adHocFields := extractAdHocFieldValues(req.FormFields); len(adHocFields) > 0 {
+		if err := NewFieldValueService(s.client).CreateAdHocValues(ctx, tenantID, "ticket", tkt.ID, adHocFields); err != nil {
+			s.logger.Errorw("Failed to persist ad-hoc custom field values", "error", err, "ticket_id", tkt.ID)
 		}
 	}
 
@@ -410,6 +414,44 @@ func extractCustomFieldValues(formFields map[string]interface{}) map[string]inte
 		return values
 	}
 	return nil
+}
+
+// extractAdHocFieldValues 解析 formFields["fieldDefs"]（客户端提交的 {name,label} 列表，
+// 用于没有 field_definitions 行的静态预设）配合 formFields["values"] 里的实际值，
+// 构造成 AdHocFieldValue 列表。fieldDefs 缺失或为空返回 nil。
+func extractAdHocFieldValues(formFields map[string]interface{}) []AdHocFieldValue {
+	if formFields == nil {
+		return nil
+	}
+	rawDefs, ok := formFields["fieldDefs"].([]interface{})
+	if !ok || len(rawDefs) == 0 {
+		return nil
+	}
+	values, _ := formFields["values"].(map[string]interface{})
+	if len(values) == 0 {
+		return nil
+	}
+	result := make([]AdHocFieldValue, 0, len(rawDefs))
+	for i, raw := range rawDefs {
+		defMap, ok := raw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		name, _ := defMap["name"].(string)
+		if name == "" {
+			continue
+		}
+		val, ok := values[name]
+		if !ok {
+			continue
+		}
+		label, _ := defMap["label"].(string)
+		if label == "" {
+			label = name
+		}
+		result = append(result, AdHocFieldValue{Name: name, Label: label, SortOrder: i, Value: val})
+	}
+	return result
 }
 
 func normalizeCreateTicketType(reqType string, formFields ...map[string]interface{}) ticket.Type {
@@ -1226,7 +1268,11 @@ func ToTicketResponseWithCustomFields(ctx context.Context, client *ent.Client, t
 		return resp
 	}
 	values, err := NewFieldValueService(client).ListValues(ctx, t.TenantID, "ticket", t.ID)
-	if err != nil || len(values) == 0 {
+	if err != nil {
+		zap.S().Warnw("Failed to load custom field values for ticket response", "error", err, "ticket_id", t.ID)
+		return resp
+	}
+	if len(values) == 0 {
 		return resp
 	}
 	resp.CustomFieldValues = make([]dto.CustomFieldValueResponse, 0, len(values))

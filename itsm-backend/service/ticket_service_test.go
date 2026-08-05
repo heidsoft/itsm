@@ -274,6 +274,34 @@ func TestTicketService_CreateTicketPersistsCustomFieldValues(t *testing.T) {
 	assert.Equal(t, "北京", values[0].Value)
 }
 
+func TestTicketService_CreateTicket_AdHocFieldValuesWithoutTemplate(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ticket_create_adhoc_fields?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant := createTicketAssociationTenant(t, ctx, client, "create-adhoc-fields")
+	requester := createTicketAssociationUser(t, ctx, client, tenant.ID, "create-adhoc-fields-requester")
+	service := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+
+	created, err := service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "K8S扩容", Description: "测试", Priority: "medium", RequesterID: requester.ID,
+		// 没有 TemplateID——模拟静态预设
+		FormFields: map[string]interface{}{
+			"fieldDefs": []interface{}{
+				map[string]interface{}{"name": "replicas", "label": "副本数"},
+			},
+			"values": map[string]interface{}{"replicas": float64(3)},
+		},
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	values, err := NewFieldValueService(client).ListValues(ctx, tenant.ID, "ticket", created.ID)
+	require.NoError(t, err)
+	require.Len(t, values, 1)
+	assert.Equal(t, "replicas", values[0].Name)
+	assert.Equal(t, "副本数", values[0].Label)
+	assert.Equal(t, float64(3), values[0].Value)
+}
+
 func TestToTicketResponse_IncludesCustomFieldValuesOrdered(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:to_ticket_response_fields?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
