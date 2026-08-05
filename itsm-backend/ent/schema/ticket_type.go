@@ -20,7 +20,6 @@ func (TicketType) Fields() []ent.Field {
 		field.String("icon").MaxLen(50),
 		field.String("color").MaxLen(20),
 		field.String("status").Default("active"),
-		field.JSON("custom_fields", map[string]interface{}{}),
 		field.Bool("approval_enabled").Default(false),
 		field.Int64("approval_workflow_id").Optional(),
 		field.JSON("approval_chain", []interface{}{}),

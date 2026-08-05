@@ -113,12 +113,6 @@ func (_u *TicketTypeUpdate) SetNillableStatus(v *string) *TicketTypeUpdate {
 	return _u
 }
 
-// SetCustomFields sets the "custom_fields" field.
-func (_u *TicketTypeUpdate) SetCustomFields(v map[string]interface{}) *TicketTypeUpdate {
-	_u.mutation.SetCustomFields(v)
-	return _u
-}
-
 // SetApprovalEnabled sets the "approval_enabled" field.
 func (_u *TicketTypeUpdate) SetApprovalEnabled(v bool) *TicketTypeUpdate {
 	_u.mutation.SetApprovalEnabled(v)
@@ -456,9 +450,6 @@ func (_u *TicketTypeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(tickettype.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.CustomFields(); ok {
-		_spec.SetField(tickettype.FieldCustomFields, field.TypeJSON, value)
-	}
 	if value, ok := _u.mutation.ApprovalEnabled(); ok {
 		_spec.SetField(tickettype.FieldApprovalEnabled, field.TypeBool, value)
 	}
@@ -642,12 +633,6 @@ func (_u *TicketTypeUpdateOne) SetNillableStatus(v *string) *TicketTypeUpdateOne
 	if v != nil {
 		_u.SetStatus(*v)
 	}
-	return _u
-}
-
-// SetCustomFields sets the "custom_fields" field.
-func (_u *TicketTypeUpdateOne) SetCustomFields(v map[string]interface{}) *TicketTypeUpdateOne {
-	_u.mutation.SetCustomFields(v)
 	return _u
 }
 
@@ -1017,9 +1002,6 @@ func (_u *TicketTypeUpdateOne) sqlSave(ctx context.Context) (_node *TicketType, 
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(tickettype.FieldStatus, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.CustomFields(); ok {
-		_spec.SetField(tickettype.FieldCustomFields, field.TypeJSON, value)
 	}
 	if value, ok := _u.mutation.ApprovalEnabled(); ok {
 		_spec.SetField(tickettype.FieldApprovalEnabled, field.TypeBool, value)

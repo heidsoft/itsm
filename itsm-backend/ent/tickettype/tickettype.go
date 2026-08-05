@@ -23,8 +23,6 @@ const (
 	FieldColor = "color"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
-	// FieldCustomFields holds the string denoting the custom_fields field in the database.
-	FieldCustomFields = "custom_fields"
 	// FieldApprovalEnabled holds the string denoting the approval_enabled field in the database.
 	FieldApprovalEnabled = "approval_enabled"
 	// FieldApprovalWorkflowID holds the string denoting the approval_workflow_id field in the database.
@@ -68,7 +66,6 @@ var Columns = []string{
 	FieldIcon,
 	FieldColor,
 	FieldStatus,
-	FieldCustomFields,
 	FieldApprovalEnabled,
 	FieldApprovalWorkflowID,
 	FieldApprovalChain,

@@ -154,7 +154,6 @@ type TicketTypeDefinition struct {
 	Icon               string                    `json:"icon,omitempty"`
 	Color              string                    `json:"color,omitempty"`
 	Status             TicketTypeStatus          `json:"status"`
-	CustomFields       []CustomFieldDefinition   `json:"customFields"`
 	ApprovalEnabled    bool                      `json:"approvalEnabled"`
 	ApprovalWorkflowID *string                   `json:"approvalWorkflowId,omitempty"`
 	ApprovalChain      []ApprovalChainDefinition `json:"approvalChain,omitempty"`
@@ -181,7 +180,6 @@ type CreateTicketTypeRequest struct {
 	Description        string                    `json:"description"`
 	Icon               string                    `json:"icon"`
 	Color              string                    `json:"color"`
-	CustomFields       []CustomFieldDefinition   `json:"customFields"`
 	ApprovalEnabled    bool                      `json:"approvalEnabled"`
 	ApprovalChain      []ApprovalChainDefinition `json:"approvalChain,omitempty"`
 	SLAEnabled         bool                      `json:"slaEnabled"`
@@ -199,7 +197,6 @@ type UpdateTicketTypeRequest struct {
 	Icon               *string                    `json:"icon"`
 	Color              *string                    `json:"color"`
 	Status             *TicketTypeStatus          `json:"status"`
-	CustomFields       *[]CustomFieldDefinition   `json:"customFields"`
 	ApprovalEnabled    *bool                      `json:"approvalEnabled"`
 	ApprovalChain      *[]ApprovalChainDefinition `json:"approvalChain"`
 	SLAEnabled         *bool                      `json:"slaEnabled"`

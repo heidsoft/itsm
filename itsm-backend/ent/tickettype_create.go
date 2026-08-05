@@ -64,12 +64,6 @@ func (_c *TicketTypeCreate) SetNillableStatus(v *string) *TicketTypeCreate {
 	return _c
 }
 
-// SetCustomFields sets the "custom_fields" field.
-func (_c *TicketTypeCreate) SetCustomFields(v map[string]interface{}) *TicketTypeCreate {
-	_c.mutation.SetCustomFields(v)
-	return _c
-}
-
 // SetApprovalEnabled sets the "approval_enabled" field.
 func (_c *TicketTypeCreate) SetApprovalEnabled(v bool) *TicketTypeCreate {
 	_c.mutation.SetApprovalEnabled(v)
@@ -313,9 +307,6 @@ func (_c *TicketTypeCreate) check() error {
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "TicketType.status"`)}
 	}
-	if _, ok := _c.mutation.CustomFields(); !ok {
-		return &ValidationError{Name: "custom_fields", err: errors.New(`ent: missing required field "TicketType.custom_fields"`)}
-	}
 	if _, ok := _c.mutation.ApprovalEnabled(); !ok {
 		return &ValidationError{Name: "approval_enabled", err: errors.New(`ent: missing required field "TicketType.approval_enabled"`)}
 	}
@@ -401,10 +392,6 @@ func (_c *TicketTypeCreate) createSpec() (*TicketType, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(tickettype.FieldStatus, field.TypeString, value)
 		_node.Status = value
-	}
-	if value, ok := _c.mutation.CustomFields(); ok {
-		_spec.SetField(tickettype.FieldCustomFields, field.TypeJSON, value)
-		_node.CustomFields = value
 	}
 	if value, ok := _c.mutation.ApprovalEnabled(); ok {
 		_spec.SetField(tickettype.FieldApprovalEnabled, field.TypeBool, value)

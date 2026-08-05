@@ -141421,7 +141421,6 @@ type TicketTypeMutation struct {
 	icon                    *string
 	color                   *string
 	status                  *string
-	custom_fields           *map[string]interface{}
 	approval_enabled        *bool
 	approval_workflow_id    *int64
 	addapproval_workflow_id *int64
@@ -141763,42 +141762,6 @@ func (m *TicketTypeMutation) OldStatus(ctx context.Context) (v string, err error
 // ResetStatus resets all changes to the "status" field.
 func (m *TicketTypeMutation) ResetStatus() {
 	m.status = nil
-}
-
-// SetCustomFields sets the "custom_fields" field.
-func (m *TicketTypeMutation) SetCustomFields(value map[string]interface{}) {
-	m.custom_fields = &value
-}
-
-// CustomFields returns the value of the "custom_fields" field in the mutation.
-func (m *TicketTypeMutation) CustomFields() (r map[string]interface{}, exists bool) {
-	v := m.custom_fields
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCustomFields returns the old "custom_fields" field's value of the TicketType entity.
-// If the TicketType object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TicketTypeMutation) OldCustomFields(ctx context.Context) (v map[string]interface{}, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCustomFields is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCustomFields requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCustomFields: %w", err)
-	}
-	return oldValue.CustomFields, nil
-}
-
-// ResetCustomFields resets all changes to the "custom_fields" field.
-func (m *TicketTypeMutation) ResetCustomFields() {
-	m.custom_fields = nil
 }
 
 // SetApprovalEnabled sets the "approval_enabled" field.
@@ -142567,7 +142530,7 @@ func (m *TicketTypeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TicketTypeMutation) Fields() []string {
-	fields := make([]string, 0, 22)
+	fields := make([]string, 0, 21)
 	if m.code != nil {
 		fields = append(fields, tickettype.FieldCode)
 	}
@@ -142585,9 +142548,6 @@ func (m *TicketTypeMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, tickettype.FieldStatus)
-	}
-	if m.custom_fields != nil {
-		fields = append(fields, tickettype.FieldCustomFields)
 	}
 	if m.approval_enabled != nil {
 		fields = append(fields, tickettype.FieldApprovalEnabled)
@@ -142654,8 +142614,6 @@ func (m *TicketTypeMutation) Field(name string) (ent.Value, bool) {
 		return m.Color()
 	case tickettype.FieldStatus:
 		return m.Status()
-	case tickettype.FieldCustomFields:
-		return m.CustomFields()
 	case tickettype.FieldApprovalEnabled:
 		return m.ApprovalEnabled()
 	case tickettype.FieldApprovalWorkflowID:
@@ -142707,8 +142665,6 @@ func (m *TicketTypeMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldColor(ctx)
 	case tickettype.FieldStatus:
 		return m.OldStatus(ctx)
-	case tickettype.FieldCustomFields:
-		return m.OldCustomFields(ctx)
 	case tickettype.FieldApprovalEnabled:
 		return m.OldApprovalEnabled(ctx)
 	case tickettype.FieldApprovalWorkflowID:
@@ -142789,13 +142745,6 @@ func (m *TicketTypeMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
-		return nil
-	case tickettype.FieldCustomFields:
-		v, ok := value.(map[string]interface{})
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCustomFields(v)
 		return nil
 	case tickettype.FieldApprovalEnabled:
 		v, ok := value.(bool)
@@ -143064,9 +143013,6 @@ func (m *TicketTypeMutation) ResetField(name string) error {
 		return nil
 	case tickettype.FieldStatus:
 		m.ResetStatus()
-		return nil
-	case tickettype.FieldCustomFields:
-		m.ResetCustomFields()
 		return nil
 	case tickettype.FieldApprovalEnabled:
 		m.ResetApprovalEnabled()

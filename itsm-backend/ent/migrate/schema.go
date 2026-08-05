@@ -4434,7 +4434,6 @@ var (
 		{Name: "icon", Type: field.TypeString, Size: 50},
 		{Name: "color", Type: field.TypeString, Size: 20},
 		{Name: "status", Type: field.TypeString, Default: "active"},
-		{Name: "custom_fields", Type: field.TypeJSON},
 		{Name: "approval_enabled", Type: field.TypeBool, Default: false},
 		{Name: "approval_workflow_id", Type: field.TypeInt64, Nullable: true},
 		{Name: "approval_chain", Type: field.TypeJSON},
@@ -4460,12 +4459,12 @@ var (
 			{
 				Name:    "tickettype_code_tenant_id",
 				Unique:  true,
-				Columns: []*schema.Column{TicketTypesColumns[1], TicketTypesColumns[17]},
+				Columns: []*schema.Column{TicketTypesColumns[1], TicketTypesColumns[16]},
 			},
 			{
 				Name:    "tickettype_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketTypesColumns[17]},
+				Columns: []*schema.Column{TicketTypesColumns[16]},
 			},
 			{
 				Name:    "tickettype_status",

@@ -13,7 +13,6 @@ func TestTicketTypeDefinitionUsesCamelCaseJSON(t *testing.T) {
 		ID:                 1,
 		Code:               "incident",
 		Name:               "Incident",
-		CustomFields:       []CustomFieldDefinition{{ID: "cf_1", DefaultValue: "p1"}},
 		ApprovalEnabled:    true,
 		ApprovalWorkflowID: testStringPtr("wf-1"),
 		SLAEnabled:         true,
@@ -35,8 +34,6 @@ func TestTicketTypeDefinitionUsesCamelCaseJSON(t *testing.T) {
 	assert.NoError(t, err)
 
 	jsonStr := string(data)
-	assert.Contains(t, jsonStr, `"customFields"`)
-	assert.Contains(t, jsonStr, `"defaultValue"`)
 	assert.Contains(t, jsonStr, `"approvalEnabled":true`)
 	assert.Contains(t, jsonStr, `"approvalWorkflowId":"wf-1"`)
 	assert.Contains(t, jsonStr, `"slaEnabled":true`)

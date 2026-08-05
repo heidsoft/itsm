@@ -30,8 +30,6 @@ type TicketType struct {
 	Color string `json:"color,omitempty"`
 	// Status holds the value of the "status" field.
 	Status string `json:"status,omitempty"`
-	// CustomFields holds the value of the "custom_fields" field.
-	CustomFields map[string]interface{} `json:"custom_fields,omitempty"`
 	// ApprovalEnabled holds the value of the "approval_enabled" field.
 	ApprovalEnabled bool `json:"approval_enabled,omitempty"`
 	// ApprovalWorkflowID holds the value of the "approval_workflow_id" field.
@@ -70,7 +68,7 @@ func (*TicketType) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case tickettype.FieldCustomFields, tickettype.FieldApprovalChain, tickettype.FieldAssignmentRules, tickettype.FieldNotificationConfig, tickettype.FieldPermissionConfig:
+		case tickettype.FieldApprovalChain, tickettype.FieldAssignmentRules, tickettype.FieldNotificationConfig, tickettype.FieldPermissionConfig:
 			values[i] = new([]byte)
 		case tickettype.FieldApprovalEnabled, tickettype.FieldSLAEnabled, tickettype.FieldAutoAssignEnabled:
 			values[i] = new(sql.NullBool)
@@ -136,14 +134,6 @@ func (_m *TicketType) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				_m.Status = value.String
-			}
-		case tickettype.FieldCustomFields:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field custom_fields", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &_m.CustomFields); err != nil {
-					return fmt.Errorf("unmarshal field custom_fields: %w", err)
-				}
 			}
 		case tickettype.FieldApprovalEnabled:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -296,9 +286,6 @@ func (_m *TicketType) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(_m.Status)
-	builder.WriteString(", ")
-	builder.WriteString("custom_fields=")
-	builder.WriteString(fmt.Sprintf("%v", _m.CustomFields))
 	builder.WriteString(", ")
 	builder.WriteString("approval_enabled=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ApprovalEnabled))
