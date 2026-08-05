@@ -80,6 +80,10 @@ type Tx struct {
 	EngineerSkill *EngineerSkillClient
 	// FeishuTicketSync is the client for interacting with the FeishuTicketSync builders.
 	FeishuTicketSync *FeishuTicketSyncClient
+	// FieldDefinition is the client for interacting with the FieldDefinition builders.
+	FieldDefinition *FieldDefinitionClient
+	// FieldValue is the client for interacting with the FieldValue builders.
+	FieldValue *FieldValueClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
 	// Incident is the client for interacting with the Incident builders.
@@ -411,6 +415,8 @@ func (tx *Tx) init() {
 	tx.EndpointACL = NewEndpointACLClient(tx.config)
 	tx.EngineerSkill = NewEngineerSkillClient(tx.config)
 	tx.FeishuTicketSync = NewFeishuTicketSyncClient(tx.config)
+	tx.FieldDefinition = NewFieldDefinitionClient(tx.config)
+	tx.FieldValue = NewFieldValueClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
 	tx.IncidentAlert = NewIncidentAlertClient(tx.config)

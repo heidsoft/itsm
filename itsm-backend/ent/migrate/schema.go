@@ -1473,6 +1473,67 @@ var (
 			},
 		},
 	}
+	// FieldDefinitionsColumns holds the columns for the "field_definitions" table.
+	FieldDefinitionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "entity_type", Type: field.TypeString},
+		{Name: "entity_id", Type: field.TypeInt},
+		{Name: "name", Type: field.TypeString},
+		{Name: "label", Type: field.TypeString},
+		{Name: "field_type", Type: field.TypeString},
+		{Name: "required", Type: field.TypeBool, Default: false},
+		{Name: "options", Type: field.TypeJSON, Nullable: true},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "config", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// FieldDefinitionsTable holds the schema information for the "field_definitions" table.
+	FieldDefinitionsTable = &schema.Table{
+		Name:       "field_definitions",
+		Columns:    FieldDefinitionsColumns,
+		PrimaryKey: []*schema.Column{FieldDefinitionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "fielddefinition_tenant_id_entity_type_entity_id_sort_order",
+				Unique:  false,
+				Columns: []*schema.Column{FieldDefinitionsColumns[1], FieldDefinitionsColumns[2], FieldDefinitionsColumns[3], FieldDefinitionsColumns[9]},
+			},
+			{
+				Name:    "fielddefinition_tenant_id_entity_type_entity_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{FieldDefinitionsColumns[1], FieldDefinitionsColumns[2], FieldDefinitionsColumns[3], FieldDefinitionsColumns[4]},
+			},
+		},
+	}
+	// FieldValuesColumns holds the columns for the "field_values" table.
+	FieldValuesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "entity_type", Type: field.TypeString},
+		{Name: "entity_id", Type: field.TypeInt},
+		{Name: "field_definition_id", Type: field.TypeInt, Nullable: true},
+		{Name: "field_name", Type: field.TypeString},
+		{Name: "field_label", Type: field.TypeString},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "value", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// FieldValuesTable holds the schema information for the "field_values" table.
+	FieldValuesTable = &schema.Table{
+		Name:       "field_values",
+		Columns:    FieldValuesColumns,
+		PrimaryKey: []*schema.Column{FieldValuesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "fieldvalue_tenant_id_entity_type_entity_id",
+				Unique:  false,
+				Columns: []*schema.Column{FieldValuesColumns[1], FieldValuesColumns[2], FieldValuesColumns[3]},
+			},
+		},
+	}
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -5159,6 +5220,8 @@ var (
 		EndpointAcLsTable,
 		EngineerSkillsTable,
 		FeishuTicketSyncsTable,
+		FieldDefinitionsTable,
+		FieldValuesTable,
 		GroupsTable,
 		IncidentsTable,
 		IncidentAlertsTable,

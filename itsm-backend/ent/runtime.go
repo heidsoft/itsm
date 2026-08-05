@@ -37,6 +37,8 @@ import (
 	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
 	"itsm-backend/ent/feishuticketsync"
+	"itsm-backend/ent/fielddefinition"
+	"itsm-backend/ent/fieldvalue"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
@@ -1251,6 +1253,84 @@ func init() {
 	feishuticketsync.DefaultUpdatedAt = feishuticketsyncDescUpdatedAt.Default.(func() time.Time)
 	// feishuticketsync.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	feishuticketsync.UpdateDefaultUpdatedAt = feishuticketsyncDescUpdatedAt.UpdateDefault.(func() time.Time)
+	fielddefinitionFields := schema.FieldDefinition{}.Fields()
+	_ = fielddefinitionFields
+	// fielddefinitionDescTenantID is the schema descriptor for tenant_id field.
+	fielddefinitionDescTenantID := fielddefinitionFields[0].Descriptor()
+	// fielddefinition.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	fielddefinition.TenantIDValidator = fielddefinitionDescTenantID.Validators[0].(func(int) error)
+	// fielddefinitionDescEntityType is the schema descriptor for entity_type field.
+	fielddefinitionDescEntityType := fielddefinitionFields[1].Descriptor()
+	// fielddefinition.EntityTypeValidator is a validator for the "entity_type" field. It is called by the builders before save.
+	fielddefinition.EntityTypeValidator = fielddefinitionDescEntityType.Validators[0].(func(string) error)
+	// fielddefinitionDescEntityID is the schema descriptor for entity_id field.
+	fielddefinitionDescEntityID := fielddefinitionFields[2].Descriptor()
+	// fielddefinition.EntityIDValidator is a validator for the "entity_id" field. It is called by the builders before save.
+	fielddefinition.EntityIDValidator = fielddefinitionDescEntityID.Validators[0].(func(int) error)
+	// fielddefinitionDescName is the schema descriptor for name field.
+	fielddefinitionDescName := fielddefinitionFields[3].Descriptor()
+	// fielddefinition.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	fielddefinition.NameValidator = fielddefinitionDescName.Validators[0].(func(string) error)
+	// fielddefinitionDescLabel is the schema descriptor for label field.
+	fielddefinitionDescLabel := fielddefinitionFields[4].Descriptor()
+	// fielddefinition.LabelValidator is a validator for the "label" field. It is called by the builders before save.
+	fielddefinition.LabelValidator = fielddefinitionDescLabel.Validators[0].(func(string) error)
+	// fielddefinitionDescFieldType is the schema descriptor for field_type field.
+	fielddefinitionDescFieldType := fielddefinitionFields[5].Descriptor()
+	// fielddefinition.FieldTypeValidator is a validator for the "field_type" field. It is called by the builders before save.
+	fielddefinition.FieldTypeValidator = fielddefinitionDescFieldType.Validators[0].(func(string) error)
+	// fielddefinitionDescRequired is the schema descriptor for required field.
+	fielddefinitionDescRequired := fielddefinitionFields[6].Descriptor()
+	// fielddefinition.DefaultRequired holds the default value on creation for the required field.
+	fielddefinition.DefaultRequired = fielddefinitionDescRequired.Default.(bool)
+	// fielddefinitionDescSortOrder is the schema descriptor for sort_order field.
+	fielddefinitionDescSortOrder := fielddefinitionFields[8].Descriptor()
+	// fielddefinition.DefaultSortOrder holds the default value on creation for the sort_order field.
+	fielddefinition.DefaultSortOrder = fielddefinitionDescSortOrder.Default.(int)
+	// fielddefinitionDescIsActive is the schema descriptor for is_active field.
+	fielddefinitionDescIsActive := fielddefinitionFields[10].Descriptor()
+	// fielddefinition.DefaultIsActive holds the default value on creation for the is_active field.
+	fielddefinition.DefaultIsActive = fielddefinitionDescIsActive.Default.(bool)
+	// fielddefinitionDescCreatedAt is the schema descriptor for created_at field.
+	fielddefinitionDescCreatedAt := fielddefinitionFields[11].Descriptor()
+	// fielddefinition.DefaultCreatedAt holds the default value on creation for the created_at field.
+	fielddefinition.DefaultCreatedAt = fielddefinitionDescCreatedAt.Default.(func() time.Time)
+	// fielddefinitionDescUpdatedAt is the schema descriptor for updated_at field.
+	fielddefinitionDescUpdatedAt := fielddefinitionFields[12].Descriptor()
+	// fielddefinition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	fielddefinition.DefaultUpdatedAt = fielddefinitionDescUpdatedAt.Default.(func() time.Time)
+	// fielddefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	fielddefinition.UpdateDefaultUpdatedAt = fielddefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	fieldvalueFields := schema.FieldValue{}.Fields()
+	_ = fieldvalueFields
+	// fieldvalueDescTenantID is the schema descriptor for tenant_id field.
+	fieldvalueDescTenantID := fieldvalueFields[0].Descriptor()
+	// fieldvalue.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	fieldvalue.TenantIDValidator = fieldvalueDescTenantID.Validators[0].(func(int) error)
+	// fieldvalueDescEntityType is the schema descriptor for entity_type field.
+	fieldvalueDescEntityType := fieldvalueFields[1].Descriptor()
+	// fieldvalue.EntityTypeValidator is a validator for the "entity_type" field. It is called by the builders before save.
+	fieldvalue.EntityTypeValidator = fieldvalueDescEntityType.Validators[0].(func(string) error)
+	// fieldvalueDescEntityID is the schema descriptor for entity_id field.
+	fieldvalueDescEntityID := fieldvalueFields[2].Descriptor()
+	// fieldvalue.EntityIDValidator is a validator for the "entity_id" field. It is called by the builders before save.
+	fieldvalue.EntityIDValidator = fieldvalueDescEntityID.Validators[0].(func(int) error)
+	// fieldvalueDescFieldName is the schema descriptor for field_name field.
+	fieldvalueDescFieldName := fieldvalueFields[4].Descriptor()
+	// fieldvalue.FieldNameValidator is a validator for the "field_name" field. It is called by the builders before save.
+	fieldvalue.FieldNameValidator = fieldvalueDescFieldName.Validators[0].(func(string) error)
+	// fieldvalueDescFieldLabel is the schema descriptor for field_label field.
+	fieldvalueDescFieldLabel := fieldvalueFields[5].Descriptor()
+	// fieldvalue.FieldLabelValidator is a validator for the "field_label" field. It is called by the builders before save.
+	fieldvalue.FieldLabelValidator = fieldvalueDescFieldLabel.Validators[0].(func(string) error)
+	// fieldvalueDescSortOrder is the schema descriptor for sort_order field.
+	fieldvalueDescSortOrder := fieldvalueFields[6].Descriptor()
+	// fieldvalue.DefaultSortOrder holds the default value on creation for the sort_order field.
+	fieldvalue.DefaultSortOrder = fieldvalueDescSortOrder.Default.(int)
+	// fieldvalueDescCreatedAt is the schema descriptor for created_at field.
+	fieldvalueDescCreatedAt := fieldvalueFields[8].Descriptor()
+	// fieldvalue.DefaultCreatedAt holds the default value on creation for the created_at field.
+	fieldvalue.DefaultCreatedAt = fieldvalueDescCreatedAt.Default.(func() time.Time)
 	groupFields := schema.Group{}.Fields()
 	_ = groupFields
 	// groupDescName is the schema descriptor for name field.

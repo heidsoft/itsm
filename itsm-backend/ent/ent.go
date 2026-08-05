@@ -40,6 +40,8 @@ import (
 	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
 	"itsm-backend/ent/feishuticketsync"
+	"itsm-backend/ent/fielddefinition"
+	"itsm-backend/ent/fieldvalue"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
@@ -223,6 +225,8 @@ func checkColumn(t, c string) error {
 			endpointacl.Table:                 endpointacl.ValidColumn,
 			engineerskill.Table:               engineerskill.ValidColumn,
 			feishuticketsync.Table:            feishuticketsync.ValidColumn,
+			fielddefinition.Table:             fielddefinition.ValidColumn,
+			fieldvalue.Table:                  fieldvalue.ValidColumn,
 			group.Table:                       group.ValidColumn,
 			incident.Table:                    incident.ValidColumn,
 			incidentalert.Table:               incidentalert.ValidColumn,
