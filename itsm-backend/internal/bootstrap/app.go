@@ -359,7 +359,7 @@ func NewApplication() *Application {
 	toolRegistry := service.NewToolRegistry(ragService, incidentService, configurationItemService, client)
 	toolQueue := service.NewToolQueue(client, toolRegistry, 100, sugar)
 
-	ticketController := controller.NewTicketController(ticketService, ticketDependencyService, database.GetRawDB(), sugar)
+	ticketController := controller.NewTicketController(ticketService, ticketDependencyService, database.GetRawDB(), client, sugar)
 	ticketDependencyController := controller.NewTicketDependencyController(ticketDependencyService)
 
 	ticketCommentService := service.NewTicketCommentService(client, sugar)

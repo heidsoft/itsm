@@ -37,7 +37,7 @@ func setupTestTicketController(t *testing.T) (*gin.Engine, *ent.Client, *TicketC
 	ticketService := service.NewTicketServiceForTest(client, logger)
 	var ticketDependencyService *service.TicketDependencyService
 
-	ticketController := NewTicketController(ticketService, ticketDependencyService, nil, logger)
+	ticketController := NewTicketController(ticketService, ticketDependencyService, nil, client, logger)
 
 	r := gin.New()
 	r.Use(gin.Recovery())

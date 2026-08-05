@@ -243,6 +243,70 @@ func TestTicketService_CreateTicketPersistsAssociations(t *testing.T) {
 	assert.Equal(t, tag.ID, entity.Edges.Tags[0].ID)
 }
 
+func TestTicketService_CreateTicketPersistsCustomFieldValues(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ticket_create_custom_fields_v2?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant := createTicketAssociationTenant(t, ctx, client, "create-custom-fields-v2")
+	requester := createTicketAssociationUser(t, ctx, client, tenant.ID, "create-custom-fields-v2-requester")
+	template, err := client.TicketTemplate.Create().
+		SetName("网络接入").SetCategory("网络").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	_, err = NewFieldDefinitionService(client).ReplaceDefinitions(ctx, tenant.ID, "ticket_template", template.ID, []FieldDefinitionInput{
+		{Name: "office_location", Label: "办公地点", FieldType: "text", SortOrder: 0},
+	})
+	require.NoError(t, err)
+
+	service := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	created, err := service.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "网络接入申请", Description: "测试", Priority: "medium",
+		RequesterID: requester.ID, TemplateID: &template.ID,
+		FormFields: map[string]interface{}{
+			"values": map[string]interface{}{"office_location": "北京"},
+		},
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	values, err := NewFieldValueService(client).ListValues(ctx, tenant.ID, "ticket", created.ID)
+	require.NoError(t, err)
+	require.Len(t, values, 1)
+	assert.Equal(t, "office_location", values[0].Name)
+	assert.Equal(t, "北京", values[0].Value)
+}
+
+func TestToTicketResponse_IncludesCustomFieldValuesOrdered(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:to_ticket_response_fields?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant := createTicketAssociationTenant(t, ctx, client, "to-response-fields")
+	requester := createTicketAssociationUser(t, ctx, client, tenant.ID, "to-response-fields-requester")
+	template, err := client.TicketTemplate.Create().
+		SetName("t").SetCategory("c").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	_, err = NewFieldDefinitionService(client).ReplaceDefinitions(ctx, tenant.ID, "ticket_template", template.ID, []FieldDefinitionInput{
+		{Name: "office_location", Label: "办公地点", FieldType: "text", SortOrder: 0},
+		{Name: "device_count", Label: "设备数量", FieldType: "number", SortOrder: 1},
+	})
+	require.NoError(t, err)
+
+	svc := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	created, err := svc.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "t", Description: "d", Priority: "medium", RequesterID: requester.ID, TemplateID: &template.ID,
+		FormFields: map[string]interface{}{"values": map[string]interface{}{
+			"office_location": "北京", "device_count": float64(2),
+		}},
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	// ToTicketResponse（列表路径）不查字段值；ToTicketResponseWithCustomFields（详情/创建路径）才查——
+	// 两者的行为契约见本文件所属任务的 Interfaces 说明。这里测的是后者。
+	resp := ToTicketResponseWithCustomFields(ctx, client, created)
+	require.Len(t, resp.CustomFieldValues, 2)
+	assert.Equal(t, "office_location", resp.CustomFieldValues[0].Name)
+	assert.Equal(t, "办公地点", resp.CustomFieldValues[0].Label)
+	assert.Equal(t, "device_count", resp.CustomFieldValues[1].Name)
+}
+
 func TestTicketService_CreateTicketRejectsCrossTenantReferences(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ticket_create_cross_tenant?mode=memory&cache=shared&_fk=1")
 	defer client.Close()

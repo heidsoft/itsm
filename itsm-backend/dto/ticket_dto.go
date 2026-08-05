@@ -75,33 +75,41 @@ type ListTicketsRequest struct {
 
 // TicketResponse 工单响应
 type TicketResponse struct {
-	ID                    int            `json:"id"`
-	Title                 string         `json:"title"`
-	Description           string         `json:"description"`
-	Status                string         `json:"status"`
-	Priority              string         `json:"priority"`
-	Type                  string         `json:"type"`
-	TicketNumber          string         `json:"ticketNumber"`
-	RequesterID           int            `json:"requesterId"`
-	AssigneeID            int            `json:"assigneeId,omitempty"`
-	TenantID              int            `json:"tenantId"`
-	CategoryID            int            `json:"categoryId,omitempty"`
-	DepartmentID          int            `json:"departmentId,omitempty"`
-	ParentTicketID        int            `json:"parentTicketId,omitempty"`
-	TemplateID            *int           `json:"templateId,omitempty"`
-	Version               int            `json:"version"`
-	CreatedAt             time.Time      `json:"createdAt"`
-	UpdatedAt             time.Time      `json:"updatedAt"`
-	Requester             *UserBasicInfo `json:"requester,omitempty"`
-	Assignee              *UserBasicInfo `json:"assignee,omitempty"`
-	Resolution            string         `json:"resolution,omitempty"`
-	ResolutionCategory    string         `json:"resolutionCategory,omitempty"`
-	ResolvedAt            *time.Time     `json:"resolvedAt,omitempty"`
-	ClosedAt              *time.Time     `json:"closedAt,omitempty"`
-	FirstResponseAt       *time.Time     `json:"firstResponseAt,omitempty"`
-	SLAResponseDeadline   *time.Time     `json:"slaResponseDeadline,omitempty"`
-	SLAResolutionDeadline *time.Time     `json:"slaResolutionDeadline,omitempty"`
-	Rating                int            `json:"rating,omitempty"`
+	ID                    int                        `json:"id"`
+	Title                 string                     `json:"title"`
+	Description           string                     `json:"description"`
+	Status                string                     `json:"status"`
+	Priority              string                     `json:"priority"`
+	Type                  string                     `json:"type"`
+	TicketNumber          string                     `json:"ticketNumber"`
+	RequesterID           int                        `json:"requesterId"`
+	AssigneeID            int                        `json:"assigneeId,omitempty"`
+	TenantID              int                        `json:"tenantId"`
+	CategoryID            int                        `json:"categoryId,omitempty"`
+	DepartmentID          int                        `json:"departmentId,omitempty"`
+	ParentTicketID        int                        `json:"parentTicketId,omitempty"`
+	TemplateID            *int                       `json:"templateId,omitempty"`
+	Version               int                        `json:"version"`
+	CreatedAt             time.Time                  `json:"createdAt"`
+	UpdatedAt             time.Time                  `json:"updatedAt"`
+	Requester             *UserBasicInfo             `json:"requester,omitempty"`
+	Assignee              *UserBasicInfo             `json:"assignee,omitempty"`
+	Resolution            string                     `json:"resolution,omitempty"`
+	ResolutionCategory    string                     `json:"resolutionCategory,omitempty"`
+	ResolvedAt            *time.Time                 `json:"resolvedAt,omitempty"`
+	ClosedAt              *time.Time                 `json:"closedAt,omitempty"`
+	FirstResponseAt       *time.Time                 `json:"firstResponseAt,omitempty"`
+	SLAResponseDeadline   *time.Time                 `json:"slaResponseDeadline,omitempty"`
+	SLAResolutionDeadline *time.Time                 `json:"slaResolutionDeadline,omitempty"`
+	Rating                int                        `json:"rating,omitempty"`
+	CustomFieldValues     []CustomFieldValueResponse `json:"customFields,omitempty"`
+}
+
+// CustomFieldValueResponse 单个自定义字段的展示值（快照 name/label，避免响应层依赖 service 包）。
+type CustomFieldValueResponse struct {
+	Name  string      `json:"name"`
+	Label string      `json:"label"`
+	Value interface{} `json:"value"`
 }
 
 // ListTicketsResponse 工单列表响应

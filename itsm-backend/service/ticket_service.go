@@ -179,6 +179,16 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}
 	}
 
+	// 将自定义字段值写入共享的 field_values 表（取代旧的 Ticket.custom_field_values JSON 列）。
+	// 写入失败不应该阻塞工单创建本身，跟 SLA 计算失败的处理方式一致。
+	if req.TemplateID != nil {
+		if fieldValues := extractCustomFieldValues(req.FormFields); len(fieldValues) > 0 {
+			if err := NewFieldValueService(s.client).CreateValues(ctx, tenantID, "ticket_template", *req.TemplateID, "ticket", tkt.ID, fieldValues); err != nil {
+				s.logger.Warnw("Failed to persist custom field values", "error", err, "ticket_id", tkt.ID)
+			}
+		}
+	}
+
 	// 计算 SLA（如果配置了 SLA 服务）
 	if s.slaSvc != nil {
 		slaResult, err := s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, string(tkt.Type), string(tkt.Priority))
@@ -386,6 +396,18 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 		if count != len(tagIDs) {
 			return fmt.Errorf("工单标签不存在或不可用")
 		}
+	}
+	return nil
+}
+
+// extractCustomFieldValues 从提交的 formFields 中取出用户实际填写的自定义字段值（"values" 键），
+// 忽略 presetTypeId 等仅用于类型推断/路由的元数据键。
+func extractCustomFieldValues(formFields map[string]interface{}) map[string]interface{} {
+	if formFields == nil {
+		return nil
+	}
+	if values, ok := formFields["values"].(map[string]interface{}); ok {
+		return values
 	}
 	return nil
 }
@@ -890,7 +912,7 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 	}
 
 	for i, t := range result.Data {
-		response.Tickets[i] = s.toTicketResponse(t)
+		response.Tickets[i] = ToTicketResponse(ctx, t)
 	}
 
 	return response, nil
@@ -1150,8 +1172,12 @@ func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.
 
 // ==================== 辅助方法 ====================
 
-// toTicketResponse 转换为 DTO 响应
-func (s *TicketService) toTicketResponse(t *ticket.Ticket) *dto.TicketResponse {
+// ToTicketResponse 是工单领域模型转 DTO 响应的唯一入口，创建/详情/列表所有路径都应该调用它。
+// 列表路径直接用这个函数，不查字段值（避免 N+1）。
+func ToTicketResponse(ctx context.Context, t *ticket.Ticket) *dto.TicketResponse {
+	if t == nil {
+		return nil
+	}
 	resp := &dto.TicketResponse{
 		ID:           t.ID,
 		TicketNumber: t.TicketNumber,
@@ -1189,6 +1215,26 @@ func (s *TicketService) toTicketResponse(t *ticket.Ticket) *dto.TicketResponse {
 	resp.SLAResponseDeadline = t.SLAResponseDeadline
 	resp.SLAResolutionDeadline = t.SLAResolutionDeadline
 
+	return resp
+}
+
+// ToTicketResponseWithCustomFields 在 ToTicketResponse 基础上额外查一次 field_values。
+// 只用于单条工单详情/创建响应，列表接口不调用（避免 N+1）。
+func ToTicketResponseWithCustomFields(ctx context.Context, client *ent.Client, t *ticket.Ticket) *dto.TicketResponse {
+	resp := ToTicketResponse(ctx, t)
+	if resp == nil || client == nil {
+		return resp
+	}
+	values, err := NewFieldValueService(client).ListValues(ctx, t.TenantID, "ticket", t.ID)
+	if err != nil || len(values) == 0 {
+		return resp
+	}
+	resp.CustomFieldValues = make([]dto.CustomFieldValueResponse, 0, len(values))
+	for _, v := range values {
+		resp.CustomFieldValues = append(resp.CustomFieldValues, dto.CustomFieldValueResponse{
+			Name: v.Name, Label: v.Label, Value: v.Value,
+		})
+	}
 	return resp
 }
 
