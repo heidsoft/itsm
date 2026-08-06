@@ -1300,6 +1300,12 @@ func ToTicketResponse(ctx context.Context, t *ticket.Ticket) *dto.TicketResponse
 	return resp
 }
 
+// ToTicketResponseWithCustomFields 是 TicketService 持有 client 时的便捷封装，
+// 供没有单独持有 *ent.Client 的调用方（如 MSPController）获取带自定义字段值的详情响应。
+func (s *TicketService) ToTicketResponseWithCustomFields(ctx context.Context, t *ticket.Ticket) *dto.TicketResponse {
+	return ToTicketResponseWithCustomFields(ctx, s.client, t)
+}
+
 // ToTicketResponseWithCustomFields 在 ToTicketResponse 基础上额外查一次 field_values。
 // 只用于单条工单详情/创建响应，列表接口不调用（避免 N+1）。
 func ToTicketResponseWithCustomFields(ctx context.Context, client *ent.Client, t *ticket.Ticket) *dto.TicketResponse {

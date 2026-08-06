@@ -349,9 +349,7 @@ func (mc *MSPController) AssignMSPTechnician(c *gin.Context) {
 		return
 	}
 
-	// MSPController 没有持有 *ent.Client，无法查一次 field_values 做详情级富化；
-	// 用不查字段值的 service.ToTicketResponse 保持编译通过和响应契约一致。
-	common.Success(c, service.ToTicketResponse(c.Request.Context(), ticket))
+	common.Success(c, mc.ticketService.ToTicketResponseWithCustomFields(c.Request.Context(), ticket))
 }
 
 // ==================== MSP 报表 ====================
