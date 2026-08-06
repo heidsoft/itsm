@@ -96,6 +96,33 @@ func (s *FieldDefinitionService) ListDefinitions(ctx context.Context, tenantID i
 		All(ctx)
 }
 
+// ListDefinitionsForEntities 批量按 entityID 分组返回字段定义，避免调用方对每个实体单独查一次
+// （列表接口场景，同 ListDefinitions 的单实体版本相比省掉 N-1 次查询）。
+func (s *FieldDefinitionService) ListDefinitionsForEntities(ctx context.Context, tenantID int, entityType string, entityIDs []int) (map[int][]*ent.FieldDefinition, error) {
+	result := make(map[int][]*ent.FieldDefinition, len(entityIDs))
+	if len(entityIDs) == 0 {
+		return result, nil
+	}
+
+	defs, err := s.client.FieldDefinition.Query().
+		Where(
+			fielddefinition.TenantID(tenantID),
+			fielddefinition.EntityType(entityType),
+			fielddefinition.EntityIDIn(entityIDs...),
+			fielddefinition.IsActive(true),
+		).
+		Order(ent.Asc(fielddefinition.FieldSortOrder)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, d := range defs {
+		result[d.EntityID] = append(result[d.EntityID], d)
+	}
+	return result, nil
+}
+
 // DeleteDefinitions 删除 (tenantID, entityType, entityID) 下所有字段定义。
 func (s *FieldDefinitionService) DeleteDefinitions(ctx context.Context, tenantID int, entityType string, entityID int) error {
 	_, err := s.client.FieldDefinition.Delete().

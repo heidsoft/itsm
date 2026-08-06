@@ -119,9 +119,19 @@ func (s *ServiceCatalogItemService) ListServiceCatalogItems(ctx context.Context,
 		return nil, fmt.Errorf("failed to list service items: %w", err)
 	}
 
+	itemIDs := make([]int, len(items))
+	for i, item := range items {
+		itemIDs[i] = item.ID
+	}
+	defsByItem, err := NewFieldDefinitionService(s.client).ListDefinitionsForEntities(ctx, tenantID, "service_catalog_item", itemIDs)
+	if err != nil {
+		s.logger.Warnw("Failed to batch-load field definitions for service catalog items", "error", err, "catalog_id", catalogID)
+		defsByItem = map[int][]*ent.FieldDefinition{}
+	}
+
 	var response []*dto.ServiceCatalogItemResponse
 	for _, item := range items {
-		response = append(response, s.toItemResponse(ctx, item))
+		response = append(response, s.toItemResponseWithDefs(item, defsByItem[item.ID]))
 	}
 
 	return response, nil
@@ -225,19 +235,25 @@ func (s *ServiceCatalogItemService) DeleteServiceCatalogItem(ctx context.Context
 	return nil
 }
 
-// toItemResponse 转换为响应对象
+// toItemResponse 转换为响应对象（单条查询场景：Create/Get/Update）
 func (s *ServiceCatalogItemService) toItemResponse(ctx context.Context, item *ent.ServiceCatalogItem) *dto.ServiceCatalogItemResponse {
-	fields := make([]map[string]interface{}, 0)
 	defs, err := NewFieldDefinitionService(s.client).ListDefinitions(ctx, item.TenantID, "service_catalog_item", item.ID)
 	if err != nil {
 		s.logger.Warnw("Failed to load field definitions for service catalog item", "error", err, "item_id", item.ID)
-	} else {
-		for _, d := range defs {
-			fields = append(fields, map[string]interface{}{
-				"name": d.Name, "label": d.Label, "type": d.FieldType,
-				"required": d.Required, "options": d.Options,
-			})
-		}
+		defs = nil
+	}
+	return s.toItemResponseWithDefs(item, defs)
+}
+
+// toItemResponseWithDefs 转换为响应对象，字段定义由调用方预先批量加载好传入
+// （列表场景：ListServiceCatalogItems 一次性查完所有项的定义，避免逐项查询）。
+func (s *ServiceCatalogItemService) toItemResponseWithDefs(item *ent.ServiceCatalogItem, defs []*ent.FieldDefinition) *dto.ServiceCatalogItemResponse {
+	fields := make([]map[string]interface{}, 0, len(defs))
+	for _, d := range defs {
+		fields = append(fields, map[string]interface{}{
+			"name": d.Name, "label": d.Label, "type": d.FieldType,
+			"required": d.Required, "options": d.Options,
+		})
 	}
 	return &dto.ServiceCatalogItemResponse{
 		ID: item.ID, Name: item.Name, Description: item.Description, Details: item.Details,
