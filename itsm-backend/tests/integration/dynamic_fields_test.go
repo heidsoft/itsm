@@ -239,3 +239,150 @@ func TestDynamicFields(t *testing.T) {
 	}
 	assert.True(t, found, "列表里应该包含 Step 2 创建的工单")
 }
+
+// TestDynamicFields_ArrayFormatWithUnderscoreNames 跑通 Task 11/12 修的那个 bug 本身：
+// 前端 http-client.ts 会对请求体的 object key 做一次全局 snake_case->camelCase 转换，
+// 如果 formFields.values 用 map 形状传（字段名是 object key），带下划线的字段名会被
+// 悄悄改写、值静默丢失。Task 12 把 values 改成 [{name,value}] 数组形状规避这个问题——
+// 这里用真实的 HTTP body（而不是 service 层直接构造 Go map）走一遍模板 -> 工单创建
+// -> 详情回显，确认数组形状的带下划线字段名真的能落库、能读回。
+func TestDynamicFields_ArrayFormatWithUnderscoreNames(t *testing.T) {
+	r, client, _, _ := setupDynamicFieldsRouter(t)
+	defer client.Close()
+
+	type templateFieldReq struct {
+		Name     string `json:"name"`
+		Label    string `json:"label"`
+		Type     string `json:"type"`
+		Required bool   `json:"required"`
+	}
+	createTemplateReq := struct {
+		Name        string             `json:"name"`
+		Description string             `json:"description"`
+		Category    string             `json:"category"`
+		Priority    string             `json:"priority"`
+		Fields      []templateFieldReq `json:"fields"`
+	}{
+		Name:        "下划线字段名集成测试模板",
+		Description: "验证数组形状的 values 能在真实 HTTP 请求体里存活",
+		Category:    "incident",
+		Priority:    "medium",
+		Fields: []templateFieldReq{
+			{Name: "current_replicas", Label: "当前副本数", Type: "number", Required: true},
+		},
+	}
+
+	env, status := doDynamicFieldsRequest(t, r, http.MethodPost, "/api/v1/tickets/templates", createTemplateReq)
+	require.Equal(t, http.StatusOK, status, "创建模板应返回200, message=%s", env.Message)
+	require.Equal(t, 0, env.Code)
+
+	var templateResp struct {
+		ID int `json:"id"`
+	}
+	require.NoError(t, json.Unmarshal(env.Data, &templateResp))
+	templateID := templateResp.ID
+
+	// formFields.values 用 [{name,value}] 数组形状提交，name 是数组元素里的字符串值
+	// 而不是 object key，所以不会被请求体的驼峰转换改写。
+	createTicketReq := struct {
+		Title       string      `json:"title"`
+		Description string      `json:"description"`
+		Priority    string      `json:"priority"`
+		TemplateID  int         `json:"templateId"`
+		FormFields  interface{} `json:"formFields"`
+	}{
+		Title:       "扩容申请",
+		Description: "生产环境副本数需要扩容",
+		Priority:    "medium",
+		TemplateID:  templateID,
+		FormFields: map[string]interface{}{
+			"presetTypeId": "incident",
+			"values": []map[string]interface{}{
+				{"name": "current_replicas", "value": 5},
+			},
+		},
+	}
+
+	env, status = doDynamicFieldsRequest(t, r, http.MethodPost, "/api/v1/tickets", createTicketReq)
+	require.Equal(t, http.StatusOK, status, "创建工单应返回200, message=%s", env.Message)
+	require.Equal(t, 0, env.Code, "创建工单 code 应为成功, message=%s", env.Message)
+
+	var createdTicket struct {
+		ID int `json:"id"`
+	}
+	require.NoError(t, json.Unmarshal(env.Data, &createdTicket))
+	ticketID := createdTicket.ID
+
+	env, status = doDynamicFieldsRequest(t, r, http.MethodGet, "/api/v1/tickets/"+strconv.Itoa(ticketID), nil)
+	require.Equal(t, http.StatusOK, status, "获取工单详情应返回200, message=%s", env.Message)
+	require.Equal(t, 0, env.Code)
+
+	var ticketDetail struct {
+		CustomFields []struct {
+			Name  string      `json:"name"`
+			Label string      `json:"label"`
+			Value interface{} `json:"value"`
+		} `json:"customFields"`
+	}
+	require.NoError(t, json.Unmarshal(env.Data, &ticketDetail))
+	require.Len(t, ticketDetail.CustomFields, 1, "工单详情 customFields 长度应为 1")
+	assert.Equal(t, "current_replicas", ticketDetail.CustomFields[0].Name, "下划线字段名应该完整存活，不被驼峰转换破坏")
+	assert.EqualValues(t, 5, ticketDetail.CustomFields[0].Value)
+}
+
+// TestDynamicFields_AdHocFieldsWithoutTemplate 跑通无模板（静态预设）的即席字段值路径：
+// 前端对静态预设的工单类型没有对应的 field_definitions 行，会在 formFields.fieldDefs
+// 里内联提交 {name,label} 定义，配合 formFields.values 一起交给
+// extractAdHocFieldValues / CreateAdHocValues。这条路径完全不经过 TemplateID 分支，
+// Task 11 新增，此前没有端到端测试覆盖过真实 HTTP 请求体。
+func TestDynamicFields_AdHocFieldsWithoutTemplate(t *testing.T) {
+	r, client, _, _ := setupDynamicFieldsRouter(t)
+	defer client.Close()
+
+	createTicketReq := struct {
+		Title       string      `json:"title"`
+		Description string      `json:"description"`
+		Priority    string      `json:"priority"`
+		FormFields  interface{} `json:"formFields"`
+	}{
+		Title:       "静态预设即席字段申请",
+		Description: "没有数据库模板，字段定义随请求内联提交",
+		Priority:    "medium",
+		FormFields: map[string]interface{}{
+			"presetTypeId": "incident",
+			"fieldDefs": []map[string]interface{}{
+				{"name": "affected_region", "label": "受影响地域"},
+			},
+			"values": []map[string]interface{}{
+				{"name": "affected_region", "value": "cn-north"},
+			},
+		},
+	}
+
+	env, status := doDynamicFieldsRequest(t, r, http.MethodPost, "/api/v1/tickets", createTicketReq)
+	require.Equal(t, http.StatusOK, status, "创建工单应返回200, message=%s", env.Message)
+	require.Equal(t, 0, env.Code, "创建工单 code 应为成功, message=%s", env.Message)
+
+	var createdTicket struct {
+		ID int `json:"id"`
+	}
+	require.NoError(t, json.Unmarshal(env.Data, &createdTicket))
+	require.NotZero(t, createdTicket.ID)
+
+	env, status = doDynamicFieldsRequest(t, r, http.MethodGet, "/api/v1/tickets/"+strconv.Itoa(createdTicket.ID), nil)
+	require.Equal(t, http.StatusOK, status, "获取工单详情应返回200, message=%s", env.Message)
+	require.Equal(t, 0, env.Code)
+
+	var ticketDetail struct {
+		CustomFields []struct {
+			Name  string      `json:"name"`
+			Label string      `json:"label"`
+			Value interface{} `json:"value"`
+		} `json:"customFields"`
+	}
+	require.NoError(t, json.Unmarshal(env.Data, &ticketDetail))
+	require.Len(t, ticketDetail.CustomFields, 1, "即席字段值应该被保存并在详情里回显")
+	assert.Equal(t, "affected_region", ticketDetail.CustomFields[0].Name)
+	assert.Equal(t, "受影响地域", ticketDetail.CustomFields[0].Label, "label 应该来自 fieldDefs 里内联提交的定义")
+	assert.Equal(t, "cn-north", ticketDetail.CustomFields[0].Value)
+}
