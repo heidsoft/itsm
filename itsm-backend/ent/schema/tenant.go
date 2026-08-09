@@ -63,6 +63,9 @@ func (Tenant) Fields() []ent.Field {
 		field.String("owner_contact").
 			Comment("租户负责人联系方式").
 			Optional(),
+		field.String("timezone").
+			Comment("时区").
+			Default("Asia/Shanghai"),
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),

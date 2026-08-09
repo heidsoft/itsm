@@ -31,6 +31,10 @@ func (Role) Fields() []ent.Field {
 		field.Bool("is_active").
 			Comment("角色是否启用").
 			Default(true),
+		field.Enum("data_scope").
+			Comment("数据权限: all-全部, department-本部门, owner-仅自己").
+			Values("all", "department", "owner").
+			Default("all"),
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(),

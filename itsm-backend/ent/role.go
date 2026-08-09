@@ -27,6 +27,8 @@ type Role struct {
 	IsSystem bool `json:"is_system,omitempty"`
 	// 角色是否启用
 	IsActive bool `json:"is_active,omitempty"`
+	// 数据权限: all-全部, department-本部门, owner-仅自己
+	DataScope role.DataScope `json:"data_scope,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
@@ -78,7 +80,7 @@ func (*Role) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case role.FieldID, role.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case role.FieldName, role.FieldCode, role.FieldDescription:
+		case role.FieldName, role.FieldCode, role.FieldDescription, role.FieldDataScope:
 			values[i] = new(sql.NullString)
 		case role.FieldCreatedAt, role.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -134,6 +136,12 @@ func (_m *Role) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
 				_m.IsActive = value.Bool
+			}
+		case role.FieldDataScope:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field data_scope", values[i])
+			} else if value.Valid {
+				_m.DataScope = role.DataScope(value.String)
 			}
 		case role.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -220,6 +228,9 @@ func (_m *Role) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
+	builder.WriteString(", ")
+	builder.WriteString("data_scope=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DataScope))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))

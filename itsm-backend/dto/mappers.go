@@ -403,6 +403,12 @@ func ToTenantResponse(tenant *ent.Tenant) *TenantResponse {
 		response.OwnerContact = &tenant.OwnerContact
 	}
 
+	// Timezone - 默认为 Asia/Shanghai
+	response.Timezone = tenant.Timezone
+	if response.Timezone == "" {
+		response.Timezone = "Asia/Shanghai"
+	}
+
 	return response
 }
 

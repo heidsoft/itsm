@@ -15,6 +15,7 @@ type RoleDTO struct {
 	CreatedAt   string   `json:"createdAt"`
 	UpdatedAt   string   `json:"updatedAt"`
 	TenantID    int      `json:"tenantId"`
+	DataScope   string   `json:"dataScope"` // all/department/owner
 }
 
 // RoleListResponse represents the response for listing roles
@@ -62,6 +63,7 @@ type RoleResponse struct {
 	Description string           `json:"description"`
 	IsSystem    bool             `json:"isSystem"`
 	IsActive    bool             `json:"isActive"` // 角色是否启用
+	DataScope   string           `json:"dataScope"` // all/department/owner
 	Permissions []PermissionInfo `json:"permissions"`
 	TenantID    int              `json:"tenantId"`
 	CreatedAt   time.Time        `json:"createdAt"`

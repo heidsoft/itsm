@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -94,6 +95,7 @@ func (s *RoleService) buildRoleResponse(roleEntity *ent.Role) *dto.RoleResponse 
 		Description: roleEntity.Description,
 		IsSystem:    roleEntity.IsSystem,
 		IsActive:    roleEntity.IsActive,
+		DataScope:   string(roleEntity.DataScope),
 		Permissions: []dto.PermissionInfo{},
 		TenantID:    roleEntity.TenantID,
 		CreatedAt:   roleEntity.CreatedAt,
@@ -370,6 +372,10 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 // AssignPermissions 给角色分配权限（直接操作 role_permissions 联表）
 // C-4 修复：使用事务包裹 Delete+CreateBulk，循环内 err 必须 return 触发 Rollback，
 // 防止"旧权限已清空、新权限只写入部分"的越权/失权静默故障。
+// ErrPermissionNotInTenant 表示请求绑定的权限中存在不属于当前租户（或不存在）的项。
+// 属于调用方输入错误（应映射为 400），而非服务端内部错误（500）。
+var ErrPermissionNotInTenant = errors.New("部分权限不存在或不属于当前租户")
+
 func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permissionIDs []int, tenantID int) error {
 	s.logger.Infow("Assigning permissions to role", "role_id", roleID, "permission_count", len(permissionIDs))
 
@@ -384,14 +390,19 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 	}
 
 	if len(permissionIDs) > 0 {
+		// R1 修复：权限是租户级实体，绑定角色时必须按本租户过滤。
+		// 否则可传入他租户 permission ID 通过 len 校验，造成跨租户提权。
 		perms, err := s.client.Permission.Query().
-			Where(permission.IDIn(permissionIDs...)).
+			Where(
+				permission.IDIn(permissionIDs...),
+				permission.TenantID(tenantID),
+			).
 			All(ctx)
 		if err != nil {
 			return fmt.Errorf("查询权限失败: %w", err)
 		}
 		if len(perms) != len(permissionIDs) {
-			return fmt.Errorf("部分权限不存在")
+			return ErrPermissionNotInTenant
 		}
 	}
 

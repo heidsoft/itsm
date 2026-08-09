@@ -47,6 +47,8 @@ type Tenant struct {
 	ServiceTier string `json:"service_tier,omitempty"`
 	// 租户负责人联系方式
 	OwnerContact string `json:"owner_contact,omitempty"`
+	// 时区
+	Timezone string `json:"timezone,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -107,7 +109,7 @@ func (*Tenant) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case tenant.FieldID, tenant.FieldParentTenantID, tenant.FieldMspProviderID:
 			values[i] = new(sql.NullInt64)
-		case tenant.FieldName, tenant.FieldCode, tenant.FieldDomain, tenant.FieldType, tenant.FieldStatus, tenant.FieldPlanCode, tenant.FieldCostCenterCode, tenant.FieldLegalEntityCode, tenant.FieldCurrency, tenant.FieldServiceTier, tenant.FieldOwnerContact:
+		case tenant.FieldName, tenant.FieldCode, tenant.FieldDomain, tenant.FieldType, tenant.FieldStatus, tenant.FieldPlanCode, tenant.FieldCostCenterCode, tenant.FieldLegalEntityCode, tenant.FieldCurrency, tenant.FieldServiceTier, tenant.FieldOwnerContact, tenant.FieldTimezone:
 			values[i] = new(sql.NullString)
 		case tenant.FieldExpiresAt, tenant.FieldCreatedAt, tenant.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -224,6 +226,12 @@ func (_m *Tenant) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.OwnerContact = value.String
 			}
+		case tenant.FieldTimezone:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field timezone", values[i])
+			} else if value.Valid {
+				_m.Timezone = value.String
+			}
 		case tenant.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -338,6 +346,9 @@ func (_m *Tenant) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("owner_contact=")
 	builder.WriteString(_m.OwnerContact)
+	builder.WriteString(", ")
+	builder.WriteString("timezone=")
+	builder.WriteString(_m.Timezone)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

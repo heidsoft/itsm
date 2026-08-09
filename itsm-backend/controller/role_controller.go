@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -127,6 +128,7 @@ func (rc *RoleController) ListRoles(c *gin.Context) {
 			CreatedAt:   role.CreatedAt.Format(time.RFC3339),
 			UpdatedAt:   role.UpdatedAt.Format(time.RFC3339),
 			TenantID:    role.TenantID,
+			DataScope:   string(role.DataScope),
 		})
 	}
 
@@ -213,6 +215,13 @@ func (rc *RoleController) AssignPermissions(c *gin.Context) {
 
 	err = rc.roleService.AssignPermissions(c.Request.Context(), id, req.PermissionIDs, tenantID)
 	if err != nil {
+		// R1：跨租户/不存在的权限 ID 属于调用方输入错误，返回 400 而非 500。
+		if errors.Is(err, service.ErrPermissionNotInTenant) {
+			rc.logger.Warnw("Cross-tenant permission assignment rejected",
+				"role_id", id, "tenant_id", tenantID, "error", err)
+			common.Fail(c, common.BadRequestCode, err.Error())
+			return
+		}
 		common.Fail(c, common.InternalErrorCode, "分配权限失败: "+err.Error())
 		return
 	}
