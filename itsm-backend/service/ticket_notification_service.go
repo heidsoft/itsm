@@ -23,14 +23,21 @@ func ticketNotificationStringPtr(s string) *string {
 }
 
 type TicketNotificationService struct {
-	client        *ent.Client
-	logger        *zap.SugaredLogger
-	emailService  *EmailService
-	smsService    *SMSService
-	outboxEnabled bool
+	client          *ent.Client
+	logger          *zap.SugaredLogger
+	emailService    *EmailService
+	smsService      *SMSService
+	outboxEnabled   bool
+	txOutboxEnabled bool
 }
 
+// EnableOutbox 启用基于 client 的非事务入箱路径（兼容外部触发、CC 等场景）。
 func (s *TicketNotificationService) EnableOutbox() { s.outboxEnabled = true }
+
+// EnableTxOutbox 启用基于 *ent.Tx 的事务入箱路径。业务侧必须在事务内调用 *Tx 方法，
+// 否则入箱行会在工单/SLA/变更主表事务之外被提交，破坏「同一事务同生同死」的语义。
+// 启用后，所有 Notify*Tx 方法才会真正写入 operational_command；未启用时直接 fail-closed。
+func (s *TicketNotificationService) EnableTxOutbox() { s.txOutboxEnabled = true }
 
 // NewTicketNotificationService 创建通知服务
 func NewTicketNotificationService(client *ent.Client, logger *zap.SugaredLogger) *TicketNotificationService {
@@ -240,16 +247,35 @@ func (s *TicketNotificationService) enqueueNotificationDeliveries(ctx context.Co
 }
 
 func enqueueTicketNotificationCommand(ctx context.Context, client *ent.Client, tenantID, ticketID, recipientID int, notificationType, channel, content, occurrenceKey string) error {
+	return enqueueTicketNotificationCommandImpl(ctx, client, nil, tenantID, ticketID, recipientID, notificationType, channel, content, occurrenceKey)
+}
+
+// enqueueTicketNotificationCommandTx 与 enqueueTicketNotificationCommand 行为一致，但写入
+// 的是 *ent.Tx 持有的连接。配合 caller 的业务事务，保证「主表变更与通知入箱同生同死」。
+// 当 client 与 tx 同时为 nil 时返回错误；两者皆非 nil 时 tx 优先（client 参数可保留为 nil）。
+func enqueueTicketNotificationCommandTx(ctx context.Context, tx *ent.Tx, tenantID, ticketID, recipientID int, notificationType, channel, content, occurrenceKey string) error {
+	if tx == nil {
+		return fmt.Errorf("enqueueTicketNotificationCommandTx requires non-nil tx")
+	}
+	return enqueueTicketNotificationCommandImpl(ctx, nil, tx, tenantID, ticketID, recipientID, notificationType, channel, content, occurrenceKey)
+}
+
+func enqueueTicketNotificationCommandImpl(ctx context.Context, client *ent.Client, tx *ent.Tx, tenantID, ticketID, recipientID int, notificationType, channel, content, occurrenceKey string) error {
 	digest := sha256.Sum256([]byte(fmt.Sprintf("%d|%d|%d|%s|%s|%s", tenantID, ticketID, recipientID, notificationType, channel, occurrenceKey)))
 	key := "notification:" + hex.EncodeToString(digest[:16])
-	_, err := commandbus.Enqueue(ctx, client, commandbus.EnqueueRequest{
+	req := commandbus.EnqueueRequest{
 		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
 		AggregateType: "ticket", AggregateID: ticketID, IdempotencyKey: key,
 		Payload: map[string]interface{}{
 			"ticketId": ticketID, "recipientId": recipientID, "type": notificationType,
 			"channel": channel, "content": content,
 		},
-	})
+	}
+	if tx != nil {
+		_, err := commandbus.EnqueueTx(ctx, tx, req)
+		return err
+	}
+	_, err := commandbus.Enqueue(ctx, client, req)
 	return err
 }
 
@@ -550,6 +576,231 @@ func (s *TicketNotificationService) NotifySLAAlertLevelChanged(
 		Channel: "in_app",
 		Content: content,
 	}, tenantID)
+}
+
+// NotifyTicketCreatedTx 在已开启 txOutboxEnabled 的前提下，按与 NotifyTicketCreated 一致的策略
+// 在 *ent.Tx 中写入 operational_command。Email/SMS 投递不在此路径内 —— 与 in_app 边界一致，
+// 由 worker 阶段按 channel 决定是否调用 connector，避免同步 I/O 拖长事务。
+// 调用方负责 ticket 上下文与 tx 的 commit/rollback；tx 提交时通知与工单主表同生，tx 回滚时同死。
+func (s *TicketNotificationService) NotifyTicketCreatedTx(ctx context.Context, tx *ent.Tx, ticket *ent.Ticket) error {
+	if !s.txOutboxEnabled {
+		return fmt.Errorf("transactional notification outbox disabled; call EnableTxOutbox on bootstrap")
+	}
+	if tx == nil || ticket == nil {
+		return fmt.Errorf("NotifyTicketCreatedTx requires non-nil tx and ticket")
+	}
+	userIDs := collectCreatedRecipients(ctx, tx, ticket)
+	if len(userIDs) == 0 {
+		return nil
+	}
+	content := fmt.Sprintf("新工单已创建：%s (#%s)", ticket.Title, ticket.TicketNumber)
+	occurrenceKey := fmt.Sprintf("created:%d:%d", ticket.TenantID, ticket.ID)
+	for _, recipientID := range userIDs {
+		if err := enqueueTicketNotificationCommandTx(ctx, tx, ticket.TenantID, ticket.ID, recipientID, "created", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+			return fmt.Errorf("enqueue ticket created notification: %w", err)
+		}
+	}
+	return nil
+}
+
+// NotifySLABreachedTx 在 *ent.Tx 中入箱 SLA 违规通知（仅 in_app 走 outbox）。
+// 调用方负责 ticket 上下文（创建人/处理人/租户隔离校验均沿用 tx 内的 User 查询）。
+func (s *TicketNotificationService) NotifySLABreachedTx(
+	ctx context.Context, tx *ent.Tx,
+	ticketID int, violationType string, exceededMinutes float64, tenantID int,
+) error {
+	if !s.txOutboxEnabled {
+		return fmt.Errorf("transactional notification outbox disabled; call EnableTxOutbox on bootstrap")
+	}
+	if tx == nil || ticketID <= 0 || tenantID <= 0 {
+		return fmt.Errorf("NotifySLABreachedTx requires non-nil tx and positive ticket/tenant ids")
+	}
+	ticket, err := tx.Ticket.Get(ctx, ticketID)
+	if err != nil {
+		return fmt.Errorf("load ticket for SLA breach notification: %w", err)
+	}
+	if ticket.TenantID != tenantID {
+		return fmt.Errorf("tenant mismatch on SLA breach notification (ticket=%d, request=%d)", ticket.TenantID, tenantID)
+	}
+	slaType := map[string]string{
+		"response_time":   "响应时间",
+		"resolution_time": "解决时间",
+	}[violationType]
+	content := fmt.Sprintf("【SLA违规】工单 #%s 的%s已违反SLA，超时 %.1f 分钟",
+		ticket.TicketNumber, slaType, exceededMinutes)
+	userIDs := []int{ticket.RequesterID}
+	if ticket.AssigneeID > 0 {
+		userIDs = append(userIDs, ticket.AssigneeID)
+	}
+	occurrenceKey := fmt.Sprintf("sla_breached:%d:%s:%d", ticket.ID, violationType, int64(exceededMinutes))
+	for _, recipientID := range userIDs {
+		if recipientID <= 0 {
+			continue
+		}
+		if err := enqueueTicketNotificationCommandTx(ctx, tx, tenantID, ticket.ID, recipientID, "sla_breached", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+			return fmt.Errorf("enqueue SLA breach notification: %w", err)
+		}
+	}
+	return nil
+}
+
+// NotifySLAAlertLevelChangedTx 在 *ent.Tx 中入箱 SLA 预警级别变更通知（仅 in_app 走 outbox）。
+func (s *TicketNotificationService) NotifySLAAlertLevelChangedTx(
+	ctx context.Context, tx *ent.Tx,
+	ticketID int, alertLevel string, percentage float64, tenantID int,
+) error {
+	if !s.txOutboxEnabled {
+		return fmt.Errorf("transactional notification outbox disabled; call EnableTxOutbox on bootstrap")
+	}
+	if tx == nil || ticketID <= 0 || tenantID <= 0 {
+		return fmt.Errorf("NotifySLAAlertLevelChangedTx requires non-nil tx and positive ticket/tenant ids")
+	}
+	ticket, err := tx.Ticket.Get(ctx, ticketID)
+	if err != nil {
+		return fmt.Errorf("load ticket for SLA alert notification: %w", err)
+	}
+	if ticket.TenantID != tenantID {
+		return fmt.Errorf("tenant mismatch on SLA alert notification (ticket=%d, request=%d)", ticket.TenantID, tenantID)
+	}
+	levelText := map[string]string{
+		"warning":  "警告",
+		"critical": "严重",
+	}[alertLevel]
+	content := fmt.Sprintf("【SLA%s】工单 #%s 剩余时间不足 %.1f%%，请及时处理！",
+		levelText, ticket.TicketNumber, percentage)
+	userIDs := []int{ticket.RequesterID}
+	if ticket.AssigneeID > 0 {
+		userIDs = append(userIDs, ticket.AssigneeID)
+	}
+	occurrenceKey := fmt.Sprintf("sla_alert:%d:%s:%d", ticket.ID, alertLevel, int64(percentage))
+	for _, recipientID := range userIDs {
+		if recipientID <= 0 {
+			continue
+		}
+		if err := enqueueTicketNotificationCommandTx(ctx, tx, tenantID, ticket.ID, recipientID, "sla_alert", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+			return fmt.Errorf("enqueue SLA alert notification: %w", err)
+		}
+	}
+	return nil
+}
+
+// NotifyChangeApprovalRequiredTx 在 *ent.Tx 中入箱「变更审批待办」通知。
+// 收件人：审批人。调用方负责 approvalChain 与 tenant 校验；tx 提交时入箱行与 change_approvals 同生，
+// tx 回滚时同死，规避「已写审批但通知丢失」的不一致。
+func (s *TicketNotificationService) NotifyChangeApprovalRequiredTx(
+	ctx context.Context, tx *ent.Tx,
+	changeID, approverID, tenantID int,
+	approvalLevel int, approverRole string,
+) error {
+	if !s.txOutboxEnabled {
+		return fmt.Errorf("transactional notification outbox disabled; call EnableTxOutbox on bootstrap")
+	}
+	if tx == nil || changeID <= 0 || approverID <= 0 || tenantID <= 0 {
+		return fmt.Errorf("NotifyChangeApprovalRequiredTx requires non-nil tx and positive ids")
+	}
+	if _, err := tx.Change.Get(ctx, changeID); err != nil {
+		return fmt.Errorf("load change for approval-required notification: %w", err)
+	}
+	if u, err := tx.User.Get(ctx, approverID); err != nil {
+		return fmt.Errorf("load approver for approval-required notification: %w", err)
+	} else if u.TenantID != tenantID {
+		return fmt.Errorf("tenant mismatch on approval-required notification (user=%d, request=%d)", u.TenantID, tenantID)
+	}
+	roleText := approverRole
+	if roleText == "" {
+		roleText = "approver"
+	}
+	content := fmt.Sprintf("【变更审批】变更 #%d 等待您的审批（第 %d 级，角色：%s）", changeID, approvalLevel, roleText)
+	occurrenceKey := fmt.Sprintf("change_approval_required:%d:%d:%d:%d", tenantID, changeID, approvalLevel, approverID)
+	if err := enqueueTicketNotificationCommandTx(ctx, tx, tenantID, changeID, approverID, "change_approval_required", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+		return fmt.Errorf("enqueue change approval-required notification: %w", err)
+	}
+	return nil
+}
+
+// NotifyChangeApprovalDecidedTx 在 *ent.Tx 中入箱「变更审批结论」通知。
+// 收件人：变更创建人。occurrenceKey 包含 decision，避免同一审批被重复结论通知。
+func (s *TicketNotificationService) NotifyChangeApprovalDecidedTx(
+	ctx context.Context, tx *ent.Tx,
+	changeID, creatorID, tenantID int,
+	approvalID int, decision, comment string,
+) error {
+	if !s.txOutboxEnabled {
+		return fmt.Errorf("transactional notification outbox disabled; call EnableTxOutbox on bootstrap")
+	}
+	if tx == nil || changeID <= 0 || creatorID <= 0 || tenantID <= 0 || approvalID <= 0 {
+		return fmt.Errorf("NotifyChangeApprovalDecidedTx requires non-nil tx and positive ids")
+	}
+	switch decision {
+	case "approved", "rejected", "aborted":
+	default:
+		return fmt.Errorf("NotifyChangeApprovalDecidedTx: invalid decision %q (want approved|rejected|aborted)", decision)
+	}
+	if _, err := tx.Change.Get(ctx, changeID); err != nil {
+		return fmt.Errorf("load change for approval-decided notification: %w", err)
+	}
+	if u, err := tx.User.Get(ctx, creatorID); err != nil {
+		return fmt.Errorf("load creator for approval-decided notification: %w", err)
+	} else if u.TenantID != tenantID {
+		return fmt.Errorf("tenant mismatch on approval-decided notification (user=%d, request=%d)", u.TenantID, tenantID)
+	}
+	decisionText := map[string]string{
+		"approved": "已通过",
+		"rejected": "已驳回",
+		"aborted":  "已中止",
+	}[decision]
+	content := fmt.Sprintf("【变更审批】变更 #%d 的审批（#%d）%s", changeID, approvalID, decisionText)
+	if comment != "" {
+		content = fmt.Sprintf("%s：%s", content, comment)
+	}
+	occurrenceKey := fmt.Sprintf("change_approval_decided:%d:%d:%d:%s", tenantID, changeID, approvalID, decision)
+	if err := enqueueTicketNotificationCommandTx(ctx, tx, tenantID, changeID, creatorID, "change_approval_decided", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+		return fmt.Errorf("enqueue change approval-decided notification: %w", err)
+	}
+	return nil
+}
+
+// collectCreatedRecipients 与 NotifyTicketCreated 同步计算收件人：
+//  1. AssigneeID；2. RequesterID（去重）；3. 若仍只 1 人，广播同租户其他用户。
+// tx 入参确保租户隔离与 ticket 一致，避免跨 tenant 误发。
+func collectCreatedRecipients(ctx context.Context, tx *ent.Tx, ticket *ent.Ticket) []int {
+	userIDs := []int{}
+	if ticket.AssigneeID > 0 {
+		userIDs = append(userIDs, ticket.AssigneeID)
+	}
+	if ticket.RequesterID > 0 {
+		dup := false
+		for _, id := range userIDs {
+			if id == ticket.RequesterID {
+				dup = true
+				break
+			}
+		}
+		if !dup {
+			userIDs = append(userIDs, ticket.RequesterID)
+		}
+	}
+	if len(userIDs) <= 1 && ticket.RequesterID > 0 {
+		admins, err := tx.User.Query().
+			Where(user.TenantID(ticket.TenantID)).
+			Where(user.IDNEQ(ticket.RequesterID)).
+			All(ctx)
+		if err == nil {
+			for _, admin := range admins {
+				dup := false
+				for _, id := range userIDs {
+					if id == admin.ID {
+						dup = true
+						break
+					}
+				}
+				if !dup {
+					userIDs = append(userIDs, admin.ID)
+				}
+			}
+		}
+	}
+	return userIDs
 }
 
 // ListTicketNotifications 获取工单通知列表

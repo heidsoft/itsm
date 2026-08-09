@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/notificationdelivery"
 	"itsm-backend/ent/operationalcommand"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/internal/commandbus"
 
 	"entgo.io/ent/dialect"
@@ -184,4 +185,209 @@ func TestNotificationDeliveryFailureRetriesThenDeadLettersWithSafeAudit(t *testi
 	require.Equal(t, "failed", delivery.Status)
 	require.Equal(t, 2, delivery.Attempt)
 	require.NotContains(t, delivery.ErrorMessage, "provider-secret")
+}
+
+// TestNotifyTicketCreatedTxRollsBackWithTicket 验证事务性入箱与主表变更「同生同死」：
+// 在 tx 内调用 NotifyTicketCreatedTx 后 rollback，operational_command 必须为零。
+// 这是阶段 B（工单创建）下沉的核心契约：业务事务失败时不得有「孤儿」通知入箱。
+func TestNotifyTicketCreatedTxRollsBackWithTicket(t *testing.T) {
+	client, ctx, tenantID, userID, ticketID := notificationDeliveryFixture(t)
+	svc := NewTicketNotificationService(client, zap.NewNop().Sugar())
+	svc.EnableTxOutbox()
+
+	tx, err := client.Tx(ctx)
+	require.NoError(t, err)
+
+	createdTicket, err := tx.Ticket.Create().
+		SetTitle("rollback-ticket").
+		SetTicketNumber("NOTIFY-RB").
+		SetRequesterID(userID).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	err = svc.NotifyTicketCreatedTx(ctx, tx, createdTicket)
+	require.NoError(t, err)
+	require.NoError(t, tx.Rollback())
+
+	commands, err := client.OperationalCommand.Query().
+		Where(operationalcommand.TenantIDEQ(tenantID)).
+		All(ctx)
+	require.NoError(t, err)
+	require.Empty(t, commands, "rollback 之后 operational_command 必须随业务事务一起消失")
+	_, err = client.Ticket.Get(ctx, ticketID)
+	require.NoError(t, err)
+	_, err = client.Ticket.Query().Where(ticket.TicketNumberEQ("NOTIFY-RB")).Only(ctx)
+	require.Error(t, err, "rollback 后刚创建的 ticket 也必须消失")
+}
+
+// TestNotifyTicketCreatedTxCommitsWithTicket 验证事务提交后通知与工单都可见，且收件人覆盖 assignee/requester。
+func TestNotifyTicketCreatedTxCommitsWithTicket(t *testing.T) {
+	client, ctx, tenantID, userID, _ := notificationDeliveryFixture(t)
+	assignee, err := client.User.Create().SetUsername("notify-assignee").SetEmail("assignee@example.com").SetName("Assignee").
+		SetPasswordHash("hash").SetRole("agent").SetActive(true).SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
+
+	svc := NewTicketNotificationService(client, zap.NewNop().Sugar())
+	svc.EnableTxOutbox()
+
+	tx, err := client.Tx(ctx)
+	require.NoError(t, err)
+
+	createdTicket, err := tx.Ticket.Create().
+		SetTitle("commit-ticket").
+		SetTicketNumber("NOTIFY-OK").
+		SetRequesterID(userID).
+		SetAssigneeID(assignee.ID).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	require.NoError(t, svc.NotifyTicketCreatedTx(ctx, tx, createdTicket))
+	require.NoError(t, tx.Commit())
+
+	commands, err := client.OperationalCommand.Query().
+		Where(operationalcommand.TenantIDEQ(tenantID), operationalcommand.AggregateIDEQ(createdTicket.ID)).
+		All(ctx)
+	require.NoError(t, err)
+	require.Len(t, commands, 2, "assignee + requester 两个收件人应各产生一条入箱行")
+
+	recipients := map[int]struct{}{}
+	for _, cmd := range commands {
+		require.Equal(t, commandbus.CommandDeliverNotification, cmd.CommandType)
+		require.Equal(t, "ticket", cmd.AggregateType)
+		require.NotNil(t, cmd.Payload)
+		recipients[asInt(cmd.Payload["recipientId"])] = struct{}{}
+		require.Equal(t, "created", cmd.Payload["type"])
+		require.Equal(t, "in_app", cmd.Payload["channel"])
+	}
+	require.Contains(t, recipients, userID)
+	require.Contains(t, recipients, assignee.ID)
+	// 域下沉的语义保证：recipientId 必须是 user.id，而不是 ticket.id 或其它主键。
+	// fixture 中 ticketID=1 与 userID=1 恰好相同是巧合，所以这里改用「恰好 2 条收件人」
+	// 且 Payload 中 ticketId 字段等于 createdTicket.ID 的硬约束来证明这一点。
+	seenTicketID := 0
+	for _, cmd := range commands {
+		seenTicketID++
+		require.Equal(t, createdTicket.ID, asInt(cmd.Payload["ticketId"]))
+	}
+	require.Equal(t, 2, seenTicketID)
+}
+
+// asInt 兼容 SQLite JSON 反序列化后数字统一为 float64 的现实，阶段 A 测试专用。
+func asInt(v interface{}) int {
+	switch n := v.(type) {
+	case int:
+		return n
+	case int64:
+		return int(n)
+	case float64:
+		return int(n)
+	default:
+		return -1
+	}
+}
+
+// TestNotifySLABreachedTxRollsBack 验证 SLA 违规通知同样随事务回滚消失。
+func TestNotifySLABreachedTxRollsBack(t *testing.T) {
+	client, ctx, tenantID, _, ticketID := notificationDeliveryFixture(t)
+	svc := NewTicketNotificationService(client, zap.NewNop().Sugar())
+	svc.EnableTxOutbox()
+
+	tx, err := client.Tx(ctx)
+	require.NoError(t, err)
+
+	err = svc.NotifySLABreachedTx(ctx, tx, ticketID, "response_time", 30, tenantID)
+	require.NoError(t, err)
+	require.NoError(t, tx.Rollback())
+
+	commands, err := client.OperationalCommand.Query().
+		Where(operationalcommand.TenantIDEQ(tenantID), operationalcommand.AggregateIDEQ(ticketID)).
+		All(ctx)
+	require.NoError(t, err)
+	require.Empty(t, commands, "SLA breach 通知随 tx rollback 必须消失")
+}
+
+// TestNotifySLABreachedTxIdempotent 验证 SLA breach 入箱对同一参数幂等：
+// 重复 enqueue 同一 occurrenceKey 只产生一行 operational_command。
+func TestNotifySLABreachedTxIdempotent(t *testing.T) {
+	client, ctx, tenantID, _, ticketID := notificationDeliveryFixture(t)
+	svc := NewTicketNotificationService(client, zap.NewNop().Sugar())
+	svc.EnableTxOutbox()
+
+	tx, err := client.Tx(ctx)
+	require.NoError(t, err)
+	defer tx.Rollback()
+
+	require.NoError(t, svc.NotifySLABreachedTx(ctx, tx, ticketID, "response_time", 30, tenantID))
+	require.NoError(t, svc.NotifySLABreachedTx(ctx, tx, ticketID, "response_time", 30, tenantID))
+	require.NoError(t, tx.Commit())
+
+	commands, err := client.OperationalCommand.Query().
+		Where(operationalcommand.TenantIDEQ(tenantID), operationalcommand.AggregateIDEQ(ticketID)).
+		All(ctx)
+	require.NoError(t, err)
+	require.Len(t, commands, 1, "同一 occurrenceKey 重复 enqueue 必须被唯一索引合并为一行")
+}
+
+// TestNotifySLABreachedTxRejectsCrossTenant 验证调用方传入与 ticket 不一致的 tenantID 直接 fail-closed。
+func TestNotifySLABreachedTxRejectsCrossTenant(t *testing.T) {
+	client, ctx, tenantID, _, ticketID := notificationDeliveryFixture(t)
+	svc := NewTicketNotificationService(client, zap.NewNop().Sugar())
+	svc.EnableTxOutbox()
+
+	tx, err := client.Tx(ctx)
+	require.NoError(t, err)
+	defer tx.Rollback()
+
+	err = svc.NotifySLABreachedTx(ctx, tx, ticketID, "response_time", 30, tenantID+999)
+	require.Error(t, err, "tenantID 与 ticket.TenantID 不一致必须被拒绝")
+	commands, err := client.OperationalCommand.Query().Where(operationalcommand.AggregateIDEQ(ticketID)).All(ctx)
+	require.NoError(t, err)
+	require.Empty(t, commands)
+}
+
+// TestNotifyTicketCreatedTxFailsClosedWhenFlagDisabled 验证未调用 EnableTxOutbox 时 Tx API 直接报错，
+// 避免静默回退到 client 路径产生主表/通知分离提交。
+func TestNotifyTicketCreatedTxFailsClosedWhenFlagDisabled(t *testing.T) {
+	client, ctx, tenantID, userID, _ := notificationDeliveryFixture(t)
+	svc := NewTicketNotificationService(client, zap.NewNop().Sugar())
+
+	tx, err := client.Tx(ctx)
+	require.NoError(t, err)
+	defer tx.Rollback()
+
+	createdTicket, err := tx.Ticket.Create().
+		SetTitle("disabled-flag-ticket").
+		SetTicketNumber("NOTIFY-DIS").
+		SetRequesterID(userID).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	err = svc.NotifyTicketCreatedTx(ctx, tx, createdTicket)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "transactional notification outbox disabled")
+}
+
+// TestNotifySLAAlertLevelChangedTxCommits 验证 SLA 预警级别变更通知随 tx 提交而持久化。
+func TestNotifySLAAlertLevelChangedTxCommits(t *testing.T) {
+	client, ctx, tenantID, _, ticketID := notificationDeliveryFixture(t)
+	svc := NewTicketNotificationService(client, zap.NewNop().Sugar())
+	svc.EnableTxOutbox()
+
+	tx, err := client.Tx(ctx)
+	require.NoError(t, err)
+
+	require.NoError(t, svc.NotifySLAAlertLevelChangedTx(ctx, tx, ticketID, "warning", 80.0, tenantID))
+	require.NoError(t, tx.Commit())
+
+	commands, err := client.OperationalCommand.Query().
+		Where(operationalcommand.AggregateIDEQ(ticketID)).
+		All(ctx)
+	require.NoError(t, err)
+	require.Len(t, commands, 1)
+	require.Equal(t, commandbus.CommandDeliverNotification, commands[0].CommandType)
+	require.NotNil(t, commands[0].Payload)
+	require.Equal(t, "sla_alert", commands[0].Payload["type"])
 }

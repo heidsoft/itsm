@@ -477,8 +477,20 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 				}
 			}
 
-			// 创建预警历史记录
-			alertHistory, err := s.client.SLAAlertHistory.Create().
+			// 创建预警历史记录（阶段 C：与通知入箱同一事务内落库）
+			tx, err := s.client.Tx(ctx)
+			if err != nil {
+				s.logger.Errorw("Failed to begin SLA alert transaction", "error", err)
+				continue
+			}
+			rollback := func(cause error) error {
+				if rollbackErr := tx.Rollback(); rollbackErr != nil {
+					s.logger.Errorw("failed to rollback SLA alert transaction", "error", rollbackErr)
+				}
+				return cause
+			}
+
+			alertHistory, err := tx.SLAAlertHistory.Create().
 				SetTicketID(ticketEntity.ID).
 				SetTicketNumber(ticketEntity.TicketNumber).
 				SetTicketTitle(ticketEntity.Title).
@@ -494,6 +506,7 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 				Save(ctx)
 			if err != nil {
 				s.logger.Errorw("Failed to create alert history", "error", err)
+				_ = rollback(err)
 				continue
 			}
 
@@ -505,14 +518,15 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 					alertLevel = "warning"
 				}
 
-				// 发送站内通知
-				if err := s.notificationSvc.NotifySLAAlertLevelChanged(ctx, ticketEntity.ID, alertLevel, percentage, tenantID); err != nil {
-					s.logger.Warnw("failed to send SLA alert level change notification", "error", err, "ticket_id", ticketEntity.ID, "alert_level", alertLevel)
+				// 发送站内通知（事务内入箱）
+				if err := s.notificationSvc.NotifySLAAlertLevelChangedTx(ctx, tx, ticketEntity.ID, alertLevel, percentage, tenantID); err != nil {
+					s.logger.Errorw("failed to enqueue SLA alert notification", "error", err, "ticket_id", ticketEntity.ID, "alert_level", alertLevel)
+					_ = rollback(err)
+					continue
 				}
 
-				// 如果是严重级别，发送邮件通知
+				// 邮件与 critical 渠道暂保留同步发送；与事务无关，由 worker 后续可考虑接管。
 				if alertLevel == "critical" && s.notificationSvc.emailService != nil {
-					// 获取处理人和创建人
 					userIDs := []int{ticketEntity.RequesterID}
 					if ticketEntity.AssigneeID > 0 {
 						userIDs = append(userIDs, ticketEntity.AssigneeID)
@@ -537,14 +551,19 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 					}
 				}
 
-				// 标记通知已发送
-				if alertHistory != nil {
-					if _, err := s.client.SLAAlertHistory.UpdateOneID(alertHistory.ID).
-						SetNotificationSent(true).
-						Save(ctx); err != nil {
-						s.logger.Warnw("failed to mark alert notification as sent", "error", err, "alert_history_id", alertHistory.ID)
-					}
+				// 标记通知已发送（事务内）
+				if _, err := tx.SLAAlertHistory.UpdateOneID(alertHistory.ID).
+					SetNotificationSent(true).
+					Save(ctx); err != nil {
+					s.logger.Errorw("failed to mark alert notification as sent", "error", err, "alert_history_id", alertHistory.ID)
+					_ = rollback(err)
+					continue
 				}
+			}
+
+			if err := tx.Commit(); err != nil {
+				s.logger.Errorw("failed to commit SLA alert transaction", "error", err, "alert_history_id", alertHistory.ID)
+				continue
 			}
 
 			s.logger.Infow("SLA alert triggered", "ticket_id", ticketEntity.ID,

@@ -255,6 +255,10 @@ func NewApplication() *Application {
 		sugar.Fatalw("Failed to register notification command handler", "error", err)
 	}
 	ticketNotificationService.EnableOutbox()
+	// EnableTxOutbox 启用事务入箱：阶段 B（工单创建）/ C（SLA 违规/预警）/ D（变更审批）
+	// 三个域下沉时，业务事务内调用 Notify*Tx 才能与主表「同生同死」。未启用时 Tx 方法会
+	// fail-closed，避免静默回退到 client 路径产生主表与通知行分离提交的不一致状态。
+	ticketNotificationService.EnableTxOutbox()
 	ticketSLAService := service.NewTicketSLAService(client, sugar)
 	ticketAutomationRuleService := service.NewTicketAutomationRuleService(client, sugar)
 

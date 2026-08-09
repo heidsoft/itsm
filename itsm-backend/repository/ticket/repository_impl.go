@@ -119,6 +119,65 @@ func (r *EntRepository) Create(ctx context.Context, params *CreateParams, tenant
 	return nil, fmt.Errorf("create ticket: ticket number collision persisted after retries")
 }
 
+// CreateWithTx 在调用方提供的 *ent.Tx 内创建工单；与 Create 逻辑一致但不管理 tx 生命周期。
+// 阶段 B（工单创建下沉）与 CreateWithTx 配套使用，保证 ticket INSERT 与 operational_command
+// 写入同生同死。GenerateTicketNumber 走 Redis 路径，不依赖数据库 tx。
+func (r *EntRepository) CreateWithTx(ctx context.Context, tx *ent.Tx, params *CreateParams, tenantID int) (*Ticket, error) {
+	if tx == nil {
+		return nil, fmt.Errorf("CreateWithTx requires non-nil tx")
+	}
+	for attempt := 0; attempt < 3; attempt++ {
+		ticketNumber, err := r.GenerateTicketNumber(ctx, tenantID)
+		if err != nil {
+			return nil, fmt.Errorf("generate ticket number: %w", err)
+		}
+
+		builder := tx.Ticket.Create().
+			SetTitle(params.Title).
+			SetDescription(params.Description).
+			SetType(string(params.Type)).
+			SetPriority(string(params.Priority)).
+			SetTicketNumber(ticketNumber).
+			SetRequesterID(params.RequesterID).
+			SetTenantID(tenantID).
+			SetStatus(string(StatusNew))
+
+		if params.AssigneeID != nil {
+			builder.SetAssigneeID(*params.AssigneeID)
+		}
+		if params.CategoryID != nil {
+			builder.SetCategoryID(*params.CategoryID)
+		}
+		if params.TemplateID != nil {
+			builder.SetTemplateID(*params.TemplateID)
+		}
+		if params.ParentTicketID != nil {
+			builder.SetParentTicketID(*params.ParentTicketID)
+		}
+		if len(params.TagIDs) > 0 {
+			builder.AddTagIDs(params.TagIDs...)
+		}
+
+		entity, err := builder.Save(ctx)
+		if err == nil {
+			return toDomainModel(entity), nil
+		}
+
+		if ent.IsConstraintError(err) || strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "23505") {
+			r.logger.Warnw("ticket number collision detected during create (tx), retrying",
+				"ticket_number", ticketNumber,
+				"tenant_id", tenantID,
+				"attempt", attempt+1,
+				"error", err)
+			continue
+		}
+
+		return nil, fmt.Errorf("create ticket (tx): %w", err)
+	}
+
+	return nil, fmt.Errorf("create ticket (tx): ticket number collision persisted after retries")
+}
+
 // GetByID 根据 ID 获取工单
 func (r *EntRepository) GetByID(ctx context.Context, id int, tenantID int) (*Ticket, error) {
 	entity, err := r.Client().Ticket.Query().

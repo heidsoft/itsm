@@ -191,6 +191,8 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 
 // createViolation 创建SLA违规记录
 // 注意: 已在调用方检查重复，此处不再检查
+// 阶段 C 起，sla_violation INSERT 与 NotifySLABreachedTx 同一事务内落库：
+// ticket 违规记录与通知入箱同生同死，未启用 TxOutbox 时整体 fail-closed。
 func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, violationType string, deadline time.Time, slaDefMap map[int]string) error {
 	// 计算超时时间（分钟）：从 deadline 到当前时间的差值
 	// response_time / resolution_time 的差异在于 deadline 语义不同，
@@ -229,7 +231,18 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 		slaName = "Default SLA"
 	}
 
-	_, err := s.client.SLAViolation.Create().
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin SLA violation transaction: %w", err)
+	}
+	rollback := func(cause error) error {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			s.logger.Errorw("failed to rollback SLA violation transaction", "error", rollbackErr)
+		}
+		return cause
+	}
+
+	if _, err := tx.SLAViolation.Create().
 		SetCreatedBy(0). // 系统自动创建，使用默认用户ID 0
 		SetTicketID(t.ID).
 		SetTicketType("ticket"). // Ticket 表没有类型字段，使用默认值
@@ -243,19 +256,22 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 		SetTenantID(t.TenantID).
 		SetCreatedAt(now).
 		SetUpdatedAt(now).
-		Save(ctx)
-	if err != nil {
-		return err
+		Save(ctx); err != nil {
+		return rollback(fmt.Errorf("create SLA violation: %w", err))
 	}
 
-	// 发送SLA违规通知
+	// 发送SLA违规通知（事务内入箱）
 	if s.notificationSvc != nil {
-		if err := s.notificationSvc.NotifySLABreached(ctx, t.ID, violationType, exceededMinutes, t.TenantID); err != nil {
-			s.logger.Warnw("failed to send SLA breach notification", "error", err, "ticket_id", t.ID, "violation_type", violationType)
+		if err := s.notificationSvc.NotifySLABreachedTx(ctx, tx, t.ID, violationType, exceededMinutes, t.TenantID); err != nil {
+			return rollback(fmt.Errorf("enqueue SLA breach notification: %w", err))
 		}
 	}
 
-	s.logger.Infow("SLA violation created and notification sent", "ticket_id", t.ID,
+	if err := tx.Commit(); err != nil {
+		return rollback(fmt.Errorf("commit SLA violation transaction: %w", err))
+	}
+
+	s.logger.Infow("SLA violation created and notification enqueued", "ticket_id", t.ID,
 		"violation_type", violationType, "exceeded_minutes", exceededMinutes)
 
 	return nil

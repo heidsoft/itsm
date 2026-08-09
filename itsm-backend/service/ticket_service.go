@@ -121,6 +121,35 @@ func (s *TicketService) SetProcessResolver(r *ProcessResolver) {
 	s.processResolver = r
 }
 
+// runCreateTicketTx 封装「ticket INSERT + 通知入箱」的同一事务边界。fn 必须在 tx 内完成所有
+// 写入并在发生错误时返回，调用方负责根据返回错误决定 rollback 或 commit。
+// 阶段 B（工单创建下沉）起作为 CreateTicket 内唯一的事务持有点，后续阶段可在该框架内扩展
+// SLA 期限、审批触发等其他副作用。当前实现仅覆盖 ticket INSERT 与 NotifyTicketCreatedTx。
+func (s *TicketService) runCreateTicketTx(
+	ctx context.Context,
+	params *ticket.CreateParams,
+	tenantID int,
+	fn func(tx *ent.Tx) error,
+) error {
+	if s.client == nil {
+		return fmt.Errorf("ticket service not configured with ent client")
+	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin create-ticket transaction: %w", err)
+	}
+	if err := fn(tx); err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			s.logger.Errorw("create-ticket transaction rollback failed", "error", rollbackErr)
+		}
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit create-ticket transaction: %w", err)
+	}
+	return nil
+}
+
 // CreateTicket 创建工单
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ticket.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
@@ -176,8 +205,26 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		params.CategoryID = categoryID
 	}
 
-	// 通过 Repository 创建工单
-	tkt, err := s.repo.Create(ctx, params, tenantID)
+	// 阶段 B（工单创建下沉）起，ticket INSERT 与工单创建通知必须在同一事务内落库。
+	// 这样 ticket 创建失败时不会出现「主表不存在但已经派发通知」或反之的不一致状态。
+	// 其他后续副作用（智能分配 / SLA 期限 / 审批触发）不在本次事务范围内，按原语义保持
+	// 独立提交，其失败仅记 warnw 不阻塞工单创建。
+	var tkt *ticket.Ticket
+	err := s.runCreateTicketTx(ctx, params, tenantID, func(tx *ent.Tx) error {
+		created, err := s.repo.CreateWithTx(ctx, tx, params, tenantID)
+		if err != nil {
+			return err
+		}
+		tkt = created
+
+		if tkt.AssigneeID != nil && s.notificationSvc != nil {
+			entTicket := s.toEntTicket(tkt)
+			if err := s.notificationSvc.NotifyTicketCreatedTx(ctx, tx, entTicket); err != nil {
+				return fmt.Errorf("enqueue ticket-created notification: %w", err)
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		s.logger.Errorw("Failed to create ticket", "error", err)
 		return nil, err
@@ -221,14 +268,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}
 	}
 
-	// 生产通知服务只执行一次快速、持久化的 outbox enqueue；不得再用 goroutine，
-	// 否则进程可能在命令落库前退出并永久丢失通知。
-	if s.notificationSvc != nil && tkt.AssigneeID != nil {
-		entTicket := s.toEntTicket(tkt)
-		if err := s.notificationSvc.NotifyTicketCreated(ctx, entTicket); err != nil {
-			s.logger.Warnw("Notification enqueue failed", "error", err, "ticket_id", tkt.ID)
-		}
-	}
+	// 事务入箱已并入 runCreateTicketTx（阶段 B：工单创建下沉）。这里不再重复调用。
 
 	// 异步执行自动化规则
 	// 同样使用独立 ctx，避免请求生命周期结束导致异步任务中断。
