@@ -306,7 +306,10 @@ export abstract class BaseApi {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${httpClient.getAuthToken()}`,
+        // 浏览器端 token 为 null，认证由 httpOnly cookie 承载；仅非浏览器调用方显式设置 token 时才带 Authorization
+        ...(httpClient.getAuthToken() && {
+          Authorization: `Bearer ${httpClient.getAuthToken()}`,
+        }),
       },
     });
 

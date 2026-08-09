@@ -1,6 +1,7 @@
 package common
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -61,6 +62,9 @@ func (h *Handler) Login(c *gin.Context) {
 	// without Secure in local development so the same-origin frontend proxy can
 	// persist login state. Production HTTPS requests still get Secure cookies.
 
+	// SameSite=Lax 防止跨站请求携带认证 cookie（CSRF 防护）；Secure 仅在生产 HTTPS 下启用。
+	c.SetSameSite(http.SameSiteLaxMode)
+
 	// Access token: 15分钟
 	c.SetCookie("access_token", res.AccessToken, 900, "/", domain, secure, httpOnly)
 	// Refresh token: 7天
@@ -88,6 +92,7 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	domain := cookieDomain(c)
 
 	// 设置 httpOnly cookies (Secure only on HTTPS requests)
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("access_token", res.AccessToken, 900, "/", domain, secure, true)
 	if res.RefreshToken != "" {
 		c.SetCookie("refresh_token", res.RefreshToken, 604800, "/", domain, secure, true)
@@ -115,6 +120,7 @@ func (h *Handler) Logout(c *gin.Context) {
 	secure := shouldUseSecureCookies(c)
 	domain := cookieDomain(c)
 
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("access_token", "", -1, "/", domain, secure, true)
 	c.SetCookie("refresh_token", "", -1, "/", domain, secure, true)
 

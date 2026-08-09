@@ -77,8 +77,9 @@ function getAuthToken(request: NextRequest): string | null {
     return customToken;
   }
 
-  // 4. auth-token 是前端写入的登录标记位（值为 "1"），不是 JWT，必须排除；
-  //    仅兼容历史版本中曾把真值 token 写入该 cookie 的情况。
+  // 4. 历史兼容分支：极旧后端可能把真值 JWT 写入 auth-token cookie。
+  //    现行栈中：后端只下发 access_token（httpOnly），前端 auth-service 只写 auth-token=1 标记位，
+  //    因此该分支在现行登录流程下不会触发，仅作为遗留后端部署的兜底；切勿当作 JWT 校验入口。
   const legacyToken = request.cookies.get('auth-token')?.value;
   if (legacyToken && legacyToken !== '1') {
     return legacyToken;
