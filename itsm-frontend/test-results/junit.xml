@@ -1,87 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="40" failures="0" errors="0" time="4.613">
-  <testsuite name="src/lib/__tests__/api-integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-08-03T14:12:10" time="3.448" tests="19">
-    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should fetch tickets successfully" time="0.008">
+<testsuites name="jest tests" tests="11" failures="0" errors="0" time="6.936">
+  <testsuite name="src/lib/hooks/__tests__/useIncidentBatchOps.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-08-08T07:57:15" time="4.348" tests="5">
+    <testcase classname="useIncidentBatchOps" name="returns an empty selection by default and 4 batch actions" time="0.168">
     </testcase>
-    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should handle API error responses" time="0.081">
+    <testcase classname="useIncidentBatchOps" name="runBatch reports success when all handlers resolve" time="0.061">
     </testcase>
-    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should handle network errors" time="0.008">
+    <testcase classname="useIncidentBatchOps" name="runBatch reports partial failure when some handlers reject" time="0.039">
     </testcase>
-    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should include query parameters correctly" time="0.003">
+    <testcase classname="useIncidentBatchOps" name="runBatch is a no-op when given an empty selection" time="0.023">
     </testcase>
-    <testcase classname="API Integration Tests › TicketApi › createTicket" name="should create ticket successfully" time="0.002">
-    </testcase>
-    <testcase classname="API Integration Tests › TicketApi › createTicket" name="should handle validation errors" time="0.008">
-    </testcase>
-    <testcase classname="API Integration Tests › DashboardAPI › getDashboardConfig" name="should fetch dashboard config successfully" time="0.003">
-    </testcase>
-    <testcase classname="API Integration Tests › DashboardAPI › getTicketStats" name="should fetch ticket statistics successfully" time="0.002">
-    </testcase>
-    <testcase classname="API Integration Tests › Error Handling" name="should handle HTTP error status codes" time="0.003">
-    </testcase>
-    <testcase classname="API Integration Tests › Error Handling" name="should handle malformed JSON responses" time="0.003">
-    </testcase>
-    <testcase classname="API Integration Tests › Error Handling" name="should handle timeout errors" time="0.218">
-    </testcase>
-    <testcase classname="API Integration Tests › Error Handling" name="should handle CORS errors" time="0.003">
-    </testcase>
-    <testcase classname="API Integration Tests › Authentication Integration" name="should use browser credentials without exposing an HttpOnly cookie as a header" time="0.002">
-    </testcase>
-    <testcase classname="API Integration Tests › Authentication Integration" name="should handle token expiration" time="0.003">
-    </testcase>
-    <testcase classname="API Integration Tests › Authentication Integration" name="should handle unauthorized access" time="0.015">
-    </testcase>
-    <testcase classname="API Integration Tests › Performance and Caching" name="should handle concurrent requests" time="0.001">
-    </testcase>
-    <testcase classname="API Integration Tests › Performance and Caching" name="should handle large response payloads" time="0.004">
-    </testcase>
-    <testcase classname="API Integration Tests › Data Validation" name="should handle missing response fields" time="0.001">
-    </testcase>
-    <testcase classname="API Integration Tests › Data Validation" name="should validate response data structure" time="0.001">
+    <testcase classname="useIncidentBatchOps" name="openAssignModal lazily fetches the user list and opens the modal" time="0.031">
     </testcase>
   </testsuite>
-  <testsuite name="src/lib/api/__tests__/http-client.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-08-03T14:12:14" time="0.196" tests="21">
-    <testcase classname="httpClient › base configuration" name="defaults to same-origin when no public API URL is configured" time="0.016">
+  <testsuite name="src/lib/hooks/__tests__/useIncidentsQuery.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-08-08T07:57:15" time="4.516" tests="6">
+    <testcase classname="useIncidentsQuery" name="starts empty and idle, then loads data on mount" time="0.214">
     </testcase>
-    <testcase classname="httpClient › base configuration" name="returns null token when no cookie is set" time="0.004">
+    <testcase classname="useIncidentsQuery" name="sets loadError=true on failure" time="0.073">
     </testcase>
-    <testcase classname="httpClient › base configuration" name="setToken populates the in-memory token; clearToken clears it" time="0.003">
+    <testcase classname="useIncidentsQuery" name="still returns data when user-name enrichment fails" time="0.074">
     </testcase>
-    <testcase classname="httpClient › get" name="sends a GET request to the full URL" time="0.004">
+    <testcase classname="useIncidentsQuery" name="refresh() re-fetches without losing existing data on error" time="0.089">
     </testcase>
-    <testcase classname="httpClient › get" name="serializes query params and drops undefined/null" time="0.002">
+    <testcase classname="useIncidentsQuery" name="refetches when filter inputs change" time="0.08">
     </testcase>
-    <testcase classname="httpClient › get" name="returns camelCase data when backend sends snake_case" time="0.002">
-    </testcase>
-    <testcase classname="httpClient › post" name="sends a POST with JSON body and returns response data" time="0.001">
-    </testcase>
-    <testcase classname="httpClient › post" name="throws on non-zero backend code with the backend message" time="0.018">
-    </testcase>
-    <testcase classname="httpClient › post" name="throws with HTTP status when response.ok is false" time="0.003">
-    </testcase>
-    <testcase classname="httpClient › post" name="tolerates a missing code field (BPMN controllers do not always set one)" time="0.001">
-    </testcase>
-    <testcase classname="httpClient › put / patch / delete" name="put uses PUT method and JSON body" time="0.005">
-    </testcase>
-    <testcase classname="httpClient › put / patch / delete" name="patch uses PATCH method" time="0.001">
-    </testcase>
-    <testcase classname="httpClient › put / patch / delete" name="delete uses DELETE method and accepts an optional body" time="0.003">
-    </testcase>
-    <testcase classname="httpClient › headers" name="adds CSRF token to mutating requests only" time="0.003">
-    </testcase>
-    <testcase classname="httpClient › headers" name="refreshes a stale CSRF token once after a 403 and clears it after success" time="0.004">
-    </testcase>
-    <testcase classname="httpClient › headers" name="does not retry permission-related 403 responses" time="0.004">
-    </testcase>
-    <testcase classname="httpClient › headers" name="uses browser credentials instead of reading a token cookie" time="0.001">
-    </testcase>
-    <testcase classname="httpClient › headers" name="adds tenant headers when TenantContext is populated" time="0.002">
-    </testcase>
-    <testcase classname="httpClient › headers" name="does not add tenant headers when TenantContext is empty" time="0.001">
-    </testcase>
-    <testcase classname="httpClient › getPaginated" name="flattens nested filters into filters[key]=value" time="0.002">
-    </testcase>
-    <testcase classname="httpClient › batchOperation" name="wraps the data array under operation/data" time="0.001">
+    <testcase classname="useIncidentsQuery" name="setPage() updates page and pageSize" time="0.076">
     </testcase>
   </testsuite>
 </testsuites>
