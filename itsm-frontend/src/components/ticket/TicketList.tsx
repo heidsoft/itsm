@@ -1,24 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  Table,
-  Card,
-  Button,
-  Input,
-  Select,
-  Space,
-  Tag,
-  Tooltip,
-  Modal,
-  App,
-  DatePicker,
-  Row,
-  Col,
-  Divider,
-} from 'antd';
-import { Filter, Plus, Pencil, Trash2, Download, Eye, RotateCcw, AlertCircle, CheckCircle } from 'lucide-react';
-import type { ColumnsType, TableProps, TablePaginationConfig } from 'antd/es/table';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Dayjs } from 'dayjs';
+import { App, Card, Divider, Table } from 'antd';
+import type { TablePaginationConfig, TableProps } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
@@ -26,63 +11,51 @@ import { TicketApi } from '@/lib/api/ticket-api';
 import type { Ticket } from '@/lib/api/types';
 import { useTickets } from '@/lib/hooks/useTickets';
 import type { TicketQueryFilters } from '@/lib/hooks/useTickets';
+import { useRowSelection } from '@/lib/hooks/useRowSelection';
+import { useTableKeyboardNav } from '@/lib/hooks/useTableKeyboardNav';
 import { useDebounce } from '@/lib/component-utils';
+
+import { buildTicketListColumns } from './TicketListColumns';
+import { TicketListToolbar } from './TicketListToolbar';
+import { TicketListFilters, type TicketFilterValues } from './TicketListFilters';
+import { TicketDeleteModal } from './TicketDeleteModal';
 import TicketBatchOperations from './TicketBatchOperations';
 
-type ListTicketsRequest = Record<string, any>;
-
-const { Search } = Input;
-const { RangePicker } = DatePicker;
-
 interface TicketListProps {
-  embedded?: boolean;
-  showHeader?: boolean;
-  pageSize?: number;
-  filters?: Partial<ListTicketsRequest>;
-  onTicketSelect?: (ticket: Ticket) => void;
-  advancedFilters?: Partial<TicketQueryFilters>;
+  readonly embedded?: boolean;
+  readonly showHeader?: boolean;
+  readonly pageSize?: number;
+  readonly filters?: Partial<TicketQueryFilters>;
+  readonly onTicketSelect?: (ticket: Ticket) => void;
+  readonly advancedFilters?: Partial<TicketQueryFilters>;
 }
 
-// 工单状态配置
-const TICKET_STATUS_CONFIG: Record<string, { color: string; text: string }> = {
-  new: { color: 'blue', text: '新建' },
-  open: { color: 'blue', text: '待处理' },
-  in_progress: { color: 'orange', text: '处理中' },
-  pending: { color: 'yellow', text: '等待中' },
-  pending_approval: { color: 'gold', text: '待审批' },
-  resolved: { color: 'green', text: '已解决' },
-  closed: { color: 'default', text: '已关闭' },
-  cancelled: { color: 'red', text: '已取消' },
+const DEFAULT_FILTER_VALUES: TicketFilterValues = {
+  status: undefined,
+  priority: undefined,
+  type: undefined,
+  createdRange: null,
 };
 
-// 优先级配置
-const PRIORITY_CONFIG: Record<string, { color: string; text: string }> = {
-  low: { color: 'green', text: '低' },
-  medium: { color: 'orange', text: '中' },
-  high: { color: 'red', text: '高' },
-  urgent: { color: 'purple', text: '紧急' },
-  critical: { color: 'purple', text: '紧急' },
-};
-
-// 工单类型配置
-const TICKET_TYPE_CONFIG: Record<string, string> = {
-  incident: '事件',
-  request: '请求',
-  service_request: '服务请求',
-  problem: '问题',
-  change: '变更',
-  task: '任务',
-};
-
+/**
+ * Container for the tickets list. Composes the presentational pieces
+ * (Toolbar, Filters, Columns, DeleteModal) and owns only the cross-cutting
+ * state that genuinely belongs at the container level: search input,
+ * filter-panel visibility, delete-confirmation target, active row index.
+ *
+ * Server state (tickets, pagination, domain filters) is delegated to
+ * `useTickets`; row-selection state lives in `useRowSelection`; keyboard
+ * navigation in `useTableKeyboardNav`. The remaining local state is the
+ * minimum needed to wire those pieces together.
+ */
 const TicketList: React.FC<TicketListProps> = ({
   embedded = false,
   showHeader = true,
-  filters: initialFilters = {},
   onTicketSelect,
   advancedFilters,
 }) => {
   const router = useRouter();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const {
     tickets,
     loading,
@@ -95,150 +68,120 @@ const TicketList: React.FC<TicketListProps> = ({
     batchDeleteTickets,
   } = useTickets();
 
-  // 本地状态
-  const [selectedTickets, setSelectedTickets] = useState<Set<number>>(new Set());
+  const selection = useRowSelection<number>();
   const [searchValue, setSearchValue] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [filterValues, setFilterValues] = useState<TicketFilterValues>(DEFAULT_FILTER_VALUES);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
+  // Keyboard-driven active row. `hoveredIndex` is independent so mouse hover
+  // never tramples the keyboard cursor — they were racing in v1.
   const [activeRowIndex, setActiveRowIndex] = useState(0);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  // 防抖搜索 - 延迟300ms触发搜索，减少API调用
+  // Debounce search input to avoid hammering the API on every keystroke.
   const debouncedSearchValue = useDebounce(searchValue, 300);
 
-  // 当防抖值变化时触发搜索
   useEffect(() => {
     updateFilters({ keyword: debouncedSearchValue || undefined });
-     
-  }, [debouncedSearchValue]);
+  }, [debouncedSearchValue, updateFilters]);
 
-  // 用 JSON 序列化做深比较，避免对象引用变化导致无限循环
-  const advancedFiltersKey = JSON.stringify(advancedFilters);
+  // Sync external advanced filters (e.g. from a dashboard deep-link) into the
+  // ticket store. Using JSON.stringify as the dep key avoids the infinite loop
+  // you would get from referencing the object directly.
+  const advancedFiltersKey = useMemo(
+    () => JSON.stringify(advancedFilters ?? {}),
+    [advancedFilters]
+  );
   useEffect(() => {
     if (advancedFilters === undefined) return;
     updateFilters(advancedFilters);
-     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [advancedFiltersKey]);
 
-  // 选择操作
-  const selectTicket = useCallback((id: number) => {
-    setSelectedTickets(prev => new Set(prev).add(id));
-  }, []);
-  const deselectTicket = useCallback((id: number) => {
-    setSelectedTickets(prev => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  }, []);
-  const deselectAll = useCallback(() => {
-    setSelectedTickets(new Set());
-  }, []);
-  const clearFilters = useCallback(() => {
-    updateFilters({});
-  }, [updateFilters]);
-
-  // 搜索处理 - 现在由useDebounce自动处理
-  const handleSearch = useCallback((value: string) => {
-    setSearchValue(value);
-  }, []);
-
-  // 过滤器变更处理
-  const handleFilterChange = useCallback(
-    (key: keyof ListTicketsRequest, value: unknown) => {
-      updateFilters({ [key]: value });
-    },
-    [updateFilters]
-  );
-
-  // 分页变更处理
-  const handleTableChange: TableProps<Ticket>['onChange'] = useCallback(
-    (pagination: TablePaginationConfig) => {
-      const newPage = pagination.current || 1;
-      const newPageSize = pagination.pageSize || 20;
-
-      updatePagination(newPage, newPageSize);
-    },
-    [updatePagination]
-  );
-
-  // 刷新数据
-  const handleRefresh = useCallback(() => {
-    fetchTickets(filters);
-  }, [fetchTickets, filters]);
-
-  // 清空过滤器
-  const handleClearFilters = useCallback(() => {
-    setSearchValue('');
-    clearFilters();
-  }, [clearFilters]);
-
-  // 删除工单
-  const handleDelete = useCallback(
-    async (ticket: Ticket) => {
-      try {
-        await deleteTicket(ticket.id);
-        message.success('删除成功');
-        setDeleteModalVisible(false);
-        setTicketToDelete(null);
-      } catch (error) {
-        message.error('删除失败');
+  const openTicket = useCallback(
+    (ticket: Ticket) => {
+      if (onTicketSelect) {
+        onTicketSelect(ticket);
+      } else {
+        router.push(`/tickets/${ticket.id}`);
       }
     },
-    [deleteTicket]
+    [onTicketSelect, router]
   );
 
-  // 批量删除
+  const editTicket = useCallback(
+    (ticket: Ticket) => router.push(`/tickets/${ticket.id}?mode=edit`),
+    [router]
+  );
+
+  // `filters` is read through a ref inside Modal callbacks so a confirmation
+  // opened before a filter change still refreshes with the user's current view.
+  const filtersRef = useRef(filters);
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  // H1: Clamp the keyboard cursor to the visible row range whenever the list
+  // shrinks (filter / page change / deletion). Without this, pressing `o` after
+  // a filter change could call `openTicket(undefined)`.
+  // Depend on `tickets.length` (not `tickets`) so we only run when the list
+  // size actually changes, and guard on prev >= length so we don't push the
+  // cursor back on every render.
+  const ticketsLength = tickets.length;
+  useEffect(() => {
+    setActiveRowIndex(prev => (prev >= ticketsLength ? Math.max(0, ticketsLength - 1) : prev));
+  }, [ticketsLength]);
+
+  const closeTicket = useCallback(
+    (ticket: Ticket) => {
+      modal.confirm({
+        title: `关闭工单 ${ticket.ticketNumber}？`,
+        content: '关闭后工单将进入终态，请确认处理结果已经记录。',
+        okText: '确认关闭',
+        cancelText: '取消',
+        okButtonProps: { danger: true },
+        onOk: async () => {
+          try {
+            await TicketApi.closeTicket(ticket.id);
+            message.success('工单已关闭');
+            await fetchTickets(filtersRef.current);
+          } catch (error) {
+            message.error(error instanceof Error ? error.message : '关闭工单失败');
+            // antd v5's `modal.confirm` resolves with `false` (not rejection) on
+            // throw inside onOk; the dialog closes either way. We swallow here
+            // so the confirm flow returns cleanly. The error toast above is the
+            // user-visible signal.
+          }
+        },
+      });
+    },
+    [fetchTickets, modal, message]
+  );
+
+  const handleRefresh = useCallback(() => {
+    void fetchTickets(filters);
+  }, [fetchTickets, filters]);
+
   const handleBatchDelete = useCallback(async () => {
-    if (selectedTickets.size === 0) {
+    if (selection.count === 0) {
       message.warning('请选择要删除的工单');
       return;
     }
-
-    try {
-      const ids = Array.from(selectedTickets);
-      await batchDeleteTickets(ids);
-      message.success(`成功删除 ${selectedTickets.size} 个工单`);
-      deselectAll();
-    } catch (error) {
-      message.error('批量删除失败');
+    // batchDeleteTickets now uses Promise.allSettled internally and toasts
+    // every failure path itself, so this call only throws on the post-delete
+    // refresh — and even then, partial success has already been reported.
+    const ids = selection.toArray();
+    const result = await batchDeleteTickets(ids);
+    // Successful deletes are already gone; keep failed ids selected so the
+    // operator can retry them. (H4: was previously wiping everything.)
+    if (result.failedIds.length > 0) {
+      selection.setMany(result.failedIds);
+    } else {
+      selection.clear();
     }
-  }, [selectedTickets, batchDeleteTickets, deselectAll]);
+  }, [selection, batchDeleteTickets, message]);
 
-  const openTicket = useCallback((ticket: Ticket) => {
-    if (onTicketSelect) onTicketSelect(ticket);
-    else router.push(`/tickets/${ticket.id}`);
-  }, [onTicketSelect, router]);
-
-  const handleClose = useCallback((ticket: Ticket) => {
-    Modal.confirm({
-      title: `关闭工单 ${ticket.ticketNumber}？`,
-      content: '关闭后工单将进入终态，请确认处理结果已经记录。',
-      okText: '确认关闭',
-      cancelText: '取消',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        await TicketApi.closeTicket(ticket.id);
-        message.success('工单已关闭');
-        await fetchTickets(filters);
-      },
-    });
-  }, [fetchTickets, filters, message]);
-
-  // 列表操作快捷键：在输入控件中不抢占按键。
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (target.matches('input, textarea, select') || target.isContentEditable || tickets.length === 0) return;
-      if (event.key === 'j') setActiveRowIndex(index => Math.min(index + 1, tickets.length - 1));
-      if (event.key === 'k') setActiveRowIndex(index => Math.max(index - 1, 0));
-      if (event.key === 'o') openTicket(tickets[Math.min(activeRowIndex, tickets.length - 1)]);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeRowIndex, openTicket, tickets]);
-
-  // 导出数据
   const handleExport = useCallback(async () => {
     try {
       const blob = await TicketApi.exportTickets({ format: 'excel', filters });
@@ -251,288 +194,123 @@ const TicketList: React.FC<TicketListProps> = ({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       message.success('导出成功');
-    } catch (error) {
+    } catch {
       message.error('导出失败');
     }
-  }, [filters]);
+  }, [filters, message]);
 
-  // 日期范围变更处理
-  const handleDateRangeChange = useCallback(
-    (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null, field: 'created' | 'due') => {
-      const startKey = field === 'created' ? 'created_after' : 'due_after';
-      const endKey = field === 'created' ? 'created_before' : 'due_before';
-
-      if (dates && dates[0] && dates[1]) {
-        // 完整日期范围
-        updateFilters({
-          [startKey]: dates[0].format('YYYY-MM-DD'),
-          [endKey]: dates[1].format('YYYY-MM-DD'),
-        });
-      } else if (dates && dates[0] && !dates[1]) {
-        // 只选择了开始日期
-        updateFilters({
-          [startKey]: dates[0].format('YYYY-MM-DD'),
-          [endKey]: undefined,
-        });
-      } else if (dates && !dates[0] && dates[1]) {
-        // 只选择了结束日期
-        updateFilters({
-          [startKey]: undefined,
-          [endKey]: dates[1].format('YYYY-MM-DD'),
-        });
-      } else {
-        // 清空日期过滤器
-        updateFilters({
-          [startKey]: undefined,
-          [endKey]: undefined,
-        });
-      }
+  const handleFiltersChange = useCallback(
+    (next: TicketFilterValues) => {
+      setFilterValues(next);
+      const [start, end] = next.createdRange ?? [];
+      updateFilters({
+        status: next.status,
+        priority: next.priority,
+        type: next.type,
+        dateRange:
+          start && end ? [start.format('YYYY-MM-DD'), end.format('YYYY-MM-DD')] : undefined,
+      });
     },
     [updateFilters]
   );
 
-  // 表格列定义
-  const columns: ColumnsType<Ticket> = useMemo(
-    () => [
-      {
-        title: '工单号',
-        dataIndex: 'ticketNumber',
-        key: 'ticketNumber',
-        width: 150,
-        fixed: 'left',
-        render: (ticketNumber: string, record: Ticket) => (
-          <Button
-            type="link"
-            onClick={() => {
-              if (onTicketSelect) {
-                onTicketSelect(record);
-              } else {
-                router.push(`/tickets/${record.id}`);
-              }
-            }}
-          >
-            {ticketNumber || '-'}
-          </Button>
-        ),
-      },
-      {
-        title: '标题',
-        dataIndex: 'title',
-        key: 'title',
-        ellipsis: {
-          showTitle: false,
-        },
-        render: (title: string) => (
-          <Tooltip placement="topLeft" title={title}>
-            {title}
-          </Tooltip>
-        ),
-      },
-      {
-        title: '状态',
-        dataIndex: 'status',
-        key: 'status',
-        width: 100,
-        render: (status: string) => {
-          const config = TICKET_STATUS_CONFIG[status] || { color: 'default', text: status };
-          return <Tag color={config.color}>{config.text}</Tag>;
-        },
-      },
-      {
-        title: '优先级',
-        dataIndex: 'priority',
-        key: 'priority',
-        width: 100,
-        render: (priority: string) => {
-          const config = PRIORITY_CONFIG[priority] || { color: 'default', text: priority };
-          return <Tag color={config.color}>{config.text}</Tag>;
-        },
-      },
-      {
-        title: '类型',
-        dataIndex: 'type',
-        key: 'type',
-        width: 100,
-        render: (type: string) => {
-          const typeName = TICKET_TYPE_CONFIG[type] || type;
-          return <Tag>{typeName}</Tag>;
-        },
-      },
-      {
-        title: '来源',
-        dataIndex: 'source',
-        key: 'source',
-        width: 100,
-        render: (source: string) => <Tag color="blue">{source}</Tag>,
-      },
-      {
-        title: '处理人',
-        key: 'assignee',
-        width: 120,
-        render: (_, record: Ticket) => record.assignee?.name || (record.assigneeId ? `用户 #${record.assigneeId}` : '未分配'),
-      },
-      {
-        title: '创建时间',
-        dataIndex: 'createdAt',
-        key: 'createdAt',
-        width: 160,
-        render: (createdAt: string) => dayjs(createdAt).format('YYYY-MM-DD HH:mm'),
-      },
-      {
-        title: '更新时间',
-        dataIndex: 'updatedAt',
-        key: 'updatedAt',
-        width: 160,
-        render: (updatedAt: string) => dayjs(updatedAt).format('YYYY-MM-DD HH:mm'),
-      },
-      {
-        title: '操作',
-        key: 'actions',
-        width: 150,
-        fixed: 'right',
-        render: (_, record: Ticket) => {
-          return (
-            <Space size={0} className="opacity-70 transition-opacity hover:opacity-100">
-              <Tooltip title="查看 (o)"><Button type="text" aria-label="查看工单" icon={<Eye size={16} />} onClick={() => openTicket(record)} /></Tooltip>
-              <Tooltip title="编辑"><Button type="text" aria-label="编辑工单" icon={<Pencil size={16} />} onClick={() => router.push(`/tickets/${record.id}?mode=edit`)} /></Tooltip>
-              {!['closed', 'cancelled'].includes(record.status) && <Tooltip title="关闭"><Button type="text" aria-label="关闭工单" icon={<CheckCircle size={16} />} onClick={() => handleClose(record)} /></Tooltip>}
-            </Space>
-          );
-        },
-      },
-    ],
-    [handleClose, openTicket, router]
+  const handleClearFilters = useCallback(() => {
+    setFilterValues(DEFAULT_FILTER_VALUES);
+    setSearchValue('');
+    updateFilters({});
+  }, [updateFilters]);
+
+  const handleConfirmDelete = useCallback(
+    async (ticket: Ticket) => {
+      try {
+        await deleteTicket(ticket.id);
+        message.success('删除成功');
+        setDeleteModalVisible(false);
+        setTicketToDelete(null);
+      } catch {
+        message.error('删除失败');
+      }
+    },
+    [deleteTicket, message]
   );
 
-  // 行选择配置
+  const columns = useMemo(
+    () => buildTicketListColumns({ onOpen: openTicket, onEdit: editTicket, onClose: closeTicket }),
+    [openTicket, editTicket, closeTicket]
+  );
+
   const rowSelection: TableProps<Ticket>['rowSelection'] = useMemo(
     () => ({
-      selectedRowKeys: Array.from(selectedTickets),
-      onChange: (selectedRowKeys: React.Key[], selectedRows: Ticket[]) => {
-        deselectAll();
-        selectedRows.forEach(ticket => selectTicket(ticket.id));
-      },
-      onSelectAll: (selected: boolean, selectedRows: Ticket[], changeRows: Ticket[]) => {
-        if (selected) {
-          changeRows.forEach(ticket => selectTicket(ticket.id));
-        } else {
-          changeRows.forEach(ticket => deselectTicket(ticket.id));
-        }
-      },
+      selectedRowKeys: selection.toArray(),
+      onChange: (_keys, rows) => selection.setMany(rows.map(r => r.id)),
     }),
-    [selectedTickets, selectTicket, deselectTicket, deselectAll]
+    [selection]
   );
 
-  return (
-    <div className="ticket-list space-y-4">
-      {showHeader && (
-        <Card className="rounded-lg shadow-sm">
-          <Row gutter={[16, 16]} align="middle">
-            <Col flex="auto">
-              <Space size="middle">
-                <Search
-                  placeholder="搜索工单标题、描述或工单号"
-                  value={searchValue}
-                  onChange={e => setSearchValue(e.target.value)}
-                  onSearch={handleSearch}
-                  style={{ width: 300 }}
-                  allowClear
-                />
-                <Button icon={<Filter />} onClick={() => setShowFilters(!showFilters)}>
-                  过滤器
-                </Button>
-                <Button icon={<RotateCcw />} onClick={handleRefresh} loading={loading}>
-                  刷新
-                </Button>
-              </Space>
-            </Col>
-            <Col>
-              <Space>
-                {selectedTickets.size > 0 && (
-                  <Button danger icon={<Trash2 />} onClick={handleBatchDelete}>
-                    批量删除 ({selectedTickets.size})
-                  </Button>
-                )}
-                <Button icon={<Download />} onClick={handleExport}>
-                  导出
-                </Button>
-                <Button
-                  type="primary"
-                  icon={<Plus />}
-                  onClick={() => router.push('/tickets/create')}
-                >
-                  创建工单
-                </Button>
-              </Space>
-            </Col>
-          </Row>
+  const handleTableChange: TableProps<Ticket>['onChange'] = useCallback(
+    (next: TablePaginationConfig) => {
+      updatePagination(next.current ?? 1, next.pageSize ?? 20);
+    },
+    [updatePagination]
+  );
 
+  useTableKeyboardNav<Ticket>({
+    rows: tickets,
+    activeIndex: activeRowIndex,
+    onActivate: openTicket,
+    onNext: () => setActiveRowIndex(i => Math.min(i + 1, Math.max(tickets.length - 1, 0))),
+    onPrev: () => setActiveRowIndex(i => Math.max(i - 1, 0)),
+    enabled: !embedded,
+  });
+
+  return (
+    <div className='ticket-list space-y-4'>
+      {showHeader && (
+        <>
+          <TicketListToolbar
+            searchValue={searchValue}
+            showFilters={showFilters}
+            selectedCount={selection.count}
+            loading={loading}
+            onSearchChange={setSearchValue}
+            onSearchSubmit={setSearchValue}
+            onToggleFilters={() => setShowFilters(v => !v)}
+            onRefresh={handleRefresh}
+            onBatchDelete={handleBatchDelete}
+            onExport={handleExport}
+            onCreate={() => router.push('/tickets/create')}
+          />
           {showFilters && (
-            <>
-              <Divider />
-              <Row gutter={[16, 16]}>
-                <Col xs={24} sm={12} md={6}>
-                  <Select
-                    placeholder="状态"
-                    value={filters.status}
-                    onChange={value => handleFilterChange('status', value)}
-                    allowClear
-                    style={{ width: '100%' }}
-                   options={Object.entries(TICKET_STATUS_CONFIG).map(([key, config]) => ({ value: key, label: <Tag color={config.color}>{config.text}</Tag> }))} />
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                  <Select
-                    placeholder="优先级"
-                    value={filters.priority}
-                    onChange={value => handleFilterChange('priority', value)}
-                    allowClear
-                    style={{ width: '100%' }}
-                   options={Object.entries(PRIORITY_CONFIG).map(([key, config]) => ({ value: key, label: <Tag color={config.color}>{config.text}</Tag> }))} />
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                  <Select
-                    placeholder="类型"
-                    value={filters.type}
-                    onChange={value => handleFilterChange('type', value)}
-                    allowClear
-                    style={{ width: '100%' }}
-                   options={Object.entries(TICKET_TYPE_CONFIG).map(([key, text]) => ({ value: key, label: text }))} />
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                  <RangePicker
-                    placeholder={['开始日期', '结束日期']}
-                    onChange={dates => handleDateRangeChange(dates, 'created')}
-                    style={{ width: '100%' }}
-                  />
-                </Col>
-              </Row>
-              <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-                <Col>
-                  <Button onClick={handleClearFilters}>清空过滤器</Button>
-                </Col>
-              </Row>
-            </>
+            <Card className='rounded-lg shadow-sm'>
+              <Divider style={{ marginTop: 0 }} />
+              <TicketListFilters
+                values={filterValues}
+                onChange={handleFiltersChange}
+                onClear={handleClearFilters}
+              />
+            </Card>
           )}
-        </Card>
+        </>
       )}
 
-      {/* 批量操作工具栏 */}
-      {!embedded && selectedTickets.size > 0 && (
+      {!embedded && selection.count > 0 && (
         <TicketBatchOperations
-          selectedTickets={tickets.filter(t => selectedTickets.has(t.id))}
-          onOperationComplete={() => fetchTickets(filters)}
-          onSelectionClear={deselectAll}
+          selectedTickets={tickets.filter(t => selection.isSelected(t.id))}
+          onOperationComplete={() => void fetchTickets(filters)}
+          onSelectionClear={selection.clear}
         />
       )}
 
-      <Card className="rounded-lg shadow-sm">
-        <div className="mb-3 flex justify-end text-xs text-gray-500" aria-label="键盘快捷键">
-          快捷键：<kbd className="mx-1 rounded border bg-gray-50 px-1.5">j</kbd>/<kbd className="mx-1 rounded border bg-gray-50 px-1.5">k</kbd> 导航，<kbd className="mx-1 rounded border bg-gray-50 px-1.5">o</kbd> 打开
+      <Card className='rounded-lg shadow-sm'>
+        <div className='mb-3 flex justify-end text-xs text-gray-500' aria-label='键盘快捷键'>
+          快捷键：<kbd className='mx-1 rounded border bg-gray-50 px-1.5'>j</kbd>/
+          <kbd className='mx-1 rounded border bg-gray-50 px-1.5'>k</kbd> 导航，
+          <kbd className='mx-1 rounded border bg-gray-50 px-1.5'>o</kbd> 打开
         </div>
         <Table<Ticket>
           columns={columns}
           dataSource={tickets}
-          rowKey="id"
+          rowKey='id'
           rowSelection={embedded ? undefined : rowSelection}
           loading={loading}
           pagination={{
@@ -546,31 +324,27 @@ const TicketList: React.FC<TicketListProps> = ({
           }}
           onChange={handleTableChange}
           scroll={{ x: 1200 }}
-          size="middle"
-          onRow={(_, index) => ({ onMouseEnter: () => setActiveRowIndex(index ?? 0) })}
-          rowClassName={(_, index) => index === activeRowIndex ? 'bg-blue-50/60' : ''}
+          size='middle'
+          onRow={(_, index) => ({
+            onMouseEnter: () => setHoveredIndex(index ?? null),
+            onMouseLeave: () => setHoveredIndex(null),
+          })}
+          rowClassName={(_, index) =>
+            index === activeRowIndex || index === hoveredIndex ? 'bg-blue-50/60' : ''
+          }
           getPopupContainer={node => node.parentElement || document.body}
         />
       </Card>
 
-      {/* 删除确认对话框 */}
-      <Modal
-        title="确认删除"
+      <TicketDeleteModal
         open={deleteModalVisible}
-        onOk={() => ticketToDelete && handleDelete(ticketToDelete)}
+        ticket={ticketToDelete}
+        onConfirm={handleConfirmDelete}
         onCancel={() => {
           setDeleteModalVisible(false);
           setTicketToDelete(null);
         }}
-        okText="确认"
-        cancelText="取消"
-        okButtonProps={{ danger: true }}
-      >
-        <p>
-          <AlertCircle style={{ color: '#ff4d4f', marginRight: 8 }} />
-          确定要删除工单 <strong>{ticketToDelete?.ticketNumber || '-'}</strong> 吗？此操作不可撤销。
-        </p>
-      </Modal>
+      />
     </div>
   );
 };

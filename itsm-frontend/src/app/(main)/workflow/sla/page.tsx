@@ -36,9 +36,8 @@ export default function SLAMonitoringPage() {
   const [processMetrics, setProcessMetrics] = useState<ProcessMetrics | null>(null);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs().subtract(7, 'day'), dayjs()]);
 
-  // 优先使用当前登录租户；未登录时回退到默认 1
-  // TODO: 待接入用户/租户选择器后移除硬编码回退值，避免未登录态误指向租户 1
-  const tenantId = currentTenant?.id ?? 1;
+  // 使用当前登录租户；未登录时不加载数据
+  const tenantId = currentTenant?.id;
 
   const fetchProcesses = async () => {
     try {
@@ -55,6 +54,10 @@ export default function SLAMonitoringPage() {
   };
 
   const fetchViolations = async () => {
+    if (!tenantId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const data = await BPMNDashboardApi.getSLAViolations(tenantId);
@@ -67,7 +70,7 @@ export default function SLAMonitoringPage() {
   };
 
   const fetchProcessMetrics = async () => {
-    if (!selectedProcess) return;
+    if (!selectedProcess || !tenantId) return;
     setLoading(true);
     try {
       const data = await BPMNDashboardApi.getProcessMetrics(

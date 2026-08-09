@@ -42,11 +42,14 @@ export default function BPMNDashboardPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs().subtract(7, 'day'), dayjs()]);
 
-  // 优先使用当前登录租户；未登录时回退到默认 1
-  // TODO: 待接入用户/租户选择器后移除硬编码回退值，避免未登录态误指向租户 1
-  const tenantId = currentTenant?.id ?? 1;
+  // 使用当前登录租户；未登录时不加载数据
+  const tenantId = currentTenant?.id;
 
   const fetchMetrics = async () => {
+    if (!tenantId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const data = await BPMNDashboardApi.getDashboardMetrics(
@@ -142,6 +145,19 @@ export default function BPMNDashboardPage() {
     return (
       <div className='flex items-center justify-center h-96'>
         <Spin size='large' />
+      </div>
+    );
+  }
+
+  if (!tenantId) {
+    return (
+      <div className='p-6'>
+        <Alert
+          message={t('common.warning') || '警告'}
+          description={t('workflow.loginRequired') || '请先登录以查看工作流仪表盘'}
+          type='warning'
+          showIcon
+        />
       </div>
     );
   }

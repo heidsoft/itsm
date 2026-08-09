@@ -281,7 +281,7 @@ const ArticleDetail: React.FC = () => {
                         <Text type="secondary">感谢您的反馈！</Text>
                       </div>
                     ) : (
-                      <Space direction="vertical" size="small">
+                      <Space orientation="vertical" size="small">
                         <Text strong>这篇文章对您有帮助吗？</Text>
                         <Space>
                           <Button

@@ -35,7 +35,7 @@ export interface SLAViolation {
   updatedAt: string;
 }
 
-// SLA合规报告接口 (camelCase - 因为 httpClient 会自动转换)
+// SLA合规报告接口（字段为 camelCase；注意后端 compliance-report 端点接收的 query 参数为 snake_case start_date/end_date）
 export interface SLAComplianceReport {
   totalTickets: number;
   metSla: number;
@@ -151,13 +151,16 @@ export class SLAApi {
 
   // 获取SLA合规报告
   // 使用后端 /sla/compliance-report 端点
+  // 注意：httpClient 仅对请求体/响应体做 camelCase↔snake_case 转换，
+  // 但 query 参数键名是原样发送的。后端该端点解析的是 snake_case 的
+  // start_date / end_date（startDate/endDate 仅作为兼容兜底），所以此处必须发 snake_case。
   static async getSLAComplianceReport(params: {
     startDate: string;
     endDate: string;
   }): Promise<SLAComplianceReport> {
     const report = await httpClient.get<SLAComplianceReport>('/api/v1/sla/compliance-report', {
-      startDate: params.startDate,
-      endDate: params.endDate,
+      start_date: params.startDate,
+      end_date: params.endDate,
     });
 
     return {

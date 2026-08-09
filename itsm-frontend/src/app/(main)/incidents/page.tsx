@@ -1,39 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Space, message, Pagination, Badge, Modal, Select, Input, Form } from 'antd';
-import {
-  Plus,
-  RotateCcw,
-  Download,
-  UserPlus,
-  CheckCircle,
-  XCircle,
-  Trash2,
-  Siren,
-  CircleDot,
-  TriangleAlert,
-  Clock3,
-} from 'lucide-react';
+import React, { useCallback } from 'react';
+import { Button, Modal, Pagination, Select, Form, message } from 'antd';
+import { Plus, RotateCcw, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {
-  BusinessPageTemplate,
-  type PageStats,
-} from '@/components/layout/BusinessPageTemplate';
-import { IncidentList } from './components/IncidentList';
-import { IncidentFilters } from './components/IncidentFilters';
-import { IncidentStats } from './components/IncidentStats';
-import type { Incident } from '@/lib/api/types';
-import { IncidentAPI } from '@/lib/api/incident-api';
-import { UserApi } from '@/lib/api/user-api';
-import { BatchActionBar, type BatchAction } from '@/components/business/BatchActionBar';
+
+import { BusinessPageTemplate } from '@/components/layout/BusinessPageTemplate';
+import { BatchActionBar } from '@/components/business/BatchActionBar';
 import {
   UnifiedKanbanBoard,
   type KanbanColumnConfig,
 } from '@/components/business/UnifiedKanbanBoard';
+import type { PageStats } from '@/components/layout/BusinessPageTemplate';
+import type { Incident } from '@/lib/api/types';
+import { IncidentAPI } from '@/lib/api/incident-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 
-// 看板列配置（颜色与全站主色 #3b82f6 对齐，避免遗留 antd 旧蓝 #1890ff）
+import { IncidentList } from './components/IncidentList';
+import { IncidentFilters } from './components/IncidentFilters';
+import { useIncidentsQuery } from '@/lib/hooks/useIncidentsQuery';
+import { useIncidentStats } from '@/lib/hooks/useIncidentStats';
+import { useIncidentFilters } from '@/lib/hooks/useIncidentFilters';
+import { useIncidentBatchOps } from '@/lib/hooks/useIncidentBatchOps';
+
 const KANBAN_COLUMNS: KanbanColumnConfig<Incident>[] = [
   { key: 'new', title: '新建', color: '#3b82f6' },
   { key: 'acknowledged', title: '已确认', color: '#722ed1' },
@@ -43,125 +32,29 @@ const KANBAN_COLUMNS: KanbanColumnConfig<Incident>[] = [
   { key: 'closed', title: '已关闭', color: '#d9d9d9' },
 ];
 
+type View = 'list' | 'kanban';
+
 export default function IncidentsPage() {
   const router = useRouter();
   const { t } = useI18n();
 
-  // ====== 状态管理 ======
-  const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState(false);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  // UI state
+  const filters = useIncidentFilters();
+  const [activeView, setActiveView] = React.useState<View>('list');
 
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>();
-  const [priorityFilter, setPriorityFilter] = useState<string>();
-  const [sourceFilter, setSourceFilter] = useState<string>();
-  const [activeView, setActiveView] = useState<'list' | 'kanban'>('list');
+  // Server state — query is bound to filter values, so changing search or
+  // status automatically re-fetches. The error message is localized here so
+  // the data hook stays free of i18n coupling.
+  const query = useIncidentsQuery(filters.values, {
+    errorMessage: t('incidents.getFailed') || '加载事件列表失败，请稍后重试',
+  });
+  const stats = useIncidentStats();
 
-  // 统计数据
-  const [metrics, setMetrics] = useState<{
-    totalIncidents?: number;
-    openIncidents?: number;
-    criticalIncidents?: number;
-    majorIncidents?: number;
-    avgResolutionTime?: number;
-  } | null>(null);
-  const [statsLoading, setStatsLoading] = useState(false);
-
-  // 筛选状态
-  const [filtersVisible, setFiltersVisible] = useState(false);
-
-  // ====== 数据获取 ======
-  const fetchIncidents = useCallback(async () => {
-    setLoading(true);
-    setLoadError(false);
-    try {
-      const response = await IncidentAPI.listIncidents({
-        page,
-        pageSize,
-        search: searchKeyword || undefined,
-        status: statusFilter,
-        priority: priorityFilter,
-        source: sourceFilter,
-      });
-      const items = response.incidents || response.data || [];
-
-      // 获取用户映射
-      const userMap = new Map<number, string>();
-      try {
-        const usersResponse = await UserApi.getUsers({ pageSize: 100 });
-        usersResponse.users.forEach((user) => userMap.set(user.id, user.name));
-      } catch (e) {
-        console.warn('Failed to fetch users for reporter names', e);
-      }
-
-      // 丰富事件数据
-      const enriched = items.map((inc) => {
-        const reporterId = inc.reporterId || (inc as any).reporterId;
-        const reporterName = reporterId ? userMap.get(reporterId) : undefined;
-        return {
-          ...inc,
-          ...(reporterId && reporterName
-            ? { reporter: { id: reporterId, name: reporterName } }
-            : {}),
-        };
-      });
-
-      setIncidents(enriched as any);
-      setTotal(response.total || enriched.length);
-    } catch (error) {
-      console.error('Failed to fetch incidents:', error);
-      message.error(t('incidents.getFailed') || '加载事件列表失败，请稍后重试');
-      // 错误态与空态区分：不清空已有数据伪装成空态，由模板 error 态展示重试
-      setLoadError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, searchKeyword, statusFilter, priorityFilter, sourceFilter, t]);
-
-  const fetchStats = useCallback(async () => {
-    setStatsLoading(true);
-    try {
-      const stats = await IncidentAPI.getIncidentMetrics();
-      setMetrics({
-        totalIncidents: stats.totalIncidents || 0,
-        openIncidents: stats.openIncidents || 0,
-        criticalIncidents: stats.criticalIncidents || 0,
-        majorIncidents: stats.majorIncidents || 0,
-        avgResolutionTime: stats.avgResolutionTime || 0,
-      });
-    } catch (error) {
-      console.error('Failed to fetch incident stats:', error);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, []);
-
-  // 初始加载
-  useEffect(() => {
-    fetchIncidents();
-    fetchStats();
-  }, [fetchIncidents, fetchStats]);
-
-  // ====== 事件处理 ======
-  const handleSearch = useCallback((value: string) => {
-    setSearchKeyword(value);
-    setPage(1);
-  }, []);
-
-  const handleFilterChange = useCallback(
-    (status?: string, priority?: string, source?: string) => {
-      setStatusFilter(status);
-      setPriorityFilter(priority);
-      setSourceFilter(source);
-      setPage(1);
+  const batch = useIncidentBatchOps({
+    onAfterBatch: async () => {
+      await query.refresh();
     },
-    [],
-  );
+  });
 
   const handleView = useCallback(
     (incident: Incident) => {
@@ -182,188 +75,76 @@ export default function IncidentsPage() {
   }, [router]);
 
   const handleRefresh = useCallback(() => {
-    fetchIncidents();
-    fetchStats();
-  }, [fetchIncidents, fetchStats]);
+    void query.refresh();
+    void stats.refresh();
+  }, [query, stats]);
 
-  const handlePageChange = useCallback((newPage: number, newPageSize: number) => {
-    setPage(newPage);
-    setPageSize(newPageSize);
-  }, []);
-
-  // ====== 批量操作 ======
-  const [batchLoading, setBatchLoading] = useState(false);
-  const [assignModalOpen, setAssignModalOpen] = useState(false);
-  const [assignUserOptions, setAssignUserOptions] = useState<
-    { label: string; value: number }[]
-  >([]);
-  const [assignForm] = Form.useForm<{ assigneeId: number }>();
-
-  // 逐条循环兜底：后端目前尚未提供 incident 批量端点，此处封装 Promise.allSettled，失败逐条汇总
-  const runIncidentBatch = useCallback(
-    async (
-      ids: React.Key[],
-      handler: (id: number) => Promise<unknown>,
-      successMsg: string,
-      failPrefix = '部分失败',
-    ) => {
-      if (ids.length === 0) return;
-      setBatchLoading(true);
-      try {
-        const results = await Promise.allSettled(ids.map((id) => handler(Number(id))));
-        const failCount = results.filter((r) => r.status === 'rejected').length;
-        if (failCount === 0) {
-          message.success(`${successMsg}：${ids.length} 项`);
-        } else {
-          message.warning(`${failPrefix}：成功 ${ids.length - failCount} 项，失败 ${failCount} 项`);
-        }
-        setSelectedRowKeys([]);
-        await fetchIncidents();
-      } finally {
-        setBatchLoading(false);
-      }
+  const handleSearch = useCallback(
+    (value: string) => {
+      filters.setSearch(value);
+      query.setPage(1);
     },
-    [fetchIncidents],
+    [filters, query]
   );
 
-  const openAssignModal = useCallback(async () => {
-    assignForm.resetFields();
-    setAssignModalOpen(true);
-    if (assignUserOptions.length === 0) {
-      try {
-        const res = await UserApi.getUsers({ pageSize: 100 });
-        setAssignUserOptions(
-          (res.users || []).map((u) => ({ label: u.name || u.username, value: u.id })),
-        );
-      } catch (e) {
-        console.warn('load users for assign failed', e);
-      }
+  const handleFilterChange = useCallback(
+    (status?: string, priority?: string, source?: string) => {
+      filters.setFilter({ status, priority, source });
+      query.setPage(1);
+    },
+    [filters, query]
+  );
+
+  const handlePageChange = useCallback(
+    (next: number, nextSize: number) => {
+      query.setPage(next, nextSize);
+    },
+    [query]
+  );
+
+  const handleAssignConfirm = useCallback(async () => {
+    try {
+      const values = await batch.assignForm.validateFields();
+      batch.closeAssignModal();
+      await batch.runBatch(
+        batch.selectedRowKeys,
+        id => IncidentAPI.assignIncident(Number(id), values.assigneeId),
+        '批量分派成功'
+      );
+    } catch {
+      // validation failed — leave modal open so the user can correct input
     }
-  }, [assignForm, assignUserOptions.length]);
+  }, [batch]);
 
-  const handleBatchAssign = useCallback(async () => {
-    const values = await assignForm.validateFields();
-    setAssignModalOpen(false);
-    await runIncidentBatch(
-      selectedRowKeys,
-      (id) => IncidentAPI.assignIncident(id, values.assigneeId),
-      '批量分派成功',
-    );
-  }, [assignForm, selectedRowKeys, runIncidentBatch]);
-
-  const handleBatchResolve = useCallback(async () => {
-    await runIncidentBatch(
-      selectedRowKeys,
-      (id) => IncidentAPI.resolveIncident(id, { resolution: '批量解决' }),
-      '批量解决成功',
-    );
-  }, [selectedRowKeys, runIncidentBatch]);
-
-  const handleBatchClose = useCallback(async () => {
-    await runIncidentBatch(
-      selectedRowKeys,
-      (id) => IncidentAPI.closeIncident(id, { closeNotes: '批量关闭' }),
-      '批量关闭成功',
-    );
-  }, [selectedRowKeys, runIncidentBatch]);
-
-  const handleBatchDelete = useCallback(async () => {
-    await runIncidentBatch(
-      selectedRowKeys,
-      (id) => IncidentAPI.deleteIncident(id),
-      '批量删除成功',
-    );
-  }, [selectedRowKeys, runIncidentBatch]);
-
-  const batchActions: BatchAction[] = [
-    {
-      key: 'assign',
-      label: '批量分派',
-      icon: <UserPlus size={14} />,
-      onClick: openAssignModal,
-      type: 'primary',
-    },
-    {
-      key: 'resolve',
-      label: '批量解决',
-      icon: <CheckCircle size={14} />,
-      onClick: handleBatchResolve,
-    },
-    {
-      key: 'close',
-      label: '批量关闭',
-      icon: <XCircle size={14} />,
-      onClick: handleBatchClose,
-    },
-    {
-      key: 'delete',
-      label: '批量删除',
-      icon: <Trash2 size={14} />,
-      danger: true,
-      confirmTitle: `确定删除选中的 ${selectedRowKeys.length} 个事件？此操作不可撤销`,
-      onClick: handleBatchDelete,
-      overflow: true,
-    },
-  ];
-
-  // ====== 统计数据转换 ======
-  const pageStats: PageStats[] = metrics
-    ? [
-        {
-          label: '总事件数',
-          value: metrics.totalIncidents || 0,
-          color: '#3b82f6',
-          icon: <Siren size={20} strokeWidth={1.8} />,
-        },
-        {
-          label: '待处理',
-          value: metrics.openIncidents || 0,
-          color: '#faad14',
-          icon: <CircleDot size={20} strokeWidth={1.8} />,
-        },
-        {
-          label: '紧急事件',
-          value: metrics.criticalIncidents || 0,
-          color: '#ff4d4f',
-          icon: <TriangleAlert size={20} strokeWidth={1.8} />,
-        },
-        {
-          label: '平均解决时间',
-          value: Math.round((metrics.avgResolutionTime || 0) / 60),
-          suffix: '分钟',
-          color: '#52c41a',
-          icon: <Clock3 size={20} strokeWidth={1.8} />,
-        },
-      ]
-    : [];
-
-  // ====== 渲染内容 ======
   const renderListContent = () => {
-    if (incidents.length === 0 && !loading) {
+    if (query.incidents.length === 0 && !query.loading) {
       return (
-        <div className="py-12 text-center">
-          <div className="text-gray-400 mb-4">暂无事件记录</div>
-          <Button type="primary" onClick={handleCreate}>
+        <div className='py-12 text-center'>
+          <div className='text-gray-400 mb-4'>暂无事件记录</div>
+          <Button type='primary' onClick={handleCreate}>
             创建第一个事件
           </Button>
         </div>
       );
     }
-
     return (
       <>
         <BatchActionBar
-          selectedCount={selectedRowKeys.length}
-          itemLabel="事件"
-          onClear={() => setSelectedRowKeys([])}
-          actions={batchActions}
-          loading={batchLoading}
+          selectedCount={batch.selectedRowKeys.length}
+          itemLabel='事件'
+          onClear={() => batch.setSelectedRowKeys([])}
+          actions={batch.batchActions}
+          loading={batch.batchLoading}
         />
         <IncidentList
-          incidents={incidents}
-          loading={loading}
-          selectedRowKeys={selectedRowKeys}
-          onSelectedRowKeysChange={setSelectedRowKeys}
+          // `query.incidents` is incident-api.Incident[] (backend-accurate,
+          // optional incidentNumber); IncidentList expects types.Incident[]
+          // (required incidentNumber). The two Incident types are separately
+          // maintained, so a crossing cast is required here. See review note.
+          incidents={query.incidents as unknown as Incident[]}
+          loading={query.loading}
+          selectedRowKeys={batch.selectedRowKeys}
+          onSelectedRowKeysChange={batch.setSelectedRowKeys}
           onEdit={handleEdit}
           onRefresh={handleRefresh}
         />
@@ -373,18 +154,14 @@ export default function IncidentsPage() {
 
   const renderKanbanContent = () => (
     <UnifiedKanbanBoard<Incident>
-      items={incidents}
-      loading={loading}
+      items={query.incidents as unknown as Incident[]}
+      loading={query.loading}
       getItemId={(incident: Incident) => incident.id}
       getItemStatus={(incident: Incident) => incident.status}
       getItemTitle={(incident: Incident) => incident.title || `事件 #${incident.id}`}
-      getItemNumber={(incident: Incident) =>
-        incident.incidentNumber || String(incident.id)
-      }
+      getItemNumber={(incident: Incident) => incident.incidentNumber || String(incident.id)}
       getItemDescription={(incident: Incident) => incident.description || ''}
-      getItemPriority={(incident: Incident) =>
-        incident.priority || incident.severity || 'medium'
-      }
+      getItemPriority={(incident: Incident) => incident.priority || incident.severity || 'medium'}
       getItemAssignee={(incident: Incident) =>
         incident.assignee
           ? { name: incident.assignee.name || incident.assigneeName || '未分配' }
@@ -395,7 +172,7 @@ export default function IncidentsPage() {
       onItemClick={handleView}
       onItemEdit={handleEdit}
       columnConfigs={KANBAN_COLUMNS}
-      showToolbar={false}  // 禁用内置工具栏，使用 BusinessPageTemplate 的统一搜索/筛选
+      showToolbar={false}
       priorityOptions={[
         { value: 'critical', label: '紧急', color: 'red' },
         { value: 'high', label: '高', color: 'orange' },
@@ -407,116 +184,102 @@ export default function IncidentsPage() {
 
   return (
     <BusinessPageTemplate
-      // 页面信息
-      title="事件管理"
-      description="管理和追踪系统中的所有事件记录"
-
-      // 统计
-      stats={pageStats}
-      statsLoading={statsLoading}
-
-      // 搜索
-      searchPlaceholder="搜索事件ID、标题或描述..."
-      searchValue={searchKeyword}
+      title='事件管理'
+      description='管理和追踪系统中的所有事件记录'
+      stats={stats.stats}
+      statsLoading={stats.loading}
+      searchPlaceholder='搜索事件ID、标题或描述...'
+      searchValue={filters.values.search}
       onSearch={handleSearch}
-      searchLoading={loading}
-
-      // 筛选
+      searchLoading={query.loading}
       filters={{
-        visible: filtersVisible,
-        onToggle: () => setFiltersVisible(!filtersVisible),
+        visible: filters.visible,
+        onToggle: filters.toggleVisible,
         content: (
           <IncidentFilters
-            loading={loading}
-            status={statusFilter}
-            priority={priorityFilter}
-            source={sourceFilter}
+            loading={query.loading}
+            status={filters.values.status}
+            priority={filters.values.priority}
+            source={filters.values.source}
             onFilterChange={handleFilterChange}
             onRefresh={handleRefresh}
           />
         ),
       }}
-
-      // 视图切换
       showViewSwitch={true}
       activeView={activeView}
-      onViewChange={setActiveView}
-
-      // 操作
+      onViewChange={view => setActiveView(view as View)}
       primaryAction={{
         label: '新建事件',
         onClick: handleCreate,
-        icon: <Plus className="w-4 h-4" />,
+        icon: <Plus className='w-4 h-4' />,
       }}
-
       extraActions={[
         {
           key: 'refresh',
           label: '刷新',
-          icon: <RotateCcw className="w-4 h-4" />,
+          icon: <RotateCcw className='w-4 h-4' />,
           onClick: handleRefresh,
         },
         {
           key: 'export',
           label: '导出',
-          icon: <Download className="w-4 h-4" />,
+          icon: <Download className='w-4 h-4' />,
           onClick: () => message.info('导出功能开发中'),
         },
       ]}
-
-      // 内容
-      loading={loading}
-      error={loadError}
-      errorDescription="加载事件列表失败"
+      loading={query.loading}
+      error={query.loadError}
+      errorDescription='加载事件列表失败'
       onRetry={handleRefresh}
-      empty={incidents.length === 0 && !loading}
-      emptyDescription="暂无事件记录"
+      empty={query.incidents.length === 0 && !query.loading}
+      emptyDescription='暂无事件记录'
       emptyAction={{
         label: '创建第一个事件',
         onClick: handleCreate,
       }}
     >
-      {/* 视图内容 */}
       {activeView === 'list' ? renderListContent() : renderKanbanContent()}
 
-      {/* 分页 */}
-      {incidents.length > 0 && (
-        <div className="mt-4 flex justify-end">
+      {query.incidents.length > 0 && (
+        <div className='mt-4 flex justify-end'>
           <Pagination
-            current={page}
-            pageSize={pageSize}
-            total={total}
+            current={query.page}
+            pageSize={query.pageSize}
+            total={query.total}
             onChange={handlePageChange}
             showSizeChanger
-            showTotal={(total) => `共 ${total} 条记录`}
-          pageSizeOptions={['10', '20', '50', '100']}
+            showTotal={t => `共 ${t} 条记录`}
+            pageSizeOptions={['10', '20', '50', '100']}
           />
         </div>
       )}
-      {/* 批量分派 Modal */}
+
       <Modal
-        title="批量分派事件"
-        open={assignModalOpen}
-        onOk={handleBatchAssign}
-        onCancel={() => setAssignModalOpen(false)}
-        okText="确定分派"
-        cancelText="取消"
-        confirmLoading={batchLoading}
+        title='批量分派事件'
+        open={batch.assignModalOpen}
+        onOk={handleAssignConfirm}
+        onCancel={batch.closeAssignModal}
+        okText='确定分派'
+        cancelText='取消'
+        confirmLoading={batch.batchLoading}
       >
-        <div className="mb-3 text-sm text-gray-500">
-          将为已选择的 <span className="text-blue-600 font-semibold">{selectedRowKeys.length}</span> 个事件分派处理人
+        <div className='mb-3 text-sm text-gray-500'>
+          将为已选择的{' '}
+          <span className='text-blue-600 font-semibold'>{batch.selectedRowKeys.length}</span>{' '}
+          个事件分派处理人
         </div>
-        <Form form={assignForm} layout="vertical">
+        <Form form={batch.assignForm} layout='vertical'>
           <Form.Item
-            name="assigneeId"
-            label="处理人"
+            name='assigneeId'
+            label='处理人'
             rules={[{ required: true, message: '请选择处理人' }]}
           >
             <Select
-              placeholder="请选择处理人"
+              placeholder='请选择处理人'
               showSearch
-              optionFilterProp="label"
-              options={assignUserOptions}
+              optionFilterProp='label'
+              options={batch.assignUserOptions}
             />
           </Form.Item>
         </Form>

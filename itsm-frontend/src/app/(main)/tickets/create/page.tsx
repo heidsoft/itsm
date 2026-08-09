@@ -37,6 +37,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { TicketApi } from '@/lib/api/ticket-api';
+import { TicketCategoryApi } from '@/lib/api/ticket-category-api';
 import { useI18n } from '@/lib/i18n';
 import { httpClient } from '@/lib/api/http-client';
 import {
@@ -104,16 +105,44 @@ export default function CreateTicketPage() {
   } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  // 分类下拉选项：从后端 TicketCategory 主数据动态拉取，避免前后端分类词表零重合
+  const [categoryOptions, setCategoryOptions] = useState<{ label: string; value: string }[]>([]);
+  const [categoryLoading, setCategoryLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadCategories = async () => {
+      setCategoryLoading(true);
+      try {
+        const res = await TicketCategoryApi.getCategories({ isActive: true, pageSize: 200 });
+        if (cancelled) return;
+        const list = res.categories ?? res.items ?? [];
+        setCategoryOptions(
+          list
+            .filter(c => c.isActive !== false)
+            .map(c => ({ label: c.name, value: c.name })),
+        );
+      } catch (e) {
+        console.error('加载工单分类失败', e);
+      } finally {
+        if (!cancelled) setCategoryLoading(false);
+      }
+    };
+    loadCategories();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 过滤后的类型列表
   const filteredTypes = getTicketTypesByCategory(categoryFilter);
 
-  // 选中类型时自动设置优先级
+  // 选中类型时自动设置优先级（注意：不再自动设置"分类"字段，
+  // 预设的 .category 是筛选用的分组标签，与后端 TicketCategory 主数据不是同一套词表，
+  // 若灌入分类下拉会导致提交时后端按名解析失败）
   useEffect(() => {
     if (selectedType) {
       form.setFieldValue('priority', selectedType.priority);
-      // 设置分类为预设的分类
-      form.setFieldValue('category', selectedType.category);
     }
   }, [selectedType, form]);
 
@@ -162,7 +191,7 @@ export default function CreateTicketPage() {
         description: description,
         priority: priority,
         type: inferTicketType(selectedType),
-        category: values.category || (selectedType ? selectedType.category : undefined),
+        category: values.category || undefined,
         formFields: selectedType ? { presetTypeId: selectedType.id } : undefined,
         workflowDefinitionKey: selectedType?.workflowTemplateId,
       });
@@ -204,8 +233,9 @@ export default function CreateTicketPage() {
 
       if (response?.suggestions) {
         setAiSuggestions(response.suggestions);
-        // 自动应用建议
-        if (response.suggestions.category) {
+        // 自动应用建议：分类仅在与后端主数据匹配时回填，
+        // 否则 AI 返回的英文 slug（database/network/…）与 TicketCategory 名称不匹配会导致提交失败
+        if (response.suggestions.category && categoryOptions.some(o => o.value === response.suggestions.category)) {
           form.setFieldValue('category', response.suggestions.category);
         }
         if (response.suggestions.priority) {
@@ -530,17 +560,14 @@ export default function CreateTicketPage() {
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={12}>
-                      <Form.Item name="category" label="分类" initialValue="技术支持">
+                      <Form.Item name="category" label="分类">
                         <Select
                           allowClear
                           showSearch
-                          options={[
-                            { label: '技术支持', value: '技术支持' },
-                            { label: '账户问题', value: '账户问题' },
-                            { label: '系统故障', value: '系统故障' },
-                          ]}
+                          loading={categoryLoading}
+                          options={categoryOptions}
                           optionFilterProp="label"
-                          placeholder="选择分类"
+                          placeholder={categoryLoading ? '加载分类中…' : '选择分类'}
                           aria-label="选择工单分类"
                         />
                       </Form.Item>

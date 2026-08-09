@@ -108,7 +108,7 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
               >
                 {getTrendIcon()}
                 {metric.change > 0 ? '+' : ''}
-                {metric.change}%
+                {metric.change.toFixed(1)}%
               </div>
             )}
           </div>
@@ -160,7 +160,7 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
                     : metric.changeType === 'decrease'
                       ? '↓'
                       : '—'}{' '}
-                  {Math.abs(metric.change)}%
+                  {Math.abs(metric.change).toFixed(1)}%
                 </span>
               </span>
             </div>

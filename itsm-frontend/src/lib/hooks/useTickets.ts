@@ -6,10 +6,9 @@ import type {
   Ticket,
   TicketStatus,
   TicketPriority,
-  TicketType} from '../../lib/services/ticket-service';
-import {
-  ticketService
+  TicketType,
 } from '../../lib/services/ticket-service';
+import { ticketService } from '../../lib/services/ticket-service';
 
 export interface TicketQueryFilters {
   status?: TicketStatus;
@@ -30,6 +29,12 @@ export interface TicketStats {
   open: number;
   resolved: number;
   highPriority: number;
+}
+
+export interface BatchDeleteResult {
+  readonly successCount: number;
+  readonly failedIds: number[];
+  readonly errors: ReadonlyArray<{ readonly id: number; readonly message: string }>;
 }
 
 export interface UseTicketsReturn {
@@ -60,7 +65,7 @@ export interface UseTicketsReturn {
   createTicket: (ticketData: unknown) => Promise<void>;
   updateTicket: (id: number, ticketData: unknown) => Promise<void>;
   deleteTicket: (id: number) => Promise<void>;
-  batchDeleteTickets: (ids: number[]) => Promise<void>;
+  batchDeleteTickets: (ids: number[]) => Promise<BatchDeleteResult>;
 }
 
 export const useTickets = (): UseTicketsReturn => {
@@ -223,17 +228,39 @@ export const useTickets = (): UseTicketsReturn => {
   );
 
   // Batch delete tickets
+  // H4: switched from Promise.all to Promise.allSettled so a single failure
+  // does not collapse the whole operation. Returns per-id detail so the UI
+  // can show actionable error info (CLAUDE.md: high-risk actions must be
+  // auditable; we surface the failed ids in the caller).
   const batchDeleteTickets = useCallback(
-    async (ids: number[]) => {
-      try {
-        await Promise.all(ids.map(id => ticketService.deleteTicket(id)));
-        message.success(`${ids.length} tickets deleted successfully`);
-        await refreshData();
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to delete tickets';
-        message.error(errorMessage);
-        throw err;
+    async (ids: number[]): Promise<BatchDeleteResult> => {
+      const errors: { id: number; message: string }[] = [];
+      let successCount = 0;
+      const results = await Promise.allSettled(
+        ids.map(id => ticketService.deleteTicket(id).then(() => id))
+      );
+      const failedIds: number[] = [];
+      results.forEach((r, idx) => {
+        if (r.status === 'fulfilled') {
+          successCount++;
+        } else {
+          const id = ids[idx]!;
+          failedIds.push(id);
+          errors.push({
+            id,
+            message: r.reason instanceof Error ? r.reason.message : String(r.reason),
+          });
+        }
+      });
+      if (failedIds.length === 0) {
+        message.success(`成功删除 ${successCount} 个工单`);
+      } else if (successCount === 0) {
+        message.error(`批量删除失败：${failedIds.length} 个工单均未删除`);
+      } else {
+        message.warning(`部分成功：${successCount} 个删除成功，${failedIds.length} 个失败`);
       }
+      await refreshData();
+      return { successCount, failedIds, errors };
     },
     [refreshData]
   );
@@ -241,7 +268,7 @@ export const useTickets = (): UseTicketsReturn => {
   // 初始加载 + fetchTrigger 变化时重新拉取
   useEffect(() => {
     fetchTickets();
-  }, [fetchTrigger]);  
+  }, [fetchTrigger]);
 
   // 初始加载统计
   useEffect(() => {

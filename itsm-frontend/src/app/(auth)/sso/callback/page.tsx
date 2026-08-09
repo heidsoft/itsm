@@ -104,9 +104,11 @@ function SSOCallbackContent() {
           permissions: user.permissions,
         };
 
-        // 设置 auth-token cookie 供 middleware 路由守卫使用（与 AuthService.login 保持一致）
+        // 仅写入 auth-token 标记位供前端判断登录态，不写真值 token（防止 XSS 窃取）
+        // 与 AuthService.login 保持一致；真值 token 由后端 httpOnly cookie 管理
         if (typeof window !== 'undefined' && accessToken) {
-          document.cookie = `auth-token=${accessToken}; path=/; SameSite=Lax`;
+          const secure = location.protocol === 'https:' ? '; Secure' : '';
+          document.cookie = `auth-token=1; path=/; SameSite=Lax${secure}`;
         }
 
         login(safeUser, accessToken, tenant);

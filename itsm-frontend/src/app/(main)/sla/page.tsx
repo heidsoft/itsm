@@ -48,14 +48,18 @@ export default function SLAPage() {
     setLoading(true);
     setError('');
     try {
-      const [statsResult, reportResult, alertResult] = await Promise.all([
+      const [statsRes, reportRes, alertsRes] = await Promise.allSettled([
         SLAApi.getSLAStats(),
         SLAApi.getSLAComplianceReport(dateRange),
         SLAApi.getSLAAlerts(),
       ]);
-      setStats(statsResult);
-      setReport(reportResult);
-      setAlerts(alertResult);
+      if (statsRes.status === 'fulfilled') setStats(statsRes.value);
+      if (reportRes.status === 'fulfilled') setReport(reportRes.value);
+      if (alertsRes.status === 'fulfilled') setAlerts(alertsRes.value);
+      // 仅当三个接口全部失败时，才整体报错，避免单个接口抖动拖垮整页
+      if (statsRes.status === 'rejected' && reportRes.status === 'rejected' && alertsRes.status === 'rejected') {
+        throw new Error('SLA 数据全部加载失败');
+      }
       setRefreshedAt(new Date());
     } catch (loadError) {
       console.error('Failed to load SLA dashboard:', loadError);

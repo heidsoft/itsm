@@ -54,10 +54,10 @@ const apiRoutes = ['/api'];
  * 支持多种方式：Cookie、Authorization Header
  */
 function getAuthToken(request: NextRequest): string | null {
-  // 1. 优先从 Cookie 读取（浏览器访问）
-  const cookieToken = request.cookies.get('auth-token')?.value;
-  if (cookieToken) {
-    return cookieToken;
+  // 1. 权威来源：后端下发的 httpOnly cookie（浏览器访问）
+  const accessToken = request.cookies.get('access_token')?.value;
+  if (accessToken) {
+    return accessToken;
   }
 
   // 2. 从 Authorization Header 读取（API 调用）
@@ -77,10 +77,11 @@ function getAuthToken(request: NextRequest): string | null {
     return customToken;
   }
 
-  // 4. 兼容旧的 access_token cookie
-  const accessToken = request.cookies.get('access_token')?.value;
-  if (accessToken) {
-    return accessToken;
+  // 4. auth-token 是前端写入的登录标记位（值为 "1"），不是 JWT，必须排除；
+  //    仅兼容历史版本中曾把真值 token 写入该 cookie 的情况。
+  const legacyToken = request.cookies.get('auth-token')?.value;
+  if (legacyToken && legacyToken !== '1') {
+    return legacyToken;
   }
 
   return null;
