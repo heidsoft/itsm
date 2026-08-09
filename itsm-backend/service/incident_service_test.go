@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
+	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/problem"
 
 	"github.com/stretchr/testify/assert"
@@ -88,6 +89,29 @@ func TestIncidentService_CreateIncident_Success(t *testing.T) {
 	assert.NotEmpty(t, response.IncidentNumber)
 	assert.Contains(t, response.IncidentNumber, "INC-")
 	assert.Equal(t, testTenant.ID, response.TenantID)
+}
+
+func TestIncidentService_CreateIncidentPersistsWorkflowCommand(t *testing.T) {
+	client, incidentService, ctx := setupIncidentTest(t)
+	defer client.Close()
+	incidentService.EnableWorkflowOutbox()
+	tenant, err := createIncidentTestTenant(ctx, client, "outbox")
+	require.NoError(t, err)
+	user, err := createIncidentTestUser(ctx, client, tenant.ID, "outbox")
+	require.NoError(t, err)
+
+	response, err := incidentService.CreateIncident(ctx, &dto.CreateIncidentRequest{
+		Title: "数据库不可用", Description: "生产告警", Priority: "high", Severity: "high", Category: "database", Source: "monitoring",
+	}, tenant.ID, user.ID)
+	require.NoError(t, err)
+	cmd, err := client.OperationalCommand.Query().Where(
+		operationalcommand.TenantIDEQ(tenant.ID),
+		operationalcommand.AggregateTypeEQ("incident"),
+		operationalcommand.AggregateIDEQ(response.ID),
+	).Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, "workflow.start", cmd.CommandType)
+	require.Equal(t, "pending", cmd.Status)
 }
 
 func TestIncidentService_CreateIncident_WithOptionalFields(t *testing.T) {

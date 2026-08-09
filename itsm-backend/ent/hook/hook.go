@@ -680,6 +680,18 @@ func (f NotificationPreferenceFunc) Mutate(ctx context.Context, m ent.Mutation) 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NotificationPreferenceMutation", m)
 }
 
+// The OperationalCommandFunc type is an adapter to allow the use of ordinary
+// function as OperationalCommand mutator.
+type OperationalCommandFunc func(context.Context, *ent.OperationalCommandMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OperationalCommandFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OperationalCommandMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OperationalCommandMutation", m)
+}
+
 // The PasswordResetTokenFunc type is an adapter to allow the use of ordinary
 // function as PasswordResetToken mutator.
 type PasswordResetTokenFunc func(context.Context, *ent.PasswordResetTokenMutation) (ent.Value, error)

@@ -59,6 +59,7 @@ import (
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/permissiondefinition"
@@ -1949,6 +1950,116 @@ func init() {
 	notificationpreference.DefaultUpdatedAt = notificationpreferenceDescUpdatedAt.Default.(func() time.Time)
 	// notificationpreference.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	notificationpreference.UpdateDefaultUpdatedAt = notificationpreferenceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	operationalcommandFields := schema.OperationalCommand{}.Fields()
+	_ = operationalcommandFields
+	// operationalcommandDescTenantID is the schema descriptor for tenant_id field.
+	operationalcommandDescTenantID := operationalcommandFields[0].Descriptor()
+	// operationalcommand.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	operationalcommand.TenantIDValidator = operationalcommandDescTenantID.Validators[0].(func(int) error)
+	// operationalcommandDescCommandType is the schema descriptor for command_type field.
+	operationalcommandDescCommandType := operationalcommandFields[1].Descriptor()
+	// operationalcommand.CommandTypeValidator is a validator for the "command_type" field. It is called by the builders before save.
+	operationalcommand.CommandTypeValidator = func() func(string) error {
+		validators := operationalcommandDescCommandType.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(command_type string) error {
+			for _, fn := range fns {
+				if err := fn(command_type); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// operationalcommandDescAggregateType is the schema descriptor for aggregate_type field.
+	operationalcommandDescAggregateType := operationalcommandFields[2].Descriptor()
+	// operationalcommand.AggregateTypeValidator is a validator for the "aggregate_type" field. It is called by the builders before save.
+	operationalcommand.AggregateTypeValidator = func() func(string) error {
+		validators := operationalcommandDescAggregateType.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(aggregate_type string) error {
+			for _, fn := range fns {
+				if err := fn(aggregate_type); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// operationalcommandDescAggregateID is the schema descriptor for aggregate_id field.
+	operationalcommandDescAggregateID := operationalcommandFields[3].Descriptor()
+	// operationalcommand.AggregateIDValidator is a validator for the "aggregate_id" field. It is called by the builders before save.
+	operationalcommand.AggregateIDValidator = operationalcommandDescAggregateID.Validators[0].(func(int) error)
+	// operationalcommandDescIdempotencyKey is the schema descriptor for idempotency_key field.
+	operationalcommandDescIdempotencyKey := operationalcommandFields[4].Descriptor()
+	// operationalcommand.IdempotencyKeyValidator is a validator for the "idempotency_key" field. It is called by the builders before save.
+	operationalcommand.IdempotencyKeyValidator = func() func(string) error {
+		validators := operationalcommandDescIdempotencyKey.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(idempotency_key string) error {
+			for _, fn := range fns {
+				if err := fn(idempotency_key); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// operationalcommandDescStatus is the schema descriptor for status field.
+	operationalcommandDescStatus := operationalcommandFields[6].Descriptor()
+	// operationalcommand.DefaultStatus holds the default value on creation for the status field.
+	operationalcommand.DefaultStatus = operationalcommandDescStatus.Default.(string)
+	// operationalcommand.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	operationalcommand.StatusValidator = operationalcommandDescStatus.Validators[0].(func(string) error)
+	// operationalcommandDescAttempt is the schema descriptor for attempt field.
+	operationalcommandDescAttempt := operationalcommandFields[7].Descriptor()
+	// operationalcommand.DefaultAttempt holds the default value on creation for the attempt field.
+	operationalcommand.DefaultAttempt = operationalcommandDescAttempt.Default.(int)
+	// operationalcommand.AttemptValidator is a validator for the "attempt" field. It is called by the builders before save.
+	operationalcommand.AttemptValidator = operationalcommandDescAttempt.Validators[0].(func(int) error)
+	// operationalcommandDescMaxAttempts is the schema descriptor for max_attempts field.
+	operationalcommandDescMaxAttempts := operationalcommandFields[8].Descriptor()
+	// operationalcommand.DefaultMaxAttempts holds the default value on creation for the max_attempts field.
+	operationalcommand.DefaultMaxAttempts = operationalcommandDescMaxAttempts.Default.(int)
+	// operationalcommand.MaxAttemptsValidator is a validator for the "max_attempts" field. It is called by the builders before save.
+	operationalcommand.MaxAttemptsValidator = operationalcommandDescMaxAttempts.Validators[0].(func(int) error)
+	// operationalcommandDescAvailableAt is the schema descriptor for available_at field.
+	operationalcommandDescAvailableAt := operationalcommandFields[9].Descriptor()
+	// operationalcommand.DefaultAvailableAt holds the default value on creation for the available_at field.
+	operationalcommand.DefaultAvailableAt = operationalcommandDescAvailableAt.Default.(func() time.Time)
+	// operationalcommandDescLeaseOwner is the schema descriptor for lease_owner field.
+	operationalcommandDescLeaseOwner := operationalcommandFields[10].Descriptor()
+	// operationalcommand.LeaseOwnerValidator is a validator for the "lease_owner" field. It is called by the builders before save.
+	operationalcommand.LeaseOwnerValidator = operationalcommandDescLeaseOwner.Validators[0].(func(string) error)
+	// operationalcommandDescFencingToken is the schema descriptor for fencing_token field.
+	operationalcommandDescFencingToken := operationalcommandFields[12].Descriptor()
+	// operationalcommand.DefaultFencingToken holds the default value on creation for the fencing_token field.
+	operationalcommand.DefaultFencingToken = operationalcommandDescFencingToken.Default.(int64)
+	// operationalcommand.FencingTokenValidator is a validator for the "fencing_token" field. It is called by the builders before save.
+	operationalcommand.FencingTokenValidator = operationalcommandDescFencingToken.Validators[0].(func(int64) error)
+	// operationalcommandDescLastError is the schema descriptor for last_error field.
+	operationalcommandDescLastError := operationalcommandFields[13].Descriptor()
+	// operationalcommand.LastErrorValidator is a validator for the "last_error" field. It is called by the builders before save.
+	operationalcommand.LastErrorValidator = operationalcommandDescLastError.Validators[0].(func(string) error)
+	// operationalcommandDescCreatedAt is the schema descriptor for created_at field.
+	operationalcommandDescCreatedAt := operationalcommandFields[15].Descriptor()
+	// operationalcommand.DefaultCreatedAt holds the default value on creation for the created_at field.
+	operationalcommand.DefaultCreatedAt = operationalcommandDescCreatedAt.Default.(func() time.Time)
+	// operationalcommandDescUpdatedAt is the schema descriptor for updated_at field.
+	operationalcommandDescUpdatedAt := operationalcommandFields[16].Descriptor()
+	// operationalcommand.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	operationalcommand.DefaultUpdatedAt = operationalcommandDescUpdatedAt.Default.(func() time.Time)
+	// operationalcommand.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	operationalcommand.UpdateDefaultUpdatedAt = operationalcommandDescUpdatedAt.UpdateDefault.(func() time.Time)
 	passwordresettokenFields := schema.PasswordResetToken{}.Fields()
 	_ = passwordresettokenFields
 	// passwordresettokenDescToken is the schema descriptor for token field.

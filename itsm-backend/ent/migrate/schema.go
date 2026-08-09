@@ -2165,6 +2165,55 @@ var (
 			},
 		},
 	}
+	// OperationalCommandsColumns holds the columns for the "operational_commands" table.
+	OperationalCommandsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "command_type", Type: field.TypeString, Size: 100},
+		{Name: "aggregate_type", Type: field.TypeString, Size: 50},
+		{Name: "aggregate_id", Type: field.TypeInt},
+		{Name: "idempotency_key", Type: field.TypeString, Size: 200},
+		{Name: "payload", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 32, Default: "pending"},
+		{Name: "attempt", Type: field.TypeInt, Default: 0},
+		{Name: "max_attempts", Type: field.TypeInt, Default: 8},
+		{Name: "available_at", Type: field.TypeTime},
+		{Name: "lease_owner", Type: field.TypeString, Nullable: true, Size: 200},
+		{Name: "lease_expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "fencing_token", Type: field.TypeInt64, Default: 0},
+		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// OperationalCommandsTable holds the schema information for the "operational_commands" table.
+	OperationalCommandsTable = &schema.Table{
+		Name:       "operational_commands",
+		Columns:    OperationalCommandsColumns,
+		PrimaryKey: []*schema.Column{OperationalCommandsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "operationalcommand_tenant_id_command_type_idempotency_key",
+				Unique:  true,
+				Columns: []*schema.Column{OperationalCommandsColumns[1], OperationalCommandsColumns[2], OperationalCommandsColumns[5]},
+			},
+			{
+				Name:    "operationalcommand_status_available_at",
+				Unique:  false,
+				Columns: []*schema.Column{OperationalCommandsColumns[7], OperationalCommandsColumns[10]},
+			},
+			{
+				Name:    "operationalcommand_status_lease_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{OperationalCommandsColumns[7], OperationalCommandsColumns[12]},
+			},
+			{
+				Name:    "operationalcommand_tenant_id_aggregate_type_aggregate_id",
+				Unique:  false,
+				Columns: []*schema.Column{OperationalCommandsColumns[1], OperationalCommandsColumns[3], OperationalCommandsColumns[4]},
+			},
+		},
+	}
 	// PasswordResetTokensColumns holds the columns for the "password_reset_tokens" table.
 	PasswordResetTokensColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -5183,6 +5232,7 @@ var (
 		MicroservicesTable,
 		NotificationsTable,
 		NotificationPreferencesTable,
+		OperationalCommandsTable,
 		PasswordResetTokensTable,
 		PermissionsTable,
 		PermissionDefinitionsTable,

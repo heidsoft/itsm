@@ -62,6 +62,7 @@ import (
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/permissiondefinition"
@@ -197,6 +198,7 @@ const (
 	TypeMicroservice                = "Microservice"
 	TypeNotification                = "Notification"
 	TypeNotificationPreference      = "NotificationPreference"
+	TypeOperationalCommand          = "OperationalCommand"
 	TypePasswordResetToken          = "PasswordResetToken"
 	TypePermission                  = "Permission"
 	TypePermissionDefinition        = "PermissionDefinition"
@@ -71950,6 +71952,1462 @@ func (m *NotificationPreferenceMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown NotificationPreference edge %s", name)
+}
+
+// OperationalCommandMutation represents an operation that mutates the OperationalCommand nodes in the graph.
+type OperationalCommandMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *int
+	tenant_id        *int
+	addtenant_id     *int
+	command_type     *string
+	aggregate_type   *string
+	aggregate_id     *int
+	addaggregate_id  *int
+	idempotency_key  *string
+	payload          *map[string]interface{}
+	status           *string
+	attempt          *int
+	addattempt       *int
+	max_attempts     *int
+	addmax_attempts  *int
+	available_at     *time.Time
+	lease_owner      *string
+	lease_expires_at *time.Time
+	fencing_token    *int64
+	addfencing_token *int64
+	last_error       *string
+	completed_at     *time.Time
+	created_at       *time.Time
+	updated_at       *time.Time
+	clearedFields    map[string]struct{}
+	done             bool
+	oldValue         func(context.Context) (*OperationalCommand, error)
+	predicates       []predicate.OperationalCommand
+}
+
+var _ ent.Mutation = (*OperationalCommandMutation)(nil)
+
+// operationalcommandOption allows management of the mutation configuration using functional options.
+type operationalcommandOption func(*OperationalCommandMutation)
+
+// newOperationalCommandMutation creates new mutation for the OperationalCommand entity.
+func newOperationalCommandMutation(c config, op Op, opts ...operationalcommandOption) *OperationalCommandMutation {
+	m := &OperationalCommandMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeOperationalCommand,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withOperationalCommandID sets the ID field of the mutation.
+func withOperationalCommandID(id int) operationalcommandOption {
+	return func(m *OperationalCommandMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *OperationalCommand
+		)
+		m.oldValue = func(ctx context.Context) (*OperationalCommand, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().OperationalCommand.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withOperationalCommand sets the old OperationalCommand of the mutation.
+func withOperationalCommand(node *OperationalCommand) operationalcommandOption {
+	return func(m *OperationalCommandMutation) {
+		m.oldValue = func(context.Context) (*OperationalCommand, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m OperationalCommandMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m OperationalCommandMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *OperationalCommandMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *OperationalCommandMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().OperationalCommand.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *OperationalCommandMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *OperationalCommandMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *OperationalCommandMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *OperationalCommandMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *OperationalCommandMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetCommandType sets the "command_type" field.
+func (m *OperationalCommandMutation) SetCommandType(s string) {
+	m.command_type = &s
+}
+
+// CommandType returns the value of the "command_type" field in the mutation.
+func (m *OperationalCommandMutation) CommandType() (r string, exists bool) {
+	v := m.command_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCommandType returns the old "command_type" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldCommandType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCommandType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCommandType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCommandType: %w", err)
+	}
+	return oldValue.CommandType, nil
+}
+
+// ResetCommandType resets all changes to the "command_type" field.
+func (m *OperationalCommandMutation) ResetCommandType() {
+	m.command_type = nil
+}
+
+// SetAggregateType sets the "aggregate_type" field.
+func (m *OperationalCommandMutation) SetAggregateType(s string) {
+	m.aggregate_type = &s
+}
+
+// AggregateType returns the value of the "aggregate_type" field in the mutation.
+func (m *OperationalCommandMutation) AggregateType() (r string, exists bool) {
+	v := m.aggregate_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAggregateType returns the old "aggregate_type" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldAggregateType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAggregateType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAggregateType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAggregateType: %w", err)
+	}
+	return oldValue.AggregateType, nil
+}
+
+// ResetAggregateType resets all changes to the "aggregate_type" field.
+func (m *OperationalCommandMutation) ResetAggregateType() {
+	m.aggregate_type = nil
+}
+
+// SetAggregateID sets the "aggregate_id" field.
+func (m *OperationalCommandMutation) SetAggregateID(i int) {
+	m.aggregate_id = &i
+	m.addaggregate_id = nil
+}
+
+// AggregateID returns the value of the "aggregate_id" field in the mutation.
+func (m *OperationalCommandMutation) AggregateID() (r int, exists bool) {
+	v := m.aggregate_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAggregateID returns the old "aggregate_id" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldAggregateID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAggregateID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAggregateID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAggregateID: %w", err)
+	}
+	return oldValue.AggregateID, nil
+}
+
+// AddAggregateID adds i to the "aggregate_id" field.
+func (m *OperationalCommandMutation) AddAggregateID(i int) {
+	if m.addaggregate_id != nil {
+		*m.addaggregate_id += i
+	} else {
+		m.addaggregate_id = &i
+	}
+}
+
+// AddedAggregateID returns the value that was added to the "aggregate_id" field in this mutation.
+func (m *OperationalCommandMutation) AddedAggregateID() (r int, exists bool) {
+	v := m.addaggregate_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAggregateID resets all changes to the "aggregate_id" field.
+func (m *OperationalCommandMutation) ResetAggregateID() {
+	m.aggregate_id = nil
+	m.addaggregate_id = nil
+}
+
+// SetIdempotencyKey sets the "idempotency_key" field.
+func (m *OperationalCommandMutation) SetIdempotencyKey(s string) {
+	m.idempotency_key = &s
+}
+
+// IdempotencyKey returns the value of the "idempotency_key" field in the mutation.
+func (m *OperationalCommandMutation) IdempotencyKey() (r string, exists bool) {
+	v := m.idempotency_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdempotencyKey returns the old "idempotency_key" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldIdempotencyKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdempotencyKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdempotencyKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdempotencyKey: %w", err)
+	}
+	return oldValue.IdempotencyKey, nil
+}
+
+// ResetIdempotencyKey resets all changes to the "idempotency_key" field.
+func (m *OperationalCommandMutation) ResetIdempotencyKey() {
+	m.idempotency_key = nil
+}
+
+// SetPayload sets the "payload" field.
+func (m *OperationalCommandMutation) SetPayload(value map[string]interface{}) {
+	m.payload = &value
+}
+
+// Payload returns the value of the "payload" field in the mutation.
+func (m *OperationalCommandMutation) Payload() (r map[string]interface{}, exists bool) {
+	v := m.payload
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPayload returns the old "payload" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldPayload(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPayload is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPayload requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPayload: %w", err)
+	}
+	return oldValue.Payload, nil
+}
+
+// ClearPayload clears the value of the "payload" field.
+func (m *OperationalCommandMutation) ClearPayload() {
+	m.payload = nil
+	m.clearedFields[operationalcommand.FieldPayload] = struct{}{}
+}
+
+// PayloadCleared returns if the "payload" field was cleared in this mutation.
+func (m *OperationalCommandMutation) PayloadCleared() bool {
+	_, ok := m.clearedFields[operationalcommand.FieldPayload]
+	return ok
+}
+
+// ResetPayload resets all changes to the "payload" field.
+func (m *OperationalCommandMutation) ResetPayload() {
+	m.payload = nil
+	delete(m.clearedFields, operationalcommand.FieldPayload)
+}
+
+// SetStatus sets the "status" field.
+func (m *OperationalCommandMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *OperationalCommandMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *OperationalCommandMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetAttempt sets the "attempt" field.
+func (m *OperationalCommandMutation) SetAttempt(i int) {
+	m.attempt = &i
+	m.addattempt = nil
+}
+
+// Attempt returns the value of the "attempt" field in the mutation.
+func (m *OperationalCommandMutation) Attempt() (r int, exists bool) {
+	v := m.attempt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttempt returns the old "attempt" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldAttempt(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttempt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttempt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttempt: %w", err)
+	}
+	return oldValue.Attempt, nil
+}
+
+// AddAttempt adds i to the "attempt" field.
+func (m *OperationalCommandMutation) AddAttempt(i int) {
+	if m.addattempt != nil {
+		*m.addattempt += i
+	} else {
+		m.addattempt = &i
+	}
+}
+
+// AddedAttempt returns the value that was added to the "attempt" field in this mutation.
+func (m *OperationalCommandMutation) AddedAttempt() (r int, exists bool) {
+	v := m.addattempt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttempt resets all changes to the "attempt" field.
+func (m *OperationalCommandMutation) ResetAttempt() {
+	m.attempt = nil
+	m.addattempt = nil
+}
+
+// SetMaxAttempts sets the "max_attempts" field.
+func (m *OperationalCommandMutation) SetMaxAttempts(i int) {
+	m.max_attempts = &i
+	m.addmax_attempts = nil
+}
+
+// MaxAttempts returns the value of the "max_attempts" field in the mutation.
+func (m *OperationalCommandMutation) MaxAttempts() (r int, exists bool) {
+	v := m.max_attempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxAttempts returns the old "max_attempts" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldMaxAttempts(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxAttempts is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxAttempts requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxAttempts: %w", err)
+	}
+	return oldValue.MaxAttempts, nil
+}
+
+// AddMaxAttempts adds i to the "max_attempts" field.
+func (m *OperationalCommandMutation) AddMaxAttempts(i int) {
+	if m.addmax_attempts != nil {
+		*m.addmax_attempts += i
+	} else {
+		m.addmax_attempts = &i
+	}
+}
+
+// AddedMaxAttempts returns the value that was added to the "max_attempts" field in this mutation.
+func (m *OperationalCommandMutation) AddedMaxAttempts() (r int, exists bool) {
+	v := m.addmax_attempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxAttempts resets all changes to the "max_attempts" field.
+func (m *OperationalCommandMutation) ResetMaxAttempts() {
+	m.max_attempts = nil
+	m.addmax_attempts = nil
+}
+
+// SetAvailableAt sets the "available_at" field.
+func (m *OperationalCommandMutation) SetAvailableAt(t time.Time) {
+	m.available_at = &t
+}
+
+// AvailableAt returns the value of the "available_at" field in the mutation.
+func (m *OperationalCommandMutation) AvailableAt() (r time.Time, exists bool) {
+	v := m.available_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAvailableAt returns the old "available_at" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldAvailableAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAvailableAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAvailableAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAvailableAt: %w", err)
+	}
+	return oldValue.AvailableAt, nil
+}
+
+// ResetAvailableAt resets all changes to the "available_at" field.
+func (m *OperationalCommandMutation) ResetAvailableAt() {
+	m.available_at = nil
+}
+
+// SetLeaseOwner sets the "lease_owner" field.
+func (m *OperationalCommandMutation) SetLeaseOwner(s string) {
+	m.lease_owner = &s
+}
+
+// LeaseOwner returns the value of the "lease_owner" field in the mutation.
+func (m *OperationalCommandMutation) LeaseOwner() (r string, exists bool) {
+	v := m.lease_owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaseOwner returns the old "lease_owner" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldLeaseOwner(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaseOwner is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaseOwner requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaseOwner: %w", err)
+	}
+	return oldValue.LeaseOwner, nil
+}
+
+// ClearLeaseOwner clears the value of the "lease_owner" field.
+func (m *OperationalCommandMutation) ClearLeaseOwner() {
+	m.lease_owner = nil
+	m.clearedFields[operationalcommand.FieldLeaseOwner] = struct{}{}
+}
+
+// LeaseOwnerCleared returns if the "lease_owner" field was cleared in this mutation.
+func (m *OperationalCommandMutation) LeaseOwnerCleared() bool {
+	_, ok := m.clearedFields[operationalcommand.FieldLeaseOwner]
+	return ok
+}
+
+// ResetLeaseOwner resets all changes to the "lease_owner" field.
+func (m *OperationalCommandMutation) ResetLeaseOwner() {
+	m.lease_owner = nil
+	delete(m.clearedFields, operationalcommand.FieldLeaseOwner)
+}
+
+// SetLeaseExpiresAt sets the "lease_expires_at" field.
+func (m *OperationalCommandMutation) SetLeaseExpiresAt(t time.Time) {
+	m.lease_expires_at = &t
+}
+
+// LeaseExpiresAt returns the value of the "lease_expires_at" field in the mutation.
+func (m *OperationalCommandMutation) LeaseExpiresAt() (r time.Time, exists bool) {
+	v := m.lease_expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaseExpiresAt returns the old "lease_expires_at" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldLeaseExpiresAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaseExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaseExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaseExpiresAt: %w", err)
+	}
+	return oldValue.LeaseExpiresAt, nil
+}
+
+// ClearLeaseExpiresAt clears the value of the "lease_expires_at" field.
+func (m *OperationalCommandMutation) ClearLeaseExpiresAt() {
+	m.lease_expires_at = nil
+	m.clearedFields[operationalcommand.FieldLeaseExpiresAt] = struct{}{}
+}
+
+// LeaseExpiresAtCleared returns if the "lease_expires_at" field was cleared in this mutation.
+func (m *OperationalCommandMutation) LeaseExpiresAtCleared() bool {
+	_, ok := m.clearedFields[operationalcommand.FieldLeaseExpiresAt]
+	return ok
+}
+
+// ResetLeaseExpiresAt resets all changes to the "lease_expires_at" field.
+func (m *OperationalCommandMutation) ResetLeaseExpiresAt() {
+	m.lease_expires_at = nil
+	delete(m.clearedFields, operationalcommand.FieldLeaseExpiresAt)
+}
+
+// SetFencingToken sets the "fencing_token" field.
+func (m *OperationalCommandMutation) SetFencingToken(i int64) {
+	m.fencing_token = &i
+	m.addfencing_token = nil
+}
+
+// FencingToken returns the value of the "fencing_token" field in the mutation.
+func (m *OperationalCommandMutation) FencingToken() (r int64, exists bool) {
+	v := m.fencing_token
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFencingToken returns the old "fencing_token" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldFencingToken(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFencingToken is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFencingToken requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFencingToken: %w", err)
+	}
+	return oldValue.FencingToken, nil
+}
+
+// AddFencingToken adds i to the "fencing_token" field.
+func (m *OperationalCommandMutation) AddFencingToken(i int64) {
+	if m.addfencing_token != nil {
+		*m.addfencing_token += i
+	} else {
+		m.addfencing_token = &i
+	}
+}
+
+// AddedFencingToken returns the value that was added to the "fencing_token" field in this mutation.
+func (m *OperationalCommandMutation) AddedFencingToken() (r int64, exists bool) {
+	v := m.addfencing_token
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetFencingToken resets all changes to the "fencing_token" field.
+func (m *OperationalCommandMutation) ResetFencingToken() {
+	m.fencing_token = nil
+	m.addfencing_token = nil
+}
+
+// SetLastError sets the "last_error" field.
+func (m *OperationalCommandMutation) SetLastError(s string) {
+	m.last_error = &s
+}
+
+// LastError returns the value of the "last_error" field in the mutation.
+func (m *OperationalCommandMutation) LastError() (r string, exists bool) {
+	v := m.last_error
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastError returns the old "last_error" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldLastError(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastError is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastError requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastError: %w", err)
+	}
+	return oldValue.LastError, nil
+}
+
+// ClearLastError clears the value of the "last_error" field.
+func (m *OperationalCommandMutation) ClearLastError() {
+	m.last_error = nil
+	m.clearedFields[operationalcommand.FieldLastError] = struct{}{}
+}
+
+// LastErrorCleared returns if the "last_error" field was cleared in this mutation.
+func (m *OperationalCommandMutation) LastErrorCleared() bool {
+	_, ok := m.clearedFields[operationalcommand.FieldLastError]
+	return ok
+}
+
+// ResetLastError resets all changes to the "last_error" field.
+func (m *OperationalCommandMutation) ResetLastError() {
+	m.last_error = nil
+	delete(m.clearedFields, operationalcommand.FieldLastError)
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (m *OperationalCommandMutation) SetCompletedAt(t time.Time) {
+	m.completed_at = &t
+}
+
+// CompletedAt returns the value of the "completed_at" field in the mutation.
+func (m *OperationalCommandMutation) CompletedAt() (r time.Time, exists bool) {
+	v := m.completed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompletedAt returns the old "completed_at" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldCompletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompletedAt: %w", err)
+	}
+	return oldValue.CompletedAt, nil
+}
+
+// ClearCompletedAt clears the value of the "completed_at" field.
+func (m *OperationalCommandMutation) ClearCompletedAt() {
+	m.completed_at = nil
+	m.clearedFields[operationalcommand.FieldCompletedAt] = struct{}{}
+}
+
+// CompletedAtCleared returns if the "completed_at" field was cleared in this mutation.
+func (m *OperationalCommandMutation) CompletedAtCleared() bool {
+	_, ok := m.clearedFields[operationalcommand.FieldCompletedAt]
+	return ok
+}
+
+// ResetCompletedAt resets all changes to the "completed_at" field.
+func (m *OperationalCommandMutation) ResetCompletedAt() {
+	m.completed_at = nil
+	delete(m.clearedFields, operationalcommand.FieldCompletedAt)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *OperationalCommandMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *OperationalCommandMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *OperationalCommandMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *OperationalCommandMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *OperationalCommandMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the OperationalCommand entity.
+// If the OperationalCommand object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationalCommandMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *OperationalCommandMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the OperationalCommandMutation builder.
+func (m *OperationalCommandMutation) Where(ps ...predicate.OperationalCommand) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the OperationalCommandMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *OperationalCommandMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.OperationalCommand, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *OperationalCommandMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *OperationalCommandMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (OperationalCommand).
+func (m *OperationalCommandMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *OperationalCommandMutation) Fields() []string {
+	fields := make([]string, 0, 17)
+	if m.tenant_id != nil {
+		fields = append(fields, operationalcommand.FieldTenantID)
+	}
+	if m.command_type != nil {
+		fields = append(fields, operationalcommand.FieldCommandType)
+	}
+	if m.aggregate_type != nil {
+		fields = append(fields, operationalcommand.FieldAggregateType)
+	}
+	if m.aggregate_id != nil {
+		fields = append(fields, operationalcommand.FieldAggregateID)
+	}
+	if m.idempotency_key != nil {
+		fields = append(fields, operationalcommand.FieldIdempotencyKey)
+	}
+	if m.payload != nil {
+		fields = append(fields, operationalcommand.FieldPayload)
+	}
+	if m.status != nil {
+		fields = append(fields, operationalcommand.FieldStatus)
+	}
+	if m.attempt != nil {
+		fields = append(fields, operationalcommand.FieldAttempt)
+	}
+	if m.max_attempts != nil {
+		fields = append(fields, operationalcommand.FieldMaxAttempts)
+	}
+	if m.available_at != nil {
+		fields = append(fields, operationalcommand.FieldAvailableAt)
+	}
+	if m.lease_owner != nil {
+		fields = append(fields, operationalcommand.FieldLeaseOwner)
+	}
+	if m.lease_expires_at != nil {
+		fields = append(fields, operationalcommand.FieldLeaseExpiresAt)
+	}
+	if m.fencing_token != nil {
+		fields = append(fields, operationalcommand.FieldFencingToken)
+	}
+	if m.last_error != nil {
+		fields = append(fields, operationalcommand.FieldLastError)
+	}
+	if m.completed_at != nil {
+		fields = append(fields, operationalcommand.FieldCompletedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, operationalcommand.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, operationalcommand.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *OperationalCommandMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case operationalcommand.FieldTenantID:
+		return m.TenantID()
+	case operationalcommand.FieldCommandType:
+		return m.CommandType()
+	case operationalcommand.FieldAggregateType:
+		return m.AggregateType()
+	case operationalcommand.FieldAggregateID:
+		return m.AggregateID()
+	case operationalcommand.FieldIdempotencyKey:
+		return m.IdempotencyKey()
+	case operationalcommand.FieldPayload:
+		return m.Payload()
+	case operationalcommand.FieldStatus:
+		return m.Status()
+	case operationalcommand.FieldAttempt:
+		return m.Attempt()
+	case operationalcommand.FieldMaxAttempts:
+		return m.MaxAttempts()
+	case operationalcommand.FieldAvailableAt:
+		return m.AvailableAt()
+	case operationalcommand.FieldLeaseOwner:
+		return m.LeaseOwner()
+	case operationalcommand.FieldLeaseExpiresAt:
+		return m.LeaseExpiresAt()
+	case operationalcommand.FieldFencingToken:
+		return m.FencingToken()
+	case operationalcommand.FieldLastError:
+		return m.LastError()
+	case operationalcommand.FieldCompletedAt:
+		return m.CompletedAt()
+	case operationalcommand.FieldCreatedAt:
+		return m.CreatedAt()
+	case operationalcommand.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *OperationalCommandMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case operationalcommand.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case operationalcommand.FieldCommandType:
+		return m.OldCommandType(ctx)
+	case operationalcommand.FieldAggregateType:
+		return m.OldAggregateType(ctx)
+	case operationalcommand.FieldAggregateID:
+		return m.OldAggregateID(ctx)
+	case operationalcommand.FieldIdempotencyKey:
+		return m.OldIdempotencyKey(ctx)
+	case operationalcommand.FieldPayload:
+		return m.OldPayload(ctx)
+	case operationalcommand.FieldStatus:
+		return m.OldStatus(ctx)
+	case operationalcommand.FieldAttempt:
+		return m.OldAttempt(ctx)
+	case operationalcommand.FieldMaxAttempts:
+		return m.OldMaxAttempts(ctx)
+	case operationalcommand.FieldAvailableAt:
+		return m.OldAvailableAt(ctx)
+	case operationalcommand.FieldLeaseOwner:
+		return m.OldLeaseOwner(ctx)
+	case operationalcommand.FieldLeaseExpiresAt:
+		return m.OldLeaseExpiresAt(ctx)
+	case operationalcommand.FieldFencingToken:
+		return m.OldFencingToken(ctx)
+	case operationalcommand.FieldLastError:
+		return m.OldLastError(ctx)
+	case operationalcommand.FieldCompletedAt:
+		return m.OldCompletedAt(ctx)
+	case operationalcommand.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case operationalcommand.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown OperationalCommand field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *OperationalCommandMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case operationalcommand.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case operationalcommand.FieldCommandType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCommandType(v)
+		return nil
+	case operationalcommand.FieldAggregateType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAggregateType(v)
+		return nil
+	case operationalcommand.FieldAggregateID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAggregateID(v)
+		return nil
+	case operationalcommand.FieldIdempotencyKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdempotencyKey(v)
+		return nil
+	case operationalcommand.FieldPayload:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPayload(v)
+		return nil
+	case operationalcommand.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case operationalcommand.FieldAttempt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttempt(v)
+		return nil
+	case operationalcommand.FieldMaxAttempts:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxAttempts(v)
+		return nil
+	case operationalcommand.FieldAvailableAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAvailableAt(v)
+		return nil
+	case operationalcommand.FieldLeaseOwner:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaseOwner(v)
+		return nil
+	case operationalcommand.FieldLeaseExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaseExpiresAt(v)
+		return nil
+	case operationalcommand.FieldFencingToken:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFencingToken(v)
+		return nil
+	case operationalcommand.FieldLastError:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastError(v)
+		return nil
+	case operationalcommand.FieldCompletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompletedAt(v)
+		return nil
+	case operationalcommand.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case operationalcommand.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown OperationalCommand field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *OperationalCommandMutation) AddedFields() []string {
+	var fields []string
+	if m.addtenant_id != nil {
+		fields = append(fields, operationalcommand.FieldTenantID)
+	}
+	if m.addaggregate_id != nil {
+		fields = append(fields, operationalcommand.FieldAggregateID)
+	}
+	if m.addattempt != nil {
+		fields = append(fields, operationalcommand.FieldAttempt)
+	}
+	if m.addmax_attempts != nil {
+		fields = append(fields, operationalcommand.FieldMaxAttempts)
+	}
+	if m.addfencing_token != nil {
+		fields = append(fields, operationalcommand.FieldFencingToken)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *OperationalCommandMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case operationalcommand.FieldTenantID:
+		return m.AddedTenantID()
+	case operationalcommand.FieldAggregateID:
+		return m.AddedAggregateID()
+	case operationalcommand.FieldAttempt:
+		return m.AddedAttempt()
+	case operationalcommand.FieldMaxAttempts:
+		return m.AddedMaxAttempts()
+	case operationalcommand.FieldFencingToken:
+		return m.AddedFencingToken()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *OperationalCommandMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case operationalcommand.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	case operationalcommand.FieldAggregateID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAggregateID(v)
+		return nil
+	case operationalcommand.FieldAttempt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttempt(v)
+		return nil
+	case operationalcommand.FieldMaxAttempts:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxAttempts(v)
+		return nil
+	case operationalcommand.FieldFencingToken:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddFencingToken(v)
+		return nil
+	}
+	return fmt.Errorf("unknown OperationalCommand numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *OperationalCommandMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(operationalcommand.FieldPayload) {
+		fields = append(fields, operationalcommand.FieldPayload)
+	}
+	if m.FieldCleared(operationalcommand.FieldLeaseOwner) {
+		fields = append(fields, operationalcommand.FieldLeaseOwner)
+	}
+	if m.FieldCleared(operationalcommand.FieldLeaseExpiresAt) {
+		fields = append(fields, operationalcommand.FieldLeaseExpiresAt)
+	}
+	if m.FieldCleared(operationalcommand.FieldLastError) {
+		fields = append(fields, operationalcommand.FieldLastError)
+	}
+	if m.FieldCleared(operationalcommand.FieldCompletedAt) {
+		fields = append(fields, operationalcommand.FieldCompletedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *OperationalCommandMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *OperationalCommandMutation) ClearField(name string) error {
+	switch name {
+	case operationalcommand.FieldPayload:
+		m.ClearPayload()
+		return nil
+	case operationalcommand.FieldLeaseOwner:
+		m.ClearLeaseOwner()
+		return nil
+	case operationalcommand.FieldLeaseExpiresAt:
+		m.ClearLeaseExpiresAt()
+		return nil
+	case operationalcommand.FieldLastError:
+		m.ClearLastError()
+		return nil
+	case operationalcommand.FieldCompletedAt:
+		m.ClearCompletedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown OperationalCommand nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *OperationalCommandMutation) ResetField(name string) error {
+	switch name {
+	case operationalcommand.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case operationalcommand.FieldCommandType:
+		m.ResetCommandType()
+		return nil
+	case operationalcommand.FieldAggregateType:
+		m.ResetAggregateType()
+		return nil
+	case operationalcommand.FieldAggregateID:
+		m.ResetAggregateID()
+		return nil
+	case operationalcommand.FieldIdempotencyKey:
+		m.ResetIdempotencyKey()
+		return nil
+	case operationalcommand.FieldPayload:
+		m.ResetPayload()
+		return nil
+	case operationalcommand.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case operationalcommand.FieldAttempt:
+		m.ResetAttempt()
+		return nil
+	case operationalcommand.FieldMaxAttempts:
+		m.ResetMaxAttempts()
+		return nil
+	case operationalcommand.FieldAvailableAt:
+		m.ResetAvailableAt()
+		return nil
+	case operationalcommand.FieldLeaseOwner:
+		m.ResetLeaseOwner()
+		return nil
+	case operationalcommand.FieldLeaseExpiresAt:
+		m.ResetLeaseExpiresAt()
+		return nil
+	case operationalcommand.FieldFencingToken:
+		m.ResetFencingToken()
+		return nil
+	case operationalcommand.FieldLastError:
+		m.ResetLastError()
+		return nil
+	case operationalcommand.FieldCompletedAt:
+		m.ResetCompletedAt()
+		return nil
+	case operationalcommand.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case operationalcommand.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown OperationalCommand field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *OperationalCommandMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *OperationalCommandMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *OperationalCommandMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *OperationalCommandMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *OperationalCommandMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *OperationalCommandMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *OperationalCommandMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown OperationalCommand unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *OperationalCommandMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown OperationalCommand edge %s", name)
 }
 
 // PasswordResetTokenMutation represents an operation that mutates the PasswordResetToken nodes in the graph.

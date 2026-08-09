@@ -67,6 +67,7 @@ import (
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/permissiondefinition"
@@ -252,6 +253,8 @@ type Client struct {
 	Notification *NotificationClient
 	// NotificationPreference is the client for interacting with the NotificationPreference builders.
 	NotificationPreference *NotificationPreferenceClient
+	// OperationalCommand is the client for interacting with the OperationalCommand builders.
+	OperationalCommand *OperationalCommandClient
 	// PasswordResetToken is the client for interacting with the PasswordResetToken builders.
 	PasswordResetToken *PasswordResetTokenClient
 	// Permission is the client for interacting with the Permission builders.
@@ -441,6 +444,7 @@ func (c *Client) init() {
 	c.Microservice = NewMicroserviceClient(c.config)
 	c.Notification = NewNotificationClient(c.config)
 	c.NotificationPreference = NewNotificationPreferenceClient(c.config)
+	c.OperationalCommand = NewOperationalCommandClient(c.config)
 	c.PasswordResetToken = NewPasswordResetTokenClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
 	c.PermissionDefinition = NewPermissionDefinitionClient(c.config)
@@ -650,6 +654,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Microservice:                NewMicroserviceClient(cfg),
 		Notification:                NewNotificationClient(cfg),
 		NotificationPreference:      NewNotificationPreferenceClient(cfg),
+		OperationalCommand:          NewOperationalCommandClient(cfg),
 		PasswordResetToken:          NewPasswordResetTokenClient(cfg),
 		Permission:                  NewPermissionClient(cfg),
 		PermissionDefinition:        NewPermissionDefinitionClient(cfg),
@@ -786,6 +791,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Microservice:                NewMicroserviceClient(cfg),
 		Notification:                NewNotificationClient(cfg),
 		NotificationPreference:      NewNotificationPreferenceClient(cfg),
+		OperationalCommand:          NewOperationalCommandClient(cfg),
 		PasswordResetToken:          NewPasswordResetTokenClient(cfg),
 		Permission:                  NewPermissionClient(cfg),
 		PermissionDefinition:        NewPermissionDefinitionClient(cfg),
@@ -889,14 +895,15 @@ func (c *Client) Use(hooks ...Hook) {
 		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
-		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
-		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
-		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
-		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
-		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
+		c.Notification, c.NotificationPreference, c.OperationalCommand,
+		c.PasswordResetToken, c.Permission, c.PermissionDefinition, c.Problem,
+		c.ProcessApprovalDecision, c.ProcessAuditLog, c.ProcessBinding,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
+		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
+		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
+		c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
 		c.ServiceRequestApproval, c.StandardChange, c.Survey, c.SurveyResponse,
 		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
 		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
@@ -926,14 +933,15 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
-		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
-		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
-		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
-		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
-		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
+		c.Notification, c.NotificationPreference, c.OperationalCommand,
+		c.PasswordResetToken, c.Permission, c.PermissionDefinition, c.Problem,
+		c.ProcessApprovalDecision, c.ProcessAuditLog, c.ProcessBinding,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
+		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
+		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
+		c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
 		c.ServiceRequestApproval, c.StandardChange, c.Survey, c.SurveyResponse,
 		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
 		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
@@ -1061,6 +1069,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Notification.mutate(ctx, m)
 	case *NotificationPreferenceMutation:
 		return c.NotificationPreference.mutate(ctx, m)
+	case *OperationalCommandMutation:
+		return c.OperationalCommand.mutate(ctx, m)
 	case *PasswordResetTokenMutation:
 		return c.PasswordResetToken.mutate(ctx, m)
 	case *PermissionMutation:
@@ -10041,6 +10051,139 @@ func (c *NotificationPreferenceClient) mutate(ctx context.Context, m *Notificati
 		return (&NotificationPreferenceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown NotificationPreference mutation op: %q", m.Op())
+	}
+}
+
+// OperationalCommandClient is a client for the OperationalCommand schema.
+type OperationalCommandClient struct {
+	config
+}
+
+// NewOperationalCommandClient returns a client for the OperationalCommand from the given config.
+func NewOperationalCommandClient(c config) *OperationalCommandClient {
+	return &OperationalCommandClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `operationalcommand.Hooks(f(g(h())))`.
+func (c *OperationalCommandClient) Use(hooks ...Hook) {
+	c.hooks.OperationalCommand = append(c.hooks.OperationalCommand, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `operationalcommand.Intercept(f(g(h())))`.
+func (c *OperationalCommandClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OperationalCommand = append(c.inters.OperationalCommand, interceptors...)
+}
+
+// Create returns a builder for creating a OperationalCommand entity.
+func (c *OperationalCommandClient) Create() *OperationalCommandCreate {
+	mutation := newOperationalCommandMutation(c.config, OpCreate)
+	return &OperationalCommandCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OperationalCommand entities.
+func (c *OperationalCommandClient) CreateBulk(builders ...*OperationalCommandCreate) *OperationalCommandCreateBulk {
+	return &OperationalCommandCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OperationalCommandClient) MapCreateBulk(slice any, setFunc func(*OperationalCommandCreate, int)) *OperationalCommandCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OperationalCommandCreateBulk{err: fmt.Errorf("calling to OperationalCommandClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OperationalCommandCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OperationalCommandCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OperationalCommand.
+func (c *OperationalCommandClient) Update() *OperationalCommandUpdate {
+	mutation := newOperationalCommandMutation(c.config, OpUpdate)
+	return &OperationalCommandUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OperationalCommandClient) UpdateOne(_m *OperationalCommand) *OperationalCommandUpdateOne {
+	mutation := newOperationalCommandMutation(c.config, OpUpdateOne, withOperationalCommand(_m))
+	return &OperationalCommandUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OperationalCommandClient) UpdateOneID(id int) *OperationalCommandUpdateOne {
+	mutation := newOperationalCommandMutation(c.config, OpUpdateOne, withOperationalCommandID(id))
+	return &OperationalCommandUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OperationalCommand.
+func (c *OperationalCommandClient) Delete() *OperationalCommandDelete {
+	mutation := newOperationalCommandMutation(c.config, OpDelete)
+	return &OperationalCommandDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OperationalCommandClient) DeleteOne(_m *OperationalCommand) *OperationalCommandDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OperationalCommandClient) DeleteOneID(id int) *OperationalCommandDeleteOne {
+	builder := c.Delete().Where(operationalcommand.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OperationalCommandDeleteOne{builder}
+}
+
+// Query returns a query builder for OperationalCommand.
+func (c *OperationalCommandClient) Query() *OperationalCommandQuery {
+	return &OperationalCommandQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOperationalCommand},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OperationalCommand entity by its id.
+func (c *OperationalCommandClient) Get(ctx context.Context, id int) (*OperationalCommand, error) {
+	return c.Query().Where(operationalcommand.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OperationalCommandClient) GetX(ctx context.Context, id int) *OperationalCommand {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *OperationalCommandClient) Hooks() []Hook {
+	return c.hooks.OperationalCommand
+}
+
+// Interceptors returns the client interceptors.
+func (c *OperationalCommandClient) Interceptors() []Interceptor {
+	return c.inters.OperationalCommand
+}
+
+func (c *OperationalCommandClient) mutate(ctx context.Context, m *OperationalCommandMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OperationalCommandCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OperationalCommandUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OperationalCommandUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OperationalCommandDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OperationalCommand mutation op: %q", m.Op())
 	}
 }
 
@@ -20028,10 +20171,10 @@ type (
 		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
 		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
 		Message, Microservice, Notification, NotificationPreference,
-		PasswordResetToken, Permission, PermissionDefinition, Problem,
-		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
-		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
-		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		OperationalCommand, PasswordResetToken, Permission, PermissionDefinition,
+		Problem, ProcessApprovalDecision, ProcessAuditLog, ProcessBinding,
+		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
+		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
 		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
 		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
 		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceRequest,
@@ -20055,10 +20198,10 @@ type (
 		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
 		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
 		Message, Microservice, Notification, NotificationPreference,
-		PasswordResetToken, Permission, PermissionDefinition, Problem,
-		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
-		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
-		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		OperationalCommand, PasswordResetToken, Permission, PermissionDefinition,
+		Problem, ProcessApprovalDecision, ProcessAuditLog, ProcessBinding,
+		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
+		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
 		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
 		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
 		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceRequest,

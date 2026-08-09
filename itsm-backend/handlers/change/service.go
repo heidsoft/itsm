@@ -25,6 +25,10 @@ type Service struct {
 	approvalBridge *service.BPMNApprovalBridge
 }
 
+type workflowCommandCreator interface {
+	CreateWithWorkflowCommand(context.Context, *Change) (*Change, error)
+}
+
 func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogger) *Service {
 	svc := &Service{
 		repo:      repo,
@@ -43,6 +47,9 @@ func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogge
 // Change methods
 func (s *Service) CreateChange(ctx context.Context, c *Change) (*Change, error) {
 	s.logger.Infow("Creating change", "title", c.Title, "tenant_id", c.TenantID)
+	if creator, ok := s.repo.(workflowCommandCreator); ok {
+		return creator.CreateWithWorkflowCommand(ctx, c)
+	}
 	return s.repo.Create(ctx, c)
 }
 

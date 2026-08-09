@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	entuser "itsm-backend/ent/user"
+	"itsm-backend/internal/commandbus"
 )
 
 type EntRepository struct {
@@ -122,6 +123,47 @@ func (r *EntRepository) Create(ctx context.Context, c *Change) (*Change, error) 
 		Save(ctx)
 	if err != nil {
 		return nil, err
+	}
+	result := toDomain(ec)
+	if err := r.hydrateUsers(ctx, []*Change{result}, c.TenantID); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// CreateWithWorkflowCommand atomically persists the change and its workflow command.
+func (r *EntRepository) CreateWithWorkflowCommand(ctx context.Context, c *Change) (*Change, error) {
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rollback := func(cause error) (*Change, error) {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return nil, fmt.Errorf("%w; rollback: %v", cause, rbErr)
+		}
+		return nil, cause
+	}
+	ec, err := tx.Change.Create().
+		SetTitle(c.Title).SetDescription(c.Description).SetJustification(c.Justification).
+		SetType(c.Type).SetStatus(c.Status).SetPriority(c.Priority).SetImpactScope(c.ImpactScope).
+		SetRiskLevel(c.RiskLevel).SetCreatedBy(c.CreatedBy).SetTenantID(c.TenantID).
+		SetImplementationPlan(c.ImplementationPlan).SetRollbackPlan(c.RollbackPlan).
+		SetNillablePlannedStartDate(c.PlannedStartDate).SetNillablePlannedEndDate(c.PlannedEndDate).
+		SetAffectedCis(c.AffectedCIs).SetRelatedTickets(c.RelatedTickets).Save(ctx)
+	if err != nil {
+		return rollback(err)
+	}
+	_, err = commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID: c.TenantID, CommandType: commandbus.CommandStartBPMN,
+		AggregateType: "change", AggregateID: ec.ID,
+		IdempotencyKey: fmt.Sprintf("change:%d:workflow:start", ec.ID),
+		Payload:        map[string]interface{}{"businessType": "change", "businessId": ec.ID},
+	})
+	if err != nil {
+		return rollback(err)
+	}
+	if err := tx.Commit(); err != nil {
+		return rollback(err)
 	}
 	result := toDomain(ec)
 	if err := r.hydrateUsers(ctx, []*Change{result}, c.TenantID); err != nil {

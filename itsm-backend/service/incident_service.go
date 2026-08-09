@@ -18,6 +18,7 @@ import (
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/commandbus"
 
 	"go.uber.org/zap"
 )
@@ -30,6 +31,7 @@ type IncidentService struct {
 	processTriggerService ProcessTriggerServiceInterface
 	ruleEngine            *IncidentRuleEngine
 	rawDB                 *sql.DB // for transactional SELECT FOR UPDATE (S-4 修复)
+	workflowOutboxEnabled bool
 }
 
 func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger) *IncidentService {
@@ -43,6 +45,8 @@ func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger) *Incident
 func (s *IncidentService) SetProcessTriggerService(triggerService ProcessTriggerServiceInterface) {
 	s.processTriggerService = triggerService
 }
+
+func (s *IncidentService) EnableWorkflowOutbox() { s.workflowOutboxEnabled = true }
 
 // SetSequenceService 设置序列服务（用于 incident_number 生成）
 func (s *IncidentService) SetPriorityMatrixService(pms *PriorityMatrixService) {
@@ -201,6 +205,17 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 	if err != nil {
 		return rollback(fmt.Errorf("failed to create incident event: %w", err))
 	}
+	if s.workflowOutboxEnabled {
+		_, err = commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+			TenantID: tenantID, CommandType: commandbus.CommandStartBPMN,
+			AggregateType: "incident", AggregateID: incidentEntity.ID,
+			IdempotencyKey: fmt.Sprintf("incident:%d:workflow:start", incidentEntity.ID),
+			Payload:        map[string]interface{}{"businessType": "incident", "businessId": incidentEntity.ID},
+		})
+		if err != nil {
+			return rollback(fmt.Errorf("enqueue incident workflow: %w", err))
+		}
+	}
 	if err := tx.Commit(); err != nil {
 		return rollback(fmt.Errorf("failed to commit incident transaction: %w", err))
 	}
@@ -219,8 +234,8 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 		s.executeIncidentRules(ruleCtx, incidentEntity.ID, tenantID)
 	}()
 
-	// 触发BPMN工作流（异步执行，不阻塞事件创建）
-	if s.processTriggerService != nil {
+	// 兼容未启用 outbox 的单元测试/旧组装；生产组装只允许持久化命令路径。
+	if s.processTriggerService != nil && !s.workflowOutboxEnabled {
 		go func() {
 			workflowCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()

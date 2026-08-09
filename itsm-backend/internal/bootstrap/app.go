@@ -42,6 +42,7 @@ import (
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
+	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/initialization"
 	"itsm-backend/middleware"
 	"itsm-backend/migration"
@@ -58,12 +59,13 @@ import (
 )
 
 type Application struct {
-	Cfg         *config.Config
-	Logger      *zap.SugaredLogger
-	DBClient    *ent.Client
-	Router      *gin.Engine
-	Embedder    service.Embedder
-	VectorStore *service.VectorStore
+	Cfg           *config.Config
+	Logger        *zap.SugaredLogger
+	DBClient      *ent.Client
+	Router        *gin.Engine
+	Embedder      service.Embedder
+	VectorStore   *service.VectorStore
+	CommandWorker *commandbus.Worker
 }
 
 // prepareRolePermissionTenantMigration upgrades installations created before
@@ -217,6 +219,20 @@ func NewApplication() *Application {
 	processBindingService := service.NewProcessBindingService(client)
 	processEngine := service.NewCustomProcessEngine(client, sugar)
 	processTriggerService := service.NewProcessTriggerService(client, processEngine)
+	commandRegistry := commandbus.NewRegistry()
+	if err := commandbus.ValidateStorage(context.Background(), client); err != nil {
+		sugar.Fatalw("Operational command storage is not ready; run the bootstrap migration first", "error", err)
+	}
+	workflowCommandHandler := service.NewWorkflowStartCommandHandler(client, processTriggerService, sugar)
+	if err := commandRegistry.Register(commandbus.CommandStartBPMN, workflowCommandHandler.Handle); err != nil {
+		sugar.Fatalw("Failed to register workflow command handler", "error", err)
+	}
+	workerOwner, _ := os.Hostname()
+	if workerOwner == "" {
+		workerOwner = "itsm-api"
+	}
+	commandWorker := commandbus.NewWorker(client, commandRegistry, sugar, workerOwner)
+	incidentService.EnableWorkflowOutbox()
 	processResolver := service.NewProcessResolver(client, processBindingService)
 	bpmnVersionService := service.NewBPMNVersionService(client, sugar)
 
@@ -780,12 +796,13 @@ func NewApplication() *Application {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return &Application{
-		Cfg:         cfg,
-		Logger:      sugar,
-		DBClient:    client,
-		Router:      r,
-		Embedder:    embedder,
-		VectorStore: vectorStore,
+		Cfg:           cfg,
+		Logger:        sugar,
+		DBClient:      client,
+		Router:        r,
+		Embedder:      embedder,
+		VectorStore:   vectorStore,
+		CommandWorker: commandWorker,
 	}
 }
 
@@ -973,6 +990,9 @@ func (app *Application) Run() {
 }
 
 func (app *Application) startBackgroundTasks() {
+	if app.CommandWorker != nil {
+		go app.CommandWorker.Run(context.Background())
+	}
 	go func() {
 		pipeline := service.NewEmbeddingPipeline(app.DBClient, app.Embedder, app.Logger, app.VectorStore)
 		ctx := context.Background()

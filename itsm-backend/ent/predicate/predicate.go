@@ -174,6 +174,9 @@ type Notification func(*sql.Selector)
 // NotificationPreference is the predicate function for notificationpreference builders.
 type NotificationPreference func(*sql.Selector)
 
+// OperationalCommand is the predicate function for operationalcommand builders.
+type OperationalCommand func(*sql.Selector)
+
 // PasswordResetToken is the predicate function for passwordresettoken builders.
 type PasswordResetToken func(*sql.Selector)
 

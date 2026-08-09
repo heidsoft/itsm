@@ -124,6 +124,8 @@ type Tx struct {
 	Notification *NotificationClient
 	// NotificationPreference is the client for interacting with the NotificationPreference builders.
 	NotificationPreference *NotificationPreferenceClient
+	// OperationalCommand is the client for interacting with the OperationalCommand builders.
+	OperationalCommand *OperationalCommandClient
 	// PasswordResetToken is the client for interacting with the PasswordResetToken builders.
 	PasswordResetToken *PasswordResetTokenClient
 	// Permission is the client for interacting with the Permission builders.
@@ -433,6 +435,7 @@ func (tx *Tx) init() {
 	tx.Microservice = NewMicroserviceClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)
 	tx.NotificationPreference = NewNotificationPreferenceClient(tx.config)
+	tx.OperationalCommand = NewOperationalCommandClient(tx.config)
 	tx.PasswordResetToken = NewPasswordResetTokenClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.PermissionDefinition = NewPermissionDefinitionClient(tx.config)
