@@ -26,6 +26,15 @@
 
 </div>
 
+
+## 📈 星标增长历史
+
+[![Star History Chart](https://api.star-history.com/svg?repos=heidsoft/itsm&type=Date)](https://star-history.com/)
+
+> 📊 感谢 56 位社区伙伴的支持！每个星标都是对我们工作的认可。
+
+---
+
 ---
 
 ## 项目说明
@@ -431,6 +440,55 @@ VERSION=v1.2.0 make build-frontend
 - 实时合规率监控面板
 - 违约预警与自动升级
 - 完整的 SLA 报表分析
+
+---
+
+## 🤝 开源社区
+
+### 贡献指南
+
+欢迎贡献代码！请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md) 了解贡献流程。
+
+#### 快速贡献方式
+
+| 方式 | 说明 |
+|:---|:---|
+| ⭐ Star | 最简单的支持，帮助项目被更多人发现 |
+| 🐛 报告 Bug | 前往 [Issues](https://github.com/idthieves/itsm/issues) 报告问题 |
+| 📝 改进文档 | 完善文档让项目更易上手 |
+| 💡 提出功能 | 在 Issues 中描述您的需求 |
+| 🔧 提交代码 | Fork 项目并提交 Pull Request |
+
+#### 贡献者排行榜
+
+感谢所有贡献者的付出！查看完整贡献者列表 → [Contributors](https://github.com/heidsoft/itsm/graphs/contributors)
+
+```ascii
+     ★ 感谢 ★
+      ★★★
+     ★★★★★
+    ★★★★★
+     ★★★
+      ★
+   贡献者名单
+```
+
+#### 社区交流
+
+- 📌 **GitHub Discussions**: 功能讨论、Q&A、分享使用经验
+- 🐛 **GitHub Issues**: Bug 报告、功能请求
+- 📢 **社区微信群**: 扫码关注公众号回复"ITSM"加入交流群
+
+#### 为什么选择 ITSM
+
+| 特性 | 传统商业 ITSM | AI-Native ITSM |
+|:---|:---|:---|
+| 部署成本 | ¥50万+ | 开源免费 |
+| AI 能力 | 额外付费插件 | 内置 AI 分诊/摘要/RAG |
+| 二次开发 | 厂商锁定 | 完全开源可定制 |
+| 数据存储 | 必须上云 | 支持完全私有化 |
+
+> ⭐ 您的 Star 是对我们最大的支持！
 
 ---
 
