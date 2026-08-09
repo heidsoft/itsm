@@ -58,6 +58,7 @@ import (
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notification"
+	"itsm-backend/ent/notificationdelivery"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/passwordresettoken"
@@ -1902,6 +1903,76 @@ func init() {
 	notification.DefaultUpdatedAt = notificationDescUpdatedAt.Default.(func() time.Time)
 	// notification.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	notification.UpdateDefaultUpdatedAt = notificationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	notificationdeliveryFields := schema.NotificationDelivery{}.Fields()
+	_ = notificationdeliveryFields
+	// notificationdeliveryDescTenantID is the schema descriptor for tenant_id field.
+	notificationdeliveryDescTenantID := notificationdeliveryFields[0].Descriptor()
+	// notificationdelivery.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	notificationdelivery.TenantIDValidator = notificationdeliveryDescTenantID.Validators[0].(func(int) error)
+	// notificationdeliveryDescOperationalCommandID is the schema descriptor for operational_command_id field.
+	notificationdeliveryDescOperationalCommandID := notificationdeliveryFields[1].Descriptor()
+	// notificationdelivery.OperationalCommandIDValidator is a validator for the "operational_command_id" field. It is called by the builders before save.
+	notificationdelivery.OperationalCommandIDValidator = notificationdeliveryDescOperationalCommandID.Validators[0].(func(int) error)
+	// notificationdeliveryDescRecipientID is the schema descriptor for recipient_id field.
+	notificationdeliveryDescRecipientID := notificationdeliveryFields[4].Descriptor()
+	// notificationdelivery.RecipientIDValidator is a validator for the "recipient_id" field. It is called by the builders before save.
+	notificationdelivery.RecipientIDValidator = notificationdeliveryDescRecipientID.Validators[0].(func(int) error)
+	// notificationdeliveryDescChannel is the schema descriptor for channel field.
+	notificationdeliveryDescChannel := notificationdeliveryFields[5].Descriptor()
+	// notificationdelivery.ChannelValidator is a validator for the "channel" field. It is called by the builders before save.
+	notificationdelivery.ChannelValidator = func() func(string) error {
+		validators := notificationdeliveryDescChannel.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(channel string) error {
+			for _, fn := range fns {
+				if err := fn(channel); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// notificationdeliveryDescTargetMasked is the schema descriptor for target_masked field.
+	notificationdeliveryDescTargetMasked := notificationdeliveryFields[6].Descriptor()
+	// notificationdelivery.TargetMaskedValidator is a validator for the "target_masked" field. It is called by the builders before save.
+	notificationdelivery.TargetMaskedValidator = notificationdeliveryDescTargetMasked.Validators[0].(func(string) error)
+	// notificationdeliveryDescStatus is the schema descriptor for status field.
+	notificationdeliveryDescStatus := notificationdeliveryFields[7].Descriptor()
+	// notificationdelivery.DefaultStatus holds the default value on creation for the status field.
+	notificationdelivery.DefaultStatus = notificationdeliveryDescStatus.Default.(string)
+	// notificationdelivery.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	notificationdelivery.StatusValidator = notificationdeliveryDescStatus.Validators[0].(func(string) error)
+	// notificationdeliveryDescAttempt is the schema descriptor for attempt field.
+	notificationdeliveryDescAttempt := notificationdeliveryFields[8].Descriptor()
+	// notificationdelivery.DefaultAttempt holds the default value on creation for the attempt field.
+	notificationdelivery.DefaultAttempt = notificationdeliveryDescAttempt.Default.(int)
+	// notificationdelivery.AttemptValidator is a validator for the "attempt" field. It is called by the builders before save.
+	notificationdelivery.AttemptValidator = notificationdeliveryDescAttempt.Validators[0].(func(int) error)
+	// notificationdeliveryDescProviderMessageID is the schema descriptor for provider_message_id field.
+	notificationdeliveryDescProviderMessageID := notificationdeliveryFields[9].Descriptor()
+	// notificationdelivery.ProviderMessageIDValidator is a validator for the "provider_message_id" field. It is called by the builders before save.
+	notificationdelivery.ProviderMessageIDValidator = notificationdeliveryDescProviderMessageID.Validators[0].(func(string) error)
+	// notificationdeliveryDescErrorCode is the schema descriptor for error_code field.
+	notificationdeliveryDescErrorCode := notificationdeliveryFields[10].Descriptor()
+	// notificationdelivery.ErrorCodeValidator is a validator for the "error_code" field. It is called by the builders before save.
+	notificationdelivery.ErrorCodeValidator = notificationdeliveryDescErrorCode.Validators[0].(func(string) error)
+	// notificationdeliveryDescErrorMessage is the schema descriptor for error_message field.
+	notificationdeliveryDescErrorMessage := notificationdeliveryFields[11].Descriptor()
+	// notificationdelivery.ErrorMessageValidator is a validator for the "error_message" field. It is called by the builders before save.
+	notificationdelivery.ErrorMessageValidator = notificationdeliveryDescErrorMessage.Validators[0].(func(string) error)
+	// notificationdeliveryDescCreatedAt is the schema descriptor for created_at field.
+	notificationdeliveryDescCreatedAt := notificationdeliveryFields[13].Descriptor()
+	// notificationdelivery.DefaultCreatedAt holds the default value on creation for the created_at field.
+	notificationdelivery.DefaultCreatedAt = notificationdeliveryDescCreatedAt.Default.(func() time.Time)
+	// notificationdeliveryDescUpdatedAt is the schema descriptor for updated_at field.
+	notificationdeliveryDescUpdatedAt := notificationdeliveryFields[14].Descriptor()
+	// notificationdelivery.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	notificationdelivery.DefaultUpdatedAt = notificationdeliveryDescUpdatedAt.Default.(func() time.Time)
+	// notificationdelivery.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	notificationdelivery.UpdateDefaultUpdatedAt = notificationdeliveryDescUpdatedAt.UpdateDefault.(func() time.Time)
 	notificationpreferenceFields := schema.NotificationPreference{}.Fields()
 	_ = notificationpreferenceFields
 	// notificationpreferenceDescUserID is the schema descriptor for user_id field.

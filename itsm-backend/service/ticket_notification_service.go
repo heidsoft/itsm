@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -10,6 +13,7 @@ import (
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/commandbus"
 
 	"go.uber.org/zap"
 )
@@ -19,11 +23,14 @@ func ticketNotificationStringPtr(s string) *string {
 }
 
 type TicketNotificationService struct {
-	client       *ent.Client
-	logger       *zap.SugaredLogger
-	emailService *EmailService
-	smsService   *SMSService
+	client        *ent.Client
+	logger        *zap.SugaredLogger
+	emailService  *EmailService
+	smsService    *SMSService
+	outboxEnabled bool
 }
+
+func (s *TicketNotificationService) EnableOutbox() { s.outboxEnabled = true }
 
 // NewTicketNotificationService 创建通知服务
 func NewTicketNotificationService(client *ent.Client, logger *zap.SugaredLogger) *TicketNotificationService {
@@ -50,6 +57,12 @@ func (s *TicketNotificationService) SendNotification(
 	req *dto.SendTicketNotificationRequest,
 	tenantID int,
 ) error {
+	if req == nil || tenantID <= 0 || ticketID <= 0 {
+		return fmt.Errorf("invalid ticket notification request")
+	}
+	if s.outboxEnabled {
+		return s.enqueueNotificationDeliveries(ctx, ticketID, req, tenantID)
+	}
 	s.logger.Infow("Sending ticket notification", "ticket_id", ticketID, "type", req.Type, "channel", req.Channel)
 
 	// 验证工单是否存在
@@ -194,6 +207,50 @@ func (s *TicketNotificationService) SendNotification(
 	}
 
 	return nil
+}
+
+func (s *TicketNotificationService) enqueueNotificationDeliveries(ctx context.Context, ticketID int, req *dto.SendTicketNotificationRequest, tenantID int) error {
+	channel := req.Channel
+	if channel == "" {
+		channel = "in_app"
+	}
+	seen := make(map[int]struct{}, len(req.UserIDs))
+	occurrenceKey := req.IdempotencyKey
+	if occurrenceKey == "" {
+		var entropy [16]byte
+		if _, err := rand.Read(entropy[:]); err != nil {
+			return fmt.Errorf("generate notification idempotency key: %w", err)
+		}
+		occurrenceKey = hex.EncodeToString(entropy[:])
+	}
+	for _, recipientID := range req.UserIDs {
+		if recipientID <= 0 {
+			return fmt.Errorf("notification recipient must be positive")
+		}
+		if _, exists := seen[recipientID]; exists {
+			continue
+		}
+		seen[recipientID] = struct{}{}
+		err := enqueueTicketNotificationCommand(ctx, s.client, tenantID, ticketID, recipientID, req.Type, channel, req.Content, occurrenceKey)
+		if err != nil && !ent.IsConstraintError(err) {
+			return fmt.Errorf("enqueue ticket notification: %w", err)
+		}
+	}
+	return nil
+}
+
+func enqueueTicketNotificationCommand(ctx context.Context, client *ent.Client, tenantID, ticketID, recipientID int, notificationType, channel, content, occurrenceKey string) error {
+	digest := sha256.Sum256([]byte(fmt.Sprintf("%d|%d|%d|%s|%s|%s", tenantID, ticketID, recipientID, notificationType, channel, occurrenceKey)))
+	key := "notification:" + hex.EncodeToString(digest[:16])
+	_, err := commandbus.Enqueue(ctx, client, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
+		AggregateType: "ticket", AggregateID: ticketID, IdempotencyKey: key,
+		Payload: map[string]interface{}{
+			"ticketId": ticketID, "recipientId": recipientID, "type": notificationType,
+			"channel": channel, "content": content,
+		},
+	})
+	return err
 }
 
 // NotifyTicketCreated 工单创建时发送通知

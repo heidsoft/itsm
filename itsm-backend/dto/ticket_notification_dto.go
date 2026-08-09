@@ -29,10 +29,11 @@ type ListTicketNotificationsResponse struct {
 
 // SendTicketNotificationRequest 发送工单通知请求
 type SendTicketNotificationRequest struct {
-	UserIDs []int  `json:"userIds" binding:"required,min=1"`                  // 接收人ID列表
-	Type    string `json:"type" binding:"required"`                           // 通知类型
-	Channel string `json:"channel" binding:"required,oneof=email in_app sms"` // 通知渠道
-	Content string `json:"content" binding:"required"`                        // 通知内容
+	UserIDs        []int  `json:"userIds" binding:"required,min=1"`
+	Type           string `json:"type" binding:"required"`
+	Channel        string `json:"channel" binding:"required,oneof=email in_app sms feishu dingtalk wecom webhook"`
+	Content        string `json:"content" binding:"required"`
+	IdempotencyKey string `json:"idempotencyKey,omitempty" binding:"omitempty,max=200"`
 }
 
 // UpdateNotificationPreferencesRequest 更新通知偏好请求

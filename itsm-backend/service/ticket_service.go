@@ -221,20 +221,13 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}
 	}
 
-	// 异步发送通知（如果分配了处理人）
-	// 注意：必须使用 context.Background()，不能复用请求 ctx。
-	// 否则 HTTP 响应返回后 ctx 立即取消，异步任务会失败（context canceled）。
+	// 生产通知服务只执行一次快速、持久化的 outbox enqueue；不得再用 goroutine，
+	// 否则进程可能在命令落库前退出并永久丢失通知。
 	if s.notificationSvc != nil && tkt.AssigneeID != nil {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			// 获取 ent.Ticket 用于通知（临时方案）
-			// 理想情况下应该传递领域模型
-			entTicket := s.toEntTicket(tkt)
-			if err := s.notificationSvc.NotifyTicketCreated(ctx2, entTicket); err != nil {
-				s.logger.Warnw("Notification failed", "error", err)
-			}
-		}()
+		entTicket := s.toEntTicket(tkt)
+		if err := s.notificationSvc.NotifyTicketCreated(ctx, entTicket); err != nil {
+			s.logger.Warnw("Notification enqueue failed", "error", err, "ticket_id", tkt.ID)
+		}
 	}
 
 	// 异步执行自动化规则
@@ -942,13 +935,9 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 
 	// 发送通知
 	if s.notificationSvc != nil {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			if err := s.notificationSvc.NotifyTicketAssigned(ctx2, ticketID, assigneeID, tenantID); err != nil {
-				s.logger.Warnw("Assignment notification failed", "error", err)
-			}
-		}()
+		if err := s.notificationSvc.NotifyTicketAssigned(ctx, ticketID, assigneeID, tenantID); err != nil {
+			s.logger.Warnw("Assignment notification enqueue failed", "error", err, "ticket_id", ticketID)
+		}
 	}
 
 	// 异步同步工单到飞书
@@ -1435,11 +1424,9 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 	}
 
 	if s.notificationSvc != nil {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			_ = s.notificationSvc.NotifyTicketAssigned(ctx2, ticketID, newAssignee, tenantID)
-		}()
+		if err := s.notificationSvc.NotifyTicketAssigned(ctx, ticketID, newAssignee, tenantID); err != nil {
+			s.logger.Warnw("Escalation notification enqueue failed", "error", err, "ticket_id", ticketID)
+		}
 	}
 
 	s.logger.Infow("Ticket escalated", "ticket_id", ticketID, "new_priority", newPriority, "new_assignee", newAssignee)

@@ -61,6 +61,7 @@ import (
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notification"
+	"itsm-backend/ent/notificationdelivery"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/passwordresettoken"
@@ -245,6 +246,7 @@ func checkColumn(t, c string) error {
 			message.Table:                     message.ValidColumn,
 			microservice.Table:                microservice.ValidColumn,
 			notification.Table:                notification.ValidColumn,
+			notificationdelivery.Table:        notificationdelivery.ValidColumn,
 			notificationpreference.Table:      notificationpreference.ValidColumn,
 			operationalcommand.Table:          operationalcommand.ValidColumn,
 			passwordresettoken.Table:          passwordresettoken.ValidColumn,

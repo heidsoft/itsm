@@ -1046,111 +1046,16 @@ func normalizeNotifyChannels(channels []string) []string {
 }
 
 func (s *TicketWorkflowService) createCCNotifications(ctx context.Context, tk *ent.Ticket, userIDs []int, channels []string, addedBy, tenantID int) {
-	now := time.Now()
 	content := fmt.Sprintf("工单 %s「%s」已抄送给你", tk.TicketNumber, tk.Title)
 	notifyChannels := normalizeNotifyChannels(channels)
-	users, err := s.client.User.Query().Where(user.IDIn(uniqueInts(userIDs)...), user.TenantID(tenantID)).All(ctx)
-	if err != nil {
-		s.logger.Warnw("Failed to query CC notification users", "error", err, "ticket_id", tk.ID)
-		return
-	}
-	userByID := make(map[int]*ent.User, len(users))
-	for _, u := range users {
-		userByID[u.ID] = u
-	}
-
 	for _, userID := range userIDs {
 		for _, channel := range notifyChannels {
-			status := "pending"
-			create := s.client.TicketNotification.Create().
-				SetTicketID(tk.ID).
-				SetUserID(userID).
-				SetType("cc").
-				SetChannel(channel).
-				SetContent(content).
-				SetTenantID(tenantID).
-				SetStatus(status)
-			if channel == "in_app" {
-				create.SetStatus("sent").SetSentAt(now)
-			}
-			notification, err := create.Save(ctx)
-			if err != nil {
-				s.logger.Warnw("Failed to create ticket CC notification", "error", err, "ticket_id", tk.ID, "user_id", userID, "channel", channel)
-				continue
-			}
-
-			if channel != "in_app" && s.connectorManager != nil {
-				sendErr := s.sendConnectorCCNotification(ctx, tenantID, channel, tk, userByID[userID], content)
-				nextStatus := "sent"
-				if sendErr != nil {
-					nextStatus = "failed"
-					s.logger.Warnw("Failed to send CC notification through connector", "error", sendErr, "ticket_id", tk.ID, "user_id", userID, "channel", channel)
-				}
-				update := s.client.TicketNotification.UpdateOneID(notification.ID).SetStatus(nextStatus)
-				if sendErr == nil {
-					update.SetSentAt(now)
-				}
-				if _, err := update.Save(ctx); err != nil {
-					s.logger.Warnw("Failed to update connector CC notification status", "error", err, "notification_id", notification.ID)
-				}
+			occurrenceKey := fmt.Sprintf("ticket:%d:cc:%d:%s", tk.ID, userID, channel)
+			if err := enqueueTicketNotificationCommand(ctx, s.client, tenantID, tk.ID, userID, "cc", channel, content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+				s.logger.Warnw("Failed to enqueue ticket CC notification", "error", err, "ticket_id", tk.ID, "user_id", userID, "channel", channel, "added_by", addedBy)
 			}
 		}
-
-		if _, err := s.client.Notification.Create().
-			SetTitle("工单抄送").
-			SetMessage(content).
-			SetType("info").
-			SetUserID(userID).
-			SetTenantID(tenantID).
-			SetActionURL(fmt.Sprintf("/tickets/%d", tk.ID)).
-			SetActionText("查看工单").
-			Save(ctx); err != nil {
-			s.logger.Warnw("Failed to create unified CC notification", "error", err, "ticket_id", tk.ID, "user_id", userID, "added_by", addedBy)
-		}
 	}
-}
-
-func (s *TicketWorkflowService) sendConnectorCCNotification(ctx context.Context, tenantID int, channel string, tk *ent.Ticket, recipient *ent.User, content string) error {
-	if s.connectorManager == nil {
-		return fmt.Errorf("connector manager not configured")
-	}
-	if recipient == nil {
-		return fmt.Errorf("recipient not found")
-	}
-
-	target := ""
-	switch channel {
-	case "feishu":
-		target = recipient.FeishuOpenID
-	case "dingtalk", "wecom":
-		target = recipient.Username
-	case "email":
-		target = recipient.Email
-	case "sms":
-		target = recipient.Phone
-	case "webhook":
-		target = recipient.Email
-	default:
-		return fmt.Errorf("unsupported connector channel %s", channel)
-	}
-	if target == "" {
-		return fmt.Errorf("recipient %d has no target for channel %s", recipient.ID, channel)
-	}
-
-	return s.connectorManager.Send(ctx, tenantID, channel, &connector.Message{
-		Channel: target,
-		Type:    "text",
-		Title:   "工单抄送",
-		Content: content,
-		Actions: []connector.Action{
-			{Type: "link", Text: "查看工单", URL: fmt.Sprintf("/tickets/%d", tk.ID)},
-		},
-		Metadata: map[string]interface{}{
-			"ticket_id":     tk.ID,
-			"ticket_number": tk.TicketNumber,
-			"event":         "ticket_cc",
-		},
-	})
 }
 
 func (s *TicketWorkflowService) buildCCListResponse(ctx context.Context, records []*ent.TicketCC) (*dto.TicketCCListResponse, error) {

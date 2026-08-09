@@ -2134,6 +2134,48 @@ var (
 		Columns:    NotificationsColumns,
 		PrimaryKey: []*schema.Column{NotificationsColumns[0]},
 	}
+	// NotificationDeliveriesColumns holds the columns for the "notification_deliveries" table.
+	NotificationDeliveriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "operational_command_id", Type: field.TypeInt, Unique: true},
+		{Name: "ticket_id", Type: field.TypeInt, Nullable: true},
+		{Name: "ticket_notification_id", Type: field.TypeInt, Nullable: true},
+		{Name: "recipient_id", Type: field.TypeInt},
+		{Name: "channel", Type: field.TypeString, Size: 50},
+		{Name: "target_masked", Type: field.TypeString, Nullable: true, Size: 200},
+		{Name: "status", Type: field.TypeString, Size: 32, Default: "pending"},
+		{Name: "attempt", Type: field.TypeInt, Default: 0},
+		{Name: "provider_message_id", Type: field.TypeString, Nullable: true, Size: 200},
+		{Name: "error_code", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "error_message", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "sent_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// NotificationDeliveriesTable holds the schema information for the "notification_deliveries" table.
+	NotificationDeliveriesTable = &schema.Table{
+		Name:       "notification_deliveries",
+		Columns:    NotificationDeliveriesColumns,
+		PrimaryKey: []*schema.Column{NotificationDeliveriesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "notificationdelivery_tenant_id_recipient_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationDeliveriesColumns[1], NotificationDeliveriesColumns[5], NotificationDeliveriesColumns[14]},
+			},
+			{
+				Name:    "notificationdelivery_tenant_id_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationDeliveriesColumns[1], NotificationDeliveriesColumns[8], NotificationDeliveriesColumns[14]},
+			},
+			{
+				Name:    "notificationdelivery_tenant_id_ticket_id",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationDeliveriesColumns[1], NotificationDeliveriesColumns[3]},
+			},
+		},
+	}
 	// NotificationPreferencesColumns holds the columns for the "notification_preferences" table.
 	NotificationPreferencesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -5231,6 +5273,7 @@ var (
 		MessagesTable,
 		MicroservicesTable,
 		NotificationsTable,
+		NotificationDeliveriesTable,
 		NotificationPreferencesTable,
 		OperationalCommandsTable,
 		PasswordResetTokensTable,

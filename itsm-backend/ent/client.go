@@ -66,6 +66,7 @@ import (
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notification"
+	"itsm-backend/ent/notificationdelivery"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/passwordresettoken"
@@ -251,6 +252,8 @@ type Client struct {
 	Microservice *MicroserviceClient
 	// Notification is the client for interacting with the Notification builders.
 	Notification *NotificationClient
+	// NotificationDelivery is the client for interacting with the NotificationDelivery builders.
+	NotificationDelivery *NotificationDeliveryClient
 	// NotificationPreference is the client for interacting with the NotificationPreference builders.
 	NotificationPreference *NotificationPreferenceClient
 	// OperationalCommand is the client for interacting with the OperationalCommand builders.
@@ -443,6 +446,7 @@ func (c *Client) init() {
 	c.Message = NewMessageClient(c.config)
 	c.Microservice = NewMicroserviceClient(c.config)
 	c.Notification = NewNotificationClient(c.config)
+	c.NotificationDelivery = NewNotificationDeliveryClient(c.config)
 	c.NotificationPreference = NewNotificationPreferenceClient(c.config)
 	c.OperationalCommand = NewOperationalCommandClient(c.config)
 	c.PasswordResetToken = NewPasswordResetTokenClient(c.config)
@@ -653,6 +657,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Message:                     NewMessageClient(cfg),
 		Microservice:                NewMicroserviceClient(cfg),
 		Notification:                NewNotificationClient(cfg),
+		NotificationDelivery:        NewNotificationDeliveryClient(cfg),
 		NotificationPreference:      NewNotificationPreferenceClient(cfg),
 		OperationalCommand:          NewOperationalCommandClient(cfg),
 		PasswordResetToken:          NewPasswordResetTokenClient(cfg),
@@ -790,6 +795,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Message:                     NewMessageClient(cfg),
 		Microservice:                NewMicroserviceClient(cfg),
 		Notification:                NewNotificationClient(cfg),
+		NotificationDelivery:        NewNotificationDeliveryClient(cfg),
 		NotificationPreference:      NewNotificationPreferenceClient(cfg),
 		OperationalCommand:          NewOperationalCommandClient(cfg),
 		PasswordResetToken:          NewPasswordResetTokenClient(cfg),
@@ -895,15 +901,15 @@ func (c *Client) Use(hooks ...Hook) {
 		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
-		c.Notification, c.NotificationPreference, c.OperationalCommand,
-		c.PasswordResetToken, c.Permission, c.PermissionDefinition, c.Problem,
-		c.ProcessApprovalDecision, c.ProcessAuditLog, c.ProcessBinding,
-		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
-		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
-		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
-		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
+		c.Notification, c.NotificationDelivery, c.NotificationPreference,
+		c.OperationalCommand, c.PasswordResetToken, c.Permission,
+		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
+		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
 		c.ServiceRequestApproval, c.StandardChange, c.Survey, c.SurveyResponse,
 		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
 		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
@@ -933,15 +939,15 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
-		c.Notification, c.NotificationPreference, c.OperationalCommand,
-		c.PasswordResetToken, c.Permission, c.PermissionDefinition, c.Problem,
-		c.ProcessApprovalDecision, c.ProcessAuditLog, c.ProcessBinding,
-		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
-		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
-		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
-		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
+		c.Notification, c.NotificationDelivery, c.NotificationPreference,
+		c.OperationalCommand, c.PasswordResetToken, c.Permission,
+		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
+		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
 		c.ServiceRequestApproval, c.StandardChange, c.Survey, c.SurveyResponse,
 		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
 		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
@@ -1067,6 +1073,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Microservice.mutate(ctx, m)
 	case *NotificationMutation:
 		return c.Notification.mutate(ctx, m)
+	case *NotificationDeliveryMutation:
+		return c.NotificationDelivery.mutate(ctx, m)
 	case *NotificationPreferenceMutation:
 		return c.NotificationPreference.mutate(ctx, m)
 	case *OperationalCommandMutation:
@@ -9902,6 +9910,139 @@ func (c *NotificationClient) mutate(ctx context.Context, m *NotificationMutation
 		return (&NotificationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Notification mutation op: %q", m.Op())
+	}
+}
+
+// NotificationDeliveryClient is a client for the NotificationDelivery schema.
+type NotificationDeliveryClient struct {
+	config
+}
+
+// NewNotificationDeliveryClient returns a client for the NotificationDelivery from the given config.
+func NewNotificationDeliveryClient(c config) *NotificationDeliveryClient {
+	return &NotificationDeliveryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `notificationdelivery.Hooks(f(g(h())))`.
+func (c *NotificationDeliveryClient) Use(hooks ...Hook) {
+	c.hooks.NotificationDelivery = append(c.hooks.NotificationDelivery, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `notificationdelivery.Intercept(f(g(h())))`.
+func (c *NotificationDeliveryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.NotificationDelivery = append(c.inters.NotificationDelivery, interceptors...)
+}
+
+// Create returns a builder for creating a NotificationDelivery entity.
+func (c *NotificationDeliveryClient) Create() *NotificationDeliveryCreate {
+	mutation := newNotificationDeliveryMutation(c.config, OpCreate)
+	return &NotificationDeliveryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of NotificationDelivery entities.
+func (c *NotificationDeliveryClient) CreateBulk(builders ...*NotificationDeliveryCreate) *NotificationDeliveryCreateBulk {
+	return &NotificationDeliveryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *NotificationDeliveryClient) MapCreateBulk(slice any, setFunc func(*NotificationDeliveryCreate, int)) *NotificationDeliveryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &NotificationDeliveryCreateBulk{err: fmt.Errorf("calling to NotificationDeliveryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*NotificationDeliveryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &NotificationDeliveryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for NotificationDelivery.
+func (c *NotificationDeliveryClient) Update() *NotificationDeliveryUpdate {
+	mutation := newNotificationDeliveryMutation(c.config, OpUpdate)
+	return &NotificationDeliveryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NotificationDeliveryClient) UpdateOne(_m *NotificationDelivery) *NotificationDeliveryUpdateOne {
+	mutation := newNotificationDeliveryMutation(c.config, OpUpdateOne, withNotificationDelivery(_m))
+	return &NotificationDeliveryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NotificationDeliveryClient) UpdateOneID(id int) *NotificationDeliveryUpdateOne {
+	mutation := newNotificationDeliveryMutation(c.config, OpUpdateOne, withNotificationDeliveryID(id))
+	return &NotificationDeliveryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for NotificationDelivery.
+func (c *NotificationDeliveryClient) Delete() *NotificationDeliveryDelete {
+	mutation := newNotificationDeliveryMutation(c.config, OpDelete)
+	return &NotificationDeliveryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NotificationDeliveryClient) DeleteOne(_m *NotificationDelivery) *NotificationDeliveryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NotificationDeliveryClient) DeleteOneID(id int) *NotificationDeliveryDeleteOne {
+	builder := c.Delete().Where(notificationdelivery.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NotificationDeliveryDeleteOne{builder}
+}
+
+// Query returns a query builder for NotificationDelivery.
+func (c *NotificationDeliveryClient) Query() *NotificationDeliveryQuery {
+	return &NotificationDeliveryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNotificationDelivery},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a NotificationDelivery entity by its id.
+func (c *NotificationDeliveryClient) Get(ctx context.Context, id int) (*NotificationDelivery, error) {
+	return c.Query().Where(notificationdelivery.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NotificationDeliveryClient) GetX(ctx context.Context, id int) *NotificationDelivery {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *NotificationDeliveryClient) Hooks() []Hook {
+	return c.hooks.NotificationDelivery
+}
+
+// Interceptors returns the client interceptors.
+func (c *NotificationDeliveryClient) Interceptors() []Interceptor {
+	return c.inters.NotificationDelivery
+}
+
+func (c *NotificationDeliveryClient) mutate(ctx context.Context, m *NotificationDeliveryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NotificationDeliveryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NotificationDeliveryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NotificationDeliveryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NotificationDeliveryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown NotificationDelivery mutation op: %q", m.Op())
 	}
 }
 
@@ -20170,20 +20311,21 @@ type (
 		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
 		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
 		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
-		Message, Microservice, Notification, NotificationPreference,
-		OperationalCommand, PasswordResetToken, Permission, PermissionDefinition,
-		Problem, ProcessApprovalDecision, ProcessAuditLog, ProcessBinding,
-		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
-		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
-		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
-		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
-		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceRequest,
-		ServiceRequestApproval, StandardChange, Survey, SurveyResponse, SystemConfig,
-		Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
-		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketType, TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor,
-		Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
+		Message, Microservice, Notification, NotificationDelivery,
+		NotificationPreference, OperationalCommand, PasswordResetToken, Permission,
+		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
+		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
+		ServiceCatalogItem, ServiceRequest, ServiceRequestApproval, StandardChange,
+		Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant, TenantInstallation,
+		Ticket, TicketApproval, TicketAssignmentRule, TicketAttachment,
+		TicketAutomationRule, TicketCC, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketType, TicketView,
+		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
+		WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
@@ -20197,19 +20339,20 @@ type (
 		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
 		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
 		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
-		Message, Microservice, Notification, NotificationPreference,
-		OperationalCommand, PasswordResetToken, Permission, PermissionDefinition,
-		Problem, ProcessApprovalDecision, ProcessAuditLog, ProcessBinding,
-		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
-		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
-		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
-		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
-		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceRequest,
-		ServiceRequestApproval, StandardChange, Survey, SurveyResponse, SystemConfig,
-		Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
-		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketType, TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor,
-		Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
+		Message, Microservice, Notification, NotificationDelivery,
+		NotificationPreference, OperationalCommand, PasswordResetToken, Permission,
+		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
+		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
+		ServiceCatalogItem, ServiceRequest, ServiceRequestApproval, StandardChange,
+		Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant, TenantInstallation,
+		Ticket, TicketApproval, TicketAssignmentRule, TicketAttachment,
+		TicketAutomationRule, TicketCC, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketType, TicketView,
+		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
+		WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )

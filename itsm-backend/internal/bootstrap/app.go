@@ -250,6 +250,11 @@ func NewApplication() *Application {
 
 	// 通知 / 审批 / SLA / 自动化 / 序列服务（V2 子服务）
 	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
+	notificationCommandHandler := service.NewNotificationDeliveryCommandHandler(client, connectorManager, sugar)
+	if err := commandRegistry.Register(commandbus.CommandDeliverNotification, notificationCommandHandler.Handle); err != nil {
+		sugar.Fatalw("Failed to register notification command handler", "error", err)
+	}
+	ticketNotificationService.EnableOutbox()
 	ticketSLAService := service.NewTicketSLAService(client, sugar)
 	ticketAutomationRuleService := service.NewTicketAutomationRuleService(client, sugar)
 

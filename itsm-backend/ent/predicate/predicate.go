@@ -171,6 +171,9 @@ type Microservice func(*sql.Selector)
 // Notification is the predicate function for notification builders.
 type Notification func(*sql.Selector)
 
+// NotificationDelivery is the predicate function for notificationdelivery builders.
+type NotificationDelivery func(*sql.Selector)
+
 // NotificationPreference is the predicate function for notificationpreference builders.
 type NotificationPreference func(*sql.Selector)
 

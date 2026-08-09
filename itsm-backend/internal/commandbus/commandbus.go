@@ -21,7 +21,8 @@ const (
 	StatusSucceeded  = "succeeded"
 	StatusDeadLetter = "dead_letter"
 
-	CommandStartBPMN = "workflow.start"
+	CommandStartBPMN           = "workflow.start"
+	CommandDeliverNotification = "notification.deliver"
 )
 
 var ErrLeaseLost = errors.New("operational command lease lost")
@@ -42,6 +43,9 @@ func ValidateStorage(ctx context.Context, client *ent.Client) error {
 	systemCtx := tenantctx.SystemContext(ctx, "commandbus:readiness", "verify durable command storage before serving traffic")
 	if _, err := client.OperationalCommand.Query().Limit(1).All(systemCtx); err != nil {
 		return fmt.Errorf("operational command storage is not ready: %w", err)
+	}
+	if _, err := client.NotificationDelivery.Query().Limit(1).All(systemCtx); err != nil {
+		return fmt.Errorf("notification delivery audit storage is not ready: %w", err)
 	}
 	return nil
 }

@@ -43,12 +43,22 @@ pending → processing → succeeded
 ## 扩展顺序
 
 1. `workflow.start`：事件、变更；
-2. `notification.deliver`：站内、邮件和消息通知；
+2. `notification.deliver`：已接入工单站内通知与飞书/钉钉/企微/Webhook 等企业渠道；每个收件人/渠道一个命令，使用调用方 occurrence key 派生幂等键；
 3. `connector.deliver`：飞书优先，具备投递幂等和回调审计；
 4. `ai.invoke`：只保存 prompt/template/model 引用和业务上下文引用；
 5. `cmdb.discovery` / `cmdb.reconcile`：Command 只负责调度，领域 Job/Result 仍是 CMDB 权威状态。
 
 每种命令必须有独立 Handler、超时、最大尝试次数、错误分类、指标和死信重放权限。不得在通用 Worker 中加入领域 switch；`workflow.start` 的聚合类型路由属于该 Handler 自身。
+
+### notification.deliver
+
+- `TicketNotificationService` 在生产组装中只入队，不同步调用外部系统；
+- payload 只保存 ticket、recipient、channel、type、content，不保存邮箱/手机号/open ID 等投递目标；目标由 Handler 在租户范围内实时解析；
+- `notification_deliveries` 保存命令、收件人、渠道、掩码目标、attempt、状态、错误分类和发送时间；
+- 站内通知、统一通知和投递审计在同一事务提交；
+- 企业渠道通过 `connector.Manager` 投递，`connector.Message.ID` 使用 command idempotency key；连接器应把该 ID 透传给支持幂等的 Provider；
+- 调用方可传 `idempotencyKey` 表示一次业务事件。未传时生成随机 occurrence key，避免内容相同的两个合法事件被永久去重；
+- 外部 Provider 原始错误不写 Outbox、审计或业务日志，只记录安全错误分类。
 
 ## 运维要求
 
