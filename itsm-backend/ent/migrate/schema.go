@@ -3163,6 +3163,7 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "is_system", Type: field.TypeBool, Default: false},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "data_scope", Type: field.TypeEnum, Enums: []string{"all", "department", "owner"}, Default: "all"},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -3176,7 +3177,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "roles_permissions_roles",
-				Columns:    []*schema.Column{RolesColumns[9]},
+				Columns:    []*schema.Column{RolesColumns[10]},
 				RefColumns: []*schema.Column{PermissionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -3837,6 +3838,7 @@ var (
 		{Name: "currency", Type: field.TypeString, Nullable: true},
 		{Name: "service_tier", Type: field.TypeString, Nullable: true},
 		{Name: "owner_contact", Type: field.TypeString, Nullable: true},
+		{Name: "timezone", Type: field.TypeString, Default: "Asia/Shanghai"},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "bootstrap_token_tenant", Type: field.TypeInt, Nullable: true},
@@ -3849,7 +3851,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tenants_bootstrap_tokens_tenant",
-				Columns:    []*schema.Column{TenantsColumns[18]},
+				Columns:    []*schema.Column{TenantsColumns[19]},
 				RefColumns: []*schema.Column{BootstrapTokensColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

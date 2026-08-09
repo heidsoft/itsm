@@ -106,6 +106,20 @@ func (_u *RoleUpdate) SetNillableIsActive(v *bool) *RoleUpdate {
 	return _u
 }
 
+// SetDataScope sets the "data_scope" field.
+func (_u *RoleUpdate) SetDataScope(v role.DataScope) *RoleUpdate {
+	_u.mutation.SetDataScope(v)
+	return _u
+}
+
+// SetNillableDataScope sets the "data_scope" field if the given value is not nil.
+func (_u *RoleUpdate) SetNillableDataScope(v *role.DataScope) *RoleUpdate {
+	if v != nil {
+		_u.SetDataScope(*v)
+	}
+	return _u
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_u *RoleUpdate) SetTenantID(v int) *RoleUpdate {
 	_u.mutation.ResetTenantID()
@@ -272,6 +286,11 @@ func (_u *RoleUpdate) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Role.code": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.DataScope(); ok {
+		if err := role.DataScopeValidator(v); err != nil {
+			return &ValidationError{Name: "data_scope", err: fmt.Errorf(`ent: validator failed for field "Role.data_scope": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.TenantID(); ok {
 		if err := role.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Role.tenant_id": %w`, err)}
@@ -309,6 +328,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(role.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.DataScope(); ok {
+		_spec.SetField(role.FieldDataScope, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(role.FieldTenantID, field.TypeInt, value)
@@ -508,6 +530,20 @@ func (_u *RoleUpdateOne) SetNillableIsActive(v *bool) *RoleUpdateOne {
 	return _u
 }
 
+// SetDataScope sets the "data_scope" field.
+func (_u *RoleUpdateOne) SetDataScope(v role.DataScope) *RoleUpdateOne {
+	_u.mutation.SetDataScope(v)
+	return _u
+}
+
+// SetNillableDataScope sets the "data_scope" field if the given value is not nil.
+func (_u *RoleUpdateOne) SetNillableDataScope(v *role.DataScope) *RoleUpdateOne {
+	if v != nil {
+		_u.SetDataScope(*v)
+	}
+	return _u
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_u *RoleUpdateOne) SetTenantID(v int) *RoleUpdateOne {
 	_u.mutation.ResetTenantID()
@@ -687,6 +723,11 @@ func (_u *RoleUpdateOne) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Role.code": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.DataScope(); ok {
+		if err := role.DataScopeValidator(v); err != nil {
+			return &ValidationError{Name: "data_scope", err: fmt.Errorf(`ent: validator failed for field "Role.data_scope": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.TenantID(); ok {
 		if err := role.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Role.tenant_id": %w`, err)}
@@ -741,6 +782,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(role.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.DataScope(); ok {
+		_spec.SetField(role.FieldDataScope, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(role.FieldTenantID, field.TypeInt, value)

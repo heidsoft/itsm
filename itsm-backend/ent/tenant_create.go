@@ -217,6 +217,20 @@ func (_c *TenantCreate) SetNillableOwnerContact(v *string) *TenantCreate {
 	return _c
 }
 
+// SetTimezone sets the "timezone" field.
+func (_c *TenantCreate) SetTimezone(v string) *TenantCreate {
+	_c.mutation.SetTimezone(v)
+	return _c
+}
+
+// SetNillableTimezone sets the "timezone" field if the given value is not nil.
+func (_c *TenantCreate) SetNillableTimezone(v *string) *TenantCreate {
+	if v != nil {
+		_c.SetTimezone(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *TenantCreate) SetCreatedAt(v time.Time) *TenantCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -337,6 +351,10 @@ func (_c *TenantCreate) defaults() {
 		v := tenant.DefaultBillingEnabled
 		_c.mutation.SetBillingEnabled(v)
 	}
+	if _, ok := _c.mutation.Timezone(); !ok {
+		v := tenant.DefaultTimezone
+		_c.mutation.SetTimezone(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := tenant.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -378,6 +396,9 @@ func (_c *TenantCreate) check() error {
 	}
 	if _, ok := _c.mutation.BillingEnabled(); !ok {
 		return &ValidationError{Name: "billing_enabled", err: errors.New(`ent: missing required field "Tenant.billing_enabled"`)}
+	}
+	if _, ok := _c.mutation.Timezone(); !ok {
+		return &ValidationError{Name: "timezone", err: errors.New(`ent: missing required field "Tenant.timezone"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Tenant.created_at"`)}
@@ -470,6 +491,10 @@ func (_c *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.OwnerContact(); ok {
 		_spec.SetField(tenant.FieldOwnerContact, field.TypeString, value)
 		_node.OwnerContact = value
+	}
+	if value, ok := _c.mutation.Timezone(); ok {
+		_spec.SetField(tenant.FieldTimezone, field.TypeString, value)
+		_node.Timezone = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(tenant.FieldCreatedAt, field.TypeTime, value)

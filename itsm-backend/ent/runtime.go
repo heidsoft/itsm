@@ -2644,15 +2644,15 @@ func init() {
 	// role.DefaultIsActive holds the default value on creation for the is_active field.
 	role.DefaultIsActive = roleDescIsActive.Default.(bool)
 	// roleDescTenantID is the schema descriptor for tenant_id field.
-	roleDescTenantID := roleFields[5].Descriptor()
+	roleDescTenantID := roleFields[6].Descriptor()
 	// role.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	role.TenantIDValidator = roleDescTenantID.Validators[0].(func(int) error)
 	// roleDescCreatedAt is the schema descriptor for created_at field.
-	roleDescCreatedAt := roleFields[6].Descriptor()
+	roleDescCreatedAt := roleFields[7].Descriptor()
 	// role.DefaultCreatedAt holds the default value on creation for the created_at field.
 	role.DefaultCreatedAt = roleDescCreatedAt.Default.(func() time.Time)
 	// roleDescUpdatedAt is the schema descriptor for updated_at field.
-	roleDescUpdatedAt := roleFields[7].Descriptor()
+	roleDescUpdatedAt := roleFields[8].Descriptor()
 	// role.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	role.DefaultUpdatedAt = roleDescUpdatedAt.Default.(func() time.Time)
 	// role.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -3363,12 +3363,16 @@ func init() {
 	tenantDescBillingEnabled := tenantFields[9].Descriptor()
 	// tenant.DefaultBillingEnabled holds the default value on creation for the billing_enabled field.
 	tenant.DefaultBillingEnabled = tenantDescBillingEnabled.Default.(bool)
+	// tenantDescTimezone is the schema descriptor for timezone field.
+	tenantDescTimezone := tenantFields[15].Descriptor()
+	// tenant.DefaultTimezone holds the default value on creation for the timezone field.
+	tenant.DefaultTimezone = tenantDescTimezone.Default.(string)
 	// tenantDescCreatedAt is the schema descriptor for created_at field.
-	tenantDescCreatedAt := tenantFields[15].Descriptor()
+	tenantDescCreatedAt := tenantFields[16].Descriptor()
 	// tenant.DefaultCreatedAt holds the default value on creation for the created_at field.
 	tenant.DefaultCreatedAt = tenantDescCreatedAt.Default.(func() time.Time)
 	// tenantDescUpdatedAt is the schema descriptor for updated_at field.
-	tenantDescUpdatedAt := tenantFields[16].Descriptor()
+	tenantDescUpdatedAt := tenantFields[17].Descriptor()
 	// tenant.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	tenant.DefaultUpdatedAt = tenantDescUpdatedAt.Default.(func() time.Time)
 	// tenant.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

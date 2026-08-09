@@ -3,6 +3,7 @@
 package role
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -24,6 +25,8 @@ const (
 	FieldIsSystem = "is_system"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
+	// FieldDataScope holds the string denoting the data_scope field in the database.
+	FieldDataScope = "data_scope"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -58,6 +61,7 @@ var Columns = []string{
 	FieldDescription,
 	FieldIsSystem,
 	FieldIsActive,
+	FieldDataScope,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -109,6 +113,33 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 )
 
+// DataScope defines the type for the "data_scope" enum field.
+type DataScope string
+
+// DataScopeAll is the default value of the DataScope enum.
+const DefaultDataScope = DataScopeAll
+
+// DataScope values.
+const (
+	DataScopeAll        DataScope = "all"
+	DataScopeDepartment DataScope = "department"
+	DataScopeOwner      DataScope = "owner"
+)
+
+func (ds DataScope) String() string {
+	return string(ds)
+}
+
+// DataScopeValidator is a validator for the "data_scope" field enum values. It is called by the builders before save.
+func DataScopeValidator(ds DataScope) error {
+	switch ds {
+	case DataScopeAll, DataScopeDepartment, DataScopeOwner:
+		return nil
+	default:
+		return fmt.Errorf("role: invalid enum value for data_scope field: %q", ds)
+	}
+}
+
 // OrderOption defines the ordering options for the Role queries.
 type OrderOption func(*sql.Selector)
 
@@ -140,6 +171,11 @@ func ByIsSystem(opts ...sql.OrderTermOption) OrderOption {
 // ByIsActive orders the results by the is_active field.
 func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+}
+
+// ByDataScope orders the results by the data_scope field.
+func ByDataScope(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDataScope, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.

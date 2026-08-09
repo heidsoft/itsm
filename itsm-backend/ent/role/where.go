@@ -320,6 +320,26 @@ func IsActiveNEQ(v bool) predicate.Role {
 	return predicate.Role(sql.FieldNEQ(FieldIsActive, v))
 }
 
+// DataScopeEQ applies the EQ predicate on the "data_scope" field.
+func DataScopeEQ(v DataScope) predicate.Role {
+	return predicate.Role(sql.FieldEQ(FieldDataScope, v))
+}
+
+// DataScopeNEQ applies the NEQ predicate on the "data_scope" field.
+func DataScopeNEQ(v DataScope) predicate.Role {
+	return predicate.Role(sql.FieldNEQ(FieldDataScope, v))
+}
+
+// DataScopeIn applies the In predicate on the "data_scope" field.
+func DataScopeIn(vs ...DataScope) predicate.Role {
+	return predicate.Role(sql.FieldIn(FieldDataScope, vs...))
+}
+
+// DataScopeNotIn applies the NotIn predicate on the "data_scope" field.
+func DataScopeNotIn(vs ...DataScope) predicate.Role {
+	return predicate.Role(sql.FieldNotIn(FieldDataScope, vs...))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v int) predicate.Role {
 	return predicate.Role(sql.FieldEQ(FieldTenantID, v))

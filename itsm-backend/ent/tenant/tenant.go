@@ -45,6 +45,8 @@ const (
 	FieldServiceTier = "service_tier"
 	// FieldOwnerContact holds the string denoting the owner_contact field in the database.
 	FieldOwnerContact = "owner_contact"
+	// FieldTimezone holds the string denoting the timezone field in the database.
+	FieldTimezone = "timezone"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -98,6 +100,7 @@ var Columns = []string{
 	FieldCurrency,
 	FieldServiceTier,
 	FieldOwnerContact,
+	FieldTimezone,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -132,6 +135,8 @@ var (
 	DefaultStatus string
 	// DefaultBillingEnabled holds the default value on creation for the "billing_enabled" field.
 	DefaultBillingEnabled bool
+	// DefaultTimezone holds the default value on creation for the "timezone" field.
+	DefaultTimezone string
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -252,6 +257,11 @@ func ByServiceTier(opts ...sql.OrderTermOption) OrderOption {
 // ByOwnerContact orders the results by the owner_contact field.
 func ByOwnerContact(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOwnerContact, opts...).ToFunc()
+}
+
+// ByTimezone orders the results by the timezone field.
+func ByTimezone(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTimezone, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

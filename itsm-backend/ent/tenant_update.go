@@ -315,6 +315,20 @@ func (_u *TenantUpdate) ClearOwnerContact() *TenantUpdate {
 	return _u
 }
 
+// SetTimezone sets the "timezone" field.
+func (_u *TenantUpdate) SetTimezone(v string) *TenantUpdate {
+	_u.mutation.SetTimezone(v)
+	return _u
+}
+
+// SetNillableTimezone sets the "timezone" field if the given value is not nil.
+func (_u *TenantUpdate) SetNillableTimezone(v *string) *TenantUpdate {
+	if v != nil {
+		_u.SetTimezone(*v)
+	}
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *TenantUpdate) SetCreatedAt(v time.Time) *TenantUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -596,6 +610,9 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.OwnerContactCleared() {
 		_spec.ClearField(tenant.FieldOwnerContact, field.TypeString)
+	}
+	if value, ok := _u.mutation.Timezone(); ok {
+		_spec.SetField(tenant.FieldTimezone, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(tenant.FieldCreatedAt, field.TypeTime, value)
@@ -1042,6 +1059,20 @@ func (_u *TenantUpdateOne) ClearOwnerContact() *TenantUpdateOne {
 	return _u
 }
 
+// SetTimezone sets the "timezone" field.
+func (_u *TenantUpdateOne) SetTimezone(v string) *TenantUpdateOne {
+	_u.mutation.SetTimezone(v)
+	return _u
+}
+
+// SetNillableTimezone sets the "timezone" field if the given value is not nil.
+func (_u *TenantUpdateOne) SetNillableTimezone(v *string) *TenantUpdateOne {
+	if v != nil {
+		_u.SetTimezone(*v)
+	}
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *TenantUpdateOne) SetCreatedAt(v time.Time) *TenantUpdateOne {
 	_u.mutation.SetCreatedAt(v)
@@ -1353,6 +1384,9 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 	}
 	if _u.mutation.OwnerContactCleared() {
 		_spec.ClearField(tenant.FieldOwnerContact, field.TypeString)
+	}
+	if value, ok := _u.mutation.Timezone(); ok {
+		_spec.SetField(tenant.FieldTimezone, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(tenant.FieldCreatedAt, field.TypeTime, value)

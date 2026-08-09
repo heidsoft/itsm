@@ -96871,6 +96871,7 @@ type RoleMutation struct {
 	description        *string
 	is_system          *bool
 	is_active          *bool
+	data_scope         *role.DataScope
 	tenant_id          *int
 	addtenant_id       *int
 	created_at         *time.Time
@@ -97178,6 +97179,42 @@ func (m *RoleMutation) ResetIsActive() {
 	m.is_active = nil
 }
 
+// SetDataScope sets the "data_scope" field.
+func (m *RoleMutation) SetDataScope(rs role.DataScope) {
+	m.data_scope = &rs
+}
+
+// DataScope returns the value of the "data_scope" field in the mutation.
+func (m *RoleMutation) DataScope() (r role.DataScope, exists bool) {
+	v := m.data_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDataScope returns the old "data_scope" field's value of the Role entity.
+// If the Role object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RoleMutation) OldDataScope(ctx context.Context) (v role.DataScope, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDataScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDataScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDataScope: %w", err)
+	}
+	return oldValue.DataScope, nil
+}
+
+// ResetDataScope resets all changes to the "data_scope" field.
+func (m *RoleMutation) ResetDataScope() {
+	m.data_scope = nil
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (m *RoleMutation) SetTenantID(i int) {
 	m.tenant_id = &i
@@ -97448,7 +97485,7 @@ func (m *RoleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RoleMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.name != nil {
 		fields = append(fields, role.FieldName)
 	}
@@ -97463,6 +97500,9 @@ func (m *RoleMutation) Fields() []string {
 	}
 	if m.is_active != nil {
 		fields = append(fields, role.FieldIsActive)
+	}
+	if m.data_scope != nil {
+		fields = append(fields, role.FieldDataScope)
 	}
 	if m.tenant_id != nil {
 		fields = append(fields, role.FieldTenantID)
@@ -97491,6 +97531,8 @@ func (m *RoleMutation) Field(name string) (ent.Value, bool) {
 		return m.IsSystem()
 	case role.FieldIsActive:
 		return m.IsActive()
+	case role.FieldDataScope:
+		return m.DataScope()
 	case role.FieldTenantID:
 		return m.TenantID()
 	case role.FieldCreatedAt:
@@ -97516,6 +97558,8 @@ func (m *RoleMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldIsSystem(ctx)
 	case role.FieldIsActive:
 		return m.OldIsActive(ctx)
+	case role.FieldDataScope:
+		return m.OldDataScope(ctx)
 	case role.FieldTenantID:
 		return m.OldTenantID(ctx)
 	case role.FieldCreatedAt:
@@ -97565,6 +97609,13 @@ func (m *RoleMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIsActive(v)
+		return nil
+	case role.FieldDataScope:
+		v, ok := value.(role.DataScope)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDataScope(v)
 		return nil
 	case role.FieldTenantID:
 		v, ok := value.(int)
@@ -97674,6 +97725,9 @@ func (m *RoleMutation) ResetField(name string) error {
 		return nil
 	case role.FieldIsActive:
 		m.ResetIsActive()
+		return nil
+	case role.FieldDataScope:
+		m.ResetDataScope()
 		return nil
 	case role.FieldTenantID:
 		m.ResetTenantID()
@@ -121991,6 +122045,7 @@ type TenantMutation struct {
 	currency                        *string
 	service_tier                    *string
 	owner_contact                   *string
+	timezone                        *string
 	created_at                      *time.Time
 	updated_at                      *time.Time
 	clearedFields                   map[string]struct{}
@@ -122818,6 +122873,42 @@ func (m *TenantMutation) ResetOwnerContact() {
 	delete(m.clearedFields, tenant.FieldOwnerContact)
 }
 
+// SetTimezone sets the "timezone" field.
+func (m *TenantMutation) SetTimezone(s string) {
+	m.timezone = &s
+}
+
+// Timezone returns the value of the "timezone" field in the mutation.
+func (m *TenantMutation) Timezone() (r string, exists bool) {
+	v := m.timezone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimezone returns the old "timezone" field's value of the Tenant entity.
+// If the Tenant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantMutation) OldTimezone(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTimezone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTimezone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimezone: %w", err)
+	}
+	return oldValue.Timezone, nil
+}
+
+// ResetTimezone resets all changes to the "timezone" field.
+func (m *TenantMutation) ResetTimezone() {
+	m.timezone = nil
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *TenantMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -123086,7 +123177,7 @@ func (m *TenantMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TenantMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 18)
 	if m.name != nil {
 		fields = append(fields, tenant.FieldName)
 	}
@@ -123132,6 +123223,9 @@ func (m *TenantMutation) Fields() []string {
 	if m.owner_contact != nil {
 		fields = append(fields, tenant.FieldOwnerContact)
 	}
+	if m.timezone != nil {
+		fields = append(fields, tenant.FieldTimezone)
+	}
 	if m.created_at != nil {
 		fields = append(fields, tenant.FieldCreatedAt)
 	}
@@ -123176,6 +123270,8 @@ func (m *TenantMutation) Field(name string) (ent.Value, bool) {
 		return m.ServiceTier()
 	case tenant.FieldOwnerContact:
 		return m.OwnerContact()
+	case tenant.FieldTimezone:
+		return m.Timezone()
 	case tenant.FieldCreatedAt:
 		return m.CreatedAt()
 	case tenant.FieldUpdatedAt:
@@ -123219,6 +123315,8 @@ func (m *TenantMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldServiceTier(ctx)
 	case tenant.FieldOwnerContact:
 		return m.OldOwnerContact(ctx)
+	case tenant.FieldTimezone:
+		return m.OldTimezone(ctx)
 	case tenant.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case tenant.FieldUpdatedAt:
@@ -123336,6 +123434,13 @@ func (m *TenantMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetOwnerContact(v)
+		return nil
+	case tenant.FieldTimezone:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimezone(v)
 		return nil
 	case tenant.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -123534,6 +123639,9 @@ func (m *TenantMutation) ResetField(name string) error {
 		return nil
 	case tenant.FieldOwnerContact:
 		m.ResetOwnerContact()
+		return nil
+	case tenant.FieldTimezone:
+		m.ResetTimezone()
 		return nil
 	case tenant.FieldCreatedAt:
 		m.ResetCreatedAt()

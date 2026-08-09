@@ -76,6 +76,20 @@ func (_c *RoleCreate) SetNillableIsActive(v *bool) *RoleCreate {
 	return _c
 }
 
+// SetDataScope sets the "data_scope" field.
+func (_c *RoleCreate) SetDataScope(v role.DataScope) *RoleCreate {
+	_c.mutation.SetDataScope(v)
+	return _c
+}
+
+// SetNillableDataScope sets the "data_scope" field if the given value is not nil.
+func (_c *RoleCreate) SetNillableDataScope(v *role.DataScope) *RoleCreate {
+	if v != nil {
+		_c.SetDataScope(*v)
+	}
+	return _c
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_c *RoleCreate) SetTenantID(v int) *RoleCreate {
 	_c.mutation.SetTenantID(v)
@@ -183,6 +197,10 @@ func (_c *RoleCreate) defaults() {
 		v := role.DefaultIsActive
 		_c.mutation.SetIsActive(v)
 	}
+	if _, ok := _c.mutation.DataScope(); !ok {
+		v := role.DefaultDataScope
+		_c.mutation.SetDataScope(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := role.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -216,6 +234,14 @@ func (_c *RoleCreate) check() error {
 	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Role.is_active"`)}
+	}
+	if _, ok := _c.mutation.DataScope(); !ok {
+		return &ValidationError{Name: "data_scope", err: errors.New(`ent: missing required field "Role.data_scope"`)}
+	}
+	if v, ok := _c.mutation.DataScope(); ok {
+		if err := role.DataScopeValidator(v); err != nil {
+			return &ValidationError{Name: "data_scope", err: fmt.Errorf(`ent: validator failed for field "Role.data_scope": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Role.tenant_id"`)}
@@ -276,6 +302,10 @@ func (_c *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(role.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
+	}
+	if value, ok := _c.mutation.DataScope(); ok {
+		_spec.SetField(role.FieldDataScope, field.TypeEnum, value)
+		_node.DataScope = value
 	}
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(role.FieldTenantID, field.TypeInt, value)
