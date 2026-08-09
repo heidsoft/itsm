@@ -117,7 +117,7 @@ func TestUserController_CreateUser(t *testing.T) {
 		Name:       "Existing User",
 		Department: "IT",
 		Phone:      "5555555555",
-		Password:   "password123",
+		Password:   "Pass@12345678",
 		TenantID:   tenant.ID,
 	}
 	existingUserBody, _ := json.Marshal(existingUserRequest)
@@ -140,7 +140,7 @@ func TestUserController_CreateUser(t *testing.T) {
 				Name:       "New User",
 				Department: "HR",
 				Phone:      "0987654321",
-				Password:   "password123",
+				Password:   "Pass@12345678",
 				TenantID:   tenant.ID,
 			},
 			expectedStatus: http.StatusOK,
@@ -154,7 +154,7 @@ func TestUserController_CreateUser(t *testing.T) {
 				Name:       "Another User",
 				Department: "Finance",
 				Phone:      "1111111111",
-				Password:   "password123",
+				Password:   "Pass@12345678",
 				TenantID:   tenant.ID,
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -168,7 +168,7 @@ func TestUserController_CreateUser(t *testing.T) {
 				Name:       "Invalid User",
 				Department: "IT",
 				Phone:      "2222222222",
-				Password:   "password123",
+				Password:   "Pass@12345678",
 				TenantID:   tenant.ID,
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -603,7 +603,7 @@ func TestUserController_ResetPassword(t *testing.T) {
 			name:   "成功重置密码",
 			userID: strconv.Itoa(user.ID),
 			request: dto.ResetPasswordRequest{
-				NewPassword: "newpassword123",
+				NewPassword: "NewPass@1234567",
 			},
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
@@ -621,7 +621,7 @@ func TestUserController_ResetPassword(t *testing.T) {
 			name:   "重置不存在用户的密码",
 			userID: "999",
 			request: dto.ResetPasswordRequest{
-				NewPassword: "newpassword123",
+				NewPassword: "NewPass@1234567",
 			},
 			expectedStatus: http.StatusNotFound,
 			expectedCode:   common.NotFoundCode,
@@ -698,7 +698,7 @@ func BenchmarkUserController_CreateUser(b *testing.B) {
 			Name:       fmt.Sprintf("User %d", i),
 			Department: "IT",
 			Phone:      "1234567890",
-			Password:   "password123",
+			Password:   "Pass@12345678",
 			TenantID:   tenant.ID,
 		}
 

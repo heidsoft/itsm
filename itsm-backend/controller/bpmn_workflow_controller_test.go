@@ -314,3 +314,33 @@ func TestGetApprovalHistory_PropagatesError(t *testing.T) {
 
 // silence unused-import lint on strconv when feature is dropped
 var _ = strconv.Itoa
+
+// ===================== F-5: tenant_id=0 透传绕过租户过滤 =====================
+
+// TestGetBPMNTenantContext_RejectsZeroTenant 验证 F-5：tenant_id=0 必须被拒绝，
+// 否则会透传到引擎导致 `if tenantID > 0` 租户过滤被跳过，造成跨租户读取。
+func TestGetBPMNTenantContext_RejectsZeroTenant(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/", nil)
+	c.Set("tenant_id", 0)
+
+	_, _, ok := getBPMNTenantContext(c)
+	assert.False(t, ok, "tenant_id=0 应通过 F-5 被拒绝，避免跨租户读取")
+}
+
+// TestGetBPMNTenantContext_AcceptsPositiveTenant 验证正常租户上下文透传。
+func TestGetBPMNTenantContext_AcceptsPositiveTenant(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/", nil)
+	c.Set("tenant_id", 7)
+	c.Set("user_id", 3)
+
+	ctx, tenantID, ok := getBPMNTenantContext(c)
+	assert.True(t, ok)
+	assert.Equal(t, 7, tenantID)
+	assert.NotNil(t, ctx)
+}

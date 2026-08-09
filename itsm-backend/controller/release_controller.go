@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"strconv"
 
 	"itsm-backend/common"
@@ -165,6 +166,13 @@ func (rc *ReleaseController) UpdateReleaseStatus(c *gin.Context) {
 
 	release, err := rc.releaseService.UpdateReleaseStatus(c.Request.Context(), releaseID, tenantID, string(req.Status))
 	if err != nil {
+		// D-5：状态机白名单拒绝属于调用方输入错误，应返回 400 而非 500，
+		// 避免客户端把"被安全策略拦截"误判为服务端故障而重试。
+		if errors.Is(err, service.ErrInvalidReleaseTransition) {
+			rc.logger.Warnw("Release status transition rejected", "error", err, "release_id", releaseID)
+			common.Fail(c, common.BadRequestCode, err.Error())
+			return
+		}
 		rc.logger.Errorw("Update release status failed", "error", err, "release_id", releaseID)
 		common.Fail(c, common.InternalErrorCode, "更新发布状态失败: "+err.Error())
 		return

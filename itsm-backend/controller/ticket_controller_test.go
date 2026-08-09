@@ -100,6 +100,16 @@ func createTestTenantAndUserForTicket(t *testing.T, client *ent.Client) (*ent.Te
 		Save(ctx)
 	require.NoError(t, err)
 
+	// 创建工单分类
+	_, err = client.TicketCategory.Create().
+		SetName("incident").
+		SetCode("incident").
+		SetDescription("事件类工单").
+		SetIsActive(true).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
 	return tenant, user
 }
 

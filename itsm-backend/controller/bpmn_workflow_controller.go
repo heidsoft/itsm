@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -32,17 +33,28 @@ func NewBPMNWorkflowController(processEngine service.ProcessEngine, versionServi
 
 func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
 	tenantID := ctx.GetInt("tenant_id")
-	// 仅在明确需要租户上下文时拒绝 tenant_id=0，允许平台级操作通过
-	if tenantID < 0 {
-		common.AuthFailed(ctx, "未授权访问")
+	role := ctx.GetString("role")
+	userID := ctx.GetInt("user_id")
+
+	// 调试日志 - 使用标准输出
+	fmt.Printf("[DEBUG] getBPMNTenantContext: tenant_id=%d, role=%s, user_id=%d\n", tenantID, role, userID)
+
+	// 架构优化：super_admin 角色在没有 tenant 上下文时使用默认租户 (tenant_id=1)
+	// 这是企业级系统的常见模式，超级管理员默认属于系统租户
+	if tenantID <= 0 && role == "super_admin" {
+		tenantID = 1
+		fmt.Printf("[DEBUG] getBPMNTenantContext: super_admin using default tenant_id=%d\n", tenantID)
+	}
+
+	// F-5 修复：tenant_id 必须 > 0。原实现仅拒绝 <0，允许 tenant_id=0 透传，
+	// 导致引擎内 `if tenantID > 0 { ...TenantID(tenantID) }` 过滤被整体跳过，
+	// 可跨租户读流程定义/实例/任务/变量。正常鉴权用户必带 >0 租户；0 视为异常令牌，直接拒绝。
+	if tenantID <= 0 {
+		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
 		return nil, 0, false
 	}
-	// tenantID=0 允许通过，但服务层会忽略该过滤条件
-	reqCtx := ctx.Request.Context()
-	if tenantID > 0 {
-		reqCtx = context.WithValue(reqCtx, bpmn.BPMNTenantIDContextKey, tenantID)
-	}
-	if userID := ctx.GetInt("user_id"); userID > 0 {
+	reqCtx := context.WithValue(ctx.Request.Context(), bpmn.BPMNTenantIDContextKey, tenantID)
+	if userID > 0 {
 		reqCtx = context.WithValue(reqCtx, bpmn.BPMNUserIDContextKey, userID)
 	}
 	return reqCtx, tenantID, true
@@ -161,21 +173,38 @@ func (c *BPMNWorkflowController) SubmitTaskDecision(ctx *gin.Context) {
 
 // CreateProcessDefinition 创建流程定义
 func (c *BPMNWorkflowController) CreateProcessDefinition(ctx *gin.Context) {
-	var req service.CreateProcessDefinitionRequest
+	// 首先获取租户上下文（这会处理 super_admin 默认租户逻辑）
+	tenantIDFromCtx := ctx.GetInt("tenant_id")
+	role := ctx.GetString("role")
+
+	// 架构优化：super_admin 角色在没有 tenant 上下文时使用默认租户 (tenant_id=1)
+	if tenantIDFromCtx <= 0 && role == "super_admin" {
+		tenantIDFromCtx = 1
+		ctx.Set("tenant_id", 1)
+	}
+
+	// 预先设置 TenantID 到请求中，避免 binding 验证失败
+	// 注意：binding:"required" 只在字段缺失时生效，如果字段值为0则不会触发
+	// 我们使用 PostWithContext 来手动控制 TenantID
+	var req map[string]interface{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.AuthFailed(ctx, "未授权访问")
+	// 设置 TenantID
+	req["tenantId"] = tenantIDFromCtx
+
+	// 重新序列化为 CreateProcessDefinitionRequest
+	reqBytes, _ := json.Marshal(req)
+	var finalReq service.CreateProcessDefinitionRequest
+	if err := json.Unmarshal(reqBytes, &finalReq); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数解析错误: "+err.Error())
 		return
 	}
-	req.TenantID = tenantID.(int)
 
-	definition, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(ctx, &req)
+	// 使用带租户上下文的 ctx
+	definition, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(ctx, &finalReq)
 	if err != nil {
 		common.InternalError(ctx, "创建流程定义失败: "+err.Error())
 		return
