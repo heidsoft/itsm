@@ -123,7 +123,7 @@ make dev-start-docker
 3. 提交 PR（CI 会按变更路径执行构建、lint、测试、契约与集成检查）
 4. 等待 review（首次贡献者会被自动欢迎 🎉）
 
-详细规则见 [贡献指南](contributing.md)。
+详细规则见 [贡献指南](../CONTRIBUTING.md)。
 
 ---
 
