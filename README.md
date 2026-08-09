@@ -29,9 +29,9 @@
 
 ## 📈 星标增长历史
 
-[![Star History Chart](https://api.star-history.com/svg?repos=heidsoft/itsm&type=Date)](https://star-history.com/)
+[![GitHub Star 增长趋势](./docs/assets/star-history.svg)](https://github.com/heidsoft/itsm/stargazers)
 
-> 📊 感谢 56 位社区伙伴的支持！每个星标都是对我们工作的认可。
+> 📊 感谢每一位社区伙伴的支持！每个星标都是对我们工作的认可。
 
 ---
 
