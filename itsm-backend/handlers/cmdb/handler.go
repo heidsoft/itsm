@@ -279,7 +279,7 @@ func (h *Handler) ListCloudAccounts(c *gin.Context) {
 			Provider:        item.Provider,
 			AccountID:       item.AccountID,
 			AccountName:     item.AccountName,
-			CredentialRef:   item.CredentialRef,
+			HasCredential:   item.CredentialRef != "",
 			RegionWhitelist: item.RegionWhitelist,
 			IsActive:        item.IsActive,
 			TenantID:        item.TenantID,
@@ -294,6 +294,10 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 	var req dto.CloudAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamError(c, "Invalid request body")
+		return
+	}
+	if err := validateTenantCredentialRef(req.CredentialRef); err != nil {
+		common.ParamError(c, err.Error())
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
@@ -320,7 +324,7 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 		Provider:        res.Provider,
 		AccountID:       res.AccountID,
 		AccountName:     res.AccountName,
-		CredentialRef:   res.CredentialRef,
+		HasCredential:   res.CredentialRef != "",
 		RegionWhitelist: res.RegionWhitelist,
 		IsActive:        res.IsActive,
 		TenantID:        res.TenantID,
@@ -487,7 +491,7 @@ func (h *Handler) GetCloudAccount(c *gin.Context) {
 		Provider:        result.Provider,
 		AccountID:       result.AccountID,
 		AccountName:     result.AccountName,
-		CredentialRef:   result.CredentialRef,
+		HasCredential:   result.CredentialRef != "",
 		RegionWhitelist: result.RegionWhitelist,
 		IsActive:        result.IsActive,
 		TenantID:        result.TenantID,
@@ -498,7 +502,7 @@ func (h *Handler) GetCloudAccount(c *gin.Context) {
 
 // UpdateCloudAccount handles PUT /api/v1/cmdb/cloud-accounts/:id
 func (h *Handler) UpdateCloudAccount(c *gin.Context) {
-	var req dto.CloudAccountRequest
+	var req dto.CMDBCloudAccountUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamError(c, "Invalid request body")
 		return
@@ -508,17 +512,38 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 	if !ok {
 		return
 	}
-	isActive := true
+	existing, err := h.svc.GetCloudAccount(c.Request.Context(), tenantID, id)
+	if err != nil {
+		common.InternalError(c, err.Error())
+		return
+	}
+	credentialRef := existing.CredentialRef
+	if req.CredentialRef != nil && *req.CredentialRef != "" {
+		if err := validateTenantCredentialRef(*req.CredentialRef); err != nil {
+			common.ParamError(c, err.Error())
+			return
+		}
+		credentialRef = *req.CredentialRef
+	}
+	accountName := existing.AccountName
+	if req.AccountName != nil {
+		accountName = *req.AccountName
+	}
+	regionWhitelist := existing.RegionWhitelist
+	if req.RegionWhitelist != nil {
+		regionWhitelist = *req.RegionWhitelist
+	}
+	isActive := existing.IsActive
 	if req.IsActive != nil {
 		isActive = *req.IsActive
 	}
 	ca := &CloudAccount{
 		ID:              id,
-		Provider:        req.Provider,
-		AccountID:       req.AccountID,
-		AccountName:     req.AccountName,
-		CredentialRef:   req.CredentialRef,
-		RegionWhitelist: req.RegionWhitelist,
+		Provider:        existing.Provider,
+		AccountID:       existing.AccountID,
+		AccountName:     accountName,
+		CredentialRef:   credentialRef,
+		RegionWhitelist: regionWhitelist,
 		IsActive:        isActive,
 		TenantID:        tenantID,
 	}
@@ -532,7 +557,7 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 		Provider:        result.Provider,
 		AccountID:       result.AccountID,
 		AccountName:     result.AccountName,
-		CredentialRef:   result.CredentialRef,
+		HasCredential:   result.CredentialRef != "",
 		RegionWhitelist: result.RegionWhitelist,
 		IsActive:        result.IsActive,
 		TenantID:        result.TenantID,
@@ -748,30 +773,9 @@ func (h *Handler) CreateDiscoveryJob(c *gin.Context) {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
-	startedAt := time.Now()
-	job := &DiscoveryJob{
-		SourceID:  req.SourceID,
-		Status:    "pending",
-		StartedAt: &startedAt,
-		TenantID:  tenantID,
-	}
-	res, err := h.svc.CreateDiscoveryJob(c.Request.Context(), job)
-	if err != nil {
-		common.InternalError(c, err.Error())
-		return
-	}
-	common.Success(c, &dto.DiscoveryJobResponse{
-		ID:         res.ID,
-		SourceID:   res.SourceID,
-		Status:     res.Status,
-		StartedAt:  res.StartedAt,
-		FinishedAt: res.FinishedAt,
-		Summary:    res.Summary,
-		TenantID:   res.TenantID,
-		CreatedAt:  res.CreatedAt,
-		UpdatedAt:  res.UpdatedAt,
-	})
+	// 商业化收敛期间禁止创建永远停留在 pending 的假任务。真实发现必须先接入
+	// 执行器、状态推进、结果落库、失败重试和审计，再重新开放此入口。
+	common.Fail(c, common.ServiceUnavailableCode, "云资源自动发现尚未通过生产验收，当前服务不可用")
 }
 
 func (h *Handler) ListDiscoveryResults(c *gin.Context) {

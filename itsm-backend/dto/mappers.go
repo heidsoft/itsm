@@ -1342,7 +1342,7 @@ func ToCloudAccountResponse(account *ent.CloudAccount) *CloudAccountResponse {
 		Provider:        account.Provider,
 		AccountID:       account.AccountID,
 		AccountName:     account.AccountName,
-		CredentialRef:   account.CredentialRef,
+		HasCredential:   account.CredentialRef != "",
 		RegionWhitelist: account.RegionWhitelist,
 		IsActive:        account.IsActive,
 		TenantID:        account.TenantID,

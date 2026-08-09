@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 )
 
 // ResolvedCredential 运行时凭据结构（所有字段非 nil）
@@ -46,6 +48,9 @@ func ResolveCredential(ctx context.Context, provider, credentialRef string) (*Re
 
 // ResolveAliyunCredential 解析阿里云凭据
 func ResolveAliyunCredential(ctx context.Context, credentialRef string) (*ResolvedCredential, error) {
+	if strings.HasPrefix(credentialRef, "env://") {
+		return resolveAliyunEnvCredential(strings.TrimPrefix(credentialRef, "env://"))
+	}
 	data, err := ParseCredentialRef(credentialRef)
 	if err != nil {
 		return nil, err
@@ -79,6 +84,26 @@ func ResolveAliyunCredential(ctx context.Context, credentialRef string) (*Resolv
 		}
 	default:
 		return nil, fmt.Errorf("unknown aliyun credential type: %v", data["type"])
+	}
+	return cred, nil
+}
+
+func resolveAliyunEnvCredential(prefix string) (*ResolvedCredential, error) {
+	// 环境变量名必须使用产品定义的固定前缀，避免由请求参数读取任意进程环境。
+	if prefix != "ITSM_ALIYUN" {
+		return nil, fmt.Errorf("unsupported aliyun environment credential reference")
+	}
+	cred := &ResolvedCredential{
+		Provider:        "aliyun",
+		AccessKeyID:     strings.TrimSpace(os.Getenv(prefix + "_ACCESS_KEY_ID")),
+		AccessKeySecret: strings.TrimSpace(os.Getenv(prefix + "_ACCESS_KEY_SECRET")),
+		SessionToken:    strings.TrimSpace(os.Getenv(prefix + "_SECURITY_TOKEN")),
+	}
+	if cred.AccessKeyID == "" {
+		return nil, fmt.Errorf("aliyun access key id environment variable is not configured")
+	}
+	if cred.AccessKeySecret == "" {
+		return nil, fmt.Errorf("aliyun access key secret environment variable is not configured")
 	}
 	return cred, nil
 }

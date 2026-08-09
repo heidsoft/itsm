@@ -102,6 +102,24 @@ func TestResolveAliyunCredential(t *testing.T) {
 		_, err := ResolveAliyunCredential(ctx, "")
 		require.Error(t, err)
 	})
+
+	t.Run("environment reference", func(t *testing.T) {
+		t.Setenv("ITSM_ALIYUN_ACCESS_KEY_ID", "env-id")
+		t.Setenv("ITSM_ALIYUN_ACCESS_KEY_SECRET", "env-secret")
+		t.Setenv("ITSM_ALIYUN_SECURITY_TOKEN", "env-token")
+
+		cred, err := ResolveAliyunCredential(ctx, "env://ITSM_ALIYUN")
+		require.NoError(t, err)
+		assert.Equal(t, "env-id", cred.AccessKeyID)
+		assert.Equal(t, "env-secret", cred.AccessKeySecret)
+		assert.Equal(t, "env-token", cred.SessionToken)
+	})
+
+	t.Run("rejects arbitrary environment prefix", func(t *testing.T) {
+		_, err := ResolveAliyunCredential(ctx, "env://HOME")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "unsupported")
+	})
 }
 
 func TestResolveAWSCredential(t *testing.T) {

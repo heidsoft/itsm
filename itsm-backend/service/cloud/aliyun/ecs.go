@@ -5,6 +5,7 @@ import (
 
 	openapiutil "github.com/alibabacloud-go/darabonba-openapi/v2/utils"
 	ecs "github.com/alibabacloud-go/ecs-20140526/v7/client"
+	"github.com/alibabacloud-go/tea/dara"
 	"github.com/alibabacloud-go/tea/tea"
 	"go.uber.org/zap"
 
@@ -53,14 +54,47 @@ func newECSClient(region string, cred *cloud.ResolvedCredential) (*ecs.Client, e
 	cfg.RegionId = tea.String(region)
 	cfg.AccessKeyId = tea.String(cred.AccessKeyID)
 	cfg.AccessKeySecret = tea.String(cred.AccessKeySecret)
+	cfg.ConnectTimeout = tea.Int(5_000)
+	cfg.ReadTimeout = tea.Int(15_000)
 	if cred.SessionToken != "" {
 		cfg.SecurityToken = tea.String(cred.SessionToken)
 	}
 	return ecs.NewClient(cfg)
 }
 
+func runtimeOptions() *dara.RuntimeOptions {
+	return &dara.RuntimeOptions{
+		ConnectTimeout: tea.Int(5_000),
+		ReadTimeout:    tea.Int(15_000),
+		Autoretry:      tea.Bool(false),
+		MaxAttempts:    tea.Int(1),
+	}
+}
+
 func (*AliyunECSAdapter) ListRegions(ctx context.Context, account *ent.CloudAccount) ([]string, error) {
-	return []string{"cn-hangzhou", "cn-shanghai", "cn-beijing"}, nil
+	cred, err := cloud.ResolveAliyunCredential(ctx, account.CredentialRef)
+	if err != nil {
+		return nil, err
+	}
+	client, err := newECSClient("cn-hangzhou", cred)
+	if err != nil {
+		return nil, err
+	}
+	response, err := client.DescribeRegionsWithOptions(&ecs.DescribeRegionsRequest{}, runtimeOptions())
+	if err != nil {
+		return nil, err
+	}
+	if response.Body == nil || response.Body.Regions == nil {
+		return nil, nil
+	}
+	regions := make([]string, 0, len(response.Body.Regions.Region))
+	for _, region := range response.Body.Regions.Region {
+		if region == nil || region.RegionId == nil || tea.StringValue(region.RegionId) == "" {
+			continue
+		}
+		regions = append(regions, tea.StringValue(region.RegionId))
+	}
+	return regions, nil
 }
 
 func (a *AliyunECSAdapter) DiscoverRegion(ctx context.Context, account *ent.CloudAccount, region string, client cloud.Client, nextToken string) (*cloud.PageResult, error) {
@@ -79,7 +113,7 @@ func (a *AliyunECSAdapter) DiscoverRegion(ctx context.Context, account *ent.Clou
 			req.NextToken = tea.String(token)
 		}
 
-		resp, err := ecsClient.ecs.DescribeInstancesWithOptions(req, nil)
+		resp, err := ecsClient.ecs.DescribeInstancesWithOptions(req, runtimeOptions())
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +147,7 @@ func (*AliyunECSAdapter) ValidateCredential(ctx context.Context, account *ent.Cl
 	if err != nil {
 		return err
 	}
-	_, err = c.DescribeRegionsWithOptions(&ecs.DescribeRegionsRequest{}, nil)
+	_, err = c.DescribeRegionsWithOptions(&ecs.DescribeRegionsRequest{}, runtimeOptions())
 	return err
 }
 

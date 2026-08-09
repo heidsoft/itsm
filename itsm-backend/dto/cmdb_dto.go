@@ -276,12 +276,19 @@ type CloudAccountRequest struct {
 	IsActive        *bool    `json:"isActive,omitempty"`
 }
 
+type CMDBCloudAccountUpdateRequest struct {
+	AccountName     *string   `json:"accountName,omitempty" binding:"omitempty,max=200"`
+	CredentialRef   *string   `json:"credentialRef,omitempty" binding:"omitempty,max=200"`
+	RegionWhitelist *[]string `json:"regionWhitelist,omitempty"`
+	IsActive        *bool     `json:"isActive,omitempty"`
+}
+
 type CloudAccountResponse struct {
 	ID              int      `json:"id"`
 	Provider        string   `json:"provider"`
 	AccountID       string   `json:"accountId"`
 	AccountName     string   `json:"accountName"`
-	CredentialRef   string   `json:"credentialRef,omitempty"`
+	HasCredential   bool     `json:"hasCredential"`
 	RegionWhitelist []string `json:"regionWhitelist,omitempty"`
 	IsActive        bool     `json:"isActive"`
 	TenantID        int      `json:"tenantId,omitempty"`

@@ -76,6 +76,7 @@ export interface CloudAccount {
   accountId: string;
   accountName: string;
   credentialRef?: string;
+  hasCredential?: boolean;
   regionWhitelist?: string[];
   isActive: boolean;
   tenantId: number;

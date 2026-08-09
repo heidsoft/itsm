@@ -114,7 +114,7 @@ export default function CloudAccountPage() {
       provider: record.provider,
       accountId: record.accountId,
       accountName: record.accountName,
-      credentialRef: record.credentialRef,
+      credentialRef: undefined,
       isActive: record.isActive,
     });
     setEditOpen(true);
@@ -198,11 +198,12 @@ export default function CloudAccountPage() {
       ellipsis: true,
     },
     {
-      title: '凭据引用',
-      dataIndex: 'credentialRef',
+      title: '凭据状态',
+      dataIndex: 'hasCredential',
       width: 180,
-      ellipsis: true,
-      render: (value?: string) => value || '-',
+      render: (value?: boolean) => (
+        <Tag color={value ? 'green' : 'orange'}>{value ? '已配置' : '未配置'}</Tag>
+      ),
     },
     {
       title: '状态',
@@ -350,8 +351,12 @@ export default function CloudAccountPage() {
           >
             <Input placeholder='例如 生产账号' />
           </Form.Item>
-          <Form.Item name='credentialRef' label='凭据引用'>
-            <Input placeholder='例如 aliyun-prod-credential' />
+          <Form.Item
+            name='credentialRef'
+            label='更新凭据引用'
+            extra='留空将保留现有凭据；服务端不会返回已保存的凭据内容。'
+          >
+            <Input.Password placeholder='例如 secret://tenant-42/aliyun-production' />
           </Form.Item>
         </Form>
       </Modal>
