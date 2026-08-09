@@ -159,6 +159,43 @@ All APIs return `{ code: number, message: string, data: any }`:
 - Prefer feature-local components/hooks under the route module for domain-specific UI; use shared components only when reuse is real.
 - User-facing enterprise workflows must show loading, empty, error, permission-denied, and success states.
 
+## Frontend Hook Patterns
+
+本节是 `src/lib/hooks/` 下 React Hook 的设计与审查基线。新建 hook 必须满足 **Pattern A–G**；code review 按 **H1–H7** 清单拦截。Pattern 来源于 2026-08-08 对 incidents/tickets 模块的重构审查。
+
+### Pattern A–G（必须满足）
+
+| # | 模式 | 正例 | 反例 |
+|---|------|------|------|
+| **A** | **requestId 守卫**：async hook 在 deps 变化引发重取时，必须用 `requestIdRef` 防止 stale response 覆盖新数据。 | `useIncidentsQuery.ts` 多检查点（incidents + user enrichment 都守） | `useTickets.ts` 直接 `setTickets(response.tickets)` |
+| **B** | **Ref-based 最新值**：`useCallback` 闭包需要最新 state 但身份必须稳定时，用 `useRef` + `ref.current` 读取。 | `useTableKeyboardNav.ts` 的 `handlersRef`；`useTickets.ts` 的 `filtersRef` + `fetchTrigger` 计数器 | `useAccessibility.tsx useKeyboardShortcuts` 每次 `shortcuts` 变都重新绑定监听器 |
+| **C** | **useEffect deps 纪律**：deps 必须列出所有 effect 内读取的响应式值；不多不少。 | `useTableKeyboardNav.ts` deps = `[enabled, rows, activeIndex]`（handlers 不在 deps，由 ref 读） | deps 含 `message`（`App.useApp()` 身份变化导致 churn） |
+| **D** | **批量操作 partial-failure**：批量 hook 必须用 `Promise.allSettled`，返回 per-id 明细（`{successCount, failedIds, errors}`），让 UI 能保留失败项供重试。 | `useIncidentBatchOps.runBatch` + `useTickets.batchDeleteTickets` 的 `BatchDeleteResult` | `useBatchOperations.useBatchDeleteTicketsMutation` 仍用 `Promise.all` |
+| **E** | **批量并发上限**：浏览器单 origin 连接池 ~6，批量 fan-out 必须并发限流（建议 5）。 | `useIncidentBatchOps` 的 `BATCH_CONCURRENCY = 5` worker pool | `useTickets.batchDeleteTickets` 1000 ids ⇒ 1000 并发请求 |
+| **F** | **errorMessage ref**：i18n/本地化错误文案若通过 options 传入，必须用 ref 读取，避免 re-fetch。 | `useIncidentsQuery.ts` 的 `errorMessageRef` | 把 `t()` 返回值直接放进 deps |
+| **G** | **稳定 callback 身份**：返回的 callback 若会被 caller 放进 `useEffect` deps，必须用空 deps + ref 模式保持身份稳定。 | `useErrorHandler` 的 `handleError`；`useFeedback` 全部 callback 单依赖 | `useCache.fetchData` deps 含调用方传入的 `fetcher` |
+
+### H1–H7 审查拦截清单
+
+| # | 缺陷类别 | 触发场景 | 阻断？ |
+|---|----------|----------|--------|
+| **H1** | **stale-index 越界** | 列表缩小时键盘 cursor 未 clamp，按 `o` 调到 `undefined` 行 | ✅ 阻断 |
+| **H2** | **批量失败清空选择** | 部分失败时 `setSelectedRowKeys([])` 让失败项无法重试 | ✅ 阻断 |
+| **H3** | **N+1 enrichment** | 列表每次拉取都附带 user 目录拉取，无 gate | ⚠️ 警告；超 100 用户的租户必须修 |
+| **H4** | **批量失败无明细** | `Promise.all` 任一失败整批 reject，UI 只显示"失败" | ✅ 阻断 |
+| **H5** | **监听器每次 render 重绑** | `useEffect` deps 含 closure 变量，未用 ref | ⚠️ 警告 |
+| **H6** | **批量并发无上限** | 500 ids 同时 fire，浏览器连接池耗尽，触发 429 误判为业务失败 | ✅ 阻断 |
+| **H7** | **状态混用** | hover 与 keyboard 共享同一 `activeIndex` 互相覆盖 | ⚠️ 警告 |
+
+### 实施要点
+
+- **新 hook 提交 checklist**：(1) Pattern A–G 全部满足；(2) 含至少 3 个单测覆盖 happy / partial / failure 路径；(3) 含 requestId race 回归测试（mock 两次慢速响应，先返回旧数据，断言 UI 显示新数据）。
+- **重写旧 hook**：从 `src/lib/hooks/` 顶部开始；旧 hook 缺哪个 pattern 就加哪个，不要为了"完整性"重写没有问题的部分。
+- **UI 反模式**：本节不重复；见 `itsm-frontend/RULES/FRONTEND-NO-GO.md` 与 `UI-DEVELOPMENT.md`。
+- **CI 集成**：`docs/code-review-guide.md` §3 检查清单为本节的扩展形式；reviewer 看到 H1–H7 任一即按对应 pattern 圈回。
+
+---
+
 ## AI-Native Engineering Rules
 
 - AI suggestions are decision support by default, not silent authority. For triage, impact analysis, workflow recommendation, and automation, keep confidence, prompt/template version, model/provider, accepted/rejected status, and operator feedback.

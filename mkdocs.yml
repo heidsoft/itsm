@@ -104,10 +104,9 @@ nav:
       - 运维: operations.md
       - v1.0 GA 验收: v1-ga-readiness.md
   - 治理:
-      - 贡献指南: contributing.md
+      - 贡献指南: ../CONTRIBUTING.md
       - 标签体系: label-schema.md
       - Roadmap: roadmap.md
-      - 架构清理记录: ARCHITECTURE_CLEANUP.md
       - 覆盖审计: testing/coverage-audit.md
       - 文档规范: documentation-style-guide.md
 

@@ -12,6 +12,7 @@
     "start": "node scripts/start-standalone.mjs",
     "lint": "eslint src tests --fix",
     "lint:check": "eslint src tests",
+    "lint:antd": "bash tools/check-antd-legacy.sh",
     "type-check": "tsc --noEmit",
     "prepare": "husky",
     "test": "jest",
