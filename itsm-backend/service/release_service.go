@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -261,9 +262,13 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 	return dto.ToReleaseResponse(updated), nil
 }
 
+// ErrInvalidReleaseTransition 表示发布状态机白名单拒绝了本次状态流转。
+// 属于调用方输入错误（应映射为 400），而非服务端内部错误（500）。
+var ErrInvalidReleaseTransition = errors.New("非法的发布状态转换")
+
 // UpdateReleaseStatus 更新发布状态
 // C-1 修复：新增 isValidReleaseStatusTransition 白名单校验，防止审批被绕过：
-//   - draft → scheduled / cancelled
+//   - draft → cancelled（draft → scheduled 已移除，见 D-5：必须走 /approve 且需 release:approve）
 //   - scheduled → in-progress / cancelled
 //   - in-progress → completed / failed / rolled_back / cancelled
 //   - completed / cancelled / rolled_back / failed 为终态（不可被复活）
@@ -282,7 +287,7 @@ func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID i
 
 	// 1. 状态机白名单校验
 	if !isValidReleaseStatusTransition(releaseEntity.Status, status) {
-		return nil, fmt.Errorf("非法的发布状态转换: %s -> %s", releaseEntity.Status, status)
+		return nil, fmt.Errorf("%w: %s -> %s", ErrInvalidReleaseTransition, releaseEntity.Status, status)
 	}
 
 	update := releaseEntity.Update().SetStatus(status)
@@ -311,7 +316,8 @@ func isValidReleaseStatusTransition(current, newStatus string) bool {
 	}
 	baseTransitions := map[string]map[string]struct{}{
 		string(dto.ReleaseStatusDraft): {
-			string(dto.ReleaseStatusScheduled): {},
+			// D-5 修复：draft→scheduled 是审批等效动作，必须经 /approve（release:approve），
+			// 不允许持 release:write 的用户经 /status 路由直接排期，否则绕过审批门禁。
 			string(dto.ReleaseStatusCancelled): {},
 		},
 		string(dto.ReleaseStatusScheduled): {
@@ -325,8 +331,7 @@ func isValidReleaseStatusTransition(current, newStatus string) bool {
 			string(dto.ReleaseStatusCancelled):  {},
 		},
 		string(dto.ReleaseStatusFailed): {
-			// 失败后允许重新排期或标记为回滚/取消
-			string(dto.ReleaseStatusScheduled):  {},
+			// D-5 修复：failed→scheduled 为重新排期（审批等效），必须经 /approve（release:approve）。
 			string(dto.ReleaseStatusRolledBack): {},
 			string(dto.ReleaseStatusCancelled):  {},
 		},

@@ -118,6 +118,7 @@ func (s *BPMNVersionService) CreateVersion(ctx context.Context, req *CreateVersi
 		SetVersion(fmt.Sprintf("%d", newVersionNumber)).
 		SetTenantID(req.TenantID).
 		SetIsActive(false).
+		SetIsLatest(false).
 		SetDeploymentID(deployment.ID).
 		Save(ctx)
 	if err != nil {
@@ -125,7 +126,7 @@ func (s *BPMNVersionService) CreateVersion(ctx context.Context, req *CreateVersi
 	}
 
 	// 记录版本变更日志 - processDef.ID是int类型
-	if err := s.recordVersionChangeLog(ctx, fmt.Sprintf("%d", processDef.ID), req.ChangeLog, req.CreatedBy, req.TenantID); err != nil {
+	if err := s.recordVersionChangeLog(ctx, fmt.Sprintf("%d", processDef.ID), fmt.Sprintf("%d", newVersionNumber), req.ChangeLog, req.CreatedBy, req.TenantID); err != nil {
 		// 记录失败不影响主流程，只记录警告
 		s.logger.Warnw("记录版本变更日志失败", "error", err)
 	}
@@ -250,13 +251,14 @@ func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey str
 		}
 	}()
 
-	// 停用所有版本
+	// 停用所有版本并取消 latest 标记
 	_, err = tx.ProcessDefinition.Update().
 		Where(
 			processdefinition.Key(processKey),
 			processdefinition.TenantID(tenantID),
 		).
 		SetIsActive(false).
+		SetIsLatest(false).
 		Save(ctx)
 	if err != nil {
 		tx.Rollback()
@@ -271,6 +273,7 @@ func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey str
 			processdefinition.TenantID(tenantID),
 		).
 		SetIsActive(true).
+		SetIsLatest(true).
 		Save(ctx)
 	if err != nil {
 		tx.Rollback()
@@ -376,7 +379,7 @@ func (s *BPMNVersionService) getCurrentVersion(ctx context.Context, processKey s
 }
 
 // recordVersionChangeLog 记录版本变更日志
-func (s *BPMNVersionService) recordVersionChangeLog(ctx context.Context, processDefID string, changeLog, createdBy string, tenantID int) error {
+func (s *BPMNVersionService) recordVersionChangeLog(ctx context.Context, processDefID string, version string, changeLog, createdBy string, tenantID int) error {
 	// 解析 processDefID 为 int
 	processDefIDInt, err := strconv.Atoi(processDefID)
 	if err != nil {
@@ -395,7 +398,7 @@ func (s *BPMNVersionService) recordVersionChangeLog(ctx context.Context, process
 	// 创建版本变更日志记录
 	_, err = s.client.ProcessVersionChangelog.Create().
 		SetProcessDefinitionID(processDefIDInt).
-		SetVersion(changeLog). // 使用 changeLog 作为 version 字段的临时值
+		SetVersion(version). // 版本号（如 "1" / "1.0.0"），区别于变更描述
 		SetChangeLog(changeLog).
 		SetChangeType("update").
 		SetCreatedBy(createdByInt).

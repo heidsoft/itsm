@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -316,6 +317,7 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	if task.Status == "completed" || task.Status == "cancelled" {
 		return fmt.Errorf("任务已结束，不能重复完成")
 	}
+	priorStatus := task.Status // 推进失败时回滚到此状态，保证可重试（F-2 防卡死）
 
 	updated, err := e.client.ProcessTask.Update().
 		Where(
@@ -338,14 +340,17 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	// 5. 使用乐观锁合并变量（最多重试3次）
 	instance, err = e.mergeVariablesWithOptimisticLock(ctx, instance.ID, variables)
 	if err != nil {
+		e.revertTaskStatus(ctx, task.ID, instance.TenantID, priorStatus)
 		return fmt.Errorf("合并实例变量失败: %w", err)
 	}
 
 	// 6. 执行流程推进（从当前UserTask继续）
 	if err := e.executeStep(ctx, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
+		e.revertTaskStatus(ctx, task.ID, instance.TenantID, priorStatus)
 		return err
 	}
 	if err := e.recordApprovalDecision(ctx, instance, task, variables); err != nil {
+		e.revertTaskStatus(ctx, task.ID, instance.TenantID, priorStatus)
 		return err
 	}
 
@@ -362,6 +367,25 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	}
 
 	return nil
+}
+
+// revertTaskStatus 将刚置为 completed 的任务回滚到推进前状态，使 CompleteTask 在流程推进失败时可被安全重试（F-2）。
+// 用 StatusEQ("completed") 乐观条件确保仅回滚本调用刚完成、尚未推进的任务，避免误改其他状态。
+func (e *CustomProcessEngine) revertTaskStatus(ctx context.Context, taskID int, tenantID int, status string) {
+	if status == "completed" || status == "cancelled" {
+		return
+	}
+	_, err := e.client.ProcessTask.Update().
+		Where(
+			processtask.ID(taskID),
+			processtask.TenantID(tenantID),
+			processtask.StatusEQ("completed"),
+		).
+		SetStatus(status).
+		Save(ctx)
+	if err != nil {
+		e.logger.Warnw("revertTaskStatus failed", "taskID", taskID, "error", err)
+	}
 }
 
 func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, instance *ent.ProcessInstance, task *ent.ProcessTask, variables map[string]interface{}) error {
@@ -505,6 +529,11 @@ func (e *CustomProcessEngine) executeStep(ctx context.Context, instance *ent.Pro
 		return fmt.Errorf("没有符合条件的路径")
 	}
 
+	// 记录排他网关路由决策，使「走哪条分支」可审计（F-4）
+	if e.findExclusiveGateway(process, currentElementID) != nil {
+		e.recordGatewayHistory(ctx, instance, currentElementID, "exclusive", "fork", []string{targetRef}, variables)
+	}
+
 	return e.handleElement(ctx, instance, process, targetRef)
 }
 
@@ -533,6 +562,12 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.P
 		return e.createUserTask(ctx, instance, task)
 	} else if endEvent := e.findEndEvent(process, elementID); endEvent != nil {
 		return e.completeProcess(ctx, instance)
+	} else if gateway := e.findParallelGateway(process, elementID); gateway != nil {
+		// 并行网关：分叉激活所有出边；汇聚等待所有入边分支完成（F-1）
+		return e.handleParallelGateway(ctx, instance, process, gateway, 0)
+	} else if gateway := e.findInclusiveGateway(process, elementID); gateway != nil {
+		// 包容网关：分叉激活所有命中条件的出边；汇聚等待所有入边分支完成（F-1）
+		return e.handleInclusiveGateway(ctx, instance, process, gateway, 0)
 	} else if gateway := e.findExclusiveGateway(process, elementID); gateway != nil {
 		return e.executeStep(ctx, instance, process, elementID, instance.Variables)
 	} else if serviceTask := e.findServiceTask(process, elementID); serviceTask != nil {
@@ -615,6 +650,18 @@ func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *B
 }
 
 func (e *CustomProcessEngine) createUserTask(ctx context.Context, instance *ent.ProcessInstance, task *BPMNUserTask) error {
+	// 幂等：同实例同节点已存在未结束任务时直接复用，避免 CompleteTask 流程推进失败重试时重复创建任务（F-2）
+	if existing, _ := e.client.ProcessTask.Query().
+		Where(
+			processtask.ProcessInstanceID(instance.ID),
+			processtask.TaskDefinitionKey(task.ID),
+			processtask.StatusNotIn("completed", "cancelled"),
+		).
+		First(ctx); existing != nil {
+		e.logger.Infow("createUserTask: 复用已存在的活跃任务", "existingTaskID", existing.TaskID, "node", task.ID)
+		return nil
+	}
+
 	// 自动分配逻辑：优先级 BPMN定义 > 流程变量(request/assignee) > 默认分配
 	assignee := task.Assignee
 
@@ -902,6 +949,40 @@ func (e *CustomProcessEngine) completeProcess(ctx context.Context, instance *ent
 	return err
 }
 
+// recordGatewayHistory 将网关路由决策写入流程执行历史，使并行/包容/排他网关的
+// 分叉（fork）与汇聚等待（join-wait）可审计（F-4）。字段与 bpmn_gateway_engine.go 的
+// recordGatewayExecution 同构，GetGatewayExecutionHistory 可按 activity_type=gateway 检索。
+// 写历史属于辅助审计，失败仅告警不阻断主流程。
+func (e *CustomProcessEngine) recordGatewayHistory(ctx context.Context, instance *ent.ProcessInstance, gatewayID, gatewayType, eventType string, nextActivities []string, variables map[string]interface{}) {
+	detail := map[string]interface{}{
+		"gateway_id":      gatewayID,
+		"gateway_type":    gatewayType,
+		"event":           eventType,
+		"next_activities": nextActivities,
+		"tenant_id":       instance.TenantID,
+	}
+	detailBytes, err := json.Marshal(detail)
+	if err != nil {
+		e.logger.Warnw("recordGatewayHistory 序列化事件详情失败", "error", err)
+		detailBytes = []byte("{}")
+	}
+	_, err = e.client.ProcessExecutionHistory.Create().
+		SetHistoryID(fmt.Sprintf("HIST-%s-%d", gatewayID, time.Now().UnixNano())).
+		SetProcessInstanceID(instance.ID).
+		SetProcessDefinitionKey(instance.ProcessDefinitionKey).
+		SetActivityID(gatewayID).
+		SetActivityType("gateway").
+		SetEventType(fmt.Sprintf("%s.%s", gatewayType, eventType)).
+		SetEventDetail(string(detailBytes)).
+		SetVariables(variables).
+		SetTenantID(instance.TenantID).
+		SetTimestamp(time.Now()).
+		Save(ctx)
+	if err != nil {
+		e.logger.Warnw("recordGatewayHistory 保存失败", "error", err)
+	}
+}
+
 func (e *CustomProcessEngine) findOutgoingFlows(process *BPMNProcess, sourceRef string) []*BPMNSequenceFlow {
 	var flows []*BPMNSequenceFlow
 	for _, flow := range process.SequenceFlows {
@@ -977,6 +1058,126 @@ func (e *CustomProcessEngine) findExclusiveGateway(process *BPMNProcess, id stri
 		}
 	}
 	return nil
+}
+
+func (e *CustomProcessEngine) findParallelGateway(process *BPMNProcess, id string) *BPMNParallelGateway {
+	for _, gateway := range process.ParallelGateways {
+		if gateway.ID == id {
+			return gateway
+		}
+	}
+	return nil
+}
+
+func (e *CustomProcessEngine) findInclusiveGateway(process *BPMNProcess, id string) *BPMNInclusiveGateway {
+	for _, gateway := range process.InclusiveGateways {
+		if gateway.ID == id {
+			return gateway
+		}
+	}
+	return nil
+}
+
+// findIncomingFlows 返回以 targetRef 为目标的顺序流（即 targetRef 的入边）
+func (e *CustomProcessEngine) findIncomingFlows(process *BPMNProcess, targetRef string) []*BPMNSequenceFlow {
+	var flows []*BPMNSequenceFlow
+	for _, flow := range process.SequenceFlows {
+		if flow.TargetRef == targetRef {
+			flows = append(flows, flow)
+		}
+	}
+	return flows
+}
+
+const maxGatewayForkDepth = 64
+
+// handleParallelGateway 处理并行网关：多入边时作为汇聚节点等待所有分支完成；否则作为分叉节点激活所有出边（F-1）。
+func (e *CustomProcessEngine) handleParallelGateway(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, gateway *BPMNParallelGateway, depth int) error {
+	if depth > maxGatewayForkDepth {
+		return fmt.Errorf("并行网关分叉层级超过上限，可能存在环路: %s", gateway.ID)
+	}
+	incoming := e.findIncomingFlows(process, gateway.ID)
+	if len(incoming) > 1 && !e.allIncomingBranchesCompleted(ctx, instance, process, gateway.ID) {
+		e.logger.Infow("并行网关汇聚等待其余分支完成", "gateway", gateway.ID, "instance", instance.ID)
+		e.recordGatewayHistory(ctx, instance, gateway.ID, "parallel", "join-wait", nil, instance.Variables)
+		return nil // 仍有分支未结束，等待，不推进
+	}
+	var next []string
+	for _, flow := range e.findOutgoingFlows(process, gateway.ID) {
+		next = append(next, flow.TargetRef)
+		if err := e.dispatchGatewayOrElement(ctx, instance, process, flow.TargetRef, depth); err != nil {
+			return err
+		}
+	}
+	e.recordGatewayHistory(ctx, instance, gateway.ID, "parallel", "fork", next, instance.Variables)
+	return nil
+}
+
+// handleInclusiveGateway 处理包容网关：汇聚等待所有入边分支完成；分叉时激活所有命中条件的出边（F-1）。
+func (e *CustomProcessEngine) handleInclusiveGateway(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, gateway *BPMNInclusiveGateway, depth int) error {
+	if depth > maxGatewayForkDepth {
+		return fmt.Errorf("包容网关分叉层级超过上限，可能存在环路: %s", gateway.ID)
+	}
+	incoming := e.findIncomingFlows(process, gateway.ID)
+	if len(incoming) > 1 && !e.allIncomingBranchesCompleted(ctx, instance, process, gateway.ID) {
+		e.logger.Infow("包容网关汇聚等待其余分支完成", "gateway", gateway.ID, "instance", instance.ID)
+		e.recordGatewayHistory(ctx, instance, gateway.ID, "inclusive", "join-wait", nil, instance.Variables)
+		return nil
+	}
+	var next []string
+	matched := false
+	for _, flow := range e.findOutgoingFlows(process, gateway.ID) {
+		if e.evaluateCondition(flow, instance.Variables) {
+			matched = true
+			next = append(next, flow.TargetRef)
+			if err := e.dispatchGatewayOrElement(ctx, instance, process, flow.TargetRef, depth); err != nil {
+				return err
+			}
+		}
+	}
+	e.recordGatewayHistory(ctx, instance, gateway.ID, "inclusive", "fork", next, instance.Variables)
+	if !matched {
+		e.logger.Warnw("包容网关无满足条件的出边，流程在此等待", "gateway", gateway.ID, "instance", instance.ID)
+	}
+	return nil
+}
+
+// dispatchGatewayOrElement 优先分发到嵌套的并行/包容网关（depth+1 用于环路防护），其余交给 handleElement。
+func (e *CustomProcessEngine) dispatchGatewayOrElement(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, elementID string, depth int) error {
+	if pg := e.findParallelGateway(process, elementID); pg != nil {
+		return e.handleParallelGateway(ctx, instance, process, pg, depth+1)
+	}
+	if ig := e.findInclusiveGateway(process, elementID); ig != nil {
+		return e.handleInclusiveGateway(ctx, instance, process, ig, depth+1)
+	}
+	return e.handleElement(ctx, instance, process, elementID)
+}
+
+// allIncomingBranchesCompleted 判断汇聚网关的所有入边分支是否均已结束。
+// 仅检查以用户任务为入边源的分支（网关源保守跳过），覆盖常见的 gateway->task->gateway 模式；
+// 查询失败时保守返回 false（视为未完成），避免提前汇聚。
+func (e *CustomProcessEngine) allIncomingBranchesCompleted(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, gatewayID string) bool {
+	for _, flow := range e.findIncomingFlows(process, gatewayID) {
+		src := flow.SourceRef
+		if e.findUserTask(process, src) == nil {
+			continue
+		}
+		open, err := e.client.ProcessTask.Query().
+			Where(
+				processtask.ProcessInstanceID(instance.ID),
+				processtask.TaskDefinitionKey(src),
+				processtask.StatusNotIn("completed", "cancelled"),
+			).
+			Exist(ctx)
+		if err != nil {
+			e.logger.Warnw("allIncomingBranchesCompleted 查询失败，保守视为未完成", "error", err)
+			return false
+		}
+		if open {
+			return false
+		}
+	}
+	return true
 }
 
 func (e *CustomProcessEngine) findServiceTask(process *BPMNProcess, id string) *BPMNServiceTask {
@@ -1328,54 +1529,42 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 	return definition, nil
 }
 
-// getNextVersion 获取下一个版本号
+// getNextVersion 获取下一个版本号（major.minor.0）。约定与部署服务一致：递增 minor、patch 归零、minor 不封顶。
+// 旧实现用 Order(Desc("version")) 对字符串版本号做字典序排序，多位数版本（如 1.10.0 vs 1.9.0）会被误判大小；
+// 此处改为在 Go 侧解析取最大 minor 后递增，避免字典序陷阱。
 func (s *bpmnProcessDefinitionService) getNextVersion(ctx context.Context, key string, tenantID int) string {
-	// 查询当前最高版本
-	existing, err := s.client.ProcessDefinition.Query().
+	defs, err := s.client.ProcessDefinition.Query().
 		Where(processdefinition.Key(key)).
 		Where(processdefinition.TenantID(tenantID)).
-		Order(ent.Desc("version")).
-		First(ctx)
-	if err != nil {
-		// 没有版本，返回初始版本
+		All(ctx)
+	if err != nil || len(defs) == 0 {
 		return "1.0.0"
 	}
 
-	// 解析当前版本号并递增
-	currentVersion := existing.Version
-	// 支持 v1.0.0, 1.0.0, 1 等格式
-	versionNum := 1
-	if currentVersion != "" {
-		// 尝试提取数字部分
-		var major, minor, patch int
-		_, err := fmt.Sscanf(currentVersion, "%d.%d.%d", &major, &minor, &patch)
-		if err != nil {
-			// 如果解析失败，尝试只解析主版本号
-			fmt.Sscanf(currentVersion, "%d", &major)
-			versionNum = major
-		} else {
-			versionNum = major*100 + minor*10 + patch
+	maxMaj, maxMin := 0, -1
+	for _, d := range defs {
+		maj, min, _ := parseSemver(d.Version)
+		if maj > maxMaj || (maj == maxMaj && min > maxMin) {
+			maxMaj, maxMin = maj, min
 		}
 	}
+	return fmt.Sprintf("%d.%d.0", maxMaj, maxMin+1)
+}
 
-	// 递增版本号 (使用语义化版本号)
-	newMajor := versionNum / 100
-	newMinor := (versionNum / 10) % 10
-	newPatch := versionNum % 10
-
-	// 如果patch已达9，重置并递增minor
-	if newPatch >= 9 {
-		newPatch = 0
-		newMinor++
-		if newMinor >= 9 {
-			newMinor = 0
-			newMajor++
-		}
-	} else {
-		newPatch++
+// parseSemver 解析 "major.minor.patch" / "major" / "major.minor" 为三段整数。
+func parseSemver(v string) (int, int, int) {
+	var maj, min, pat int
+	parts := strings.Split(v, ".")
+	if len(parts) > 0 {
+		fmt.Sscanf(strings.TrimSpace(parts[0]), "%d", &maj)
 	}
-
-	return fmt.Sprintf("%d.%d.%d", newMajor, newMinor, newPatch)
+	if len(parts) > 1 {
+		fmt.Sscanf(strings.TrimSpace(parts[1]), "%d", &min)
+	}
+	if len(parts) > 2 {
+		fmt.Sscanf(strings.TrimSpace(parts[2]), "%d", &pat)
+	}
+	return maj, min, pat
 }
 
 func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context, key string, version string) (*ent.ProcessDefinition, error) {

@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -134,26 +136,28 @@ func (s *BPMNDeploymentService) createProcessDefinition(ctx context.Context, req
 	return processDef, nil
 }
 
-// generateNextVersion 生成下一个版本号
+// generateNextVersion 生成下一个版本号（major.minor.0）。
+// 约定：递增 minor 段、patch 归零，minor 不封顶（允许 1.10.0 等）。
+// 旧实现仅识别 1.0.0~1.3.0，超出后回退 "1.0.0"，与唯一索引 (tenant_id,key,version) 冲突导致部署失败/覆盖；此处改为正确递增。
 func (s *BPMNDeploymentService) generateNextVersion(currentVersion string) string {
-	// 简单的版本号递增逻辑
-	// 这里可以实现更复杂的版本号管理
 	if currentVersion == "" {
 		return "1.0.0"
 	}
 
-	// 简单的版本号递增
-	switch currentVersion {
-	case "1.0.0":
-		return "1.1.0"
-	case "1.1.0":
-		return "1.2.0"
-	case "1.2.0":
-		return "1.3.0"
-	default:
-		// 如果版本号不匹配预期格式，返回默认值
-		return "1.0.0"
+	parts := strings.Split(currentVersion, ".")
+	maj, min := 1, 0
+	if len(parts) > 0 {
+		if n, err := strconv.Atoi(strings.TrimSpace(parts[0])); err == nil && n > 0 {
+			maj = n
+		}
 	}
+	if len(parts) > 1 {
+		if n, err := strconv.Atoi(strings.TrimSpace(parts[1])); err == nil && n >= 0 {
+			min = n
+		}
+	}
+	min++ // 递增 minor，patch 归零
+	return fmt.Sprintf("%d.%d.0", maj, min)
 }
 
 // GetDeployment 获取部署记录

@@ -45,6 +45,14 @@ func newTicketFixture(t *testing.T) *ticketFixture {
 		Save(ctx)
 	require.NoError(t, err)
 
+	// 工单分类：CreateTicket 现在按名称解析分类，需先播种，否则状态流转测试会报"工单分类不存在或不可用"
+	_, err = client.TicketCategory.Create().
+		SetName("incident").
+		SetCode("INC").
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
 	user, err := client.User.Create().
 		SetUsername("requester").
 		SetEmail("req@example.com").

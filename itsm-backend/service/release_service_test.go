@@ -193,21 +193,36 @@ func TestReleaseService_UpdateReleaseStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	// 测试更新状态
-	t.Run("更新为已计划状态", func(t *testing.T) {
+	// D-5 修复后：draft→scheduled 为审批等效动作，必须经 ApplyReleaseApproval（release:approve），
+	// 不允许通过 UpdateReleaseStatus（release:write）直达，避免持 write 权限绕过审批门禁。
+	t.Run("draft->scheduled 经 status 路由被拒绝（须走审批）", func(t *testing.T) {
 		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "scheduled")
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "scheduled", result.Status)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		rel, qErr := client.Release.Get(ctx, release.ID)
+		require.NoError(t, qErr)
+		assert.Equal(t, "draft", rel.Status)
 	})
 
-	t.Run("更新为进行中状态", func(t *testing.T) {
+	t.Run("draft->cancelled 允许（write 可取消草稿）", func(t *testing.T) {
+		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "cancelled")
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, "cancelled", result.Status)
+		// 复位为 draft 以便后续链路测试
+		_, _ = client.Release.UpdateOneID(release.ID).SetStatus("draft").Save(ctx)
+	})
+
+	// scheduled / in-progress / completed 链路：先直接置 scheduled 作为"已审批"基线
+	t.Run("scheduled->in-progress", func(t *testing.T) {
+		_, _ = client.Release.UpdateOneID(release.ID).SetStatus("scheduled").Save(ctx)
 		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "in-progress")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, "in-progress", result.Status)
 	})
 
-	t.Run("更新为已完成状态", func(t *testing.T) {
+	t.Run("in-progress->completed", func(t *testing.T) {
 		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "completed")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)

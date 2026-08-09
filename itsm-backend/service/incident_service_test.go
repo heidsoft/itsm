@@ -605,15 +605,14 @@ func TestIncidentService_UpdateIncident_StatusTransition(t *testing.T) {
 			Save(ctx)
 		require.NoError(t, err)
 
-		newStatus := "resolved"
-		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
-			Status:  &newStatus,
-			Version: 0,
-		}, testTenant.ID)
-
+		// resolved/closed 必须通过专用动作而非 UpdateIncident 状态字段完成
+		err = service.ResolveIncident(ctx, testIncident.ID, testUser.ID, testTenant.ID, "resolved via dedicated action", "root cause")
 		require.NoError(t, err)
-		assert.Equal(t, newStatus, response.Status)
-		assert.NotNil(t, response.ResolvedAt)
+
+		updated, err := client.Incident.Get(ctx, testIncident.ID)
+		require.NoError(t, err)
+		assert.Equal(t, "resolved", updated.Status)
+		assert.NotNil(t, updated.ResolvedAt)
 	})
 
 	t.Run("有效状态转换 resolved -> closed", func(t *testing.T) {
@@ -632,15 +631,13 @@ func TestIncidentService_UpdateIncident_StatusTransition(t *testing.T) {
 			Save(ctx)
 		require.NoError(t, err)
 
-		newStatus := "closed"
-		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
-			Status:  &newStatus,
-			Version: 0,
-		}, testTenant.ID)
-
+		err = service.CloseIncident(ctx, testIncident.ID, testUser.ID, testTenant.ID, "closed via dedicated action")
 		require.NoError(t, err)
-		assert.Equal(t, newStatus, response.Status)
-		assert.NotNil(t, response.ClosedAt)
+
+		updated, err := client.Incident.Get(ctx, testIncident.ID)
+		require.NoError(t, err)
+		assert.Equal(t, "closed", updated.Status)
+		assert.NotNil(t, updated.ClosedAt)
 	})
 
 	t.Run("无效状态转换", func(t *testing.T) {

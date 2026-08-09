@@ -48,6 +48,17 @@ func TestTicketService_CreateTicket(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	// 创建测试工单分类
+	testCategory, err := client.TicketCategory.Create().
+		SetName("incident").
+		SetCode("incident").
+		SetDescription("事件类工单").
+		SetIsActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	_ = testCategory
+
 	tests := []struct {
 		name          string
 		request       *dto.CreateTicketRequest

@@ -484,20 +484,27 @@ func (r *EntRepository) GetSLAMonitoring(ctx context.Context, tenantID int, star
 
 // GetComplianceReportData retrieves data for SLA compliance report
 func (r *EntRepository) GetComplianceReportData(ctx context.Context, tenantID int, startDate, endDate time.Time) (totalTickets, metSLA, violatedSLA int, avgResponseTime, avgResolutionTime float64, err error) {
-	// 1. Total tickets created in the period
-	total, err := r.client.Ticket.Query().
+	// 1. 统计「窗口内创建」的工单，作为合规率统计的统一口径种群。
+	//    总数与达标数必须基于同一批工单，否则会出现负数合规率（详见 R-003）。
+	cohort, err := r.client.Ticket.Query().
 		Where(ticket.TenantID(tenantID), ticket.CreatedAtGTE(startDate), ticket.CreatedAtLTE(endDate)).
-		Count(ctx)
+		Select(ticket.FieldID).
+		All(ctx)
 	if err != nil {
 		return 0, 0, 0, 0, 0, err
 	}
-	totalTickets = total
+	totalTickets = len(cohort)
 	if totalTickets == 0 {
 		return 0, 0, 0, 0, 0, nil
 	}
+	cohortIDs := make([]int, 0, totalTickets)
+	for _, t := range cohort {
+		cohortIDs = append(cohortIDs, t.ID)
+	}
 
-	// 2. Count distinct tickets with at least one unresolved violation in the period
-	var violatedCount int
+	// 2. 统计同一批（窗口内创建）工单中、在窗口内发生未解决 SLA 违约的数量。
+	//    通过 TicketIDIn(cohortIDs) 将违约统计限定在上述种群内，
+	//    保证 violatedSLA <= totalTickets，从根本上消除负数合规率。
 	var groups []struct {
 		TicketID int `json:"ticket_id"` // json tag matches SQL column for ent GroupBy().Scan()
 	}
@@ -505,6 +512,7 @@ func (r *EntRepository) GetComplianceReportData(ctx context.Context, tenantID in
 		Where(
 			slaviolation.TenantID(tenantID),
 			slaviolation.IsResolved(false),
+			slaviolation.TicketIDIn(cohortIDs...),
 			slaviolation.ViolationTimeGTE(startDate),
 			slaviolation.ViolationTimeLTE(endDate),
 		).
@@ -513,8 +521,7 @@ func (r *EntRepository) GetComplianceReportData(ctx context.Context, tenantID in
 	if scanErr != nil {
 		return 0, 0, 0, 0, 0, fmt.Errorf("compliance scan query failed: %w", scanErr)
 	}
-	violatedCount = len(groups)
-	violatedSLA = violatedCount
+	violatedSLA = len(groups)
 	metSLA = totalTickets - violatedSLA
 
 	// 3. Average response time (minutes) for tickets with first_response_at

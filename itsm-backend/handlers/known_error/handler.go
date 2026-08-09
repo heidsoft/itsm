@@ -9,6 +9,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	entknownerror "itsm-backend/ent/knownerror"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -561,14 +562,17 @@ func (h *Handler) PromoteToKnownError(c *gin.Context) {
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	knownErrors := r.Group("/known-errors")
 	{
-		knownErrors.GET("", h.ListKnownErrors)
-		knownErrors.GET("/stats", h.GetStats)
-		knownErrors.GET("/categories", h.GetCategories)
-		knownErrors.GET("/search", h.SearchKnownErrors)
-		knownErrors.GET("/:id", h.GetKnownError)
-		knownErrors.POST("", h.CreateKnownError)
-		knownErrors.PUT("/:id", h.UpdateKnownError)
-		knownErrors.DELETE("/:id", h.DeleteKnownError)
-		knownErrors.POST("/:id/promote", h.PromoteToKnownError)
+		// D-8 修复：原四条变更路由零 RBAC，任意登录用户可 CRUD 已知错误库。
+		// KEDB 属问题管理范畴，复用已 seeded 且已赋权给运营角色的 problem 权限做最小侵入保护
+		// （避免新增 unknown_error 权限导致现有租户未重新 seed 而全员不可访问）。
+		knownErrors.GET("", middleware.RequirePermission("problem", "read"), h.ListKnownErrors)
+		knownErrors.GET("/stats", middleware.RequirePermission("problem", "read"), h.GetStats)
+		knownErrors.GET("/categories", middleware.RequirePermission("problem", "read"), h.GetCategories)
+		knownErrors.GET("/search", middleware.RequirePermission("problem", "read"), h.SearchKnownErrors)
+		knownErrors.GET("/:id", middleware.RequirePermission("problem", "read"), h.GetKnownError)
+		knownErrors.POST("", middleware.RequirePermission("problem", "write"), h.CreateKnownError)
+		knownErrors.PUT("/:id", middleware.RequirePermission("problem", "write"), h.UpdateKnownError)
+		knownErrors.DELETE("/:id", middleware.RequirePermission("problem", "delete"), h.DeleteKnownError)
+		knownErrors.POST("/:id/promote", middleware.RequirePermission("problem", "write"), h.PromoteToKnownError)
 	}
 }

@@ -142,6 +142,19 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		assigneeID = s.defaultTierOneAssignee(ctx, tenantID)
 	}
 	categoryID := req.CategoryID
+	// 若仅传入分类名称（前端下拉选值），按名解析为分类ID，与 UpdateTicket 行为保持一致
+	if categoryID == nil && strings.TrimSpace(req.Category) != "" {
+		if s.client == nil {
+			return nil, fmt.Errorf("无法解析工单分类")
+		}
+		category, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.NameEQ(strings.TrimSpace(req.Category)), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
+			Only(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("工单分类不存在或不可用")
+		}
+		categoryID = &category.ID
+	}
 	workflowDefinitionKey := req.WorkflowDefinitionKey
 
 	// 转换 DTO 到领域参数

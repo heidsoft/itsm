@@ -37,6 +37,17 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 		// 1) JWT claims 中的 tenant_id 是最强来源。
 		// JWT 一旦锁定,后续任何来源都不能与之不一致。
 		claimsTenantID := c.GetInt("tenant_id")
+
+		// 架构优化：super_admin 角色在没有 tenant 上下文时使用默认租户 (tenant_id=1)
+		// 这是企业级系统的常见模式，超级管理员默认属于系统租户
+		if claimsTenantID <= 0 {
+			role := c.GetString("role")
+			if role == "super_admin" {
+				claimsTenantID = 1
+				zap.S().Infow("TenantMiddleware: super_admin using default tenant", "default_tenant_id", claimsTenantID)
+			}
+		}
+
 		if claimsTenantID > 0 {
 			tenantEntity, err = client.Tenant.Get(c.Request.Context(), claimsTenantID)
 			if err != nil {

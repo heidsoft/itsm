@@ -252,8 +252,9 @@ func NewApplication() *Application {
 	})
 	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
 
-	// 为 IncidentService 注入序列服务
+	// 为 IncidentService 注入序列服务与原生数据库连接（S-4 编号事务锁）
 	incidentService.SetSequenceService(sequenceService)
+	incidentService.SetRawDB(database.GetRawDB())
 
 	// MSP 服务初始化
 	mspAllocationService := service.NewMSPAllocationService(client, sugar)

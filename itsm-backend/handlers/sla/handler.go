@@ -452,9 +452,17 @@ func (h *Handler) GetSLAStats(c *gin.Context) {
 func (h *Handler) GetSLAComplianceReport(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 
-	// Parse query parameters
+	// Parse query parameters. Accept both snake_case (canonical) and
+	// camelCase variants so a client-side key mismatch (R-002) does not
+	// surface as a hard 400.
 	startDateStr := c.Query("start_date")
+	if startDateStr == "" {
+		startDateStr = c.Query("startDate")
+	}
 	endDateStr := c.Query("end_date")
+	if endDateStr == "" {
+		endDateStr = c.Query("endDate")
+	}
 
 	if startDateStr == "" || endDateStr == "" {
 		common.ParamError(c, "start_date and end_date are required")

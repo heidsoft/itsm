@@ -371,7 +371,10 @@ func (s *ApprovalService) submitApproval(ctx context.Context, client *ent.Client
 		return fmt.Errorf("invalid action: %s", action)
 	}
 
+	// T-2 修复：加乐观锁。仅当记录仍处于 pending 才允许更新，
+	// 使并发提交的第二条事务因命中 0 行而失败，杜绝重复审批/重复委派。
 	update := client.ApprovalRecord.UpdateOneID(recordID).
+		Where(approvalrecord.StatusEQ("pending")).
 		SetStatus(newStatus).
 		SetAction(action).
 		SetProcessedAt(time.Now())
@@ -382,6 +385,12 @@ func (s *ApprovalService) submitApproval(ctx context.Context, client *ent.Client
 
 	_, err = update.Save(ctx)
 	if err != nil {
+		// 并发场景下另一条事务已抢先处理（状态不再是 pending），
+		// Ent 的 UpdateOne 命中 0 行会返回 not-found，这里转为明确业务错误。
+		if ent.IsNotFound(err) {
+			s.logger.Warnw("Approval record already processed by another request (race lost)", "record_id", recordID)
+			return fmt.Errorf("审批记录已被其他请求处理，请刷新后重试")
+		}
 		s.logger.Errorw("Failed to update approval record", "error", err)
 		return fmt.Errorf("failed to update approval record: %w", err)
 	}

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ type IncidentService struct {
 	sequenceService       *SequenceService
 	processTriggerService ProcessTriggerServiceInterface
 	ruleEngine            *IncidentRuleEngine
+	rawDB                 *sql.DB // for transactional SELECT FOR UPDATE (S-4 修复)
 }
 
 func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger) *IncidentService {
@@ -49,6 +51,11 @@ func (s *IncidentService) SetPriorityMatrixService(pms *PriorityMatrixService) {
 
 func (s *IncidentService) SetSequenceService(seq *SequenceService) {
 	s.sequenceService = seq
+}
+
+// SetRawDB 设置原生数据库连接（用于事务性编号生成，S-4 修复）
+func (s *IncidentService) SetRawDB(db *sql.DB) {
+	s.rawDB = db
 }
 
 func (s *IncidentService) SetRuleEngine(engine *IncidentRuleEngine) {
@@ -959,6 +966,11 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 }
 
 // generateIncidentNumber 生成事件编号，优先使用 Redis 序列
+//
+// S-4 补充修复：incident_number 是**全局唯一**约束（不含 tenant_id），而 Redis 序列
+// key 只按年月分片、不区分租户来源，一旦某个编号已被其他写入方（含历史数据迁移、
+// 其他租户、人工补数）占用，序列返回的候选值就会与之碰撞，导致本次创建直接失败。
+// 因此这里对候选编号做全局存在性校验并向前跳号，把"必然失败"降级为"跳过占用号"。
 func (s *IncidentService) generateIncidentNumber(ctx context.Context, tenantID int) (string, error) {
 	now := time.Now()
 	year := now.Year()
@@ -968,12 +980,35 @@ func (s *IncidentService) generateIncidentNumber(ctx context.Context, tenantID i
 
 	// 优先使用 Redis 序列（原子递增，避免并发重复）
 	if s.sequenceService != nil {
-		seq, err := s.sequenceService.GetNextSequenceWithExpiry(ctx, key, expiredAt)
-		if err != nil {
-			s.logger.Warnw("Redis sequence failed for incident, fallback to DB", "error", err)
-		} else {
-			return fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq), nil
+		// 最多跳号 maxProbe 次；超过则落到唯一后缀兜底，避免热点月份被长期占用时死循环
+		const maxProbe = 20
+		for i := 0; i < maxProbe; i++ {
+			seq, err := s.sequenceService.GetNextSequenceWithExpiry(ctx, key, expiredAt)
+			if err != nil {
+				s.logger.Warnw("Redis sequence failed for incident, fallback to DB", "error", err)
+				break
+			}
+			candidate := fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq)
+
+			// 全局（跨租户）存在性校验：命中则继续取下一个序列值
+			taken, existErr := s.client.Incident.Query().
+				Where(incident.IncidentNumberEQ(candidate)).
+				Exist(ctx)
+			if existErr != nil {
+				// 校验失败不阻断创建，交由数据库唯一约束兜底
+				s.logger.Warnw("Incident number existence check failed, accepting candidate",
+					"error", existErr, "candidate", candidate)
+				return candidate, nil
+			}
+			if !taken {
+				return candidate, nil
+			}
+			s.logger.Warnw("Incident number already taken globally, probing next",
+				"candidate", candidate, "tenant_id", tenantID, "attempt", i+1)
 		}
+		s.logger.Warnw("Incident number probing exhausted, using unique suffix",
+			"tenant_id", tenantID)
+		return fmt.Sprintf("INC-%04d%02d-%s", year, month, uniqueFallbackSuffix()), nil
 	}
 
 	// 备用方案：数据库查询
@@ -981,41 +1016,45 @@ func (s *IncidentService) generateIncidentNumber(ctx context.Context, tenantID i
 }
 
 // generateIncidentNumberWithDB 使用数据库查询生成事件编号（备用方案）
-// 修复：使用 IncidentNumberContains 过滤标准格式（INC-YYYYMM-NNNNNN），
-// 避免旧格式（INC-001 等）干扰序列计算
+// S-4 修复：incident_number 在库中为全局唯一约束（非按租户），原实现按租户各自求 max 后再落库，
+// 两租户极易算出同一编号，先建者占用全局唯一值、后者永久创建失败（跨租户死锁）。
+// 改为：在事务内对全表当月最大编号加锁（FOR UPDATE SKIP LOCKED）后递增，保证全局单调递增且唯一；
+// 当月无记录时用唯一后缀兜底，彻底消除跨租户碰撞。
 func (s *IncidentService) generateIncidentNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
 	prefix := fmt.Sprintf("INC-%04d%02d-", year, month)
 
-	incidents, err := s.client.Incident.Query().
-		Where(
-			incident.TenantIDEQ(tenantID),
-			incident.DeletedAtIsNil(),
-			incident.IncidentNumberContains(prefix),
-		).
-		All(ctx)
-
-	maxSeq := 0
-	if err != nil {
-		s.logger.Warnw("Query incident numbers failed, starting from 0", "error", err)
-	} else {
-		for _, inc := range incidents {
-			num := inc.IncidentNumber
-			// 解析 INC-YYYYMM-NNNNNN 格式，只取最后的数字序列
-			for i := len(num) - 1; i >= 0; i-- {
-				if num[i] == '-' {
-					var seq int
-					if _, err := fmt.Sscanf(num[i+1:], "%d", &seq); err == nil {
-						if seq > maxSeq {
-							maxSeq = seq
-						}
-					}
-					break
+	if s.rawDB != nil {
+		tx, err := s.rawDB.BeginTx(ctx, nil)
+		if err == nil {
+			// 不加租户过滤：incident_number 全局唯一，必须跨租户协调最大号
+			query := `SELECT incident_number FROM incidents WHERE incident_number LIKE $1 AND incident_number IS NOT NULL AND incident_number != '' ORDER BY incident_number DESC LIMIT 1 FOR UPDATE SKIP LOCKED`
+			var maxNum string
+			scanErr := tx.QueryRowContext(ctx, query, prefix+"%").Scan(&maxNum)
+			if scanErr == nil {
+				seq := 0
+				if idx := strings.LastIndex(maxNum, "-"); idx >= 0 {
+					fmt.Sscanf(maxNum[idx+1:], "%d", &seq)
 				}
+				candidate := fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq+1)
+				_ = tx.Commit()
+				return candidate, nil
 			}
+			if scanErr == sql.ErrNoRows {
+				// 全表当月无记录：用唯一后缀避免两租户同时落到 000001 而碰撞
+				candidate := fmt.Sprintf("INC-%04d%02d-%s", year, month, uniqueFallbackSuffix())
+				_ = tx.Commit()
+				return candidate, nil
+			}
+			// 其他查询错误：回滚后走最终兜底
+			_ = tx.Rollback()
+			s.logger.Warnw("Incident number lock query failed, using random fallback", "error", scanErr)
+		} else {
+			s.logger.Warnw("Incident number tx begin failed, using random fallback", "error", err)
 		}
 	}
 
-	return fmt.Sprintf("INC-%04d%02d-%06d", year, month, maxSeq+1), nil
+	// 最终兜底（无 rawDB 或事务异常）：唯一后缀保证全局唯一约束不被打破
+	return fmt.Sprintf("INC-%04d%02d-%s", year, month, uniqueFallbackSuffix()), nil
 }
 
 func (s *IncidentService) executeIncidentRules(ctx context.Context, incidentID int, tenantID int) {

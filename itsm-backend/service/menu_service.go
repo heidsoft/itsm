@@ -245,10 +245,50 @@ func (s *MenuService) GetUserMenus(ctx context.Context, userID int, tenantID int
 	// 构建菜单树
 	mainMenus, adminMenus := s.buildMenuTree(filteredMenus)
 
+	// 当部署模式未启用 MSP（如 DEPLOYMENT_MODE=private）时，后端 /api/v1/msp/* 路由整体关闭。
+	// 此时即便用户拥有 msp:* 权限，也应隐藏 MSP 菜单，避免暴露一个后端不可用的模块（R-001）。
+	if !middleware.IsMSPEnabled() {
+		mainMenus = filterMSPMenus(mainMenus)
+		adminMenus = filterMSPMenus(adminMenus)
+	}
+
 	return &dto.MenuTreeResponse{
 		Main:  mainMenus,
 		Admin: adminMenus,
 	}, nil
+}
+
+// filterMSPMenus 递归剔除 MSP 模块相关菜单项。
+// 判定标准：菜单路径以 "/msp" 开头，或权限码以 "msp" 开头（覆盖 msp:*、msp_allocation:*、msp_customer:*、msp_ticket:*、msp_report:*）。
+func filterMSPMenus(menus []dto.MenuDTO) []dto.MenuDTO {
+	if len(menus) == 0 {
+		return menus
+	}
+	result := make([]dto.MenuDTO, 0, len(menus))
+	for _, m := range menus {
+		if isMSPMenu(m) {
+			continue
+		}
+		// 保留非 MSP 父级，但递归过滤其子菜单中的 MSP 项
+		if len(m.Children) > 0 {
+			m.Children = filterMSPMenus(m.Children)
+		}
+		result = append(result, m)
+	}
+	return result
+}
+
+// isMSPMenu 判定单个菜单项是否属于 MSP 模块
+func isMSPMenu(m dto.MenuDTO) bool {
+	if m.Path != "" && strings.HasPrefix(m.Path, "/msp") {
+		return true
+	}
+	if m.PermissionCode != nil && *m.PermissionCode != "" {
+		if strings.HasPrefix(*m.PermissionCode, "msp") {
+			return true
+		}
+	}
+	return false
 }
 
 // getUserPermissions 获取用户的权限列表
