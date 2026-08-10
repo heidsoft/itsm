@@ -169,7 +169,7 @@ export default function MainLayout({
         </a>
         <NetworkStatus />
         <Layout
-          className="min-h-screen bg-[#f5f7fb]"
+          className="min-h-screen bg-[var(--color-background-primary)]"
           style={{
             paddingLeft: isMobile
               ? 0
@@ -187,7 +187,7 @@ export default function MainLayout({
           />
 
           {/* 主区域 */}
-          <Layout className="bg-[#f5f7fb] min-h-screen">
+          <Layout className="bg-[var(--color-background-primary)] min-h-screen">
             {/* 顶部导航栏 */}
             <Header collapsed={collapsed} onCollapse={setCollapsed} showBreadcrumb={true} />
 
@@ -196,7 +196,7 @@ export default function MainLayout({
               id="main-content"
               tabIndex={-1}
               onClick={handleContentClick}
-              className="bg-[#f5f7fb] w-auto min-w-0 max-w-full overflow-x-hidden shadow-none outline-none"
+              className="bg-[var(--color-background-primary)] w-auto min-w-0 max-w-full overflow-x-hidden shadow-none outline-none"
               style={{
                 minHeight: LAYOUT_CONFIG.content.minHeight,
               }}

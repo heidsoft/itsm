@@ -141,9 +141,9 @@ function TicketsPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--color-background-primary)]">
       {/* 页面头部 */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-[var(--color-surface-primary)] border-b border-[var(--color-border-primary)]">
         <div className="w-full px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -235,7 +235,7 @@ function TicketsPageContent() {
       {/* 高级搜索面板 */}
       {showAdvancedSearch && (
         <div className="bg-gray-50 border-b border-gray-200">
-          <div className="w-full px-6 py-4">
+          <div className="w-full px-6 py-4 bg-[var(--color-background-tertiary)] border-b border-[var(--color-border-primary)]">
             <TicketAdvancedSearch onSearch={handleAdvancedSearch} onReset={handleSearchReset} />
           </div>
         </div>

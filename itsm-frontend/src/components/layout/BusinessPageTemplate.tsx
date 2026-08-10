@@ -301,9 +301,9 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
   }));
 
   return (
-    <div className={`min-h-screen bg-[#f5f7fb] ${className}`}>
+    <div className={`min-h-screen bg-[var(--color-background-primary)] ${className}`}>
       {/* ====== 页面头部区域 ====== */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-[var(--color-surface-primary)] border-b border-[var(--color-border-primary)]">
         <div className="w-full px-3 py-4 sm:px-6">
           {/* 标题行 */}
           <div className="mb-4 flex items-start justify-between gap-3">
@@ -373,7 +373,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
       </div>
 
       {/* ====== 搜索和筛选区域 ====== */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-[var(--color-surface-primary)] border-b border-[var(--color-border-primary)]">
         <div className="w-full px-3 py-3 sm:px-6">
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* 搜索框 */}
@@ -412,7 +412,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
 
           {/* 筛选面板 */}
           {filters?.visible && filters.content && (
-            <div className="mt-3 p-3 bg-gray-50 rounded-lg">{filters.content}</div>
+            <div className="mt-3 p-3 bg-[var(--color-background-tertiary)] rounded-lg">{filters.content}</div>
           )}
         </div>
       </div>

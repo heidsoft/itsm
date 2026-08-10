@@ -235,7 +235,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
         </div>
       )}
 
-      <Card className="rounded-lg shadow-sm border border-gray-200">
+      <Card className="rounded-lg shadow-sm border border-[var(--color-border-primary)]">
         <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">
           <Form.Item name="keyword" className="mb-0">
             <Input

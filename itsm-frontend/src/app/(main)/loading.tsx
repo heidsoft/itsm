@@ -10,7 +10,7 @@ import { LAYOUT_CONFIG } from '@/config/layout.config';
  */
 export default function Loading() {
   return (
-    <Layout className="min-h-screen bg-[#f5f7fb]">
+    <Layout className="min-h-screen bg-[var(--color-background-primary)]">
       {/* 侧边栏占位 */}
       <div
         style={{
@@ -42,7 +42,7 @@ export default function Loading() {
       <Layout
         style={{
           paddingLeft: LAYOUT_CONFIG.sider.width,
-          background: '#f5f7fb',
+          background: 'var(--color-background-primary)',
         }}
       >
         {/* Header 占位 */}
