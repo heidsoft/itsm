@@ -97,8 +97,8 @@
 
 /* 当前选中项 - 大色块强调 */
 .ant-menu-item-selected {
-  background: linear-gradient(90deg, #e6f4ff 0%, #bae0ff 100%) !important;
-  border-left: 4px solid #1890ff !important;
+  background: linear-gradient(90deg, var(--color-primary-50) 0%, var(--color-primary-100) 100%) !important;
+  border-left: 4px solid var(--color-primary) !important;
   padding-left: 8px !important;        /* 减去border宽度 */
 }
 
@@ -114,19 +114,19 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: #1890ff;
+  background: var(--color-primary);
   border-radius: 0 4px 4px 0;
 }
 
 /* 悬停效果 */
 .ant-menu-item:hover,
 .ant-menu-submenu-title:hover {
-  background: rgba(24, 144, 255, 0.08) !important;
+  background: rgba(59, 130, 246, 0.08) !important;
 }
 
 /* 字体高亮变色 */
 .ant-menu-item-selected .ant-menu-title-content {
-  color: #1890ff !important;
+  color: var(--color-primary) !important;
   font-weight: 600 !important;
 }
 
@@ -142,7 +142,7 @@
 }
 
 .ant-breadcrumb a:hover {
-  color: #1890ff;
+  color: var(--color-primary);
 }
 
 /* ========== 响应式适配 ========== */
@@ -213,21 +213,47 @@
 }
 
 /* ========== 深色模式适配 ========== */
+/* 应用内显式切换（html.dark / :root.dark，由 ThemeHtmlClassSync 控制）。
+   必须基于 .dark 类，否则用户手动切暗色时布局 chrome 不跟随。 */
+:root.dark .ant-layout,
+html.dark .ant-layout {
+  background: #141414;
+}
+
+:root.dark .ant-layout-header,
+html.dark .ant-layout-header {
+  background: #1f1f1f !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root.dark .ant-layout-sider-light,
+html.dark .ant-layout-sider-light,
+:root.dark .ant-layout-sider-dark,
+html.dark .ant-layout-sider-dark {
+  background: linear-gradient(180deg, #1f1f1f 0%, #141414 100%) !important;
+}
+
+:root.dark .ant-layout-content,
+html.dark .ant-layout-content {
+  background: #1f1f1f;
+}
+
+/* 系统偏好（OS 暗色且应用未显式设为亮色） */
 @media (prefers-color-scheme: dark) {
-  .ant-layout {
+  :root:not(.light) .ant-layout {
     background: #141414;
   }
-  
-  .ant-layout-header {
+
+  :root:not(.light) .ant-layout-header {
     background: #1f1f1f !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
   }
-  
-  .ant-layout-sider-light {
+
+  :root:not(.light) .ant-layout-sider-light {
     background: linear-gradient(180deg, #1f1f1f 0%, #141414 100%) !important;
   }
-  
-  .ant-layout-content {
+
+  :root:not(.light) .ant-layout-content {
     background: #1f1f1f;
   }
 }
@@ -245,7 +271,7 @@
 /* ========== 无障碍优化 ========== */
 .ant-menu-item:focus-visible,
 .ant-menu-submenu-title:focus-visible {
-  outline: 2px solid #1890ff;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 

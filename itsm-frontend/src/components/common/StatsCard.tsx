@@ -23,7 +23,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   title,
   value,
   icon: Icon,
-  iconColor = '#1890ff',
+  iconColor = '#3b82f6',
   valueColor,
   suffix,
   loading = false,

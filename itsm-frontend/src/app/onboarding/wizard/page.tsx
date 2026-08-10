@@ -122,7 +122,7 @@ export default function FirstRunWizard({ initialStep, onFinish }: WizardProps) {
 function WelcomeStep() {
   return (
     <Result
-      icon={<Rocket style={{ color: '#1677ff' }} />}
+      icon={<Rocket style={{ color: '#3b82f6' }} />}
       title="5 分钟快速了解 AI-Native ITSM"
       subTitle="我们将引导你完成：创建第一个工单、浏览服务目录、配置 CMDB、体验 AI 分诊。"
       extra={

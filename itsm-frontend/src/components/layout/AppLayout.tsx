@@ -79,7 +79,7 @@ export function AppLayout({
             zIndex: 100,
             height: '100vh',
             width: 40,
-            background: 'rgba(255,255,255,0.8)',
+            background: 'var(--color-bg-secondary, rgba(255,255,255,0.8))',
             borderRadius: 0,
             boxShadow: '2px 0 8px rgba(0,0,0,0.1)',
           }}
@@ -122,7 +122,7 @@ export function AppLayout({
             padding: collapsed
               ? `${LAYOUT_CONFIG.content.paddingCollapsed}px`
               : `${LAYOUT_CONFIG.content.padding}px`,
-            background: '#fff',
+            background: 'transparent',
             minHeight: LAYOUT_CONFIG.content.minHeight,
             borderRadius: LAYOUT_CONFIG.borderRadius.lg,
             transition: LAYOUT_CONFIG.transitions.base,
@@ -144,7 +144,7 @@ export function AppLayout({
               style={{
                 marginBottom: LAYOUT_CONFIG.content.pageHeaderMarginBottom,
                 paddingBottom: LAYOUT_CONFIG.content.pageHeaderPaddingBottom,
-                borderBottom: '1px solid #e5e7eb',
+                borderBottom: '1px solid var(--color-border-primary, #e5e7eb)',
               }}
             >
               {/* 标题和描述 */}
@@ -155,7 +155,7 @@ export function AppLayout({
                       style={{
                         fontSize: `${LAYOUT_CONFIG.content.pageTitleFontSize}px`,
                         fontWeight: '600',
-                        color: '#1f2937',
+                        color: 'var(--color-text-primary, #1f2937)',
                         margin: 0,
                         marginBottom: description ? LAYOUT_CONFIG.spacing.xs : 0,
                       }}
@@ -167,7 +167,7 @@ export function AppLayout({
                     <p
                       style={{
                         fontSize: `${LAYOUT_CONFIG.content.pageDescFontSize}px`,
-                        color: '#6b7280',
+                        color: 'var(--color-text-secondary, #6b7280)',
                         margin: 0,
                         lineHeight: '1.5',
                       }}

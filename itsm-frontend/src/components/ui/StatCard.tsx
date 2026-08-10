@@ -11,7 +11,7 @@ import { LucideIcon } from 'lucide-react';
  * @param icon - Optional LucideIcon or ReactNode to display alongside value
  * @param prefix - ReactNode displayed before the numeric value (e.g. currency symbol)
  * @param suffix - ReactNode displayed after the numeric value (e.g. unit label)
- * @param color - Hex color string for the icon background (default: #1890ff)
+ * @param color - Hex color string for the icon background (default: #3b82f6)
  * @param loading - Boolean; when true shows loading skeleton state
  */
 export interface StatCardProps {
@@ -30,7 +30,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   icon,
   prefix,
   suffix,
-  color = '#1890ff',
+  color = '#3b82f6',
   loading = false,
 }) => {
   return (

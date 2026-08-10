@@ -111,7 +111,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
           trend: 'up',
           trendValue: 12.5,
           icon: <BarChart3 className="w-5 h-5" />,
-          color: '#1890ff',
+          color: '#3b82f6',
           format: 'number',
         },
         {

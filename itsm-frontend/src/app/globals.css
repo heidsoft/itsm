@@ -110,8 +110,8 @@
 
 .ant-select-item-option-selected,
 :root .ant-select-item-option-selected {
-  background-color: #e6f4ff !important;
-  color: #1890ff !important;
+  background-color: var(--color-primary-50) !important;
+  color: var(--color-primary) !important;
   font-weight: 500 !important;
 }
 
@@ -165,8 +165,8 @@
 
 .ant-picker-cell.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner,
 :global(:root) .ant-picker-cell.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
-  background-color: #e6f4ff !important;
-  color: #1890ff !important;
+  background-color: var(--color-primary-50) !important;
+  color: var(--color-primary) !important;
 }
 
 .ant-picker-time-panel-column,
@@ -186,8 +186,8 @@
 
 .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner,
 :global(:root) .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
-  background-color: #e6f4ff !important;
-  color: #1890ff !important;
+  background-color: var(--color-primary-50) !important;
+  color: var(--color-primary) !important;
 }
 
 /* ColorPicker 下拉样式 - 亮色模式（默认） */
@@ -237,8 +237,8 @@
 :global(:root) .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
 .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-title,
 :global(:root) .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-title {
-  background-color: #e6f4ff !important;
-  color: #1890ff !important;
+  background-color: var(--color-primary-50) !important;
+  color: var(--color-primary) !important;
 }
 
 /* Cascader 下拉样式 - 亮色模式（默认） */
@@ -270,8 +270,8 @@
 
 .ant-cascader-menu-item-selected,
 :global(:root) .ant-cascader-menu-item-selected {
-  background-color: #e6f4ff !important;
-  color: #1890ff !important;
+  background-color: var(--color-primary-50) !important;
+  color: var(--color-primary) !important;
 }
 
 /* Mentions 下拉样式 - 亮色模式（默认） */
@@ -292,8 +292,8 @@
 
 .ant-mentions-dropdown .ant-select-item-option-selected,
 :global(:root) .ant-mentions-dropdown .ant-select-item-option-selected {
-  background-color: #e6f4ff !important;
-  color: #1890ff !important;
+  background-color: var(--color-primary-50) !important;
+  color: var(--color-primary) !important;
 }
 
 /* Select 下拉框样式修复 - 暗色模式 */

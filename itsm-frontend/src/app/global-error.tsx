@@ -77,7 +77,7 @@ export default function GlobalError({
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
-    background: '#1677ff',
+    background: '#3b82f6',
     color: '#ffffff',
     border: 'none',
     borderRadius: '8px',

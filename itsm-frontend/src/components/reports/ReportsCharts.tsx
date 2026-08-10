@@ -55,7 +55,7 @@ interface ReportsChartsProps {
 }
 
 const COLORS = [
-  '#1890ff',
+  '#3b82f6',
   '#52c41a',
   '#faad14',
   '#f5222d',
@@ -171,9 +171,9 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#1890ff"
+                stroke="#3b82f6"
                 strokeWidth={2}
-                dot={{ fill: '#1890ff', r: 4 }}
+                dot={{ fill: '#3b82f6', r: 4 }}
                 activeDot={{ r: 6 }}
               />
               {data.some(item => item.avgTime) && (
@@ -201,8 +201,8 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
               <Area
                 type="monotone"
                 dataKey="value"
-                stroke="#1890ff"
-                fill="#1890ff"
+                stroke="#3b82f6"
+                fill="#3b82f6"
                 fillOpacity={0.6}
               />
             </AreaChart>
@@ -254,7 +254,7 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Bar dataKey="value" fill="#1890ff" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]}>
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}

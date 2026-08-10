@@ -469,3 +469,71 @@
     display: none;
   }
 }
+
+/* ========== 暗色模式（跟随 html.dark 类） ========== */
+:global(html.dark) .header {
+  background: var(--color-bg-secondary);
+  border-bottom-color: var(--color-border-primary);
+}
+
+:global(html.dark) .title {
+  color: var(--color-text-primary);
+}
+
+:global(html.dark) .breadcrumbCurrent {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-active);
+}
+
+:global(html.dark) .breadcrumbLink {
+  color: var(--color-primary-light);
+}
+
+:global(html.dark) .breadcrumbLink:hover {
+  background-color: var(--color-primary-soft-hover);
+  color: var(--color-primary-light);
+}
+
+:global(html.dark) .actionButton {
+  color: var(--color-text-primary) !important;
+}
+
+:global(html.dark) .actionButton svg {
+  color: var(--color-text-primary);
+  stroke: var(--color-text-primary);
+}
+
+:global(html.dark) .actionButton:hover {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-active);
+}
+
+:global(html.dark) .actionButton:hover svg,
+:global(html.dark) .actionButton:focus svg {
+  color: var(--color-text-primary);
+  stroke: var(--color-text-primary);
+}
+
+:global(html.dark) .userMenu:hover {
+  background: var(--color-bg-active);
+  border-color: var(--color-border-primary);
+}
+
+:global(html.dark) .userName {
+  color: var(--color-text-primary);
+}
+
+:global(html.dark) .menuItemContent {
+  color: var(--color-text-secondary);
+}
+
+:global(html.dark) .notificationButton:hover,
+:global(html.dark) .notificationButton:focus {
+  background: var(--color-bg-active);
+}
+
+:global(html.dark) .notificationButton:hover svg,
+:global(html.dark) .notificationButton:focus svg {
+  color: var(--color-text-primary);
+  stroke: var(--color-text-primary);
+}

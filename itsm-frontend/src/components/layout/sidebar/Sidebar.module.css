@@ -32,7 +32,7 @@
 .logoIcon {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -40,7 +40,7 @@
   color: white;
   font-weight: 800;
   font-size: 18px;
-  box-shadow: 0 2px 6px rgba(22, 119, 255, 0.2);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
 }
 
 .logoTextContainer {
@@ -106,13 +106,13 @@
 }
 
 .customMenu :global(.ant-menu-item:hover) {
-  color: #0958d9 !important;
-  background-color: #f3f4f6 !important;
+  color: var(--color-primary) !important;
+  background-color: var(--color-bg-active) !important;
 }
 
 .customMenu :global(.ant-menu-item-selected) {
-  background-color: #e6f4ff !important;
-  color: #0958d9 !important;
+  background-color: var(--color-primary-soft) !important;
+  color: var(--color-primary) !important;
   font-weight: 600 !important;
 }
 
@@ -240,4 +240,53 @@
 .customMenu :global(.ant-menu-item),
 .customMenu :global(.ant-menu-submenu-title) {
   margin: 2px 0 !important;
+}
+
+/* ========== 暗色模式（跟随 html.dark 类） ========== */
+:global(html.dark) .sider {
+  /* 原 .sider 用 !important 写死背景，暗色覆盖必须同样用 !important */
+  background: var(--color-bg-secondary) !important;
+  border-right: 1px solid var(--color-border-primary) !important;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+:global(html.dark) .logoArea {
+  background: var(--color-bg-secondary);
+  border-bottom-color: var(--color-border-primary);
+}
+
+:global(html.dark) .logoText {
+  color: var(--color-text-primary);
+}
+
+:global(html.dark) .logoSubtext {
+  color: var(--color-text-muted);
+}
+
+:global(html.dark) .adminMenuContainer {
+  background: var(--color-bg-tertiary);
+  border-top-color: var(--color-border-primary);
+}
+
+:global(html.dark) .userInfoContainer {
+  background: var(--color-bg-secondary);
+  border-top-color: var(--color-border-primary);
+}
+
+:global(html.dark) .userInfo:hover {
+  background-color: var(--color-bg-active);
+}
+
+:global(html.dark) .customMenu :global(.ant-menu-item) {
+  color: var(--color-text-secondary) !important;
+}
+
+:global(html.dark) .customMenu :global(.ant-menu-item:hover) {
+  color: var(--color-primary-light) !important;
+  background-color: var(--color-bg-active) !important;
+}
+
+:global(html.dark) .customMenu :global(.ant-menu-item-selected) {
+  background-color: var(--color-primary-soft) !important;
+  color: var(--color-primary-light) !important;
 }

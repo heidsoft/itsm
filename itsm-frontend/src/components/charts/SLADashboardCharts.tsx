@@ -59,7 +59,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
 
   // 颜色配置
   const colors = {
-    primary: '#1890ff',
+    primary: '#3b82f6',
     success: '#52c41a',
     warning: '#faad14',
     error: '#ff4d4f',

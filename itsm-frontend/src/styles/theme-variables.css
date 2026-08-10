@@ -12,6 +12,8 @@
   --color-primary-500: #3b82f6;
   --color-primary-600: #2563eb;
   --color-primary-700: #1d4ed8;
+  --color-primary-soft: #eff6ff;
+  --color-primary-soft-hover: rgba(59, 130, 246, 0.08);
   
   /* 成功色 Success */
   --color-success: #22c55e;
@@ -165,27 +167,76 @@
 }
 
 /* ====== 深色模式 Dark Mode ====== */
+/* 应用内显式切换：html.dark / :root.dark（由 ThemeHtmlClassSync 控制）。
+   必须基于 .dark 类而非仅 OS 偏好，否则用户手动切暗色时布局/变量不跟随。 */
+:root.dark,
+html.dark {
+  /* 文本颜色 */
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-text-disabled: #4b5563;
+  --color-text-inverse: #111827;
+
+  /* 背景颜色 */
+  --color-bg-primary: #111827;
+  --color-bg-secondary: #1f2937;
+  --color-bg-tertiary: #374151;
+  --color-bg-overlay: rgba(0, 0, 0, 0.7);
+  --color-bg-hover: #1f2937;
+  --color-bg-active: #374151;
+
+  /* 边框颜色 */
+  --color-border-primary: #374151;
+  --color-border-secondary: #4b5563;
+
+  /* 品牌色在暗色下提亮，保持可辨识 */
+  --color-primary: #3b82f6;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #2563eb;
+  --color-primary-50: #172554;
+  --color-primary-100: #1e3a8a;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #60a5fa;
+  --color-primary-700: #93c5fd;
+
+  /* 选中/悬浮软底色 */
+  --color-primary-soft: rgba(59, 130, 246, 0.15);
+  --color-primary-soft-hover: rgba(59, 130, 246, 0.1);
+}
+
+/* 系统偏好（OS 暗色且应用未显式设为亮色） */
 @media (prefers-color-scheme: dark) {
-  :root {
-    /* 文本颜色 */
+  :root:not(.light) {
     --color-text-primary: #f9fafb;
     --color-text-secondary: #d1d5db;
     --color-text-tertiary: #9ca3af;
     --color-text-muted: #6b7280;
     --color-text-disabled: #4b5563;
     --color-text-inverse: #111827;
-    
-    /* 背景颜色 */
+
     --color-bg-primary: #111827;
     --color-bg-secondary: #1f2937;
     --color-bg-tertiary: #374151;
     --color-bg-overlay: rgba(0, 0, 0, 0.7);
     --color-bg-hover: #1f2937;
     --color-bg-active: #374151;
-    
-    /* 边框颜色 */
+
     --color-border-primary: #374151;
     --color-border-secondary: #4b5563;
+
+    --color-primary: #3b82f6;
+    --color-primary-light: #60a5fa;
+    --color-primary-dark: #2563eb;
+    --color-primary-50: #172554;
+    --color-primary-100: #1e3a8a;
+    --color-primary-500: #3b82f6;
+    --color-primary-600: #60a5fa;
+    --color-primary-700: #93c5fd;
+
+    --color-primary-soft: rgba(59, 130, 246, 0.15);
+    --color-primary-soft-hover: rgba(59, 130, 246, 0.1);
   }
 }
 
