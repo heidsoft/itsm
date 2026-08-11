@@ -46,7 +46,8 @@ pending → processing → succeeded
 2. `notification.deliver`：已接入工单站内通知与飞书/钉钉/企微/Webhook 等企业渠道；每个收件人/渠道一个命令，使用调用方 occurrence key 派生幂等键；
 3. `connector.deliver`：飞书优先，具备投递幂等和回调审计；
 4. `ai.invoke`：只保存 prompt/template/model 引用和业务上下文引用；
-5. `cmdb.discovery` / `cmdb.reconcile`：Command 只负责调度，领域 Job/Result 仍是 CMDB 权威状态。
+5. `cmdb.import.process` / `cmdb.export.process`：已接入；任务与 Command 同事务创建，Command 只负责调度，领域 Job 仍是进度和结果的权威状态；导入行必须提供资产标签、序列号或云资源稳定标识以保证重试对账；
+6. `cmdb.discovery` / `cmdb.reconcile`：沿用相同 Job + Command 模式，补齐分页发现、Diff、对账和待退役治理。
 
 每种命令必须有独立 Handler、超时、最大尝试次数、错误分类、指标和死信重放权限。不得在通用 Worker 中加入领域 switch；`workflow.start` 的聚合类型路由属于该 Handler 自身。
 
@@ -59,6 +60,14 @@ pending → processing → succeeded
 - 企业渠道通过 `connector.Manager` 投递，`connector.Message.ID` 使用 command idempotency key；连接器应把该 ID 透传给支持幂等的 Provider；
 - 调用方可传 `idempotencyKey` 表示一次业务事件。未传时生成随机 occurrence key，避免内容相同的两个合法事件被永久去重；
 - 外部 Provider 原始错误不写 Outbox、审计或业务日志，只记录安全错误分类。
+
+### CMDB import/export
+
+- `CMDBImportTask` / `CMDBExportTask` 与调度 Command 在同一 Ent 事务提交，不允许请求结束后启动 goroutine；
+- Handler 只从命令租户内重载 Job，payload 仅保存 `taskId`，不携带文件内容或凭据；
+- Worker 使用父 context 和任务超时，完成任务再次执行是 no-op；
+- 导入按租户内资产标签、序列号或“云厂商 + 云资源 ID”对账，缺少稳定身份的行明确失败，防止 Worker 恢复时重复建 CI；
+- Job 对外错误只保存安全分类，不持久化下载 URL、数据库错误或云端原始响应。
 
 ## 运维要求
 

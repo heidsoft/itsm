@@ -306,6 +306,12 @@ func NewApplication() *Application {
 	configurationItemService := service.NewConfigurationItemService(client, sugar, ciHistoryService, ciTagService)
 	ciRelationshipService := service.NewCIRelationshipService(client, sugar)
 	importExportService := service.NewCMDBImportExportService(client, sugar, configurationItemService, ciTagService)
+	if err := commandRegistry.Register(commandbus.CommandProcessCMDBImport, importExportService.HandleImportCommand); err != nil {
+		sugar.Fatalw("Failed to register CMDB import command handler", "error", err)
+	}
+	if err := commandRegistry.Register(commandbus.CommandProcessCMDBExport, importExportService.HandleExportCommand); err != nil {
+		sugar.Fatalw("Failed to register CMDB export command handler", "error", err)
+	}
 	savedViewService := service.NewCMDBSavedViewService(client, sugar)
 	// LLM/Embedding/VectorStore
 	var embedder service.Embedder

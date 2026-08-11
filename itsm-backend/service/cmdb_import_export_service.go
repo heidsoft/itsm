@@ -21,6 +21,7 @@ import (
 	"itsm-backend/ent/cmdbexporttask"
 	"itsm-backend/ent/cmdbimporttask"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/internal/commandbus"
 
 	"github.com/google/uuid"
 	"github.com/xuri/excelize/v2"
@@ -42,6 +43,79 @@ type CMDBImportExportService struct {
 	tagService *CITagService
 }
 
+// HandleImportCommand reloads the authoritative Job under the command tenant.
+// Completed jobs are idempotent no-ops; failed/interrupted jobs are resumed by
+// the same command identity and remain visible through the Job API.
+func (s *CMDBImportExportService) HandleImportCommand(ctx context.Context, command *ent.OperationalCommand) error {
+	if command == nil || command.CommandType != commandbus.CommandProcessCMDBImport || command.AggregateType != "cmdb_import_task" {
+		return fmt.Errorf("invalid CMDB import command")
+	}
+	task, err := s.client.CMDBImportTask.Query().Where(
+		cmdbimporttask.IDEQ(command.AggregateID), cmdbimporttask.TenantIDEQ(command.TenantID),
+	).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("load CMDB import job: %w", err)
+	}
+	if payloadTaskID, _ := command.Payload["taskId"].(string); payloadTaskID != task.TaskID {
+		return fmt.Errorf("CMDB import command identity mismatch")
+	}
+	if task.Status == "completed" {
+		return nil
+	}
+	request := &dto.ImportCIRequest{
+		FileURL: task.FileURL, FileType: task.FileType, UpdateMode: task.UpdateMode, SheetName: task.SheetName,
+	}
+	s.processImportTask(ctx, task.TaskID, request, task.TenantID, task.OperatorID, task.OperatorName)
+	status, err := s.client.CMDBImportTask.Query().Where(
+		cmdbimporttask.IDEQ(task.ID), cmdbimporttask.TenantIDEQ(command.TenantID),
+	).Select(cmdbimporttask.FieldStatus).String(ctx)
+	if err != nil {
+		return fmt.Errorf("reload CMDB import job: %w", err)
+	}
+	if status != "completed" {
+		return fmt.Errorf("CMDB import job did not complete")
+	}
+	return nil
+}
+
+func (s *CMDBImportExportService) HandleExportCommand(ctx context.Context, command *ent.OperationalCommand) error {
+	if command == nil || command.CommandType != commandbus.CommandProcessCMDBExport || command.AggregateType != "cmdb_export_task" {
+		return fmt.Errorf("invalid CMDB export command")
+	}
+	task, err := s.client.CMDBExportTask.Query().Where(
+		cmdbexporttask.IDEQ(command.AggregateID), cmdbexporttask.TenantIDEQ(command.TenantID),
+	).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("load CMDB export job: %w", err)
+	}
+	if payloadTaskID, _ := command.Payload["taskId"].(string); payloadTaskID != task.TaskID {
+		return fmt.Errorf("CMDB export command identity mismatch")
+	}
+	if task.Status == "completed" {
+		return nil
+	}
+	filterJSON, err := json.Marshal(task.Filters)
+	if err != nil {
+		return fmt.Errorf("decode CMDB export filters")
+	}
+	var filters dto.CISearchFilter
+	if err := json.Unmarshal(filterJSON, &filters); err != nil {
+		return fmt.Errorf("decode CMDB export filters")
+	}
+	request := &dto.ExportCIRequest{Filters: &filters, ExportType: task.ExportType, ExportFields: task.ExportFields}
+	s.processExportTask(ctx, task.TaskID, request, task.TenantID)
+	status, err := s.client.CMDBExportTask.Query().Where(
+		cmdbexporttask.IDEQ(task.ID), cmdbexporttask.TenantIDEQ(command.TenantID),
+	).Select(cmdbexporttask.FieldStatus).String(ctx)
+	if err != nil {
+		return fmt.Errorf("reload CMDB export job: %w", err)
+	}
+	if status != "completed" {
+		return fmt.Errorf("CMDB export job did not complete")
+	}
+	return nil
+}
+
 // NewCMDBImportExportService 创建CMDB导入导出服务
 func NewCMDBImportExportService(client *ent.Client, logger *zap.SugaredLogger, ciService *ConfigurationItemService, tagService *CITagService) *CMDBImportExportService {
 	return &CMDBImportExportService{
@@ -56,8 +130,13 @@ func NewCMDBImportExportService(client *ent.Client, logger *zap.SugaredLogger, c
 func (s *CMDBImportExportService) CreateImportTask(ctx context.Context, req *dto.ImportCIRequest, tenantID int, operatorID int, operatorName string) (*dto.ImportCIResult, error) {
 	taskID := uuid.NewString()
 
-	// 创建导入任务记录
-	task, err := s.client.CMDBImportTask.Create().
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建导入任务事务失败: %w", err)
+	}
+	defer tx.Rollback()
+	// Job 和调度命令必须在同一事务提交。
+	task, err := tx.CMDBImportTask.Create().
 		SetTaskID(taskID).
 		SetFileURL(req.FileURL).
 		SetFileType(req.FileType).
@@ -68,13 +147,20 @@ func (s *CMDBImportExportService) CreateImportTask(ctx context.Context, req *dto
 		SetOperatorName(operatorName).
 		Save(ctx)
 	if err != nil {
-		s.logger.Errorw("Failed to create import task", "error", err, "tenant_id", tenantID, "file_url", req.FileURL)
+		s.logger.Errorw("Failed to create import task", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("创建导入任务失败: %w", err)
 	}
-
-	// 异步执行导入
-	reqCopy := *req
-	go s.processImportTask(taskID, &reqCopy, tenantID, operatorID, operatorName)
+	if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandProcessCMDBImport,
+		AggregateType: "cmdb_import_task", AggregateID: task.ID,
+		IdempotencyKey: fmt.Sprintf("cmdb-import:%s:process", taskID),
+		Payload:        map[string]interface{}{"taskId": taskID}, MaxAttempts: 8,
+	}); err != nil {
+		return nil, fmt.Errorf("创建导入任务调度命令失败: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交导入任务失败: %w", err)
+	}
 
 	return s.convertToImportDTO(task), nil
 }
@@ -133,8 +219,8 @@ func (s *CMDBImportExportService) ListImportTasks(ctx context.Context, tenantID 
 }
 
 // processImportTask 处理导入任务
-func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.ImportCIRequest, tenantID int, operatorID int, operatorName string) {
-	ctx, cancel := context.WithTimeout(context.Background(), cmdbTaskTimeout)
+func (s *CMDBImportExportService) processImportTask(parent context.Context, taskID string, req *dto.ImportCIRequest, tenantID int, operatorID int, operatorName string) {
+	ctx, cancel := context.WithTimeout(parent, cmdbTaskTimeout)
 	defer cancel()
 
 	// 更新任务状态为处理中
@@ -154,21 +240,21 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 	// 下载文件
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, req.FileURL, nil)
 	if err != nil {
-		s.failImportTask(ctx, taskID, fmt.Sprintf("创建下载请求失败: %v", err))
+		s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("创建下载请求失败: %v", err))
 		return
 	}
 	resp, err := cmdbImportHTTPClient.Do(httpReq)
 	if err != nil {
-		s.failImportTask(ctx, taskID, fmt.Sprintf("下载文件失败: %v", err))
+		s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("下载文件失败: %v", err))
 		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		s.failImportTask(ctx, taskID, fmt.Sprintf("下载文件失败: HTTP %d", resp.StatusCode))
+		s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("下载文件失败: HTTP %d", resp.StatusCode))
 		return
 	}
 	if resp.ContentLength > maxCMDBImportFileSize {
-		s.failImportTask(ctx, taskID, "导入文件超过 50 MiB 限制")
+		s.failImportTask(ctx, taskID, tenantID, "导入文件超过 50 MiB 限制")
 		return
 	}
 	limitedBody := http.MaxBytesReader(nil, resp.Body, maxCMDBImportFileSize)
@@ -178,14 +264,14 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 		reader := csv.NewReader(limitedBody)
 		records, err = reader.ReadAll()
 		if err != nil {
-			s.failImportTask(ctx, taskID, fmt.Sprintf("解析CSV文件失败: %v", err))
+			s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("解析CSV文件失败: %v", err))
 			return
 		}
 	} else if req.FileType == "xlsx" {
 		// 先保存到临时文件
 		tmpFile, err := os.CreateTemp("", "cmdb-import-*.xlsx")
 		if err != nil {
-			s.failImportTask(ctx, taskID, fmt.Sprintf("创建临时文件失败: %v", err))
+			s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("创建临时文件失败: %v", err))
 			return
 		}
 		defer os.Remove(tmpFile.Name())
@@ -193,7 +279,7 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 		_, err = io.Copy(tmpFile, limitedBody)
 		if err != nil {
 			tmpFile.Close()
-			s.failImportTask(ctx, taskID, fmt.Sprintf("保存Excel文件失败: %v", err))
+			s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("保存Excel文件失败: %v", err))
 			return
 		}
 		tmpFile.Close()
@@ -201,7 +287,7 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 		// 读取Excel
 		f, err := excelize.OpenFile(tmpFile.Name())
 		if err != nil {
-			s.failImportTask(ctx, taskID, fmt.Sprintf("打开Excel文件失败: %v", err))
+			s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("打开Excel文件失败: %v", err))
 			return
 		}
 		defer f.Close()
@@ -213,14 +299,14 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 
 		rows, err := f.GetRows(sheetName)
 		if err != nil {
-			s.failImportTask(ctx, taskID, fmt.Sprintf("读取Excel Sheet失败: %v", err))
+			s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("读取Excel Sheet失败: %v", err))
 			return
 		}
 		records = rows
 	}
 
 	if len(records) < 2 {
-		s.failImportTask(ctx, taskID, "文件中没有有效数据")
+		s.failImportTask(ctx, taskID, tenantID, "文件中没有有效数据")
 		return
 	}
 
@@ -238,7 +324,7 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 	// 预处理CI类型映射
 	ciTypeMap, err := s.buildCITypeMap(ctx, tenantID)
 	if err != nil {
-		s.failImportTask(ctx, taskID, fmt.Sprintf("获取CI类型失败: %v", err))
+		s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("获取CI类型失败: %v", err))
 		return
 	}
 
@@ -363,8 +449,13 @@ func (s *CMDBImportExportService) CreateExportTask(ctx context.Context, req *dto
 		return nil, fmt.Errorf("反序列化过滤条件失败: %w", err)
 	}
 
-	// 创建导出任务记录
-	task, err := s.client.CMDBExportTask.Create().
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建导出任务事务失败: %w", err)
+	}
+	defer tx.Rollback()
+	// Job 和调度命令必须在同一事务提交。
+	task, err := tx.CMDBExportTask.Create().
 		SetTaskID(taskID).
 		SetFilters(filtersMap).
 		SetExportFields(req.ExportFields).
@@ -378,22 +469,17 @@ func (s *CMDBImportExportService) CreateExportTask(ctx context.Context, req *dto
 		s.logger.Errorw("Failed to create export task", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("创建导出任务失败: %w", err)
 	}
-
-	// 异步执行导出
-	reqCopy := *req
-	reqCopy.ExportFields = append([]string(nil), req.ExportFields...)
-	if req.Filters != nil {
-		filtersCopy := *req.Filters
-		filtersCopy.TagIDs = append([]int(nil), req.Filters.TagIDs...)
-		if req.Filters.Attributes != nil {
-			filtersCopy.Attributes = make(map[string]interface{}, len(req.Filters.Attributes))
-			for key, value := range req.Filters.Attributes {
-				filtersCopy.Attributes[key] = value
-			}
-		}
-		reqCopy.Filters = &filtersCopy
+	if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandProcessCMDBExport,
+		AggregateType: "cmdb_export_task", AggregateID: task.ID,
+		IdempotencyKey: fmt.Sprintf("cmdb-export:%s:process", taskID),
+		Payload:        map[string]interface{}{"taskId": taskID}, MaxAttempts: 8,
+	}); err != nil {
+		return nil, fmt.Errorf("创建导出任务调度命令失败: %w", err)
 	}
-	go s.processExportTask(taskID, &reqCopy, tenantID)
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交导出任务失败: %w", err)
+	}
 
 	return s.convertToExportDTO(task), nil
 }
@@ -452,8 +538,8 @@ func (s *CMDBImportExportService) ListExportTasks(ctx context.Context, tenantID 
 }
 
 // processExportTask 处理导出任务
-func (s *CMDBImportExportService) processExportTask(taskID string, req *dto.ExportCIRequest, tenantID int) {
-	ctx, cancel := context.WithTimeout(context.Background(), cmdbTaskTimeout)
+func (s *CMDBImportExportService) processExportTask(parent context.Context, taskID string, req *dto.ExportCIRequest, tenantID int) {
+	ctx, cancel := context.WithTimeout(parent, cmdbTaskTimeout)
 	defer cancel()
 
 	// 更新任务状态为处理中
@@ -482,12 +568,12 @@ func (s *CMDBImportExportService) processExportTask(taskID string, req *dto.Expo
 
 	searchResult, err := s.ciService.SearchCI(ctx, tenantID, searchReq)
 	if err != nil {
-		s.failExportTask(ctx, taskID, fmt.Sprintf("查询CI数据失败: %v", err))
+		s.failExportTask(ctx, taskID, tenantID, fmt.Sprintf("查询CI数据失败: %v", err))
 		return
 	}
 
 	if len(searchResult.Items) == 0 {
-		s.failExportTask(ctx, taskID, "没有符合条件的CI数据")
+		s.failExportTask(ctx, taskID, tenantID, "没有符合条件的CI数据")
 		return
 	}
 
@@ -513,7 +599,7 @@ func (s *CMDBImportExportService) processExportTask(taskID string, req *dto.Expo
 	}
 
 	if err != nil {
-		s.failExportTask(ctx, taskID, fmt.Sprintf("生成导出文件失败: %v", err))
+		s.failExportTask(ctx, taskID, tenantID, fmt.Sprintf("生成导出文件失败: %v", err))
 		return
 	}
 
@@ -534,31 +620,49 @@ func (s *CMDBImportExportService) processExportTask(taskID string, req *dto.Expo
 }
 
 // failImportTask 标记导入任务失败
-func (s *CMDBImportExportService) failImportTask(ctx context.Context, taskID string, errMsg string) {
+func (s *CMDBImportExportService) failImportTask(ctx context.Context, taskID string, tenantID int, errMsg string) {
+	safeMessage := safeCMDBTaskError(errMsg)
 	_, err := s.client.CMDBImportTask.Update().
-		Where(cmdbimporttask.TaskID(taskID)).
+		Where(cmdbimporttask.TaskID(taskID), cmdbimporttask.TenantIDEQ(tenantID)).
 		SetStatus("failed").
-		SetErrorMessage(errMsg).
+		SetErrorMessage(safeMessage).
 		SetCompletedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to mark import task as failed", "error", err, "task_id", taskID)
 	}
-	s.logger.Errorw("Import task failed", "task_id", taskID, "error", errMsg)
+	s.logger.Errorw("Import task failed", "task_id", taskID, "error", safeMessage)
 }
 
 // failExportTask 标记导出任务失败
-func (s *CMDBImportExportService) failExportTask(ctx context.Context, taskID string, errMsg string) {
+func (s *CMDBImportExportService) failExportTask(ctx context.Context, taskID string, tenantID int, errMsg string) {
+	safeMessage := safeCMDBTaskError(errMsg)
 	_, err := s.client.CMDBExportTask.Update().
-		Where(cmdbexporttask.TaskID(taskID)).
+		Where(cmdbexporttask.TaskID(taskID), cmdbexporttask.TenantIDEQ(tenantID)).
 		SetStatus("failed").
-		SetErrorMessage(errMsg).
+		SetErrorMessage(safeMessage).
 		SetCompletedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to mark export task as failed", "error", err, "task_id", taskID)
 	}
-	s.logger.Errorw("Export task failed", "task_id", taskID, "error", errMsg)
+	s.logger.Errorw("Export task failed", "task_id", taskID, "error", safeMessage)
+}
+
+func safeCMDBTaskError(message string) string {
+	message = strings.TrimSpace(message)
+	if message == "" {
+		return "任务执行失败"
+	}
+	if prefix, _, found := strings.Cut(message, ":"); found {
+		message = prefix
+	}
+	const maxMessageLength = 200
+	runes := []rune(message)
+	if len(runes) > maxMessageLength {
+		message = string(runes[:maxMessageLength])
+	}
+	return message
 }
 
 // buildFieldMap 构建表头到字段的映射
@@ -758,6 +862,15 @@ func (s *CMDBImportExportService) parseCIRow(row map[string]string, fieldMap map
 	}
 	if req.Status == "" {
 		req.Status = "active" // 默认状态
+	}
+	// Durable retries must reconcile against a stable, tenant-scoped identity.
+	// Name is mutable and cannot safely prevent duplicate CIs after a worker
+	// crash between the CI write and the Job progress update.
+	if req.AssetTag == "" && req.SerialNumber == "" && (req.CloudProvider == "" || req.CloudResourceID == "") {
+		errors = append(errors, &FieldError{
+			Field:   "资产标签/序列号/云资源标识",
+			Message: "至少提供资产标签、序列号，或云厂商与云资源ID，以支持幂等导入",
+		})
 	}
 
 	return req, errors

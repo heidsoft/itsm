@@ -25,6 +25,8 @@ const (
 
 	CommandStartBPMN           = "workflow.start"
 	CommandDeliverNotification = "notification.deliver"
+	CommandProcessCMDBImport   = "cmdb.import.process"
+	CommandProcessCMDBExport   = "cmdb.export.process"
 )
 
 var ErrLeaseLost = errors.New("operational command lease lost")
