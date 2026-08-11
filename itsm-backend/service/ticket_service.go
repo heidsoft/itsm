@@ -217,7 +217,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}
 		tkt = created
 
-		if tkt.AssigneeID != nil && s.notificationSvc != nil {
+		if s.notificationSvc != nil {
 			entTicket := s.toEntTicket(tkt)
 			if err := s.notificationSvc.NotifyTicketCreatedTx(ctx, tx, entTicket); err != nil {
 				return fmt.Errorf("enqueue ticket-created notification: %w", err)

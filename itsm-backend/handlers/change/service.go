@@ -146,8 +146,7 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		return nil, fmt.Errorf("提交变更审批失败: %w", err)
 	}
 
-	// 6. Notify approvers (optional - to be implemented later or via async)
-	// For now, just log the submission
+	// 审批记录、审批链和 notification.deliver 命令已由仓储在同一事务提交。
 	s.logger.Infow("Change submitted for approval", "change_id", changeID, "submitter_id", submitterID, "approvers", req.ApproverIDs)
 
 	c.Status = "pending"

@@ -93,9 +93,11 @@ func TestNotifyChangeApprovalRequiredTxSinksIntoTx(t *testing.T) {
 
 	cmd := commands[0]
 	require.Equal(t, commandbus.CommandDeliverNotification, cmd.CommandType)
+	require.Equal(t, "change", cmd.AggregateType)
 	require.NotNil(t, cmd.Payload)
 	require.Equal(t, "change_approval_required", cmd.Payload["type"])
 	require.Equal(t, "in_app", cmd.Payload["channel"])
+	require.Equal(t, "change", cmd.Payload["resourceType"])
 	require.Equal(t, float64(approver.ID), float64(asInt(cmd.Payload["recipientId"])))
 }
 
@@ -239,6 +241,7 @@ func TestNotifyChangeApprovalDecidedTxSinksIntoTx(t *testing.T) {
 	require.Len(t, commands, 1)
 
 	cmd := commands[0]
+	require.Equal(t, "change", cmd.AggregateType)
 	require.Equal(t, "change_approval_decided", cmd.Payload["type"])
 	require.Equal(t, "in_app", cmd.Payload["channel"])
 	require.Equal(t, float64(creator.ID), float64(asInt(cmd.Payload["recipientId"])))
@@ -295,4 +298,3 @@ func TestNotifyChangeApprovalDecidedTxFailClosedWhenOutboxDisabled(t *testing.T)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "transactional notification outbox disabled")
 }
-

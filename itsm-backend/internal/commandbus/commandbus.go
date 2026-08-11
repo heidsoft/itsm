@@ -2,6 +2,8 @@ package commandbus
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -86,6 +88,38 @@ func Enqueue(ctx context.Context, client *ent.Client, req EnqueueRequest) (*ent.
 
 func EnqueueTx(ctx context.Context, tx *ent.Tx, req EnqueueRequest) (*ent.OperationalCommand, error) {
 	return enqueue(ctx, tx.OperationalCommand.Create(), req)
+}
+
+// EnqueueSQLTx lets domain repositories that already own a database/sql
+// transaction participate in the same durable outbox without opening a second
+// Ent transaction. The business write and command therefore commit or roll
+// back together.
+func EnqueueSQLTx(ctx context.Context, tx *sql.Tx, req EnqueueRequest) error {
+	if tx == nil {
+		return fmt.Errorf("operational command SQL transaction is required")
+	}
+	if req.TenantID <= 0 || req.AggregateID <= 0 || req.CommandType == "" || req.AggregateType == "" || req.IdempotencyKey == "" {
+		return fmt.Errorf("invalid operational command")
+	}
+	maxAttempts := req.MaxAttempts
+	if maxAttempts <= 0 {
+		maxAttempts = 8
+	}
+	payload, err := json.Marshal(req.Payload)
+	if err != nil {
+		return fmt.Errorf("marshal operational command payload: %w", err)
+	}
+	now := time.Now()
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO operational_commands
+			(tenant_id, command_type, aggregate_type, aggregate_id, idempotency_key, payload,
+			 status, attempt, max_attempts, available_at, fencing_token, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, 'pending', 0, $7, $8, 0, $8, $8)
+	`, req.TenantID, req.CommandType, req.AggregateType, req.AggregateID, req.IdempotencyKey, string(payload), maxAttempts, now)
+	if err != nil {
+		return fmt.Errorf("insert operational command: %w", err)
+	}
+	return nil
 }
 
 func enqueue(ctx context.Context, create *ent.OperationalCommandCreate, req EnqueueRequest) (*ent.OperationalCommand, error) {

@@ -274,6 +274,37 @@ func TestNotifyTicketCreatedTxCommitsWithTicket(t *testing.T) {
 	require.Equal(t, 2, seenTicketID)
 }
 
+func TestNotificationDeliveryHandlerDeliversChangeInApp(t *testing.T) {
+	client, ctx, tenantID, userID, _ := notificationDeliveryFixture(t)
+	creator, err := client.User.Get(ctx, userID)
+	require.NoError(t, err)
+	changeEntity, err := client.Change.Create().SetTitle("approval delivery").SetDescription("change notification").
+		SetCreatedBy(creator.ID).SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
+	cmd, err := commandbus.Enqueue(ctx, client, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
+		AggregateType: "change", AggregateID: changeEntity.ID, IdempotencyKey: "change-delivery-test",
+		Payload: map[string]interface{}{
+			"resourceType": "change", "resourceId": changeEntity.ID, "recipientId": userID,
+			"type": "change_approval_required", "channel": "in_app", "content": "请审批变更",
+		},
+	})
+	require.NoError(t, err)
+
+	handler := NewNotificationDeliveryCommandHandler(client, nil, zap.NewNop().Sugar())
+	require.NoError(t, handler.Handle(ctx, cmd))
+
+	deliveries, err := client.NotificationDelivery.Query().All(ctx)
+	require.NoError(t, err)
+	require.Len(t, deliveries, 1)
+	require.Nil(t, deliveries[0].TicketID)
+	require.Nil(t, deliveries[0].TicketNotificationID)
+	notifications, err := client.Notification.Query().All(ctx)
+	require.NoError(t, err)
+	require.Len(t, notifications, 1)
+	require.Equal(t, fmt.Sprintf("/changes/%d", changeEntity.ID), notifications[0].ActionURL)
+}
+
 // asInt 兼容 SQLite JSON 反序列化后数字统一为 float64 的现实，阶段 A 测试专用。
 func asInt(v interface{}) int {
 	switch n := v.(type) {

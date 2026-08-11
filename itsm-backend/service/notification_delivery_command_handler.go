@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/connector"
 	"itsm-backend/ent"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/notificationdelivery"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
@@ -39,7 +40,16 @@ func (h *NotificationDeliveryCommandHandler) Handle(ctx context.Context, cmd *en
 		return fmt.Errorf("query delivery audit: %w", err)
 	}
 
-	ticketID, err := payloadInt(cmd.Payload, "ticketId")
+	resourceType := cmd.AggregateType
+	resourceID := cmd.AggregateID
+	if payloadType := payloadString(cmd.Payload, "resourceType"); payloadType != "" {
+		resourceType = payloadType
+	}
+	if _, ok := cmd.Payload["resourceId"]; ok {
+		resourceID, err = payloadInt(cmd.Payload, "resourceId")
+	} else if resourceType == "ticket" {
+		resourceID, err = payloadInt(cmd.Payload, "ticketId")
+	}
 	if err != nil {
 		return err
 	}
@@ -54,9 +64,20 @@ func (h *NotificationDeliveryCommandHandler) Handle(ctx context.Context, cmd *en
 		return fmt.Errorf("notification channel, type and content are required")
 	}
 
-	tk, err := h.client.Ticket.Query().Where(ticket.IDEQ(ticketID), ticket.TenantIDEQ(cmd.TenantID)).Only(ctx)
+	var tk *ent.Ticket
+	actionURL, actionText := "", ""
+	switch resourceType {
+	case "ticket":
+		tk, err = h.client.Ticket.Query().Where(ticket.IDEQ(resourceID), ticket.TenantIDEQ(cmd.TenantID)).Only(ctx)
+		actionURL, actionText = fmt.Sprintf("/tickets/%d", resourceID), "查看工单"
+	case "change":
+		_, err = h.client.Change.Query().Where(change.IDEQ(resourceID), change.TenantIDEQ(cmd.TenantID)).Only(ctx)
+		actionURL, actionText = fmt.Sprintf("/changes/%d", resourceID), "查看变更"
+	default:
+		return fmt.Errorf("unsupported notification resource type %q", resourceType)
+	}
 	if err != nil {
-		return fmt.Errorf("load notification ticket: %w", err)
+		return fmt.Errorf("load notification %s: %w", resourceType, err)
 	}
 	recipient, err := h.client.User.Query().Where(user.IDEQ(recipientID), user.TenantIDEQ(cmd.TenantID), user.ActiveEQ(true)).Only(ctx)
 	if err != nil {
@@ -64,33 +85,41 @@ func (h *NotificationDeliveryCommandHandler) Handle(ctx context.Context, cmd *en
 	}
 
 	if channel == "in_app" {
-		return h.deliverInApp(ctx, cmd, tk, recipient, notificationType, content)
+		return h.deliverInApp(ctx, cmd, tk, recipient, notificationType, content, actionURL, actionText)
 	}
-	return h.deliverConnector(ctx, cmd, tk, recipient, channel, notificationType, content, existing)
+	return h.deliverConnector(ctx, cmd, tk, recipient, channel, notificationType, content, actionURL, actionText, resourceType, resourceID, existing)
 }
 
-func (h *NotificationDeliveryCommandHandler) deliverInApp(ctx context.Context, cmd *ent.OperationalCommand, tk *ent.Ticket, recipient *ent.User, notificationType, content string) error {
+func (h *NotificationDeliveryCommandHandler) deliverInApp(ctx context.Context, cmd *ent.OperationalCommand, tk *ent.Ticket, recipient *ent.User, notificationType, content, actionURL, actionText string) error {
 	tx, err := h.client.Tx(ctx)
 	if err != nil {
 		return err
 	}
 	rollback := func(cause error) error { _ = tx.Rollback(); return cause }
 	now := time.Now()
-	ticketNotification, err := tx.TicketNotification.Create().
-		SetTicketID(tk.ID).SetUserID(recipient.ID).SetType(notificationType).SetChannel("in_app").
-		SetContent(content).SetTenantID(cmd.TenantID).SetStatus("sent").SetSentAt(now).Save(ctx)
-	if err != nil {
-		return rollback(err)
+	var ticketNotificationID *int
+	if tk != nil {
+		ticketNotification, err := tx.TicketNotification.Create().
+			SetTicketID(tk.ID).SetUserID(recipient.ID).SetType(notificationType).SetChannel("in_app").
+			SetContent(content).SetTenantID(cmd.TenantID).SetStatus("sent").SetSentAt(now).Save(ctx)
+		if err != nil {
+			return rollback(err)
+		}
+		ticketNotificationID = &ticketNotification.ID
 	}
 	_, err = tx.Notification.Create().SetTitle(notificationType).SetMessage(content).SetType("info").
-		SetUserID(recipient.ID).SetTenantID(cmd.TenantID).SetActionURL(fmt.Sprintf("/tickets/%d", tk.ID)).SetActionText("查看工单").Save(ctx)
+		SetUserID(recipient.ID).SetTenantID(cmd.TenantID).SetActionURL(actionURL).SetActionText(actionText).Save(ctx)
 	if err != nil {
 		return rollback(err)
 	}
-	_, err = tx.NotificationDelivery.Create().SetTenantID(cmd.TenantID).SetOperationalCommandID(cmd.ID).
-		SetTicketID(tk.ID).SetTicketNotificationID(ticketNotification.ID).SetRecipientID(recipient.ID).
+	deliveryCreate := tx.NotificationDelivery.Create().SetTenantID(cmd.TenantID).SetOperationalCommandID(cmd.ID).
+		SetNillableTicketNotificationID(ticketNotificationID).SetRecipientID(recipient.ID).
 		SetChannel("in_app").SetTargetMasked(fmt.Sprintf("user:%d", recipient.ID)).SetStatus("sent").
-		SetAttempt(cmd.Attempt).SetSentAt(now).Save(ctx)
+		SetAttempt(cmd.Attempt).SetSentAt(now)
+	if tk != nil {
+		deliveryCreate.SetTicketID(tk.ID)
+	}
+	_, err = deliveryCreate.Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			_ = tx.Rollback()
@@ -101,7 +130,7 @@ func (h *NotificationDeliveryCommandHandler) deliverInApp(ctx context.Context, c
 	return tx.Commit()
 }
 
-func (h *NotificationDeliveryCommandHandler) deliverConnector(ctx context.Context, cmd *ent.OperationalCommand, tk *ent.Ticket, recipient *ent.User, channel, notificationType, content string, existing *ent.NotificationDelivery) error {
+func (h *NotificationDeliveryCommandHandler) deliverConnector(ctx context.Context, cmd *ent.OperationalCommand, tk *ent.Ticket, recipient *ent.User, channel, notificationType, content, actionURL, actionText, resourceType string, resourceID int, existing *ent.NotificationDelivery) error {
 	if h.connectors == nil {
 		return fmt.Errorf("connector manager is not configured")
 	}
@@ -116,16 +145,21 @@ func (h *NotificationDeliveryCommandHandler) deliverConnector(ctx context.Contex
 		if err != nil {
 			return err
 		}
-		tn, err := tx.TicketNotification.Create().SetTicketID(tk.ID).SetUserID(recipient.ID).
-			SetType(notificationType).SetChannel(channel).SetContent(content).SetTenantID(cmd.TenantID).SetStatus("pending").Save(ctx)
-		if err != nil {
-			_ = tx.Rollback()
-			return err
+		if tk != nil {
+			tn, err := tx.TicketNotification.Create().SetTicketID(tk.ID).SetUserID(recipient.ID).
+				SetType(notificationType).SetChannel(channel).SetContent(content).SetTenantID(cmd.TenantID).SetStatus("pending").Save(ctx)
+			if err != nil {
+				_ = tx.Rollback()
+				return err
+			}
+			ticketNotificationID = tn.ID
 		}
-		ticketNotificationID = tn.ID
-		delivery, err = tx.NotificationDelivery.Create().SetTenantID(cmd.TenantID).SetOperationalCommandID(cmd.ID).
-			SetTicketID(tk.ID).SetTicketNotificationID(tn.ID).SetRecipientID(recipient.ID).SetChannel(channel).
-			SetTargetMasked(maskTarget(target)).SetStatus("pending").SetAttempt(cmd.Attempt).Save(ctx)
+		deliveryCreate := tx.NotificationDelivery.Create().SetTenantID(cmd.TenantID).SetOperationalCommandID(cmd.ID).
+			SetRecipientID(recipient.ID).SetChannel(channel).SetTargetMasked(maskTarget(target)).SetStatus("pending").SetAttempt(cmd.Attempt)
+		if tk != nil {
+			deliveryCreate.SetTicketID(tk.ID).SetTicketNotificationID(ticketNotificationID)
+		}
+		delivery, err = deliveryCreate.Save(ctx)
 		if err != nil {
 			_ = tx.Rollback()
 			return err
@@ -142,8 +176,8 @@ func (h *NotificationDeliveryCommandHandler) deliverConnector(ctx context.Contex
 	messageID := cmd.IdempotencyKey
 	err := h.connectors.Send(ctx, cmd.TenantID, channel, &connector.Message{
 		ID: messageID, Channel: target, Type: "text", Title: notificationType, Content: content,
-		Actions:  []connector.Action{{Type: "link", Text: "查看工单", URL: fmt.Sprintf("/tickets/%d", tk.ID)}},
-		Metadata: map[string]interface{}{"ticket_id": tk.ID, "recipient_id": recipient.ID, "command_id": cmd.ID},
+		Actions:  []connector.Action{{Type: "link", Text: actionText, URL: actionURL}},
+		Metadata: map[string]interface{}{"resource_type": resourceType, "resource_id": resourceID, "recipient_id": recipient.ID, "command_id": cmd.ID},
 	})
 	if err != nil {
 		safeErr := fmt.Errorf("connector %s delivery failed", channel)

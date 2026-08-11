@@ -2,7 +2,9 @@ package change
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -384,7 +386,13 @@ func (r *EntRepository) SubmitForApproval(
 	}
 
 	now := time.Now()
-	for level, approverID := range approverIDs {
+	seenApprovers := make(map[int]struct{}, len(approverIDs))
+	for _, approverID := range approverIDs {
+		if _, exists := seenApprovers[approverID]; exists {
+			continue
+		}
+		approvalLevel := len(seenApprovers) + 1
+		seenApprovers[approverID] = struct{}{}
 		if _, err := tx.ExecContext(ctx, `
 			INSERT INTO change_approvals
 				(change_id, tenant_id, approver_id, status, comment, created_at, updated_at)
@@ -396,8 +404,22 @@ func (r *EntRepository) SubmitForApproval(
 			INSERT INTO change_approval_chains
 				(change_id, tenant_id, level, approver_id, role, status, is_required, created_at)
 			VALUES ($1, $2, $3, $4, 'approver', 'pending', true, $5)
-		`, changeID, tenantID, level+1, approverID, now); err != nil {
+		`, changeID, tenantID, approvalLevel, approverID, now); err != nil {
 			return err
+		}
+		content := fmt.Sprintf("【变更审批】变更 #%d 等待您的审批（第 %d 级）", changeID, approvalLevel)
+		occurrenceKey := fmt.Sprintf("change_approval_required:%d:%d:%d:%d", tenantID, changeID, approvalLevel, approverID)
+		digest := sha256.Sum256([]byte(fmt.Sprintf("%d|change|%d|%d|%s|in_app|%s", tenantID, changeID, approverID, "change_approval_required", occurrenceKey)))
+		if err := commandbus.EnqueueSQLTx(ctx, tx, commandbus.EnqueueRequest{
+			TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
+			AggregateType: "change", AggregateID: changeID,
+			IdempotencyKey: "notification:" + hex.EncodeToString(digest[:16]),
+			Payload: map[string]interface{}{
+				"resourceType": "change", "resourceId": changeID, "recipientId": approverID,
+				"type": "change_approval_required", "channel": "in_app", "content": content,
+			},
+		}); err != nil {
+			return fmt.Errorf("enqueue change approval notification: %w", err)
 		}
 	}
 	return tx.Commit()

@@ -260,6 +260,20 @@ func enqueueTicketNotificationCommandTx(ctx context.Context, tx *ent.Tx, tenantI
 	return enqueueTicketNotificationCommandImpl(ctx, nil, tx, tenantID, ticketID, recipientID, notificationType, channel, content, occurrenceKey)
 }
 
+func enqueueResourceNotificationCommandTx(ctx context.Context, tx *ent.Tx, tenantID int, aggregateType string, aggregateID, recipientID int, notificationType, channel, content, occurrenceKey string) error {
+	digest := sha256.Sum256([]byte(fmt.Sprintf("%d|%s|%d|%d|%s|%s|%s", tenantID, aggregateType, aggregateID, recipientID, notificationType, channel, occurrenceKey)))
+	_, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
+		AggregateType: aggregateType, AggregateID: aggregateID,
+		IdempotencyKey: "notification:" + hex.EncodeToString(digest[:16]),
+		Payload: map[string]interface{}{
+			"resourceType": aggregateType, "resourceId": aggregateID, "recipientId": recipientID,
+			"type": notificationType, "channel": channel, "content": content,
+		},
+	})
+	return err
+}
+
 func enqueueTicketNotificationCommandImpl(ctx context.Context, client *ent.Client, tx *ent.Tx, tenantID, ticketID, recipientID int, notificationType, channel, content, occurrenceKey string) error {
 	digest := sha256.Sum256([]byte(fmt.Sprintf("%d|%d|%d|%s|%s|%s", tenantID, ticketID, recipientID, notificationType, channel, occurrenceKey)))
 	key := "notification:" + hex.EncodeToString(digest[:16])
@@ -698,8 +712,12 @@ func (s *TicketNotificationService) NotifyChangeApprovalRequiredTx(
 	if tx == nil || changeID <= 0 || approverID <= 0 || tenantID <= 0 {
 		return fmt.Errorf("NotifyChangeApprovalRequiredTx requires non-nil tx and positive ids")
 	}
-	if _, err := tx.Change.Get(ctx, changeID); err != nil {
+	change, err := tx.Change.Get(ctx, changeID)
+	if err != nil {
 		return fmt.Errorf("load change for approval-required notification: %w", err)
+	}
+	if change.TenantID != tenantID {
+		return fmt.Errorf("tenant mismatch on approval-required notification (change=%d, request=%d)", change.TenantID, tenantID)
 	}
 	if u, err := tx.User.Get(ctx, approverID); err != nil {
 		return fmt.Errorf("load approver for approval-required notification: %w", err)
@@ -712,7 +730,7 @@ func (s *TicketNotificationService) NotifyChangeApprovalRequiredTx(
 	}
 	content := fmt.Sprintf("【变更审批】变更 #%d 等待您的审批（第 %d 级，角色：%s）", changeID, approvalLevel, roleText)
 	occurrenceKey := fmt.Sprintf("change_approval_required:%d:%d:%d:%d", tenantID, changeID, approvalLevel, approverID)
-	if err := enqueueTicketNotificationCommandTx(ctx, tx, tenantID, changeID, approverID, "change_approval_required", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+	if err := enqueueResourceNotificationCommandTx(ctx, tx, tenantID, "change", changeID, approverID, "change_approval_required", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
 		return fmt.Errorf("enqueue change approval-required notification: %w", err)
 	}
 	return nil
@@ -736,8 +754,12 @@ func (s *TicketNotificationService) NotifyChangeApprovalDecidedTx(
 	default:
 		return fmt.Errorf("NotifyChangeApprovalDecidedTx: invalid decision %q (want approved|rejected|aborted)", decision)
 	}
-	if _, err := tx.Change.Get(ctx, changeID); err != nil {
+	change, err := tx.Change.Get(ctx, changeID)
+	if err != nil {
 		return fmt.Errorf("load change for approval-decided notification: %w", err)
+	}
+	if change.TenantID != tenantID {
+		return fmt.Errorf("tenant mismatch on approval-decided notification (change=%d, request=%d)", change.TenantID, tenantID)
 	}
 	if u, err := tx.User.Get(ctx, creatorID); err != nil {
 		return fmt.Errorf("load creator for approval-decided notification: %w", err)
@@ -754,7 +776,7 @@ func (s *TicketNotificationService) NotifyChangeApprovalDecidedTx(
 		content = fmt.Sprintf("%s：%s", content, comment)
 	}
 	occurrenceKey := fmt.Sprintf("change_approval_decided:%d:%d:%d:%s", tenantID, changeID, approvalID, decision)
-	if err := enqueueTicketNotificationCommandTx(ctx, tx, tenantID, changeID, creatorID, "change_approval_decided", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+	if err := enqueueResourceNotificationCommandTx(ctx, tx, tenantID, "change", changeID, creatorID, "change_approval_decided", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
 		return fmt.Errorf("enqueue change approval-decided notification: %w", err)
 	}
 	return nil
@@ -762,6 +784,7 @@ func (s *TicketNotificationService) NotifyChangeApprovalDecidedTx(
 
 // collectCreatedRecipients 与 NotifyTicketCreated 同步计算收件人：
 //  1. AssigneeID；2. RequesterID（去重）；3. 若仍只 1 人，广播同租户其他用户。
+//
 // tx 入参确保租户隔离与 ticket 一致，避免跨 tenant 误发。
 func collectCreatedRecipients(ctx context.Context, tx *ent.Tx, ticket *ent.Ticket) []int {
 	userIDs := []int{}
