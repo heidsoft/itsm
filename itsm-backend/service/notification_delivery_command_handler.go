@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/notificationdelivery"
+	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 
@@ -73,6 +74,11 @@ func (h *NotificationDeliveryCommandHandler) Handle(ctx context.Context, cmd *en
 	case "change":
 		_, err = h.client.Change.Query().Where(change.IDEQ(resourceID), change.TenantIDEQ(cmd.TenantID)).Only(ctx)
 		actionURL, actionText = fmt.Sprintf("/changes/%d", resourceID), "查看变更"
+	case "service_request":
+		_, err = h.client.ServiceRequest.Query().Where(
+			servicerequest.IDEQ(resourceID), servicerequest.TenantIDEQ(cmd.TenantID),
+		).Only(ctx)
+		actionURL, actionText = fmt.Sprintf("/service-requests/%d", resourceID), "查看服务请求"
 	default:
 		return fmt.Errorf("unsupported notification resource type %q", resourceType)
 	}

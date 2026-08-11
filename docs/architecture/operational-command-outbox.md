@@ -66,3 +66,13 @@ pending → processing → succeeded
 - 监控 pending 数量、最老等待时间、processing 租约过期数、重试率和 dead-letter 数；
 - 死信重放必须创建审计记录，保留原 attempt 和错误；
 - Worker 可与 API 同进程启动，但生产规模化时可拆为独立进程，数据库状态机和 Handler 契约保持不变。
+# 运维控制面
+
+平台运维人员通过租户隔离且受 `system:write` 权限保护的接口查看和处置可靠命令：
+
+- `GET /api/v1/admin/operations/commands`：分页列表，支持 `status` 过滤，并返回 pending、processing、dead-letter、cancelled 和最老等待时间。
+- `GET /api/v1/admin/operations/commands/:id`：查看命令详情；潜在密钥字段在 DTO 映射时脱敏。
+- `POST /api/v1/admin/operations/commands/:id/replay`：只允许 dead-letter/cancelled，保留原 idempotency key、attempt 历史并增加 fencing token。
+- `POST /api/v1/admin/operations/commands/:id/cancel`：只允许 pending/processing，通过 fencing 使旧 Worker 失去提交资格。
+
+重放与取消和 `audit_logs` 写入位于同一事务，跨租户 ID 返回不存在，避免资源枚举。

@@ -23,6 +23,7 @@ import (
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
+	"itsm-backend/handlers/operations"
 	"itsm-backend/handlers/problem"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
@@ -403,6 +404,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		auth.Use(middleware.CSRFProtectionMiddleware(csrfConfig))
 	}
 	auth.GET("/capabilities", capability.Handler)
+	if config.Client != nil {
+		operationHandler := operations.NewHandler(operations.NewService(config.Client))
+		operationRoutes := auth.Group("/admin/operations/commands")
+		operationRoutes.Use(middleware.RequirePermission("system", "write"))
+		operationRoutes.GET("", operationHandler.List)
+		operationRoutes.GET("/:id", operationHandler.Get)
+		operationRoutes.POST("/:id/replay", operationHandler.Replay)
+		operationRoutes.POST("/:id/cancel", operationHandler.Cancel)
+	}
 
 	// WebSocket 路由（使用短期票据替代JWT query参数，避免token泄露）
 	// 票据流程:
