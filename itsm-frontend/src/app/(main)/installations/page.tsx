@@ -31,6 +31,7 @@ import type { ConnectorConfig } from '@/lib/services/connector-service';
 import connectorService from '@/lib/services/connector-service';
 import type { TenantInstallation } from '@/lib/services/marketplace-service';
 import marketplaceService from '@/lib/services/marketplace-service';
+import { useCapabilities } from '@/lib/hooks/useCapabilities';
 
 type InstallForm = {
   appId: string;
@@ -110,6 +111,8 @@ const InstallationsPage = () => {
   const [typeFilter, setTypeFilter] = useState('all');
   const [loadError, setLoadError] = useState<string | null>(null);
   const { message, modal } = App.useApp();
+  const { allows } = useCapabilities();
+  const canManageMarketplace = allows('marketplace', 'manage');
 
   const loadInstallations = async () => {
     setLoading(true);
@@ -236,12 +239,12 @@ const InstallationsPage = () => {
           <h1 className="text-3xl font-bold tracking-tight">我的应用</h1>
           <p className="text-gray-500 mt-1">管理已安装的连接器、AI技能和扩展插件</p>
         </div>
-        <Link href="/marketplace">
+        {canManageMarketplace && <Link href="/marketplace">
           <Button>
             <PlusCircle className="h-4 w-4 mr-2" />
             安装应用
           </Button>
-        </Link>
+        </Link>}
       </div>
 
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
@@ -332,7 +335,7 @@ const InstallationsPage = () => {
                       <CardDescription className="mt-1">{item?.description || '暂无描述'}</CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  {canManageMarketplace && <div className="flex items-center gap-2">
                     {item?.type === 'connector' && (
                       <Button variant="secondary" size="sm" onClick={() => setEditingId(isEditing ? null : installation.id)}>
                         <Settings className="h-4 w-4 mr-1" />
@@ -343,7 +346,7 @@ const InstallationsPage = () => {
                       <Trash2 className="h-4 w-4 mr-1" />
                       卸载
                     </Button>
-                  </div>
+                  </div>}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -379,7 +382,7 @@ const InstallationsPage = () => {
                   </div>
                 )}
 
-                {isEditing && (
+                {canManageMarketplace && isEditing && (
                   <div className="rounded-md border p-4 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Field label="App ID" value={form.appId} onChange={value => updateForm(installation.id, { appId: value })} />

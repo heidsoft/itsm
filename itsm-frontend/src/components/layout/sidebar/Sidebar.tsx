@@ -20,6 +20,7 @@ import {
   type MenuItem as MenuItemType,
   type MenuTreeResponse,
 } from '@/lib/api/menu-api';
+import { useCapabilities } from '@/lib/hooks/useCapabilities';
 
 const { Sider } = Layout;
 
@@ -43,10 +44,31 @@ function convertApiMenuToSidebar(menus: MenuItemType[]): MenuItem[] {
       path: menu.path,
       permission: menu.permissionCode ?? undefined,
       description: menu.description,
+      capabilityKey: capabilityForPath(menu.path),
       children: menu.children ? convertApiMenuToSidebar(menu.children) : undefined,
     };
     return item;
   });
+}
+
+const capabilityPathRules: Array<[string, string]> = [
+  ['/service-requests', 'serviceRequest'],
+  ['/incidents', 'incident'],
+  ['/problems', 'problem'],
+  ['/changes', 'change'],
+  ['/knowledge', 'knowledge'],
+  ['/cmdb', 'cmdb'],
+  ['/sla', 'sla'],
+  ['/workflow', 'workflow'],
+  ['/ai', 'ai'],
+  ['/marketplace', 'marketplace'],
+  ['/installations', 'marketplace'],
+  ['/admin/connectors', 'marketplace'],
+];
+
+function capabilityForPath(path?: string): string | undefined {
+  if (!path) return undefined;
+  return capabilityPathRules.find(([prefix]) => path === prefix || path.startsWith(`${prefix}/`))?.[1];
 }
 
 /**
@@ -58,6 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuthStore();
+  const { capabilities, isLoading: capabilitiesLoading } = useCapabilities();
 
   // 触发 auth store 的 hydration
   useAuthStoreHydration();
@@ -149,8 +172,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
     return result;
   };
 
-  const mainMenus = deduplicateMenus(rawMainMenus);
-  const adminMenus = deduplicateMenus(rawAdminMenus);
+  const filterByCapability = (menus: MenuItem[]): MenuItem[] =>
+    menus.flatMap(menu => {
+      const key = menu.capabilityKey || capabilityForPath(menu.path);
+      const capability = key ? capabilities.find(item => item.key === key) : undefined;
+      if (key && (!capability || capability.maturity === 'disabled' || !capability.buildAvailable || !capability.deploymentReady || !capability.tenantReady)) {
+        return [];
+      }
+      const children = menu.children ? filterByCapability(menu.children) : undefined;
+      return [{
+        ...menu,
+        badge: capability?.maturity === 'pilot' ? 'Pilot' : menu.badge,
+        children,
+      }];
+    });
+
+  // Capability is fail-closed for governed entries. During the first request only
+  // ungoverned core navigation is rendered, avoiding a flash of disabled features.
+  const mainMenus = deduplicateMenus(filterByCapability(rawMainMenus));
+  const adminMenus = deduplicateMenus(filterByCapability(rawAdminMenus));
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
@@ -181,7 +221,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
       </div>
 
       {/* 主菜单 */}
-      <div className={styles.mainMenu} style={{ flex: 1, overflowY: 'auto' }}>
+      <div className={styles.mainMenu} style={{ flex: 1, overflowY: 'auto', opacity: capabilitiesLoading ? 0.85 : 1 }}>
         <MenuItems items={mainMenus} selectedKeys={[pathname]} onMenuClick={handleMenuClick} />
       </div>
 

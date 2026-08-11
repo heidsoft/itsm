@@ -8,7 +8,8 @@ import { Database, GitBranch, Plus, RefreshCw, Server, ShieldCheck } from 'lucid
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview, type StatsOverviewItem } from '@/components/ui/StatsOverview';
 import { CMDBApi } from '@/lib/api/cmdb-api';
-import { CMDB_GA_CAPABILITIES } from '@/lib/cmdb/cmdb-capabilities';
+import { CMDB_CAPABILITIES } from '@/lib/cmdb/cmdb-capabilities';
+import { useCapabilities } from '@/lib/hooks/useCapabilities';
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -31,6 +32,8 @@ const normalizeItems = (value: unknown): unknown[] => {
 export function CSDMHub() {
   const router = useRouter();
   const { message } = App.useApp();
+  const { capabilities, allows } = useCapabilities();
+  const availableCapabilities = CMDB_CAPABILITIES.filter(item => allows(item.capabilityKey));
   const [overview, setOverview] = React.useState<CMDBOverview>({
     totalCIs: 0,
     ciTypes: 0,
@@ -84,7 +87,9 @@ export function CSDMHub() {
     {
       key: 'ga-capabilities',
       title: '生产可用能力',
-      value: CMDB_GA_CAPABILITIES.length,
+      value: availableCapabilities.filter(item =>
+        capabilities.find(capability => capability.key === item.capabilityKey)?.maturity === 'ga'
+      ).length,
       prefix: <ShieldCheck className="mr-2 text-green-600" />,
       accentColor: '#389e0d',
     },
@@ -117,12 +122,14 @@ export function CSDMHub() {
 
       <Card title="生产可用能力" loading={overview.loading}>
         <Row gutter={[16, 16]}>
-          {CMDB_GA_CAPABILITIES.map(capability => (
+          {availableCapabilities.map(capability => {
+            const maturity = capabilities.find(item => item.key === capability.capabilityKey)?.maturity;
+            return (
             <Col key={capability.key} xs={24} md={12} xl={6}>
               <Card size="small" className="h-full border-slate-200">
                 <div className="flex items-center justify-between gap-2">
                   <Title level={5} className="!mb-0">{capability.title}</Title>
-                  <Tag color="green">GA</Tag>
+                  <Tag color={maturity === 'ga' ? 'green' : 'gold'}>{maturity === 'ga' ? 'GA' : 'Pilot'}</Tag>
                 </div>
                 <Paragraph type="secondary" className="!mb-4 !mt-3 min-h-11">
                   {capability.description}
@@ -132,7 +139,8 @@ export function CSDMHub() {
                 </Button>
               </Card>
             </Col>
-          ))}
+            );
+          })}
         </Row>
       </Card>
 

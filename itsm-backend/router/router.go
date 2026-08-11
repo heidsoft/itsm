@@ -17,6 +17,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
+	"itsm-backend/handlers/capability"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
@@ -401,6 +402,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		csrfConfig.SkipPaths = append(csrfConfig.SkipPaths, "/api/v1/auth/login", "/api/v1/refresh-token")
 		auth.Use(middleware.CSRFProtectionMiddleware(csrfConfig))
 	}
+	auth.GET("/capabilities", capability.Handler)
 
 	// WebSocket 路由（使用短期票据替代JWT query参数，避免token泄露）
 	// 票据流程:

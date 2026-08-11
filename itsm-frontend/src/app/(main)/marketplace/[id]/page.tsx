@@ -27,6 +27,7 @@ import type {
   TenantInstallation,
 } from '@/lib/services/marketplace-service';
 import marketplaceService from '@/lib/services/marketplace-service';
+import { useCapabilities } from '@/lib/hooks/useCapabilities';
 
 const typeNames = {
   connector: '连接器',
@@ -44,6 +45,8 @@ const MarketplaceDetailPage = () => {
   const router = useRouter();
   const itemId = Number(params.id);
   const { message, modal } = App.useApp();
+  const { allows, find: findCapability } = useCapabilities();
+  const canManageMarketplace = allows('marketplace', 'manage');
 
   const [item, setItem] = useState<MarketplaceItem | null>(null);
   const [installation, setInstallation] = useState<TenantInstallation | null>(null);
@@ -204,7 +207,14 @@ const MarketplaceDetailPage = () => {
                   </div>
                 </div>
                 <div className="md:text-right">
-                  {isInstalled ? (
+                  {!canManageMarketplace ? (
+                    <div className="max-w-52 text-left">
+                      <Badge className="bg-yellow-100 text-yellow-800">Pilot · 只读</Badge>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {findCapability('marketplace')?.degradedReason || '安装、卸载和配置将在飞书生产闭环验收后开放。'}
+                      </p>
+                    </div>
+                  ) : isInstalled ? (
                     <div className="space-y-2">
                       <div className="flex items-center md:justify-end gap-1 text-green-600">
                         <CheckCircle2 className="h-5 w-5" />

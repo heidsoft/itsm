@@ -945,6 +945,13 @@ func hasPermission(client *ent.Client, role, method, path string, userID, tenant
 	if method == "GET" && (path == "/api/v1/auth/menus" || strings.HasPrefix(path, "/api/v1/auth/menus?")) {
 		return true
 	}
+	// Capability discovery is available to every authenticated tenant member.
+	// It only returns readiness metadata and already filters actions by role;
+	// allowing discovery prevents a circular dependency where the UI needs a
+	// capability permission before it can learn which capabilities are usable.
+	if method == "GET" && path == "/api/v1/capabilities" {
+		return true
+	}
 
 	// 使用智能权限检查器（4层兜底架构）
 	// 获取底层数据库连接进行 ACL 查询

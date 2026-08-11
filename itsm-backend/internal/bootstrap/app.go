@@ -5,8 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"itsm-backend/common"
@@ -988,23 +991,61 @@ func needsBootstrapAdmin(ctx context.Context, client *ent.Client) (bool, error) 
 func (app *Application) Run() {
 	defer app.Logger.Sync()
 	defer app.DBClient.Close()
+	mode, err := ParseProcessMode(os.Getenv("ITSM_PROCESS_MODE"))
+	if err != nil {
+		app.Logger.Fatalw("invalid process mode", "error", err)
+	}
+	environment := os.Getenv("SERVER_ENV")
+	if environment == "" {
+		environment = os.Getenv("ENV")
+	}
+	if err := ValidateProcessMode(mode, environment); err != nil {
+		app.Logger.Fatalw("unsafe process mode", "error", err)
+	}
+	rootCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	// Start background tasks
-	app.startBackgroundTasks()
+	if mode == ProcessModeWorker || mode == ProcessModeAll {
+		app.startBackgroundTasks(rootCtx)
+		app.Logger.Infow("worker schedulers started", "process_mode", mode)
+	}
+	if mode == ProcessModeWorker {
+		<-rootCtx.Done()
+		app.Logger.Info("worker shutdown completed")
+		return
+	}
 
-	app.Logger.Infof("Server starting on port %d", app.Cfg.Server.Port)
-	if err := app.Router.Run(fmt.Sprintf(":%d", app.Cfg.Server.Port)); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	server := &http.Server{
+		Addr:              fmt.Sprintf(":%d", app.Cfg.Server.Port),
+		Handler:           app.Router,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+	serverErrors := make(chan error, 1)
+	go func() {
+		app.Logger.Infow("API server starting", "port", app.Cfg.Server.Port, "process_mode", mode)
+		serverErrors <- server.ListenAndServe()
+	}()
+
+	select {
+	case <-rootCtx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			app.Logger.Errorw("API graceful shutdown failed", "error", err)
+		}
+	case err := <-serverErrors:
+		if err != nil && err != http.ErrServerClosed {
+			app.Logger.Fatalw("API server failed", "error", err)
+		}
 	}
 }
 
-func (app *Application) startBackgroundTasks() {
+func (app *Application) startBackgroundTasks(ctx context.Context) {
 	if app.CommandWorker != nil {
-		go app.CommandWorker.Run(context.Background())
+		go app.CommandWorker.Run(ctx)
 	}
 	go func() {
 		pipeline := service.NewEmbeddingPipeline(app.DBClient, app.Embedder, app.Logger, app.VectorStore)
-		ctx := context.Background()
 		// initial full-ish pass per tenant
 		tenants, err := app.DBClient.Tenant.Query().All(ctx)
 		if err == nil {
@@ -1022,7 +1063,12 @@ func (app *Application) startBackgroundTasks() {
 		// periodic incremental per tenant
 		ticker := time.NewTicker(15 * time.Minute)
 		defer ticker.Stop()
-		for range ticker.C {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+			}
 			tenants, err := app.DBClient.Tenant.Query().All(ctx)
 			if err != nil {
 				continue
@@ -1040,7 +1086,6 @@ func (app *Application) startBackgroundTasks() {
 		slaMonitorService := service.NewSLAMonitorService(app.DBClient, app.Logger)
 		escalationService := service.NewEscalationService(app.DBClient, app.Logger)
 
-		ctx := context.Background()
 		// Run SLA check every 5 minutes
 		slaTicker := time.NewTicker(5 * time.Minute)
 		defer slaTicker.Stop()
@@ -1051,6 +1096,8 @@ func (app *Application) startBackgroundTasks() {
 
 		for {
 			select {
+			case <-ctx.Done():
+				return
 			case <-slaTicker.C:
 				tenants, err := app.DBClient.Tenant.Query().All(ctx)
 				if err != nil {

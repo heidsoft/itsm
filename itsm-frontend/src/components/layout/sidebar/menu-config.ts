@@ -14,6 +14,7 @@ export interface MenuItem {
   permission?: string;
   description?: string;
   badge?: string;
+  capabilityKey?: string;
   children?: MenuItem[];
 }
 
@@ -40,6 +41,7 @@ export function getMenuConfig(): MenuConfig {
       },
       {
         key: '/service-requests',
+        capabilityKey: 'serviceRequest',
         icon: getIconByName('FileText')!,
         label: '服务请求',
         path: '/service-requests',
@@ -72,6 +74,7 @@ export function getMenuConfig(): MenuConfig {
       },
       {
         key: '/incidents',
+        capabilityKey: 'incident',
         icon: getIconByName('AlertCircle')!,
         label: '事件管理',
         path: '/incidents',
@@ -96,6 +99,7 @@ export function getMenuConfig(): MenuConfig {
       },
       {
         key: '/problems',
+        capabilityKey: 'problem',
         icon: getIconByName('HelpCircle')!,
         label: '问题管理',
         path: '/problems',
@@ -120,6 +124,7 @@ export function getMenuConfig(): MenuConfig {
       },
       {
         key: '/changes',
+        capabilityKey: 'change',
         icon: getIconByName('BarChart3')!,
         label: '变更管理',
         path: '/changes',
@@ -145,6 +150,7 @@ export function getMenuConfig(): MenuConfig {
       // ===== 服务保障 =====
       {
         key: '/knowledge',
+        capabilityKey: 'knowledge',
         icon: getIconByName('Book')!,
         label: '知识库',
         path: '/knowledge',
@@ -200,6 +206,7 @@ export function getMenuConfig(): MenuConfig {
       },
       {
         key: '/cmdb',
+        capabilityKey: 'cmdb',
         icon: getIconByName('Database')!,
         label: 'CMDB',
         path: '/cmdb',
@@ -270,6 +277,7 @@ export function getMenuConfig(): MenuConfig {
       // ===== 报告分析 =====
       {
         key: '/sla',
+        capabilityKey: 'sla',
         icon: getIconByName('Calendar')!,
         label: 'SLA管理',
         path: '/sla',
@@ -307,6 +315,7 @@ export function getMenuConfig(): MenuConfig {
       // ===== 自动化 =====
       {
         key: '/workflow',
+        capabilityKey: 'workflow',
         icon: getIconByName('GitMerge')!,
         label: '工作流',
         path: '/workflow',
@@ -360,6 +369,7 @@ export function getMenuConfig(): MenuConfig {
       // ===== AI =====
       {
         key: '/ai/chat',
+        capabilityKey: 'ai',
         icon: getIconByName('Bot')!,
         label: 'AI助手',
         path: '/ai/chat',

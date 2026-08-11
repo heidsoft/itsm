@@ -35,6 +35,8 @@ ITSM 用一套可审计、可扩展的后端规则连接服务台、事件、问
 
 > 当前处于商业化收敛阶段。核心 ITIL 能力已经具备可运行基础，但不同领域成熟度不同。代码或页面存在不等于已达到生产承诺；请以[商业能力契约](./docs/product/itsm-commercial-capability-contract.md)和对应验收结果为准。
 
+运行时能力以认证接口 `GET /api/v1/capabilities` 为唯一事实来源。菜单和工作台必须同时满足构建可用、部署就绪、租户就绪及用户操作权限；仓库内的成熟度表用于发布说明，不替代运行时判断。
+
 ## 适用场景
 
 - 企业 IT 服务台统一受理、分派和跟踪员工请求。
@@ -176,6 +178,8 @@ flowchart LR
 4. 服务目录 → 请求 → 审批 → 交付 → CI 创建或变更。
 
 ## 可靠执行架构
+
+生产部署使用同一后端镜像的三个进程角色：`itsm-init` 只执行迁移和初始化，`ITSM_PROCESS_MODE=api` 只提供 HTTP/WebSocket，`ITSM_PROCESS_MODE=worker` 执行 command、SLA、升级和索引任务。`all` 仅用于开发环境，生产启动会拒绝该模式。
 
 ```mermaid
 flowchart TB

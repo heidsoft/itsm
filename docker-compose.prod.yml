@@ -157,6 +157,7 @@ services:
       - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
       - ITSM_AUTO_MIGRATE=false
       - ITSM_AUTO_SEED=false
+      - ITSM_PROCESS_MODE=api
 
       # 监控
       - ENABLE_METRICS=true
@@ -220,6 +221,57 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    restart: always
+
+  # 可靠命令、SLA、升级和索引调度器。与 API 使用同一镜像但不监听 HTTP。
+  itsm-worker:
+    image: itsm-backend:${VERSION:-latest}
+    container_name: itsm-worker-prod
+    hostname: worker
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-itsm}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set}
+      - DB_NAME=${DB_NAME:-itsm_prod}
+      - DB_SSLMODE=${DB_SSLMODE:-disable}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+      - REDIS_DB=0
+      - SERVER_ENV=production
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - LOG_LEVEL=error
+      - LOG_PATH=/app/logs
+      - LOG_FORMAT=json
+      - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
+      - ITSM_AUTO_MIGRATE=false
+      - ITSM_AUTO_SEED=false
+      - ITSM_PROCESS_MODE=worker
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY must be set}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:?MINIO_SECRET_KEY must be set}
+      - MINIO_BUCKET=${MINIO_BUCKET:-itsm-uploads}
+      - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
+      - no_proxy=localhost,127.0.0.1
+      - NO_PROXY=localhost,127.0.0.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      itsm-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads:rw
+      - ./config:/app/config:ro
+    networks:
+      - itsm-prod-network
+    stop_grace_period: 35s
     restart: always
 
   # ITSM 前端服务（生产环境）

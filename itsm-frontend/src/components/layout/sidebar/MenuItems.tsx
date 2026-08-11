@@ -66,6 +66,7 @@ export function renderMenuItems(
             }}
           >
             <span className="truncate">{item.label}</span>
+            {item.badge && <Badge count={item.badge} size="small" className={styles.menuItemBadge} />}
           </div>
         ),
         children: item.children.map((child: MenuItem, childIndex: number) => {
@@ -83,6 +84,7 @@ export function renderMenuItems(
             label: (
               <div className={styles.menuItemLabel}>
                 <span className="truncate">{child.label}</span>
+                {child.badge && <Badge count={child.badge} size="small" className={styles.menuItemBadge} />}
               </div>
             ),
             onClick: () => onMenuClick(child.key),
