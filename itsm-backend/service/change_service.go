@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/commandbus"
 
 	"go.uber.org/zap"
 )
@@ -30,8 +31,7 @@ type ChangeService struct {
 // NewChangeService 创建变更管理服务
 func NewChangeService(client *ent.Client, logger *zap.SugaredLogger) *ChangeService {
 	return &ChangeService{
-		client: client,
-		logger: logger,
+		client: client, logger: logger,
 	}
 }
 
@@ -58,7 +58,12 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		initialStatus = dto.ChangeStatusApproved
 	}
 
-	changeEntity, err := s.client.Change.Create().
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin change transaction: %w", err)
+	}
+	defer tx.Rollback()
+	changeEntity, err := tx.Change.Create().
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetJustification(req.Justification).
@@ -79,6 +84,17 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 	if err != nil {
 		s.logger.Errorw("Failed to create change", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to create change: %w", err)
+	}
+	if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandStartBPMN,
+		AggregateType: "change", AggregateID: changeEntity.ID,
+		IdempotencyKey: fmt.Sprintf("change:%d:workflow:start", changeEntity.ID),
+		Payload:        map[string]interface{}{"businessType": "change", "businessId": changeEntity.ID},
+	}); err != nil {
+		return nil, fmt.Errorf("failed to enqueue change workflow: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("failed to commit change transaction: %w", err)
 	}
 
 	// 构建响应（先填充实体数据，状态后续可能更新）
@@ -125,17 +141,6 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 	// 设置相关工单
 	if len(changeEntity.RelatedTickets) > 0 {
 		response.RelatedTickets = changeEntity.RelatedTickets
-	}
-
-	// 触发BPMN工作流（异步执行，不阻塞变更创建）
-	if s.processTriggerService != nil {
-		go func() {
-			workflowCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			if err := s.triggerWorkflowForChange(workflowCtx, changeEntity.ID, tenantID); err != nil {
-				s.logger.Warnw("Failed to trigger workflow for change", "error", err, "change_id", changeEntity.ID)
-			}
-		}()
 	}
 
 	s.logger.Infow("Change created successfully", "change_id", changeEntity.ID, "tenant_id", tenantID)

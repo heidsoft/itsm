@@ -103,7 +103,7 @@ func createTestTenantAndUserForTicket(t *testing.T, client *ent.Client) (*ent.Te
 	// 创建工单分类
 	_, err = client.TicketCategory.Create().
 		SetName("incident").
-		SetCode("incident").
+		SetCode("incident-" + uniqueID).
 		SetDescription("事件类工单").
 		SetIsActive(true).
 		SetTenantID(tenant.ID).

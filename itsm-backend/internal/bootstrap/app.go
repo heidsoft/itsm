@@ -222,11 +222,12 @@ func NewApplication() *Application {
 	processBindingService := service.NewProcessBindingService(client)
 	processEngine := service.NewCustomProcessEngine(client, sugar)
 	processTriggerService := service.NewProcessTriggerService(client, processEngine)
+	processResolver := service.NewProcessResolver(client, processBindingService)
 	commandRegistry := commandbus.NewRegistry()
 	if err := commandbus.ValidateStorage(context.Background(), client); err != nil {
 		sugar.Fatalw("Operational command storage is not ready; run the bootstrap migration first", "error", err)
 	}
-	workflowCommandHandler := service.NewWorkflowStartCommandHandler(client, processTriggerService, sugar)
+	workflowCommandHandler := service.NewWorkflowStartCommandHandler(client, processTriggerService, processResolver, sugar)
 	if err := commandRegistry.Register(commandbus.CommandStartBPMN, workflowCommandHandler.Handle); err != nil {
 		sugar.Fatalw("Failed to register workflow command handler", "error", err)
 	}
@@ -236,7 +237,7 @@ func NewApplication() *Application {
 	}
 	commandWorker := commandbus.NewWorker(client, commandRegistry, sugar, workerOwner)
 	incidentService.EnableWorkflowOutbox()
-	processResolver := service.NewProcessResolver(client, processBindingService)
+	incidentService.EnableRulesOutbox()
 	bpmnVersionService := service.NewBPMNVersionService(client, sugar)
 
 	// 工单仓储层（V2 Repository 模式）
@@ -264,6 +265,14 @@ func NewApplication() *Application {
 	ticketNotificationService.EnableTxOutbox()
 	ticketSLAService := service.NewTicketSLAService(client, sugar)
 	ticketAutomationRuleService := service.NewTicketAutomationRuleService(client, sugar)
+	ticketAutomationCommandHandler := service.NewTicketAutomationCommandHandler(ticketAutomationRuleService)
+	if err := commandRegistry.Register(commandbus.CommandExecuteTicketRules, ticketAutomationCommandHandler.Handle); err != nil {
+		sugar.Fatalw("Failed to register ticket automation command handler", "error", err)
+	}
+	ticketFeishuCommandHandler := service.NewTicketFeishuSyncCommandHandler(client, connectorManager, sugar)
+	if err := commandRegistry.Register(commandbus.CommandSyncTicketFeishu, ticketFeishuCommandHandler.Handle); err != nil {
+		sugar.Fatalw("Failed to register ticket feishu command handler", "error", err)
+	}
 
 	// V2 工单服务（构造函数注入）
 	ticketService := service.NewTicketService(&service.TicketServiceConfig{
@@ -278,6 +287,8 @@ func NewApplication() *Application {
 		ProcessResolver:       processResolver,
 		ConnectorManager:      connectorManager,
 	})
+	ticketService.EnableWorkflowOutbox()
+	ticketService.EnableSideEffectOutbox()
 	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
 
 	// 为 IncidentService 注入序列服务与原生数据库连接（S-4 编号事务锁）
@@ -369,6 +380,10 @@ func NewApplication() *Application {
 	// 控制器依赖
 	incidentRuleEngine := service.NewIncidentRuleEngine(client, sugar)
 	incidentService.SetRuleEngine(incidentRuleEngine)
+	incidentRulesCommandHandler := service.NewIncidentRulesCommandHandler(client, incidentRuleEngine)
+	if err := commandRegistry.Register(commandbus.CommandExecuteIncidentRules, incidentRulesCommandHandler.Handle); err != nil {
+		sugar.Fatalw("Failed to register incident rules command handler", "error", err)
+	}
 	incidentMonitoringService := service.NewIncidentMonitoringService(client, sugar)
 	incidentAlertingService := service.NewIncidentAlertingService(client, sugar)
 	ticketDependencyService := service.NewTicketDependencyService(client, sugar)

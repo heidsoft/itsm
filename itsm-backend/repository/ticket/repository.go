@@ -49,3 +49,9 @@ type Repository interface {
 	// 版本控制
 	GetVersion(ctx context.Context, id int, tenantID int) (int, error)
 }
+
+// TransactionalUpdater lets application services append durable outbox writes
+// to the same transaction as an optimistic-lock ticket update.
+type TransactionalUpdater interface {
+	UpdateWithTxHook(ctx context.Context, id int, params *UpdateParams, tenantID int, hook func(*ent.Tx, *Ticket) error) (*Ticket, error)
+}

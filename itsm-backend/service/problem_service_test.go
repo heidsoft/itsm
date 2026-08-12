@@ -11,6 +11,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/operationalcommand"
+	"itsm-backend/internal/commandbus"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -78,6 +80,12 @@ func TestProblemService_CreateProblem_Success(t *testing.T) {
 	assert.Equal(t, req.Priority, response.Priority)
 	assert.Equal(t, testUser.ID, response.CreatedBy)
 	assert.NotEmpty(t, response.CreatedAt)
+	cmd, err := client.OperationalCommand.Query().Where(
+		operationalcommand.TenantIDEQ(testTenant.ID), operationalcommand.CommandTypeEQ(commandbus.CommandStartBPMN),
+		operationalcommand.AggregateTypeEQ("problem"), operationalcommand.AggregateIDEQ(response.ID),
+	).Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, commandbus.StatusPending, cmd.Status)
 }
 
 func TestProblemService_CreateProblem_WithCategory(t *testing.T) {

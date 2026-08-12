@@ -11,6 +11,8 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/operationalcommand"
+	"itsm-backend/internal/commandbus"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -88,6 +90,12 @@ func TestChangeService_CreateChange_Success(t *testing.T) {
 	assert.Equal(t, testUser.ID, response.CreatedBy)
 	assert.Nil(t, response.AssigneeID)
 	assert.NotEmpty(t, response.CreatedAt)
+	cmd, err := client.OperationalCommand.Query().Where(
+		operationalcommand.TenantIDEQ(testTenant.ID), operationalcommand.CommandTypeEQ(commandbus.CommandStartBPMN),
+		operationalcommand.AggregateTypeEQ("change"), operationalcommand.AggregateIDEQ(response.ID),
+	).Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, commandbus.StatusPending, cmd.Status)
 }
 
 func TestChangeService_CreateChange_WithAffectedCIs(t *testing.T) {

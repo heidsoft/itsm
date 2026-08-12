@@ -111,6 +111,32 @@ func TestRepository_Create(t *testing.T) {
 	assert.Equal(t, StatusNew, tkt.Status)
 }
 
+func TestRepository_UpdateWithTxHookRollsBackTicketWhenHookFails(t *testing.T) {
+	fx := newRepoFixture(t)
+	defer fx.client.Close()
+
+	repo := fx.repo.(*EntRepository)
+	created, err := repo.Create(fx.ctx, &CreateParams{
+		Title: "Before", Description: "atomic update", Priority: PriorityMedium,
+		Type: TypeIncident, RequesterID: fx.user.ID,
+	}, fx.tenant.ID)
+	require.NoError(t, err)
+
+	after := "After"
+	updated, err := repo.UpdateWithTxHook(fx.ctx, created.ID, &UpdateParams{
+		Title: &after, Version: created.Version,
+	}, fx.tenant.ID, func(_ *ent.Tx, _ *Ticket) error {
+		return fmt.Errorf("outbox unavailable")
+	})
+	require.ErrorContains(t, err, "outbox unavailable")
+	require.Nil(t, updated)
+
+	stored, err := repo.GetByID(fx.ctx, created.ID, fx.tenant.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "Before", stored.Title)
+	assert.Equal(t, created.Version, stored.Version)
+}
+
 func TestRepository_Create_GeneratesTicketNumber(t *testing.T) {
 	fx := newRepoFixture(t)
 	defer fx.client.Close()

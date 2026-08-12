@@ -107,6 +107,38 @@ func TestCreateTicketSinksCreatedNotificationIntoTx(t *testing.T) {
 	}
 }
 
+func TestCreateTicketSinksWorkflowStartIntoSameTransaction(t *testing.T) {
+	client, ctx, tenant, requester, _ := txNotificationFixture(t)
+
+	svc := NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	svc.EnableWorkflowOutbox()
+	svc.EnableSideEffectOutbox()
+	created, err := svc.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title: "Durable workflow ticket", Description: "workflow command commits with ticket",
+		Priority: "medium", Type: "incident", RequesterID: requester.ID,
+		WorkflowDefinitionKey: "tenant_ticket_flow",
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	cmd, err := client.OperationalCommand.Query().Where(
+		operationalcommand.TenantIDEQ(tenant.ID),
+		operationalcommand.CommandTypeEQ(commandbus.CommandStartBPMN),
+		operationalcommand.AggregateTypeEQ("ticket"),
+		operationalcommand.AggregateIDEQ(created.ID),
+	).Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, fmt.Sprintf("ticket:%d:workflow:start", created.ID), cmd.IdempotencyKey)
+	require.Equal(t, "tenant_ticket_flow", cmd.Payload["workflowDefinitionKey"])
+	for _, commandType := range []string{commandbus.CommandExecuteTicketRules, commandbus.CommandSyncTicketFeishu} {
+		command, err := client.OperationalCommand.Query().Where(
+			operationalcommand.TenantIDEQ(tenant.ID), operationalcommand.CommandTypeEQ(commandType),
+			operationalcommand.AggregateIDEQ(created.ID),
+		).Only(ctx)
+		require.NoError(t, err)
+		require.Equal(t, commandbus.StatusPending, command.Status)
+	}
+}
+
 // TestCreateTicketRollsBackWhenNotificationEnqueueFails 验证通知入箱失败时
 // ticket 也必须随 tx 一起回滚——这是「同生同死」语义的核心契约。
 //

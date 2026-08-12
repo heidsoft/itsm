@@ -414,6 +414,18 @@ func (e *IncidentRuleEngine) ExecuteRulesForIncident(ctx context.Context, incide
 	// 执行每个规则
 	var failedRules int
 	for _, rule := range rules {
+		alreadyProcessed, checkErr := e.client.IncidentRuleExecution.Query().Where(
+			incidentruleexecution.TenantIDEQ(tenantID),
+			incidentruleexecution.RuleIDEQ(rule.ID),
+			incidentruleexecution.IncidentIDEQ(incidentID),
+			incidentruleexecution.StatusIn("completed", "skipped"),
+		).Exist(ctx)
+		if checkErr != nil {
+			return fmt.Errorf("check incident rule idempotency: %w", checkErr)
+		}
+		if alreadyProcessed {
+			continue
+		}
 		err := e.ExecuteRule(ctx, rule, incidentEntity, tenantID)
 		if err != nil {
 			failedRules++

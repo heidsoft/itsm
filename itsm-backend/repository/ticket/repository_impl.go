@@ -287,6 +287,87 @@ func (r *EntRepository) Update(ctx context.Context, id int, params *UpdateParams
 	return toDomainModel(entity), nil
 }
 
+// UpdateWithTxHook applies the same optimistic-lock semantics as Update and
+// invokes hook before commit so domain outbox commands cannot be lost between
+// the business update and command persistence.
+func (r *EntRepository) UpdateWithTxHook(ctx context.Context, id int, params *UpdateParams, tenantID int, hook func(*ent.Tx, *Ticket) error) (*Ticket, error) {
+	tx, err := r.Client().Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin ticket update transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	currentEntity, err := tx.Ticket.Query().Where(ticket.IDEQ(id), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get ticket for update: %w", err)
+	}
+	if currentEntity.Version != params.Version {
+		return nil, fmt.Errorf("version conflict: expected %d, got %d", currentEntity.Version, params.Version)
+	}
+	builder := tx.Ticket.UpdateOneID(id).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(params.Version)).
+		SetVersion(currentEntity.Version + 1)
+	if params.Title != nil {
+		builder.SetTitle(*params.Title)
+	}
+	if params.Description != nil {
+		builder.SetDescription(*params.Description)
+	}
+	if params.Status != nil {
+		builder.SetStatus(string(*params.Status))
+		switch *params.Status {
+		case StatusResolved:
+			builder.SetResolvedAt(time.Now()).ClearClosedAt()
+		case StatusClosed:
+			builder.SetClosedAt(time.Now())
+		case StatusNew, StatusOpen, StatusInProgress, StatusPending:
+			builder.ClearResolvedAt().ClearClosedAt()
+		}
+	}
+	if params.Type != nil {
+		builder.SetType(string(*params.Type))
+	}
+	if params.Priority != nil {
+		builder.SetPriority(string(*params.Priority))
+	}
+	if params.AssigneeID != nil {
+		builder.SetAssigneeID(*params.AssigneeID)
+	}
+	if params.CategoryID != nil {
+		if *params.CategoryID == 0 {
+			builder.ClearCategoryID()
+		} else {
+			builder.SetCategoryID(*params.CategoryID)
+		}
+	}
+	if params.ReplaceTags {
+		builder.ClearTags()
+		if len(params.TagIDs) > 0 {
+			builder.AddTagIDs(params.TagIDs...)
+		}
+	}
+	if params.Resolution != nil {
+		builder.SetResolution(*params.Resolution)
+	}
+	updatedEntity, err := builder.Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("version conflict or ticket no longer exists")
+		}
+		return nil, fmt.Errorf("update ticket: %w", err)
+	}
+	updated := toDomainModel(updatedEntity)
+	if hook != nil {
+		if err := hook(tx, updated); err != nil {
+			return nil, err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit ticket update transaction: %w", err)
+	}
+	return updated, nil
+}
+
 // Delete 软删除工单，保留审计和关联记录。
 func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error {
 	affected, err := r.Client().Ticket.Update().

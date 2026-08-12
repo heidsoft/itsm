@@ -161,6 +161,24 @@ func newBPMNWorkflowTestRouter(t *testing.T) (*gin.Engine, *fakeTaskService) {
 
 	r := gin.New()
 	r.Use(gin.Recovery())
+	r.Use(func(c *gin.Context) {
+		// Mirror the authenticated tenant context installed by production
+		// middleware. Security tests exercise missing/zero tenants directly.
+		tenantID, userID := 1, 7
+		if value := c.GetHeader("X-Test-Tenant"); value != "" {
+			if parsed, err := strconv.Atoi(value); err == nil {
+				tenantID = parsed
+			}
+		}
+		if value := c.GetHeader("X-Test-User"); value != "" {
+			if parsed, err := strconv.Atoi(value); err == nil {
+				userID = parsed
+			}
+		}
+		c.Set("tenant_id", tenantID)
+		c.Set("user_id", userID)
+		c.Next()
+	})
 	g := r.Group("/api/v1")
 	ctrl.RegisterRoutes(g)
 	return r, fakeTask
@@ -184,7 +202,7 @@ func doRequest(t *testing.T, r *gin.Engine, method, path string, body interface{
 	return w
 }
 
-// doAuthedRequest sets tenant_id and user_id on the gin context before invoking the handler.
+// doAuthedRequest overrides the router's default authenticated identity.
 func doAuthedRequest(t *testing.T, r *gin.Engine, method, path string, body interface{}, tenantID, userID int) *httptest.ResponseRecorder {
 	t.Helper()
 	var reader *bytes.Reader
@@ -198,11 +216,9 @@ func doAuthedRequest(t *testing.T, r *gin.Engine, method, path string, body inte
 	req, err := http.NewRequest(method, path, reader)
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Test-Tenant", strconv.Itoa(tenantID))
+	req.Header.Set("X-Test-User", strconv.Itoa(userID))
 	w := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(w)
-	ctx.Request = req
-	ctx.Set("tenant_id", tenantID)
-	ctx.Set("user_id", userID)
 	r.ServeHTTP(w, req)
 	return w
 }

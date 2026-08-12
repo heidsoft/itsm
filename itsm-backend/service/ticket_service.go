@@ -22,6 +22,7 @@ import (
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/commandbus"
 	"itsm-backend/repository/base"
 	"itsm-backend/repository/ticket"
 
@@ -42,8 +43,10 @@ type TicketService struct {
 	connectorManager       *connector.Manager // 连接器管理器，用于飞书等外部集成
 
 	// 流程触发（V1 兼容语义）
-	processTriggerSvc ProcessTriggerServiceInterface
-	processResolver   *ProcessResolver
+	processTriggerSvc       ProcessTriggerServiceInterface
+	processResolver         *ProcessResolver
+	workflowOutboxEnabled   bool
+	sideEffectOutboxEnabled bool
 }
 
 // TicketServiceConfig 工单服务配置
@@ -119,6 +122,59 @@ func (s *TicketService) SetProcessTriggerService(p ProcessTriggerServiceInterfac
 // SetProcessResolver 注入流程解析器（运行时依赖注入）
 func (s *TicketService) SetProcessResolver(r *ProcessResolver) {
 	s.processResolver = r
+}
+
+// EnableWorkflowOutbox makes ticket creation persist the workflow-start command
+// in the same transaction as the ticket. Production wiring must enable this;
+// the legacy direct trigger remains only for isolated tests and old embedders.
+func (s *TicketService) EnableWorkflowOutbox() { s.workflowOutboxEnabled = true }
+
+// EnableSideEffectOutbox routes ticket automation and connector synchronization
+// through the durable command worker instead of request-scoped goroutines.
+func (s *TicketService) EnableSideEffectOutbox() { s.sideEffectOutboxEnabled = true }
+
+func (s *TicketService) enqueueTicketFeishuSync(ctx context.Context, tkt *ticket.Ticket, tenantID int, event string) error {
+	if !s.sideEffectOutboxEnabled || tkt == nil {
+		return nil
+	}
+	_, err := commandbus.Enqueue(ctx, s.client, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandSyncTicketFeishu,
+		AggregateType: "ticket", AggregateID: tkt.ID,
+		IdempotencyKey: fmt.Sprintf("ticket:%d:feishu:sync:v%d", tkt.ID, tkt.Version),
+		Payload:        map[string]interface{}{"event": event, "version": tkt.Version},
+	})
+	if err != nil {
+		return fmt.Errorf("enqueue ticket feishu sync: %w", err)
+	}
+	return nil
+}
+
+func (s *TicketService) updateTicketWithFeishuCommand(ctx context.Context, id int, params *ticket.UpdateParams, tenantID int, event string) (*ticket.Ticket, error) {
+	if !s.sideEffectOutboxEnabled {
+		return s.repo.Update(ctx, id, params, tenantID)
+	}
+	if updater, ok := s.repo.(ticket.TransactionalUpdater); ok {
+		return updater.UpdateWithTxHook(ctx, id, params, tenantID, func(tx *ent.Tx, updated *ticket.Ticket) error {
+			_, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+				TenantID: tenantID, CommandType: commandbus.CommandSyncTicketFeishu,
+				AggregateType: "ticket", AggregateID: updated.ID,
+				IdempotencyKey: fmt.Sprintf("ticket:%d:feishu:sync:v%d", updated.ID, updated.Version),
+				Payload:        map[string]interface{}{"event": event, "version": updated.Version},
+			})
+			if err != nil {
+				return fmt.Errorf("enqueue ticket feishu sync: %w", err)
+			}
+			return nil
+		})
+	}
+	updated, err := s.repo.Update(ctx, id, params, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.enqueueTicketFeishuSync(ctx, updated, tenantID, event); err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 // runCreateTicketTx 封装「ticket INSERT + 通知入箱」的同一事务边界。fn 必须在 tx 内完成所有
@@ -223,6 +279,33 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 				return fmt.Errorf("enqueue ticket-created notification: %w", err)
 			}
 		}
+		if s.workflowOutboxEnabled {
+			_, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+				TenantID: tenantID, CommandType: commandbus.CommandStartBPMN,
+				AggregateType: "ticket", AggregateID: created.ID,
+				IdempotencyKey: fmt.Sprintf("ticket:%d:workflow:start", created.ID),
+				Payload: map[string]interface{}{
+					"businessType": "ticket", "businessId": created.ID,
+					"workflowDefinitionKey": workflowDefinitionKey,
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("enqueue ticket workflow: %w", err)
+			}
+		}
+		if s.sideEffectOutboxEnabled {
+			commands := []commandbus.EnqueueRequest{
+				{TenantID: tenantID, CommandType: commandbus.CommandExecuteTicketRules, AggregateType: "ticket", AggregateID: created.ID,
+					IdempotencyKey: fmt.Sprintf("ticket:%d:rules:create", created.ID), Payload: map[string]interface{}{"event": "created"}},
+				{TenantID: tenantID, CommandType: commandbus.CommandSyncTicketFeishu, AggregateType: "ticket", AggregateID: created.ID,
+					IdempotencyKey: fmt.Sprintf("ticket:%d:feishu:sync:v%d", created.ID, created.Version), Payload: map[string]interface{}{"event": "created", "version": created.Version}},
+			}
+			for _, command := range commands {
+				if _, err := commandbus.EnqueueTx(ctx, tx, command); err != nil {
+					return fmt.Errorf("enqueue ticket side effect %s: %w", command.CommandType, err)
+				}
+			}
+		}
 		return nil
 	})
 	if err != nil {
@@ -272,7 +355,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	// 异步执行自动化规则
 	// 同样使用独立 ctx，避免请求生命周期结束导致异步任务中断。
-	if s.automationRuleSvc != nil {
+	if s.automationRuleSvc != nil && !s.sideEffectOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
@@ -285,7 +368,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 异步触发 BPMN 流程（V1 兼容语义）
 	// 这是 V1 缺失的 Phase 1 #1 缺陷修复：V2 必须让工单进入 BPMN 引擎
 	// 使用独立 ctx，否则控制器响应后 workflow 触发立即被取消。
-	if s.processTriggerSvc != nil {
+	if s.processTriggerSvc != nil && !s.workflowOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
@@ -299,7 +382,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	// 异步同步工单到飞书
 	// 必须使用独立 ctx，否则飞书同步在响应返回后立即失败。
-	if s.connectorManager != nil {
+	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -614,7 +697,12 @@ func (s *TicketService) SyncTicketStatusWithWorkflow(ctx context.Context, ticket
 		return nil
 	}
 
-	if _, err := s.repo.UpdateStatus(ctx, ticketID, newStatus, tenantID); err != nil {
+	current, err := s.repo.GetByID(ctx, ticketID, tenantID)
+	if err != nil {
+		return err
+	}
+	_, err = s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{Status: &newStatus, Version: current.Version}, tenantID, "workflow_status_synced")
+	if err != nil {
 		return fmt.Errorf("同步工单状态失败: %w", err)
 	}
 
@@ -651,7 +739,7 @@ func (s *TicketService) GetTicket(ctx context.Context, id int, tenantID int) (*t
 	}
 
 	// 异步同步工单到飞书
-	if s.connectorManager != nil {
+	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -806,7 +894,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 	}
 
 	// 更新工单
-	updated, err := s.repo.Update(ctx, id, params, tenantID)
+	updated, err := s.updateTicketWithFeishuCommand(ctx, id, params, tenantID, "updated")
 	if err != nil {
 		s.logger.Errorw("Failed to update ticket", "error", err)
 		return nil, err
@@ -815,7 +903,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 	s.logger.Infow("Ticket updated", "ticket_id", id)
 
 	// 异步同步工单到飞书
-	if s.connectorManager != nil {
+	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -964,11 +1052,11 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 		}
 	}
 	status := current.Status
-	updated, err := s.repo.Update(ctx, ticketID, &ticket.UpdateParams{
+	updated, err := s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{
 		AssigneeID: &assigneeID,
 		Status:     &status,
 		Version:    current.Version,
-	}, tenantID)
+	}, tenantID, "assigned")
 	if err != nil {
 		return nil, err
 	}
@@ -981,7 +1069,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 	}
 
 	// 异步同步工单到飞书
-	if s.connectorManager != nil {
+	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -1042,11 +1130,11 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 	}
 
 	status := ticket.StatusResolved
-	updated, err := s.repo.Update(ctx, ticketID, &ticket.UpdateParams{
+	updated, err := s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{
 		Status:     &status,
 		Resolution: &resolution,
 		Version:    tkt.Version,
-	}, tenantID)
+	}, tenantID, "resolved")
 	if err != nil {
 		return nil, err
 	}
@@ -1054,7 +1142,7 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 	s.logger.Infow("Ticket resolved", "ticket_id", ticketID)
 
 	// 异步同步工单到飞书
-	if s.connectorManager != nil {
+	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -1116,7 +1204,7 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, tenantID 
 		feedback = strings.TrimSpace(feedback)
 		params.Resolution = &feedback
 	}
-	updated, err := s.repo.Update(ctx, ticketID, params, tenantID)
+	updated, err := s.updateTicketWithFeishuCommand(ctx, ticketID, params, tenantID, "closed")
 	if err != nil {
 		return nil, err
 	}
@@ -1124,7 +1212,7 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, tenantID 
 	s.logger.Infow("Ticket closed", "ticket_id", ticketID)
 
 	// 异步同步工单到飞书
-	if s.connectorManager != nil {
+	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -1286,7 +1374,8 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 		return nil, fmt.Errorf("解决工单必须通过 ResolveTicket 提交解决方案")
 	}
 
-	updated, err := s.repo.UpdateStatus(ctx, ticketID, ticket.Status(status), tenantID)
+	targetStatus := ticket.Status(status)
+	updated, err := s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{Status: &targetStatus, Version: current.Version}, tenantID, "status_updated")
 	if err != nil {
 		s.logger.Errorw("Failed to update ticket status", "error", err, "ticket_id", ticketID)
 		return nil, fmt.Errorf("failed to update ticket status: %w", err)
@@ -1306,7 +1395,7 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 	}
 
 	// 异步同步工单到飞书
-	if s.connectorManager != nil {
+	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -1457,7 +1546,7 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 		}(),
 	}
 
-	updated, err := s.repo.Update(ctx, ticketID, params, tenantID)
+	updated, err := s.updateTicketWithFeishuCommand(ctx, ticketID, params, tenantID, "escalated")
 	if err != nil {
 		s.logger.Errorw("Failed to escalate ticket", "error", err, "ticket_id", ticketID)
 		return nil, fmt.Errorf("failed to escalate ticket: %w", err)
@@ -1472,7 +1561,7 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 	s.logger.Infow("Ticket escalated", "ticket_id", ticketID, "new_priority", newPriority, "new_assignee", newAssignee)
 
 	// 异步同步工单到飞书
-	if s.connectorManager != nil {
+	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -1812,11 +1901,22 @@ func (s *TicketService) AssignTickets(ctx context.Context, tenantID int, ticketI
 	if s.client == nil {
 		return fmt.Errorf("ent client not available for assign")
 	}
-	if _, err := s.client.User.Get(ctx, assigneeID); err != nil {
+	assigneeExists, err := s.client.User.Query().Where(user.IDEQ(assigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Exist(ctx)
+	if err != nil || !assigneeExists {
 		return fmt.Errorf("分配者不存在: %v", err)
 	}
 	for _, ticketID := range ticketIDs {
-		if _, err := s.repo.AssignTicket(ctx, ticketID, assigneeID, tenantID); err != nil {
+		current, err := s.repo.GetByID(ctx, ticketID, tenantID)
+		if err != nil {
+			return fmt.Errorf("查询工单 %d 失败: %v", ticketID, err)
+		}
+		if err := current.Assign(assigneeID); err != nil {
+			return fmt.Errorf("分配工单 %d 失败: %v", ticketID, err)
+		}
+		status := current.Status
+		if _, err := s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{
+			AssigneeID: &assigneeID, Status: &status, Version: current.Version,
+		}, tenantID, "batch_assigned"); err != nil {
 			return fmt.Errorf("分配工单 %d 失败: %v", ticketID, err)
 		}
 	}
@@ -1836,8 +1936,14 @@ func (s *TicketService) BatchCloseTickets(ctx context.Context, ticketIDs []int, 
 // BatchUpdatePriority 批量更新优先级
 func (s *TicketService) BatchUpdatePriority(ctx context.Context, ticketIDs []int, priority string, tenantID int) error {
 	for _, ticketID := range ticketIDs {
+		current, err := s.repo.GetByID(ctx, ticketID, tenantID)
+		if err != nil {
+			return fmt.Errorf("查询工单 %d 失败: %v", ticketID, err)
+		}
 		p := ticket.Priority(priority)
-		_, err := s.repo.Update(ctx, ticketID, &ticket.UpdateParams{Priority: &p}, tenantID)
+		_, err = s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{
+			Priority: &p, Version: current.Version,
+		}, tenantID, "batch_priority_updated")
 		if err != nil {
 			return fmt.Errorf("更新工单 %d 优先级失败: %v", ticketID, err)
 		}
@@ -2251,17 +2357,24 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 	if t.TenantID != customerTenantID {
 		return nil, fmt.Errorf("工单不属于指定客户租户")
 	}
-	// 分配给 MSP 技术员（这里 assignerID 作为目标处理人；可后续扩展为查表分配）
-	if _, err := s.repo.AssignTicket(ctx, ticketID, assignerID, customerTenantID); err != nil {
-		return nil, fmt.Errorf("failed to assign MSP technician: %w", err)
-	}
-	updated, err := s.repo.GetByID(ctx, ticketID, customerTenantID)
+	// 分配与同步命令在 EntRepository 中同事务提交。
+	current, err := s.repo.GetByID(ctx, ticketID, customerTenantID)
 	if err != nil {
 		return nil, err
 	}
+	if err := current.Assign(assignerID); err != nil {
+		return nil, err
+	}
+	status := current.Status
+	updated, err := s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{
+		AssigneeID: &assignerID, Status: &status, Version: current.Version,
+	}, customerTenantID, "msp_assigned")
+	if err != nil {
+		return nil, fmt.Errorf("failed to assign MSP technician: %w", err)
+	}
 
 	// 异步同步工单到飞书
-	if s.connectorManager != nil {
+	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()

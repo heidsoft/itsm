@@ -17,6 +17,7 @@ import (
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/problem"
+	"itsm-backend/internal/commandbus"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -95,6 +96,7 @@ func TestIncidentService_CreateIncidentPersistsWorkflowCommand(t *testing.T) {
 	client, incidentService, ctx := setupIncidentTest(t)
 	defer client.Close()
 	incidentService.EnableWorkflowOutbox()
+	incidentService.EnableRulesOutbox()
 	tenant, err := createIncidentTestTenant(ctx, client, "outbox")
 	require.NoError(t, err)
 	user, err := createIncidentTestUser(ctx, client, tenant.ID, "outbox")
@@ -104,14 +106,21 @@ func TestIncidentService_CreateIncidentPersistsWorkflowCommand(t *testing.T) {
 		Title: "数据库不可用", Description: "生产告警", Priority: "high", Severity: "high", Category: "database", Source: "monitoring",
 	}, tenant.ID, user.ID)
 	require.NoError(t, err)
-	cmd, err := client.OperationalCommand.Query().Where(
+	workflowCmd, err := client.OperationalCommand.Query().Where(
 		operationalcommand.TenantIDEQ(tenant.ID),
+		operationalcommand.CommandTypeEQ(commandbus.CommandStartBPMN),
 		operationalcommand.AggregateTypeEQ("incident"),
 		operationalcommand.AggregateIDEQ(response.ID),
 	).Only(ctx)
 	require.NoError(t, err)
-	require.Equal(t, "workflow.start", cmd.CommandType)
-	require.Equal(t, "pending", cmd.Status)
+	require.Equal(t, "pending", workflowCmd.Status)
+	rulesCmd, err := client.OperationalCommand.Query().Where(
+		operationalcommand.TenantIDEQ(tenant.ID),
+		operationalcommand.CommandTypeEQ(commandbus.CommandExecuteIncidentRules),
+		operationalcommand.AggregateIDEQ(response.ID),
+	).Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, "pending", rulesCmd.Status)
 }
 
 func TestIncidentService_CreateIncident_WithOptionalFields(t *testing.T) {

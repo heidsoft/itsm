@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/commandbus"
 
 	"go.uber.org/zap"
 )
@@ -27,8 +28,7 @@ type ProblemService struct {
 // NewProblemService 创建问题管理服务
 func NewProblemService(client *ent.Client, logger *zap.SugaredLogger) *ProblemService {
 	return &ProblemService{
-		client: client,
-		logger: logger,
+		client: client, logger: logger,
 	}
 }
 
@@ -57,7 +57,12 @@ func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProbl
 		return nil, fmt.Errorf("问题创建人不存在或不可用")
 	}
 
-	problem, err := s.client.Problem.Create().
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("开启问题创建事务失败: %w", err)
+	}
+	defer tx.Rollback()
+	problem, err := tx.Problem.Create().
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetPriority(req.Priority).
@@ -72,19 +77,19 @@ func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProbl
 		s.logger.Errorw("Failed to create problem", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("创建问题失败: %w", err)
 	}
+	if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandStartBPMN,
+		AggregateType: "problem", AggregateID: problem.ID,
+		IdempotencyKey: fmt.Sprintf("problem:%d:workflow:start", problem.ID),
+		Payload:        map[string]interface{}{"businessType": "problem", "businessId": problem.ID},
+	}); err != nil {
+		return nil, fmt.Errorf("问题流程命令入箱失败: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交问题创建事务失败: %w", err)
+	}
 
 	s.logger.Infow("Problem created successfully", "id", problem.ID, "tenant_id", tenantID)
-
-	// 触发BPMN工作流（异步执行，不阻塞问题创建）
-	if s.processTriggerService != nil {
-		go func() {
-			workflowCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			if err := s.triggerWorkflowForProblem(workflowCtx, problem.ID, tenantID); err != nil {
-				s.logger.Warnw("Failed to trigger workflow for problem", "error", err, "problem_id", problem.ID)
-			}
-		}()
-	}
 
 	return dto.ToProblemResponse(problem), nil
 }

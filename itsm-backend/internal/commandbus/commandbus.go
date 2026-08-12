@@ -23,10 +23,13 @@ const (
 	StatusSucceeded  = "succeeded"
 	StatusDeadLetter = "dead_letter"
 
-	CommandStartBPMN           = "workflow.start"
-	CommandDeliverNotification = "notification.deliver"
-	CommandProcessCMDBImport   = "cmdb.import.process"
-	CommandProcessCMDBExport   = "cmdb.export.process"
+	CommandStartBPMN            = "workflow.start"
+	CommandDeliverNotification  = "notification.deliver"
+	CommandProcessCMDBImport    = "cmdb.import.process"
+	CommandProcessCMDBExport    = "cmdb.export.process"
+	CommandExecuteTicketRules   = "ticket.rules.execute"
+	CommandSyncTicketFeishu     = "ticket.feishu.sync"
+	CommandExecuteIncidentRules = "incident.rules.execute"
 )
 
 var ErrLeaseLost = errors.New("operational command lease lost")

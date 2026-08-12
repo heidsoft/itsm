@@ -32,6 +32,7 @@ type IncidentService struct {
 	ruleEngine            *IncidentRuleEngine
 	rawDB                 *sql.DB // for transactional SELECT FOR UPDATE (S-4 修复)
 	workflowOutboxEnabled bool
+	rulesOutboxEnabled    bool
 }
 
 func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger) *IncidentService {
@@ -47,6 +48,7 @@ func (s *IncidentService) SetProcessTriggerService(triggerService ProcessTrigger
 }
 
 func (s *IncidentService) EnableWorkflowOutbox() { s.workflowOutboxEnabled = true }
+func (s *IncidentService) EnableRulesOutbox()    { s.rulesOutboxEnabled = true }
 
 // SetSequenceService 设置序列服务（用于 incident_number 生成）
 func (s *IncidentService) SetPriorityMatrixService(pms *PriorityMatrixService) {
@@ -216,23 +218,36 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 			return rollback(fmt.Errorf("enqueue incident workflow: %w", err))
 		}
 	}
+	if s.rulesOutboxEnabled {
+		_, err = commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+			TenantID: tenantID, CommandType: commandbus.CommandExecuteIncidentRules,
+			AggregateType: "incident", AggregateID: incidentEntity.ID,
+			IdempotencyKey: fmt.Sprintf("incident:%d:rules:create", incidentEntity.ID),
+			Payload:        map[string]interface{}{"event": "created"},
+		})
+		if err != nil {
+			return rollback(fmt.Errorf("enqueue incident rules: %w", err))
+		}
+	}
 	if err := tx.Commit(); err != nil {
 		return rollback(fmt.Errorf("failed to commit incident transaction: %w", err))
 	}
 	incidentEntity.Edges.ConfigurationItems = configurationItems
 
 	// 执行事件规则
-	go func() {
-		ruleCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		if s.ruleEngine != nil {
-			if err := s.ruleEngine.ExecuteRulesForIncident(ruleCtx, incidentEntity.ID, tenantID); err != nil {
-				s.logger.Errorw("Incident rule execution completed with failures", "error", err, "incident_id", incidentEntity.ID)
+	if !s.rulesOutboxEnabled {
+		go func() {
+			ruleCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if s.ruleEngine != nil {
+				if err := s.ruleEngine.ExecuteRulesForIncident(ruleCtx, incidentEntity.ID, tenantID); err != nil {
+					s.logger.Errorw("Incident rule execution completed with failures", "error", err, "incident_id", incidentEntity.ID)
+				}
+				return
 			}
-			return
-		}
-		s.executeIncidentRules(ruleCtx, incidentEntity.ID, tenantID)
-	}()
+			s.executeIncidentRules(ruleCtx, incidentEntity.ID, tenantID)
+		}()
+	}
 
 	// 兼容未启用 outbox 的单元测试/旧组装；生产组装只允许持久化命令路径。
 	if s.processTriggerService != nil && !s.workflowOutboxEnabled {
