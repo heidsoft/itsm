@@ -1,0 +1,5 @@
+{"id":"summarize-001","ticket_id":"T-1001","messages":["客户反馈登录页面白屏","已确认是 CDN 缓存了旧版本 index.html","已通过强制刷新 CDN 解决"],"expected_topics":["CDN","缓存","登录页"],"max_length":120,"min_length":40}
+{"id":"summarize-002","ticket_id":"T-1002","messages":["VPN 客户端提示证书过期","已更新客户端证书到 2027 年","VPN 服务恢复正常"],"expected_topics":["VPN","证书","客户端"],"max_length":100,"min_length":30}
+{"id":"summarize-003","ticket_id":"T-1003","messages":["生产 MySQL 复制延迟达到 5 分钟","已切换到备库并修复主从延迟","已通过监控告警恢复"],"expected_topics":["MySQL","主从复制","备库"],"max_length":120,"min_length":40}
+{"id":"summarize-004","ticket_id":"T-1004","messages":["工单升级到 change 流程","CAB 审批通过","变更窗口: 2026-09-01 02:00-04:00"],"expected_topics":["CAB","变更窗口","审批"],"max_length":100,"min_length":30}
+{"id":"summarize-005","ticket_id":"T-1005","messages":["知识库文章发布失败","后端返回 503","重启知识库服务后恢复"],"expected_topics":["知识库","503","重启"],"max_length":80,"min_length":20}

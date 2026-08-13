@@ -111,3 +111,75 @@ func TestNotificationController_DeleteNotification(t *testing.T) {
 	resp := doReq(t, r, "DELETE", "/api/v1/notifications/"+strconv.Itoa(id), nil, false)
 	assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
 }
+
+// ---- 阶段 1.11: 通知 Tx Outbox + 标记已读/未读 负例测试 ----
+
+func TestNotificationController_MarkRead_Success(t *testing.T) {
+	r, _, tenantID, userID := setupNotificationController(t)
+	created := doReq(t, r, "POST", "/api/v1/notifications", dto.CreateNotificationRequest{
+		Title: "待标记已读", Message: "m", Type: "info", UserID: userID, TenantID: tenantID,
+	}, false)
+	require.Equal(t, common.SuccessCode, created.Code)
+	id := int(created.Data.(map[string]interface{})["id"].(float64))
+
+	resp := doReq(t, r, "PUT", "/api/v1/notifications/"+strconv.Itoa(id)+"/read", nil, false)
+	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
+	// 标记已读接口通常返回 message 字符串或包含 isRead 字段的对象。
+	// 宽松断言：成功码 + 非 nil data
+	require.NotNil(t, resp.Data, "data 不应为 nil，body=%s", mustString(resp))
+}
+
+func TestNotificationController_MarkRead_NotFound(t *testing.T) {
+	r, _, _, _ := setupNotificationController(t)
+	resp := doReq(t, r, "PUT", "/api/v1/notifications/999999/read", nil, false)
+	assert.NotEqual(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
+}
+
+func TestNotificationController_MarkRead_InvalidID(t *testing.T) {
+	r, _, _, _ := setupNotificationController(t)
+	resp := doReq(t, r, "PUT", "/api/v1/notifications/notanint/read", nil, false)
+	assert.NotEqual(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
+}
+
+func TestNotificationController_DeleteNotification_InvalidID(t *testing.T) {
+	r, _, _, _ := setupNotificationController(t)
+	resp := doReq(t, r, "DELETE", "/api/v1/notifications/notanint", nil, false)
+	assert.NotEqual(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
+}
+
+func TestNotificationController_GetNotifications_WithFilters(t *testing.T) {
+	r, _, _, _ := setupNotificationController(t)
+
+	t.Run("按已读过滤", func(t *testing.T) {
+		resp := doReq(t, r, "GET", "/api/v1/notifications?isRead=false", nil, false)
+		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
+	})
+	t.Run("分页参数 page=1&pageSize=10", func(t *testing.T) {
+		resp := doReq(t, r, "GET", "/api/v1/notifications?page=1&pageSize=10", nil, false)
+		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
+	})
+}
+
+func TestNotificationController_CreateNotification_TenantIsolation(t *testing.T) {
+	// 验证租户作用域：跨租户 ID 不会泄漏
+	r1, _, t1, u1 := setupNotificationController(t)
+	r2, _, t2, u2 := setupNotificationController(t)
+
+	// 在租户1创建通知
+	created := doReq(t, r1, "POST", "/api/v1/notifications", dto.CreateNotificationRequest{
+		Title: "租户1通知", Message: "m", Type: "info", UserID: u1, TenantID: t1,
+	}, false)
+	require.Equal(t, common.SuccessCode, created.Code)
+	id := int(created.Data.(map[string]interface{})["id"].(float64))
+
+	// 租户2尝试删除租户1的通知 ID → 应返回 404 或 not found（不放行）
+	resp := doReq(t, r2, "DELETE", "/api/v1/notifications/"+strconv.Itoa(id), nil, false)
+	assert.NotEqual(t, common.SuccessCode, resp.Code, "跨租户删除应被拒绝，body=%s", mustString(resp))
+
+	// 同时记录两个用户，方便反查 2002 错误码使用
+	// 验证租户字段已使用，避免未使用变量告警
+	_ = t1
+	_ = t2
+	_ = u1
+	_ = u2
+}

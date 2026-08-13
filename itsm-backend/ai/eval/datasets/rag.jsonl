@@ -1,0 +1,10 @@
+{"id":"rag-001","query":"如何配置 CDN 缓存","tenant_id":1,"expected_doc_ids":["KB-001","KB-002"],"min_relevance":0.7,"top_k":5}
+{"id":"rag-002","query":"VPN 证书过期怎么办","tenant_id":1,"expected_doc_ids":["KB-010"],"min_relevance":0.8,"top_k":3}
+{"id":"rag-003","query":"数据库主从延迟排查","tenant_id":1,"expected_doc_ids":["KB-020","KB-021"],"min_relevance":0.7,"top_k":5}
+{"id":"rag-004","query":"工单状态机","tenant_id":1,"expected_doc_ids":["KB-030"],"min_relevance":0.9,"top_k":1}
+{"id":"rag-005","query":"SLA 告警阈值","tenant_id":1,"expected_doc_ids":["KB-040","KB-041"],"min_relevance":0.7,"top_k":3}
+{"id":"rag-006","query":"跨租户如何隔离","tenant_id":1,"expected_doc_ids":["KB-100"],"min_relevance":0.8,"top_k":2}
+{"id":"rag-007","query":"RBAC 权限模型","tenant_id":1,"expected_doc_ids":["KB-101"],"min_relevance":0.9,"top_k":1}
+{"id":"rag-008","query":"知识库搜索语法","tenant_id":1,"expected_doc_ids":["KB-200"],"min_relevance":0.6,"top_k":3}
+{"id":"rag-009","query":"如何配置 webhooks","tenant_id":1,"expected_doc_ids":["KB-300"],"min_relevance":0.8,"top_k":2}
+{"id":"rag-010","query":"L1/L2/L3 现场支持区别","tenant_id":1,"expected_doc_ids":["KB-400"],"min_relevance":0.7,"top_k":1}

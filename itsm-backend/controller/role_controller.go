@@ -137,7 +137,7 @@ func (rc *RoleController) ListRoles(c *gin.Context) {
 		Total:     total,
 		Page:      page,
 		PageSize:  pageSize,
-		TotalPage: totalPages,
+		TotalPages: totalPages,
 	})
 }
 

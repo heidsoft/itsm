@@ -128,7 +128,7 @@ func (gc *GroupController) ListGroups(c *gin.Context) {
 			Page:      req.Page,
 			PageSize:  req.PageSize,
 			Total:     total,
-			TotalPage: (total + req.PageSize - 1) / req.PageSize,
+			TotalPages: (total + req.PageSize - 1) / req.PageSize,
 		},
 	}
 
@@ -418,7 +418,7 @@ func (gc *GroupController) GetGroupMembers(c *gin.Context) {
 			Page:      page,
 			PageSize:  pageSize,
 			Total:     total,
-			TotalPage: (total + pageSize - 1) / pageSize,
+			TotalPages: (total + pageSize - 1) / pageSize,
 		},
 	}
 

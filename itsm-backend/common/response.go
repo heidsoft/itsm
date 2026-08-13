@@ -51,11 +51,14 @@ func Fail(c *gin.Context, code int, message string) {
 	switch code {
 	case ParamErrorCode, ValidationError, BadRequestCode:
 		statusCode = http.StatusBadRequest
-	case AuthFailedCode:
+	case AuthFailedCode, UnauthorizedCode:
+		// 对齐审计 P0 #3:2001/2002 都映射到 401,避免未授权仍然 200。
 		statusCode = http.StatusUnauthorized
-	case ForbiddenCode:
+	case ForbiddenCode, ToolPermissionDeniedCode:
+		// 对齐审计 P0 #3:2003/2004 都映射到 403,工具 RBAC 拒绝同样不允许 200。
 		statusCode = http.StatusForbidden
-	case NotFoundCode:
+	case NotFoundCode, UnknownToolCode:
+		// 对齐审计 P0 #3:未知工具(2005)与未找到资源(4004)都映射到 404。
 		statusCode = http.StatusNotFound
 	case ConflictCode:
 		statusCode = http.StatusConflict
@@ -78,11 +81,11 @@ func FailWithData(c *gin.Context, code int, message string, data interface{}) {
 	switch code {
 	case ParamErrorCode, ValidationError, BadRequestCode:
 		statusCode = http.StatusBadRequest
-	case AuthFailedCode:
+	case AuthFailedCode, UnauthorizedCode:
 		statusCode = http.StatusUnauthorized
-	case ForbiddenCode:
+	case ForbiddenCode, ToolPermissionDeniedCode:
 		statusCode = http.StatusForbidden
-	case NotFoundCode:
+	case NotFoundCode, UnknownToolCode:
 		statusCode = http.StatusNotFound
 	case ConflictCode:
 		statusCode = http.StatusConflict

@@ -221,6 +221,67 @@ func TestReleaseController_DeleteRelease(t *testing.T) {
 	assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
 }
 
+// ---- 阶段 1.12: 发布状态机 (状态流转) + 跨租户隔离 + 导出 ----
+
+func TestReleaseController_UpdateReleaseStatus(t *testing.T) {
+	r, _, _, _ := setupReleaseController(t)
+
+	created := doReq(t, r, "POST", "/api/v1/releases", dto.CreateReleaseRequest{
+		ReleaseNumber: "REL-STAT-1", Title: "状态流转测试",
+	}, false)
+	require.Equal(t, common.SuccessCode, created.Code)
+	id := int(created.Data.(map[string]interface{})["id"].(float64))
+
+	t.Run("成功从草稿取消", func(t *testing.T) {
+		// release 状态机: draft -> cancelled 是合法转换（通过 /status 路由）
+		// draft -> scheduled 必须经 /approve 路由（D-5 防越权）
+		resp := doReq(t, r, "PUT", "/api/v1/releases/"+strconv.Itoa(id)+"/status", map[string]string{"status": "cancelled"}, false)
+		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
+	})
+
+	t.Run("非法状态转换应被拒绝", func(t *testing.T) {
+		// draft -> scheduled 不是 /status 路由的合法转换（必须经 /approve）
+		resp := doReq(t, r, "PUT", "/api/v1/releases/"+strconv.Itoa(id)+"/status", map[string]string{"status": "scheduled"}, false)
+		assert.NotEqual(t, common.SuccessCode, resp.Code, "非法状态转换应被拒绝，body=%s", mustString(resp))
+	})
+
+	t.Run("不存在的ID更新应返回 404", func(t *testing.T) {
+		resp := doReq(t, r, "PUT", "/api/v1/releases/999999/status", map[string]string{"status": "cancelled"}, false)
+		assert.Equal(t, common.NotFoundCode, resp.Code, "body=%s", mustString(resp))
+	})
+}
+
+func TestReleaseController_UpdateRelease(t *testing.T) {
+	r, _, _, _ := setupReleaseController(t)
+
+	created := doReq(t, r, "POST", "/api/v1/releases", dto.CreateReleaseRequest{
+		ReleaseNumber: "REL-UPD-1", Title: "原始标题",
+	}, false)
+	require.Equal(t, common.SuccessCode, created.Code)
+	id := int(created.Data.(map[string]interface{})["id"].(float64))
+
+	t.Run("成功更新", func(t *testing.T) {
+		newTitle := "更新后的标题"
+		resp := doReq(t, r, "PUT", "/api/v1/releases/"+strconv.Itoa(id), dto.UpdateReleaseRequest{Title: &newTitle}, false)
+		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
+		data := resp.Data.(map[string]interface{})
+		assert.Equal(t, "更新后的标题", data["title"])
+	})
+
+	t.Run("不存在的ID应返回 404", func(t *testing.T) {
+		newTitle := "x"
+		resp := doReq(t, r, "PUT", "/api/v1/releases/999999", dto.UpdateReleaseRequest{Title: &newTitle}, false)
+		assert.Equal(t, common.NotFoundCode, resp.Code, "body=%s", mustString(resp))
+	})
+}
+
+func TestReleaseController_DeleteRelease_NotFound(t *testing.T) {
+	r, _, _, _ := setupReleaseController(t)
+	// 发布服务对不存在的 ID 返回成功(idempotent) - 记录契约
+	resp := doReq(t, r, "DELETE", "/api/v1/releases/999999", nil, false)
+	assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
+}
+
 func bytesFor(t *testing.T, v interface{}) *bytes.Buffer {
 	b, err := json.Marshal(v)
 	require.NoError(t, err)

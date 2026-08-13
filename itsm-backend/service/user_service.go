@@ -168,7 +168,7 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, 
 			Page:      req.Page,
 			PageSize:  req.PageSize,
 			Total:     total,
-			TotalPage: (total + req.PageSize - 1) / req.PageSize,
+			TotalPages: (total + req.PageSize - 1) / req.PageSize,
 		},
 	}
 

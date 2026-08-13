@@ -64,10 +64,10 @@ type PagedUsersResponse struct {
 
 // PaginationResponse 分页响应
 type PaginationResponse struct {
-	Page      int `json:"page"`
-	PageSize  int `json:"pageSize"`
-	Total     int `json:"total"`
-	TotalPage int `json:"totalPages"`
+	Page       int `json:"page"`
+	PageSize   int `json:"pageSize"`
+	Total      int `json:"total"`
+	TotalPages int `json:"totalPages"`
 }
 
 // ChangeUserStatusRequest 更改用户状态请求

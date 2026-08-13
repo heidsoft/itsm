@@ -1,0 +1,10 @@
+{"id":"triage-001","title":"MySQL 数据库连接失败","description":"应用无法连接到生产 MySQL 库，所有接口返回 500","category":"database","priority":"critical","assignee":101,"confidence_min":0.7,"tags":["prod","critical"]}
+{"id":"triage-002","title":"WiFi 无法连接","description":"员工无法连接公司 WiFi，提示认证失败","category":"network","priority":"medium","assignee":102,"confidence_min":0.6,"tags":["office"]}
+{"id":"triage-003","title":"打印机卡纸","description":"3 楼打印机卡纸，无法自助取出纸张","category":"office","priority":"low","assignee":103,"confidence_min":0.5,"tags":["hardware"]}
+{"id":"triage-004","title":"VPN 连接断开","description":"远程办公时 VPN 频繁掉线","category":"network","priority":"medium","assignee":102,"confidence_min":0.6,"tags":["remote"]}
+{"id":"triage-005","title":"CRM 系统登录失败","description":"登录销售 CRM 提示账号密码错误，但确认密码正确","category":"application","priority":"high","assignee":104,"confidence_min":0.7,"tags":["crm","auth"]}
+{"id":"triage-006","title":"服务器 CPU 飙升","description":"prod-app-01 服务器 CPU 持续 95% 以上","category":"server","priority":"high","assignee":105,"confidence_min":0.8,"tags":["performance"]}
+{"id":"triage-007","title":"邮件发送失败","description":"外部邮件发送超时，提示 SMTP 异常","category":"email","priority":"medium","assignee":106,"confidence_min":0.6,"tags":["smtp"]}
+{"id":"triage-008","title":"磁盘空间不足","description":"服务器磁盘使用率达到 92%","category":"server","priority":"high","assignee":105,"confidence_min":0.85,"tags":["disk","alert"]}
+{"id":"triage-009","title":"员工无法访问知识库","description":"KB 系统 502 错误","category":"application","priority":"medium","assignee":104,"confidence_min":0.6,"tags":["kb"]}
+{"id":"triage-010","title":"安全审计日志告警","description":"检测到异常登录尝试","category":"security","priority":"critical","assignee":107,"confidence_min":0.9,"tags":["security","audit"]}

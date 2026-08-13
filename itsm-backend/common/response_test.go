@@ -201,6 +201,80 @@ func TestFail_Conflict(t *testing.T) {
 	assert.Equal(t, http.StatusConflict, w.Code)
 }
 
+// 对齐审计 P0 #3:2002 (未授权)必须映射到 401,不能再走 200 通道。
+// 这是 Stage 1.6 (common/response 2002/2004/2005 HTTP 状态断言) 的核心契约。
+func TestFail_Unauthorized2002(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	Fail(c, UnauthorizedCode, "未授权")
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var resp Response
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, UnauthorizedCode, resp.Code)
+}
+
+// 对齐审计 P0 #3:2004 (工具权限不足)必须映射到 403。
+func TestFail_ToolPermissionDenied2004(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	Fail(c, ToolPermissionDeniedCode, "工具权限不足")
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+
+	var resp Response
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, ToolPermissionDeniedCode, resp.Code)
+}
+
+// 对齐审计 P0 #3:2005 (未知工具)必须映射到 404。
+func TestFail_UnknownTool2005(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	Fail(c, UnknownToolCode, "未知工具")
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	var resp Response
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, UnknownToolCode, resp.Code)
+}
+
+// FailWithData 同样要遵循 2002/2004/2005 的 HTTP 状态映射。
+func TestFailWithData_Unauthorized2002(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	FailWithData(c, UnauthorizedCode, "未授权", map[string]string{"hint": "login"})
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestFailWithData_ToolPermissionDenied2004(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	FailWithData(c, ToolPermissionDeniedCode, "工具权限不足", map[string]string{"tool": "rbac_query"})
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestFailWithData_UnknownTool2005(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	FailWithData(c, UnknownToolCode, "未知工具", map[string]string{"tool": "no_such_tool"})
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
 func TestFail_InternalError(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
