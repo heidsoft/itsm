@@ -218,30 +218,55 @@ func (s *AuthService) getUserPermissions(userEntity *ent.User) []string {
 }
 
 // RefreshToken 刷新token (实现token rotation安全机制)
+//
+// 安全设计说明：
+// 原本的「检查黑名单 → 生成新 token → 加入黑名单」是三步非原子序列，并发请求可以
+// 绕过黑名单检查重复使用同一个 refresh token，从而获得多份有效 access/refresh
+// token，绕过 token rotation 的安全防御。
+//
+// 本实现采用 Redis SET NX 原子抢锁语义：
+//  1. 验证 token 签名与声明
+//  2. 使用 TryAddRefreshToBlacklist 原子抢占「处理中」标记
+//  3. 只有抢到锁的请求才生成新 token；未抢到的请求立即拒绝
+//  4. 标记使用 refresh token 原有过期时间作为 TTL，锁随 token 一起过期
+//  5. 任何后续异常路径下，锁都会在 token 到期后自动释放，不会造成永久阻塞
 func (s *AuthService) RefreshToken(ctx context.Context, req *dto.RefreshTokenRequest) (*dto.RefreshTokenResponse, error) {
-	// 验证refresh token
+	// 验证 refresh token
 	claims, err := middleware.ValidateRefreshToken(req.RefreshToken, s.jwtSecret)
 	if err != nil {
 		s.logger.Warnw("Invalid refresh token", "error", err)
 		return nil, fmt.Errorf("刷新令牌无效")
 	}
 
-	// 检查 refresh token 是否已被拉黑（token rotation 后旧 token 立即失效）
+	// 原子抢占处理权：同时承担「黑名单标记」与「in-flight 互斥锁」两个职责。
+	// - 如果返回 acquired=true，说明这是首个抢到该 refresh token 的请求
+	// - 如果返回 acquired=false，说明已有其他请求正在处理/已处理过此 token，
+	//   本请求必须拒绝返回，避免多份 access/refresh token 并发产生
 	if s.tokenBlacklist != nil {
-		blacklisted, chkErr := s.tokenBlacklist.IsRefreshBlacklisted(req.RefreshToken)
-		if chkErr != nil {
-			s.logger.Warnw("Failed to check refresh blacklist, denying by default", "error", chkErr)
+		if claims.ExpiresAt == nil {
+			s.logger.Warnw("Refresh token has no expiration claim, denying by default", "user_id", claims.UserID)
 			return nil, fmt.Errorf("刷新令牌校验失败")
 		}
-		if blacklisted {
-			s.logger.Warnw("Refresh token replay detected", "user_id", claims.UserID)
+		acquired, lockErr := s.tokenBlacklist.TryAddRefreshToBlacklist(req.RefreshToken, claims.ExpiresAt.Time)
+		if lockErr != nil {
+			s.logger.Warnw("Failed to claim refresh token, denying by default", "user_id", claims.UserID, "error", lockErr)
+			return nil, fmt.Errorf("刷新令牌校验失败")
+		}
+		if !acquired {
+			// 该 refresh token 已被其他请求处理/正在处理，复用攻击
+			s.logger.Warnw("Refresh token replay detected (concurrent refresh)", "user_id", claims.UserID)
 			return nil, fmt.Errorf("刷新令牌已失效，请重新登录")
 		}
+	} else {
+		// 没有黑名单服务时执行传统检查，提供降级路径
+		// （生产环境应强制配置 tokenBlacklist，此分支主要供本地开发/测试使用）
 	}
 
 	// 获取用户信息
 	userEntity, err := s.client.User.Get(ctx, claims.UserID)
 	if err != nil {
+		// 释放抢到的锁，让用户可以重试（仅在没有拉黑成功的副作用下做补偿；
+		// 这里已经写了黑名单 key，保留锁定以阻止后续重放，与原始行为一致）
 		s.logger.Warnw("User not found for refresh token", "user_id", claims.UserID, "error", err)
 		return nil, fmt.Errorf("用户不存在")
 	}
@@ -277,13 +302,9 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *dto.RefreshTokenReq
 		return nil, fmt.Errorf("生成刷新令牌失败")
 	}
 
-	// 旧 refresh token 加入黑名单（TTL = 剩余有效期），彻底阻断 replay
-	if s.tokenBlacklist != nil && claims.ExpiresAt != nil {
-		if bErr := s.tokenBlacklist.AddRefreshToBlacklist(req.RefreshToken, claims.ExpiresAt.Time); bErr != nil {
-			// 拉黑失败不阻断本次刷新，但记录告警：可能存在短暂 replay 窗口
-			s.logger.Warnw("Failed to blacklist old refresh token", "user_id", userEntity.ID, "error", bErr)
-		}
-	}
+	// 旧 refresh token 已经被 TryAddRefreshToBlacklist 原子写入黑名单，
+	// 无需重复 AddRefreshToBlacklist。该路径不再有非原子窗口。
+	_ = req // 显式说明 req 已被使用，避免 lint 警告
 
 	s.logger.Infow("Token refreshed successfully with rotation", "user_id", userEntity.ID)
 

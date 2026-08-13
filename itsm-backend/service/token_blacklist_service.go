@@ -87,6 +87,31 @@ func (s *TokenBlacklistService) AddRefreshToBlacklist(tokenString string, expire
 	return nil
 }
 
+// TryAddRefreshToBlacklist 原子地将 refresh token 加入黑名单，并返回是否抢到执行权。
+// 底层使用 Redis SET NX（仅在 key 不存在时设置），保证多个并发请求中只有一个
+// 能成功 set，从而让 RefreshToken 路径在「检查黑名单 + 抢占标记」之间是原子的。
+//
+// 返回值：
+//   - acquired=true：当前请求成功抢占标记，可以继续走“生成新 token”流程
+//   - acquired=false：已有其他请求抢到了该 refresh token 的处理权，当前请求必须中止
+//
+// 当返回 acquired=false 时，调用方应当把当前请求视为「refresh token 已被其他
+// 路径处理」并拒绝生成新 token，从而彻底阻断 token rotation 绕过攻击。
+func (s *TokenBlacklistService) TryAddRefreshToBlacklist(tokenString string, expiresAt time.Time) (bool, error) {
+	ttl := time.Until(expiresAt)
+	if ttl <= 0 {
+		// 已过期则直接放行，遵循既有语义
+		return true, nil
+	}
+	key := "refresh:blacklist:" + tokenString
+	ok, err := s.redisClient.SetNX(context.Background(), key, "1", ttl).Result()
+	if err != nil {
+		s.logger.Errorw("Failed to atomically claim refresh token", "error", err)
+		return false, fmt.Errorf("failed to claim refresh token: %w", err)
+	}
+	return ok, nil
+}
+
 // IsRefreshBlacklisted 检查 refresh token 是否已被拉黑
 func (s *TokenBlacklistService) IsRefreshBlacklisted(tokenString string) (bool, error) {
 	ctx := context.Background()
