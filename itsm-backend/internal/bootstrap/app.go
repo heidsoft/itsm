@@ -366,16 +366,18 @@ func NewApplication() *Application {
 	ragService := service.NewRAGServiceWithAutoConfig(client, vectorStore, embedder, sugar)
 	aiTelemetryService := service.NewAITelemetryService(database.GetRawDB())
 
-	// 非阻塞初始化：向量扩展检测与 Embedding 管道预热
-	// 如果 pgvector 扩展未就绪，RAG 功能自动降级为关键字搜索
-	go func() {
-		ctx := context.Background()
-		if err := vectorStore.EnsureExtension(ctx); err != nil {
-			sugar.Warnw("pgvector 扩展未就绪，RAG功能降级为关键字搜索", "error", err)
-			return
-		}
+	// 同步初始化：向量扩展检测与 vectors 表准备。
+	// 使用带超时的 context，避免 pgvector 不可用时阻塞整个启动流程。
+	// 初始化失败时仅记录告警并继续——RAG 功能会自动降级为关键字搜索。
+	// 在 RAG 请求处理路径中，VectorStore 自身也会在首次查询时再次尝试初始化
+	// 并缓存状态，因此这里阻塞启动是安全的。
+	initCtx, initCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	if err := vectorStore.EnsureExtension(initCtx); err != nil {
+		sugar.Warnw("pgvector 扩展未就绪，RAG功能降级为关键字搜索", "error", err)
+	} else {
 		sugar.Infow("pgvector 扩展初始化成功")
-	}()
+	}
+	initCancel()
 
 	// 控制器依赖
 	incidentRuleEngine := service.NewIncidentRuleEngine(client, sugar)
