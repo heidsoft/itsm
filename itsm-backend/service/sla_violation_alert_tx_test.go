@@ -101,8 +101,9 @@ func TestSLAMonitorCreateViolationSinksNotificationIntoTx(t *testing.T) {
 	slaDefMap := map[int]string{slaDef.ID: slaDef.Name}
 	deadline := time.Now().Add(-30 * time.Minute) // 已过期 30 分钟
 
-	err := monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
+	created, err := monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
 	require.NoError(t, err)
+	require.True(t, created, "expected first createViolation to insert a new violation")
 
 	// 1. SLAViolation 必须落库
 	violations, err := client.SLAViolation.Query().
@@ -144,8 +145,9 @@ func TestSLAMonitorCreateViolationRollsBackWhenTxOutboxDisabled(t *testing.T) {
 	slaDefMap := map[int]string{slaDef.ID: slaDef.Name}
 	deadline := time.Now().Add(-30 * time.Minute)
 
-	err := monitor.createViolation(ctx, ticket, "resolution_time", deadline, slaDefMap)
+	created, err := monitor.createViolation(ctx, ticket, "resolution_time", deadline, slaDefMap)
 	require.Error(t, err, "未开启 EnableTxOutbox 时 createViolation 必须 fail-closed")
+	require.False(t, created, "事务回滚后不得报告违规已创建")
 	require.Contains(t, err.Error(), "transactional notification outbox disabled")
 
 	// SLAViolation 不应落库
@@ -187,26 +189,26 @@ func TestSLAMonitorCreateViolationRollsBackOnTxFailure(t *testing.T) {
 	deadline := time.Now().Add(-30 * time.Minute)
 
 	// 第一次 commit 成功
-	require.NoError(t, monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap))
+	_, err := monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
+	require.NoError(t, err)
 
-	// 第二次同样参数——occurrenceKey 内含 violationType，但 SLAViolation 自身
-	// 不具备 (ticket, type) 唯一约束，重复 create 会再次落库。
-	// 真正想验证的是：commit 失败时整条链路回滚（这里通过 nil ticket
-	// 触发更上层的 crash 不可行，因为 SLAMonitor 已在调用方检查重复）。
-	// 因此本测试断言：commit 后 violation 与 command 同时可见且可重复。
-	require.NoError(t, monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap))
+	// 第二次同样参数会被事务内检查跳过；生产环境另有数据库部分唯一索引
+	// (ticket_id, violation_type) WHERE is_resolved = false 收口跨实例竞态。
+	secondCreated, err := monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
+	require.NoError(t, err)
+	require.False(t, secondCreated, "expected duplicate createViolation to be suppressed")
 
 	violations, err := client.SLAViolation.Query().
 		Where(slaviolation.TicketIDEQ(ticket.ID)).
 		All(ctx)
 	require.NoError(t, err)
-	require.GreaterOrEqual(t, len(violations), 1)
+	require.Len(t, violations, 1, "数据库部分唯一索引应保证只保留一条未解决违规")
 
 	commands, err := client.OperationalCommand.Query().
 		Where(operationalcommand.AggregateIDEQ(ticket.ID)).
 		All(ctx)
 	require.NoError(t, err)
-	require.GreaterOrEqual(t, len(commands), 1)
+	require.Len(t, commands, 2, "重复调用不得再次为 requester 和 assignee 入箱通知")
 }
 
 // TestSLAMonitorCreateViolationSkipsWhenNoSLA 边界：ticket.SLADefinitionID == 0 时
@@ -231,7 +233,8 @@ func TestSLAMonitorCreateViolationSkipsWhenNoSLA(t *testing.T) {
 
 	slaDefMap := map[int]string{}
 	deadline := time.Now().Add(-10 * time.Minute)
-	require.NoError(t, monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap))
+	_, err = monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
+	require.NoError(t, err)
 
 	violations, err := client.SLAViolation.Query().
 		Where(slaviolation.TicketIDEQ(ticket.ID)).

@@ -174,6 +174,27 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 		log.Printf("create ai_feedbacks created index failed (non-fatal): %v", err)
 	}
 
+	// SLA violation 部分唯一索引：
+	// 防止同一 (ticket_id, violation_type) 在“未解决”状态下被多个 worker / 实例
+	// 重复创建。这是 SLA Monitor Service 跨实例竞态保护的最后一道防线：
+	// CheckSLAViolations 内部的预加载 existingViolationMap 是“乐观检查”，真正
+	// 的互斥由数据库唯一约束保证；服务层将唯一冲突识别为幂等跳过。
+	// 部分索引条件 is_resolved = false 允许同一工单在已解决后再次触发新违规。
+	if _, err := db.ExecContext(ctx, `
+            CREATE UNIQUE INDEX IF NOT EXISTS sla_violation_unique_open_idx
+            ON sla_violations (ticket_id, violation_type)
+            WHERE is_resolved = false;
+        `); err != nil {
+		log.Printf("create sla_violation unique open index failed (non-fatal): %v", err)
+	}
+	// 同时加一个常规索引支持按工单查违规的查询路径
+	if _, err := db.ExecContext(ctx, `
+            CREATE INDEX IF NOT EXISTS sla_violation_ticket_type_idx
+            ON sla_violations (ticket_id, violation_type);
+        `); err != nil {
+		log.Printf("create sla_violation ticket_type index failed (non-fatal): %v", err)
+	}
+
 	// Compatibility fix: if legacy column "author" exists and is NOT NULL, relax constraint to allow inserts via current schema (author_id)
 	var hasAuthorColumn bool
 	if err := db.QueryRowContext(ctx, `SELECT EXISTS (

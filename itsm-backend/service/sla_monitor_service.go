@@ -72,7 +72,7 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 	existingViolations, err := s.client.SLAViolation.Query().
 		Where(
 			slaviolation.TenantIDEQ(tenantID),
-			slaviolation.ResolvedAtIsNil(),
+			slaviolation.IsResolvedEQ(false),
 		).
 		All(ctx)
 	if err != nil {
@@ -132,12 +132,20 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 			if t.FirstResponseAt.IsZero() && !t.SLAResponseDeadline.IsZero() && now.After(t.SLAResponseDeadline) {
 				existingMap := existingViolationMap[t.ID]
 				if existingMap == nil || !existingMap["response_time"] {
-					// 新违规
-					if err := s.createViolation(ctx, t, "response_time", t.SLAResponseDeadline, slaDefMap); err != nil {
-						s.logger.Errorw("Failed to create response violation", "ticket_id", t.ID, "error", err)
-					} else {
+					// 乐观检查未命中：尝试创建。
+					// 即使乐观检查在多 worker / 实例场景下产生“假命中”，createViolation
+					// 内部还会通过事务内检查与数据库唯一约束再次去重，
+					// 返回的 created 标志会准确反映“是否真的新增了一条记录”。
+					created, cErr := s.createViolation(ctx, t, "response_time", t.SLAResponseDeadline, slaDefMap)
+					if cErr != nil {
+						s.logger.Errorw("Failed to create response violation", "ticket_id", t.ID, "error", cErr)
+					} else if created {
 						stats.NewViolations++
 						s.logger.Warnw("Ticket violated response SLA (new)", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
+					} else {
+						// 重复跳过：与现有违规的 stats 保持一致。
+						stats.ExistingViolations++
+						s.logger.Debugw("Ticket response SLA violation already exists, suppressed duplicate", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
 					}
 				} else {
 					stats.ExistingViolations++
@@ -149,12 +157,15 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 			if !t.SLAResolutionDeadline.IsZero() && now.After(t.SLAResolutionDeadline) {
 				existingMap := existingViolationMap[t.ID]
 				if existingMap == nil || !existingMap["resolution_time"] {
-					// 新违规
-					if err := s.createViolation(ctx, t, "resolution_time", t.SLAResolutionDeadline, slaDefMap); err != nil {
-						s.logger.Errorw("Failed to create resolution violation", "ticket_id", t.ID, "error", err)
-					} else {
+					created, cErr := s.createViolation(ctx, t, "resolution_time", t.SLAResolutionDeadline, slaDefMap)
+					if cErr != nil {
+						s.logger.Errorw("Failed to create resolution violation", "ticket_id", t.ID, "error", cErr)
+					} else if created {
 						stats.NewViolations++
 						s.logger.Warnw("Ticket violated resolution SLA (new)", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
+					} else {
+						stats.ExistingViolations++
+						s.logger.Debugw("Ticket resolution SLA violation already exists, suppressed duplicate", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
 					}
 				} else {
 					stats.ExistingViolations++
@@ -190,10 +201,16 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 }
 
 // createViolation 创建SLA违规记录
-// 注意: 已在调用方检查重复，此处不再检查
-// 阶段 C 起，sla_violation INSERT 与 NotifySLABreachedTx 同一事务内落库：
-// ticket 违规记录与通知入箱同生同死，未启用 TxOutbox 时整体 fail-closed。
-func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, violationType string, deadline time.Time, slaDefMap map[int]string) error {
+// 跨实例竞态保护（issue #85）：
+// CheckSLAViolations 内部预加载 existingViolationMap 仅是“乐观检查”；真正
+// 的互斥由以下两层保证：
+//  1. 事务内“再查一次”，保证普通重试幂等
+//  2. 数据库上的部分唯一索引
+//     (ticket_id, violation_type) WHERE is_resolved = false，收口跨实例竞态
+//
+// 同时，本函数会明确区分「插入成功」与「重复跳过」两种结果，仅在插入成功时才
+// 提交事务 + 发送通知，重复路径下会主动中止事务以避免重复入箱。
+func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, violationType string, deadline time.Time, slaDefMap map[int]string) (created bool, err error) {
 	// 计算超时时间（分钟）：从 deadline 到当前时间的差值
 	// response_time / resolution_time 的差异在于 deadline 语义不同，
 	// 由调用方决定传入哪种 deadline；这里的超时时间计算逻辑一致。
@@ -222,7 +239,7 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 	now := time.Now()
 	// 如果没有 SLA 定义，跳过创建违规记录
 	if t.SLADefinitionID == 0 {
-		return nil
+		return false, nil
 	}
 
 	// 从预加载的map中获取SLA名称
@@ -231,21 +248,58 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 		slaName = "Default SLA"
 	}
 
+	// 在事务中创建违规与入箱通知，以保证同生同死。
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("begin SLA violation transaction: %w", err)
+		return false, fmt.Errorf("begin SLA violation transaction: %w", err)
 	}
-	rollback := func(cause error) error {
+	commitAndNotify := func() (bool, error) {
+		if s.notificationSvc != nil {
+			if err := s.notificationSvc.NotifySLABreachedTx(ctx, tx, t.ID, violationType, exceededMinutes, t.TenantID); err != nil {
+				if rollbackErr := tx.Rollback(); rollbackErr != nil {
+					s.logger.Errorw("failed to rollback SLA violation transaction", "error", rollbackErr)
+				}
+				return false, fmt.Errorf("enqueue SLA breach notification: %w", err)
+			}
+		}
+		if err := tx.Commit(); err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				s.logger.Errorw("failed to rollback SLA violation transaction", "error", rollbackErr)
+			}
+			return false, fmt.Errorf("commit SLA violation notification transaction: %w", err)
+		}
+		return true, nil
+	}
+
+	// 违规记录和通知必须共用同一个 Ent 事务。不能借用全局 rawDB 插入，
+	// 否则通知入箱失败时违规记录无法回滚，会破坏 outbox 的原子性。
+	exists, err := tx.SLAViolation.Query().
+		Where(
+			slaviolation.TicketIDEQ(t.ID),
+			slaviolation.TenantIDEQ(t.TenantID),
+			slaviolation.ViolationTypeEQ(violationType),
+			slaviolation.IsResolvedEQ(false),
+		).
+		Exist(ctx)
+	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			s.logger.Errorw("failed to rollback SLA violation transaction", "error", rollbackErr)
 		}
-		return cause
+		return false, fmt.Errorf("check existing SLA violation in tx: %w", err)
+	}
+	if exists {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			s.logger.Errorw("failed to rollback SLA violation transaction", "error", rollbackErr)
+		}
+		s.logger.Infow("SLA violation already exists, skipped duplicate insert (tx path)",
+			"ticket_id", t.ID, "violation_type", violationType)
+		return false, nil
 	}
 
 	if _, err := tx.SLAViolation.Create().
-		SetCreatedBy(0). // 系统自动创建，使用默认用户ID 0
+		SetCreatedBy(0).
 		SetTicketID(t.ID).
-		SetTicketType("ticket"). // Ticket 表没有类型字段，使用默认值
+		SetTicketType("ticket").
 		SetSLADefinitionID(t.SLADefinitionID).
 		SetSLAName(slaName).
 		SetViolationType(violationType).
@@ -257,24 +311,23 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 		SetCreatedAt(now).
 		SetUpdatedAt(now).
 		Save(ctx); err != nil {
-		return rollback(fmt.Errorf("create SLA violation: %w", err))
-	}
-
-	// 发送SLA违规通知（事务内入箱）
-	if s.notificationSvc != nil {
-		if err := s.notificationSvc.NotifySLABreachedTx(ctx, tx, t.ID, violationType, exceededMinutes, t.TenantID); err != nil {
-			return rollback(fmt.Errorf("enqueue SLA breach notification: %w", err))
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			s.logger.Errorw("failed to rollback SLA violation transaction", "error", rollbackErr)
 		}
+		if ent.IsConstraintError(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("create SLA violation: %w", err)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return rollback(fmt.Errorf("commit SLA violation transaction: %w", err))
+	if committed, cErr := commitAndNotify(); !committed {
+		return false, cErr
 	}
 
 	s.logger.Infow("SLA violation created and notification enqueued", "ticket_id", t.ID,
 		"violation_type", violationType, "exceeded_minutes", exceededMinutes)
 
-	return nil
+	return true, nil
 }
 
 // checkAndTriggerWarning 检查是否需要发送SLA预警（在截止时间前触发）
