@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -275,6 +276,195 @@ func TestGetCIImpactAnalysis_RequiresTenant(t *testing.T) {
 	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
 	if _, err := svc.GetCIImpactAnalysis(context.Background(), 1, 0, 3); err == nil {
 		t.Fatal("expected missing tenant ID to be rejected")
+	}
+}
+
+// -----------------------------------------------------------------------------
+// Stage 1.5 — Topology / Impact / Cycle coverage
+// -----------------------------------------------------------------------------
+
+func TestGetCITopology_DepthClampsToMax10(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_topology_clamp?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, _ := createCMDBTestTenant(ctx, client, "Clamp Tenant", "clamp-tenant", "clamp.example.com")
+	ciType, _ := createTestCIType(ctx, client, tenant.ID, "server")
+	root, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "root")
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+
+	// Build a chain of 12 CIs.
+	prev := root.ID
+	for i := 0; i < 12; i++ {
+		next, err := createTestCI(ctx, client, tenant.ID, ciType.ID, fmt.Sprintf("chain-%d", i))
+		if err != nil {
+			t.Fatalf("chain-%d: %v", i, err)
+		}
+		client.CIRelationship.Create().
+			SetRelationshipType("depends_on").
+			SetSourceCiID(prev).
+			SetTargetCiID(next.ID).
+			SetTenantID(tenant.ID).SaveX(ctx)
+		prev = next.ID
+	}
+
+	// Ask for an absurd depth; the implementation must clamp to <= 10.
+	graph, err := svc.GetCITopology(ctx, root.ID, tenant.ID, 100)
+	if err != nil {
+		t.Fatalf("GetCITopology failed: %v", err)
+	}
+	if graph.Depth > 10 {
+		t.Fatalf("depth = %d, must be <= 10", graph.Depth)
+	}
+}
+
+func TestGetCITopology_DepthZeroDefaultsToThree(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_topology_default?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, _ := createCMDBTestTenant(ctx, client, "Default Tenant", "default-tenant", "default.example.com")
+	ciType, _ := createTestCIType(ctx, client, tenant.ID, "server")
+	root, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "root")
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+
+	graph, err := svc.GetCITopology(ctx, root.ID, tenant.ID, 0)
+	if err != nil {
+		t.Fatalf("GetCITopology failed: %v", err)
+	}
+	if graph.Depth != 3 {
+		t.Fatalf("depth = %d, want default 3", graph.Depth)
+	}
+}
+
+func TestGetCITopology_MissingTenantRejected(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_topology_no_tenant?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	if _, err := svc.GetCITopology(context.Background(), 1, 0, 3); err == nil {
+		t.Fatal("expected missing tenant ID to be rejected")
+	}
+}
+
+func TestGetCITopology_RootNotFoundReturnsError(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_topology_missing_root?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant, _ := createCMDBTestTenant(ctx, client, "MissingRoot Tenant", "missing-root", "missing-root.example.com")
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+
+	if _, err := svc.GetCITopology(ctx, 999999, tenant.ID, 2); err == nil {
+		t.Fatal("expected error when root CI does not exist")
+	}
+}
+
+func TestGetCITopology_TerminationOnEmptyFrontier(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_topology_term?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant, _ := createCMDBTestTenant(ctx, client, "Term Tenant", "term-tenant", "term.example.com")
+	ciType, _ := createTestCIType(ctx, client, tenant.ID, "server")
+	root, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "isolated")
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+
+	graph, err := svc.GetCITopology(ctx, root.ID, tenant.ID, 5)
+	if err != nil {
+		t.Fatalf("GetCITopology failed: %v", err)
+	}
+	if graph.TotalNodes != 1 {
+		t.Fatalf("expected 1 node, got %d", graph.TotalNodes)
+	}
+	if graph.TotalEdges != 0 {
+		t.Fatalf("expected 0 edges, got %d", graph.TotalEdges)
+	}
+}
+
+func TestGetCIImpactAnalysis_RiskLevelEscalation(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_risk_level?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant, _ := createCMDBTestTenant(ctx, client, "Risk Tenant", "risk-tenant", "risk.example.com")
+	ciType, _ := createTestCIType(ctx, client, tenant.ID, "server")
+	root, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "risk-root")
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+
+	// 0 downstream → low
+	r, err := svc.GetCIImpactAnalysis(ctx, root.ID, tenant.ID, 1)
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if r.RiskLevel != "low" {
+		t.Fatalf("expected low risk with 0 downstream, got %q", r.RiskLevel)
+	}
+
+	// 1 downstream → medium
+	down, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "down")
+	client.CIRelationship.Create().SetRelationshipType("impacts").
+		SetSourceCiID(root.ID).SetTargetCiID(down.ID).
+		SetTenantID(tenant.ID).SaveX(ctx)
+	r, _ = svc.GetCIImpactAnalysis(ctx, root.ID, tenant.ID, 1)
+	if r.RiskLevel != "medium" {
+		t.Fatalf("expected medium risk with 1 downstream, got %q", r.RiskLevel)
+	}
+}
+
+// TestCycleRejection_DirectAndIndirect verifies wouldCreateCycle detects
+// the closed-loop case A→B→A as well as the longer B→C→A triangle.
+func TestCycleRejection_DirectAndIndirect(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_cycle_reject?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant, _ := createCMDBTestTenant(ctx, client, "Cycle Tenant", "cycle-tenant", "cycle.example.com")
+	ciType, _ := createTestCIType(ctx, client, tenant.ID, "server")
+	a, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "a")
+	b, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "b")
+	c, _ := createTestCI(ctx, client, tenant.ID, ciType.ID, "c")
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+
+	// A → B exists; adding B → A closes a 2-cycle.
+	client.CIRelationship.Create().SetRelationshipType("depends_on").
+		SetSourceCiID(a.ID).SetTargetCiID(b.ID).SetTenantID(tenant.ID).SaveX(ctx)
+	cycle, err := svc.wouldCreateCycle(ctx, tenant.ID, b.ID, a.ID, "depends_on")
+	if err != nil {
+		t.Fatalf("wouldCreateCycle error: %v", err)
+	}
+	if !cycle {
+		t.Fatal("B → A must be rejected: target A reaches source B via existing edge")
+	}
+
+	// Build A → B → C; adding C → A closes a 3-cycle.
+	client.CIRelationship.Create().SetRelationshipType("depends_on").
+		SetSourceCiID(b.ID).SetTargetCiID(c.ID).SetTenantID(tenant.ID).SaveX(ctx)
+	cycle, err = svc.wouldCreateCycle(ctx, tenant.ID, c.ID, a.ID, "depends_on")
+	if err != nil {
+		t.Fatalf("wouldCreateCycle error: %v", err)
+	}
+	if !cycle {
+		t.Fatal("C → A must be rejected: C reaches A via B")
+	}
+
+	// Adding A → C (a leaf extending forward) must NOT be flagged.
+	cycle, err = svc.wouldCreateCycle(ctx, tenant.ID, a.ID, c.ID, "depends_on")
+	if err != nil {
+		t.Fatalf("wouldCreateCycle error: %v", err)
+	}
+	if cycle {
+		t.Fatal("A → C must not be flagged as a cycle (no return path)")
+	}
+}
+
+func TestGetCITopology_CrossTenantIsolation(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_topology_cross?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenantA, _ := createCMDBTestTenant(ctx, client, "Topo A", "topo-a", "topo-a.example.com")
+	tenantB, _ := createCMDBTestTenant(ctx, client, "Topo B", "topo-b", "topo-b.example.com")
+	ciTypeA, _ := createTestCIType(ctx, client, tenantA.ID, "server-a")
+	rootA, _ := createTestCI(ctx, client, tenantA.ID, ciTypeA.ID, "a-root")
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+
+	if _, err := svc.GetCITopology(ctx, rootA.ID, tenantB.ID, 2); err == nil {
+		t.Fatal("cross-tenant topology lookup must fail")
 	}
 }
 
