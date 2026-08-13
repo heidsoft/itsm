@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -70,6 +71,10 @@ type Application struct {
 	Embedder      service.Embedder
 	VectorStore   *service.VectorStore
 	CommandWorker *commandbus.Worker
+
+	// backgroundWG 跟踪由 startBackgroundTasks 启动的所有后台 goroutine。
+	// 在 Stop() 中等待它们退出，避免应用关闭时强制杀死进行中的任务。
+	backgroundWG sync.WaitGroup
 }
 
 // prepareRolePermissionTenantMigration upgrades installations created before
@@ -1067,8 +1072,11 @@ func (app *Application) Run() {
 func (app *Application) startBackgroundTasks(ctx context.Context) {
 	// safeGo 启动一个 panic-safe 的后台 goroutine：
 	// - 任务 panic 会被 recover 并记录完整堆栈，goroutine 不再静默退出
+	// - 自动通过 app.backgroundWG 跟踪生命周期，Stop() 中可等待优雅退出
 	safeGo := func(name string, fn func()) {
+		app.backgroundWG.Add(1)
 		go func() {
+			defer app.backgroundWG.Done()
 			defer func() {
 				if r := recover(); r != nil {
 					app.Logger.Errorw("background task panicked, recovered",
@@ -1167,4 +1175,31 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 			}
 		}
 	})
+}
+
+// StopBackgroundTasks 等待所有由 startBackgroundTasks 启动的后台 goroutine
+// 退出。调用方需先取消传入 startBackgroundTasks 的 ctx，使得 goroutine 内部的
+// select 能感知到 Done 信号；本方法提供在取消之后的同步等待点，
+// 超时则强制返回，避免关闭流程被无响应的后台任务永远阻塞。
+//
+// 默认超时 30 秒。可由 ITSM_BACKGROUND_SHUTDOWN_TIMEOUT_SECONDS 覆盖。
+func (app *Application) StopBackgroundTasks() {
+	timeout := 30 * time.Second
+	if v := os.Getenv("ITSM_BACKGROUND_SHUTDOWN_TIMEOUT_SECONDS"); v != "" {
+		if d, err := time.ParseDuration(v + "s"); err == nil && d > 0 {
+			timeout = d
+		}
+	}
+	done := make(chan struct{})
+	go func() {
+		app.backgroundWG.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+		app.Logger.Info("all background tasks stopped cleanly")
+	case <-time.After(timeout):
+		app.Logger.Warnw("background tasks shutdown timed out; some goroutines may still be running",
+			"timeout", timeout)
+	}
 }
