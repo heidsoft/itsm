@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -1064,10 +1065,32 @@ func (app *Application) Run() {
 }
 
 func (app *Application) startBackgroundTasks(ctx context.Context) {
-	if app.CommandWorker != nil {
-		go app.CommandWorker.Run(ctx)
+	// safeGo 启动一个 panic-safe 的后台 goroutine：
+	// - 任务 panic 会被 recover 并记录完整堆栈，goroutine 不再静默退出
+	safeGo := func(name string, fn func()) {
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					app.Logger.Errorw("background task panicked, recovered",
+						"task", name,
+						"panic", r,
+						"stack", string(debug.Stack()),
+					)
+				}
+			}()
+			fn()
+		}()
 	}
-	go func() {
+
+	// Command worker: 依赖外部 Worker 自带清理逻辑，这里仅做 panic 防护
+	if app.CommandWorker != nil {
+		safeGo("command-worker", func() {
+			app.CommandWorker.Run(ctx)
+		})
+	}
+
+	// Embedding pipeline 后台任务
+	safeGo("embedding-pipeline", func() {
 		pipeline := service.NewEmbeddingPipeline(app.DBClient, app.Embedder, app.Logger, app.VectorStore)
 		// initial full-ish pass per tenant
 		tenants, err := app.DBClient.Tenant.Query().All(ctx)
@@ -1102,10 +1125,10 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 				}
 			}
 		}
-	}()
+	})
 
 	// SLA Monitoring and Escalation background tasks
-	go func() {
+	safeGo("sla-monitor-escalation", func() {
 		slaMonitorService := service.NewSLAMonitorService(app.DBClient, app.Logger)
 		escalationService := service.NewEscalationService(app.DBClient, app.Logger)
 
@@ -1143,5 +1166,5 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 				}
 			}
 		}
-	}()
+	})
 }
