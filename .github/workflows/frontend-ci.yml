@@ -14,6 +14,9 @@ on:
 
 permissions:
   contents: read
+  # PR-0.5: marocchino/sticky-pull-request-comment needs read+write on PRs/issues
+  pull-requests: write
+  issues: write
 
 concurrency:
   group: frontend-ci-${{ github.ref }}
@@ -47,7 +50,11 @@ jobs:
       - name: Unit tests
         working-directory: itsm-frontend
         # --forceExit: Jest 全量测试通过后进程因残留句柄不退出，导致 job 挂到 30min 超时
-        run: npm test -- --runInBand --forceExit
+        # PR-0.5: --outputFile junit.xml 让 test-trend.js 拿到 pass/fail/skip 计数
+        run: npm test -- --runInBand --forceExit -- --ci --reporters=default --reporters=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT: ${{ runner.temp }}/junit-frontend.xml
+
       - name: Production build
         working-directory: itsm-frontend
         env:
@@ -57,3 +64,41 @@ jobs:
         run: npm run build
       - name: Verify standalone output
         run: test -f itsm-frontend/.next/standalone/server.js
+
+      # PR-0.5: emit a unified trend markdown for both the Jest and (later)
+      # the E2E runs.
+      - name: Generate test trend summary
+        if: always()
+        run: |
+          mkdir -p output/trend
+          set +e
+          args=(--baseline docs/testing/coverage-baseline.json \
+                --jest-coverage itsm-frontend/coverage/coverage-summary.json \
+                --out output/trend/test-trend.md \
+                --pr "${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}")
+          if [ -f "${{ runner.temp }}/junit-frontend.xml" ]; then
+            args+=(--junit "${{ runner.temp }}/junit-frontend.xml")
+          fi
+          node scripts/test-trend.js "${args[@]}"
+          rc=$?
+          set -e
+          if [ $rc -ne 0 ]; then
+            echo "[trend] WARN trend generation failed (rc=$rc); continuing"
+          fi
+
+      - name: Upload test trend artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-test-trend
+          path: output/trend/test-trend.md
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # PR-0.5: sticky PR comment so the trend stays attached to the PR thread.
+      - name: Comment test trend on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: itsm-frontend-test-trend
+          path: output/trend/test-trend.md

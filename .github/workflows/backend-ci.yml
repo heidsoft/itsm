@@ -25,12 +25,21 @@ on:
 
 permissions:
   contents: read
+  # PR-0.5: marocchino/sticky-pull-request-comment needs write on PRs/issues
+  pull-requests: write
+  issues: write
 
 concurrency:
   group: backend-ci-${{ github.ref }}
   cancel-in-progress: true
 
 env:
+  # Mirror `itsm-backend/go.mod` toolchain directive. CI installs the exact
+  # version via actions/setup-go@v7 below; `GOTOOLCHAIN=auto` is the explicit
+  # fallback contract so any helper step (e.g. scripts that shell out to
+  # `go test` directly) behaves the same locally and on CI. See
+  # docs/testing/go-toolchain.md for the long-form contract.
+  GOTOOLCHAIN: "auto"
   GOPROXY: "https://proxy.golang.org,direct"
   GOSUMDB: "sum.golang.org"
 
@@ -191,6 +200,35 @@ jobs:
           name: backend-coverage
           path: itsm-backend/coverage.out
           retention-days: 7
+
+      # PR-0.5: emit a unified trend markdown that PR reviewers can see at a glance.
+      - name: Generate test trend summary
+        if: always()
+        run: |
+          mkdir -p output/trend
+          node scripts/test-trend.js \
+            --go-coverage itsm-backend/coverage.out \
+            --baseline docs/testing/coverage-baseline.json \
+            --out output/trend/test-trend.md \
+            --pr "${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}" \
+            || echo '[trend] WARN trend generation failed; continuing'
+
+      - name: Upload test trend artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-test-trend
+          path: output/trend/test-trend.md
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # PR-0.5: sticky PR comment so the trend stays attached to the PR thread.
+      - name: Comment test trend on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: itsm-backend-test-trend
+          path: output/trend/test-trend.md
 
   dependency-review:
     name: Dependency Review

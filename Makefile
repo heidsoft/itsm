@@ -103,10 +103,35 @@ verify-scripts:    ## Validate build/start scripts without starting services
 
 # Database
 db-migrate:         ## Run database migrations
-	cd itsm-backend && go run -tags migrate main.go
+	cd itsm-backend && $(MAKE) build && GOTOOLCHAIN="${GOTOOLCHAIN:-auto}" go run -tags migrate main.go
 
 db-seed:            ## Seed database with test data
-	cd itsm-backend && go run -tags create_user main.go
+	cd itsm-backend && GOTOOLCHAIN="${GOTOOLCHAIN:-auto}" go run -tags create_user main.go
+
+# Backend Go wrappers (delegates to itsm-backend/Makefile, keeps GOTOOLCHAIN=auto)
+backend-test:       ## Run Go tests with toolchain auto (delegates to itsm-backend/Makefile)
+	cd itsm-backend && $(MAKE) test
+
+backend-test-ci:    ## Run Go tests with coverage (mirrors backend-ci.yml)
+	cd itsm-backend && $(MAKE) test-ci
+
+backend-vet:        ## Run `go vet ./...`
+	cd itsm-backend && $(MAKE) vet
+
+backend-build:      ## Build backend binary into itsm-backend/itsm
+	cd itsm-backend && $(MAKE) build
+
+backend-cover:      ## Generate coverage profile (itsm-backend/coverage.out)
+	cd itsm-backend && $(MAKE) cover
+
+backend-cover-html: ## Render coverage as HTML (itsm-backend/coverage.html)
+	cd itsm-backend && $(MAKE) cover-html
+
+backend-lint:       ## Run staticcheck locally (matches CI)
+	cd itsm-backend && $(MAKE) lint
+
+backend-tidy:       ## Run `go mod tidy` in itsm-backend/
+	cd itsm-backend && $(MAKE) tidy
 
 # Utility
 logs-backend:       ## View backend logs
@@ -122,9 +147,17 @@ check-contracts:    ## Validate cross-file API, deployment, Docker, and docs con
 	node scripts/check-engineering-contracts.js
 	node scripts/check-api-paths.js
 
+coverage-report:    ## Unified coverage report (Go + Jest) → coverage-summary.md
+	./scripts/coverage-report.sh
+
+coverage-baseline:  ## Snapshot current coverage to docs/testing/coverage-baseline.json
+	mkdir -p docs/testing
+	node -e "const fs=require('fs');const o={go:0,jest:0,ts:new Date().toISOString()};fs.writeFileSync('docs/testing/coverage-baseline.json',JSON.stringify(o,null,2));console.log('baseline (0,0) written; will be overwritten on next run')"
+
 .PHONY: dev-init dev-start dev-start-local dev-start-docker dev-stop dev-stop-local dev-stop-docker dev-logs dev-restart dev-status dev-health dev-doctor dev-clean \
         prod-init prod-start prod-stop prod-deploy prod-status prod-health prod-logs \
         prod-restart prod-rollback prod-backup prod-down \
         db-migrate db-seed \
+        backend-test backend-test-ci backend-vet backend-build backend-cover backend-cover-html backend-lint backend-tidy \
         release build-images build-backend build-frontend verify-scripts \
-        logs-backend logs-frontend logs-postgres check-contracts
+        logs-backend logs-frontend logs-postgres check-contracts coverage-report coverage-baseline

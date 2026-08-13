@@ -67,6 +67,31 @@ jobs:
         run: |
           chmod +x scripts/smoke-test.sh
           ./scripts/smoke-test.sh
+        # PR-0.5: emit junit so the test-trend workflow has data to render
+        env:
+          SMOKE_JUNIT: ${{ runner.temp }}/smoke-junit.xml
+
+      - name: Generate test trend summary
+        # PR-0.5: keep the trend markdown alongside the gate so reviewers
+        # can see the pass/fail/skip counts without digging through CI logs.
+        if: always()
+        run: |
+          mkdir -p output/trend
+          node scripts/test-trend.js \
+            --baseline docs/testing/coverage-baseline.json \
+            --out output/trend/test-trend.md \
+            || echo '[trend] WARN trend generation failed; continuing'
+
+      - name: Upload test trend artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ga-gate-trend
+          path: |
+            output/trend/test-trend.md
+            ga-gate-compose.log
+          retention-days: 14
+          if-no-files-found: ignore
 
       - name: Upload failure logs
         if: failure()
