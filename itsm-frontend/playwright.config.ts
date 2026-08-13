@@ -66,5 +66,43 @@ export default defineConfig({
       testDir: './tests/e2e/business-flows',
       timeout: 60_000,
     },
+
+    // PR-0.4: golden — 25 critical business flows. Default OFF locally so
+    // day-to-day `npm run e2e` stays fast; CI enables it via PLAYWRIGHT_ENABLE_GOLDEN=1.
+    ...(process.env.PLAYWRIGHT_ENABLE_GOLDEN === '1'
+      ? [
+          {
+            name: 'golden',
+            use: {
+              browserName: 'chromium' as const,
+              viewport: { width: 1440, height: 900 },
+              // Golden runs want trace on every test, not just failures —
+              // the GA gate uses them as the official pass/fail signal.
+              trace: 'on' as const,
+              video: 'retain-on-failure' as const,
+            },
+            testDir: './tests/e2e/golden',
+            timeout: 60_000,
+            grep: /@golden/,
+          },
+        ]
+      : []),
+
+    // PR-0.4 / PR-3.5: multi-tenant — cross-tenant isolation regression.
+    // Tags tests @multi-tenant so PR-3.4 can wire them into the GA gate.
+    ...(process.env.PLAYWRIGHT_ENABLE_MULTI_TENANT === '1'
+      ? [
+          {
+            name: 'multi-tenant',
+            use: {
+              browserName: 'chromium' as const,
+              viewport: { width: 1440, height: 900 },
+            },
+            testDir: './tests/e2e/multi-tenant',
+            timeout: 60_000,
+            grep: /@multi-tenant/,
+          },
+        ]
+      : []),
   ],
 });
