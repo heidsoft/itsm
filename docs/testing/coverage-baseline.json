@@ -1,0 +1,10 @@
+{
+  "go": 13.6,
+  "jest": 0.47,
+  "ts": "2026-06-28T00:00:00Z",
+  "sources": [
+    "docs/testing/coverage-audit.md",
+    "itsm-frontend/coverage/coverage-summary.json"
+  ],
+  "notes": "Baseline captured from v1.1 audit (backend service+controller combined ~13.6%, frontend total ~0.47%). Update after each coverage-report run to track delta."
+}
