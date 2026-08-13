@@ -1,0 +1,12 @@
+/**
+ * Shared k6 helpers.
+ *
+ * Added by PR-0.4. PR-4.1 will populate `auth.js` with the OAuth + JWT
+ * login flow that all baseline scripts will share. PR-4.2 will fill in
+ * `thresholds.js` with the +20% P95 envelope the perf-budget gate uses.
+ *
+ * Until then, both files are intentionally empty — k6 will skip
+ * importing them because each `<endpoint>.js` self-contains its setup.
+ */
+
+export {};
