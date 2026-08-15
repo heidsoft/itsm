@@ -216,6 +216,7 @@ func (f *fakeSkill) Tags() []string { return nil }
 func (f *fakeSkill) Manifest() SkillManifest {
 	return SkillManifest{Name: f.code, Version: "v1", Category: f.category}
 }
+
 func (f *fakeSkill) GetMetrics() SkillMetrics                                      { return SkillMetrics{} }
 func (f *fakeSkill) Validate(_ interface{}) error                                  { return nil }
 func (f *fakeSkill) Execute(_ context.Context, _ interface{}) (interface{}, error) { return nil, nil }
