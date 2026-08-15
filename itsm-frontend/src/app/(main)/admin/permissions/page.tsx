@@ -531,9 +531,9 @@ const PermissionConfiguration = () => {
   );
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       {/* 页面标题 */}
-      <div className="mb-6">
+      <div>
         <Title level={2} className="!mb-2">
           <Key className="inline-block w-6 h-6 mr-2" />
           权限配置管理
@@ -621,7 +621,6 @@ const PermissionConfiguration = () => {
           description="从上方下拉框中选择一个角色，以查看和编辑该角色的权限配置。"
           type="info"
           showIcon
-          className="mb-6"
         />
       )}
 
@@ -631,12 +630,11 @@ const PermissionConfiguration = () => {
           description="当前租户没有可用于真实授权的权限字典。请点击“初始化权限字典”，否则角色权限保存可能无法落到后端关联表。"
           type="warning"
           showIcon
-          className="mb-6"
         />
       )}
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
+      <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic

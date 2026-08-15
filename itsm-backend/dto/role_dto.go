@@ -62,7 +62,7 @@ type RoleResponse struct {
 	Code        string           `json:"code"`
 	Description string           `json:"description"`
 	IsSystem    bool             `json:"isSystem"`
-	IsActive    bool             `json:"isActive"` // 角色是否启用
+	IsActive    bool             `json:"isActive"`  // 角色是否启用
 	DataScope   string           `json:"dataScope"` // all/department/owner
 	Permissions []PermissionInfo `json:"permissions"`
 	TenantID    int              `json:"tenantId"`

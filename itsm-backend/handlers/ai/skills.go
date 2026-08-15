@@ -123,7 +123,7 @@ func (s *TriageSkill) Manifest() service.SkillManifest {
 	m.LongDescription = "TriageSkill 接受工单的标题与描述，返回建议的 category/priority/confidence/reasoning。" +
 		" 内部委托给 service.TriageService 走 LLM 推理；LLM 不可用时降级为关键词匹配。"
 	m.InputSchema = map[string]any{
-		"type": "object",
+		"type":     "object",
 		"required": []string{"title", "description", "tenantId"},
 		"properties": map[string]any{
 			"tenantId":    map[string]any{"type": "integer", "description": "租户 ID（必填）"},
@@ -225,11 +225,11 @@ func (s *ChatSkill) Manifest() service.SkillManifest {
 		"type":     "object",
 		"required": []string{"tenantId", "userId", "query"},
 		"properties": map[string]any{
-			"tenantId":        map[string]any{"type": "integer"},
-			"userId":          map[string]any{"type": "integer"},
-			"query":           map[string]any{"type": "string"},
-			"limit":           map[string]any{"type": "integer", "default": 5},
-			"conversationId":  map[string]any{"type": "integer", "description": "已有会话 ID；缺省自动新建"},
+			"tenantId":       map[string]any{"type": "integer"},
+			"userId":         map[string]any{"type": "integer"},
+			"query":          map[string]any{"type": "string"},
+			"limit":          map[string]any{"type": "integer", "default": 5},
+			"conversationId": map[string]any{"type": "integer", "description": "已有会话 ID；缺省自动新建"},
 		},
 	}
 	m.OutputSchema = map[string]any{
@@ -282,7 +282,6 @@ func (s *ChatSkill) Execute(ctx context.Context, input interface{}) (interface{}
 		"conversationId": newConv,
 	}, nil
 }
-
 
 // ----------------------------------------------------------------------------
 // KnowledgeSearchSkill —— ai.knowledge_search
@@ -486,7 +485,7 @@ func NewAnalyticsSkill(svc *Service) *AnalyticsSkill {
 func (s *AnalyticsSkill) Manifest() service.SkillManifest {
 	m := s.BuildManifest()
 	m.InputSchema = map[string]any{
-		"type": "object",
+		"type":     "object",
 		"required": []string{"tenantId", "dimensions", "metrics", "chartType", "timeRange"},
 		"properties": map[string]any{
 			"tenantId":   map[string]any{"type": "integer"},
@@ -837,15 +836,15 @@ func (s *MetricsSkill) Execute(ctx context.Context, input interface{}) (interfac
 // ----------------------------------------------------------------------------
 
 type FeedbackSkillInput struct {
-	TenantID  int    `json:"tenantId"`
-	UserID    int    `json:"userId"`
-	RequestID string `json:"requestId"`
-	Kind      string `json:"kind"`
-	Query     string `json:"query"`
-	ItemType  string `json:"itemType"`
-	ItemID    *int   `json:"itemId,omitempty"`
-	Useful    bool   `json:"useful"`
-	Score     *int   `json:"score,omitempty"`
+	TenantID  int     `json:"tenantId"`
+	UserID    int     `json:"userId"`
+	RequestID string  `json:"requestId"`
+	Kind      string  `json:"kind"`
+	Query     string  `json:"query"`
+	ItemType  string  `json:"itemType"`
+	ItemID    *int    `json:"itemId,omitempty"`
+	Useful    bool    `json:"useful"`
+	Score     *int    `json:"score,omitempty"`
 	Notes     *string `json:"notes,omitempty"`
 }
 

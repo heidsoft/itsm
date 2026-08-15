@@ -15,16 +15,16 @@ import (
 // Register() 注入到 SkillRegistry 后，Invoke 的调用结果才会被自动累计；脱离 Registry
 // 的 Skill（如测试桩）不会自动累计指标。
 type BaseSkill struct {
-	code          string
-	name          string
-	tags          []string
-	version       string
-	category      string // ga / pilot / experimental
-	requiredPerms []string
-	capabilities  []string
-	provider      string
-	author        string
-	description   string
+	code            string
+	name            string
+	tags            []string
+	version         string
+	category        string // ga / pilot / experimental
+	requiredPerms   []string
+	capabilities    []string
+	provider        string
+	author          string
+	description     string
 	longDescription string
 
 	mu      sync.Mutex
@@ -83,11 +83,12 @@ func (b *BaseSkill) Identity() SkillIdentity {
 // With* 系列配置器（链式可选），便于在 builtin 注册处一行完成元数据补全。
 
 func (b *BaseSkill) WithProvider(p string) *BaseSkill { b.provider = p; return b }
-func (b *BaseSkill) WithAuthor(a string) *BaseSkill    { b.author = a; return b }
+func (b *BaseSkill) WithAuthor(a string) *BaseSkill   { b.author = a; return b }
 func (b *BaseSkill) WithDescription(d string) *BaseSkill {
 	b.description = d
 	return b
 }
+
 func (b *BaseSkill) WithLongDescription(d string) *BaseSkill {
 	b.longDescription = d
 	return b

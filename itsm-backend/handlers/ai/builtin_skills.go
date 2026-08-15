@@ -3,8 +3,8 @@ package ai
 import (
 	"fmt"
 
-	"itsm-backend/service"
 	"go.uber.org/zap"
+	"itsm-backend/service"
 )
 
 // RegisterBuiltinSkills 将 ITSM 内置 AI Skill 注入到指定 SkillRegistry。

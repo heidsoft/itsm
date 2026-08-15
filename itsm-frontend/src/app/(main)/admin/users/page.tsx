@@ -319,9 +319,9 @@ const UserManagement: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: token.paddingLG }}>
+    <div className="space-y-6">
       {/* 页面标题和统计 */}
-      <div style={{ marginBottom: token.marginLG }}>
+      <div>
         <Title level={2} style={{ margin: 0, marginBottom: token.marginXS }}>
           <Space>
             <Users style={{ color: token.colorPrimary }} />

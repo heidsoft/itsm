@@ -125,9 +125,9 @@ func (gc *GroupController) ListGroups(c *gin.Context) {
 	response := &dto.PagedGroupsResponse{
 		Groups: groupResponses,
 		Pagination: dto.PaginationResponse{
-			Page:      req.Page,
-			PageSize:  req.PageSize,
-			Total:     total,
+			Page:       req.Page,
+			PageSize:   req.PageSize,
+			Total:      total,
 			TotalPages: (total + req.PageSize - 1) / req.PageSize,
 		},
 	}
@@ -415,9 +415,9 @@ func (gc *GroupController) GetGroupMembers(c *gin.Context) {
 	response := &dto.GroupMembersResponse{
 		Members: userDTOs,
 		Pagination: dto.PaginationResponse{
-			Page:      page,
-			PageSize:  pageSize,
-			Total:     total,
+			Page:       page,
+			PageSize:   pageSize,
+			Total:      total,
 			TotalPages: (total + pageSize - 1) / pageSize,
 		},
 	}

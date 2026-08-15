@@ -128,51 +128,51 @@ func TestHasResourcePermission(t *testing.T) {
 	t.Cleanup(func() { PermissionConfig.Mode = original })
 
 	t.Run("Super Admin Has All Permissions", func(t *testing.T) {
-		result := hasResourcePermission(context.Background(), nil,"super_admin", "any_resource", "any_action", 1)
+		result := hasResourcePermission(context.Background(), nil, "super_admin", "any_resource", "any_action", 1)
 		assert.True(t, result)
 	})
 
 	t.Run("Admin Has Ticket Write Permission", func(t *testing.T) {
-		result := hasResourcePermission(context.Background(), nil,"admin", "ticket", "write", 1)
+		result := hasResourcePermission(context.Background(), nil, "admin", "ticket", "write", 1)
 		assert.True(t, result)
 	})
 
 	t.Run("End User Has Ticket Read Permission", func(t *testing.T) {
-		result := hasResourcePermission(context.Background(), nil,"end_user", "ticket", "read", 1)
+		result := hasResourcePermission(context.Background(), nil, "end_user", "ticket", "read", 1)
 		assert.True(t, result)
 	})
 
 	t.Run("End User Does Not Have Ticket Delete Permission", func(t *testing.T) {
-		result := hasResourcePermission(context.Background(), nil,"end_user", "ticket", "delete", 1)
+		result := hasResourcePermission(context.Background(), nil, "end_user", "ticket", "delete", 1)
 		assert.False(t, result)
 	})
 
 	t.Run("Agent Has Dashboard Read Permission", func(t *testing.T) {
-		result := hasResourcePermission(context.Background(), nil,"agent", "dashboard", "read", 1)
+		result := hasResourcePermission(context.Background(), nil, "agent", "dashboard", "read", 1)
 		assert.True(t, result)
 	})
 
 	t.Run("Technician Has CMDB Read Permission", func(t *testing.T) {
-		result := hasResourcePermission(context.Background(), nil,"technician", "cmdb", "read", 1)
+		result := hasResourcePermission(context.Background(), nil, "technician", "cmdb", "read", 1)
 		assert.True(t, result)
 	})
 
 	t.Run("Manager Has User Read Permission", func(t *testing.T) {
-		result := hasResourcePermission(context.Background(), nil,"manager", "user", "read", 1)
+		result := hasResourcePermission(context.Background(), nil, "manager", "user", "read", 1)
 		assert.True(t, result)
 	})
 
 	t.Run("Unknown Role Has No Permissions", func(t *testing.T) {
-		result := hasResourcePermission(context.Background(), nil,"unknown_role", "ticket", "read", 1)
+		result := hasResourcePermission(context.Background(), nil, "unknown_role", "ticket", "read", 1)
 		assert.False(t, result)
 	})
 
 	t.Run("Wildcard Permission", func(t *testing.T) {
 		// Super admin has wildcard "*" permission
-		result := hasResourcePermission(context.Background(), nil,"super_admin", "ticket", "delete", 1)
+		result := hasResourcePermission(context.Background(), nil, "super_admin", "ticket", "delete", 1)
 		assert.True(t, result)
 
-		result = hasResourcePermission(context.Background(), nil,"super_admin", "anything", "anything", 1)
+		result = hasResourcePermission(context.Background(), nil, "super_admin", "anything", "anything", 1)
 		assert.True(t, result)
 	})
 }

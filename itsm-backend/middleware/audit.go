@@ -63,14 +63,14 @@ const (
 	ActionPermission    AuditableAction = "permission"
 	ActionConfiguration AuditableAction = "configuration"
 	// 变更（及其他资源）生命周期动词，避免所有 POST 被笼统记为 create
-	ActionSubmit    AuditableAction = "submit"
-	ActionApprove   AuditableAction = "approve"
-	ActionReject    AuditableAction = "reject"
-	ActionSchedule  AuditableAction = "schedule"
-	ActionStart     AuditableAction = "start"
-	ActionComplete  AuditableAction = "complete"
-	ActionRollback  AuditableAction = "rollback"
-	ActionCancel    AuditableAction = "cancel"
+	ActionSubmit   AuditableAction = "submit"
+	ActionApprove  AuditableAction = "approve"
+	ActionReject   AuditableAction = "reject"
+	ActionSchedule AuditableAction = "schedule"
+	ActionStart    AuditableAction = "start"
+	ActionComplete AuditableAction = "complete"
+	ActionRollback AuditableAction = "rollback"
+	ActionCancel   AuditableAction = "cancel"
 )
 
 // SensitiveResource 敏感资源类型

@@ -12,7 +12,7 @@ import {
   Input,
   Select,
   Switch,
-  message,
+  App,
   Popconfirm,
   Tag,
   Row,
@@ -63,6 +63,7 @@ interface ApprovalNode {
 }
 
 export default function ApprovalManagement() {
+  const { message } = App.useApp();
   const [workflows, setWorkflows] = useState<ApprovalWorkflow[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -280,7 +281,7 @@ export default function ApprovalManagement() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="space-y-6">
       {/* 迁移提示 */}
       <Alert
         message="审批配置已迁移"
@@ -288,7 +289,6 @@ export default function ApprovalManagement() {
         type="warning"
         showIcon
         closable
-        className="mb-6"
         action={
           <Button size="small" type="primary" href="/workflow">
             前往工作流管理
@@ -305,7 +305,7 @@ export default function ApprovalManagement() {
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
+      <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={8}>
           <Card className="enterprise-card">
             <Statistic

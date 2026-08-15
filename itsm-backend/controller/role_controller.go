@@ -133,10 +133,10 @@ func (rc *RoleController) ListRoles(c *gin.Context) {
 	}
 
 	common.Success(c, dto.RoleListResponse{
-		Roles:     roleItems,
-		Total:     total,
-		Page:      page,
-		PageSize:  pageSize,
+		Roles:      roleItems,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
 		TotalPages: totalPages,
 	})
 }

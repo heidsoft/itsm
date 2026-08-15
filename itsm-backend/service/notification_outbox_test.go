@@ -100,8 +100,10 @@ func TestServiceRequestNotificationHandlerProducesAuditedInAppDelivery(t *testin
 	command, err := commandbus.Enqueue(ctx, client, commandbus.EnqueueRequest{
 		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
 		AggregateType: "service_request", AggregateID: requestID, IdempotencyKey: "request-approval-1",
-		Payload: map[string]interface{}{"resourceType": "service_request", "resourceId": requestID,
-			"recipientId": userID, "type": "approval_required", "channel": "in_app", "content": "您有新的审批待办"},
+		Payload: map[string]interface{}{
+			"resourceType": "service_request", "resourceId": requestID,
+			"recipientId": userID, "type": "approval_required", "channel": "in_app", "content": "您有新的审批待办",
+		},
 	})
 	require.NoError(t, err)
 	command.Attempt = 1

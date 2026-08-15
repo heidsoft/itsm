@@ -12,7 +12,7 @@ import {
   InputNumber,
   Space,
   Tag,
-  message,
+  App,
   Tabs,
   Descriptions,
   Switch,
@@ -45,6 +45,7 @@ type ProcessRoutingRule = ProcessBinding & {
 };
 
 export default function ProcessRoutingPage() {
+  const { message } = App.useApp();
   const [rules, setRules] = useState<ProcessRoutingRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -142,10 +143,10 @@ export default function ProcessRoutingPage() {
     try {
       await ProcessBindingApi.delete(id);
     } catch {
-      message.error('Failed to delete routing rule');
+      message.error('删除路由规则失败');
       return;
     }
-    message.success('Routing rule deleted');
+    message.success('路由规则已删除');
     loadRules();
   };
 
@@ -310,7 +311,7 @@ export default function ProcessRoutingPage() {
         }
       />
       {/* Statistics */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
+      <Row gutter={16}>
         <Col span={6}>
           <Card>
             <Statistic title="Total Rules" value={stats.total} />

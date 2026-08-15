@@ -102,7 +102,8 @@ func createRunningInstance(t *testing.T, c *ent.Client, key string, tenantID int
 
 // createPendingTask 创建一个 pending ProcessTask，关联到 instanceID（ent.ID）。
 func createPendingTask(t *testing.T, c *ent.Client, taskID, defKey, name string,
-	instanceID, tenantID int, assignee string) int {
+	instanceID, tenantID int, assignee string,
+) int {
 	t.Helper()
 	ctx := context.Background()
 	task, err := c.ProcessTask.Create().

@@ -210,12 +210,14 @@ type fakeSkill struct {
 	category string
 }
 
-func (f *fakeSkill) Code() string               { return f.code }
-func (f *fakeSkill) Name() string               { return f.name }
-func (f *fakeSkill) Tags() []string             { return nil }
-func (f *fakeSkill) Manifest() SkillManifest    { return SkillManifest{Name: f.code, Version: "v1", Category: f.category} }
-func (f *fakeSkill) GetMetrics() SkillMetrics   { return SkillMetrics{} }
-func (f *fakeSkill) Validate(_ interface{}) error { return nil }
+func (f *fakeSkill) Code() string   { return f.code }
+func (f *fakeSkill) Name() string   { return f.name }
+func (f *fakeSkill) Tags() []string { return nil }
+func (f *fakeSkill) Manifest() SkillManifest {
+	return SkillManifest{Name: f.code, Version: "v1", Category: f.category}
+}
+func (f *fakeSkill) GetMetrics() SkillMetrics                                      { return SkillMetrics{} }
+func (f *fakeSkill) Validate(_ interface{}) error                                  { return nil }
 func (f *fakeSkill) Execute(_ context.Context, _ interface{}) (interface{}, error) { return nil, nil }
 
 func TestEvaluate_BySkillDimension_WithoutRegistry(t *testing.T) {
@@ -299,7 +301,6 @@ func TestEvaluate_ScenarioToSkillCodeMapping(t *testing.T) {
 		assert.Equal(t, want, scenarioToSkillCode(kind), "kind=%q", kind)
 	}
 }
-
 
 func TestListAIAuditLogs_PaginationAndNotes(t *testing.T) {
 	db, svc := newTelemetryTestDB(t)

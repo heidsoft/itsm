@@ -72,7 +72,7 @@ type TenantResponse struct {
 	Currency        *string                `json:"currency,omitempty"`
 	ServiceTier     *string                `json:"serviceTier,omitempty"`
 	OwnerContact    *string                `json:"ownerContact,omitempty"`
-	Timezone       string                 `json:"timezone"`
+	Timezone        string                 `json:"timezone"`
 	CreatedAt       time.Time              `json:"createdAt"`
 	UpdatedAt       time.Time              `json:"updatedAt"`
 }

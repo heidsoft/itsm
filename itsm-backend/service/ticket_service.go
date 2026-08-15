@@ -296,10 +296,14 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}
 		if s.sideEffectOutboxEnabled {
 			commands := []commandbus.EnqueueRequest{
-				{TenantID: tenantID, CommandType: commandbus.CommandExecuteTicketRules, AggregateType: "ticket", AggregateID: created.ID,
-					IdempotencyKey: fmt.Sprintf("ticket:%d:rules:create", created.ID), Payload: map[string]interface{}{"event": "created"}},
-				{TenantID: tenantID, CommandType: commandbus.CommandSyncTicketFeishu, AggregateType: "ticket", AggregateID: created.ID,
-					IdempotencyKey: fmt.Sprintf("ticket:%d:feishu:sync:v%d", created.ID, created.Version), Payload: map[string]interface{}{"event": "created", "version": created.Version}},
+				{
+					TenantID: tenantID, CommandType: commandbus.CommandExecuteTicketRules, AggregateType: "ticket", AggregateID: created.ID,
+					IdempotencyKey: fmt.Sprintf("ticket:%d:rules:create", created.ID), Payload: map[string]interface{}{"event": "created"},
+				},
+				{
+					TenantID: tenantID, CommandType: commandbus.CommandSyncTicketFeishu, AggregateType: "ticket", AggregateID: created.ID,
+					IdempotencyKey: fmt.Sprintf("ticket:%d:feishu:sync:v%d", created.ID, created.Version), Payload: map[string]interface{}{"event": "created", "version": created.Version},
+				},
 			}
 			for _, command := range commands {
 				if _, err := commandbus.EnqueueTx(ctx, tx, command); err != nil {

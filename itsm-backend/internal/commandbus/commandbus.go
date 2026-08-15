@@ -157,8 +157,10 @@ type Worker struct {
 }
 
 func NewWorker(client *ent.Client, registry *Registry, logger *zap.SugaredLogger, owner string) *Worker {
-	return &Worker{client: client, registry: registry, logger: logger, owner: owner,
-		leaseTTL: time.Minute, pollInterval: time.Second, now: time.Now}
+	return &Worker{
+		client: client, registry: registry, logger: logger, owner: owner,
+		leaseTTL: time.Minute, pollInterval: time.Second, now: time.Now,
+	}
 }
 
 func (w *Worker) Run(ctx context.Context) {

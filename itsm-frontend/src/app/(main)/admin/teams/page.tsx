@@ -13,7 +13,7 @@ import {
   Select,
   Avatar,
   Tooltip,
-  message,
+  App,
   Popconfirm,
   Tag,
   Row,
@@ -257,7 +257,7 @@ export default function TeamManagement() {
       </Row>
 
       {/* 操作栏 */}
-      <Card className="mb-6">
+      <Card>
         <Space wrap>
           <Input
             allowClear

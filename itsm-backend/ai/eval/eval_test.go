@@ -60,13 +60,13 @@ type RAGCase struct {
 
 // PredictionCase golden case for SLA breach prediction 评估
 type PredictionCase struct {
-	ID                       string                 `json:"id"`
-	TicketID                 string                 `json:"ticket_id"`
-	Features                 map[string]interface{} `json:"features"`
-	ExpectedBreachWithinSLA  bool                   `json:"expected_breach_within_sla"`
-	BreachProbabilityMin     float64                `json:"breach_probability_min"`
-	BreachProbabilityMax     float64                `json:"breach_probability_max"`
-	HorizonMinutes           int                    `json:"horizon_minutes"`
+	ID                      string                 `json:"id"`
+	TicketID                string                 `json:"ticket_id"`
+	Features                map[string]interface{} `json:"features"`
+	ExpectedBreachWithinSLA bool                   `json:"expected_breach_within_sla"`
+	BreachProbabilityMin    float64                `json:"breach_probability_min"`
+	BreachProbabilityMax    float64                `json:"breach_probability_max"`
+	HorizonMinutes          int                    `json:"horizon_minutes"`
 }
 
 // TriageResult is the eval-mode fixture result. In production, this is
@@ -296,10 +296,10 @@ func TestEval_Prediction_ROCAUC(t *testing.T) {
 // 防止后续修改导致指标悄悄下降。
 func TestEval_RegressionSnapshots(t *testing.T) {
 	type snapshot struct {
-		Task       string
-		Cases      int
-		Metric     string
-		Value      float64
+		Task   string
+		Cases  int
+		Metric string
+		Value  float64
 	}
 	var snaps []snapshot
 	triageCases := LoadTriageCases(t)

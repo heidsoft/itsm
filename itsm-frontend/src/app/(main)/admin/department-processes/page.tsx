@@ -7,7 +7,7 @@ import {
   Table,
   Button,
   Select,
-  message,
+  App,
   Descriptions,
   Tag,
   Space,
@@ -44,6 +44,7 @@ interface DepartmentTreeNode {
 }
 
 export default function DepartmentProcessPage() {
+  const { message } = App.useApp();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
   const [selectedDept, setSelectedDept] = useState<Department | null>(null);
@@ -94,7 +95,7 @@ export default function DepartmentProcessPage() {
 
     try {
       await ProcessBindingApi.initDepartmentProcesses(selectedDeptId, departmentType);
-      message.success('Department processes initialized successfully');
+      message.success('部门流程初始化成功');
       loadDeptProcesses(selectedDeptId);
       setShowInitModal(false);
     } catch (error) {

@@ -31,8 +31,10 @@ func TestWorkerProcessesCommandExactlyOnceAfterSuccess(t *testing.T) {
 		require.Equal(t, 42, cmd.TenantID)
 		return nil
 	}))
-	_, err := Enqueue(ctx, client, EnqueueRequest{TenantID: 42, CommandType: CommandStartBPMN,
-		AggregateType: "incident", AggregateID: 7, IdempotencyKey: "incident:7:workflow:start"})
+	_, err := Enqueue(ctx, client, EnqueueRequest{
+		TenantID: 42, CommandType: CommandStartBPMN,
+		AggregateType: "incident", AggregateID: 7, IdempotencyKey: "incident:7:workflow:start",
+	})
 	require.NoError(t, err)
 
 	worker := NewWorker(client, registry, zap.NewNop().Sugar(), "worker-a")
@@ -56,8 +58,10 @@ func TestWorkerRetriesAndDeadLetters(t *testing.T) {
 	require.NoError(t, registry.Register("always.fail", func(context.Context, *ent.OperationalCommand) error {
 		return errors.New("provider secret must not appear here")
 	}))
-	cmd, err := Enqueue(ctx, client, EnqueueRequest{TenantID: 9, CommandType: "always.fail",
-		AggregateType: "notification", AggregateID: 3, IdempotencyKey: "notification:3", MaxAttempts: 2})
+	cmd, err := Enqueue(ctx, client, EnqueueRequest{
+		TenantID: 9, CommandType: "always.fail",
+		AggregateType: "notification", AggregateID: 3, IdempotencyKey: "notification:3", MaxAttempts: 2,
+	})
 	require.NoError(t, err)
 
 	worker := NewWorker(client, registry, zap.NewNop().Sugar(), "worker-a")

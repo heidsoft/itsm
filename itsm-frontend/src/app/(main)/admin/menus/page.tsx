@@ -351,8 +351,8 @@ export default function MenuManagementPage() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <div className="mb-6">
+    <div className="space-y-6">
+      <div>
         <Title level={2} className="!mb-2">
           <MenuIcon className="inline-block w-6 h-6 mr-2" />
           菜单管理
@@ -361,7 +361,6 @@ export default function MenuManagementPage() {
       </div>
 
       <Alert
-        className="mb-4"
         type="info"
         showIcon
         message="使用须知"
@@ -374,7 +373,7 @@ export default function MenuManagementPage() {
         }
       />
 
-      <Row gutter={[16, 16]} className="mb-4">
+      <Row gutter={[16, 16]}>
         <Col xs={12} md={6}>
           <Card>
             <Statistic

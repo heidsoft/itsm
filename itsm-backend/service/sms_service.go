@@ -105,6 +105,7 @@ func (s *SMSService) validateMessage(msg *SMSMessage) error {
 	}
 	return nil
 }
+
 func (s *SMSService) checkRateLimit(keys []string, limit int, window time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -454,7 +454,7 @@ const CMDBTypesManagement = () => {
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            showTotal: total => `共 ${total} 条记录`,
           }}
           scroll={{ x: 800 }}
         />

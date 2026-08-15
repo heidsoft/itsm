@@ -165,9 +165,9 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, 
 	response := &dto.PagedUsersResponse{
 		Users: userResponses,
 		Pagination: dto.PaginationResponse{
-			Page:      req.Page,
-			PageSize:  req.PageSize,
-			Total:     total,
+			Page:       req.Page,
+			PageSize:   req.PageSize,
+			Total:      total,
 			TotalPages: (total + req.PageSize - 1) / req.PageSize,
 		},
 	}

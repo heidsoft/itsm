@@ -876,48 +876,48 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 // RequirePermission 要求特定权限的中间件
 func RequirePermission(resource, action string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-	role, ok := c.Get("role")
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "用户角色信息缺失")
-		c.Abort()
-		return
-	}
-	roleStr, ok := role.(string)
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "用户角色信息格式错误")
-		c.Abort()
-		return
-	}
+		role, ok := c.Get("role")
+		if !ok {
+			common.Fail(c, common.AuthFailedCode, "用户角色信息缺失")
+			c.Abort()
+			return
+		}
+		roleStr, ok := role.(string)
+		if !ok {
+			common.Fail(c, common.AuthFailedCode, "用户角色信息格式错误")
+			c.Abort()
+			return
+		}
 
-	// 获取租户ID
-	tenantIDInterface, ok := c.Get("tenant_id")
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
-		c.Abort()
-		return
-	}
-	tenantID, ok := tenantIDInterface.(int)
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户信息格式错误")
-		c.Abort()
-		return
-	}
+		// 获取租户ID
+		tenantIDInterface, ok := c.Get("tenant_id")
+		if !ok {
+			common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+			c.Abort()
+			return
+		}
+		tenantID, ok := tenantIDInterface.(int)
+		if !ok {
+			common.Fail(c, common.AuthFailedCode, "租户信息格式错误")
+			c.Abort()
+			return
+		}
 
-	// 获取客户端
-	clientInterface, ok := c.Get("client")
-	if !ok {
-		common.Fail(c, common.InternalErrorCode, "客户端缺失")
-		c.Abort()
-		return
-	}
-	client, ok := clientInterface.(*ent.Client)
-	if !ok {
-		common.Fail(c, common.InternalErrorCode, "客户端类型错误")
-		c.Abort()
-		return
-	}
+		// 获取客户端
+		clientInterface, ok := c.Get("client")
+		if !ok {
+			common.Fail(c, common.InternalErrorCode, "客户端缺失")
+			c.Abort()
+			return
+		}
+		client, ok := clientInterface.(*ent.Client)
+		if !ok {
+			common.Fail(c, common.InternalErrorCode, "客户端类型错误")
+			c.Abort()
+			return
+		}
 
-	if !hasResourcePermission(c.Request.Context(), client, roleStr, resource, action, tenantID) {
+		if !hasResourcePermission(c.Request.Context(), client, roleStr, resource, action, tenantID) {
 			common.Fail(c, common.ForbiddenCode, "权限不足")
 			c.Abort()
 			return

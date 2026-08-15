@@ -86,11 +86,11 @@ type SkillInvokeRequest struct {
 
 // SkillInvokeResponse 统一调用入口的响应体，附带延迟与指标追踪状态。
 type SkillInvokeResponse struct {
-	Code              string      `json:"code"`
-	Output            interface{} `json:"output"`
-	LatencyMs         int64       `json:"latencyMs"`
-	MetricsTracked    bool        `json:"metricsTracked"`
-	IsPilot           bool        `json:"isPilot"`
+	Code           string      `json:"code"`
+	Output         interface{} `json:"output"`
+	LatencyMs      int64       `json:"latencyMs"`
+	MetricsTracked bool        `json:"metricsTracked"`
+	IsPilot        bool        `json:"isPilot"`
 }
 
 // ----------------------------------------------------------------------------

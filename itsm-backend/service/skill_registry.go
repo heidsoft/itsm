@@ -171,24 +171,24 @@ func (r *SkillRegistry) Count() int {
 // 与 SkillManifest 的区别：SkillEntry 折叠了 Code/Name/Metrics 等从 Skill
 // 接口直接派生出的字段，方便前端直接渲染而不必再下钻 Manifest。
 type SkillEntry struct {
-	Code           string        `json:"code"`
-	Name           string        `json:"name"`
-	Version        string        `json:"version"`
-	Title          string        `json:"title"`
-	Provider       string        `json:"provider"`
-	Description    string        `json:"description"`
-	Category       string        `json:"category"` // ga / pilot / experimental
-	Tags           []string      `json:"tags"`
-	Capabilities   []string      `json:"capabilities"`
-	RequiredPerms  []string      `json:"requiredPermissions"`
-	Author         string        `json:"author,omitempty"`
-	IsOfficial     bool          `json:"isOfficial"`
-	Checksum       string        `json:"checksum,omitempty"`
-	IsBuiltin      bool          `json:"isBuiltin"`
-	Status         string        `json:"status"` // active / disabled
-	Manifest       SkillManifest `json:"manifest"`
-	Metrics        SkillMetrics  `json:"metrics"`
-	LongDescription string       `json:"longDescription,omitempty"`
+	Code            string        `json:"code"`
+	Name            string        `json:"name"`
+	Version         string        `json:"version"`
+	Title           string        `json:"title"`
+	Provider        string        `json:"provider"`
+	Description     string        `json:"description"`
+	Category        string        `json:"category"` // ga / pilot / experimental
+	Tags            []string      `json:"tags"`
+	Capabilities    []string      `json:"capabilities"`
+	RequiredPerms   []string      `json:"requiredPermissions"`
+	Author          string        `json:"author,omitempty"`
+	IsOfficial      bool          `json:"isOfficial"`
+	Checksum        string        `json:"checksum,omitempty"`
+	IsBuiltin       bool          `json:"isBuiltin"`
+	Status          string        `json:"status"` // active / disabled
+	Manifest        SkillManifest `json:"manifest"`
+	Metrics         SkillMetrics  `json:"metrics"`
+	LongDescription string        `json:"longDescription,omitempty"`
 }
 
 // ListEntries 全部 Skill 的可序列化视图。
@@ -216,24 +216,24 @@ func (r *SkillRegistry) entries(skills []Skill) []SkillEntry {
 	for _, s := range skills {
 		m := s.Manifest()
 		out = append(out, SkillEntry{
-			Code:           s.Code(),
-			Name:           s.Name(),
-			Version:        m.Version,
-			Title:          m.Title,
-			Provider:       m.Provider,
-			Description:    m.Description,
+			Code:            s.Code(),
+			Name:            s.Name(),
+			Version:         m.Version,
+			Title:           m.Title,
+			Provider:        m.Provider,
+			Description:     m.Description,
 			LongDescription: m.LongDescription,
-			Category:       m.Category,
-			Tags:           s.Tags(),
-			Capabilities:   m.Capabilities,
-			RequiredPerms:  m.RequiredPermissions,
-			Author:         m.Author,
-			IsOfficial:     m.IsOfficial,
-			Checksum:       m.Checksum,
-			IsBuiltin:      true,
-			Status:         "active",
-			Manifest:       m,
-			Metrics:        s.GetMetrics(),
+			Category:        m.Category,
+			Tags:            s.Tags(),
+			Capabilities:    m.Capabilities,
+			RequiredPerms:   m.RequiredPermissions,
+			Author:          m.Author,
+			IsOfficial:      m.IsOfficial,
+			Checksum:        m.Checksum,
+			IsBuiltin:       true,
+			Status:          "active",
+			Manifest:        m,
+			Metrics:         s.GetMetrics(),
 		})
 	}
 	return out
@@ -241,8 +241,8 @@ func (r *SkillRegistry) entries(skills []Skill) []SkillEntry {
 
 // SkillInvokeResult Invoke 的结构化返回，包含 latency / 错误码 / 是否被 metrics 追踪。
 type SkillInvokeResult struct {
-	Output     interface{}
-	LatencyMs  int64
+	Output         interface{}
+	LatencyMs      int64
 	SkippedMetrics bool
 }
 
@@ -284,14 +284,14 @@ func (r *SkillRegistry) InvokeWithMetrics(ctx context.Context, code string, inpu
 	}
 	if execErr != nil {
 		return SkillInvokeResult{
-			Output:        out,
-			LatencyMs:     elapsed.Milliseconds(),
+			Output:         out,
+			LatencyMs:      elapsed.Milliseconds(),
 			SkippedMetrics: !tracked,
 		}, fmt.Errorf("%w: %v", ErrSkillInvoke, execErr)
 	}
 	return SkillInvokeResult{
-		Output:        out,
-		LatencyMs:     elapsed.Milliseconds(),
+		Output:         out,
+		LatencyMs:      elapsed.Milliseconds(),
 		SkippedMetrics: !tracked,
 	}, nil
 }

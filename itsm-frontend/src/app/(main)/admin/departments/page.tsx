@@ -12,7 +12,7 @@ import {
   Input,
   Select,
   TreeSelect,
-  message,
+  App,
   Popconfirm,
   Tag,
   Row,
@@ -234,8 +234,8 @@ export default function DepartmentManagement() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <div className="mb-6">
+    <div className="space-y-6">
+      <div>
         <Title level={2} className="!mb-2">
           <Users className="mr-2" />
           部门管理
@@ -266,7 +266,7 @@ export default function DepartmentManagement() {
       </Row>
 
       {/* 操作栏 */}
-      <Card className="mb-6">
+      <Card>
         <Space wrap>
           <Input
             allowClear

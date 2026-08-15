@@ -31,18 +31,18 @@ const (
 //   - BySkillAlias 是 ByScenario 的反别名（统一返回两个字段，前端可任选）。
 //   - 旧 kind 字段（如 "triage"）会通过 scenarioToSkillCode 映射到 ai.triage。
 type AIEvaluationReport struct {
-	GeneratedAt          string                `json:"generatedAt"`
-	LookbackDays         int                   `json:"lookbackDays"`
-	TotalFeedback        int                   `json:"totalFeedback"`
-	UsefulRate           float64               `json:"usefulRate"`
-	AcceptedRate         float64               `json:"acceptedRate"`
-	AvgConfidence        float64               `json:"avgConfidence"`
-	HealthScore          float64               `json:"healthScore"`
-	HasData              bool                  `json:"hasData"`
-	ByScenario           []AIScenarioEval      `json:"byScenario"`
-	BySkill              []AISkillEval         `json:"bySkill"`
+	GeneratedAt           string                `json:"generatedAt"`
+	LookbackDays          int                   `json:"lookbackDays"`
+	TotalFeedback         int                   `json:"totalFeedback"`
+	UsefulRate            float64               `json:"usefulRate"`
+	AcceptedRate          float64               `json:"acceptedRate"`
+	AvgConfidence         float64               `json:"avgConfidence"`
+	HealthScore           float64               `json:"healthScore"`
+	HasData               bool                  `json:"hasData"`
+	ByScenario            []AIScenarioEval      `json:"byScenario"`
+	BySkill               []AISkillEval         `json:"bySkill"`
 	ConfidenceCalibration []AICalibrationBucket `json:"confidenceCalibration"`
-	Platform             LLMPlatformStats      `json:"platform"`
+	Platform              LLMPlatformStats      `json:"platform"`
 }
 
 // AIScenarioEval 单个 AI 场景（triage/summarize/analyze/rag_search/...）的评估。
@@ -67,24 +67,24 @@ type AIScenarioEval struct {
 //     给出 0-100 的子健康分；
 //   - 配合 AIEvaluationReport.HealthScore 形成"总-分"健康分。
 type AISkillEval struct {
-	SkillCode           string  `json:"skillCode"`
-	SkillName           string  `json:"skillName,omitempty"`
-	Count               int     `json:"count"`
-	UsefulRate          float64 `json:"usefulRate"`
-	AcceptedRate        float64 `json:"acceptedRate"`
-	AvgConfidence       float64 `json:"avgConfidence"`
-	HealthScore         float64 `json:"healthScore"`
-	IsPilot             bool    `json:"isPilot"`
+	SkillCode     string  `json:"skillCode"`
+	SkillName     string  `json:"skillName,omitempty"`
+	Count         int     `json:"count"`
+	UsefulRate    float64 `json:"usefulRate"`
+	AcceptedRate  float64 `json:"acceptedRate"`
+	AvgConfidence float64 `json:"avgConfidence"`
+	HealthScore   float64 `json:"healthScore"`
+	IsPilot       bool    `json:"isPilot"`
 }
 
 // AICalibrationBucket 置信度分桶：中点=桶内置信度均值（评分校准的目标值），
 // CalibrationError = |实际有用率 - 中点|，越小说明置信度越可信。
 type AICalibrationBucket struct {
-	Bucket            string  `json:"bucket"`
-	Midpoint          float64 `json:"midpoint"`
-	Count             int     `json:"count"`
-	UsefulRate        float64 `json:"usefulRate"`
-	CalibrationError  float64 `json:"calibrationError"`
+	Bucket           string  `json:"bucket"`
+	Midpoint         float64 `json:"midpoint"`
+	Count            int     `json:"count"`
+	UsefulRate       float64 `json:"usefulRate"`
+	CalibrationError float64 `json:"calibrationError"`
 }
 
 // LLMPlatformStats 平台级 LLM 调用统计（ai_llm_calls，无租户维度）。

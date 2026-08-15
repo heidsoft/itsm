@@ -189,12 +189,12 @@ func TestSLAHandler_AlertRule_CRUD(t *testing.T) {
 
 	t.Run("创建告警规则成功", func(t *testing.T) {
 		body := dto.CreateSLAAlertRuleRequest{
-			SLADefinitionID:     defID,
-			Name:                "预警 80%",
-			ThresholdPercentage: 80,
-			AlertLevel:          "warning",
+			SLADefinitionID:      defID,
+			Name:                 "预警 80%",
+			ThresholdPercentage:  80,
+			AlertLevel:           "warning",
 			NotificationChannels: []string{"email", "feishu"},
-			IsActive:            true,
+			IsActive:             true,
 		}
 		resp := doSLAReq(t, r, "POST", "/api/v1/sla/alert-rules", body, false)
 		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
@@ -299,7 +299,7 @@ func TestSLAHandler_UpdateAndDelete(t *testing.T) {
 		newName := "重命名后的SLA"
 		active := false
 		resp := doSLAReq(t, r, "PUT", "/api/v1/sla/definitions/"+itoaSLA(id), dto.UpdateSLADefinitionRequest{
-			Name:    &newName,
+			Name:     &newName,
 			IsActive: &active,
 		}, false)
 		require.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))

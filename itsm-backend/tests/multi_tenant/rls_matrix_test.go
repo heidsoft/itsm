@@ -2,10 +2,10 @@
 // regression test for v1.1 收尾 (Stage 3, PR-3.1 / PR-3.2).
 //
 // 测试目标：
-//   1. 17 张 tenant 表全部隔离（每个表单独跑"跨租户访问应失败"用例）
-//   2. 9 个跨域查询场景（详见 scenarios.go）不允许跨租户
-//   3. MSP 用户能跨多个 tenant，CSP 用户被隔离
-//   4. 跨租户注入：携带 tenantA 的 token，访问 tenantB 的 ID → 404
+//  1. 17 张 tenant 表全部隔离（每个表单独跑"跨租户访问应失败"用例）
+//  2. 9 个跨域查询场景（详见 scenarios.go）不允许跨租户
+//  3. MSP 用户能跨多个 tenant，CSP 用户被隔离
+//  4. 跨租户注入：携带 tenantA 的 token，访问 tenantB 的 ID → 404
 //
 // 跑测命令：cd itsm-backend && go test ./tests/multi_tenant/... -v
 package multi_tenant

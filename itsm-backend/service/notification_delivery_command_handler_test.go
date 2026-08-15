@@ -30,8 +30,10 @@ type notificationTestConnector struct {
 }
 
 func (*notificationTestConnector) Manifest() connector.Manifest {
-	return connector.Manifest{Name: "feishu", Version: "1.0.0", Title: "Test Feishu", Type: connector.TypeIM,
-		Capabilities: []connector.Capability{connector.CapSendMessage}, RequiredPermissions: []string{"connector:send"}}
+	return connector.Manifest{
+		Name: "feishu", Version: "1.0.0", Title: "Test Feishu", Type: connector.TypeIM,
+		Capabilities: []connector.Capability{connector.CapSendMessage}, RequiredPermissions: []string{"connector:send"},
+	}
 }
 func (*notificationTestConnector) Init(context.Context, connector.Config) error { return nil }
 func (c *notificationTestConnector) Send(context.Context, *connector.Message) error {
@@ -41,6 +43,7 @@ func (c *notificationTestConnector) Send(context.Context, *connector.Message) er
 	}
 	return nil
 }
+
 func (*notificationTestConnector) HealthCheck(context.Context) connector.HealthStatus {
 	return connector.HealthStatus{OK: true}
 }

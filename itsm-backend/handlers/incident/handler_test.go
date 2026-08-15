@@ -32,12 +32,12 @@ import (
 // `executeRules(ctx, ...)` goroutine inside Service.Create that calls
 // ListActiveRules. We serialize via the embedded mutex.
 type mockRepository struct {
-	mu              sync.Mutex
-	incidents       map[int]*Incident
-	eventLog        []string
-	ruleReturnErr   error
-	numberCounter   int
-	nextID          int
+	mu            sync.Mutex
+	incidents     map[int]*Incident
+	eventLog      []string
+	ruleReturnErr error
+	numberCounter int
+	nextID        int
 }
 
 func newMockRepository() *mockRepository {
@@ -258,10 +258,10 @@ func doJSON(t *testing.T, r http.Handler, method, path string, body interface{},
 // TestHandler_Create_TableDriven covers the four Create-time branches the
 // production handler exercises:
 //
-//	1. JSON binding failure   → 400 + ParamErrorCode
-//	2. tenant_id missing      → 401 + AuthErrorCode
-//	3. user_id missing        → 401 + AuthErrorCode
-//	4. happy path             → 200 + SuccessCode + auto-derived priority
+//  1. JSON binding failure   → 400 + ParamErrorCode
+//  2. tenant_id missing      → 401 + AuthErrorCode
+//  3. user_id missing        → 401 + AuthErrorCode
+//  4. happy path             → 200 + SuccessCode + auto-derived priority
 func TestHandler_Create_TableDriven(t *testing.T) {
 	type want struct {
 		httpStatus int
@@ -269,18 +269,18 @@ func TestHandler_Create_TableDriven(t *testing.T) {
 		priority   string // asserted on the success path only
 	}
 	cases := []struct {
-		name       string
-		body       interface{}
-		tenantHdr  string
-		userHdr    string
-		want       want
+		name      string
+		body      interface{}
+		tenantHdr string
+		userHdr   string
+		want      want
 	}{
 		{
-			name:       "rejects empty title",
-			body:       map[string]interface{}{}, // binding:"required" on Title
-			tenantHdr:  "1",
-			userHdr:    "7",
-			want:       want{httpStatus: 400, bodyCode: 1001},
+			name:      "rejects empty title",
+			body:      map[string]interface{}{}, // binding:"required" on Title
+			tenantHdr: "1",
+			userHdr:   "7",
+			want:      want{httpStatus: 400, bodyCode: 1001},
 		},
 		{
 			name: "rejects missing tenant",
@@ -341,8 +341,8 @@ func TestHandler_Create_TableDriven(t *testing.T) {
 			assert.Equal(t, tc.want.httpStatus, w.Code, "http status; body=%s", w.Body.String())
 
 			var resp struct {
-				Code    int             `json:"code"`
-				Message string          `json:"message"`
+				Code    int                   `json:"code"`
+				Message string                `json:"message"`
 				Data    *dto.IncidentResponse `json:"data"`
 			}
 			assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))

@@ -455,9 +455,9 @@ const EscalationRuleManagement = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       {/* 页面标题 */}
-      <div className="mb-6">
+      <div>
         <Title level={2} className="!mb-2">
           <Zap className="inline-block w-6 h-6 mr-2" />
           升级规则管理

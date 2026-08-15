@@ -346,7 +346,7 @@ export default function TenantManagement() {
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
+      <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
