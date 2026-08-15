@@ -126,6 +126,51 @@ func IsValidIncidentStatusTransition(currentStatus, newStatus string) bool {
 	return false
 }
 
+// IsValidTicketStatusTransition 校验工单状态转换是否合法。
+// P1-1：工单状态机的单一事实来源。
+// 所有入口（ticket_service.go 的 PUT 更新、ticket_lifecycle_service 的 UpdateTicketStatus、
+// repository/ticket/model.CanTransitionTo、Workflow 状态同步）必须统一通过本函数判断，
+// 禁止在各层内联 map 导致状态转换判定不一致。
+//
+// 规则：
+//   - new        → open / assigned / in_progress / cancelled
+//   - assigned   → in_progress / pending / resolved / cancelled
+//   - open       → in_progress / pending / resolved / cancelled
+//   - in_progress → resolved / pending / cancelled
+//   - pending    → in_progress / resolved / open / cancelled
+//   - resolved   → closed / in_progress / open
+//   - closed     → 终态，禁止转换
+//   - cancelled  → 终态，禁止转换
+//   - approved   → in_progress / resolved / closed
+//   - rejected   → open / cancelled
+func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
+	if currentStatus == newStatus {
+		return true
+	}
+	validTransitions := map[string][]string{
+		TicketStatusNew:        {TicketStatusOpen, TicketStatusAssigned, TicketStatusInProgress, TicketStatusCancelled},
+		TicketStatusAssigned:   {TicketStatusInProgress, TicketStatusPending, TicketStatusResolved, TicketStatusCancelled},
+		TicketStatusOpen:       {TicketStatusInProgress, TicketStatusPending, TicketStatusResolved, TicketStatusCancelled},
+		TicketStatusInProgress: {TicketStatusResolved, TicketStatusPending, TicketStatusCancelled},
+		TicketStatusPending:    {TicketStatusInProgress, TicketStatusResolved, TicketStatusOpen, TicketStatusCancelled},
+		TicketStatusResolved:   {TicketStatusClosed, TicketStatusInProgress, TicketStatusOpen},
+		TicketStatusClosed:     {},
+		TicketStatusCancelled:  {},
+		TicketStatusApproved:   {TicketStatusInProgress, TicketStatusResolved, TicketStatusClosed},
+		TicketStatusRejected:   {TicketStatusOpen, TicketStatusCancelled},
+	}
+	allowed, ok := validTransitions[currentStatus]
+	if !ok {
+		return false
+	}
+	for _, s := range allowed {
+		if s == newStatus {
+			return true
+		}
+	}
+	return false
+}
+
 // ===================================
 // Problem Status Constants
 // ===================================

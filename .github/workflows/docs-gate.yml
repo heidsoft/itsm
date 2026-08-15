@@ -1,0 +1,103 @@
+name: docs-gate
+
+# Purpose:
+#   Enforce documentation quality gates (advisory in v1.5, hard in v2.0):
+#     C.1 Hardcoded production credentials
+#     C.2 Duplicate roadmap content
+#     C.3 Broken internal markdown links
+#     C.4 Release claims without commit/date/digest anchor
+#
+# Triggers:
+#   - PRs and pushes that touch any markdown, .env, or docs-gate script.
+#   - Changes to this workflow file.
+#
+# Behavior:
+#   - Runs scripts/docs-gate/run-all.sh on every relevant change.
+#   - Current mode (v1.5): advisory only — logs violations but does not block.
+#   - Future mode (v2.0+): add `--strict` flag input or change run-all.sh default
+#     to hard gate.
+#   - Uploads violation report as artifact regardless of pass/fail.
+
+on:
+  pull_request:
+    paths:
+      - '**.md'
+      - '**.mdx'
+      - '.env'
+      - '.env.dev'
+      - '.env.prod'
+      - 'scripts/docs-gate/**'
+      - '.github/workflows/docs-gate.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+      - '**.mdx'
+      - '.env'
+      - '.env.dev'
+      - '.env.prod'
+      - 'scripts/docs-gate/**'
+      - '.github/workflows/docs-gate.yml'
+  workflow_dispatch:
+    inputs:
+      strict:
+        description: 'Enable hard mode (v2.0+). Default: advisory only.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  STRICT_MODE: ${{ inputs.strict == true && '--strict' || '' }}
+
+jobs:
+  gate:
+    name: Docs Gate (v1.5 advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # full history for accurate git ls-files
+
+      - name: Setup Bash
+        run: bash --version
+
+      - name: Run docs-gate
+        id: gate
+        run: |
+          set -uo pipefail
+          STRICT="${STRICT_MODE:-}"
+          if [ -n "${STRICT}" ]; then
+            echo "[docs-gate] Strict mode enabled — violations will block the build."
+            ./scripts/docs-gate/run-all.sh --strict | tee docs-gate-report.txt
+          else
+            echo "[docs-gate] Advisory mode (v1.5) — violations logged but do not block."
+            ./scripts/docs-gate/run-all.sh | tee docs-gate-report.txt
+          fi
+
+      - name: Annotate violations
+        if: always()
+        run: |
+          set -uo pipefail
+          if [ -s docs-gate-report.txt ]; then
+            echo "::group::Docs Gate Report"
+            cat docs-gate-report.txt
+            echo "::endgroup::"
+          fi
+
+      - name: Upload report (always)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs-gate-report
+          path: docs-gate-report.txt
+          retention-days: 14
+          if-no-files-found: warn

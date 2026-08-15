@@ -1834,30 +1834,18 @@ routes:
     menu: v1
     description: 创建
     source: router.go:1137
-  - method: GET
+  - method: POST
     path: /api/v1/ai/rag/search
     permission: ai.read
     menu: v1
-    description: 列表
-    source: router.go:1139
-  - method: POST
-    path: /api/v1/ai/rag/ask
-    permission: ai.read
-    menu: v1
     description: 创建
-    source: router.go:1140
+    source: router.go:1139
   - method: POST
     path: /api/v1/ai/ticket/create
     permission: ticket.create
     menu: v1
     description: 创建
     source: router.go:1142
-  - method: POST
-    path: /api/v1/ai/tickets/:id/summarize
-    permission: ticket.read
-    menu: v1
-    description: 创建
-    source: router.go:1143
   - method: GET
     path: /api/v1/agent/tools
     permission: ai.read

@@ -75,10 +75,18 @@ func (h *Handler) Login(c *gin.Context) {
 
 func (h *Handler) RefreshToken(c *gin.Context) {
 	var req struct {
-		RefreshToken string `json:"refreshToken" binding:"required"`
+		RefreshToken string `json:"refreshToken"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+	// 浏览器端 refresh_token 存于 httpOnly cookie，JS 无法读取，前端以空 body 调用；
+	// 此处回退读取 cookie。否则刷新永远 400，access_token(15min) 过期后会话必然丢失。
+	_ = c.ShouldBindJSON(&req)
+	if req.RefreshToken == "" {
+		if cookieToken, err := c.Cookie("refresh_token"); err == nil && cookieToken != "" {
+			req.RefreshToken = cookieToken
+		}
+	}
+	if req.RefreshToken == "" {
+		common.ParamError(c, "参数错误: refreshToken 不能为空")
 		return
 	}
 

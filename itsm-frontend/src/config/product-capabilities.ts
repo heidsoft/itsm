@@ -4,7 +4,9 @@
  * presenting controls that can only fail or mutate local mock state.
  */
 export const PRODUCT_CAPABILITIES = {
-  aiKnowledgeSearch: false,
+  // 后端已注册 POST /api/v1/ai/rag/search（handlers/ai KnowledgeSearch），
+  // ai-api.ts 已对齐契约（{results, degraded}），打开能力开关。
+  aiKnowledgeSearch: true,
   advancedBatchOperations: false,
   changeClassification: false,
   collaborationAdvanced: false,
@@ -17,7 +19,15 @@ export const PRODUCT_CAPABILITIES = {
   genericTemplateMarketplace: false,
   advancedTicketRelations: false,
   rootCauseWorkflowActions: false,
-  workflowAnalytics: false,
+  // P1-6：后端已完成 BPMN 监控/仪表盘/瓶颈分析服务实现：
+  //   controller/bpmn_monitoring_controller.go 注册 /api/v1/bpmn/monitoring/*
+  //   controller/bpmn_dashboard_controller.go 注册 /api/v1/bpmn/dashboard/* (含 /bottlenecks)
+  //   service/bpmn_monitoring_service.go + service/bpmn_metrics_service.go 有单元测试
+  // 前端使用 bpmn-monitoring-api.ts / bpmn-dashboard-api.ts 而非 workflow-api.ts。
+  // capability 已打开；workflow-api.ts 中 4 个遗留分析/模板入口已改为不再发起未注册请求
+  // （getTemplates/getNodeStats/getBottleneckAnalysis 返回空，getWorkflowStats 返回零快照），
+  // 因此原有 4 条 workflowAnalytics 豁免表项已一并从 DISABLED_API_CONTRACTS 移除。
+  workflowAnalytics: true,
 } as const;
 
 export type ProductCapability = keyof typeof PRODUCT_CAPABILITIES;
@@ -35,7 +45,6 @@ export interface DisabledApiContract {
 
 /** Explicit audit allow-list for roadmap clients that are disabled in UI. */
 export const DISABLED_API_CONTRACTS: readonly DisabledApiContract[] = [
-  { capability: 'aiKnowledgeSearch', file: 'ai-api.ts', path: /\/ai\/knowledge\/search$/, reason: 'AI knowledge search backend route is not registered' },
   { capability: 'advancedBatchOperations', file: 'batch-operations-api.ts', reason: 'Advanced batch orchestration is roadmap-only' },
   { capability: 'changeClassification', file: 'change-classification-api.ts', reason: 'Change classification/rule APIs are not registered' },
   { capability: 'changeClassification', file: 'change-api.ts', path: /\/changes\/templates\//, reason: 'Template instantiation route is not registered' },
@@ -44,10 +53,14 @@ export const DISABLED_API_CONTRACTS: readonly DisabledApiContract[] = [
   { capability: 'notificationTemplateManagement', file: 'notification-preference-api.ts', reason: 'Preference reset/template application routes are not registered' },
   { capability: 'priorityMatrix', file: 'priority-matrix-api.ts', reason: 'Priority matrix backend is not registered' },
   { capability: 'advancedProblemActions', file: 'problem-api.ts', path: /\/(investigate|root-cause|solution|close|sla)$/, reason: 'Advanced problem lifecycle endpoints are not registered' },
-  { capability: 'advancedProblemActions', file: 'problem-investigation.ts', path: /\/problem-relationships$/, reason: 'Problem relationship write endpoint is not registered' },
   { capability: 'advancedReporting', file: 'reports-api.ts', reason: 'Only read-only report summaries are supported by the backend' },
   { capability: 'genericTemplateMarketplace', file: 'template-api.ts', reason: 'Generic template marketplace is not registered; ticket templates use a separate supported API' },
   { capability: 'advancedTicketRelations', file: 'ticket-relations-api.ts', reason: 'Advanced relation analytics and batch routes are not registered' },
   { capability: 'rootCauseWorkflowActions', file: 'ticket-root-cause-api.ts', reason: 'Root-cause confirm/resolve routes are not registered' },
-  { capability: 'workflowAnalytics', file: 'workflow-api.ts', path: /\/(workflow-templates|stats|node-stats|bottlenecks)(?:\/|$)/, reason: 'Workflow template and analytics routes are not registered' },
+  // NOTE: workflowAnalytics is now enabled and the 4 legacy workflow-api.ts analytics/template
+  // entrypoints (workflow-templates / workflows/:id/stats / node-stats / bottlenecks) were
+  // neutralized to stop emitting unregistered paths (see workflow-api.ts). Their exemptions were
+  // therefore removed from this list; canonical analytics use bpmn-dashboard-api.ts /
+  // bpmn-monitoring-api.ts. The problem-relationships write endpoint is now registered
+  // (router.go POST /api/v1/problem-relationships), so its exemption was removed as well.
 ] as const;

@@ -1,5 +1,7 @@
 # ITSM v1.0 GA 收口验收指南
 
+> Status: historical。本文仅适用于 v1.0 GA 历史验收。当前版本不得复用这里的模块计数、默认账号或发布结论；请使用[当前文档事实源](documentation-governance.md)、当前源码和重新执行的 readiness/Golden Gate 证据。
+
 本文档用于开源 v1.0 GA 前的产品默认能力、部署和安全验收。
 
 ## 核心入口

@@ -1,4 +1,17 @@
-import { aiTriage, aiSearchKB, aiSimilarIncidents, aiSummarize, aiSaveFeedback, aiGetMetrics, AIApi } from '../ai-api';
+import {
+  aiTriage,
+  aiSearchKB,
+  aiSimilarIncidents,
+  aiSummarize,
+  aiSaveFeedback,
+  aiGetMetrics,
+  aiGetEvaluation,
+  aiGetAuditLogs,
+  aiClassifyTicket,
+  aiSuggestSolutions,
+  aiIntelligentSearch,
+  AIApi,
+} from '../ai-api';
 import { httpClient } from '../http-client';
 
 jest.mock('../http-client', () => ({
@@ -41,14 +54,14 @@ describe('AI API', () => {
 
   describe('aiSearchKB', () => {
     it('should search knowledge base', async () => {
-      mockPost.mockResolvedValue([{ id: 1, objectType: 'article', snippet: 'found' }]);
+      mockPost.mockResolvedValue({ results: [{ id: 1, objectType: 'article', snippet: 'found' }] });
       const result = await aiSearchKB('password reset', 3);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/knowledge/search', { query: 'password reset', limit: 3, type: 'kb' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/rag/search', { query: 'password reset', limit: 3, type: 'kb' });
       expect(result.answers).toHaveLength(1);
     });
 
-    it('should handle non-array response', async () => {
-      mockPost.mockResolvedValue(null);
+    it('should handle missing results', async () => {
+      mockPost.mockResolvedValue({});
       const result = await aiSearchKB('test');
       expect(result.answers).toEqual([]);
     });
@@ -56,9 +69,9 @@ describe('AI API', () => {
 
   describe('aiSimilarIncidents', () => {
     it('should find similar incidents', async () => {
-      mockPost.mockResolvedValue([{ id: 1, objectType: 'incident', snippet: 'similar' }]);
+      mockPost.mockResolvedValue({ results: [{ id: 1, objectType: 'incident', snippet: 'similar' }] });
       const result = await aiSimilarIncidents('server crash', 5);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/knowledge/search', { query: 'server crash', limit: 5, type: 'incident' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/rag/search', { query: 'server crash', limit: 5, type: 'incident' });
       expect(result.incidents).toHaveLength(1);
     });
   });
@@ -103,6 +116,44 @@ describe('AI API', () => {
     });
   });
 
+  describe('aiGetEvaluation', () => {
+    it('should fetch evaluation report with days param', async () => {
+      mockGet.mockResolvedValue({ healthScore: 57.5, hasData: true, byScenario: [{ kind: 'triage' }] });
+      const result = await aiGetEvaluation(30);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/ai/evaluation?days=30');
+      expect(result.healthScore).toBe(57.5);
+      expect(result.hasData).toBe(true);
+    });
+
+    it('should default to 30 days', async () => {
+      mockGet.mockResolvedValue({});
+      await aiGetEvaluation();
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/ai/evaluation?days=30');
+    });
+  });
+
+  describe('aiGetAuditLogs', () => {
+    it('should fetch audit logs with all params', async () => {
+      mockGet.mockResolvedValue({ items: [{ id: 1, scenario: 'analyze' }], total: 3, page: 1, pageSize: 20 });
+      const result = await aiGetAuditLogs({ page: 2, pageSize: 10, kind: 'analyze', days: 90 });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/ai/audit-logs?page=2&pageSize=10&kind=analyze&days=90');
+      expect(result.items).toHaveLength(1);
+      expect(result.total).toBe(3);
+    });
+
+    it('should omit empty params', async () => {
+      mockGet.mockResolvedValue({ items: [], total: 0 });
+      await aiGetAuditLogs();
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/ai/audit-logs');
+    });
+
+    it('should handle missing items as empty list', async () => {
+      mockGet.mockResolvedValue({ total: 0 });
+      const result = await aiGetAuditLogs({ page: 1 });
+      expect(result.items).toBeUndefined();
+    });
+  });
+
   describe('AIApi class wrapper', () => {
     it('triage should delegate', async () => {
       mockPost.mockResolvedValue({ suggestions: { category: 'test' } });
@@ -117,13 +168,13 @@ describe('AI API', () => {
     });
 
     it('searchKB should delegate', async () => {
-      mockPost.mockResolvedValue([]);
+      mockPost.mockResolvedValue({ results: [] });
       const result = await AIApi.searchKB('test');
       expect(result.answers).toEqual([]);
     });
 
     it('similarIncidents should delegate', async () => {
-      mockPost.mockResolvedValue([]);
+      mockPost.mockResolvedValue({ results: [] });
       const result = await AIApi.similarIncidents('test');
       expect(result.incidents).toEqual([]);
     });
@@ -144,6 +195,92 @@ describe('AI API', () => {
       mockGet.mockResolvedValue({ totalRequests: 50 });
       const result = await AIApi.getMetrics(30);
       expect(result.totalRequests).toBe(50);
+    });
+  });
+
+  describe('aiClassifyTicket (merged from legacy AIService)', () => {
+    it('should classify with suggestions mapping', async () => {
+      mockPost.mockResolvedValue({
+        suggestions: { category: 'network', priority: 'high', confidence: 0.88, reasoning: 'network down', urgency: 'urgent' },
+      });
+      const result = await aiClassifyTicket({ title: 'Test', description: 'Desc' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/triage', { title: 'Test', description: 'Desc' });
+      expect(result.category).toBe('network');
+      expect(result.priority).toBe('high');
+      expect(result.urgency).toBe('urgent');
+      expect(result.confidence).toBe(0.88);
+      expect(result.reasoning).toBe('network down');
+    });
+
+    it('should default urgency to priority and handle missing suggestions', async () => {
+      mockPost.mockResolvedValue({ suggestions: { category: 'software', priority: 'medium' } });
+      const result = await aiClassifyTicket({ title: 'Test', description: 'Desc' });
+      expect(result.category).toBe('software');
+      expect(result.urgency).toBe('medium');
+    });
+
+    it('should fall back to general/medium on empty response', async () => {
+      mockPost.mockResolvedValue({});
+      const result = await aiClassifyTicket({ title: 'Test', description: 'Desc' });
+      expect(result.category).toBe('general');
+      expect(result.priority).toBe('medium');
+      expect(result.confidence).toBe(0);
+    });
+  });
+
+  describe('aiSuggestSolutions (merged from legacy AIService)', () => {
+    const answers = [
+      { id: 1, title: '重置密码指南', snippet: '通过SSO重置', score: 0.9, source: 'kb/1' },
+      { id: 2, title: 'VPN连接排查', snippet: '检查客户端版本', score: 0.7 },
+    ];
+
+    it('should map rag results to solution suggestions', async () => {
+      mockPost.mockResolvedValue({ results: answers });
+      const result = await aiSuggestSolutions({ query: 'password reset', limit: 5 });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/rag/search', { query: 'password reset', limit: 5, type: 'kb' });
+      expect(result).toHaveLength(2);
+      expect(result[0].solutionId).toBe('1');
+      expect(result[0].title).toBe('重置密码指南');
+      expect(result[0].description).toBe('通过SSO重置');
+      expect(result[0].relatedKnowledge).toEqual(['kb/1']);
+    });
+
+    it('should default limit to 5 when not provided or invalid', async () => {
+      mockPost.mockResolvedValue({ results: [] });
+      await aiSuggestSolutions({ query: 'test', limit: 0 });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/rag/search', { query: 'test', limit: 5, type: 'kb' });
+    });
+
+    it('should handle non-array response', async () => {
+      mockPost.mockResolvedValue(null);
+      const result = await aiSuggestSolutions({ query: 'test' });
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('aiIntelligentSearch (merged from legacy AIService)', () => {
+    it('should split results by type', async () => {
+      mockGet.mockResolvedValue({
+        results: [
+          { id: 1, type: 'ticket', title: 'T1', ticketNumber: 'TCK-1' },
+          { id: 2, type: 'incident', title: 'I1' },
+          { id: 3, type: 'knowledge', title: 'K1' },
+          { id: 4, type: 'unknown', title: 'X1' },
+        ],
+      });
+      const result = await aiIntelligentSearch('login issue');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/global-search?keyword=login%20issue');
+      expect(result.tickets).toHaveLength(1);
+      expect(result.tickets[0].number).toBe('TCK-1');
+      expect(result.incidents).toHaveLength(1);
+      expect(result.knowledge).toHaveLength(1);
+    });
+
+    it('should handle empty results', async () => {
+      mockGet.mockResolvedValue({ results: [] });
+      const result = await aiIntelligentSearch('nothing');
+      expect(result.tickets).toEqual([]);
+      expect(result.suggestions).toEqual([]);
     });
   });
 

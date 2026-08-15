@@ -2,10 +2,15 @@ package router
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/connector"
 	"itsm-backend/ent"
+	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/user"
 )
 
 type gaReadinessModule struct {
@@ -34,6 +39,7 @@ type gaReadinessResponse struct {
 }
 
 func buildGAReadiness(ctx context.Context, client *ent.Client) gaReadinessResponse {
+	workflowHealth := classifyWorkflowTasks(ctx, client, time.Now().Add(-24*time.Hour))
 	modules := []gaReadinessModule{
 		{Key: "tenant_model", Name: "租户模型", Status: "ready", Endpoint: "/api/v1/tenants", DataCount: countOrZero(ctx, client, "tenants")},
 		{Key: "permission_menu", Name: "权限与菜单", Status: "ready", Endpoint: "/api/v1/auth/menus", DataCount: countOrZero(ctx, client, "permissions") + countOrZero(ctx, client, "menus")},
@@ -55,11 +61,23 @@ func buildGAReadiness(ctx context.Context, client *ent.Client) gaReadinessRespon
 			ready++
 		}
 	}
+	status := "ready"
+	workflowRuntime := gaReadinessCheck{
+		Key: "workflow_runtime", Name: "流程运行健康", Status: "ready", Notes: "没有超过 24 小时仍未处理的用户任务",
+	}
+	if workflowHealth.Orphaned > 0 || workflowHealth.CrossTenant > 0 {
+		status = "degraded"
+		workflowRuntime.Status = "degraded"
+		workflowRuntime.Notes = fmt.Sprintf("发现 %d 个孤儿任务、%d 个跨租户分配异常；另有 %d 个已分配逾期任务", workflowHealth.Orphaned, workflowHealth.CrossTenant, workflowHealth.Overdue)
+	} else if workflowHealth.Overdue > 0 {
+		workflowRuntime.Status = "warning"
+		workflowRuntime.Notes = fmt.Sprintf("%d 个用户任务已分配但超过 24 小时未处理；属于业务积压，不自动恢复", workflowHealth.Overdue)
+	}
 
 	return gaReadinessResponse{
 		Version:     "1.6.8",
 		Target:      "production-release",
-		Status:      "ready",
+		Status:      status,
 		GeneratedAt: time.Now(),
 		Modules:     modules,
 		Checks: []gaReadinessCheck{
@@ -68,12 +86,57 @@ func buildGAReadiness(ctx context.Context, client *ent.Client) gaReadinessRespon
 			{Key: "connector_lifecycle", Name: "连接器生命周期", Status: "ready", Notes: "市场/配置/健康状态已统一为 lifecycle 视图"},
 			{Key: "ai_traceability", Name: "AI 可追踪", Status: "ready", Notes: "AI audit contract includes scenario/input_ref/prompt_version/model/confidence/suggestion/accepted"},
 			{Key: "product_seed", Name: "产品默认初始化", Status: "ready", Notes: "默认 seed 提供可配置功能模板，不预置虚构业务记录"},
+			workflowRuntime,
 		},
 		Summary: map[string]int{
-			"modules_total": len(modules),
-			"modules_ready": ready,
+			"modules_total":               len(modules),
+			"modules_ready":               ready,
+			"stale_workflow_tasks":        workflowHealth.Total(),
+			"overdue_workflow_tasks":      workflowHealth.Overdue,
+			"orphaned_workflow_tasks":     workflowHealth.Orphaned,
+			"cross_tenant_workflow_tasks": workflowHealth.CrossTenant,
 		},
 	}
+}
+
+type workflowTaskHealth struct {
+	Overdue     int
+	Orphaned    int
+	CrossTenant int
+}
+
+func (h workflowTaskHealth) Total() int { return h.Overdue + h.Orphaned + h.CrossTenant }
+
+func classifyWorkflowTasks(ctx context.Context, client *ent.Client, cutoff time.Time) workflowTaskHealth {
+	if client == nil {
+		return workflowTaskHealth{}
+	}
+	tasks, err := client.ProcessTask.Query().Where(
+		processtask.StatusEQ("created"),
+		processtask.CreatedTimeLT(cutoff),
+	).All(ctx)
+	if err != nil {
+		return workflowTaskHealth{}
+	}
+	health := workflowTaskHealth{}
+	for _, task := range tasks {
+		assigneeID, parseErr := strconv.Atoi(strings.TrimSpace(task.Assignee))
+		if parseErr != nil || assigneeID <= 0 {
+			health.Orphaned++
+			continue
+		}
+		assignee, queryErr := client.User.Query().Where(user.IDEQ(assigneeID)).Only(ctx)
+		if queryErr != nil || !assignee.Active {
+			health.Orphaned++
+			continue
+		}
+		if assignee.TenantID != task.TenantID {
+			health.CrossTenant++
+			continue
+		}
+		health.Overdue++
+	}
+	return health
 }
 
 func countOrZero(ctx context.Context, client *ent.Client, key string) int {

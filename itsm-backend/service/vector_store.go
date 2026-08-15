@@ -68,6 +68,17 @@ func (s *VectorStore) Upsert(ctx context.Context, tenantID int, objectType strin
 	return err
 }
 
+// Delete removes a vector entry by tenant + object identity.
+// Used by RAGService.RemoveArticle so soft-deleted / unpublished articles are
+// physically removed from the vectors table instead of lingering as stale
+// hits that only enrichment-time filtering can hide.
+func (s *VectorStore) Delete(ctx context.Context, tenantID int, objectType string, objectID int) error {
+	_, err := s.db.ExecContext(ctx, `
+        DELETE FROM vectors WHERE tenant_id = $1 AND object_type = $2 AND object_id = $3
+    `, tenantID, objectType, objectID)
+	return err
+}
+
 func (s *VectorStore) SearchTopK(ctx context.Context, tenantID int, query []float32, k int) (*sql.Rows, error) {
 	if k <= 0 {
 		k = 5

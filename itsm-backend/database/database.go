@@ -174,6 +174,28 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 		log.Printf("create ai_feedbacks created index failed (non-fatal): %v", err)
 	}
 
+	// Create ai_llm_calls table for LLM gateway observability.
+	// Populated by service.LLMObserver on every gateway call (success, rate-limited or
+	// failed) and consumed by AITelemetryService.GetMetrics for real latency numbers.
+	if _, err := db.ExecContext(ctx, `
+            CREATE TABLE IF NOT EXISTS ai_llm_calls (
+                id BIGSERIAL PRIMARY KEY,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                provider TEXT NOT NULL DEFAULT '',
+                model TEXT NOT NULL DEFAULT '',
+                tokens INT NOT NULL DEFAULT 0,
+                latency_ms INT NOT NULL DEFAULT 0,
+                success BOOLEAN NOT NULL DEFAULT TRUE
+            );
+        `); err != nil {
+		log.Printf("create ai_llm_calls table failed (non-fatal): %v", err)
+	}
+	if _, err := db.ExecContext(ctx, `
+            CREATE INDEX IF NOT EXISTS ai_llm_calls_created_idx ON ai_llm_calls(created_at);
+        `); err != nil {
+		log.Printf("create ai_llm_calls created index failed (non-fatal): %v", err)
+	}
+
 	// SLA violation 部分唯一索引：
 	// 防止同一 (ticket_id, violation_type) 在“未解决”状态下被多个 worker / 实例
 	// 重复创建。这是 SLA Monitor Service 跨实例竞态保护的最后一道防线：

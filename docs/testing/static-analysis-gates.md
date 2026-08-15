@@ -11,6 +11,12 @@ shell 脚本，位于 `scripts/static-gates/`，由 `scripts/static-gates/run-al
 | 5.3 | 前端禁用 raw `fetch` / `axios`，统一走 BaseApi | `check-raw-fetch.sh` | ADVISORY | ❌ |
 | 5.4 | `service` 层 `go func` 内不得裸用 `context.Background()` | `check-context-bg.sh` | ADVISORY | ❌ |
 | 5.5 | `*ListResponse` 必须含 `items/total/page/pageSize/totalPages` 五元组 | `check-pagination-shape.sh` | ADVISORY | ❌ |
+| 5.6 | `next.config.ts` 不得启用 `ignoreBuildErrors` / `ignoreDuringBuilds` | `check-next-ignore-build-errors.sh` | ADVISORY | ❌ |
+| 5.7 | 主要路由组必须具备 `loading.tsx` / `error.tsx` / `not-found.tsx` | `check-next-route-states.sh` | ADVISORY | ❌ |
+| 5.8 | `ErrorBoundary` / `AccessDenied` 不得跳转 `/` 营销路径 | `check-error-boundary-target.sh` | ADVISORY | ❌ |
+| 5.9 | 测试夹具不得硬编码共享唯一键（如 `ticket_categories.code`） | `check-test-fixture-uniqueness.sh` | ADVISORY | ❌ |
+
+> 5.6–5.9 迁移自 [`docs/review/frontend-ux-review-2026-06-19.md`](../review/frontend-ux-review-2026-06-19.md) 与 [`docs/review/system-function-review-result-2026-07-01.md`](../review/system-function-review-result-2026-07-01.md)；脚本位于 `scripts/static-gates/`（与 5.1–5.5 并列）。
 
 ## 接入位置
 
@@ -205,6 +211,79 @@ type FooListResponse struct {
     TotalPages int   `json:"totalPages"`
 }
 ```
+
+---
+
+## 5.6 — `next.config.ts` 不得启用 ignoreBuildErrors
+
+**目的**：任何 `typescript.ignoreBuildErrors` / `eslint.ignoreDuringBuilds` 都会让类型错误 / lint 问题进入生产构建。评审 P0-4 明确指出该选项需删除。
+
+**实现**：扫描 `itsm-frontend/next.config.ts` 与 `next.config.js`，匹配：
+
+- `ignoreBuildErrors\s*:\s*true`
+- `ignoreDuringBuilds\s*:\s*true`
+
+**当前状态**：⚠️ advisory。仓库现存 1 处历史命中，移除后切换硬门禁。
+
+**修复示例**：
+
+```ts
+// 反例：
+const nextConfig = {
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
+};
+
+// 正例：删除两个 ignore 配置；CI 强制 `tsc --noEmit` 与 `next lint`。
+const nextConfig = {
+  reactStrictMode: true,
+};
+```
+
+---
+
+## 5.7 — 路由必备状态文件
+
+**目的**：评审 P0-2 / P0-3 / P1-2 指出 Next.js 路由缺少 `loading.tsx` / `error.tsx` / `not-found.tsx` / `global-error.tsx` 会导致整页白屏或默认 404。
+
+**实现**：扫描 `itsm-frontend/src/app/` 下每个路由目录（含 `(main)/`、`(auth)/`）：
+
+- 必须存在 `error.tsx`（路由级错误边界）
+- 公共路由（`/`、`(main)`）必须存在 `loading.tsx`、`not-found.tsx`
+- 根 `app/` 必须存在 `global-error.tsx`
+
+**豁免**：动态路由目录、API 路由（`api/`）。
+
+**当前状态**：⚠️ advisory。仓库当前已补齐 `(main)` 路由的 `loading.tsx` / `error.tsx`，待补 `not-found.tsx` 与根 `global-error.tsx`。
+
+---
+
+## 5.8 — 错误边界跳转目标
+
+**目的**：评审 P1-3 / P2-10 指出 `ErrorBoundary.handleGoHome` 与 `AccessDenied` "返回首页"在无历史记录时跳 `/`（营销页 / 重定向到登录），导致用户被登出。
+
+**实现**：扫描 `itsm-frontend/src/components/common/ErrorBoundary.tsx`、`AuthGuard.tsx`：
+
+- 不得出现 `router.push('/')` 或 `window.location.href = '/'`
+- 必须跳 `/dashboard` 或基于认证状态动态决定
+
+**当前状态**：⚠️ advisory。评审已识别 2 处需修复。
+
+---
+
+## 5.9 — 测试夹具共享唯一键
+
+**目的**：评审 F-6..F-9 指出 controller 测试硬编码 `ticket_categories.code = "incident"` 会导致唯一约束冲突，9 个 ticket 测试因此失败。
+
+**实现**：扫描 `itsm-backend/controller/*_test.go`、`service/*_test.go`，匹配：
+
+- `SetCode\(["']incident["']\)`（不带 uniqueTestID）
+- `SetName\(["']incident["']\)` 同模式
+- 任何 `SetCode(["']` + 字面量 + `["'])` 后跟 `.Save(ctx)` 且未含 `unique` / `+.*ID` / `fmt.Sprintf`
+
+豁免：测试夹具必须含 `uniqueTestID()`、`uuid`、`fmt.Sprintf` 或 `time.Now()` 等唯一化逻辑。
+
+**当前状态**：⚠️ advisory。F-6..F-9 已在 2026-08-12 修复，但守门规则缺失；本门禁防止未来再次引入同类硬编码。
 
 ---
 

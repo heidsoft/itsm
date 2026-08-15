@@ -131,6 +131,9 @@ func (ProcessBinding) Edges() []ent.Edge {
 // Indexes of the ProcessBinding.
 func (ProcessBinding) Indexes() []ent.Index {
 	return []ent.Index{
+		// The active routing business key is enforced by post-schema migration
+		// 013 because Ent cannot express the required partial expression index
+		// over COALESCE(business_sub_type, '').
 		// 业务类型索引
 		index.Fields("business_type", "business_sub_type"),
 		// 流程定义索引

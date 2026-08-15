@@ -40,7 +40,7 @@ func (h *Handler) ListTools(c *gin.Context) {
 
 	visible := make([]service.ToolDefinition, 0, len(allTools))
 	for _, t := range allTools {
-		if middleware.HasResourcePermission(h.svc.entClient, role, t.Resource, t.Action, tenantID) {
+		if middleware.HasResourcePermission(c.Request.Context(), h.svc.entClient, role, t.Resource, t.Action, tenantID) {
 			visible = append(visible, t)
 		}
 	}
@@ -392,6 +392,45 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 	})
 }
 
+// GetEvaluation handles GET /api/v1/ai/evaluation.
+// 输出 AI 评估报告：按场景的有用率、置信度校准、平台级 LLM 成功率/延迟。
+func (h *Handler) GetEvaluation(c *gin.Context) {
+	days := queryInt(c, "days", 30)
+	tenantID := c.GetInt("tenant_id")
+	report, err := h.svc.Evaluate(c.Request.Context(), tenantID, days)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(c, report)
+}
+
+// GetAuditLogs handles GET /api/v1/ai/audit-logs.
+// 分页查询 AI 审计记录（item_type='ai_audit'），可按场景 kind 过滤。
+func (h *Handler) GetAuditLogs(c *gin.Context) {
+	page := queryInt(c, "page", 1)
+	pageSize := queryInt(c, "pageSize", 20)
+	days := queryInt(c, "days", 90)
+	kind := c.Query("kind")
+	tenantID := c.GetInt("tenant_id")
+	entries, total, err := h.svc.ListAuditLogs(c.Request.Context(), tenantID, page, pageSize, kind, days)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(c, gin.H{"items": entries, "total": total, "page": page, "pageSize": pageSize})
+}
+
+// queryInt 解析正整数查询参数，非法/缺失时回退到默认值。
+func queryInt(c *gin.Context, key string, def int) int {
+	if v := c.Query(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+	}
+	return def
+}
+
 // GetMetrics handles GET /api/v1/ai/metrics.
 func (h *Handler) GetMetrics(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
@@ -413,7 +452,7 @@ func (h *Handler) GetMetrics(c *gin.Context) {
 	common.Success(c, metrics)
 }
 
-// KnowledgeSearch handles POST /api/v1/ai/knowledge/search - RAG search over knowledge base
+// KnowledgeSearch handles POST /api/v1/ai/rag/search - RAG search over knowledge base
 func (h *Handler) KnowledgeSearch(c *gin.Context) {
 	var req struct {
 		Query string `json:"query" binding:"required"`
@@ -512,12 +551,6 @@ func (h *Handler) CreateTicketByAI(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, result)
-}
-
-// SummarizeTicketPost handles POST /api/v1/ai/tickets/:id/summarize
-// POST 版本的工单总结，复用 GET SummarizeTicket 逻辑
-func (h *Handler) SummarizeTicketPost(c *gin.Context) {
-	h.SummarizeTicket(c)
 }
 
 // GetToolInvocation handles GET /api/v1/agent/tools/:id

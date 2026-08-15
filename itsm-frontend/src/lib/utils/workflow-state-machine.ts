@@ -139,13 +139,17 @@ export function isActiveStatus(status: TicketStatus): boolean {
 
 /**
  * 事件状态转换规则
+ * 与后端 common/constants.go IsValidIncidentStatusTransition 保持一致（单一事实来源）
  */
 export const INCIDENT_STATUS_TRANSITIONS: Record<string, string[]> = {
-  new: ['investigating', 'resolved', 'cancelled'],
-  investigating: ['identified', 'monitoring', 'resolved', 'cancelled'],
-  identified: ['monitoring', 'resolved', 'cancelled'],
-  monitoring: ['resolved', 'cancelled'],
-  resolved: ['closed'],
+  new: ['acknowledged', 'assigned', 'in_progress', 'cancelled'],
+  acknowledged: ['in_progress', 'on_hold', 'cancelled'],
+  assigned: ['in_progress', 'escalated', 'on_hold', 'cancelled'],
+  in_progress: ['resolved', 'escalated', 'on_hold', 'cancelled'],
+  triaged: ['in_progress', 'escalated', 'on_hold', 'cancelled'],
+  escalated: ['in_progress', 'on_hold', 'cancelled'],
+  on_hold: ['in_progress', 'cancelled'],
+  resolved: ['closed', 'in_progress', 'cancelled'], // in_progress = 重新打开
   closed: [],
   cancelled: [],
 };

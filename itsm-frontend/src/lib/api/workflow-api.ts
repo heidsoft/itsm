@@ -331,7 +331,6 @@ export class WorkflowApi {
   static async listWorkflowTasks(instanceId: string): Promise<WorkflowTask[]> {
     // 调用后端 BPMN API 获取指定流程实例的任务列表
     try {
-      const tenantId = httpClient.getTenantId() || 1;
       const res = await httpClient.get<{ items?: any[]; list?: any[]; data?: any[] }>('/api/v1/bpmn/tasks', {
         processInstanceId: instanceId,
         page: 1,
@@ -474,16 +473,13 @@ export class WorkflowApi {
    * 创建工作流
    */
   static async createWorkflow(request: CreateWorkflowRequest): Promise<WorkflowDefinition> {
-    // 从 httpClient 获取当前租户ID
-    const tenantId = httpClient.getTenantId() || 1;
-
+    // 租户归属由后端从 JWT 上下文强制注入，前端不得伪造 tenantId
     const payload = {
       key: request.code || `process_${Date.now()}`,
       name: request.name,
       description: request.description,
       category: request.type, // Map type to category
       bpmnXml: request.bpmnXml,
-      tenantId: tenantId,
     };
     return httpClient.post('/api/v1/bpmn/process-definitions', payload);
   }
@@ -1056,7 +1052,8 @@ export class WorkflowApi {
     category?: string;
     search?: string;
   }): Promise<WorkflowTemplate[]> {
-    // return httpClient.get('/api/v1/workflow-templates', params);
+    // Backend does not register /api/v1/workflow-templates; return empty until a BPMN
+    // template API lands. Kept as a stable no-op for existing useWorkflowTemplatesQuery callers.
     return [];
   }
 
@@ -1160,12 +1157,26 @@ export class WorkflowApi {
    */
   static async getWorkflowStats(
     workflowId: string,
-    params?: {
+    _params?: {
       startDate?: string;
       endDate?: string;
     }
   ): Promise<WorkflowStats> {
-    return httpClient.get(`/api/v1/workflows/${workflowId}/stats`, params);
+    // Legacy endpoint /api/v1/workflows/:id/stats is not registered on the backend.
+    // Canonical workflow analytics are served by BPMNDashboardApi / BPMNMonitoringApi
+    // (see bpmn-dashboard-api.ts / bpmn-monitoring-api.ts) and getInstanceStats/getTaskStats
+    // which target /api/v1/bpmn/stats/*. Return a zeroed snapshot so callers such as
+    // exportReport() fall back to those live sources instead of hitting a 404.
+    return {
+      workflowId,
+      totalInstances: 0,
+      runningInstances: 0,
+      completedInstances: 0,
+      failedInstances: 0,
+      avgDuration: 0,
+      successRate: 0,
+      bottlenecks: [],
+    };
   }
 
   /**
@@ -1346,7 +1357,7 @@ export class WorkflowApi {
       endDate?: string;
     }
   ): Promise<NodeExecutionStats[]> {
-    // return httpClient.get(`/api/v1/workflows/${workflowId}/node-stats`, params);
+    // No legacy node-stats endpoint; return empty list (see getWorkflowStats note).
     return [];
   }
 
@@ -1362,7 +1373,7 @@ export class WorkflowApi {
       recommendations: string[];
     }>;
   }> {
-    // return httpClient.get(`/api/v1/workflows/${workflowId}/bottlenecks`);
+    // No legacy bottlenecks endpoint; return empty analysis (see getWorkflowStats note).
     return { bottlenecks: [] };
   }
 

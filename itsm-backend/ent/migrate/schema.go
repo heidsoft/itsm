@@ -372,7 +372,6 @@ var (
 		{Name: "used_by", Type: field.TypeInt, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "tenant_id", Type: field.TypeInt},
-		{Name: "tenant_bootstrap_tokens", Type: field.TypeInt, Nullable: true},
 	}
 	// BootstrapTokensTable holds the schema information for the "bootstrap_tokens" table.
 	BootstrapTokensTable = &schema.Table{
@@ -382,9 +381,9 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "bootstrap_tokens_tenants_bootstrap_tokens",
-				Columns:    []*schema.Column{BootstrapTokensColumns[7]},
+				Columns:    []*schema.Column{BootstrapTokensColumns[6]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.SetNull,
+				OnDelete:   schema.NoAction,
 			},
 		},
 	}
@@ -3932,21 +3931,12 @@ var (
 		{Name: "timezone", Type: field.TypeString, Default: "Asia/Shanghai"},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "bootstrap_token_tenant", Type: field.TypeInt, Nullable: true},
 	}
 	// TenantsTable holds the schema information for the "tenants" table.
 	TenantsTable = &schema.Table{
 		Name:       "tenants",
 		Columns:    TenantsColumns,
 		PrimaryKey: []*schema.Column{TenantsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "tenants_bootstrap_tokens_tenant",
-				Columns:    []*schema.Column{TenantsColumns[19]},
-				RefColumns: []*schema.Column{BootstrapTokensColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 	}
 	// TenantInstallationsColumns holds the columns for the "tenant_installations" table.
 	TenantInstallationsColumns = []*schema.Column{
@@ -5420,7 +5410,6 @@ func init() {
 	SLAViolationsTable.ForeignKeys[1].RefTable = TicketsTable
 	ServiceCatalogItemsTable.ForeignKeys[0].RefTable = ServiceCatalogsTable
 	SurveyResponsesTable.ForeignKeys[0].RefTable = SurveysTable
-	TenantsTable.ForeignKeys[0].RefTable = BootstrapTokensTable
 	TenantInstallationsTable.ForeignKeys[0].RefTable = MarketplaceItemsTable
 	TicketsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	TicketsTable.ForeignKeys[1].RefTable = DepartmentsTable

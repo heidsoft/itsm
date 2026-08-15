@@ -113,7 +113,7 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 	}
 
 	if IsToolRBACEnabled() && s.entClient != nil && role != "" && role != "super_admin" {
-		if middleware.HasResourcePermission(s.entClient, role, toolDef.Resource, toolDef.Action, tenantID) {
+		if middleware.HasResourcePermission(ctx, s.entClient, role, toolDef.Resource, toolDef.Action, tenantID) {
 			permCheck = "passed"
 		} else {
 			permCheck = "denied"
@@ -550,6 +550,22 @@ func (s *Service) determineUrgency(priority string) string {
 	default:
 		return "medium"
 	}
+}
+
+// Evaluate delegates to AITelemetryService.Evaluate (nil-safe for unit tests).
+func (s *Service) Evaluate(ctx context.Context, tenantID int, days int) (*service.AIEvaluationReport, error) {
+	if s.aiTelemetryService == nil {
+		return &service.AIEvaluationReport{GeneratedAt: time.Now().Format(time.RFC3339), LookbackDays: days}, nil
+	}
+	return s.aiTelemetryService.Evaluate(ctx, tenantID, days)
+}
+
+// ListAuditLogs delegates to AITelemetryService.ListAuditLogs (nil-safe for unit tests).
+func (s *Service) ListAuditLogs(ctx context.Context, tenantID, page, pageSize int, kind string, days int) ([]service.AIAuditEntry, int, error) {
+	if s.aiTelemetryService == nil {
+		return []service.AIAuditEntry{}, 0, nil
+	}
+	return s.aiTelemetryService.ListAuditLogs(ctx, tenantID, page, pageSize, kind, days)
 }
 
 // containsAny checks if string contains any of the keywords

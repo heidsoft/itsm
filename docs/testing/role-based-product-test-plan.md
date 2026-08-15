@@ -183,7 +183,7 @@
 | FLOW-7 | SLA 违约告警 | system → sd_manager | 预设短 SLA → 等待 → 告警触发 → 邮件/IM 推送 | `slaalerthistory` 有记录，连接器发送成功 |
 | FLOW-8 | CMDB 影响分析 | engineer | 改某 CI → `/configuration-items/:id/impact-analysis` | 返回受影响下游 CI 列表 |
 | FLOW-9 | 多租户隔离 | t1.admin & t2.admin | 同名工单各自创建 → 互查 0 命中 | 任一接口 cross-tenant 返回均为 0 |
-| FLOW-10 | 知识库 RAG | end_user → AI | 自然语言提问 → `/ai/rag/ask` | 返回 KB 引用列表，无 KB 时降级关键字 |
+| FLOW-10 | 知识库 RAG | end_user → AI | 自然语言提问 → `/ai/chat` | 返回 KB 引用列表，无 KB 时降级关键字 |
 
 ---
 

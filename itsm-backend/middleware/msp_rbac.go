@@ -163,7 +163,7 @@ func RequireMSPPermission(resource, action string) gin.HandlerFunc {
 		}
 		client := clientInterface.(*ent.Client)
 
-		if !hasResourcePermission(client, rbacRole, resource, action, tenantID) {
+		if !hasResourcePermission(c.Request.Context(), client, rbacRole, resource, action, tenantID) {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    http.StatusForbidden,
 				"message": "权限不足",

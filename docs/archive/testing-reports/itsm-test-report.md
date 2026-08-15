@@ -2,6 +2,8 @@
 
 # ITSM 系统测试问题清单
 
+> **归档说明（2026-08-15）**: 本报告为 2026-07-24 版本（a877babc）的时点快照，已归档至 docs/archive/。其中问题 #1（Token 登出后仍可使用）已在后续版本修复——访问令牌吊销机制已实现（见 `itsm-backend/middleware/token_revocation_test.go`，登出后旧 Token 返回 401 "token已失效"）。其余问题以当前代码为准，勿以本报告状态作为开发依据。
+
 **测试日期**: 2026\-07\-24
 **测试人员**: OpenClaw Agent
 **测试环境**: http://localhost
@@ -59,7 +61,7 @@
 
 **建议**: 实现 Token 黑名单机制，登录后将 Token 加入黑名单
 
-**状态**: 待修复
+**状态**: 已修复（访问令牌吊销机制已实现，见 `middleware/token_revocation_test.go`；归档时于 2026-08-15 确认）
 
 ---
 

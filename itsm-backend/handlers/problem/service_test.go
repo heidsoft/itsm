@@ -80,6 +80,35 @@ func TestProblemServiceLifecycleAndTimestamps(t *testing.T) {
 	require.ErrorContains(t, err, "invalid problem status transition")
 }
 
+func TestGoldenJourney_ProblemRCAResolvedAndClosed(t *testing.T) {
+	client, service, ctx := setupProblemHandlerTest(t)
+	defer client.Close()
+	tenant := createProblemHandlerTenant(t, ctx, client, "golden")
+	user := createProblemHandlerUser(t, ctx, client, tenant.ID, "golden")
+	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, user.ID)
+
+	_, err := service.CloseProblem(ctx, tenant.ID, p.ID, "不得跳过分析")
+	require.ErrorContains(t, err, "invalid problem status transition")
+	p, err = service.InvestigateProblem(ctx, tenant.ID, p.ID)
+	require.NoError(t, err)
+	p, err = service.UpdateRootCause(ctx, tenant.ID, p.ID, "连接池耗尽")
+	require.NoError(t, err)
+	p, err = service.UpdateSolution(ctx, tenant.ID, p.ID, "临时扩容", "修复连接泄漏")
+	require.NoError(t, err)
+	p, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "resolved"})
+	require.NoError(t, err)
+	p, err = service.CloseProblem(ctx, tenant.ID, p.ID, "修复连接泄漏并观察稳定")
+	require.NoError(t, err)
+	assert.Equal(t, "closed", p.Status)
+	assert.Equal(t, "连接池耗尽", p.RootCause)
+	assert.Equal(t, "临时扩容", p.Workaround)
+	require.NotNil(t, p.ResolvedAt)
+	require.NotNil(t, p.ClosedAt)
+
+	_, err = service.Get(ctx, p.ID, tenant.ID+1)
+	require.Error(t, err, "cross-tenant direct ID must fail closed")
+}
+
 func TestProblemRepositorySoftDeleteExcludedEverywhere(t *testing.T) {
 	client, service, ctx := setupProblemHandlerTest(t)
 	defer client.Close()

@@ -33,22 +33,12 @@ func NewBPMNWorkflowController(processEngine service.ProcessEngine, versionServi
 
 func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
 	tenantID := ctx.GetInt("tenant_id")
-	role := ctx.GetString("role")
 	userID := ctx.GetInt("user_id")
-
-	// 调试日志 - 使用标准输出
-	fmt.Printf("[DEBUG] getBPMNTenantContext: tenant_id=%d, role=%s, user_id=%d\n", tenantID, role, userID)
-
-	// 架构优化：super_admin 角色在没有 tenant 上下文时使用默认租户 (tenant_id=1)
-	// 这是企业级系统的常见模式，超级管理员默认属于系统租户
-	if tenantID <= 0 && role == "super_admin" {
-		tenantID = 1
-		fmt.Printf("[DEBUG] getBPMNTenantContext: super_admin using default tenant_id=%d\n", tenantID)
-	}
 
 	// F-5 修复：tenant_id 必须 > 0。原实现仅拒绝 <0，允许 tenant_id=0 透传，
 	// 导致引擎内 `if tenantID > 0 { ...TenantID(tenantID) }` 过滤被整体跳过，
 	// 可跨租户读流程定义/实例/任务/变量。正常鉴权用户必带 >0 租户；0 视为异常令牌，直接拒绝。
+	// 注意:不得为 super_admin 回退默认租户 1 —— 无租户上下文必须 fail-closed(ADR 0001)。
 	if tenantID <= 0 {
 		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
 		return nil, 0, false
@@ -173,14 +163,11 @@ func (c *BPMNWorkflowController) SubmitTaskDecision(ctx *gin.Context) {
 
 // CreateProcessDefinition 创建流程定义
 func (c *BPMNWorkflowController) CreateProcessDefinition(ctx *gin.Context) {
-	// 首先获取租户上下文（这会处理 super_admin 默认租户逻辑）
+	// 获取租户上下文。租户缺失时 fail-closed，禁止回退默认租户(ADR 0001)。
 	tenantIDFromCtx := ctx.GetInt("tenant_id")
-	role := ctx.GetString("role")
-
-	// 架构优化：super_admin 角色在没有 tenant 上下文时使用默认租户 (tenant_id=1)
-	if tenantIDFromCtx <= 0 && role == "super_admin" {
-		tenantIDFromCtx = 1
-		ctx.Set("tenant_id", 1)
+	if tenantIDFromCtx <= 0 {
+		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		return
 	}
 
 	// 预先设置 TenantID 到请求中，避免 binding 验证失败
@@ -719,6 +706,47 @@ func (c *BPMNWorkflowController) AssignTask(ctx *gin.Context) {
 	}
 
 	common.SuccessWithMessage(ctx, "任务分配成功", nil)
+}
+
+// ReassignTask performs an audited tenant-scoped recovery of an active task.
+func (c *BPMNWorkflowController) ReassignTask(ctx *gin.Context) {
+	var req struct {
+		NewAssigneeID int    `json:"newAssigneeId" binding:"required"`
+		Reason        string `json:"reason" binding:"required"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
+	if err := c.processEngine.TaskService().ReassignTask(workflowCtx, ctx.Param("id"), req.NewAssigneeID, req.Reason); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "重新分配任务失败: "+err.Error())
+		return
+	}
+	common.SuccessWithMessage(ctx, "任务重新分配成功", nil)
+}
+
+// TerminateTask terminates the owning BPMN instance and all of its open tasks.
+func (c *BPMNWorkflowController) TerminateTask(ctx *gin.Context) {
+	var req struct {
+		Reason string `json:"reason" binding:"required"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
+	if err := c.processEngine.TaskService().TerminateTask(workflowCtx, ctx.Param("id"), req.Reason); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "终止任务失败: "+err.Error())
+		return
+	}
+	common.SuccessWithMessage(ctx, "任务所属流程终止成功", nil)
 }
 
 // ClaimTask 认领任务

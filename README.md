@@ -35,6 +35,8 @@ ITSM 用一套可审计、可扩展的后端规则连接服务台、事件、问
 
 > 当前处于商业化收敛阶段。核心 ITIL 能力已经具备可运行基础，但不同领域成熟度不同。代码或页面存在不等于已达到生产承诺；请以[商业能力契约](./docs/product/itsm-commercial-capability-contract.md)和对应验收结果为准。
 
+开发前请先阅读[文档状态与事实源](./docs/documentation-governance.md)。`output/`、`docs/review/`、`docs/test-plan/` 和 `docs/archive/` 中的报告是历史快照，不能覆盖当前源码、运行时和最新发布证据。
+
 运行时能力以认证接口 `GET /api/v1/capabilities` 为唯一事实来源。菜单和工作台必须同时满足构建可用、部署就绪、租户就绪及用户操作权限；仓库内的成熟度表用于发布说明，不替代运行时判断。
 
 ## 适用场景
@@ -307,7 +309,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 | [API 参考](./docs/api/API_REFERENCE.md) | HTTP 接口文档 |
 | [配置参考](./docs/configuration.md) | 环境变量和配置项 |
 | [测试指南](./docs/testing/README.md) | 单元、集成、契约和 E2E 测试 |
-| [Roadmap](./docs/roadmap.md) | 迭代方向 |
+| [Roadmap](./ROADMAP.md) | 当前迭代方向唯一事实源 |
 
 ## 参与贡献
 

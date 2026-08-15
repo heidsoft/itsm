@@ -200,12 +200,19 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 			"search_type": "vector",
 		}
 
-		// Enrich with knowledge article metadata
+		// Enrich with knowledge article metadata.
+		// 可见性过滤：仅保留存在、未软删除且已发布的文章；否则跳过该条结果，
+		// 避免向量索引残留（软删除/未发布文章）泄漏到检索结果。
 		if objType == "kb" {
-			if a, err := r.client.KnowledgeArticle.Query().Where(ka.IDEQ(objID), ka.DeletedAtIsNil()).Only(ctx); err == nil {
-				item["title"] = a.Title
-				item["category"] = a.Category
+			a, err := r.client.KnowledgeArticle.Query().
+				Where(ka.IDEQ(objID), ka.DeletedAtIsNil(), ka.IsPublished(true)).
+				Only(ctx)
+			if err != nil {
+				r.logger.Debugw("RAGService: skip vector result, article not visible", "article_id", objID, "error", err)
+				continue
 			}
+			item["title"] = a.Title
+			item["category"] = a.Category
 		}
 
 		results = append(results, item)
@@ -220,7 +227,9 @@ func (r *RAGService) keywordSearch(ctx context.Context, tenantID int, query stri
 		return nil, fmt.Errorf("keyword search not available")
 	}
 
-	q := r.client.KnowledgeArticle.Query().Where(ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil())
+	q := r.client.KnowledgeArticle.Query().
+		// 可见性过滤：仅检索本租户、未软删除且已发布的文章，草稿不得进入 RAG 结果。
+		Where(ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil(), ka.IsPublished(true))
 	if qq := strings.TrimSpace(query); qq != "" {
 		// Use OR for broader search
 		q = q.Where(ka.Or(
@@ -412,15 +421,21 @@ func (r *RAGService) IndexArticle(ctx context.Context, tenantID int, articleID i
 	return nil
 }
 
-// RemoveArticle removes a knowledge article from the vector store
+// RemoveArticle removes a knowledge article from the vector store.
+// 真实删除：软删除/取消发布文章时调用，物理移除 vectors 表中的残留向量，
+// 使检索侧不再依赖 enrichment 阶段的兜底过滤。幂等：条目不存在时静默成功。
 func (r *RAGService) RemoveArticle(ctx context.Context, tenantID int, articleID int) error {
 	if !r.useVector || r.vectors == nil {
+		r.logger.Debugw("RAGService: vector indexing disabled, skip article removal")
 		return nil
 	}
 
-	// Vector store doesn't have delete, but we could add one
-	// For now, just log
-	r.logger.Debugw("RAGService: article removal from vector store not yet implemented")
+	if err := r.vectors.Delete(ctx, tenantID, "kb", articleID); err != nil {
+		r.logger.Warnw("RAGService: failed to remove article vector", "article_id", articleID, "tenant_id", tenantID, "error", err)
+		return fmt.Errorf("failed to remove article vector: %w", err)
+	}
+
+	r.logger.Infow("RAGService: article vector removed", "article_id", articleID, "tenant_id", tenantID)
 	return nil
 }
 

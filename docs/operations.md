@@ -167,7 +167,7 @@ checkpoint_completion_target = 0.9
 
 ## Security Hardening
 
-1. **Change default passwords** - `admin123` must be changed
+1. **Use production bootstrap** - `admin123` is development-only; production must create the first administrator through the supported one-time bootstrap flow
 2. **Restrict CORS** - Set `ITSM_ALLOW_ALL_ORIGINS=false`
 3. **Enable HTTPS** - Terminate SSL at reverse proxy
 4. **Rotate secrets** - Update JWT_SECRET periodically

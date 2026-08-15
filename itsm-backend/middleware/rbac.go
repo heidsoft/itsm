@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"itsm-backend/common"
-	"itsm-backend/database"
 	"itsm-backend/ent"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/role"
@@ -373,7 +372,8 @@ var PermissionConfig = struct {
 
 // loadRolePermissionsFromDB 从数据库加载角色的权限
 // 直接从 role_permissions 联表查询，支持多租户
-func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int) []Permission {
+// P0-4：ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()
+func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName string, tenantID int) []Permission {
 	// 如果 client 为 nil，直接返回空权限
 	if client == nil {
 		return nil
@@ -400,7 +400,7 @@ func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int
 			role.Code(roleName),
 			role.TenantID(tenantID),
 		).
-		Only(context.Background())
+		Only(ctx)
 
 	if err == nil && roleEntity != nil {
 		roleID := roleEntity.ID
@@ -408,7 +408,7 @@ func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int
 		// 直接查询 role_permissions 联表获取该角色的权限
 		rolePerms, err := client.RolePermission.Query().
 			Where(rolepermission.RoleIDEQ(roleID), rolepermission.TenantID(tenantID)).
-			All(context.Background())
+			All(ctx)
 
 		if err == nil && len(rolePerms) > 0 {
 			// 提取permission_id列表
@@ -420,7 +420,7 @@ func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int
 			// 查询 permissions 表获取权限详情（加 tenant 过滤）
 			permsData, err := client.Permission.Query().
 				Where(permission.IDIn(permIDs...), permission.TenantID(tenantID)).
-				All(context.Background())
+				All(ctx)
 
 			if err == nil {
 				for _, p := range permsData {
@@ -461,7 +461,8 @@ func InvalidateAllPermissionCaches() {
 
 // loadPermissionsFromDB 从新的permission_definition和role_permission表加载权限
 // 如果新表没有数据，则fallback到旧的Permission表
-func loadPermissionsFromDB(client *ent.Client, roleName string, tenantID int) []Permission {
+// P0-4：ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()
+func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName string, tenantID int) []Permission {
 	// 如果 client 为 nil，直接返回空权限（将使用默认权限）
 	if client == nil {
 		return nil
@@ -488,7 +489,7 @@ func loadPermissionsFromDB(client *ent.Client, roleName string, tenantID int) []
 			role.Code(roleName),
 			role.TenantID(tenantID),
 		).
-		Only(context.Background())
+		Only(ctx)
 
 	if err == nil && roleEntity != nil {
 		roleID := roleEntity.ID
@@ -496,7 +497,7 @@ func loadPermissionsFromDB(client *ent.Client, roleName string, tenantID int) []
 		// 查询role_permission表获取该角色的权限定义ID
 		rolePerms, err := client.RolePermission.Query().
 			Where(rolepermission.RoleIDEQ(roleID), rolepermission.TenantID(tenantID)).
-			All(context.Background())
+			All(ctx)
 
 		if err == nil && len(rolePerms) > 0 {
 			// 提取permission_id列表
@@ -508,7 +509,7 @@ func loadPermissionsFromDB(client *ent.Client, roleName string, tenantID int) []
 			// 查询 permissions 表获取权限详情（加 tenant 过滤）
 			permsData, err := client.Permission.Query().
 				Where(permission.IDIn(permIDs...), permission.TenantID(tenantID)).
-				All(context.Background())
+				All(ctx)
 
 			if err == nil {
 				for _, p := range permsData {
@@ -523,7 +524,7 @@ func loadPermissionsFromDB(client *ent.Client, roleName string, tenantID int) []
 
 	// 如果仍然没有权限，fallback到旧的方式
 	if len(perms) == 0 {
-		perms = loadRolePermissionsFromDB(client, roleName, tenantID)
+		perms = loadRolePermissionsFromDB(ctx, client, roleName, tenantID)
 	}
 
 	// 存入缓存（带TTL）
@@ -785,9 +786,10 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 
 		// 从数据库获取用户最新角色信息
+		// P0-4：使用请求 ctx，随请求超时/取消传播
 		userEntity, err := client.User.Query().
 			Where(user.ID(userID)).
-			Only(context.Background())
+			Only(c.Request.Context())
 		if err != nil {
 			zap.S().Warnw(
 				"RBACMiddleware: user not found in DB",
@@ -899,7 +901,7 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 		}
 		client := clientInterface.(*ent.Client)
 
-		if !hasResourcePermission(client, role.(string), resource, action, tenantID) {
+		if !hasResourcePermission(c.Request.Context(), client, role.(string), resource, action, tenantID) {
 			common.Fail(c, common.ForbiddenCode, "权限不足")
 			c.Abort()
 			return
@@ -957,38 +959,38 @@ func hasPermission(client *ent.Client, role, method, path string, userID, tenant
 	}
 
 	// 使用智能权限检查器（4层兜底架构）
-	// 获取底层数据库连接进行 ACL 查询
-	db := database.GetRawDB()
-	return SmartCheckPermission(c, db, client, role, method, path, tenantID)
+	// P0-4 修复：移除 database.GetRawDB() 直连，ACL 查询统一走 Ent 客户端
+	return SmartCheckPermission(c, client, role, method, path, tenantID)
 }
 
 // HasResourcePermission 检查角色是否有指定资源的操作权限（导出供 AI 工具 RBAC 校验复用）
 // P2-6: AI 工具执行前的 Gate 2 校验入口
-func HasResourcePermission(client *ent.Client, role, resource, action string, tenantID int) bool {
-	return hasResourcePermission(client, role, resource, action, tenantID)
+// P0-4：ctx 由调用方传入（请求链路为请求 ctx）
+func HasResourcePermission(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
+	return hasResourcePermission(ctx, client, role, resource, action, tenantID)
 }
 
 // hasResourcePermission 检查角色是否有指定资源的操作权限（支持多种配置模式）
-func hasResourcePermission(client *ent.Client, role, resource, action string, tenantID int) bool {
+func hasResourcePermission(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
 	// 超级管理员拥有所有权限
 	if role == "super_admin" {
 		return true
 	}
 
 	// 根据配置模式加载权限
-	permissions := loadPermissionsByMode(client, role, tenantID)
+	permissions := loadPermissionsByMode(ctx, client, role, tenantID)
 
 	// 检查权限
 	return checkPermissionMatch(permissions, resource, action)
 }
 
 // loadPermissionsByMode 根据配置模式加载权限
-func loadPermissionsByMode(client *ent.Client, role string, tenantID int) []Permission {
+func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string, tenantID int) []Permission {
 	switch PermissionConfig.Mode {
 	case PermissionConfigModeDBOnly:
 		// Production is fail-closed: an empty, revoked, or unavailable database
 		// permission set must never regain privileges from compiled defaults.
-		return loadPermissionsFromDB(client, role, tenantID)
+		return loadPermissionsFromDB(ctx, client, role, tenantID)
 	case PermissionConfigModeHardcodeOnly:
 		if perms, ok := RolePermissions[role]; ok {
 			return perms
@@ -996,7 +998,7 @@ func loadPermissionsByMode(client *ent.Client, role string, tenantID int) []Perm
 		return nil
 	case PermissionConfigModeMerge:
 		// 合并数据库和硬编码权限（并集）
-		dbPerms := loadPermissionsFromDB(client, role, tenantID)
+		dbPerms := loadPermissionsFromDB(ctx, client, role, tenantID)
 		hardcodePerms, hasHardcode := RolePermissions[role]
 		if !hasHardcode {
 			return dbPerms
@@ -1024,7 +1026,7 @@ func loadPermissionsByMode(client *ent.Client, role string, tenantID int) []Perm
 		fallthrough
 	default:
 		// 默认：先数据库（新的permission_definition+role_permission表，fallback到旧的Permission表），失败则使用硬编码
-		dbPerms := loadPermissionsFromDB(client, role, tenantID)
+		dbPerms := loadPermissionsFromDB(ctx, client, role, tenantID)
 		if len(dbPerms) > 0 {
 			return dbPerms
 		}

@@ -64,6 +64,16 @@ var RegisteredMigrations = []Migration{
 		Description: "Add tenant_id column to tool_invocations for cross-tenant IDOR isolation",
 		RollbackSQL: "ALTER TABLE tool_invocations DROP COLUMN IF EXISTS tenant_id; DROP INDEX IF EXISTS idx_tool_invocations_tenant;",
 	},
+	{
+		Version:     "012_deduplicate_active_process_bindings",
+		Description: "Deduplicate active process bindings by the tenant-scoped routing business key (irreversible; forward-fix only)",
+		RollbackSQL: "",
+	},
+	{
+		Version:     "013_enforce_active_process_binding_route_key",
+		Description: "Enforce one active process binding for each tenant-scoped routing business key",
+		RollbackSQL: "DROP INDEX IF EXISTS uq_process_bindings_active_route_key;",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -584,6 +594,48 @@ CREATE INDEX IF NOT EXISTS idx_tool_invocations_tenant ON tool_invocations(tenan
 
 -- NOTE: rows with tenant_id = 0 are orphan records (conversation_id=0 or conversation
 -- without a valid tenant). They will only be accessible via system-bypass queries.
+`
+	case "012_deduplicate_active_process_bindings":
+		return `
+-- Keep the most operationally relevant active binding for each route. The
+-- deleted rows are duplicate routing configuration, not workflow instances.
+WITH ranked AS (
+    SELECT id,
+           ROW_NUMBER() OVER (
+               PARTITION BY tenant_id,
+                            business_type,
+                            COALESCE(business_sub_type, ''),
+                            department_id,
+                            team_id,
+                            scenario,
+                            category
+               ORDER BY is_default DESC,
+                        priority DESC,
+                        process_version DESC,
+                        updated_at DESC,
+                        id DESC
+           ) AS route_rank
+    FROM process_bindings
+    WHERE is_active = TRUE
+)
+DELETE FROM process_bindings target
+USING ranked duplicate
+WHERE target.id = duplicate.id
+  AND duplicate.route_rank > 1;
+`
+	case "013_enforce_active_process_binding_route_key":
+		return `
+CREATE UNIQUE INDEX uq_process_bindings_active_route_key
+ON process_bindings (
+    tenant_id,
+    business_type,
+    COALESCE(business_sub_type, ''),
+    department_id,
+    team_id,
+    scenario,
+    category
+)
+WHERE is_active = TRUE;
 `
 	default:
 		return ""

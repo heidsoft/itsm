@@ -39,7 +39,10 @@ func (BootstrapToken) Fields() []ent.Field {
 // Edges of the BootstrapToken.
 func (BootstrapToken) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("tenant", Tenant.Type).
+		edge.From("tenant", Tenant.Type).
+			Ref("bootstrap_tokens").
+			Field("tenant_id").
+			Unique().
 			Required(),
 	}
 }

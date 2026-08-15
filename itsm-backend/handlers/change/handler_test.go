@@ -93,7 +93,44 @@ func (m *mockRepository) Get(ctx context.Context, id int, tenantID int) (*Change
 	if !ok || c.TenantID != tenantID {
 		return nil, http.ErrMissingFile
 	}
-	return c, nil
+	// P1-2：返回深拷贝，确保调用方对返回实体的修改不会污染仓储当前持久化状态。
+	// 这样 Service.UpdateChange 中"读取当前状态 vs 传入请求状态"的差异对比才有意义。
+	return cloneChange(c), nil
+}
+
+// cloneChange 返回 Change 实体的浅结构深拷贝（对指针字段与切片复制底层数据）。
+func cloneChange(c *Change) *Change {
+	if c == nil {
+		return nil
+	}
+	cc := *c
+	if c.AssigneeID != nil {
+		v := *c.AssigneeID
+		cc.AssigneeID = &v
+	}
+	if c.PlannedStartDate != nil {
+		v := *c.PlannedStartDate
+		cc.PlannedStartDate = &v
+	}
+	if c.PlannedEndDate != nil {
+		v := *c.PlannedEndDate
+		cc.PlannedEndDate = &v
+	}
+	if c.ActualStartDate != nil {
+		v := *c.ActualStartDate
+		cc.ActualStartDate = &v
+	}
+	if c.ActualEndDate != nil {
+		v := *c.ActualEndDate
+		cc.ActualEndDate = &v
+	}
+	if c.AffectedCIs != nil {
+		cc.AffectedCIs = append([]string(nil), c.AffectedCIs...)
+	}
+	if c.RelatedTickets != nil {
+		cc.RelatedTickets = append([]string(nil), c.RelatedTickets...)
+	}
+	return &cc
 }
 
 func (m *mockRepository) List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string) ([]*Change, int, error) {
@@ -523,6 +560,18 @@ func TestChangeController_UpdateChange(t *testing.T) {
 			expectedStatus: http.StatusNotFound,
 			expectedCode:   common.NotFoundCode,
 		},
+		{
+			name:     "P1-2 draft 允许修改治理字段（RiskLevel/Type/Justification）",
+			changeID: strconv.Itoa(change.ID),
+			request: dto.UpdateChangeRequest{
+				RiskLevel:     ptrChangeRisk(dto.ChangeRiskHigh),
+				Type:          ptrChangeType(dto.ChangeTypeEmergency),
+				Justification: strPtr("紧急变更理由"),
+				ImpactScope:   ptrChangeImpact(dto.ChangeImpactHigh),
+			},
+			expectedStatus: http.StatusOK,
+			expectedCode:   common.SuccessCode,
+		},
 	}
 
 	for _, tt := range tests {
@@ -539,6 +588,129 @@ func TestChangeController_UpdateChange(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 		})
 	}
+}
+
+// TestChangeController_UpdateChange_P12_GovernanceGuard 验证已提审状态（非 draft）下
+// PUT /changes/:id 不再能静默修改治理字段；运营类字段仍可编辑。
+func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
+	r, _, repo := setupTestHandler(t)
+
+	// 预置 pending 状态的变更（已提审，治理字段冻结）
+	pendingChange := createTestChange(repo, 1, 1)
+	pendingChange.Status = "pending"
+	pendingChange.Type = "normal"
+	pendingChange.RiskLevel = "low"
+	pendingChange.ImpactScope = "low"
+	pendingChange.Justification = "原理由"
+	pendingChange.ImplementationPlan = "原实施计划"
+	pendingChange.RollbackPlan = "原回滚计划"
+	pendingChange.AffectedCIs = []string{"CI-001"}
+	repo.changes[pendingChange.ID] = pendingChange
+
+	t.Run("P1-2 pending 下改 RiskLevel 被拒", func(t *testing.T) {
+		body := dto.UpdateChangeRequest{RiskLevel: ptrChangeRisk(dto.ChangeRiskHigh)}
+		buf, _ := json.Marshal(body)
+		req, _ := http.NewRequest("PUT", "/api/v1/changes/"+strconv.Itoa(pendingChange.ID), bytes.NewBuffer(buf))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		var resp common.Response
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+		assert.Equal(t, common.InternalErrorCode, resp.Code)
+		assert.Contains(t, resp.Message, "治理字段")
+		assert.Contains(t, resp.Message, "draft")
+	})
+
+	t.Run("P1-2 pending 下改 Type+ImpactScope+Justification 组合被拒并命名字段", func(t *testing.T) {
+		body := dto.UpdateChangeRequest{
+			Type:          ptrChangeType(dto.ChangeTypeEmergency),
+			ImpactScope:   ptrChangeImpact(dto.ChangeImpactHigh),
+			Justification: strPtr("新理由绕过审批"),
+		}
+		buf, _ := json.Marshal(body)
+		req, _ := http.NewRequest("PUT", "/api/v1/changes/"+strconv.Itoa(pendingChange.ID), bytes.NewBuffer(buf))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		var resp common.Response
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+		for _, want := range []string{"Type", "ImpactScope", "Justification"} {
+			assert.Contains(t, resp.Message, want)
+		}
+	})
+
+	t.Run("P1-2 pending 下改 ImplementationPlan/RollbackPlan/AffectedCIs 被拒", func(t *testing.T) {
+		body := dto.UpdateChangeRequest{
+			ImplementationPlan: strPtr("绕过审批改实施计划"),
+			RollbackPlan:       strPtr("绕过审批改回滚计划"),
+			AffectedCIs:        []string{"CI-999", "CI-008"},
+		}
+		buf, _ := json.Marshal(body)
+		req, _ := http.NewRequest("PUT", "/api/v1/changes/"+strconv.Itoa(pendingChange.ID), bytes.NewBuffer(buf))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		var resp common.Response
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+		assert.Contains(t, resp.Message, "ImplementationPlan")
+		assert.Contains(t, resp.Message, "RollbackPlan")
+		assert.Contains(t, resp.Message, "AffectedCIs")
+	})
+
+	t.Run("P1-2 approved 下仅改运营字段（Title/Description/Planned*/RelatedTickets）放行", func(t *testing.T) {
+		approvedChange := createTestChange(repo, 1, 1)
+		approvedChange.Status = "approved"
+		approvedChange.Title = "原始标题"
+		approvedChange.Description = "原始描述"
+		approvedChange.RelatedTickets = nil
+		repo.changes[approvedChange.ID] = approvedChange
+
+		newDate := time.Now().AddDate(0, 0, 7)
+		body := dto.UpdateChangeRequest{
+			Title:            strPtr("运营调整后的标题"),
+			Description:      strPtr("运营调整后的描述"),
+			PlannedStartDate: timePtr(newDate),
+			PlannedEndDate:   timePtr(newDate.AddDate(0, 0, 1)),
+			RelatedTickets:   []string{"T-1", "T-2"},
+		}
+		buf, _ := json.Marshal(body)
+		req, _ := http.NewRequest("PUT", "/api/v1/changes/"+strconv.Itoa(approvedChange.ID), bytes.NewBuffer(buf))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var resp common.Response
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+		assert.Equal(t, common.SuccessCode, resp.Code)
+	})
+
+	t.Run("P1-2 scheduled 下改治理字段+运营字段混合 被拒（治理优先守卫）", func(t *testing.T) {
+		scheduledChange := createTestChange(repo, 1, 1)
+		scheduledChange.Status = "scheduled"
+		repo.changes[scheduledChange.ID] = scheduledChange
+
+		body := dto.UpdateChangeRequest{
+			Title:     strPtr("运营允许修改"),
+			RiskLevel: ptrChangeRisk(dto.ChangeRiskMedium), // 治理字段
+		}
+		buf, _ := json.Marshal(body)
+		req, _ := http.NewRequest("PUT", "/api/v1/changes/"+strconv.Itoa(scheduledChange.ID), bytes.NewBuffer(buf))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		var resp common.Response
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+		assert.Contains(t, resp.Message, "RiskLevel")
+	})
 }
 
 // TestChangeController_DeleteChange tests DELETE /api/v1/changes/:id
@@ -772,6 +944,22 @@ func strPtr(s string) *string {
 
 func ptrChangePriority(p dto.ChangePriority) *dto.ChangePriority {
 	return &p
+}
+
+func ptrChangeType(p dto.ChangeType) *dto.ChangeType {
+	return &p
+}
+
+func ptrChangeImpact(p dto.ChangeImpact) *dto.ChangeImpact {
+	return &p
+}
+
+func ptrChangeRisk(p dto.ChangeRisk) *dto.ChangeRisk {
+	return &p
+}
+
+func timePtr(t time.Time) *time.Time {
+	return &t
 }
 
 // ===================== CMDB Impact Summary Helper Tests =====================

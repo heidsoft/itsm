@@ -276,18 +276,26 @@ describe('WorkflowApi', () => {
   });
 
   describe('createWorkflow', () => {
-    it('should create a workflow', async () => {
+    it('should create a workflow with code/name mapped to key/category', async () => {
       (httpClient.post as jest.Mock).mockResolvedValueOnce({ id: 1, key: 'new_wf', name: 'New' });
-      (httpClient.getTenantId as jest.Mock).mockReturnValue(5);
       const result = await WorkflowApi.createWorkflow({ code: 'new_wf', name: 'New', type: 'ticket' as any });
-      expect(httpClient.post).toHaveBeenCalledWith('/api/v1/bpmn/process-definitions', expect.objectContaining({ key: 'new_wf', name: 'New', tenantId: 5 }));
+      expect(httpClient.post).toHaveBeenCalledWith(
+        '/api/v1/bpmn/process-definitions',
+        expect.objectContaining({ key: 'new_wf', name: 'New', category: 'ticket' })
+      );
+      // Tenant is injected by the backend from the JWT context; the frontend must
+      // NOT forge it, so the payload must stay tenant-free (see createWorkflow in workflow-api.ts).
+      expect(httpClient.post).toHaveBeenCalledWith(
+        '/api/v1/bpmn/process-definitions',
+        expect.not.objectContaining({ tenantId: expect.anything() })
+      );
     });
 
-    it('should use default tenantId when none set', async () => {
+    it('should omit tenantId from the payload (backend-issued tenant)', async () => {
       (httpClient.post as jest.Mock).mockResolvedValueOnce({ id: 1 });
-      (httpClient.getTenantId as jest.Mock).mockReturnValue(null);
       await WorkflowApi.createWorkflow({ name: 'Test' } as any);
-      expect(httpClient.post).toHaveBeenCalledWith('/api/v1/bpmn/process-definitions', expect.objectContaining({ tenantId: 1 }));
+      const [, body] = (httpClient.post as jest.Mock).mock.calls[0];
+      expect(body).not.toHaveProperty('tenantId');
     });
   });
 
@@ -512,22 +520,17 @@ describe('WorkflowApi', () => {
   });
 
   describe('getWorkflowStats', () => {
-    it('should fetch stats from backend API', async () => {
-      const mockStats = {
-        workflowId: 'wf1',
-        totalInstances: 10,
-        runningInstances: 2,
-        completedInstances: 7,
-        failedInstances: 1,
-        avgDuration: 3600,
-        successRate: 0.7,
-        bottlenecks: [],
-      };
-      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockStats);
+    it('returns a zeroed snapshot without hitting the unregistered legacy endpoint', async () => {
+      // Legacy /api/v1/workflows/:id/stats is not registered; the method is neutralized so
+      // callers fall back to BPMN stats sources instead of triggering a 404.
       const result = await WorkflowApi.getWorkflowStats('wf1');
       expect(result.workflowId).toBe('wf1');
-      expect(result.totalInstances).toBe(10);
-      expect(httpClient.get).toHaveBeenCalledWith('/api/v1/workflows/wf1/stats', undefined);
+      expect(result.totalInstances).toBe(0);
+      expect(result.bottlenecks).toEqual([]);
+      expect(httpClient.get).not.toHaveBeenCalledWith(
+        '/api/v1/workflows/wf1/stats',
+        expect.anything()
+      );
     });
   });
 

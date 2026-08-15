@@ -2514,7 +2514,7 @@ func (c *BootstrapTokenClient) QueryTenant(_m *BootstrapToken) *TenantQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bootstraptoken.Table, bootstraptoken.FieldID, id),
 			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, bootstraptoken.TenantTable, bootstraptoken.TenantColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, bootstraptoken.TenantTable, bootstraptoken.TenantColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

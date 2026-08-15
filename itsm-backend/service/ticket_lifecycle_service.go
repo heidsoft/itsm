@@ -358,40 +358,16 @@ func (s *TicketLifecycleService) mapProcessStatus(status string) string {
 	}
 }
 
-// IsValidTicketStatusTransition 检查状态转换是否合法
-// 导出的函数供其他服务使用（如 TicketCoreService）
+// IsValidTicketStatusTransition 检查状态转换是否合法。
+// P1-1：统一委托 common.IsValidTicketStatusTransition（工单状态机单一事实来源）。
+// 保留此包装仅为维持已有调用点的包级导出符号稳定，禁止再次在 service 层内联状态表。
 func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
-	validTransitions := map[string][]string{
-		common.TicketStatusNew:        {common.TicketStatusOpen, common.TicketStatusAssigned, common.TicketStatusInProgress, common.TicketStatusCancelled},
-		common.TicketStatusAssigned:   {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusResolved, common.TicketStatusCancelled},
-		common.TicketStatusOpen:       {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusResolved, common.TicketStatusCancelled},
-		common.TicketStatusInProgress: {common.TicketStatusResolved, common.TicketStatusPending, common.TicketStatusCancelled},
-		common.TicketStatusPending:    {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusOpen, common.TicketStatusCancelled},
-		common.TicketStatusResolved:   {common.TicketStatusClosed, common.TicketStatusInProgress, common.TicketStatusOpen},
-		common.TicketStatusClosed:     {},
-		common.TicketStatusCancelled:  {},
-		common.TicketStatusApproved:   {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusClosed},
-		common.TicketStatusRejected:   {common.TicketStatusOpen, common.TicketStatusCancelled},
-	}
-
-	allowed, ok := validTransitions[currentStatus]
-	if !ok {
-		// 未知状态，不允许转换到任何状态
-		return false
-	}
-
-	for _, status := range allowed {
-		if status == newStatus {
-			return true
-		}
-	}
-
-	return false
+	return common.IsValidTicketStatusTransition(currentStatus, newStatus)
 }
 
 // isValidStatusTransition 检查状态转换是否合法 (内部调用)
 func (s *TicketLifecycleService) isValidStatusTransition(currentStatus, newStatus string) bool {
-	return IsValidTicketStatusTransition(currentStatus, newStatus)
+	return common.IsValidTicketStatusTransition(currentStatus, newStatus)
 }
 
 // getEscalatedPriority 获取升级后的优先级

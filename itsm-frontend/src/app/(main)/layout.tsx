@@ -14,6 +14,7 @@ import { useLayoutStore } from '@/lib/store/layout-store';
 import PageTransition from '@/components/common/PageTransition';
 import { useAuthStore } from '@/lib/store/auth-store';
 import type { Tenant } from '@/lib/api/api-config';
+import { ThemeProvider, useTheme, getAntdTheme } from '@/lib/design-system/theme';
 
 const { Content } = Layout;
 
@@ -55,10 +56,20 @@ export default function MainLayout({
         console.error('Failed to fetch tenant info:', e);
       }
 
-      // 如果两个都失败，则认为未认证
+      // 如果两个都失败
       if (!userInfo && !tenantInfo) {
-        setIsAuthenticated(false);
-        router.push(`/login?redirect=${encodeURIComponent(pathname || '/')}`);
+        const { isAuthenticated: storeIsAuth } = useAuthStore.getState();
+        // 仅当 store 也没有会话时才判定未认证。
+        // 接口瞬时失败（如 5xx）不应把已登录用户踢出；真实 401 已由
+        // http-client 的刷新失败兜底逻辑处理（自动跳转 /login）。
+        if (!storeIsAuth) {
+          setIsAuthenticated(false);
+          router.push(`/login?redirect=${encodeURIComponent(pathname || '/')}`);
+          setCheckingAuth(false);
+          return;
+        }
+        console.warn('Auth check endpoints failed but store session exists; keeping session');
+        setIsAuthenticated(true);
         setCheckingAuth(false);
         return;
       }
@@ -113,7 +124,24 @@ export default function MainLayout({
       setCheckingAuth(false);
     };
     checkAuth();
-  }, [router, pathname]);
+    // 仅在布局挂载时检查一次；SPA 内部导航不重复检查，避免瞬时故障误踢用户
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // access_token 有效期 15 分钟：每 10 分钟主动刷新一次会话，
+  // 防止 token 在操作期间过期导致被踢到 /login
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const REFRESH_INTERVAL_MS = 10 * 60 * 1000;
+    const timer = setInterval(() => {
+      httpClient
+        .refreshToken()
+        .catch(() => {
+          // 刷新失败不主动登出；下一次请求的 401 兜底流程会处理
+        });
+    }, REFRESH_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [isAuthenticated]);
 
   // 响应式布局：在移动端自动折叠侧边栏
   useEffect(() => {
@@ -158,7 +186,35 @@ export default function MainLayout({
 
   // 根据官方布局模式，使用单一容器控制侧边栏占位
   return (
-    <ConfigProvider locale={zhCN}>
+    <ThemeProvider>
+      <ThemedMainLayout
+        collapsed={collapsed}
+        isMobile={isMobile}
+        handleContentClick={handleContentClick}
+      >
+        <PageTransition>{children}</PageTransition>
+      </ThemedMainLayout>
+    </ThemeProvider>
+  );
+}
+
+function ThemedMainLayout({
+  collapsed,
+  isMobile,
+  handleContentClick,
+  children,
+}: Readonly<{
+  collapsed: boolean;
+  isMobile: boolean;
+  handleContentClick: () => void;
+  children: React.ReactNode;
+}>) {
+  const { isDark } = useTheme();
+  const setCollapsed = useLayoutStore(s => s.setCollapsed);
+  const antdThemeConfig = React.useMemo(() => getAntdTheme(isDark), [isDark]);
+
+  return (
+    <ConfigProvider locale={zhCN} theme={antdThemeConfig as any}>
       <App>
         {/* Skip to main content link for accessibility */}
         <a

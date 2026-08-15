@@ -1171,18 +1171,39 @@ func (s *Seeder) seedProcessBindings(ctx context.Context) {
 		return
 	}
 
-	existing, err := s.client.ProcessBinding.Query().Where(processbinding.TenantIDEQ(t.ID)).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing process bindings failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("process bindings already seeded")
-		return
-	}
-
 	for _, b := range s.config.ProcessBindings {
-		_, err := s.client.ProcessBinding.Create().
+		subTypePredicate := processbinding.BusinessSubTypeEQ(b.BusinessSubType)
+		if b.BusinessSubType == "" {
+			subTypePredicate = processbinding.Or(
+				processbinding.BusinessSubTypeEQ(""),
+				processbinding.BusinessSubTypeIsNil(),
+			)
+		}
+		existing, err := s.client.ProcessBinding.Query().Where(
+			processbinding.TenantIDEQ(t.ID),
+			processbinding.BusinessTypeEQ(b.BusinessType),
+			subTypePredicate,
+			processbinding.DepartmentIDEQ(0),
+			processbinding.TeamIDEQ(0),
+			processbinding.ScenarioEQ(""),
+			processbinding.CategoryEQ(""),
+			processbinding.IsActiveEQ(true),
+		).First(ctx)
+		if err == nil {
+			_, err = existing.Update().
+				SetProcessDefinitionKey(b.ProcessDefinitionKey).
+				SetIsDefault(b.IsDefault).
+				Save(ctx)
+			if err != nil {
+				s.sugar.Warnw("reconcile process binding failed", "error", err, "business_type", b.BusinessType)
+			}
+			continue
+		}
+		if !ent.IsNotFound(err) {
+			s.sugar.Warnw("query process binding failed", "error", err, "business_type", b.BusinessType)
+			continue
+		}
+		_, err = s.client.ProcessBinding.Create().
 			SetBusinessType(b.BusinessType).
 			SetNillableBusinessSubType(nilIfEmpty(b.BusinessSubType)).
 			SetProcessDefinitionKey(b.ProcessDefinitionKey).
@@ -1986,18 +2007,22 @@ func (s *Seeder) seedServiceCatalog(ctx context.Context) {
 		return
 	}
 
-	existing, err := s.client.ServiceCatalog.Query().Where(servicecatalog.TenantIDEQ(t.ID)).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing service catalog failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("service catalog already seeded")
-		return
-	}
-
+	created := 0
 	for _, svc := range s.config.ServiceCatalog {
-		_, err := s.client.ServiceCatalog.Create().
+		exists, err := s.client.ServiceCatalog.Query().Where(
+			servicecatalog.TenantIDEQ(t.ID),
+			servicecatalog.NameEQ(svc.Name),
+		).Exist(ctx)
+		if err != nil {
+			s.sugar.Warnw("check default service catalog failed", "error", err, "name", svc.Name)
+			continue
+		}
+		if exists {
+			// Existing rows may contain tenant-owned customizations. Initialization
+			// repairs missing managed templates but does not overwrite them.
+			continue
+		}
+		_, err = s.client.ServiceCatalog.Create().
 			SetName(svc.Name).
 			SetDescription(svc.Description).
 			SetCategory(svc.Category).
@@ -2010,9 +2035,11 @@ func (s *Seeder) seedServiceCatalog(ctx context.Context) {
 			Save(ctx)
 		if err != nil {
 			s.sugar.Warnw("seed service catalog failed", "error", err, "name", svc.Name)
+			continue
 		}
+		created++
 	}
-	s.sugar.Infow("service catalog seeded", "count", len(s.config.ServiceCatalog))
+	s.sugar.Infow("service catalog reconciled", "expected", len(s.config.ServiceCatalog), "created", created)
 }
 
 // seedTicketTypes 初始化默认工单类型

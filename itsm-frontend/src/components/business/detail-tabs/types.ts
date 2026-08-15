@@ -81,6 +81,7 @@ export interface HistoryRecord {
   id: number | string;
   user?: { name?: string; username?: string };
   action?: string;
+  details?: string;
   fieldName?: string;
   oldValue?: string;
   newValue?: string;

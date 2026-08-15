@@ -199,6 +199,19 @@ class HttpClient {
     }
   }
 
+  /**
+   * 主动刷新会话（access_token 有效期 15 分钟）。
+   * 由布局层定时调用，避免 token 过期后才被动触发刷新。
+   * 刷新失败不抛错：下一次请求的 401 处理流程会兜底。
+   */
+  async refreshToken(): Promise<boolean> {
+    try {
+      return await this.refreshTokenInternal();
+    } catch {
+      return false;
+    }
+  }
+
   // Core request method using fetch API (internal)
   private async requestInternal<T>(endpoint: string, config: RequestConfig): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;

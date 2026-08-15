@@ -366,7 +366,10 @@ func NewApplication() *Application {
 	}
 	llmLimiter := service.NewFixedWindowLimiter(tokenCap)
 	sugar.Infow("LLM token limiter wired", "capacity_runes_per_request", tokenCap)
-	llmGateway := service.NewLLMGateway(llmProvider, llmLimiter, nil, llmConfig.Provider)
+	// 网关级可观测性：每次 LLM 调用（成功/限流/失败）都会写入 ai_llm_calls，
+	// 供 /api/v1/ai/metrics 输出真实的 avg_response_time_seconds。
+	llmObserver := service.NewLLMObserver(database.GetRawDB(), sugar)
+	llmGateway := service.NewLLMGateway(llmProvider, llmLimiter, llmObserver, llmConfig.Provider)
 
 	vectorStore := service.NewVectorStore(database.GetRawDB())
 	ragService := service.NewRAGServiceWithAutoConfig(client, vectorStore, embedder, sugar)
@@ -411,6 +414,10 @@ func NewApplication() *Application {
 	triageService := service.NewTriageServiceWithGuidanceAndSugaredLogger(llmGateway, guidanceClient, sugar)
 
 	rootCauseService := service.NewRootCauseService(client, sugar)
+	// Bug fix (2026-08-15): inject LLM gateway so AnalyzeTicket / SummarizeTicket
+	// actually call the LLM. Previously gateway was constructed but never wired in,
+	// so RCA endpoints always fell back to the canned "系统资源不足" template.
+	rootCauseService.SetGateway(llmGateway)
 	// LLM/Embedding/VectorStore
 
 	// AI Tools
@@ -534,14 +541,24 @@ func NewApplication() *Application {
 	ticketService.SetApprovalService(approvalService)
 
 	// 初始化模板并部署默认流程
+	// 多租户语义:默认流程模板与流程绑定是每租户的基础设施,
+	// 部署到所有 active 租户,而不是硬编码 tenant_id=1。
 	go func() {
 		ctx := context.Background()
-		const defaultTenantID = 1
-		if _, err := bpmnTemplateService.LoadAndDeployTemplates(ctx, defaultTenantID); err != nil {
-			sugar.Warnw("Failed to deploy BPMN templates", "error", err)
+		tenants, err := client.Tenant.Query().
+			Where(tenant.StatusEQ("active")).
+			All(ctx)
+		if err != nil {
+			sugar.Errorw("Failed to query tenants for BPMN template deployment", "error", err)
+			return
 		}
-		if err := processBindingService.InitDefaultBindings(ctx, defaultTenantID); err != nil {
-			sugar.Warnw("Failed to init default process bindings", "error", err)
+		for _, t := range tenants {
+			if _, err := bpmnTemplateService.LoadAndDeployTemplates(ctx, t.ID); err != nil {
+				sugar.Warnw("Failed to deploy BPMN templates", "tenant_id", t.ID, "error", err)
+			}
+			if err := processBindingService.InitDefaultBindings(ctx, t.ID); err != nil {
+				sugar.Warnw("Failed to init default process bindings", "tenant_id", t.ID, "error", err)
+			}
 		}
 	}()
 
@@ -572,6 +589,11 @@ func NewApplication() *Application {
 	problemServiceDomain := problem.NewService(problemRepo, sugar)
 	problemHandler := problem.NewHandler(problemServiceDomain)
 
+	// Problem Investigation Service & Controller（问题调查/RCA/解决方案/知识沉淀）
+	// 修复：此前该 controller 从未在 bootstrap 装配，导致 /problem-investigation 路由组整体未注册（404）
+	problemInvestigationService := service.NewProblemInvestigationService(database.GetRawDB(), sugar)
+	problemInvestigationController := controller.NewProblemInvestigationController(sugar, problemInvestigationService)
+
 	// Domain: Change (DDD)
 	changeRepo := change.NewEntRepository(client, database.GetRawDB())
 	changeServiceDomain := change.NewService(changeRepo, client, sugar)
@@ -584,6 +606,8 @@ func NewApplication() *Application {
 	// Domain: Knowledge (DDD)
 	knowledgeRepo := knowledge.NewEntRepository(client)
 	knowledgeServiceDomain := knowledge.NewService(knowledgeRepo, sugar)
+	// 向量索引同步：发布→索引，取消发布/软删除→移除向量（RemoveArticle 真实删除）。
+	knowledgeServiceDomain.SetRAG(ragService)
 	knowledgeHandler := knowledge.NewHandler(knowledgeServiceDomain)
 
 	// Domain: SLA (DDD)
@@ -795,17 +819,18 @@ func NewApplication() *Application {
 		CloudController:        cloudController,
 
 		// Domain Handlers
-		ServiceCatalogHandler: scHandler,
-		ServiceRequestHandler: srHandler,
-		ProblemHandler:        problemHandler,
-		ChangeHandler:         changeHandler,
-		KnowledgeHandler:      knowledgeHandler,
-		SLAHandler:            slaHandler,
-		SLATemplateController: slaTemplateController,
-		AIHandler:             aiHandler, // Added AI domain handler
-		CommonHandler:         commonHandler,
-		AuthController:        authController,
-		RoleHandler:           roleHandler,
+		ServiceCatalogHandler:          scHandler,
+		ServiceRequestHandler:          srHandler,
+		ProblemHandler:                 problemHandler,
+		ProblemInvestigationController: problemInvestigationController,
+		ChangeHandler:                  changeHandler,
+		KnowledgeHandler:               knowledgeHandler,
+		SLAHandler:                     slaHandler,
+		SLATemplateController:          slaTemplateController,
+		AIHandler:                      aiHandler, // Added AI domain handler
+		CommonHandler:                  commonHandler,
+		AuthController:                 authController,
+		RoleHandler:                    roleHandler,
 
 		// Global Search
 		GlobalSearchController: globalSearchController,
@@ -898,7 +923,7 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 		if err != nil {
 			return fmt.Errorf("check bootstrap administrator: %w", err)
 		}
-		if needsAdmin {
+		if needsAdmin && os.Getenv("BOOTSTRAP_TOKEN_ENABLED") != "1" {
 			for _, risk := range GuardBootstrapAdminCredentials(
 				cfg.Deployment.Mode,
 				os.Getenv("ADMIN_PASSWORD"),

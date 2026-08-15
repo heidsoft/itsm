@@ -113,6 +113,9 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
                       {r.action}
                     </Tag>
                   )}
+                  {r.details && (
+                    <div className="text-sm text-gray-600 mt-1">{r.details}</div>
+                  )}
                   {r.fieldName && (
                     <div className="text-sm text-gray-600 mt-1">
                       修改了 <Text code>{r.fieldName}</Text>

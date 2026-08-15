@@ -3,10 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/processauditlog"
 	"itsm-backend/service/bpmn"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -879,4 +882,78 @@ func TestAuthorizeTaskActor_NoActorContextIsPermissive(t *testing.T) {
 	require.NoError(t, err)
 	// No actor in context should not error (system/internal calls stay working)
 	assert.NoError(t, engine.authorizeTaskActor(ctx, task))
+}
+
+func TestTaskRecovery_ReassignIsTenantScopedAndAudited(t *testing.T) {
+	engine, baseCtx := newApprovalDecisionTestEngine(t)
+	tenantID, actorID := setupApprovalDecisionFixture(t, engine)
+	ctx := context.WithValue(baseCtx, bpmn.BPMNUserIDContextKey, actorID)
+	ctx = context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
+	_, taskPK := createProcessFixture(t, engine, tenantID, "reassign-recovery")
+	task, err := engine.client.ProcessTask.Get(ctx, taskPK)
+	require.NoError(t, err)
+	assignee, err := engine.client.User.Create().
+		SetUsername("recovery-assignee").SetEmail("recovery-assignee@example.com").
+		SetName("Recovery Assignee").SetRole("agent").SetPasswordHash("unused").
+		SetTenantID(tenantID).SetActive(true).Save(ctx)
+	require.NoError(t, err)
+
+	require.NoError(t, engine.taskService.ReassignTask(ctx, task.TaskID, assignee.ID, "原审批人休假"))
+	updated, err := engine.client.ProcessTask.Get(ctx, taskPK)
+	require.NoError(t, err)
+	assert.Equal(t, strconv.Itoa(assignee.ID), updated.Assignee)
+	assert.Equal(t, common.ProcessTaskStatusAssigned, updated.Status)
+	audit, err := engine.client.ProcessAuditLog.Query().Where(processauditlog.ActionEQ(AuditActionTaskReassigned)).Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, tenantID, audit.TenantID)
+	assert.Equal(t, actorID, audit.UserID)
+	assert.Equal(t, assignee.ID, audit.AssigneeID)
+	assert.Equal(t, "原审批人休假", audit.Comment)
+}
+
+func TestTaskRecovery_RejectsCrossTenantAssigneeWithoutSideEffect(t *testing.T) {
+	engine, baseCtx := newApprovalDecisionTestEngine(t)
+	tenantID, actorID := setupApprovalDecisionFixture(t, engine)
+	ctx := context.WithValue(baseCtx, bpmn.BPMNUserIDContextKey, actorID)
+	ctx = context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
+	_, taskPK := createProcessFixture(t, engine, tenantID, "cross-tenant-recovery")
+	task, err := engine.client.ProcessTask.Get(ctx, taskPK)
+	require.NoError(t, err)
+	otherTenant, err := engine.client.Tenant.Create().SetName("Other").SetCode("other-recovery").SetDomain("other-recovery.example.com").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+	otherUser, err := engine.client.User.Create().
+		SetUsername("other-recovery-user").SetEmail("other-recovery@example.com").SetName("Other User").
+		SetRole("agent").SetPasswordHash("unused").SetTenantID(otherTenant.ID).SetActive(true).Save(ctx)
+	require.NoError(t, err)
+
+	err = engine.taskService.ReassignTask(ctx, task.TaskID, otherUser.ID, "错误跨租户操作")
+	require.Error(t, err)
+	unchanged, getErr := engine.client.ProcessTask.Get(ctx, taskPK)
+	require.NoError(t, getErr)
+	assert.Empty(t, unchanged.Assignee)
+	count, countErr := engine.client.ProcessAuditLog.Query().Where(processauditlog.ActionEQ(AuditActionTaskReassigned)).Count(ctx)
+	require.NoError(t, countErr)
+	assert.Zero(t, count)
+}
+
+func TestTaskRecovery_TerminateClosesInstanceTasksAndAuditsAtomically(t *testing.T) {
+	engine, baseCtx := newApprovalDecisionTestEngine(t)
+	tenantID, actorID := setupApprovalDecisionFixture(t, engine)
+	ctx := context.WithValue(baseCtx, bpmn.BPMNUserIDContextKey, actorID)
+	ctx = context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
+	instancePK, taskPK := createProcessFixture(t, engine, tenantID, "terminate-recovery")
+	task, err := engine.client.ProcessTask.Get(ctx, taskPK)
+	require.NoError(t, err)
+
+	require.NoError(t, engine.taskService.TerminateTask(ctx, task.TaskID, "业务单据已撤销"))
+	instance, err := engine.client.ProcessInstance.Get(ctx, instancePK)
+	require.NoError(t, err)
+	assert.Equal(t, "terminated", instance.Status)
+	updatedTask, err := engine.client.ProcessTask.Get(ctx, taskPK)
+	require.NoError(t, err)
+	assert.Equal(t, common.ProcessTaskStatusCancelled, updatedTask.Status)
+	audit, err := engine.client.ProcessAuditLog.Query().Where(processauditlog.ActionEQ(AuditActionProcessTerminated)).Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, "业务单据已撤销", audit.Comment)
+	assert.Equal(t, actorID, audit.UserID)
 }

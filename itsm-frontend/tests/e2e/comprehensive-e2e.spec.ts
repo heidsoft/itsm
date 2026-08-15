@@ -396,8 +396,8 @@ test.describe('ITSM 全面 E2E 业务流测试', () => {
     const chat = (await chatResp.json()).data;
     expect(chat).toHaveProperty('conversation_id');
 
-    const ragResp = await page.request.post(`${API}/api/v1/ai/rag/ask`, {
-      data: { query: 'VPN连接', limit: 3 },
+    const ragResp = await page.request.post(`${API}/api/v1/ai/rag/search`, {
+      data: { query: 'VPN连接', limit: 3, type: 'kb' },
     });
     expect(ragResp.status()).toBe(200);
   });

@@ -133,3 +133,4 @@ exclude_docs: |
   superpowers/
   tools/
   v1-ga/
+  release/

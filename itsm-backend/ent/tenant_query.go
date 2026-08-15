@@ -29,7 +29,6 @@ type TenantQuery struct {
 	withUsers                  *UserQuery
 	withMspCustomerAllocations *MSPAllocationQuery
 	withBootstrapTokens        *BootstrapTokenQuery
-	withFKs                    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -443,7 +442,6 @@ func (_q *TenantQuery) prepareQuery(ctx context.Context) error {
 func (_q *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenant, error) {
 	var (
 		nodes       = []*Tenant{}
-		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [3]bool{
 			_q.withUsers != nil,
@@ -451,9 +449,6 @@ func (_q *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 			_q.withBootstrapTokens != nil,
 		}
 	)
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, tenant.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Tenant).scanValues(nil, columns)
 	}
@@ -569,7 +564,9 @@ func (_q *TenantQuery) loadBootstrapTokens(ctx context.Context, query *Bootstrap
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(bootstraptoken.FieldTenantID)
+	}
 	query.Where(predicate.BootstrapToken(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(tenant.BootstrapTokensColumn), fks...))
 	}))
@@ -578,13 +575,10 @@ func (_q *TenantQuery) loadBootstrapTokens(ctx context.Context, query *Bootstrap
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.tenant_bootstrap_tokens
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "tenant_bootstrap_tokens" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.TenantID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "tenant_bootstrap_tokens" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

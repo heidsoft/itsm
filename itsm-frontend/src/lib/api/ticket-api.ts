@@ -536,16 +536,13 @@ export class TicketApi {
   static async getTicketHistory(id: number): Promise<
     Array<{
       id: number;
-      fieldName: string;
-      oldValue: string;
-      newValue: string;
-      changedBy: number;
-      changedAt: string;
-      changeReason?: string;
-      user?: {
-        id: number;
-        name: string;
-      };
+      action: string;
+      details?: string;
+      createdAt: string;
+      userId?: number;
+      userName?: string;
+      oldValue?: string | null;
+      newValue?: string | null;
     }>
   > {
     return httpClient.get(`/api/v1/tickets/${id}/history`);

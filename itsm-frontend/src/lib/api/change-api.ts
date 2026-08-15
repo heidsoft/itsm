@@ -284,6 +284,11 @@ export class ChangeApi {
     return httpClient.post(`/api/v1/changes/${id}/reject`, data);
   }
 
+  // 排期变更（普通变更 approved → scheduled 的必经步骤）
+  static async scheduleChange(id: number): Promise<void> {
+    return httpClient.post(`/api/v1/changes/${id}/schedule`);
+  }
+
   // 开始实施变更
   static async startImplementation(id: number): Promise<void> {
     return httpClient.post(`/api/v1/changes/${id}/start`);

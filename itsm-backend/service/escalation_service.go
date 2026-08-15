@@ -105,8 +105,8 @@ func (e *EscalationService) processSLAEscalations(ctx context.Context, tenantID 
 			// 计算已过去的时间（分钟）
 			elapsedMinutes := int(time.Since(alert.CreatedAt).Minutes())
 
-			// 取工单优先级
-			priority := e.resolveTicketPriority(ctx, alert.TicketID)
+			// 取工单优先级（限定租户，防止跨租户读取）
+			priority := e.resolveTicketPriority(ctx, alert.TicketID, tenantID)
 			if priority == "" {
 				priority = "medium" // 默认值
 			}
@@ -143,12 +143,17 @@ func (e *EscalationService) processSLAEscalations(ctx context.Context, tenantID 
 	return nil
 }
 
-// resolveTicketPriority 从工单查询优先级
-func (e *EscalationService) resolveTicketPriority(ctx context.Context, ticketID int) string {
-	if ticketID <= 0 || e.client == nil {
+// resolveTicketPriority 从工单查询优先级（带租户过滤，fail-closed）
+func (e *EscalationService) resolveTicketPriority(ctx context.Context, ticketID int, tenantID int) string {
+	if ticketID <= 0 || tenantID <= 0 || e.client == nil {
 		return ""
 	}
-	t, err := e.client.Ticket.Get(ctx, ticketID)
+	t, err := e.client.Ticket.Query().
+		Where(
+			ticket.IDEQ(ticketID),
+			ticket.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
 	if err != nil || t == nil {
 		return ""
 	}
@@ -239,8 +244,8 @@ func (e *EscalationService) resolveNotifyUsers(ctx context.Context, level *Escal
 	return out
 }
 
-// getEscalationNotifyUsers 获取指定升级级别的通知用户
-func (e *EscalationService) getEscalationNotifyUsers(ctx context.Context, level int, rule *ent.SLAAlertRule) []int {
+// getEscalationNotifyUsers 获取指定升级级别的通知用户（admin 兜底查询必须限定租户）
+func (e *EscalationService) getEscalationNotifyUsers(ctx context.Context, level int, rule *ent.SLAAlertRule, tenantID int) []int {
 	var userIDs []int
 
 	// 从预警规则获取通知用户
@@ -258,11 +263,16 @@ func (e *EscalationService) getEscalationNotifyUsers(ctx context.Context, level 
 		}
 	}
 
-	// 如果没有配置，查找该SLA定义的管理员
+	// 如果没有配置，查找该SLA定义的管理员（仅限当前租户，禁止跨租户通知）
 	if len(userIDs) == 0 {
-		// 获取所有管理员用户
+		if tenantID <= 0 {
+			return nil
+		}
 		admins, _ := e.client.User.Query().
-			Where(user.RoleEQ("admin")).
+			Where(
+				user.TenantIDEQ(tenantID),
+				user.RoleEQ("admin"),
+			).
 			IDs(ctx)
 		userIDs = append(userIDs, admins...)
 	}
@@ -336,9 +346,12 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 				}
 			}
 
-			// 通知管理员
+			// 通知管理员（仅限当前租户）
 			admins, _ := e.client.User.Query().
-				Where(user.RoleEQ("admin")).
+				Where(
+					user.TenantIDEQ(tenantID),
+					user.RoleEQ("admin"),
+				).
 				IDs(ctx)
 
 			for _, adminID := range admins {
@@ -411,9 +424,12 @@ func (e *EscalationService) processUnassignedTickets(ctx context.Context, tenant
 		alertedTickets[alert.TicketID] = true
 	}
 
-	// 通知管理员
+	// 通知管理员（仅限当前租户，防止跨租户信息泄漏）
 	admins, _ := e.client.User.Query().
-		Where(user.RoleEQ("admin")).
+		Where(
+			user.TenantIDEQ(tenantID),
+			user.RoleEQ("admin"),
+		).
 		IDs(ctx)
 
 	for _, t := range tickets {
@@ -456,9 +472,17 @@ func (e *EscalationService) processUnassignedTickets(ctx context.Context, tenant
 	return nil
 }
 
-// EscalateTicket 手动升级工单
+// EscalateTicket 手动升级工单（租户隔离：工单必须属于当前租户）
 func (e *EscalationService) EscalateTicket(ctx context.Context, ticketID int, reason string, notifyUsers []int, tenantID int) error {
-	ticket, err := e.client.Ticket.Get(ctx, ticketID)
+	if tenantID <= 0 {
+		return fmt.Errorf("invalid tenant id: %d", tenantID)
+	}
+	ticket, err := e.client.Ticket.Query().
+		Where(
+			ticket.IDEQ(ticketID),
+			ticket.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get ticket: %w", err)
 	}

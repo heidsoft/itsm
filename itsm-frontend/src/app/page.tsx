@@ -244,9 +244,10 @@ export default function HomePage() {
                   $ git clone https://github.com/heidsoft/itsm.git
                 </div>
                 <div className="text-gray-500 mb-1"># 进入项目目录</div>
-                <div className="text-green-400 mb-3">$ cd tism</div>
-                <div className="text-gray-500 mb-1"># 使用 Docker Compose 启动</div>
-                <div className="text-green-400 mb-3">$ docker compose up -d --build</div>
+				<div className="text-green-400 mb-3">$ cd itsm</div>
+				<div className="text-gray-500 mb-1"># 启动本地开发环境</div>
+				<div className="text-green-400 mb-3">$ cp .env.dev.example .env</div>
+				<div className="text-green-400 mb-3">$ make dev-start-docker</div>
                 <div className="text-gray-500 mb-1"># 访问应用</div>
                 <div className="text-blue-400">$ open http://localhost:3000</div>
               </div>
@@ -255,11 +256,12 @@ export default function HomePage() {
             <div className="mt-6 flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-lg p-4">
               <CheckCircle2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-800">
-                <p className="font-medium mb-1">默认管理员账户</p>
-                <p>
-                  首次启动后，使用 <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin</code> /{' '}
-                  <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin123</code> 登录系统，请及时修改密码。
-                </p>
+				<p className="font-medium mb-1">本地开发默认账户</p>
+				<p>
+				  仅本地开发环境可使用 <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin</code> /{' '}
+				  <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin123</code>。生产部署使用一次性 bootstrap token
+				  创建管理员，不提供默认密码。
+				</p>
               </div>
             </div>
           </div>

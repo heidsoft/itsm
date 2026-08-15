@@ -74,6 +74,8 @@ type TaskService interface {
 	ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error)
 	ListUserTaskViews(ctx context.Context, req *ListUserTasksRequest) ([]*dto.BPMNTaskResponse, int, error)
 	AssignTask(ctx context.Context, taskID string, assignee string) error
+	ReassignTask(ctx context.Context, taskID string, newAssigneeID int, reason string) error
+	TerminateTask(ctx context.Context, taskID string, reason string) error
 	CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error
 	CancelTask(ctx context.Context, taskID string, reason string) error
 	GetTaskVariables(ctx context.Context, taskID string) (map[string]interface{}, error)
@@ -199,20 +201,36 @@ func (e *CustomProcessEngine) TaskService() TaskService {
 	return &bpmnTaskService{client: e.client, logger: e.logger, groupResolver: e.groupResolver}
 }
 
+// requireBPMNTenantContext 从 ctx 强制提取并校验租户上下文（P1-4 fail-closed）。
+// 无租户上下文或 tenantID<=0 一律返回错误，禁止跨租户回退到全局无过滤查询。
+func requireBPMNTenantContext(ctx context.Context) (int, error) {
+	if ctx == nil {
+		return 0, fmt.Errorf("BPMN 缺少请求上下文")
+	}
+	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
+	if tenantID <= 0 {
+		return 0, fmt.Errorf("BPMN 缺少有效租户上下文（tenantID=%d），已 fail-closed", tenantID)
+	}
+	return tenantID, nil
+}
+
 // StartProcess 启动流程实例
 func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitionKey string, businessKey string, variables map[string]interface{}) (*ent.ProcessInstance, error) {
-	// 1. 获取租户ID
-	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
-
-	// 2. 获取流程定义
-	query := e.client.ProcessDefinition.Query().
-		Where(processdefinition.Key(processDefinitionKey)).
-		Where(processdefinition.IsActive(true)).
-		Where(processdefinition.IsLatest(true))
-	if tenantID > 0 {
-		query = query.Where(processdefinition.TenantID(tenantID))
+	// P1-4：租户上下文必须显式有效（>0），禁止缺上下文时全局查流程定义。
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
 	}
-	definition, err := query.First(ctx)
+
+	// 2. 获取流程定义（固定使用当前租户过滤，不再存在"无过滤跨租户"分支）
+	definition, err := e.client.ProcessDefinition.Query().
+		Where(
+			processdefinition.Key(processDefinitionKey),
+			processdefinition.IsActive(true),
+			processdefinition.IsLatest(true),
+			processdefinition.TenantID(tenantID),
+		).
+		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
@@ -273,13 +291,16 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 
 // CompleteTask 完成任务（使用乐观锁保护变量合并，防止并发覆写）
 func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error {
-	// 1. 获取任务
-	taskQuery := e.client.ProcessTask.Query().
-		Where(processtask.TaskID(taskID))
-	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
-		taskQuery = taskQuery.Where(processtask.TenantID(tenantID))
+	// P1-4：租户上下文必须显式有效（>0），禁止缺上下文时全局查任务
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
 	}
-	task, err := taskQuery.First(ctx)
+
+	// 1. 获取任务（固定按当前租户过滤，不存在"无过滤跨租户"分支）
+	task, err := e.client.ProcessTask.Query().
+		Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).
+		First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取任务失败: %w", err)
 	}
@@ -1190,13 +1211,15 @@ func (e *CustomProcessEngine) findServiceTask(process *BPMNProcess, id string) *
 }
 
 func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanceID string, reason string) error {
-	// 1. 获取流程实例
-	query := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID))
-	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
-		query = query.Where(processinstance.TenantID(tenantID))
+	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
 	}
-	instance, err := query.First(ctx)
+	// 1. 获取流程实例（固定按当前租户过滤）
+	instance, err := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID), processinstance.TenantID(tenantID)).
+		First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -1239,13 +1262,15 @@ func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanc
 }
 
 func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstanceID string) error {
-	// 1. 获取流程实例
-	query := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID))
-	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
-		query = query.Where(processinstance.TenantID(tenantID))
+	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
 	}
-	instance, err := query.First(ctx)
+	// 1. 获取流程实例（固定按当前租户过滤）
+	instance, err := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID), processinstance.TenantID(tenantID)).
+		First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -1285,13 +1310,15 @@ func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstance
 }
 
 func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInstanceID string, reason string) error {
-	// 1. 获取流程实例
-	query := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID))
-	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
-		query = query.Where(processinstance.TenantID(tenantID))
+	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
 	}
-	instance, err := query.First(ctx)
+	// 1. 获取流程实例（固定按当前租户过滤）
+	instance, err := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID), processinstance.TenantID(tenantID)).
+		First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -1568,14 +1595,18 @@ func parseSemver(v string) (int, int, int) {
 }
 
 func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context, key string, version string) (*ent.ProcessDefinition, error) {
-	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
-	query := s.client.ProcessDefinition.Query().
-		Where(processdefinition.Key(key)).
-		Where(processdefinition.Version(version))
-	if tenantID > 0 {
-		query = query.Where(processdefinition.TenantID(tenantID))
+	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
 	}
-	definition, err := query.First(ctx)
+	definition, err := s.client.ProcessDefinition.Query().
+		Where(
+			processdefinition.Key(key),
+			processdefinition.Version(version),
+			processdefinition.TenantID(tenantID),
+		).
+		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
@@ -1585,12 +1616,14 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context,
 
 // GetProcessDefinitionByID 根据ID获取流程定义
 func (s *bpmnProcessDefinitionService) GetProcessDefinitionByID(ctx context.Context, id int) (*ent.ProcessDefinition, error) {
-	query := s.client.ProcessDefinition.Query().
-		Where(processdefinition.ID(id))
-	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
-		query = query.Where(processdefinition.TenantID(tenantID))
+	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
 	}
-	definition, err := query.First(ctx)
+	definition, err := s.client.ProcessDefinition.Query().
+		Where(processdefinition.ID(id), processdefinition.TenantID(tenantID)).
+		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
@@ -1599,14 +1632,18 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinitionByID(ctx context.Cont
 }
 
 func (s *bpmnProcessDefinitionService) GetLatestProcessDefinition(ctx context.Context, key string) (*ent.ProcessDefinition, error) {
-	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
-	query := s.client.ProcessDefinition.Query().
-		Where(processdefinition.Key(key)).
-		Where(processdefinition.IsLatest(true))
-	if tenantID > 0 {
-		query = query.Where(processdefinition.TenantID(tenantID))
+	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
 	}
-	definition, err := query.First(ctx)
+	definition, err := s.client.ProcessDefinition.Query().
+		Where(
+			processdefinition.Key(key),
+			processdefinition.IsLatest(true),
+			processdefinition.TenantID(tenantID),
+		).
+		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取最新流程定义失败: %w", err)
 	}
@@ -1671,7 +1708,18 @@ func (s *bpmnProcessDefinitionService) DeleteProcessDefinition(ctx context.Conte
 }
 
 func (s *bpmnProcessDefinitionService) ListProcessDefinitions(ctx context.Context, req *ListProcessDefinitionsRequest) ([]*ent.ProcessDefinition, int, error) {
-	query := s.client.ProcessDefinition.Query()
+	// P1-4：租户上下文必须显式有效（>0）；允许请求级 req.TenantID，但必须与上下文一致
+	ctxTenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	tenantID := ctxTenantID
+	if req.TenantID > 0 && req.TenantID != ctxTenantID {
+		return nil, 0, fmt.Errorf("请求租户 %d 与上下文租户 %d 不一致，已拒绝", req.TenantID, ctxTenantID)
+	}
+
+	query := s.client.ProcessDefinition.Query().
+		Where(processdefinition.TenantID(tenantID))
 
 	if req.Key != "" {
 		query = query.Where(processdefinition.Key(req.Key))
@@ -1681,9 +1729,6 @@ func (s *bpmnProcessDefinitionService) ListProcessDefinitions(ctx context.Contex
 	}
 	if req.IsActive != nil {
 		query = query.Where(processdefinition.IsActive(*req.IsActive))
-	}
-	if req.TenantID > 0 {
-		query = query.Where(processdefinition.TenantID(req.TenantID))
 	}
 
 	total, err := query.Count(ctx)
@@ -1723,16 +1768,18 @@ type bpmnProcessInstanceService struct {
 }
 
 func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, processInstanceID string) (*ent.ProcessInstance, error) {
+	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	id, err := strconv.Atoi(processInstanceID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的流程实例ID: %w", err)
 	}
-	query := s.client.ProcessInstance.Query().
-		Where(processinstance.ID(id))
-	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
-		query = query.Where(processinstance.TenantID(tenantID))
-	}
-	instance, err := query.First(ctx)
+	instance, err := s.client.ProcessInstance.Query().
+		Where(processinstance.ID(id), processinstance.TenantID(tenantID)).
+		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -1741,7 +1788,18 @@ func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, pro
 }
 
 func (s *bpmnProcessInstanceService) ListProcessInstances(ctx context.Context, req *ListProcessInstancesRequest) ([]*ent.ProcessInstance, int, error) {
-	query := s.client.ProcessInstance.Query()
+	// P1-4：租户上下文必须显式有效（>0）；同时允许请求对象级 req.TenantID 覆盖，前提是与上下文一致
+	ctxTenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	tenantID := ctxTenantID
+	if req.TenantID > 0 && req.TenantID != ctxTenantID {
+		return nil, 0, fmt.Errorf("请求租户 %d 与上下文租户 %d 不一致，已拒绝", req.TenantID, ctxTenantID)
+	}
+
+	query := s.client.ProcessInstance.Query().
+		Where(processinstance.TenantID(tenantID))
 
 	if req.ProcessDefinitionKey != "" {
 		query = query.Where(processinstance.ProcessDefinitionKey(req.ProcessDefinitionKey))
@@ -1751,9 +1809,6 @@ func (s *bpmnProcessInstanceService) ListProcessInstances(ctx context.Context, r
 	}
 	if req.BusinessKey != "" {
 		query = query.Where(processinstance.BusinessKey(req.BusinessKey))
-	}
-	if req.TenantID > 0 {
-		query = query.Where(processinstance.TenantID(req.TenantID))
 	}
 
 	total, err := query.Count(ctx)
@@ -1797,16 +1852,21 @@ func (s *bpmnProcessInstanceService) SetProcessInstanceVariables(ctx context.Con
 }
 
 func (s *bpmnProcessInstanceService) GetProcessInstanceHistory(ctx context.Context, processInstanceID string) ([]*ent.ProcessExecutionHistory, error) {
+	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	id, err := strconv.Atoi(processInstanceID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的流程实例ID: %w", err)
 	}
 
 	query := s.client.ProcessExecutionHistory.Query().
-		Where(processexecutionhistory.ProcessInstanceID(id))
-	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
-		query = query.Where(processexecutionhistory.TenantID(tenantID))
-	}
+		Where(
+			processexecutionhistory.ProcessInstanceID(id),
+			processexecutionhistory.TenantID(tenantID),
+		)
 
 	history, err := query.Order(ent.Asc(processexecutionhistory.FieldTimestamp)).All(ctx)
 	if err != nil {
@@ -1818,13 +1878,21 @@ func (s *bpmnProcessInstanceService) GetProcessInstanceHistory(ctx context.Conte
 
 // GetInstanceStatistics 获取实例统计
 func (s *bpmnProcessInstanceService) GetInstanceStatistics(ctx context.Context, req *InstanceStatisticsRequest) (*InstanceStatistics, error) {
-	query := s.client.ProcessInstance.Query()
+	// P1-4：租户上下文必须显式有效（>0）；允许请求级 req.TenantID，但必须与上下文一致
+	ctxTenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	tenantID := ctxTenantID
+	if req.TenantID > 0 && req.TenantID != ctxTenantID {
+		return nil, fmt.Errorf("请求租户 %d 与上下文租户 %d 不一致，已拒绝", req.TenantID, ctxTenantID)
+	}
+
+	query := s.client.ProcessInstance.Query().
+		Where(processinstance.TenantID(tenantID))
 
 	if req.ProcessDefinitionKey != "" {
 		query = query.Where(processinstance.ProcessDefinitionKey(req.ProcessDefinitionKey))
-	}
-	if req.TenantID > 0 {
-		query = query.Where(processinstance.TenantID(req.TenantID))
 	}
 	if req.StartDate != nil {
 		query = query.Where(processinstance.StartTimeGTE(*req.StartDate))
@@ -1885,12 +1953,14 @@ type bpmnTaskService struct {
 
 // GetTask 根据任务ID (BPMN标准task_id字符串)获取任务
 func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error) {
-	query := s.client.ProcessTask.Query().
-		Where(processtask.TaskID(taskID))
-	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
-		query = query.Where(processtask.TenantID(tenantID))
+	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
 	}
-	task, err := query.First(ctx)
+	task, err := s.client.ProcessTask.Query().
+		Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).
+		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取任务失败: %w", err)
 	}
@@ -1900,12 +1970,14 @@ func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.Proc
 
 // GetTaskByID 根据数据库自增ID获取任务
 func (s *bpmnTaskService) GetTaskByID(ctx context.Context, id int) (*ent.ProcessTask, error) {
-	query := s.client.ProcessTask.Query().
-		Where(processtask.ID(id))
-	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
-		query = query.Where(processtask.TenantID(tenantID))
+	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
 	}
-	task, err := query.First(ctx)
+	task, err := s.client.ProcessTask.Query().
+		Where(processtask.ID(id), processtask.TenantID(tenantID)).
+		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取任务失败: %w", err)
 	}
@@ -2078,6 +2150,153 @@ func (s *bpmnTaskService) AssignTask(ctx context.Context, taskID string, assigne
 		Save(ctx)
 
 	return err
+}
+
+// ReassignTask atomically validates the tenant-scoped target, reassigns an
+// active BPMN task, and records the operator decision in the BPMN audit log.
+func (s *bpmnTaskService) ReassignTask(ctx context.Context, taskID string, newAssigneeID int, reason string) error {
+	reason = strings.TrimSpace(reason)
+	if reason == "" {
+		return fmt.Errorf("重新分配原因不能为空")
+	}
+	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
+	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
+	if tenantID <= 0 || actorID <= 0 {
+		return fmt.Errorf("缺少有效的租户或操作人上下文")
+	}
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("开启重新分配事务失败: %w", err)
+	}
+	defer tx.Rollback()
+
+	task, err := tx.ProcessTask.Query().Where(
+		processtask.TaskID(taskID),
+		processtask.TenantID(tenantID),
+	).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("任务不存在或不属于当前租户: %w", err)
+	}
+	if task.Status != common.ProcessTaskStatusCreated && task.Status != common.ProcessTaskStatusAssigned && task.Status != common.ProcessTaskStatusStarted && task.Status != "running" {
+		return fmt.Errorf("任务状态 %s 不允许重新分配", task.Status)
+	}
+	assignee, err := tx.User.Query().Where(
+		user.IDEQ(newAssigneeID),
+		user.TenantIDEQ(tenantID),
+		user.ActiveEQ(true),
+	).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("目标处理人不存在、已停用或不属于当前租户")
+	}
+	actor, err := tx.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("操作人不存在、已停用或不属于当前租户")
+	}
+	instance, err := tx.ProcessInstance.Get(ctx, task.ProcessInstanceID)
+	if err != nil || instance.TenantID != tenantID {
+		return fmt.Errorf("任务所属流程实例不存在或租户不一致")
+	}
+	previousAssignee := task.Assignee
+	if _, err = tx.ProcessTask.UpdateOne(task).
+		SetAssignee(strconv.Itoa(assignee.ID)).
+		SetStatus(common.ProcessTaskStatusAssigned).
+		SetAssignedTime(time.Now()).
+		Save(ctx); err != nil {
+		return fmt.Errorf("重新分配任务失败: %w", err)
+	}
+	if _, err = tx.ProcessAuditLog.Create().
+		SetProcessInstanceID(instance.ID).
+		SetProcessInstanceKey(instance.ProcessInstanceID).
+		SetProcessDefinitionKey(instance.ProcessDefinitionKey).
+		SetProcessDefinitionID(instance.ProcessDefinitionID).
+		SetActivityID(task.TaskDefinitionKey).
+		SetActivityName(task.TaskName).
+		SetActivityType(task.TaskType).
+		SetAction(AuditActionTaskReassigned).
+		SetUserID(actor.ID).
+		SetUserName(actor.Name).
+		SetAssigneeID(assignee.ID).
+		SetAssigneeName(assignee.Name).
+		SetComment(reason).
+		SetVariablesBefore(map[string]interface{}{"assignee": previousAssignee}).
+		SetVariablesAfter(map[string]interface{}{"assignee": strconv.Itoa(assignee.ID)}).
+		SetTenantID(tenantID).
+		SetTimestamp(time.Now()).
+		SetMetadata(map[string]interface{}{"recoveryAction": "reassign", "taskId": task.TaskID}).
+		Save(ctx); err != nil {
+		return fmt.Errorf("记录重新分配审计失败: %w", err)
+	}
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("提交重新分配事务失败: %w", err)
+	}
+	return nil
+}
+
+// TerminateTask terminates the owning process rather than cancelling a single
+// task and leaving an unrecoverable running instance behind.
+func (s *bpmnTaskService) TerminateTask(ctx context.Context, taskID string, reason string) error {
+	reason = strings.TrimSpace(reason)
+	if reason == "" {
+		return fmt.Errorf("终止原因不能为空")
+	}
+	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
+	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
+	if tenantID <= 0 || actorID <= 0 {
+		return fmt.Errorf("缺少有效的租户或操作人上下文")
+	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("开启终止事务失败: %w", err)
+	}
+	defer tx.Rollback()
+	task, err := tx.ProcessTask.Query().Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("任务不存在或不属于当前租户: %w", err)
+	}
+	instance, err := tx.ProcessInstance.Get(ctx, task.ProcessInstanceID)
+	if err != nil || instance.TenantID != tenantID {
+		return fmt.Errorf("任务所属流程实例不存在或租户不一致")
+	}
+	if instance.Status == "completed" || instance.Status == "terminated" {
+		return fmt.Errorf("流程实例已处于终态 %s", instance.Status)
+	}
+	actor, err := tx.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("操作人不存在、已停用或不属于当前租户")
+	}
+	now := time.Now()
+	if _, err = tx.ProcessInstance.UpdateOne(instance).SetStatus("terminated").SetEndTime(now).Save(ctx); err != nil {
+		return fmt.Errorf("终止流程实例失败: %w", err)
+	}
+	if _, err = tx.ProcessTask.Update().Where(
+		processtask.ProcessInstanceID(instance.ID),
+		processtask.StatusNotIn(common.ProcessTaskStatusCompleted, common.ProcessTaskStatusCancelled),
+	).SetStatus(common.ProcessTaskStatusCancelled).SetCompletedTime(now).Save(ctx); err != nil {
+		return fmt.Errorf("取消流程未完成任务失败: %w", err)
+	}
+	if _, err = tx.ProcessAuditLog.Create().
+		SetProcessInstanceID(instance.ID).
+		SetProcessInstanceKey(instance.ProcessInstanceID).
+		SetProcessDefinitionKey(instance.ProcessDefinitionKey).
+		SetProcessDefinitionID(instance.ProcessDefinitionID).
+		SetActivityID(task.TaskDefinitionKey).
+		SetActivityName(task.TaskName).
+		SetActivityType(task.TaskType).
+		SetAction(AuditActionProcessTerminated).
+		SetUserID(actor.ID).
+		SetUserName(actor.Name).
+		SetComment(reason).
+		SetTenantID(tenantID).
+		SetTimestamp(now).
+		SetMetadata(map[string]interface{}{"recoveryAction": "terminate", "sourceTaskId": task.TaskID}).
+		Save(ctx); err != nil {
+		return fmt.Errorf("记录终止审计失败: %w", err)
+	}
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("提交终止事务失败: %w", err)
+	}
+	return nil
 }
 
 // ClaimTask 认领任务 (根据task_id字符串)

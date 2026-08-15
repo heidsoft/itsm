@@ -77,8 +77,117 @@ const ChangeDetail: React.FC = () => {
      
   }, [id]);
 
-  // 检查是否可以审批
+  // 生命周期 action bar 可见性(修复 P0-1: 详情页无生命周期推进按钮)
+  // draft → 提交审批;pending → 批准/拒绝;approved → 开始实施;
+  // in_progress → 完成实施/回滚;非终态 → 取消
+  const isTerminal =
+    change?.status === ChangeStatus.COMPLETED ||
+    change?.status === ChangeStatus.CANCELLED ||
+    change?.status === ChangeStatus.ROLLED_BACK ||
+    change?.status === ChangeStatus.REJECTED ||
+    change?.status === ChangeStatus.FAILED;
+  const canSubmit = change?.status === ChangeStatus.DRAFT;
   const canApprove = change?.status === ChangeStatus.PENDING;
+  const canSchedule = change?.status === ChangeStatus.APPROVED;
+  const canStart = change?.status === ChangeStatus.SCHEDULED;
+  const canComplete = change?.status === ChangeStatus.IN_PROGRESS;
+  const canCancel =
+    change?.status === ChangeStatus.DRAFT ||
+    change?.status === ChangeStatus.APPROVED ||
+    change?.status === ChangeStatus.SCHEDULED ||
+    change?.status === ChangeStatus.IN_PROGRESS;
+
+  // 提交审批
+  const handleSubmit = async () => {
+    if (!change) return;
+    setProcessing(true);
+    try {
+      await ChangeApi.submitForApproval(change.id);
+      message.success('变更已提交审批');
+      loadDetail();
+    } catch (error) {
+      message.error('提交审批失败');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // 排期
+  const handleSchedule = async () => {
+    if (!change) return;
+    setProcessing(true);
+    try {
+      await ChangeApi.scheduleChange(change.id);
+      message.success('变更已排期');
+      loadDetail();
+    } catch (error) {
+      message.error('排期失败');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // 开始实施
+  const handleStart = async () => {
+    if (!change) return;
+    setProcessing(true);
+    try {
+      await ChangeApi.startImplementation(change.id);
+      message.success('变更已开始实施');
+      loadDetail();
+    } catch (error) {
+      message.error('开始实施失败');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // 完成实施
+  const handleComplete = async () => {
+    if (!change) return;
+    setProcessing(true);
+    try {
+      await ChangeApi.completeImplementation(change.id);
+      message.success('变更实施完成');
+      loadDetail();
+    } catch (error) {
+      message.error('完成实施失败');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // 回滚
+  const handleRollback = async () => {
+    if (!change) return;
+    setProcessing(true);
+    try {
+      await ChangeApi.rollbackChange(change.id, approvalComment);
+      message.success('变更已回滚');
+      setApprovalComment('');
+      loadDetail();
+    } catch (error) {
+      message.error('回滚失败');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // 取消
+  const handleCancel = async () => {
+    if (!change) return;
+    setProcessing(true);
+    try {
+      await ChangeApi.cancelChange(change.id, approvalComment);
+      message.success('变更已取消');
+      setApprovalComment('');
+      loadDetail();
+    } catch (error) {
+      message.error('取消失败');
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   // 批准变更
   const handleApprove = async () => {
@@ -241,22 +350,58 @@ const ChangeDetail: React.FC = () => {
             <Tag color={statusColors[change.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
               {ChangeStatusLabels[change.status]}
             </Tag>
-            {canApprove && (
+            {!isTerminal && (
               <Space>
-                <Button
-                  type="primary"
-                  icon={<CheckCircle />}
-                  onClick={() => setApprovalModalVisible(true)}
-                >
-                  批准
-                </Button>
-                <Button
-                  danger
-                  icon={<XCircle />}
-                  onClick={() => setRejectModalVisible(true)}
-                >
-                  拒绝
-                </Button>
+                {canSubmit && (
+                  <Button type="primary" loading={processing} onClick={handleSubmit}>
+                    提交审批
+                  </Button>
+                )}
+                {canApprove && (
+                  <>
+                    <Button
+                      type="primary"
+                      icon={<CheckCircle />}
+                      loading={processing}
+                      onClick={() => setApprovalModalVisible(true)}
+                    >
+                      批准
+                    </Button>
+                    <Button
+                      danger
+                      icon={<XCircle />}
+                      loading={processing}
+                      onClick={() => setRejectModalVisible(true)}
+                    >
+                      拒绝
+                    </Button>
+                  </>
+                )}
+                {canSchedule && (
+                  <Button type="primary" loading={processing} onClick={handleSchedule}>
+                    排期
+                  </Button>
+                )}
+                {canStart && (
+                  <Button type="primary" loading={processing} onClick={handleStart}>
+                    开始实施
+                  </Button>
+                )}
+                {canComplete && (
+                  <>
+                    <Button type="primary" loading={processing} onClick={handleComplete}>
+                      完成实施
+                    </Button>
+                    <Button danger loading={processing} onClick={handleRollback}>
+                      回滚
+                    </Button>
+                  </>
+                )}
+                {canCancel && (
+                  <Button danger loading={processing} onClick={handleCancel}>
+                    取消变更
+                  </Button>
+                )}
               </Space>
             )}
           </div>

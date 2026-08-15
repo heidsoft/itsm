@@ -303,15 +303,22 @@ func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 根据测试用例设置初始状态
-			initialStatus := "open"
-			if tt.newStatus == "resolved" {
-				// resolved 需要先到 in_progress
+			// 根据测试用例显式设置初始状态（P1-1：之前"closed→open"用例错误地仍从 open 出发，
+			// 导致它实际上测的是 open→open 的 self-loop，无法验证终态保护）。
+			var initialStatus string
+			switch {
+			case tt.name == "无效状态转换 closed -> open":
+				initialStatus = "closed"
+			case tt.newStatus == "resolved":
+				// resolved 需要从可转换状态（in_progress）出发
 				initialStatus = "in_progress"
+			default:
+				initialStatus = "open"
 			}
-			client.Ticket.UpdateOneID(testTicket.ID).
+			_, setupErr := client.Ticket.UpdateOneID(testTicket.ID).
 				SetStatus(initialStatus).
-				Exec(ctx)
+				Save(ctx)
+			require.NoError(t, setupErr, "failed to reset ticket to initial status %q", initialStatus)
 
 			updatedTicket, err := lifecycleService.UpdateTicketStatus(ctx, tt.ticketID, tt.newStatus, tt.tenantID, tt.operatorID)
 

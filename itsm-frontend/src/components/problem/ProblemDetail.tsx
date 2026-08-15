@@ -5,17 +5,19 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, Tag, Button, Space, Skeleton, message, Typography, Tabs, Modal } from 'antd';
-import { ArrowLeft, Search, Pencil } from 'lucide-react';
+import { Card, Tag, Button, Space, Skeleton, message, Typography, Tabs, Modal, Form, Input } from 'antd';
+import { ArrowLeft, Search, Pencil, FlaskConical, ShieldAlert } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 
 import { ProblemApi } from '@/lib/api/';
+import { KEDBApi } from '@/lib/api/kedb-api';
 import { ProblemStatus, ProblemStatusLabels } from '@/constants/problem';
 import type { Problem } from '@/types/biz/problem';
 import ProblemInvestigationTab from './ProblemInvestigationTab';
 import BasicInfoCard from './BasicInfoCard';
 
 const { Title } = Typography;
+const { TextArea } = Input;
 
 const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const params = useParams();
@@ -26,6 +28,15 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [data, setData] = useState<Problem | null>(null);
   // 状态流转 loading：记录正在提交的目标状态，防止重复点击
   const [updatingStatus, setUpdatingStatus] = useState<ProblemStatus | null>(null);
+  // 受控 Tab：用于“启动 RCA”等操作直接跳转到对应面板
+  const [activeTab, setActiveTab] = useState('basic');
+  // 调查 Tab 内部初始面板（启动 RCA 时跳到“根因分析”）
+  const [investigationInnerTab, setInvestigationInnerTab] = useState('overview');
+  const [investigationMountKey, setInvestigationMountKey] = useState(0);
+  // 转为已知错误 Modal
+  const [knownErrorModalOpen, setKnownErrorModalOpen] = useState(false);
+  const [creatingKnownError, setCreatingKnownError] = useState(false);
+  const [knownErrorForm] = Form.useForm();
 
   const loadData = async () => {
     if (!id) return;
@@ -70,6 +81,41 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     });
   };
 
+  // 启动 RCA：跳转到问题调查 Tab 的“根因分析”面板
+  const handleStartRCA = () => {
+    setInvestigationInnerTab('root-cause');
+    setInvestigationMountKey((k) => k + 1);
+    setActiveTab('investigation');
+  };
+
+  // 转为已知错误：沉淀到 KEDB（已知错误库）
+  const handleCreateKnownError = async (values: {
+    title: string;
+    rootCause?: string;
+    workaround?: string;
+    description?: string;
+  }) => {
+    if (!data) return;
+    setCreatingKnownError(true);
+    try {
+      await KEDBApi.createKnownError({
+        title: values.title,
+        description: values.description || data.description,
+        rootCause: values.rootCause || data.rootCause,
+        workaround: values.workaround,
+        problemId: data.id,
+      });
+      message.success('已转为已知错误');
+      setKnownErrorModalOpen(false);
+      knownErrorForm.resetFields();
+      router.push('/problems/known-errors');
+    } catch (error) {
+      message.error('转为已知错误失败');
+    } finally {
+      setCreatingKnownError(false);
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -97,9 +143,11 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       ),
       children: (
         <ProblemInvestigationTab
+          key={investigationMountKey}
           problemId={data.id}
           problemTitle={data.title}
           problemDescription={data.description}
+          initialInnerTab={investigationInnerTab}
         />
       ),
     },
@@ -128,6 +176,32 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             >
               编辑
             </Button>
+            {/* 启动 RCA：进入问题调查根因分析 */}
+            {(data.status === ProblemStatus.OPEN ||
+              data.status === ProblemStatus.INVESTIGATING ||
+              data.status === ProblemStatus.IN_PROGRESS) && (
+              <Button icon={<FlaskConical />} onClick={handleStartRCA}>
+                启动 RCA
+              </Button>
+            )}
+            {/* 转为已知错误：沉淀到 KEDB */}
+            {(data.status === ProblemStatus.INVESTIGATING ||
+              data.status === ProblemStatus.IN_PROGRESS ||
+              data.status === ProblemStatus.RESOLVED) && (
+              <Button
+                icon={<ShieldAlert />}
+                onClick={() => {
+                  knownErrorForm.setFieldsValue({
+                    title: data.title,
+                    rootCause: data.rootCause || '',
+                    description: data.description || '',
+                  });
+                  setKnownErrorModalOpen(true);
+                }}
+              >
+                转为已知错误
+              </Button>
+            )}
             {data.status === ProblemStatus.OPEN && (
               <Button
                 type="primary"
@@ -163,8 +237,42 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
       {/* Tab 内容 */}
       <Card>
-        <Tabs items={tabItems} defaultActiveKey="basic" />
+        <Tabs
+          items={tabItems}
+          activeKey={activeTab}
+          onChange={setActiveTab}
+        />
       </Card>
+
+      {/* 转为已知错误 Modal */}
+      <Modal
+        title="转为已知错误"
+        open={knownErrorModalOpen}
+        onCancel={() => setKnownErrorModalOpen(false)}
+        confirmLoading={creatingKnownError}
+        onOk={() => knownErrorForm.submit()}
+        okText="确认转换"
+        cancelText="取消"
+      >
+        <Form form={knownErrorForm} layout="vertical" onFinish={handleCreateKnownError}>
+          <Form.Item
+            name="title"
+            label="已知错误标题"
+            rules={[{ required: true, message: '请输入标题' }]}
+          >
+            <Input placeholder="请输入已知错误标题" />
+          </Form.Item>
+          <Form.Item name="rootCause" label="根本原因">
+            <TextArea rows={3} placeholder="根本原因（可选）" />
+          </Form.Item>
+          <Form.Item name="workaround" label="临时规避方案">
+            <TextArea rows={3} placeholder="临时规避方案（可选）" />
+          </Form.Item>
+          <Form.Item name="description" label="描述">
+            <TextArea rows={3} placeholder="问题描述（可选）" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Space>
   );
 };

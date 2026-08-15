@@ -81,19 +81,9 @@ func (_c *BootstrapTokenCreate) SetTenantID(v int) *BootstrapTokenCreate {
 	return _c
 }
 
-// AddTenantIDs adds the "tenant" edge to the Tenant entity by IDs.
-func (_c *BootstrapTokenCreate) AddTenantIDs(ids ...int) *BootstrapTokenCreate {
-	_c.mutation.AddTenantIDs(ids...)
-	return _c
-}
-
-// AddTenant adds the "tenant" edges to the Tenant entity.
-func (_c *BootstrapTokenCreate) AddTenant(v ...*Tenant) *BootstrapTokenCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddTenantIDs(ids...)
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (_c *BootstrapTokenCreate) SetTenant(v *Tenant) *BootstrapTokenCreate {
+	return _c.SetTenantID(v.ID)
 }
 
 // Mutation returns the BootstrapTokenMutation object of the builder.
@@ -217,14 +207,10 @@ func (_c *BootstrapTokenCreate) createSpec() (*BootstrapToken, *sqlgraph.CreateS
 		_spec.SetField(bootstraptoken.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := _c.mutation.TenantID(); ok {
-		_spec.SetField(bootstraptoken.FieldTenantID, field.TypeInt, value)
-		_node.TenantID = value
-	}
 	if nodes := _c.mutation.TenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
 			Table:   bootstraptoken.TenantTable,
 			Columns: []string{bootstraptoken.TenantColumn},
 			Bidi:    false,
@@ -235,6 +221,7 @@ func (_c *BootstrapTokenCreate) createSpec() (*BootstrapToken, *sqlgraph.CreateS
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.TenantID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

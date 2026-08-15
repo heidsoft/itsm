@@ -1052,15 +1052,24 @@ const TicketDetailTabs: React.FC<TicketDetailTabsProps> = ({
           fetchHistory={async (id) => {
             const list = await TicketApi.getTicketHistory(Number(id));
             const arr = Array.isArray(list) ? list : [];
-            return arr.map((raw) => {
+            // 后端返回活动流水（camelCase：id/action/details/createdAt/userName/oldValue/newValue）
+            return arr.map((raw, idx) => {
               const r = raw as unknown as Record<string, unknown>;
               return {
-                id: Number(r.id ?? 0),
-                createdAt: String(r.changedAt ?? r.createdAt ?? ''),
-                user: (r.user as { name?: string; username?: string }) ?? undefined,
+                id: (r.id as number | undefined) ?? idx,
+                createdAt: String(r.createdAt ?? r.timestamp ?? ''),
+                user: { name: String(r.userName ?? r.user_name ?? '') },
+                action: r.action as string | undefined,
+                details: r.details as string | undefined,
                 fieldName: r.fieldName as string | undefined,
-                oldValue: r.oldValue as string | undefined,
-                newValue: r.newValue as string | undefined,
+                oldValue:
+                  r.oldValue !== undefined && r.oldValue !== null
+                    ? String(r.oldValue)
+                    : undefined,
+                newValue:
+                  r.newValue !== undefined && r.newValue !== null
+                    ? String(r.newValue)
+                    : undefined,
                 changeReason: r.changeReason as string | undefined,
               };
             });

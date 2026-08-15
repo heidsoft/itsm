@@ -1,5 +1,7 @@
 # 构建与部署指南
 
+> Status: current。历史认证、测试报告或旧 Compose 示例不能覆盖本文；发布状态按[文档状态与事实源](documentation-governance.md)判定。
+
 ## 命令入口
 
 | 场景 | 推荐命令 | 环境文件 |
@@ -90,10 +92,10 @@ make prod-init
 - `DB_PASSWORD`
 - `REDIS_PASSWORD`
 - `JWT_SECRET`
-- `ADMIN_PASSWORD`
+- `BOOTSTRAP_TOKEN_ENABLED=1`（首位管理员使用一次性 token；`ADMIN_PASSWORD` 只用于显式兼容旧流程）
 - MinIO 访问密钥
 
-生产环境不得使用 `admin123` 或仓库开发默认值。
+生产环境不得使用 `admin123` 或仓库开发默认值，也不得把固定首管理员密码长期注入 Web/Worker 容器。
 
 ### 构建并部署
 
@@ -126,6 +128,8 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml logs -f
 curl -fsS http://localhost/health
 curl -fsS http://localhost:8090/api/v1/readiness/ga
 ```
+
+首次认证还必须验证当前发布实际提供 bootstrap 状态和创建管理员接口。接口缺失、token 可重放或没有审计时，应视为部署未就绪，而不是回退到文档中的历史默认账号。
 
 ## 构建版本化镜像
 

@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 const BASE = 'http://localhost:3000';
 const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'AdminProd2026!';
+const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'admin123';
 
 test.describe('ITSM 生产环境诊断测试', () => {
   test('登录流程详细诊断', async ({ page }) => {

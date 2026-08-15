@@ -25,7 +25,7 @@ import {
   Spin,
   Alert,
 } from 'antd';
-import { ArrowUp, Plus, Save, Pencil, FileText, Clock, AlertCircle, CheckCircle, Plug, AreaChart, UserCheck, Siren } from 'lucide-react';
+import { ArrowUp, Plus, Save, Pencil, FileText, Clock, AlertCircle, CheckCircle, Plug, AreaChart, UserCheck, Siren, Play } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -96,6 +96,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [escalating, setEscalating] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [reopening, setReopening] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [form] = Form.useForm();
   const [resolveForm] = Form.useForm();
 
@@ -244,6 +245,27 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const handleResolveClick = () => {
     resolveForm.resetFields();
     setResolveModalVisible(true);
+  };
+
+  // 开始处理：将事件推进到 in_progress（解决前的必要步骤）
+  const handleStartProcessing = async () => {
+    if (!data) return;
+
+    if (!isValidIncidentTransition(data.status, IncidentStatus.IN_PROGRESS)) {
+      message.error('当前状态不允许开始处理');
+      return;
+    }
+
+    setStarting(true);
+    try {
+      await IncidentAPI.updateIncidentStatus(data.id, { status: IncidentStatus.IN_PROGRESS });
+      message.success('已开始处理');
+      loadData();
+    } catch (error) {
+      handleError(error, 'startProcessing', '开始处理失败');
+    } finally {
+      setStarting(false);
+    }
   };
 
   // 提交解决方案（ITIL 合规：要求填写解决方案）
@@ -550,6 +572,12 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                     升级为重大事件
                   </Button>
                 )}
+              {/* 开始处理：new/acknowledged/assigned/on_hold → in_progress（解决前置步骤） */}
+              {isValidIncidentTransition(data.status, IncidentStatus.IN_PROGRESS) && (
+                <Button icon={<Play />} onClick={handleStartProcessing} loading={starting}>
+                  开始处理
+                </Button>
+              )}
               {data.status !== IncidentStatus.RESOLVED && data.status !== IncidentStatus.CLOSED && (
                 <Button
                   type="primary"

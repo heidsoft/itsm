@@ -1648,6 +1648,45 @@
   --color-text-inverse: #0f172a;
 }
 
+/* ============================================================
+   暗色模式：补齐「裸」Tailwind 工具类（组件未写 dark: 变体）
+   这些规则不带 !important，但因位于未分层（unlayered）作用域，
+   优先级高于 Tailwind v4 的 @layer utilities，可在 .dark 下覆盖裸 light 类。
+   仅覆盖最常见的亮色基底/文字/边框，避免误伤有意浅色元素。
+   ============================================================ */
+.dark .bg-white {
+  background-color: var(--color-background-primary);
+}
+
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background-color: var(--color-background-secondary);
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800 {
+  color: var(--color-text-primary);
+}
+
+.dark .text-gray-700,
+.dark .text-gray-600 {
+  color: var(--color-text-secondary);
+}
+
+.dark .text-gray-500 {
+  color: var(--color-text-tertiary);
+}
+
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: var(--color-border-primary);
+}
+
+.dark .divide-gray-200 > * + *,
+.dark .divide-gray-100 > * + * {
+  border-color: var(--color-border-primary);
+}
+
 /* 系统主题偏好支持 */
 @media (prefers-color-scheme: dark) {
   :root.dark {

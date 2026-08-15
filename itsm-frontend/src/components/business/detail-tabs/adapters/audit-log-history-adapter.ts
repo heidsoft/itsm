@@ -12,19 +12,25 @@ export async function fetchAuditLogHistory(
   targetType: TargetType,
   targetId: number | string
 ): Promise<HistoryRecord[]> {
-  const resource = targetType;
-  // 尝试用 path 参数做进一步限定；后端如未支持模糊匹配则退化为 resource 全量再前端过滤
-  const pathHint = `/${targetType}s/${targetId}`;
+  // 审计中间件按 URL 路径段写入 resource（复数，如 'incidents'），
+  // path 为完整请求路径（如 /api/v1/incidents/3/status）。查询条件必须与写入侧对齐：
+  // - resource 用复数形式
+  // - path 用 /api/v1/{复数}/{id} 前缀（后端 PathHasPrefix 匹配）
+  const pluralResource = `${targetType}s`;
+  const pathPrefix = `/api/v1/${pluralResource}/${targetId}`;
   const res = await listAuditLogs({
-    resource,
-    path: pathHint,
+    resource: pluralResource,
+    path: pathPrefix,
     pageSize: 100,
   });
-  const logs = res.logs || [];
+  const logs = (res.logs || []).filter(
+    (l) => l.path === pathPrefix || l.path.startsWith(`${pathPrefix}/`)
+  );
   return logs.map((l) => ({
     id: l.id,
     createdAt: l.createdAt,
     action: l.action,
+    details: `${l.method} ${l.path}`,
     path: l.path,
     method: l.method,
     statusCode: l.statusCode,

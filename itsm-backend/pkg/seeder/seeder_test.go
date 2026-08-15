@@ -305,6 +305,58 @@ func TestProductionInitializersApplyAndVerifyCompleteDAG(t *testing.T) {
 	}
 }
 
+func TestProductionInitializersRepairMissingServiceCatalogWithoutOverwritingTenantCustomization(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
+	components, err := ProductionInitializers(seeder)
+	require.NoError(t, err)
+	scope := initialization.Scope{Type: "platform", ID: 0}
+
+	for index, component := range components {
+		plan, planErr := component.Plan(ctx, scope)
+		require.NoError(t, planErr)
+		_, applyErr := component.Apply(ctx, scope, plan, int64(index+1))
+		require.NoError(t, applyErr, component.Name())
+	}
+
+	rootTenant, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+	require.NoError(t, err)
+	customized := seeder.config.ServiceCatalog[0]
+	managed, err := seeder.client.ServiceCatalog.Query().Where(
+		servicecatalog.TenantIDEQ(rootTenant.ID),
+		servicecatalog.NameEQ(customized.Name),
+	).Only(ctx)
+	require.NoError(t, err)
+	require.NoError(t, managed.Update().SetDescription("tenant customized description").Exec(ctx))
+
+	missing := seeder.config.ServiceCatalog[1]
+	_, err = seeder.client.ServiceCatalog.Delete().Where(
+		servicecatalog.TenantIDEQ(rootTenant.ID),
+		servicecatalog.NameEQ(missing.Name),
+	).Exec(ctx)
+	require.NoError(t, err)
+
+	extension := components[len(components)-1]
+	plan, err := extension.Plan(ctx, scope)
+	require.NoError(t, err)
+	_, err = extension.Apply(ctx, scope, plan, 100)
+	require.NoError(t, err)
+	require.NoError(t, extension.Verify(ctx, scope, plan))
+
+	repaired, err := seeder.client.ServiceCatalog.Query().Where(
+		servicecatalog.TenantIDEQ(rootTenant.ID),
+		servicecatalog.NameEQ(missing.Name),
+	).Exist(ctx)
+	require.NoError(t, err)
+	assert.True(t, repaired)
+
+	preserved, err := seeder.client.ServiceCatalog.Query().Where(
+		servicecatalog.TenantIDEQ(rootTenant.ID),
+		servicecatalog.NameEQ(customized.Name),
+	).Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, "tenant customized description", preserved.Description)
+}
+
 func TestProductionComponentRollsBackWhenTransactionalVerificationFails(t *testing.T) {
 	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
 	components, err := ProductionInitializers(seeder)

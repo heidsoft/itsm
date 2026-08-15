@@ -18,10 +18,12 @@ import {
 } from 'antd';
 import { Bot, Lightbulb, Search, CheckCircle, Clock, Target } from 'lucide-react';
 import {
-  AIService,
+  aiClassifyTicket,
+  aiSuggestSolutions,
+  aiIntelligentSearch,
   type TicketAnalysisRequest,
   type SolutionSuggestion,
-} from '@/lib/services/ai-service';
+} from '@/lib/api/ai-api';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -101,8 +103,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
       };
 
       const [classification, solutionSuggestions] = await Promise.all([
-        AIService.classifyTicket(request),
-        AIService.suggestSolutions({
+        aiClassifyTicket(request),
+        aiSuggestSolutions({
           query: `${inputData.title} ${inputData.description}`,
           category: inputData.category,
           limit: 5,
@@ -130,7 +132,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
     setSearchLoading(true);
     try {
-      const results = await AIService.intelligentSearch(searchQuery, {
+      const results = await aiIntelligentSearch(searchQuery, {
         type: 'all',
       });
       setSearchResults(results);

@@ -96,10 +96,17 @@ services:
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
       - LOG_LEVEL=error
       - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - BOOTSTRAP_TOKEN_ENABLED=${BOOTSTRAP_TOKEN_ENABLED:-1}
       - ITSM_BOOTSTRAP_ONLY=true
       - ITSM_AUTO_MIGRATE=true
       - ITSM_AUTO_SEED=true
+      # Bootstrap flow: init container uses legacy ADMIN_PASSWORD path to ensure
+      # admin user is created in one shot; bootstrap-token flow requires a separate
+      # two-step generate-token + consume-token API dance (planned post-pilot).
+      - BOOTSTRAP_TOKEN_ENABLED=${BOOTSTRAP_TOKEN_ENABLED:-0}
+      - RLS_MODE=off
+      - RLS_TENANT_VAR_NAME=app.current_tenant
       - no_proxy=localhost,127.0.0.1
       - NO_PROXY=localhost,127.0.0.1
     depends_on:
@@ -143,7 +150,8 @@ services:
       # 服务配置
       - SERVER_ENV=production
       - SERVER_HOST=0.0.0.0
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - BOOTSTRAP_TOKEN_ENABLED=${BOOTSTRAP_TOKEN_ENABLED:-1}
 
       # JWT 配置（生产环境必须更改！）
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
@@ -158,6 +166,9 @@ services:
       - ITSM_AUTO_MIGRATE=false
       - ITSM_AUTO_SEED=false
       - ITSM_PROCESS_MODE=api
+      # RLS pilot — driver decorator wired, policies enforced on changes/vectors
+      - RLS_MODE=${RLS_MODE:-enforce}
+      - RLS_TENANT_VAR_NAME=${RLS_TENANT_VAR_NAME:-app.current_tenant}
 
       # 监控
       - ENABLE_METRICS=true
@@ -176,6 +187,8 @@ services:
       # LLM 配置（生产环境）
       - LLM_PROVIDER=${LLM_PROVIDER:-openai}
       - LLM_MODEL=${LLM_MODEL:-gpt-4}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_ENDPOINT=${LLM_ENDPOINT:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
 
@@ -249,6 +262,9 @@ services:
       - ITSM_AUTO_MIGRATE=false
       - ITSM_AUTO_SEED=false
       - ITSM_PROCESS_MODE=worker
+      # RLS pilot — worker uses enforce mode same as backend
+      - RLS_MODE=${RLS_MODE:-enforce}
+      - RLS_TENANT_VAR_NAME=${RLS_TENANT_VAR_NAME:-app.current_tenant}
       - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY must be set}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:?MINIO_SECRET_KEY must be set}
@@ -271,6 +287,14 @@ services:
       - ./config:/app/config:ro
     networks:
       - itsm-prod-network
+    healthcheck:
+      # Worker mode intentionally does not expose the Web API port. Check the
+      # long-running PID instead of inheriting the backend image HTTP probe.
+      test: ["CMD", "sh", "-c", "kill -0 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     stop_grace_period: 35s
     restart: always
 

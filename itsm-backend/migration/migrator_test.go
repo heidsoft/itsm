@@ -130,3 +130,18 @@ func TestMigrationSQLChecksumIsDeterministic(t *testing.T) {
 	assert.Equal(t, first, second)
 	assert.NotEqual(t, first, checksumSQL(sql+" -- changed"))
 }
+
+func TestProcessBindingRouteKeyMigrationsAreSeparated(t *testing.T) {
+	deduplicateSQL := GetMigrationSQL("012_deduplicate_active_process_bindings")
+	constraintSQL := GetMigrationSQL("013_enforce_active_process_binding_route_key")
+
+	assert.Contains(t, deduplicateSQL, "ROW_NUMBER() OVER")
+	assert.Contains(t, deduplicateSQL, "WHERE is_active = TRUE")
+	assert.Contains(t, deduplicateSQL, "duplicate.route_rank > 1")
+	assert.NotContains(t, deduplicateSQL, "CREATE UNIQUE INDEX")
+
+	assert.Contains(t, constraintSQL, "CREATE UNIQUE INDEX uq_process_bindings_active_route_key")
+	assert.Contains(t, constraintSQL, "COALESCE(business_sub_type, '')")
+	assert.Contains(t, constraintSQL, "WHERE is_active = TRUE")
+	assert.NotContains(t, constraintSQL, "DELETE FROM")
+}

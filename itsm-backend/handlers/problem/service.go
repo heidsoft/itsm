@@ -167,13 +167,13 @@ func isValidProblemStatusTransition(current, next string) bool {
 		return true
 	}
 	transitions := map[string]map[string]struct{}{
-		"open":          {"investigating": {}, "identified": {}, "resolved": {}, "closed": {}},
-		"investigating": {"identified": {}, "resolved": {}, "closed": {}},
-		"identified":    {"investigating": {}, "resolved": {}, "closed": {}},
+		"open":          {"investigating": {}, "identified": {}, "resolved": {}},
+		"investigating": {"identified": {}, "resolved": {}},
+		"identified":    {"investigating": {}, "resolved": {}},
 		"resolved":      {"investigating": {}, "closed": {}},
 		"closed":        {},
 		// 兼容存量 in_progress 数据，仅允许进入规范状态。
-		"in_progress": {"identified": {}, "resolved": {}, "closed": {}},
+		"in_progress": {"identified": {}, "resolved": {}},
 	}
 	allowed, ok := transitions[current]
 	if !ok {

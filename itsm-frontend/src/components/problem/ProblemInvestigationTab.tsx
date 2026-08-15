@@ -93,12 +93,15 @@ interface ProblemInvestigationTabProps {
   problemId: number;
   problemTitle?: string;
   problemDescription?: string;
+  // 初始激活的内部面板（如“启动 RCA”时直接进入根因分析）
+  initialInnerTab?: string;
 }
 
 const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   problemId,
   problemTitle = '',
   problemDescription = '',
+  initialInnerTab = 'overview',
 }) => {
   const params = useParams();
   const id = (params?.id as string) || problemId.toString();
@@ -759,7 +762,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
     <>
       <Tabs
         items={tabItems}
-        defaultActiveKey="overview"
+        defaultActiveKey={initialInnerTab}
         animated={{ inkBar: true, tabPane: true }}
       />
 

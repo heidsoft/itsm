@@ -25,6 +25,7 @@ import {
 } from 'antd';
 import { RotateCcw, AlertTriangle, Maximize, ZoomIn, ZoomOut, Network } from 'lucide-react';
 import type { Node, Edge, NodeProps } from 'reactflow';
+import { useTheme } from '@/lib/design-system/theme';
 import ReactFlow, {
   Background,
   Controls,
@@ -50,6 +51,7 @@ const { Text, Title } = Typography;
 
 // CI节点自定义组件
 const CINode: React.FC<NodeProps<any>> = ({ data }) => {
+  const { isDark } = useTheme();
   const statusColors: Record<string, string> = {
     operational: '#52c41a',
     warning: '#faad14',
@@ -67,14 +69,19 @@ const CINode: React.FC<NodeProps<any>> = ({ data }) => {
   const statusColor = statusColors[data.status] || '#8c8c8c';
   const criticalityColor = criticalityColors[data.criticality] || '#8c8c8c';
 
+  const nodeBg = isDark ? '#1e293b' : '#fff';
+  const nodeText = isDark ? '#f1f5f9' : '#1e293b';
+  const nodeSubText = isDark ? '#94a3b8' : '#888';
+  const nodeShadow = isDark ? '0 2px 8px rgba(0,0,0,0.45)' : '0 2px 8px rgba(0,0,0,0.1)';
+
   return (
     <div
       style={{
         padding: '12px 16px',
-        background: '#fff',
+        background: nodeBg,
         borderRadius: 8,
         border: `2px solid ${statusColor}`,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        boxShadow: nodeShadow,
         minWidth: 140,
         position: 'relative',
       }}
@@ -84,10 +91,10 @@ const CINode: React.FC<NodeProps<any>> = ({ data }) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Badge color={statusColor} />
         <div>
-          <Text strong style={{ fontSize: 13 }}>
+          <Text strong style={{ fontSize: 13, color: nodeText }}>
             {data.name}
           </Text>
-          <div style={{ fontSize: 11, color: '#888' }}>{data.type}</div>
+          <div style={{ fontSize: 11, color: nodeSubText }}>{data.type}</div>
         </div>
       </div>
 
@@ -150,6 +157,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
   const [selectedNode, setSelectedNode] = useState<TopologyNode | null>(null);
   const [impactAnalysis, setImpactAnalysis] = useState<ImpactAnalysisResponse | null>(null);
   const [impactDrawerOpen, setImpactDrawerOpen] = useState(false);
+  const { isDark } = useTheme();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -187,7 +195,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
         },
         label: edge.relationshipLabel,
         labelStyle: {
-          fill: '#666',
+          fill: isDark ? '#94a3b8' : '#666',
           fontSize: 11,
         },
       }));
@@ -304,7 +312,14 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
           </Space>
         }
       >
-        <div style={{ height, border: '1px solid #f0f0f0', borderRadius: 8, overflow: 'hidden' }}>
+        <div
+          style={{
+            height,
+            border: `1px solid ${isDark ? '#334155' : '#f0f0f0'}`,
+            borderRadius: 8,
+            overflow: 'hidden',
+          }}
+        >
           {loading ? (
             <div
               style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height }}
@@ -343,7 +358,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
               fitView
               attributionPosition='bottom-left'
             >
-              <Background color='#f0f0f0' gap={20} />
+              <Background color={isDark ? '#0f172a' : '#f0f0f0'} gap={20} />
               <Controls />
               <MiniMap
                 nodeColor={node => {
@@ -361,7 +376,14 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
         </div>
 
         {/* 图例 */}
-        <div style={{ marginTop: 16, padding: '8px 16px', background: '#fafafa', borderRadius: 8 }}>
+        <div
+          style={{
+            marginTop: 16,
+            padding: '8px 16px',
+            background: isDark ? '#1e293b' : '#fafafa',
+            borderRadius: 8,
+          }}
+        >
           <Space split='|'>
             <Space>
               <span>节点状态:</span>

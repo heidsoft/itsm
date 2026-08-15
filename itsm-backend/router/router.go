@@ -343,6 +343,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	// 公共路由（无需认证）
 	public := r.Group("/api/v1")
 	{
+		registerBootstrapRoutes(public, config)
 		if config.CommonHandler != nil {
 			public.POST("/auth/login", middleware.LoginRateLimiter(), config.CommonHandler.Login)
 			public.POST("/refresh-token", config.CommonHandler.RefreshToken)
@@ -706,7 +707,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// B9: AI 工单总结 /ai/tickets/{id}/summary
 		aiGroup := tenant.(*gin.RouterGroup).Group("/ai")
 		{
-			aiGroup.GET("/tickets/:id/summary", middleware.RequirePermission("ticket", "read"), config.AIHandler.SummarizeTicket)
+			// 权限与 /ai/tickets/:id/analyze 对齐（ai.read）：两者同属 AI 能力面，
+			// 避免同组端点一个走 ticket.read 一个走 ai.read 的对称性漂移。
+			aiGroup.GET("/tickets/:id/summary", middleware.RequirePermission("ai", "read"), config.AIHandler.SummarizeTicket)
 		}
 
 		// ==================== System Configs ====================
@@ -934,6 +937,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				problems.GET("/:id/associations", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetAssociations)
 				problems.POST("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddAssociation)
 				problems.DELETE("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.RemoveAssociation)
+				// 问题调查关联列表（前端契约：GET /api/v1/problems/:id/relationships）
+				if config.ProblemInvestigationController != nil {
+					problems.GET("/:id/relationships", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemRelationships)
+				}
 			}
 		}
 
@@ -952,6 +959,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				// 状态转换：approve/reject 需要独立审批权限，rollback 需要独立回滚权限（H-15 修复：禁止 write 权限泛化为审批/回滚）
 				changes.POST("/:id/approve", middleware.RequirePermission("change", "approve"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/reject", middleware.RequirePermission("change", "approve"), config.ChangeHandler.TransitionStatus)
+				changes.POST("/:id/schedule", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/start", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/complete", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/rollback", middleware.RequirePermission("change", "rollback"), config.ChangeHandler.TransitionStatus)
@@ -1149,13 +1157,20 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				aiGrp.POST("/feedback", middleware.RequirePermission("ai", "write"), config.AIHandler.SaveFeedback)
 				aiGrp.POST("/audit", middleware.RequirePermission("ai", "write"), config.AIHandler.RecordAudit)
 				aiGrp.GET("/metrics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetMetrics)
+				// AI 评估报告（按场景有用率 / 置信度校准 / 平台 LLM 统计）
+				aiGrp.GET("/evaluation", middleware.RequirePermission("ai", "read"), config.AIHandler.GetEvaluation)
+				// AI 审计日志（ai_audit 记录分页查询）
+				aiGrp.GET("/audit-logs", middleware.RequirePermission("ai", "read"), config.AIHandler.GetAuditLogs)
 				aiGrp.POST("/triage", middleware.RequirePermission("ai", "read"), config.AIHandler.Triage)
 				// RAG endpoints
-				aiGrp.GET("/rag/search", middleware.RequirePermission("ai", "read"), config.AIHandler.KnowledgeSearch)
-				aiGrp.POST("/rag/ask", middleware.RequirePermission("ai", "read"), config.AIHandler.Chat)
-				// AI 工单智能创建与总结
+				// Bug fix (2026-08-15): handler KnowledgeSearch uses ShouldBindJSON
+				// to read {query,limit,type} from a request body, but the route was
+				// registered as GET. Gin would refuse to parse a body on GET, so the
+				// endpoint always returned ParamError. Promote to POST to match the
+				// handler's binding contract.
+				aiGrp.POST("/rag/search", middleware.RequirePermission("ai", "read"), config.AIHandler.KnowledgeSearch)
+				// AI 工单智能创建
 				aiGrp.POST("/ticket/create", middleware.RequirePermission("ticket", "create"), config.AIHandler.CreateTicketByAI)
-				aiGrp.POST("/tickets/:id/summarize", middleware.RequirePermission("ticket", "read"), config.AIHandler.SummarizeTicketPost)
 			}
 
 			agentGrp := tenant.(*gin.RouterGroup).Group("/agent")
@@ -1400,29 +1415,41 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// ==================== Problem Investigation ====================
+		// 权限说明：investigation/step/root_cause/solution 等资源未在 seeder 中定义，
+		// 统一复用已 seeded 且已赋权运营角色的 problem 权限，避免注册后全员 403。
 		if config.ProblemInvestigationController != nil {
 			problemInvestigation := tenant.(*gin.RouterGroup).Group("/problem-investigation")
 			{
 				// 问题调查管理
-				problemInvestigation.POST("/investigations", middleware.RequirePermission("investigation", "create"), config.ProblemInvestigationController.CreateProblemInvestigation)
-				problemInvestigation.GET("/investigations/:id", middleware.RequirePermission("investigation", "read"), config.ProblemInvestigationController.GetProblemInvestigation)
-				problemInvestigation.PUT("/investigations/:id", middleware.RequirePermission("investigation", "update"), config.ProblemInvestigationController.UpdateProblemInvestigation)
+				problemInvestigation.POST("/investigations", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateProblemInvestigation)
+				problemInvestigation.GET("/investigations/:id", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemInvestigation)
+				problemInvestigation.PUT("/investigations/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.UpdateProblemInvestigation)
 
 				// 调查步骤管理
-				problemInvestigation.POST("/steps", middleware.RequirePermission("step", "create"), config.ProblemInvestigationController.CreateInvestigationStep)
-				problemInvestigation.PUT("/steps/:id", middleware.RequirePermission("step", "update"), config.ProblemInvestigationController.UpdateInvestigationStep)
-				problemInvestigation.GET("/investigations/:investigation_id/steps", middleware.RequirePermission("investigation", "read"), config.ProblemInvestigationController.GetInvestigationSteps)
+				problemInvestigation.POST("/steps", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateInvestigationStep)
+				problemInvestigation.PUT("/steps/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.UpdateInvestigationStep)
+				// Gin 路由树不允许同一位置出现不同参数名（:id vs :investigation_id 会 panic），
+				// 统一使用 :id，与上方 /investigations/:id 保持一致。
+				problemInvestigation.GET("/investigations/:id/steps", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetInvestigationSteps)
 
 				// 根本原因分析
-				problemInvestigation.POST("/root-cause-analysis", middleware.RequirePermission("root_cause", "create"), config.ProblemInvestigationController.CreateRootCauseAnalysis)
+				problemInvestigation.POST("/root-cause-analysis", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateRootCauseAnalysis)
+				problemInvestigation.PUT("/root-cause-analysis/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.UpdateRootCauseAnalysis)
 
 				// 解决方案管理
-				problemInvestigation.POST("/solutions", middleware.RequirePermission("solution", "create"), config.ProblemInvestigationController.CreateProblemSolution)
+				problemInvestigation.POST("/solutions", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateProblemSolution)
+				problemInvestigation.PUT("/solutions/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.UpdateProblemSolution)
 				problemInvestigation.GET("/problems/:id/solutions", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemSolutions)
 
 				// 问题调查摘要
 				problemInvestigation.GET("/problems/:id/summary", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemInvestigationSummary)
 			}
+
+			// 关联管理与知识沉淀（前端契约：/api/v1/problem-relationships、/api/v1/problem-knowledge-articles）
+			problemInvestigationExtra := tenant.(*gin.RouterGroup)
+			problemInvestigationExtra.POST("/problem-relationships", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateProblemRelationship)
+			problemInvestigationExtra.POST("/problem-knowledge-articles", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateKnowledgeArticle)
+			problemInvestigationExtra.GET("/problem-knowledge-articles/problems/:id", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemKnowledgeArticles)
 		}
 
 		// ==================== BPMN Workflow ====================
@@ -1443,6 +1470,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			workflow.GET("/tasks", middleware.RequirePermission("task", "read"), config.BPMNWorkflowController.ListUserTasks)
 			workflow.PUT("/tasks/:id/complete", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.CompleteTask)
 			workflow.POST("/tasks/:id/claim", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.ClaimTask)
+			workflow.PUT("/tasks/:id/reassign", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.ReassignTask)
+			workflow.PUT("/tasks/:id/terminate", middleware.RequirePermission("process_instance", "update"), config.BPMNWorkflowController.TerminateTask)
 		}
 
 		// BPMN Process Trigger Controller (统一流程触发接口)

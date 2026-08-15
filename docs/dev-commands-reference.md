@@ -90,7 +90,7 @@ make dev-doctor            # 诊断环境问题（端口冲突、Docker 状态�
 | 前端 | http://localhost:3000 |
 | 后端 API | http://localhost:8090 |
 | Swagger 文档 | http://localhost:8090/swagger |
-| 登录账号 | admin / admin123 |
+| 本地开发登录账号 | admin / admin123（禁止用于生产） |
 | PostgreSQL | localhost:5432 (itsm_user/dev123) |
 | Redis | localhost:6379 |
 | MinIO 控制台 | http://localhost:9001 (minioadmin/minioadmin123) |
@@ -188,6 +188,7 @@ make verify-scripts         # 验证构建/启动脚本语法
 ./scripts/smoke-test.sh
 
 # 自定义测试参数
+# 仅用于本地开发 seed 数据；生产烟测应使用临时测试 actor/secret 注入
 ITSM_BACKEND_URL=http://localhost:8090 ITSM_ADMIN_USER=admin ITSM_ADMIN_PASS=admin123 ./scripts/smoke-test.sh
 
 # Python 版功能测试（更全面，需要后端运行中）

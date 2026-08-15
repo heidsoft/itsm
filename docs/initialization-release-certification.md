@@ -1,6 +1,8 @@
 # 数据初始化生产发布认证
 
-当前状态：**阻断项已全部关闭，v1.5.0 发布证据见 `docs/release-v1.5.0-certification-evidence.md`，待发布/安全/数据库负责人签字**。
+> Status: historical。本文记录 2026-07-30 的 v1.5.0 候选验证，不代表当前工作树或运行镜像。当前发布判断请先查看[文档状态与事实源](documentation-governance.md)及[最新部署业务测试](../output/product-deployment-business-test-2026-08-14.md)。文中的“阻断项已全部关闭”仅适用于当次证据，不得作为后续发布签字。
+
+当时状态：**阻断项按 2026-07-30 的验证范围关闭，v1.5.0 候选证据见 `docs/release-v1.5.0-certification-evidence.md`；没有当前有效签字**。
 
 最近一次自动验证（2026-07-30）：
 

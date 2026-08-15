@@ -216,7 +216,7 @@
 - **FR-501**: AI Triage MUST 在 P95 < 3s 内返回建议（受 LLM 影响可单独基线）。
 - **FR-502**: `POST /api/v1/ai/audit` MUST 接受 `{ ticketId, suggestion, accepted }` 并入库。
 - **FR-503**: `/api/v1/ai/metrics` MUST 返回 `acceptance_rate / total_calls`。
-- **FR-504**: `/api/v1/ai/rag/ask` 在无匹配 KB 时 MUST 优雅降级到关键字搜索而非 500。
+- **FR-504**: `/api/v1/ai/chat` 在无匹配 KB 时 MUST 优雅降级到关键字搜索而非 500。
 
 #### FR-600 系列：RBAC / 多租户
 

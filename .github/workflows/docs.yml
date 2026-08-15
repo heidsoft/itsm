@@ -10,7 +10,8 @@ on:
       - 'requirements-docs.txt'
       - '.markdownlint.json'
       - '.github/workflows/docs.yml'
-      - '.github/workflows/README.md'
+      - '.github/workflows/docs-gate.yml'
+      - 'scripts/docs-gate/**'
   push:
     branches: [main]
     paths:
@@ -20,7 +21,8 @@ on:
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
       - '.github/workflows/docs.yml'
-      - '.github/workflows/README.md'
+      - '.github/workflows/docs-gate.yml'
+      - 'scripts/docs-gate/**'
   workflow_dispatch:
 
 permissions:
@@ -51,6 +53,15 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
+
+  # Documentation quality gates (advisory in v1.5, hard in v2.0).
+  # Runs in parallel with `build` so reviewers see the violation report.
+  # See scripts/docs-gate/run-all.sh and docs/release/README.md for rationale.
+  docs-gate:
+    name: Docs Gate (advisory)
+    uses: ./.github/workflows/docs-gate.yml
+    with:
+      strict: false
 
   deploy:
     name: Deploy GitHub Pages

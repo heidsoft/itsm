@@ -11694,11 +11694,8 @@ type BootstrapTokenMutation struct {
 	used_by       *int
 	addused_by    *int
 	created_at    *time.Time
-	tenant_id     *int
-	addtenant_id  *int
 	clearedFields map[string]struct{}
-	tenant        map[int]struct{}
-	removedtenant map[int]struct{}
+	tenant        *int
 	clearedtenant bool
 	done          bool
 	oldValue      func(context.Context) (*BootstrapToken, error)
@@ -12019,13 +12016,12 @@ func (m *BootstrapTokenMutation) ResetCreatedAt() {
 
 // SetTenantID sets the "tenant_id" field.
 func (m *BootstrapTokenMutation) SetTenantID(i int) {
-	m.tenant_id = &i
-	m.addtenant_id = nil
+	m.tenant = &i
 }
 
 // TenantID returns the value of the "tenant_id" field in the mutation.
 func (m *BootstrapTokenMutation) TenantID() (r int, exists bool) {
-	v := m.tenant_id
+	v := m.tenant
 	if v == nil {
 		return
 	}
@@ -12049,43 +12045,15 @@ func (m *BootstrapTokenMutation) OldTenantID(ctx context.Context) (v int, err er
 	return oldValue.TenantID, nil
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (m *BootstrapTokenMutation) AddTenantID(i int) {
-	if m.addtenant_id != nil {
-		*m.addtenant_id += i
-	} else {
-		m.addtenant_id = &i
-	}
-}
-
-// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
-func (m *BootstrapTokenMutation) AddedTenantID() (r int, exists bool) {
-	v := m.addtenant_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetTenantID resets all changes to the "tenant_id" field.
 func (m *BootstrapTokenMutation) ResetTenantID() {
-	m.tenant_id = nil
-	m.addtenant_id = nil
-}
-
-// AddTenantIDs adds the "tenant" edge to the Tenant entity by ids.
-func (m *BootstrapTokenMutation) AddTenantIDs(ids ...int) {
-	if m.tenant == nil {
-		m.tenant = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.tenant[ids[i]] = struct{}{}
-	}
+	m.tenant = nil
 }
 
 // ClearTenant clears the "tenant" edge to the Tenant entity.
 func (m *BootstrapTokenMutation) ClearTenant() {
 	m.clearedtenant = true
+	m.clearedFields[bootstraptoken.FieldTenantID] = struct{}{}
 }
 
 // TenantCleared reports if the "tenant" edge to the Tenant entity was cleared.
@@ -12093,29 +12061,12 @@ func (m *BootstrapTokenMutation) TenantCleared() bool {
 	return m.clearedtenant
 }
 
-// RemoveTenantIDs removes the "tenant" edge to the Tenant entity by IDs.
-func (m *BootstrapTokenMutation) RemoveTenantIDs(ids ...int) {
-	if m.removedtenant == nil {
-		m.removedtenant = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.tenant, ids[i])
-		m.removedtenant[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedTenant returns the removed IDs of the "tenant" edge to the Tenant entity.
-func (m *BootstrapTokenMutation) RemovedTenantIDs() (ids []int) {
-	for id := range m.removedtenant {
-		ids = append(ids, id)
-	}
-	return
-}
-
 // TenantIDs returns the "tenant" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// TenantID instead. It exists only for internal usage by the builders.
 func (m *BootstrapTokenMutation) TenantIDs() (ids []int) {
-	for id := range m.tenant {
-		ids = append(ids, id)
+	if id := m.tenant; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -12124,7 +12075,6 @@ func (m *BootstrapTokenMutation) TenantIDs() (ids []int) {
 func (m *BootstrapTokenMutation) ResetTenant() {
 	m.tenant = nil
 	m.clearedtenant = false
-	m.removedtenant = nil
 }
 
 // Where appends a list predicates to the BootstrapTokenMutation builder.
@@ -12177,7 +12127,7 @@ func (m *BootstrapTokenMutation) Fields() []string {
 	if m.created_at != nil {
 		fields = append(fields, bootstraptoken.FieldCreatedAt)
 	}
-	if m.tenant_id != nil {
+	if m.tenant != nil {
 		fields = append(fields, bootstraptoken.FieldTenantID)
 	}
 	return fields
@@ -12283,9 +12233,6 @@ func (m *BootstrapTokenMutation) AddedFields() []string {
 	if m.addused_by != nil {
 		fields = append(fields, bootstraptoken.FieldUsedBy)
 	}
-	if m.addtenant_id != nil {
-		fields = append(fields, bootstraptoken.FieldTenantID)
-	}
 	return fields
 }
 
@@ -12296,8 +12243,6 @@ func (m *BootstrapTokenMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case bootstraptoken.FieldUsedBy:
 		return m.AddedUsedBy()
-	case bootstraptoken.FieldTenantID:
-		return m.AddedTenantID()
 	}
 	return nil, false
 }
@@ -12313,13 +12258,6 @@ func (m *BootstrapTokenMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddUsedBy(v)
-		return nil
-	case bootstraptoken.FieldTenantID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddTenantID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown BootstrapToken numeric field %s", name)
@@ -12393,11 +12331,9 @@ func (m *BootstrapTokenMutation) AddedEdges() []string {
 func (m *BootstrapTokenMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case bootstraptoken.EdgeTenant:
-		ids := make([]ent.Value, 0, len(m.tenant))
-		for id := range m.tenant {
-			ids = append(ids, id)
+		if id := m.tenant; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -12405,23 +12341,12 @@ func (m *BootstrapTokenMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BootstrapTokenMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removedtenant != nil {
-		edges = append(edges, bootstraptoken.EdgeTenant)
-	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *BootstrapTokenMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case bootstraptoken.EdgeTenant:
-		ids := make([]ent.Value, 0, len(m.removedtenant))
-		for id := range m.removedtenant {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
@@ -12448,6 +12373,9 @@ func (m *BootstrapTokenMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *BootstrapTokenMutation) ClearEdge(name string) error {
 	switch name {
+	case bootstraptoken.EdgeTenant:
+		m.ClearTenant()
+		return nil
 	}
 	return fmt.Errorf("unknown BootstrapToken unique edge %s", name)
 }

@@ -598,7 +598,10 @@ func (s *AuthService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 	}
 
 	// 获取租户ID
-	tenantID := 1 // 默认租户
+	// 安全约束:禁止回退硬编码默认租户(tenant_id=1)。未提供 TenantCode 时,
+	// 仅当系统恰好只有一个 active 租户(单租户私有部署)才允许注册到该租户;
+	// 多租户环境必须显式指定 TenantCode,否则 fail-closed。
+	var tenantID int
 	if req.TenantCode != "" {
 		tenantEntity, err := s.client.Tenant.Query().
 			Where(tenant.CodeEQ(req.TenantCode)).
@@ -608,6 +611,22 @@ func (s *AuthService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 			return nil, fmt.Errorf("租户不存在")
 		}
 		tenantID = tenantEntity.ID
+	} else {
+		tenants, err := s.client.Tenant.Query().
+			Where(tenant.StatusEQ("active")).
+			Order(ent.Asc(tenant.FieldID)).
+			Limit(2).
+			All(ctx)
+		if err != nil {
+			s.logger.Errorw("Failed to query tenants for registration", "error", err)
+			return nil, fmt.Errorf("查询租户失败")
+		}
+		if len(tenants) != 1 {
+			s.logger.Warnw("Registration without tenant code rejected: ambiguous tenant",
+				"active_tenant_count", len(tenants))
+			return nil, fmt.Errorf("请指定要加入的租户(tenantCode)")
+		}
+		tenantID = tenants[0].ID
 	}
 
 	// 加密密码

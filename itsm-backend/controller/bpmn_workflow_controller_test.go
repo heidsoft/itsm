@@ -68,6 +68,14 @@ func (f *fakeTaskService) AssignTask(ctx context.Context, taskID, assignee strin
 	return nil
 }
 
+func (f *fakeTaskService) ReassignTask(ctx context.Context, taskID string, newAssigneeID int, reason string) error {
+	return nil
+}
+
+func (f *fakeTaskService) TerminateTask(ctx context.Context, taskID, reason string) error {
+	return nil
+}
+
 func (f *fakeTaskService) CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error {
 	f.completeCalls++
 	f.completeVars = append(f.completeVars, variables)

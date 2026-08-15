@@ -1,19 +1,21 @@
 # ITSM 文档中心
 
+> Status: current。首次进入请先阅读[文档状态与事实源](./documentation-governance.md)，确认规范、计划、历史报告和归档材料的优先级。
+
 这个目录包含产品说明、部署运维、开发协作、测试报告和阶段性评审文档。为了避免新用户在大量历史文档中迷路，建议先从本页按角色阅读。
 
 ## 快速入口
 
 | 角色 | 建议阅读 |
 |:---|:---|
-| 试用者 | [README 快速开始](../README.md#-快速开始)、[v1.0 GA 收口验收指南](./v1-ga-readiness.md) |
+| 试用者 | [README 快速开始](../README.md#快速开始)、[安装指南](./getting-started/install.md) |
 | 部署人员 | [部署指南](./deployment.md)、[配置参考](./configuration.md)、[运维手册](./operations.md) |
 | 后端开发 | [开发指南](./development.md)、[数据库说明](./database.md)、[后端 CI](../.github/workflows/backend-ci.yml) |
 | 前端开发 | [开发指南](./development.md)、[前端 CI](../.github/workflows/frontend-ci.yml) |
-| 产品/方案 | [开源发布能力说明](./product/open-source-release-capability.md)、[ServiceNow 对标评审](./review/servicenow-benchmark-2026-06-18.md) |
+| 产品/方案 | [开源发布能力说明](./product/open-source-release-capability.md)、ServiceNow 对标评审（参见 [archive](./archive/reviews/servicenow-benchmark-2026-06-18.md)） |
 | 测试/QA | [角色视角测试方案](./testing/role-based-product-test-plan.md)、[深度业务测试报告](./review/deep-business-test-report-2026-06-18.md) |
 | 发布维护 | [Release workflow](../.github/workflows/release.yml)、[CI/CD 评审](./delivery/cicd-review.md) |
-| 文档维护 | [文档命名与维护规范](./documentation-style-guide.md) |
+| 文档维护 | [文档状态与事实源](./documentation-governance.md)、[文档命名与维护规范](./documentation-style-guide.md) |
 
 ## 核心文档
 
@@ -22,7 +24,7 @@
 - [开发指南](./development.md): 本地开发、前后端命令、调试和常见问题。
 - [数据库说明](./database.md): 数据库迁移、备份和模型说明。
 - [运维手册](./operations.md): 日志、健康检查、备份、恢复和故障排查。
-- [v1.0 GA 收口验收指南](./v1-ga-readiness.md): 默认能力、连接器、AI 审计和部署模式检查。
+- [文档状态与事实源](./documentation-governance.md): 当前规范、计划、测试报告和归档材料的权威层级。
 - [文档命名与维护规范](./documentation-style-guide.md): 目录分层、命名规则和归档标准。
 
 ## 产品与架构
@@ -62,6 +64,6 @@ CI 按后端、前端、契约、集成、安全和发布分层。`ga-gate` 只�
 
 - README 只放项目定位、核心能力、最快启动和主入口。
 - `docs/README.md` 作为文档导航，不承载大量业务细节。
-- 阶段性评审、测试报告、历史复盘保留在 `docs/review/`、`docs/testing/`、`docs/delivery/` 等目录。
+- 阶段性评审、测试报告和历史复盘必须标记为 historical，不能作为当前实现或发布结论。
 - 新增长期有效文档时，优先补到本页索引；临时报告使用日期命名，避免和正式指南混淆。
 - 历史 bug 报告、过期计划和阶段性复盘统一放入 [archive](./archive/README.md)，避免干扰当前用户路径。

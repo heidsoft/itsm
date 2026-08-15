@@ -528,7 +528,7 @@ func TestServiceRequestHandler_ApplyApproval_FullProgression(t *testing.T) {
 	assert.EqualValues(t, common.ConflictCode, resp4.Code, "L4 body=%s", srStr(resp4))
 }
 
-func TestServiceRequestHandler_OperationalLifecycleAfterApproval(t *testing.T) {
+func TestGoldenJourney_ServiceRequestApprovedProvisionedAndDelivered(t *testing.T) {
 	r, _, _, catID := srSetupRole(t, "admin", "IT")
 	id := srCreateOne(t, r, catID)
 	for i := 0; i < 3; i++ {

@@ -25,6 +25,55 @@ func NewProblemInvestigationService(db *sql.DB, logger *zap.SugaredLogger) *Prob
 	}
 }
 
+// problemInvestigationStatusTransitions 与 handlers/problem 的状态机保持一致。
+// 调查服务联动问题状态时必须经过该校验，禁止绕过状态机直写。
+var problemInvestigationStatusTransitions = map[string]map[string]struct{}{
+	"open":          {"investigating": {}, "identified": {}, "resolved": {}},
+	"investigating": {"identified": {}, "resolved": {}},
+	"identified":    {"investigating": {}, "resolved": {}},
+	"resolved":      {"investigating": {}, "closed": {}},
+	"closed":        {},
+	// 兼容存量 in_progress 数据，仅允许进入规范状态。
+	"in_progress": {"identified": {}, "resolved": {}},
+}
+
+// transitionProblemStatus 校验并联动问题状态（带状态机校验 + 乐观并发防护）
+//
+// 返回错误当且仅当目标转换非法（例如 closed 终态复活）。
+// SQL 带 AND status = $current 防止检查与更新之间的竞态。
+func (s *ProblemInvestigationService) transitionProblemStatus(ctx context.Context, problemID int, tenantID int, targetStatus string) error {
+	var currentStatus string
+	err := s.db.QueryRowContext(ctx,
+		"SELECT status FROM problems WHERE id = $1 AND tenant_id = $2",
+		problemID, tenantID).Scan(&currentStatus)
+	if err != nil {
+		return fmt.Errorf("查询问题状态失败: %v", err)
+	}
+
+	if currentStatus == targetStatus {
+		return nil
+	}
+	allowed, ok := problemInvestigationStatusTransitions[currentStatus]
+	if !ok {
+		return fmt.Errorf("问题当前状态 %q 非法，拒绝状态联动", currentStatus)
+	}
+	if _, ok := allowed[targetStatus]; !ok {
+		return fmt.Errorf("问题状态 %q 不允许转换为 %q", currentStatus, targetStatus)
+	}
+
+	res, err := s.db.ExecContext(ctx,
+		"UPDATE problems SET status = $1, updated_at = $2 WHERE id = $3 AND tenant_id = $4 AND status = $5",
+		targetStatus, time.Now(), problemID, tenantID, currentStatus)
+	if err != nil {
+		return fmt.Errorf("更新问题状态失败: %v", err)
+	}
+	if affected, _ := res.RowsAffected(); affected == 0 {
+		// 并发竞争：状态已被其他请求改变，按失败处理由调用方决定是否重试
+		return fmt.Errorf("问题状态已被并发修改，请刷新后重试")
+	}
+	return nil
+}
+
 // GetRootCauseAnalysis 获取根本原因分析
 func (s *ProblemInvestigationService) GetRootCauseAnalysis(ctx context.Context, id int, tenantID int) (*dto.RootCauseAnalysisResponse, error) {
 	var analysis dto.RootCauseAnalysisResponse
@@ -125,10 +174,10 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 		investigatorName = "未知用户"
 	}
 
-	// 更新问题状态为"调查中"
-	_, err = s.db.ExecContext(ctx, "UPDATE problems SET status = 'in_progress' WHERE id = $1 AND tenant_id = $2", req.ProblemID, tenantID)
-	if err != nil {
-		s.logger.Warnw("Failed to update problem status", "problem_id", req.ProblemID, "error", err)
+	// 联动问题状态为"调查中"（经状态机校验，closed 终态拒绝联动；调查记录仍创建）
+	if err := s.transitionProblemStatus(ctx, req.ProblemID, tenantID, "investigating"); err != nil {
+		s.logger.Warnw("Failed to transition problem status to investigating",
+			"problem_id", req.ProblemID, "error", err)
 	}
 
 	return &dto.ProblemInvestigationResponse{
@@ -214,11 +263,11 @@ func (s *ProblemInvestigationService) UpdateProblemInvestigation(ctx context.Con
 		return nil, fmt.Errorf("更新问题调查失败: %v", err)
 	}
 
-	// 如果状态更新为完成，同时更新问题状态
+	// 如果状态更新为完成，联动问题状态为"已解决"（经状态机校验，closed 终态不可复活）
 	if req.Status != nil && *req.Status == dto.InvestigationStatusCompleted {
-		_, err = s.db.ExecContext(ctx, "UPDATE problems SET status = 'resolved' WHERE id = $1 AND tenant_id = $2", investigation.ProblemID, tenantID)
-		if err != nil {
-			s.logger.Warnw("Failed to update problem status", "problem_id", investigation.ProblemID, "error", err)
+		if err := s.transitionProblemStatus(ctx, investigation.ProblemID, tenantID, "resolved"); err != nil {
+			s.logger.Warnw("Failed to transition problem status to resolved",
+				"problem_id", investigation.ProblemID, "error", err)
 		}
 	}
 

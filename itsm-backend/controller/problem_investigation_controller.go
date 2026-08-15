@@ -239,7 +239,7 @@ func (pc *ProblemInvestigationController) GetProblemInvestigationSummary(c *gin.
 
 // GetInvestigationSteps 获取调查步骤列表
 func (pc *ProblemInvestigationController) GetInvestigationSteps(c *gin.Context) {
-	investigationID, err := strconv.Atoi(c.Param("investigation_id"))
+	investigationID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		common.Fail(c, common.ParamErrorCode, "无效的调查ID")
 		return

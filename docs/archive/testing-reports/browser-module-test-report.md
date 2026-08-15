@@ -57,7 +57,7 @@
 
 | 维度 | 详情 |
 |------|------|
-| **现象** | 登录页面提示 `admin/admin123`，但 `.env.prod` 中 `ADMIN_PASSWORD=AdminProd2026!` |
+| **现象** | 登录页面提示 `admin/admin123`，但 `.env.prod` 中 `ADMIN_PASSWORD=***（已脱敏）***` |
 | **结论** | 登录页提示信息是开发环境的默认值，生产环境已正确配置强密码 |
 
 ## 各模块测试结果
@@ -602,7 +602,7 @@ curl -s -o /dev/null -w "Backend:  %{http_code}\n" http://localhost:8090/api/v1/
 # 2. 登录获取 token
 curl -s -X POST http://localhost:8090/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"AdminProd2026!"}'
+  -d '{"username":"admin","password":"***（已脱敏）***"}'
 
 # 3. 验证模块可访问
 curl -s -o /dev/null -w "Dashboard: %{http_code}\n" \

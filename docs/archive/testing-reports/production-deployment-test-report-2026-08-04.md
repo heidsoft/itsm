@@ -34,7 +34,7 @@ All production containers are running healthy:
 - Form fields (username/password) are functional
 - Login button responds to clicks
 - Successful authentication redirects to dashboard
-- Credentials tested: `admin` / `AdminProd2026!`
+- Credentials tested: `admin` / `***（已脱敏）***`
 
 ### 2.2 Session Management
 - Session persistence works correctly

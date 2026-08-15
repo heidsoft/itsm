@@ -7,6 +7,7 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/repository/base"
@@ -847,4 +848,27 @@ func TestTicketModel_IsFinalState(t *testing.T) {
 func TestTicketModel_StateError(t *testing.T) {
 	err := &StateError{CurrentStatus: StatusNew, Message: "cannot resolve ticket from current status"}
 	assert.Contains(t, err.Error(), "cannot resolve ticket")
+}
+
+// TestTicketStateMachine_SingleSourceOfTruth P1-1 不变式：
+// repository 层的 CanTransitionTo 必须与 common.IsValidTicketStatusTransition
+// 对所有已知状态对返回完全一致的结果。这锁定了"工单状态机为单一事实来源"这一要求，
+// 防止将来有人在 model 层或 service 层内联一份自己的 map 导致入口间判定不一致。
+func TestTicketStateMachine_SingleSourceOfTruth(t *testing.T) {
+	statuses := []Status{
+		StatusNew, StatusOpen, StatusInProgress, StatusPending,
+		StatusResolved, StatusClosed, StatusCancelled,
+		Status("assigned"), Status("approved"), Status("rejected"),
+	}
+	for _, from := range statuses {
+		for _, to := range statuses {
+			model := &Ticket{Status: from}
+			gotModel := model.CanTransitionTo(to)
+			gotCommon := common.IsValidTicketStatusTransition(string(from), string(to))
+			assert.Equalf(t, gotCommon, gotModel,
+				"CanTransitionTo diverged from common.IsValidTicketStatusTransition: %q -> %q (model=%v common=%v)",
+				from, to, gotModel, gotCommon,
+			)
+		}
+	}
 }

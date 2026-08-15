@@ -30,8 +30,8 @@ type slaMockRepository struct {
 	nextID        int
 
 	// failure injection
-	failCreateErr   error
-	failNumberErr   error
+	failCreateErr    error
+	failNumberErr    error
 	failListRulesErr error
 }
 
@@ -194,6 +194,30 @@ func TestService_Update_StatusTransition_TableDriven(t *testing.T) {
 			assert.Equal(t, tc.ok, got, "transition %s→%s", tc.current, tc.next)
 		})
 	}
+}
+
+func TestGoldenJourney_IncidentResolvedAndClosed(t *testing.T) {
+	repo := newSLAMockRepository()
+	svc := NewService(repo, zap.NewNop().Sugar())
+	ctx := context.Background()
+	incident, err := svc.Create(ctx, 11, &Incident{Title: "核心支付不可用", ReporterID: 101, Priority: "urgent"})
+	require.NoError(t, err)
+
+	for _, status := range []string{"acknowledged", "in_progress", "resolved", "closed"} {
+		incident, err = svc.Update(ctx, 11, incident.ID, &Incident{Status: status})
+		require.NoError(t, err, "transition to %s", status)
+	}
+	assert.Equal(t, "closed", incident.Status)
+	require.NotNil(t, incident.ResolvedAt)
+	require.NotNil(t, incident.ClosedAt)
+	assert.False(t, incident.ClosedAt.Before(*incident.ResolvedAt))
+
+	other, err := svc.Create(ctx, 11, &Incident{Title: "非法跃迁样本", ReporterID: 101})
+	require.NoError(t, err)
+	_, err = svc.Update(ctx, 11, other.ID, &Incident{Status: "closed"})
+	require.ErrorContains(t, err, "invalid incident status transition")
+	_, err = svc.Get(ctx, other.ID, 12)
+	require.Error(t, err, "cross-tenant direct ID must fail closed")
 }
 
 // TestService_Create_AutoPriorityTable re-uses the existing priority

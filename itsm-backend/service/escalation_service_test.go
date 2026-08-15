@@ -262,7 +262,80 @@ func TestEscalationService_GetEscalationNotifyUsers(t *testing.T) {
 	require.NoError(t, err)
 
 	// 获取升级通知用户 - 可能返回空列表
-	users := service.getEscalationNotifyUsers(ctx, 1, rule)
+	users := service.getEscalationNotifyUsers(ctx, 1, rule, testTenant.ID)
 	// 验证方法执行不报错，返回值可以是 nil 或空列表
 	_ = users
+}
+
+// TestEscalationService_GetEscalationNotifyUsers_TenantIsolation
+// 跨租户回归测试：A 租户的升级通知兜底 admin 查询不得包含 B 租户 admin
+func TestEscalationService_GetEscalationNotifyUsers_TenantIsolation(t *testing.T) {
+	client, service, ctx := setupEscalationTest(t)
+	defer client.Close()
+
+	tenantA, err := createEscalationTestTenant(ctx, client, "isoA")
+	require.NoError(t, err)
+	tenantB, err := createEscalationTestTenant(ctx, client, "isoB")
+	require.NoError(t, err)
+
+	// 两个租户各创建一个 admin
+	adminA, err := client.User.Create().
+		SetUsername("admin-iso-a").
+		SetEmail("admin-a@iso.com").
+		SetName("Admin A").
+		SetPasswordHash("hashedpassword").
+		SetRole("admin").
+		SetActive(true).
+		SetTenantID(tenantA.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = client.User.Create().
+		SetUsername("admin-iso-b").
+		SetEmail("admin-b@iso.com").
+		SetName("Admin B").
+		SetPasswordHash("hashedpassword").
+		SetRole("admin").
+		SetActive(true).
+		SetTenantID(tenantB.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 无升级级别配置的规则 → 走 admin 兜底查询
+	slaDef, err := client.SLADefinition.Create().
+		SetName("Test SLA Isolation").
+		SetPriority("medium").
+		SetResponseTime(60).
+		SetResolutionTime(240).
+		SetTenantID(tenantA.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	rule, err := client.SLAAlertRule.Create().
+		SetName("Test Isolation Rule").
+		SetSLADefinitionID(slaDef.ID).
+		SetAlertLevel("warning").
+		SetThresholdPercentage(70).
+		SetIsActive(true).
+		SetEscalationEnabled(true).
+		SetTenantID(tenantA.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	users := service.getEscalationNotifyUsers(ctx, 1, rule, tenantA.ID)
+	require.NotEmpty(t, users, "admin 兜底查询应返回租户 A 的 admin")
+	for _, uid := range users {
+		require.Equal(t, tenantA.ID, mustGetUserTenantID(t, client, ctx, uid),
+			"升级通知用户必须全部属于租户 A，禁止跨租户通知泄漏")
+	}
+	require.Contains(t, users, adminA.ID, "租户 A 的 admin 应收到通知")
+
+	// fail-closed：tenantID<=0 时必须返回空，不得退化为全局查询
+	users = service.getEscalationNotifyUsers(ctx, 1, rule, 0)
+	require.Empty(t, users, "tenantID=0 必须 fail-closed 返回空列表")
+}
+
+func mustGetUserTenantID(t *testing.T, client *ent.Client, ctx context.Context, userID int) int {
+	t.Helper()
+	u, err := client.User.Get(ctx, userID)
+	require.NoError(t, err)
+	return u.TenantID
 }

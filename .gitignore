@@ -95,6 +95,9 @@ itsm-frontend/.swc/
 # Backup files
 *.bak
 *.backup
+# Timestamped backup artifacts (e.g. .env.prod.bak.1786752666) — may contain
+# real secrets (JWT/DB/MinIO keys). Never commit these.
+*.bak.*
 
 # Debug files (generated during development)
 # Note: docs/images/*.png are product screenshots and should NOT be ignored
@@ -210,6 +213,13 @@ release/
 /ai-dev-agent/ai-dev-agent
 graphify-out/
 
+# 根目录一次性测试产物（约定：只有 itsm-frontend/test-results 为 Playwright 正式产物目录）
+/test-results/
+
+# 补丁冲突与合并残留（严禁入仓）
+*.rej
+*.orig
+
 # Go build cache
 itsm-backend/.cache/
 
@@ -223,3 +233,5 @@ ignored
 .qoder/better-harness/
 production-mode-test-report-*.md
 output/
+# Local verification/rebuild reports (often embed real credentials) — never commit
+reports/

@@ -286,4 +286,4 @@ PPT/演示材料     ──▶  团队新人 onboarding
 ### 7.3 相关文档
 
 - [Code Review 流程规范](./code-review-guide.md)
-- [团队技术提升指导](./team-tech-improvement-guide.md)
+- [团队技术提升指导](./archive/plans/team-tech-improvement-guide.md)（已归档，指标为时点快照）

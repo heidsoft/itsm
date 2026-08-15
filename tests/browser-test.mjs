@@ -39,7 +39,7 @@ log(`Login form: username=${hasUsername}, password=${hasPassword}, submit=${hasS
 // Fill and login
 if (hasUsername && hasPassword && hasSubmit) {
   await usernameInput.fill('admin');
-  await passwordInput.fill('AdminProd2026!');
+  await passwordInput.fill(process.env.ADMIN_PASSWORD || 'admin123');
   await snap('login-filled');
   await submitBtn.click();
   await page.waitForTimeout(5000);

@@ -153,13 +153,17 @@ export default function KnowledgePage() {
     setAiSearchError(null);
 
     try {
-      const response = await httpClient.post<any[]>('/api/v1/ai/knowledge/search', {
-        query: aiSearchQuery,
-        limit: 10,
-        type: 'kb',
-      });
+      // 后端契约：POST /api/v1/ai/rag/search 返回 { results, degraded }
+      const response = await httpClient.post<{ results: any[]; degraded?: boolean }>(
+        '/api/v1/ai/rag/search',
+        {
+          query: aiSearchQuery,
+          limit: 10,
+          type: 'kb',
+        }
+      );
 
-      const answers = (response as any)?.answers || response || [];
+      const answers = (response as any)?.results || [];
       setAiSearchResults(Array.isArray(answers) ? answers : []);
       setShowAiSearch(true);
       if (Array.isArray(answers) && answers.length === 0) {

@@ -358,6 +358,17 @@ export function getMenuConfig(): MenuConfig {
             permission: 'workflow:read',
           },
           {
+            // P1-6 / UI：BPMN 瓶颈/节点分析（seeder 已挂菜单 205 号，前端菜单之前缺失）
+            // 对应页面 src/app/(main)/workflow/bottlenecks/page.tsx，使用真实
+            // BPMNDashboardApi + BPMNMonitoringApi，后端路由在 bpmn_dashboard_controller.go
+            // 和 bpmn_monitoring_controller.go，服务层有单元测试。
+            key: '/workflow/bottlenecks',
+            icon: getIconByName('BarChart3')!,
+            label: '节点瓶颈分析',
+            path: '/workflow/bottlenecks',
+            permission: 'workflow:read',
+          },
+          {
             key: '/workflow/automation',
             icon: getIconByName('Zap')!,
             label: '自动化规则',
@@ -389,6 +400,15 @@ export function getMenuConfig(): MenuConfig {
             label: 'AI创建工单',
             path: '/tickets/ai-create',
             permission: 'ai:use',
+          },
+          {
+            // AI-Native：评估（有用率/置信度校准）与审计日志控制台，
+            // 对应 src/app/(main)/ai/audit/page.tsx，后端 GET /ai/evaluation、/ai/audit-logs。
+            key: '/ai/audit',
+            icon: getIconByName('ShieldCheck')!,
+            label: 'AI评估与审计',
+            path: '/ai/audit',
+            permission: 'ai:read',
           },
         ],
       },
@@ -572,6 +592,15 @@ export function getMenuConfig(): MenuConfig {
             label: '通知配置',
             path: '/notifications',
             permission: 'system:config',
+          },
+          {
+            // 通用审计日志（后端 GET /api/v1/audit-logs，权限 audit:read）
+            // 对应页面 src/app/(main)/audit-logs/page.tsx，使用 auditlog-api.ts
+            key: '/audit-logs',
+            icon: getIconByName('Shield')!,
+            label: '审计日志',
+            path: '/audit-logs',
+            permission: 'audit:read',
           },
           {
             key: '/workflow/audit',

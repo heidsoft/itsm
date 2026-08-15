@@ -18,6 +18,7 @@ import {
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { CloudResource } from '@/types/biz/cmdb';
+import { useChartTheme } from '@/lib/design-system/chart-theme';
 
 interface ProviderCount {
   name: string;
@@ -55,7 +56,7 @@ const STATUS_LABEL_MAP: Record<string, { label: string; color: string }> = {
   failed: { label: '失败', color: '#ef4444' },
 };
 
-const FALLBACK_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7f50', '#8dd1e1', '#a4de6c'];
+const FALLBACK_COLORS = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#0891b2', '#7c3aed'];
 
 const aggregateByProvider = (resources: CloudResource[]): ProviderCount[] => {
   const counts = new Map<string, number>();
@@ -101,6 +102,7 @@ export const ResourceDistributionChart: React.FC = () => {
   const { message } = App.useApp();
   const [data, setData] = useState<ProviderCount[]>([]);
   const [loading, setLoading] = useState(false);
+  const chart = useChartTheme();
 
   useEffect(() => {
     let isMounted = true;
@@ -137,12 +139,31 @@ export const ResourceDistributionChart: React.FC = () => {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-        <XAxis dataKey="name" />
-        <YAxis allowDecimals={false} />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="value" name="资源数" fill="#8884d8" radius={[4, 4, 0, 0]} />
+        <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
+        <XAxis
+          dataKey="name"
+          tick={{ fill: chart.axisText, fontSize: 12 }}
+          axisLine={{ stroke: chart.axisLine }}
+          tickLine={{ stroke: chart.axisLine }}
+        />
+        <YAxis
+          allowDecimals={false}
+          tick={{ fill: chart.axisText, fontSize: 12 }}
+          axisLine={{ stroke: chart.axisLine }}
+          tickLine={{ stroke: chart.axisLine }}
+        />
+        <Tooltip
+          contentStyle={{
+            background: chart.tooltipBg,
+            border: `1px solid ${chart.tooltipBorder}`,
+            borderRadius: 8,
+            color: chart.tooltipText,
+          }}
+          itemStyle={{ color: chart.tooltipText }}
+          labelStyle={{ color: chart.tooltipText }}
+        />
+        <Legend wrapperStyle={{ color: chart.legendText }} />
+        <Bar dataKey="value" name="资源数" fill={chart.palette[0]} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -153,6 +174,7 @@ export const ResourceHealthPieChart: React.FC = () => {
   const { message } = App.useApp();
   const [data, setData] = useState<StatusCount[]>([]);
   const [loading, setLoading] = useState(false);
+  const chart = useChartTheme();
 
   useEffect(() => {
     let isMounted = true;
@@ -194,7 +216,7 @@ export const ResourceHealthPieChart: React.FC = () => {
           cy="50%"
           labelLine={false}
           outerRadius={100}
-          fill="#8884d8"
+          fill={chart.palette[0]}
           dataKey="value"
           label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
         >
@@ -202,8 +224,17 @@ export const ResourceHealthPieChart: React.FC = () => {
             <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} />
           ))}
         </Pie>
-        <Tooltip />
-        <Legend />
+        <Tooltip
+          contentStyle={{
+            background: chart.tooltipBg,
+            border: `1px solid ${chart.tooltipBorder}`,
+            borderRadius: 8,
+            color: chart.tooltipText,
+          }}
+          itemStyle={{ color: chart.tooltipText }}
+          labelStyle={{ color: chart.tooltipText }}
+        />
+        <Legend wrapperStyle={{ color: chart.legendText }} />
       </PieChart>
     </ResponsiveContainer>
   );

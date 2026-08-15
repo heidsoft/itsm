@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/bootstraptoken"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -31,6 +32,9 @@ type BootstrapTokenManager struct {
 
 // NewBootstrapTokenManager creates a new BootstrapTokenManager.
 func NewBootstrapTokenManager(client *ent.Client, sugar *zap.SugaredLogger) *BootstrapTokenManager {
+	if sugar == nil {
+		sugar = zap.NewNop().Sugar()
+	}
 	ttlStr := os.Getenv("BOOTSTRAP_TOKEN_TTL")
 	ttl := DefaultBootstrapTokenTTL
 	if ttlStr != "" {
@@ -47,6 +51,21 @@ func NewBootstrapTokenManager(client *ent.Client, sugar *zap.SugaredLogger) *Boo
 
 // GenerateToken generates a new bootstrap token and returns the plaintext (shown only once).
 func (m *BootstrapTokenManager) GenerateToken(ctx context.Context, tenantID int) (string, error) {
+	tenantRecord, err := m.client.Tenant.Get(ctx, tenantID)
+	if err != nil {
+		return "", fmt.Errorf("resolve bootstrap tenant: %w", err)
+	}
+	// At most one token may be presented as usable. Old plaintext values can no
+	// longer bootstrap an administrator after a rotation.
+	if _, err := m.client.BootstrapToken.Update().
+		Where(
+			bootstraptoken.HasTenantWith(tenant.IDEQ(tenantID)),
+			bootstraptoken.UsedEQ(false),
+		).
+		SetUsed(true).
+		Save(ctx); err != nil {
+		return "", fmt.Errorf("invalidate previous bootstrap token: %w", err)
+	}
 	raw := make([]byte, TokenLength)
 	if _, err := rand.Read(raw); err != nil {
 		return "", fmt.Errorf("generate random token: %w", err)
@@ -65,6 +84,7 @@ func (m *BootstrapTokenManager) GenerateToken(ctx context.Context, tenantID int)
 		SetExpiresAt(expiresAt).
 		SetUsed(false).
 		SetTenantID(tenantID).
+		SetTenant(tenantRecord).
 		Save(ctx)
 	if err != nil {
 		return "", fmt.Errorf("store bootstrap token: %w", err)
@@ -77,6 +97,9 @@ func (m *BootstrapTokenManager) GenerateToken(ctx context.Context, tenantID int)
 // ConsumeToken atomically validates and consumes a bootstrap token.
 // Returns the created admin user ID on success.
 func (m *BootstrapTokenManager) ConsumeToken(ctx context.Context, rawToken string, tenantID int, adminPassword string) (int, error) {
+	if len(adminPassword) < 12 || len(adminPassword) > 128 {
+		return 0, errors.New("admin password must be between 12 and 128 characters")
+	}
 	// Use transaction with SELECT FOR UPDATE to prevent concurrent consumption.
 	tx, err := m.client.Tx(ctx)
 	if err != nil {
@@ -90,7 +113,8 @@ func (m *BootstrapTokenManager) ConsumeToken(ctx context.Context, rawToken strin
 	token, err := tx.BootstrapToken.Query().
 		Where(bootstraptoken.HasTenantWith(tenant.IDEQ(tenantID))).
 		Where(bootstraptoken.UsedEQ(false)).
-		Only(ctx)
+		Order(ent.Desc(bootstraptoken.FieldCreatedAt)).
+		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return 0, errors.New("invalid or already used bootstrap token")
@@ -137,6 +161,17 @@ func (m *BootstrapTokenManager) ConsumeToken(ctx context.Context, rawToken strin
 	if err != nil {
 		return 0, fmt.Errorf("mark token used: %w", err)
 	}
+	if _, err := tx.AuditLog.Create().
+		SetTenantID(tenantID).
+		SetUserID(admin.ID).
+		SetResource("bootstrap_admin").
+		SetAction("BOOTSTRAP_ADMIN_CREATED").
+		SetPath("/api/v1/bootstrap/create-admin").
+		SetMethod("POST").
+		SetStatusCode(200).
+		Save(ctx); err != nil {
+		return 0, fmt.Errorf("audit bootstrap admin creation: %w", err)
+	}
 
 	if err := tx.Commit(); err != nil {
 		return 0, fmt.Errorf("commit transaction: %w", err)
@@ -144,6 +179,32 @@ func (m *BootstrapTokenManager) ConsumeToken(ctx context.Context, rawToken strin
 
 	m.sugar.Infow("bootstrap token consumed, admin created", "user_id", admin.ID, "tenant_id", tenantID)
 	return admin.ID, nil
+}
+
+// Status reports first-admin bootstrap state without exposing token material.
+func (m *BootstrapTokenManager) Status(ctx context.Context, tenantID int) (required bool, tokenAvailable bool, expiresAt *time.Time, err error) {
+	adminExists, err := m.client.User.Query().Where(
+		user.UsernameEQ("admin"),
+		user.TenantIDEQ(tenantID),
+	).Exist(ctx)
+	if err != nil {
+		return false, false, nil, fmt.Errorf("query bootstrap admin: %w", err)
+	}
+	if adminExists {
+		return false, false, nil, nil
+	}
+	token, err := m.client.BootstrapToken.Query().Where(
+		bootstraptoken.HasTenantWith(tenant.IDEQ(tenantID)),
+		bootstraptoken.UsedEQ(false),
+		bootstraptoken.ExpiresAtGT(time.Now()),
+	).Order(ent.Desc(bootstraptoken.FieldCreatedAt)).First(ctx)
+	if ent.IsNotFound(err) {
+		return true, false, nil, nil
+	}
+	if err != nil {
+		return false, false, nil, fmt.Errorf("query bootstrap token status: %w", err)
+	}
+	return true, true, &token.ExpiresAt, nil
 }
 
 // IsBreakGlassEnabled returns true if emergency bootstrap is enabled.

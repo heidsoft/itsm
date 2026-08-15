@@ -1,29 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="11" failures="0" errors="0" time="6.936">
-  <testsuite name="src/lib/hooks/__tests__/useIncidentBatchOps.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-08-08T07:57:15" time="4.348" tests="5">
-    <testcase classname="useIncidentBatchOps" name="returns an empty selection by default and 4 batch actions" time="0.168">
+<testsuites name="jest tests" tests="36" failures="0" errors="0" time="1.369">
+  <testsuite name="src/lib/api/__tests__/ai-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-08-15T02:30:26" time="0.563" tests="36">
+    <testcase classname="AI API › aiTriage" name="should triage and transform response" time="0.007">
     </testcase>
-    <testcase classname="useIncidentBatchOps" name="runBatch reports success when all handlers resolve" time="0.061">
+    <testcase classname="AI API › aiTriage" name="should handle missing suggestions" time="0.002">
     </testcase>
-    <testcase classname="useIncidentBatchOps" name="runBatch reports partial failure when some handlers reject" time="0.039">
+    <testcase classname="AI API › aiSearchKB" name="should search knowledge base" time="0.002">
     </testcase>
-    <testcase classname="useIncidentBatchOps" name="runBatch is a no-op when given an empty selection" time="0.023">
+    <testcase classname="AI API › aiSearchKB" name="should handle missing results" time="0.001">
     </testcase>
-    <testcase classname="useIncidentBatchOps" name="openAssignModal lazily fetches the user list and opens the modal" time="0.031">
+    <testcase classname="AI API › aiSimilarIncidents" name="should find similar incidents" time="0.001">
     </testcase>
-  </testsuite>
-  <testsuite name="src/lib/hooks/__tests__/useIncidentsQuery.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-08-08T07:57:15" time="4.516" tests="6">
-    <testcase classname="useIncidentsQuery" name="starts empty and idle, then loads data on mount" time="0.214">
+    <testcase classname="AI API › aiSummarize" name="should summarize text" time="0.001">
     </testcase>
-    <testcase classname="useIncidentsQuery" name="sets loadError=true on failure" time="0.073">
+    <testcase classname="AI API › aiSummarize" name="should handle empty answers" time="0.007">
     </testcase>
-    <testcase classname="useIncidentsQuery" name="still returns data when user-name enrichment fails" time="0.074">
+    <testcase classname="AI API › aiSaveFeedback" name="should save feedback" time="0.001">
     </testcase>
-    <testcase classname="useIncidentsQuery" name="refresh() re-fetches without losing existing data on error" time="0.089">
+    <testcase classname="AI API › aiGetMetrics" name="should get metrics" time="0.001">
     </testcase>
-    <testcase classname="useIncidentsQuery" name="refetches when filter inputs change" time="0.08">
+    <testcase classname="AI API › aiGetMetrics" name="should default to 7 days" time="0.001">
     </testcase>
-    <testcase classname="useIncidentsQuery" name="setPage() updates page and pageSize" time="0.076">
+    <testcase classname="AI API › aiGetEvaluation" name="should fetch evaluation report with days param" time="0.001">
+    </testcase>
+    <testcase classname="AI API › aiGetEvaluation" name="should default to 30 days" time="0.001">
+    </testcase>
+    <testcase classname="AI API › aiGetAuditLogs" name="should fetch audit logs with all params" time="0.003">
+    </testcase>
+    <testcase classname="AI API › aiGetAuditLogs" name="should omit empty params" time="0.001">
+    </testcase>
+    <testcase classname="AI API › aiGetAuditLogs" name="should handle missing items as empty list" time="0.001">
+    </testcase>
+    <testcase classname="AI API › AIApi class wrapper" name="triage should delegate" time="0.001">
+    </testcase>
+    <testcase classname="AI API › AIApi class wrapper" name="chat should call post" time="0.001">
+    </testcase>
+    <testcase classname="AI API › AIApi class wrapper" name="searchKB should delegate" time="0.001">
+    </testcase>
+    <testcase classname="AI API › AIApi class wrapper" name="similarIncidents should delegate" time="0.001">
+    </testcase>
+    <testcase classname="AI API › AIApi class wrapper" name="summarize should delegate" time="0.001">
+    </testcase>
+    <testcase classname="AI API › AIApi class wrapper" name="saveFeedback should delegate" time="0">
+    </testcase>
+    <testcase classname="AI API › AIApi class wrapper" name="getMetrics should delegate" time="0.001">
+    </testcase>
+    <testcase classname="AI API › aiClassifyTicket (merged from legacy AIService)" name="should classify with suggestions mapping" time="0.001">
+    </testcase>
+    <testcase classname="AI API › aiClassifyTicket (merged from legacy AIService)" name="should default urgency to priority and handle missing suggestions" time="0.001">
+    </testcase>
+    <testcase classname="AI API › aiClassifyTicket (merged from legacy AIService)" name="should fall back to general/medium on empty response" time="0.001">
+    </testcase>
+    <testcase classname="AI API › aiSuggestSolutions (merged from legacy AIService)" name="should map rag results to solution suggestions" time="0.002">
+    </testcase>
+    <testcase classname="AI API › aiSuggestSolutions (merged from legacy AIService)" name="should default limit to 5 when not provided or invalid" time="0.001">
+    </testcase>
+    <testcase classname="AI API › aiSuggestSolutions (merged from legacy AIService)" name="should handle non-array response" time="0.001">
+    </testcase>
+    <testcase classname="AI API › aiIntelligentSearch (merged from legacy AIService)" name="should split results by type" time="0.002">
+    </testcase>
+    <testcase classname="AI API › aiIntelligentSearch (merged from legacy AIService)" name="should handle empty results" time="0.001">
+    </testcase>
+    <testcase classname="AI API › error propagation" name="should propagate errors" time="0.014">
+    </testcase>
+    <testcase classname="AI API › aiChatStream" name="should stream SSE events and invoke callbacks" time="0.015">
+    </testcase>
+    <testcase classname="AI API › aiChatStream" name="should handle HTTP error" time="0.015">
+    </testcase>
+    <testcase classname="AI API › aiChatStream" name="should handle error event in stream" time="0.003">
+    </testcase>
+    <testcase classname="AI API › aiChatStream" name="should handle invalid JSON in SSE data gracefully" time="0.003">
+    </testcase>
+    <testcase classname="AI API › AIApi.chatStream" name="should delegate to aiChatStream" time="0.001">
     </testcase>
   </testsuite>
 </testsuites>

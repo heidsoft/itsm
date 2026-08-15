@@ -31,12 +31,12 @@ const (
 	// Table holds the table name of the bootstraptoken in the database.
 	Table = "bootstrap_tokens"
 	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "tenants"
+	TenantTable = "bootstrap_tokens"
 	// TenantInverseTable is the table name for the Tenant entity.
 	// It exists in this package in order to avoid circular dependency with the "tenant" package.
 	TenantInverseTable = "tenants"
 	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "bootstrap_token_tenant"
+	TenantColumn = "tenant_id"
 )
 
 // Columns holds all SQL columns for bootstraptoken fields.
@@ -50,21 +50,10 @@ var Columns = []string{
 	FieldTenantID,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "bootstrap_tokens"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"tenant_bootstrap_tokens",
-}
-
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -120,23 +109,16 @@ func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
 }
 
-// ByTenantCount orders the results by tenant count.
-func ByTenantCount(opts ...sql.OrderTermOption) OrderOption {
+// ByTenantField orders the results by tenant field.
+func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newTenantStep(), opts...)
-	}
-}
-
-// ByTenant orders the results by tenant terms.
-func ByTenant(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newTenantStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, TenantTable, TenantColumn),
+		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
 	)
 }

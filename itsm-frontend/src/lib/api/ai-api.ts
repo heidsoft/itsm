@@ -63,24 +63,31 @@ export async function aiTriage(title: string, description: string): Promise<Tria
 }
 
 export async function aiSearchKB(query: string, limit = 5): Promise<{ answers: RagAnswer[] }> {
-  const answers = await httpClient.post<RagAnswer[]>(`/api/v1/ai/knowledge/search`, {
-    query,
-    limit,
-    type: 'kb',
-  });
-  return { answers: Array.isArray(answers) ? answers : [] };
+  // 后端契约：POST /api/v1/ai/rag/search 返回 { results, degraded }（见 handlers/ai KnowledgeSearch）
+  const res = await httpClient.post<{ results: RagAnswer[]; degraded?: boolean }>(
+    `/api/v1/ai/rag/search`,
+    {
+      query,
+      limit,
+      type: 'kb',
+    }
+  );
+  return { answers: Array.isArray(res?.results) ? res.results : [] };
 }
 
 export async function aiSimilarIncidents(
   query: string,
   limit = 5
 ): Promise<{ incidents: RagAnswer[] }> {
-  const incidents = await httpClient.post<RagAnswer[]>(`/api/v1/ai/knowledge/search`, {
-    query,
-    limit,
-    type: 'incident',
-  });
-  return { incidents: Array.isArray(incidents) ? incidents : [] };
+  const res = await httpClient.post<{ results: RagAnswer[]; degraded?: boolean }>(
+    `/api/v1/ai/rag/search`,
+    {
+      query,
+      limit,
+      type: 'incident',
+    }
+  );
+  return { incidents: Array.isArray(res?.results) ? res.results : [] };
 }
 
 export async function aiSummarize(text: string, maxLen = 200): Promise<{ summary: string }> {
@@ -102,6 +109,237 @@ export async function aiSaveFeedback(feedback: AIFeedbackRequest): Promise<{ mes
 
 export async function aiGetMetrics(days = 7): Promise<AIMetrics> {
   return httpClient.get<AIMetrics>(`/api/v1/ai/metrics?days=${days}`);
+}
+
+// ==================== AI 评估与审计（AI-Native：可观测、可回测） ====================
+// 后端契约：GET /api/v1/ai/evaluation、GET /api/v1/ai/audit-logs（见 handlers/ai GetEvaluation/GetAuditLogs）
+
+export interface AICalibrationBucket {
+  bucket: string;
+  midpoint: number;
+  count: number;
+  usefulRate: number;
+  calibrationError: number;
+}
+
+export interface AIScenarioEval {
+  kind: string;
+  count: number;
+  usefulRate: number;
+  acceptedRate: number;
+  avgConfidence: number;
+}
+
+export interface AIEvaluationReport {
+  generatedAt: string;
+  lookbackDays: number;
+  totalFeedback: number;
+  usefulRate: number;
+  acceptedRate: number;
+  avgConfidence: number;
+  healthScore: number;
+  hasData: boolean;
+  byScenario: AIScenarioEval[];
+  confidenceCalibration: AICalibrationBucket[];
+  platform: {
+    llmCallCount: number;
+    successRate: number;
+    avgLatencyMs: number;
+  };
+}
+
+export interface AIAuditEntry {
+  id: number;
+  createdAt: string;
+  tenantId: number;
+  userId: number;
+  requestId: string;
+  scenario: string;
+  inputRef: string;
+  promptVersion: string;
+  model: string;
+  confidence: number;
+  accepted: boolean;
+  suggestion: Record<string, unknown> | null;
+  notes: string;
+}
+
+export interface AIAuditLogsResponse {
+  items: AIAuditEntry[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export async function aiGetEvaluation(days = 30): Promise<AIEvaluationReport> {
+  return httpClient.get<AIEvaluationReport>(`/api/v1/ai/evaluation?days=${days}`);
+}
+
+export async function aiGetAuditLogs(params: {
+  page?: number;
+  pageSize?: number;
+  kind?: string;
+  days?: number;
+} = {}): Promise<AIAuditLogsResponse> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.kind) query.set('kind', params.kind);
+  if (params.days) query.set('days', String(params.days));
+  const qs = query.toString();
+  return httpClient.get<AIAuditLogsResponse>(`/api/v1/ai/audit-logs${qs ? `?${qs}` : ''}`);
+}
+
+// ==================== 合并自 legacy AIService（src/lib/services/ai-service.ts） ====================
+// 语义与旧实现保持一致：aiClassifyTicket → /ai/triage；aiSuggestSolutions → /ai/rag/search(kb)；
+// aiIntelligentSearch → /global-search。
+
+export interface TicketAnalysisRequest {
+  title: string;
+  description: string;
+  attachments?: string[];
+  userContext?: {
+    department: string;
+    role: string;
+    location: string;
+  };
+}
+
+export interface TicketClassificationResult {
+  category: string;
+  subcategory?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  urgency: 'low' | 'medium' | 'high' | 'critical' | string;
+  confidence: number;
+  reasoning: string;
+  suggestions?: string[];
+}
+
+export interface SolutionSuggestion {
+  solutionId: string;
+  title: string;
+  description: string;
+  steps?: string[];
+  estimatedTime?: number; // 预计解决时间（分钟）
+  successRate?: number; // 历史成功率
+  relatedKnowledge?: string[];
+  confidence: number;
+  reasoning: string;
+}
+
+export interface SolutionSearchRequest {
+  query: string;
+  category?: string;
+  priority?: string;
+  context?: string;
+  limit?: number;
+}
+
+export interface SearchResult {
+  id: number;
+  title: string;
+  description: string;
+  type: string;
+  status?: string;
+  number?: string;
+}
+
+export interface IntelligentSearchFilters {
+  type?: 'tickets' | 'knowledge' | 'incidents' | 'all';
+  dateRange?: { start: string; end: string };
+  category?: string;
+}
+
+export async function aiClassifyTicket(
+  request: TicketAnalysisRequest
+): Promise<TicketClassificationResult> {
+  const res = await httpClient.post<{
+    title: string;
+    description: string;
+    suggestions?: {
+      category?: string;
+      priority?: string;
+      confidence?: number;
+      reasoning?: string;
+      urgency?: string;
+    };
+  }>(`/api/v1/ai/triage`, {
+    title: request.title,
+    description: request.description,
+  });
+
+  const s = res?.suggestions || {};
+  const priority = (s.priority || 'medium') as TicketClassificationResult['priority'];
+  const urgency = (s.urgency || priority) as TicketClassificationResult['urgency'];
+  return {
+    category: s.category || 'general',
+    priority,
+    urgency,
+    confidence: typeof s.confidence === 'number' ? s.confidence : 0,
+    reasoning: s.reasoning || '',
+    suggestions: [],
+  };
+}
+
+export async function aiSuggestSolutions(
+  request: SolutionSearchRequest
+): Promise<SolutionSuggestion[]> {
+  const limit = request.limit && request.limit > 0 ? request.limit : 5;
+  const res = await httpClient.post<{ results: any[]; degraded?: boolean }>(
+    `/api/v1/ai/rag/search`,
+    {
+      query: request.query,
+      limit,
+      type: 'kb',
+    }
+  );
+
+  const list = Array.isArray(res?.results) ? res.results : [];
+  return list.map((item, idx) => {
+    const title = String(item?.title || item?.source || `知识项 ${idx + 1}`);
+    const snippet = String(item?.snippet || item?.content || item?.text || '');
+    const score = typeof item?.score === 'number' ? item.score : undefined;
+    return {
+      solutionId: String(item?.id ?? `${Date.now()}_${idx}`),
+      title,
+      description: snippet,
+      steps: [],
+      relatedKnowledge: item?.source ? [String(item.source)] : [],
+      confidence: typeof score === 'number' ? score : 0,
+      reasoning: '来自知识库检索结果',
+    };
+  });
+}
+
+export async function aiIntelligentSearch(
+  query: string,
+  _filters?: IntelligentSearchFilters
+): Promise<{
+  tickets: SearchResult[];
+  knowledge: SearchResult[];
+  incidents: SearchResult[];
+  suggestions: string[];
+}> {
+  const res = await httpClient.get<{ results: Array<any>; total: number }>(
+    `/api/v1/global-search?keyword=${encodeURIComponent(query)}`
+  );
+  const results = Array.isArray(res?.results) ? res.results : [];
+
+  const normalize = (r: any): SearchResult => ({
+    id: Number(r?.id || 0),
+    type: String(r?.type || ''),
+    title: String(r?.title || ''),
+    description: String(r?.description || ''),
+    status: r?.status ? String(r.status) : undefined,
+    number: r?.ticketNumber ? String(r.ticketNumber) : r?.number ? String(r.number) : undefined,
+  });
+
+  return {
+    tickets: results.filter(r => r?.type === 'ticket').map(normalize),
+    knowledge: results.filter(r => r?.type === 'knowledge').map(normalize),
+    incidents: results.filter(r => r?.type === 'incident').map(normalize),
+    suggestions: [],
+  };
 }
 
 // ==================== SSE Streaming Chat ====================

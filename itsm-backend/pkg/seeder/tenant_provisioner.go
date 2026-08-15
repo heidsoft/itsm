@@ -265,15 +265,29 @@ func cloneTenantTemplates(ctx context.Context, c *ent.Client, sourceID, tenantID
 			return fmt.Errorf("provision process definition %s: %w", item.Key, err)
 		}
 	}
-	bindings, err := c.ProcessBinding.Query().Where(processbinding.TenantIDEQ(sourceID)).All(ctx)
+	bindings, err := c.ProcessBinding.Query().Where(
+		processbinding.TenantIDEQ(sourceID),
+		processbinding.IsActiveEQ(true),
+	).All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, item := range bindings {
+		subTypePredicate := processbinding.BusinessSubTypeEQ(item.BusinessSubType)
+		if item.BusinessSubType == "" {
+			subTypePredicate = processbinding.Or(
+				processbinding.BusinessSubTypeEQ(""),
+				processbinding.BusinessSubTypeIsNil(),
+			)
+		}
 		exists, err := c.ProcessBinding.Query().Where(
 			processbinding.BusinessTypeEQ(item.BusinessType),
-			processbinding.BusinessSubTypeEQ(item.BusinessSubType),
-			processbinding.ProcessDefinitionKeyEQ(item.ProcessDefinitionKey),
+			subTypePredicate,
+			processbinding.DepartmentIDEQ(item.DepartmentID),
+			processbinding.TeamIDEQ(item.TeamID),
+			processbinding.ScenarioEQ(item.Scenario),
+			processbinding.CategoryEQ(item.Category),
+			processbinding.IsActiveEQ(true),
 			processbinding.TenantIDEQ(tenantID),
 		).Exist(ctx)
 		if err != nil {

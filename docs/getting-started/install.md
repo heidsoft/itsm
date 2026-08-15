@@ -1,5 +1,7 @@
 # 安装
 
+> Status: current。开发账号仅用于本地环境；生产初始化和认证以[部署指南](../deployment.md)及当前发布的 bootstrap/readiness 接口为准。
+
 > 适用版本：ITSM v1.0+
 > 阅读时间：约 5 分钟
 > 难度：⭐⭐（需要 Docker 基础）
@@ -38,8 +40,8 @@ DB_PASSWORD=ChangeMeToStrongPassword123!
 # JWT 密钥（生产环境务必使用 64+ 字符随机串）
 JWT_SECRET=$(openssl rand -hex 32)
 
-# 初始管理员密码（生产环境务必修改）
-ADMIN_PASSWORD=ChangeMe123!
+# 仅兼容旧版初始化；新生产部署应启用一次性 bootstrap token
+BOOTSTRAP_TOKEN_ENABLED=1
 
 # 日志级别
 LOG_LEVEL=info  # debug | info | warn | error
@@ -58,9 +60,9 @@ make dev-start-docker
 首次启动会：
 
 1. 拉取镜像（约 5-10 分钟，取决于网速）
-2. 初始化 PostgreSQL schema（[Ent migrations](itsm-backend/ent/migrate)）
+2. 初始化 PostgreSQL schema（[Ent migrations](../../itsm-backend/ent/migrate)）
 3. 播种基础数据（角色、权限、菜单）
-4. 创建默认管理员账户 `admin / admin123`
+4. 在本地开发模式创建开发管理员 `admin / admin123`
 
 查看启动进度：
 
@@ -83,7 +85,7 @@ xdg-open http://localhost:3000  # Linux
 start http://localhost:3000  # Windows
 ```
 
-默认登录：`admin / admin123`
+本地开发默认登录：`admin / admin123`。该凭据不得用于生产。
 
 ## 6. 生产部署
 
@@ -107,7 +109,9 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml build itsm-backen
 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 ```
 
-详见 [运维 - 部署](../operations/deployment.md)。
+生产环境不得假定存在默认管理员密码。部署后应先检查当前版本的 bootstrap 状态，由初始化 CLI 生成一次性 token，再通过受支持的 bootstrap API 创建首位管理员；token 必须过期、单次消费并产生审计。如果当前发布没有 bootstrap 状态接口，则该版本不满足本文的生产首次认证要求。
+
+详见 [生产部署指南](../deployment.md)。
 
 ## 7. 卸载
 
@@ -121,6 +125,6 @@ docker compose --env-file .env -f docker-compose.dev.yml --profile dev down -v
 
 ## 下一步
 
-- [本地开发](local-dev.md)：如何修改代码、运行测试
-- [第一个工单](first-ticket.md)：走通端到端流程
+- [开发指南](../development.md)：如何修改代码、运行测试
+- [项目快速开始](../../README.md#快速开始)：当前开发环境入口
 - [架构总览](../architecture/overview.md)：理解模块划分

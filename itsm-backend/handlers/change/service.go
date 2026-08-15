@@ -62,7 +62,67 @@ func (s *Service) ListChanges(ctx context.Context, tenantID int, page, size int,
 }
 
 func (s *Service) UpdateChange(ctx context.Context, c *Change) (*Change, error) {
+	// P1-2: Guard governance fields. Changes must be in draft status to freely edit fields that
+	// feed CAB approval / risk snapshot. Reject silent post-submission mutations and force the
+	// caller to return to draft for re-approval instead.
+	existing, err := s.repo.Get(ctx, c.ID, c.TenantID)
+	if err != nil || existing == nil {
+		return nil, fmt.Errorf("change not found")
+	}
+	if existing.Status != "draft" {
+		if blocked := governanceFieldDiffs(existing, c); len(blocked) > 0 {
+			return nil, fmt.Errorf(
+				"当前变更状态为 %q，不允许直接修改治理字段 %v。请先将变更退回 draft 后再修改并重新提审",
+				existing.Status, blocked,
+			)
+		}
+	}
 	return s.repo.Update(ctx, c)
+}
+
+// governanceFieldsAlwaysEditable 列示即使在已提审状态下也允许修改的字段（运营类非治理字段）。
+// 其余字段若发生变化，将被视为治理字段修改并被拒绝。
+var governanceFieldsAlwaysEditable = map[string]struct{}{
+	"Title":            {},
+	"Description":      {},
+	"PlannedStartDate": {},
+	"PlannedEndDate":   {},
+	"RelatedTickets":   {},
+}
+
+// governanceFieldDiffs 返回 existing 与 requested 之间存在差异且不属于
+// governanceFieldsAlwaysEditable 的字段名，用于告知调用方被拒绝修改的治理字段。
+func governanceFieldDiffs(existing, requested *Change) []string {
+	var blocked []string
+	check := func(name string, equal bool) {
+		if _, ok := governanceFieldsAlwaysEditable[name]; ok {
+			return
+		}
+		if !equal {
+			blocked = append(blocked, name)
+		}
+	}
+	check("Type", existing.Type == requested.Type)
+	check("Priority", existing.Priority == requested.Priority)
+	check("ImpactScope", existing.ImpactScope == requested.ImpactScope)
+	check("RiskLevel", existing.RiskLevel == requested.RiskLevel)
+	check("Justification", existing.Justification == requested.Justification)
+	check("ImplementationPlan", existing.ImplementationPlan == requested.ImplementationPlan)
+	check("RollbackPlan", existing.RollbackPlan == requested.RollbackPlan)
+	// AffectedCIs 是风险快照输入，修改会改变审批依据
+	existingCIs, requestedCIs := existing.AffectedCIs, requested.AffectedCIs
+	ciEqual := len(existingCIs) == len(requestedCIs)
+	if ciEqual {
+		for i := range existingCIs {
+			if existingCIs[i] != requestedCIs[i] {
+				ciEqual = false
+				break
+			}
+		}
+	}
+	check("AffectedCIs", ciEqual)
+	// 租户/创建人/ID 等不可变字段不属于用户可编辑字段，这里不关心
+	return blocked
 }
 
 func (s *Service) DeleteChange(ctx context.Context, id int, tenantID int) error {

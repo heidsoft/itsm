@@ -310,32 +310,12 @@ func TenantIDNotIn(vs ...int) predicate.BootstrapToken {
 	return predicate.BootstrapToken(sql.FieldNotIn(FieldTenantID, vs...))
 }
 
-// TenantIDGT applies the GT predicate on the "tenant_id" field.
-func TenantIDGT(v int) predicate.BootstrapToken {
-	return predicate.BootstrapToken(sql.FieldGT(FieldTenantID, v))
-}
-
-// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
-func TenantIDGTE(v int) predicate.BootstrapToken {
-	return predicate.BootstrapToken(sql.FieldGTE(FieldTenantID, v))
-}
-
-// TenantIDLT applies the LT predicate on the "tenant_id" field.
-func TenantIDLT(v int) predicate.BootstrapToken {
-	return predicate.BootstrapToken(sql.FieldLT(FieldTenantID, v))
-}
-
-// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
-func TenantIDLTE(v int) predicate.BootstrapToken {
-	return predicate.BootstrapToken(sql.FieldLTE(FieldTenantID, v))
-}
-
 // HasTenant applies the HasEdge predicate on the "tenant" edge.
 func HasTenant() predicate.BootstrapToken {
 	return predicate.BootstrapToken(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TenantTable, TenantColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

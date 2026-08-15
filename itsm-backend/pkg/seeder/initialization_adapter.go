@@ -367,11 +367,14 @@ func (s *Seeder) verifyExtensionTemplates(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	count, err := s.client.ServiceCatalog.Query().
-		Where(servicecatalog.TenantIDEQ(tenantID)).
-		Count(ctx)
-	if err != nil || count < len(s.config.ServiceCatalog) {
-		return fmt.Errorf("verify service catalog: expected>=%d actual=%d err=%w", len(s.config.ServiceCatalog), count, err)
+	for _, expected := range s.config.ServiceCatalog {
+		exists, err := s.client.ServiceCatalog.Query().Where(
+			servicecatalog.TenantIDEQ(tenantID),
+			servicecatalog.NameEQ(expected.Name),
+		).Exist(ctx)
+		if err != nil || !exists {
+			return fmt.Errorf("verify service catalog %s: exists=%t err=%w", expected.Name, exists, err)
+		}
 	}
 	return nil
 }

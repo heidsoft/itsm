@@ -55,9 +55,8 @@ type Tenant struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TenantQuery when eager-loading is set.
-	Edges                  TenantEdges `json:"edges"`
-	bootstrap_token_tenant *int
-	selectValues           sql.SelectValues
+	Edges        TenantEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // TenantEdges holds the relations/edges for other nodes in the graph.
@@ -113,8 +112,6 @@ func (*Tenant) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case tenant.FieldExpiresAt, tenant.FieldCreatedAt, tenant.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case tenant.ForeignKeys[0]: // bootstrap_token_tenant
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -243,13 +240,6 @@ func (_m *Tenant) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
-			}
-		case tenant.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field bootstrap_token_tenant", value)
-			} else if value.Valid {
-				_m.bootstrap_token_tenant = new(int)
-				*_m.bootstrap_token_tenant = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

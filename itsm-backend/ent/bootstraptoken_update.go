@@ -114,7 +114,6 @@ func (_u *BootstrapTokenUpdate) SetNillableCreatedAt(v *time.Time) *BootstrapTok
 
 // SetTenantID sets the "tenant_id" field.
 func (_u *BootstrapTokenUpdate) SetTenantID(v int) *BootstrapTokenUpdate {
-	_u.mutation.ResetTenantID()
 	_u.mutation.SetTenantID(v)
 	return _u
 }
@@ -127,25 +126,9 @@ func (_u *BootstrapTokenUpdate) SetNillableTenantID(v *int) *BootstrapTokenUpdat
 	return _u
 }
 
-// AddTenantID adds value to the "tenant_id" field.
-func (_u *BootstrapTokenUpdate) AddTenantID(v int) *BootstrapTokenUpdate {
-	_u.mutation.AddTenantID(v)
-	return _u
-}
-
-// AddTenantIDs adds the "tenant" edge to the Tenant entity by IDs.
-func (_u *BootstrapTokenUpdate) AddTenantIDs(ids ...int) *BootstrapTokenUpdate {
-	_u.mutation.AddTenantIDs(ids...)
-	return _u
-}
-
-// AddTenant adds the "tenant" edges to the Tenant entity.
-func (_u *BootstrapTokenUpdate) AddTenant(v ...*Tenant) *BootstrapTokenUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddTenantIDs(ids...)
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (_u *BootstrapTokenUpdate) SetTenant(v *Tenant) *BootstrapTokenUpdate {
+	return _u.SetTenantID(v.ID)
 }
 
 // Mutation returns the BootstrapTokenMutation object of the builder.
@@ -153,25 +136,10 @@ func (_u *BootstrapTokenUpdate) Mutation() *BootstrapTokenMutation {
 	return _u.mutation
 }
 
-// ClearTenant clears all "tenant" edges to the Tenant entity.
+// ClearTenant clears the "tenant" edge to the Tenant entity.
 func (_u *BootstrapTokenUpdate) ClearTenant() *BootstrapTokenUpdate {
 	_u.mutation.ClearTenant()
 	return _u
-}
-
-// RemoveTenantIDs removes the "tenant" edge to Tenant entities by IDs.
-func (_u *BootstrapTokenUpdate) RemoveTenantIDs(ids ...int) *BootstrapTokenUpdate {
-	_u.mutation.RemoveTenantIDs(ids...)
-	return _u
-}
-
-// RemoveTenant removes "tenant" edges to Tenant entities.
-func (_u *BootstrapTokenUpdate) RemoveTenant(v ...*Tenant) *BootstrapTokenUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemoveTenantIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -213,6 +181,9 @@ func (_u *BootstrapTokenUpdate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "BootstrapToken.tenant_id": %w`, err)}
 		}
 	}
+	if _u.mutation.TenantCleared() && len(_u.mutation.TenantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "BootstrapToken.tenant"`)
+	}
 	return nil
 }
 
@@ -249,45 +220,23 @@ func (_u *BootstrapTokenUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(bootstraptoken.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := _u.mutation.TenantID(); ok {
-		_spec.SetField(bootstraptoken.FieldTenantID, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedTenantID(); ok {
-		_spec.AddField(bootstraptoken.FieldTenantID, field.TypeInt, value)
-	}
 	if _u.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
 			Table:   bootstraptoken.TenantTable,
 			Columns: []string{bootstraptoken.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedTenantIDs(); len(nodes) > 0 && !_u.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   bootstraptoken.TenantTable,
-			Columns: []string{bootstraptoken.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.TenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
 			Table:   bootstraptoken.TenantTable,
 			Columns: []string{bootstraptoken.TenantColumn},
 			Bidi:    false,
@@ -405,7 +354,6 @@ func (_u *BootstrapTokenUpdateOne) SetNillableCreatedAt(v *time.Time) *Bootstrap
 
 // SetTenantID sets the "tenant_id" field.
 func (_u *BootstrapTokenUpdateOne) SetTenantID(v int) *BootstrapTokenUpdateOne {
-	_u.mutation.ResetTenantID()
 	_u.mutation.SetTenantID(v)
 	return _u
 }
@@ -418,25 +366,9 @@ func (_u *BootstrapTokenUpdateOne) SetNillableTenantID(v *int) *BootstrapTokenUp
 	return _u
 }
 
-// AddTenantID adds value to the "tenant_id" field.
-func (_u *BootstrapTokenUpdateOne) AddTenantID(v int) *BootstrapTokenUpdateOne {
-	_u.mutation.AddTenantID(v)
-	return _u
-}
-
-// AddTenantIDs adds the "tenant" edge to the Tenant entity by IDs.
-func (_u *BootstrapTokenUpdateOne) AddTenantIDs(ids ...int) *BootstrapTokenUpdateOne {
-	_u.mutation.AddTenantIDs(ids...)
-	return _u
-}
-
-// AddTenant adds the "tenant" edges to the Tenant entity.
-func (_u *BootstrapTokenUpdateOne) AddTenant(v ...*Tenant) *BootstrapTokenUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddTenantIDs(ids...)
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (_u *BootstrapTokenUpdateOne) SetTenant(v *Tenant) *BootstrapTokenUpdateOne {
+	return _u.SetTenantID(v.ID)
 }
 
 // Mutation returns the BootstrapTokenMutation object of the builder.
@@ -444,25 +376,10 @@ func (_u *BootstrapTokenUpdateOne) Mutation() *BootstrapTokenMutation {
 	return _u.mutation
 }
 
-// ClearTenant clears all "tenant" edges to the Tenant entity.
+// ClearTenant clears the "tenant" edge to the Tenant entity.
 func (_u *BootstrapTokenUpdateOne) ClearTenant() *BootstrapTokenUpdateOne {
 	_u.mutation.ClearTenant()
 	return _u
-}
-
-// RemoveTenantIDs removes the "tenant" edge to Tenant entities by IDs.
-func (_u *BootstrapTokenUpdateOne) RemoveTenantIDs(ids ...int) *BootstrapTokenUpdateOne {
-	_u.mutation.RemoveTenantIDs(ids...)
-	return _u
-}
-
-// RemoveTenant removes "tenant" edges to Tenant entities.
-func (_u *BootstrapTokenUpdateOne) RemoveTenant(v ...*Tenant) *BootstrapTokenUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemoveTenantIDs(ids...)
 }
 
 // Where appends a list predicates to the BootstrapTokenUpdate builder.
@@ -517,6 +434,9 @@ func (_u *BootstrapTokenUpdateOne) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "BootstrapToken.tenant_id": %w`, err)}
 		}
 	}
+	if _u.mutation.TenantCleared() && len(_u.mutation.TenantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "BootstrapToken.tenant"`)
+	}
 	return nil
 }
 
@@ -570,45 +490,23 @@ func (_u *BootstrapTokenUpdateOne) sqlSave(ctx context.Context) (_node *Bootstra
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(bootstraptoken.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := _u.mutation.TenantID(); ok {
-		_spec.SetField(bootstraptoken.FieldTenantID, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedTenantID(); ok {
-		_spec.AddField(bootstraptoken.FieldTenantID, field.TypeInt, value)
-	}
 	if _u.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
 			Table:   bootstraptoken.TenantTable,
 			Columns: []string{bootstraptoken.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedTenantIDs(); len(nodes) > 0 && !_u.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   bootstraptoken.TenantTable,
-			Columns: []string{bootstraptoken.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.TenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
 			Table:   bootstraptoken.TenantTable,
 			Columns: []string{bootstraptoken.TenantColumn},
 			Bidi:    false,

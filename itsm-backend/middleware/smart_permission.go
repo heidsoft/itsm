@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"context"
-	"database/sql"
 	"strings"
 	"sync"
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/endpointacl"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -28,11 +28,6 @@ import (
 //   - URL pattern matching with wildcard support
 //   - Auto-inference for REST endpoints
 // =============================================================================
-
-// DBQuerier interface for database access
-type DBQuerier interface {
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
-}
 
 // EndpointACL represents a cached ACL entry
 type EndpointACL struct {
@@ -106,7 +101,12 @@ func InvalidateTenantACLCache(tenantID int) {
 
 // SmartCheckPermission checks permission using 4-layer fallback
 // This is the main entry point for permission checking
-func SmartCheckPermission(c *gin.Context, db DBQuerier, client *ent.Client, role string, method, path string, tenantID int) bool {
+//
+// P0-4 修复：移除 raw DB 通道，ACL 与角色权限统一走 Ent（保留租户过滤与 RLS），
+// 并使用请求 context（超时/取消随请求传播），不再使用 context.Background()。
+func SmartCheckPermission(c *gin.Context, client *ent.Client, role string, method, path string, tenantID int) bool {
+	ctx := c.Request.Context()
+
 	// L1: Check auth whitelist (public endpoints)
 	if isAuthWhitelist(path, method) {
 		zap.S().Debugw("Auth whitelist match", "path", path, "method", method)
@@ -114,12 +114,12 @@ func SmartCheckPermission(c *gin.Context, db DBQuerier, client *ent.Client, role
 	}
 
 	// L2: Check database ACL (dynamic configuration)
-	if checkDatabaseACL(db, client, role, method, path, tenantID) {
+	if checkDatabaseACL(ctx, client, role, method, path, tenantID) {
 		return true
 	}
 
 	// L3: Check URL auto-inference (REST endpoints)
-	if checkURLInference(client, role, method, path, tenantID) {
+	if checkURLInference(ctx, client, role, method, path, tenantID) {
 		return true
 	}
 
@@ -147,13 +147,13 @@ func isAuthWhitelist(path, method string) bool {
 // L2: Database ACL Check
 // =============================================================================
 
-func checkDatabaseACL(db DBQuerier, client *ent.Client, role, method, path string, tenantID int) bool {
-	if db == nil {
+func checkDatabaseACL(ctx context.Context, client *ent.Client, role, method, path string, tenantID int) bool {
+	if client == nil {
 		return false
 	}
 
 	// Get cached ACLs or load from database
-	acls := getCachedACLs(db, tenantID)
+	acls := getCachedACLs(ctx, client, tenantID)
 	if acls == nil {
 		return false
 	}
@@ -169,7 +169,7 @@ func checkDatabaseACL(db DBQuerier, client *ent.Client, role, method, path strin
 			}
 
 			// Found matching ACL - check role permission
-			if checkRolePermissionFromDB(client, role, acl.Resource, acl.Action, tenantID) {
+			if checkRolePermissionFromDB(ctx, client, role, acl.Resource, acl.Action, tenantID) {
 				zap.S().Debugw("Database ACL permission granted",
 					"path", path, "method", method,
 					"resource", acl.Resource, "action", acl.Action)
@@ -187,7 +187,7 @@ func checkDatabaseACL(db DBQuerier, client *ent.Client, role, method, path strin
 	return false
 }
 
-func getCachedACLs(db DBQuerier, tenantID int) []EndpointACL {
+func getCachedACLs(ctx context.Context, client *ent.Client, tenantID int) []EndpointACL {
 	aclCacheLock.RLock()
 	if cached, exists := aclCache[tenantID]; exists {
 		if time.Now().Before(cached.expiresAt) {
@@ -198,7 +198,7 @@ func getCachedACLs(db DBQuerier, tenantID int) []EndpointACL {
 	aclCacheLock.RUnlock()
 
 	// Load from database
-	acls := loadACLsFromDB(db, tenantID)
+	acls := loadACLsFromDB(ctx, client, tenantID)
 	if acls == nil {
 		return nil
 	}
@@ -214,35 +214,38 @@ func getCachedACLs(db DBQuerier, tenantID int) []EndpointACL {
 	return acls
 }
 
-func loadACLsFromDB(db DBQuerier, tenantID int) []EndpointACL {
-	ctx := context.Background()
+// loadACLsFromDB 通过 Ent 加载租户 ACL（P0-4：替代 raw SQL，
+// 保持 tenant_id 过滤并使用请求 ctx）。
+func loadACLsFromDB(ctx context.Context, client *ent.Client, tenantID int) []EndpointACL {
+	if client == nil || tenantID <= 0 {
+		return nil
+	}
 
-	// Query endpoint_acls table - handle both old and new schema
-	// Old schema: no is_whitelist column
-	// New schema: has is_whitelist column
-	rows, err := db.QueryContext(ctx, `
-		SELECT path_pattern, method, resource, action, priority
-		FROM endpoint_acls
-		WHERE tenant_id = $1 AND is_active = true
-		ORDER BY priority DESC
-	`, tenantID)
+	rows, err := client.EndpointACL.Query().
+		Where(
+			endpointacl.TenantIDEQ(tenantID),
+			endpointacl.IsActiveEQ(true),
+		).
+		Order(ent.Desc(endpointacl.FieldPriority)).
+		All(ctx)
 	if err != nil {
 		zap.S().Warnw("Failed to load ACLs from DB",
 			"tenant_id", tenantID, "error", err)
 		return nil
 	}
-	defer rows.Close()
 
 	var acls []EndpointACL
-	for rows.Next() {
-		var acl EndpointACL
-		var method sql.NullString
-		if err := rows.Scan(&acl.PathPattern, &method, &acl.Resource, &acl.Action, &acl.Priority); err != nil {
-			zap.S().Warnw("Failed to scan ACL row", "error", err)
-			continue
+	for _, row := range rows {
+		acl := EndpointACL{
+			PathPattern: row.PathPattern,
+			Resource:    row.Resource,
+			Action:      row.Action,
+			Priority:    row.Priority,
 		}
-		if method.Valid {
-			acl.Method = &method.String
+		// method 为空字符串表示匹配所有 HTTP 方法（等价旧 schema 的 NULL）
+		if row.Method != "" {
+			m := row.Method
+			acl.Method = &m
 		}
 		// Check if this is a whitelist endpoint (auth endpoints with NULL method)
 		acl.IsWhitelist = isKnownWhitelistPath(acl.PathPattern)
@@ -308,11 +311,11 @@ func matchACL(acl EndpointACL, method, path string) bool {
 
 // REST URL pattern: /api/v1/{resource}/*
 // Examples: /api/v1/tickets, /api/v1/incidents/123
-func checkURLInference(client *ent.Client, role, method, path string, tenantID int) bool {
+func checkURLInference(ctx context.Context, client *ent.Client, role, method, path string, tenantID int) bool {
 	// 优先使用显式端点映射。动作型接口不能只按 HTTP 方法推断，
 	// 例如 POST /tickets/:id/assign 对应 ticket:assign，而不是 ticket:write。
 	if permission := getPermissionFromPath(method, path); permission != nil {
-		if checkRolePermissionFromDB(client, role, permission.Resource, permission.Action, tenantID) {
+		if checkRolePermissionFromDB(ctx, client, role, permission.Resource, permission.Action, tenantID) {
 			zap.S().Debugw("URL permission mapping granted",
 				"path", path, "method", method,
 				"resource", permission.Resource, "action", permission.Action)
@@ -399,7 +402,8 @@ func checkRoleBasedPermission(role, method, path string) bool {
 // checkRolePermissionFromDB checks if a role has permission for a resource:action
 // using the database-driven approach
 // SEC-005 修复：真正查询数据库获取角色权限，而非仅使用硬编码权限
-func checkRolePermissionFromDB(client *ent.Client, role, resource, action string, tenantID int) bool {
+// P0-4：透传请求 ctx，替代 loadACLsFromDB/loadPermissions 链路中的 context.Background()
+func checkRolePermissionFromDB(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
 	// 修复：统一超管白名单——仅 super_admin 直接放行。
 	// sysadmin 不再硬编码短路，必须走数据库权限校验，
 	// 否则 DBOnly 模式下对 sysadmin 的任何权限收回/降级完全失效。
@@ -413,7 +417,7 @@ func checkRolePermissionFromDB(client *ent.Client, role, resource, action string
 	//   - HardcodeOnly: 仅硬编码
 	//   - Merge: 数据库 + 硬编码并集
 	//   - Fallback: 先数据库，失败则硬编码
-	permissions := loadPermissionsByMode(client, role, tenantID)
+	permissions := loadPermissionsByMode(ctx, client, role, tenantID)
 
 	// 使用统一的权限匹配逻辑检查
 	if checkPermissionMatch(permissions, resource, action) {
@@ -425,20 +429,10 @@ func checkRolePermissionFromDB(client *ent.Client, role, resource, action string
 
 // GetResourceAndActionFromPath extracts resource and action from a URL path
 // This is useful for logging and debugging
+// P0-4 修复：移除硬编码 aclCache[1]（跨租户读取 tenant 1 缓存），
+// 仅保留静态 URL 推断，不再依赖任何租户的 ACL 缓存。
 func GetResourceAndActionFromPath(method, path string) (resource, action string) {
-	// Try L2: Check database ACL first
-	aclCacheLock.RLock()
-	if cached, ok := aclCache[1]; ok && cached != nil {
-		for _, acl := range cached.acls {
-			if matchACL(acl, method, path) {
-				aclCacheLock.RUnlock()
-				return acl.Resource, acl.Action
-			}
-		}
-	}
-	aclCacheLock.RUnlock()
-
-	// Try L3: URL auto-inference
+	// URL auto-inference
 	parts := strings.Split(path, "/")
 	if len(parts) >= 4 && parts[1] == "api" && parts[2] == "v1" {
 		return parts[3], methodToAction(method)

@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/bootstraptoken"
 	"itsm-backend/ent/predicate"
@@ -25,7 +24,6 @@ type BootstrapTokenQuery struct {
 	inters     []Interceptor
 	predicates []predicate.BootstrapToken
 	withTenant *TenantQuery
-	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,7 +74,7 @@ func (_q *BootstrapTokenQuery) QueryTenant() *TenantQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bootstraptoken.Table, bootstraptoken.FieldID, selector),
 			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, bootstraptoken.TenantTable, bootstraptoken.TenantColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, bootstraptoken.TenantTable, bootstraptoken.TenantColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -371,15 +369,11 @@ func (_q *BootstrapTokenQuery) prepareQuery(ctx context.Context) error {
 func (_q *BootstrapTokenQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*BootstrapToken, error) {
 	var (
 		nodes       = []*BootstrapToken{}
-		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
 			_q.withTenant != nil,
 		}
 	)
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, bootstraptoken.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*BootstrapToken).scanValues(nil, columns)
 	}
@@ -399,9 +393,8 @@ func (_q *BootstrapTokenQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 		return nodes, nil
 	}
 	if query := _q.withTenant; query != nil {
-		if err := _q.loadTenant(ctx, query, nodes,
-			func(n *BootstrapToken) { n.Edges.Tenant = []*Tenant{} },
-			func(n *BootstrapToken, e *Tenant) { n.Edges.Tenant = append(n.Edges.Tenant, e) }); err != nil {
+		if err := _q.loadTenant(ctx, query, nodes, nil,
+			func(n *BootstrapToken, e *Tenant) { n.Edges.Tenant = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -409,33 +402,31 @@ func (_q *BootstrapTokenQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 }
 
 func (_q *BootstrapTokenQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*BootstrapToken, init func(*BootstrapToken), assign func(*BootstrapToken, *Tenant)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*BootstrapToken)
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*BootstrapToken)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		fk := nodes[i].TenantID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
 		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.withFKs = true
-	query.Where(predicate.Tenant(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(bootstraptoken.TenantColumn), fks...))
-	}))
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(tenant.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.bootstrap_token_tenant
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "bootstrap_token_tenant" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "bootstrap_token_tenant" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "tenant_id" returned %v`, n.ID)
 		}
-		assign(node, n)
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }
@@ -464,6 +455,9 @@ func (_q *BootstrapTokenQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != bootstraptoken.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if _q.withTenant != nil {
+			_spec.Node.AddColumnOnce(bootstraptoken.FieldTenantID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

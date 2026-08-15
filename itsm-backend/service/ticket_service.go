@@ -1669,17 +1669,24 @@ func (s *TicketService) GetTicketActivity(ctx context.Context, ticketID int, ten
 		return nil, fmt.Errorf("工单不存在: %w", err)
 	}
 
+	// 响应契约与全局 API 字段规范一致：camelCase + id，前端历史 Tab 直接消费
 	activities := make([]map[string]interface{}, 0)
+	seq := 0
+	addActivity := func(action, details string, ts time.Time, userID int, userName string, oldValue, newValue interface{}) {
+		seq++
+		activities = append(activities, map[string]interface{}{
+			"id":        seq,
+			"action":    action,
+			"details":   details,
+			"createdAt": ts,
+			"userId":    userID,
+			"userName":  userName,
+			"oldValue":  oldValue,
+			"newValue":  newValue,
+		})
+	}
 
-	activities = append(activities, map[string]interface{}{
-		"action":    "created",
-		"timestamp": tkt.CreatedAt,
-		"user_id":   tkt.RequesterID,
-		"user_name": "",
-		"details":   "工单已创建",
-		"old_value": nil,
-		"new_value": tkt.Title,
-	})
+	addActivity("created", "工单已创建", tkt.CreatedAt, tkt.RequesterID, "", nil, tkt.Title)
 
 	comments, err := s.client.TicketComment.Query().
 		Where(entTicketComment.TicketID(ticketID)).
@@ -1695,46 +1702,20 @@ func (s *TicketService) GetTicketActivity(ctx context.Context, ticketID int, ten
 					userName = c.Edges.User.Username
 				}
 			}
-			activities = append(activities, map[string]interface{}{
-				"action":    "commented",
-				"timestamp": c.CreatedAt,
-				"user_id":   c.UserID,
-				"user_name": userName,
-				"details":   "添加了评论",
-				"old_value": nil,
-				"new_value": nil,
-			})
+			addActivity("commented", "添加了评论", c.CreatedAt, c.UserID, userName, nil, nil)
 		}
 	} else {
 		s.logger.Warnw("Failed to get comments for activity", "error", err)
 	}
 
 	if tkt.AssigneeID != nil && *tkt.AssigneeID > 0 {
-		activities = append(activities, map[string]interface{}{
-			"action":    "assigned",
-			"timestamp": tkt.UpdatedAt,
-			"user_id":   *tkt.AssigneeID,
-			"user_name": "",
-			"details":   "工单已分配",
-			"old_value": nil,
-			"new_value": *tkt.AssigneeID,
-		})
+		addActivity("assigned", "工单已分配", tkt.UpdatedAt, *tkt.AssigneeID, "", nil, fmt.Sprintf("%d", *tkt.AssigneeID))
 	}
 	if tkt.FirstResponseAt != nil {
-		activities = append(activities, map[string]interface{}{
-			"action":    "first_response",
-			"timestamp": *tkt.FirstResponseAt,
-			"user_id":   0,
-			"details":   "首次响应工单",
-		})
+		addActivity("first_response", "首次响应工单", *tkt.FirstResponseAt, 0, "", nil, nil)
 	}
 	if tkt.ResolvedAt != nil {
-		activities = append(activities, map[string]interface{}{
-			"action":    "resolved",
-			"timestamp": *tkt.ResolvedAt,
-			"user_id":   0,
-			"details":   "工单已解决",
-		})
+		addActivity("resolved", "工单已解决", *tkt.ResolvedAt, 0, "", nil, nil)
 	}
 
 	// 倒序

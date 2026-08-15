@@ -450,6 +450,7 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 	statusMap := map[string]string{
 		"approve":  "approved",
 		"reject":   "rejected",
+		"schedule": "scheduled",
 		"start":    "in_progress",
 		"complete": "completed",
 		"rollback": "rolled_back",

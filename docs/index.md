@@ -1,5 +1,7 @@
 # ITSM · AI-Native IT 服务管理
 
+> Status: current。开发与发布状态冲突时，以[文档状态与事实源](documentation-governance.md)定义的优先级为准；历史测试报告不代表当前发布结论。
+
 > **一句话**：一个面向 2026+ 工程师的开源 ITSM — 票务/事件/问题/变更、CMDB、知识库、BPMN 工作流、SLA、AI Triage，全部内建。
 
 [项目 README](https://github.com/heidsoft/itsm#readme) · [中文 README](https://github.com/heidsoft/itsm/blob/main/README.zh-CN.md) · [GitHub 仓库](https://github.com/heidsoft/itsm) · [变更日志](https://github.com/heidsoft/itsm/blob/main/CHANGELOG.md)
@@ -90,7 +92,7 @@ make dev-start-docker
 # 4. 访问
 #   前端  http://localhost:3000
 #   后端  http://localhost:8090/api/v1/health
-#   默认账号 admin / admin123（生产环境务必修改！）
+#   本地开发账号 admin / admin123（禁止用于生产）
 ```
 
 完整步骤见 [快速开始 - 安装](getting-started/install.md)。
@@ -110,7 +112,7 @@ make dev-start-docker
 | 文档站点 | MkDocs 构建 + GitHub Pages | 持续维护 | ✅ |
 | 依赖治理 | Dependabot 周更新，人工审核合并 | 保持 | ✅ |
 
-详见 [Roadmap](roadmap.md) 和 [覆盖审计](testing/coverage-audit.md)。
+详见根目录 [Roadmap](../ROADMAP.md) 和 [覆盖审计](testing/coverage-audit.md)。
 
 ---
 

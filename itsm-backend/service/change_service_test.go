@@ -29,6 +29,23 @@ func setupChangeTest(t *testing.T) (*ent.Client, *ChangeService, context.Context
 	return client, service, ctx
 }
 
+func TestGoldenJourney_NormalChangeCompletedStateMachine(t *testing.T) {
+	path := []string{
+		"draft",
+		"submitted",
+		"approved",
+		"scheduled",
+		"in_progress",
+		"completed",
+	}
+	for i := 0; i < len(path)-1; i++ {
+		assert.True(t, IsValidChangeStatusTransition(path[i], path[i+1], string(dto.ChangeTypeNormal)),
+			"normal change transition %s -> %s must remain valid", path[i], path[i+1])
+	}
+	assert.False(t, IsValidChangeStatusTransition("draft", "completed", string(dto.ChangeTypeNormal)))
+	assert.False(t, IsValidChangeStatusTransition("completed", "in_progress", string(dto.ChangeTypeNormal)))
+}
+
 func createChangeTestTenant(ctx context.Context, client *ent.Client, suffix string) (*ent.Tenant, error) {
 	return client.Tenant.Create().
 		SetName("Test Tenant " + suffix).

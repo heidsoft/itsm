@@ -3,6 +3,8 @@ package ticket
 
 import (
 	"time"
+
+	"itsm-backend/common"
 )
 
 // Status 工单状态类型
@@ -82,29 +84,11 @@ func (t *Ticket) IsFinalState() bool {
 	return t.Status == StatusClosed || t.Status == StatusCancelled
 }
 
-// CanTransitionTo 判断是否可以转换到目标状态
+// CanTransitionTo 判断是否可以转换到目标状态。
+// P1-1：统一委托 common.IsValidTicketStatusTransition，使其成为全系统唯一的工单状态机事实来源。
+// 禁止在此处或其他层内联状态转换表（否则会出现不同入口判定不一致的漏洞）。
 func (t *Ticket) CanTransitionTo(target Status) bool {
-	transitions := map[Status][]Status{
-		StatusNew:        {StatusOpen, StatusInProgress, StatusCancelled},
-		StatusOpen:       {StatusInProgress, StatusPending, StatusResolved, StatusCancelled},
-		StatusInProgress: {StatusPending, StatusResolved, StatusCancelled},
-		StatusPending:    {StatusInProgress, StatusResolved, StatusCancelled},
-		StatusResolved:   {StatusClosed, StatusOpen, StatusInProgress, StatusResolved},
-		StatusClosed:     {}, // 终态
-		StatusCancelled:  {}, // 终态
-	}
-
-	allowed, exists := transitions[t.Status]
-	if !exists {
-		return false
-	}
-
-	for _, s := range allowed {
-		if s == target {
-			return true
-		}
-	}
-	return false
+	return common.IsValidTicketStatusTransition(string(t.Status), string(target))
 }
 
 // Assign 分配工单给处理人

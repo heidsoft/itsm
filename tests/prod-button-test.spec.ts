@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 const BASE = 'http://localhost:3000';
 const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'AdminProd2026!';
+const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'admin123';
 
 async function login(page: Page) {
   await page.goto(BASE);
