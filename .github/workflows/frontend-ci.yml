@@ -51,7 +51,7 @@ jobs:
         working-directory: itsm-frontend
         # --forceExit: Jest 全量测试通过后进程因残留句柄不退出，导致 job 挂到 30min 超时
         # PR-0.5: --outputFile junit.xml 让 test-trend.js 拿到 pass/fail/skip 计数
-        run: npm test -- --runInBand --forceExit -- --ci --reporters=default --reporters=jest-junit
+        run: npm test -- --runInBand --forceExit --ci --reporters=default --reporters=jest-junit
         env:
           JEST_JUNIT_OUTPUT: ${{ runner.temp }}/junit-frontend.xml
 
