@@ -831,16 +831,17 @@ func (s *ChangeService) triggerWorkflowForChange(ctx context.Context, changeID i
 
 	// 构建流程变量
 	variables := map[string]interface{}{
-		"change_id":    ch.ID,
-		"title":        ch.Title,
-		"description":  ch.Description,
-		"type":         ch.Type,
-		"priority":     ch.Priority,
-		"status":       ch.Status,
-		"impact_scope": ch.ImpactScope,
-		"risk_level":   ch.RiskLevel,
-		"created_by":   ch.CreatedBy,
-		"assignee_id":  ch.AssigneeID,
+		"change_id":     ch.ID,
+		"title":         ch.Title,
+		"description":   ch.Description,
+		"type":          ch.Type,
+		"priority":      ch.Priority,
+		"status":        ch.Status,
+		"impact_scope":  ch.ImpactScope,
+		"risk_level":    ch.RiskLevel,
+		"created_by":    ch.CreatedBy,
+		"assignee_id":   ch.AssigneeID,
+		"need_approval": ch.Type != "emergency",
 	}
 
 	// 根据变更类型选择不同的流程

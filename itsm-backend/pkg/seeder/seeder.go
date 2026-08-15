@@ -1665,6 +1665,7 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		{"升级矩阵", "/admin/escalation-matrices", "TrendingUp", "sla:read", 273},
 		{"BPMN节点分析", "/workflow/bottlenecks", "BarChart3", "workflow:read", 205},
 		{"菜单管理", "/admin/menus", "List", "system:write", 285},
+		{"审计日志", "/audit-logs", "Shield", "audit:read", 295},
 	}
 
 	for _, m := range missingMenus {

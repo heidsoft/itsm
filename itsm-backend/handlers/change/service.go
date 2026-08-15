@@ -206,6 +206,16 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		return nil, fmt.Errorf("提交变更审批失败: %w", err)
 	}
 
+	// P0-2：提交审批后同步完成流程中的“变更评估”任务，推进到审批网关。
+	// 失败不回滚已提交的业务审批（后续动作会自愈推进流程），仅记录告警。
+	if s.approvalBridge != nil {
+		if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
+			ctx, tenantID, submitterID, string(dto.BusinessTypeChange), changeID, nil, 1,
+		); bridgeErr != nil {
+			s.logger.Warnw("提交变更后推进流程任务失败（非致命，后续动作自愈）", "error", bridgeErr, "change_id", changeID)
+		}
+	}
+
 	// 审批记录、审批链和 notification.deliver 命令已由仓储在同一事务提交。
 	s.logger.Infow("Change submitted for approval", "change_id", changeID, "submitter_id", submitterID, "approvers", req.ApproverIDs)
 
@@ -630,6 +640,42 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, action, comment,
 			); bridgeErr != nil {
 				return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+			}
+		}
+	}
+
+	// P0-2：业务生命周期动作同步推进 BPMN 流程，避免业务状态与流程状态分叉。
+	// 各动作推进的步数按 change_normal_flow 模板节点编排：
+	//   rejected  → 驳回收尾（Activity_Reject → 结束）；
+	//   scheduled → 完成排期任务（Activity_Schedule → 实施）；
+	//   in_progress → 完成实施任务（Activity_Implement → 验证）；
+	//   completed → 完成验证（verify_passed=true）+ 关闭变更两步收尾。
+	if s.approvalBridge != nil {
+		switch targetStatus {
+		case "rejected":
+			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
+				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, nil, 2,
+			); bridgeErr != nil {
+				return nil, fmt.Errorf("同步流程驳回任务失败: %w", bridgeErr)
+			}
+		case "scheduled":
+			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
+				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, nil, 1,
+			); bridgeErr != nil {
+				return nil, fmt.Errorf("同步流程排期任务失败: %w", bridgeErr)
+			}
+		case "in_progress":
+			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
+				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, nil, 1,
+			); bridgeErr != nil {
+				return nil, fmt.Errorf("同步流程实施任务失败: %w", bridgeErr)
+			}
+		case "completed":
+			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
+				ctx, tenantID, userID, string(dto.BusinessTypeChange), id,
+				map[string]interface{}{"verify_passed": true}, 4,
+			); bridgeErr != nil {
+				return nil, fmt.Errorf("同步流程验证任务失败: %w", bridgeErr)
 			}
 		}
 	}

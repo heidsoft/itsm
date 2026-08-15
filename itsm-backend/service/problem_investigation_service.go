@@ -541,7 +541,14 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 		return nil, fmt.Errorf("查询问题失败: %v", err)
 	}
 
-	summary := &dto.ProblemInvestigationSummaryResponse{}
+	summary := &dto.ProblemInvestigationSummaryResponse{
+		// 空数组而非 null，避免前端对 steps/solutions 等字段做空值防御时崩溃
+		Steps:             []*dto.InvestigationStepResponse{},
+		Solutions:         []*dto.ProblemSolutionResponse{},
+		Implementations:   []*dto.SolutionImplementationResponse{},
+		Relationships:     []*dto.ProblemRelationshipResponse{},
+		KnowledgeArticles: []*dto.ProblemKnowledgeArticleResponse{},
+	}
 
 	// 获取调查记录
 	var investigationID int

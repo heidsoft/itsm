@@ -60,7 +60,7 @@ const normalizeChain = (chain: BackendApprovalChain): ApprovalChain => ({
     stepName: step.name || `步骤 ${index + 1}`,
     approverType: step.role ? 'role' : 'user',
     approverId: step.approverId || 0,
-    approverName: step.name || step.role || '',
+    approverName: step.role || '',
     isRequired: step.isRequired !== false,
     createdAt: chain.createdAt,
     updatedAt: chain.updatedAt,
@@ -74,10 +74,11 @@ const toBackendPayload = (data: ApprovalChainSubmitData, fallback?: ApprovalChai
   status: data.isActive ?? fallback?.isActive ? 'active' : 'inactive',
   chain: (data.steps || fallback?.steps || []).map((step, index) => ({
     level: index + 1,
-    approverId: step.approverId || undefined,
+    // 后端契约：name=步骤名，role=角色名（role 类型步骤），approverId=用户ID（user 类型步骤）
+    approverId: step.approverType === 'user' && step.approverId > 0 ? step.approverId : undefined,
     role: step.approverType === 'role' ? step.approverName : '',
-    name: step.approverName || step.stepName,
-    isRequired: step.isRequired,
+    name: step.stepName || `步骤 ${index + 1}`,
+    isRequired: step.isRequired !== false,
   })),
 });
 
@@ -227,7 +228,10 @@ export default function ApprovalChainsPage() {
             <ol className="mt-2 list-decimal pl-5">
               {chain.steps.map(step => (
                 <li key={`${chain.id}-${step.stepOrder}`}>
-                  {step.stepName}：{step.approverName || '未指定审批人'}
+                  {step.stepName}：
+                  {step.approverType === 'user'
+                    ? step.approverName || (step.approverId ? `用户 #${step.approverId}` : '未指定审批人')
+                    : step.approverName || '未指定审批角色'}
                 </li>
               ))}
             </ol>

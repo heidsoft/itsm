@@ -389,6 +389,40 @@ func TestCustomProcessEngine_EvaluateCondition_EmptyExpression(t *testing.T) {
 	assert.True(t, result)
 }
 
+func TestCustomProcessEngine_EvaluateCondition_BPMNWrappedSyntax(t *testing.T) {
+	engine, client := setupBPMNEngineTest(t)
+	defer client.Close()
+
+	variables := map[string]interface{}{
+		"need_approval":  true,
+		"approvalResult": "approved",
+	}
+
+	tests := []struct {
+		name       string
+		expression string
+		expected   bool
+	}{
+		{"审批网关-需要审批", "${variables['need_approval'] == true}", true},
+		{"审批网关-无需审批", "${variables['need_approval'] != true}", false},
+		{"审批结果-通过", "${variables['approvalResult'] == 'approved'}", true},
+		{"审批结果-驳回", "${variables['approvalResult'] != 'approved'}", false},
+		{"验证结果-验证通过", "${variables['verify_passed'] == true}", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			flow := &BPMNSequenceFlow{
+				ConditionExpression: &BPMNConditionExpression{
+					Expression: tt.expression,
+				},
+			}
+			result := engine.evaluateCondition(flow, variables)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 // ==================== 流程定义请求/响应结构测试 ====================
 
 func TestCreateProcessDefinitionRequest_Structure(t *testing.T) {

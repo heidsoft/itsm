@@ -117,6 +117,7 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 				"change_id": ch.ID, "title": ch.Title, "description": ch.Description, "type": ch.Type,
 				"priority": ch.Priority, "status": ch.Status, "impact_scope": ch.ImpactScope,
 				"risk_level": ch.RiskLevel, "created_by": ch.CreatedBy, "assignee_id": ch.AssigneeID,
+				"need_approval": ch.Type != "emergency",
 			},
 			TriggeredBy: fmt.Sprintf("%d", ch.CreatedBy), TriggeredAt: time.Now(), TenantID: cmd.TenantID,
 		}

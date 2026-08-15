@@ -492,29 +492,29 @@ export default function ApprovalManagement() {
                     </Row>
                     <Row gutter={12}>
                       <Col span={8}>
-                        <Form.Item name={[field.name, 'approver_type']} label="审批人类型" rules={[{ required: true }]}>
+                        <Form.Item name={[field.name, 'approverType']} label="审批人类型" rules={[{ required: true }]}>
                           <Select options={approverTypeOptions} />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
-                        <Form.Item name={[field.name, 'assignee_type']} label="动态解析类型">
+                        <Form.Item name={[field.name, 'assigneeType']} label="动态解析类型">
                           <Select allowClear options={dynamicApproverOptions} />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
-                        <Form.Item name={[field.name, 'assignee_value']} label="解析值">
+                        <Form.Item name={[field.name, 'assigneeValue']} label="解析值">
                           <Input placeholder="部门/团队/项目ID，或金额阈值" />
                         </Form.Item>
                       </Col>
                     </Row>
                     <Row gutter={12}>
                       <Col span={8}>
-                        <Form.Item name={[field.name, 'approver_ids']} label="固定审批人ID">
+                        <Form.Item name={[field.name, 'approverIds']} label="固定审批人ID">
                           <Select mode="tags" tokenSeparators={[',']} placeholder="输入用户ID" />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
-                        <Form.Item name={[field.name, 'approval_mode']} label="审批模式" initialValue="any">
+                        <Form.Item name={[field.name, 'approvalMode']} label="审批模式" initialValue="any">
                           <Select options={[
                             { value: 'any', label: '任一通过' },
                             { value: 'all', label: '全部通过' },
@@ -524,24 +524,24 @@ export default function ApprovalManagement() {
                         </Form.Item>
                       </Col>
                       <Col span={8}>
-                        <Form.Item name={[field.name, 'timeout_hours']} label="超时小时">
+                        <Form.Item name={[field.name, 'timeoutHours']} label="超时小时">
                           <InputNumber min={0} style={{ width: '100%' }} />
                         </Form.Item>
                       </Col>
                     </Row>
                     <Row gutter={12}>
                       <Col span={8}>
-                        <Form.Item name={[field.name, 'allow_reject']} label="允许拒绝" valuePropName="checked" initialValue>
+                        <Form.Item name={[field.name, 'allowReject']} label="允许拒绝" valuePropName="checked" initialValue>
                           <Switch />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
-                        <Form.Item name={[field.name, 'allow_delegate']} label="允许委派" valuePropName="checked">
+                        <Form.Item name={[field.name, 'allowDelegate']} label="允许委派" valuePropName="checked">
                           <Switch />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
-                        <Form.Item name={[field.name, 'reject_action']} label="拒绝动作" initialValue="end">
+                        <Form.Item name={[field.name, 'rejectAction']} label="拒绝动作" initialValue="end">
                           <Select options={[
                             { value: 'end', label: '结束' },
                             { value: 'return', label: '退回' },

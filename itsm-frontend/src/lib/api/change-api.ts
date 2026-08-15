@@ -271,7 +271,8 @@ export class ChangeApi {
 
   // 提交变更审批
   static async submitForApproval(id: number): Promise<void> {
-    return httpClient.post(`/api/v1/changes/${id}/submit`);
+    // 后端需要 JSON body（空 body 会触发 ShouldBindJSON EOF → 400），显式传空对象
+    return httpClient.post(`/api/v1/changes/${id}/submit`, {});
   }
 
   // 审批变更
@@ -286,17 +287,17 @@ export class ChangeApi {
 
   // 排期变更（普通变更 approved → scheduled 的必经步骤）
   static async scheduleChange(id: number): Promise<void> {
-    return httpClient.post(`/api/v1/changes/${id}/schedule`);
+    return httpClient.post(`/api/v1/changes/${id}/schedule`, {});
   }
 
   // 开始实施变更
   static async startImplementation(id: number): Promise<void> {
-    return httpClient.post(`/api/v1/changes/${id}/start`);
+    return httpClient.post(`/api/v1/changes/${id}/start`, {});
   }
 
   // 完成变更实施
   static async completeImplementation(id: number): Promise<void> {
-    return httpClient.post(`/api/v1/changes/${id}/complete`);
+    return httpClient.post(`/api/v1/changes/${id}/complete`, {});
   }
 
   // 回滚变更

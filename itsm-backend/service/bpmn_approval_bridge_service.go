@@ -119,6 +119,42 @@ func (b *BPMNApprovalBridge) DelegateBusinessApprovalTask(ctx context.Context, t
 	return true, nil
 }
 
+// AdvanceBusinessWorkflow 按业务键依次完成流程实例的待办用户任务（最多 maxSteps 个），
+// 用于将业务侧生命周期动作（提交/排期/实施/验证/驳回收尾等）同步推进到 BPMN 流程，
+// 避免业务状态与流程状态分叉。
+//
+// 返回语义：
+//   - (true, nil)  至少推进了一个流程任务；
+//   - (false, nil) 无关联运行中流程实例或无待办用户任务，调用方按旧逻辑处理；
+//   - (false, err) 存在待办任务但推进失败，调用方应中止业务动作。
+func (b *BPMNApprovalBridge) AdvanceBusinessWorkflow(ctx context.Context, tenantID, actorUserID int, businessType string, businessID int, variables map[string]interface{}, maxSteps int) (bool, error) {
+	if tenantID <= 0 || businessID <= 0 || maxSteps <= 0 {
+		return false, nil
+	}
+
+	handled := false
+	for step := 0; step < maxSteps; step++ {
+		_, task, err := b.findPendingApprovalTask(ctx, tenantID, businessType, businessID)
+		if err != nil {
+			return handled, err
+		}
+		if task == nil {
+			return handled, nil
+		}
+
+		workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
+		workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, actorUserID)
+
+		engine := NewCustomProcessEngine(b.client, b.logger)
+		if err := engine.CompleteTask(workflowCtx, task.TaskID, variables); err != nil {
+			return handled, fmt.Errorf("推进流程任务失败: %w", err)
+		}
+		handled = true
+	}
+
+	return handled, nil
+}
+
 // findPendingApprovalTask 按业务键查找运行中流程实例及其当前待办用户任务。
 // 无关联实例或无待办任务时返回 (nil, nil, nil)，调用方回退旧逻辑。
 // 待办状态包含 delegated，保证委派后的任务仍可被新审批人通过桥接完成。

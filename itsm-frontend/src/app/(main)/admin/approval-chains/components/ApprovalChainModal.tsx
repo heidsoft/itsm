@@ -21,6 +21,7 @@ import {
   message,
   Row,
   Col,
+  Spin,
 } from 'antd';
 import { Plus, MinusCircle, Edit, Trash2 } from 'lucide-react';
 import type {
@@ -30,6 +31,10 @@ import type {
   UpdateApprovalChainRequest,
 } from '@/types/approval-chain';
 import { FormField } from '@/types/common';
+import { UserApi } from '@/lib/api/user-api';
+import type { User } from '@/lib/api/user-api';
+import { RoleAPI } from '@/lib/api/role-api';
+import type { Role } from '@/lib/api/api-config';
 
 const { TextArea } = Input;
 
@@ -56,6 +61,43 @@ export function ApprovalChainModal({
   const [steps, setSteps] = useState<
     Omit<ApprovalStep, 'id' | 'chainId' | 'createdAt' | 'updatedAt'>[]
   >([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(false);
+
+  // 获取可选审批用户（远程搜索）
+  const fetchUsers = useCallback(async (search?: string) => {
+    try {
+      setUsersLoading(true);
+      const response = await UserApi.getUsers({ page: 1, pageSize: 100, search: search || '' });
+      setUsers(response.users || []);
+    } catch (error) {
+      message.error('获取用户列表失败');
+    } finally {
+      setUsersLoading(false);
+    }
+  }, []);
+
+  // 获取可选审批角色
+  const fetchRoles = useCallback(async () => {
+    try {
+      setRolesLoading(true);
+      const response = await RoleAPI.getRoles({ page: 1, pageSize: 100 });
+      setRoles(response.roles || []);
+    } catch (error) {
+      message.error('获取角色列表失败');
+    } finally {
+      setRolesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (visible) {
+      fetchUsers();
+      fetchRoles();
+    }
+  }, [visible, fetchUsers, fetchRoles]);
 
   // 重置表单
   const resetForm = useCallback(() => {
@@ -96,6 +138,27 @@ export function ApprovalChainModal({
   const handleSubmit = useCallback(async () => {
     try {
       const values = await form.validateFields();
+
+      if (steps.length === 0) {
+        message.error('请至少添加一个审批步骤');
+        return;
+      }
+
+      // 每个步骤必须绑定真实审批人，避免落库后审批路由失效
+      const invalidIndex = steps.findIndex(step =>
+        step.approverType === 'user'
+          ? !step.approverId || step.approverId <= 0
+          : !step.approverName?.trim()
+      );
+      if (invalidIndex >= 0) {
+        const step = steps[invalidIndex];
+        message.error(
+          `步骤 ${invalidIndex + 1}（${step.stepName}）未选择${
+            step.approverType === 'user' ? '审批用户' : '审批角色'
+          }`
+        );
+        return;
+      }
 
       const data = {
         ...values,
@@ -176,12 +239,16 @@ export function ApprovalChainModal({
                 </div>
                 <Select
                   value={step.approverType}
-                  onChange={value => handleUpdateStep(index, 'approverType', value)}
+                  onChange={value => {
+                    // 切换类型时清空原有绑定，防止残留错误审批人
+                    handleUpdateStep(index, 'approverType', value);
+                    handleUpdateStep(index, 'approverId', 0);
+                    handleUpdateStep(index, 'approverName', '');
+                  }}
                   style={{ width: '100%' }}
                   options={[
                     { value: 'user', label: '用户' },
                     { value: 'role', label: '角色' },
-                    { value: 'group', label: '组' },
                   ]}
                 />
               </Col>
@@ -190,11 +257,46 @@ export function ApprovalChainModal({
                 <div className="mb-2">
                   <Text strong>审批人</Text>
                 </div>
-                <Input
-                  value={step.approverName}
-                  onChange={e => handleUpdateStep(index, 'approverName', e.target.value)}
-                  placeholder="审批人名称"
-                />
+                {step.approverType === 'user' ? (
+                  <Select
+                    showSearch
+                    filterOption={false}
+                    onSearch={fetchUsers}
+                    value={step.approverId || undefined}
+                    placeholder="搜索并选择审批用户"
+                    style={{ width: '100%' }}
+                    loading={usersLoading}
+                    notFoundContent={usersLoading ? <Spin size="small" /> : '未找到用户'}
+                    optionLabelProp="label"
+                    options={users.map(user => ({
+                      value: user.id,
+                      label: user.name || user.username,
+                    }))}
+                    onChange={(userId: number) => {
+                      const user = users.find(u => u.id === userId);
+                      handleUpdateStep(index, 'approverId', userId);
+                      handleUpdateStep(index, 'approverName', user?.name || user?.username || '');
+                    }}
+                  />
+                ) : (
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    value={step.approverName || undefined}
+                    placeholder="选择审批角色"
+                    style={{ width: '100%' }}
+                    loading={rolesLoading}
+                    options={roles.map(role => ({
+                      value: role.code || role.name,
+                      label: role.name,
+                    }))}
+                    onChange={(roleKey: string) => {
+                      const role = roles.find(r => (r.code || r.name) === roleKey);
+                      handleUpdateStep(index, 'approverName', role?.code || role?.name || roleKey);
+                      handleUpdateStep(index, 'approverId', 0);
+                    }}
+                  />
+                )}
               </Col>
 
               <Col span={8}>

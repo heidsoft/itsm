@@ -1,77 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="36" failures="0" errors="0" time="1.369">
-  <testsuite name="src/lib/api/__tests__/ai-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-08-15T02:30:26" time="0.563" tests="36">
-    <testcase classname="AI API › aiTriage" name="should triage and transform response" time="0.007">
+<testsuites name="jest tests" tests="15" failures="0" errors="0" time="10.652">
+  <testsuite name="src/lib/__tests__/ticket-approval.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-08-15T03:25:57" time="4.857" tests="8">
+    <testcase classname="TicketApprovalApi › getWorkflows" name="should fetch approval workflows successfully" time="0.015">
     </testcase>
-    <testcase classname="AI API › aiTriage" name="should handle missing suggestions" time="0.002">
+    <testcase classname="TicketApprovalApi › getWorkflows" name="should handle empty workflow list" time="0.01">
     </testcase>
-    <testcase classname="AI API › aiSearchKB" name="should search knowledge base" time="0.002">
+    <testcase classname="TicketApprovalApi › createWorkflow" name="should create approval workflow successfully" time="0.011">
     </testcase>
-    <testcase classname="AI API › aiSearchKB" name="should handle missing results" time="0.001">
+    <testcase classname="TicketApprovalApi › submitApproval" name="should submit approval successfully" time="0.006">
     </testcase>
-    <testcase classname="AI API › aiSimilarIncidents" name="should find similar incidents" time="0.001">
+    <testcase classname="TicketApprovalApi › submitApproval" name="should handle rejection action" time="0.175">
     </testcase>
-    <testcase classname="AI API › aiSummarize" name="should summarize text" time="0.001">
+    <testcase classname="TicketApprovalApi › submitApproval" name="should handle delegation action" time="0.013">
     </testcase>
-    <testcase classname="AI API › aiSummarize" name="should handle empty answers" time="0.007">
+    <testcase classname="TicketApprovalApi › getApprovalRecords" name="getApprovalRecords returns correct data" time="0.051">
     </testcase>
-    <testcase classname="AI API › aiSaveFeedback" name="should save feedback" time="0.001">
+    <testcase classname="TicketApprovalApi › getApprovalRecords" name="should filter by status" time="0.019">
     </testcase>
-    <testcase classname="AI API › aiGetMetrics" name="should get metrics" time="0.001">
+  </testsuite>
+  <testsuite name="src/lib/api/__tests__/ticket-approval-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-08-15T03:26:02" time="0.973" tests="7">
+    <testcase classname="TicketApprovalApi › getWorkflows" name="should fetch workflows without params" time="0.008">
     </testcase>
-    <testcase classname="AI API › aiGetMetrics" name="should default to 7 days" time="0.001">
+    <testcase classname="TicketApprovalApi › getWorkflows" name="should pass query params" time="0.008">
     </testcase>
-    <testcase classname="AI API › aiGetEvaluation" name="should fetch evaluation report with days param" time="0.001">
+    <testcase classname="TicketApprovalApi › createWorkflow" name="should create a workflow" time="0.004">
     </testcase>
-    <testcase classname="AI API › aiGetEvaluation" name="should default to 30 days" time="0.001">
+    <testcase classname="TicketApprovalApi › updateWorkflow" name="should update a workflow" time="0.015">
     </testcase>
-    <testcase classname="AI API › aiGetAuditLogs" name="should fetch audit logs with all params" time="0.003">
+    <testcase classname="TicketApprovalApi › deleteWorkflow" name="should delete a workflow" time="0.015">
     </testcase>
-    <testcase classname="AI API › aiGetAuditLogs" name="should omit empty params" time="0.001">
+    <testcase classname="TicketApprovalApi › getApprovalRecords" name="should fetch approval records" time="0.002">
     </testcase>
-    <testcase classname="AI API › aiGetAuditLogs" name="should handle missing items as empty list" time="0.001">
-    </testcase>
-    <testcase classname="AI API › AIApi class wrapper" name="triage should delegate" time="0.001">
-    </testcase>
-    <testcase classname="AI API › AIApi class wrapper" name="chat should call post" time="0.001">
-    </testcase>
-    <testcase classname="AI API › AIApi class wrapper" name="searchKB should delegate" time="0.001">
-    </testcase>
-    <testcase classname="AI API › AIApi class wrapper" name="similarIncidents should delegate" time="0.001">
-    </testcase>
-    <testcase classname="AI API › AIApi class wrapper" name="summarize should delegate" time="0.001">
-    </testcase>
-    <testcase classname="AI API › AIApi class wrapper" name="saveFeedback should delegate" time="0">
-    </testcase>
-    <testcase classname="AI API › AIApi class wrapper" name="getMetrics should delegate" time="0.001">
-    </testcase>
-    <testcase classname="AI API › aiClassifyTicket (merged from legacy AIService)" name="should classify with suggestions mapping" time="0.001">
-    </testcase>
-    <testcase classname="AI API › aiClassifyTicket (merged from legacy AIService)" name="should default urgency to priority and handle missing suggestions" time="0.001">
-    </testcase>
-    <testcase classname="AI API › aiClassifyTicket (merged from legacy AIService)" name="should fall back to general/medium on empty response" time="0.001">
-    </testcase>
-    <testcase classname="AI API › aiSuggestSolutions (merged from legacy AIService)" name="should map rag results to solution suggestions" time="0.002">
-    </testcase>
-    <testcase classname="AI API › aiSuggestSolutions (merged from legacy AIService)" name="should default limit to 5 when not provided or invalid" time="0.001">
-    </testcase>
-    <testcase classname="AI API › aiSuggestSolutions (merged from legacy AIService)" name="should handle non-array response" time="0.001">
-    </testcase>
-    <testcase classname="AI API › aiIntelligentSearch (merged from legacy AIService)" name="should split results by type" time="0.002">
-    </testcase>
-    <testcase classname="AI API › aiIntelligentSearch (merged from legacy AIService)" name="should handle empty results" time="0.001">
-    </testcase>
-    <testcase classname="AI API › error propagation" name="should propagate errors" time="0.014">
-    </testcase>
-    <testcase classname="AI API › aiChatStream" name="should stream SSE events and invoke callbacks" time="0.015">
-    </testcase>
-    <testcase classname="AI API › aiChatStream" name="should handle HTTP error" time="0.015">
-    </testcase>
-    <testcase classname="AI API › aiChatStream" name="should handle error event in stream" time="0.003">
-    </testcase>
-    <testcase classname="AI API › aiChatStream" name="should handle invalid JSON in SSE data gracefully" time="0.003">
-    </testcase>
-    <testcase classname="AI API › AIApi.chatStream" name="should delegate to aiChatStream" time="0.001">
+    <testcase classname="TicketApprovalApi › submitApproval" name="should submit approval action" time="0.002">
     </testcase>
   </testsuite>
 </testsuites>

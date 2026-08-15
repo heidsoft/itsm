@@ -1,6 +1,7 @@
 package change
 
 import (
+	"io"
 	"strconv"
 	"strings"
 
@@ -384,7 +385,7 @@ func (h *Handler) SubmitChange(c *gin.Context) {
 	userID := userIDVal.(int)
 
 	var req dto.SubmitChangeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil && err != io.EOF {
 		common.ParamError(c, "Invalid request body: "+err.Error())
 		return
 	}

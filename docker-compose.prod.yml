@@ -192,6 +192,9 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
 
+      # AI 能力就绪标记（/api/v1/capabilities 中 ai 的 deploymentReady）
+      - ITSM_AI_READY=${ITSM_AI_READY:-}
+
       # 告警通知
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}

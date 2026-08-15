@@ -126,7 +126,20 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
     setLoading(true);
     try {
       const data = await ProblemInvestigationAPI.getSummary(Number(id) || problemId);
-      setSummary(data);
+      // 后端历史数据可能返回 null 字段（steps/solutions 等），统一归一化为空数组，
+      // 避免渲染时对 null 取 .length 崩溃
+      setSummary(
+        data
+          ? {
+              ...data,
+              steps: data.steps ?? [],
+              solutions: data.solutions ?? [],
+              implementations: data.implementations ?? [],
+              relationships: data.relationships ?? [],
+              knowledgeArticles: data.knowledgeArticles ?? [],
+            }
+          : null
+      );
     } catch (error) {
       console.error('加载调查摘要失败:', error);
       message.error('加载调查摘要失败');

@@ -1021,6 +1021,15 @@ func (e *CustomProcessEngine) evaluateCondition(flow *BPMNSequenceFlow, variable
 		return true // 无条件则默认通过
 	}
 
+	// 兼容模板中常见的 ${...} 包裹语法（expr-lang 无法编译 ${} 前缀）
+	expr := strings.TrimSpace(flow.ConditionExpression.Expression)
+	if strings.HasPrefix(expr, "${") && strings.HasSuffix(expr, "}") {
+		expr = strings.TrimSpace(expr[2 : len(expr)-1])
+	}
+	if expr == "" {
+		return true // 剥离包裹后为空视为无条件
+	}
+
 	// 合并变量
 	evalVars := make(map[string]interface{})
 	for k, v := range e.expressionVars {
@@ -1029,14 +1038,16 @@ func (e *CustomProcessEngine) evaluateCondition(flow *BPMNSequenceFlow, variable
 	for k, v := range variables {
 		evalVars[k] = v
 	}
+	// 兼容模板中 variables['xxx'] 的字典访问语法
+	evalVars["variables"] = variables
 
 	// 使用表达式引擎评估条件
-	result, err := e.exprEngine.EvaluateCondition(flow.ConditionExpression.Expression, evalVars)
+	result, err := e.exprEngine.EvaluateCondition(expr, evalVars)
 	if err != nil {
 		// SEC-002 修复：评估失败时默认拒绝（return false），而非放行
 		e.logger.Errorw(
 			"条件评估失败，默认拒绝流转",
-			"expression", flow.ConditionExpression.Expression,
+			"expression", expr,
 			"error", err,
 		)
 		return false

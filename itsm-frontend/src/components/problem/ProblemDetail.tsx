@@ -205,14 +205,15 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             {data.status === ProblemStatus.OPEN && (
               <Button
                 type="primary"
-                loading={updatingStatus === ProblemStatus.IN_PROGRESS}
+                loading={updatingStatus === ProblemStatus.INVESTIGATING}
                 disabled={updatingStatus !== null}
-                onClick={() => handleUpdateStatus(ProblemStatus.IN_PROGRESS)}
+                onClick={() => handleUpdateStatus(ProblemStatus.INVESTIGATING)}
               >
                 开始处理
               </Button>
             )}
-            {data.status === ProblemStatus.IN_PROGRESS && (
+            {(data.status === ProblemStatus.IN_PROGRESS ||
+              data.status === ProblemStatus.INVESTIGATING) && (
               <Button
                 type="primary"
                 loading={updatingStatus === ProblemStatus.RESOLVED}

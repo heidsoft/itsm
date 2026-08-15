@@ -602,11 +602,15 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
               编辑
             </Button>
             {data.status === ProblemStatus.OPEN && (
-              <Button type="primary" onClick={() => handleUpdateStatus(ProblemStatus.IN_PROGRESS)}>
+              <Button
+                type="primary"
+                onClick={() => handleUpdateStatus(ProblemStatus.INVESTIGATING)}
+              >
                 开始处理
               </Button>
             )}
-            {data.status === ProblemStatus.IN_PROGRESS && (
+            {(data.status === ProblemStatus.IN_PROGRESS ||
+              data.status === ProblemStatus.INVESTIGATING) && (
               <Button type="primary" onClick={() => handleUpdateStatus(ProblemStatus.IDENTIFIED)}>
                 标记已识别
               </Button>
