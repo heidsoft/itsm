@@ -506,11 +506,11 @@ func (s *AnalyticsSkill) Validate(input interface{}) error {
 	if _, err := inputInt(in, "tenantId", 0); err != nil {
 		return err
 	}
-	dims, _ := in["dimensions"]
+	dims := in["dimensions"]
 	if dims == nil {
 		return &SkillInputError{Field: "dimensions", Reason: "required"}
 	}
-	metrics, _ := in["metrics"]
+	metrics := in["metrics"]
 	if metrics == nil {
 		return &SkillInputError{Field: "metrics", Reason: "required"}
 	}

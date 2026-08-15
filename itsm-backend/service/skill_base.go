@@ -175,20 +175,20 @@ func (b *BaseSkill) BuildManifest() SkillManifest {
 	return m
 }
 
-// sortedTags 工具：返回排序后的 tag 列表（用于不区分调用顺序的相等比较）。
-func sortedTags(tags []string) []string {
+// _sortedTags 工具：返回排序后的 tag 列表（用于不区分调用顺序的相等比较，保留用于将来使用）。
+func _sortedTags(tags []string) []string {
 	out := append([]string(nil), tags...)
 	sort.Strings(out)
 	return out
 }
 
-// tagSetEqual 比较两个 tag 切片是否代表同一集合。
-func tagSetEqual(a, b []string) bool {
+// _tagSetEqual 比较两个 tag 切片是否代表同一集合（保留用于将来使用）。
+func _tagSetEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	as := sortedTags(a)
-	bs := sortedTags(b)
+	as := _sortedTags(a)
+	bs := _sortedTags(b)
 	for i := range as {
 		if as[i] != bs[i] {
 			return false

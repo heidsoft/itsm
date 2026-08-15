@@ -430,8 +430,8 @@ func (s *DashboardService) getResourceMetrics(ctx context.Context, tenantID int)
 	return &dto.ResourceMetrics{TotalResources: totalResources, ByCloud: byCloud, ByType: byType, ByStatus: byStatus, Distribution: distribution, HealthStatus: healthStatus}, nil
 }
 
-// stringPtr 返回字符串指针
-func (s *DashboardService) stringPtr(str string) *string {
+// _stringPtr 返回字符串指针（保留用于将来使用）
+func (s *DashboardService) _stringPtr(str string) *string {
 	return &str
 }
 

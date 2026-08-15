@@ -312,8 +312,8 @@ func (s *ProblemService) GetProblemStats(ctx context.Context, tenantID int) (*dt
 	}, nil
 }
 
-// triggerWorkflowForProblem 为问题触发工作流
-func (s *ProblemService) triggerWorkflowForProblem(ctx context.Context, problemID int, tenantID int) error {
+// _triggerWorkflowForProblem 为问题触发工作流（保留用于将来工作流集成）
+func (s *ProblemService) _triggerWorkflowForProblem(ctx context.Context, problemID int, tenantID int) error {
 	// 获取问题信息
 	p, err := s.client.Problem.Query().
 		Where(

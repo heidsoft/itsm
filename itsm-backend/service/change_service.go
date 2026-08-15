@@ -817,8 +817,8 @@ func IsValidChangeStatusTransition(currentStatus, newStatus, changeType string) 
 	return false
 }
 
-// triggerWorkflowForChange 为变更触发工作流
-func (s *ChangeService) triggerWorkflowForChange(ctx context.Context, changeID int, tenantID int) error {
+// _triggerWorkflowForChange 为变更触发工作流（保留用于将来工作流集成）
+func (s *ChangeService) _triggerWorkflowForChange(ctx context.Context, changeID int, tenantID int) error {
 	// 获取变更信息
 	ch, err := s.client.Change.Query().
 		Where(

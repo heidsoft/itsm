@@ -13,8 +13,8 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// createTestTicket wires the minimum required fields for a ticket row.
-func createTestTicket(ctx context.Context, t *testing.T, client interface {
+// _createTestTicket wires the minimum required fields for a ticket row（保留用于将来使用）。
+func _createTestTicket(ctx context.Context, t *testing.T, client interface {
 	Create() interface {
 		SetTicketNumber(string) interface {
 			SetTitle(string) interface {

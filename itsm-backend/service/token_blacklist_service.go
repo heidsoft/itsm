@@ -104,7 +104,7 @@ func (s *TokenBlacklistService) TryAddRefreshToBlacklist(tokenString string, exp
 		return true, nil
 	}
 	key := "refresh:blacklist:" + tokenString
-	ok, err := s.redisClient.SetNX(context.Background(), key, "1", ttl).Result()
+	ok, err := s.redisClient.Set(context.Background(), key, "1", ttl).Result()
 	if err != nil {
 		s.logger.Errorw("Failed to atomically claim refresh token", "error", err)
 		return false, fmt.Errorf("failed to claim refresh token: %w", err)
