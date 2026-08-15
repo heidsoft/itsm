@@ -45,6 +45,7 @@ import (
 	"itsm-backend/handlers/problem"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
+	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
 	"itsm-backend/internal/commandbus"
@@ -71,6 +72,7 @@ type Application struct {
 	Embedder      service.Embedder
 	VectorStore   *service.VectorStore
 	CommandWorker *commandbus.Worker
+	SkillRegistry *service.SkillRegistry
 
 	// backgroundWG 跟踪由 startBackgroundTasks 启动的所有后台 goroutine。
 	// 在 Stop() 中等待它们退出，避免应用关闭时强制杀死进行中的任务。
@@ -627,6 +629,25 @@ func NewApplication() *Application {
 	aiServiceDomain.SetEntClient(client)
 	aiHandler := ai.NewHandler(aiServiceDomain)
 
+	// Sprint C — Skill Registry v1：在 ai.Service 装配完成后注入内置 Skill。
+	// 注册失败按"启动期 fail-fast"原则处理：以 service.SkillRegistry 注入到 ai package 中，
+	// 供后续 handlers/skill 管理 API 调用。
+	skillRegistry := service.NewSkillRegistry()
+	if err := ai.RegisterBuiltinSkills(skillRegistry, aiServiceDomain, sugar); err != nil {
+		sugar.Errorw("failed to register builtin AI skills; SkillRegistry will operate in partial mode",
+			"error", err)
+	}
+	sugar.Infow("AI SkillRegistry ready", "total_skills", skillRegistry.Count())
+
+	// Sprint C — Skills Management API：在 SkillRegistry 装配完成后创建 handler。
+	// handler 只是 thin wrapper，所有业务逻辑在 SkillRegistry 内。
+	skillHandler := skill.NewHandler(skillRegistry, sugar)
+
+	// Sprint C — Evaluator bySkill 维度：将 SkillRegistry 注入到 AI 评估服务。
+	// 这样 /ai/evaluation 返回的 bySkill 字段会带上 Skill 的 Name/Category 元数据，
+	// 同时 byScenario 项也会带 SkillName，便于前端"技能"与"场景"两个视角对齐。
+	aiTelemetryService.SetSkillRegistry(skillRegistry)
+
 	// Common Domain
 	commonRepo := domainCommon.NewEntRepository(client)
 	commonServiceDomain := domainCommon.NewService(commonRepo, cfg.JWT.Secret, sugar, client)
@@ -832,6 +853,9 @@ func NewApplication() *Application {
 		AuthController:                 authController,
 		RoleHandler:                    roleHandler,
 
+		// Sprint C — Skill Registry v1
+		SkillHandler: skillHandler,
+
 		// Global Search
 		GlobalSearchController: globalSearchController,
 
@@ -869,6 +893,7 @@ func NewApplication() *Application {
 		Embedder:      embedder,
 		VectorStore:   vectorStore,
 		CommandWorker: commandWorker,
+		SkillRegistry: skillRegistry,
 	}
 }
 

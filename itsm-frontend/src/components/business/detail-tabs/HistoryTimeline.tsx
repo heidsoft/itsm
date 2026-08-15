@@ -92,15 +92,6 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
         />
       )}
 
-      {source === 'audit' && (
-        <Alert
-          type="info"
-          showIcon
-          className="mb-4"
-          message="展示的是审计日志（通用来源）；模块专属历史 API 就绪后会自动切换。"
-        />
-      )}
-
       {records.length > 0 ? (
         <Timeline>
           {records.map((r) => (

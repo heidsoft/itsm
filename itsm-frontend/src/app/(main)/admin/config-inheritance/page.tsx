@@ -17,7 +17,7 @@ import {
   Table,
   Tag,
   Typography,
-  message,
+  App,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { GitBranch, Plus, RefreshCw, Search } from 'lucide-react';
@@ -27,6 +27,7 @@ import { DomainConfigApi } from '@/lib/api/domain-config-api';
 const { Title, Text } = Typography;
 
 export default function ConfigInheritancePage() {
+  const { message } = App.useApp();
   const [configs, setConfigs] = useState<DomainConfig[]>([]);
   const [effectiveConfig, setEffectiveConfig] = useState<EffectiveConfig | null>(null);
   const [loading, setLoading] = useState(false);
@@ -144,8 +145,8 @@ export default function ConfigInheritancePage() {
   );
 
   return (
-    <div style={{ padding: 24 }}>
-      <div className="mb-6">
+    <div className="space-y-6">
+      <div>
         <Title level={2} className="!mb-2">
           <GitBranch className="mr-2" />
           配置继承

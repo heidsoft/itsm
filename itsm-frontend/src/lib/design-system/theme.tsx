@@ -243,6 +243,70 @@ export const getAntdTheme = (isDark: boolean) => {
       Notification: {
         borderRadius: borderRadiusValue(borderRadius.lg),
       },
+
+      // 下拉选择组件：补齐 controlHeight，避免与 Button/Input 出现 8px 高度差
+      Select: {
+        borderRadius: borderRadiusValue(borderRadius.lg),
+        controlHeight: 40,
+        controlHeightLG: 48,
+        controlHeightSM: 32,
+      },
+
+      // 自动完成组件
+      AutoComplete: {
+        borderRadius: borderRadiusValue(borderRadius.lg),
+        controlHeight: 40,
+        controlHeightLG: 48,
+        controlHeightSM: 32,
+      },
+
+      // 级联选择组件
+      Cascader: {
+        borderRadius: borderRadiusValue(borderRadius.lg),
+        controlHeight: 40,
+        controlHeightLG: 48,
+        controlHeightSM: 32,
+      },
+
+      // 树选择组件
+      TreeSelect: {
+        borderRadius: borderRadiusValue(borderRadius.lg),
+        controlHeight: 40,
+        controlHeightLG: 48,
+        controlHeightSM: 32,
+      },
+
+      // 日期选择组件
+      DatePicker: {
+        borderRadius: borderRadiusValue(borderRadius.lg),
+        controlHeight: 40,
+        controlHeightLG: 48,
+        controlHeightSM: 32,
+      },
+
+      // 时间选择组件
+      TimePicker: {
+        borderRadius: borderRadiusValue(borderRadius.lg),
+        controlHeight: 40,
+        controlHeightLG: 48,
+        controlHeightSM: 32,
+      },
+
+      // 数字输入组件
+      InputNumber: {
+        borderRadius: borderRadiusValue(borderRadius.lg),
+        controlHeight: 40,
+        controlHeightLG: 48,
+        controlHeightSM: 32,
+      },
+
+      // 提及组件
+      Mentions: {
+        borderRadius: borderRadiusValue(borderRadius.lg),
+        controlHeight: 40,
+        controlHeightLG: 48,
+        controlHeightSM: 32,
+      },
     },
   };
 };

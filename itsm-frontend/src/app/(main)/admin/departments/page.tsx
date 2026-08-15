@@ -37,6 +37,7 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 export default function DepartmentManagement() {
+  const { message } = App.useApp();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [treeData, setTreeData] = useState<Department[]>([]);
   const [loading, setLoading] = useState(false);
@@ -243,7 +244,7 @@ export default function DepartmentManagement() {
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
+      <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={8}>
           <Card className="enterprise-card">
             <Statistic

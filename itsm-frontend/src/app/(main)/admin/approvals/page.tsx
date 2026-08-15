@@ -296,7 +296,7 @@ export default function ApprovalManagement() {
         }
       />
 
-      <div className="mb-6">
+      <div>
         <Title level={2} className="!mb-2">
           <GitMerge className="mr-2" />
           审批管理
@@ -336,7 +336,7 @@ export default function ApprovalManagement() {
       </Row>
 
       {/* 操作栏 */}
-      <Card className="mb-6">
+      <Card>
         <Space>
           <Button
             type="primary"

@@ -755,9 +755,10 @@ func IsValidChangeStatusTransition(currentStatus, newStatus, changeType string) 
 	// 基础转换规则（适用于所有变更类型）
 	baseTransitions := map[string][]string{
 		common.ChangeStatusRejected:        {}, // 被拒绝后不允许转换
-		common.ChangeStatusCompleted:       {}, // 已完成不允许转换
-		common.ChangeStatusCancelled:       {}, // 已取消不允许转换
-		string(dto.ChangeStatusRolledBack): {},
+		common.ChangeStatusCompleted:       {common.ChangeStatusClosed}, // 已完成 → 可显式关闭以归档
+		common.ChangeStatusCancelled:       {},                         // 已取消不允许转换
+		string(dto.ChangeStatusRolledBack): {common.ChangeStatusClosed}, // 已回滚 → 也可归档
+		common.ChangeStatusClosed:          {},                         // 已关闭为终态
 	}
 
 	// 不同变更类型的特殊转换规则

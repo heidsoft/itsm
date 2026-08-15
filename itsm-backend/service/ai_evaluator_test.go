@@ -188,7 +188,118 @@ func TestEvaluate_EmptyState(t *testing.T) {
 	assert.Equal(t, 0, report.TotalFeedback)
 	assert.Equal(t, 0.0, report.HealthScore)
 	assert.Empty(t, report.ByScenario)
+	// Sprint C：bySkill 字段在空库时仍以空数组返回（与 ByScenario 对齐）。
+	assert.NotNil(t, report.BySkill)
+	assert.Empty(t, report.BySkill)
 }
+
+// newRegistryWithFakeSkill 构造一个只包含单个 fake Skill 的最小 SkillRegistry，
+// 用于评估器“带 SkillRegistry”的场景。Skill 的 Manifest.Category 决定 IsPilot。
+func newRegistryWithFakeSkill(code, name, category string) *SkillRegistry {
+	reg := NewSkillRegistry()
+	fs := &fakeSkill{code: code, name: name, category: category}
+	// 直接绕开 register 的并发保护（测试中调用次序固定）。
+	reg.skills[code] = fs
+	return reg
+}
+
+// fakeSkill 是 SkillRegistry 测试用的最小实现：仅返回 Manifest/Name。
+type fakeSkill struct {
+	code     string
+	name     string
+	category string
+}
+
+func (f *fakeSkill) Code() string               { return f.code }
+func (f *fakeSkill) Name() string               { return f.name }
+func (f *fakeSkill) Tags() []string             { return nil }
+func (f *fakeSkill) Manifest() SkillManifest    { return SkillManifest{Name: f.code, Version: "v1", Category: f.category} }
+func (f *fakeSkill) GetMetrics() SkillMetrics   { return SkillMetrics{} }
+func (f *fakeSkill) Validate(_ interface{}) error { return nil }
+func (f *fakeSkill) Execute(_ context.Context, _ interface{}) (interface{}, error) { return nil, nil }
+
+func TestEvaluate_BySkillDimension_WithoutRegistry(t *testing.T) {
+	db, svc := newTelemetryTestDB(t)
+	seedStandardEvaluationFixture(t, db)
+
+	// 未注入 SkillRegistry：bySkill 仍以 skillCode 为 key 聚合。
+	report, err := svc.Evaluate(context.Background(), 1, 30)
+	require.NoError(t, err)
+	// 4 条样本 (triage/summarize/analyze/analyze) 分别映射到
+	// ai.triage / ai.summarize / ai.analyze。租户2的 1 条 triage 同映射为 ai.triage，
+	// 但只计租户1 的 4 条。
+	require.Len(t, report.BySkill, 3)
+	byCode := map[string]AISkillEval{}
+	for _, sk := range report.BySkill {
+		byCode[sk.SkillCode] = sk
+	}
+	// ai.triage：1 条 useful，accepted 0；usefulRate=1.0，acceptedRate=0.0
+	triage, ok := byCode["ai.triage"]
+	require.True(t, ok, "ai.triage should be present")
+	assert.Equal(t, 1, triage.Count)
+	assert.Equal(t, 1.0, triage.UsefulRate)
+	assert.Equal(t, 0.0, triage.AcceptedRate)
+	assert.Equal(t, 0.8, triage.AvgConfidence)
+	assert.Equal(t, false, triage.IsPilot) // 未注入 registry → IsPilot=false
+	// ai.analyze：2 条，usefulRate=0.5
+	analyze, ok := byCode["ai.analyze"]
+	require.True(t, ok)
+	assert.Equal(t, 2, analyze.Count)
+	assert.Equal(t, 0.5, analyze.UsefulRate)
+	assert.Equal(t, 0.5, analyze.AcceptedRate)
+	assert.Equal(t, 0.925, analyze.AvgConfidence)
+	// HealthScore = 0.5*40 + 0.5*30 + (1-|0.5-0.925|)*30 = 20+15+(0.575*30) = 52.25
+	assert.Equal(t, 52.25, analyze.HealthScore)
+}
+
+func TestEvaluate_BySkillDimension_WithRegistry(t *testing.T) {
+	db, svc := newTelemetryTestDB(t)
+	seedStandardEvaluationFixture(t, db)
+
+	// 注入一个含 pilot 分类的 fake ai.triage。
+	reg := newRegistryWithFakeSkill("ai.triage", "Triage Skill", "pilot")
+	svc.SetSkillRegistry(reg)
+
+	report, err := svc.Evaluate(context.Background(), 1, 30)
+	require.NoError(t, err)
+
+	byCode := map[string]AISkillEval{}
+	for _, sk := range report.BySkill {
+		byCode[sk.SkillCode] = sk
+	}
+	// 找到的 ai.triage 应当带上 Name + IsPilot=true
+	triage, ok := byCode["ai.triage"]
+	require.True(t, ok)
+	assert.Equal(t, "Triage Skill", triage.SkillName)
+	assert.Equal(t, true, triage.IsPilot)
+
+	// ai.analyze 未注册：SkillName 为空，IsPilot=false
+	analyze, ok := byCode["ai.analyze"]
+	require.True(t, ok)
+	assert.Empty(t, analyze.SkillName)
+	assert.Equal(t, false, analyze.IsPilot)
+}
+
+func TestEvaluate_ScenarioToSkillCodeMapping(t *testing.T) {
+	// 验证 AIScenarioEval.Kind → SkillCode 的稳定映射。
+	cases := map[string]string{
+		"triage":        "ai.triage",
+		"summarize":     "ai.summarize",
+		"analyze":       "ai.analyze",
+		"rag_search":    "ai.knowledge_search",
+		"chat":          "ai.chat",
+		"analytics":     "ai.analytics",
+		"prediction":    "ai.trend_prediction",
+		"create_ticket": "ai.create_ticket",
+		"agent_tool":    "ai.agent_tool",
+		"":              "",
+		"custom_kind":   "ai.custom_kind", // 未识别 kind 走 "ai." + 原 kind
+	}
+	for kind, want := range cases {
+		assert.Equal(t, want, scenarioToSkillCode(kind), "kind=%q", kind)
+	}
+}
+
 
 func TestListAIAuditLogs_PaginationAndNotes(t *testing.T) {
 	db, svc := newTelemetryTestDB(t)

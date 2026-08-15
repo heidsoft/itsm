@@ -73,4 +73,5 @@ export const ChangeStatusLabels: Record<ChangeStatus, string> = {
   [ChangeStatus.FAILED]: '实施失败',
   [ChangeStatus.ROLLED_BACK]: '已回滚',
   [ChangeStatus.CANCELLED]: '已取消',
+  [ChangeStatus.CLOSED]: '已关闭',
 };

@@ -3,12 +3,7 @@
 /**
  * SLA 升级矩阵页面
  *
- * 对应后端 service/escalation_matrix.go（service 层，无 HTTP API）
- *
- * 功能：
- *   1. 按优先级（P1/P2/P3/P4）展示默认升级矩阵
- *   2. 每个优先级下的多级升级链：阈值 / 目标类型 / 目标 ID / 通知渠道
- *   3. 提示：当前矩阵为只读预览，后端尚未暴露 HTTP 编辑接口
+ * 按优先级展示多级升级链：阈值 / 目标类型 / 目标 ID / 通知渠道
  */
 
 import { Alert, Card, Col, Row, Space, Statistic, Table, Tag, Typography } from 'antd';
@@ -157,9 +152,9 @@ export default function EscalationMatricesPage() {
       </div>
 
       <Alert
-        message="只读预览模式"
-        description="升级矩阵当前在后端为进程内缓存（service/escalation_matrix.go），尚未提供 HTTP 编辑接口。后续版本会开放租户级自定义能力。"
-        type="warning"
+        message="只读预览"
+        description="升级矩阵为系统内置策略，当前仅支持查看，暂不提供在线编辑。后续版本将开放租户级自定义配置。"
+        type="info"
         showIcon
       />
 

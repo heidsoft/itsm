@@ -23,7 +23,7 @@ import {
   Select,
   Switch,
   Button,
-  message,
+  App,
   Space,
   Row,
   Col,
@@ -88,6 +88,7 @@ const serializeConfigValue = (value: unknown): string => {
 };
 
 export default function SystemConfiguration() {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState('general');
   const [config, setConfig] = useState<Record<string, unknown>>({});
@@ -493,8 +494,8 @@ export default function SystemConfiguration() {
   ];
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
+    <div className="space-y-6">
+      <div>
         <Title level={2} className="!mb-2 !text-gray-900">
           <Settings className="inline-block w-6 h-6 mr-2" />
           系统配置
@@ -503,7 +504,7 @@ export default function SystemConfiguration() {
       </div>
 
       {/* 系统状态统计 */}
-      <Row gutter={[16, 16]} className="mb-6">
+      <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
@@ -558,7 +559,6 @@ export default function SystemConfiguration() {
           type="warning"
           showIcon
           closable
-          className="mb-6"
         />
       )}
 

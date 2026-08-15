@@ -76,14 +76,33 @@ type SkillMetrics struct {
 	LastUsedAt   string  `json:"lastUsedAt"`   // 最后使用时间
 }
 
+// Skill 技能接口（运行时能力抽象）
+//
+// Sprint C — Skill Registry v1：恢复该接口定义，修复 skill_manifest.go 中
+// ExtendedSkill 引用未定义 Skill 的预存编译错误。
+// 所有 AI 能力（chat/triage/summarize/analyze/rag_search/agent_tool/...）
+// 的运行时抽象都应该实现该接口，由 SkillRegistry 统一管理。
+type Skill interface {
+	// Code 技能唯一标识（如 ai.triage）
+	Code() string
+	// Name 显示名称
+	Name() string
+	// Execute 执行技能调用；input/executor-specific 协议由各 skill 自行定义
+	Execute(ctx context.Context, input interface{}) (interface{}, error)
+	// Validate 验证输入是否合法
+	Validate(input interface{}) error
+	// Tags 技能标签（用于发现、统计、过滤）
+	Tags() []string
+	// Manifest 返回技能的市场自描述信息
+	Manifest() SkillManifest
+	// GetMetrics 获取运行指标
+	GetMetrics() SkillMetrics
+}
+
 // ExtendedSkill 扩展的Skill接口，包含市场和训练相关能力
 // 所有新开发的技能都应该实现这个接口
 type ExtendedSkill interface {
 	Skill
-	// Manifest 返回技能的自描述信息
-	Manifest() SkillManifest
 	// Train 使用提供的数据集训练/微调技能
 	Train(ctx context.Context, dataset interface{}) error
-	// GetMetrics 获取技能的运行指标
-	GetMetrics() SkillMetrics
 }

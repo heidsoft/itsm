@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -21,6 +22,16 @@ import (
 	"itsm-backend/internal/commandbus"
 
 	"go.uber.org/zap"
+)
+
+// 事件领域哨兵错误，供 controller 通过 errors.Is 做精确错误分类，
+// 避免依赖易碎的字符串比较（err.Error() == "incident not found"）。
+var (
+	ErrIncidentNotFound                  = errors.New("incident not found")
+	ErrIncidentTerminal                  = errors.New("terminal incident cannot be escalated")
+	ErrIncidentEscalationLevelInvalid    = errors.New("escalation level must be between 1 and 5")
+	ErrIncidentEscalationLevelNotGreater = errors.New("escalation level must be greater than current level")
+	ErrIncidentEscalationReasonRequired  = errors.New("escalation reason is required")
 )
 
 type IncidentService struct {
@@ -276,7 +287,7 @@ func (s *IncidentService) GetIncident(ctx context.Context, id int, tenantID int)
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("incident not found")
+			return nil, ErrIncidentNotFound
 		}
 		s.logger.Errorw("Failed to get incident", "error", err, "id", id)
 		return nil, fmt.Errorf("failed to get incident: %w", err)
@@ -363,7 +374,7 @@ func (s *IncidentService) LinkIncidentCIs(ctx context.Context, incidentID int, c
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("incident not found")
+			return ErrIncidentNotFound
 		}
 		return fmt.Errorf("failed to get incident: %w", err)
 	}
@@ -398,7 +409,7 @@ func (s *IncidentService) GetIncidentCIs(ctx context.Context, incidentID int, te
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("incident not found")
+			return nil, ErrIncidentNotFound
 		}
 		return nil, fmt.Errorf("failed to get incident configuration items: %w", err)
 	}
@@ -420,7 +431,7 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("incident not found")
+			return nil, ErrIncidentNotFound
 		}
 		return nil, fmt.Errorf("failed to get incident: %w", err)
 	}
@@ -532,6 +543,12 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 	if req.Metadata != nil {
 		updateQuery.SetMetadata(req.Metadata)
 	}
+	if req.Category != nil {
+		updateQuery.SetCategory(*req.Category)
+	}
+	if req.Subcategory != nil {
+		updateQuery.SetSubcategory(*req.Subcategory)
+	}
 
 	// 自动增加版本号
 	updateQuery.AddVersion(1)
@@ -547,7 +564,7 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 					return nil, common.NewVersionConflictError("事件", id, req.Version, latest.Version)
 				}
 			}
-			return nil, fmt.Errorf("incident not found")
+			return nil, ErrIncidentNotFound
 		}
 		s.logger.Errorw("Failed to update incident", "error", err)
 		return nil, fmt.Errorf("failed to update incident: %w", err)
@@ -581,7 +598,7 @@ func (s *IncidentService) AssignIncident(ctx context.Context, id int, assigneeID
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("incident not found")
+			return nil, ErrIncidentNotFound
 		}
 		return nil, fmt.Errorf("failed to get incident: %w", err)
 	}
@@ -641,7 +658,7 @@ func (s *IncidentService) ensureActiveIncident(ctx context.Context, incidentID, 
 		return fmt.Errorf("failed to validate incident: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("incident not found")
+		return ErrIncidentNotFound
 	}
 	return nil
 }
@@ -901,10 +918,10 @@ func (s *IncidentService) GetIncidentMonitoring(ctx context.Context, req *dto.In
 func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.IncidentEscalationRequest, tenantID int) (*dto.IncidentEscalationResponse, error) {
 	s.logger.Infow("Escalating incident", "incident_id", req.IncidentID, "level", req.EscalationLevel)
 	if req.EscalationLevel < 1 || req.EscalationLevel > 5 {
-		return nil, fmt.Errorf("escalation level must be between 1 and 5")
+		return nil, ErrIncidentEscalationLevelInvalid
 	}
 	if strings.TrimSpace(req.Reason) == "" {
-		return nil, fmt.Errorf("escalation reason is required")
+		return nil, ErrIncidentEscalationReasonRequired
 	}
 
 	// 获取事件
@@ -917,15 +934,15 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("incident not found")
+			return nil, ErrIncidentNotFound
 		}
 		return nil, fmt.Errorf("failed to get incident: %w", err)
 	}
 	if current.Status == common.IncidentStatusClosed || current.Status == common.IncidentStatusCancelled {
-		return nil, fmt.Errorf("terminal incident cannot be escalated")
+		return nil, ErrIncidentTerminal
 	}
 	if req.EscalationLevel <= current.EscalationLevel {
-		return nil, fmt.Errorf("escalation level must be greater than current level %d", current.EscalationLevel)
+		return nil, fmt.Errorf("%w: %d", ErrIncidentEscalationLevelNotGreater, current.EscalationLevel)
 	}
 
 	// 更新事件升级信息

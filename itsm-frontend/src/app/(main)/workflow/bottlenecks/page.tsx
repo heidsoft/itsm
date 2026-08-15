@@ -34,7 +34,7 @@ import {
 import { Search, Clock, AlertTriangle, BarChart3, Zap, Rocket } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { BPMNMonitoringApi, type BottleneckTask } from '@/lib/api/bpmn-monitoring-api';
-import { BPMNDashboardApi, type ProcessStat } from '@/lib/api/bpmn-dashboard-api';
+import { WorkflowDefinitionApi } from '@/lib/api/workflow-definition-api';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -61,7 +61,7 @@ function formatSeconds(s: number): string {
 
 export default function BottlenecksPage() {
   const { message } = App.useApp();
-  const [processList, setProcessList] = useState<ProcessStat[]>([]);
+  const [processList, setProcessList] = useState<{ key: string; name: string }[]>([]);
   const [selectedProcess, setSelectedProcess] = useState<string | null>(null);
   const [keyword, setKeyword] = useState('');
   const [timeRange, setTimeRange] = useState<string>('24h');
@@ -88,25 +88,31 @@ export default function BottlenecksPage() {
     }>;
   } | null>(null);
 
-  // 加载流程列表
+  // 加载流程列表：以流程定义为准（未运行过实例的流程也能分析），
+  // 不再用 dashboard topProcesses（仅统计有实例的流程，新环境会恒空）
   useEffect(() => {
     let alive = true;
-    BPMNDashboardApi.getDashboardMetrics(1)
-      .then(metrics => {
+    WorkflowDefinitionApi.getWorkflows({ page: 1, pageSize: 200 })
+      .then(result => {
         if (!alive) return;
-        const list = metrics.topProcesses ?? [];
+        const list = (result.workflows || [])
+          .map(w => ({ key: w.code, name: w.name }))
+          .filter(w => w.key);
         setProcessList(list);
         if (list.length > 0 && !selectedProcess) {
-          setSelectedProcess(list[0].processDefinitionKey);
+          setSelectedProcess(list[0].key);
         }
       })
-      .catch(() => {
-        // 静默失败，允许用户手动输入
+      .catch(err => {
+        console.error(err);
+        if (alive) {
+          message.warning('流程列表加载失败，可直接输入流程 Key 分析');
+        }
       });
     return () => {
       alive = false;
     };
-  }, [selectedProcess]);
+  }, [selectedProcess, message]);
 
   // 加载瓶颈分析
   useEffect(() => {
@@ -143,7 +149,9 @@ export default function BottlenecksPage() {
   const filteredProcesses = useMemo(() => {
     if (!keyword) return processList;
     const k = keyword.toLowerCase();
-    return processList.filter(p => p.processDefinitionKey.toLowerCase().includes(k));
+    return processList.filter(
+      p => p.key.toLowerCase().includes(k) || p.name?.toLowerCase().includes(k)
+    );
   }, [processList, keyword]);
 
   const totalWait = useMemo(
@@ -258,8 +266,8 @@ export default function BottlenecksPage() {
             value={selectedProcess ?? undefined}
             onChange={v => setSelectedProcess(v ?? null)}
             options={filteredProcesses.map(p => ({
-              label: `${p.processDefinitionKey} (${p.totalInstances} 实例)`,
-              value: p.processDefinitionKey,
+              label: p.name ? `${p.name} (${p.key})` : p.key,
+              value: p.key,
             }))}
             filterOption={(input, option) =>
               (option?.label as string)?.toLowerCase().includes(input.toLowerCase())

@@ -357,22 +357,19 @@ export default function MenuManagementPage() {
           <MenuIcon className="inline-block w-6 h-6 mr-2" />
           菜单管理
         </Title>
-        <Text type="secondary">
-          管理侧边栏菜单：添加、修改、删除、启用/禁用、显示/隐藏。tenant_id 自动从登录态注入。
-        </Text>
+        <Text type="secondary">管理侧边栏菜单：新增、编辑、删除，以及启用/禁用、显示/隐藏。</Text>
       </div>
 
       <Alert
         className="mb-4"
         type="info"
         showIcon
-        message="提示"
+        message="使用须知"
         description={
           <div>
-            <div>• 权限码必须与 <code>permissions</code> 表中已存在的权限代码一致，菜单才会按角色过滤。</div>
-            <div>• sortOrder 越小越靠前；建议按 10/20/30… 或 100/110/120… 留出插入空间。</div>
-            <div>• 隐藏(isVisible=false)仍占位；禁用(isEnabled=false)会被完全过滤。</div>
-            <div>• 默认菜单请通过后端种子数据（seed）初始化，本页面不提供一键初始化。</div>
+            <div>• 菜单可关联权限码，系统会按角色权限决定是否向用户展示；留空则对所有用户可见。</div>
+            <div>• 排序数字越小越靠前，建议预留间隔（如 10、20、30）便于后续插入新菜单。</div>
+            <div>• 「隐藏」的菜单保留配置但不在侧边栏展示；「禁用」的菜单则完全不生效。</div>
           </div>
         }
       />

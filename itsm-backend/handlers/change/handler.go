@@ -454,6 +454,7 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 		"schedule": "scheduled",
 		"start":    "in_progress",
 		"complete": "completed",
+		"close":    "closed",
 		"rollback": "rolled_back",
 		"cancel":   "cancelled",
 	}

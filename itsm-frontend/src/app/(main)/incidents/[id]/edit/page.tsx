@@ -6,6 +6,7 @@ import { Button, Card, Form, Input, Select, message, Row, Col, Space, Divider } 
 import { ArrowLeft, Save } from 'lucide-react';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import type { Incident, UpdateIncidentRequest } from '@/lib/api/incident-api';
+import { IncidentCategoryOptions } from '@/constants/taxonomy';
 import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
@@ -167,16 +168,7 @@ export default function IncidentEditPage() {
             </Col>
             <Col span={12}>
               <Form.Item name="category" label="分类">
-                <Select placeholder="请选择分类" allowClear options={[
-                  { value: 'performance', label: '性能' },
-                  { value: 'connectivity', label: '连接' },
-                  { value: 'security', label: '安全' },
-                  { value: 'storage', label: '存储' },
-                  { value: 'network', label: '网络' },
-                  { value: 'application', label: '应用' },
-                  { value: 'database', label: '数据库' },
-                  { value: 'other', label: '其他' },
-                ]} />
+                <Select placeholder="请选择分类" allowClear options={IncidentCategoryOptions} />
               </Form.Item>
             </Col>
           </Row>

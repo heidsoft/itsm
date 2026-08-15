@@ -27,6 +27,7 @@ import (
 	"itsm-backend/handlers/problem"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
+	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
 	"itsm-backend/middleware"
@@ -272,6 +273,9 @@ type RouterConfig struct {
 	CommonHandler         *domainCommon.Handler
 	AuthController        *controller.AuthController
 	RoleHandler           *common.RoleHandler
+
+	// Sprint C — Skill Registry v1
+	SkillHandler *skill.Handler
 
 	// WebSocket Service
 	WebSocketService *service.WebSocketService
@@ -962,6 +966,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				changes.POST("/:id/schedule", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/start", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/complete", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
+				changes.POST("/:id/close", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/rollback", middleware.RequirePermission("change", "rollback"), config.ChangeHandler.TransitionStatus)
 				changes.POST("/:id/cancel", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
 				// 审批
@@ -1180,6 +1185,20 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				agentGrp.GET("/tools/:id", middleware.RequirePermission("ai", "read"), config.AIHandler.GetToolInvocation)
 				agentGrp.POST("/tools/:id/approve", middleware.RequirePermission("ai", "write"), config.AIHandler.ApproveTool)
 			}
+		}
+
+		// ==================== Skill Registry v1 ====================
+		// Sprint C：技能管理与调用入口。
+		// 路径：
+		//   GET    /api/v1/skills                  列表
+		//   GET    /api/v1/skills/:code            详情
+		//   POST   /api/v1/admin/skills            注册（custom）
+		//   PUT    /api/v1/admin/skills/:code      更新
+		//   POST   /api/v1/admin/skills/:code/promote  pilot → ga
+		//   DELETE /api/v1/admin/skills/:code      禁用
+		//   POST   /api/v1/admin/skills/:code/invoke   统一调用入口
+		if config.SkillHandler != nil {
+			config.SkillHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		// ==================== Common & System (DDD) ====================

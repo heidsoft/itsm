@@ -876,7 +876,7 @@ export class IncidentAPI {
     return response;
   }
 
-  // 事件升级（reason 为必填，后端 binding:"required"）
+  // 事件升级（incidentId/reason 为后端必填字段）
   static async escalateIncident(
     id: number,
     data: {
@@ -886,7 +886,11 @@ export class IncidentAPI {
       autoAssign?: boolean;
     }
   ): Promise<any> {
-    const response = await httpClient.post<any>(`/api/v1/incidents/${id}/escalate`, data);
+    // 后端 DTO 要求 body 携带 incidentId（binding:"required"），必须显式合入
+    const response = await httpClient.post<any>(`/api/v1/incidents/${id}/escalate`, {
+      ...data,
+      incidentId: id,
+    });
     return response;
   }
 

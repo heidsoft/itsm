@@ -2,6 +2,7 @@ package controller
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -439,15 +440,27 @@ func (tc *TicketController) CloseTicket(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	closedBy := c.GetInt("user_id")
 
-	ticket, err := tc.ticketService.CloseTicket(c.Request.Context(), ticketID, tenantID, req.Feedback)
+	closedTicket, err := tc.ticketService.CloseTicket(c.Request.Context(), ticketID, tenantID, req.Feedback)
 	_ = closedBy // V2 简化
 	if err != nil {
+		var stateErr *ticket.StateError
+		if errors.As(err, &stateErr) {
+			// 状态机校验失败属于业务规则错误，返回 400 而非 500
+			common.Fail(c, common.BadRequestCode,
+				fmt.Sprintf("当前状态（%s）不允许关闭，仅已解决（resolved）或已批准（approved）的工单可关闭", stateErr.CurrentStatus))
+			return
+		}
+		// 乐观锁版本冲突：返回 409，前端提示刷新后重试，而非 500
+		if common.IsVersionConflictError(err) {
+			common.Conflict(c, "工单已被其他操作修改，请刷新后重试", gin.H{"ticketId": ticketID})
+			return
+		}
 		tc.logger.Errorw("Failed to close ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 
-	common.Success(c, ticketToResponse(ticket))
+	common.Success(c, ticketToResponse(closedTicket))
 }
 
 // SearchTickets 搜索工单

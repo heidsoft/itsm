@@ -706,7 +706,8 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	// 1. 终态（rejected/completed/cancelled/rolled_back）需要事务化：写 change + 收口 pending chains
 	// 2. 非终态直接更新
 	isTerminal := targetStatus == "rejected" || targetStatus == "completed" ||
-		targetStatus == "cancelled" || targetStatus == "rolled_back"
+		targetStatus == "cancelled" || targetStatus == "rolled_back" ||
+		targetStatus == "closed"
 	if isTerminal {
 		tx, txErr := s.entClient.Tx(ctx)
 		if txErr != nil {

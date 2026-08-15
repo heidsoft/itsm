@@ -119,7 +119,7 @@ export default function ProcessRoutingPage() {
       } else {
         await ProcessBindingApi.create(payload);
       }
-      message.success('Routing rule saved successfully');
+      message.success('路由规则已保存');
       setShowModal(false);
       form.resetFields();
       setSelectedRule(null);
@@ -294,12 +294,11 @@ export default function ProcessRoutingPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="space-y-6">
       {/* 关联页面入口 */}
       <Alert
         type="info"
         showIcon
-        style={{ marginBottom: 16 }}
         message="流程路由规则决定业务单据匹配到哪个工作流"
         description={
           <Space wrap>
@@ -363,7 +362,7 @@ export default function ProcessRoutingPage() {
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `Total ${total} rules`,
+            showTotal: total => `共 ${total} 条记录`,
           }}
         />
       </Card>

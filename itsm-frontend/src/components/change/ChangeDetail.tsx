@@ -42,6 +42,7 @@ import ChangeCMDBImpactPanel from './ChangeCMDBImpactPanel';
 import ChangeImpactAnalysis from './ChangeImpactAnalysis';
 import ChangeRollbackPlan from './ChangeRollbackPlan';
 import { SafeTextBlock } from '@/components/common/SafeContent';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -85,12 +86,17 @@ const ChangeDetail: React.FC = () => {
     change?.status === ChangeStatus.CANCELLED ||
     change?.status === ChangeStatus.ROLLED_BACK ||
     change?.status === ChangeStatus.REJECTED ||
-    change?.status === ChangeStatus.FAILED;
+    change?.status === ChangeStatus.FAILED ||
+    change?.status === ChangeStatus.CLOSED;
   const canSubmit = change?.status === ChangeStatus.DRAFT;
   const canApprove = change?.status === ChangeStatus.PENDING;
   const canSchedule = change?.status === ChangeStatus.APPROVED;
   const canStart = change?.status === ChangeStatus.SCHEDULED;
   const canComplete = change?.status === ChangeStatus.IN_PROGRESS;
+  // 已完成 → 可显式关闭以归档；已回滚也可选择关闭
+  const canClose =
+    change?.status === ChangeStatus.COMPLETED ||
+    change?.status === ChangeStatus.ROLLED_BACK;
   const canCancel =
     change?.status === ChangeStatus.DRAFT ||
     change?.status === ChangeStatus.APPROVED ||
@@ -152,6 +158,21 @@ const ChangeDetail: React.FC = () => {
       loadDetail();
     } catch (error) {
       message.error('完成实施失败');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // 关闭变更（已完成/已回滚 → 已关闭）
+  const handleClose = async () => {
+    if (!change) return;
+    setProcessing(true);
+    try {
+      await ChangeApi.closeChange(change.id);
+      message.success('变更已关闭归档');
+      loadDetail();
+    } catch (error) {
+      message.error('关闭变更失败');
     } finally {
       setProcessing(false);
     }
@@ -404,6 +425,11 @@ const ChangeDetail: React.FC = () => {
                 )}
               </Space>
             )}
+            {canClose && (
+              <Button type="primary" loading={processing} onClick={handleClose} style={{ marginLeft: 12 }}>
+                关闭
+              </Button>
+            )}
           </div>
         </div>
 
@@ -422,11 +448,11 @@ const ChangeDetail: React.FC = () => {
           <Descriptions.Item label="负责人">{change.assigneeName || '未分配'}</Descriptions.Item>
           <Descriptions.Item label="计划起始">
             {change.plannedStartDate
-              ? dayjs(change.plannedStartDate).format('YYYY-MM-DD HH:mm')
+              ? formatDateTime(change.plannedStartDate) || '-'
               : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="计划截止">
-            {change.plannedEndDate ? dayjs(change.plannedEndDate).format('YYYY-MM-DD HH:mm') : '-'}
+            {formatDateTime(change.plannedEndDate) || '-'}
           </Descriptions.Item>
         </Descriptions>
 

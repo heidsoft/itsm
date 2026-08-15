@@ -15,7 +15,8 @@ const (
 	ChangeStatusCompleted  ChangeStatus = "completed"   // 已完成
 	ChangeStatusFailed     ChangeStatus = "failed"      // 实施失败
 	ChangeStatusRolledBack ChangeStatus = "rolled_back" // 已回滚
-	ChangeStatusCancelled  ChangeStatus = "cancelled"   // 已取消
+	ChangeStatusCancelled  ChangeStatus = "cancelled"  // 已取消
+	ChangeStatusClosed     ChangeStatus = "closed"     // 已关闭
 )
 
 // ChangeType 变更类型

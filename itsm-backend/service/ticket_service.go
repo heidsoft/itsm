@@ -155,14 +155,14 @@ func (s *TicketService) updateTicketWithFeishuCommand(ctx context.Context, id in
 	}
 	if updater, ok := s.repo.(ticket.TransactionalUpdater); ok {
 		return updater.UpdateWithTxHook(ctx, id, params, tenantID, func(tx *ent.Tx, updated *ticket.Ticket) error {
-			_, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+			// 飞书同步是副作用，入队失败不应回滚主流程（best-effort）。
+			if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
 				TenantID: tenantID, CommandType: commandbus.CommandSyncTicketFeishu,
 				AggregateType: "ticket", AggregateID: updated.ID,
 				IdempotencyKey: fmt.Sprintf("ticket:%d:feishu:sync:v%d", updated.ID, updated.Version),
 				Payload:        map[string]interface{}{"event": event, "version": updated.Version},
-			})
-			if err != nil {
-				return fmt.Errorf("enqueue ticket feishu sync: %w", err)
+			}); err != nil {
+				s.logger.Warnw("Enqueue ticket feishu sync failed (best-effort, ignoring)", "error", err, "ticket_id", updated.ID)
 			}
 			return nil
 		})
@@ -171,8 +171,9 @@ func (s *TicketService) updateTicketWithFeishuCommand(ctx context.Context, id in
 	if err != nil {
 		return nil, err
 	}
+	// 飞书同步是副作用，入队失败仅告警，不影响主流程（best-effort）。
 	if err := s.enqueueTicketFeishuSync(ctx, updated, tenantID, event); err != nil {
-		return nil, err
+		s.logger.Warnw("Enqueue ticket feishu sync failed (best-effort, ignoring)", "error", err, "ticket_id", updated.ID)
 	}
 	return updated, nil
 }

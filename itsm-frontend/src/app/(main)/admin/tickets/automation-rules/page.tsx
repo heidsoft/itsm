@@ -13,7 +13,7 @@ import {
   Input,
   InputNumber,
   Select,
-  message,
+  App,
   Popconfirm,
   Typography,
   Tooltip,
@@ -32,6 +32,7 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const AutomationRulesPage: React.FC = () => {
+  const { message } = App.useApp();
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -205,7 +206,7 @@ const AutomationRulesPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       <Card>
         <div className="flex justify-between items-center mb-4">
           <div>
@@ -235,7 +236,7 @@ const AutomationRulesPage: React.FC = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: total => `共 ${total} 条`,
+              showTotal: total => `共 ${total} 条记录`,
             }}
           />
         )}

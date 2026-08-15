@@ -595,6 +595,35 @@
 /* 主内容区域：移除页面内居中约束，贴合侧边栏与顶部布局 */
 .main-content {
   width: 100%;
+  /* 与 .scrollbar-thin / 侧边栏保持一致的细滚动条 */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(156 163 175) transparent;
+}
+
+.main-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background-color: rgb(156 163 175);
+  border-radius: 3px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(107 114 128);
+}
+
+.dark .main-content {
+  scrollbar-color: rgb(71 85 105) transparent;
+}
+
+.dark .main-content::-webkit-scrollbar-thumb {
+  background-color: rgb(71 85 105);
 }
 
 .main-content .mx-auto {

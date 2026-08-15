@@ -3,16 +3,7 @@
 /**
  * SLA 模板管理页面
  *
- * 对应后端 /api/v1/sla/templates：
- *   - GET  /                 列出预置模板
- *   - GET  /:key             模板详情
- *   - POST /:key/install     安装到当前租户（幂等）
- *
- * 主要功能：
- *   1. 浏览 6 个开箱即用预置模板
- *   2. 查看模板详情（响应时间/解决时间/升级规则等）
- *   3. 一键安装到当前租户
- *   4. 批量安装全部推荐模板
+ * 浏览预置模板、查看详情、安装到当前租户
  */
 
 import {
@@ -211,8 +202,8 @@ export default function SLATemplatesPage() {
             <Button type="text" icon={<Eye />} onClick={() => setDetail(t)} />
           </Tooltip>
           <Popconfirm
-            title={`确认将模板「${t.name}」安装到当前租户？`}
-            description="幂等操作：已存在则跳过"
+            title={`确认安装模板「${t.name}」？`}
+            description="若该模板已安装，将自动跳过"
             okText="确认安装"
             cancelText="取消"
             onConfirm={() => handleInstall(t.key)}
@@ -268,12 +259,12 @@ export default function SLATemplatesPage() {
 
       <Card>
         <Alert
-          message="安装说明"
+          message="使用说明"
           description={
             <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
-              <li>每个模板对应一张 SLA 定义表（sla_definitions）。</li>
-              <li>安装操作是幂等的：相同 key 重复安装不会产生重复记录。</li>
-              <li>已安装的 SLA 定义可在「SLA 定义管理」页面查看和编辑。</li>
+              <li>安装模板后，系统会为当前租户创建对应的 SLA 定义，即可对相关工单生效。</li>
+              <li>重复安装同一模板不会产生重复配置，可放心操作。</li>
+              <li>安装完成后，可在「SLA 配置」页面查看和调整已启用的 SLA 定义。</li>
             </ul>
           }
           type="info"
@@ -283,7 +274,7 @@ export default function SLATemplatesPage() {
         <Space style={{ marginBottom: 12 }}>
           <Popconfirm
             title="批量安装全部推荐模板？"
-            description="仅会安装 recommended=true 的模板，跳过已存在的"
+            description="仅安装标记为推荐的模板，已安装的自动跳过"
             okText="全部安装"
             cancelText="取消"
             onConfirm={handleInstallAll}

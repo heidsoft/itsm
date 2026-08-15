@@ -71,6 +71,7 @@ export function buildTicketListColumns(actions: TicketListColumnActions): Column
       key: 'ticketNumber',
       width: 150,
       fixed: 'left',
+      ellipsis: true,
       render: (ticketNumber: string, record: Ticket) => (
         <Button type='link' onClick={() => onOpen(record)}>
           {ticketNumber || '-'}
@@ -81,6 +82,7 @@ export function buildTicketListColumns(actions: TicketListColumnActions): Column
       title: '标题',
       dataIndex: 'title',
       key: 'title',
+      width: 280,
       ellipsis: { showTitle: false },
       render: (title: string) => (
         <Tooltip placement='topLeft' title={title}>
@@ -168,7 +170,7 @@ export function buildTicketListColumns(actions: TicketListColumnActions): Column
                 onClick={() => onEdit(record)}
               />
             </Tooltip>
-            {!isTerminal && (
+            {!isTerminal && (record.status === 'resolved' || record.status === 'approved') && (
               <Tooltip title='关闭'>
                 <Button
                   type='text'

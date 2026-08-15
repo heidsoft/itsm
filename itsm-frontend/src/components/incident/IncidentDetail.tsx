@@ -235,7 +235,8 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       setEscalateModalVisible(false);
       loadData(); // 刷新数据
     } catch (error) {
-      handleError(error, 'escalateIncident', '升级失败');
+      // 不传硬编码文案，直接展示服务端返回的真实错误消息（如：已处于终态、级别不高于当前等）
+      handleError(error, 'escalateIncident');
     } finally {
       setEscalating(false);
     }

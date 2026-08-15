@@ -62,6 +62,15 @@ const (
 	ActionAttachment    AuditableAction = "attachment"
 	ActionPermission    AuditableAction = "permission"
 	ActionConfiguration AuditableAction = "configuration"
+	// 变更（及其他资源）生命周期动词，避免所有 POST 被笼统记为 create
+	ActionSubmit    AuditableAction = "submit"
+	ActionApprove   AuditableAction = "approve"
+	ActionReject    AuditableAction = "reject"
+	ActionSchedule  AuditableAction = "schedule"
+	ActionStart     AuditableAction = "start"
+	ActionComplete  AuditableAction = "complete"
+	ActionRollback  AuditableAction = "rollback"
+	ActionCancel    AuditableAction = "cancel"
 )
 
 // SensitiveResource 敏感资源类型
@@ -278,6 +287,23 @@ func determineActionAndResource(c *gin.Context) (string, string, string) {
 			action = string(ActionExport)
 		} else if strings.Contains(path, "import") {
 			action = string(ActionImport)
+		} else if strings.Contains(path, "submit") {
+			action = string(ActionSubmit)
+		} else if strings.Contains(path, "approve") {
+			action = string(ActionApprove)
+		} else if strings.Contains(path, "reject") {
+			action = string(ActionReject)
+		} else if strings.Contains(path, "schedule") {
+			action = string(ActionSchedule)
+		} else if strings.Contains(path, "/start") || strings.HasSuffix(path, "/start") {
+			// 避免与 /api/v1/start* 等无意义路径误匹配；本项目变更 /start 才是生命周期动作
+			action = string(ActionStart)
+		} else if strings.Contains(path, "complete") {
+			action = string(ActionComplete)
+		} else if strings.Contains(path, "rollback") || strings.Contains(path, "rolled_back") {
+			action = string(ActionRollback)
+		} else if strings.Contains(path, "cancel") {
+			action = string(ActionCancel)
 		} else {
 			action = string(ActionCreate)
 		}
@@ -298,6 +324,8 @@ func isActionPath(pathPart string) bool {
 		"assign", "escalate", "resolve", "close", "reopen",
 		"comment", "attachment", "export", "import",
 		"search", "stats", "analytics", "batch",
+		"submit", "approve", "reject", "schedule", "start", "complete",
+		"rollback", "cancel",
 	}
 
 	for _, actionPath := range actionPaths {

@@ -542,7 +542,7 @@ const PermissionConfiguration = () => {
       </div>
 
       {/* 角色选择器 */}
-      <Card className="mb-6">
+      <Card>
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={6}>
             <div className="flex items-center gap-2">
@@ -691,7 +691,6 @@ const PermissionConfiguration = () => {
           type="warning"
           showIcon
           closable
-          className="mb-6"
         />
       )}
 

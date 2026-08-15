@@ -227,6 +227,7 @@ const (
 	ChangeStatusCompleted  = "completed"
 	ChangeStatusFailed     = "failed"
 	ChangeStatusCancelled  = "cancelled"
+	ChangeStatusClosed     = "closed"
 )
 
 // ===================================

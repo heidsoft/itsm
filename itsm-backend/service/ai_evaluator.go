@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -11,6 +12,7 @@ import (
 // 基于 ai_feedbacks（用户对 AI 建议的 useful/score=confidence×100 标签）与
 // ai_llm_calls（平台级 LLM 调用观测）输出评估报告：
 //   - 按场景(kind)的有用率与平均置信度
+//   - 按 Skill（skillCode）聚合的有用率与健康分（与 byScenario 一致，但走 Skill 标识）
 //   - 置信度校准：将 confidence 分桶，比较每桶有用率与桶中点，量化“高置信≠被接受”的偏差
 //   - 平台级 LLM 成功率与延迟
 //
@@ -22,6 +24,12 @@ const (
 )
 
 // AIEvaluationReport 是 /api/v1/ai/evaluation 的返回契约（camelCase）。
+//
+// 字段兼容性说明（Sprint C）：
+//   - ByScenario 保留为旧契约，内部字段已扩展 SkillCode / SkillName。
+//   - BySkill 是新字段，结构与 ByScenario 一致，便于前端按"技能"维度渲染。
+//   - BySkillAlias 是 ByScenario 的反别名（统一返回两个字段，前端可任选）。
+//   - 旧 kind 字段（如 "triage"）会通过 scenarioToSkillCode 映射到 ai.triage。
 type AIEvaluationReport struct {
 	GeneratedAt          string                `json:"generatedAt"`
 	LookbackDays         int                   `json:"lookbackDays"`
@@ -32,17 +40,41 @@ type AIEvaluationReport struct {
 	HealthScore          float64               `json:"healthScore"`
 	HasData              bool                  `json:"hasData"`
 	ByScenario           []AIScenarioEval      `json:"byScenario"`
+	BySkill              []AISkillEval         `json:"bySkill"`
 	ConfidenceCalibration []AICalibrationBucket `json:"confidenceCalibration"`
 	Platform             LLMPlatformStats      `json:"platform"`
 }
 
 // AIScenarioEval 单个 AI 场景（triage/summarize/analyze/rag_search/...）的评估。
+//
+// 字段兼容性：保留 Kind（字段名同前），并新增 SkillCode / SkillName。
+// 旧"triage" → 新"ai.triage"由 scenarioToSkillCode 推导。
 type AIScenarioEval struct {
 	Kind          string  `json:"kind"`
+	SkillCode     string  `json:"skillCode,omitempty"`
+	SkillName     string  `json:"skillName,omitempty"`
 	Count         int     `json:"count"`
 	UsefulRate    float64 `json:"usefulRate"`
 	AcceptedRate  float64 `json:"acceptedRate"`
 	AvgConfidence float64 `json:"avgConfidence"`
+}
+
+// AISkillEval 按 Skill 维度的评估（来自 SkillRegistry 的 SkillEntity）。
+//
+// 与 AIScenarioEval 的区别：
+//   - 字段名固定为 SkillCode（不再保留 Kind）；
+//   - 增加 HealthScore 字段，按 manifest.eval.successThreshold 与校准误差
+//     给出 0-100 的子健康分；
+//   - 配合 AIEvaluationReport.HealthScore 形成"总-分"健康分。
+type AISkillEval struct {
+	SkillCode           string  `json:"skillCode"`
+	SkillName           string  `json:"skillName,omitempty"`
+	Count               int     `json:"count"`
+	UsefulRate          float64 `json:"usefulRate"`
+	AcceptedRate        float64 `json:"acceptedRate"`
+	AvgConfidence       float64 `json:"avgConfidence"`
+	HealthScore         float64 `json:"healthScore"`
+	IsPilot             bool    `json:"isPilot"`
 }
 
 // AICalibrationBucket 置信度分桶：中点=桶内置信度均值（评分校准的目标值），
@@ -62,6 +94,52 @@ type LLMPlatformStats struct {
 	AvgLatencyMs float64 `json:"avgLatencyMs"`
 }
 
+// scenarioToSkillCode 把旧"kind"（scenarios）映射到 Skill 标识。
+//
+// 映射规则：
+//   - "triage"          → "ai.triage"
+//   - "summarize"       → "ai.summarize"
+//   - "analyze"         → "ai.analyze"
+//   - "rag_search"      → "ai.knowledge_search"
+//   - "chat"            → "ai.chat"
+//   - "analytics"       → "ai.analytics"
+//   - "prediction"      → "ai.trend_prediction"
+//   - "create_ticket"   → "ai.create_ticket"
+//   - "agent_tool"      → "ai.agent_tool"
+//   - "metrics"         → "ai.metrics"
+//   - "feedback"        → "ai.feedback"
+//   - 其它              → "ai." + 原 kind（兼容未来扩展）
+func scenarioToSkillCode(kind string) string {
+	switch kind {
+	case "triage":
+		return "ai.triage"
+	case "summarize":
+		return "ai.summarize"
+	case "analyze":
+		return "ai.analyze"
+	case "rag_search":
+		return "ai.knowledge_search"
+	case "chat":
+		return "ai.chat"
+	case "analytics":
+		return "ai.analytics"
+	case "prediction":
+		return "ai.trend_prediction"
+	case "create_ticket":
+		return "ai.create_ticket"
+	case "agent_tool":
+		return "ai.agent_tool"
+	case "metrics":
+		return "ai.metrics"
+	case "feedback":
+		return "ai.feedback"
+	}
+	if kind == "" {
+		return ""
+	}
+	return "ai." + kind
+}
+
 // Evaluate 输出租户在 lookbackDays 窗口内的 AI 评估报告。
 func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbackDays int) (*AIEvaluationReport, error) {
 	if lookbackDays <= 0 {
@@ -69,10 +147,11 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 	}
 	since := time.Now().AddDate(0, 0, -lookbackDays)
 	report := &AIEvaluationReport{
-		GeneratedAt:  time.Now().Format(time.RFC3339),
-		LookbackDays: lookbackDays,
+		GeneratedAt:           time.Now().Format(time.RFC3339),
+		LookbackDays:          lookbackDays,
 		ConfidenceCalibration: make([]AICalibrationBucket, 0, auditBucketCount),
-		ByScenario:   make([]AIScenarioEval, 0),
+		ByScenario:            make([]AIScenarioEval, 0),
+		BySkill:               make([]AISkillEval, 0),
 	}
 
 	// 1) 窗口内所有反馈样本（含审计记录），一次取回后在内存聚合，保证跨库兼容。
@@ -117,6 +196,9 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 	acceptedCount, auditCount := 0, 0
 	scoreSum := 0
 	byKind := map[string]*kindAgg{}
+	// bySkillCode 与 byKind 同步聚合（key 是 skill.code，如 ai.triage）。
+	// 即使 SkillRegistry 未注入，scenarioToSkillCode 仍可保证映射稳定。
+	bySkillCode := map[string]*kindAgg{}
 	for _, smp := range samples {
 		if smp.useful {
 			usefulCount++
@@ -140,6 +222,22 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 			agg.acceptedCount += boolToInt(smp.useful)
 		}
 		agg.scoreSum += smp.score
+		// 同步累计到 bySkillCode：kind → skillCode 的映射在聚合阶段完成。
+		skillCode := scenarioToSkillCode(smp.kind)
+		if skillCode != "" {
+			sAgg := bySkillCode[skillCode]
+			if sAgg == nil {
+				sAgg = &kindAgg{}
+				bySkillCode[skillCode] = sAgg
+			}
+			sAgg.count++
+			sAgg.usefulCount += boolToInt(smp.useful)
+			if smp.itemType == "ai_audit" {
+				sAgg.auditCount++
+				sAgg.acceptedCount += boolToInt(smp.useful)
+			}
+			sAgg.scoreSum += smp.score
+		}
 	}
 	report.UsefulRate = round4(float64(usefulCount) / float64(len(samples)))
 	report.AvgConfidence = round4(float64(scoreSum) / float64(len(samples)) / 100.0)
@@ -147,13 +245,20 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 		report.AcceptedRate = round4(float64(acceptedCount) / float64(auditCount))
 	}
 
-	// 3) 按场景分解。
+	// 3) 按场景分解。每个 AIScenarioEval 同时填上 SkillCode（来自
+	// scenarioToSkillCode 的稳定映射），与 SkillName（如果 SkillRegistry 已注入）。
 	for kind, agg := range byKind {
 		scenario := AIScenarioEval{
 			Kind:          kind,
+			SkillCode:     scenarioToSkillCode(kind),
 			Count:         agg.count,
 			UsefulRate:    round4(float64(agg.usefulCount) / float64(agg.count)),
 			AvgConfidence: round4(float64(agg.scoreSum) / float64(agg.count) / 100.0),
+		}
+		if scenario.SkillCode != "" && s.skillRegistry != nil {
+			if sk, err := s.skillRegistry.Get(scenario.SkillCode); err == nil {
+				scenario.SkillName = sk.Name()
+			}
 		}
 		if agg.auditCount > 0 {
 			scenario.AcceptedRate = round4(float64(agg.acceptedCount) / float64(agg.auditCount))
@@ -162,7 +267,42 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 	}
 	sortScenariosByCount(report.ByScenario)
 
-	// 4) 置信度校准：score(0-100) 均分为 5 桶，比较桶内有用率与置信度中点。
+	// 4) 按 Skill 维度分解（Sprint C 新增维度）。
+	//	与 byScenario 互为同构表达，但 key 固定为 skill.code。
+	//	HealthScore 子分 = usefulRate*40 + acceptedRate*30 + (1.0 - |usefulRate-avgConfidence|)*30
+	//	  即"用户满意度" 40 + "被采纳度" 30 + "置信度校准" 30。
+	//	IsPilot 由 SkillRegistry 注入；未注入时按 false 输出，保留稳定字段。
+	report.BySkill = make([]AISkillEval, 0, len(bySkillCode))
+	for code, agg := range bySkillCode {
+		skill := AISkillEval{
+			SkillCode:     code,
+			Count:         agg.count,
+			UsefulRate:    round4(float64(agg.usefulCount) / float64(agg.count)),
+			AcceptedRate:  0.0,
+			AvgConfidence: round4(float64(agg.scoreSum) / float64(agg.count) / 100.0),
+		}
+		if agg.auditCount > 0 {
+			skill.AcceptedRate = round4(float64(agg.acceptedCount) / float64(agg.auditCount))
+		}
+		// 置信度校准误差：|实际有用率 - 平均置信度|，越小说明置信度越接近实际。
+		calibrationError := absFloat(skill.UsefulRate - skill.AvgConfidence)
+		skill.HealthScore = round4(
+			skill.UsefulRate*40.0 +
+				skill.AcceptedRate*30.0 +
+				(1.0-calibrationError)*30.0,
+		)
+		// 名称 / IsPilot 由 SkillRegistry 注入。
+		if s.skillRegistry != nil {
+			if sk, err := s.skillRegistry.Get(code); err == nil {
+				skill.SkillName = sk.Name()
+				skill.IsPilot = strings.EqualFold(sk.Manifest().Category, "pilot")
+			}
+		}
+		report.BySkill = append(report.BySkill, skill)
+	}
+	sortSkillsByCount(report.BySkill)
+
+	// 5) 置信度校准：score(0-100) 均分为 5 桶，比较桶内有用率与置信度中点。
 	bucketAggs := make([]*calibrationAgg, auditBucketCount)
 	for i := range bucketAggs {
 		bucketAggs[i] = &calibrationAgg{}
@@ -361,6 +501,16 @@ func sortScenariosByCount(scenarios []AIScenarioEval) {
 	for i := 1; i < len(scenarios); i++ {
 		for j := i; j > 0 && scenarios[j].Count > scenarios[j-1].Count; j-- {
 			scenarios[j], scenarios[j-1] = scenarios[j-1], scenarios[j]
+		}
+	}
+}
+
+// sortSkillsByCount 按调用次数降序排列 bySkill 列表，与 sortScenariosByCount
+// 保持一致的口径：次数多的排前，便于前端在健康看板中优先展示高频 Skill。
+func sortSkillsByCount(skills []AISkillEval) {
+	for i := 1; i < len(skills); i++ {
+		for j := i; j > 0 && skills[j].Count > skills[j-1].Count; j-- {
+			skills[j], skills[j-1] = skills[j-1], skills[j]
 		}
 	}
 }

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Card, Table, Tag, Button, Space, Modal, Form, Input, Switch, Tabs, message, Drawer,
+  Card, Table, Tag, Button, Space, Modal, Form, Input, Switch, Tabs, App, Drawer,
   Typography, Empty, Alert, Spin, Tooltip,
 } from 'antd';
 import { Plus, Settings, RotateCcw, CheckCircle, XCircle, Plug, Send, Power } from 'lucide-react';
@@ -17,6 +17,7 @@ const { Text, Paragraph } = Typography;
 type Tab = 'market' | 'instances';
 
 export default function ConnectorsAdminPage() {
+  const { message } = App.useApp();
   const [tab, setTab] = useState<Tab>('market');
   const [market, setMarket] = useState<ConnectorManifest[]>([]);
   const [instances, setInstances] = useState<ConnectorConfig[]>([]);

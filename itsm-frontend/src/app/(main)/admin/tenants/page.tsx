@@ -34,7 +34,7 @@ import {
   Statistic,
   Tooltip,
   Popconfirm,
-  message,
+  App,
   Tag,
   DatePicker,
 } from 'antd';
@@ -92,6 +92,7 @@ type TenantFormValues = {
 };
 
 export default function TenantManagement() {
+  const { message } = App.useApp();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -335,8 +336,8 @@ export default function TenantManagement() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <div className="mb-6">
+    <div className="space-y-6">
+      <div>
         <Title level={2} className="!mb-2">
           <Building2 className="inline-block w-6 h-6 mr-2" />
           租户管理
@@ -388,7 +389,7 @@ export default function TenantManagement() {
       </Row>
 
       {/* 搜索和过滤 */}
-      <Card className="mb-6">
+      <Card>
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={12} lg={8}>
             <Input

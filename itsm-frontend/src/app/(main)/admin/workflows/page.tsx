@@ -35,7 +35,7 @@ import {
   Statistic,
   Tooltip,
   Popconfirm,
-  message,
+  App,
   Badge,
   Progress,
   Alert,
@@ -126,6 +126,7 @@ const STATUS_CONFIG = {
 };
 
 const WorkflowManagement = () => {
+  const { message } = App.useApp();
   const router = useRouter();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -542,9 +543,9 @@ const WorkflowManagement = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       {/* 页面标题 */}
-      <div className="mb-6">
+      <div>
         <Title level={2} className="!mb-2">
           <GitBranch className="inline-block w-6 h-6 mr-2" />
           工作流管理
@@ -553,7 +554,7 @@ const WorkflowManagement = () => {
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
+      <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
@@ -597,7 +598,7 @@ const WorkflowManagement = () => {
       </Row>
 
       {/* 搜索和过滤 */}
-      <Card className="mb-6">
+      <Card>
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={8}>
             <Input

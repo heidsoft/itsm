@@ -208,13 +208,12 @@ func (c *BPMNWorkflowController) ListProcessDefinitions(ctx *gin.Context) {
 		return
 	}
 
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.AuthFailed(ctx, "未授权访问")
+	// 注入 BPMN 租户上下文（service 层 requireBPMNTenantContext fail-closed，缺失会 500）
+	workflowCtx, tenantID, ok := getBPMNTenantContext(ctx)
+	if !ok {
 		return
 	}
-	req.TenantID = tenantID.(int)
+	req.TenantID = tenantID
 
 	// 设置默认分页参数
 	if req.Page <= 0 {
@@ -224,7 +223,7 @@ func (c *BPMNWorkflowController) ListProcessDefinitions(ctx *gin.Context) {
 		req.PageSize = 20
 	}
 
-	definitions, total, err := c.processEngine.ProcessDefinitionService().ListProcessDefinitions(ctx, &req)
+	definitions, total, err := c.processEngine.ProcessDefinitionService().ListProcessDefinitions(workflowCtx, &req)
 	if err != nil {
 		common.InternalError(ctx, "获取流程定义列表失败: "+err.Error())
 		return

@@ -56,15 +56,15 @@ type ApprovalChain struct {
 
 // ApprovalRecord represents an individual approval action
 type ApprovalRecord struct {
-	ID           int
-	ChangeID     int
-	TenantID     int
-	ApproverID   int
-	ApproverName string
-	Status       string
-	Comment      *string
-	ApprovedAt   *time.Time
-	CreatedAt    time.Time
+	ID           int        `json:"id"`
+	ChangeID     int        `json:"changeId"`
+	TenantID     int        `json:"tenantId"`
+	ApproverID   int        `json:"approverId"`
+	ApproverName string     `json:"approverName"`
+	Status       string     `json:"status"`
+	Comment      *string    `json:"comment,omitempty"`
+	ApprovedAt   *time.Time `json:"approvedAt,omitempty"`
+	CreatedAt    time.Time  `json:"createdAt"`
 }
 
 // RiskAssessment represents the risk evaluation of a change

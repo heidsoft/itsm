@@ -1602,6 +1602,29 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		}
 	}
 
+	// 1b. 修正系统菜单的名称与图标（历史数据可能以路径作为名称或缺图标）
+	menuMetaFixes := []struct {
+		Path string
+		Name string
+		Icon string
+	}{
+		{"/admin/sla-templates", "SLA 模板", "Layers"},
+		{"/admin/escalation-matrices", "升级矩阵", "TrendingUp"},
+	}
+
+	for _, f := range menuMetaFixes {
+		_, err := s.client.Menu.Update().
+			Where(menu.Path(f.Path), menu.TenantIDEQ(t.ID)).
+			SetName(f.Name).
+			SetIcon(f.Icon).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("fix menu metadata failed", "error", err, "path", f.Path)
+		} else {
+			s.sugar.Debugw("menu metadata fixed", "path", f.Path, "name", f.Name)
+		}
+	}
+
 	_, err = s.client.Menu.Update().
 		Where(menu.Path("/admin/groups"), menu.TenantIDEQ(t.ID)).
 		SetPermissionCode("groups:read").

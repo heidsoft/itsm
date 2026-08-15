@@ -261,6 +261,7 @@ export enum ChangeStatus {
   FAILED = 'failed',
   ROLLED_BACK = 'rolled_back',
   CANCELLED = 'cancelled',
+  CLOSED = 'closed',
 }
 
 export const ChangeStatusConfig: Record<ChangeStatus, {
@@ -318,6 +319,11 @@ export const ChangeStatusConfig: Record<ChangeStatus, {
     color: 'default',
     badgeStatus: 'default',
   },
+  [ChangeStatus.CLOSED]: {
+    label: '已关闭',
+    color: 'default',
+    badgeStatus: 'default',
+  },
 };
 
 // ==================== 事件优先级 (Incident Priority) ====================
@@ -364,6 +370,24 @@ export const IncidentPriorityConfig: Record<IncidentPriority, {
     responseTime: '8小时',
   },
 };
+
+// ==================== 事件分类 (Incident Category) ====================
+// 创建/编辑/展示三处共用同一份值域，防止回显空白
+export const IncidentCategoryOptions: { value: string; label: string }[] = [
+  { value: 'hardware', label: '硬件故障' },
+  { value: 'software', label: '软件故障' },
+  { value: 'network', label: '网络问题' },
+  { value: 'security', label: '安全问题' },
+  { value: 'performance', label: '性能问题' },
+  { value: 'connectivity', label: '连接问题' },
+  { value: 'storage', label: '存储问题' },
+  { value: 'application', label: '应用故障' },
+  { value: 'database', label: '数据库故障' },
+  { value: 'other', label: '其他' },
+];
+
+export const getIncidentCategoryLabel = (value?: string): string =>
+  IncidentCategoryOptions.find(option => option.value === value)?.label || value || '-';
 
 // ==================== 服务请求状态 (Service Request Status) ====================
 export enum ServiceRequestStatus {

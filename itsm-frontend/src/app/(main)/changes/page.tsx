@@ -338,8 +338,13 @@ export default function ChangesPage() {
 
   const getChangesForDate = (date: Dayjs) =>
     calendarData.filter((change) => {
-      const start = dayjs(change.plannedStart);
-      const end = dayjs(change.plannedEnd || change.plannedStart);
+      // 后端在可空计划日期上输出 0001-01-01T00:00:00Z（Go zero-time），过滤掉这种“伪有效”值
+      const startISO = change.plannedStart;
+      const endISO = change.plannedEnd || change.plannedStart;
+      if (!startISO || !endISO) return false;
+      const start = dayjs(startISO);
+      const end = dayjs(endISO);
+      if (start.year() <= 1 || end.year() <= 1) return false;
       return (
         start.isValid() &&
         end.isValid() &&

@@ -39,6 +39,7 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 export default function TeamManagement() {
+  const { message } = App.useApp();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -224,8 +225,8 @@ export default function TeamManagement() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <div className="mb-6">
+    <div className="space-y-6">
+      <div>
         <Title level={2} className="!mb-2">
           <Users className="mr-2" />
           团队管理
@@ -234,7 +235,7 @@ export default function TeamManagement() {
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
+      <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={8}>
           <Card className="enterprise-card">
             <Statistic

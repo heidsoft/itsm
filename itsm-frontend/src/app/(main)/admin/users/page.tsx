@@ -363,7 +363,7 @@ const UserManagement: React.FC = () => {
       </div>
 
       {/* 操作栏 */}
-      <Card style={{ marginBottom: token.marginLG }}>
+      <Card>
         <Row gutter={[16, 16]} align="middle">
           <Col flex="auto">
             <Space wrap>
@@ -464,7 +464,7 @@ const UserManagement: React.FC = () => {
               total: pagination.total,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+              showTotal: total => `共 ${total} 条记录`,
               pageSizeOptions: ['10', '20', '50', '100'],
               onChange: (page, pageSize) => {
                 setPagination(prev => ({ ...prev, current: page, pageSize }));

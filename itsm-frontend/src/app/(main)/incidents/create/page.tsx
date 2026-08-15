@@ -5,6 +5,7 @@ import { Button, Card, Form, Input, Select, Upload, Space, Row, Col, message, Ta
 import { ArrowLeft, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { IncidentAPI } from '@/lib/api/incident-api';
+import { IncidentCategoryOptions } from '@/constants/taxonomy';
 import type { ConfigurationItem } from '@/types/biz/cmdb';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { User } from '@/lib/api/user-api';
@@ -247,13 +248,7 @@ export default function CreateIncidentPage() {
                               name="category"
                               label="事件分类"
                             >
-                              <Select placeholder="选择分类" options={[
-                                { value: 'hardware', label: '硬件故障' },
-                                { value: 'software', label: '软件故障' },
-                                { value: 'network', label: '网络问题' },
-                                { value: 'security', label: '安全问题' },
-                                { value: 'other', label: '其他' },
-                              ]} />
+                              <Select placeholder="选择分类" options={IncidentCategoryOptions} />
                             </Form.Item>
                           </Col>
                           <Col span={12}>

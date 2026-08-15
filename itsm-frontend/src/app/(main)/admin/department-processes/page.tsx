@@ -99,7 +99,7 @@ export default function DepartmentProcessPage() {
       setShowInitModal(false);
     } catch (error) {
       console.error('Failed to initialize department processes:', error);
-      message.error('Failed to initialize department processes');
+      message.error('初始化部门流程失败');
     }
   };
 
@@ -179,12 +179,11 @@ export default function DepartmentProcessPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="space-y-6">
       {/* 关联页面入口 */}
       <Alert
         type="info"
         showIcon
-        style={{ marginBottom: 16 }}
         message="部门流程配置用于查看各部门已绑定的流程"
         description={
           <Space wrap>

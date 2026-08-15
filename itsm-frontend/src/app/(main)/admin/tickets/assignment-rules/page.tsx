@@ -15,7 +15,7 @@ import {
   Tag,
   Tooltip,
   Typography,
-  message,
+  App,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { Delete, Edit, FlaskConical, Plus, RefreshCw } from 'lucide-react';
@@ -75,6 +75,7 @@ function stringifyJson(value: unknown, fallback: string) {
 }
 
 export default function AssignmentRulesPage() {
+  const { message } = App.useApp();
   const [rules, setRules] = useState<AssignmentRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -302,7 +303,7 @@ export default function AssignmentRulesPage() {
   ];
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       <Card>
         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -334,7 +335,7 @@ export default function AssignmentRulesPage() {
             columns={columns}
             dataSource={rules}
             loading={loading}
-            pagination={{ pageSize: 10, showTotal: total => `共 ${total} 条` }}
+            pagination={{ pageSize: 10, showTotal: total => `共 ${total} 条记录` }}
           />
         )}
       </Card>

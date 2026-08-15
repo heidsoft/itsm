@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -125,7 +126,7 @@ func (c *IncidentController) GetIncident(ctx *gin.Context) {
 	}
 	response, err := c.incidentService.GetIncident(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		if err.Error() == "incident not found" {
+		if errors.Is(err, service.ErrIncidentNotFound) {
 			common.Fail(ctx, common.ParamErrorCode, "事件不存在")
 			return
 		}
@@ -279,7 +280,7 @@ func (c *IncidentController) UpdateIncident(ctx *gin.Context) {
 			})
 			return
 		}
-		if err.Error() == "incident not found" {
+		if errors.Is(err, service.ErrIncidentNotFound) {
 			common.Fail(ctx, common.ParamErrorCode, "事件不存在")
 			return
 		}
@@ -316,7 +317,7 @@ func (c *IncidentController) DeleteIncident(ctx *gin.Context) {
 	}
 	err = c.incidentService.DeleteIncident(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		if err.Error() == "incident not found" {
+		if errors.Is(err, service.ErrIncidentNotFound) {
 			common.Fail(ctx, common.ParamErrorCode, "事件不存在")
 			return
 		}
@@ -354,12 +355,25 @@ func (c *IncidentController) EscalateIncident(ctx *gin.Context) {
 	}
 	response, err := c.incidentService.EscalateIncident(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
-		if err.Error() == "incident not found" {
-			common.Fail(ctx, common.ParamErrorCode, "事件不存在")
+		if common.IsVersionConflictError(err) {
+			common.Conflict(ctx, "事件已被其他操作修改，请刷新后重试", gin.H{"incidentId": req.IncidentID})
 			return
 		}
-		c.logger.Errorw("Failed to escalate incident", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "升级事件失败")
+		switch {
+		case errors.Is(err, service.ErrIncidentNotFound):
+			common.Fail(ctx, common.ParamErrorCode, "事件不存在")
+		case errors.Is(err, service.ErrIncidentTerminal):
+			common.Fail(ctx, common.BadRequestCode, "该事件已处于终态，无法升级")
+		case errors.Is(err, service.ErrIncidentEscalationLevelNotGreater):
+			common.Fail(ctx, common.BadRequestCode, "升级级别必须高于当前级别")
+		case errors.Is(err, service.ErrIncidentEscalationLevelInvalid):
+			common.Fail(ctx, common.BadRequestCode, "升级级别必须在 1-5 之间")
+		case errors.Is(err, service.ErrIncidentEscalationReasonRequired):
+			common.Fail(ctx, common.BadRequestCode, "升级原因不能为空")
+		default:
+			c.logger.Errorw("Failed to escalate incident", "error", err)
+			common.Fail(ctx, common.InternalErrorCode, "升级事件失败")
+		}
 		return
 	}
 
@@ -424,7 +438,7 @@ func (c *IncidentController) AnalyzeIncidentImpact(ctx *gin.Context) {
 	}
 	analysis, err := c.monitoringService.AnalyzeIncidentImpact(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		if err.Error() == "incident not found" {
+		if errors.Is(err, service.ErrIncidentNotFound) {
 			common.Fail(ctx, common.ParamErrorCode, "事件不存在")
 			return
 		}
@@ -1066,10 +1080,18 @@ func (c *IncidentController) GetRootCause(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, gin.H{
-		"incident_id": incident.ID,
-		"root_cause":  incident.RootCause,
-	})
+	// 拆分 dto.RootCause 结构体到顶层字段，匹配前端 RootCauseData 类型
+	// （避免直接序列化整个对象导致前端读取 rootCause 字段拿到 [object Object]）
+	payload := gin.H{"incident_id": incident.ID}
+	if rc := incident.RootCause; rc != nil {
+		payload["analysisMethod"] = rc.AnalysisMethod
+		payload["rootCause"] = rc.RootCause
+		payload["contributingFactors"] = rc.ContributingFactors
+		payload["evidence"] = rc.Evidence
+		payload["preventiveActions"] = rc.PreventiveActions
+		payload["status"] = rc.Status
+	}
+	common.Success(ctx, payload)
 }
 
 // UpdateRootCause 更新根因分析

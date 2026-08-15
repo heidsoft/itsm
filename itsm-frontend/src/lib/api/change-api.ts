@@ -300,6 +300,11 @@ export class ChangeApi {
     return httpClient.post(`/api/v1/changes/${id}/complete`, {});
   }
 
+  // 关闭变更（已完成 → 已关闭）
+  static async closeChange(id: number): Promise<void> {
+    return httpClient.post(`/api/v1/changes/${id}/close`, {});
+  }
+
   // 回滚变更
   static async rollbackChange(id: number, reason?: string): Promise<void> {
     return httpClient.post(`/api/v1/changes/${id}/rollback`, { reason });

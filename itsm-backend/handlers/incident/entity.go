@@ -16,8 +16,8 @@ type Incident struct {
 	ReporterID          int
 	AssigneeID          *int
 	ConfigurationItemID *int
-	Category            string
-	Subcategory         string
+	Category            string `json:"category"`
+	Subcategory         string `json:"subcategory"`
 	ImpactAnalysis      map[string]interface{}
 	RootCause           map[string]interface{}
 	ResolutionSteps     []map[string]interface{}

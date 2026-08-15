@@ -1,4 +1,5 @@
 import { httpClient } from './http-client';
+import { security } from '@/lib/security';
 
 export interface TriageResult {
   category: string;
@@ -391,22 +392,23 @@ export async function aiChatStream(
     });
   }
 
-  // 读取 CSRF token（可能不存在于某些环境，缺失时不会阻塞请求）。
-  let csrfToken: string | null = null;
-  try {
-    // httpClient 在内部从 cookie 提取，下面这段只用于为 fetch 头补充
-    // 与 httpClient 自身一致：避免再次调用 security 抽象以免循环依赖。
-    csrfToken =
-      typeof document !== 'undefined'
-        ? (document.cookie
-            .split(';')
-            .map(c => c.trim())
-            .find(c => c.startsWith('csrf_token=') || c.startsWith('XSRF-TOKEN='))
-            ?.split('=')[1] ?? null)
-        : null;
-  } catch {
-    csrfToken = null;
-  }
+  // 获取 CSRF token。后端的 csrf cookie 是 HttpOnly，document.cookie 读不到，
+  // 必须与 httpClient 一致走 security 抽象（GET /api/v1/csrf-token）。
+  const getCsrfToken = async (): Promise<string | null> => {
+    try {
+      return await security.csrf.getToken();
+    } catch {
+      return null;
+    }
+  };
+  // 后端会在每次写请求成功后轮换 CSRF token，缓存值可能已过期；
+  // 403 时丢弃缓存重新获取。
+  const refreshCsrfToken = async (): Promise<string | null> => {
+    security.csrf.clearToken();
+    return getCsrfToken();
+  };
+
+  const csrfToken = await getCsrfToken();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -414,7 +416,7 @@ export async function aiChatStream(
   };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (tenantId) headers['X-Tenant-ID'] = String(tenantId);
-  if (csrfToken) headers['X-CSRF-Token'] = decodeURIComponent(csrfToken);
+  if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
 
   const body = JSON.stringify({
     query: req.query,
@@ -434,13 +436,25 @@ export async function aiChatStream(
     }
 
     try {
-      const response = await fetch(candidate.url, {
-        method: 'POST',
-        headers,
-        credentials: candidate.useCredentials ? 'include' : 'omit',
-        signal: controller.signal,
-        body,
-      });
+      const doFetch = () =>
+        fetch(candidate.url, {
+          method: 'POST',
+          headers,
+          credentials: candidate.useCredentials ? 'include' : 'omit',
+          signal: controller.signal,
+          body,
+        });
+
+      let response = await doFetch();
+
+      // CSRF token 可能已被后端轮换导致 403，取新 token 原地重试一次。
+      if (response.status === 403) {
+        const freshToken = await refreshCsrfToken();
+        if (freshToken) {
+          headers['X-CSRF-Token'] = freshToken;
+          response = await doFetch();
+        }
+      }
 
       if (!response.ok || !response.body) {
         // 4xx/5xx 走 fallback 而非抛错

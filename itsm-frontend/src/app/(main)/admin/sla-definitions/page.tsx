@@ -31,7 +31,7 @@ import {
   Statistic,
   Tooltip,
   Popconfirm,
-  message,
+  App,
   Progress,
   List,
   Badge,
@@ -71,6 +71,7 @@ const STATUS_CONFIG = {
 };
 
 const SLADefinitionManagement = () => {
+  const { message } = App.useApp();
   const [slaDefinitions, setSlaDefinitions] = useState<SLADefinition[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -373,9 +374,9 @@ const SLADefinitionManagement = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       {/* 页面标题 */}
-      <div className="mb-6">
+      <div>
         <Title level={2} className="!mb-2">
           <Target className="inline-block w-6 h-6 mr-2" />
           SLA定义管理
@@ -384,7 +385,7 @@ const SLADefinitionManagement = () => {
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6" align="stretch">
+      <Row gutter={[16, 16]} align="stretch">
         <Col xs={24} sm={12} lg={6} className="flex">
           <Card className="enterprise-card h-full w-full">
             <Statistic
@@ -429,7 +430,7 @@ const SLADefinitionManagement = () => {
       </Row>
 
       {/* 搜索和过滤 */}
-      <Card className="mb-6">
+      <Card>
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={8}>
             <Input

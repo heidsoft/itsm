@@ -10,7 +10,7 @@ import {
   Select,
   Space,
   Tag,
-  message,
+  App,
   Popconfirm,
   Tooltip,
   Tree,
@@ -99,6 +99,7 @@ interface DepartmentOption {
 }
 
 const TicketCategoryManagementPage = () => {
+  const { message } = App.useApp();
   const [categories, setCategories] = useState<TicketCategory[]>([]);
   const [workflows, setWorkflows] = useState<WorkflowOption[]>([]);
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
@@ -540,7 +541,7 @@ const TicketCategoryManagementPage = () => {
               pageSize: 20,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+              showTotal: total => `共 ${total} 条记录`,
             }}
           />
         ) : treeData.length > 0 ? (

@@ -84,10 +84,11 @@ const statusMap: Record<
   { text: string; status: 'success' | 'processing' | 'default' | 'error' | 'warning' }
 > = {
   new: { text: '新建', status: 'default' },
-  open: { text: '未分配', status: 'default' },
+  open: { text: '待处理', status: 'default' },
   in_progress: { text: '处理中', status: 'processing' },
   assigned: { text: '已分配', status: 'processing' },
-  pending: { text: '挂起', status: 'warning' },
+  pending: { text: '等待中', status: 'warning' },
+  pending_approval: { text: '待审批', status: 'warning' },
   resolved: { text: '已解决', status: 'success' },
   closed: { text: '已关闭', status: 'default' },
   cancelled: { text: '已取消', status: 'error' },
@@ -789,13 +790,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               >
                 <Select
                   placeholder="请选择状态"
-                  options={[
-                    { value: 'new', label: '待处理' },
-                    { value: 'in_progress', label: '处理中' },
-                    { value: 'pending', label: '暂停' },
-                    { value: 'resolved', label: '已解决' },
-                    { value: 'closed', label: '已关闭' },
-                  ]}
+                  options={Object.entries(statusMap).map(([value, cfg]) => ({
+                    value,
+                    label: cfg.text,
+                  }))}
                 />
               </Form.Item>
             </div>
