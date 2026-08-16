@@ -6,7 +6,7 @@
 
 ITIL 流程 · BPMN 编排 · CMDB · SLA · 知识库/RAG · 多租户 · 企业连接器
 
-[![Go](https://img.shields.io/badge/Go-1.25.12-00ADD8?logo=go&logoColor=white)](https://go.dev/)
+[![Go](https://img.shields.io/badge/Go-1.25.13-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-Apache--2.0-green)](./LICENSE)
@@ -221,7 +221,7 @@ flowchart TB
 
 | 层 | 技术 |
 |:---|:---|
-| 后端 | Go 1.25.12、Gin、Ent、PostgreSQL、Redis |
+| 后端 | Go 1.25.13、Gin、Ent、PostgreSQL、Redis |
 | 前端 | Next.js 15.5、React 19、TypeScript 6、Ant Design 6、Tailwind CSS |
 | 工作流 | BPMN 2.0、流程定义/实例/任务/变量/历史 |
 | AI/RAG | LLM Gateway、pgvector、OpenAI/兼容接口、Ollama 可选 |
