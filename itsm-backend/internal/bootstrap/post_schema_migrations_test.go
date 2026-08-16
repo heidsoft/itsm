@@ -27,14 +27,14 @@ func (m *recordingPostSchemaMigrator) RunMigrations(_ context.Context, migration
 	return len(migrations), m.runErr
 }
 
-func TestRunPostSchemaMigrationsAppliesVersion007(t *testing.T) {
+func TestRunPostSchemaMigrationsAppliesRegisteredStream(t *testing.T) {
 	runner := &recordingPostSchemaMigrator{}
 
 	err := runPostSchemaMigrations(context.Background(), runner)
 
 	require.NoError(t, err)
 	require.True(t, runner.ensured)
-	require.Len(t, runner.migrations, 7)
+	require.Len(t, runner.migrations, 8)
 	require.Equal(t, "007_add_change_execution_tables", runner.migrations[0].Version)
 	require.Equal(t, "008_add_initialization_ledger", runner.migrations[1].Version)
 	require.Equal(t, "009_enable_rls_tenant_isolation", runner.migrations[2].Version)
@@ -42,6 +42,7 @@ func TestRunPostSchemaMigrationsAppliesVersion007(t *testing.T) {
 	require.Equal(t, "011_add_tool_invocation_tenant_id", runner.migrations[4].Version)
 	require.Equal(t, "012_deduplicate_active_process_bindings", runner.migrations[5].Version)
 	require.Equal(t, "013_enforce_active_process_binding_route_key", runner.migrations[6].Version)
+	require.Equal(t, "014_add_change_approval_quorum", runner.migrations[7].Version)
 }
 
 func TestRunPostSchemaMigrationsFailsClosed(t *testing.T) {
