@@ -288,12 +288,12 @@ const TicketTemplatesPage = () => {
             aria-label="复制模板"
           />
         </Tooltip>,
-        <Tooltip title="Delete template" key="delete">
+        <Tooltip title="删除模板" key="delete">
           <Popconfirm
-            title="Are you sure you want to delete this template?"
+            title="确定删除这个模板吗？"
             onConfirm={() => handleDeleteTemplate(template.id)}
-            okText="Confirm"
-            cancelText="Cancel"
+            okText="确定"
+            cancelText="取消"
           >
             <Button type="text" danger icon={<Delete size={16} />} aria-label="删除模板" />
           </Popconfirm>
@@ -421,10 +421,10 @@ const TicketTemplatesPage = () => {
               aria-label="复制模板"
             />
             <Popconfirm
-              title="Are you sure you want to delete this template?"
+              title="确定删除这个模板吗？"
               onConfirm={() => handleDeleteTemplate(template.id)}
-              okText="Confirm"
-              cancelText="Cancel"
+              okText="确定"
+              cancelText="取消"
             >
               <Button type="text" danger icon={<Delete size={16} />} aria-label="删除模板" />
             </Popconfirm>
@@ -845,7 +845,7 @@ const TicketTemplatesPage = () => {
               <Button type="primary" htmlType="submit">
                 {editingTemplate ? 'Update Template' : 'Create Template'}
               </Button>
-              <Button onClick={() => setModalVisible(false)}>Cancel</Button>
+              <Button onClick={() => setModalVisible(false)}>取消</Button>
             </Space>
           </Form.Item>
         </Form>

@@ -8,10 +8,12 @@ import ProblemDetail from '@/components/problem/ProblemDetail';
 import ProblemAssociationsTab from '@/components/problem/ProblemAssociationsTab';
 import { HistoryTimeline, fetchAuditLogHistory } from '@/components/business/detail-tabs';
 import dayjs from 'dayjs';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const formatDateTime = (v?: string) => (v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-');
 
 export default function ProblemDetailPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
@@ -27,7 +29,7 @@ export default function ProblemDetailPage() {
             onClick={() => router.back()}
             style={{ paddingLeft: 0, color: '#666' }}
           >
-            返回列表
+            {t('common.back')}
           </Button>
         </div>
         <ProblemDetail id={id} />
@@ -43,7 +45,7 @@ export default function ProblemDetailPage() {
                   label: (
                     <span>
                       <Link2 size={14} className="inline mr-1" />
-                      关联（工单/事件/变更）
+                      {t('detailTabs.relations')}
                     </span>
                   ),
                   children: <ProblemAssociationsTab problemId={numericId} />,
@@ -53,7 +55,7 @@ export default function ProblemDetailPage() {
                   label: (
                     <span>
                       <HistoryIcon size={14} className="inline mr-1" />
-                      历史（审计日志）
+                      {t('detailTabs.history')}
                     </span>
                   ),
                   children: (

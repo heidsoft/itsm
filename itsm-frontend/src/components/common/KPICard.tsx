@@ -1,3 +1,6 @@
+/**
+ * @deprecated 请使用 BusinessPageTemplate 内置 stats 或 ui/StatsOverview 替代
+ */
 'use client';
 
 import React from 'react';

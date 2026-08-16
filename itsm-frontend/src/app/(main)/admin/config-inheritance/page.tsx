@@ -105,10 +105,10 @@ export default function ConfigInheritancePage() {
       title: '作用域',
       key: 'scope',
       render: (_, record) => {
-        if (record.teamId > 0) return <Tag color="purple">Team #{record.teamId}</Tag>;
-        if (record.departmentId > 0) return <Tag color="geekblue">Department #{record.departmentId}</Tag>;
-        if ((record as any).tenantId > 0) return <Tag color="green">Tenant</Tag>;
-        return <Tag>Global</Tag>;
+        if (record.teamId > 0) return <Tag color="purple">团队 #{record.teamId}</Tag>;
+        if (record.departmentId > 0) return <Tag color="geekblue">部门 #{record.departmentId}</Tag>;
+        if ((record as any).tenantId > 0) return <Tag color="green">租户</Tag>;
+        return <Tag>全局</Tag>;
       },
     },
     {
@@ -136,10 +136,10 @@ export default function ConfigInheritancePage() {
 
   const chainItems = useMemo(
     () => [
-      { title: 'Global', description: 'tenant_id = 0' },
-      { title: 'Tenant', description: '当前租户' },
-      { title: 'Department', description: '部门祖先链' },
-      { title: 'Team', description: '团队覆盖' },
+      { title: '全局', description: '对所有租户生效' },
+      { title: '租户', description: '当前租户' },
+      { title: '部门', description: '部门祖先链' },
+      { title: '团队', description: '团队覆盖' },
     ],
     []
   );
@@ -151,7 +151,7 @@ export default function ConfigInheritancePage() {
           <GitBranch className="mr-2" />
           配置继承
         </Title>
-        <Text type="secondary">查看 Global → Tenant → Department → Team 的配置继承与最终生效结果</Text>
+        <Text type="secondary">查看全局 → 租户 → 部门 → 团队 的配置继承与最终生效结果</Text>
       </div>
 
       <Row gutter={[16, 16]}>

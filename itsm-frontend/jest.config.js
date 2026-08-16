@@ -8,7 +8,9 @@ const createJestConfig = nextJest({
 // Add any custom config to be passed to Jest
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  testEnvironment: 'jest-environment-jsdom',
+  // 自定义环境:让 jsdom 样式级联对 nwsapi 无法解析的 `:has()` + Tailwind 任意值类
+  // 选择器返回"不匹配"而非抛错(浏览器行为),详见 jest-environment-safe-nwsapi.js
+  testEnvironment: '<rootDir>/jest-environment-safe-nwsapi.js',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^lodash-es$': 'lodash',

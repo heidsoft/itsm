@@ -10,6 +10,7 @@ import { StatsOverview, type StatsOverviewItem } from '@/components/ui/StatsOver
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { CMDB_CAPABILITIES } from '@/lib/cmdb/cmdb-capabilities';
 import { useCapabilities } from '@/lib/hooks/useCapabilities';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -32,6 +33,7 @@ const normalizeItems = (value: unknown): unknown[] => {
 export function CSDMHub() {
   const router = useRouter();
   const { message } = App.useApp();
+  const { t } = useI18n();
   const { capabilities, allows } = useCapabilities();
   const availableCapabilities = CMDB_CAPABILITIES.filter(item => allows(item.capabilityKey));
   const [overview, setOverview] = React.useState<CMDBOverview>({
@@ -61,9 +63,9 @@ export function CSDMHub() {
       });
     } catch {
       setOverview(previous => ({ ...previous, loading: false, error: true }));
-      message.error('CMDB 总览加载失败，请检查服务状态后重试');
+      message.error(t('cmdb.hub.loadFailed'));
     }
-  }, [message]);
+  }, [message, t]);
 
   React.useEffect(() => {
     void load();
@@ -72,21 +74,21 @@ export function CSDMHub() {
   const statsItems: StatsOverviewItem[] = [
     {
       key: 'total-cis',
-      title: '配置项总数',
+      title: t('cmdb.totalCIs'),
       value: overview.totalCIs,
       prefix: <Database className="mr-2 text-blue-500" />,
       accentColor: '#1677ff',
     },
     {
       key: 'ci-types',
-      title: 'CI 类型',
+      title: t('cmdb.hub.ciTypes'),
       value: overview.ciTypes,
       prefix: <Server className="mr-2 text-cyan-600" />,
       accentColor: '#08979c',
     },
     {
       key: 'ga-capabilities',
-      title: '生产可用能力',
+      title: t('cmdb.hub.gaCapabilities'),
       value: availableCapabilities.filter(item =>
         capabilities.find(capability => capability.key === item.capabilityKey)?.maturity === 'ga'
       ).length,
@@ -98,15 +100,15 @@ export function CSDMHub() {
   return (
     <div className="space-y-6 p-6">
       <ManagementPageHeader
-        title="配置管理数据库 (CMDB)"
-        description="面向生产运维的配置项、关系、拓扑和影响分析工作台。"
+        title={t('cmdb.title')}
+        description={t('cmdb.hub.description')}
         actions={
           <Space wrap>
             <Button icon={<RefreshCw className="h-4 w-4" />} loading={overview.loading} onClick={load}>
-              刷新
+              {t('cmdb.refresh')}
             </Button>
             <Button type="primary" icon={<Plus className="h-4 w-4" />} onClick={() => router.push('/cmdb/cis/create')}>
-              录入配置项
+              {t('cmdb.newCI')}
             </Button>
           </Space>
         }
@@ -114,13 +116,13 @@ export function CSDMHub() {
 
       {overview.error && (
         <Card className="border-red-200 bg-red-50">
-          <Text type="danger">总览数据加载失败。当前数值不是可信业务数据，请刷新或联系管理员。</Text>
+          <Text type="danger">{t('cmdb.hub.errorBanner')}</Text>
         </Card>
       )}
 
       <StatsOverview items={statsItems} />
 
-      <Card title="生产可用能力" loading={overview.loading}>
+      <Card title={t('cmdb.hub.gaCapabilities')} loading={overview.loading}>
         <Row gutter={[16, 16]}>
           {availableCapabilities.map(capability => {
             const maturity = capabilities.find(item => item.key === capability.capabilityKey)?.maturity;
@@ -129,13 +131,13 @@ export function CSDMHub() {
               <Card size="small" className="h-full border-slate-200">
                 <div className="flex items-center justify-between gap-2">
                   <Title level={5} className="!mb-0">{capability.title}</Title>
-                  <Tag color={maturity === 'ga' ? 'green' : 'gold'}>{maturity === 'ga' ? 'GA' : 'Pilot'}</Tag>
+                  <Tag color={maturity === 'ga' ? 'green' : 'gold'}>{maturity === 'ga' ? t('cmdb.hub.gaBadge') : t('cmdb.hub.pilotBadge')}</Tag>
                 </div>
                 <Paragraph type="secondary" className="!mb-4 !mt-3 min-h-11">
                   {capability.description}
                 </Paragraph>
                 <Button type="link" className="!px-0" onClick={() => router.push(capability.href)}>
-                  进入
+                  {t('cmdb.hub.enterButton')}
                 </Button>
               </Card>
             </Col>
@@ -144,27 +146,27 @@ export function CSDMHub() {
         </Row>
       </Card>
 
-      <Card title="推荐操作">
+      <Card title={t('cmdb.hub.recommendedActions')}>
         <Space wrap size="middle">
           <Button type="primary" icon={<Server className="h-4 w-4" />} onClick={() => router.push('/cmdb/ci')}>
-            配置项工作台
+            {t('cmdb.hub.ciWorkbench')}
           </Button>
           <Button icon={<Database className="h-4 w-4" />} onClick={() => router.push('/admin/cmdb-types')}>
-            维护类型模板
+            {t('cmdb.hub.maintainTypeTemplates')}
           </Button>
           <Button icon={<GitBranch className="h-4 w-4" />} onClick={() => router.push('/cmdb/relationships')}>
-            维护关系
+            {t('cmdb.hub.maintainRelationships')}
           </Button>
           <Button icon={<GitBranch className="h-4 w-4" />} onClick={() => router.push('/cmdb/topology')}>
-            查看拓扑影响
+            {t('cmdb.hub.viewTopology')}
           </Button>
         </Space>
         <Text type="secondary" className="mt-4 block">
-          云资源自动发现和自动对账仍处于受控试点，完成真实连接、任务重试、审计和生产验收前不在正式入口展示。
+          {t('cmdb.hub.autoDiscoverNote')}
         </Text>
         {overview.refreshedAt && (
           <Text type="secondary" className="mt-2 block text-xs">
-            数据刷新时间：{new Date(overview.refreshedAt).toLocaleString('zh-CN')}
+            {t('cmdb.hub.refreshedAt', { time: new Date(overview.refreshedAt).toLocaleString() })}
           </Text>
         )}
       </Card>

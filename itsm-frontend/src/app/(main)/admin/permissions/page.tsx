@@ -14,7 +14,7 @@ import {
   Search,
 } from 'lucide-react';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Card,
   Table,
@@ -37,6 +37,7 @@ import {
 } from 'antd';
 import { RoleAPI } from '@/lib/api/role-api';
 import type { Role } from '@/lib/api/api-config';
+import { useI18n } from '@/lib/i18n/useI18n';
 const { Title, Text } = Typography;
 
 // 权限模块定义
@@ -78,64 +79,6 @@ const PERMISSION_ACTIONS = {
   ALL: 'all',
 } as const;
 
-// 权限模块配置
-const MODULE_CONFIG: Record<string, { label: string; icon: string; description: string; category: string }> = {
-  [PERMISSION_MODULES.DASHBOARD]: { label: '仪表盘', icon: '📊', description: '系统仪表盘和概览信息', category: '核心功能' },
-  [PERMISSION_MODULES.TICKETS]: { label: '工单管理', icon: '🎫', description: '工单的创建、处理和管理', category: '核心功能' },
-  [PERMISSION_MODULES.INCIDENTS]: { label: '事件管理', icon: '🚨', description: 'IT事件的记录和处理', category: '核心功能' },
-  [PERMISSION_MODULES.PROBLEMS]: { label: '问题管理', icon: '🔧', description: '根本原因分析和问题解决', category: '核心功能' },
-  [PERMISSION_MODULES.CHANGES]: { label: '变更管理', icon: '🔄', description: 'IT变更的规划和实施', category: '核心功能' },
-  [PERMISSION_MODULES.SERVICE_CATALOG]: { label: '服务目录', icon: '📋', description: 'IT服务目录管理', category: '服务管理' },
-  [PERMISSION_MODULES.SERVICE_REQUEST]: { label: '服务请求', icon: '🧾', description: '服务请求提交、审批和履约', category: '服务管理' },
-  [PERMISSION_MODULES.KNOWLEDGE_BASE]: { label: '知识库', icon: '📚', description: '知识文档和解决方案', category: '服务管理' },
-  [PERMISSION_MODULES.CMDB]: { label: 'CMDB', icon: '🧩', description: '配置项、关系和拓扑管理', category: '核心功能' },
-  [PERMISSION_MODULES.ASSETS]: { label: '资产管理', icon: '💻', description: 'IT资产和许可证管理', category: '核心功能' },
-  [PERMISSION_MODULES.RELEASES]: { label: '发布管理', icon: '🚀', description: '发布计划和发布执行', category: '核心功能' },
-  [PERMISSION_MODULES.REPORTS]: { label: '报告分析', icon: '📈', description: '数据报告和分析功能', category: '分析工具' },
-  [PERMISSION_MODULES.ADMIN]: { label: '系统管理', icon: '⚙️', description: '系统管理和配置', category: '系统管理' },
-  [PERMISSION_MODULES.USERS]: { label: '用户管理', icon: '👥', description: '用户账户管理', category: '系统管理' },
-  [PERMISSION_MODULES.ROLES]: { label: '角色管理', icon: '🛡️', description: '角色和权限管理', category: '系统管理' },
-  [PERMISSION_MODULES.GROUPS]: { label: '用户组管理', icon: '👪', description: '用户组和候选组管理', category: '系统管理' },
-  [PERMISSION_MODULES.ORG]: { label: '组织架构', icon: '🏢', description: '部门、团队和组织架构管理', category: '系统管理' },
-  [PERMISSION_MODULES.WORKFLOWS]: { label: '工作流', icon: '🔀', description: '业务流程配置', category: '系统管理' },
-  [PERMISSION_MODULES.SYSTEM_CONFIG]: { label: '系统配置', icon: '🔧', description: '系统参数和设置', category: '系统管理' },
-  [PERMISSION_MODULES.AI]: { label: 'AI能力', icon: '🤖', description: 'AI 辅助与智能自动化能力', category: '系统管理' },
-};
-
-// 权限操作配置
-const ACTION_CONFIG: Record<string, { label: string; color: string; description: string }> = {
-  [PERMISSION_ACTIONS.READ]: { label: '读取', color: 'blue', description: '读取和浏览权限' },
-  [PERMISSION_ACTIONS.CREATE]: { label: '创建', color: 'green', description: '创建新记录权限' },
-  [PERMISSION_ACTIONS.WRITE]: { label: '写入', color: 'orange', description: '创建或修改业务数据权限' },
-  [PERMISSION_ACTIONS.UPDATE]: { label: '更新', color: 'orange', description: '更新现有记录权限' },
-  [PERMISSION_ACTIONS.DELETE]: { label: '删除', color: 'red', description: '删除记录权限' },
-  [PERMISSION_ACTIONS.MANAGE]: { label: '管理', color: 'magenta', description: '管理配置和成员关系权限' },
-  [PERMISSION_ACTIONS.APPROVE]: { label: '审批', color: 'purple', description: '审批和批准权限' },
-  [PERMISSION_ACTIONS.ASSIGN]: { label: '分配', color: 'cyan', description: '分配和指派权限' },
-  [PERMISSION_ACTIONS.VIEW]: { label: '查看', color: 'geekblue', description: '兼容旧版查看权限' },
-  [PERMISSION_ACTIONS.EXPORT]: { label: '导出', color: 'geekblue', description: '数据导出权限' },
-  [PERMISSION_ACTIONS.ALL]: { label: '全部', color: 'volcano', description: '平台级全部权限' },
-};
-
-// 分类配置
-const CATEGORIES = [
-  { id: '核心功能', name: '核心功能', icon: <Activity className="w-4 h-4" /> },
-  { id: '服务管理', name: '服务管理', icon: <Globe className="w-4 h-4" /> },
-  { id: '分析工具', name: '分析工具', icon: <BarChart3 className="w-4 h-4" /> },
-  { id: '系统管理', name: '系统管理', icon: <Settings className="w-4 h-4" /> },
-];
-
-// 所有可能的权限字符串
-function generateAllPermissionStrings(): string[] {
-  const permissions: string[] = [];
-  for (const moduleKey of Object.values(PERMISSION_MODULES)) {
-    for (const actionKey of Object.values(PERMISSION_ACTIONS)) {
-      permissions.push(`${moduleKey}:${actionKey}`);
-    }
-  }
-  return permissions;
-}
-
 // 类型：每个模块的动作启用状态
 interface ActionState {
   [actionId: string]: boolean;
@@ -168,14 +111,12 @@ function createDefaultPermissionState(): PermissionState {
 // 从角色 permissions string[] 构建 PermissionState
 function buildPermissionStateFromStrings(permissionStrings: string[]): PermissionState {
   const state = createDefaultPermissionState();
-  // 先全部设为 false
   for (const moduleKey of Object.values(PERMISSION_MODULES)) {
     state[moduleKey].isEnabled = false;
     for (const actionKey of Object.values(PERMISSION_ACTIONS)) {
       state[moduleKey].actions[actionKey] = false;
     }
   }
-  // 根据权限字符串启用
   for (const perm of permissionStrings) {
     const [moduleKey, actionKey] = perm.split(':');
     if (moduleKey && state[moduleKey]) {
@@ -185,7 +126,6 @@ function buildPermissionStateFromStrings(permissionStrings: string[]): Permissio
       }
     }
   }
-  // 如果模块有任何动作启用，则模块本身标记为启用
   for (const moduleKey of Object.values(PERMISSION_MODULES)) {
     if (!state[moduleKey].isEnabled) {
       const hasEnabledAction = Object.values(state[moduleKey].actions).some(v => v);
@@ -208,7 +148,46 @@ function buildPermissionStringsFromState(state: PermissionState): string[] {
   return permissions;
 }
 
+// 模块图标与分类映射（静态部分）
+const MODULE_META: Record<string, { icon: string; categoryKey: 'core' | 'service' | 'analysis' | 'system' }> = {
+  [PERMISSION_MODULES.DASHBOARD]: { icon: '📊', categoryKey: 'core' },
+  [PERMISSION_MODULES.TICKETS]: { icon: '🎫', categoryKey: 'core' },
+  [PERMISSION_MODULES.INCIDENTS]: { icon: '🚨', categoryKey: 'core' },
+  [PERMISSION_MODULES.PROBLEMS]: { icon: '🔧', categoryKey: 'core' },
+  [PERMISSION_MODULES.CHANGES]: { icon: '🔄', categoryKey: 'core' },
+  [PERMISSION_MODULES.SERVICE_CATALOG]: { icon: '📋', categoryKey: 'service' },
+  [PERMISSION_MODULES.SERVICE_REQUEST]: { icon: '🧾', categoryKey: 'service' },
+  [PERMISSION_MODULES.KNOWLEDGE_BASE]: { icon: '📚', categoryKey: 'service' },
+  [PERMISSION_MODULES.CMDB]: { icon: '🧩', categoryKey: 'core' },
+  [PERMISSION_MODULES.ASSETS]: { icon: '💻', categoryKey: 'core' },
+  [PERMISSION_MODULES.RELEASES]: { icon: '🚀', categoryKey: 'core' },
+  [PERMISSION_MODULES.REPORTS]: { icon: '📈', categoryKey: 'analysis' },
+  [PERMISSION_MODULES.ADMIN]: { icon: '⚙️', categoryKey: 'system' },
+  [PERMISSION_MODULES.USERS]: { icon: '👥', categoryKey: 'system' },
+  [PERMISSION_MODULES.ROLES]: { icon: '🛡️', categoryKey: 'system' },
+  [PERMISSION_MODULES.GROUPS]: { icon: '👪', categoryKey: 'system' },
+  [PERMISSION_MODULES.ORG]: { icon: '🏢', categoryKey: 'system' },
+  [PERMISSION_MODULES.WORKFLOWS]: { icon: '🔀', categoryKey: 'system' },
+  [PERMISSION_MODULES.SYSTEM_CONFIG]: { icon: '🔧', categoryKey: 'system' },
+  [PERMISSION_MODULES.AI]: { icon: '🤖', categoryKey: 'system' },
+};
+
+const ACTION_COLOR: Record<string, string> = {
+  [PERMISSION_ACTIONS.READ]: 'blue',
+  [PERMISSION_ACTIONS.CREATE]: 'green',
+  [PERMISSION_ACTIONS.WRITE]: 'orange',
+  [PERMISSION_ACTIONS.UPDATE]: 'orange',
+  [PERMISSION_ACTIONS.DELETE]: 'red',
+  [PERMISSION_ACTIONS.MANAGE]: 'magenta',
+  [PERMISSION_ACTIONS.APPROVE]: 'purple',
+  [PERMISSION_ACTIONS.ASSIGN]: 'cyan',
+  [PERMISSION_ACTIONS.VIEW]: 'geekblue',
+  [PERMISSION_ACTIONS.EXPORT]: 'geekblue',
+  [PERMISSION_ACTIONS.ALL]: 'volcano',
+};
+
 const PermissionConfiguration = () => {
+  const { t } = useI18n();
   const { message } = App.useApp();
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
@@ -222,6 +201,47 @@ const PermissionConfiguration = () => {
   const [rolesLoading, setRolesLoading] = useState(false);
   const [permissionCatalogCount, setPermissionCatalogCount] = useState(0);
 
+  // 分类配置（运行时国际化）
+  const categories = useMemo(
+    () => [
+      { id: t('permissions.categories.core'), key: 'core', icon: <Activity className="w-4 h-4" /> },
+      { id: t('permissions.categories.service'), key: 'service', icon: <Globe className="w-4 h-4" /> },
+      { id: t('permissions.categories.analysis'), key: 'analysis', icon: <BarChart3 className="w-4 h-4" /> },
+      { id: t('permissions.categories.system'), key: 'system', icon: <Settings className="w-4 h-4" /> },
+    ],
+    [t]
+  );
+
+  // 模块配置（运行时国际化）
+  const moduleConfig = useMemo(() => {
+    const result: Record<string, { label: string; icon: string; description: string; category: string; categoryKey: string }> = {};
+    for (const moduleKey of Object.values(PERMISSION_MODULES)) {
+      const meta = MODULE_META[moduleKey];
+      const categoryName = t(`permissions.categories.${meta.categoryKey}`);
+      result[moduleKey] = {
+        label: t(`permissions.modules.${moduleKey.toUpperCase()}.label`),
+        icon: meta.icon,
+        description: t(`permissions.modules.${moduleKey.toUpperCase()}.description`),
+        category: categoryName,
+        categoryKey: meta.categoryKey,
+      };
+    }
+    return result;
+  }, [t]);
+
+  // 操作配置（运行时国际化）
+  const actionConfig = useMemo(() => {
+    const result: Record<string, { label: string; color: string; description: string }> = {};
+    for (const actionKey of Object.values(PERMISSION_ACTIONS)) {
+      result[actionKey] = {
+        label: t(`permissions.actions.${actionKey.toUpperCase()}`),
+        color: ACTION_COLOR[actionKey],
+        description: t(`permissions.actionDescriptions.${actionKey.toUpperCase()}`),
+      };
+    }
+    return result;
+  }, [t]);
+
   // 加载角色列表
   const loadRoles = useCallback(async () => {
     setRolesLoading(true);
@@ -232,11 +252,11 @@ const PermissionConfiguration = () => {
       setPermissionCatalogCount(catalog.filter(item => item.id > 0).length);
     } catch (error) {
       console.error('Failed to load roles:', error);
-      message.error('加载角色列表失败');
+      message.error(t('permissions.messages.loadRolesFailed'));
     } finally {
       setRolesLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   useEffect(() => {
     loadRoles();
@@ -253,7 +273,7 @@ const PermissionConfiguration = () => {
       setPermissionState(buildPermissionStateFromStrings(permissions));
     } catch (error) {
       console.error('Failed to load role permissions:', error);
-      message.error('加载角色权限失败');
+      message.error(t('permissions.messages.loadPermissionsFailed'));
     } finally {
       setLoading(false);
     }
@@ -265,16 +285,16 @@ const PermissionConfiguration = () => {
       await RoleAPI.initDefaultPermissions();
       const catalog = await RoleAPI.getPermissionCatalog();
       setPermissionCatalogCount(catalog.filter(item => item.id > 0).length);
-      message.success('默认权限字典初始化完成');
+      message.success(t('permissions.messages.initSuccess'));
     } catch (error) {
-      message.error('初始化权限字典失败');
+      message.error(t('permissions.messages.initFailed'));
     } finally {
       setSaving(false);
     }
   };
 
   // 过滤模块
-  const filteredModuleKeys = Object.entries(MODULE_CONFIG)
+  const filteredModuleKeys = Object.entries(moduleConfig)
     .filter(([key, config]) => {
       const matchesSearch =
         config.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -287,7 +307,7 @@ const PermissionConfiguration = () => {
   // 按分类分组
   const modulesByCategory: Record<string, string[]> = {};
   for (const key of filteredModuleKeys) {
-    const cat = MODULE_CONFIG[key].category;
+    const cat = moduleConfig[key].category;
     if (!modulesByCategory[cat]) modulesByCategory[cat] = [];
     modulesByCategory[cat].push(key);
   }
@@ -330,8 +350,8 @@ const PermissionConfiguration = () => {
   const handleBatchToggle = (category: string, enabled: boolean) => {
     setPermissionState(prev => {
       const newState = { ...prev };
-      for (const moduleKey of Object.keys(MODULE_CONFIG)) {
-        if (MODULE_CONFIG[moduleKey].category === category) {
+      for (const moduleKey of Object.keys(moduleConfig)) {
+        if (moduleConfig[moduleKey].category === category) {
           newState[moduleKey] = {
             isEnabled: enabled,
             actions: Object.fromEntries(
@@ -348,7 +368,7 @@ const PermissionConfiguration = () => {
   // 保存配置到后端
   const handleSave = async () => {
     if (!selectedRoleId) {
-      message.warning('请先选择一个角色');
+      message.warning(t('permissions.messages.selectRoleFirst'));
       return;
     }
     setSaving(true);
@@ -356,10 +376,10 @@ const PermissionConfiguration = () => {
       const permissionStrings = buildPermissionStringsFromState(permissionState);
       await RoleAPI.updateRole(selectedRoleId, { permissions: permissionStrings });
       setHasChanges(false);
-      message.success('权限配置保存成功');
+      message.success(t('permissions.messages.saveSuccess'));
     } catch (error) {
       console.error('Failed to save permissions:', error);
-      message.error('保存失败，请重试');
+      message.error(t('permissions.messages.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -373,12 +393,12 @@ const PermissionConfiguration = () => {
       setPermissionState(createDefaultPermissionState());
       setHasChanges(false);
     }
-    message.info('配置已重置');
+    message.info(t('permissions.messages.reset'));
   };
 
   // 统计信息
   const stats = {
-    totalModules: Object.keys(MODULE_CONFIG).length,
+    totalModules: Object.keys(moduleConfig).length,
     enabledModules: Object.values(permissionState).filter(m => m.isEnabled).length,
     totalActions: Object.values(permissionState).reduce((sum, m) => sum + Object.keys(m.actions).length, 0),
     enabledActions: Object.values(permissionState).reduce((sum, m) => sum + Object.values(m.actions).filter(v => v).length, 0),
@@ -387,19 +407,19 @@ const PermissionConfiguration = () => {
 
   // 生成权限树数据
   const generateTreeData = () => {
-    return CATEGORIES.map(category => ({
+    return categories.map(category => ({
       title: (
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2">
             {category.icon}
-            <Text strong>{category.name}</Text>
+            <Text strong>{category.id}</Text>
           </span>
           <div className="flex gap-2">
             <Button size="small" type="link" onClick={() => handleBatchToggle(category.id, true)}>
-              全部启用
+              {t('permissions.buttons.enableAll')}
             </Button>
             <Button size="small" type="link" onClick={() => handleBatchToggle(category.id, false)}>
-              全部禁用
+              {t('permissions.buttons.disableAll')}
             </Button>
           </div>
         </div>
@@ -408,13 +428,13 @@ const PermissionConfiguration = () => {
       children:
         modulesByCategory[category.id]?.map((moduleKey: string) => {
           const moduleState = permissionState[moduleKey];
-          const moduleConfig = MODULE_CONFIG[moduleKey];
+          const modConf = moduleConfig[moduleKey];
           return {
             title: (
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2">
-                  <span>{moduleConfig.icon}</span>
-                  <span>{moduleConfig.label}</span>
+                  <span>{modConf.icon}</span>
+                  <span>{modConf.label}</span>
                   <Switch
                     size="small"
                     checked={moduleState?.isEnabled || false}
@@ -424,7 +444,7 @@ const PermissionConfiguration = () => {
               </div>
             ),
             key: moduleKey,
-            children: Object.entries(ACTION_CONFIG).map(([actionKey, actionConf]) => ({
+            children: Object.entries(actionConfig).map(([actionKey, actionConf]) => ({
               title: (
                 <div className="flex items-center justify-between w-full">
                   <Tag color={moduleState?.actions[actionKey] ? actionConf.color : 'default'}>
@@ -447,7 +467,7 @@ const PermissionConfiguration = () => {
   // 渲染权限卡片视图
   const renderCardView = () => (
     <div className="space-y-6">
-      {CATEGORIES.map(category => {
+      {categories.map(category => {
         const categoryModuleKeys = modulesByCategory[category.id] || [];
         if (categoryModuleKeys.length === 0) return null;
 
@@ -458,15 +478,15 @@ const PermissionConfiguration = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {category.icon}
-                  <span>{category.name}</span>
+                  <span>{category.id}</span>
                   <Badge count={categoryModuleKeys.length} color="blue" />
                 </div>
                 <Space>
                   <Button size="small" type="link" onClick={() => handleBatchToggle(category.id, true)}>
-                    全部启用
+                    {t('permissions.buttons.enableAll')}
                   </Button>
                   <Button size="small" type="link" onClick={() => handleBatchToggle(category.id, false)}>
-                    全部禁用
+                    {t('permissions.buttons.disableAll')}
                   </Button>
                 </Space>
               </div>
@@ -475,7 +495,7 @@ const PermissionConfiguration = () => {
           >
             <Row gutter={[16, 16]}>
               {categoryModuleKeys.map((moduleKey: string) => {
-                const moduleConfig = MODULE_CONFIG[moduleKey];
+                const modConf = moduleConfig[moduleKey];
                 const moduleState = permissionState[moduleKey];
                 return (
                   <Col xs={24} md={12} lg={8} key={moduleKey}>
@@ -485,8 +505,8 @@ const PermissionConfiguration = () => {
                       title={
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span>{moduleConfig.icon}</span>
-                            <span className="text-sm">{moduleConfig.label}</span>
+                            <span>{modConf.icon}</span>
+                            <span className="text-sm">{modConf.label}</span>
                           </div>
                           <Switch
                             size="small"
@@ -497,10 +517,10 @@ const PermissionConfiguration = () => {
                       }
                     >
                       <Text type="secondary" className="text-xs mb-3 block">
-                        {moduleConfig.description}
+                        {modConf.description}
                       </Text>
                       <div className="space-y-2">
-                        {Object.entries(ACTION_CONFIG).map(([actionKey, actionConf]) => (
+                        {Object.entries(actionConfig).map(([actionKey, actionConf]) => (
                           <div key={actionKey} className="flex items-center justify-between">
                             <Tooltip title={actionConf.description}>
                               <Tag
@@ -536,9 +556,9 @@ const PermissionConfiguration = () => {
       <div>
         <Title level={2} className="!mb-2">
           <Key className="inline-block w-6 h-6 mr-2" />
-          权限配置管理
+          {t('permissions.title')}
         </Title>
-        <Text type="secondary">配置系统功能模块和操作权限，定义访问控制策略</Text>
+        <Text type="secondary">{t('permissions.description')}</Text>
       </div>
 
       {/* 角色选择器 */}
@@ -546,9 +566,9 @@ const PermissionConfiguration = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={6}>
             <div className="flex items-center gap-2">
-              <Text strong>选择角色：</Text>
+              <Text strong>{t('permissions.selectRole')}</Text>
               <Select
-                placeholder="请选择角色"
+                placeholder={t('permissions.placeholders.selectRole')}
                 value={selectedRoleId || undefined}
                 onChange={handleSelectRole}
                 loading={rolesLoading}
@@ -561,7 +581,7 @@ const PermissionConfiguration = () => {
           </Col>
           <Col xs={24} md={6}>
             <Input
-              placeholder="搜索模块或权限..."
+              placeholder={t('permissions.placeholders.searchModules')}
               prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -570,35 +590,35 @@ const PermissionConfiguration = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder="筛选分类"
+              placeholder={t('permissions.placeholders.filterCategory')}
               value={categoryFilter}
               onChange={setCategoryFilter}
               style={{ width: '100%' }}
               options={[
-                { value: 'all', label: '全部分类' },
-                ...CATEGORIES.map(category => ({ value: category.id, label: category.name })),
+                { value: 'all', label: t('permissions.allCategories') },
+                ...categories.map(category => ({ value: category.id, label: category.id })),
               ]}
             />
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder="视图模式"
+              placeholder={t('permissions.placeholders.viewMode')}
               value={viewMode}
               onChange={setViewMode}
               style={{ width: '100%' }}
               options={[
-                { value: 'card', label: '卡片视图' },
-                { value: 'tree', label: '树形视图' },
+                { value: 'card', label: t('permissions.viewModes.card') },
+                { value: 'tree', label: t('permissions.viewModes.tree') },
               ]}
             />
           </Col>
           <Col xs={24} md={4} className="text-right">
             <Space>
               <Button onClick={handleInitPermissions} loading={saving}>
-                初始化权限字典
+                {t('permissions.buttons.init')}
               </Button>
               <Button icon={<RefreshCw className="w-4 h-4" />} onClick={handleReset}>
-                重置
+                {t('permissions.buttons.reset')}
               </Button>
               <Button
                 type="primary"
@@ -607,7 +627,7 @@ const PermissionConfiguration = () => {
                 onClick={handleSave}
                 disabled={!hasChanges || !selectedRoleId}
               >
-                {saving ? '保存中...' : '保存配置'}
+                {saving ? t('permissions.buttons.saving') : t('permissions.buttons.save')}
               </Button>
             </Space>
           </Col>
@@ -617,8 +637,8 @@ const PermissionConfiguration = () => {
       {/* 未选择角色提示 */}
       {!selectedRoleId && (
         <Alert
-          message="请先选择角色"
-          description="从上方下拉框中选择一个角色，以查看和编辑该角色的权限配置。"
+          message={t('permissions.alerts.selectRoleMessage')}
+          description={t('permissions.alerts.selectRoleDescription')}
           type="info"
           showIcon
         />
@@ -626,8 +646,8 @@ const PermissionConfiguration = () => {
 
       {permissionCatalogCount === 0 && (
         <Alert
-          message="权限字典尚未初始化"
-          description="当前租户没有可用于真实授权的权限字典。请点击“初始化权限字典”，否则角色权限保存可能无法落到后端关联表。"
+          message={t('permissions.alerts.catalogNotInitMessage')}
+          description={t('permissions.alerts.catalogNotInitDescription')}
           type="warning"
           showIcon
         />
@@ -638,7 +658,7 @@ const PermissionConfiguration = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="功能模块"
+              title={t('permissions.stats.modules')}
               value={stats.enabledModules}
               suffix={`/ ${stats.totalModules}`}
               prefix={<Layers className="w-5 h-5" />}
@@ -649,7 +669,7 @@ const PermissionConfiguration = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="操作权限"
+              title={t('permissions.stats.actions')}
               value={stats.enabledActions}
               suffix={`/ ${stats.totalActions}`}
               prefix={<Activity className="w-5 h-5" />}
@@ -660,7 +680,7 @@ const PermissionConfiguration = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="启用模块"
+              title={t('permissions.stats.enabledModules')}
               value={((stats.enabledModules / stats.totalModules) * 100).toFixed(1)}
               suffix="%"
               prefix={<CheckCircle className="w-5 h-5" />}
@@ -671,7 +691,7 @@ const PermissionConfiguration = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="权限覆盖率"
+              title={t('permissions.stats.coverage')}
               value={((stats.enabledActions / stats.totalActions) * 100).toFixed(1)}
               suffix="%"
               prefix={<Shield className="w-5 h-5" />}
@@ -684,8 +704,8 @@ const PermissionConfiguration = () => {
       {/* 配置变更提醒 */}
       {hasChanges && selectedRoleId && (
         <Alert
-          message="配置已修改"
-          description="您有未保存的权限配置更改，请及时保存。"
+          message={t('permissions.alerts.unsavedMessage')}
+          description={t('permissions.alerts.unsavedDescription')}
           type="warning"
           showIcon
           closable
@@ -696,7 +716,7 @@ const PermissionConfiguration = () => {
       <Card className="enterprise-card">
         {loading ? (
           <div className="flex justify-center items-center py-20">
-            <Spin size="large" tip="加载权限数据..." />
+            <Spin size="large" tip={t('permissions.loading')} />
           </div>
         ) : viewMode === 'card' ? (
           renderCardView()

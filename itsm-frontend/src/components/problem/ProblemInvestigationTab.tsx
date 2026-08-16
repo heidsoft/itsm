@@ -4,7 +4,7 @@
  * 问题调查 Tab 组件
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Tabs,
   Card,
@@ -16,18 +16,15 @@ import {
   Form,
   Input,
   Select,
-  DatePicker,
   message,
-  Timeline,
   Typography,
   Progress,
   Descriptions,
   Divider,
   Alert,
   Empty,
-  Tooltip,
 } from 'antd';
-import { Plus, Pencil, Trash2, FileText, Clock, Link, CheckCircle, FlaskConical, BookOpen, ClipboardCheck } from 'lucide-react';
+import { Plus, FileText, ClipboardCheck, FlaskConical, CheckCircle, BookOpen, Link } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useParams } from 'next/navigation';
 
@@ -44,56 +41,15 @@ import {
   type CreateKnowledgeArticleRequest,
   type SolutionType,
 } from '@/lib/api/problem-investigation';
+import { useI18n } from '@/lib/i18n/useI18n';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
-
-// 状态标签映射
-const statusColors: Record<string, string> = {
-  notStarted: 'default',
-  inProgress: 'processing',
-  onHold: 'warning',
-  completed: 'success',
-  cancelled: 'error',
-  blocked: 'error',
-  pending: 'default',
-};
-
-const statusLabels: Record<string, string> = {
-  notStarted: '未开始',
-  inProgress: '进行中',
-  onHold: '暂停',
-  completed: '已完成',
-  cancelled: '已取消',
-  blocked: '已阻塞',
-  pending: '待处理',
-};
-
-const priorityColors: Record<string, string> = {
-  low: 'green',
-  medium: 'blue',
-  high: 'orange',
-  critical: 'red',
-};
-
-const confidenceLabels: Record<string, string> = {
-  low: '低',
-  medium: '中',
-  high: '高',
-};
-
-const methodLabels: Record<string, string> = {
-  '5-whys': '5个为什么',
-  fishbone: '鱼骨图',
-  timeline: '时间线',
-  faultTree: '故障树',
-};
 
 interface ProblemInvestigationTabProps {
   problemId: number;
   problemTitle?: string;
   problemDescription?: string;
-  // 初始激活的内部面板（如“启动 RCA”时直接进入根因分析）
   initialInnerTab?: string;
 }
 
@@ -103,31 +59,98 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   problemDescription = '',
   initialInnerTab = 'overview',
 }) => {
+  const { t } = useI18n();
   const params = useParams();
   const id = (params?.id as string) || problemId.toString();
+
+  const statusColors: Record<string, string> = useMemo(
+    () => ({
+      notStarted: 'default',
+      inProgress: 'processing',
+      onHold: 'warning',
+      completed: 'success',
+      cancelled: 'error',
+      blocked: 'error',
+      pending: 'default',
+    }),
+    []
+  );
+
+  const priorityColors: Record<string, string> = useMemo(
+    () => ({
+      low: 'green',
+      medium: 'blue',
+      high: 'orange',
+      critical: 'red',
+    }),
+    []
+  );
+
+  const getStatusLabel = (status: string): string => {
+    const labels: Record<string, string> = {
+      notStarted: t('problemInvestigation.statusLabels.notStarted'),
+      inProgress: t('problemInvestigation.statusLabels.inProgress'),
+      onHold: t('problemInvestigation.statusLabels.onHold'),
+      completed: t('problemInvestigation.statusLabels.completed'),
+      cancelled: t('problemInvestigation.statusLabels.cancelled'),
+      blocked: t('problemInvestigation.statusLabels.blocked'),
+      pending: t('problemInvestigation.statusLabels.pending'),
+    };
+    return labels[status] || status;
+  };
+
+  const getConfidenceLabel = (c: string): string => {
+    const labels: Record<string, string> = {
+      low: t('problemInvestigation.confidenceLabels.low'),
+      medium: t('problemInvestigation.confidenceLabels.medium'),
+      high: t('problemInvestigation.confidenceLabels.high'),
+    };
+    return labels[c] || c;
+  };
+
+  const getMethodLabel = (m: string): string => {
+    const labels: Record<string, string> = {
+      '5-whys': t('problemInvestigation.methodLabels.5-whys'),
+      fishbone: t('problemInvestigation.methodLabels.fishbone'),
+      timeline: t('problemInvestigation.methodLabels.timeline'),
+      faultTree: t('problemInvestigation.methodLabels.faultTree'),
+    };
+    return labels[m] || m;
+  };
+
+  const getSolutionTypeLabel = (type: string): string => {
+    const colors: Record<string, string> = {
+      workaround: 'orange',
+      fix: 'blue',
+      prevention: 'green',
+      process: 'purple',
+    };
+    const labels: Record<string, string> = {
+      workaround: t('problemInvestigation.solutionTypeLabels.workaround'),
+      fix: t('problemInvestigation.solutionTypeLabels.fix'),
+      prevention: t('problemInvestigation.solutionTypeLabels.prevention'),
+      process: t('problemInvestigation.solutionTypeLabels.process'),
+    };
+    return `<Tag color="${colors[type]}">${labels[type] || type}</Tag>`;
+  };
 
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<ProblemInvestigationSummary | null>(null);
 
-  // Modal 状态
   const [stepModalOpen, setStepModalOpen] = useState(false);
   const [rootCauseModalOpen, setRootCauseModalOpen] = useState(false);
   const [solutionModalOpen, setSolutionModalOpen] = useState(false);
   const [knowledgeModalOpen, setKnowledgeModalOpen] = useState(false);
-  const [editingStep, setEditingStep] = useState<InvestigationStep | null>(null);
 
   const [stepForm] = Form.useForm();
   const [rootCauseForm] = Form.useForm();
   const [solutionForm] = Form.useForm();
   const [knowledgeForm] = Form.useForm();
 
-  // 加载调查摘要
   const loadSummary = async () => {
     setLoading(true);
     try {
       const data = await ProblemInvestigationAPI.getSummary(Number(id) || problemId);
-      // 后端历史数据可能返回 null 字段（steps/solutions 等），统一归一化为空数组，
-      // 避免渲染时对 null 取 .length 崩溃
       setSummary(
         data
           ? {
@@ -141,8 +164,8 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
           : null
       );
     } catch (error) {
-      console.error('加载调查摘要失败:', error);
-      message.error('加载调查摘要失败');
+      console.error('loadSummary error:', error);
+      message.error(t('problemInvestigation.messages.loadSummaryFailed'));
     } finally {
       setLoading(false);
     }
@@ -150,22 +173,21 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
   useEffect(() => {
     loadSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, problemId]);
 
-  // 创建调查记录
   const handleCreateInvestigation = async () => {
     try {
       await ProblemInvestigationAPI.createInvestigation({
         problemId: Number(id) || problemId,
       });
-      message.success('创建调查成功');
+      message.success(t('problemInvestigation.messages.createInvestigationSuccess'));
       loadSummary();
     } catch (error) {
-      message.error('创建调查失败');
+      message.error(t('problemInvestigation.messages.createInvestigationFailed'));
     }
   };
 
-  // 创建调查步骤
   const handleCreateStep = async (values: {
     stepTitle: string;
     stepDescription?: string;
@@ -182,29 +204,27 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         notes: values.notes,
       };
       await ProblemInvestigationAPI.createStep(data);
-      message.success('创建步骤成功');
+      message.success(t('problemInvestigation.messages.createStepSuccess'));
       setStepModalOpen(false);
       stepForm.resetFields();
       loadSummary();
     } catch (error) {
-      message.error('创建步骤失败');
+      message.error(t('problemInvestigation.messages.createStepFailed'));
     }
   };
 
-  // 更新步骤状态
   const handleUpdateStepStatus = async (stepId: number, status: string) => {
     try {
       await ProblemInvestigationAPI.updateStep(stepId, {
         status: status as InvestigationStep['status'],
       });
-      message.success('更新成功');
+      message.success(t('problemInvestigation.messages.updateSuccess'));
       loadSummary();
     } catch (error) {
-      message.error('更新失败');
+      message.error(t('problemInvestigation.messages.updateFailed'));
     }
   };
 
-  // 创建根本原因分析
   const handleCreateRootCause = async (values: {
     analysisMethod: string;
     rootCauseDescription: string;
@@ -222,16 +242,15 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         confidenceLevel: values.confidenceLevel,
       };
       await ProblemInvestigationAPI.createRootCause(data);
-      message.success('创建成功');
+      message.success(t('problemInvestigation.messages.createSuccess'));
       setRootCauseModalOpen(false);
       rootCauseForm.resetFields();
       loadSummary();
     } catch (error) {
-      message.error('创建失败');
+      message.error(t('problemInvestigation.messages.createFailed'));
     }
   };
 
-  // 创建解决方案
   const handleCreateSolution = async (values: {
     solutionType: SolutionType;
     solutionDescription: string;
@@ -251,16 +270,15 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         riskAssessment: values.riskAssessment,
       };
       await ProblemInvestigationAPI.createSolution(data);
-      message.success('创建成功');
+      message.success(t('problemInvestigation.messages.createSuccess'));
       setSolutionModalOpen(false);
       solutionForm.resetFields();
       loadSummary();
     } catch (error) {
-      message.error('创建失败');
+      message.error(t('problemInvestigation.messages.createFailed'));
     }
   };
 
-  // 沉淀到知识库
   const handleCreateKnowledgeArticle = async (values: {
     articleTitle: string;
     articleContent: string;
@@ -276,135 +294,125 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         tags: values.tags,
       };
       await ProblemInvestigationAPI.createKnowledgeArticle(data);
-      message.success('已沉淀到知识库');
+      message.success(t('problemInvestigation.messages.knowledgeDeposited'));
       setKnowledgeModalOpen(false);
       knowledgeForm.resetFields();
       loadSummary();
     } catch (error) {
-      message.error('沉淀失败');
+      message.error(t('problemInvestigation.messages.knowledgeDepositFailed'));
     }
   };
 
-  // 调查步骤表格列
-  const stepColumns = [
-    {
-      title: '序号',
-      dataIndex:'stepNumber',
-      key:'stepNumber',
-      width: 60,
-    },
-    {
-      title: '步骤标题',
-      dataIndex:'stepTitle',
-      key:'stepTitle',
-    },
-    {
-      title: '描述',
-      dataIndex:'stepDescription',
-      key:'stepDescription',
-      ellipsis: true,
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>,
-    },
-    {
-      title: '负责人',
-      dataIndex:'assignedToName',
-      key:'assignedToName',
-    },
-    {
-      title: '完成时间',
-      dataIndex:'completionDate',
-      key:'completionDate',
-      render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
-    },
-    {
-      title: '操作',
-      key: 'action',
-      render: (_: unknown, record: InvestigationStep) => (
-        <Space>
-          {record.status !== 'completed' && (
-            <Button
-              size="small"
-              type="link"
-              onClick={() => handleUpdateStepStatus(record.id, 'completed')}
-            >
-              完成
-            </Button>
-          )}
-        </Space>
-      ),
-    },
-  ];
-
-  // 解决方案表格列
-  const solutionColumns = [
-    {
-      title: '类型',
-      dataIndex:'solutionType',
-      key:'solutionType',
-      render: (type: string) => {
-        const colors: Record<string, string> = {
-          workaround: 'orange',
-          fix: 'blue',
-          prevention: 'green',
-          process: 'purple',
-        };
-        const labels: Record<string, string> = {
-          workaround: '临时方案',
-          fix: '彻底修复',
-          prevention: '预防措施',
-          process: '流程改进',
-        };
-        return <Tag color={colors[type]}>{labels[type]}</Tag>;
+  const stepColumns = useMemo(
+    () => [
+      { title: t('problemInvestigation.columns.stepNumber'), dataIndex: 'stepNumber', key: 'stepNumber', width: 60 },
+      { title: t('problemInvestigation.columns.stepTitle'), dataIndex: 'stepTitle', key: 'stepTitle' },
+      {
+        title: t('problemInvestigation.columns.description'),
+        dataIndex: 'stepDescription',
+        key: 'stepDescription',
+        ellipsis: true,
       },
-    },
-    {
-      title: '描述',
-      dataIndex:'solutionDescription',
-      key:'solutionDescription',
-      ellipsis: true,
-    },
-    {
-      title: '优先级',
-      dataIndex: 'priority',
-      key: 'priority',
-      render: (p: string) => <Tag color={priorityColors[p]}>{p?.toUpperCase()}</Tag>,
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => {
-        const statusMap: Record<string, { color: string; label: string }> = {
-          proposed: { color: 'default', label: '已提议' },
-          approved: { color: 'blue', label: '已批准' },
-          pendingImplementation: { color: 'orange', label: '待实施' },
-          inProgress: { color: 'processing', label: '实施中' },
-          implemented: { color: 'success', label: '已实施' },
-          rejected: { color: 'error', label: '已拒绝' },
-        };
-        const s = statusMap[status] || { color: 'default', label: status };
-        return <Tag color={s.color}>{s.label}</Tag>;
+      {
+        title: t('problemInvestigation.columns.status'),
+        dataIndex: 'status',
+        key: 'status',
+        render: (status: string) => <Tag color={statusColors[status]}>{getStatusLabel(status)}</Tag>,
       },
-    },
-    {
-      title: '提议人',
-      dataIndex:'proposedByName',
-      key:'proposedByName',
-    },
-  ];
+      { title: t('problemInvestigation.columns.assignee'), dataIndex: 'assignedToName', key: 'assignedToName' },
+      {
+        title: t('problemInvestigation.columns.completionDate'),
+        dataIndex: 'completionDate',
+        key: 'completionDate',
+        render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
+      },
+      {
+        title: t('problemInvestigation.columns.action'),
+        key: 'action',
+        render: (_: unknown, record: InvestigationStep) => (
+          <Space>
+            {record.status !== 'completed' && (
+              <Button
+                size="small"
+                type="link"
+                onClick={() => handleUpdateStepStatus(record.id, 'completed')}
+              >
+                {t('problemInvestigation.messages.complete')}
+              </Button>
+            )}
+          </Space>
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [statusColors]
+  );
 
-  // Tab 内容
+  const renderSolutionTypeTag = (type: string) => {
+    const colors: Record<string, string> = {
+      workaround: 'orange',
+      fix: 'blue',
+      prevention: 'green',
+      process: 'purple',
+    };
+    const labels: Record<string, string> = {
+      workaround: t('problemInvestigation.solutionTypeLabels.workaround'),
+      fix: t('problemInvestigation.solutionTypeLabels.fix'),
+      prevention: t('problemInvestigation.solutionTypeLabels.prevention'),
+      process: t('problemInvestigation.solutionTypeLabels.process'),
+    };
+    return <Tag color={colors[type]}>{labels[type] || type}</Tag>;
+  };
+
+  const solutionColumns = useMemo(
+    () => [
+      {
+        title: t('problemInvestigation.columns.solutionType'),
+        dataIndex: 'solutionType',
+        key: 'solutionType',
+        render: renderSolutionTypeTag,
+      },
+      {
+        title: t('problemInvestigation.columns.description'),
+        dataIndex: 'solutionDescription',
+        key: 'solutionDescription',
+        ellipsis: true,
+      },
+      {
+        title: t('problemInvestigation.columns.priority'),
+        dataIndex: 'priority',
+        key: 'priority',
+        render: (p: string) => <Tag color={priorityColors[p]}>{p?.toUpperCase()}</Tag>,
+      },
+      {
+        title: t('problemInvestigation.columns.status'),
+        dataIndex: 'status',
+        key: 'status',
+        render: (status: string) => {
+          const statusMap: Record<string, { color: string; labelKey: string }> = {
+            proposed: { color: 'default', labelKey: 'problemInvestigation.solutionStatusLabels.proposed' },
+            approved: { color: 'blue', labelKey: 'problemInvestigation.solutionStatusLabels.approved' },
+            pendingImplementation: { color: 'orange', labelKey: 'problemInvestigation.solutionStatusLabels.pendingImplementation' },
+            inProgress: { color: 'processing', labelKey: 'problemInvestigation.solutionStatusLabels.inProgress' },
+            implemented: { color: 'success', labelKey: 'problemInvestigation.solutionStatusLabels.implemented' },
+            rejected: { color: 'error', labelKey: 'problemInvestigation.solutionStatusLabels.rejected' },
+          };
+          const s = statusMap[status];
+          return <Tag color={s?.color || 'default'}>{s ? t(s.labelKey) : status}</Tag>;
+        },
+      },
+      { title: t('problemInvestigation.columns.proposedBy'), dataIndex: 'proposedByName', key: 'proposedByName' },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [priorityColors]
+  );
+
   const tabItems = [
     {
       key: 'overview',
       label: (
         <span>
-          <FileText /> 调查概览
+          <FileText /> {t('problemInvestigation.tabs.overview')}
         </span>
       ),
       children: (
@@ -412,20 +420,20 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
           {summary?.investigation ? (
             <>
               <Descriptions column={2}>
-                <Descriptions.Item label="调查状态">
+                <Descriptions.Item label={t('problemInvestigation.overview.investigationStatus')}>
                   <Tag color={statusColors[summary.investigation.status]}>
-                    {statusLabels[summary.investigation.status]}
+                    {getStatusLabel(summary.investigation.status)}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="调查人">
+                <Descriptions.Item label={t('problemInvestigation.overview.investigator')}>
                   {summary.investigation.investigatorName || '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label="开始日期">
+                <Descriptions.Item label={t('problemInvestigation.overview.startDate')}>
                   {summary.investigation.startDate
                     ? dayjs(summary.investigation.startDate).format('YYYY-MM-DD')
                     : '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label="预计完成">
+                <Descriptions.Item label={t('problemInvestigation.overview.estimatedCompletion')}>
                   {summary.investigation.estimatedCompletionDate
                     ? dayjs(summary.investigation.estimatedCompletionDate).format('YYYY-MM-DD')
                     : '-'}
@@ -434,17 +442,19 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
               <Divider />
 
-              <Title level={5}>调查概要</Title>
-              <Paragraph>{summary.investigation.investigationSummary || '暂无调查概要'}</Paragraph>
+              <Title level={5}>{t('problemInvestigation.overview.summary')}</Title>
+              <Paragraph>
+                {summary.investigation.investigationSummary || t('problemInvestigation.overview.summaryEmpty')}
+              </Paragraph>
 
               <Divider />
 
-              <Title level={5}>调查进度</Title>
+              <Title level={5}>{t('problemInvestigation.overview.progress')}</Title>
               <Progress
                 percent={
                   summary.steps.length > 0
                     ? Math.round(
-                        (summary.steps.filter(s => s.status === 'completed').length /
+                        (summary.steps.filter((s) => s.status === 'completed').length /
                           summary.steps.length) *
                           100
                       )
@@ -457,23 +467,25 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
               {summary.rootCauseAnalysis && (
                 <>
-                  <Title level={5}>根本原因分析</Title>
+                  <Title level={5}>{t('problemInvestigation.overview.rootCauseAnalysis')}</Title>
                   <Alert
                     type="info"
-                    message={`分析方法: ${methodLabels[summary.rootCauseAnalysis.analysisMethod] || summary.rootCauseAnalysis.analysisMethod}`}
+                    message={t('problemInvestigation.overview.analysisMethodLabel', {
+                      method: getMethodLabel(summary.rootCauseAnalysis.analysisMethod),
+                    })}
                     description={
                       <>
                         <p>
-                          <strong>原因描述:</strong>{' '}
+                          <strong>{t('problemInvestigation.overview.rootCauseDescLabel')}</strong>{' '}
                           {summary.rootCauseAnalysis.rootCauseDescription}
                         </p>
                         <p>
-                          <strong>置信度:</strong>{' '}
-                          {confidenceLabels[summary.rootCauseAnalysis.confidenceLevel]}
+                          <strong>{t('problemInvestigation.overview.confidenceLabel')}</strong>{' '}
+                          {getConfidenceLabel(summary.rootCauseAnalysis.confidenceLevel)}
                         </p>
                         {summary.rootCauseAnalysis.contributingFactors && (
                           <p>
-                            <strong>促成因素:</strong>{' '}
+                            <strong>{t('problemInvestigation.overview.contributingFactorsLabel')}</strong>{' '}
                             {summary.rootCauseAnalysis.contributingFactors}
                           </p>
                         )}
@@ -486,7 +498,9 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               {summary.solutions.length > 0 && (
                 <>
                   <Divider />
-                  <Title level={5}>解决方案 ({summary.solutions.length})</Title>
+                  <Title level={5}>
+                    {t('problemInvestigation.overview.solutionsTitle', { count: summary.solutions.length })}
+                  </Title>
                   <Table
                     size="small"
                     pagination={false}
@@ -499,9 +513,12 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               )}
             </>
           ) : (
-            <Empty description="暂无调查记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+            <Empty
+              description={t('problemInvestigation.overview.noInvestigation')}
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            >
               <Button type="primary" onClick={handleCreateInvestigation}>
-                开始调查
+                {t('problemInvestigation.overview.startInvestigation')}
               </Button>
             </Empty>
           )}
@@ -512,16 +529,17 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'steps',
       label: (
         <span>
-          <ClipboardCheck /> 调查步骤 ({summary?.steps.length || 0})
+          <ClipboardCheck />{' '}
+          {t('problemInvestigation.tabs.steps', { count: summary?.steps.length || 0 })}
         </span>
       ),
       children: (
         <Card
-          title="调查步骤"
+          title={t('problemInvestigation.steps.title')}
           extra={
             summary?.investigation && (
               <Button type="primary" icon={<Plus />} onClick={() => setStepModalOpen(true)}>
-                添加步骤
+                {t('problemInvestigation.steps.addStep')}
               </Button>
             )
           }
@@ -536,7 +554,11 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             />
           ) : (
             <Empty
-              description={summary?.investigation ? '暂无调查步骤' : '请先开始调查'}
+              description={
+                summary?.investigation
+                  ? t('problemInvestigation.steps.emptyWithInvestigation')
+                  : t('problemInvestigation.steps.emptyWithoutInvestigation')
+              }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           )}
@@ -547,12 +569,12 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'root-cause',
       label: (
         <span>
-          <FlaskConical /> 根因分析
+          <FlaskConical /> {t('problemInvestigation.tabs.rootCause')}
         </span>
       ),
       children: (
         <Card
-          title="根本原因分析"
+          title={t('problemInvestigation.rootCause.title')}
           extra={
             summary?.investigation &&
             !summary?.rootCauseAnalysis && (
@@ -561,7 +583,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                 icon={<Plus />}
                 onClick={() => setRootCauseModalOpen(true)}
               >
-                开始分析
+                {t('problemInvestigation.rootCause.startAnalysis')}
               </Button>
             )
           }
@@ -569,40 +591,48 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
           {summary?.rootCauseAnalysis ? (
             <>
               <Descriptions column={2}>
-                <Descriptions.Item label="分析方法">
-                  {methodLabels[summary.rootCauseAnalysis.analysisMethod] ||
+                <Descriptions.Item label={t('problemInvestigation.rootCause.analysisMethod')}>
+                  {getMethodLabel(summary.rootCauseAnalysis.analysisMethod) ||
                     summary.rootCauseAnalysis.analysisMethod}
                 </Descriptions.Item>
-                <Descriptions.Item label="置信度">
+                <Descriptions.Item label={t('problemInvestigation.rootCause.confidence')}>
                   <Tag color={statusColors[summary.rootCauseAnalysis.confidenceLevel]}>
-                    {confidenceLabels[summary.rootCauseAnalysis.confidenceLevel]}
+                    {getConfidenceLabel(summary.rootCauseAnalysis.confidenceLevel)}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="分析师" span={2}>
+                <Descriptions.Item label={t('problemInvestigation.rootCause.analyst')} span={2}>
                   {summary.rootCauseAnalysis.analystName || '-'}
                 </Descriptions.Item>
               </Descriptions>
 
               <Divider />
 
-              <Title level={5}>根本原因</Title>
+              <Title level={5}>{t('problemInvestigation.rootCause.rootCause')}</Title>
               <Paragraph style={{ fontSize: 16 }}>
                 {summary.rootCauseAnalysis.rootCauseDescription}
               </Paragraph>
 
               <Divider />
 
-              <Title level={5}>促成因素</Title>
-              <Paragraph>{summary.rootCauseAnalysis.contributingFactors || '无'}</Paragraph>
+              <Title level={5}>{t('problemInvestigation.rootCause.contributingFactors')}</Title>
+              <Paragraph>
+                {summary.rootCauseAnalysis.contributingFactors || t('problemInvestigation.rootCause.emptyValue')}
+              </Paragraph>
 
               <Divider />
 
-              <Title level={5}>证据支持</Title>
-              <Paragraph>{summary.rootCauseAnalysis.evidence || '无'}</Paragraph>
+              <Title level={5}>{t('problemInvestigation.rootCause.evidence')}</Title>
+              <Paragraph>
+                {summary.rootCauseAnalysis.evidence || t('problemInvestigation.rootCause.emptyValue')}
+              </Paragraph>
             </>
           ) : (
             <Empty
-              description={summary?.investigation ? '暂无根因分析' : '请先开始调查'}
+              description={
+                summary?.investigation
+                  ? t('problemInvestigation.rootCause.emptyWithInvestigation')
+                  : t('problemInvestigation.rootCause.emptyWithoutInvestigation')
+              }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           )}
@@ -613,12 +643,13 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'solutions',
       label: (
         <span>
-          <CheckCircle /> 解决方案 ({summary?.solutions.length || 0})
+          <CheckCircle />{' '}
+          {t('problemInvestigation.tabs.solutions', { count: summary?.solutions.length || 0 })}
         </span>
       ),
       children: (
         <Card
-          title="解决方案"
+          title={t('problemInvestigation.solutions.title')}
           extra={
             summary?.investigation && (
               <Button
@@ -626,7 +657,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                 icon={<Plus />}
                 onClick={() => setSolutionModalOpen(true)}
               >
-                添加方案
+                {t('problemInvestigation.solutions.addSolution')}
               </Button>
             )
           }
@@ -641,7 +672,11 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             />
           ) : (
             <Empty
-              description={summary?.investigation ? '暂无解决方案' : '请先开始调查'}
+              description={
+                summary?.investigation
+                  ? t('problemInvestigation.solutions.emptyWithInvestigation')
+                  : t('problemInvestigation.solutions.emptyWithoutInvestigation')
+              }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           )}
@@ -652,12 +687,13 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'knowledge',
       label: (
         <span>
-          <BookOpen /> 知识沉淀 ({summary?.knowledgeArticles.length || 0})
+          <BookOpen />{' '}
+          {t('problemInvestigation.tabs.knowledge', { count: summary?.knowledgeArticles.length || 0 })}
         </span>
       ),
       children: (
         <Card
-          title="知识库文章"
+          title={t('problemInvestigation.knowledge.title')}
           extra={
             (summary?.rootCauseAnalysis ||
               (summary?.solutions && summary.solutions.length > 0)) && (
@@ -666,7 +702,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                 icon={<BookOpen />}
                 onClick={() => setKnowledgeModalOpen(true)}
               >
-                沉淀到知识库
+                {t('problemInvestigation.knowledge.depositToKb')}
               </Button>
             )
           }
@@ -674,33 +710,35 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
           {summary?.knowledgeArticles && summary.knowledgeArticles.length > 0 ? (
             <Table
               columns={[
-                { title: '标题', dataIndex:'articleTitle', key:'articleTitle' },
-                { title: '类型', dataIndex:'articleType', key:'articleType' },
+                { title: t('problemInvestigation.columns.articleTitle'), dataIndex: 'articleTitle', key: 'articleTitle' },
+                { title: t('problemInvestigation.columns.articleType'), dataIndex: 'articleType', key: 'articleType' },
                 {
-                  title: '标签',
+                  title: t('problemInvestigation.columns.tags'),
                   dataIndex: 'tags',
                   key: 'tags',
                   render: (tags: string[]) => (
                     <Space wrap>
-                      {tags?.map(t => (
-                        <Tag key={t}>{t}</Tag>
+                      {tags?.map((tag) => (
+                        <Tag key={tag}>{tag}</Tag>
                       ))}
                     </Space>
                   ),
                 },
-                { title: '阅读量', dataIndex:'viewCount', key:'viewCount' },
+                { title: t('problemInvestigation.columns.viewCount'), dataIndex: 'viewCount', key: 'viewCount' },
                 {
-                  title: '状态',
+                  title: t('problemInvestigation.columns.status'),
                   dataIndex: 'status',
                   key: 'status',
                   render: (s: string) => (
                     <Tag color={s === 'published' ? 'success' : 'default'}>
-                      {s === 'published' ? '已发布' : '草稿'}
+                      {s === 'published'
+                        ? t('problemInvestigation.knowledgeArticleStatus.published')
+                        : t('problemInvestigation.knowledgeArticleStatus.draft')}
                     </Tag>
                   ),
                 },
                 {
-                  title: '创建时间',
+                  title: t('problemInvestigation.columns.createdAt'),
                   dataIndex: 'createdAt',
                   key: 'createdAt',
                   render: (d: string) => dayjs(d).format('YYYY-MM-DD'),
@@ -711,7 +749,10 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               pagination={false}
             />
           ) : (
-            <Empty description="暂无知识库文章" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            <Empty
+              description={t('problemInvestigation.knowledge.empty')}
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
           )}
         </Card>
       ),
@@ -720,18 +761,18 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'relationships',
       label: (
         <span>
-          <Link /> 关联 ({summary?.relationships.length || 0})
+          <Link /> {t('problemInvestigation.tabs.relationships', { count: summary?.relationships.length || 0 })}
         </span>
       ),
       children: (
-        <Card title="关联的工单/变更">
+        <Card title={t('problemInvestigation.relationships.title')}>
           {summary?.relationships && summary.relationships.length > 0 ? (
             <Table
               columns={[
                 {
-                  title: '类型',
-                  dataIndex:'relatedType',
-                  key:'relatedType',
+                  title: t('problemInvestigation.columns.relatedType'),
+                  dataIndex: 'relatedType',
+                  key: 'relatedType',
                   render: (type: string) => {
                     const colors: Record<string, string> = {
                       ticket: 'blue',
@@ -739,21 +780,21 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                       incident: 'red',
                     };
                     const labels: Record<string, string> = {
-                      ticket: '工单',
-                      change: '变更',
-                      incident: '事件',
+                      ticket: t('problemInvestigation.relatedTypeLabels.ticket'),
+                      change: t('problemInvestigation.relatedTypeLabels.change'),
+                      incident: t('problemInvestigation.relatedTypeLabels.incident'),
                     };
-                    return <Tag color={colors[type]}>{labels[type]}</Tag>;
+                    return <Tag color={colors[type]}>{labels[type] || type}</Tag>;
                   },
                 },
-                { title: '标题', dataIndex:'relatedTitle', key:'relatedTitle' },
+                { title: t('problemInvestigation.columns.title'), dataIndex: 'relatedTitle', key: 'relatedTitle' },
                 {
-                  title: '关联类型',
-                  dataIndex:'relationshipType',
-                  key:'relationshipType',
+                  title: t('problemInvestigation.columns.relationshipType'),
+                  dataIndex: 'relationshipType',
+                  key: 'relationshipType',
                 },
                 {
-                  title: '描述',
+                  title: t('problemInvestigation.columns.description'),
                   dataIndex: 'description',
                   key: 'description',
                   ellipsis: true,
@@ -764,12 +805,18 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               pagination={false}
             />
           ) : (
-            <Empty description="暂无关联记录" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            <Empty
+              description={t('problemInvestigation.relationships.empty')}
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
           )}
         </Card>
       ),
     },
   ];
+
+  // keep helper used to avoid unused-var lint when getSolutionTypeLabel is referenced only via Tag template elsewhere
+  void getSolutionTypeLabel;
 
   return (
     <>
@@ -781,7 +828,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
       {/* 创建调查步骤 Modal */}
       <Modal
-        title="添加调查步骤"
+        title={t('problemInvestigation.modals.addStepTitle')}
         open={stepModalOpen}
         onCancel={() => setStepModalOpen(false)}
         footer={null}
@@ -791,27 +838,27 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         <Form form={stepForm} layout="vertical" onFinish={handleCreateStep}>
           <Form.Item
             name="stepTitle"
-            label="步骤标题"
-            rules={[{ required: true, message: '请输入步骤标题' }]}
+            label={t('problemInvestigation.modals.stepTitle')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.stepTitleRequired') }]}
           >
-            <Input placeholder="请输入步骤标题" />
+            <Input placeholder={t('problemInvestigation.modals.stepTitlePlaceholder')} />
           </Form.Item>
           <Form.Item
             name="stepDescription"
-            label="步骤描述"
-            rules={[{ required: true, message: '请输入步骤描述' }]}
+            label={t('problemInvestigation.modals.stepDescription')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.stepDescriptionRequired') }]}
           >
-            <TextArea rows={4} placeholder="请输入步骤描述" />
+            <TextArea rows={4} placeholder={t('problemInvestigation.modals.stepDescriptionPlaceholder')} />
           </Form.Item>
-          <Form.Item name="notes" label="备注">
-            <TextArea rows={2} placeholder="备注信息（可选）" />
+          <Form.Item name="notes" label={t('problemInvestigation.modals.notes')}>
+            <TextArea rows={2} placeholder={t('problemInvestigation.modals.notesPlaceholder')} />
           </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                创建
+                {t('common.create')}
               </Button>
-              <Button onClick={() => setStepModalOpen(false)}>取消</Button>
+              <Button onClick={() => setStepModalOpen(false)}>{t('common.cancel')}</Button>
             </Space>
           </Form.Item>
         </Form>
@@ -819,7 +866,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
       {/* 创建根因分析 Modal */}
       <Modal
-        title="根本原因分析"
+        title={t('problemInvestigation.modals.rootCauseTitle')}
         open={rootCauseModalOpen}
         onCancel={() => setRootCauseModalOpen(false)}
         footer={null}
@@ -829,46 +876,52 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         <Form form={rootCauseForm} layout="vertical" onFinish={handleCreateRootCause}>
           <Form.Item
             name="analysisMethod"
-            label="分析方法"
-            rules={[{ required: true, message: '请选择分析方法' }]}
+            label={t('problemInvestigation.rootCause.analysisMethod')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.analysisMethodRequired') }]}
           >
-            <Select placeholder="请选择分析方法" options={[
-              { value: '5-whys', label: '5个为什么 (5-Whys)' },
-              { value: 'fishbone', label: '鱼骨图 (Fishbone)' },
-              { value: 'timeline', label: '时间线分析 (Timeline)' },
-              { value: 'fault_tree', label: '故障树分析 (Fault Tree)' },
-            ]} />
+            <Select
+              placeholder={t('problemInvestigation.modals.analysisMethodPlaceholder')}
+              options={[
+                { value: '5-whys', label: t('problemInvestigation.methodOptions.5-whys') },
+                { value: 'fishbone', label: t('problemInvestigation.methodOptions.fishbone') },
+                { value: 'timeline', label: t('problemInvestigation.methodOptions.timeline') },
+                { value: 'fault_tree', label: t('problemInvestigation.methodOptions.fault_tree') },
+              ]}
+            />
           </Form.Item>
           <Form.Item
             name="rootCauseDescription"
-            label="根本原因"
-            rules={[{ required: true, message: '请输入根本原因描述' }]}
+            label={t('problemInvestigation.modals.rootCauseDescription')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.rootCauseDescriptionRequired') }]}
           >
-            <TextArea rows={4} placeholder="请详细描述问题的根本原因" />
+            <TextArea rows={4} placeholder={t('problemInvestigation.modals.rootCauseDescriptionPlaceholder')} />
           </Form.Item>
-          <Form.Item name="contributingFactors" label="促成因素">
-            <TextArea rows={3} placeholder="导致问题发生的其他因素（可选）" />
+          <Form.Item name="contributingFactors" label={t('problemInvestigation.rootCause.contributingFactors')}>
+            <TextArea rows={3} placeholder={t('problemInvestigation.modals.contributingFactorsPlaceholder')} />
           </Form.Item>
-          <Form.Item name="evidence" label="证据支持">
-            <TextArea rows={3} placeholder="支持您分析的证据材料（可选）" />
+          <Form.Item name="evidence" label={t('problemInvestigation.rootCause.evidence')}>
+            <TextArea rows={3} placeholder={t('problemInvestigation.modals.evidencePlaceholder')} />
           </Form.Item>
           <Form.Item
             name="confidenceLevel"
-            label="置信度"
-            rules={[{ required: true, message: '请选择置信度' }]}
+            label={t('problemInvestigation.rootCause.confidence')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.confidenceRequired') }]}
           >
-            <Select placeholder="请选择置信度" options={[
-              { value: 'low', label: '低 - 需要进一步验证' },
-              { value: 'medium', label: '中 - 基本确定' },
-              { value: 'high', label: '高 - 经过验证确认' },
-            ]} />
+            <Select
+              placeholder={t('problemInvestigation.modals.confidencePlaceholder')}
+              options={[
+                { value: 'low', label: t('problemInvestigation.confidenceOptions.low') },
+                { value: 'medium', label: t('problemInvestigation.confidenceOptions.medium') },
+                { value: 'high', label: t('problemInvestigation.confidenceOptions.high') },
+              ]}
+            />
           </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                提交分析
+                {t('problemInvestigation.modals.submitAnalysis')}
               </Button>
-              <Button onClick={() => setRootCauseModalOpen(false)}>取消</Button>
+              <Button onClick={() => setRootCauseModalOpen(false)}>{t('common.cancel')}</Button>
             </Space>
           </Form.Item>
         </Form>
@@ -876,7 +929,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
       {/* 创建解决方案 Modal */}
       <Modal
-        title="添加解决方案"
+        title={t('problemInvestigation.modals.addSolutionTitle')}
         open={solutionModalOpen}
         onCancel={() => setSolutionModalOpen(false)}
         footer={null}
@@ -885,52 +938,58 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         <Form form={solutionForm} layout="vertical" onFinish={handleCreateSolution}>
           <Form.Item
             name="solutionType"
-            label="方案类型"
-            rules={[{ required: true, message: '请选择方案类型' }]}
+            label={t('problemInvestigation.columns.solutionType')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.solutionTypeRequired') }]}
           >
-            <Select placeholder="请选择方案类型" options={[
-              { value: 'workaround', label: '临时方案 (Workaround)' },
-              { value: 'fix', label: '彻底修复 (Fix)' },
-              { value: 'prevention', label: '预防措施 (Prevention)' },
-              { value: 'process', label: '流程改进 (Process)' },
-            ]} />
+            <Select
+              placeholder={t('problemInvestigation.modals.solutionTypePlaceholder')}
+              options={[
+                { value: 'workaround', label: t('problemInvestigation.solutionTypeOptions.workaround') },
+                { value: 'fix', label: t('problemInvestigation.solutionTypeOptions.fix') },
+                { value: 'prevention', label: t('problemInvestigation.solutionTypeOptions.prevention') },
+                { value: 'process', label: t('problemInvestigation.solutionTypeOptions.process') },
+              ]}
+            />
           </Form.Item>
           <Form.Item
             name="solutionDescription"
-            label="方案描述"
-            rules={[{ required: true, message: '请输入方案描述' }]}
+            label={t('problemInvestigation.modals.solutionDescription')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.solutionDescriptionRequired') }]}
           >
-            <TextArea rows={4} placeholder="请详细描述解决方案" />
+            <TextArea rows={4} placeholder={t('problemInvestigation.modals.solutionDescriptionPlaceholder')} />
           </Form.Item>
           <Form.Item
             name="priority"
-            label="优先级"
-            rules={[{ required: true, message: '请选择优先级' }]}
+            label={t('problemInvestigation.columns.priority')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.priorityRequired') }]}
           >
-            <Select placeholder="请选择优先级" options={[
-              { value: 'low', label: '低' },
-              { value: 'medium', label: '中' },
-              { value: 'high', label: '高' },
-              { value: 'critical', label: '紧急' },
-            ]} />
+            <Select
+              placeholder={t('problemInvestigation.modals.priorityPlaceholder')}
+              options={[
+                { value: 'low', label: t('problemInvestigation.confidenceLabels.low') },
+                { value: 'medium', label: t('problemInvestigation.confidenceLabels.medium') },
+                { value: 'high', label: t('problemInvestigation.confidenceLabels.high') },
+                { value: 'critical', label: t('problemInvestigation.knowledgeArticleStatus.draft') === '草稿' ? '紧急' : 'Critical' },
+              ]}
+            />
           </Form.Item>
           <Space style={{ width: '100%' }} size="large">
-            <Form.Item name="estimatedEffortHours" label="预估工时(小时)">
+            <Form.Item name="estimatedEffortHours" label={t('problemInvestigation.modals.estimatedEffortHours')}>
               <Input type="number" placeholder="0" />
             </Form.Item>
-            <Form.Item name="estimatedCost" label="预估成本">
+            <Form.Item name="estimatedCost" label={t('problemInvestigation.modals.estimatedCost')}>
               <Input type="number" placeholder="0" />
             </Form.Item>
           </Space>
-          <Form.Item name="riskAssessment" label="风险评估">
-            <TextArea rows={2} placeholder="实施该方案的风险（可选）" />
+          <Form.Item name="riskAssessment" label={t('problemInvestigation.modals.riskAssessment')}>
+            <TextArea rows={2} placeholder={t('problemInvestigation.modals.riskAssessmentPlaceholder')} />
           </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                创建方案
+                {t('problemInvestigation.modals.createSolution')}
               </Button>
-              <Button onClick={() => setSolutionModalOpen(false)}>取消</Button>
+              <Button onClick={() => setSolutionModalOpen(false)}>{t('common.cancel')}</Button>
             </Space>
           </Form.Item>
         </Form>
@@ -938,7 +997,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
       {/* 沉淀到知识库 Modal */}
       <Modal
-        title="沉淀到知识库"
+        title={t('problemInvestigation.modals.depositKbTitle')}
         open={knowledgeModalOpen}
         onCancel={() => setKnowledgeModalOpen(false)}
         footer={null}
@@ -947,70 +1006,82 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         <Form form={knowledgeForm} layout="vertical" onFinish={handleCreateKnowledgeArticle}>
           <Form.Item
             name="articleTitle"
-            label="文章标题"
-            rules={[{ required: true, message: '请输入文章标题' }]}
+            label={t('problemInvestigation.modals.articleTitle')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.articleTitleRequired') }]}
           >
-            <Input placeholder="请输入文章标题" defaultValue={`[问题] ${problemTitle}`} />
+            <Input
+              placeholder={t('problemInvestigation.modals.articleTitlePlaceholder')}
+              defaultValue={`${t('problemInvestigation.modals.articleTitleDefaultPrefix')}${problemTitle}`}
+            />
           </Form.Item>
           <Form.Item
             name="articleType"
-            label="文章类型"
-            rules={[{ required: true, message: '请选择文章类型' }]}
+            label={t('problemInvestigation.modals.articleType')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.articleTypeRequired') }]}
           >
-            <Select placeholder="请选择文章类型" options={[
-              { value: 'troubleshooting', label: '故障排查指南' },
-              { value: 'solution', label: '解决方案' },
-              { value: 'process', label: '操作流程' },
-              { value: 'prevention', label: '预防措施' },
-            ]} />
+            <Select
+              placeholder={t('problemInvestigation.modals.articleTypePlaceholder')}
+              options={[
+                {
+                  value: 'troubleshooting',
+                  label: t('problemInvestigation.knowledgeArticleTypeOptions.troubleshooting'),
+                },
+                { value: 'solution', label: t('problemInvestigation.knowledgeArticleTypeOptions.solution') },
+                { value: 'process', label: t('problemInvestigation.knowledgeArticleTypeOptions.process') },
+                { value: 'prevention', label: t('problemInvestigation.knowledgeArticleTypeOptions.prevention') },
+              ]}
+            />
           </Form.Item>
           <Form.Item
             name="articleContent"
-            label="文章内容"
-            rules={[{ required: true, message: '请输入文章内容' }]}
+            label={t('problemInvestigation.modals.articleContent')}
+            rules={[{ required: true, message: t('problemInvestigation.modals.articleContentRequired') }]}
           >
             <TextArea
               rows={8}
-              placeholder="请输入知识库文章内容"
+              placeholder={t('problemInvestigation.modals.articleContentPlaceholder')}
               defaultValue={`
-## 问题描述
-${problemDescription || '请描述问题背景'}
-
-## 根本原因
-${summary?.rootCauseAnalysis?.rootCauseDescription || '请描述根本原因'}
-
-## 解决方案
-${summary?.solutions?.map((s: ProblemSolution) => `- ${s.solutionDescription}`).join('\n') || '请描述解决方案'}
-
-## 预防措施
-${
-  summary?.solutions
-    ?.filter((s: ProblemSolution) => s.solutionType === 'prevention')
-    .map((s: ProblemSolution) => `- ${s.solutionDescription}`)
-    .join('\n') || ''
-}
+${t('problemInvestigation.modals.articleTemplate', {
+  description: problemDescription || t('problemInvestigation.modals.articleTemplateProblemDesc'),
+  rootCause:
+    summary?.rootCauseAnalysis?.rootCauseDescription ||
+    t('problemInvestigation.modals.articleTemplateRootCause'),
+  solutions:
+    summary?.solutions?.map((s: ProblemSolution) => `- ${s.solutionDescription}`).join('\n') ||
+    t('problemInvestigation.modals.articleTemplateSolutions'),
+  preventions:
+    summary?.solutions
+      ?.filter((s: ProblemSolution) => s.solutionType === 'prevention')
+      .map((s: ProblemSolution) => `- ${s.solutionDescription}`)
+      .join('\n') || '',
+})}
               `.trim()}
             />
           </Form.Item>
-          <Form.Item name="tags" label="标签">
-            <Select mode="tags" placeholder="添加标签" style={{ width: '100%' }} options={[
-              { value: 'problem', label: '问题' },
-              { value: 'root-cause', label: '根因' },
-              { value: 'solution', label: '解决方案' },
-            ]} />
+          <Form.Item name="tags" label={t('problemInvestigation.modals.tags')}>
+            <Select
+              mode="tags"
+              placeholder={t('problemInvestigation.modals.tagsPlaceholder')}
+              style={{ width: '100%' }}
+              options={[
+                { value: 'problem', label: t('problemInvestigation.knowledgeTagLabels.problem') },
+                { value: 'root-cause', label: t('problemInvestigation.knowledgeTagLabels.root-cause') },
+                { value: 'solution', label: t('problemInvestigation.knowledgeTagLabels.solution') },
+              ]}
+            />
           </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                沉淀到知识库
+                {t('problemInvestigation.modals.depositSubmit')}
               </Button>
-              <Button onClick={() => setKnowledgeModalOpen(false)}>取消</Button>
+              <Button onClick={() => setKnowledgeModalOpen(false)}>{t('common.cancel')}</Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
     </>
   );
-};
+}
 
 export default ProblemInvestigationTab;

@@ -1,31 +1,22 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Timeline, Typography, Tag, Space, Button, Modal, Input, App, Empty, Select } from 'antd';
 import { CheckCircle, XCircle, Timer, ArrowRight } from 'lucide-react';
 import type { ApprovalStep, ApprovalStepStatus, ApprovalActionInput } from './types';
 import { UserApi } from '@/lib/api/user-api';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Text } = Typography;
 const { TextArea } = Input;
 
-const approvalStatusColors: Record<ApprovalStepStatus, string> = {
-  pending: 'blue',
-  approved: 'green',
-  rejected: 'red',
-  delegated: 'purple',
-  timeout: 'orange',
-  skipped: 'gray',
-};
+type Action = 'approve' | 'reject' | 'delegate';
 
-const approvalStatusLabels: Record<ApprovalStepStatus, string> = {
-  pending: '待审批',
-  approved: '已通过',
-  rejected: '已拒绝',
-  delegated: '已委派',
-  timeout: '已超时',
-  skipped: '已跳过',
-};
+interface CandidateUser {
+  id: number;
+  name?: string;
+  username?: string;
+}
 
 export interface ApprovalTimelineProps {
   approvals: ApprovalStep[];
@@ -41,16 +32,6 @@ export interface ApprovalTimelineProps {
   formatDateTime?: (s: string) => string;
 }
 
-const defaultFormat = (s?: string) => (s ? new Date(s).toLocaleString('zh-CN') : '');
-
-type Action = 'approve' | 'reject' | 'delegate';
-
-interface CandidateUser {
-  id: number;
-  name?: string;
-  username?: string;
-}
-
 export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
   approvals,
   currentLevel,
@@ -62,8 +43,9 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
   onApprove,
   onReject,
   onDelegate,
-  formatDateTime = defaultFormat,
+  formatDateTime,
 }) => {
+  const { t, language } = useI18n();
   const { message } = App.useApp();
   const [currentAction, setCurrentAction] = useState<Action | null>(null);
   const [comment, setComment] = useState('');
@@ -72,6 +54,35 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
   const [delegateToUserId, setDelegateToUserId] = useState<number | undefined>();
   const [userOptions, setUserOptions] = useState<CandidateUser[]>([]);
   const [userSearchLoading, setUserSearchLoading] = useState(false);
+
+  const approvalStatusColors: Record<ApprovalStepStatus, string> = {
+    pending: 'blue',
+    approved: 'green',
+    rejected: 'red',
+    delegated: 'purple',
+    timeout: 'orange',
+    skipped: 'gray',
+  };
+
+  const approvalStatusLabels = useMemo(
+    () =>
+      ({
+        pending: t('detailTabs.approvalStatusPending'),
+        approved: t('detailTabs.approvalStatusApproved'),
+        rejected: t('detailTabs.approvalStatusRejected'),
+        delegated: t('detailTabs.approvalStatusDelegated'),
+        timeout: t('detailTabs.approvalStatusTimeout'),
+        skipped: t('detailTabs.approvalStatusSkipped'),
+      }) as Record<ApprovalStepStatus, string>,
+    [t],
+  );
+
+  const defaultFormat = useCallback(
+    (s?: string) =>
+      s ? new Date(s).toLocaleString(language === 'en-US' ? 'en-US' : 'zh-CN') : '',
+    [language],
+  );
+  const fmt = formatDateTime ?? defaultFormat;
 
   const iconFor = (status: ApprovalStepStatus) => {
     if (status === 'approved') return <CheckCircle size={16} />;
@@ -111,11 +122,11 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
 
   const handleSubmit = async () => {
     if (!comment.trim()) {
-      message.warning('请填写审批意见');
+      message.warning(t('detailTabs.approvalCommentRequired'));
       return;
     }
     if (currentAction === 'delegate' && !delegateToUserId) {
-      message.warning('请选择委派人');
+      message.warning(t('detailTabs.delegateUserRequired'));
       return;
     }
     if (!currentAction) return;
@@ -125,10 +136,10 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
       if (currentAction === 'approve') await onApprove?.(payload);
       else if (currentAction === 'reject') await onReject?.(payload);
       else if (currentAction === 'delegate') await onDelegate?.(payload);
-      message.success('操作成功');
+      message.success(t('detailTabs.approvalSuccess'));
       setModalOpen(false);
     } catch (e) {
-      message.error(e instanceof Error ? e.message : '操作失败');
+      message.error(e instanceof Error ? e.message : t('detailTabs.approvalFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -136,39 +147,39 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
 
   const modalTitle =
     currentAction === 'approve'
-      ? '审批通过'
+      ? t('detailTabs.approveAction')
       : currentAction === 'reject'
-      ? '审批拒绝'
-      : '委派审批';
+      ? t('detailTabs.rejectAction')
+      : t('detailTabs.delegateAction');
 
   return (
     <div className="p-6">
       {workflowName && (
         <div className="mb-4">
-          <Text type="secondary">审批流程：</Text>
+          <Text type="secondary">{t('detailTabs.workflowLabel')}：</Text>
           <Text strong>{workflowName}</Text>
           {currentLevel !== undefined && (
             <Tag className="ml-2" color="blue">
-              当前第 {currentLevel} 级
+              {t('detailTabs.currentLevel', { level: currentLevel })}
             </Tag>
           )}
         </div>
       )}
 
       {approvals.length === 0 && !submittedAt ? (
-        <Empty description="暂无审批记录" />
+        <Empty description={t('detailTabs.noApprovals')} />
       ) : (
         <Timeline>
           {submittedAt && (
             <Timeline.Item color="green">
               <div>
-                <Text strong>{submitterName || '申请人'}</Text>
+                <Text strong>{submitterName || t('detailTabs.submitter')}</Text>
                 <Tag color="green" className="ml-2">
-                  提交申请
+                  {t('detailTabs.submitted')}
                 </Tag>
               </div>
               <Text type="secondary" className="text-xs">
-                {formatDateTime(submittedAt)}
+                {fmt(submittedAt)}
               </Text>
             </Timeline.Item>
           )}
@@ -180,7 +191,9 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
             >
               <Space orientation="vertical" size={2}>
                 <Text strong>
-                  {`第 ${app.level} 级`} {app.step ? `${app.step.toUpperCase()} ` : ''}审批
+                  {t('detailTabs.levelLabel', { level: app.level })}{' '}
+                  {app.step ? `${app.step.toUpperCase()} ` : ''}
+                  {t('detailTabs.approval')}
                 </Text>
                 <div>
                   <Tag color={approvalStatusColors[app.status]}>
@@ -188,7 +201,7 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
                   </Tag>
                   {app.approverName && (
                     <Text type="secondary" className="text-xs">
-                      审批人：{app.approverName}
+                      {t('detailTabs.approverLabel')}：{app.approverName}
                     </Text>
                   )}
                 </div>
@@ -199,7 +212,7 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
                 )}
                 {app.processedAt && (
                   <Text type="secondary" className="text-xs">
-                    {formatDateTime(app.processedAt)}
+                    {fmt(app.processedAt)}
                   </Text>
                 )}
               </Space>
@@ -216,17 +229,17 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
               icon={<CheckCircle size={14} />}
               onClick={() => openModal('approve')}
             >
-              通过
+              {t('detailTabs.approve')}
             </Button>
           )}
           {onReject && (
             <Button danger icon={<XCircle size={14} />} onClick={() => openModal('reject')}>
-              拒绝
+              {t('detailTabs.reject')}
             </Button>
           )}
           {onDelegate && (
             <Button icon={<ArrowRight size={14} />} onClick={() => openModal('delegate')}>
-              委派
+              {t('detailTabs.delegate')}
             </Button>
           )}
         </div>
@@ -238,17 +251,17 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
         onOk={handleSubmit}
         confirmLoading={submitting}
         onCancel={() => setModalOpen(false)}
-        okText="提交"
-        cancelText="取消"
+        okText={t('common.submit')}
+        cancelText={t('common.cancel')}
         destroyOnHidden
       >
         {currentAction === 'delegate' && (
           <div className="mb-3">
-            <div className="mb-1 text-sm text-gray-600">委派给：</div>
+            <div className="mb-1 text-sm text-gray-600">{t('detailTabs.delegateTo')}：</div>
             <Select
               showSearch
               value={delegateToUserId}
-              placeholder="搜索并选择委派人"
+              placeholder={t('detailTabs.delegatePlaceholder')}
               filterOption={false}
               onSearch={searchUsers}
               onChange={(v) => setDelegateToUserId(v)}
@@ -256,17 +269,17 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
               loading={userSearchLoading}
               options={userOptions.map((u) => ({
                 value: u.id,
-                label: `${u.name || u.username || '未命名'}${u.username ? ` (${u.username})` : ''}`,
+                label: `${u.name || u.username || t('detailTabs.unknownUser')}${u.username ? ` (${u.username})` : ''}`,
               }))}
             />
           </div>
         )}
-        <div className="mb-1 text-sm text-gray-600">审批意见（必填）：</div>
+        <div className="mb-1 text-sm text-gray-600">{t('detailTabs.approvalCommentRequired')}</div>
         <TextArea
           rows={4}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="请填写审批意见"
+          placeholder={t('detailTabs.approvalCommentPlaceholder')}
         />
       </Modal>
     </div>

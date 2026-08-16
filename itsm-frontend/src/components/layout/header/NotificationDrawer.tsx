@@ -5,6 +5,7 @@ import { Drawer, Typography, Button } from 'antd';
 import { Bell, CheckCheck, ArrowRight, Ticket, AlertTriangle, Zap } from 'lucide-react';
 import type { TicketNotification } from '@/lib/api/ticket-notification-api';
 import { DESIGN } from '@/design-system/tokens';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Text, Title } = Typography;
 
@@ -28,6 +29,8 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   onMarkAllAsRead,
   onViewAll,
 }) => {
+  const { t } = useI18n();
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent':
@@ -55,21 +58,21 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   const getNotificationTitle = (type: string) => {
     switch (type) {
       case 'created':
-        return '新工单创建';
+        return t('notificationDrawer.typeCreated');
       case 'assigned':
-        return '工单已分配';
+        return t('notificationDrawer.typeAssigned');
       case 'status_changed':
-        return '工单状态变更';
+        return t('notificationDrawer.typeStatusChanged');
       case 'commented':
-        return '工单有新评论';
+        return t('notificationDrawer.typeCommented');
       case 'sla_warning':
-        return 'SLA预警';
+        return t('notificationDrawer.typeSlaWarning');
       case 'resolved':
-        return '工单已解决';
+        return t('notificationDrawer.typeResolved');
       case 'closed':
-        return '工单已关闭';
+        return t('notificationDrawer.typeClosed');
       default:
-        return '新通知';
+        return t('notificationDrawer.typeDefault');
     }
   };
 
@@ -184,10 +187,12 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
             </div>
             <div>
               <Title level={5} style={{ margin: 0, fontSize: 16 }}>
-                通知中心
+                {t('notificationDrawer.title')}
               </Title>
               <Text style={{ fontSize: 12, color: DESIGN.colors.textMuted }}>
-                {unreadCount > 0 ? `${unreadCount} 条未读` : '暂无未读'}
+                {unreadCount > 0
+                  ? t('notificationDrawer.unreadCount', { count: unreadCount })
+                  : t('notificationDrawer.noUnread')}
               </Text>
             </div>
           </div>
@@ -198,7 +203,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               onClick={onMarkAllAsRead}
               style={{ color: DESIGN.colors.accent }}
             >
-              全部已读
+              {t('notificationDrawer.markAllRead')}
             </Button>
           )}
         </div>
@@ -213,7 +218,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
         {notifications.length === 0 ? (
           <div style={{ padding: '60px 20px', textAlign: 'center' }}>
             <Bell size={48} style={{ color: DESIGN.colors.border, marginBottom: 16 }} />
-            <Text style={{ color: DESIGN.colors.textMuted }}>暂无通知</Text>
+            <Text style={{ color: DESIGN.colors.textMuted }}>{t('notificationDrawer.noNotifications')}</Text>
           </div>
         ) : (
           notifications.map(item => <NotificationItem key={item.id} item={item} />)
@@ -228,7 +233,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
         }}
       >
         <Button type="link" onClick={onViewAll} style={{ color: DESIGN.colors.accent }}>
-          查看全部通知 <ArrowRight size={14} />
+          {t('notificationDrawer.viewAll')} <ArrowRight size={14} />
         </Button>
       </div>
     </Drawer>

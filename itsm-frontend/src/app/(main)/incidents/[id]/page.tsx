@@ -12,17 +12,18 @@ import {
   fetchAuditLogHistory,
 } from '@/components/business/detail-tabs';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useI18n } from '@/lib/i18n/useI18n';
 import dayjs from 'dayjs';
 
 const formatDateTime = (v?: string) => (v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-');
 
-// 动态路由参数类型
 export default function IncidentDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
   const numericId = Number(id);
   const { user } = useAuthStore();
+  const { t } = useI18n();
 
   return (
     <App>
@@ -34,13 +35,11 @@ export default function IncidentDetailPage() {
             onClick={() => router.back()}
             style={{ paddingLeft: 0, color: '#666' }}
           >
-            返回列表
+            {t('common.back')}
           </Button>
         </div>
-        {/* 主详情组件保持不变 */}
         <IncidentDetail id={id} />
 
-        {/* 追加：协作与历史 Tabs */}
         {Number.isFinite(numericId) && numericId > 0 && (
           <Card className="mt-4 rounded-lg shadow-sm border border-gray-200">
             <Tabs
@@ -51,7 +50,7 @@ export default function IncidentDetailPage() {
                   label: (
                     <span>
                       <MessageSquare size={14} className="inline mr-1" />
-                      评论
+                      {t('detailTabs.comments')}
                     </span>
                   ),
                   children: (
@@ -70,7 +69,7 @@ export default function IncidentDetailPage() {
                   label: (
                     <span>
                       <HistoryIcon size={14} className="inline mr-1" />
-                      历史（审计日志）
+                      {t('detailTabs.history')}
                     </span>
                   ),
                   children: (

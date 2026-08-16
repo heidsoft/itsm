@@ -6,14 +6,17 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Button, Space, message } from 'antd';
+import { App, Button, Space } from 'antd';
 import { Archive, Send } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import ArticleDetail from '@/components/knowledge/ArticleDetail';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import { ArticleStatus } from '@/types/knowledge-base';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 export default function KnowledgeArticleDetailPage() {
+  const { t } = useI18n();
+  const { message } = App.useApp();
   const { id } = useParams() as { id: string };
   const [status, setStatus] = useState<ArticleStatus>();
   const [submitting, setSubmitting] = useState(false);
@@ -32,7 +35,7 @@ export default function KnowledgeArticleDetailPage() {
   const updatePublishStatus = async (publish: boolean) => {
     const articleId = Number(id);
     if (!Number.isSafeInteger(articleId) || articleId <= 0) {
-      message.error('无效的文章 ID');
+      message.error(t('knowledgeBase.invalidArticleId'));
       return;
     }
 
@@ -43,9 +46,9 @@ export default function KnowledgeArticleDetailPage() {
         : await KnowledgeBaseApi.unpublishArticle(articleId);
       setStatus(article.status);
       setDetailVersion(version => version + 1);
-      message.success(publish ? '文章已发布' : '文章已下架');
+      message.success(publish ? t('knowledgeBase.articlePublished') : t('knowledgeBase.articleUnpublished'));
     } catch {
-      message.error(publish ? '发布文章失败' : '下架文章失败');
+      message.error(publish ? t('knowledgeBase.publishFailed') : t('knowledgeBase.unpublishFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -61,7 +64,7 @@ export default function KnowledgeArticleDetailPage() {
             loading={submitting}
             onClick={() => updatePublishStatus(false)}
           >
-            下架文章
+            {t('knowledgeBase.unpublish')}
           </Button>
         ) : (
           <Button
@@ -70,7 +73,7 @@ export default function KnowledgeArticleDetailPage() {
             loading={submitting}
             onClick={() => updatePublishStatus(true)}
           >
-            发布文章
+            {t('knowledgeBase.publish')}
           </Button>
         )}
       </Space>

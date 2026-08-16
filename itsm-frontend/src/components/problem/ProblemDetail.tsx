@@ -10,6 +10,7 @@ import { ArrowLeft, Search, Pencil, FlaskConical, ShieldAlert } from 'lucide-rea
 import { useRouter, useParams } from 'next/navigation';
 
 import { ProblemApi } from '@/lib/api/';
+import { useI18n } from '@/lib/i18n/useI18n';
 import { KEDBApi } from '@/lib/api/kedb-api';
 import { ProblemStatus, ProblemStatusLabels } from '@/constants/problem';
 import type { Problem } from '@/types/biz/problem';
@@ -22,6 +23,7 @@ const { TextArea } = Input;
 const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const params = useParams();
   const router = useRouter();
+  const { t } = useI18n();
   // 支持通过props传入id，或通过useParams获取
   const id = propId || (params?.id as string);
   const [loading, setLoading] = useState(false);
@@ -33,7 +35,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   // 调查 Tab 内部初始面板（启动 RCA 时跳到“根因分析”）
   const [investigationInnerTab, setInvestigationInnerTab] = useState('overview');
   const [investigationMountKey, setInvestigationMountKey] = useState(0);
-  // 转为已知错误 Modal
+  // {t('problemDetail.toKnownError')} Modal
   const [knownErrorModalOpen, setKnownErrorModalOpen] = useState(false);
   const [creatingKnownError, setCreatingKnownError] = useState(false);
   const [knownErrorForm] = Form.useForm();
@@ -45,7 +47,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       const problem = await ProblemApi.getProblem(Number(id));
       setData(problem as unknown as Problem);
     } catch (error) {
-      message.error('加载问题详情失败');
+      message.error(t('problemDetail.loadDetailFailed'));
     } finally {
       setLoading(false);
     }
@@ -60,10 +62,10 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     setUpdatingStatus(status);
     try {
       await ProblemApi.updateProblem(Number(id), { status });
-      message.success('状态更新成功');
+      message.success(t('problemDetail.statusUpdateSuccess'));
       loadData();
     } catch (error) {
-      message.error('状态更新失败');
+      message.error(t('problemDetail.statusUpdateFailed'));
     } finally {
       setUpdatingStatus(null);
     }
@@ -72,11 +74,11 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   // 关闭问题为不可逆操作，必须二次确认
   const handleCloseProblem = () => {
     Modal.confirm({
-      title: '确认关闭问题？',
-      content: '关闭后问题将进入终态，无法再进行处理操作。请确认根因分析与解决方案已记录完整。',
-      okText: '确认关闭',
+      title: t('problemDetail.confirmCloseTitle'),
+      content: t('problemDetail.confirmCloseContent'),
+      okText: t('problemDetail.confirmCloseOk'),
       okButtonProps: { danger: true },
-      cancelText: '取消',
+      cancelText: t('problemDetail.cancel'),
       onOk: () => handleUpdateStatus(ProblemStatus.CLOSED),
     });
   };
@@ -88,7 +90,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     setActiveTab('investigation');
   };
 
-  // 转为已知错误：沉淀到 KEDB（已知错误库）
+  // {t('problemDetail.toKnownError')}：沉淀到 KEDB（已知错误库）
   const handleCreateKnownError = async (values: {
     title: string;
     rootCause?: string;
@@ -105,12 +107,12 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         workaround: values.workaround,
         problemId: data.id,
       });
-      message.success('已转为已知错误');
+      message.success(t('problemDetail.toKnownErrorSuccess'));
       setKnownErrorModalOpen(false);
       knownErrorForm.resetFields();
       router.push('/problems/known-errors');
     } catch (error) {
-      message.error('转为已知错误失败');
+      message.error(t('problemDetail.toKnownErrorFailed'));
     } finally {
       setCreatingKnownError(false);
     }
@@ -125,20 +127,20 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   }
 
   if (!data) {
-    return <Card>未找到该问题</Card>;
+    return <Card>{t('problemDetail.notFound')}</Card>;
   }
 
   const tabItems = [
     {
       key: 'basic',
-      label: '基本信息',
+      label: t('problemDetail.basicInfo'),
       children: <BasicInfoCard data={data} />,
     },
     {
       key: 'investigation',
       label: (
         <span>
-          <Search /> 问题调查
+          <Search /> {t('problemDetail.investigation')}
         </span>
       ),
       children: (
@@ -160,7 +162,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
             <Button icon={<ArrowLeft />} onClick={() => router.push('/problems')}>
-              返回列表
+              {t('problemDetail.back')}
             </Button>
             <Title level={4} style={{ margin: 0 }}>
               {data.title}
@@ -174,17 +176,17 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               icon={<Pencil />}
               onClick={() => router.push(`/problems/${data.id}/edit`)}
             >
-              编辑
+              {t('problemDetail.edit')}
             </Button>
             {/* 启动 RCA：进入问题调查根因分析 */}
             {(data.status === ProblemStatus.OPEN ||
               data.status === ProblemStatus.INVESTIGATING ||
               data.status === ProblemStatus.IN_PROGRESS) && (
               <Button icon={<FlaskConical />} onClick={handleStartRCA}>
-                启动 RCA
+                {t('problemDetail.startRca')}
               </Button>
             )}
-            {/* 转为已知错误：沉淀到 KEDB */}
+            {/* {t('problemDetail.toKnownError')}：沉淀到 KEDB */}
             {(data.status === ProblemStatus.INVESTIGATING ||
               data.status === ProblemStatus.IN_PROGRESS ||
               data.status === ProblemStatus.RESOLVED) && (
@@ -199,7 +201,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                   setKnownErrorModalOpen(true);
                 }}
               >
-                转为已知错误
+                {t('problemDetail.toKnownError')}
               </Button>
             )}
             {data.status === ProblemStatus.OPEN && (
@@ -209,7 +211,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 disabled={updatingStatus !== null}
                 onClick={() => handleUpdateStatus(ProblemStatus.INVESTIGATING)}
               >
-                开始处理
+                {t('problemDetail.startProcessing')}
               </Button>
             )}
             {(data.status === ProblemStatus.IN_PROGRESS ||
@@ -220,7 +222,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 disabled={updatingStatus !== null}
                 onClick={() => handleUpdateStatus(ProblemStatus.RESOLVED)}
               >
-                标记解决
+                {t('problemDetail.markResolved')}
               </Button>
             )}
             {data.status === ProblemStatus.RESOLVED && (
@@ -229,7 +231,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 disabled={updatingStatus !== null}
                 onClick={handleCloseProblem}
               >
-                关闭问题
+                {t('problemDetail.closeProblem')}
               </Button>
             )}
           </Space>
@@ -245,32 +247,32 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         />
       </Card>
 
-      {/* 转为已知错误 Modal */}
+      {/* {t('problemDetail.toKnownError')} Modal */}
       <Modal
-        title="转为已知错误"
+        title="{t('problemDetail.toKnownError')}"
         open={knownErrorModalOpen}
         onCancel={() => setKnownErrorModalOpen(false)}
         confirmLoading={creatingKnownError}
         onOk={() => knownErrorForm.submit()}
-        okText="确认转换"
-        cancelText="取消"
+        okText={t('problemDetail.confirmConvert')}
+        cancelText={t('problemDetail.cancel')}
       >
         <Form form={knownErrorForm} layout="vertical" onFinish={handleCreateKnownError}>
           <Form.Item
             name="title"
-            label="已知错误标题"
-            rules={[{ required: true, message: '请输入标题' }]}
+            label={t('problemDetail.knownErrorTitle')}
+            rules={[{ required: true, message: t('problemDetail.titleRequired') }]}
           >
-            <Input placeholder="请输入已知错误标题" />
+            <Input placeholder={t('problemDetail.knownErrorTitlePlaceholder')} />
           </Form.Item>
-          <Form.Item name="rootCause" label="根本原因">
-            <TextArea rows={3} placeholder="根本原因（可选）" />
+          <Form.Item name="rootCause" label={t('problemDetail.rootCause')}>
+            <TextArea rows={3} placeholder={t('problemDetail.rootCauseOptional')} />
           </Form.Item>
-          <Form.Item name="workaround" label="临时规避方案">
-            <TextArea rows={3} placeholder="临时规避方案（可选）" />
+          <Form.Item name="workaround" label={t('problemDetail.workaroundLabel')}>
+            <TextArea rows={3} placeholder={t('problemDetail.workaroundOptional')} />
           </Form.Item>
-          <Form.Item name="description" label="描述">
-            <TextArea rows={3} placeholder="问题描述（可选）" />
+          <Form.Item name="description" label={t('problemDetail.labelDescription')}>
+            <TextArea rows={3} placeholder={t('problemDetail.descriptionOptional')} />
           </Form.Item>
         </Form>
       </Modal>

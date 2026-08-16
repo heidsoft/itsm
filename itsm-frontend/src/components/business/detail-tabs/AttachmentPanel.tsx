@@ -28,6 +28,7 @@ import {
   Upload as UploadIcon,
 } from 'lucide-react';
 import type { AttachmentAdapter, AttachmentItem, TargetType } from './types';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Text } = Typography;
 
@@ -35,13 +36,11 @@ export interface AttachmentPanelProps {
   targetType: TargetType;
   targetId: number | string;
   adapter: AttachmentAdapter;
-  maxSize?: number; // bytes，默认 50MB
+  maxSize?: number; // bytes, default 50MB
   accept?: string;
   currentUserId?: number;
   formatDateTime?: (dateString: string) => string;
 }
-
-const defaultFormat = (s: string) => (s ? new Date(s).toLocaleString('zh-CN') : '');
 
 const formatFileSize = (bytes: number): string => {
   if (!bytes || bytes === 0) return '0 B';
@@ -68,8 +67,9 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
   maxSize = 50 * 1024 * 1024,
   accept,
   currentUserId,
-  formatDateTime = defaultFormat,
+  formatDateTime,
 }) => {
+  const { t, language } = useI18n();
   const { message } = App.useApp();
   const [items, setItems] = useState<AttachmentItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -79,26 +79,33 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewName, setPreviewName] = useState<string>('');
 
-  const fetch = useCallback(async () => {
+  const locale = language === 'en-US' ? 'en-US' : 'zh-CN';
+  const defaultFormat = useCallback(
+    (s: string) => (s ? new Date(s).toLocaleString(locale) : ''),
+    [locale],
+  );
+  const fmt = formatDateTime ?? defaultFormat;
+
+  const fetchList = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await adapter.list(targetId);
       setItems(res || []);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '加载附件失败');
+      setError(e instanceof Error ? e.message : t('attachments.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [adapter, targetId]);
+  }, [adapter, targetId, t]);
 
   useEffect(() => {
-    void fetch();
-  }, [fetch]);
+    void fetchList();
+  }, [fetchList]);
 
   const beforeUpload = (file: RcFile) => {
     if (file.size > maxSize) {
-      message.error(`文件大小超过 ${formatFileSize(maxSize)} 限制`);
+      message.error(t('attachments.sizeExceeded', { size: formatFileSize(maxSize) }));
       return Upload.LIST_IGNORE;
     }
     return true;
@@ -115,10 +122,10 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
     try {
       await adapter.upload(targetId, file, (p) => setUploadProgress(p));
       options.onSuccess?.({});
-      message.success(`${file.name} 上传成功`);
-      await fetch();
+      message.success(t('attachments.uploadSuccess', { name: file.name }));
+      await fetchList();
     } catch (e) {
-      const err = e instanceof Error ? e : new Error('上传失败');
+      const err = e instanceof Error ? e : new Error(t('attachments.uploadFailed'));
       options.onError?.(err);
       message.error(err.message);
     } finally {
@@ -129,18 +136,20 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
 
   const handleDelete = (item: AttachmentItem) => {
     Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除附件 "${item.fileName}" 吗？`,
-      okText: '删除',
+      title: t('common.confirm'),
+      content: t('attachments.deleteConfirm', { name: item.fileName }),
+      okText: t('common.delete'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('common.cancel'),
       onOk: async () => {
         try {
           await adapter.remove(targetId, item.id);
-          message.success('删除成功');
-          await fetch();
+          message.success(t('attachments.deleteSuccess'));
+          await fetchList();
         } catch (e) {
-          message.error(e instanceof Error ? e.message : '删除失败');
+          message.error(
+            e instanceof Error ? e.message : t('attachments.deleteFailed'),
+          );
         }
       },
     });
@@ -148,7 +157,6 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
 
   const handleDownload = (item: AttachmentItem) => {
     const url = adapter.getDownloadUrl(targetId, item.id);
-    // 通过 <a download> 触发浏览器下载
     const a = document.createElement('a');
     a.href = url;
     a.download = item.fileName;
@@ -161,7 +169,7 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
 
   const handlePreview = (item: AttachmentItem) => {
     if (!adapter.getPreviewUrl) {
-      message.warning('该附件不支持预览');
+      message.warning(t('attachments.previewNotSupported'));
       return;
     }
     setPreviewUrl(adapter.getPreviewUrl(targetId, item.id));
@@ -193,8 +201,8 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
           className="mb-4"
           onClose={() => setError(null)}
           action={
-            <Button size="small" type="link" onClick={() => void fetch()}>
-              重试
+            <Button size="small" type="link" onClick={() => void fetchList()}>
+              {t('common.retry')}
             </Button>
           }
         />
@@ -209,7 +217,7 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
           accept={accept}
         >
           <Button icon={<UploadIcon size={14} />} loading={uploading}>
-            上传附件
+            {t('attachments.upload')}
           </Button>
         </Upload>
         {uploading && (
@@ -218,12 +226,12 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
           </div>
         )}
         <Text type="secondary" className="ml-3 text-xs">
-          单文件最大 {formatFileSize(maxSize)}
+          {t('attachments.maxSize', { size: formatFileSize(maxSize) })}
         </Text>
       </div>
 
       {items.length === 0 ? (
-        <Empty description="暂无附件" />
+        <Empty description={t('attachments.empty')} />
       ) : (
         <List
           itemLayout="horizontal"
@@ -239,7 +247,7 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
                     icon={<Eye size={14} />}
                     onClick={() => handlePreview(item)}
                   >
-                    预览
+                    {t('attachments.preview')}
                   </Button>
                 ) : null,
                 <Button
@@ -249,7 +257,7 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
                   icon={<Download size={14} />}
                   onClick={() => handleDownload(item)}
                 >
-                  下载
+                  {t('attachments.download')}
                 </Button>,
                 canManage(item) ? (
                   <Button
@@ -260,7 +268,7 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
                     icon={<Trash2 size={14} />}
                     onClick={() => handleDelete(item)}
                   >
-                    删除
+                    {t('common.delete')}
                   </Button>
                 ) : null,
               ].filter(Boolean) as React.ReactNode[]}
@@ -274,10 +282,12 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
                       {formatFileSize(item.fileSize)}
                     </Text>
                     <Text type="secondary" className="text-xs">
-                      {item.uploader?.name || item.uploader?.username || '未知'}
+                      {item.uploader?.name ||
+                        item.uploader?.username ||
+                        t('detailTabs.unknownUser')}
                     </Text>
                     <Text type="secondary" className="text-xs">
-                      {formatDateTime(item.createdAt)}
+                      {fmt(item.createdAt)}
                     </Text>
                   </Space>
                 }

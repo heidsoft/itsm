@@ -12,6 +12,7 @@ import { UserApi } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
 import { GroupAPI } from '@/lib/api/group-api';
 import { httpClient } from '@/lib/api/http-client';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 import { WorkflowDesignerContext } from './WorkflowContext';
 import WorkflowToolbar from './WorkflowToolbar';
@@ -99,6 +100,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { message } = App.useApp();
+  const { t } = useI18n();
 
   const [form] = Form.useForm();
   const [metadataForm] = Form.useForm();
@@ -156,7 +158,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     (elementId: string, properties: Record<string, unknown>) => {
       const api = getBpmnDesignerApi();
       if (!api) {
-        message.warning('流程设计器未就绪，请稍后重试');
+        message.warning(t('workflow.designer.designerNotReady'));
         return false;
       }
       const ok = api.updateElementProperties(elementId, properties);
@@ -194,15 +196,16 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const loadUserList = async () => {
     setLoadingUsers(true);
     try {
-      const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
+      const response = (await UserApi.getUsers({ page: 1, pageSize: 100 }));
       const users = (response.users || []).map((u: any) => ({
         id: u.id,
-        name: u.name || u.username || '未知用户',
+        name: u.name || u.username || t('workflow.designer.unknownUser'),
         username: u.username,
       }));
       setUserList(users);
     } catch (error) {
       console.error('加载用户列表失败:', error);
+      message.error(t('workflow.designer.loadUserListFailed'));
     } finally {
       setLoadingUsers(false);
     }
@@ -215,12 +218,13 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       const response = (await RoleAPI.getRoles()) as any;
       const roles = (response.roles || response.data || []).map((r: any) => ({
         id: r.id,
-        name: r.name || r.code || '未知角色',
+        name: r.name || r.code || t('workflow.designer.unknownRole'),
         code: r.code,
       }));
       setRoleList(roles);
     } catch (error) {
       console.error('加载角色列表失败:', error);
+      message.error(t('workflow.designer.loadRoleListFailed'));
     } finally {
       setLoadingRoles(false);
     }
@@ -234,13 +238,14 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       const response = await GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId: tenantId });
       const groups = (response.groups || []).map((g: any) => ({
         id: g.id,
-        name: g.name || '未命名组',
+        name: g.name || t('workflow.designer.unnamedGroup'),
         description: g.description,
         memberCount: Array.isArray(g.members) ? g.members.length : undefined,
       }));
       setGroupList(groups);
     } catch (error) {
       console.error('加载审批组列表失败:', error);
+      message.error(t('workflow.designer.loadApprovalGroupsFailed'));
     } finally {
       setLoadingGroups(false);
     }
@@ -254,7 +259,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       const response = (await WorkflowAPI.getProcessDefinition(id)) as any;
 
       if (!response || (!response.key && !response.id && !response.name)) {
-        message.error('加载工作流失败，该工作流可能不存在');
+        message.error(t('workflow.designer.loadWorkflowNotFound'));
         router.push('/workflow');
         return;
       }
@@ -278,7 +283,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
 	  const workflowData: WorkflowDefinition = {
 		id: response.code || response.key || response.id,
-        name: response.name || '未命名工作流',
+        name: response.name || t('workflow.designer.unnamedWorkflow'),
         description: response.description || '',
         version: (response.version || '1').toString(),
         category: response.category || response.type || 'general',
@@ -286,7 +291,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         xml: xmlContent,
         createdAt: response.createdAt || new Date().toISOString(),
         updatedAt: response.updatedAt || new Date().toISOString(),
-        createdBy: '系统',
+        createdBy: t('workflow.designer.system'),
         tags: [],
         approvalConfig: approvalConfig,
         variables: [],
@@ -303,7 +308,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       setCurrentXML(xmlContent || getDefaultBPMNXML());
     } catch (error) {
       console.error('加载工作流失败:', error);
-      message.error('加载工作流失败');
+      message.error(t('workflow.designer.loadWorkflowFailed'));
     }
   };
 
@@ -318,7 +323,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         version: String(version.version ?? '1.0.0'),
         status: version.status || (version.isActive ? 'active' : 'draft'),
         createdAt: version.createdAt || new Date().toISOString(),
-        createdBy: version.createdBy || '系统',
+        createdBy: version.createdBy || t('workflow.designer.system'),
         changeLog: version.changeLog || '',
         xml: version.bpmnXml || '',
       }));
@@ -403,7 +408,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const validateWorkflow = useCallback(async (showSuccessMessage = false) => {
     const api = getBpmnDesignerApi();
     if (!api) {
-      message.warning('流程设计器未就绪，请稍后重试');
+      message.warning(t('workflow.designer.designerNotReady'));
       return [];
     }
 
@@ -418,11 +423,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         
         if (showSuccessMessage) {
           if (errorCount > 0) {
-            message.error(`校验发现 ${errorCount} 个错误，${warningCount} 个警告`);
+            message.error(t('workflow.designer.validationErrorsFound', { errorCount, warningCount }));
           } else if (warningCount > 0) {
-            message.warning(`校验发现 ${warningCount} 个警告`);
+            message.warning(t('workflow.designer.validationWarningsFound', { warningCount }));
           } else {
-            message.success('流程校验通过');
+            message.success(t('workflow.designer.validationPassed'));
           }
         }
         
@@ -434,14 +439,14 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         return issues;
       } else {
         if (showSuccessMessage) {
-          message.success('流程校验通过，未发现问题');
+          message.success(t('workflow.designer.validationPassedNoIssue'));
         }
         setShowValidationPanel(false);
         return [];
       }
     } catch (error) {
       console.error('校验失败:', error);
-      message.error('流程校验失败');
+      message.error(t('workflow.designer.validationFailed'));
       return [];
     } finally {
       setValidating(false);
@@ -458,10 +463,10 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       const hasErrors = issues.some((i: ValidationIssue) => i.type === 'error');
       if (hasErrors) {
         Modal.confirm({
-          title: '流程存在错误',
-          content: '当前流程存在校验错误，建议修复后再保存。是否仍要继续保存？',
-          okText: '继续保存',
-          cancelText: '取消',
+          title: t('workflow.designer.saveConfirmTitle'),
+          content: t('workflow.designer.saveConfirmContent'),
+          okText: t('workflow.designer.saveConfirmContinue'),
+          cancelText: t('common.cancel'),
           onOk: async () => {
             await doSave(xml);
           }
@@ -495,7 +500,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           status: 'draft',
         });
 
-        message.success('工作流创建成功');
+        message.success(t('workflow.designer.workflowCreated'));
       } else {
         const response = (await WorkflowAPI.updateProcessDefinition(
           workflow.id,
@@ -514,7 +519,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           version: response.version || workflow.version,
         });
 
-        message.success('工作流更新成功');
+        message.success(t('workflow.designer.workflowUpdated'));
       }
 
       setCurrentXML(xml);
@@ -525,21 +530,21 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       }
     } catch (error) {
       console.error('保存工作流失败:', error);
-      message.error('保存工作流失败: ' + (error as Error).message);
+      message.error(t('workflow.designer.saveFailed', { message: (error as Error).message }));
     } finally {
       setSaving(false);
     }
   };
 
   // 部署工作流
-  const handleDeploy = async () => {
+  const handleDeploy = useCallback(async () => {
     if (!workflow || !currentXML) return;
 
     // 部署前必须校验
     const issues = await validateWorkflow(true);
     const hasErrors = issues.some((i: ValidationIssue) => i.type === 'error');
     if (hasErrors) {
-      message.error('流程存在错误，请修复后再部署');
+      message.error(t('workflow.designer.deployErrorTitle'));
       setShowValidationPanel(true);
       return;
     }
@@ -547,15 +552,16 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     setDeploying(true);
     try {
       await WorkflowAPI.deployProcessDefinition(workflow.id, workflow.version);
+      message.success(t('workflow.designer.deploySuccess'));
       updateWorkflow({ status: 'active' });
-      message.success('工作流部署成功');
-    } catch (error) {
-      console.error('部署工作流失败:', error);
-      message.error('部署工作流失败');
+      void loadWorkflowVersions(workflow.id);
+    } catch (error: any) {
+      console.error('部署失败:', error);
+      message.error(t('workflow.designer.deployFailed') + ': ' + (error?.message || ''));
     } finally {
       setDeploying(false);
     }
-  };
+  }, [workflow, currentXML, message, loadWorkflowVersions]);
 
   // 保存并部署
   const handleSaveAndDeploy = async (xml: string) => {
@@ -565,7 +571,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     const issues = await validateWorkflow(true);
     const hasErrors = issues.some((i: ValidationIssue) => i.type === 'error');
     if (hasErrors) {
-      message.error('流程存在错误，请修复后再部署');
+      message.error(t('workflow.designer.deployErrorTitle'));
       setShowValidationPanel(true);
       return;
     }
@@ -587,14 +593,14 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         const response = (await WorkflowAPI.createProcessDefinition(createData as any)) as any;
 
         if (!response) {
-          throw new Error('创建工作流失败：服务器返回空响应');
+          throw new Error(t('workflow.designer.createEmptyResponse'));
         }
 
         const newVersion = response.version || '1.0.0';
 		const newKey = response.code || response.key || response.id;
 
         if (!newKey) {
-          throw new Error('创建工作流失败：未获取到工作流ID');
+          throw new Error(t('workflow.designer.createMissingId'));
         }
 
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -606,7 +612,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           status: 'active',
         });
 
-        message.success('工作流创建并部署成功');
+        message.success(t('workflow.designer.workflowCreatedAndDeployed'));
       } else {
         const updateData = {
           name: workflow.name,
@@ -621,7 +627,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         await WorkflowAPI.deployProcessDefinition(workflow.id, currentVersion);
 
         updateWorkflow({ status: 'active' });
-        message.success('工作流保存并部署成功');
+        message.success(t('workflow.designer.workflowSavedAndDeployed'));
       }
 
       setCurrentXML(xml);
@@ -633,7 +639,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     } catch (error) {
       console.error('保存并部署失败:', error);
       const errorMsg = error instanceof Error ? error.message : String(error);
-      message.error('保存并部署失败: ' + errorMsg);
+      message.error(t('workflow.designer.saveAndDeployFailed', { message: errorMsg }));
     } finally {
       setSaving(false);
       setDeploying(false);
@@ -647,11 +653,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       if (version) {
         setCurrentXML(version.xml);
         updateWorkflow({ version: version.version });
-        message.success(`已切换到版本 ${version.version}`);
+        message.success(t('workflow.designer.versionSwitched', { version: version.version }));
       }
     } catch (error) {
       console.error('切换版本失败:', error);
-      message.error('切换版本失败');
+      message.error(t('workflow.designer.switchVersionFailed'));
     }
   };
 
@@ -665,15 +671,15 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 		name: workflow.name,
 		description: workflow.description,
 		bpmnXml: currentXML,
-		changeLog: '创建新版本',
+		changeLog: t('workflow.designer.versionChangeLog'),
 	  });
 	  await loadWorkflowVersions(workflow.id);
 
-      message.success('新版本创建成功');
+      message.success(t('workflow.designer.versionCreated'));
       setShowVersionModal(false);
     } catch (error) {
       console.error('创建版本失败:', error);
-      message.error('创建版本失败');
+      message.error(t('workflow.designer.versionCreateFailed'));
     }
   };
 
@@ -694,7 +700,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       setActiveTab('designer');
       // 关闭校验面板（可选）
       // setShowValidationPanel(false);
-      message.info(`已定位到元素 "${issue.elementName || issue.elementId}"`);
+      message.info(t('workflow.designer.elementLocatedWithName', { name: issue.elementName || issue.elementId }));
     }
   };
 
@@ -797,7 +803,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
             items={[
               {
                 key: 'designer',
-                label: '流程设计',
+                label: t('workflow.designer.tabDesigner'),
                 children: (
                   <div className="flex flex-col md:flex-row gap-2 md:gap-4 h-[calc(100vh-220px)] md:h-[calc(100vh-200px)]">
                     <div className="flex-1 min-w-0 min-h-[300px] md:min-h-0">
@@ -823,7 +829,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
               },
               {
                 key: 'versions',
-                label: '版本历史',
+                label: t('workflow.designer.tabVersions'),
                 children: (
                   <WorkflowProperties
                     workflow={workflow}
@@ -843,7 +849,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
               },
               {
                 key: 'config',
-                label: '流程配置',
+                label: t('workflow.designer.tabConfig'),
                 children: (
                   <WorkflowProperties
                     workflow={workflow}
@@ -864,7 +870,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                 key: 'validation',
                 label: (
                   <span>
-                    校验结果
+                    {t('workflow.designer.tabValidation')}
                     {validationIssues.length > 0 && (
                       <Tag color={validationIssues.some(i => i.type === 'error') ? 'error' : 'warning'} className="ml-1">
                         {validationIssues.length}
@@ -882,13 +888,13 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                           onClick={() => validateWorkflow(true)}
                           loading={validating}
                         >
-                          重新校验
+                          {t('workflow.designer.validationRevalidate')}
                         </Button>
                         <Switch 
                           checked={autoValidate} 
                           onChange={setAutoValidate} 
-                          checkedChildren="自动校验开启" 
-                          unCheckedChildren="自动校验关闭"
+                          checkedChildren={t('workflow.designer.validationAutoOn')}
+                          unCheckedChildren={t('workflow.designer.validationAutoOff')}
                         />
                       </Space>
                     </div>
@@ -896,8 +902,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                     {validationIssues.length === 0 ? (
                       <div className="text-center py-12">
                         <CheckCircle className="text-4xl text-green-500 mb-2" />
-                        <Title level={4}>流程校验通过</Title>
-                        <Text type="secondary">未发现任何问题，可以正常部署</Text>
+                        <Title level={4}>{t('workflow.designer.validationPassTitle')}</Title>
+                        <Text type="secondary">{t('workflow.designer.validationPassDesc')}</Text>
                       </div>
                     ) : (
                       <div className="divide-y divide-gray-100">
@@ -924,14 +930,14 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                                   <Text>{item.message}</Text>
                                   {item.elementId && (
                                     <Tag color="blue">
-                                      {item.elementType?.replace('bpmn:', '') || '元素'}: {item.elementName || item.elementId}
+                                      {item.elementType?.replace('bpmn:', '') || t('workflow.designer.elementTypePrefix')}: {item.elementName || item.elementId}
                                     </Tag>
                                   )}
                                 </Space>
                                 {item.elementId && (
                                   <div>
                                     <Text type="secondary" className="text-xs">
-                                      点击定位到该元素
+                                      {t('workflow.designer.validationClickToLocate')}
                                     </Text>
                                   </div>
                                 )}
@@ -973,7 +979,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
               xml: getDefaultBPMNXML(),
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
-              createdBy: '当前用户',
+              createdBy: t('workflow.designer.currentUser'),
               tags: [],
               approvalConfig: approvalConfig,
               variables: [],
@@ -1008,10 +1014,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                 approvalConfig: values.approvalConfig,
                 slaConfig: values.slaConfig,
               });
-              message.success('设置保存成功');
+              message.success(t('workflow.designer.settingsSaved'));
               setShowSettingsModal(false);
             } catch (error) {
               console.error('保存设置失败:', error);
+              message.error(t('workflow.designer.settingsSaveFailed'));
             }
           }}
           form={form}
@@ -1033,7 +1040,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
         {/* 版本对比弹窗 */}
         <Modal
-          title="版本对比"
+          title={t('workflow.designer.versionCompareTitle')}
           open={showVersionCompare}
           onCancel={() => setShowVersionCompare(false)}
           width={900}
@@ -1042,9 +1049,9 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           {compareVersions.version1 && compareVersions.version2 ? (
             <div>
               <div className="mb-4 flex justify-between">
-                <Tag color="blue">版本 {compareVersions.version1.version}</Tag>
+                <Tag color="blue">{t('workflow.designer.versionCompareVersion', { version: compareVersions.version1.version })}</Tag>
                 <span className="mx-2">VS</span>
-                <Tag color="green">版本 {compareVersions.version2.version}</Tag>
+                <Tag color="green">{t('workflow.designer.versionCompareVersion', { version: compareVersions.version2.version })}</Tag>
               </div>
               <div className="grid grid-cols-2 gap-4 h-[600px]">
                 <div className="border border-gray-200 rounded-lg p-4 overflow-y-auto bg-gray-50 font-mono text-xs whitespace-pre-wrap">
@@ -1058,7 +1065,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           ) : (
             <div className="text-center py-12">
               <GitCompare className="text-4xl text-gray-400 mb-2" />
-              <Text type="secondary">请选择两个版本进行对比</Text>
+              <Text type="secondary">{t('workflow.designer.versionComparePrompt')}</Text>
             </div>
           )}
         </Modal>

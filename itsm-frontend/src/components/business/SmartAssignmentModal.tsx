@@ -21,18 +21,17 @@ import {
   Empty,
   Tooltip,
   Divider,
-  message,
+  App,
 } from 'antd';
 import { User, Info, CheckCircle, Zap } from 'lucide-react';
 import type {
   AssignRecommendation,
-  AutoAssignResponse} from '@/lib/api/ticket-assignment-api';
-import {
-  TicketAssignmentApi
+  AutoAssignResponse,
 } from '@/lib/api/ticket-assignment-api';
-import { App } from 'antd';
+import { TicketAssignmentApi } from '@/lib/api/ticket-assignment-api';
+import { useI18n } from '@/lib/i18n/useI18n';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 interface SmartAssignmentModalProps {
   visible: boolean;
@@ -47,21 +46,20 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
   onCancel,
   onSuccess,
 }) => {
+  const { t } = useI18n();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<AssignRecommendation[]>([]);
   const [autoAssigning, setAutoAssigning] = useState(false);
 
-  // 加载推荐列表
   const loadRecommendations = async () => {
     if (!ticketId) return;
-
     setLoading(true);
     try {
       const response = await TicketAssignmentApi.getRecommendations(ticketId);
       setRecommendations(response.recommendations || []);
     } catch (error) {
-      message.error('获取分配推荐失败');
+      message.error(t('smartAssignment.recommendFailed'));
     } finally {
       setLoading(false);
     }
@@ -71,47 +69,43 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
     if (visible && ticketId) {
       loadRecommendations();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, ticketId]);
 
-  // 自动分配
   const handleAutoAssign = async () => {
     if (!ticketId) return;
-
     setAutoAssigning(true);
     try {
       const response: AutoAssignResponse = await TicketAssignmentApi.autoAssign(ticketId);
       if (response.assignedTo) {
-        message.success(`工单已自动分配给推荐的处理人`);
+        message.success(t('smartAssignment.autoAssigned'));
         onSuccess(response.assignedTo);
         onCancel();
       } else {
-        message.warning('自动分配失败，请手动选择处理人');
+        message.warning(t('smartAssignment.autoAssignFailedFallback'));
       }
     } catch (error) {
-      message.error('自动分配失败');
+      message.error(t('smartAssignment.autoAssignFailed'));
     } finally {
       setAutoAssigning(false);
     }
   };
 
-  // 手动选择处理人
   const handleSelectAssignee = (userId: number) => {
     onSuccess(userId);
     onCancel();
   };
 
-  // 获取评分颜色
   const getScoreColor = (score: number) => {
     if (score >= 80) return '#52c41a';
     if (score >= 60) return '#faad14';
     return '#ff4d4f';
   };
 
-  // 获取评分标签
-  const getScoreLabel = (score: number) => {
-    if (score >= 80) return '优秀';
-    if (score >= 60) return '良好';
-    return '一般';
+  const getScoreLabel = (score: number): string => {
+    if (score >= 80) return t('smartAssignment.scoreExcellent');
+    if (score >= 60) return t('smartAssignment.scoreGood');
+    return t('smartAssignment.scoreAverage');
   };
 
   return (
@@ -119,7 +113,7 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
       title={
         <Space>
           <Zap style={{ color: '#1890ff' }} />
-          <span>智能分配工单</span>
+          <span>{t('smartAssignment.title')}</span>
         </Space>
       }
       open={visible}
@@ -130,19 +124,17 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
     >
       <Spin spinning={loading}>
         <Space orientation="vertical" style={{ width: '100%' }} size="large">
-          {/* 说明信息 */}
           <Alert
-            message="智能分配说明"
-            description="系统将根据处理人的技能匹配度、当前工作负载、历史处理记录等因素，为您推荐最合适的处理人。"
+            message={t('smartAssignment.infoTitle')}
+            description={t('smartAssignment.infoDescription')}
             type="info"
             icon={<Info />}
             showIcon
           />
 
-          {/* 自动分配按钮 */}
           <Card>
             <Space orientation="vertical" style={{ width: '100%' }}>
-              <Text strong>快速操作</Text>
+              <Text strong>{t('smartAssignment.quickAction')}</Text>
               <Button
                 type="primary"
                 icon={<Zap />}
@@ -152,19 +144,18 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
                 onClick={handleAutoAssign}
                 disabled={recommendations.length === 0}
               >
-                使用智能推荐自动分配
+                {t('smartAssignment.autoAssignButton')}
               </Button>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                系统将自动分配给评分最高的推荐处理人
+                {t('smartAssignment.autoAssignHint')}
               </Text>
             </Space>
           </Card>
 
-          <Divider>或手动选择</Divider>
+          <Divider>{t('smartAssignment.orManual')}</Divider>
 
-          {/* 推荐列表 */}
           {recommendations.length === 0 ? (
-            <Empty description="暂无推荐处理人" />
+            <Empty description={t('smartAssignment.empty')} />
           ) : (
             <List
               dataSource={recommendations}
@@ -176,7 +167,7 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
                       type="primary"
                       onClick={() => handleSelectAssignee(item.userId)}
                     >
-                      选择
+                      {t('smartAssignment.select')}
                     </Button>,
                   ]}
                 >
@@ -187,11 +178,14 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
                         <Text strong>{item.userName}</Text>
                         {index === 0 && (
                           <Tag color="gold" icon={<CheckCircle />}>
-                            最佳推荐
+                            {t('smartAssignment.bestMatch')}
                           </Tag>
                         )}
                         <Tag color={getScoreColor(item.score)}>
-                          评分: {item.score.toFixed(1)} ({getScoreLabel(item.score)})
+                          {t('smartAssignment.scoreTag', {
+                            score: item.score.toFixed(1),
+                            label: getScoreLabel(item.score),
+                          })}
                         </Tag>
                       </Space>
                     }
@@ -202,23 +196,23 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
                         </Paragraph>
                         <Space size="middle">
                           {item.factors.skillMatch !== undefined && (
-                            <Tooltip title="技能匹配度">
+                            <Tooltip title={t('smartAssignment.skillMatch')}>
                               <Text type="secondary" style={{ fontSize: 12 }}>
-                                技能: {item.factors.skillMatch}%
+                                {t('smartAssignment.skill')}: {item.factors.skillMatch}%
                               </Text>
                             </Tooltip>
                           )}
                           {item.factors.workload !== undefined && (
-                            <Tooltip title="工作负载">
+                            <Tooltip title={t('smartAssignment.workload')}>
                               <Text type="secondary" style={{ fontSize: 12 }}>
-                                负载: {item.factors.workload}%
+                                {t('smartAssignment.load')}: {item.factors.workload}%
                               </Text>
                             </Tooltip>
                           )}
                           {item.factors.historySuccess !== undefined && (
-                            <Tooltip title="历史成功率">
+                            <Tooltip title={t('smartAssignment.historySuccessRate')}>
                               <Text type="secondary" style={{ fontSize: 12 }}>
-                                成功率: {item.factors.historySuccess}%
+                                {t('smartAssignment.successRate')}: {item.factors.historySuccess}%
                               </Text>
                             </Tooltip>
                           )}

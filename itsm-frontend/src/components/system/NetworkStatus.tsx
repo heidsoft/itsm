@@ -127,7 +127,7 @@ export function NetworkStatus({ compact = false, enableFormLock = true }: Networ
         <Space>
           <span>
             {status === 'offline' && '网络连接已断开，部分功能不可用'}
-            {status === 'degraded' && '后端服务异常，请稍后重试'}
+            {status === 'degraded' && '系统服务异常，请稍后重试'}
           </span>
           {lastChecked && (
             <span style={{ fontSize: 12, color: '#999' }}>

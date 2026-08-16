@@ -1,40 +1,44 @@
 import { CIStatus, CIStatusLabels } from '@/constants/cmdb';
 import type { CIType, CloudResource, CloudService } from '@/types/biz/cmdb';
 
+import type { useI18n } from '@/lib/i18n/useI18n';
+
 export const statusOptions = [CIStatus.ACTIVE, CIStatus.INACTIVE, CIStatus.MAINTENANCE];
 
-export const environmentOptions = [
-  { label: '生产', value: 'production' },
-  { label: '预发布', value: 'staging' },
-  { label: '开发', value: 'development' },
+export type TranslationFn = ReturnType<typeof useI18n>['t'];
+
+export const buildEnvironmentOptions = (t: TranslationFn) => [
+  { label: t('ciEditor.environmentOptions.production'), value: 'production' },
+  { label: t('ciEditor.environmentOptions.staging'), value: 'staging' },
+  { label: t('ciEditor.environmentOptions.development'), value: 'development' },
 ];
 
-export const criticalityOptions = [
-  { label: '低', value: 'low' },
-  { label: '中', value: 'medium' },
-  { label: '高', value: 'high' },
-  { label: '关键', value: 'critical' },
+export const buildCriticalityOptions = (t: TranslationFn) => [
+  { label: t('ciEditor.criticalityOptions.low'), value: 'low' },
+  { label: t('ciEditor.criticalityOptions.medium'), value: 'medium' },
+  { label: t('ciEditor.criticalityOptions.high'), value: 'high' },
+  { label: t('ciEditor.criticalityOptions.critical'), value: 'critical' },
 ];
 
-export const sourceOptions = [
-  { label: '手工录入', value: 'manual' },
-  { label: '自动发现', value: 'discovery' },
-  { label: '批量导入', value: 'import' },
+export const buildSourceOptions = (t: TranslationFn) => [
+  { label: t('ciEditor.sourceOptions.manual'), value: 'manual' },
+  { label: t('ciEditor.sourceOptions.discovery'), value: 'discovery' },
+  { label: t('ciEditor.sourceOptions.import'), value: 'import' },
 ];
 
-export const cloudProviderOptions = [
-  { label: '阿里云', value: 'aliyun' },
-  { label: '华为云', value: 'huawei' },
-  { label: '腾讯云', value: 'tencent' },
-  { label: 'Azure', value: 'azure' },
-  { label: 'AWS', value: 'aws' },
-  { label: '私有云', value: 'onprem' },
+export const buildCloudProviderOptions = (t: TranslationFn) => [
+  { label: t('ciEditor.cloudProviderOptions.aliyun'), value: 'aliyun' },
+  { label: t('ciEditor.cloudProviderOptions.huawei'), value: 'huawei' },
+  { label: t('ciEditor.cloudProviderOptions.tencent'), value: 'tencent' },
+  { label: t('ciEditor.cloudProviderOptions.azure'), value: 'azure' },
+  { label: t('ciEditor.cloudProviderOptions.aws'), value: 'aws' },
+  { label: t('ciEditor.cloudProviderOptions.onprem'), value: 'onprem' },
 ];
 
-export const cloudSyncStatusOptions = [
-  { label: '成功', value: 'success' },
-  { label: '失败', value: 'failed' },
-  { label: '未知', value: 'unknown' },
+export const buildCloudSyncStatusOptions = (t: TranslationFn) => [
+  { label: t('ciEditor.cloudSyncStatusOptions.success'), value: 'success' },
+  { label: t('ciEditor.cloudSyncStatusOptions.failed'), value: 'failed' },
+  { label: t('ciEditor.cloudSyncStatusOptions.unknown'), value: 'unknown' },
 ];
 
 export type SchemaField = {
@@ -176,20 +180,22 @@ export const resolveEffectiveTypeSchemaFields = (
 
 export const buildCloudResourceOptions = (
   cloudResources: CloudResource[],
-  cloudServiceMap: Map<number, CloudService>
+  cloudServiceMap: Map<number, CloudService>,
+  t: TranslationFn
 ) =>
   cloudResources.map(resource => {
     const service = cloudServiceMap.get(resource.serviceId);
-    const label = `${resource.resourceName || resource.resourceId}（${service?.resourceTypeName || '未知类型'}）`;
+    const unknownType = t('ciEditor.unknownType');
+    const label = `${resource.resourceName || resource.resourceId}（${service?.resourceTypeName || unknownType}）`;
     return {
       label,
       value: resource.id,
     };
   });
 
-export const getStatusSelectOptions = () =>
+export const getStatusSelectOptions = (t?: TranslationFn) =>
   statusOptions.map(status => ({
-    label: CIStatusLabels[status],
+    label: t ? t(`ciEditor.ciStatus.${status}`) : CIStatusLabels[status],
     value: status,
   }));
 

@@ -15,6 +15,7 @@ import {
   Alert,
 } from 'antd';
 import { UserSelect } from '@/components/common/UserSelect';
+import { useI18n } from '@/lib/i18n/useI18n';
 import type {
   CommentAdapter,
   CommentItem,
@@ -28,25 +29,11 @@ export interface CommentPanelProps {
   targetType: TargetType;
   targetId: number | string;
   adapter: CommentAdapter;
-  /**
-   * 是否显示"仅内部可见"开关。默认 true。
-   */
   showInternalToggle?: boolean;
-  /**
-   * 是否支持 @提及。默认 true。
-   */
   showMentions?: boolean;
-  /**
-   * 当前用户 id，用于判断哪些评论可以编辑/删除
-   */
   currentUserId?: number;
-  /**
-   * 自定义时间格式化，如未提供则使用 toLocaleString
-   */
   formatDateTime?: (dateString: string) => string;
 }
-
-const defaultFormat = (s: string) => (s ? new Date(s).toLocaleString('zh-CN') : '');
 
 export const CommentPanel: React.FC<CommentPanelProps> = ({
   targetId,
@@ -54,8 +41,9 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
   showInternalToggle = true,
   showMentions = true,
   currentUserId,
-  formatDateTime = defaultFormat,
+  formatDateTime,
 }) => {
+  const { t, language } = useI18n();
   const { message } = App.useApp();
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -70,6 +58,12 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
   const canEditByAdapter = typeof adapter.update === 'function';
   const canEditByUser = (c: CommentItem) => (currentUserId ? c.userId === currentUserId : true);
 
+  const defaultFormat = useCallback(
+    (s: string) => (s ? new Date(s).toLocaleString(language === 'en-US' ? 'en-US' : 'zh-CN') : ''),
+    [language]
+  );
+  const fmt = formatDateTime ?? defaultFormat;
+
   const fetchComments = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -77,19 +71,22 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
       const { comments } = await adapter.list(targetId);
       setComments(comments || []);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : '加载评论失败';
+      const msg = e instanceof Error ? e.message : t('detailTabs.commentFailed');
       setError(msg);
     } finally {
       setLoading(false);
     }
-  }, [adapter, targetId]);
+  }, [adapter, targetId, t]);
 
   useEffect(() => {
     void fetchComments();
   }, [fetchComments]);
 
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim()) {
+      message.warning(t('detailTabs.commentRequired'));
+      return;
+    }
     setSubmitting(true);
     try {
       await adapter.create(targetId, {
@@ -101,9 +98,9 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
       setMentionedUsers([]);
       setIsInternal(false);
       await fetchComments();
-      message.success('评论已发布');
+      message.success(t('detailTabs.commentSuccess'));
     } catch (e) {
-      const msg = e instanceof Error ? e.message : '添加评论失败';
+      const msg = e instanceof Error ? e.message : t('detailTabs.commentFailed');
       message.error(msg);
     } finally {
       setSubmitting(false);
@@ -111,7 +108,10 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
   };
 
   const handleEditComment = async (commentId: number) => {
-    if (!editingCommentContent.trim() || !adapter.update) return;
+    if (!editingCommentContent.trim() || !adapter.update) {
+      message.warning(t('detailTabs.commentRequired'));
+      return;
+    }
     setSubmitting(true);
     try {
       await adapter.update(targetId, commentId, {
@@ -120,8 +120,9 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
       setEditingCommentId(null);
       setEditingCommentContent('');
       await fetchComments();
+      message.success(t('detailTabs.commentSuccess'));
     } catch (e) {
-      const msg = e instanceof Error ? e.message : '更新评论失败';
+      const msg = e instanceof Error ? e.message : t('detailTabs.commentFailed');
       message.error(msg);
     } finally {
       setSubmitting(false);
@@ -132,8 +133,9 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
     try {
       await adapter.remove(targetId, commentId);
       await fetchComments();
+      message.success(t('detailTabs.commentSuccess'));
     } catch (e) {
-      const msg = e instanceof Error ? e.message : '删除评论失败';
+      const msg = e instanceof Error ? e.message : t('detailTabs.commentFailed');
       message.error(msg);
     }
   };
@@ -158,7 +160,6 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
 
   return (
     <div className="p-6">
-      {/* 错误提示 */}
       {error && (
         <Alert
           message={error}
@@ -169,15 +170,14 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
           onClose={() => setError(null)}
           action={
             <Button size="small" type="link" onClick={() => void fetchComments()}>
-              重试
+              {t('common.retry')}
             </Button>
           }
         />
       )}
 
-      {/* 添加评论 */}
       <div className="mb-6">
-        <Card title="添加评论" className="shadow-sm">
+        <Card title={t('detailTabs.addComment')} className="shadow-sm">
           <div className="space-y-4">
             {showInternalToggle && (
               <div className="flex items-center space-x-4">
@@ -192,7 +192,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                     htmlFor={`internal-${targetId}`}
                     className="text-sm text-gray-600"
                   >
-                    仅内部可见
+                    {t('detailTabs.internalOnly')}
                   </label>
                 </div>
               </div>
@@ -202,14 +202,14 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                 <div className="mb-2">
                   <Text type="secondary" className="text-sm">
                     <AtSign className="w-4 h-4 inline mr-1" />
-                    @用户（可选）
+                    @ {t('detailTabs.mentions')}
                   </Text>
                 </div>
                 <UserSelect
                   value={mentionedUsers}
                   onChange={setMentionedUsers}
                   mode="multiple"
-                  placeholder="选择要@的用户"
+                  placeholder={t('detailTabs.mentionsPlaceholder')}
                   style={{ width: '100%' }}
                 />
               </div>
@@ -217,7 +217,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
             <TextArea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder="输入您的评论..."
+              placeholder={t('detailTabs.commentPlaceholder')}
               rows={4}
             />
             <div className="flex justify-end">
@@ -228,14 +228,13 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                 disabled={!newComment.trim()}
                 loading={submitting}
               >
-                发送评论
+                {t('detailTabs.postComment')}
               </Button>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* 评论列表 */}
       <div className="space-y-4">
         {comments.map((comment) => (
           <Card key={comment.id} className="shadow-sm">
@@ -245,17 +244,17 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                   value={editingCommentContent}
                   onChange={(e) => setEditingCommentContent(e.target.value)}
                   rows={3}
-                  placeholder="输入编辑后的评论..."
+                  placeholder={t('detailTabs.commentPlaceholder')}
                 />
                 <div className="flex justify-end space-x-2">
-                  <Button onClick={cancelEdit}>取消</Button>
+                  <Button onClick={cancelEdit}>{t('common.cancel')}</Button>
                   <Button
                     type="primary"
                     onClick={() => handleEditComment(comment.id)}
                     disabled={!editingCommentContent.trim()}
                     loading={submitting}
                   >
-                    保存
+                    {t('common.save')}
                   </Button>
                 </div>
               </div>
@@ -267,20 +266,20 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2 flex-wrap">
                     <Text strong>
-                      {comment.user?.name || comment.user?.username || '未知用户'}
+                      {comment.user?.name || comment.user?.username || t('detailTabs.unknownUser')}
                     </Text>
-                    {comment.isInternal && <AntTag color="orange">仅内部可见</AntTag>}
+                    {comment.isInternal && <AntTag color="orange">{t('detailTabs.internalOnly')}</AntTag>}
                     {comment.mentions && comment.mentions.length > 0 && (
                       <AntTag color="blue" icon={<AtSign className="w-3 h-3" />}>
-                        @{comment.mentions.length}人
+                        {t('detailTabs.mentionCount', { count: comment.mentions.length })}
                       </AntTag>
                     )}
                     <Text type="secondary" className="text-sm">
-                      {formatDateTime(comment.createdAt)}
+                      {fmt(comment.createdAt)}
                     </Text>
                     {comment.updatedAt && comment.updatedAt !== comment.createdAt && (
                       <Text type="secondary" className="text-xs">
-                        （已编辑）
+                        （{t('detailTabs.edited')}）
                       </Text>
                     )}
                   </div>
@@ -295,7 +294,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                         icon={<Edit className="w-3 h-3" />}
                         onClick={() => startEditComment(comment)}
                       >
-                        编辑
+                        {t('common.edit')}
                       </Button>
                     )}
                     {canEditByUser(comment) && (
@@ -306,16 +305,16 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                         icon={<Trash2 className="w-3 h-3" />}
                         onClick={() => {
                           Modal.confirm({
-                            title: '确认删除',
-                            content: '确定要删除这条评论吗？',
-                            okText: '删除',
+                            title: t('detailTabs.deleteConfirmTitle'),
+                            content: t('detailTabs.deleteConfirmContent'),
+                            okText: t('common.delete'),
                             okType: 'danger',
-                            cancelText: '取消',
+                            cancelText: t('common.cancel'),
                             onOk: () => handleDeleteComment(comment.id),
                           });
                         }}
                       >
-                        删除
+                        {t('common.delete')}
                       </Button>
                     )}
                   </div>
@@ -328,7 +327,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
         {comments.length === 0 && !loading && (
           <div className="text-center py-8 text-gray-500">
             <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-            <Text>暂无评论</Text>
+            <Text>{t('detailTabs.noComments')}</Text>
           </div>
         )}
       </div>

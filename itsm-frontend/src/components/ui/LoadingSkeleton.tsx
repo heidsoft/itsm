@@ -1,3 +1,6 @@
+/**
+ * @deprecated 请使用 LoadingEmptyError 或 SkeletonLoading 替代
+ */
 'use client';
 
 import React from 'react';

@@ -44,6 +44,7 @@ import {
   App,
   Tag,
 } from 'antd';
+import AppSelect from '@/components/ui/AppSelect';
 const { Title, Text } = Typography;
 
 // 升级规则的数据类型
@@ -642,7 +643,7 @@ const EscalationRuleManagement = () => {
                 name="serviceType"
                 rules={[{ required: true, message: '请输入服务类型' }]}
               >
-                <Select showSearch optionFilterProp="label" placeholder="选择或输入服务类型" options={serviceTypes.map(type => ({ value: type, label: type }))} />
+                <AppSelect placeholder="选择或输入服务类型" options={serviceTypes.map(type => ({ value: type, label: type }))} />
               </Form.Item>
             </Col>
             <Col span={8}>

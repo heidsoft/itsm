@@ -35,6 +35,7 @@ import {
 } from 'antd';
 import { UserApi, type User } from '@/lib/api/user-api';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
@@ -42,6 +43,7 @@ const { Search: AntSearch } = Input;
 const UserManagement: React.FC = () => {
   const { token } = theme.useToken();
   const { message } = App.useApp();
+  const { t } = useI18n();
   const { currentTenant } = useAuthStore();
   useAuthStoreHydration();
 
@@ -90,7 +92,7 @@ const UserManagement: React.FC = () => {
       const userStats = await UserApi.getUserStats(currentTenant?.id);
       setStats(userStats);
     } catch (error) {
-      message.error('加载用户列表失败');
+      message.error(t('users.messages.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -106,7 +108,7 @@ const UserManagement: React.FC = () => {
     try {
       const tenantId = currentTenant?.id;
       if (!tenantId) {
-        message.error('无法获取租户信息，请重新登录');
+        message.error(t('users.messages.noTenant'));
         return;
       }
       await UserApi.createUser({
@@ -118,12 +120,12 @@ const UserManagement: React.FC = () => {
         password: values.password,
         tenantId: tenantId,
       });
-      message.success('用户创建成功');
+      message.success(t('users.messages.createSuccess'));
       setIsCreateModalVisible(false);
       createForm.resetFields();
       loadUsers();
     } catch (error) {
-      message.error('创建用户失败');
+      message.error(t('users.messages.createFailed'));
     } finally {
       setLoading(false);
     }
@@ -141,13 +143,13 @@ const UserManagement: React.FC = () => {
         department: values.department,
         phone: values.phone,
       });
-      message.success('用户更新成功');
+      message.success(t('users.messages.updateSuccess'));
       setIsEditModalVisible(false);
       editForm.resetFields();
       setSelectedUser(null);
       loadUsers();
     } catch (error) {
-      message.error('更新用户失败');
+      message.error(t('users.messages.updateFailed'));
     } finally {
       setLoading(false);
     }
@@ -158,10 +160,10 @@ const UserManagement: React.FC = () => {
     setLoading(true);
     try {
       await UserApi.deleteUser(userId);
-      message.success('用户删除成功');
+      message.success(t('users.messages.deleteSuccess'));
       loadUsers();
     } catch (error) {
-      message.error('删除用户失败');
+      message.error(t('users.messages.deleteFailed'));
     } finally {
       setLoading(false);
     }
@@ -176,11 +178,11 @@ const UserManagement: React.FC = () => {
       setUsers(prev =>
         prev.map(user => (user.id === userId ? { ...user, active: newStatus } : user))
       );
-      message.success(newStatus ? '用户已激活' : '用户已禁用');
+      message.success(newStatus ? t('users.messages.activated') : t('users.messages.deactivated'));
       loadUsers();
     } catch (error) {
       console.error('Failed to toggle user status:', error);
-      message.error('状态更新失败');
+      message.error(t('users.messages.statusUpdateFailed'));
     } finally {
       setLoading(false);
     }
@@ -192,12 +194,12 @@ const UserManagement: React.FC = () => {
     setLoading(true);
     try {
       await UserApi.resetPassword(selectedUser.id, values.newPassword);
-      message.success('密码重置成功');
+      message.success(t('users.messages.passwordResetSuccess'));
       setIsPasswordModalVisible(false);
       passwordForm.resetFields();
       setSelectedUser(null);
     } catch (error) {
-      message.error('密码重置失败');
+      message.error(t('users.messages.passwordResetFailed'));
     } finally {
       setLoading(false);
     }
@@ -217,38 +219,38 @@ const UserManagement: React.FC = () => {
   // 表格列定义
   const columns = [
     {
-      title: '用户名',
+      title: t('users.columns.username'),
       dataIndex: 'username',
       key: 'username',
       render: (text: string, record: User) => (
         <Space>
           <Text strong>{text}</Text>
-          {!record.active && <Tag color="red">已禁用</Tag>}
+          {!record.active && <Tag color="red">{t('users.statusTag.deactivated')}</Tag>}
         </Space>
       ),
     },
     {
-      title: '姓名',
+      title: t('users.columns.name'),
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: '邮箱',
+      title: t('users.columns.email'),
       dataIndex: 'email',
       key: 'email',
     },
     {
-      title: '部门',
+      title: t('users.columns.department'),
       dataIndex: 'department',
       key: 'department',
     },
     {
-      title: '电话',
+      title: t('users.columns.phone'),
       dataIndex: 'phone',
       key: 'phone',
     },
     {
-      title: '状态',
+      title: t('users.columns.status'),
       dataIndex: 'active',
       key: 'active',
       render: (active: boolean, record: User) => (
@@ -256,19 +258,19 @@ const UserManagement: React.FC = () => {
           checked={active}
           loading={loading}
           onChange={() => handleToggleUserStatus(record.id, active)}
-          checkedChildren="激活"
-          unCheckedChildren="禁用"
+          checkedChildren={t('users.statusTag.active')}
+          unCheckedChildren={t('users.statusTag.deactivated')}
         />
       ),
     },
     {
-      title: '创建时间',
+      title: t('users.columns.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (text: string) => (text ? new Date(text).toLocaleString('zh-CN') : '-'),
     },
     {
-      title: '操作',
+      title: t('common.action'),
       key: 'actions',
       render: (_: unknown, record: User) => (
         <Dropdown
@@ -276,7 +278,7 @@ const UserManagement: React.FC = () => {
             items: [
               {
                 key: 'edit',
-                label: '编辑',
+                label: t('common.edit'),
                 icon: <Edit size={16} />,
                 onClick: () => {
                   setSelectedUser(record);
@@ -286,7 +288,7 @@ const UserManagement: React.FC = () => {
               },
               {
                 key: 'password',
-                label: '重置密码',
+                label: t('users.actions.resetPassword'),
                 icon: <Key size={16} />,
                 onClick: () => {
                   setSelectedUser(record);
@@ -298,13 +300,13 @@ const UserManagement: React.FC = () => {
               },
               {
                 key: 'delete',
-                label: '删除',
+                label: t('common.delete'),
                 icon: <Trash2 size={16} />,
                 danger: true,
                 onClick: () => {
                   Modal.confirm({
-                    title: '确认删除',
-                    content: `确定要删除用户 ${record.name} 吗？`,
+                    title: t('common.confirmDelete'),
+                    content: t('users.confirmDelete', { name: record.name }),
                     onOk: () => handleDeleteUser(record.id),
                   });
                 },
@@ -312,7 +314,7 @@ const UserManagement: React.FC = () => {
             ],
           }}
         >
-          <Button type="text" icon={<MoreHorizontal size={16} />} aria-label="更多操作" />
+          <Button type="text" icon={<MoreHorizontal size={16} />} aria-label={t('common.actions')} />
         </Dropdown>
       ),
     },
@@ -325,17 +327,17 @@ const UserManagement: React.FC = () => {
         <Title level={2} style={{ margin: 0, marginBottom: token.marginXS }}>
           <Space>
             <Users style={{ color: token.colorPrimary }} />
-            用户管理
+{t('users.title')}
           </Space>
         </Title>
-        <Text type="secondary">管理系统用户账户、权限和状态</Text>
+        <Text type="secondary">{t('users.description')}</Text>
 
         {/* 统计卡片 */}
         <Row gutter={16} style={{ marginTop: token.marginLG }}>
           <Col span={8}>
             <Card>
               <Statistic
-                title="总用户数"
+                title={t('users.stats.total')}
                 value={stats.total}
                 prefix={<Users style={{ color: token.colorPrimary }} />}
               />
@@ -344,7 +346,7 @@ const UserManagement: React.FC = () => {
           <Col span={8}>
             <Card>
               <Statistic
-                title="活跃用户"
+                title={t('users.stats.active')}
                 value={stats.active}
                 prefix={<UserCheck style={{ color: '#52c41a' }} />}
               />
@@ -353,7 +355,7 @@ const UserManagement: React.FC = () => {
           <Col span={8}>
             <Card>
               <Statistic
-                title="禁用用户"
+                title={t('users.stats.inactive')}
                 value={stats.inactive}
                 prefix={<UserX style={{ color: '#ff4d4f' }} />}
               />
@@ -368,31 +370,31 @@ const UserManagement: React.FC = () => {
           <Col flex="auto">
             <Space wrap>
               <AntSearch
-                placeholder="搜索用户名、姓名、邮箱"
+                placeholder={t('users.searchPlaceholder')}
                 style={{ width: 280 }}
                 onSearch={handleSearch}
                 allowClear
               />
               <Select
-                placeholder="状态筛选"
+                placeholder={t('users.filter.status')}
                 style={{ width: 120 }}
                 allowClear
                 onChange={value => handleFilterChange('status', value || '')}
                 options={[
-                  { value: 'active', label: '激活' },
-                  { value: 'inactive', label: '禁用' },
+                  { value: 'active', label: t('users.statusTag.active') },
+                  { value: 'inactive', label: t('users.statusTag.deactivated') },
                 ]}
               />
               <Select
-                placeholder="部门筛选"
+                placeholder={t('users.filter.department')}
                 style={{ width: 160 }}
                 allowClear
                 onChange={value => handleFilterChange('department', value || '')}
                 options={[
-                  { value: 'IT部门', label: 'IT部门' },
-                  { value: '财务部门', label: '财务部门' },
-                  { value: '人事部门', label: '人事部门' },
-                  { value: '市场部门', label: '市场部门' },
+                  { value: 'IT部门', label: t('users.departments.IT') },
+                  { value: '财务部门', label: t('users.departments.Finance') },
+                  { value: '人事部门', label: t('users.departments.HR') },
+                  { value: '市场部门', label: t('users.departments.Marketing') },
                 ]}
               />
             </Space>
@@ -404,7 +406,7 @@ const UserManagement: React.FC = () => {
                 icon={<Plus size={16} />}
                 onClick={() => setIsCreateModalVisible(true)}
               >
-                新建用户
+{t('users.createUser')}
               </Button>
               <Button
                 icon={<Download size={16} />}
@@ -430,13 +432,13 @@ const UserManagement: React.FC = () => {
                   const url = URL.createObjectURL(blob);
                   const link = document.createElement('a');
                   link.href = url;
-                  link.download = `用户列表_${new Date().toISOString().split('T')[0]}.csv`;
+                  link.download = `{t('users.exportFilename')}_${new Date().toISOString().split('T')[0]}.csv`;
                   link.click();
                   URL.revokeObjectURL(url);
-                  message.success('导出成功');
+                  message.success(t('users.messages.exportSuccess'));
                 }}
               >
-                导出
+{t('common.export')}
               </Button>
             </Space>
           </Col>
@@ -446,9 +448,9 @@ const UserManagement: React.FC = () => {
       {/* 用户表格 */}
       <Card>
         {users.length === 0 && !loading ? (
-          <Empty description="暂无用户数据" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+          <Empty description={t('users.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type="primary" onClick={() => setIsCreateModalVisible(true)}>
-              创建第一个用户
+{t('users.createFirst')}
             </Button>
           </Empty>
         ) : (
@@ -464,7 +466,7 @@ const UserManagement: React.FC = () => {
               total: pagination.total,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: total => `共 ${total} 条记录`,
+              showTotal: total => t('common.totalLabel', { total: total }),
               pageSizeOptions: ['10', '20', '50', '100'],
               onChange: (page, pageSize) => {
                 setPagination(prev => ({ ...prev, current: page, pageSize }));
@@ -476,7 +478,7 @@ const UserManagement: React.FC = () => {
 
       {/* 创建用户模态框 */}
       <Modal
-        title="新建用户"
+        title={t('users.createUser')}
         open={isCreateModalVisible}
         onCancel={() => {
           setIsCreateModalVisible(false);
@@ -490,22 +492,22 @@ const UserManagement: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="username"
-                label="用户名"
+                label={t('users.columns.username')}
                 rules={[
-                  { required: true, message: '请输入用户名' },
-                  { min: 3, message: '用户名至少3个字符' },
+                  { required: true, message: t('users.form.requiredUsername') },
+                  { min: 3, message: t('users.form.minUsername') },
                 ]}
               >
-                <Input placeholder="请输入用户名" />
+                <Input placeholder={t('users.form.usernamePlaceholder')} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="name"
-                label="姓名"
-                rules={[{ required: true, message: '请输入姓名' }]}
+                label={t('users.columns.name')}
+                rules={[{ required: true, message: t('users.form.requiredName') }]}
               >
-                <Input placeholder="请输入姓名" />
+                <Input placeholder={t('users.form.namePlaceholder')} />
               </Form.Item>
             </Col>
           </Row>
@@ -513,44 +515,44 @@ const UserManagement: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="email"
-                label="邮箱"
+                label={t('users.columns.email')}
                 rules={[
-                  { required: true, message: '请输入邮箱' },
-                  { type: 'email', message: '请输入有效的邮箱地址' },
+                  { required: true, message: t('users.form.requiredEmail') },
+                  { type: 'email', message: t('users.form.invalidEmail') },
                 ]}
               >
-                <Input placeholder="请输入邮箱" />
+                <Input placeholder={t('users.form.emailPlaceholder')} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="phone" label="电话">
-                <Input placeholder="请输入电话号码" />
+              <Form.Item name="phone" label={t('users.columns.phone')}>
+                <Input placeholder={t('users.form.phonePlaceholder')} />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="department" label="部门">
-                <Select placeholder="请选择部门" options={[{ value: 'IT部门', label: 'IT部门' }, { value: '财务部门', label: '财务部门' }, { value: '人事部门', label: '人事部门' }, { value: '市场部门', label: '市场部门' }]} />
+              <Form.Item name="department" label={t('users.columns.department')}>
+                <Select placeholder={t('users.form.departmentPlaceholder')} options={[{ value: 'IT部门', label: 'IT部门' }, { value: '财务部门', label: '财务部门' }, { value: '人事部门', label: '人事部门' }, { value: '市场部门', label: '市场部门' }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="password"
-                label="密码"
+                label={t('users.form.password')}
                 rules={[
-                  { required: true, message: '请输入密码' },
-                  { min: 6, message: '密码至少6个字符' },
+                  { required: true, message: t('users.form.requiredPassword') },
+                  { min: 6, message: t('users.form.minPassword') },
                 ]}
               >
-                <Input.Password placeholder="请输入密码" />
+                <Input.Password placeholder={t('users.form.passwordPlaceholder')} />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" loading={loading}>
-                创建用户
+  {t('users.createUser')}
               </Button>
               <Button
                 onClick={() => {
@@ -558,7 +560,7 @@ const UserManagement: React.FC = () => {
                   createForm.resetFields();
                 }}
               >
-                取消
+{t('common.cancel')}
               </Button>
             </Space>
           </Form.Item>
@@ -567,7 +569,7 @@ const UserManagement: React.FC = () => {
 
       {/* 编辑用户模态框 */}
       <Modal
-        title="编辑用户"
+        title={t('users.editUser')}
         open={isEditModalVisible}
         onCancel={() => {
           setIsEditModalVisible(false);
@@ -621,7 +623,7 @@ const UserManagement: React.FC = () => {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" loading={loading}>
-                保存更改
+{t('users.form.save')}
               </Button>
               <Button
                 onClick={() => {
@@ -639,7 +641,7 @@ const UserManagement: React.FC = () => {
 
       {/* 重置密码模态框 */}
       <Modal
-        title="重置密码"
+        title={t('users.actions.resetPassword')}
         open={isPasswordModalVisible}
         onCancel={() => {
           setIsPasswordModalVisible(false);
@@ -651,18 +653,18 @@ const UserManagement: React.FC = () => {
         <Form form={passwordForm} layout="vertical" onFinish={handleResetPassword}>
           <Form.Item
             name="newPassword"
-            label="新密码"
+            label={t('users.form.newPassword')}
             rules={[
-              { required: true, message: '请输入新密码' },
+              { required: true, message: t('users.form.requiredNewPassword') },
               { min: 6, message: '密码至少6个字符' },
             ]}
           >
-            <Input.Password placeholder="请输入新密码" />
+            <Input.Password placeholder={t('users.form.newPasswordPlaceholder')} />
           </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" loading={loading}>
-                重置密码
+{t('users.actions.resetPassword')}
               </Button>
               <Button
                 onClick={() => {

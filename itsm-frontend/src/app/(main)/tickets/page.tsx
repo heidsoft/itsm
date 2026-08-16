@@ -17,11 +17,13 @@ import {
   clearFilters,
   getDefaultFilters,
 } from '@/lib/utils/filter-persistence';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 
 // 内容组件，使用 useSearchParams
 function TicketsPageContent() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('list');
@@ -148,10 +150,10 @@ function TicketsPageContent() {
           <div className="flex items-center justify-between">
             <div>
               <Title level={2} style={{ marginBottom: 0 }}>
-                工单管理
+                {t('tickets.title')}
               </Title>
               <Text type="secondary">
-                统一的工单处理平台，支持多维度视图切换、全生命周期管理、SLA 监控与智能分派
+                {t('tickets.description')}
               </Text>
             </div>
             <Space>
@@ -169,7 +171,7 @@ function TicketsPageContent() {
                   router.push(`/tickets?${newParams.toString()}`, { scroll: false });
                 }}
               >
-                高级搜索
+                {t('tickets.advancedSearch')}
               </Button>
               <Badge count={ticketStats.overdue} size="small">
                 <Button
@@ -179,12 +181,12 @@ function TicketsPageContent() {
                     router.push('/tickets?tab=list', { scroll: false });
                   }}
                 >
-                  SLA 预警
+                  {t('tickets.slaWarning')}
                 </Button>
               </Badge>
               <Link href="/tickets/create">
                 <Button type="primary" icon={<Plus />}>
-                  新建工单
+                  {t('tickets.create')}
                 </Button>
               </Link>
             </Space>
@@ -195,7 +197,7 @@ function TicketsPageContent() {
             <Card size="small" className="rounded-lg shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <Text type="secondary">总工单</Text>
+                  <Text type="secondary">{t('tickets.stats.total')}</Text>
                   <div className="text-2xl font-bold">{ticketStats.total}</div>
                 </div>
                 <Table className="text-2xl text-blue-500" />
@@ -204,7 +206,7 @@ function TicketsPageContent() {
             <Card size="small" className="rounded-lg shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <Text type="secondary">待处理</Text>
+                  <Text type="secondary">{t('tickets.stats.open')}</Text>
                   <div className="text-2xl font-bold text-orange-500">{ticketStats.open}</div>
                 </div>
                 <Bell className="text-2xl text-orange-500" />
@@ -213,7 +215,7 @@ function TicketsPageContent() {
             <Card size="small" className="rounded-lg shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <Text type="secondary">超时工单</Text>
+                  <Text type="secondary">{t('tickets.stats.overdue')}</Text>
                   <div className="text-2xl font-bold text-red-500">{ticketStats.overdue}</div>
                 </div>
                 <Bell className="text-2xl text-red-500" />
@@ -222,7 +224,7 @@ function TicketsPageContent() {
             <Card size="small" className="rounded-lg shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <Text type="secondary">今日新增</Text>
+                  <Text type="secondary">{t('tickets.stats.today')}</Text>
                   <div className="text-2xl font-bold text-green-500">{ticketStats.today}</div>
                 </div>
                 <Plus className="text-2xl text-green-500" />
@@ -255,7 +257,7 @@ function TicketsPageContent() {
               label: (
                 <span className="flex items-center gap-2">
                   <Table />
-                  列表视图
+                  {t('tickets.tabs.list')} ({ticketStats.total})
                 </span>
               ),
             },
@@ -264,9 +266,13 @@ function TicketsPageContent() {
               label: (
                 <span className="flex items-center gap-2">
                   <LayoutGrid />
-                  看板视图
+                  {t('tickets.tabs.kanban')}
                 </span>
               ),
+            },
+            {
+              key: 'analytics',
+              label: t('tickets.tabs.analytics'),
             },
           ]}
         />

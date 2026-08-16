@@ -314,7 +314,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
         title={
           <span className="flex items-center space-x-2">
             <Bot className="w-5 h-5 text-purple-500" />
-            <span>AI智能推荐</span>
+            <span>AI 辅助推荐</span>
           </span>
         }
         className="shadow-sm"

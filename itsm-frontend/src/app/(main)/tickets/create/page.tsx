@@ -6,7 +6,6 @@ import {
   Card,
   Form,
   Input,
-  Select,
   Button,
   Space,
   Typography,
@@ -18,7 +17,9 @@ import {
   Spin,
   Alert,
   DatePicker,
+  Select,
 } from 'antd';
+import AppSelect from '@/components/ui/AppSelect';
 import {
   ArrowLeft,
   Container,
@@ -466,7 +467,7 @@ export default function CreateTicketPage() {
                               aria-label={field.label}
                             />
                           ) : field.type === 'select' ? (
-                            <Select
+                            <AppSelect
                               placeholder={field.placeholder || `请选择${field.label}`}
                               options={field.options}
                               aria-label={field.label}
@@ -546,7 +547,7 @@ export default function CreateTicketPage() {
                         initialValue="medium"
                         rules={[{ required: true }]}
                       >
-                        <Select<Priority>
+                        <AppSelect
                           allowClear
                           options={[
                             { label: '低', value: 'low' },
@@ -561,12 +562,10 @@ export default function CreateTicketPage() {
                     </Col>
                     <Col xs={24} sm={12}>
                       <Form.Item name="category" label="分类">
-                        <Select
+                        <AppSelect
                           allowClear
-                          showSearch
                           loading={categoryLoading}
                           options={categoryOptions}
-                          optionFilterProp="label"
                           placeholder={categoryLoading ? '加载分类中…' : '选择分类'}
                           aria-label="选择工单分类"
                         />
@@ -611,7 +610,7 @@ export default function CreateTicketPage() {
                 title={
                   <span className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-yellow-500" />
-                    AI 智能分类
+                    AI 辅助分类
                   </span>
                 }
               >

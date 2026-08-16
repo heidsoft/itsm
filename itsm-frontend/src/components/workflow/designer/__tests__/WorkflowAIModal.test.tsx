@@ -60,7 +60,7 @@ describe('WorkflowAIModal', () => {
 
     const { onApplyGeneratedProcess } = renderModal();
 
-    fireEvent.change(screen.getByLabelText('流程描述'), {
+    fireEvent.change(screen.getByLabelText('需求描述'), {
       target: {
         value: '用户提交事件，服务台分派给工程师，工程师处理后关闭。',
       },
@@ -88,14 +88,14 @@ describe('WorkflowAIModal', () => {
 
     renderModal();
 
-    fireEvent.change(screen.getByLabelText('流程描述'), {
+    fireEvent.change(screen.getByLabelText('需求描述'), {
       target: {
         value: '用户提交事件，服务台分派给工程师，工程师处理后关闭。',
       },
     });
     fireEvent.click(screen.getByRole('button', { name: /生成流程/ }));
 
-    expect(await screen.findByText('AI流程生成请求失败')).toBeInTheDocument();
+    expect(await screen.findByText('生成失败')).toBeInTheDocument();
     expect(screen.getByText('AI服务暂不可用')).toBeInTheDocument();
   });
 });

@@ -4,12 +4,11 @@
 'use client';
 
 import React from 'react';
-import { Modal, Input, Form, Button, Typography } from 'antd';
+import { Modal, Input, Form, Button } from 'antd';
 import { FileText } from 'lucide-react';
 import { WORKFLOW_TEMPLATES, TEMPLATE_CATEGORIES } from '@/lib/workflow-templates';
 import type { WorkflowDefinition } from './WorkflowTypes';
-
-const { Text } = Typography;
+import { useI18n } from '@/lib/i18n/useI18n';
 
 interface WorkflowNewModalProps {
   visible: boolean;
@@ -29,6 +28,7 @@ export default function WorkflowNewModal({
   onSelectTemplate,
   onCreateCustom,
 }: WorkflowNewModalProps) {
+  const { t } = useI18n();
   const [form] = Form.useForm();
 
   const handleSelectTemplate = (template: (typeof WORKFLOW_TEMPLATES)[0]) => {
@@ -42,7 +42,7 @@ export default function WorkflowNewModal({
       xml: template.bpmnXml,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      createdBy: '当前用户',
+      createdBy: t('workflow.newModal.currentUser'),
       tags: [],
       approvalConfig: {
         requireApproval: template.approvalConfig.requireApproval,
@@ -63,13 +63,13 @@ export default function WorkflowNewModal({
     onSelectTemplate(newWorkflow);
   };
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = (values: { name: string; description?: string; slaResponse?: number; slaResolution?: number }) => {
     onCreateCustom(values);
   };
 
   return (
     <Modal
-      title="选择工作流模板"
+      title={t('workflow.newModal.title')}
       open={visible}
       onCancel={onClose}
       footer={null}
@@ -77,10 +77,10 @@ export default function WorkflowNewModal({
     >
       <div className="mb-4">
         <Input.Search
-          placeholder="搜索模板..."
+          placeholder={t('workflow.newModal.searchPlaceholder')}
           style={{ width: 300 }}
-          onSearch={value => {
-            // 可以添加搜索功能
+          onSearch={() => {
+            // can add search functionality here
           }}
         />
       </div>
@@ -120,20 +120,20 @@ export default function WorkflowNewModal({
       </div>
 
       <div className="mt-6 border-t pt-4">
-        <div className="text-sm text-gray-500 mb-3">或者自定义创建</div>
+        <div className="text-sm text-gray-500 mb-3">{t('workflow.newModal.orCustomCreate')}</div>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <div className="flex gap-4">
             <Form.Item
-              label="工作流名称"
+              label={t('workflow.newModal.workflowName')}
               name="name"
-              rules={[{ required: true, message: '请输入工作流名称' }]}
+              rules={[{ required: true, message: t('workflow.newModal.workflowNameRequired') }]}
               style={{ flex: 1 }}
             >
-              <Input placeholder="自定义流程名称" />
+              <Input placeholder={t('workflow.newModal.workflowNamePlaceholder')} />
             </Form.Item>
             <Form.Item style={{ marginTop: '32px' }}>
               <Button type="primary" htmlType="submit">
-                创建空白流程
+                {t('workflow.newModal.createBlank')}
               </Button>
             </Form.Item>
           </div>

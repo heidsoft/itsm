@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   Row,
@@ -9,7 +9,6 @@ import {
   Typography,
   Tabs,
   Button,
-  Space,
   Tag,
   Table,
   message,
@@ -26,7 +25,6 @@ import {
   Plus,
   Clock,
   Star,
-  MessageCircle,
   Search,
   Sparkles,
 } from 'lucide-react';
@@ -35,15 +33,16 @@ import ArticleList from '@/components/knowledge/ArticleList';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import { ArticleStatus } from '@/types/knowledge-base';
 import { httpClient } from '@/lib/api/http-client';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 
 export default function KnowledgePage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('list');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // P1-05 修复：设置 12s 超时保护，避免某个 API 卡死时页面永远转圈
   const [statsTimedOut, setStatsTimedOut] = useState(false);
 
   // AI 智能搜索
@@ -92,7 +91,6 @@ export default function KnowledgePage() {
     categories: [],
   });
 
-  // Fetch stats and articles
   const fetchStats = async () => {
     setLoading(true);
     setError(null);
@@ -102,10 +100,6 @@ export default function KnowledgePage() {
         KnowledgeBaseApi.getArticles({ page: 1, pageSize: 20, status: ArticleStatus.PUBLISHED }),
       ]);
 
-      // Map backend stats to frontend state
-      // 后端 /api/v1/knowledge/stats 实际返回字段：
-      //   { total, published, draft, views, rating, categories:[{name,count}] }
-      // P1-05 修复：与后端真实字段对齐，避免 UI 一直显示 0/空。
       setStats({
         total: kbStats.total || 0,
         published: kbStats.published || 0,
@@ -117,7 +111,6 @@ export default function KnowledgePage() {
           : [],
       });
 
-      // Map articles - backend fields: id (int), title, views (int), author (string), published_at, category (string)
       const articles = articlesData.articles || [];
       const mappedArticles = articles.map((a: any) => ({
         id: String(a.id),
@@ -130,22 +123,20 @@ export default function KnowledgePage() {
 
       setRecentArticles(mappedArticles);
 
-      // Popular articles: sorted by views, add rating placeholder
       const sortedByViews = [...mappedArticles].sort((a, b) => b.views - a.views);
       setPopularArticles(sortedByViews.slice(0, 10).map(a => ({ ...a, rating: 0 })));
-    } catch (error) {
-      console.error('Failed to fetch knowledge stats:', error);
-      setError('加载知识库数据失败，请稍后重试');
-      message.error('获取知识库统计数据失败');
+    } catch (err) {
+      console.error('Failed to fetch knowledge stats:', err);
+      setError(t('knowledgeBase.loadFailed'));
+      message.error(t('knowledgeBase.loadFailedShort'));
     } finally {
       setLoading(false);
     }
   };
 
-  // AI 智能搜索
   const handleAISearch = async () => {
     if (!aiSearchQuery.trim()) {
-      message.warning('请输入搜索关键词');
+      message.warning(t('knowledgeBase.aiSearchPromptRequired'));
       return;
     }
 
@@ -153,7 +144,6 @@ export default function KnowledgePage() {
     setAiSearchError(null);
 
     try {
-      // 后端契约：POST /api/v1/ai/rag/search 返回 { results, degraded }
       const response = await httpClient.post<{ results: any[]; degraded?: boolean }>(
         '/api/v1/ai/rag/search',
         {
@@ -167,11 +157,11 @@ export default function KnowledgePage() {
       setAiSearchResults(Array.isArray(answers) ? answers : []);
       setShowAiSearch(true);
       if (Array.isArray(answers) && answers.length === 0) {
-        message.info('未找到与查询匹配的内容，可尝试更换关键词');
+        message.info(t('knowledgeBase.aiSearchNoResults'));
       }
-    } catch (error) {
-      console.error('AI search error:', error);
-      setAiSearchError('智能搜索服务暂时不可用，请使用普通搜索');
+    } catch (err) {
+      console.error('AI search error:', err);
+      setAiSearchError(t('knowledgeBase.aiSearchError'));
       setShowAiSearch(true);
     } finally {
       setAiSearchLoading(false);
@@ -182,110 +172,170 @@ export default function KnowledgePage() {
     fetchStats();
   }, []);
 
-  const recentColumns = [
-    {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text: string, record: any) => (
-        <a onClick={() => router.push(`/knowledge/articles/${record.id}`)}>{text}</a>
-      ),
-    },
-    {
-      title: '分类',
-      dataIndex: 'category',
-      key: 'category',
-      render: (category: string) => <Tag>{category}</Tag>,
-    },
-    {
-      title: '作者',
-      dataIndex: 'author',
-      key: 'author',
-    },
-    {
-      title: '更新时间',
-      dataIndex: 'date',
-      key: 'date',
-    },
-    {
-      title: '浏览',
-      dataIndex: 'views',
-      key: 'views',
-      render: (views: number) => (
-        <span className="flex items-center gap-1">
-          <Eye size={14} /> {views}
-        </span>
-      ),
-    },
-  ];
+  const recentColumns = useMemo(
+    () => [
+      {
+        title: t('knowledgeBase.titleCol'),
+        dataIndex: 'title',
+        key: 'title',
+        render: (text: string, record: any) => (
+          <a onClick={() => router.push(`/knowledge/articles/${record.id}`)}>{text}</a>
+        ),
+      },
+      {
+        title: t('knowledgeBase.category'),
+        dataIndex: 'category',
+        key: 'category',
+        render: (category: string) => <Tag>{category}</Tag>,
+      },
+      {
+        title: t('knowledgeBase.author'),
+        dataIndex: 'author',
+        key: 'author',
+      },
+      {
+        title: t('knowledgeBase.updatedAt'),
+        dataIndex: 'date',
+        key: 'date',
+      },
+      {
+        title: t('knowledgeBase.views'),
+        dataIndex: 'views',
+        key: 'views',
+        render: (views: number) => (
+          <span className="flex items-center gap-1">
+            <Eye size={14} /> {views}
+          </span>
+        ),
+      },
+    ],
+    [t, router]
+  );
 
-  const popularColumns = [
-    {
-      title: '排名',
-      key: 'rank',
-      width: 60,
-      render: (_: any, __: any, index: number) => (
-        <span className="font-bold text-blue-500">#{index + 1}</span>
-      ),
-    },
-    {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text: string, record: any) => (
-        <a onClick={() => router.push(`/knowledge/articles/${record.id}`)}>{text}</a>
-      ),
-    },
-    {
-      title: '分类',
-      dataIndex: 'category',
-      key: 'category',
-      render: (category: string) => <Tag color="blue">{category}</Tag>,
-    },
-    {
-      title: '浏览量',
-      dataIndex: 'views',
-      key: 'views',
-      render: (views: number) => (
-        <span className="flex items-center gap-1">
-          <Eye size={14} /> {views}
-        </span>
-      ),
-    },
-    {
-      title: '评分',
-      dataIndex: 'rating',
-      key: 'rating',
-      render: (rating: number) => (
-        <span className="flex items-center gap-1">
-          <Star size={14} className="text-yellow-500" fill="currentColor" /> {rating.toFixed(1)}
-        </span>
-      ),
-    },
-  ];
+  const popularColumns = useMemo(
+    () => [
+      {
+        title: t('knowledgeBase.rank'),
+        key: 'rank',
+        width: 60,
+        render: (_: any, __: any, index: number) => (
+          <span className="font-bold text-blue-500">#{index + 1}</span>
+        ),
+      },
+      {
+        title: t('knowledgeBase.titleCol'),
+        dataIndex: 'title',
+        key: 'title',
+        render: (text: string, record: any) => (
+          <a onClick={() => router.push(`/knowledge/articles/${record.id}`)}>{text}</a>
+        ),
+      },
+      {
+        title: t('knowledgeBase.category'),
+        dataIndex: 'category',
+        key: 'category',
+        render: (category: string) => <Tag color="blue">{category}</Tag>,
+      },
+      {
+        title: t('knowledgeBase.views'),
+        dataIndex: 'views',
+        key: 'views',
+        render: (views: number) => (
+          <span className="flex items-center gap-1">
+            <Eye size={14} /> {views}
+          </span>
+        ),
+      },
+      {
+        title: t('knowledgeBase.rating'),
+        dataIndex: 'rating',
+        key: 'rating',
+        render: (rating: number) => (
+          <span className="flex items-center gap-1">
+            <Star size={14} className="text-yellow-500" fill="currentColor" /> {rating.toFixed(1)}
+          </span>
+        ),
+      },
+    ],
+    [t, router]
+  );
+
+  const tabItems = useMemo(
+    () => [
+      {
+        key: 'list',
+        label: (
+          <span className="flex items-center gap-2">
+            <FileText />
+            {t('knowledgeBase.articleList')}
+          </span>
+        ),
+        children: <ArticleList showHeader={false} />,
+      },
+      {
+        key: 'recent',
+        label: (
+          <span className="flex items-center gap-2">
+            <Clock />
+            {t('knowledgeBase.recentArticles')}
+          </span>
+        ),
+        children: (
+          <Card>
+            <Table
+              columns={recentColumns}
+              dataSource={recentArticles}
+              rowKey="id"
+              pagination={false}
+              locale={{ emptyText: t('knowledgeBase.emptyRecent') }}
+            />
+          </Card>
+        ),
+      },
+      {
+        key: 'popular',
+        label: (
+          <span className="flex items-center gap-2">
+            <Star />
+            {t('knowledgeBase.popularArticles')}
+          </span>
+        ),
+        children: (
+          <Card>
+            <Table
+              columns={popularColumns}
+              dataSource={popularArticles}
+              rowKey="id"
+              pagination={false}
+              locale={{ emptyText: t('knowledgeBase.emptyPopular') }}
+            />
+          </Card>
+        ),
+      },
+    ],
+    [t, recentColumns, popularColumns, recentArticles, popularArticles]
+  );
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Spin size="large" description="加载知识库数据..." />
+        <Spin size="large" description={t('knowledgeBase.loadingData')} />
       </div>
     );
   }
 
   return (
     <div className="p-6 min-h-screen bg-gray-50">
-      {/* 页面头部 */}
       <div className="mb-6 flex justify-between items-center">
         <div>
           <Title level={2} style={{ marginBottom: 4 }}>
-            知识库
+            {t('knowledgeBase.title')}
           </Title>
-          <Text type="secondary">创建、维护和分享解决方案与最佳实践</Text>
+          <Text type="secondary">{t('knowledgeBase.pageDescription')}</Text>
         </div>
         <div className="flex items-center gap-2">
-          {/* AI 智能搜索 */}
           <Input.Search
-            placeholder="AI 智能搜索..."
+            placeholder={t('knowledgeBase.aiSearchPlaceholder')}
             value={aiSearchQuery}
             onChange={e => setAiSearchQuery(e.target.value)}
             onSearch={handleAISearch}
@@ -302,19 +352,18 @@ export default function KnowledgePage() {
             size="large"
             onClick={() => router.push('/knowledge/articles/new')}
           >
-            新建文章
+            {t('knowledgeBase.createArticle')}
           </Button>
         </div>
       </div>
 
-      {/* AI 搜索结果展示 */}
       {showAiSearch && (
         <Card
           className="mb-6"
           title={
             <span className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-yellow-500" />
-              智能搜索结果
+              {t('knowledgeBase.aiSearchResults')}
             </span>
           }
         >
@@ -332,13 +381,15 @@ export default function KnowledgePage() {
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <Text strong>{result.title || '未命名'}</Text>
+                      <Text strong>{result.title || t('knowledgeBase.aiSearchUnnamed')}</Text>
                       {result.category && <Tag className="ml-2">{result.category}</Tag>}
                     </div>
                     <Tag
                       color={result.score > 0.8 ? 'green' : result.score > 0.5 ? 'blue' : 'default'}
                     >
-                      匹配度: {Math.round((result.score || 0) * 100)}%
+                      {t('knowledgeBase.aiSearchMatchScore', {
+                        score: Math.round((result.score || 0) * 100),
+                      })}
                     </Tag>
                   </div>
                   {result.snippet && (
@@ -350,36 +401,34 @@ export default function KnowledgePage() {
               ))}
             </div>
           ) : (
-            <Empty description="未找到相关内容" />
+            <Empty description={t('knowledgeBase.aiSearchEmpty')} />
           )}
           <Button type="link" onClick={() => setShowAiSearch(false)} className="mt-2">
-            关闭搜索结果
+            {t('knowledgeBase.closeSearchResults')}
           </Button>
         </Card>
       )}
 
-      {/* 错误提示 */}
       {error && (
         <Alert
           message={error}
-          description="请检查网络连接或稍后重试"
+          description={t('knowledgeBase.retryHint')}
           type="error"
           showIcon
           className="mb-6"
           action={
             <Button size="small" onClick={fetchStats}>
-              重试
+              {t('knowledgeBase.retry')}
             </Button>
           }
         />
       )}
 
-      {/* 统计卡片 */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm">
             <Statistic
-              title="文章总数"
+              title={t('knowledgeBase.totalArticles')}
               value={stats.total}
               prefix={<BookOpen className="text-blue-500 mr-2" />}
               styles={{ content: { color: '#1890ff' } }}
@@ -389,7 +438,7 @@ export default function KnowledgePage() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm">
             <Statistic
-              title="已发布"
+              title={t('knowledgeBase.publishedArticles')}
               value={stats.published}
               prefix={<CheckCircle className="text-green-500 mr-2" />}
               styles={{ content: { color: '#52c41a' } }}
@@ -399,7 +448,7 @@ export default function KnowledgePage() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm">
             <Statistic
-              title="草稿"
+              title={t('knowledgeBase.draftArticles')}
               value={stats.draft}
               prefix={<FileText className="text-orange-500 mr-2" />}
               styles={{ content: { color: '#fa8c16' } }}
@@ -409,7 +458,7 @@ export default function KnowledgePage() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm">
             <Statistic
-              title="总浏览量"
+              title={t('knowledgeBase.totalViews')}
               value={stats.views}
               prefix={<Eye className="text-purple-500 mr-2" />}
               styles={{ content: { color: '#722ed1' } }}
@@ -418,64 +467,7 @@ export default function KnowledgePage() {
         </Col>
       </Row>
 
-      {/* 主要内容区域 */}
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        size="large"
-        items={[
-          {
-            key: 'list',
-            label: (
-              <span className="flex items-center gap-2">
-                <FileText />
-                文章列表
-              </span>
-            ),
-            children: <ArticleList showHeader={false} />,
-          },
-          {
-            key: 'recent',
-            label: (
-              <span className="flex items-center gap-2">
-                <Clock />
-                最新更新
-              </span>
-            ),
-            children: (
-              <Card>
-                <Table
-                  columns={recentColumns}
-                  dataSource={recentArticles}
-                  rowKey="id"
-                  pagination={false}
-                  locale={{ emptyText: '暂无文章' }}
-                />
-              </Card>
-            ),
-          },
-          {
-            key: 'popular',
-            label: (
-              <span className="flex items-center gap-2">
-                <Star />
-                热门文章
-              </span>
-            ),
-            children: (
-              <Card>
-                <Table
-                  columns={popularColumns}
-                  dataSource={popularArticles}
-                  rowKey="id"
-                  pagination={false}
-                  locale={{ emptyText: '暂无热门文章' }}
-                />
-              </Card>
-            ),
-          },
-        ]}
-      />
+      <Tabs activeKey={activeTab} onChange={setActiveTab} size="large" items={tabItems} />
     </div>
   );
 }

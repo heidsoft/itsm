@@ -3,7 +3,6 @@ import {
   Card,
   Select,
   Input,
-  DatePicker,
   Button,
   Space,
   Row,
@@ -14,13 +13,12 @@ import {
 } from 'antd';
 import { Search, Filter, X, RotateCcw } from 'lucide-react';
 import dayjs from 'dayjs';
+import { AppDateRangePicker } from '@/components/ui/AppDatePicker';
 import { TicketViewSelector } from './TicketViewSelector';
 import type { TicketView } from '@/lib/api/ticket-view-api';
 import { FilterPresetSelector } from './FilterPresetSelector';
 import { debounce as _debounce } from 'lodash-es';
 const debounce = _debounce as any;
-
-const { RangePicker } = DatePicker;
 
 export type TicketFilterState = {
   status: 'all' | 'open' | 'in_progress' | 'resolved' | 'closed';
@@ -306,11 +304,9 @@ function TicketFilters({
 
           {/* 日期范围 */}
           <Col xs={24} sm={12} md={6} lg={5}>
-            <RangePicker
-              style={{ width: '100%' }}
+            <AppDateRangePicker
               value={dateRange as any}
               onChange={handleDateRangeChange}
-              format="YYYY-MM-DD"
               placeholder={['开始日期', '结束日期']}
               data-testid="filter-date-range"
               disabled={loading}

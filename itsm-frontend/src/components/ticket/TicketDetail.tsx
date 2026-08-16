@@ -71,49 +71,65 @@ import {
   Link2,
   Info,
 } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+
+// 状态映射配置接口
+interface StatusConfig {
+  text: string;
+  status: 'success' | 'processing' | 'default' | 'error' | 'warning';
+}
+
+// 优先级映射配置接口
+interface PriorityConfig {
+  label: string;
+  color?: string;
+}
+
+// 创建状态映射的工厂函数
+const createStatusMap = (t: (key: string) => string): Record<string, StatusConfig> => ({
+  new: { text: t('ticketDetail.statusNew'), status: 'default' },
+  open: { text: t('ticketDetail.statusOpen'), status: 'default' },
+  in_progress: { text: t('ticketDetail.statusInProgress'), status: 'processing' },
+  assigned: { text: t('ticketDetail.statusAssigned'), status: 'processing' },
+  pending: { text: t('ticketDetail.statusPending'), status: 'warning' },
+  pending_approval: { text: t('ticketDetail.statusPendingApproval'), status: 'warning' },
+  resolved: { text: t('ticketDetail.statusResolved'), status: 'success' },
+  closed: { text: t('ticketDetail.statusClosed'), status: 'default' },
+  cancelled: { text: t('ticketDetail.statusCancelled'), status: 'error' },
+  rejected: { text: t('ticketDetail.statusRejected'), status: 'error' },
+  approved: { text: t('ticketDetail.statusApproved'), status: 'success' },
+});
+
+// 创建优先级映射的工厂函数
+const createPriorityMap = (t: (key: string) => string): Record<string, string> => ({
+  critical: t('ticketDetail.priorityCritical'),
+  urgent: t('ticketDetail.priorityUrgent'),
+  high: t('ticketDetail.priorityHigh'),
+  medium: t('ticketDetail.priorityMedium'),
+  low: t('ticketDetail.priorityLow'),
+});
 
 const ticketPriorities: TicketPriority[] = ['low', 'medium', 'high', 'urgent', 'critical'];
 const toTicketPriority = (value: string): TicketPriority =>
   ticketPriorities.includes(value as TicketPriority) ? (value as TicketPriority) : 'medium';
 
-const statusMap: Record<
-  string,
-  { text: string; status: 'success' | 'processing' | 'default' | 'error' | 'warning' }
-> = {
-  new: { text: '新建', status: 'default' },
-  open: { text: '待处理', status: 'default' },
-  in_progress: { text: '处理中', status: 'processing' },
-  assigned: { text: '已分配', status: 'processing' },
-  pending: { text: '等待中', status: 'warning' },
-  pending_approval: { text: '待审批', status: 'warning' },
-  resolved: { text: '已解决', status: 'success' },
-  closed: { text: '已关闭', status: 'default' },
-  cancelled: { text: '已取消', status: 'error' },
-  rejected: { text: '已拒绝', status: 'error' },
-  approved: { text: '已批准', status: 'success' },
-};
-
-// Bug #9 修复：添加优先级本地化映射
-const priorityMap: Record<string, string> = {
-  critical: '紧急',
-  urgent: '紧急',
-  high: '高优先级',
-  medium: '中优先级',
-  low: '低优先级',
-};
-
-const getPriorityText = (priority: string): string => {
-  return priorityMap[priority] || priority;
-};
-
 const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const params = useParams();
   const { message: antMessage } = App.useApp();
+  const { t } = useI18n();
   const { user: currentUser } = useAuthStore();
   const { handleError } = useErrorHandler();
+
+  // 创建基于翻译的状态和优先级映射
+  const statusMap = createStatusMap(t);
+  const priorityMap = createPriorityMap(t);
+  const getPriorityText = (priority: string): string => {
+    return priorityMap[priority] || priority;
+  };
+
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,7 +169,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const fetchTicket = useCallback(async () => {
     // Skip if ticketId is not a valid number
     if (!ticketId || isNaN(ticketId) || ticketId <= 0) {
-      setError('无效的工单ID');
+      setError(t('ticketDetail.invalidTicketId'));
       setLoading(false);
       return;
     }
@@ -216,10 +232,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     try {
       setApproving(true);
       await TicketApi.updateTicketStatus(ticketId, 'approved');
-      antMessage.success('批准成功');
+      antMessage.success(t('ticketDetail.approveSuccess'));
       fetchTicket();
     } catch (error) {
-      handleError(error, 'approveTicket', '批准失败');
+      handleError(error, 'approveTicket', t('ticketDetail.approveFailed'));
     } finally {
       setApproving(false);
     }
@@ -238,12 +254,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         values.comment,
         values.notifyChannels || ['in_app']
       );
-      antMessage.success('抄送成功');
+      antMessage.success(t('ticketDetail.ccSuccess'));
       setCCModalVisible(false);
       ccForm.resetFields();
       fetchTicket();
     } catch (error) {
-      handleError(error, 'ccTicket', '抄送失败');
+      handleError(error, 'ccTicket', t('ticketDetail.ccFailed'));
     } finally {
       setCCing(false);
     }
@@ -254,10 +270,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     try {
       setRejecting(true);
       await TicketApi.updateTicketStatus(ticketId, 'rejected');
-      antMessage.success('已拒绝');
+      antMessage.success(t('ticketDetail.rejectSuccess'));
       fetchTicket();
     } catch (error) {
-      handleError(error, 'rejectTicket', '拒绝失败');
+      handleError(error, 'rejectTicket', t('ticketDetail.rejectFailed'));
     } finally {
       setRejecting(false);
     }
@@ -273,12 +289,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     try {
       setAssigning(true);
       await TicketApi.assignTicket(ticketId, values);
-      antMessage.success('工单分配成功');
+      antMessage.success(t('ticketDetail.assignSuccess'));
       setAssignModalVisible(false);
       assignForm.resetFields();
       fetchTicket();
     } catch (error) {
-      handleError(error, 'assignTicket', '分配失败');
+      handleError(error, 'assignTicket', t('ticketDetail.assignFailed'));
     } finally {
       setAssigning(false);
     }
@@ -317,11 +333,11 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       };
 
       await TicketApi.updateTicket(ticketId, updatePayload);
-      antMessage.success('工单更新成功');
+      antMessage.success(t('ticketDetail.editSuccess'));
       setEditModalVisible(false);
       fetchTicket();
     } catch (error) {
-      handleError(error, 'updateTicket', '更新失败');
+      handleError(error, 'updateTicket', t('ticketDetail.editFailed'));
     }
   };
 
@@ -335,12 +351,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     try {
       setDeleting(true);
       await TicketApi.deleteTicket(ticketId);
-      antMessage.success('工单删除成功');
+      antMessage.success(t('ticketDetail.deleteSuccess'));
       setDeleteModalVisible(false);
       // Navigate back to ticket list
       window.location.href = '/tickets';
     } catch (error) {
-      handleError(error, 'deleteTicket', '删除失败');
+      handleError(error, 'deleteTicket', t('ticketDetail.deleteFailed'));
     } finally {
       setDeleting(false);
     }
@@ -396,12 +412,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           <div className="text-center py-8">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <Title level={4} className="text-red-600 mb-2">
-              加载失败
+              {t('ticketDetail.loadFailed')}
             </Title>
             <Text type="secondary">{error}</Text>
             <div className="mt-4">
               <Button type="primary" onClick={fetchTicket}>
-                重试
+                {t('ticketDetail.retry')}
               </Button>
             </div>
           </div>
@@ -417,12 +433,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           <div className="text-center py-8">
             <XCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <Title level={4} className="text-gray-600 mb-2">
-              未找到工单
+              {t('ticketDetail.notFound')}
             </Title>
-            <Text type="secondary">未找到指定的工单</Text>
+            <Text type="secondary">{t('ticketDetail.notFoundDesc')}</Text>
             <div className="mt-4">
               <Link href="/tickets">
-                <Button type="primary">返回工单列表</Button>
+                <Button type="primary">{t('ticketDetail.backToList')}</Button>
               </Link>
             </div>
           </div>
@@ -439,12 +455,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           <div className="flex min-w-0 items-start sm:items-center space-x-2 sm:space-x-4">
             <Link href="/tickets">
               <Button icon={<ArrowLeft />} type="text">
-                返回列表
+                {t('common.back')}
               </Button>
             </Link>
             <div className="min-w-0">
               <Title level={2} className="!mb-1 !text-gray-900">
-                工单详情 #{ticket.id}
+                {t('ticketDetail.title')} #{ticket.id}
               </Title>
               <Text type="secondary" className="block truncate">{ticket.title}</Text>
             </div>
@@ -463,11 +479,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                     : 'green'
               }
             >
-              {ticket.priority === 'high'
-                ? '高优先级'
-                : ticket.priority === 'medium'
-                  ? '中优先级'
-                  : '低优先级'}
+              {getPriorityText(ticket.priority)}
             </Tag>
           </div>
         </div>
@@ -512,28 +524,28 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       <Card className="rounded-lg shadow-sm border border-gray-200">
         <Space orientation="vertical" size={16} style={{ width: '100%' }}>
           <Descriptions column={2} bordered size="middle">
-            <Descriptions.Item label="标题">{ticket.title}</Descriptions.Item>
-            <Descriptions.Item label="编号">{ticket.ticketNumber || '-'}</Descriptions.Item>
-            <Descriptions.Item label="状态">{statusMap[ticket.status]?.text || ticket.status}</Descriptions.Item>
-            <Descriptions.Item label="优先级">{getPriorityText(ticket.priority)}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">{formatDateTime(ticket.createdAt)}</Descriptions.Item>
-            <Descriptions.Item label="更新时间">{formatDateTime(ticket.updatedAt)}</Descriptions.Item>
-            <Descriptions.Item label="描述" span={2}>
-              <SafeTextBlock content={ticket.description} fallback="暂无描述" />
+            <Descriptions.Item label={t('ticketDetail.labelTitle')}>{ticket.title}</Descriptions.Item>
+            <Descriptions.Item label={t('ticketDetail.labelNumber')}>{ticket.ticketNumber || '-'}</Descriptions.Item>
+            <Descriptions.Item label={t('ticketDetail.labelStatus')}>{statusMap[ticket.status]?.text || ticket.status}</Descriptions.Item>
+            <Descriptions.Item label={t('ticketDetail.labelPriority')}>{getPriorityText(ticket.priority)}</Descriptions.Item>
+            <Descriptions.Item label={t('ticketDetail.labelCreatedAt')}>{formatDateTime(ticket.createdAt)}</Descriptions.Item>
+            <Descriptions.Item label={t('ticketDetail.labelUpdatedAt')}>{formatDateTime(ticket.updatedAt)}</Descriptions.Item>
+            <Descriptions.Item label={t('ticketDetail.labelDescription')} span={2}>
+              <SafeTextBlock content={ticket.description} fallback={t('ticketDetail.labelNoDescription')} />
             </Descriptions.Item>
           </Descriptions>
 
           {/* SLA Information */}
           {slaInfo && (
-            <Card size="small" title="SLA信息" className="mt-4">
+            <Card size="small" title={t('ticketDetail.slaInfo')} className="mt-4">
               <Space orientation="vertical" style={{ width: '100%' }}>
                 <div className="flex justify-between">
-                  <Text type="secondary">SLA定义:</Text>
+                  <Text type="secondary">{t('ticketDetail.slaDefinition')}:</Text>
                   <Tag color={slaInfo.isBreached ? 'red' : 'blue'}>{slaInfo.slaName}</Tag>
                 </div>
                 {slaInfo.responseDeadline && (
                   <div className="flex justify-between">
-                    <Text type="secondary">响应截止:</Text>
+                    <Text type="secondary">{t('ticketDetail.responseDeadline')}:</Text>
                     <Text
                       type={
                         slaInfo.responseTimeRemaining !== null &&
@@ -545,13 +557,13 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                       {new Date(slaInfo.responseDeadline).toLocaleString()}
                       {slaInfo.responseTimeRemaining !== null &&
                         slaInfo.responseTimeRemaining < 0 &&
-                        ' (已超时)'}
+                        ` (${t('ticketDetail.responseTimeout')})`}
                     </Text>
                   </div>
                 )}
                 {slaInfo.resolutionDeadline && (
                   <div className="flex justify-between">
-                    <Text type="secondary">解决截止:</Text>
+                    <Text type="secondary">{t('ticketDetail.resolutionDeadline')}:</Text>
                     <Text
                       type={
                         slaInfo.resolutionTimeRemaining !== null &&
@@ -563,11 +575,11 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                       {new Date(slaInfo.resolutionDeadline).toLocaleString()}
                       {slaInfo.resolutionTimeRemaining !== null &&
                         slaInfo.resolutionTimeRemaining < 0 &&
-                        ' (已超时)'}
+                        ` (${t('ticketDetail.resolutionTimeout')})`}
                     </Text>
                   </div>
                 )}
-                {slaInfo.isBreached && <Tag color="red">SLA已违规</Tag>}
+                {slaInfo.isBreached && <Tag color="red">{t('ticketDetail.slaBreached')}</Tag>}
               </Space>
             </Card>
           )}
@@ -580,10 +592,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               loading={approving}
               disabled={isRequester || isTicketFinal}
               title={
-                isRequester ? '不能审批自己提交的工单' : isTicketFinal ? '工单已结束，无法操作' : ''
+                isRequester ? t('ticketDetail.cannotApproveOwnTicket') : isTicketFinal ? t('ticketDetail.ticketFinalNoAction') : ''
               }
             >
-              批准
+              {t('ticketDetail.approve')}
             </Button>
             <Button
               danger
@@ -592,55 +604,55 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               loading={rejecting}
               disabled={isRequester || isTicketFinal}
               title={
-                isRequester ? '不能拒绝自己提交的工单' : isTicketFinal ? '工单已结束，无法操作' : ''
+                isRequester ? t('ticketDetail.cannotApproveOwnTicket') : isTicketFinal ? t('ticketDetail.ticketFinalNoAction') : ''
               }
             >
-              拒绝
+              {t('ticketDetail.reject')}
             </Button>
             <Button
               icon={<UserCheck size={16} />}
               onClick={handleAssign}
               loading={loadingUsers}
               disabled={isTicketFinal}
-              title={isTicketFinal ? '工单已结束，无法分配' : ''}
+              title={isTicketFinal ? t('ticketDetail.ticketFinalNoAssign') : ''}
             >
-              分配
+              {t('ticketDetail.assign')}
             </Button>
             <Button
               icon={<Edit size={16} />}
               onClick={handleUpdate}
               disabled={isTicketFinal}
-              title={isTicketFinal ? '工单已结束，无法编辑' : ''}
+              title={isTicketFinal ? t('ticketDetail.ticketFinalNoEdit') : ''}
             >
-              编辑
+              {t('common.edit')}
             </Button>
             <Button
               icon={<Users size={16} />}
               onClick={() => setCCModalVisible(true)}
               disabled={isTicketFinal}
-              title={isTicketFinal ? '工单已结束，无法抄送' : ''}
+              title={isTicketFinal ? t('ticketDetail.ticketFinalNoCc') : ''}
             >
-              抄送
+              {t('ticketDetail.cc')}
             </Button>
             <Button danger icon={<Trash2 size={16} />} onClick={handleDeleteClick}>
-              删除
+              {t('common.delete')}
             </Button>
           </Space>
 
           {isTicketFinal && (
             <Text type="secondary" className="block mt-2">
-              工单已结束，无法进行操作
+              {t('ticketDetail.ticketFinalHint')}
             </Text>
           )}
 
           {isRequester && !isTicketFinal && (
             <Text type="secondary" className="block mt-2">
-              您是此工单的申请人，无法进行审批操作
+              {t('ticketDetail.requesterCannotApprove')}
             </Text>
           )}
 
           {!isRequester && !isTicketFinal && (
-            <Text type="secondary">支持状态变更、审批流程、分配处理人等完整工单操作</Text>
+            <Text type="secondary">{t('ticketDetail.fullOperationSupport')}</Text>
           )}
         </Space>
 
@@ -649,7 +661,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           title={
             <Space>
               <UserCheck className="w-5 h-5 text-blue-600" />
-              分配工单
+              {t('ticketDetail.assignTitle')}
             </Space>
           }
           open={assignModalVisible}
@@ -662,12 +674,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         >
           <Form form={assignForm} layout="vertical" onFinish={handleAssignSubmit}>
             <Form.Item
-              label="分配给"
+              label={t('ticketDetail.assignTo')}
               name="assigneeId"
-              rules={[{ required: true, message: '请选择处理人' }]}
+              rules={[{ required: true, message: t('ticketDetail.assigneeRequired') }]}
             >
               <Select
-                placeholder="请选择处理人"
+                placeholder={t('ticketDetail.selectAssignee')}
                 loading={loadingUsers}
                 showSearch
                 filterOption={(input, option) =>
@@ -687,8 +699,8 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 }))}
               />
             </Form.Item>
-            <Form.Item label="备注" name="comment">
-              <TextArea rows={3} placeholder="请输入分配备注（可选）" maxLength={500} showCount />
+            <Form.Item label={t('ticketDetail.remark')} name="comment">
+              <TextArea rows={3} placeholder={t('ticketDetail.assignRemarkPlaceholder')} maxLength={500} showCount />
             </Form.Item>
             <Form.Item className="mb-0">
               <Space className="w-full justify-end">
@@ -699,10 +711,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                     assignForm.resetFields();
                   }}
                 >
-                  取消
+                  {t('common.cancel')}
                 </Button>
                 <Button type="primary" htmlType="submit" icon={<Save />} loading={assigning}>
-                  确认分配
+                  {t('ticketDetail.confirmAssign')}
                 </Button>
               </Space>
             </Form.Item>
@@ -714,7 +726,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           title={
             <Space>
               <Edit className="w-5 h-5 text-green-600" />
-              编辑工单
+              {t('ticketDetail.editTitle')}
             </Space>
           }
           open={editModalVisible}
@@ -727,39 +739,39 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         >
           <Form form={editForm} layout="vertical" onFinish={handleEditSubmit}>
             <Form.Item
-              label="工单标题"
+              label={t('ticketDetail.ticketTitle')}
               name="title"
               rules={[
-                { required: true, message: '请输入工单标题' },
-                { max: 100, message: '标题不能超过100个字符' },
+                { required: true, message: t('ticketDetail.ticketTitleRequired') },
+                { max: 100, message: t('ticketDetail.ticketTitleMaxLength') },
               ]}
             >
-              <Input placeholder="请输入工单标题" />
+              <Input placeholder={t('ticketDetail.ticketTitlePlaceholder')} />
             </Form.Item>
             <Form.Item
-              label="工单描述"
+              label={t('ticketDetail.ticketDescription')}
               name="description"
               rules={[
-                { required: true, message: '请输入工单描述' },
-                { max: 2000, message: '描述不能超过2000个字符' },
+                { required: true, message: t('ticketDetail.ticketDescriptionRequired') },
+                { max: 2000, message: t('ticketDetail.ticketDescriptionMaxLength') },
               ]}
             >
-              <TextArea rows={6} placeholder="请输入工单描述" showCount maxLength={2000} />
+              <TextArea rows={6} placeholder={t('ticketDetail.ticketDescriptionPlaceholder')} showCount maxLength={2000} />
             </Form.Item>
             <div className="grid grid-cols-2 gap-4">
               <Form.Item
-                label="优先级"
+                label={t('ticketDetail.priority')}
                 name="priority"
-                rules={[{ required: true, message: '请选择优先级' }]}
+                rules={[{ required: true, message: t('ticketDetail.priorityRequired') }]}
               >
                 <Select
-                  placeholder="请选择优先级"
+                  placeholder={t('ticketDetail.selectPriority')}
                   options={[
                     {
                       value: 'low',
                       label: (
                         <>
-                          <Tag color="green">低优先级</Tag>
+                          <Tag color="green">{t('ticketDetail.priorityLow')}</Tag>
                         </>
                       ),
                     },
@@ -767,7 +779,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                       value: 'medium',
                       label: (
                         <>
-                          <Tag color="orange">中优先级</Tag>
+                          <Tag color="orange">{t('ticketDetail.priorityMedium')}</Tag>
                         </>
                       ),
                     },
@@ -775,7 +787,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                       value: 'high',
                       label: (
                         <>
-                          <Tag color="red">高优先级</Tag>
+                          <Tag color="red">{t('ticketDetail.priorityHigh')}</Tag>
                         </>
                       ),
                     },
@@ -783,13 +795,13 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 />
               </Form.Item>
               <Form.Item
-                label="状态"
+                label={t('ticketDetail.status')}
                 name="status"
-                rules={[{ required: true, message: '请选择状态' }]}
-                extra={ticket ? `当前状态: ${statusMap[ticket.status]?.text || ticket.status}` : ''}
+                rules={[{ required: true, message: t('ticketDetail.statusRequired') }]}
+                extra={ticket ? `${t('ticketDetail.currentStatus')}: ${statusMap[ticket.status]?.text || ticket.status}` : ''}
               >
                 <Select
-                  placeholder="请选择状态"
+                  placeholder={t('ticketDetail.selectStatus')}
                   options={Object.entries(statusMap).map(([value, cfg]) => ({
                     value,
                     label: cfg.text,
@@ -806,10 +818,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                     editForm.resetFields();
                   }}
                 >
-                  取消
+                  {t('common.cancel')}
                 </Button>
                 <Button type="primary" htmlType="submit" icon={<Save />}>
-                  保存修改
+                  {t('ticketDetail.saveChanges')}
                 </Button>
               </Space>
             </Form.Item>
@@ -821,7 +833,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           title={
             <Space>
               <Users className="w-5 h-5 text-blue-600" />
-              抄送工单
+              {t('ticketDetail.ccTitle')}
             </Space>
           }
           open={ccModalVisible}
@@ -839,13 +851,13 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             onFinish={handleCCSubmit}
           >
             <Form.Item
-              label="抄送给"
+              label={t('ticketDetail.ccTo')}
               name="ccUsers"
-              rules={[{ required: true, message: '请选择抄送人' }]}
+              rules={[{ required: true, message: t('ticketDetail.ccUsersRequired') }]}
             >
               <Select
                 mode="multiple"
-                placeholder="请选择抄送人"
+                placeholder={t('ticketDetail.selectCcUsers')}
                 loading={loadingUsers}
                 showSearch
                 optionFilterProp="label"
@@ -855,23 +867,23 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 }))}
               />
             </Form.Item>
-            <Form.Item label="通知渠道" name="notifyChannels">
+            <Form.Item label={t('ticketDetail.notifyChannels')} name="notifyChannels">
               <Select
                 mode="multiple"
-                placeholder="请选择通知渠道"
+                placeholder={t('ticketDetail.selectNotifyChannels')}
                 options={[
-                  { value: 'in_app', label: '站内信' },
-                  { value: 'email', label: '邮件' },
-                  { value: 'sms', label: '短信' },
-                  { value: 'feishu', label: '飞书' },
-                  { value: 'dingtalk', label: '钉钉' },
-                  { value: 'wecom', label: '企业微信' },
-                  { value: 'webhook', label: 'Webhook' },
+                  { value: 'in_app', label: t('ticketDetail.channelInApp') },
+                  { value: 'email', label: t('ticketDetail.channelEmail') },
+                  { value: 'sms', label: t('ticketDetail.channelSms') },
+                  { value: 'feishu', label: t('ticketDetail.channelFeishu') },
+                  { value: 'dingtalk', label: t('ticketDetail.channelDingtalk') },
+                  { value: 'wecom', label: t('ticketDetail.channelWecom') },
+                  { value: 'webhook', label: t('ticketDetail.channelWebhook') },
                 ]}
               />
             </Form.Item>
-            <Form.Item label="备注" name="comment">
-              <TextArea rows={3} placeholder="请输入抄送备注（可选）" maxLength={500} showCount />
+            <Form.Item label={t('ticketDetail.remark')} name="comment">
+              <TextArea rows={3} placeholder={t('ticketDetail.ccRemarkPlaceholder')} maxLength={500} showCount />
             </Form.Item>
             <Form.Item className="mb-0">
               <Space className="w-full justify-end">
@@ -882,10 +894,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                     ccForm.resetFields();
                   }}
                 >
-                  取消
+                  {t('common.cancel')}
                 </Button>
                 <Button type="primary" htmlType="submit" icon={<Users />} loading={ccing}>
-                  确认抄送
+                  {t('ticketDetail.confirmCc')}
                 </Button>
               </Space>
             </Form.Item>
@@ -897,7 +909,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           title={
             <Space>
               <Trash2 className="w-5 h-5 text-red-600" />
-              删除工单
+              {t('ticketDetail.deleteTitle')}
             </Space>
           }
           open={deleteModalVisible}
@@ -910,16 +922,16 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
               <div>
                 <Typography.Text strong className="text-lg">
-                  确定要删除此工单吗？
+                  {t('ticketDetail.deleteConfirm')}
                 </Typography.Text>
                 <Typography.Paragraph type="secondary" className="mb-0 mt-1">
-                  此操作不可恢复，工单编号 #{ticket.id} 将被永久删除。
+                  {t('ticketDetail.deleteWarning', { id: ticket.id })}
                 </Typography.Paragraph>
               </div>
             </div>
             <div className="bg-gray-50 rounded p-3 mb-4">
               <Typography.Text type="secondary" className="text-sm">
-                工单信息：
+                {t('ticketDetail.ticketInfo')}：
               </Typography.Text>
               <div className="mt-1">
                 <Text strong>{ticket.title}</Text>
@@ -928,7 +940,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           </div>
           <Space className="w-full justify-end">
             <Button onClick={() => setDeleteModalVisible(false)} disabled={deleting}>
-              取消
+              {t('common.cancel')}
             </Button>
             <Button
               danger
@@ -937,7 +949,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               loading={deleting}
               icon={<Trash2 size={14} />}
             >
-              确认删除
+              {t('ticketDetail.confirmDelete')}
             </Button>
           </Space>
         </Modal>
@@ -952,6 +964,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         currentUserId={currentUser?.id}
         isTicketFinal={isTicketFinal}
         onRefresh={fetchTicket}
+        t={t}
       />
     </div>
   );
@@ -967,6 +980,7 @@ interface TicketDetailTabsProps {
   currentUserId?: number;
   isTicketFinal: boolean;
   onRefresh: () => void;
+  t: (key: string) => string;
 }
 
 const TicketDetailTabs: React.FC<TicketDetailTabsProps> = ({
@@ -977,6 +991,7 @@ const TicketDetailTabs: React.FC<TicketDetailTabsProps> = ({
   currentUserId,
   isTicketFinal,
   onRefresh,
+  t,
 }) => {
   const items = [
     {
@@ -984,7 +999,7 @@ const TicketDetailTabs: React.FC<TicketDetailTabsProps> = ({
       label: (
         <span>
           <MessageSquare size={14} className="inline mr-1" />
-          评论
+          {t('ticketDetail.tabComments')}
         </span>
       ),
       children: (
@@ -1002,7 +1017,7 @@ const TicketDetailTabs: React.FC<TicketDetailTabsProps> = ({
       label: (
         <span>
           <Paperclip size={14} className="inline mr-1" />
-          附件
+          {t('ticketDetail.tabAttachments')}
         </span>
       ),
       children: (
@@ -1020,7 +1035,7 @@ const TicketDetailTabs: React.FC<TicketDetailTabsProps> = ({
       label: (
         <span>
           <GitBranch size={14} className="inline mr-1" />
-          审批链
+          {t('ticketDetail.tabApprovals')}
         </span>
       ),
       children: (
@@ -1040,7 +1055,7 @@ const TicketDetailTabs: React.FC<TicketDetailTabsProps> = ({
       label: (
         <span>
           <HistoryIcon size={14} className="inline mr-1" />
-          历史
+          {t('ticketDetail.tabHistory')}
         </span>
       ),
       children: (
@@ -1082,7 +1097,7 @@ const TicketDetailTabs: React.FC<TicketDetailTabsProps> = ({
       label: (
         <span>
           <Link2 size={14} className="inline mr-1" />
-          关联
+          {t('ticketDetail.tabRelations')}
         </span>
       ),
       children: (
@@ -1097,7 +1112,7 @@ const TicketDetailTabs: React.FC<TicketDetailTabsProps> = ({
     <Card className="mt-4 rounded-lg shadow-sm border border-gray-200">
       <div className="flex items-center gap-2 mb-2 px-2 pt-2 text-gray-500 text-sm">
         <Info size={14} />
-        协作、审批与历史
+        {t('ticketDetail.detailTabsTitle')}
       </div>
       <Tabs items={items} defaultActiveKey="comments" />
     </Card>

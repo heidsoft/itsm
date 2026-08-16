@@ -97,7 +97,7 @@ describe('SLAApi', () => {
     it('should get compliance report and transform data', async () => {
       mockGet.mockResolvedValue({ totalTickets: 100, metSla: 90, violatedSla: 10, complianceRate: 90, avgResponseTime: 30, avgResolutionTime: 120, reportPeriod: { startDate: '2024-01-01', endDate: '2024-01-31' } });
       const result = await SLAApi.getSLAComplianceReport({ startDate: '2024-01-01', endDate: '2024-01-31' });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/compliance-report', { startDate: '2024-01-01', endDate: '2024-01-31' });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/compliance-report', { start_date: '2024-01-01', end_date: '2024-01-31' });
       expect(result.totalTickets).toBe(100);
       expect(result.complianceRate).toBe(90);
     });

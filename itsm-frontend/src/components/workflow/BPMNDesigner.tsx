@@ -34,6 +34,7 @@ import {
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import itsmModdleDescriptor from './itsm-moddle-descriptor';
 import gridModule from 'diagram-js/lib/features/grid-snapping';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 
 import 'bpmn-js/dist/assets/diagram-js.css';
@@ -108,12 +109,13 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   apiRef,
 }) => {
   const { message } = App.useApp();
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const modelerRef = useRef<BpmnModeler | null>(null);
   const initAttemptedRef = useRef(false);
   const [currentXML, setCurrentXML] = useState(xml);
   const [zoom, setZoom] = useState(1);
-  const [history, setHistory] = useState<HistoryItem[]>([{ xml, timestamp: Date.now(), description: '初始' }]);
+  const [history, setHistory] = useState<HistoryItem[]>([{ xml, timestamp: Date.now(), description: t('bpmnDesigner.messages.initial') }]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
@@ -164,7 +166,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           })
           .catch((err: Error) => {
             console.error('Failed to import XML:', err);
-            message.error('加载流程图失败');
+            message.error(t('bpmnDesigner.messages.loadFailed'));
           });
       } else {
         modeler
@@ -204,7 +206,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
               newHistory.push({ 
                 xml: savedXml, 
                 timestamp: Date.now(),
-                description: '修改流程'
+                description: t('bpmnDesigner.messages.modifyFlow')
               });
               return newHistory.slice(-50);
             });
@@ -269,7 +271,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       console.error('Failed to initialize BPMN Modeler:', err);
       initAttemptedRef.current = false;
     }
-  }, [xml, historyIndex, message, onChange, onSelectionChange, showGrid, snapToGrid]);
+  }, [xml, historyIndex, message, onChange, onSelectionChange, showGrid, snapToGrid, t]);
 
   // 初始化 BPMN Modeler - 等待容器布局完成
   useEffect(() => {
@@ -337,14 +339,14 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           setZoom(readCanvasZoom(canvas));
           setCurrentXML(xml);
           // 重置历史记录
-          setHistory([{ xml, timestamp: Date.now(), description: '加载流程' }]);
+          setHistory([{ xml, timestamp: Date.now(), description: t('bpmnDesigner.messages.loadFlow') }]);
           setHistoryIndex(0);
         })
         .catch((err: Error) => {
           console.error('Failed to import XML:', err);
         });
     }
-  }, [xml]);
+  }, [xml, t]);
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -412,17 +414,17 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   const handleSave = useCallback(() => {
     if (onSave) {
       onSave(currentXML);
-      message.success('流程已保存');
+      message.success(t('bpmnDesigner.messages.saveSuccess'));
     }
-  }, [currentXML, onSave, message]);
+  }, [currentXML, onSave, message, t]);
 
   // 部署
   const handleDeploy = useCallback(() => {
     if (onDeploy) {
       onDeploy(currentXML);
-      message.success('流程已部署');
+      message.success(t('bpmnDesigner.messages.deploySuccess'));
     }
-  }, [currentXML, onDeploy, message]);
+  }, [currentXML, onDeploy, message, t]);
 
   // 导出图片
   const handleExportSVG = useCallback(async () => {
@@ -437,12 +439,12 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         link.download = 'workflow.svg';
         link.click();
         URL.revokeObjectURL(url);
-        message.success('SVG 已导出');
+        message.success(t('bpmnDesigner.messages.exportSvg'));
       }
     } catch {
-      message.error('导出失败');
+      message.error(t('bpmnDesigner.messages.exportFailed'));
     }
-  }, [message]);
+  }, [message, t]);
 
   // 导出XML
   const handleExportXML = useCallback(() => {
@@ -453,8 +455,8 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     link.download = 'workflow.bpmn';
     link.click();
     URL.revokeObjectURL(url);
-    message.success('BPMN 文件已导出');
-  }, [currentXML, message]);
+    message.success(t('bpmnDesigner.messages.exportBpmn'));
+  }, [currentXML, message, t]);
 
   // 导入XML
   const handleImportXML = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -467,17 +469,17 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       modelerRef.current
         ?.importXML(content)
         .then(() => {
-          message.success('导入成功');
+          message.success(t('bpmnDesigner.messages.importSuccess'));
           // 更新历史记录
-          setHistory([{ xml: content, timestamp: Date.now(), description: '导入流程' }]);
+          setHistory([{ xml: content, timestamp: Date.now(), description: t('bpmnDesigner.messages.importFlow') }]);
           setHistoryIndex(0);
         })
         .catch((err: Error) => {
-          message.error('导入失败: ' + err.message);
+          message.error(t('bpmnDesigner.messages.importFailed') + ': ' + err.message);
         });
     };
     reader.readAsText(file);
-  }, [message]);
+  }, [message, t]);
 
   // 缩放
   const handleZoom = useCallback(
@@ -517,14 +519,14 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         .then(() => {
           setHistoryIndex(newIndex);
           setCurrentXML(historyItem.xml);
-          message.info('已撤销');
+          message.info(t('bpmnDesigner.messages.undoSuccess'));
         })
         .catch(err => {
-          console.error('撤销失败:', err);
-          message.error('撤销失败');
+          console.error('Undo failed:', err);
+          message.error(t('bpmnDesigner.messages.undoFailed'));
         });
     }
-  }, [history, historyIndex, message]);
+  }, [history, historyIndex, message, t]);
 
   // 重做
   const handleRedo = useCallback(() => {
@@ -536,14 +538,14 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         .then(() => {
           setHistoryIndex(newIndex);
           setCurrentXML(historyItem.xml);
-          message.info('已重做');
+          message.info(t('bpmnDesigner.messages.redoSuccess'));
         })
         .catch(err => {
-          console.error('重做失败:', err);
-          message.error('重做失败');
+          console.error('Redo failed:', err);
+          message.error(t('bpmnDesigner.messages.redoFailed'));
         });
     }
-  }, [history, historyIndex, message]);
+  }, [history, historyIndex, message, t]);
 
   // 删除选中
   const handleDelete = useCallback(() => {
@@ -555,9 +557,9 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     const selection = selectionObj?.get?.() || [];
     if (selection.length > 0 && modelingObj) {
       modelingObj.removeElements(selection);
-      message.success(`已删除 ${selection.length} 个元素`);
+      message.success(t('bpmnDesigner.messages.elementsDeleted', { count: selection.length }));
     }
-  }, [readOnly, message]);
+  }, [readOnly, message, t]);
 
   // 全选
   const handleSelectAll = useCallback(() => {
@@ -572,8 +574,8 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     // 选择所有可见元素
     const allElements = elementRegistry.filter(element => !element.hidden && element.type !== 'label');
     selection.select(allElements);
-    message.success(`已选中 ${allElements.length} 个元素`);
-  }, [message]);
+    message.success(t('bpmnDesigner.messages.elementsSelected', { count: allElements.length }));
+  }, [message, t]);
 
   // 复制
   const handleCopy = useCallback(() => {
@@ -588,9 +590,9 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     const elements = selectedElements.map(id => elementRegistry.get(id)).filter(Boolean);
     if (elements.length > 0) {
       copyPaste.copy(elements);
-      message.success(`已复制 ${elements.length} 个元素`);
+      message.success(t('bpmnDesigner.messages.elementsCopied', { count: elements.length }));
     }
-  }, [selectedElements, readOnly, message]);
+  }, [selectedElements, readOnly, message, t]);
 
   // 粘贴
   const handlePaste = useCallback(() => {
@@ -601,15 +603,15 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     };
     
     if (copyPaste.isClipboardEmpty()) {
-      message.warning('剪贴板为空');
+      message.warning(t('bpmnDesigner.messages.clipboardEmpty'));
       return;
     }
     
     const pastedElements = copyPaste.paste();
     if (pastedElements.length > 0) {
-      message.success(`已粘贴 ${pastedElements.length} 个元素`);
+      message.success(t('bpmnDesigner.messages.elementsPasted', { count: pastedElements.length }));
     }
-  }, [readOnly, message]);
+  }, [readOnly, message, t]);
 
   // 对齐操作
   const handleAlign = useCallback((type: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => {
@@ -620,17 +622,19 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     
     try {
       alignElements.trigger(type);
-      message.success(`已${type === 'left' ? '左对齐' :
-        type === 'center' ? '水平居中对齐' :
-        type === 'right' ? '右对齐' :
-        type === 'top' ? '顶部对齐' :
-        type === 'middle' ? '垂直居中对齐' :
-        '底部对齐'}`);
+      const alignMsg =
+        type === 'left' ? t('bpmnDesigner.messages.alignLeftSuccess') :
+        type === 'center' ? t('bpmnDesigner.messages.alignCenterSuccess') :
+        type === 'right' ? t('bpmnDesigner.messages.alignRightSuccess') :
+        type === 'top' ? t('bpmnDesigner.messages.alignTopSuccess') :
+        type === 'middle' ? t('bpmnDesigner.messages.alignMiddleSuccess') :
+        t('bpmnDesigner.messages.alignBottomSuccess');
+      message.success(alignMsg);
     } catch (err) {
-      console.error('对齐失败:', err);
-      message.error('对齐操作失败');
+      console.error('Align failed:', err);
+      message.error(t('bpmnDesigner.messages.alignFailed'));
     }
-  }, [selectedElements.length, readOnly, message]);
+  }, [selectedElements.length, readOnly, message, t]);
 
   // 分布操作
   const handleDistribute = useCallback((direction: 'horizontal' | 'vertical') => {
@@ -641,12 +645,16 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     
     try {
       distributeElements.trigger(direction);
-      message.success(`已${direction === 'horizontal' ? '水平' : '垂直'}分布元素`);
+      message.success(
+        direction === 'horizontal'
+          ? t('bpmnDesigner.messages.distributeHorizontalSuccess')
+          : t('bpmnDesigner.messages.distributeVerticalSuccess')
+      );
     } catch (err) {
-      console.error('分布失败:', err);
-      message.error('分布操作失败');
+      console.error('Distribute failed:', err);
+      message.error(t('bpmnDesigner.messages.distributeFailed'));
     }
-  }, [selectedElements.length, readOnly, message]);
+  }, [selectedElements.length, readOnly, message, t]);
 
   // 切换网格显示
   const toggleGrid = useCallback(() => {
@@ -677,8 +685,10 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       gridSnapping.setActive(newSnapToGrid);
     }
     
-    message.success(`网格吸附已${newSnapToGrid ? '开启' : '关闭'}`);
-  }, [snapToGrid, message]);
+    message.success(
+      newSnapToGrid ? t('bpmnDesigner.messages.gridSnapEnabled') : t('bpmnDesigner.messages.gridSnapDisabled')
+    );
+  }, [snapToGrid, message, t]);
 
   // 搜索节点
   const handleSearch = useCallback((value: string) => {
@@ -714,11 +724,11 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         y: firstElement.y + firstElement.height / 2
       };
       canvas.zoom(1.5, center);
-      message.success(`找到 ${matchedElements.length} 个匹配元素`);
+      message.success(t('bpmnDesigner.messages.searchFound', { count: matchedElements.length }));
     } else {
-      message.info('未找到匹配元素');
+      message.info(t('bpmnDesigner.messages.searchNotFound'));
     }
-  }, [message]);
+  }, [message, t]);
 
   // 验证流程
   const handleValidate = useCallback(async () => {
@@ -734,11 +744,11 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     const endEvents = elementRegistry.filter(el => el.type === 'bpmn:EndEvent');
     
     if (startEvents.length === 0) {
-      errors.push({ type: 'error', message: '流程缺少开始事件' });
+      errors.push({ type: 'error', message: t('bpmnDesigner.messages.missingStartEvent') });
     }
     
     if (endEvents.length === 0) {
-      errors.push({ type: 'error', message: '流程缺少结束事件' });
+      errors.push({ type: 'error', message: t('bpmnDesigner.messages.missingEndEvent') });
     }
     
     // 检查用户任务是否有配置
@@ -748,7 +758,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       if (!bo.assignee && !bo.candidateUsers && !bo.candidateGroups) {
         errors.push({ 
           type: 'warning', 
-          message: `用户任务 "${bo.name || task.id}" 未配置受理人或候选人` 
+          message: t('bpmnDesigner.messages.userTaskNoConfig', { name: bo.name || task.id })
         });
       }
     });
@@ -760,7 +770,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       if (!bo.implementation && !bo.operationRef) {
         errors.push({ 
           type: 'warning', 
-          message: `服务任务 "${bo.name || task.id}" 未配置实现类型或操作引用` 
+          message: t('bpmnDesigner.messages.serviceTaskNoConfig', { name: bo.name || task.id })
         });
       }
     });
@@ -774,7 +784,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       if (bo.$type === 'bpmn:ExclusiveGateway' && outgoing.length > 1 && !bo.default) {
         errors.push({ 
           type: 'warning', 
-          message: `排他网关 "${bo.name || gateway.id}" 有多个输出流但未配置默认分支` 
+          message: t('bpmnDesigner.messages.gatewayNoDefault', { name: bo.name || gateway.id })
         });
       }
       
@@ -783,7 +793,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         if (!flow.conditionExpression && outgoing.length > 1) {
           errors.push({ 
             type: 'warning', 
-            message: `网关 "${bo.name || gateway.id}" 的输出流 "${flow.id}" 未配置条件表达式` 
+            message: t('bpmnDesigner.messages.flowNoCondition', { name: bo.name || gateway.id, flowId: flow.id })
           });
         }
       });
@@ -791,15 +801,15 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     
     // 显示验证结果
     if (errors.length === 0) {
-      message.success('流程验证通过，未发现问题');
+      message.success(t('bpmnDesigner.messages.validationPassed'));
     } else {
       const errorCount = errors.filter(e => e.type === 'error').length;
       const warningCount = errors.filter(e => e.type === 'warning').length;
-      message.warning(`验证完成，发现 ${errorCount} 个错误，${warningCount} 个警告`);
+      message.warning(t('bpmnDesigner.messages.validationResult', { errors: errorCount, warnings: warningCount }));
     }
     
     return errors;
-  }, [message]);
+  }, [message, t]);
 
   /**
    * 供父组件调用：修改当前 BPMN 元素的属性。
@@ -896,21 +906,21 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     {
       key: 'left',
       icon: <AlignLeft size={14} />,
-      label: '左对齐',
+      label: t('bpmnDesigner.buttons.alignLeft'),
       onClick: () => handleAlign('left'),
       disabled: selectedElements.length < 2 || readOnly
     },
     {
       key: 'center',
       icon: <AlignCenter size={14} />,
-      label: '水平居中',
+      label: t('bpmnDesigner.buttons.alignCenter'),
       onClick: () => handleAlign('center'),
       disabled: selectedElements.length < 2 || readOnly
     },
     {
       key: 'right',
       icon: <AlignRight size={14} />,
-      label: '右对齐',
+      label: t('bpmnDesigner.buttons.alignRight'),
       onClick: () => handleAlign('right'),
       disabled: selectedElements.length < 2 || readOnly
     },
@@ -920,21 +930,21 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     {
       key: 'top',
       icon: <PanelTop size={14} />,
-      label: '顶部对齐',
+      label: t('bpmnDesigner.buttons.alignTop'),
       onClick: () => handleAlign('top'),
       disabled: selectedElements.length < 2 || readOnly
     },
     {
       key: 'middle',
       icon: <Rows2 size={14} />,
-      label: '垂直居中',
+      label: t('bpmnDesigner.buttons.alignMiddle'),
       onClick: () => handleAlign('middle'),
       disabled: selectedElements.length < 2 || readOnly
     },
     {
       key: 'bottom',
       icon: <PanelBottom size={14} />,
-      label: '底部对齐',
+      label: t('bpmnDesigner.buttons.alignBottom'),
       onClick: () => handleAlign('bottom'),
       disabled: selectedElements.length < 2 || readOnly
     }
@@ -945,14 +955,14 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     {
       key: 'horizontal',
       icon: <AlignHorizontalDistributeCenter size={14} />,
-      label: '水平分布',
+      label: t('bpmnDesigner.buttons.distributeHorizontal'),
       onClick: () => handleDistribute('horizontal'),
       disabled: selectedElements.length < 3 || readOnly
     },
     {
       key: 'vertical',
       icon: <AlignVerticalDistributeCenter size={14} />,
-      label: '垂直分布',
+      label: t('bpmnDesigner.buttons.distributeVertical'),
       onClick: () => handleDistribute('vertical'),
       disabled: selectedElements.length < 3 || readOnly
     }
@@ -963,13 +973,13 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     {
       key: 'grid',
       icon: <Grid size={14} />,
-      label: showGrid ? '隐藏网格' : '显示网格',
+      label: showGrid ? t('bpmnDesigner.buttons.hideGrid') : t('bpmnDesigner.buttons.showGrid'),
       onClick: toggleGrid
     },
     {
       key: 'snap',
       icon: <Grid size={14} />,
-      label: snapToGrid ? '关闭网格吸附' : '开启网格吸附',
+      label: snapToGrid ? t('bpmnDesigner.buttons.disableSnap') : t('bpmnDesigner.buttons.enableSnap'),
       onClick: toggleSnapToGrid
     },
     {
@@ -978,7 +988,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     {
       key: 'validate',
       icon: <Bug size={14} />,
-      label: '验证流程',
+      label: t('bpmnDesigner.buttons.validateFlow'),
       onClick: handleValidate
     }
   ];
@@ -998,10 +1008,10 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           gap: 4,
         }}
       >
-        <Tooltip title="保存 (Ctrl+S)" placement="right">
+        <Tooltip title={t('bpmnDesigner.buttons.saveShortcut')} placement="right">
           <Button type="text" icon={<Save size={18} />} onClick={handleSave} disabled={readOnly} />
         </Tooltip>
-        <Tooltip title="部署" placement="right">
+        <Tooltip title={t('bpmnDesigner.buttons.deploy')} placement="right">
           <Button
             type="text"
             icon={<PlayCircle size={18} />}
@@ -1009,7 +1019,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
             disabled={readOnly}
           />
         </Tooltip>
-        <Tooltip title="撤销 (Ctrl+Z)" placement="right">
+        <Tooltip title={t('bpmnDesigner.buttons.undoShortcut')} placement="right">
           <Button
             type="text"
             icon={<Undo size={18} />}
@@ -1017,7 +1027,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
             disabled={readOnly || historyIndex <= 0}
           />
         </Tooltip>
-        <Tooltip title="重做 (Ctrl+Y)" placement="right">
+        <Tooltip title={t('bpmnDesigner.buttons.redoShortcut')} placement="right">
           <Button
             type="text"
             icon={<Redo size={18} />}
@@ -1028,7 +1038,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
         <div style={{ height: 1, width: '80%', background: '#e8e8e8', margin: '8px 0' }} />
 
-        <Tooltip title="复制 (Ctrl+C)" placement="right">
+        <Tooltip title={t('bpmnDesigner.buttons.copyShortcut')} placement="right">
           <Button
             type="text"
             icon={<Copy size={18} />}
@@ -1036,7 +1046,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
             disabled={readOnly || selectedElements.length === 0}
           />
         </Tooltip>
-        <Tooltip title="粘贴 (Ctrl+V)" placement="right">
+        <Tooltip title={t('bpmnDesigner.buttons.pasteShortcut')} placement="right">
           <Button
             type="text"
             icon={<ClipboardPaste size={18} />}
@@ -1044,7 +1054,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
             disabled={readOnly}
           />
         </Tooltip>
-        <Tooltip title="全选 (Ctrl+A)" placement="right">
+        <Tooltip title={t('bpmnDesigner.buttons.selectAllShortcut')} placement="right">
           <Button
             type="text"
             icon={<ListChecks size={18} />}
@@ -1052,7 +1062,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
             disabled={readOnly}
           />
         </Tooltip>
-        <Tooltip title="删除 (Delete)" placement="right">
+        <Tooltip title={t('bpmnDesigner.buttons.deleteShortcut')} placement="right">
           <Button
             type="text"
             icon={<Trash2 size={18} />}
@@ -1065,13 +1075,13 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         <div style={{ height: 1, width: '80%', background: '#e8e8e8', margin: '8px 0' }} />
 
         <Dropdown menu={{ items: alignMenuItems }} placement="bottomRight" trigger={['click']}>
-          <Tooltip title="对齐" placement="right">
+          <Tooltip title={t('bpmnDesigner.buttons.align')} placement="right">
             <Button type="text" icon={<AlignLeft size={18} />} disabled={selectedElements.length < 2 || readOnly} />
           </Tooltip>
         </Dropdown>
 
         <Dropdown menu={{ items: distributeMenuItems }} placement="bottomRight" trigger={['click']}>
-          <Tooltip title="分布" placement="right">
+          <Tooltip title={t('bpmnDesigner.buttons.distribute')} placement="right">
           <Button type="text" icon={<AlignHorizontalDistributeCenter size={18} />} disabled={selectedElements.length < 3 || readOnly} />
           </Tooltip>
         </Dropdown>
@@ -1079,15 +1089,15 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         <div style={{ flex: 1 }} />
 
         <Dropdown menu={{ items: settingsMenuItems }} placement="bottomRight" trigger={['click']}>
-          <Tooltip title="设置" placement="right">
+          <Tooltip title={t('bpmnDesigner.buttons.settings')} placement="right">
             <Button type="text" icon={<Settings size={18} />} />
           </Tooltip>
         </Dropdown>
 
-        <Tooltip title="导出SVG" placement="right">
+        <Tooltip title={t('bpmnDesigner.buttons.exportSvg')} placement="right">
           <Button type="text" icon={<Download size={18} />} onClick={handleExportSVG} />
         </Tooltip>
-        <Tooltip title="导出BPMN" placement="right">
+        <Tooltip title={t('bpmnDesigner.buttons.exportBpmn')} placement="right">
           <Button type="text" icon={<FileJson size={18} />} onClick={handleExportXML} />
         </Tooltip>
         <label>
@@ -1097,7 +1107,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
             style={{ display: 'none' }}
             onChange={handleImportXML}
           />
-          <Tooltip title="导入BPMN" placement="right">
+          <Tooltip title={t('bpmnDesigner.buttons.importBpmn')} placement="right">
             <Button type="text" icon={<Upload size={18} />} />
           </Tooltip>
         </label>
@@ -1120,7 +1130,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       }}>
         <Input
           id="bpmn-search-input"
-          placeholder="搜索节点名称/ID/类型..."
+          placeholder={t('bpmnDesigner.buttons.searchPlaceholder')}
           prefix={<Search size={14} />}
           value={searchKeyword}
           onChange={e => handleSearch(e.target.value)}
@@ -1143,7 +1153,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
         }}
       >
-        <Tooltip title="缩小">
+        <Tooltip title={t('bpmnDesigner.buttons.zoomOut')}>
           <Button
             type="text"
             size="small"
@@ -1154,7 +1164,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         <span style={{ minWidth: 50, textAlign: 'center', lineHeight: '28px', fontSize: '12px' }}>
           {Math.round(zoom * 100)}%
         </span>
-        <Tooltip title="放大">
+        <Tooltip title={t('bpmnDesigner.buttons.zoomIn')}>
           <Button
             type="text"
             size="small"
@@ -1162,7 +1172,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
             onClick={() => handleZoom(0.1)}
           />
         </Tooltip>
-        <Tooltip title="适应屏幕">
+        <Tooltip title={t('bpmnDesigner.buttons.fit')}>
           <Button
             type="text"
             size="small"
@@ -1184,7 +1194,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           borderRadius: '4px',
           fontSize: '12px'
         }}>
-          已选中 {selectedElements.length} 个元素
+          {t('bpmnDesigner.messages.elementsSelected', { count: selectedElements.length })}
         </div>
       )}
     </div>

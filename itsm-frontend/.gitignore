@@ -34,6 +34,8 @@ typecheck-output*.txt
 
 # test artifacts
 test-results/
+# 本地直接跑 --reporters=jest-junit 时(未设 JEST_JUNIT_OUTPUT)的默认输出
+junit.xml
 playwright-report/
 .jest-cache/
 .pytest_cache/

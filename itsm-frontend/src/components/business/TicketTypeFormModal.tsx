@@ -11,7 +11,7 @@ import {
   Space,
   Tabs,
   Card,
-  message,
+  App,
   InputNumber,
   Radio,
   Divider,
@@ -23,13 +23,12 @@ import type {
   TicketTypeDefinition,
   CustomFieldDefinition,
   ApprovalChainDefinition,
-  AssignmentRule} from '@/types/ticket-type';
-import {
-  CustomFieldType
+  AssignmentRule,
 } from '@/types/ticket-type';
+import { CustomFieldType } from '@/types/ticket-type';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { TextArea } = Input;
-const { Panel } = Collapse;
 
 interface TicketTypeFormModalProps {
   visible: boolean;
@@ -44,6 +43,8 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
   onCancel,
   onSubmit,
 }) => {
+  const { t } = useI18n();
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
@@ -55,9 +56,9 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
 
   useEffect(() => {
     if (visible) {
-      loadDependencies();
-      // ... existing code ...
+      void loadDependencies();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const loadDependencies = async () => {
@@ -74,7 +75,6 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
       setUsers(userResponse.users);
     } catch (error) {
       console.error('Failed to load dependencies:', error);
-      // Fail silently to avoid interrupting user flow
     }
   };
 
@@ -128,7 +128,6 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
     }
   };
 
-  // 添加自定义字段
   const addCustomField = () => {
     const newField: CustomFieldDefinition = {
       id: `field_${Date.now()}`,
@@ -141,19 +140,16 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
     setCustomFields([...customFields, newField]);
   };
 
-  // 删除自定义字段
   const removeCustomField = (index: number) => {
     setCustomFields(customFields.filter((_, i) => i !== index));
   };
 
-  // 更新自定义字段
   const updateCustomField = (index: number, field: Partial<CustomFieldDefinition>) => {
     const newFields = [...customFields];
     newFields[index] = { ...newFields[index], ...field };
     setCustomFields(newFields);
   };
 
-  // 移动字段顺序
   const moveField = (index: number, direction: 'up' | 'down') => {
     const newFields = [...customFields];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
@@ -165,12 +161,11 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
     }
   };
 
-  // 添加审批级别
   const addApprovalLevel = () => {
     const newLevel: ApprovalChainDefinition = {
       id: `level_${Date.now()}`,
       level: approvalChain.length + 1,
-      name: `审批级别 ${approvalChain.length + 1}`,
+      name: `${t('ticketTypeForm.approvalLevelPrefix')} ${approvalChain.length + 1}`,
       approvers: [],
       approvalType: 'any',
       allowReject: true,
@@ -180,12 +175,10 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
     setApprovalChain([...approvalChain, newLevel]);
   };
 
-  // 删除审批级别
   const removeApprovalLevel = (index: number) => {
     setApprovalChain(approvalChain.filter((_, i) => i !== index));
   };
 
-  // 更新审批级别
   const updateApprovalLevel = (index: number, level: Partial<ApprovalChainDefinition>) => {
     const newChain = [...approvalChain];
     newChain[index] = { ...newChain[index], ...level };
@@ -194,357 +187,428 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
 
   return (
     <Modal
-      title={editingType ? '编辑工单类型' : '创建工单类型'}
+      title={editingType ? t('ticketTypeForm.editTitle') : t('ticketTypeForm.createTitle')}
       open={visible}
       onCancel={onCancel}
       width={1000}
       footer={[
         <Button key="cancel" onClick={onCancel}>
-          取消
+          {t('common.cancel')}
         </Button>,
         <Button key="submit" type="primary" loading={loading} onClick={handleSubmit}>
-          {editingType ? '更新' : '创建'}
+          {editingType ? t('common.update') : t('common.create')}
         </Button>,
       ]}
     >
       <Tabs
-        activeKey={activeTab} onChange={setActiveTab}
+        activeKey={activeTab}
+        onChange={setActiveTab}
         items={[
-                {
-                  key: 'basic',
-                  label: '基本信息',
-                  children: (
-                    <>
-          <Form form={form} layout="vertical">
-            <Form.Item
-              label="类型编码"
-              name="code"
-              rules={[
-                { required: true, message: '请输入类型编码' },
-                { pattern: /^[a-z_]+$/, message: '只能包含小写字母和下划线' },
-              ]}
-              tooltip="唯一标识，创建后不可修改"
-            >
-              <Input placeholder="例如: incident, request, change" disabled={!!editingType} />
-            </Form.Item>
+          {
+            key: 'basic',
+            label: t('ticketTypeForm.tabBasic'),
+            children: (
+              <Form form={form} layout="vertical">
+                <Form.Item
+                  label={t('ticketTypeForm.code')}
+                  name="code"
+                  rules={[
+                    { required: true, message: t('ticketTypeForm.codeRequired') },
+                    { pattern: /^[a-z_]+$/, message: t('ticketTypeForm.codePattern') },
+                  ]}
+                  tooltip={t('ticketTypeForm.codeTooltip')}
+                >
+                  <Input
+                    placeholder={t('ticketTypeForm.codePlaceholder')}
+                    disabled={!!editingType}
+                  />
+                </Form.Item>
 
-            <Form.Item
-              label="类型名称"
-              name="name"
-              rules={[{ required: true, message: '请输入类型名称' }]}
-            >
-              <Input placeholder="例如: 故障工单, 服务请求" />
-            </Form.Item>
+                <Form.Item
+                  label={t('ticketTypeForm.name')}
+                  name="name"
+                  rules={[{ required: true, message: t('ticketTypeForm.nameRequired') }]}
+                >
+                  <Input placeholder={t('ticketTypeForm.namePlaceholder')} />
+                </Form.Item>
 
-            <Form.Item label="描述" name="description">
-              <TextArea rows={3} placeholder="描述此工单类型的用途" />
-            </Form.Item>
+                <Form.Item label={t('ticketTypeForm.description')} name="description">
+                  <TextArea rows={3} placeholder={t('ticketTypeForm.descriptionPlaceholder')} />
+                </Form.Item>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Form.Item label="图标" name="icon">
-                <Select placeholder="选择图标" options={[
-                  { value: 'Bug', label: '🐛 故障' },
-                  { value: 'Headphones', label: '🎧 服务' },
-                  { value: 'Wrench', label: '🔧 维护' },
-                  { value: 'HelpCircle', label: '❓ 问题' },
-                  { value: 'Zap', label: '⚡ 紧急' },
-                ]} />
-              </Form.Item>
+                <div className="grid grid-cols-2 gap-4">
+                  <Form.Item label={t('ticketTypeForm.icon')} name="icon">
+                    <Select
+                      placeholder={t('ticketTypeForm.selectIcon')}
+                      options={[
+                        { value: 'Bug', label: t('ticketTypeForm.iconBug') },
+                        { value: 'Headphones', label: t('ticketTypeForm.iconService') },
+                        { value: 'Wrench', label: t('ticketTypeForm.iconMaintenance') },
+                        { value: 'HelpCircle', label: t('ticketTypeForm.iconQuestion') },
+                        { value: 'Zap', label: t('ticketTypeForm.iconUrgent') },
+                      ]}
+                    />
+                  </Form.Item>
 
-              <Form.Item label="颜色" name="color">
-                <Select placeholder="选择颜色" options={[
-                  { value: '#ff4d4f', label: '🔴 红色' },
-                  { value: '#1890ff', label: '🔵 蓝色' },
-                  { value: '#52c41a', label: '🟢 绿色' },
-                  { value: '#faad14', label: '🟡 黄色' },
-                  { value: '#722ed1', label: '🟣 紫色' },
-                ]} />
-              </Form.Item>
-            </div>
-          </Form>
-                    </>
-                  ),
-                },
-                {
-                  key: 'fields',
-                  label: '自定义字段',
-                  children: (
-                    <>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-gray-600">
-                配置此工单类型的自定义字段（共 {customFields.length} 个）
-              </span>
-              <Button type="dashed" icon={<Plus />} onClick={addCustomField}>
-                添加字段
-              </Button>
-            </div>
-
-            {customFields.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <Info className="text-4xl mb-2" />
-                <div>暂无自定义字段，点击上方按钮添加</div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {customFields.map((field, index) => (
-                  <Card
-                    key={field.id}
-                    size="small"
-                    extra={
-                      <Space>
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<ArrowUp />}
-                          disabled={index === 0}
-                          onClick={() => moveField(index, 'up')}
-                        />
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<ArrowDown />}
-                          disabled={index === customFields.length - 1}
-                          onClick={() => moveField(index, 'down')}
-                        />
-                        <Button
-                          type="text"
-                          size="small"
-                          danger
-                          icon={<Trash2 />}
-                          onClick={() => removeCustomField(index)}
-                        />
-                      </Space>
-                    }
-                  >
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        placeholder="字段名称（英文）"
-                        value={field.name}
-                        onChange={e => updateCustomField(index, { name: e.target.value })}
-                      />
-                      <Input
-                        placeholder="字段标签（显示名称）"
-                        value={field.label}
-                        onChange={e => updateCustomField(index, { label: e.target.value })}
-                      />
-                      <Select
-                        placeholder="字段类型"
-                        value={field.type}
-                        onChange={type => updateCustomField(index, { type })}
-                        options={[
-                          { value: CustomFieldType.TEXT, label: '单行文本' },
-                          { value: CustomFieldType.TEXTAREA, label: '多行文本' },
-                          { value: CustomFieldType.NUMBER, label: '数字' },
-                          { value: CustomFieldType.DATE, label: '日期' },
-                          { value: CustomFieldType.DATETIME, label: '日期时间' },
-                          { value: CustomFieldType.SELECT, label: '下拉选择' },
-                          { value: CustomFieldType.MULTI_SELECT, label: '多选' },
-                          { value: CustomFieldType.CHECKBOX, label: '复选框' },
-                          { value: CustomFieldType.RADIO, label: '单选按钮' },
-                          { value: CustomFieldType.USER_PICKER, label: '用户选择器' },
-                        ]}
-                      />
-                      <div className="flex items-center">
-                        <Switch
-                          checked={field.required}
-                          onChange={required => updateCustomField(index, { required })}
-                        />
-                        <span className="ml-2">必填</span>
-                      </div>
-                      <Input
-                        className="col-span-2"
-                        placeholder="字段描述（可选）"
-                        value={field.description}
-                        onChange={e => updateCustomField(index, { description: e.target.value })}
-                      />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-                    </>
-                  ),
-                },
-                {
-                  key: 'approval',
-                  label: '审批流程',
-                  children: (
-                    <>
-          <Form.Item label="启用审批流程" name="approvalEnabled" valuePropName="checked">
-            <Switch />
-          </Form.Item>
-
-          {form.getFieldValue('approvalEnabled') && (
-            <div className="space-y-4 mt-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">配置审批级别（共 {approvalChain.length} 级）</span>
-                <Button type="dashed" icon={<Plus />} onClick={addApprovalLevel}>
-                  添加审批级别
-                </Button>
-              </div>
-
-              {approvalChain.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <Info className="text-4xl mb-2" />
-                  <div>暂无审批级别，点击上方按钮添加</div>
+                  <Form.Item label={t('ticketTypeForm.color')} name="color">
+                    <Select
+                      placeholder={t('ticketTypeForm.selectColor')}
+                      options={[
+                        { value: '#ff4d4f', label: t('ticketTypeForm.colorRed') },
+                        { value: '#1890ff', label: t('ticketTypeForm.colorBlue') },
+                        { value: '#52c41a', label: t('ticketTypeForm.colorGreen') },
+                        { value: '#faad14', label: t('ticketTypeForm.colorYellow') },
+                        { value: '#722ed1', label: t('ticketTypeForm.colorPurple') },
+                      ]}
+                    />
+                  </Form.Item>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {approvalChain.map((level, index) => (
-                    <Card
-                      key={level.id}
-                      title={`第 ${level.level} 级审批`}
-                      size="small"
-                      extra={
-                        <Button
-                          type="text"
-                          size="small"
-                          danger
-                          icon={<Trash2 />}
-                          onClick={() => removeApprovalLevel(index)}
-                        />
-                      }
-                    >
-                      <div className="space-y-3">
-                        <Input
-                          placeholder="审批级别名称"
-                          value={level.name}
-                          onChange={e => updateApprovalLevel(index, { name: e.target.value })}
-                        />
+              </Form>
+            ),
+          },
+          {
+            key: 'fields',
+            label: t('ticketTypeForm.tabFields'),
+            children: (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-gray-600">
+                    {t('ticketTypeForm.fieldsCount', { count: customFields.length })}
+                  </span>
+                  <Button type="dashed" icon={<Plus />} onClick={addCustomField}>
+                    {t('ticketTypeForm.addField')}
+                  </Button>
+                </div>
 
-                        <div>
-                          <div className="text-sm text-gray-600 mb-2">审批方式</div>
-                          <Radio.Group
-                            value={level.approvalType}
+                {customFields.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <Info className="text-4xl mb-2" />
+                    <div>{t('ticketTypeForm.noFields')}</div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {customFields.map((field, index) => (
+                      <Card
+                        key={field.id}
+                        size="small"
+                        extra={
+                          <Space>
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={<ArrowUp />}
+                              disabled={index === 0}
+                              onClick={() => moveField(index, 'up')}
+                            />
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={<ArrowDown />}
+                              disabled={index === customFields.length - 1}
+                              onClick={() => moveField(index, 'down')}
+                            />
+                            <Button
+                              type="text"
+                              size="small"
+                              danger
+                              icon={<Trash2 />}
+                              onClick={() => removeCustomField(index)}
+                            />
+                          </Space>
+                        }
+                      >
+                        <div className="grid grid-cols-2 gap-3">
+                          <Input
+                            placeholder={t('ticketTypeForm.fieldNameEnPlaceholder')}
+                            value={field.name}
                             onChange={e =>
-                              updateApprovalLevel(index, {
-                                approvalType: e.target.value,
-                              })
+                              updateCustomField(index, { name: e.target.value })
+                            }
+                          />
+                          <Input
+                            placeholder={t('ticketTypeForm.fieldLabelPlaceholder')}
+                            value={field.label}
+                            onChange={e =>
+                              updateCustomField(index, { label: e.target.value })
+                            }
+                          />
+                          <Select
+                            placeholder={t('ticketTypeForm.fieldType')}
+                            value={field.type}
+                            onChange={type => updateCustomField(index, { type })}
+                            options={[
+                              { value: CustomFieldType.TEXT, label: t('ticketTypeForm.typeText') },
+                              {
+                                value: CustomFieldType.TEXTAREA,
+                                label: t('ticketTypeForm.typeTextarea'),
+                              },
+                              { value: CustomFieldType.NUMBER, label: t('ticketTypeForm.typeNumber') },
+                              { value: CustomFieldType.DATE, label: t('ticketTypeForm.typeDate') },
+                              {
+                                value: CustomFieldType.DATETIME,
+                                label: t('ticketTypeForm.typeDatetime'),
+                              },
+                              {
+                                value: CustomFieldType.SELECT,
+                                label: t('ticketTypeForm.typeSelect'),
+                              },
+                              {
+                                value: CustomFieldType.MULTI_SELECT,
+                                label: t('ticketTypeForm.typeMultiSelect'),
+                              },
+                              {
+                                value: CustomFieldType.CHECKBOX,
+                                label: t('ticketTypeForm.typeCheckbox'),
+                              },
+                              {
+                                value: CustomFieldType.RADIO,
+                                label: t('ticketTypeForm.typeRadio'),
+                              },
+                              {
+                                value: CustomFieldType.USER_PICKER,
+                                label: t('ticketTypeForm.typeUserPicker'),
+                              },
+                            ]}
+                          />
+                          <div className="flex items-center">
+                            <Switch
+                              checked={field.required}
+                              onChange={required => updateCustomField(index, { required })}
+                            />
+                            <span className="ml-2">{t('ticketTypeForm.required')}</span>
+                          </div>
+                          <Input
+                            className="col-span-2"
+                            placeholder={t('ticketTypeForm.fieldDescriptionPlaceholder')}
+                            value={field.description}
+                            onChange={e =>
+                              updateCustomField(index, { description: e.target.value })
+                            }
+                          />
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ),
+          },
+          {
+            key: 'approval',
+            label: t('ticketTypeForm.tabApproval'),
+            children: (
+              <>
+                <Form.Item
+                  label={t('ticketTypeForm.enableApproval')}
+                  name="approvalEnabled"
+                  valuePropName="checked"
+                >
+                  <Switch />
+                </Form.Item>
+
+                {form.getFieldValue('approvalEnabled') && (
+                  <div className="space-y-4 mt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">
+                        {t('ticketTypeForm.approvalLevelsCount', {
+                          count: approvalChain.length,
+                        })}
+                      </span>
+                      <Button type="dashed" icon={<Plus />} onClick={addApprovalLevel}>
+                        {t('ticketTypeForm.addApprovalLevel')}
+                      </Button>
+                    </div>
+
+                    {approvalChain.length === 0 ? (
+                      <div className="text-center py-8 text-gray-400">
+                        <Info className="text-4xl mb-2" />
+                        <div>{t('ticketTypeForm.noApprovalLevels')}</div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {approvalChain.map((level, index) => (
+                          <Card
+                            key={level.id}
+                            title={t('detailTabs.levelLabel', { level: level.level })}
+                            size="small"
+                            extra={
+                              <Button
+                                type="text"
+                                size="small"
+                                danger
+                                icon={<Trash2 />}
+                                onClick={() => removeApprovalLevel(index)}
+                              />
                             }
                           >
-                            <Radio value="any">任一通过</Radio>
-                            <Radio value="all">全部通过</Radio>
-                            <Radio value="majority">多数通过</Radio>
-                          </Radio.Group>
-                        </div>
+                            <div className="space-y-3">
+                              <Input
+                                placeholder={t('ticketTypeForm.approvalLevelName')}
+                                value={level.name}
+                                onChange={e =>
+                                  updateApprovalLevel(index, { name: e.target.value })
+                                }
+                              />
 
-                        <div>
-                          <div className="text-sm text-gray-600 mb-2">审批人</div>
-                          <Select
-                            mode="multiple"
-                            placeholder="选择审批人"
-                            style={{ width: '100%' }}
-                            value={level.approvers.map(a => a.value)}
-                            onChange={values => {
-                              // 注意：审批人详细信息需要从用户API获取
-                              const approvers = values.map(v => {
-                                const user = users.find(u => u.id === v);
-                                return {
-                                  type: 'user' as const,
-                                  value: v as number,
-                                  name: user ? user.name || user.username : `用户 ${v}`,
-                                };
-                              });
-                              updateApprovalLevel(index, { approvers });
-                            }}
-                          options={users.map(user => ({
-                            value: user.id,
-                            label: user.name || user.username,
-                          }))}
-                        />
-                        </div>
+                              <div>
+                                <div className="text-sm text-gray-600 mb-2">
+                                  {t('ticketTypeForm.approvalMode')}
+                                </div>
+                                <Radio.Group
+                                  value={level.approvalType}
+                                  onChange={e =>
+                                    updateApprovalLevel(index, {
+                                      approvalType: e.target.value,
+                                    })
+                                  }
+                                >
+                                  <Radio value="any">{t('ticketTypeForm.approvalAny')}</Radio>
+                                  <Radio value="all">{t('ticketTypeForm.approvalAll')}</Radio>
+                                  <Radio value="majority">
+                                    {t('ticketTypeForm.approvalMajority')}
+                                  </Radio>
+                                </Radio.Group>
+                              </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="flex items-center">
-                            <Switch
-                              checked={level.allowReject}
-                              onChange={allowReject => updateApprovalLevel(index, { allowReject })}
-                            />
-                            <span className="ml-2">允许驳回</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Switch
-                              checked={level.allowDelegate}
-                              onChange={allowDelegate =>
-                                updateApprovalLevel(index, { allowDelegate })
-                              }
-                            />
-                            <span className="ml-2">允许委派</span>
-                          </div>
-                        </div>
+                              <div>
+                                <div className="text-sm text-gray-600 mb-2">
+                                  {t('ticketTypeForm.approvers')}
+                                </div>
+                                <Select
+                                  mode="multiple"
+                                  placeholder={t('ticketTypeForm.selectApprovers')}
+                                  style={{ width: '100%' }}
+                                  value={level.approvers.map(a => a.value)}
+                                  onChange={values => {
+                                    const approvers = values.map(v => {
+                                      const user = users.find(u => u.id === v);
+                                      return {
+                                        type: 'user' as const,
+                                        value: v as number,
+                                        name: user ? user.name || user.username : `${t('ticketTypeForm.userPrefix')} ${v}`,
+                                      };
+                                    });
+                                    updateApprovalLevel(index, { approvers });
+                                  }}
+                                  options={users.map(user => ({
+                                    value: user.id,
+                                    label: user.name || user.username,
+                                  }))}
+                                />
+                              </div>
 
-                        {level.allowReject && (
-                          <div>
-                            <div className="text-sm text-gray-600 mb-2">驳回后操作</div>
-                            <Radio.Group
-                              value={level.rejectAction}
-                              onChange={e =>
-                                updateApprovalLevel(index, {
-                                  rejectAction: e.target.value,
-                                })
-                              }
-                            >
-                              <Radio value="end">结束流程</Radio>
-                              <Radio value="return">返回上一级</Radio>
-                              <Radio value="custom">自定义</Radio>
-                            </Radio.Group>
-                          </div>
-                        )}
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-center">
+                                  <Switch
+                                    checked={level.allowReject}
+                                    onChange={allowReject =>
+                                      updateApprovalLevel(index, { allowReject })
+                                    }
+                                  />
+                                  <span className="ml-2">
+                                    {t('ticketTypeForm.allowReject')}
+                                  </span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Switch
+                                    checked={level.allowDelegate}
+                                    onChange={allowDelegate =>
+                                      updateApprovalLevel(index, { allowDelegate })
+                                    }
+                                  />
+                                  <span className="ml-2">
+                                    {t('ticketTypeForm.allowDelegate')}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {level.allowReject && (
+                                <div>
+                                  <div className="text-sm text-gray-600 mb-2">
+                                    {t('ticketTypeForm.rejectAction')}
+                                  </div>
+                                  <Radio.Group
+                                    value={level.rejectAction}
+                                    onChange={e =>
+                                      updateApprovalLevel(index, {
+                                        rejectAction: e.target.value,
+                                      })
+                                    }
+                                  >
+                                    <Radio value="end">{t('ticketTypeForm.rejectEnd')}</Radio>
+                                    <Radio value="return">
+                                      {t('ticketTypeForm.rejectReturn')}
+                                    </Radio>
+                                    <Radio value="custom">
+                                      {t('ticketTypeForm.rejectCustom')}
+                                    </Radio>
+                                  </Radio.Group>
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        ))}
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-                    </>
-                  ),
-                },
-                {
-                  key: 'sla',
-                  label: 'SLA配置',
-                  children: (
-                    <>
-          <Form.Item label="启用SLA" name="slaEnabled" valuePropName="checked">
-            <Switch />
-          </Form.Item>
+                    )}
+                  </div>
+                )}
+              </>
+            ),
+          },
+          {
+            key: 'sla',
+            label: t('ticketTypeForm.tabSla'),
+            children: (
+              <>
+                <Form.Item
+                  label={t('ticketTypeForm.enableSla')}
+                  name="slaEnabled"
+                  valuePropName="checked"
+                >
+                  <Switch />
+                </Form.Item>
 
-          {form.getFieldValue('slaEnabled') && (
-            <Form.Item label="默认SLA" name="defaultSlaId">
-              <Select placeholder="选择默认SLA" options={slas.map(sla => ({
-                value: sla.id,
-                label: sla.name,
-              }))} />
-            </Form.Item>
-          )}
-                    </>
-                  ),
-                },
-                {
-                  key: 'assignment',
-                  label: '自动分配',
-                  children: (
-                    <>
-          <Form.Item label="启用自动分配" name="autoAssignEnabled" valuePropName="checked">
-            <Switch />
-          </Form.Item>
+                {form.getFieldValue('slaEnabled') && (
+                  <Form.Item label={t('ticketTypeForm.defaultSla')} name="defaultSlaId">
+                    <Select
+                      placeholder={t('ticketTypeForm.selectDefaultSla')}
+                      options={slas.map(sla => ({
+                        value: sla.id,
+                        label: sla.name,
+                      }))}
+                    />
+                  </Form.Item>
+                )}
+              </>
+            ),
+          },
+          {
+            key: 'assignment',
+            label: t('ticketTypeForm.tabAssignment'),
+            children: (
+              <>
+                <Form.Item
+                  label={t('ticketTypeForm.enableAutoAssign')}
+                  name="autoAssignEnabled"
+                  valuePropName="checked"
+                >
+                  <Switch />
+                </Form.Item>
 
-          {form.getFieldValue('autoAssignEnabled') && (
-            <div className="mt-4">
-              <div className="text-sm text-gray-600 mb-2">
-                <Info className="mr-1" />
-                配置自动分配规则，系统将根据规则自动分配工单
-              </div>
-              <Button type="dashed" block icon={<Plus />}>
-                添加分配规则
-              </Button>
-            </div>
-          )}
-                    </>
-                  ),
-                },
+                {form.getFieldValue('autoAssignEnabled') && (
+                  <div className="mt-4">
+                    <div className="text-sm text-gray-600 mb-2">
+                      <Info className="mr-1" />
+                      {t('ticketTypeForm.autoAssignHint')}
+                    </div>
+                    <Button type="dashed" block icon={<Plus />}>
+                      {t('ticketTypeForm.addAssignmentRule')}
+                    </Button>
+                  </div>
+                )}
+              </>
+            ),
+          },
         ]}
       />
     </Modal>

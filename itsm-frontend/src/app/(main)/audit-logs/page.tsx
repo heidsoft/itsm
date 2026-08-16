@@ -94,7 +94,7 @@ const AuditLogsPage: React.FC = () => {
 
   useEffect(() => {
     void fetchLogs(1, pagination.pageSize, appliedFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [appliedFilters]);
 
   const handleSearch = () => {
@@ -188,7 +188,7 @@ const AuditLogsPage: React.FC = () => {
       <Card size="small">
         <Space wrap>
           <Input
-            placeholder="操作(action)"
+            placeholder="操作类型"
             allowClear
             style={{ width: 160 }}
             value={filters.action}
@@ -196,7 +196,7 @@ const AuditLogsPage: React.FC = () => {
             onPressEnter={handleSearch}
           />
           <Input
-            placeholder="资源(resource)"
+            placeholder="资源名称"
             allowClear
             style={{ width: 160 }}
             value={filters.resource}
@@ -204,7 +204,7 @@ const AuditLogsPage: React.FC = () => {
             onPressEnter={handleSearch}
           />
           <Input
-            placeholder="路径(path)"
+            placeholder="操作路径"
             allowClear
             style={{ width: 220 }}
             value={filters.path}
@@ -212,7 +212,7 @@ const AuditLogsPage: React.FC = () => {
             onPressEnter={handleSearch}
           />
           <Select
-            placeholder="请求方法"
+            placeholder="请求方式"
             allowClear
             style={{ width: 120 }}
             value={filters.method}
@@ -223,7 +223,7 @@ const AuditLogsPage: React.FC = () => {
             }))}
           />
           <Select
-            placeholder="状态码"
+            placeholder="结果状态"
             allowClear
             style={{ width: 110 }}
             value={filters.statusCode}

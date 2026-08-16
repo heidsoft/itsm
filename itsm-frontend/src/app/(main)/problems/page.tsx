@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Space, message, Pagination, Select } from 'antd';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Button, message, Pagination, Select } from 'antd';
 import {
   Plus,
   RotateCcw,
@@ -24,34 +24,43 @@ import {
   type KanbanColumnConfig,
 } from '@/components/business/UnifiedKanbanBoard';
 
-// 看板列配置
-const KANBAN_COLUMNS: KanbanColumnConfig<Problem>[] = [
-  { key: 'open', title: '待处理', color: '#ff4d4f' },
-  { key: 'investigating', title: '调查中', color: '#722ed1' },
-  { key: 'identified', title: '已识别', color: '#fa8c16' },
-  { key: 'resolved', title: '已解决', color: '#52c41a' },
-  { key: 'closed', title: '已关闭', color: '#d9d9d9' },
-];
-
-// 筛选选项
-const statusOptions = [
-  { value: 'open', label: '待处理' },
-  { value: 'investigating', label: '调查中' },
-  { value: 'identified', label: '已识别' },
-  { value: 'resolved', label: '已解决' },
-  { value: 'closed', label: '已关闭' },
-];
-
-const priorityOptions = [
-  { value: 'critical', label: '紧急' },
-  { value: 'high', label: '高' },
-  { value: 'medium', label: '中' },
-  { value: 'low', label: '低' },
-];
+type View = 'list' | 'kanban';
 
 export default function ProblemListPage() {
   const router = useRouter();
   const { t } = useI18n();
+
+  const kanbanColumns = useMemo<KanbanColumnConfig<Problem>[]>(
+    () => [
+      { key: 'open', title: t('problems.kanbanColumns.open'), color: '#ff4d4f' },
+      { key: 'investigating', title: t('problems.kanbanColumns.investigating'), color: '#722ed1' },
+      { key: 'identified', title: t('problems.kanbanColumns.identified'), color: '#fa8c16' },
+      { key: 'resolved', title: t('problems.kanbanColumns.resolved'), color: '#52c41a' },
+      { key: 'closed', title: t('problems.kanbanColumns.closed'), color: '#d9d9d9' },
+    ],
+    [t]
+  );
+
+  const statusOptions = useMemo(
+    () => [
+      { value: 'open', label: t('problems.statusOptions.open') },
+      { value: 'investigating', label: t('problems.statusOptions.investigating') },
+      { value: 'identified', label: t('problems.statusOptions.identified') },
+      { value: 'resolved', label: t('problems.statusOptions.resolved') },
+      { value: 'closed', label: t('problems.statusOptions.closed') },
+    ],
+    [t]
+  );
+
+  const priorityOptions = useMemo(
+    () => [
+      { value: 'critical', label: t('problems.priorityCritical') },
+      { value: 'high', label: t('incidents.priorityHigh') },
+      { value: 'medium', label: t('incidents.priorityMedium') },
+      { value: 'low', label: t('incidents.priorityLow') },
+    ],
+    [t]
+  );
 
   // ====== 状态管理 ======
   const [stats, setStats] = useState({
@@ -60,6 +69,37 @@ export default function ProblemListPage() {
     inProgress: 0,
     resolved: 0,
   });
+
+  const pageStats: PageStats[] = useMemo(
+    () => [
+      {
+        label: t('problems.total'),
+        value: stats.total,
+        color: '#3b82f6',
+        icon: <Bug size={20} strokeWidth={1.8} />,
+      },
+      {
+        label: t('problems.open'),
+        value: stats.open,
+        color: '#ff4d4f',
+        icon: <CircleAlert size={20} strokeWidth={1.8} />,
+      },
+      {
+        label: t('problems.investigatingLabel'),
+        value: stats.inProgress,
+        color: '#fa8c16',
+        icon: <ScanSearch size={20} strokeWidth={1.8} />,
+      },
+      {
+        label: t('problems.resolved'),
+        value: stats.resolved,
+        color: '#52c41a',
+        icon: <CircleCheckBig size={20} strokeWidth={1.8} />,
+      },
+    ],
+    [t, stats]
+  );
+
   const [statsLoading, setStatsLoading] = useState(false);
 
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -67,7 +107,7 @@ export default function ProblemListPage() {
   const [priorityFilter, setPriorityFilter] = useState<string | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
 
-  const [activeView, setActiveView] = useState<'list' | 'kanban'>('list');
+  const [activeView, setActiveView] = useState<View>('list');
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -94,13 +134,12 @@ export default function ProblemListPage() {
       setTotal(response.total || items.length);
     } catch (error) {
       console.error('Failed to fetch problems:', error);
-      message.error('加载问题列表失败，请稍后重试');
-      // 错误态与空态区分，由模板 error 态展示重试
+      message.error(t('problems.getFailed'));
       setLoadError(true);
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, statusFilter, priorityFilter, searchKeyword]);
+  }, [page, pageSize, statusFilter, priorityFilter, searchKeyword, t]);
 
   const fetchProblemsForKanban = useCallback(async () => {
     setLoading(true);
@@ -116,7 +155,6 @@ export default function ProblemListPage() {
       setProblems(response.problems || []);
     } catch (error) {
       console.error('Failed to fetch problems for kanban:', error);
-      // 错误态与空态区分：不清空数据伪装成空态
       setLoadError(true);
     } finally {
       setLoading(false);
@@ -135,13 +173,12 @@ export default function ProblemListPage() {
       });
     } catch (error) {
       console.error('Failed to fetch problem stats:', error);
-      message.error(t('problems.getStatsFailed') || '获取问题统计失败，请稍后重试');
+      message.error(t('problems.getStatsFailed'));
     } finally {
       setStatsLoading(false);
     }
   }, [t]);
 
-  // 加载数据
   useEffect(() => {
     if (activeView === 'kanban') {
       fetchProblemsForKanban();
@@ -154,7 +191,6 @@ export default function ProblemListPage() {
     fetchStats();
   }, [fetchStats]);
 
-  // ====== 事件处理 ======
   const handleSearch = useCallback((value: string) => {
     setSearchKeyword(value);
     setPage(1);
@@ -185,39 +221,10 @@ export default function ProblemListPage() {
     setPageSize(newPageSize);
   }, []);
 
-  // ====== 统计数据转换 ======
-  const pageStats: PageStats[] = [
-    {
-      label: '总问题数',
-      value: stats.total,
-      color: '#3b82f6',
-      icon: <Bug size={20} strokeWidth={1.8} />,
-    },
-    {
-      label: '待处理',
-      value: stats.open,
-      color: '#ff4d4f',
-      icon: <CircleAlert size={20} strokeWidth={1.8} />,
-    },
-    {
-      label: '调查中',
-      value: stats.inProgress,
-      color: '#fa8c16',
-      icon: <ScanSearch size={20} strokeWidth={1.8} />,
-    },
-    {
-      label: '已解决',
-      value: stats.resolved,
-      color: '#52c41a',
-      icon: <CircleCheckBig size={20} strokeWidth={1.8} />,
-    },
-  ];
-
-  // ====== 筛选面板内容 ======
   const renderFilters = () => (
     <div className="flex flex-wrap gap-3">
       <Select
-        placeholder="状态筛选"
+        placeholder={t('problems.statusPlaceholder')}
         value={statusFilter}
         onChange={(val) => {
           setStatusFilter(val);
@@ -228,7 +235,7 @@ export default function ProblemListPage() {
         style={{ width: 150 }}
       />
       <Select
-        placeholder="优先级筛选"
+        placeholder={t('problems.priorityPlaceholder')}
         value={priorityFilter}
         onChange={(val) => {
           setPriorityFilter(val);
@@ -238,11 +245,10 @@ export default function ProblemListPage() {
         options={priorityOptions}
         style={{ width: 150 }}
       />
-      <Button onClick={handleResetFilters}>重置</Button>
+      <Button onClick={handleResetFilters}>{t('problems.reset')}</Button>
     </div>
   );
 
-  // ====== 渲染内容 ======
   const renderListContent = () => (
     <ProblemList
       showHeader={false}
@@ -258,7 +264,9 @@ export default function ProblemListPage() {
       loading={loading}
       getItemId={(problem: Problem) => problem.id}
       getItemStatus={(problem: Problem) => problem.status || 'open'}
-      getItemTitle={(problem: Problem) => problem.title || `问题 #${problem.id}`}
+      getItemTitle={(problem: Problem) =>
+        problem.title || t('problems.itemTitleFallback', { id: problem.id })
+      }
       getItemNumber={(problem: Problem) => {
         const data = problem as unknown as Record<string, unknown>;
         return (data.problemNumber as string) || `P-${problem.id}`;
@@ -270,90 +278,74 @@ export default function ProblemListPage() {
         if (!assigneeId) return null;
         const data = problem as unknown as Record<string, unknown>;
         const assigneeName = data.assigneeName as string;
-        return { name: assigneeName || `用户 #${assigneeId}` };
+        return { name: assigneeName || t('problems.userFallback', { id: assigneeId }) };
       }}
       getItemCreatedAt={(problem: Problem) => problem.createdAt || ''}
       getItemUpdatedAt={(problem: Problem) => problem.updatedAt || ''}
       onItemClick={(problem: Problem) => router.push(`/problems/${problem.id}`)}
       onItemEdit={(problem: Problem) => router.push(`/problems/${problem.id}/edit`)}
-      columnConfigs={KANBAN_COLUMNS}
+      columnConfigs={kanbanColumns}
       showToolbar={false}
-      searchPlaceholder="搜索问题标题或描述..."
+      searchPlaceholder={t('problems.searchPlaceholder')}
       priorityOptions={[
-        { value: 'critical', label: '紧急', color: 'red' },
-        { value: 'high', label: '高', color: 'orange' },
-        { value: 'medium', label: '中', color: 'blue' },
-        { value: 'low', label: '低', color: 'green' },
+        { value: 'critical', label: t('problems.priorityCritical'), color: 'red' },
+        { value: 'high', label: t('incidents.priorityHigh'), color: 'orange' },
+        { value: 'medium', label: t('incidents.priorityMedium'), color: 'blue' },
+        { value: 'low', label: t('incidents.priorityLow'), color: 'green' },
       ]}
     />
   );
 
   return (
     <BusinessPageTemplate
-      // 页面信息
-      title="问题管理"
-      description="识别、分析和消除事件发生的根本原因"
-
-      // 统计
+      title={t('problems.title')}
+      description={t('problems.description')}
       stats={pageStats}
       statsLoading={statsLoading}
-
-      // 搜索
-      searchPlaceholder="搜索问题标题或描述..."
+      searchPlaceholder={t('problems.searchPlaceholder')}
       searchValue={searchKeyword}
       onSearch={handleSearch}
       searchLoading={loading}
-
-      // 筛选
       filters={{
         visible: showFilters,
         onToggle: () => setShowFilters(!showFilters),
         content: renderFilters(),
       }}
-
-      // 视图切换
       showViewSwitch={true}
       activeView={activeView}
-      onViewChange={setActiveView}
-
-      // 操作
+      onViewChange={view => setActiveView(view as View)}
       primaryAction={{
-        label: '新建问题',
+        label: t('problems.create'),
         onClick: handleCreate,
         icon: <Plus className="w-4 h-4" />,
       }}
-
       extraActions={[
         {
           key: 'refresh',
-          label: '刷新',
+          label: t('problems.refresh'),
           icon: <RotateCcw className="w-4 h-4" />,
           onClick: handleRefresh,
         },
         {
           key: 'export',
-          label: '导出',
+          label: t('problems.export'),
           icon: <Download className="w-4 h-4" />,
-          onClick: () => message.info('导出功能开发中'),
+          onClick: () => message.info(t('problems.exportPending')),
         },
       ]}
-
-      // 内容
       loading={loading}
       error={loadError}
-      errorDescription="加载问题列表失败"
+      errorDescription={t('problems.emptyDescription')}
       onRetry={handleRefresh}
       empty={problems.length === 0 && !loading}
-      emptyDescription="暂无问题记录"
+      emptyDescription={t('problems.emptyText')}
       emptyAction={{
-        label: '创建第一个问题',
+        label: t('problems.createFirst'),
         onClick: handleCreate,
       }}
     >
-      {/* 视图内容 */}
       {activeView === 'list' ? renderListContent() : renderKanbanContent()}
 
-      {/* 分页 */}
       {activeView === 'list' && problems.length > 0 && (
         <div className="mt-4 flex justify-end">
           <Pagination
@@ -362,7 +354,7 @@ export default function ProblemListPage() {
             total={total}
             onChange={handlePageChange}
             showSizeChanger
-            showTotal={(total) => `共 ${total} 条记录`}
+            showTotal={totalCount => t('problems.totalLabel', { total: totalCount })}
             pageSizeOptions={['10', '20', '50', '100']}
           />
         </div>

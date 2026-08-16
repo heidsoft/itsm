@@ -19,9 +19,10 @@ import {
   Empty,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { Search, Plus, Pencil, Trash2, Download, Eye, RotateCcw } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Download, Eye, RotateCcw, Database } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
+import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 
 import { CMDBApi } from '@/lib/api/';
 import { CIStatus, CIStatusLabels } from '@/constants/cmdb';
@@ -43,6 +44,7 @@ const CIList: React.FC = () => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [data, setData] = useState<ConfigurationItem[]>([]);
   const [total, setTotal] = useState(0);
   const [types, setTypes] = useState<CIType[]>([]);
@@ -85,6 +87,7 @@ const CIList: React.FC = () => {
   const loadData = useCallback(async () => {
     const requestId = ++requestIdRef.current;
     setLoading(true);
+    setLoadError(false);
     try {
       const currentFilters = filtersRef.current;
       const resp = await CMDBApi.getCIs({
@@ -405,13 +408,33 @@ const CIList: React.FC = () => {
           dataSource={data}
           loading={loading}
           locale={{
-            emptyText: (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无配置项数据">
-                <Button type="primary" onClick={() => router.push('/cmdb/cis/create')}>
-                  创建第一个配置项
-                </Button>
-              </Empty>
-            ),
+            emptyText:
+              loading && data.length === 0 ? (
+                <LoadingEmptyError state="loading" minHeight={200} />
+              ) : loadError ? (
+                <LoadingEmptyError
+                  state="error"
+                  minHeight={200}
+                  error={{
+                    title: '加载失败',
+                    description: '加载配置项列表失败',
+                    actionText: '重试',
+                    onAction: loadData,
+                  }}
+                />
+              ) : (
+                <LoadingEmptyError
+                  state="empty"
+                  minHeight={200}
+                  empty={{
+                    title: '暂无配置项数据',
+                    description: '当前没有配置项数据',
+                    icon: <Database size={48} />,
+                    actionText: '创建第一个配置项',
+                    onAction: () => router.push('/cmdb/cis/create'),
+                  }}
+                />
+              ),
           }}
           pagination={{
             current: Math.floor(query.offset / query.limit) + 1,

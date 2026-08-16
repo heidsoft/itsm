@@ -9,6 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Tag, Space, Statistic, Row, Col } from 'antd';
 import { Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { ProblemApi, type Problem } from '@/lib/api/problem-api';
+import { useI18n } from '@/lib/i18n';
 
 interface ProblemSLACardProps {
   problem: ProblemWithSLA;
@@ -32,13 +33,8 @@ interface ProblemWithSLA extends Problem {
   resolutionDeadline?: string;
 }
 
-const SLA_STATUS_CONFIG: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-  ok: { color: 'success', text: '正常', icon: <CheckCircle /> },
-  warning: { color: 'warning', text: '即将到期', icon: <AlertTriangle /> },
-  breached: { color: 'error', text: '已违规', icon: <AlertTriangle /> },
-};
-
 const ProblemSLACard: React.FC<ProblemSLACardProps> = ({ problem }) => {
+  const { t } = useI18n();
   const [slaInfo, setSlaInfo] = useState<SLAInfo | null>(null);
 
   const loadSLA = useCallback(async () => {
@@ -55,6 +51,12 @@ const ProblemSLACard: React.FC<ProblemSLACardProps> = ({ problem }) => {
     loadSLA();
   }, [loadSLA]);
 
+  const SLA_STATUS_CONFIG: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
+    ok: { color: 'success', text: t('problemSla.status.ok'), icon: <CheckCircle /> },
+    warning: { color: 'warning', text: t('problemSla.status.warning'), icon: <AlertTriangle /> },
+    breached: { color: 'error', text: t('problemSla.status.breached'), icon: <AlertTriangle /> },
+  };
+
   // 优先使用已嵌入问题中的SLA字段
   const status = slaInfo?.slaStatus || problem.slaStatus || 'ok';
   const config = SLA_STATUS_CONFIG[status] || SLA_STATUS_CONFIG.ok;
@@ -68,11 +70,29 @@ const ProblemSLACard: React.FC<ProblemSLACardProps> = ({ problem }) => {
   const getTimeRemaining = (deadline?: string) => {
     if (!deadline) return null;
     const remaining = new Date(deadline).getTime() - Date.now();
-    if (remaining <= 0) return '已超时';
+    if (remaining <= 0) return t('problemSla.expired');
     const hours = Math.floor(remaining / (1000 * 60 * 60));
     const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-    if (hours > 24) return `${Math.floor(hours / 24)}天${hours % 24}小时`;
-    return `${hours}小时${minutes}分钟`;
+    if (hours > 24) {
+      return t('problemSla.timeRemaining.daysHours', {
+        days: Math.floor(hours / 24),
+        hours: hours % 24,
+      });
+    }
+    return t('problemSla.timeRemaining.hoursMinutes', {
+      hours,
+      minutes,
+    });
+  };
+
+  const renderRemaining = (breached: boolean, deadline?: string) => {
+    if (breached) {
+      return <Tag color="error" style={{ marginLeft: 8 }}>{t('problemSla.expired')}</Tag>;
+    }
+    if (!deadline) return null;
+    const remaining = getTimeRemaining(deadline);
+    if (!remaining) return null;
+    return <span style={{ fontSize: 12, color: '#999' }}>{t('problemSla.remaining', { time: remaining })}</span>;
   };
 
   const responseDeadline = slaInfo?.responseDeadline || problem.responseDeadline;
@@ -86,7 +106,7 @@ const ProblemSLACard: React.FC<ProblemSLACardProps> = ({ problem }) => {
       title={
         <Space>
           <Clock />
-          <span>SLA信息</span>
+          <span>{t('problemSla.title')}</span>
           <Tag color={config.color} icon={config.icon}>
             {config.text}
           </Tag>
@@ -96,40 +116,24 @@ const ProblemSLACard: React.FC<ProblemSLACardProps> = ({ problem }) => {
       <Row gutter={16}>
         <Col span={12}>
           <Statistic
-            title="响应截止"
+            title={t('problemSla.responseDeadline')}
             value={formatDeadline(responseDeadline)}
             valueStyle={{
               fontSize: 14,
               color: responseBreached ? '#ff4d4f' : undefined,
             }}
-            suffix={
-              !responseBreached && responseDeadline ? (
-                <span style={{ fontSize: 12, color: '#999' }}>
-                  (剩余 {getTimeRemaining(responseDeadline)})
-                </span>
-              ) : responseBreached ? (
-                <Tag color="error" style={{ marginLeft: 8 }}>已超时</Tag>
-              ) : null
-            }
+            suffix={renderRemaining(responseBreached, responseDeadline)}
           />
         </Col>
         <Col span={12}>
           <Statistic
-            title="解决截止"
+            title={t('problemSla.resolutionDeadline')}
             value={formatDeadline(resolutionDeadline)}
             valueStyle={{
               fontSize: 14,
               color: resolutionBreached ? '#ff4d4f' : undefined,
             }}
-            suffix={
-              !resolutionBreached && resolutionDeadline ? (
-                <span style={{ fontSize: 12, color: '#999' }}>
-                  (剩余 {getTimeRemaining(resolutionDeadline)})
-                </span>
-              ) : resolutionBreached ? (
-                <Tag color="error" style={{ marginLeft: 8 }}>已超时</Tag>
-              ) : null
-            }
+            suffix={renderRemaining(resolutionBreached, resolutionDeadline)}
           />
         </Col>
       </Row>

@@ -6,6 +6,8 @@
 import React from 'react';
 import { Modal, Form, Tabs, Select, Input, Checkbox, Row, Col } from 'antd';
 import type { FormInstance } from 'antd';
+import { useI18n } from '@/lib/i18n/useI18n';
+
 interface WorkflowSettingsModalProps {
   visible: boolean;
   onClose: () => void;
@@ -19,34 +21,41 @@ export default function WorkflowSettingsModal({
   onSave,
   form,
 }: WorkflowSettingsModalProps) {
+  const { t } = useI18n();
+
   return (
     <Modal
-      title="流程设置"
+      title={t('workflow.settingsModal.title')}
       open={visible}
       onOk={onSave}
       onCancel={onClose}
       width={800}
-      okText="保存"
-      cancelText="取消"
+      okText={t('common.save')}
+      cancelText={t('common.cancel')}
     >
       <Form form={form} layout="vertical">
         <Tabs
           items={[
             {
               key: 'approval',
-              label: '审批配置',
+              label: t('workflow.settingsModal.tabApproval'),
               children: (
                 <>
                   <Form.Item
-                    label="审批类型"
+                    label={t('workflow.settingsModal.approvalType')}
                     name={['approval_config', 'approval_type']}
-                    rules={[{ required: true, message: '请选择审批类型' }]}
+                    rules={[{ required: true, message: t('workflow.settingsModal.approvalTypeRequired') }]}
                   >
-                    <Select options={[{ value: "single", label: "单人审批" }, { value: "parallel", label: "并行审批" }, { value: "sequential", label: "串行审批" }, { value: "conditional", label: "条件审批" }]} />
+                    <Select options={[
+                      { value: 'single', label: t('workflow.settingsModal.approvalTypeSingle') },
+                      { value: 'parallel', label: t('workflow.settingsModal.approvalTypeParallel') },
+                      { value: 'sequential', label: t('workflow.settingsModal.approvalTypeSequential') },
+                      { value: 'conditional', label: t('workflow.settingsModal.approvalTypeConditional') },
+                    ]} />
                   </Form.Item>
 
-                  <Form.Item label="审批人" name={['approval_config', 'approvers']}>
-                    <Select mode="multiple" placeholder="选择审批人">
+                  <Form.Item label={t('workflow.settingsModal.approvers')} name={['approval_config', 'approvers']}>
+                    <Select mode="multiple" placeholder={t('workflow.settingsModal.approversPlaceholder')}>
                       {/* 用户列表通过 Context 获取 */}
                     </Select>
                   </Form.Item>
@@ -55,13 +64,13 @@ export default function WorkflowSettingsModal({
             },
             {
               key: 'sla',
-              label: 'SLA配置',
+              label: t('workflow.settingsModal.tabSla'),
               children: (
                 <>
                   <Row gutter={16}>
                     <Col span={12}>
                       <Form.Item
-                        label="响应时间(小时)"
+                        label={t('workflow.settingsModal.responseTimeHours')}
                         name={['sla_config', 'response_time_hours']}
                       >
                         <Input type="number" />
@@ -69,7 +78,7 @@ export default function WorkflowSettingsModal({
                     </Col>
                     <Col span={12}>
                       <Form.Item
-                        label="解决时间(小时)"
+                        label={t('workflow.settingsModal.resolutionTimeHours')}
                         name={['sla_config', 'resolution_time_hours']}
                       >
                         <Input type="number" />
@@ -78,11 +87,11 @@ export default function WorkflowSettingsModal({
                   </Row>
 
                   <Form.Item
-                    label="工作时间设置"
+                    label={t('workflow.settingsModal.businessHoursSetting')}
                     name={['sla_config', 'business_hours_only']}
                     valuePropName="checked"
                   >
-                    <Checkbox>仅工作时间</Checkbox>
+                    <Checkbox>{t('workflow.settingsModal.businessHoursOnly')}</Checkbox>
                   </Form.Item>
                 </>
               ),

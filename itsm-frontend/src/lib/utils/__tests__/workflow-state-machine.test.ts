@@ -92,8 +92,14 @@ describe('isFinalStatus / isActiveStatus', () => {
 });
 
 describe('isValidIncidentTransition', () => {
-  it('allows new -> investigating', () => {
-    expect(isValidIncidentTransition('new', 'investigating')).toBe(true);
+  it('allows new -> acknowledged', () => {
+    expect(isValidIncidentTransition('new', 'acknowledged')).toBe(true);
+  });
+  it('allows new -> in_progress', () => {
+    expect(isValidIncidentTransition('new', 'in_progress')).toBe(true);
+  });
+  it('disallows new -> investigating', () => {
+    expect(isValidIncidentTransition('new', 'investigating')).toBe(false);
   });
   it('disallows closed -> new', () => {
     expect(isValidIncidentTransition('closed', 'new')).toBe(false);

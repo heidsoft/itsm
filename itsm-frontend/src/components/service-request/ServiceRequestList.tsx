@@ -6,10 +6,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Button, Tabs, Card, Space, Tooltip, message, Empty } from 'antd';
+import { Table, Tag, Button, Tabs, Card, Space, Tooltip, message } from 'antd';
 import { Eye, RefreshCw, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
+import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 
 import { ServiceRequestApi } from '@/lib/api/';
 import { ServiceRequestStatus } from '@/constants/service-request';
@@ -177,11 +178,17 @@ const ServiceRequestList: React.FC = () => {
         scroll={{ x: 'max-content' }}
         locale={{
           emptyText: (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无服务请求数据">
-              <Button type="primary" onClick={() => router.push('/service-requests/new')}>
-                创建第一个服务请求
-              </Button>
-            </Empty>
+            <LoadingEmptyError
+              state="empty"
+              empty={{
+                title: '暂无服务请求数据',
+                description: '当前没有服务请求记录，点击下方按钮创建第一个服务请求',
+                actionText: '新建服务请求',
+                onAction: () => router.push('/service-requests/new'),
+                showAction: true,
+                icon: <CheckCircle size={48} />,
+              }}
+            />
           ),
         }}
         pagination={{

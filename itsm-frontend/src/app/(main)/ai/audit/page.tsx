@@ -125,14 +125,14 @@ const AIAuditConsole: React.FC = () => {
       render: (v: string) => v || '-',
     },
     {
-      title: '提示词版本',
+      title: '策略版本',
       dataIndex: 'promptVersion',
       key: 'promptVersion',
       width: 110,
       render: (v: string) => (v ? <Tag>{v}</Tag> : '-'),
     },
     {
-      title: '置信度',
+      title: '可信度',
       dataIndex: 'confidence',
       key: 'confidence',
       width: 110,
@@ -157,7 +157,7 @@ const AIAuditConsole: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="space-y-6">
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
         <Space align="center" style={{ justifyContent: 'space-between', width: '100%' }}>
           <Space align="center">
@@ -213,13 +213,13 @@ const AIAuditConsole: React.FC = () => {
                   <Descriptions.Item label="平均置信度">
                     <Text strong>{pct(report.avgConfidence)}</Text>
                   </Descriptions.Item>
-                  <Descriptions.Item label="LLM 调用">
+                  <Descriptions.Item label="模型调用次数">
                     <Text strong>{report.platform.llmCallCount} 次</Text>
                   </Descriptions.Item>
-                  <Descriptions.Item label="LLM 成功率">
+                  <Descriptions.Item label="调用成功率">
                     <Text strong>{pct(report.platform.successRate)}</Text>
                   </Descriptions.Item>
-                  <Descriptions.Item label="LLM 平均延迟">
+                  <Descriptions.Item label="平均响应时间">
                     <Text strong>{Math.round(report.platform.avgLatencyMs)} ms</Text>
                   </Descriptions.Item>
                 </Descriptions>
@@ -229,8 +229,7 @@ const AIAuditConsole: React.FC = () => {
             <Empty
               description={
                 <span>
-                  暂无评估数据。AI 建议产生后可通过 <Text code>POST /ai/audit</Text> 上报审计记录，
-                  并在前端对建议反馈有用/无用，评估器将据此计算健康分与置信度校准。
+                  AI 功能使用后会自动产生评估数据，可在此查看健康分和采纳率。
                 </span>
               }
             />
@@ -362,8 +361,8 @@ const AIAuditConsole: React.FC = () => {
             <Descriptions.Item label="场景">{scenarioLabel(detail.scenario)}</Descriptions.Item>
             <Descriptions.Item label="输入引用">{detail.inputRef || '-'}</Descriptions.Item>
             <Descriptions.Item label="模型">{detail.model || '-'}</Descriptions.Item>
-            <Descriptions.Item label="提示词版本">{detail.promptVersion || '-'}</Descriptions.Item>
-            <Descriptions.Item label="置信度">{pct(detail.confidence)}</Descriptions.Item>
+            <Descriptions.Item label="策略版本">{detail.promptVersion || '-'}</Descriptions.Item>
+            <Descriptions.Item label="可信度">{pct(detail.confidence)}</Descriptions.Item>
             <Descriptions.Item label="采纳结果">
               {detail.accepted ? <Tag color="success">已采纳</Tag> : <Tag>未采纳</Tag>}
             </Descriptions.Item>

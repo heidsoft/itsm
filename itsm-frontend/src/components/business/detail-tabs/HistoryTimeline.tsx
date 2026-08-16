@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Timeline, Typography, Empty, Spin, Alert, Button, Tag } from 'antd';
 import { History as HistoryIcon } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/useI18n';
 import type { HistoryRecord, TargetType } from './types';
 
 const { Text } = Typography;
@@ -10,30 +11,29 @@ const { Text } = Typography;
 export interface HistoryTimelineProps {
   targetType: TargetType;
   targetId: number | string;
-  /**
-   * 模式 A：使用模块自有 /:id/history 端点
-   */
   fetchHistory?: (targetId: number | string) => Promise<HistoryRecord[]>;
-  /**
-   * 模式 B：走 audit-logs 兜底
-   */
   fetchAuditLog?: (targetType: TargetType, targetId: number | string) => Promise<HistoryRecord[]>;
   formatDateTime?: (dateString: string) => string;
 }
-
-const defaultFormat = (s: string) => (s ? new Date(s).toLocaleString('zh-CN') : '');
 
 export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
   targetType,
   targetId,
   fetchHistory,
   fetchAuditLog,
-  formatDateTime = defaultFormat,
+  formatDateTime,
 }) => {
+  const { t, language } = useI18n();
   const [records, setRecords] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<'native' | 'audit'>('native');
+
+  const defaultFormat = useCallback(
+    (s: string) => (s ? new Date(s).toLocaleString(language === 'en-US' ? 'en-US' : 'zh-CN') : ''),
+    [language]
+  );
+  const fmt = formatDateTime ?? defaultFormat;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -46,7 +46,6 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
           setSource('native');
           return;
         } catch (e) {
-          // 主源失败自动降级到 audit-log
           if (!fetchAuditLog) throw e;
         }
       }
@@ -56,11 +55,11 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
         setSource('audit');
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : '加载历史失败');
+      setError(e instanceof Error ? e.message : t('detailTabs.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [targetType, targetId, fetchHistory, fetchAuditLog]);
+  }, [targetType, targetId, fetchHistory, fetchAuditLog, t]);
 
   useEffect(() => {
     void load();
@@ -86,7 +85,7 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
           onClose={() => setError(null)}
           action={
             <Button size="small" type="link" onClick={() => void load()}>
-              重试
+              {t('common.retry')}
             </Button>
           }
         />
@@ -98,7 +97,7 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
             <Timeline.Item key={r.id}>
               <div className="flex items-start justify-between">
                 <div>
-                  <Text strong>{r.user?.name || r.user?.username || '系统'}</Text>
+                  <Text strong>{r.user?.name || r.user?.username || t('detailTabs.system')}</Text>
                   {r.action && (
                     <Tag color="blue" className="ml-2">
                       {r.action}
@@ -109,11 +108,11 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
                   )}
                   {r.fieldName && (
                     <div className="text-sm text-gray-600 mt-1">
-                      修改了 <Text code>{r.fieldName}</Text>
+                      {t('detailTabs.fieldChanged')} <Text code>{r.fieldName}</Text>
                     </div>
                   )}
                   {r.changeReason && (
-                    <div className="text-sm text-gray-500 mt-1">原因: {r.changeReason}</div>
+                    <div className="text-sm text-gray-500 mt-1">{t('detailTabs.changeReason')}：{r.changeReason}</div>
                   )}
                   {source === 'audit' && (r.method || r.path) && (
                     <div className="text-xs text-gray-400 mt-1">
@@ -125,10 +124,10 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
                   )}
                 </div>
                 <div className="text-right ml-4 shrink-0">
-                  <div className="text-sm text-gray-500">{formatDateTime(r.createdAt)}</div>
+                  <div className="text-sm text-gray-500">{fmt(r.createdAt)}</div>
                   {r.oldValue !== undefined && r.newValue !== undefined && (
                     <div className="text-xs text-gray-400">
-                      {String(r.oldValue) || '(空)'} → {String(r.newValue) || '(空)'}
+                      {String(r.oldValue) || t('detailTabs.emptyValue')} → {String(r.newValue) || t('detailTabs.emptyValue')}
                     </div>
                   )}
                 </div>
@@ -139,7 +138,7 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
       ) : (
         <Empty
           image={<HistoryIcon size={48} className="text-gray-300 mx-auto" />}
-          description="暂无历史记录"
+          description={t('detailTabs.noHistory')}
         />
       )}
     </div>

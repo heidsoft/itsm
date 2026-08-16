@@ -4,6 +4,7 @@ import { Modal } from 'antd';
 import { AlertCircle } from 'lucide-react';
 
 import type { Ticket } from '@/lib/api/types';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 interface TicketDeleteModalProps {
   readonly open: boolean;
@@ -28,6 +29,8 @@ export function TicketDeleteModal({
   onConfirm,
   onCancel,
 }: TicketDeleteModalProps) {
+  const { t } = useI18n();
+
   const handleOk = () => {
     if (ticket) {
       void onConfirm(ticket);
@@ -36,18 +39,20 @@ export function TicketDeleteModal({
 
   return (
     <Modal
-      title='确认删除'
+      title={t('tickets.confirmDeleteTitle')}
       open={open}
       onOk={handleOk}
       onCancel={onCancel}
-      okText='确认'
-      cancelText='取消'
+      okText={t('common.confirm')}
+      cancelText={t('common.cancel')}
       okButtonProps={{ danger: true }}
       confirmLoading={loading}
     >
       <p>
         <AlertCircle style={{ color: '#ff4d4f', marginRight: 8 }} />
-        确定要删除工单 <strong>{ticket?.ticketNumber || '-'}</strong> 吗？此操作不可撤销。
+        {t('tickets.confirmDeleteContent', {
+          ticketNumber: ticket?.ticketNumber || '-',
+        })}
       </p>
     </Modal>
   );

@@ -30,6 +30,7 @@ import {
   type GenerateBPMNResponse,
   type PreviewBPMNResponse,
 } from '@/lib/api/bpmn-ai-api';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Text, Title, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -80,6 +81,7 @@ export default function WorkflowAIModal({
   onApplyGeneratedProcess,
 }: WorkflowAIModalProps) {
   const { message } = App.useApp();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('generate');
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -94,14 +96,14 @@ export default function WorkflowAIModal({
   const [generationError, setGenerationError] = useState<string>('');
 
   const getErrorMessage = (error: unknown) =>
-    error instanceof Error ? error.message : '请求失败，请稍后重试';
+    error instanceof Error ? error.message : t('workflow.aiModal.requestFailedRetry');
 
   // 生成流程
   const handleGenerateProcess = async (values: GenerateFormValues) => {
     setLoading(true);
     setGenerationError('');
     try {
-      message.info('AI正在生成流程，请稍候...');
+      message.info(t('workflow.aiModal.generating'));
 
       const requirement = `${values.processName}\n\n${values.processDescription}`.trim();
       const result = await BPMNAIApi.generateBPMN({
@@ -115,12 +117,12 @@ export default function WorkflowAIModal({
 
       setGenerationResult(result);
       setGeneratedProcess(result.bpmnXml);
-      message.success(`流程生成完成：${result.processName || values.processName}`);
+      message.success(t('workflow.aiModal.generateCompleted', { name: result.processName || values.processName }));
     } catch (error) {
       console.error('生成流程失败:', error);
       const errorMessage = getErrorMessage(error);
       setGenerationError(errorMessage);
-      message.error(`生成流程失败：${errorMessage}`);
+      message.error(t('workflow.aiModal.generateFailed', { message: errorMessage }));
     } finally {
       setLoading(false);
     }
@@ -138,12 +140,12 @@ export default function WorkflowAIModal({
         enterpriseType: values.enterpriseType,
       });
       setPreviewResult(result);
-      message.success('流程结构预览已生成');
+      message.success(t('workflow.aiModal.previewGenerated'));
     } catch (error) {
       console.error('预览流程失败:', error);
       const errorMessage = getErrorMessage(error);
       setGenerationError(errorMessage);
-      message.error(`预览流程失败：${errorMessage}`);
+      message.error(t('workflow.aiModal.previewFailed', { message: errorMessage }));
     } finally {
       setPreviewLoading(false);
     }
@@ -159,11 +161,11 @@ export default function WorkflowAIModal({
       });
       setTemplateSuggestions(result);
       if (result.length === 0) {
-        message.info('暂无匹配的模板建议');
+        message.info(t('workflow.aiModal.noMatchingTemplates'));
       }
     } catch (error) {
       console.error('获取模板建议失败:', error);
-      message.error(`获取模板建议失败：${getErrorMessage(error)}`);
+      message.error(t('workflow.aiModal.loadTemplatesFailed', { message: getErrorMessage(error) }));
     } finally {
       setTemplateLoading(false);
     }
@@ -172,12 +174,12 @@ export default function WorkflowAIModal({
   // 应用生成的流程
   const handleApplyGeneratedProcess = () => {
     if (!generatedProcess) {
-      message.error('应用失败，未找到生成的流程XML');
+      message.error(t('workflow.aiModal.applyFailedNoXml'));
       return;
     }
 
     onApplyGeneratedProcess?.(generatedProcess);
-    message.success('已应用生成的流程');
+    message.success(t('workflow.aiModal.appliedToCanvas'));
     onClose();
   };
 
@@ -185,50 +187,48 @@ export default function WorkflowAIModal({
   const handleGetSuggestions = async () => {
     setLoading(true);
     try {
-      message.info('AI正在分析流程，请稍候...');
-      
-      // 模拟延迟
+      message.info(t('workflow.aiModal.analyzing'));
+
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // 模拟建议结果
+
       const mockSuggestions: OptimizationSuggestion[] = [
         {
           id: '1',
           type: 'optimization',
-          title: '添加流程说明文档',
-          description: '建议为关键节点添加说明文档，帮助审批人员了解操作要求',
-          severity: 'low'
+          title: t('workflow.aiModal.suggDocTitle'),
+          description: t('workflow.aiModal.suggDocDesc'),
+          severity: 'low',
         },
         {
           id: '2',
           type: 'warning',
-          title: '用户任务未配置审批人',
-          description: '检测到有3个用户任务未配置审批人或候选组，部署后可能无法正常运行',
+          title: t('workflow.aiModal.suggAssigneeTitle'),
+          description: t('workflow.aiModal.suggAssigneeDesc'),
           elementId: 'UserTask_1',
-          severity: 'medium'
+          severity: 'medium',
         },
         {
           id: '3',
           type: 'warning',
-          title: '网关缺少默认分支',
-          description: '排他网关"金额是否大于10000"未配置默认分支，可能导致流程卡住',
+          title: t('workflow.aiModal.suggGatewayTitle'),
+          description: t('workflow.aiModal.suggGatewayDesc'),
           elementId: 'Gateway_1',
-          severity: 'high'
+          severity: 'high',
         },
         {
           id: '4',
           type: 'optimization',
-          title: '建议添加SLA配置',
-          description: '为关键审批节点配置SLA超时提醒，提升流程执行效率',
-          severity: 'low'
-        }
+          title: t('workflow.aiModal.suggSlaTitle'),
+          description: t('workflow.aiModal.suggSlaDesc'),
+          severity: 'low',
+        },
       ];
-      
+
       setSuggestions(mockSuggestions);
-      message.success('分析完成，共找到4条建议');
+      message.success(t('workflow.aiModal.suggestionCount', { count: 4 }));
     } catch (error) {
       console.error('获取优化建议失败:', error);
-      message.error('获取优化建议失败，请重试');
+      message.error(t('workflow.aiModal.suggestionFailed'));
     } finally {
       setLoading(false);
     }
@@ -238,41 +238,39 @@ export default function WorkflowAIModal({
   const handleComplianceCheck = async () => {
     setLoading(true);
     try {
-      message.info('AI正在进行合规检查，请稍候...');
-      
-      // 模拟延迟
+      message.info(t('workflow.aiModal.complianceChecking'));
+
       await new Promise(resolve => setTimeout(resolve, 1800));
-      
-      // 模拟检查结果
+
       const mockIssues: ComplianceIssue[] = [
         {
           id: '1',
           type: 'violation',
-          rule: '财务审批流程规范',
-          description: '金额大于50000的流程必须包含CEO审批节点，当前流程缺失',
-          severity: 'high'
+          rule: t('workflow.aiModal.ruleFinanceApproval'),
+          description: t('workflow.aiModal.ruleFinanceApprovalDesc'),
+          severity: 'high',
         },
         {
           id: '2',
           type: 'warning',
-          rule: '数据安全规范',
-          description: '流程中包含敏感数据处理，建议添加数据脱敏配置',
-          severity: 'medium'
+          rule: t('workflow.aiModal.ruleDataSecurity'),
+          description: t('workflow.aiModal.ruleDataSecurityDesc'),
+          severity: 'medium',
         },
         {
           id: '3',
           type: 'suggestion',
-          rule: '流程效率优化',
-          description: '当前流程有4个串行审批节点，建议考虑并行审批以提升效率',
-          severity: 'low'
-        }
+          rule: t('workflow.aiModal.ruleEfficiency'),
+          description: t('workflow.aiModal.ruleEfficiencyDesc'),
+          severity: 'low',
+        },
       ];
-      
+
       setComplianceIssues(mockIssues);
-      message.success('合规检查完成');
+      message.success(t('workflow.aiModal.complianceCompleted'));
     } catch (error) {
       console.error('合规检查失败:', error);
-      message.error('合规检查失败，请重试');
+      message.error(t('workflow.aiModal.complianceFailed'));
     } finally {
       setLoading(false);
     }
@@ -281,12 +279,12 @@ export default function WorkflowAIModal({
   // 跳转到问题元素
   const jumpToElement = (elementId?: string) => {
     if (!elementId) return;
-    
+
     const api = getBpmnDesignerApi();
     if (api) {
       api.selectElement(elementId);
       onClose();
-      message.info(`已定位到元素 ${elementId}`);
+      message.info(t('workflow.aiModal.elementLocated', { id: elementId }));
     }
   };
 
@@ -295,7 +293,7 @@ export default function WorkflowAIModal({
       title={
         <Space>
           <Bot className="text-blue-500" />
-          <span>AI工作流助手</span>
+          <span>{t('workflow.aiModal.title')}</span>
         </Space>
       }
       open={visible}
@@ -313,216 +311,206 @@ export default function WorkflowAIModal({
             label: (
               <Space>
                 <Rocket />
-                生成流程
+                {t('workflow.aiModal.tabGenerate')}
               </Space>
             ),
             children: (
-          <div className="py-4">
-            <Paragraph>
-              描述您需要的工作流场景，AI将自动为您生成符合BPMN 2.0规范的流程定义。
-            </Paragraph>
-            
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={handleGenerateProcess}
-              initialValues={{
-                processName: workflowName || '',
-                processDescription: '',
-                processType: 'custom',
-                enterpriseType: 'cn_enterprise',
-                includeSla: true,
-                includeNotifications: true,
-                includeApprovals: true,
-              }}
-            >
-              <Form.Item
-                name="processName"
-                label="流程名称"
-                rules={[{ required: true, message: '请输入流程名称' }]}
-              >
-                <Input placeholder="例如：费用报销流程" />
-              </Form.Item>
+              <div className="py-4">
+                <Paragraph>{t('workflow.aiModal.generateIntro')}</Paragraph>
 
-              <Form.Item
-                name="processDescription"
-                label="流程描述"
-                rules={[{ required: true, message: '请描述您需要的流程' }]}
-              >
-                <TextArea
-                  rows={4}
-                  placeholder="例如：员工提交报销申请，部门经理审批，金额大于5000需要总经理审批，最后财务打款。超过3天未审批自动提醒。"
-                />
-              </Form.Item>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Form.Item
-                  name="processType"
-                  label="流程类型"
-                  rules={[{ required: true, message: '请选择流程类型' }]}
+                <Form
+                  form={form}
+                  layout="vertical"
+                  onFinish={handleGenerateProcess}
+                  initialValues={{
+                    processName: workflowName || '',
+                    processDescription: '',
+                    processType: 'custom',
+                    enterpriseType: 'cn_enterprise',
+                    includeSla: true,
+                    includeNotifications: true,
+                    includeApprovals: true,
+                  }}
                 >
-                  <Select
-                    options={[
-                      { label: '事件管理', value: 'incident' },
-                      { label: '变更管理', value: 'change' },
-                      { label: '问题管理', value: 'problem' },
-                      { label: '服务请求', value: 'service_request' },
-                      { label: '自定义流程', value: 'custom' },
-                    ]}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="enterpriseType"
-                  label="企业类型"
-                  rules={[{ required: true, message: '请选择企业类型' }]}
-                >
-                  <Select
-                    options={[
-                      { label: '国内企业', value: 'cn_enterprise' },
-                      { label: '国际企业', value: 'international' },
-                      { label: '创业公司', value: 'startup' },
-                      { label: '政府/事业单位', value: 'government' },
-                    ]}
-                  />
-                </Form.Item>
-              </div>
-
-              <Form.Item label="生成配置">
-                <Space wrap>
-                  <Form.Item name="includeSla" valuePropName="checked" noStyle>
-                    <Checkbox>包含SLA配置</Checkbox>
-                  </Form.Item>
-                  <Form.Item name="includeNotifications" valuePropName="checked" noStyle>
-                    <Checkbox>包含通知配置</Checkbox>
-                  </Form.Item>
-                  <Form.Item name="includeApprovals" valuePropName="checked" noStyle>
-                    <Checkbox>包含审批节点</Checkbox>
-                  </Form.Item>
-                </Space>
-              </Form.Item>
-
-              {generationError && (
-                <Alert
-                  className="mb-4"
-                  type="error"
-                  showIcon
-                  title="AI流程生成请求失败"
-                  description={generationError}
-                />
-              )}
-
-              <Form.Item>
-                <Space wrap>
-                  <Button
-                    type="default"
-                    onClick={handlePreviewProcess}
-                    loading={previewLoading}
-                    icon={<Bot />}
+                  <Form.Item
+                    name="processName"
+                    label={t('workflow.aiModal.processName')}
+                    rules={[{ required: true, message: t('workflow.aiModal.processNameRequired') }]}
                   >
-                    预览结构
-                  </Button>
-                  <Button
-                    onClick={handleLoadTemplateSuggestions}
-                    loading={templateLoading}
-                    icon={<Rocket />}
+                    <Input placeholder={t('workflow.aiModal.processNamePlaceholder')} />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="processDescription"
+                    label={t('workflow.aiModal.processDescription')}
+                    rules={[{ required: true, message: t('workflow.aiModal.processDescriptionRequired') }]}
                   >
-                    推荐模板
-                  </Button>
-                  <Button type="primary" htmlType="submit" loading={loading} icon={<Send />}>
-                    生成流程
-                  </Button>
-                </Space>
-              </Form.Item>
-            </Form>
+                    <TextArea rows={4} placeholder={t('workflow.aiModal.processDescriptionPlaceholder')} />
+                  </Form.Item>
 
-            {templateSuggestions.length > 0 && (
-              <Card className="mb-4" size="small" title="模板建议">
-                <Space wrap>
-                  {templateSuggestions.map((item, index) => (
-                    <Tag key={item.id || `${item.name}-${index}`} color="blue">
-                      {item.name || item.description || item.id || `建议 ${index + 1}`}
-                    </Tag>
-                  ))}
-                </Space>
-              </Card>
-            )}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Form.Item
+                      name="processType"
+                      label={t('workflow.aiModal.processType')}
+                      rules={[{ required: true, message: t('workflow.aiModal.processTypeRequired') }]}
+                    >
+                      <Select
+                        options={[
+                          { label: t('workflow.aiModal.processTypeIncident'), value: 'incident' },
+                          { label: t('workflow.aiModal.processTypeChange'), value: 'change' },
+                          { label: t('workflow.aiModal.processTypeProblem'), value: 'problem' },
+                          { label: t('workflow.aiModal.processTypeServiceRequest'), value: 'service_request' },
+                          { label: t('workflow.aiModal.processTypeCustom'), value: 'custom' },
+                        ]}
+                      />
+                    </Form.Item>
 
-            {previewResult && (
-              <Card className="mb-4" size="small" title="结构预览">
-                <Space wrap className="mb-3">
-                  <Tag color="blue">复杂度: {previewResult.complexity}</Tag>
-                  <Tag color="purple">预计节点: {previewResult.estimatedNodeCount}</Tag>
-                </Space>
-                <Paragraph className="mb-3">{previewResult.structureDescription}</Paragraph>
-                {previewResult.suggestions?.length > 0 && (
-                  <Alert
-                    className="mb-3"
-                    type="info"
-                    showIcon
-                    title="优化建议"
-                    description={previewResult.suggestions.join('；')}
-                  />
-                )}
-                <List
-                  size="small"
-                  bordered
-                  dataSource={previewResult.nodes || []}
-                  renderItem={node => (
-                    <List.Item>
-                      <div className="space-y-1">
-                        <Space wrap>
-                          <Text strong>{node.name}</Text>
-                          <Tag>{node.type}</Tag>
-                          {node.assigneeRole && <Tag color="green">{node.assigneeRole}</Tag>}
-                          {node.slaMinutes ? <Tag color="orange">SLA {node.slaMinutes}分钟</Tag> : null}
-                        </Space>
-                        <Text type="secondary">{node.description}</Text>
-                      </div>
-                    </List.Item>
-                  )}
-                />
-              </Card>
-            )}
-
-            {generatedProcess && (
-              <div className="mt-6">
-                <div className="mb-3 flex justify-between items-center">
-                  <div className="space-y-1">
-                    <Title level={5}>生成结果预览</Title>
-                    {generationResult && (
-                      <Space wrap>
-                        <Tag color="blue">{generationResult.processName}</Tag>
-                        <Tag color="purple">版本 {generationResult.version}</Tag>
-                        <Tag color="green">节点 {generationResult.nodeCount}</Tag>
-                        <Tag color="orange">复杂度 {generationResult.complexity}</Tag>
-                      </Space>
-                    )}
+                    <Form.Item
+                      name="enterpriseType"
+                      label={t('workflow.aiModal.enterpriseType')}
+                      rules={[{ required: true, message: t('workflow.aiModal.enterpriseTypeRequired') }]}
+                    >
+                      <Select
+                        options={[
+                          { label: t('workflow.aiModal.enterpriseCn'), value: 'cn_enterprise' },
+                          { label: t('workflow.aiModal.enterpriseInternational'), value: 'international' },
+                          { label: t('workflow.aiModal.enterpriseStartup'), value: 'startup' },
+                          { label: t('workflow.aiModal.enterpriseGovernment'), value: 'government' },
+                        ]}
+                      />
+                    </Form.Item>
                   </div>
-                  <Button
-                    type="primary"
-                    size="small"
-                    disabled={!generatedProcess || loading}
-                    onClick={handleApplyGeneratedProcess}
-                  >
-                    应用到画布
-                  </Button>
-                </div>
-                {generationResult?.explanation && (
-                  <Alert
-                    className="mb-3"
-                    type="success"
-                    showIcon
-                    title="生成说明"
-                    description={generationResult.explanation}
-                  />
+
+                  <Form.Item label={t('workflow.aiModal.generateConfig')}>
+                    <Space wrap>
+                      <Form.Item name="includeSla" valuePropName="checked" noStyle>
+                        <Checkbox>{t('workflow.aiModal.includeSla')}</Checkbox>
+                      </Form.Item>
+                      <Form.Item name="includeNotifications" valuePropName="checked" noStyle>
+                        <Checkbox>{t('workflow.aiModal.includeNotifications')}</Checkbox>
+                      </Form.Item>
+                      <Form.Item name="includeApprovals" valuePropName="checked" noStyle>
+                        <Checkbox>{t('workflow.aiModal.includeApprovals')}</Checkbox>
+                      </Form.Item>
+                    </Space>
+                  </Form.Item>
+
+                  {generationError && (
+                    <Alert
+                      className="mb-4"
+                      type="error"
+                      showIcon
+                      title={t('workflow.aiModal.generationFailed')}
+                      description={generationError}
+                    />
+                  )}
+
+                  <Form.Item>
+                    <Space wrap>
+                      <Button type="default" onClick={handlePreviewProcess} loading={previewLoading} icon={<Bot />}>
+                        {t('workflow.aiModal.previewStructure')}
+                      </Button>
+                      <Button onClick={handleLoadTemplateSuggestions} loading={templateLoading} icon={<Rocket />}>
+                        {t('workflow.aiModal.recommendTemplates')}
+                      </Button>
+                      <Button type="primary" htmlType="submit" loading={loading} icon={<Send />}>
+                        {t('workflow.aiModal.generateProcess')}
+                      </Button>
+                    </Space>
+                  </Form.Item>
+                </Form>
+
+                {templateSuggestions.length > 0 && (
+                  <Card className="mb-4" size="small" title={t('workflow.aiModal.templateSuggestions')}>
+                    <Space wrap>
+                      {templateSuggestions.map((item, index) => (
+                        <Tag key={item.id || `${item.name}-${index}`} color="blue">
+                          {item.name || item.description || item.id || t('workflow.aiModal.suggestionIndex', { index: index + 1 })}
+                        </Tag>
+                      ))}
+                    </Space>
+                  </Card>
                 )}
-                <Card className="bg-gray-50 font-mono text-xs overflow-auto max-h-[400px] whitespace-pre-wrap">
-                  {generatedProcess}
-                </Card>
+
+                {previewResult && (
+                  <Card className="mb-4" size="small" title={t('workflow.aiModal.structurePreview')}>
+                    <Space wrap className="mb-3">
+                      <Tag color="blue">{t('workflow.aiModal.complexityLabel', { complexity: previewResult.complexity })}</Tag>
+                      <Tag color="purple">{t('workflow.aiModal.estimatedNodes', { count: previewResult.estimatedNodeCount })}</Tag>
+                    </Space>
+                    <Paragraph className="mb-3">{previewResult.structureDescription}</Paragraph>
+                    {previewResult.suggestions?.length > 0 && (
+                      <Alert
+                        className="mb-3"
+                        type="info"
+                        showIcon
+                        title={t('workflow.aiModal.optimizationSuggestions')}
+                        description={previewResult.suggestions.join(t('workflow.aiModal.suggestionSeparator'))}
+                      />
+                    )}
+                    <List
+                      size="small"
+                      bordered
+                      dataSource={previewResult.nodes || []}
+                      renderItem={node => (
+                        <List.Item>
+                          <div className="space-y-1">
+                            <Space wrap>
+                              <Text strong>{node.name}</Text>
+                              <Tag>{node.type}</Tag>
+                              {node.assigneeRole && <Tag color="green">{node.assigneeRole}</Tag>}
+                              {node.slaMinutes ? (
+                                <Tag color="orange">
+                                  {t('workflow.aiModal.slaMinutesTag', { minutes: node.slaMinutes })}
+                                </Tag>
+                              ) : null}
+                            </Space>
+                            <Text type="secondary">{node.description}</Text>
+                          </div>
+                        </List.Item>
+                      )}
+                    />
+                  </Card>
+                )}
+
+                {generatedProcess && (
+                  <div className="mt-6">
+                    <div className="mb-3 flex justify-between items-center">
+                      <div className="space-y-1">
+                        <Title level={5}>{t('workflow.aiModal.generationResultPreview')}</Title>
+                        {generationResult && (
+                          <Space wrap>
+                            <Tag color="blue">{generationResult.processName}</Tag>
+                            <Tag color="purple">{t('workflow.aiModal.versionTag', { version: generationResult.version })}</Tag>
+                            <Tag color="green">{t('workflow.aiModal.nodeCountTag', { count: generationResult.nodeCount })}</Tag>
+                            <Tag color="orange">{t('workflow.aiModal.complexityTag', { complexity: generationResult.complexity })}</Tag>
+                          </Space>
+                        )}
+                      </div>
+                      <Button
+                        type="primary"
+                        size="small"
+                        disabled={!generatedProcess || loading}
+                        onClick={handleApplyGeneratedProcess}
+                      >
+                        {t('workflow.aiModal.applyToCanvas')}
+                      </Button>
+                    </div>
+                    {generationResult?.explanation && (
+                      <Alert
+                        className="mb-3"
+                        type="success"
+                        showIcon
+                        title={t('workflow.aiModal.generationExplanation')}
+                        description={generationResult.explanation}
+                      />
+                    )}
+                    <Card className="bg-gray-50 font-mono text-xs overflow-auto max-h-[400px] whitespace-pre-wrap">
+                      {generatedProcess}
+                    </Card>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
             ),
           },
           {
@@ -530,65 +518,61 @@ export default function WorkflowAIModal({
             label: (
               <Space>
                 <Bot />
-                优化建议
+                {t('workflow.aiModal.tabOptimize')}
               </Space>
             ),
             children: (
-          <div className="py-4">
-            <Paragraph>
-              AI将分析您当前的流程设计，提供优化建议和潜在问题检测。
-            </Paragraph>
-            
-            <div className="mb-4">
-              <Button type="primary" onClick={handleGetSuggestions} loading={loading} icon={<Bot />}>
-                获取优化建议
-              </Button>
-            </div>
+              <div className="py-4">
+                <Paragraph>{t('workflow.aiModal.optimizeIntro')}</Paragraph>
 
-            {suggestions.length > 0 && (
-              <div className="divide-y divide-gray-100">
-                {suggestions.map(item => (
-                  <div
-                    key={item.id}
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => item.elementId && jumpToElement(item.elementId)}
-                  >
-                    <div className="flex gap-3 px-4 py-3">
-                      <div className="pt-1">
-                        {
-                        item.type === 'error' ? (
-                          <XCircle className="text-red-500 text-xl" />
-                        ) : item.type === 'warning' ? (
-                          <AlertTriangle className="text-yellow-500 text-xl" />
-                        ) : (
-                          <CheckCircle className="text-green-500 text-xl" />
-                        )
-                        }
+                <div className="mb-4">
+                  <Button type="primary" onClick={handleGetSuggestions} loading={loading} icon={<Bot />}>
+                    {t('workflow.aiModal.getOptimizationSuggestions')}
+                  </Button>
+                </div>
+
+                {suggestions.length > 0 && (
+                  <div className="divide-y divide-gray-100">
+                    {suggestions.map(item => (
+                      <div
+                        key={item.id}
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => item.elementId && jumpToElement(item.elementId)}
+                      >
+                        <div className="flex gap-3 px-4 py-3">
+                          <div className="pt-1">
+                            {item.type === 'error' ? (
+                              <XCircle className="text-red-500 text-xl" />
+                            ) : item.type === 'warning' ? (
+                              <AlertTriangle className="text-yellow-500 text-xl" />
+                            ) : (
+                              <CheckCircle className="text-green-500 text-xl" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <Space wrap>
+                              <span>{item.title}</span>
+                              <Tag
+                                color={
+                                  item.severity === 'high' ? 'error' : item.severity === 'medium' ? 'warning' : 'success'
+                                }
+                              >
+                                {item.severity === 'high'
+                                  ? t('workflow.aiModal.severityHigh')
+                                  : item.severity === 'medium'
+                                  ? t('workflow.aiModal.severityMedium')
+                                  : t('workflow.aiModal.severityLow')}
+                              </Tag>
+                              {item.elementId && <Tag color="blue">{t('workflow.aiModal.elementTag', { id: item.elementId })}</Tag>}
+                            </Space>
+                            <div className="mt-1 text-sm text-gray-500">{item.description}</div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <Space wrap>
-                          <span>{item.title}</span>
-                          <Tag color={
-                            item.severity === 'high' ? 'error' :
-                            item.severity === 'medium' ? 'warning' : 'success'
-                          }>
-                            {item.severity === 'high' ? '高优先级' :
-                             item.severity === 'medium' ? '中优先级' : '低优先级'}
-                          </Tag>
-                          {item.elementId && (
-                            <Tag color="blue">
-                              元素: {item.elementId}
-                            </Tag>
-                          )}
-                        </Space>
-                        <div className="mt-1 text-sm text-gray-500">{item.description}</div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
             ),
           },
           {
@@ -596,65 +580,61 @@ export default function WorkflowAIModal({
             label: (
               <Space>
                 <Bug />
-                合规检查
+                {t('workflow.aiModal.tabCompliance')}
               </Space>
             ),
             children: (
-          <div className="py-4">
-            <Paragraph>
-              基于企业流程规范和最佳实践，检查当前流程是否符合合规要求。
-            </Paragraph>
-            
-            <div className="mb-4">
-              <Button type="primary" onClick={handleComplianceCheck} loading={loading} icon={<Bug />}>
-                开始合规检查
-              </Button>
-            </div>
+              <div className="py-4">
+                <Paragraph>{t('workflow.aiModal.complianceIntro')}</Paragraph>
 
-            {complianceIssues.length > 0 && (
-              <div className="divide-y divide-gray-100">
-                {complianceIssues.map(item => (
-                  <div
-                    key={item.id}
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => item.elementId && jumpToElement(item.elementId)}
-                  >
-                    <div className="flex gap-3 px-4 py-3">
-                      <div className="pt-1">
-                        {
-                        item.type === 'violation' ? (
-                          <XCircle className="text-red-500 text-xl" />
-                        ) : item.type === 'warning' ? (
-                          <AlertTriangle className="text-yellow-500 text-xl" />
-                        ) : (
-                          <CheckCircle className="text-green-500 text-xl" />
-                        )
-                        }
+                <div className="mb-4">
+                  <Button type="primary" onClick={handleComplianceCheck} loading={loading} icon={<Bug />}>
+                    {t('workflow.aiModal.startComplianceCheck')}
+                  </Button>
+                </div>
+
+                {complianceIssues.length > 0 && (
+                  <div className="divide-y divide-gray-100">
+                    {complianceIssues.map(item => (
+                      <div
+                        key={item.id}
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => item.elementId && jumpToElement(item.elementId)}
+                      >
+                        <div className="flex gap-3 px-4 py-3">
+                          <div className="pt-1">
+                            {item.type === 'violation' ? (
+                              <XCircle className="text-red-500 text-xl" />
+                            ) : item.type === 'warning' ? (
+                              <AlertTriangle className="text-yellow-500 text-xl" />
+                            ) : (
+                              <CheckCircle className="text-green-500 text-xl" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <Space wrap>
+                              <span>{item.rule}</span>
+                              <Tag
+                                color={
+                                  item.severity === 'high' ? 'error' : item.severity === 'medium' ? 'warning' : 'success'
+                                }
+                              >
+                                {item.severity === 'high'
+                                  ? t('workflow.aiModal.riskHigh')
+                                  : item.severity === 'medium'
+                                  ? t('workflow.aiModal.riskMedium')
+                                  : t('workflow.aiModal.riskSuggestion')}
+                              </Tag>
+                              {item.elementId && <Tag color="blue">{t('workflow.aiModal.elementTag', { id: item.elementId })}</Tag>}
+                            </Space>
+                            <div className="mt-1 text-sm text-gray-500">{item.description}</div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <Space wrap>
-                          <span>{item.rule}</span>
-                          <Tag color={
-                            item.severity === 'high' ? 'error' :
-                            item.severity === 'medium' ? 'warning' : 'success'
-                          }>
-                            {item.severity === 'high' ? '高风险' :
-                             item.severity === 'medium' ? '中风险' : '建议'}
-                          </Tag>
-                          {item.elementId && (
-                            <Tag color="blue">
-                              元素: {item.elementId}
-                            </Tag>
-                          )}
-                        </Space>
-                        <div className="mt-1 text-sm text-gray-500">{item.description}</div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
             ),
           },
         ]}

@@ -11,8 +11,8 @@ export default function SettingsApprovalsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // 重定向到管理后台的审批配置页面
-    router.replace('/admin/approvals');
+    // 审批配置已迁移到 BPMN 工作流管理，跳转到工作流管理页面
+    router.replace('/admin/workflows');
   }, [router]);
 
   return null;

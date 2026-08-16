@@ -6,7 +6,6 @@ import {
   Trash2,
   Shield,
   Users,
-  Settings,
   Key,
   CheckCircle,
   XCircle,
@@ -41,52 +40,9 @@ import type { ColumnsType } from 'antd/es/table';
 import { RoleAPI } from '@/lib/api/role-api';
 import { UserApi } from '@/lib/api/user-api';
 import type { PermissionCatalogItem } from '@/lib/api/api-config';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
-
-// 展示层映射：资源代码 -> 中文模块名（后端 permission_definition 未存中文时兜底）
-// 后端拉取的 permission.name 若为空或与代码相同，则使用此表；否则优先展示后端 name
-const RESOURCE_LABELS: Record<string, string> = {
-  dashboard: '仪表盘',
-  ticket: '工单管理',
-  ticket_category: '工单分类',
-  incident: '事件管理',
-  problem: '问题管理',
-  change: '变更管理',
-  service_catalog: '服务目录',
-  service_request: '服务请求',
-  knowledge: '知识库',
-  cmdb: 'CMDB',
-  asset: '资产管理',
-  license: '许可证管理',
-  release: '发布管理',
-  report: '报表分析',
-  admin: '系统管理',
-  user: '用户管理',
-  role: '角色管理',
-  groups: '用户组管理',
-  org: '组织架构',
-  bpmn: '工作流管理',
-  workflow: '工作流实例',
-  system_config: '系统配置',
-  ai: 'AI 能力',
-};
-
-// 展示层映射：动作代码 -> 中文标签
-const ACTION_LABELS: Record<string, string> = {
-  view: '查看',
-  read: '读取',
-  create: '创建',
-  write: '写入',
-  update: '编辑',
-  delete: '删除',
-  manage: '管理',
-  approve: '审批',
-  assign: '分配',
-  all: '全部',
-  export: '导出',
-  import: '导入',
-};
 
 // 按 resource 分组的权限模块，从后端 permission catalog 动态派生
 interface PermissionModule {
@@ -99,9 +55,12 @@ interface PermissionModule {
  * 从后端权限目录（PermissionCatalogItem[]）派生前端权限矩阵。
  * - 按 resource 分组
  * - 每组内按 catalog 出现顺序保留 action，去重
- * - resource 展示名优先取 catalog 中 name 字段，缺失时兜底到 RESOURCE_LABELS，再兜底到 resource 代码
+ * - resource 展示名优先取 catalog 中 name 字段，缺失时兜底到 i18n 的 resourceLabels，再兜底到 resource 代码
  */
-function derivePermissionModules(catalog: PermissionCatalogItem[]): PermissionModule[] {
+function derivePermissionModules(
+  catalog: PermissionCatalogItem[],
+  t: (key: string) => string
+): PermissionModule[] {
   const grouped = new Map<string, { label: string; actions: string[] }>();
   for (const item of catalog) {
     const resource = item.resource || '';
@@ -109,10 +68,13 @@ function derivePermissionModules(catalog: PermissionCatalogItem[]): PermissionMo
     if (!resource || !action) continue;
     let bucket = grouped.get(resource);
     if (!bucket) {
-      // name 若与 code 相同，视为无中文，走 RESOURCE_LABELS 兜底
+      // name 若与 code 相同，视为无中文，走 i18n 兜底
       const backendName = item.name && item.name !== item.code ? item.name : undefined;
+      const i18nKey = `roles.resourceLabels.${resource}`;
+      const i18nLabel = t(i18nKey);
+      const fallback = i18nLabel === i18nKey ? undefined : i18nLabel;
       bucket = {
-        label: backendName || RESOURCE_LABELS[resource] || resource,
+        label: backendName || fallback || resource,
         actions: [],
       };
       grouped.set(resource, bucket);
@@ -137,12 +99,14 @@ export default function RoleManagement() {
     status?: string;
     permissions: string[];
     createdAt?: string;
+    isSystem?: boolean;
   }
+  const { t } = useI18n();
   const { message } = App.useApp();
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<any>(null);
+  const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
   const [form] = Form.useForm();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -152,7 +116,7 @@ export default function RoleManagement() {
     inactiveRoles: 0,
     totalUsers: 0,
   });
-  const [availablePermissions, setAvailablePermissions] = useState<string[]>([]);
+  const [, setAvailablePermissions] = useState<string[]>([]);
   // 从后端 permission catalog 动态派生的权限模块矩阵
   const [permissionModules, setPermissionModules] = useState<PermissionModule[]>([]);
   const [permissionCatalog, setPermissionCatalog] = useState<PermissionCatalogItem[]>([]);
@@ -173,14 +137,9 @@ export default function RoleManagement() {
 
       setRoles(rolesResponse.roles);
 
-      // 计算统计数据
-      // 注意: 后端角色实体没有 status 字段，所以 activeRoles/inactiveRoles 无法准确计算
-      // 这里我们使用 totalRoles 作为总角色数，并说明状态统计的限制
       const totalRoles = rolesResponse.roles.length;
-      // 由于后端 Role 实体没有 status 字段，所有角色默认为启用状态
-      // 实际应用中可能需要通过 is_system 或其他字段来判断
-      const activeRoles = totalRoles; // 所有非系统角色视为启用
-      const inactiveRoles = 0; // 无法从后端获取此信息
+      const activeRoles = totalRoles;
+      const inactiveRoles = 0;
 
       setStats({
         totalRoles,
@@ -190,7 +149,7 @@ export default function RoleManagement() {
       });
     } catch (error) {
       console.error('Failed to load roles:', error);
-      message.error('加载角色数据失败');
+      message.error(t('roles.loadRolesFailed'));
     } finally {
       setLoading(false);
     }
@@ -204,17 +163,17 @@ export default function RoleManagement() {
       const catalog = await RoleAPI.getPermissionCatalog();
       setPermissionCatalog(catalog);
       setAvailablePermissions(catalog.map(p => p.code));
-      const modules = derivePermissionModules(catalog);
+      const modules = derivePermissionModules(catalog, t);
       setPermissionModules(modules);
       if (modules.length === 0) {
-        setPermissionsError('后端未返回任何权限定义，请先点击"初始化默认权限"');
+        setPermissionsError(t('roles.permissionsEmpty'));
       }
     } catch (error) {
       console.error('Failed to load permission catalog:', error);
       setPermissionCatalog([]);
       setAvailablePermissions([]);
       setPermissionModules([]);
-      setPermissionsError('加载权限目录失败，请检查后端服务');
+      setPermissionsError(t('roles.loadPermissionsFailed'));
     } finally {
       setPermissionsLoading(false);
     }
@@ -255,11 +214,11 @@ export default function RoleManagement() {
       if (selectedRole) {
         const updated = await RoleAPI.updateRole(selectedRole.id, roleData);
         roleId = updated.id;
-        message.success('角色更新成功');
+        message.success(t('roles.updateSuccess'));
       } else {
         const created = await RoleAPI.createRole({ ...roleData, permissions: permissionCodes });
         roleId = created.id;
-        message.success('角色创建成功');
+        message.success(t('roles.createSuccess'));
       }
 
       // 分配权限（使用专用接口）
@@ -280,7 +239,7 @@ export default function RoleManagement() {
           }
         } catch (permError) {
           console.error('Failed to assign permissions:', permError);
-          message.warning('角色基本信息已保存，但权限分配失败，请重试');
+          message.warning(t('roles.permissionAssignFailed'));
         }
       }
 
@@ -289,7 +248,7 @@ export default function RoleManagement() {
       setSelectedRole(null);
       loadRoles(); // 重新加载数据
     } catch (error) {
-      message.error('保存角色失败');
+      message.error(t('roles.saveFailed'));
     } finally {
       setLoading(false);
     }
@@ -300,9 +259,9 @@ export default function RoleManagement() {
     try {
       await RoleAPI.initDefaultPermissions();
       await loadPermissions();
-      message.success('默认权限字典初始化完成');
+      message.success(t('roles.initPermissionsSuccess'));
     } catch (error) {
-      message.error('初始化权限字典失败');
+      message.error(t('roles.initPermissionsFailed'));
     } finally {
       setLoading(false);
     }
@@ -312,10 +271,10 @@ export default function RoleManagement() {
   const handleDeleteRole = async (id: number) => {
     try {
       await RoleAPI.deleteRole(id);
-      message.success('角色删除成功');
+      message.success(t('roles.deleteSuccess'));
       loadRoles(); // 重新加载数据
     } catch (error) {
-      message.error('删除角色失败');
+      message.error(t('roles.deleteFailed'));
     }
   };
 
@@ -332,7 +291,7 @@ export default function RoleManagement() {
   // 表格列定义
   const columns: ColumnsType<RoleItem> = [
     {
-      title: '角色信息',
+      title: t('roles.title'),
       key: 'info',
       render: (_: unknown, record: RoleItem) => (
         <div>
@@ -345,24 +304,26 @@ export default function RoleManagement() {
       ),
     },
     {
-      title: '状态',
+      title: t('roles.status'),
       key: 'status',
       render: (_: unknown, record: RoleItem) => {
-        // 后端 Role 实体没有 status 字段时，按启用处理，避免空值显示为灰色但文本仍是启用。
         const isActive = record.status !== 'inactive';
         return (
-          <Badge status={isActive ? 'success' : 'default'} text={isActive ? '启用' : '禁用'} />
+          <Badge
+            status={isActive ? 'success' : 'default'}
+            text={isActive ? t('roles.active') : t('roles.inactive')}
+          />
         );
       },
     },
     {
-      title: '权限数量',
+      title: t('roles.permissionsCount'),
       key: 'permissions',
       dataIndex: 'permissions',
       render: (permissions: string[]) => <span>{permissions?.length || 0}</span>,
     },
     {
-      title: '创建时间',
+      title: t('roles.createdAt'),
       key: 'createdAt',
       dataIndex: 'createdAt',
       render: (createdAt: string) => (
@@ -370,18 +331,17 @@ export default function RoleManagement() {
       ),
     },
     {
-      title: '操作',
+      title: t('roles.actions'),
       key: 'actions',
       width: 150,
       render: (_: unknown, record: RoleItem) => (
         <Space size="small">
-          <Tooltip title="编辑">
+          <Tooltip title={t('roles.editTooltip')}>
             <Button
               type="text"
               icon={<Edit className="w-4 h-4" />}
               onClick={() => {
                 setSelectedRole(record);
-                // 设置表单值
                 const formValues: Record<string, unknown> = {
                   name: record.name,
                   code: record.code,
@@ -389,7 +349,6 @@ export default function RoleManagement() {
                   status: record.status !== 'inactive',
                 };
 
-                // 设置权限值（基于后端返回的动态矩阵，而非硬编码）
                 permissionModules.forEach(({ resource, actions }) => {
                   actions.forEach(action => {
                     const permission = `${resource}:${action}`;
@@ -403,13 +362,13 @@ export default function RoleManagement() {
             />
           </Tooltip>
           <Popconfirm
-            title="确认删除"
-            description="确定要删除这个角色吗？此操作不可恢复。"
+            title={t('roles.deleteConfirmTitle')}
+            description={t('roles.deleteConfirmDescription')}
             onConfirm={() => handleDeleteRole(record.id)}
-            okText="确认"
-            cancelText="取消"
+            okText={t('roles.confirm')}
+            cancelText={t('roles.cancel')}
           >
-            <Tooltip title="删除">
+            <Tooltip title={t('roles.deleteTooltip')}>
               <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
             </Tooltip>
           </Popconfirm>
@@ -422,8 +381,8 @@ export default function RoleManagement() {
   const PermissionConfigTab = () => (
     <div className="space-y-6">
       <Alert
-        message="权限说明"
-        description="权限矩阵由后端权限目录动态生成。为角色分配相应的权限，控制用户可以访问的功能模块和操作。"
+        message={t('roles.permissionInfo')}
+        description={t('roles.permissionInfoDesc')}
         type="info"
         showIcon
       />
@@ -435,16 +394,16 @@ export default function RoleManagement() {
           showIcon
           action={
             <Button size="small" type="link" onClick={handleInitPermissions} loading={loading}>
-              初始化默认权限
+              {t('roles.initDefaultPermissions')}
             </Button>
           }
         />
       )}
 
       {permissionsLoading ? (
-        <div className="text-center py-8 text-gray-500">正在加载权限目录…</div>
+        <div className="text-center py-8 text-gray-500">{t('roles.loadPermissions')}</div>
       ) : permissionModules.length === 0 && !permissionsError ? (
-        <div className="text-center py-8 text-gray-500">暂无权限定义</div>
+        <div className="text-center py-8 text-gray-500">{t('roles.noPermissions')}</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {permissionModules.map(({ resource, label, actions }) => (
@@ -463,13 +422,15 @@ export default function RoleManagement() {
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">全选</span>
+                  <span className="text-sm font-medium">{t('roles.selectAll')}</span>
                   <Checkbox onChange={e => handleSelectAllModule(resource, e.target.checked)} />
                 </div>
                 <Divider className="my-2" />
                 <div className="grid grid-cols-2 gap-2">
                   {actions.map(action => {
-                    const actionLabel = ACTION_LABELS[action] || action;
+                    const actionI18nKey = `roles.actionLabels.${action}`;
+                    const actionI18nLabel = t(actionI18nKey);
+                    const actionLabel = actionI18nLabel === actionI18nKey ? action : actionI18nLabel;
                     return (
                       <div key={action} className="flex items-center">
                         <Form.Item
@@ -497,39 +458,39 @@ export default function RoleManagement() {
   const tabItems = [
     {
       key: 'basic',
-      label: '基本信息',
+      label: t('roles.basicTab'),
       children: (
         <div className="space-y-4">
           <Form.Item
-            label="角色名称"
+            label={t('roles.roleName')}
             name="name"
-            rules={[{ required: true, message: '请输入角色名称' }]}
+            rules={[{ required: true, message: t('roles.enterRoleName') }]}
           >
-            <Input placeholder="请输入角色名称" />
+            <Input placeholder={t('roles.enterRoleName')} />
           </Form.Item>
           <Form.Item
-            label="角色编码"
+            label={t('roles.roleCode')}
             name="code"
-            tooltip="编码用于权限缓存和系统集成，建议使用英文、数字、下划线"
+            tooltip={t('roles.roleCodeTooltip')}
           >
-            <Input placeholder="例如：it_manager、change_approver" disabled={selectedRole?.isSystem} />
+            <Input placeholder={t('roles.roleCodePlaceholder')} disabled={selectedRole?.isSystem} />
           </Form.Item>
           <Form.Item
-            label="角色描述"
+            label={t('roles.roleDescription')}
             name="description"
-            rules={[{ required: true, message: '请输入角色描述' }]}
+            rules={[{ required: true, message: t('roles.enterRoleDescription') }]}
           >
-            <Input.TextArea rows={3} placeholder="请输入角色描述" />
+            <Input.TextArea rows={3} placeholder={t('roles.enterRoleDescription')} />
           </Form.Item>
-          <Form.Item label="状态" name="status" valuePropName="checked">
-            <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+          <Form.Item label={t('roles.status')} name="status" valuePropName="checked">
+            <Switch checkedChildren={t('roles.active')} unCheckedChildren={t('roles.inactive')} />
           </Form.Item>
         </div>
       ),
     },
     {
       key: 'permissions',
-      label: '权限配置',
+      label: t('roles.permissionsTab'),
       children: <PermissionConfigTab />,
     },
   ];
@@ -539,9 +500,9 @@ export default function RoleManagement() {
       <div>
         <Title level={2} className="!mb-2">
           <Key className="inline-block w-6 h-6 mr-2" />
-          角色权限管理
+          {t('roles.title')}
         </Title>
-        <Text type="secondary">管理系统角色和权限分配</Text>
+        <Text type="secondary">{t('roles.description')}</Text>
       </div>
 
       {/* 统计卡片 */}
@@ -549,7 +510,7 @@ export default function RoleManagement() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="总角色数"
+              title={t('roles.total')}
               value={stats.totalRoles}
               prefix={<Key className="w-5 h-5" />}
             />
@@ -558,7 +519,7 @@ export default function RoleManagement() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="启用角色"
+              title={t('roles.enabled')}
               value={stats.activeRoles}
               prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
@@ -568,7 +529,7 @@ export default function RoleManagement() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="禁用角色"
+              title={t('roles.disabled')}
               value={stats.inactiveRoles}
               prefix={<XCircle className="w-5 h-5" />}
               styles={{ content: { color: '#ff4d4f' } }}
@@ -578,7 +539,7 @@ export default function RoleManagement() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="关联用户"
+              title={t('roles.userCount')}
               value={stats.totalUsers}
               prefix={<Users className="w-5 h-5" />}
               styles={{ content: { color: '#fa8c16' } }}
@@ -592,7 +553,7 @@ export default function RoleManagement() {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={12} lg={8}>
             <Input
-              placeholder="搜索角色名称..."
+              placeholder={t('roles.searchPlaceholder')}
               prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -601,17 +562,21 @@ export default function RoleManagement() {
           </Col>
           <Col xs={24} md={8} lg={6}>
             <Select
-              placeholder="筛选状态"
+              placeholder={t('roles.selectStatus')}
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
-              options={[{ value: 'all', label: '全部状态' }, { value: 'active', label: '启用' }, { value: 'inactive', label: '禁用' }]}
+              options={[
+                { value: 'all', label: t('roles.allStatus') },
+                { value: 'active', label: t('roles.statusActive') },
+                { value: 'inactive', label: t('roles.statusInactive') },
+              ]}
             />
           </Col>
           <Col xs={24} md={4} lg={10} className="text-right">
             <Space>
               <Button onClick={handleInitPermissions} loading={loading}>
-                初始化权限字典
+                {t('roles.initPermissions')}
               </Button>
               <Button
                 type="primary"
@@ -622,7 +587,7 @@ export default function RoleManagement() {
                   setShowModal(true);
                 }}
               >
-                新建角色
+                {t('roles.create')}
               </Button>
             </Space>
           </Col>
@@ -641,7 +606,7 @@ export default function RoleManagement() {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: total => `共 ${total} 条记录`,
+            showTotal: total => t('roles.totalLabel', { total }),
           }}
           scroll={{ x: 760 }}
           className="enterprise-table"
@@ -653,7 +618,7 @@ export default function RoleManagement() {
         title={
           <span>
             <Edit className="w-4 h-4 mr-2" />
-            {selectedRole ? '编辑角色' : '新建角色'}
+            {selectedRole ? t('roles.edit') : t('roles.create')}
           </span>
         }
         open={showModal}
@@ -665,8 +630,8 @@ export default function RoleManagement() {
         }}
         width={800}
         confirmLoading={loading}
-        okText="保存"
-        cancelText="取消"
+        okText={t('roles.save')}
+        cancelText={t('roles.cancel')}
       >
         <Form form={form} layout="vertical" className="mt-4">
           <Tabs items={tabItems} type="card" />

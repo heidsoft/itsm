@@ -2,9 +2,12 @@
  * SLA 违规详情模态框（简化版）
  */
 
+'use client';
+
 import React from 'react';
 import { Modal, Descriptions, Tag, Space, Button } from 'antd';
 import type { SLAViolation } from '../types';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 interface SLAViolationDetailModalProps {
   violation: SLAViolation | null;
@@ -25,6 +28,8 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
   canManage = false,
   actionLoading = false,
 }) => {
+  const { t } = useI18n();
+
   if (!violation) return null;
 
   const severityColors: Record<string, string> = {
@@ -34,55 +39,66 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
     low: 'blue',
   };
 
+  const severityLabels: Record<string, string> = {
+    critical: t('sla.violation.severityCritical'),
+    high: t('sla.violation.severityHigh'),
+    medium: t('sla.violation.severityMedium'),
+    low: t('sla.violation.severityLow'),
+  };
+
   return (
     <Modal
-      title="SLA 违规详情"
+      title={t('sla.violation.detailTitle')}
       open={visible}
       onCancel={onClose}
       footer={
         <Space>
           {canManage && violation.status === 'open' && (
             <>
-              <Button loading={actionLoading} onClick={() => void onAcknowledge(violation)}>确认</Button>
+              <Button loading={actionLoading} onClick={() => void onAcknowledge(violation)}>
+                {t('sla.violation.acknowledge')}
+              </Button>
               <Button type="primary" danger loading={actionLoading} onClick={() => void onResolve(violation)}>
-                解决
+                {t('sla.violation.resolve')}
               </Button>
             </>
           )}
-          <Button onClick={onClose}>关闭</Button>
+          <Button onClick={onClose}>{t('common.close')}</Button>
         </Space>
       }
       width={700}
     >
       <Descriptions bordered column={1}>
-        <Descriptions.Item label="ID">{violation.id}</Descriptions.Item>
-        <Descriptions.Item label="工单ID">{violation.ticketId}</Descriptions.Item>
-        <Descriptions.Item label="SLA定义ID">{violation.slaDefId}</Descriptions.Item>
-        <Descriptions.Item label="违规类型">{violation.violationType}</Descriptions.Item>
-        <Descriptions.Item label="严重程度">
+        <Descriptions.Item label={t('sla.violation.fieldId')}>{violation.id}</Descriptions.Item>
+        <Descriptions.Item label={t('sla.violation.fieldTicketId')}>{violation.ticketId}</Descriptions.Item>
+        <Descriptions.Item label={t('sla.violation.fieldSlaDefId')}>{violation.slaDefId}</Descriptions.Item>
+        <Descriptions.Item label={t('sla.violation.fieldViolationType')}>{violation.violationType}</Descriptions.Item>
+        <Descriptions.Item label={t('sla.violation.fieldSeverity')}>
           <Tag color={severityColors[violation.severity] || 'default'}>
-            {violation.severity}
+            {severityLabels[violation.severity] || violation.severity}
           </Tag>
         </Descriptions.Item>
-        <Descriptions.Item label="状态">
+        <Descriptions.Item label={t('sla.violation.fieldStatus')}>
           <Tag color={violation.status === 'resolved' ? 'green' : 'red'}>
-            {violation.status}
+            {violation.status === 'resolved' ? t('sla.violation.statusResolved') : t('sla.violation.statusOpen')}
           </Tag>
         </Descriptions.Item>
-        <Descriptions.Item label="期望时间">
+        <Descriptions.Item label={t('sla.violation.fieldExpectedTime')}>
           {new Date(violation.expectedTime).toLocaleString()}
         </Descriptions.Item>
-        <Descriptions.Item label="实际时间">
+        <Descriptions.Item label={t('sla.violation.fieldActualTime')}>
           {new Date(violation.actualTime).toLocaleString()}
         </Descriptions.Item>
-        <Descriptions.Item label="延迟分钟数">{violation.delayMinutes} 分钟</Descriptions.Item>
-        <Descriptions.Item label="描述">
+        <Descriptions.Item label={t('sla.violation.fieldDelayMinutes')}>
+          {t('sla.violation.delayMinutes', { count: violation.delayMinutes })}
+        </Descriptions.Item>
+        <Descriptions.Item label={t('sla.violation.fieldDescription')}>
           {violation.description || '-'}
         </Descriptions.Item>
-        <Descriptions.Item label="创建时间">
+        <Descriptions.Item label={t('sla.violation.fieldCreatedAt')}>
           {violation.createdAt ? new Date(violation.createdAt).toLocaleString() : '-'}
         </Descriptions.Item>
-        <Descriptions.Item label="更新时间">
+        <Descriptions.Item label={t('sla.violation.fieldUpdatedAt')}>
           {violation.updatedAt ? new Date(violation.updatedAt).toLocaleString() : '-'}
         </Descriptions.Item>
       </Descriptions>

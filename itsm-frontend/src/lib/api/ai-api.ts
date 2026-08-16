@@ -188,7 +188,9 @@ export async function aiGetAuditLogs(params: {
   if (params.kind) query.set('kind', params.kind);
   if (params.days) query.set('days', String(params.days));
   const qs = query.toString();
-  return httpClient.get<AIAuditLogsResponse>(`/api/v1/ai/audit-logs${qs ? `?${qs}` : ''}`);
+  // 字面量路径 + 拼接，避免模板内三元表达式，保证 api-contract 测试可静态解析路径
+  const url = '/api/v1/ai/audit-logs' + (qs ? `?${qs}` : '');
+  return httpClient.get<AIAuditLogsResponse>(url);
 }
 
 // ==================== 合并自 legacy AIService（src/lib/services/ai-service.ts） ====================

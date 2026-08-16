@@ -94,14 +94,14 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
       };
       const newRating = await TicketRatingApi.submitRating(ticketId, request);
       setRating(newRating);
-      antMessage.success('感谢您的评分！');
+      antMessage.success(t('ticketRating.thanksForRating'));
       setShowRatingModal(false);
       form.resetFields();
       if (onRatingSubmitted) {
         onRatingSubmitted(newRating);
       }
     } catch (error: unknown) {
-      antMessage.error(error instanceof Error ? error.message : '提交评分失败');
+      antMessage.error(error instanceof Error ? error.message : t('ticketRating.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -115,14 +115,14 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
 
   // 获取评分描述
   const getRatingDescription = (ratingValue: number) => {
-    const descriptions: Record<number, string> = {
-      1: '非常不满意',
-      2: '不满意',
-      3: '一般',
-      4: '满意',
-      5: '非常满意',
+    const map: Record<number, string> = {
+      1: t('ticketRating.description.1'),
+      2: t('ticketRating.description.2'),
+      3: t('ticketRating.description.3'),
+      4: t('ticketRating.description.4'),
+      5: t('ticketRating.description.5'),
     };
-    return descriptions[ratingValue] || '';
+    return map[ratingValue] || '';
   };
 
   // 获取评分颜色
@@ -135,7 +135,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
   if (loading) {
     return (
       <Card loading={loading}>
-        <Empty description="加载中..." />
+        <Empty description={t('ticketRating.loading')} />
       </Card>
     );
   }
@@ -147,7 +147,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
         title={
           <Space>
             <Star style={{ color: '#faad14' }} />
-            <span>评分信息</span>
+            <span>{t('ticketRating.cardTitle')}</span>
           </Space>
         }
         className="shadow-sm"
@@ -157,7 +157,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
             <div className="flex items-center space-x-2">
               <Rate disabled value={rating.rating} />
               <Text strong style={{ fontSize: 18, color: getRatingColor(rating.rating) }}>
-                {rating.rating} 星
+                {t('ticketRating.scoreLabel', { count: rating.rating })}
               </Text>
               <Tag
                 color={rating.rating >= 4 ? 'success' : rating.rating >= 3 ? 'warning' : 'error'}
@@ -172,7 +172,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
               <div className="flex items-center space-x-2 mb-2">
                 <MessageSquare style={{ fontSize: 16, color: '#8c8c8c' }} />
                 <Text type="secondary" strong>
-                  评分评论
+                  {t('ticketRating.commentTitle')}
                 </Text>
               </div>
               <div className="p-3 bg-gray-50 rounded-md">
@@ -187,13 +187,13 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
             {rating.ratedAt && (
               <div className="flex items-center space-x-1">
                 <Clock style={{ fontSize: 14 }} />
-                <Text>评分时间: {formatDateTime(rating.ratedAt)}</Text>
+                <Text>{t('ticketRating.ratedAt', { time: formatDateTime(rating.ratedAt) })}</Text>
               </div>
             )}
             {rating.ratedByName && (
               <div className="flex items-center space-x-1">
                 <CheckCircle style={{ fontSize: 14 }} />
-                <Text>评分人: {rating.ratedByName}</Text>
+                <Text>{t('ticketRating.ratedBy', { name: rating.ratedByName })}</Text>
               </div>
             )}
           </div>
@@ -209,7 +209,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
         title={
           <Space>
             <Star style={{ color: '#faad14' }} />
-            <span>服务评分</span>
+            <span>{t('ticketRating.serviceRatingTitle')}</span>
           </Space>
         }
         className="shadow-sm"
@@ -217,7 +217,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
         <div className="space-y-4">
           <div className="text-center py-4">
             <Text type="secondary" className="block mb-4">
-              工单已解决，请为本次服务评分
+              {t('ticketRating.resolvedHint')}
             </Text>
             <Button
               type="primary"
@@ -226,7 +226,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
               onClick={() => setShowRatingModal(true)}
               className="bg-gradient-to-r from-yellow-400 to-orange-500 border-0 hover:from-yellow-500 hover:to-orange-600"
             >
-              立即评分
+              {t('ticketRating.rateNow')}
             </Button>
           </div>
         </div>
@@ -236,7 +236,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
           title={
             <Space>
               <Star style={{ color: '#faad14' }} />
-              <span>为本次服务评分</span>
+              <span>{t('ticketRating.modalTitle')}</span>
             </Space>
           }
           open={showRatingModal}
@@ -259,24 +259,24 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
             }}
           >
             <Form.Item
-              label="评分"
+              label={t('ticketRating.fieldRating')}
               name="rating"
-              rules={[{ required: true, message: '请选择评分' }]}
+              rules={[{ required: true, message: t('ticketRating.ratingRequired') }]}
             >
               <Rate allowClear={false} style={{ fontSize: 32 }} character={<Star />} />
             </Form.Item>
 
-            <Form.Item label="评分评论（可选）" name="comment">
+            <Form.Item label={t('ticketRating.commentLabel')} name="comment">
               <TextArea
                 rows={4}
-                placeholder="请分享您对本次服务的评价..."
+                placeholder={t('ticketRating.commentPlaceholder')}
                 showCount
                 maxLength={500}
               />
             </Form.Item>
 
             <div className="text-sm text-gray-500 mt-4">
-              <Text type="secondary">您的评分将帮助我 们改进服务质量，感谢您的反馈！</Text>
+              <Text type="secondary">{t('ticketRating.feedbackHint')}</Text>
             </div>
           </Form>
         </Modal>

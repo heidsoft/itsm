@@ -1,17 +1,17 @@
 'use client';
 
 /**
- * 工单多级审批链增强面板
+ * Ticket multi-level approval chain panel with workflow awareness.
  *
- * 相比 ApprovalTimeline 的增强：
- * 1. 顶部展示"工作流全景 Steps"——把匹配到的 workflow 的 nodes[] 展开为 Steps
- *    每级标注：审批模式(sequential/parallel/any/all)、审批人类型、超时时长
- * 2. 中部展示"审批记录 Timeline"——现有 records，按 level 分组显示
- * 3. 底部展示"操作区"——当前用户是本级审批人时，展示 通过/拒绝/委派 三按钮
- * 4. 内部集成 TicketApprovalApi 的 getWorkflows / getApprovalRecords / submitApproval
+ * Compared to ApprovalTimeline, this component also displays:
+ * 1. Workflow overview Steps — every node of the matched workflow is rendered as a Step.
+ *    Each level is annotated with approval mode, approver type, and timeout.
+ * 2. Approval Timeline (records grouped by level).
+ * 3. Action area — when the current user is the pending approver, three buttons (approve/reject/delegate).
+ * 4. Integrates TicketApprovalApi.getWorkflows / getApprovalRecords / submitApproval.
  *
- * 若后端没有为该工单绑定 workflow（getWorkflows 未匹配），会自动降级为
- * 仅显示 Timeline + 操作区，与 Iter-1 行为一致。
+ * If no workflow is bound for the ticket, the panel gracefully degrades to
+ * Timeline + action area.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -25,29 +25,9 @@ import {
 } from '@/lib/api/ticket-approval-api';
 import { ApprovalTimeline } from './ApprovalTimeline';
 import type { ApprovalStep, ApprovalStepStatus } from './types';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Text } = Typography;
-
-const modeLabels: Record<ApprovalNode['approvalMode'], string> = {
-  sequential: '串行审批',
-  parallel: '并行审批',
-  any: '任一通过',
-  all: '全员通过',
-};
-
-const modeColors: Record<ApprovalNode['approvalMode'], string> = {
-  sequential: 'blue',
-  parallel: 'purple',
-  any: 'green',
-  all: 'orange',
-};
-
-const approverTypeLabels: Record<ApprovalNode['approverType'], string> = {
-  user: '指定用户',
-  role: '角色',
-  department: '部门',
-  dynamic: '动态',
-};
 
 export interface ApprovalWorkflowPanelProps {
   ticketId: number;
@@ -66,13 +46,13 @@ interface LevelState {
 }
 
 /**
- * 计算某一级的状态
- * - 有 approved 且没有 pending → approved
- * - 有 rejected → rejected
- * - 有 pending → pending（当前级）
- * - 有 delegated 但没有其他 → delegated
- * - 全部 timeout → timeout
- * - 无记录 → pending（未开始）
+ * Compute a single level's aggregate status:
+ * - any rejected -> rejected
+ * - any pending -> pending
+ * - all approved -> approved
+ * - any delegated (no others) -> delegated
+ * - all timeout -> timeout
+ * - no records -> pending (not started)
  */
 function computeLevelStatus(records: ApprovalRecord[]): ApprovalStepStatus {
   if (records.length === 0) return 'pending';
@@ -93,15 +73,47 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
   onRefresh,
   formatDateTime,
 }) => {
+  const { t } = useI18n();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [workflow, setWorkflow] = useState<ApprovalWorkflow | null>(null);
   const [records, setRecords] = useState<ApprovalRecord[]>([]);
 
+  const modeLabels = useMemo(
+    () =>
+      ({
+        sequential: t('detailTabs.modeSequential'),
+        parallel: t('detailTabs.modeParallel'),
+        any: t('detailTabs.modeAny'),
+        all: t('detailTabs.modeAll'),
+      }) as Record<ApprovalNode['approvalMode'], string>,
+    [t],
+  );
+
+  const modeColors: Record<ApprovalNode['approvalMode'], string> = useMemo(
+    () => ({
+      sequential: 'blue',
+      parallel: 'purple',
+      any: 'green',
+      all: 'orange',
+    }),
+    [],
+  );
+
+  const approverTypeLabels = useMemo(
+    () =>
+      ({
+        user: t('detailTabs.approverTypeUser'),
+        role: t('detailTabs.approverTypeRole'),
+        department: t('detailTabs.approverTypeDepartment'),
+        dynamic: t('detailTabs.approverTypeDynamic'),
+      }) as Record<ApprovalNode['approverType'], string>,
+    [t],
+  );
+
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      // 并行加载工作流列表 + 审批记录
       const [wfRes, recRes] = await Promise.all([
         TicketApprovalApi.getWorkflows({
           ticketType,
@@ -120,13 +132,11 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
 
       setRecords(recRes.items || []);
 
-      // 优先用 records 里的 workflowId 匹配（更精确，因为工单实际用了哪个）
       const wfIdFromRecord = (recRes.items || [])[0]?.workflowId;
       let matched: ApprovalWorkflow | null = null;
       if (wfIdFromRecord) {
         matched = (wfRes.items || []).find((w) => w.id === wfIdFromRecord) || null;
       }
-      // 如未匹配（record 为空 or workflow 已删除），再按 ticketType/priority 兜底
       if (!matched && (ticketType || priority)) {
         matched =
           (wfRes.items || []).find(
@@ -138,20 +148,18 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
       setWorkflow(matched);
     } catch (e) {
       console.warn('load enhanced approval failed', e);
-      message.error('审批链加载失败');
+      message.error(t('detailTabs.workflowLoadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [ticketId, ticketType, priority, message]);
+  }, [ticketId, ticketType, priority, message, t]);
 
   useEffect(() => {
     void loadAll();
   }, [loadAll]);
 
-  // ==================== 计算全景 Steps ====================
   const levelStates: LevelState[] = useMemo(() => {
     if (!workflow || !workflow.nodes || workflow.nodes.length === 0) {
-      // 无 workflow 定义：按 records 的 currentLevel 分组
       const map = new Map<number, ApprovalRecord[]>();
       for (const r of records) {
         const list = map.get(r.currentLevel) || [];
@@ -165,7 +173,6 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
         records: map.get(lv) || [],
       }));
     }
-    // 有 workflow：按 nodes 顺序，每级填充对应 records
     return workflow.nodes
       .slice()
       .sort((a, b) => a.level - b.level)
@@ -179,13 +186,11 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
       });
   }, [workflow, records]);
 
-  // 当前 pending 级次
   const currentLevel = useMemo(() => {
     const pending = levelStates.find((l) => l.status === 'pending' && l.records.length > 0);
     return pending?.level;
   }, [levelStates]);
 
-  // 当前用户在本级的 pending 审批记录 id
   const myApprovalId = useMemo(() => {
     if (!currentUserId || isTicketFinal) return null;
     const myRec = records.find(
@@ -194,7 +199,6 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
     return myRec?.id ?? null;
   }, [records, currentUserId, isTicketFinal]);
 
-  // ==================== Timeline 用的扁平 steps ====================
   const timelineSteps: ApprovalStep[] = useMemo(() => {
     return records
       .slice()
@@ -211,13 +215,12 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
       }));
   }, [records]);
 
-  // ==================== 提交审批 ====================
   const submitApproval = async (
     action: 'approve' | 'reject' | 'delegate',
     payload: { comment: string; delegateToUserId?: number },
   ) => {
     if (!myApprovalId) {
-      message.warning('没有可操作的审批节点');
+      message.warning(t('detailTabs.noActionableApproval'));
       throw new Error('no pending approval');
     }
     await TicketApprovalApi.submitApproval({
@@ -231,7 +234,6 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
     onRefresh?.();
   };
 
-  // ==================== 渲染 ====================
   const stepStatus = (
     s: ApprovalStepStatus,
   ): 'wait' | 'process' | 'finish' | 'error' => {
@@ -270,7 +272,6 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
 
   return (
     <div className="p-6 space-y-4">
-      {/* 工作流全景 */}
       {hasWorkflowMeta && workflow && (
         <Card
           size="small"
@@ -278,7 +279,9 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
             <Space size={6}>
               <GitBranch size={14} />
               <Text strong>{workflow.name}</Text>
-              <Tag color="blue">{workflow.nodes.length} 级审批</Tag>
+              <Tag color="blue">
+                {t('detailTabs.levelCount', { count: workflow.nodes.length })}
+              </Tag>
               {workflow.description && (
                 <Text type="secondary" className="text-xs">
                   {workflow.description}
@@ -294,7 +297,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
             items={levelStates.map((l) => {
               const node = workflow.nodes.find((n) => n.level === l.level);
               return {
-                title: node?.name || `第 ${l.level} 级`,
+                title: node?.name || t('detailTabs.levelLabel', { level: l.level }),
                 status: stepStatus(l.status),
                 icon: iconFor(l.status),
                 description: node ? (
@@ -310,11 +313,13 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
                       )}
                       {approverTypeLabels[node.approverType]}
                       {node.approverNames && node.approverNames.length > 0
-                        ? `：${node.approverNames.slice(0, 2).join(',')}${node.approverNames.length > 2 ? '...' : ''}`
+                        ? `:${node.approverNames.slice(0, 2).join(',')}${node.approverNames.length > 2 ? '...' : ''}`
                         : ''}
                     </span>
                     {node.timeoutHours && (
-                      <span className="text-gray-400">超时 {node.timeoutHours}h</span>
+                      <span className="text-gray-400">
+                        {t('detailTabs.timeoutHours', { hours: node.timeoutHours })}
+                      </span>
                     )}
                   </Space>
                 ) : (
@@ -330,10 +335,11 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
                 showIcon
                 message={
                   <Text>
-                    当前进行到 <Text strong>第 {currentLevel} 级</Text>
+                    {t('detailTabs.currentLevelIntro')}{' '}
+                    <Text strong>{t('detailTabs.levelLabel', { level: currentLevel })}</Text>
                     {myApprovalId && (
                       <Tag color="orange" className="ml-2">
-                        本级需要您审批
+                        {t('detailTabs.youNeedToApprove')}
                       </Tag>
                     )}
                   </Text>
@@ -348,16 +354,15 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
         <Alert
           type="warning"
           showIcon
-          message="未找到匹配的审批工作流定义，仅显示审批记录"
+          message={t('detailTabs.workflowNotMatched')}
           className="text-xs"
         />
       )}
 
       {!hasRecords && !hasWorkflowMeta && (
-        <Empty description="该工单未走审批流程" />
+        <Empty description={t('detailTabs.noApprovalWorkflow')} />
       )}
 
-      {/* 审批记录 Timeline + 操作区 */}
       {hasRecords && (
         <>
           <Divider style={{ margin: '8px 0' }} />

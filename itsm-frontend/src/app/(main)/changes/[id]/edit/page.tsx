@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   Col,
-  DatePicker,
   Form,
   Input,
   Row,
@@ -18,6 +17,7 @@ import {
 } from 'antd';
 import { ArrowLeft, Lock, Save } from 'lucide-react';
 import dayjs, { type Dayjs } from 'dayjs';
+import { AppDateRangePicker } from '@/components/ui/AppDatePicker';
 import { ChangeApi, type ChangeRequest } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n';
 
@@ -320,12 +320,10 @@ const EditChangePage: React.FC = () => {
             tooltip="计划开始与结束时间"
             rules={[{ validator: validateRange }]}
           >
-            <DatePicker.RangePicker
+            <AppDateRangePicker
               showTime={{ format: 'HH:mm' }}
-              format="YYYY-MM-DD HH:mm"
-              disabledDate={current => !!current && current.isBefore(dayjs().startOf('day'))}
+              disabledDate={(current: Dayjs) => !!current && current.isBefore(dayjs().startOf('day'))}
               placeholder={['开始时间', '结束时间']}
-              className="w-full"
             />
           </Form.Item>
 

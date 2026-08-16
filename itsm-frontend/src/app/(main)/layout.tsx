@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Layout, ConfigProvider, App } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
+import { Layout, App } from 'antd';
 import { usePathname, useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -14,7 +13,7 @@ import { useLayoutStore } from '@/lib/store/layout-store';
 import PageTransition from '@/components/common/PageTransition';
 import { useAuthStore } from '@/lib/store/auth-store';
 import type { Tenant } from '@/lib/api/api-config';
-import { ThemeProvider, useTheme, getAntdTheme } from '@/lib/design-system/theme';
+import { useTheme } from '@/lib/design-system/theme';
 
 const { Content } = Layout;
 
@@ -125,7 +124,7 @@ export default function MainLayout({
     };
     checkAuth();
     // 仅在布局挂载时检查一次；SPA 内部导航不重复检查，避免瞬时故障误踢用户
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // access_token 有效期 15 分钟：每 10 分钟主动刷新一次会话，
@@ -186,15 +185,13 @@ export default function MainLayout({
 
   // 根据官方布局模式，使用单一容器控制侧边栏占位
   return (
-    <ThemeProvider>
-      <ThemedMainLayout
-        collapsed={collapsed}
-        isMobile={isMobile}
-        handleContentClick={handleContentClick}
-      >
-        <PageTransition>{children}</PageTransition>
-      </ThemedMainLayout>
-    </ThemeProvider>
+    <ThemedMainLayout
+      collapsed={collapsed}
+      isMobile={isMobile}
+      handleContentClick={handleContentClick}
+    >
+      <PageTransition>{children}</PageTransition>
+    </ThemedMainLayout>
   );
 }
 
@@ -211,80 +208,77 @@ function ThemedMainLayout({
 }>) {
   const { isDark } = useTheme();
   const setCollapsed = useLayoutStore(s => s.setCollapsed);
-  const antdThemeConfig = React.useMemo(() => getAntdTheme(isDark), [isDark]);
 
   return (
-    <ConfigProvider locale={zhCN} theme={antdThemeConfig as any}>
-      <App>
-        {/* Skip to main content link for accessibility */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-400"
-        >
-          跳转到主要内容
-        </a>
-        <NetworkStatus />
-        <Layout
-          className="min-h-screen bg-[var(--color-background-primary)]"
-          style={{
-            paddingLeft: isMobile
-              ? 0
-              : collapsed
-                ? LAYOUT_CONFIG.sider.collapsedWidth
-                : LAYOUT_CONFIG.sider.width,
-            transition: 'padding-left 0.2s ease',
-          }}
-        >
-          {/* 侧边栏 */}
-          <Sidebar
-            collapsed={collapsed}
-            onCollapse={setCollapsed}
-            mobile={isMobile}
-          />
+    <App>
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-400"
+      >
+        跳转到主要内容
+      </a>
+      <NetworkStatus />
+      <Layout
+        className="min-h-screen bg-[var(--color-background-primary)]"
+        style={{
+          paddingLeft: isMobile
+            ? 0
+            : collapsed
+              ? LAYOUT_CONFIG.sider.collapsedWidth
+              : LAYOUT_CONFIG.sider.width,
+          transition: 'padding-left 0.2s ease',
+        }}
+      >
+        {/* 侧边栏 */}
+        <Sidebar
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
+          mobile={isMobile}
+        />
 
-          {/* 主区域 */}
-          <Layout className="bg-[var(--color-background-primary)] min-h-screen">
-            {/* 顶部导航栏 */}
-            <Header collapsed={collapsed} onCollapse={setCollapsed} showBreadcrumb={true} />
+        {/* 主区域 */}
+        <Layout className="bg-[var(--color-background-primary)] min-h-screen">
+          {/* 顶部导航栏 */}
+          <Header collapsed={collapsed} onCollapse={setCollapsed} showBreadcrumb={true} />
 
-            {/* 内容区域 */}
-            <Content
-              id="main-content"
-              tabIndex={-1}
-              onClick={handleContentClick}
-              className="bg-[var(--color-background-primary)] w-auto min-w-0 max-w-full overflow-x-hidden shadow-none outline-none"
+          {/* 内容区域 */}
+          <Content
+            id="main-content"
+            tabIndex={-1}
+            onClick={handleContentClick}
+            className="bg-[var(--color-background-primary)] w-auto min-w-0 max-w-full overflow-x-hidden shadow-none outline-none"
+            style={{
+              minHeight: LAYOUT_CONFIG.content.minHeight,
+            }}
+          >
+            <div
+              className="main-content"
               style={{
-                minHeight: LAYOUT_CONFIG.content.minHeight,
+                padding: isMobile ? `${LAYOUT_CONFIG.content.paddingMobile}px` : '16px',
               }}
             >
-              <div
-                className="main-content"
-                style={{
-                  padding: isMobile ? `${LAYOUT_CONFIG.content.paddingMobile}px` : '16px',
-                }}
-              >
-                <PageTransition>{children}</PageTransition>
-              </div>
-            </Content>
+              <PageTransition>{children}</PageTransition>
+            </div>
+          </Content>
 
-            {/* 页脚（可选） */}
-            <footer className="text-center p-4 bg-transparent text-gray-400 text-xs">
-              AI-Native ITSM ©{new Date().getFullYear()} - AI驱动的IT服务管理系统
-            </footer>
-          </Layout>
-
-        {/* 移动端遮罩层 */}
-        {!collapsed && isMobile && (
-          <div
-            onClick={() => setCollapsed(true)}
-            className="fixed inset-0 bg-black/45"
-            style={{
-              zIndex: LAYOUT_CONFIG.zIndex.sider - 1,
-            }}
-          />
-        )}
+          {/* 页脚（可选） */}
+          <footer className="text-center p-4 bg-transparent text-gray-400 text-xs">
+            AI-Native ITSM ©{new Date().getFullYear()} - AI驱动的IT服务管理系统
+          </footer>
         </Layout>
-      </App>
-    </ConfigProvider>
+
+      {/* 移动端遮罩层 */}
+      {!collapsed && isMobile && (
+        <div
+          onClick={() => setCollapsed(true)}
+          className="fixed inset-0 bg-black/45"
+          style={{
+            zIndex: LAYOUT_CONFIG.zIndex.sider - 1,
+          }}
+        />
+      )}
+      </Layout>
+    </App>
   );
 }

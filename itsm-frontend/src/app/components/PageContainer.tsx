@@ -1,3 +1,6 @@
+/**
+ * @deprecated 请使用 BusinessPageTemplate 替代，此组件为历史遗留实现
+ */
 import React from 'react';
 import { Layout, Typography, Breadcrumb, Space, Divider } from 'antd';
 import type { BreadcrumbProps } from 'antd';

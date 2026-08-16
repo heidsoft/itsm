@@ -135,7 +135,11 @@ describe('IncidentAPI', () => {
     it('should escalate an incident', async () => {
       mockPost.mockResolvedValue({ id: 1 });
       await IncidentAPI.escalateIncident(1, { escalationLevel: 2, reason: 'Urgent' });
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/1/escalate', { escalationLevel: 2, reason: 'Urgent' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/1/escalate', {
+        escalationLevel: 2,
+        reason: 'Urgent',
+        incidentId: 1,
+      });
     });
   });
 

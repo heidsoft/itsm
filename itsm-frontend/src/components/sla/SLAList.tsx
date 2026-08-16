@@ -16,11 +16,11 @@ import {
   Modal,
   Breadcrumb,
   Switch,
-  Empty,
 } from 'antd';
 import { Plus, Pencil, Trash2, RotateCcw, Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
+import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 
 import { SLAApi } from '@/lib/api/sla-api';
 import type { SLADefinition } from '@/lib/api/sla-api';
@@ -186,11 +186,17 @@ const SLAList: React.FC = () => {
         scroll={{ x: 'max-content' }}
         locale={{
           emptyText: (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无SLA数据">
-              <Button type="primary" onClick={() => router.push('/sla/definitions/new')}>
-                创建第一个SLA
-              </Button>
-            </Empty>
+            <LoadingEmptyError
+              state="empty"
+              empty={{
+                title: '暂无 SLA 定义',
+                description: '当前没有 SLA 策略，点击下方按钮创建第一个 SLA 定义',
+                actionText: '新建 SLA',
+                onAction: () => router.push('/sla/definitions/new'),
+                showAction: true,
+                icon: <Bell size={48} />,
+              }}
+            />
           ),
         }}
         pagination={{

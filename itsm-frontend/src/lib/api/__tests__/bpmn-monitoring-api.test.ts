@@ -39,7 +39,7 @@ describe('BPMNMonitoringApi', () => {
       const expected = { totalInstances: 20 };
       mockGet.mockResolvedValue({ data: expected });
       const res = await BPMNMonitoringApi.getProcessMetricsByKey('proc1', '7d');
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/monitoring/metrics/proc1', { timeRange: '7d' });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/monitoring/metrics/proc1', { time_range: '7d' });
       expect(res).toEqual(expected);
     });
   });

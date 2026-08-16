@@ -288,7 +288,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         title={
           <div className="flex items-center space-x-2">
             <Bot size={20} className="text-blue-600" />
-            <span>AI 智能助手</span>
+            <span>AI 助手</span>
           </div>
         }
         size="small"

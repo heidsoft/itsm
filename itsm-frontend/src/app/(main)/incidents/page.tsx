@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useCallback } from 'react';
-import { Button, Modal, Pagination, Select, Form, message } from 'antd';
+import React, { useCallback, useMemo } from 'react';
+import { Button, Modal, Pagination, Form, message } from 'antd';
+import AppSelect from '@/components/ui/AppSelect';
 import { Plus, RotateCcw, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -23,20 +24,33 @@ import { useIncidentStats } from '@/lib/hooks/useIncidentStats';
 import { useIncidentFilters } from '@/lib/hooks/useIncidentFilters';
 import { useIncidentBatchOps } from '@/lib/hooks/useIncidentBatchOps';
 
-const KANBAN_COLUMNS: KanbanColumnConfig<Incident>[] = [
-  { key: 'new', title: '新建', color: '#3b82f6' },
-  { key: 'acknowledged', title: '已确认', color: '#722ed1' },
-  { key: 'assigned', title: '已分配', color: '#13c2c2' },
-  { key: 'in_progress', title: '处理中', color: '#3b82f6' },
-  { key: 'resolved', title: '已解决', color: '#52c41a' },
-  { key: 'closed', title: '已关闭', color: '#d9d9d9' },
-];
-
 type View = 'list' | 'kanban';
 
 export default function IncidentsPage() {
   const router = useRouter();
   const { t } = useI18n();
+
+  const kanbanColumns = useMemo<KanbanColumnConfig<Incident>[]>(
+    () => [
+      { key: 'new', title: t('incidents.kanbanColumns.new'), color: '#3b82f6' },
+      { key: 'acknowledged', title: t('incidents.kanbanColumns.acknowledged'), color: '#722ed1' },
+      { key: 'assigned', title: t('incidents.kanbanColumns.assigned'), color: '#13c2c2' },
+      { key: 'in_progress', title: t('incidents.kanbanColumns.in_progress'), color: '#3b82f6' },
+      { key: 'resolved', title: t('incidents.kanbanColumns.resolved'), color: '#52c41a' },
+      { key: 'closed', title: t('incidents.kanbanColumns.closed'), color: '#d9d9d9' },
+    ],
+    [t]
+  );
+
+  const priorityOptions = useMemo(
+    () => [
+      { value: 'critical', label: t('incidents.priorityCritical'), color: 'red' },
+      { value: 'high', label: t('incidents.priorityHigh'), color: 'orange' },
+      { value: 'medium', label: t('incidents.priorityMedium'), color: 'blue' },
+      { value: 'low', label: t('incidents.priorityLow'), color: 'green' },
+    ],
+    [t]
+  );
 
   // UI state
   const filters = useIncidentFilters();
@@ -46,7 +60,7 @@ export default function IncidentsPage() {
   // status automatically re-fetches. The error message is localized here so
   // the data hook stays free of i18n coupling.
   const query = useIncidentsQuery(filters.values, {
-    errorMessage: t('incidents.getFailed') || '加载事件列表失败，请稍后重试',
+    errorMessage: t('incidents.getFailed'),
   });
   const stats = useIncidentStats();
 
@@ -109,20 +123,20 @@ export default function IncidentsPage() {
       await batch.runBatch(
         batch.selectedRowKeys,
         id => IncidentAPI.assignIncident(Number(id), values.assigneeId),
-        '批量分派成功'
+        t('incidents.batchAssignSuccess')
       );
     } catch {
       // validation failed — leave modal open so the user can correct input
     }
-  }, [batch]);
+  }, [batch, t]);
 
   const renderListContent = () => {
     if (query.incidents.length === 0 && !query.loading) {
       return (
         <div className='py-12 text-center'>
-          <div className='text-gray-400 mb-4'>暂无事件记录</div>
+          <div className='text-gray-400 mb-4'>{t('incidents.emptyText')}</div>
           <Button type='primary' onClick={handleCreate}>
-            创建第一个事件
+            {t('incidents.createFirst')}
           </Button>
         </div>
       );
@@ -131,7 +145,7 @@ export default function IncidentsPage() {
       <>
         <BatchActionBar
           selectedCount={batch.selectedRowKeys.length}
-          itemLabel='事件'
+          itemLabel={t('incidents.title')}
           onClear={() => batch.setSelectedRowKeys([])}
           actions={batch.batchActions}
           loading={batch.batchLoading}
@@ -158,37 +172,34 @@ export default function IncidentsPage() {
       loading={query.loading}
       getItemId={(incident: Incident) => incident.id}
       getItemStatus={(incident: Incident) => incident.status}
-      getItemTitle={(incident: Incident) => incident.title || `事件 #${incident.id}`}
+      getItemTitle={(incident: Incident) =>
+        incident.title || t('incidents.itemTitleFallback', { id: incident.id })
+      }
       getItemNumber={(incident: Incident) => incident.incidentNumber || String(incident.id)}
       getItemDescription={(incident: Incident) => incident.description || ''}
       getItemPriority={(incident: Incident) => incident.priority || incident.severity || 'medium'}
       getItemAssignee={(incident: Incident) =>
         incident.assignee
-          ? { name: incident.assignee.name || incident.assigneeName || '未分配' }
+          ? { name: incident.assignee.name || incident.assigneeName || t('incidents.unassigned') }
           : null
       }
       getItemCreatedAt={(incident: Incident) => incident.createdAt}
       getItemUpdatedAt={(incident: Incident) => incident.updatedAt}
       onItemClick={handleView}
       onItemEdit={handleEdit}
-      columnConfigs={KANBAN_COLUMNS}
+      columnConfigs={kanbanColumns}
       showToolbar={false}
-      priorityOptions={[
-        { value: 'critical', label: '紧急', color: 'red' },
-        { value: 'high', label: '高', color: 'orange' },
-        { value: 'medium', label: '中', color: 'blue' },
-        { value: 'low', label: '低', color: 'green' },
-      ]}
+      priorityOptions={priorityOptions}
     />
   );
 
   return (
     <BusinessPageTemplate
-      title='事件管理'
-      description='管理和追踪系统中的所有事件记录'
+      title={t('incidents.title')}
+      description={t('incidents.description')}
       stats={stats.stats}
       statsLoading={stats.loading}
-      searchPlaceholder='搜索事件ID、标题或描述...'
+      searchPlaceholder={t('incidents.searchPlaceholder')}
       searchValue={filters.values.search}
       onSearch={handleSearch}
       searchLoading={query.loading}
@@ -210,32 +221,32 @@ export default function IncidentsPage() {
       activeView={activeView}
       onViewChange={view => setActiveView(view as View)}
       primaryAction={{
-        label: '新建事件',
+        label: t('incidents.create'),
         onClick: handleCreate,
         icon: <Plus className='w-4 h-4' />,
       }}
       extraActions={[
         {
           key: 'refresh',
-          label: '刷新',
+          label: t('incidents.refresh'),
           icon: <RotateCcw className='w-4 h-4' />,
           onClick: handleRefresh,
         },
         {
           key: 'export',
-          label: '导出',
+          label: t('incidents.export'),
           icon: <Download className='w-4 h-4' />,
-          onClick: () => message.info('导出功能开发中'),
+          onClick: () => message.info(t('incidents.exportPending')),
         },
       ]}
       loading={query.loading}
       error={query.loadError}
-      errorDescription='加载事件列表失败'
+      errorDescription={t('incidents.emptyDescription')}
       onRetry={handleRefresh}
       empty={query.incidents.length === 0 && !query.loading}
-      emptyDescription='暂无事件记录'
+      emptyDescription={t('incidents.emptyText')}
       emptyAction={{
-        label: '创建第一个事件',
+        label: t('incidents.createFirst'),
         onClick: handleCreate,
       }}
     >
@@ -249,36 +260,32 @@ export default function IncidentsPage() {
             total={query.total}
             onChange={handlePageChange}
             showSizeChanger
-            showTotal={t => `共 ${t} 条记录`}
+            showTotal={total => t('incidents.totalLabel', { total })}
             pageSizeOptions={['10', '20', '50', '100']}
           />
         </div>
       )}
 
       <Modal
-        title='批量分派事件'
+        title={t('incidents.batchAssign')}
         open={batch.assignModalOpen}
         onOk={handleAssignConfirm}
         onCancel={batch.closeAssignModal}
-        okText='确定分派'
-        cancelText='取消'
+        okText={t('incidents.batchAssignConfirm')}
+        cancelText={t('common.cancel')}
         confirmLoading={batch.batchLoading}
       >
         <div className='mb-3 text-sm text-gray-500'>
-          将为已选择的{' '}
-          <span className='text-blue-600 font-semibold'>{batch.selectedRowKeys.length}</span>{' '}
-          个事件分派处理人
+          {t('incidents.batchAssignDesc', { count: batch.selectedRowKeys.length })}
         </div>
         <Form form={batch.assignForm} layout='vertical'>
           <Form.Item
             name='assigneeId'
-            label='处理人'
-            rules={[{ required: true, message: '请选择处理人' }]}
+            label={t('incidents.assignee')}
+            rules={[{ required: true, message: t('incidents.assigneeRequired') }]}
           >
-            <Select
-              placeholder='请选择处理人'
-              showSearch
-              optionFilterProp='label'
+            <AppSelect
+              placeholder={t('incidents.selectAssignee')}
               options={batch.assignUserOptions}
             />
           </Form.Item>

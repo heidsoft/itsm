@@ -5,8 +5,10 @@ import { Card, Descriptions, Tag, Button, Skeleton, Result, Space, App } from 'a
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { TicketApi } from '@/lib/api/ticket-api';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const ImprovementDetailPage = () => {
+  const { t } = useI18n();
   const params = useParams() as { id?: string };
   const id = params?.id;
   const router = useRouter();
@@ -26,6 +28,7 @@ const ImprovementDetailPage = () => {
 
   useEffect(() => {
     if (id) loadDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadDetail = async () => {
@@ -39,14 +42,14 @@ const ImprovementDetailPage = () => {
         setImprovement(data as unknown as typeof improvement);
       } catch (err) {
         console.error('Load improvement failed:', err);
-        message.error('加载改进计划失败');
-        setError('未找到该改进计划');
+        message.error(t('improvements.loadFailed'));
+        setError(t('improvements.notFound'));
       } finally {
         setLoading(false);
       }
       return;
     }
-    setError('无效的改进计划ID');
+    setError(t('improvements.invalidId'));
     setLoading(false);
   };
 
@@ -67,10 +70,10 @@ const ImprovementDetailPage = () => {
           <Result
             status="404"
             title="404"
-            subTitle={error || '抱歉，您访问的改进计划不存在'}
+            subTitle={error || t('improvements.notFoundHint')}
             extra={
               <Button type="primary" onClick={() => router.push('/improvements')}>
-                返回列表
+                {t('common.back')}
               </Button>
             }
           />
@@ -87,33 +90,41 @@ const ImprovementDetailPage = () => {
           onClick={() => router.push('/improvements')}
           type="text"
         >
-          返回列表
+          {t('common.back')}
         </Button>
 
         <Card>
           <Space orientation="vertical" size="small" style={{ width: '100%' }}>
             <h2 className="text-2xl font-bold text-gray-800">{improvement.title}</h2>
             <Space>
-              <Tag color="blue">{improvement.status || '待评估'}</Tag>
-              <Tag>{improvement.priority || '中'}</Tag>
+              <Tag color="blue">{improvement.status || t('improvements.defaultStatus')}</Tag>
+              <Tag>{improvement.priority || t('improvements.defaultPriority')}</Tag>
             </Space>
           </Space>
 
           <Descriptions bordered column={2} style={{ marginTop: 24 }}>
-            <Descriptions.Item label="计划ID">{String(improvement.id)}</Descriptions.Item>
-            <Descriptions.Item label="标题">{improvement.title}</Descriptions.Item>
-            <Descriptions.Item label="状态">
-              <Tag color="blue">{improvement.status || '待评估'}</Tag>
+            <Descriptions.Item label={t('improvements.fieldPlanId')}>
+              {String(improvement.id)}
             </Descriptions.Item>
-            <Descriptions.Item label="优先级">{improvement.priority || '中'}</Descriptions.Item>
-            <Descriptions.Item label="负责人">
-              {improvement.assignee?.name || '未分配'}
+            <Descriptions.Item label={t('improvements.fieldTitle')}>
+              {improvement.title}
             </Descriptions.Item>
-            <Descriptions.Item label="创建时间">{improvement.createdAt || '-'}</Descriptions.Item>
-            <Descriptions.Item label="更新时间" span={2}>
+            <Descriptions.Item label={t('improvements.fieldStatus')}>
+              <Tag color="blue">{improvement.status || t('improvements.defaultStatus')}</Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label={t('improvements.fieldPriority')}>
+              {improvement.priority || t('improvements.defaultPriority')}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('improvements.fieldOwner')}>
+              {improvement.assignee?.name || t('improvements.unassigned')}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('improvements.fieldCreatedAt')}>
+              {improvement.createdAt || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('improvements.fieldUpdatedAt')} span={2}>
               {improvement.updatedAt || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="目标描述" span={2}>
+            <Descriptions.Item label={t('improvements.fieldDescription')} span={2}>
               {improvement.description || '-'}
             </Descriptions.Item>
           </Descriptions>

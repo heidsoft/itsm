@@ -188,28 +188,28 @@ export default function ProcessRoutingPage() {
 
   // Scenario options
   const scenarioOptions = [
-    { value: 'alert_handling', label: 'Alert Handling' },
-    { value: 'change_release', label: 'Change Release' },
-    { value: 'emergency_change', label: 'Emergency Change' },
-    { value: 'code_release', label: 'Code Release' },
-    { value: 'expense_approval', label: 'Expense Approval' },
-    { value: 'leave_approval', label: 'Leave Approval' },
-    { value: 'recruitment_approval', label: 'Recruitment Approval' },
+    { value: 'alert_handling', label: '告警处理' },
+    { value: 'change_release', label: '变更发布' },
+    { value: 'emergency_change', label: '紧急变更' },
+    { value: 'code_release', label: '代码发布' },
+    { value: 'expense_approval', label: '费用审批' },
+    { value: 'leave_approval', label: '请假审批' },
+    { value: 'recruitment_approval', label: '招聘审批' },
   ];
 
   // Category options
   const categoryOptions = [
-    { value: 'operations', label: 'Operations' },
-    { value: 'rd', label: 'R&D' },
-    { value: 'finance', label: 'Finance' },
-    { value: 'hr', label: 'HR' },
-    { value: 'general', label: 'General' },
+    { value: 'operations', label: '运维' },
+    { value: 'rd', label: '研发' },
+    { value: 'finance', label: '财务' },
+    { value: 'hr', label: '人力' },
+    { value: 'general', label: '综合' },
   ];
 
   // Table columns
   const columns = [
     {
-      title: 'Business Type',
+      title: '业务类型',
       dataIndex:'businessType',
       key:'businessType',
       render: (type: string) => (
@@ -219,65 +219,65 @@ export default function ProcessRoutingPage() {
           type === 'service_request' ? 'green' :
           'default'
         }>
-          {type}
+          {type === 'incident' ? '事件' : type === 'change' ? '变更' : type === 'service_request' ? '服务请求' : '其他'}
         </Tag>
       ),
     },
     {
-      title: 'Sub Type',
+      title: '子类型',
       dataIndex:'businessSubType',
       key:'businessSubType',
     },
     {
-      title: 'Department',
+      title: '部门',
       dataIndex:'departmentName',
       key:'departmentName',
-      render: (name: string) => name || <Tag>Global</Tag>,
+      render: (name: string) => name || <Tag>全局</Tag>,
     },
     {
-      title: 'Scenario',
+      title: '场景',
       dataIndex: 'scenario',
       key: 'scenario',
       render: (scenario: string) => scenario && <Tag color="purple">{scenario}</Tag>,
     },
     {
-      title: 'Process',
+      title: '流程',
       dataIndex:'processDefinitionKey',
       key:'processDefinitionKey',
       render: (key: string) => <Tag color="cyan">{key}</Tag>,
     },
     {
-      title: 'Priority',
+      title: '优先级',
       dataIndex: 'priority',
       key: 'priority',
       sorter: (a: ProcessRoutingRule, b: ProcessRoutingRule) => a.priority - b.priority,
     },
     {
-      title: 'Status',
+      title: '状态',
       dataIndex: 'isActive',
       key: 'isActive',
       render: (active: boolean) => (
         <Tag color={active ? 'green' : 'red'}>
-          {active ? 'Active' : 'Inactive'}
+          {active ? '启用' : '停用'}
         </Tag>
       ),
     },
     {
-      title: 'Actions',
+      title: '操作',
       key: 'actions',
       render: (_: any, record: ProcessRoutingRule) => (
         <Space>
-          <Tooltip title="Edit">
+          <Tooltip title="编辑">
             <Button size="small" icon={<Edit />} onClick={() => handleEdit(record)} />
           </Tooltip>
-          <Tooltip title="Duplicate">
+          <Tooltip title="复制">
             <Button size="small" icon={<Copy />} onClick={() => handleDuplicate(record)} />
           </Tooltip>
           <Popconfirm
-            title="Are you sure you want to delete this rule?"
+            title="确定删除这条规则吗？"
             onConfirm={() => handleDelete(record.id)}
           >
-            <Tooltip title="Delete">
+            <Tooltip title="删除">
               <Button size="small" danger icon={<Delete />} />
             </Tooltip>
           </Popconfirm>
@@ -314,22 +314,22 @@ export default function ProcessRoutingPage() {
       <Row gutter={16}>
         <Col span={6}>
           <Card>
-            <Statistic title="Total Rules" value={stats.total} />
+            <Statistic title="规则总数" value={stats.total} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Active Rules" value={stats.active} valueStyle={{ color: '#3f8600' }} />
+            <Statistic title="已启用" value={stats.active} valueStyle={{ color: '#3f8600' }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Department-Specific" value={stats.departmentSpecific} />
+            <Statistic title="部门专用" value={stats.departmentSpecific} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Global Rules" value={stats.global} />
+            <Statistic title="全局规则" value={stats.global} />
           </Card>
         </Col>
       </Row>
@@ -339,18 +339,18 @@ export default function ProcessRoutingPage() {
         title={
           <Space>
             <Settings />
-            <span>Process Routing Rules</span>
+            <span>流程路由规则</span>
           </Space>
         }
         extra={
           <Space>
             <Input
-              placeholder="Search rules..."
+              placeholder="搜索规则..."
               prefix={<Search />}
               style={{ width: 200 }}
             />
             <Button type="primary" icon={<Plus />} onClick={() => setShowModal(true)}>
-              Add Rule
+              新增规则
             </Button>
           </Space>
         }
@@ -370,7 +370,7 @@ export default function ProcessRoutingPage() {
 
       {/* Add/Edit Modal */}
       <Modal
-        title={selectedRule ? 'Edit Routing Rule' : 'New Routing Rule'}
+        title={selectedRule ? '编辑路由规则' : '新增路由规则'}
         open={showModal}
         onCancel={() => {
           setShowModal(false);
@@ -385,21 +385,21 @@ export default function ProcessRoutingPage() {
             items={[
               {
                 key: 'basic',
-                label: 'Basic Info',
+                label: '基本信息',
                 children: (
                   <>
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item
                         name="businessType"
-                        label="Business Type"
+                        label="业务类型"
                         rules={[{ required: true }]}
                         >
-                        <Select options={[{ value: 'ticket', label: 'Ticket' }, { value: 'incident', label: 'Incident' }, { value: 'change', label: 'Change' }, { value: 'service_request', label: 'Service Request' }, { value: 'problem', label: 'Problem' }, { value: 'release', label: 'Release' }]} />
+                        <Select options={[{ value: 'ticket', label: '工单' }, { value: 'incident', label: '事件' }, { value: 'change', label: '变更' }, { value: 'service_request', label: '服务请求' }, { value: 'problem', label: '问题' }, { value: 'release', label: '发布' }]} />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item name="businessSubType" label="Sub Type">
+                        <Form.Item name="businessSubType" label="子类型">
                           <Input />
                         </Form.Item>
                       </Col>
@@ -407,7 +407,7 @@ export default function ProcessRoutingPage() {
 
                     <Form.Item
                       name="processDefinitionKey"
-                      label="Process Definition"
+                      label="流程定义"
                       rules={[{ required: true }]}
                     >
                       <Select showSearch optionFilterProp="children" options={processDefinitions.map(pd => ({ value: pd.key, label: `${pd.name} (${pd.key})` }))} />
@@ -417,9 +417,9 @@ export default function ProcessRoutingPage() {
                       <Col span={12}>
                         <Form.Item
                           name="priority"
-                          label="Priority"
+                          label="优先级"
                           rules={[{ required: true }]}
-                          tooltip="Higher priority = checked first"
+                          tooltip="数字越小优先级越高"
                         >
                           <InputNumber min={0} max={1000} style={{ width: '100%' }} />
                         </Form.Item>
@@ -427,7 +427,7 @@ export default function ProcessRoutingPage() {
                       <Col span={12}>
                         <Form.Item
                           name="isActive"
-                          label="Active"
+                          label="启用"
                           valuePropName="checked"
                         >
                           <Switch />
@@ -439,15 +439,15 @@ export default function ProcessRoutingPage() {
               },
               {
                 key: 'scope',
-                label: 'Scope',
+                label: '适用范围',
                 children: (
                   <>
                     <Row gutter={16}>
                       <Col span={12}>
-                        <Form.Item name="departmentId" label="Department">
+                        <Form.Item name="departmentId" label="部门">
                           <Select
                             allowClear
-                            placeholder="Global (All Departments)"
+                            placeholder="全局（所有部门）"
                             showSearch
                             optionFilterProp="children"
                             options={departments.map(dept => ({ value: dept.id, label: `${dept.name} (${dept.code})` }))}
@@ -455,10 +455,10 @@ export default function ProcessRoutingPage() {
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item name="teamId" label="Team">
+                        <Form.Item name="teamId" label="团队">
                           <Select
                             allowClear
-                            placeholder="All Teams"
+                            placeholder="所有团队"
                             showSearch
                             optionFilterProp="children"
                             options={teams.map(team => ({ value: team.id, label: `${team.name} (${team.code})` }))}
@@ -469,13 +469,13 @@ export default function ProcessRoutingPage() {
 
                     <Row gutter={16}>
                       <Col span={12}>
-                        <Form.Item name="scenario" label="Scenario">
-                          <Select allowClear placeholder="Any Scenario" options={scenarioOptions} />
+                        <Form.Item name="scenario" label="场景">
+                          <Select allowClear placeholder="全部场景" options={scenarioOptions} />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item name="category" label="Category">
-                          <Select allowClear placeholder="Any Category" options={categoryOptions} />
+                        <Form.Item name="category" label="部门类别">
+                          <Select allowClear placeholder="全部类别" options={categoryOptions} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -484,24 +484,24 @@ export default function ProcessRoutingPage() {
               },
               {
                 key: 'advanced',
-                label: 'Advanced',
+                label: '高级设置',
                 children: (
                   <>
-                    <Form.Item name="approvalChainId" label="Approval Chain ID">
-                      <Input placeholder="Optional approval chain override" />
+                    <Form.Item name="approvalChainId" label="审批链 ID（可选）">
+                      <Input placeholder="覆盖默认审批链，留空则使用流程内置" />
                     </Form.Item>
-                    <Form.Item name="slaPolicyId" label="SLA Policy ID">
-                      <Input placeholder="Optional SLA policy override" />
+                    <Form.Item name="slaPolicyId" label="SLA 策略 ID（可选）">
+                      <Input placeholder="覆盖默认 SLA 策略，留空则使用流程内置" />
                     </Form.Item>
                     <Form.Item
                       name="conditions"
-                      label="Conditions JSON"
+                      label="条件配置（JSON 格式）"
                       validateTrigger="onChange"
                       rules={[{ validator: jsonValidator }]}
                     >
                       <Input.TextArea
                         rows={5}
-                        placeholder='{"severity":"p0","min_amount":100000}'
+                        placeholder='例如：{"severity":"p0","min_amount":100000}'
                       />
                     </Form.Item>
                   </>

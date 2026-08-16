@@ -56,11 +56,12 @@ import type {
   FieldOption,
   FieldConditional,
 } from '@/types/template';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { TextArea } = Input;
 const { Panel } = Collapse;
 
-// ==================== 字段类型配置 ====================
+// ==================== 字段类型配置工厂函数 ====================
 
 interface FieldTypeConfig {
   type: FieldType;
@@ -71,53 +72,53 @@ interface FieldTypeConfig {
   defaultConfig: Partial<TemplateField>;
 }
 
-const FIELD_TYPES: FieldTypeConfig[] = [
+const createFieldTypes = (t: (key: string) => string): FieldTypeConfig[] => [
   // 基础类型
   {
     type: 'text' as FieldType,
-    label: '单行文本',
+    label: t('fieldDesigner.fieldTypes.text.label'),
     icon: '📝',
-    description: '单行文本输入框',
+    description: t('fieldDesigner.fieldTypes.text.description'),
     category: 'basic',
     defaultConfig: {
-      placeholder: '请输入内容',
+      placeholder: t('fieldDesigner.fieldTypes.text.defaultPlaceholder'),
       validation: { maxLength: 200 },
     },
   },
   {
     type: 'textarea' as FieldType,
-    label: '多行文本',
+    label: t('fieldDesigner.fieldTypes.textarea.label'),
     icon: '📄',
-    description: '多行文本输入框',
+    description: t('fieldDesigner.fieldTypes.textarea.description'),
     category: 'basic',
     defaultConfig: {
-      placeholder: '请输入详细内容',
+      placeholder: t('fieldDesigner.fieldTypes.textarea.defaultPlaceholder'),
       validation: { maxLength: 2000 },
     },
   },
   {
     type: 'number' as FieldType,
-    label: '数字',
+    label: t('fieldDesigner.fieldTypes.number.label'),
     icon: '🔢',
-    description: '数字输入框',
+    description: t('fieldDesigner.fieldTypes.number.description'),
     category: 'basic',
     defaultConfig: {
-      placeholder: '请输入数字',
+      placeholder: t('fieldDesigner.fieldTypes.number.defaultPlaceholder'),
     },
   },
   {
     type: 'date' as FieldType,
-    label: '日期',
+    label: t('fieldDesigner.fieldTypes.date.label'),
     icon: '📅',
-    description: '日期选择器',
+    description: t('fieldDesigner.fieldTypes.date.description'),
     category: 'basic',
     defaultConfig: {},
   },
   {
     type: 'datetime' as FieldType,
-    label: '日期时间',
+    label: t('fieldDesigner.fieldTypes.datetime.label'),
     icon: '🕐',
-    description: '日期时间选择器',
+    description: t('fieldDesigner.fieldTypes.datetime.description'),
     category: 'basic',
     defaultConfig: {},
   },
@@ -125,55 +126,55 @@ const FIELD_TYPES: FieldTypeConfig[] = [
   // 选择类型
   {
     type: 'select' as FieldType,
-    label: '下拉选择',
+    label: t('fieldDesigner.fieldTypes.select.label'),
     icon: '📋',
-    description: '单选下拉框',
+    description: t('fieldDesigner.fieldTypes.select.description'),
     category: 'basic',
     defaultConfig: {
       options: [
-        { label: '选项1', value: 'option1' },
-        { label: '选项2', value: 'option2' },
+        { label: t('fieldDesigner.fieldTypes.select.defaultOption1'), value: 'option1' },
+        { label: t('fieldDesigner.fieldTypes.select.defaultOption2'), value: 'option2' },
       ],
       showSearch: true,
     },
   },
   {
     type: 'multi_select' as FieldType,
-    label: '多选下拉',
+    label: t('fieldDesigner.fieldTypes.multiselect.label'),
     icon: '☑️',
-    description: '多选下拉框',
+    description: t('fieldDesigner.fieldTypes.multiselect.description'),
     category: 'basic',
     defaultConfig: {
       options: [
-        { label: '选项1', value: 'option1' },
-        { label: '选项2', value: 'option2' },
+        { label: t('fieldDesigner.fieldTypes.multiselect.defaultOption1'), value: 'option1' },
+        { label: t('fieldDesigner.fieldTypes.multiselect.defaultOption2'), value: 'option2' },
       ],
       multiple: true,
     },
   },
   {
     type: 'radio' as FieldType,
-    label: '单选按钮',
+    label: t('fieldDesigner.fieldTypes.radio.label'),
     icon: '🔘',
-    description: '单选按钮组',
+    description: t('fieldDesigner.fieldTypes.radio.description'),
     category: 'basic',
     defaultConfig: {
       options: [
-        { label: '选项1', value: 'option1' },
-        { label: '选项2', value: 'option2' },
+        { label: t('fieldDesigner.fieldTypes.radio.defaultOption1'), value: 'option1' },
+        { label: t('fieldDesigner.fieldTypes.radio.defaultOption2'), value: 'option2' },
       ],
     },
   },
   {
     type: 'checkbox' as FieldType,
-    label: '复选框',
+    label: t('fieldDesigner.fieldTypes.checkbox.label'),
     icon: '✅',
-    description: '复选框组',
+    description: t('fieldDesigner.fieldTypes.checkbox.description'),
     category: 'basic',
     defaultConfig: {
       options: [
-        { label: '选项1', value: 'option1' },
-        { label: '选项2', value: 'option2' },
+        { label: t('fieldDesigner.fieldTypes.checkbox.defaultOption1'), value: 'option1' },
+        { label: t('fieldDesigner.fieldTypes.checkbox.defaultOption2'), value: 'option2' },
       ],
     },
   },
@@ -181,9 +182,9 @@ const FIELD_TYPES: FieldTypeConfig[] = [
   // 高级类型
   {
     type: 'user_picker' as FieldType,
-    label: '用户选择',
+    label: t('fieldDesigner.fieldTypes.user.label'),
     icon: '👤',
-    description: '选择用户',
+    description: t('fieldDesigner.fieldTypes.user.description'),
     category: 'advanced',
     defaultConfig: {
       showSearch: true,
@@ -192,9 +193,9 @@ const FIELD_TYPES: FieldTypeConfig[] = [
   },
   {
     type: 'department_picker' as FieldType,
-    label: '部门选择',
+    label: t('fieldDesigner.fieldTypes.dept.label'),
     icon: '🏢',
-    description: '选择部门',
+    description: t('fieldDesigner.fieldTypes.dept.description'),
     category: 'advanced',
     defaultConfig: {
       showSearch: true,
@@ -202,9 +203,9 @@ const FIELD_TYPES: FieldTypeConfig[] = [
   },
   {
     type: 'file_upload' as FieldType,
-    label: '文件上传',
+    label: t('fieldDesigner.fieldTypes.file.label'),
     icon: '📎',
-    description: '文件上传',
+    description: t('fieldDesigner.fieldTypes.file.description'),
     category: 'advanced',
     defaultConfig: {
       maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -214,9 +215,9 @@ const FIELD_TYPES: FieldTypeConfig[] = [
   },
   {
     type: 'rich_text' as FieldType,
-    label: '富文本',
+    label: t('fieldDesigner.fieldTypes.richtext.label'),
     icon: '✏️',
-    description: '富文本编辑器',
+    description: t('fieldDesigner.fieldTypes.richtext.description'),
     category: 'advanced',
     defaultConfig: {
       richTextConfig: {
@@ -227,9 +228,9 @@ const FIELD_TYPES: FieldTypeConfig[] = [
   },
   {
     type: 'rating' as FieldType,
-    label: '评分',
+    label: t('fieldDesigner.fieldTypes.rate.label'),
     icon: '⭐',
-    description: '星级评分',
+    description: t('fieldDesigner.fieldTypes.rate.description'),
     category: 'advanced',
     defaultConfig: {
       validation: { min: 1, max: 5 },
@@ -237,9 +238,9 @@ const FIELD_TYPES: FieldTypeConfig[] = [
   },
   {
     type: 'slider' as FieldType,
-    label: '滑块',
+    label: t('fieldDesigner.fieldTypes.slider.label'),
     icon: '🎚️',
-    description: '数值滑块',
+    description: t('fieldDesigner.fieldTypes.slider.description'),
     category: 'advanced',
     defaultConfig: {
       validation: { min: 0, max: 100 },
@@ -249,9 +250,9 @@ const FIELD_TYPES: FieldTypeConfig[] = [
   // 特殊类型
   {
     type: 'divider' as FieldType,
-    label: '分隔线',
+    label: t('fieldDesigner.fieldTypes.divider.label'),
     icon: '➖',
-    description: '视觉分隔',
+    description: t('fieldDesigner.fieldTypes.divider.description'),
     category: 'special',
     defaultConfig: {
       required: false,
@@ -259,9 +260,9 @@ const FIELD_TYPES: FieldTypeConfig[] = [
   },
   {
     type: 'section_title' as FieldType,
-    label: '章节标题',
+    label: t('fieldDesigner.fieldTypes.title.label'),
     icon: '📌',
-    description: '表单章节',
+    description: t('fieldDesigner.fieldTypes.title.description'),
     category: 'special',
     defaultConfig: {
       required: false,
@@ -281,6 +282,8 @@ interface SortableFieldItemProps {
   onMoveDown: (index: number) => void;
   isFirst: boolean;
   isLast: boolean;
+  fieldTypes: FieldTypeConfig[];
+  t: (key: string) => string;
 }
 
 const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
@@ -293,6 +296,8 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
   onMoveDown,
   isFirst,
   isLast,
+  fieldTypes,
+  t,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: field.id,
@@ -304,7 +309,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const fieldTypeConfig = FIELD_TYPES.find(t => t.type === field.type);
+  const fieldTypeConfig = fieldTypes.find(cfg => cfg.type === field.type);
 
   return (
     <div ref={setNodeRef} style={style} className="mb-2">
@@ -330,12 +335,12 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
                   <span className="font-medium">{field.label}</span>
                   {field.required && (
                     <Tag color="red" style={{ margin: 0 }}>
-                      必填
+                      {t('fieldDesigner.flags.required')}
                     </Tag>
                   )}
                   {field.conditional && (
                     <Tag color="blue" style={{ margin: 0 }}>
-                      条件显示
+                      {t('fieldDesigner.flags.conditionalShow')}
                     </Tag>
                   )}
                 </div>
@@ -347,7 +352,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
           </div>
 
           <Space size="small">
-            <Tooltip title="上移">
+            <Tooltip title={t('fieldDesigner.actions.moveUp')}>
               <Button
                 type="text"
                 size="small"
@@ -356,7 +361,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
                 disabled={isFirst}
               />
             </Tooltip>
-            <Tooltip title="下移">
+            <Tooltip title={t('fieldDesigner.actions.moveDown')}>
               <Button
                 type="text"
                 size="small"
@@ -365,7 +370,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
                 disabled={isLast}
               />
             </Tooltip>
-            <Tooltip title="编辑">
+            <Tooltip title={t('fieldDesigner.actions.edit')}>
               <Button
                 type="text"
                 size="small"
@@ -373,7 +378,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
                 onClick={() => onEdit(field)}
               />
             </Tooltip>
-            <Tooltip title="复制">
+            <Tooltip title={t('fieldDesigner.actions.copy')}>
               <Button
                 type="text"
                 size="small"
@@ -381,7 +386,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
                 onClick={() => onDuplicate(field)}
               />
             </Tooltip>
-            <Tooltip title="删除">
+            <Tooltip title={t('fieldDesigner.actions.delete')}>
               <Button
                 type="text"
                 size="small"
@@ -404,6 +409,8 @@ interface FieldConfigPanelProps {
   allFields: TemplateField[];
   onSave: (field: TemplateField) => void;
   onCancel: () => void;
+  fieldTypes: FieldTypeConfig[];
+  t: (key: string) => string;
 }
 
 const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
@@ -411,6 +418,8 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
   allFields,
   onSave,
   onCancel,
+  fieldTypes,
+  t,
 }) => {
   const [form] = Form.useForm();
   const [currentField, setCurrentField] = useState<TemplateField | null>(field);
@@ -428,21 +437,21 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
     try {
       const values = await form.validateFields();
       onSave({ ...currentField!, ...values });
-      message.success('字段配置已保存');
+      message.success(t('fieldDesigner.messages.saveSuccess'));
     } catch (error) {
-      console.error('表单验证失败:', error);
+      console.error('Form validation failed:', error);
     }
   };
 
   if (!field) {
     return (
       <Card className="h-full">
-        <Empty description="请选择或添加字段进行配置" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <Empty description={t('fieldDesigner.empty.noFieldSelected')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
       </Card>
     );
   }
 
-  const fieldTypeConfig = FIELD_TYPES.find(t => t.type === field.type);
+  const fieldTypeConfig = fieldTypes.find(cfg => cfg.type === field.type);
   const hasOptions = ['select', 'multi_select', 'radio', 'checkbox'].includes(field.type);
 
   return (
@@ -450,15 +459,15 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
       title={
         <div className="flex items-center gap-2">
           <span className="text-xl">{fieldTypeConfig?.icon}</span>
-          <span>字段配置</span>
+          <span>{t('fieldDesigner.section.config')}</span>
           <Tag color="blue">{fieldTypeConfig?.label}</Tag>
         </div>
       }
       extra={
         <Space>
-          <Button onClick={onCancel}>取消</Button>
+          <Button onClick={onCancel}>{t('fieldDesigner.actions.cancel')}</Button>
           <Button type="primary" onClick={handleSave}>
-            保存
+            {t('fieldDesigner.actions.save')}
           </Button>
         </Space>
       }
@@ -471,130 +480,130 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
           items={[
                   {
                     key: 'basic',
-                    label: '基础设置',
+                    label: t('fieldDesigner.section.basic'),
                     children: (
                       <>
             <Form.Item
-              label="字段名称"
+              label={t('fieldDesigner.form.fieldName')}
               name="name"
               rules={[
-                { required: true, message: '请输入字段名称' },
+                { required: true, message: t('fieldDesigner.form.fieldNameRequired') },
                 {
                   pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/,
-                  message: '只能包含字母、数字和下划线，且以字母或下划线开头',
+                  message: t('fieldDesigner.form.fieldNamePattern'),
                 },
               ]}
-              tooltip="用于数据存储的字段标识符，创建后不建议修改"
+              tooltip={t('fieldDesigner.form.fieldNameTooltip')}
             >
-              <Input placeholder="如：customer_name" />
+              <Input placeholder={t('fieldDesigner.form.fieldNamePlaceholder')} />
             </Form.Item>
 
             <Form.Item
-              label="字段标签"
+              label={t('fieldDesigner.form.fieldLabel')}
               name="label"
-              rules={[{ required: true, message: '请输入字段标签' }]}
-              tooltip="显示给用户的字段名称"
+              rules={[{ required: true, message: t('fieldDesigner.form.fieldLabelRequired') }]}
+              tooltip={t('fieldDesigner.form.fieldLabelTooltip')}
             >
-              <Input placeholder="如：客户姓名" />
+              <Input placeholder={t('fieldDesigner.form.fieldLabelPlaceholder')} />
             </Form.Item>
 
-            <Form.Item label="占位符" name="placeholder">
-              <Input placeholder="输入框的占位提示文字" />
+            <Form.Item label={t('fieldDesigner.form.placeholder')} name="placeholder">
+              <Input placeholder={t('fieldDesigner.form.placeholderHint')} />
             </Form.Item>
 
-            <Form.Item label="帮助文本" name="helpText">
-              <TextArea rows={2} placeholder="帮助用户理解如何填写此字段" />
+            <Form.Item label={t('fieldDesigner.form.helpText')} name="helpText">
+              <TextArea rows={2} placeholder={t('fieldDesigner.form.helpTextPlaceholder')} />
             </Form.Item>
 
-            <Form.Item label="工具提示" name="tooltip">
-              <Input placeholder="鼠标悬停时显示的提示" />
+            <Form.Item label={t('fieldDesigner.form.tooltip')} name="tooltip">
+              <Input placeholder={t('fieldDesigner.form.tooltipPlaceholder')} />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item label="必填" name="required" valuePropName="checked">
+                <Form.Item label={t('fieldDesigner.form.required')} name="required" valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item label="禁用" name="disabled" valuePropName="checked">
+                <Form.Item label={t('fieldDesigner.form.disabled')} name="disabled" valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item label="隐藏" name="hidden" valuePropName="checked">
+                <Form.Item label={t('fieldDesigner.form.hidden')} name="hidden" valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Form.Item label="字段宽度" name="width">
+            <Form.Item label={t('fieldDesigner.form.width')} name="width">
               <Select
-                placeholder="选择字段宽度"
+                placeholder={t('fieldDesigner.form.widthPlaceholder')}
                 options={[
-                  { value: 24, label: '100% (全宽)' },
-                  { value: 12, label: '50% (半宽)' },
-                  { value: 8, label: '33% (三分之一)' },
-                  { value: 6, label: '25% (四分之一)' },
+                  { value: 24, label: t('fieldDesigner.form.widthFull') },
+                  { value: 12, label: t('fieldDesigner.form.widthHalf') },
+                  { value: 8, label: t('fieldDesigner.form.widthThird') },
+                  { value: 6, label: t('fieldDesigner.form.widthQuarter') },
                 ]}
               />
             </Form.Item>
 
-            <Form.Item label="默认值" name="defaultValue">
-              <Input placeholder="字段的默认值" />
+            <Form.Item label={t('fieldDesigner.form.defaultValue')} name="defaultValue">
+              <Input placeholder={t('fieldDesigner.form.defaultValuePlaceholder')} />
             </Form.Item>
                       </>
                     ),
                   },
                   {
                     key: 'validation',
-                    label: '验证规则',
+                    label: t('fieldDesigner.section.validation'),
                     children: (
                       <>
             <Alert
-              message="配置字段的验证规则，确保用户输入符合要求"
+              message={t('fieldDesigner.form.validationIntro')}
               type="info"
               showIcon
               className="mb-4"
             />
 
-            <Form.Item label="最小长度" name={['validation', 'minLength']}>
-              <InputNumber placeholder="字符最小长度" min={0} style={{ width: '100%' }} />
+            <Form.Item label={t('fieldDesigner.form.minLength')} name={['validation', 'minLength']}>
+              <InputNumber placeholder={t('fieldDesigner.form.minLengthPlaceholder')} min={0} style={{ width: '100%' }} />
             </Form.Item>
 
-            <Form.Item label="最大长度" name={['validation', 'maxLength']}>
-              <InputNumber placeholder="字符最大长度" min={0} style={{ width: '100%' }} />
+            <Form.Item label={t('fieldDesigner.form.maxLength')} name={['validation', 'maxLength']}>
+              <InputNumber placeholder={t('fieldDesigner.form.maxLengthPlaceholder')} min={0} style={{ width: '100%' }} />
             </Form.Item>
 
-            <Form.Item label="最小值" name={['validation', 'minValue']}>
-              <InputNumber placeholder="数值最小值" style={{ width: '100%' }} />
+            <Form.Item label={t('fieldDesigner.form.minValue')} name={['validation', 'minValue']}>
+              <InputNumber placeholder={t('fieldDesigner.form.minValuePlaceholder')} style={{ width: '100%' }} />
             </Form.Item>
 
-            <Form.Item label="最大值" name={['validation', 'maxValue']}>
-              <InputNumber placeholder="数值最大值" style={{ width: '100%' }} />
+            <Form.Item label={t('fieldDesigner.form.maxValue')} name={['validation', 'maxValue']}>
+              <InputNumber placeholder={t('fieldDesigner.form.maxValuePlaceholder')} style={{ width: '100%' }} />
             </Form.Item>
 
-            <Form.Item label="正则表达式" name={['validation', 'pattern']}>
-              <Input placeholder="如：^[0-9]{11}$" />
+            <Form.Item label={t('fieldDesigner.form.pattern')} name={['validation', 'pattern']}>
+              <Input placeholder={t('fieldDesigner.form.patternPlaceholder')} />
             </Form.Item>
 
-            <Form.Item label="自定义错误消息" name={['validation', 'customMessage']}>
-              <TextArea rows={2} placeholder="验证失败时显示的错误消息" />
+            <Form.Item label={t('fieldDesigner.form.message')} name={['validation', 'customMessage']}>
+              <TextArea rows={2} placeholder={t('fieldDesigner.form.messagePlaceholder')} />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item label="邮箱格式" name={['validation', 'email']} valuePropName="checked">
+                <Form.Item label={t('fieldDesigner.form.errorEmail')} name={['validation', 'email']} valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item label="URL格式" name={['validation', 'url']} valuePropName="checked">
+                <Form.Item label={t('fieldDesigner.form.errorUrl')} name={['validation', 'url']} valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item label="电话格式" name={['validation', 'phone']} valuePropName="checked">
+                <Form.Item label={t('fieldDesigner.form.errorPhone')} name={['validation', 'phone']} valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </Col>
@@ -604,11 +613,11 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                   },
                   {
                     key: 'options',
-                    label: '选项配置',
+                    label: t('fieldDesigner.section.optionsConfig'),
                     children: (
                       <>
               <Alert
-                message="配置下拉选择、单选、多选等字段的选项"
+                message={t('fieldDesigner.form.optionsIntro')}
                 type="info"
                 showIcon
                 className="mb-4"
@@ -636,25 +645,25 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                           <Col span={10}>
                             <Form.Item
                               {...fieldItem}
-                              label="标签"
+                              label={t('fieldDesigner.form.optionLabel')}
                               name={[fieldItem.name, 'label']}
-                              rules={[{ required: true, message: '请输入标签' }]}
+                              rules={[{ required: true, message: t('fieldDesigner.form.optionLabelRequired') }]}
                             >
-                              <Input placeholder="显示文本" />
+                              <Input placeholder={t('fieldDesigner.form.optionLabelPlaceholder')} />
                             </Form.Item>
                           </Col>
                           <Col span={10}>
                             <Form.Item
                               {...fieldItem}
-                              label="值"
+                              label={t('fieldDesigner.form.optionValue')}
                               name={[fieldItem.name, 'value']}
-                              rules={[{ required: true, message: '请输入值' }]}
+                              rules={[{ required: true, message: t('fieldDesigner.form.optionValueRequired') }]}
                             >
-                              <Input placeholder="实际值" />
+                              <Input placeholder={t('fieldDesigner.form.optionValuePlaceholder')} />
                             </Form.Item>
                           </Col>
                           <Col span={4}>
-                            <Form.Item {...fieldItem} label="颜色" name={[fieldItem.name, 'color']}>
+                            <Form.Item {...fieldItem} label={t('fieldDesigner.form.optionColor')} name={[fieldItem.name, 'color']}>
                               <Input type="color" />
                             </Form.Item>
                           </Col>
@@ -667,7 +676,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                       block
                       icon={<Plus />}
                     >
-                      添加选项
+                      {t('fieldDesigner.form.addOption')}
                     </Button>
                   </>
                 )}
@@ -677,19 +686,19 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                   },
                   {
                     key: 'conditional',
-                    label: '条件显示',
+                    label: t('fieldDesigner.section.conditional'),
                     children: (
                       <>
             <Alert
-              message="根据其他字段的值决定是否显示此字段"
+              message={t('fieldDesigner.form.conditionalIntro')}
               type="info"
               showIcon
               className="mb-4"
             />
 
-            <Form.Item label="依赖字段" name={['conditional', 'field']}>
+            <Form.Item label={t('fieldDesigner.form.conditionalField')} name={['conditional', 'field']}>
               <Select
-                placeholder="选择依赖的字段"
+                placeholder={t('fieldDesigner.form.conditionalFieldPlaceholder')}
                 allowClear
                 showSearch
                 optionFilterProp="children"
@@ -702,55 +711,55 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
               />
             </Form.Item>
 
-            <Form.Item label="条件运算符" name={['conditional', 'operator']}>
+            <Form.Item label={t('fieldDesigner.form.conditionalOperator')} name={['conditional', 'operator']}>
               <Select
-                placeholder="选择运算符"
+                placeholder={t('fieldDesigner.form.conditionalOperatorPlaceholder')}
                 options={[
-                  { value: 'equals', label: '等于 (=)' },
-                  { value: 'not_equals', label: '不等于 (≠)' },
-                  { value: 'contains', label: '包含' },
-                  { value: 'not_contains', label: '不包含' },
-                  { value: 'greater_than', label: '大于 (> )' },
-                  { value: 'less_than', label: '小于 (< )' },
-                  { value: 'in', label: '在列表中' },
-                  { value: 'not_in', label: '不在列表中' },
+                  { value: 'equals', label: t('fieldDesigner.form.operatorEquals') },
+                  { value: 'not_equals', label: t('fieldDesigner.form.operatorNotEquals') },
+                  { value: 'contains', label: t('fieldDesigner.form.operatorContains') },
+                  { value: 'not_contains', label: t('fieldDesigner.form.operatorNotContains') },
+                  { value: 'greater_than', label: t('fieldDesigner.form.operatorGreaterThan') },
+                  { value: 'less_than', label: t('fieldDesigner.form.operatorLessThan') },
+                  { value: 'in', label: t('fieldDesigner.form.operatorIn') },
+                  { value: 'not_in', label: t('fieldDesigner.form.operatorNotIn') },
                 ]}
               />
             </Form.Item>
 
-            <Form.Item label="比较值" name={['conditional', 'value']}>
-              <Input placeholder="要比较的值" />
+            <Form.Item label={t('fieldDesigner.form.conditionalValue')} name={['conditional', 'value']}>
+              <Input placeholder={t('fieldDesigner.form.conditionalValuePlaceholder')} />
             </Form.Item>
                       </>
                     ),
                   },
                   {
                     key: 'advanced',
-                    label: '高级配置',
+                    label: t('fieldDesigner.section.advanced'),
                     children: (
                       <>
             {field.type === 'file_upload' && (
               <>
-                <Form.Item label="最大文件大小（MB）" name="maxFileSize">
+                <Form.Item label={t('fieldDesigner.form.maxFileSize')} name="maxFileSize">
                   <InputNumber min={1} max={100} placeholder="10" style={{ width: '100%' }} />
                 </Form.Item>
 
-                <Form.Item label="允许的文件类型" name="acceptedFileTypes">
+                <Form.Item label={t('fieldDesigner.form.fileTypes')} name="acceptedFileTypes">
                   <Select
                     mode="tags"
-                    placeholder="如：image/*, .pdf, .docx"
+                    placeholder={t('fieldDesigner.form.fileTypesPlaceholder')}
                     options={[
-                      { value: 'image/*', label: '图片 (image/*)' },
-                      { value: 'application/pdf', label: 'PDF' },
-                      { value: '.doc', label: 'Word (.doc)' },
-                      { value: '.docx', label: 'Word (.docx)' },
-                      { value: '.xls', label: 'Excel (.xls)' },
-                      { value: '.xlsx', label: 'Excel (.xlsx)' },
+                      { value: 'image/*', label: t('fieldDesigner.form.fileImage') },
+                      { value: 'application/pdf', label: t('fieldDesigner.form.filePdf') },
+                      { value: '.doc', label: t('fieldDesigner.form.fileDoc') },
+                      { value: '.docx', label: t('fieldDesigner.form.fileDocx') },
+                      { value: '.xls', label: t('fieldDesigner.form.fileXls') },
+                      { value: '.xlsx', label: t('fieldDesigner.form.fileXlsx') },
                     ]}
                   />
                 </Form.Item>
 
-                <Form.Item label="允许多个文件" name="multiple" valuePropName="checked">
+                <Form.Item label={t('fieldDesigner.form.allowMultiple')} name="multiple" valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </>
@@ -760,40 +769,40 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
               field.type
             ) && (
               <>
-                <Form.Item label="显示搜索框" name="showSearch" valuePropName="checked">
+                <Form.Item label={t('fieldDesigner.form.showSearch')} name="showSearch" valuePropName="checked">
                   <Switch />
                 </Form.Item>
 
-                <Form.Item label="允许清空" name="allowClear" valuePropName="checked">
+                <Form.Item label={t('fieldDesigner.form.allowClear')} name="allowClear" valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </>
             )}
 
             {field.type === 'multi_select' && (
-              <Form.Item label="多选模式" name="multiple" valuePropName="checked">
+              <Form.Item label={t('fieldDesigner.form.multipleMode')} name="multiple" valuePropName="checked">
                 <Switch />
               </Form.Item>
             )}
 
             {field.type === 'rich_text' && (
               <>
-                <Form.Item label="编辑器高度" name={['richTextConfig', 'height']}>
+                <Form.Item label={t('fieldDesigner.form.editorHeight')} name={['richTextConfig', 'height']}>
                   <InputNumber min={200} max={800} placeholder="300" style={{ width: '100%' }} />
                 </Form.Item>
 
-                <Form.Item label="工具栏" name={['richTextConfig', 'toolbar']}>
+                <Form.Item label={t('fieldDesigner.form.toolbar')} name={['richTextConfig', 'toolbar']}>
                   <Select
                     mode="multiple"
-                    placeholder="选择工具栏按钮"
+                    placeholder={t('fieldDesigner.form.toolbarPlaceholder')}
                     options={[
-                      { value: 'bold', label: '粗体' },
-                      { value: 'italic', label: '斜体' },
-                      { value: 'underline', label: '下划线' },
-                      { value: 'link', label: '链接' },
-                      { value: 'image', label: '图片' },
-                      { value: 'code', label: '代码' },
-                      { value: 'list', label: '列表' },
+                      { value: 'bold', label: t('fieldDesigner.form.toolbarBold') },
+                      { value: 'italic', label: t('fieldDesigner.form.toolbarItalic') },
+                      { value: 'underline', label: t('fieldDesigner.form.toolbarUnderline') },
+                      { value: 'link', label: t('fieldDesigner.form.toolbarLink') },
+                      { value: 'image', label: t('fieldDesigner.form.toolbarImage') },
+                      { value: 'code', label: t('fieldDesigner.form.toolbarCode') },
+                      { value: 'list', label: t('fieldDesigner.form.toolbarList') },
                     ]}
                   />
                 </Form.Item>
@@ -822,10 +831,13 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
   onChange,
   categoryId,
 }) => {
+  const { t } = useI18n();
   const [fields, setFields] = useState<TemplateField[]>(value);
   const [selectedField, setSelectedField] = useState<TemplateField | null>(null);
   const [fieldTypeFilter, setFieldTypeFilter] = useState<string>('all');
   const { message } = App.useApp();
+
+  const FIELD_TYPES = React.useMemo(() => createFieldTypes(t as unknown as (key: string) => string), [t]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -866,7 +878,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
     const newField: TemplateField = {
       id: `field_${Date.now()}`,
       name: `field_${fields.length + 1}`,
-      label: `新字段 ${fields.length + 1}`,
+      label: t('fieldDesigner.categories.newField') + ' ' + (fields.length + 1),
       type: typeConfig.type,
       required: false,
       order: fields.length,
@@ -875,7 +887,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
 
     handleFieldsChange([...fields, newField]);
     setSelectedField(newField);
-    message.success('字段已添加');
+    message.success(t('fieldDesigner.messages.fieldAdded'));
   };
 
   const handleEditField = (field: TemplateField) => {
@@ -890,15 +902,15 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
 
   const handleDeleteField = (id: string) => {
     Modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这个字段吗？此操作不可撤销。',
+      title: t('fieldDesigner.messages.confirmDeleteTitle'),
+      content: t('fieldDesigner.messages.confirmDeleteContent'),
       onOk: () => {
         const newFields = fields.filter(f => f.id !== id);
         handleFieldsChange(newFields);
         if (selectedField?.id === id) {
           setSelectedField(null);
         }
-        message.success('字段已删除');
+        message.success(t('fieldDesigner.messages.fieldDeleted'));
       },
     });
   };
@@ -908,12 +920,12 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
       ...field,
       id: `field_${Date.now()}`,
       name: `${field.name}_copy`,
-      label: `${field.label} (副本)`,
+      label: `${field.label} ${t('fieldDesigner.categories.copySuffix')}`,
       order: fields.length,
     };
 
     handleFieldsChange([...fields, newField]);
-    message.success('字段已复制');
+    message.success(t('fieldDesigner.messages.fieldDuplicated'));
   };
 
   const handleMoveUp = (index: number) => {
@@ -943,7 +955,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
         {/* 左侧：字段类型面板 */}
         <Col span={5}>
           <Card
-            title="字段类型"
+            title={t('fieldDesigner.categories.fieldTypes')}
             extra={
               <Select
                 size="small"
@@ -951,10 +963,10 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
                 onChange={setFieldTypeFilter}
                 style={{ width: 100 }}
                 options={[
-                  { value: 'all', label: '全部' },
-                  { value: 'basic', label: '基础' },
-                  { value: 'advanced', label: '高级' },
-                  { value: 'special', label: '特殊' },
+                  { value: 'all', label: t('fieldDesigner.categories.all') },
+                  { value: 'basic', label: t('fieldDesigner.categories.basic') },
+                  { value: 'advanced', label: t('fieldDesigner.categories.advanced') },
+                  { value: 'special', label: t('fieldDesigner.categories.special') },
                 ]}
               />
             }
@@ -989,7 +1001,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
           <Card
             title={
               <div className="flex items-center justify-between">
-                <span>字段列表</span>
+                <span>{t('fieldDesigner.categories.fieldList')}</span>
                 <Badge count={fields.length} showZero color="blue" />
               </div>
             }
@@ -998,7 +1010,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
           >
             {fields.length === 0 ? (
               <Empty
-                description="暂无字段，请从左侧添加字段"
+                description={t('fieldDesigner.messages.noFields')}
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
               />
             ) : (
@@ -1023,6 +1035,8 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
                       onMoveDown={handleMoveDown}
                       isFirst={index === 0}
                       isLast={index === fields.length - 1}
+                      fieldTypes={FIELD_TYPES}
+                      t={t}
                     />
                   ))}
                 </SortableContext>
@@ -1038,6 +1052,8 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
             allFields={fields}
             onSave={handleSaveField}
             onCancel={() => setSelectedField(null)}
+            fieldTypes={FIELD_TYPES}
+            t={t}
           />
         </Col>
       </Row>

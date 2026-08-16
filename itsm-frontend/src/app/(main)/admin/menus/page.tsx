@@ -21,7 +21,6 @@ import {
   Table,
   Button,
   Input,
-  Select,
   Space,
   Typography,
   Modal,
@@ -39,10 +38,12 @@ import {
   AutoComplete,
   Popover,
 } from 'antd';
+import AppSelect from '@/components/ui/AppSelect';
 import type { ColumnsType } from 'antd/es/table';
 import { MenuAdminAPI, notifyMenusUpdated, type MenuItem } from '@/lib/api/menu-api';
 import { RoleAPI } from '@/lib/api/role-api';
 import { iconMap, getIconByName } from '@/components/layout/sidebar/icons';
+import { useI18n } from '@/lib/i18n';
 import { buildMenuTree, collectMenuDescendantIds } from './menuTreeUtils';
 
 const { Title, Text } = Typography;
@@ -55,6 +56,7 @@ const { Title, Text } = Typography;
  * - 图标选择器 + 权限码自动补全
  */
 export default function MenuManagementPage() {
+  const { t } = useI18n();
   const { message: antMessage } = App.useApp();
   const [menus, setMenus] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -77,7 +79,7 @@ export default function MenuManagementPage() {
       setMenus(res.menus || []);
     } catch (err) {
       console.error('Failed to load menus', err);
-      antMessage.error('加载菜单列表失败');
+      antMessage.error(t('menus.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -171,10 +173,10 @@ export default function MenuManagementPage() {
       };
       if (editing) {
         await MenuAdminAPI.update(editing.id, payload);
-        antMessage.success('菜单更新成功');
+        antMessage.success(t('menus.updateSuccess'));
       } else {
         await MenuAdminAPI.create(payload);
-        antMessage.success('菜单创建成功');
+        antMessage.success(t('menus.createSuccess'));
       }
       setShowModal(false);
       setEditing(null);
@@ -187,7 +189,7 @@ export default function MenuManagementPage() {
         return;
       }
       console.error('Save menu failed', err);
-      antMessage.error(err?.message || '保存菜单失败');
+      antMessage.error(err?.message || t('common.saveFailed'));
     } finally {
       setLoading(false);
     }
@@ -197,12 +199,12 @@ export default function MenuManagementPage() {
   const handleDelete = async (id: number) => {
     try {
       await MenuAdminAPI.remove(id);
-      antMessage.success('菜单已删除');
+      antMessage.success(t('menus.deleteSuccess'));
       notifyMenusUpdated();
       loadMenus();
     } catch (err: any) {
       console.error('Delete menu failed', err);
-      antMessage.error(err?.message || '删除失败');
+      antMessage.error(err?.message || t('common.deleteFailed'));
     }
   };
 
@@ -210,11 +212,11 @@ export default function MenuManagementPage() {
   const toggleEnabled = async (record: MenuItem) => {
     try {
       await MenuAdminAPI.update(record.id, { isEnabled: !record.isEnabled });
-      antMessage.success(record.isEnabled ? '已禁用' : '已启用');
+      antMessage.success(record.isEnabled ? t('menus.disabled') : t('menus.enabled'));
       notifyMenusUpdated();
       loadMenus();
     } catch (err: any) {
-      antMessage.error(err?.message || '操作失败');
+      antMessage.error(err?.message || t('common.operationFailed'));
     }
   };
 
@@ -222,11 +224,11 @@ export default function MenuManagementPage() {
   const toggleVisible = async (record: MenuItem) => {
     try {
       await MenuAdminAPI.update(record.id, { isVisible: !record.isVisible });
-      antMessage.success(record.isVisible ? '已隐藏' : '已显示');
+      antMessage.success(record.isVisible ? t('menus.hidden') : t('menus.visible'));
       notifyMenusUpdated();
       loadMenus();
     } catch (err: any) {
-      antMessage.error(err?.message || '操作失败');
+      antMessage.error(err?.message || t('common.operationFailed'));
     }
   };
 
@@ -239,14 +241,14 @@ export default function MenuManagementPage() {
 
   const columns: ColumnsType<MenuItem> = [
     {
-      title: '排序',
+      title: t('menus.sortOrder'),
       dataIndex: 'sortOrder',
       width: 80,
       sorter: (a, b) => a.sortOrder - b.sortOrder,
       render: (v: number) => <Tag color="blue">{v}</Tag>,
     },
     {
-      title: '名称',
+      title: t('menus.menuName'),
       dataIndex: 'name',
       width: 160,
       render: (v: string, r) => (
@@ -259,14 +261,14 @@ export default function MenuManagementPage() {
       ),
     },
     {
-      title: '路径',
+      title: t('menus.menuPath'),
       dataIndex: 'path',
       render: (v: string) => (
         <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">{v || '-'}</code>
       ),
     },
     {
-      title: '图标',
+      title: t('menus.icon'),
       dataIndex: 'icon',
       width: 130,
       render: (v?: string) =>
@@ -280,41 +282,41 @@ export default function MenuManagementPage() {
         ),
     },
     {
-      title: '权限码',
+      title: t('menus.permissionCode'),
       dataIndex: 'permissionCode',
       width: 160,
       render: (v?: string) =>
-        v ? <Tag color="purple">{v}</Tag> : <span className="text-gray-400">无</span>,
-    },
+        v ? <Tag color="purple">{v}</Tag> : <span className="text-gray-400">{t('menus.none')}</span>,
+      },
     {
-      title: '状态',
+      title: t('menus.statusColumn'),
       key: 'status',
       width: 170,
       render: (_: unknown, r) => (
         <Space size={4}>
-          <Tooltip title={r.isEnabled ? '点击禁用' : '点击启用'}>
+          <Tooltip title={r.isEnabled ? t('menus.toggleDisableTooltip') : t('menus.toggleEnableTooltip')}>
             <Tag
               color={r.isEnabled ? 'green' : 'default'}
               onClick={() => toggleEnabled(r)}
               style={{ cursor: 'pointer' }}
             >
-              {r.isEnabled ? '已启用' : '已禁用'}
+              {r.isEnabled ? t('menus.enabled') : t('menus.disabled')}
             </Tag>
           </Tooltip>
-          <Tooltip title={r.isVisible ? '点击隐藏' : '点击显示'}>
+          <Tooltip title={r.isVisible ? t('menus.toggleHideTooltip') : t('menus.toggleShowTooltip')}>
             <Tag
               color={r.isVisible ? 'cyan' : 'default'}
               onClick={() => toggleVisible(r)}
               style={{ cursor: 'pointer' }}
             >
-              {r.isVisible ? '可见' : '隐藏'}
+              {r.isVisible ? t('menus.visibleLabel') : t('menus.hiddenLabel')}
             </Tag>
           </Tooltip>
         </Space>
       ),
     },
     {
-      title: '父菜单',
+      title: t('menus.parentMenu'),
       dataIndex: 'parentId',
       width: 140,
       render: (v?: number | null) => {
@@ -324,24 +326,24 @@ export default function MenuManagementPage() {
       },
     },
     {
-      title: '操作',
+      title: t('common.actions'),
       key: 'actions',
       width: 160,
       fixed: 'right',
       render: (_: unknown, record) => (
         <Space size="small">
-          <Tooltip title="编辑">
+          <Tooltip title={t('common.edit')}>
             <Button type="text" icon={<Edit className="w-4 h-4" />} onClick={() => openEdit(record)} />
           </Tooltip>
           <Popconfirm
-            title="确认删除"
-            description="删除后不可恢复，关联的子菜单会变成根菜单。"
+            title={t('common.confirmDelete')}
+            description={t('menus.deleteWarning', { name: '删除后不可恢复，关联的子菜单会变成根菜单。' })}
             onConfirm={() => handleDelete(record.id)}
-            okText="删除"
-            cancelText="取消"
+            okText={t('common.delete')}
+            cancelText={t('common.cancel')}
             okButtonProps={{ danger: true }}
           >
-            <Tooltip title="删除">
+            <Tooltip title={t('common.delete')}>
               <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
             </Tooltip>
           </Popconfirm>
@@ -355,20 +357,20 @@ export default function MenuManagementPage() {
       <div>
         <Title level={2} className="!mb-2">
           <MenuIcon className="inline-block w-6 h-6 mr-2" />
-          菜单管理
+          {t('menus.title')}
         </Title>
-        <Text type="secondary">管理侧边栏菜单：新增、编辑、删除，以及启用/禁用、显示/隐藏。</Text>
+        <Text type="secondary">{t('menus.description')}</Text>
       </div>
 
       <Alert
         type="info"
         showIcon
-        message="使用须知"
+        message={t('menus.usageTip')}
         description={
           <div>
-            <div>• 菜单可关联权限码，系统会按角色权限决定是否向用户展示；留空则对所有用户可见。</div>
-            <div>• 排序数字越小越靠前，建议预留间隔（如 10、20、30）便于后续插入新菜单。</div>
-            <div>• 「隐藏」的菜单保留配置但不在侧边栏展示；「禁用」的菜单则完全不生效。</div>
+            <div>• {t('menus.usageTipLine1')}</div>
+            <div>• {t('menus.usageTipLine2')}</div>
+            <div>• {t('menus.usageTipLine3')}</div>
           </div>
         }
       />
@@ -377,7 +379,7 @@ export default function MenuManagementPage() {
         <Col xs={12} md={6}>
           <Card>
             <Statistic
-              title="总菜单数"
+              title={t('menus.totalMenus')}
               value={stats.total}
               prefix={<Hash className="w-5 h-5" />}
             />
@@ -386,7 +388,7 @@ export default function MenuManagementPage() {
         <Col xs={12} md={6}>
           <Card>
             <Statistic
-              title="已启用"
+              title={t('menus.enabledMenus')}
               value={stats.enabled}
               prefix={<Power className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
@@ -396,7 +398,7 @@ export default function MenuManagementPage() {
         <Col xs={12} md={6}>
           <Card>
             <Statistic
-              title="已禁用"
+              title={t('menus.disabledMenus')}
               value={stats.disabled}
               prefix={<PowerOff className="w-5 h-5" />}
               styles={{ content: { color: '#ff4d4f' } }}
@@ -406,7 +408,7 @@ export default function MenuManagementPage() {
         <Col xs={12} md={6}>
           <Card>
             <Statistic
-              title="已隐藏"
+              title={t('menus.hiddenMenus')}
               value={stats.hidden}
               prefix={<EyeOff className="w-5 h-5" />}
               styles={{ content: { color: '#faad14' } }}
@@ -419,7 +421,7 @@ export default function MenuManagementPage() {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={10} lg={8}>
             <Input
-              placeholder="搜索 名称 / 路径 / 权限码 / 图标"
+              placeholder={t('menus.searchPlaceholder')}
               prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
@@ -427,25 +429,25 @@ export default function MenuManagementPage() {
             />
           </Col>
           <Col xs={24} md={8} lg={6}>
-            <Select
+            <AppSelect
               value={statusFilter}
               onChange={setStatusFilter}
-              style={{ width: '100%' }}
               options={[
-                { value: 'all', label: '全部状态' },
-                { value: 'enabled', label: '已启用' },
-                { value: 'disabled', label: '已禁用' },
-                { value: 'hidden', label: '已隐藏' },
+                { value: 'all', label: t('menus.allStatus') },
+                { value: 'visible', label: t('menus.visibleStatus') },
+                { value: 'hidden', label: t('menus.hiddenStatus') },
+                { value: 'enabled', label: t('menus.enabledStatus') },
+                { value: 'disabled', label: t('menus.disabledStatus') },
               ]}
             />
           </Col>
           <Col xs={24} md={6} lg={10} className="text-right">
             <Space>
               <Button icon={<RefreshCw className="w-4 h-4" />} onClick={loadMenus} loading={loading}>
-                刷新
+                {t('menus.refresh')}
               </Button>
               <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={openCreate}>
-                新建菜单
+                {t('menus.createMenu')}
               </Button>
             </Space>
           </Col>
@@ -462,7 +464,7 @@ export default function MenuManagementPage() {
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: t => `共 ${t} 条`,
+            showTotal: total => t('menus.totalLabel', { total }),
             pageSize: 20,
           }}
           scroll={{ x: 1100 }}
@@ -473,7 +475,7 @@ export default function MenuManagementPage() {
         title={
           <span>
             {editing ? <Edit className="w-4 h-4 mr-2 inline-block" /> : <Plus className="w-4 h-4 mr-2 inline-block" />}
-            {editing ? '编辑菜单' : '新建菜单'}
+            {editing ? t('menus.editMenu') : t('menus.createMenu')}
           </span>
         }
         open={showModal}
@@ -484,37 +486,37 @@ export default function MenuManagementPage() {
           form.resetFields();
         }}
         confirmLoading={loading}
-        okText="保存"
-        cancelText="取消"
+        okText={t('common.save')}
+        cancelText={t('common.cancel')}
         width={680}
       >
         <Form form={form} layout="vertical" className="mt-4" preserve={false}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="菜单名称"
+                label={t('menus.menuName')}
                 name="name"
-                rules={[{ required: true, message: '请输入菜单名称' }]}
+                rules={[{ required: true, message: t('common.required') }]}
               >
-                <Input placeholder="如：SLA 模板" />
+                <Input placeholder={t('menus.menuNamePlaceholder')} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="路径"
+                label={t('menus.menuPath')}
                 name="path"
                 rules={[
-                  { required: true, message: '请输入路由路径' },
+                  { required: true, message: t('menus.pathRequired', { name: '请输入路由路径' }) },
                   {
                     pattern: /^\/[\w\-./]*$/,
-                    message: '路径必须以 / 开头，仅支持字母、数字、- _ . /',
+                    message: t('menus.pathFormatError', { name: '路径必须以 / 开头，仅支持字母、数字、- _ . /' }),
                   },
                 ]}
-                tooltip="前端路由地址，例如 /admin/sla-templates"
+                tooltip={t('menus.pathTooltip', { name: '前端路由地址，例如 /admin/sla-templates' })}
               >
                 <Input
                   prefix={<LinkIcon className="w-4 h-4 text-gray-400" />}
-                  placeholder="/admin/sla-templates"
+                  placeholder={t('menus.pathPlaceholder', { name: '/admin/sla-templates' })}
                 />
               </Form.Item>
             </Col>
@@ -523,16 +525,16 @@ export default function MenuManagementPage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="图标"
+                label={t('menus.icon')}
                 name="icon"
-                tooltip="Lucide React 图标名，可手输或从列表选择"
+                tooltip={t('menus.iconTooltip', { name: 'Lucide React 图标名，可手输或从列表选择' })}
               >
                 <Input
-                  placeholder="如：Layers / BarChart3"
+                  placeholder={t('menus.iconPlaceholder')}
                   addonBefore={getIconByName(iconValue) ?? <MenuIcon className="w-4 h-4 text-gray-300" />}
                   addonAfter={
                     <Popover
-                      title="选择图标"
+                      title={t('menus.selectIcon')}
                       trigger="click"
                       open={iconPickerOpen}
                       onOpenChange={setIconPickerOpen}
@@ -564,7 +566,7 @@ export default function MenuManagementPage() {
                         </div>
                       }
                     >
-                      <span style={{ cursor: 'pointer' }}>选择</span>
+                      <span style={{ cursor: 'pointer' }}>{t('menus.selectLabel')}</span>
                     </Popover>
                   }
                 />
@@ -572,9 +574,9 @@ export default function MenuManagementPage() {
             </Col>
             <Col span={12}>
               <Form.Item
-                label="排序"
+                label={t('menus.sortOrder')}
                 name="sortOrder"
-                rules={[{ required: true, message: '请输入排序号' }]}
+                rules={[{ required: true, message: t('menus.sortOrderRequired', { name: '请输入排序号' }) }]}
               >
                 <InputNumber min={0} max={9999} style={{ width: '100%' }} />
               </Form.Item>
@@ -584,14 +586,14 @@ export default function MenuManagementPage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="权限码"
+                label={t('menus.permissionCode')}
                 name="permissionCode"
-                tooltip="菜单关联的权限码，留空则对所有登录用户可见"
+                tooltip={t('menus.permissionCodeTooltip', { name: '菜单关联的权限码，留空则对所有登录用户可见' })}
               >
                 <AutoComplete
                   options={permissionOptions}
                   allowClear
-                  placeholder="如：sla:write（支持从已有权限码中选择）"
+                  placeholder={t('menus.permissionCodePlaceholder')}
                   filterOption={(input, option) =>
                     String(option?.value ?? '')
                       .toLowerCase()
@@ -601,29 +603,29 @@ export default function MenuManagementPage() {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="父菜单" name="parentId" tooltip="二级菜单需指定父菜单">
-                <Select allowClear placeholder="无（顶级菜单）" showSearch optionFilterProp="label"
+              <Form.Item label={t('menus.parentMenu')} name="parentId" tooltip={t('menus.parentMenuTooltip', { name: '二级菜单需指定父菜单' })}>
+                <AppSelect allowClear placeholder={t('menus.topLevelMenu')}
                 options={parentOptions.map(p => ({ value: p.id, label: p.name }))}
               />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item label="描述" name="description">
-            <Input.TextArea rows={2} maxLength={200} showCount placeholder="可选：菜单用途说明" />
+          <Form.Item label={t('common.description')} name="description">
+            <Input.TextArea rows={2} maxLength={200} showCount placeholder={t('menus.descriptionPlaceholder')} />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="启用" name="isEnabled" valuePropName="checked">
-                <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+              <Form.Item label={t('menus.isEnabled')} name="isEnabled" valuePropName="checked">
+                <Switch checkedChildren={t('menus.enabled')} unCheckedChildren={t('menus.disabled')} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="可见" name="isVisible" valuePropName="checked">
+              <Form.Item label={t('menus.isVisible')} name="isVisible" valuePropName="checked">
                 <Switch
-                  checkedChildren={<><Eye className="w-3 h-3 mr-1 inline-block" />显示</>}
-                  unCheckedChildren={<><EyeOff className="w-3 h-3 mr-1 inline-block" />隐藏</>}
+                  checkedChildren={<><Eye className="w-3 h-3 mr-1 inline-block" />{t('menus.showLabel')}</>}
+                  unCheckedChildren={<><EyeOff className="w-3 h-3 mr-1 inline-block" />{t('menus.hideLabel')}</>}
                 />
               </Form.Item>
             </Col>

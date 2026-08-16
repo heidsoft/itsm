@@ -18,12 +18,12 @@ import {
   Row,
   Col,
   App,
-  Empty,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { Search, Plus, Pencil, Eye, RefreshCw } from 'lucide-react';
+import { Search, Plus, Pencil, Eye, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
+import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 
 import { IncidentApi } from '@/lib/api/';
 import type {
@@ -224,12 +224,33 @@ const IncidentList: React.FC = () => {
         loading={loading}
         scroll={{ x: 'max-content' }}
         locale={{
-          emptyText: (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={loadError ? '事件列表加载失败' : '暂无事件数据'}>
-              {loadError ? <Button type="primary" onClick={loadData}>重新加载</Button> :
-                <Button type="primary" onClick={() => router.push('/incidents/create')}>创建第一个事件</Button>}
-            </Empty>
-          ),
+          emptyText:
+            loading && data.length === 0 ? (
+              <LoadingEmptyError state="loading" minHeight={200} />
+            ) : loadError ? (
+              <LoadingEmptyError
+                state="error"
+                minHeight={200}
+                error={{
+                  title: '加载失败',
+                  description: '事件列表加载失败',
+                  actionText: '重试',
+                  onAction: loadData,
+                }}
+              />
+            ) : (
+              <LoadingEmptyError
+                state="empty"
+                minHeight={200}
+                empty={{
+                  title: '暂无事件数据',
+                  description: '当前没有事件数据',
+                  icon: <AlertTriangle size={48} />,
+                  actionText: '创建第一个事件',
+                  onAction: () => router.push('/incidents/create'),
+                }}
+              />
+            ),
         }}
         pagination={{
           current: query.page,

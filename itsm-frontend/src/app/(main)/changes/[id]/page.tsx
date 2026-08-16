@@ -14,6 +14,7 @@ import {
   type ApprovalStepStatus,
 } from '@/components/business/detail-tabs';
 import dayjs from 'dayjs';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const formatDateTime = (v?: string) => (v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-');
 
@@ -35,6 +36,7 @@ function mapApprovalStatus(status: string): ApprovalStepStatus {
 }
 
 export default function ChangeDetailPage() {
+  const { t } = useI18n();
   const params = useParams();
   const id = params?.id as string;
   const numericId = Number(id);
@@ -87,11 +89,11 @@ export default function ChangeDetailPage() {
                   label: (
                     <span>
                       <GitBranch size={14} className="inline mr-1" />
-                      审批时间线
+                      {t('detailTabs.approvals')}
                     </span>
                   ),
                   children: approvalLoading ? (
-                    <div className="p-6 text-center">加载中...</div>
+                    <div className="p-6 text-center">{t('common.loading')}</div>
                   ) : (
                     <ApprovalTimeline
                       approvals={approvals}
@@ -106,7 +108,7 @@ export default function ChangeDetailPage() {
                   label: (
                     <span>
                       <HistoryIcon size={14} className="inline mr-1" />
-                      历史（审计日志）
+                      {t('detailTabs.history')}
                     </span>
                   ),
                   children: (

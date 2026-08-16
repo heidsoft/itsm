@@ -96,7 +96,7 @@ const TicketList: React.FC<TicketListProps> = ({
   useEffect(() => {
     if (advancedFilters === undefined) return;
     updateFilters(advancedFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [advancedFiltersKey]);
 
   const openTicket = useCallback(

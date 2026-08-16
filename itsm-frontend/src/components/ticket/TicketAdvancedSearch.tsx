@@ -6,7 +6,6 @@ import {
   Form,
   Input,
   Select,
-  DatePicker,
   Button,
   Space,
   Row,
@@ -20,10 +19,10 @@ import {
 } from 'antd';
 import { Search, Filter, Save, RotateCcw } from 'lucide-react';
 import type { FormInstance } from 'antd';
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import type { RangePickerProps } from 'antd/es/date-picker';
+import { AppDateRangePicker } from '@/components/ui/AppDatePicker';
 
-const { RangePicker } = DatePicker;
 const { Panel } = Collapse;
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -244,11 +243,9 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
     <Row gutter={[16, 0]}>
       <Col span={12}>
         <Form.Item label="创建时间" name="created_range">
-          <RangePicker
-            style={{ width: '100%' }}
+          <AppDateRangePicker
             ranges={quickDateRanges}
-            format="YYYY-MM-DD"
-            onChange={dates => {
+            onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
                   createdAfter: dates[0].format('YYYY-MM-DD'),
@@ -263,11 +260,9 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
       </Col>
       <Col span={12}>
         <Form.Item label="更新时间" name="updated_range">
-          <RangePicker
-            style={{ width: '100%' }}
+          <AppDateRangePicker
             ranges={quickDateRanges}
-            format="YYYY-MM-DD"
-            onChange={dates => {
+            onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
                   updatedAfter: dates[0].format('YYYY-MM-DD'),
@@ -282,11 +277,9 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
       </Col>
       <Col span={12}>
         <Form.Item label="截止时间" name="due_range">
-          <RangePicker
-            style={{ width: '100%' }}
+          <AppDateRangePicker
             ranges={quickDateRanges}
-            format="YYYY-MM-DD"
-            onChange={dates => {
+            onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
                   dueAfter: dates[0].format('YYYY-MM-DD'),
@@ -301,11 +294,9 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
       </Col>
       <Col span={12}>
         <Form.Item label="解决时间" name="resolved_range">
-          <RangePicker
-            style={{ width: '100%' }}
+          <AppDateRangePicker
             ranges={quickDateRanges}
-            format="YYYY-MM-DD"
-            onChange={dates => {
+            onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
                   resolvedAfter: dates[0].format('YYYY-MM-DD'),

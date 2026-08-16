@@ -34,11 +34,13 @@ import type { ColumnsType } from 'antd/es/table';
 import type { Team, CreateTeamRequest } from '@/lib/services/team-service';
 import { teamService } from '@/lib/services/team-service';
 import { UserApi } from '@/lib/api/user-api';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 export default function TeamManagement() {
+  const { t } = useI18n();
   const { message } = App.useApp();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,7 +59,7 @@ export default function TeamManagement() {
       setTeams(data);
     } catch (error) {
       console.error('Failed to load teams:', error);
-      message.error('加载团队数据失败');
+      message.error(t('teamsPage.messages.loadFailed'));
     } finally {
       setFetching(false);
     }
@@ -109,11 +111,11 @@ export default function TeamManagement() {
       if (selectedTeam) {
         // 更新
         await teamService.updateTeam(selectedTeam.id, values);
-        message.success('团队更新成功');
+        message.success(t('teamsPage.messages.updateSuccess'));
       } else {
         // 创建
         await teamService.createTeam(values as CreateTeamRequest);
-        message.success('团队创建成功');
+        message.success(t('teamsPage.messages.createSuccess'));
       }
 
       setShowModal(false);
@@ -122,7 +124,7 @@ export default function TeamManagement() {
       loadTeams();
     } catch (error) {
       console.error('Failed to save team:', error);
-      message.error('保存团队失败');
+      message.error(t('teamsPage.messages.saveFailed'));
     } finally {
       setLoading(false);
     }
@@ -132,11 +134,11 @@ export default function TeamManagement() {
   const handleDelete = async (id: number) => {
     try {
       await teamService.deleteTeam(id);
-      message.success('团队删除成功');
+      message.success(t('teamsPage.messages.deleteSuccess'));
       loadTeams();
     } catch (error) {
       console.error('Failed to delete team:', error);
-      message.error('删除团队失败');
+      message.error(t('teamsPage.messages.deleteFailed'));
     }
   };
 
@@ -155,19 +157,19 @@ export default function TeamManagement() {
   // 表格列定义
   const columns: ColumnsType<Team> = [
     {
-      title: '团队名称',
+      title: t('teamsPage.teamName'),
       dataIndex: 'name',
       key: 'name',
       render: (text: string) => <span className="font-medium">{text}</span>,
     },
     {
-      title: '团队编码',
+      title: t('teamsPage.teamCode'),
       dataIndex: 'code',
       key: 'code',
       render: (text: string) => <Tag color="green">{text}</Tag>,
     },
     {
-      title: '团队经理',
+      title: t('teamsPage.manager'),
       dataIndex:'managerId',
       key: 'manager',
       render: (managerId: number) => {
@@ -176,7 +178,7 @@ export default function TeamManagement() {
       },
     },
     {
-      title: '成员',
+      title: t('teamsPage.members'),
       key: 'members',
       render: (_: unknown, record: Team) => {
         const members = record.edges?.users || [];
@@ -194,13 +196,13 @@ export default function TeamManagement() {
       },
     },
     {
-      title: '描述',
+      title: t('common.description'),
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
     },
     {
-      title: '操作',
+      title: t('common.action'),
       key: 'actions',
       width: 150,
       render: (_: unknown, record: Team) => (
@@ -211,11 +213,11 @@ export default function TeamManagement() {
             onClick={() => handleEdit(record)}
           />
           <Popconfirm
-            title="确认删除"
-            description={`确定要删除团队"${record.name}"吗？`}
+            title={t("common.confirmDelete")}
+            description={t("teamsPage.confirmDeleteContent", { name: record.name })}
             onConfirm={() => handleDelete(record.id)}
-            okText="确认"
-            cancelText="取消"
+            okText={t("common.confirm")}
+            cancelText={t("common.cancel")}
           >
             <Button type="text" danger icon={<Trash2 size={16} />} />
           </Popconfirm>
@@ -229,9 +231,9 @@ export default function TeamManagement() {
       <div>
         <Title level={2} className="!mb-2">
           <Users className="mr-2" />
-          团队管理
+          {t('teamsPage.title')}
         </Title>
-        <Text type="secondary">管理团队和团队成员</Text>
+        <Text type="secondary">{t('teamsPage.description')}</Text>
       </div>
 
       {/* 统计卡片 */}
@@ -239,7 +241,7 @@ export default function TeamManagement() {
         <Col xs={24} sm={12} lg={8}>
           <Card className="enterprise-card">
             <Statistic
-              title="团队总数"
+              title={t("teamsPage.stats.total")}
               value={stats.totalTeams}
               prefix={<Users />}
             />
@@ -248,7 +250,7 @@ export default function TeamManagement() {
         <Col xs={24} sm={12} lg={8}>
           <Card className="enterprise-card">
             <Statistic
-              title="团队成员总数"
+              title={t("teamsPage.stats.totalMembers")}
               value={stats.totalMembers}
               prefix={<Users />}
             />
@@ -261,7 +263,7 @@ export default function TeamManagement() {
         <Space wrap>
           <Input
             allowClear
-            placeholder="搜索团队名称、编码或描述"
+            placeholder={t("teamsPage.searchPlaceholder")}
             prefix={<Search size={16} />}
             value={searchTerm}
             onChange={event => setSearchTerm(event.target.value)}
@@ -276,14 +278,14 @@ export default function TeamManagement() {
               setShowModal(true);
             }}
           >
-            新建团队
+            {t('teamsPage.create')}
           </Button>
           <Button
             icon={<RefreshCw size={16} />}
             onClick={() => loadTeams()}
             loading={fetching}
           >
-            刷新
+            {t('common.refresh')}
           </Button>
         </Space>
       </Card>
@@ -298,9 +300,9 @@ export default function TeamManagement() {
           scroll={{ x: 820 }}
           locale={{
             emptyText: (
-              <Empty description={searchTerm ? '没有匹配的团队' : '暂无团队'}>
+              <Empty description={searchTerm ? t('teamsPage.empty.searchEmpty') : t('teamsPage.empty.noData')}>
                 <Button type="primary" onClick={() => setShowModal(true)}>
-                  新建团队
+                  {t('teamsPage.create')}
                 </Button>
               </Empty>
             ),
@@ -309,7 +311,7 @@ export default function TeamManagement() {
             total: filteredTeams.length,
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: total => `共 ${total} 条记录`,
+            showTotal: total => t('common.totalLabel', { total }),
           }}
           className="enterprise-table"
         />
@@ -320,7 +322,7 @@ export default function TeamManagement() {
         title={
           <span>
             <Edit className="w-4 h-4 mr-2" />
-            {selectedTeam ? '编辑团队' : '新建团队'}
+            {selectedTeam ? t('teamsPage.edit') : t('teamsPage.create')}
           </span>
         }
         open={showModal}
@@ -332,40 +334,40 @@ export default function TeamManagement() {
         }}
         width={600}
         confirmLoading={loading}
-        okText="保存"
-        cancelText="取消"
+        okText={t("common.save")}
+        cancelText={t("common.cancel")}
       >
         <Form form={form} layout="vertical" className="mt-4">
           <Form.Item
-            label="团队名称"
+            label={t("teamsPage.teamName")}
             name="name"
-            rules={[{ required: true, message: '请输入团队名称' }]}
+            rules={[{ required: true, message: t('teamsPage.form.requiredName') }]}
           >
-            <Input placeholder="请输入团队名称" />
+            <Input placeholder={t("teamsPage.form.namePlaceholder")} />
           </Form.Item>
           <Form.Item
-            label="团队编码"
+            label={t("teamsPage.teamCode")}
             name="code"
-            rules={[{ required: true, message: '请输入团队编码' }]}
+            rules={[{ required: true, message: t('teamsPage.form.requiredCode') }]}
           >
-            <Input placeholder="请输入团队编码（如：TEAM001）" />
+            <Input placeholder={t("teamsPage.form.codePlaceholder")} />
           </Form.Item>
           <Form.Item
-            label="团队经理"
+            label={t("teamsPage.manager")}
             name="manager_id"
           >
             <Select
-              placeholder="选择团队经理"
+              placeholder={t("teamsPage.form.managerPlaceholder")}
               options={users}
               allowClear
               style={{ width: '100%' }}
             />
           </Form.Item>
           <Form.Item
-            label="描述"
+            label={t("common.description")}
             name="description"
           >
-            <TextArea rows={3} placeholder="请输入团队描述" />
+            <TextArea rows={3} placeholder={t("teamsPage.form.descriptionPlaceholder")} />
           </Form.Item>
         </Form>
       </Modal>

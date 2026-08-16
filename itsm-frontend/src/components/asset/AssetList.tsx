@@ -19,12 +19,12 @@ import {
   Statistic,
   Row,
   Col,
-  Empty,
   message,
 } from 'antd';
 import { Search, Plus, Pencil, Eye, Monitor } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
+import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 
 import { AssetApi, AssetStatus, AssetType } from '@/lib/api/asset-api';
 
@@ -53,6 +53,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<any>({});
@@ -65,6 +66,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
 
   const loadData = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const values = await form.validateFields();
       const resp = await AssetApi.getAssets({
@@ -74,6 +76,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
       setData(resp.assets || []);
       setTotal(resp.total || 0);
     } catch (error) {
+      setLoadError(true);
       message.error('加载资产列表失败');
     } finally {
       setLoading(false);
@@ -344,11 +347,17 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
           scroll={{ x: 'max-content' }}
           locale={{
             emptyText: (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无资产数据">
-                <Button type="primary" onClick={() => router.push('/assets/new')}>
-                  创建第一个资产
-                </Button>
-              </Empty>
+              <LoadingEmptyError
+                state="empty"
+                empty={{
+                  title: '暂无资产数据',
+                  description: '当前没有资产记录，点击下方按钮创建第一个资产',
+                  actionText: '新增资产',
+                  onAction: () => router.push('/assets/new'),
+                  showAction: true,
+                  icon: <Monitor size={48} />,
+                }}
+              />
             ),
           }}
           pagination={{

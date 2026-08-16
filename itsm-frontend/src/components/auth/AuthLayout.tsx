@@ -22,22 +22,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   showBranding = true,
 }) => {
   return (
-    <div
-      className="min-h-screen flex"
-      style={{
-        background: `linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)`,
-      }}
-    >
+    <div className="min-h-screen flex bg-gradient-to-br from-slate-50 to-indigo-100 dark:from-slate-900 dark:to-indigo-950">
       {/* 左侧品牌区域 */}
       {showBranding && (
         <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
           {/* 背景装饰 - 使用设计系统颜色 */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)`,
-            }}
-          ></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-950"></div>
           <div className="absolute inset-0 bg-black/20"></div>
 
           {/* 装饰性几何图形 */}
@@ -50,10 +40,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             {/* Logo和标题 */}
             <div className="mb-12">
               <div className="flex items-center mb-6">
-                <div
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mr-4"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-                >
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mr-4 bg-white/20">
                   <Server className="w-8 h-8 text-white" />
                 </div>
                 <div>
@@ -168,65 +155,40 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   footer,
   loading = false,
 }) => {
-  // 卡片变体样式
-  const getVariantStyles = () => {
+  // 卡片变体样式类名
+  const getVariantClasses = () => {
     switch (variant) {
       case 'elevated':
-        return {
-          backgroundColor: '#ffffff',
-          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.08)',
-          border: 'none',
-        };
+        return 'bg-white dark:bg-slate-800 shadow-lg border-0';
       case 'outlined':
-        return {
-          backgroundColor: '#ffffff',
-          boxShadow: 'none',
-          border: `2px solid #e2e8f0`,
-        };
+        return 'bg-white dark:bg-slate-800 shadow-none border-2 border-slate-200 dark:border-slate-600';
       case 'filled':
-        return {
-          backgroundColor: '#f1f5f9',
-          boxShadow: 'none',
-          border: 'none',
-        };
+        return 'bg-slate-100 dark:bg-slate-700 shadow-none border-0';
       default:
-        return {
-          backgroundColor: '#ffffff',
-          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.08)',
-          border: `1px solid #e2e8f0`,
-        };
+        return 'bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700';
     }
   };
 
-  // 卡片尺寸样式
-  const getSizeStyles = () => {
+  // 卡片尺寸样式类名
+  const getSizeClasses = () => {
     switch (size) {
       case 'sm':
-        return {
-          padding: 16,
-          borderRadius: 6,
-        };
+        return 'p-4 rounded-md';
       case 'lg':
-        return {
-          padding: 24,
-          borderRadius: 8,
-        };
+        return 'p-6 rounded-lg';
       default:
-        return {
-          padding: 24,
-          borderRadius: 8,
-        };
+        return 'p-6 rounded-lg';
     }
   };
 
   // 加载骨架屏
   const LoadingSkeleton = () => (
     <div className="animate-pulse">
-      <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+      <div className="h-4 bg-slate-200 dark:bg-slate-600 rounded w-3/4 mb-4"></div>
       <div className="space-y-3">
-        <div className="h-3 bg-gray-200 rounded w-full"></div>
-        <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-        <div className="h-3 bg-gray-200 rounded w-4/6"></div>
+        <div className="h-3 bg-slate-200 dark:bg-slate-600 rounded w-full"></div>
+        <div className="h-3 bg-slate-200 dark:bg-slate-600 rounded w-5/6"></div>
+        <div className="h-3 bg-slate-200 dark:bg-slate-600 rounded w-4/6"></div>
       </div>
     </div>
   );
@@ -236,16 +198,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       {/* 移动端Logo */}
       {showMobileLogo && (
         <div className="lg:hidden text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
-            style={{ backgroundColor: '#3b82f6' }}
-          >
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 bg-blue-500 dark:bg-blue-600">
             <Server className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold" style={{ color: '#1e293b' }}>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
             AI-Native ITSM
           </h1>
-          <p style={{ color: '#64748b' }}>AI驱动的IT服务管理系统</p>
+          <p className="text-slate-500 dark:text-slate-400">AI驱动的IT服务管理系统</p>
         </div>
       )}
 
@@ -253,27 +212,26 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       <div
         className={cn(
           'transition-all duration-200',
+          getVariantClasses(),
+          getSizeClasses(),
+          bordered && variant === 'default' ? '' : '',
           hoverable && 'hover:shadow-lg hover:scale-[1.02] cursor-pointer',
           className
         )}
-        style={{
-          ...getVariantStyles(),
-          ...getSizeStyles(),
-          ...style,
-        }}
+        style={style}
       >
         {/* 卡片头部 */}
         {(title || subtitle || extra) && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               {title && (
-                <h2 className="text-xl font-semibold" style={{ color: '#1e293b' }}>
+                <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
                   {title}
                 </h2>
               )}
               {extra && <div className="ml-4">{extra}</div>}
             </div>
-            {subtitle && <p style={{ color: '#64748b' }}>{subtitle}</p>}
+            {subtitle && <p className="text-slate-500 dark:text-slate-400">{subtitle}</p>}
           </div>
         )}
 
@@ -282,7 +240,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
 
         {/* 卡片底部 */}
         {footer && (
-          <div className="mt-6 pt-4 border-t" style={{ borderColor: '#e2e8f0' }}>
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
             {footer}
           </div>
         )}

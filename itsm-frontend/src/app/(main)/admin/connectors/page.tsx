@@ -3,20 +3,22 @@
 import React, { useEffect, useState } from 'react';
 import {
   Card, Table, Tag, Button, Space, Modal, Form, Input, Switch, Tabs, App, Drawer,
-  Typography, Empty, Alert, Spin, Tooltip,
+  Typography, Empty, Alert, Tooltip,
 } from 'antd';
-import { Plus, Settings, RotateCcw, CheckCircle, XCircle, Plug, Send, Power } from 'lucide-react';
+import { Plus, RotateCcw, CheckCircle, XCircle, Plug, Send, Power } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type {
   ConnectorManifest, ConnectorConfig, SendConnectorMessageRequest,
 } from '@/lib/services/connector-service';
 import connectorService from '@/lib/services/connector-service';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Text, Paragraph } = Typography;
 
 type Tab = 'market' | 'instances';
 
 export default function ConnectorsAdminPage() {
+  const { t } = useI18n();
   const { message } = App.useApp();
   const [tab, setTab] = useState<Tab>('market');
   const [market, setMarket] = useState<ConnectorManifest[]>([]);
@@ -46,7 +48,7 @@ export default function ConnectorsAdminPage() {
       setInstances(c);
       setHealth(h || {});
     } catch (e) {
-      message.error(`加载失败: ${(e as Error).message}`);
+      message.error(t('connectors.loadFailed', { msg: (e as Error).message }));
     } finally {
       setLoading(false);
     }
@@ -65,7 +67,6 @@ export default function ConnectorsAdminPage() {
     if (!provisionTarget) return;
     try {
       const values = await form.validateFields();
-      // 解析 credentials / settings：行格式 "key=value"
       const credentials: Record<string, string> = {};
       const settings: Record<string, unknown> = {};
       if (typeof values.credText === 'string') {
@@ -87,23 +88,25 @@ export default function ConnectorsAdminPage() {
         credentials,
         settings,
       });
-      message.success(`✓ 已启用 ${provisionTarget.title}`);
+      message.success(t('connectors.provision.enableSuccess', { title: provisionTarget.title }));
       setProvisionOpen(false);
       load();
     } catch (e) {
       if ((e as { errorFields?: unknown }).errorFields) return;
-      message.error(`启用失败: ${(e as Error).message}`);
+      message.error(t('connectors.provision.enableFailed', { msg: (e as Error).message }));
     }
   };
 
   const handleRevoke = async (c: ConnectorConfig) => {
     Modal.confirm({
-      title: `停用 ${c.name}?`,
-      content: '该连接器实例将被关闭并从当前租户移除。',
+      title: t('connectors.revoke.title', { name: c.name }),
+      content: t('connectors.revoke.content'),
       okType: 'danger',
+      okText: t('connectors.buttons.disable'),
+      cancelText: t('common.cancel'),
       onOk: async () => {
         await connectorService.revoke(c.name);
-        message.success(`已停用 ${c.name}`);
+        message.success(t('connectors.revoke.success', { name: c.name }));
         load();
       },
     });
@@ -112,16 +115,16 @@ export default function ConnectorsAdminPage() {
   const handleTest = async (c: ConnectorConfig) => {
     try {
       const r = await connectorService.test(c.name);
-      message.success(`✓ 测试消息已发送至 ${r.channel}`);
+      message.success(t('connectors.test.success', { channel: r.channel }));
     } catch (e) {
-      message.error(`测试失败: ${(e as Error).message}`);
+      message.error(t('connectors.test.failed', { msg: (e as Error).message }));
     }
   };
 
   const openSend = (c: ConnectorConfig) => {
     setSendTarget(c);
     sendForm.resetFields();
-    sendForm.setFieldsValue({ type: 'text', content: '来自 ITSM 的消息' });
+    sendForm.setFieldsValue({ type: 'text', content: t('connectors.send.defaultContent') });
     setSendOpen(true);
   };
 
@@ -136,11 +139,11 @@ export default function ConnectorsAdminPage() {
         content: v.content,
       };
       await connectorService.send(sendTarget.name, payload);
-      message.success(`✓ 已通过 ${sendTarget.name} 发送给 ${v.channel}`);
+      message.success(t('connectors.send.success', { name: sendTarget.name, channel: v.channel }));
       setSendOpen(false);
     } catch (e) {
       if ((e as { errorFields?: unknown }).errorFields) return;
-      message.error(`发送失败: ${(e as Error).message}`);
+      message.error(t('connectors.send.failed', { msg: (e as Error).message }));
     }
   };
 
@@ -149,24 +152,24 @@ export default function ConnectorsAdminPage() {
 
   const marketColumns = [
     {
-      title: '名称', dataIndex: 'title', key: 'title', width: 200,
-      render: (t: string, r: ConnectorManifest) => (
+      title: t('connectors.columns.name'), dataIndex: 'title', key: 'title', width: 200,
+      render: (col: string, r: ConnectorManifest) => (
         <Space orientation="vertical" size={0}>
-          <Text strong>{t}</Text>
+          <Text strong>{col}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>{r.name} · v{r.version}</Text>
         </Space>
       ),
     },
     {
-      title: '类型', dataIndex: 'type', key: 'type', width: 100,
-      render: (t: string) => <Tag color={t === 'im' ? 'blue' : t === 'webhook' ? 'cyan' : 'default'}>{t}</Tag>,
+      title: t('connectors.columns.type'), dataIndex: 'type', key: 'type', width: 100,
+      render: (col: string) => <Tag color={col === 'im' ? 'blue' : col === 'webhook' ? 'cyan' : 'default'}>{col}</Tag>,
     },
     {
-      title: '提供商', dataIndex: 'provider', key: 'provider', width: 110,
+      title: t('connectors.columns.provider'), dataIndex: 'provider', key: 'provider', width: 110,
       render: (p: string) => <Tag>{p}</Tag>,
     },
     {
-      title: '能力', dataIndex: 'capabilities', key: 'capabilities',
+      title: t('connectors.columns.capabilities'), dataIndex: 'capabilities', key: 'capabilities',
       render: (caps: string[]) => (
         <Space wrap size={[4, 4]}>
           {caps.map(c => <Tag key={c} color="geekblue">{c}</Tag>)}
@@ -174,33 +177,41 @@ export default function ConnectorsAdminPage() {
       ),
     },
     {
-      title: '状态', key: 'status', width: 120,
+      title: t('connectors.columns.status'), key: 'status', width: 120,
       render: (_: unknown, r: ConnectorManifest) => {
         const inst = instanceOf(r);
-        if (!inst) return <Tag color="default">未启用</Tag>;
-        if (!inst.enabled) return <Tag color="orange">已停用</Tag>;
+        if (!inst) return <Tag color="default">{t('connectors.status.notEnabled')}</Tag>;
+        if (!inst.enabled) return <Tag color="orange">{t('connectors.status.disabled')}</Tag>;
         const h = health[`${0}/${r.name}/${r.provider}`];
         return h ? (
           <Tag color={h.ok ? 'green' : 'red'} icon={h.ok ? <CheckCircle /> : <XCircle />}>
-            {h.ok ? '运行中' : '异常'}
+            {h.ok ? t('connectors.status.running') : t('connectors.status.error')}
           </Tag>
-        ) : <Tag color="green">已启用</Tag>;
+        ) : <Tag color="green">{t('connectors.status.enabled')}</Tag>;
       },
     },
     {
-      title: '操作', key: 'actions', width: 220, fixed: 'right' as const,
+      title: t('connectors.columns.actions'), key: 'actions', width: 220, fixed: 'right' as const,
       render: (_: unknown, r: ConnectorManifest) => {
         const inst = instanceOf(r);
         return (
           <Space>
-            <Button size="small" icon={<Plug />} onClick={() => { setDetailTarget(r); setDetailOpen(true); }}>详情</Button>
+            <Button size="small" icon={<Plug />} onClick={() => { setDetailTarget(r); setDetailOpen(true); }}>
+              {t('connectors.buttons.detail')}
+            </Button>
             {inst ? (
               <>
-                <Button size="small" icon={<Send />} onClick={() => openSend(inst)} type="primary" ghost>发消息</Button>
-                <Button size="small" icon={<Power />} danger onClick={() => handleRevoke(inst)}>停用</Button>
+                <Button size="small" icon={<Send />} onClick={() => openSend(inst)} type="primary" ghost>
+                  {t('connectors.buttons.sendMessage')}
+                </Button>
+                <Button size="small" icon={<Power />} danger onClick={() => handleRevoke(inst)}>
+                  {t('connectors.buttons.disable')}
+                </Button>
               </>
             ) : (
-              <Button size="small" type="primary" icon={<Plus />} onClick={() => openProvision(r)}>启用</Button>
+              <Button size="small" type="primary" icon={<Plus />} onClick={() => openProvision(r)}>
+                {t('connectors.buttons.enable')}
+              </Button>
             )}
           </Space>
         );
@@ -209,15 +220,19 @@ export default function ConnectorsAdminPage() {
   ];
 
   const instanceColumns = [
-    { title: '名称', dataIndex: 'name', key: 'name', width: 140, render: (n: string) => <Text strong>{n}</Text> },
-    { title: '提供商', dataIndex: 'provider', key: 'provider', width: 110, render: (p: string) => <Tag>{p}</Tag> },
-    { title: '类型', dataIndex: 'type', key: 'type', width: 100, render: (t: string) => <Tag>{t}</Tag> },
+    { title: t('connectors.columns.name'), dataIndex: 'name', key: 'name', width: 140, render: (n: string) => <Text strong>{n}</Text> },
+    { title: t('connectors.columns.provider'), dataIndex: 'provider', key: 'provider', width: 110, render: (p: string) => <Tag>{p}</Tag> },
+    { title: t('connectors.columns.type'), dataIndex: 'type', key: 'type', width: 100, render: (col: string) => <Tag>{col}</Tag> },
     {
-      title: '状态', dataIndex: 'enabled', key: 'enabled', width: 100,
-      render: (e: boolean) => <Tag color={e ? 'green' : 'orange'}>{e ? '已启用' : '已停用'}</Tag>,
+      title: t('connectors.columns.status'), dataIndex: 'enabled', key: 'enabled', width: 100,
+      render: (e: boolean) => (
+        <Tag color={e ? 'green' : 'orange'}>
+          {e ? t('connectors.status.enabled') : t('connectors.status.disabled')}
+        </Tag>
+      ),
     },
     {
-      title: '凭据', dataIndex: 'credentials', key: 'credentials',
+      title: t('connectors.provision.fieldCredentials'), dataIndex: 'credentials', key: 'credentials',
       render: (c?: Record<string, string>) => (
         <Space wrap size={[4, 4]}>
           {c ? Object.keys(c).map(k => <Tag key={k}>{k}</Tag>) : '-'}
@@ -225,12 +240,18 @@ export default function ConnectorsAdminPage() {
       ),
     },
     {
-      title: '操作', key: 'actions', width: 220, fixed: 'right' as const,
+      title: t('connectors.columns.actions'), key: 'actions', width: 220, fixed: 'right' as const,
       render: (_: unknown, r: ConnectorConfig) => (
         <Space>
-          <Button size="small" icon={<Send />} onClick={() => openSend(r)} type="primary" ghost>发消息</Button>
-          <Button size="small" icon={<Send />} onClick={() => handleTest(r)}>测试</Button>
-          <Button size="small" icon={<Power />} danger onClick={() => handleRevoke(r)}>停用</Button>
+          <Button size="small" icon={<Send />} onClick={() => openSend(r)} type="primary" ghost>
+            {t('connectors.buttons.sendMessage')}
+          </Button>
+          <Button size="small" icon={<Send />} onClick={() => handleTest(r)}>
+            {t('connectors.buttons.test')}
+          </Button>
+          <Button size="small" icon={<Power />} danger onClick={() => handleRevoke(r)}>
+            {t('connectors.buttons.disable')}
+          </Button>
         </Space>
       ),
     },
@@ -239,12 +260,19 @@ export default function ConnectorsAdminPage() {
   return (
     <PageContainer
       header={{
-        title: '🧩 连接器 / 插件 / 技能 / IM 市场',
-        breadcrumb: { items: [{ title: '管理' }, { title: '连接器' }] },
+        title: t('connectors.title'),
+        breadcrumb: {
+          items: [
+            { title: t('connectors.breadcrumbHome') },
+            { title: t('connectors.breadcrumbCurrent') },
+          ],
+        },
       }}
       extra={
         <Space>
-          <Button icon={<RotateCcw />} onClick={load} loading={loading}>刷新</Button>
+          <Button icon={<RotateCcw />} onClick={load} loading={loading}>
+            {t('connectors.buttons.refresh')}
+          </Button>
         </Space>
       }
     >
@@ -252,8 +280,8 @@ export default function ConnectorsAdminPage() {
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
-        message="AI-Native 集成层"
-        description="飞书 / 钉钉 / 企微 / Webhook / 邮件 / 数据库 / 监控告警 全部走统一的 Connector 框架。新连接器即插即用，无需改核心代码。"
+        message={t('connectors.pageDescription')}
+        description={t('connectors.description')}
       />
 
       <Tabs
@@ -261,9 +289,10 @@ export default function ConnectorsAdminPage() {
         onChange={(k) => setTab(k as Tab)}
         items={[
           {
-            key: 'market', label: `市场 (${market.length})`,
+            key: 'market',
+            label: `${t('connectors.tabs.market')} (${market.length})`,
             children: market.length === 0 ? (
-              <Empty description="暂无可用连接器" />
+              <Empty description={t('connectors.marketEmpty')} />
             ) : (
               <Table
                 rowKey="name"
@@ -276,9 +305,10 @@ export default function ConnectorsAdminPage() {
             ),
           },
           {
-            key: 'instances', label: `已配置 (${instances.length})`,
+            key: 'instances',
+            label: `${t('connectors.tabs.configured')} (${instances.length})`,
             children: instances.length === 0 ? (
-              <Empty description="还没有启用任何连接器，去市场页启用一个吧" />
+              <Empty description={t('connectors.configuredEmpty')} />
             ) : (
               <Table
                 rowKey="name"
@@ -293,70 +323,69 @@ export default function ConnectorsAdminPage() {
         ]}
       />
 
-      {/* 启用连接器 */}
       <Modal
-        title={provisionTarget ? `启用 ${provisionTarget.title}` : '启用'}
+        title={provisionTarget ? t('connectors.provision.enableTitle', { title: provisionTarget.title }) : t('connectors.actions.enable')}
         open={provisionOpen}
         onCancel={() => setProvisionOpen(false)}
         onOk={submitProvision}
         width={640}
-        okText="启用"
+        okText={t('connectors.actions.enable')}
+        cancelText={t('common.cancel')}
       >
         {provisionTarget && (
           <>
             <Paragraph type="secondary">{provisionTarget.description}</Paragraph>
             <Form form={form} layout="vertical">
-              <Form.Item name="enabled" label="启用" valuePropName="checked">
+              <Form.Item name="enabled" label={t('connectors.provision.fieldEnabled')} valuePropName="checked">
                 <Switch />
               </Form.Item>
-              <Form.Item name="provider" label="提供商">
-                <Input placeholder="provider（可留空）" />
+              <Form.Item name="provider" label={t('connectors.provision.fieldProvider')}>
+                <Input placeholder={t('connectors.provision.providerPlaceholder')} />
               </Form.Item>
               <Form.Item
                 name="credText"
-                label="凭据（每行 key=value）"
-                tooltip="app_id / app_secret / corp_id 等"
+                label={t('connectors.provision.fieldCredentials')}
+                tooltip={t('connectors.provision.credentialsTooltip')}
               >
-                <Input.TextArea rows={4} placeholder={'app_id=cli_xxx\napp_secret=xxx'} />
+                <Input.TextArea rows={4} placeholder={t('connectors.provision.credentialsPlaceholder')} />
               </Form.Item>
               <Form.Item
                 name="settingText"
-                label="设置（每行 key=value）"
-                tooltip="base_url / debug_channel 等"
+                label={t('connectors.provision.fieldSettings')}
+                tooltip={t('connectors.provision.settingsTooltip')}
               >
-                <Input.TextArea rows={3} placeholder={'debug_channel=ou_xxx'} />
+                <Input.TextArea rows={3} placeholder={t('connectors.provision.settingsPlaceholder')} />
               </Form.Item>
             </Form>
           </>
         )}
       </Modal>
 
-      {/* 发送消息 */}
       <Modal
-        title={sendTarget ? `通过 ${sendTarget.name} 发送` : '发送'}
+        title={sendTarget ? t('connectors.send.title', { name: sendTarget.name }) : t('connectors.actions.send')}
         open={sendOpen}
         onCancel={() => setSendOpen(false)}
         onOk={submitSend}
         width={600}
-        okText="发送"
+        okText={t('connectors.actions.send')}
+        cancelText={t('common.cancel')}
       >
         <Form form={sendForm} layout="vertical">
-          <Form.Item name="channel" label="目标" rules={[{ required: true }]}>
-            <Input placeholder="ou_xxx（飞书 open_id）/ 钉钉 userid / WeCom UserID / webhook URL" />
+          <Form.Item name="channel" label={t('connectors.send.fieldChannel')} rules={[{ required: true }]}>
+            <Input placeholder={t('connectors.send.channelPlaceholder')} />
           </Form.Item>
-          <Form.Item name="type" label="类型" rules={[{ required: true }]}>
-            <Input placeholder="text / markdown / card" />
+          <Form.Item name="type" label={t('connectors.send.fieldType')} rules={[{ required: true }]}>
+            <Input placeholder={t('connectors.send.typePlaceholder')} />
           </Form.Item>
-          <Form.Item name="title" label="标题">
-            <Input placeholder="可选" />
+          <Form.Item name="title" label={t('connectors.send.fieldTitle')}>
+            <Input placeholder={t('connectors.send.titlePlaceholder')} />
           </Form.Item>
-          <Form.Item name="content" label="内容" rules={[{ required: true }]}>
+          <Form.Item name="content" label={t('connectors.send.fieldContent')} rules={[{ required: true }]}>
             <Input.TextArea rows={4} />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* 详情 */}
       <Drawer
         title={detailTarget ? detailTarget.title : ''}
         open={detailOpen}
@@ -366,30 +395,30 @@ export default function ConnectorsAdminPage() {
         {detailTarget && (
           <Space orientation="vertical" style={{ width: '100%' }} size="middle">
             <div>
-              <Text type="secondary">标识</Text>
+              <Text type="secondary">{t('connectors.detail.identifier')}</Text>
               <div><Text code>{detailTarget.name}</Text> <Tag>v{detailTarget.version}</Tag></div>
             </div>
             <div>
-              <Text type="secondary">提供商 / 类型</Text>
+              <Text type="secondary">{t('connectors.detail.providerType')}</Text>
               <div><Tag>{detailTarget.provider}</Tag><Tag color="blue">{detailTarget.type}</Tag></div>
             </div>
             <div>
-              <Text type="secondary">描述</Text>
+              <Text type="secondary">{t('connectors.detail.description')}</Text>
               <Paragraph>{detailTarget.description}</Paragraph>
             </div>
             <div>
-              <Text type="secondary">能力</Text>
+              <Text type="secondary">{t('connectors.detail.capabilities')}</Text>
               <div>{detailTarget.capabilities.map(c => <Tag key={c} color="geekblue">{c}</Tag>)}</div>
             </div>
             {detailTarget.tags && detailTarget.tags.length > 0 && (
               <div>
-                <Text type="secondary">标签</Text>
+                <Text type="secondary">{t('connectors.detail.tags')}</Text>
                 <div>{detailTarget.tags.map(t => <Tag key={t}>{t}</Tag>)}</div>
               </div>
             )}
             {detailTarget.homepage && (
               <div>
-                <Text type="secondary">主页</Text>
+                <Text type="secondary">{t('connectors.detail.homepage')}</Text>
                 <div><a href={detailTarget.homepage} target="_blank" rel="noreferrer">{detailTarget.homepage}</a></div>
               </div>
             )}

@@ -134,39 +134,39 @@ export default function DepartmentProcessPage() {
   // Table columns
   const columns = [
     {
-      title: 'Scenario',
+      title: '场景',
       dataIndex: 'scenario',
       key: 'scenario',
       render: (scenario: string) => (
         <Tag color={getScenarioColor(scenario)}>
-          {scenario || 'Default'}
+          {scenario || '默认'}
         </Tag>
       ),
     },
     {
-      title: 'Business Type',
+      title: '业务类型',
       dataIndex:'businessType',
       key:'businessType',
       render: (type: string) => <Tag>{type}</Tag>,
     },
     {
-      title: 'Process',
+      title: '流程定义',
       dataIndex:'processDefinitionKey',
       key:'processDefinitionKey',
       render: (key: string) => <Tag color="cyan">{key}</Tag>,
     },
     {
-      title: 'Priority',
+      title: '优先级',
       dataIndex: 'priority',
       key: 'priority',
     },
     {
-      title: 'Status',
+      title: '状态',
       dataIndex: 'isActive',
       key: 'isActive',
       render: (active: boolean) => (
         <Tag icon={active ? <CheckCircle /> : <AlertTriangle />} color={active ? 'success' : 'error'}>
-          {active ? 'Active' : 'Inactive'}
+          {active ? '启用' : '停用'}
         </Tag>
       ),
     },
@@ -194,11 +194,11 @@ export default function DepartmentProcessPage() {
           </Space>
         }
       />
-      <Card title="Department Process Configuration">
+      <Card title="部门流程配置">
         <Row gutter={24}>
           {/* Department Tree */}
           <Col span={8}>
-            <Card title="Departments" size="small">
+            <Card title="部门列表" size="small">
               <Tree
                 showIcon
                 treeData={buildDeptTree(departments)}
@@ -219,13 +219,13 @@ export default function DepartmentProcessPage() {
                 {/* Department Info */}
                 <Card size="small" style={{ marginBottom: 16 }}>
                   <Descriptions size="small">
-                    <Descriptions.Item label="Department">
+                    <Descriptions.Item label="部门名称">
                       {selectedDept?.name}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Code">
+                    <Descriptions.Item label="编码">
                       <Tag>{selectedDept?.code}</Tag>
                     </Descriptions.Item>
-                    <Descriptions.Item label="Description">
+                    <Descriptions.Item label="描述">
                       {selectedDept?.description || '-'}
                     </Descriptions.Item>
                   </Descriptions>
@@ -235,17 +235,17 @@ export default function DepartmentProcessPage() {
                 <Row gutter={16} style={{ marginBottom: 16 }}>
                   <Col span={8}>
                     <Card size="small">
-                      <Statistic title="Total Processes" value={stats.total} />
+                      <Statistic title="流程总数" value={stats.total} />
                     </Card>
                   </Col>
                   <Col span={8}>
                     <Card size="small">
-                      <Statistic title="Active" value={stats.active} valueStyle={{ color: '#3f8600' }} />
+                      <Statistic title="已启用" value={stats.active} valueStyle={{ color: '#3f8600' }} />
                     </Card>
                   </Col>
                   <Col span={8}>
                     <Card size="small">
-                      <Statistic title="Scenarios" value={stats.scenarios} />
+                      <Statistic title="场景数" value={stats.scenarios} />
                     </Card>
                   </Col>
                 </Row>
@@ -258,13 +258,13 @@ export default function DepartmentProcessPage() {
                       icon={<Plus />}
                       onClick={() => setShowInitModal(true)}
                     >
-                      Initialize Default Templates
+                      初始化默认流程模板
                     </Button>
                     <Button
                       icon={<RefreshCw />}
                       onClick={() => loadDeptProcesses(selectedDeptId)}
                     >
-                      Refresh
+                      刷新
                     </Button>
                   </Space>
                 </Card>
@@ -284,7 +284,7 @@ export default function DepartmentProcessPage() {
               <Card>
                 <div style={{ textAlign: 'center', padding: 48, color: '#999' }}>
                   <Building2 style={{ width: 48, height: 48, marginBottom: 16 }} />
-                  <p>Select a department from the tree to configure processes</p>
+                  <p>请从左侧选择一个部门查看流程配置</p>
                 </div>
               </Card>
             )}
@@ -294,23 +294,23 @@ export default function DepartmentProcessPage() {
 
       {/* Initialize Modal */}
       <Modal
-        title="Initialize Department Processes"
+        title="初始化部门流程"
         open={showInitModal}
         onCancel={() => setShowInitModal(false)}
         onOk={handleInitDefaults}
       >
         <Alert
-          message="This will create default process templates for the selected department"
+          message="将为所选部门创建默认流程模板（不会影响已有配置）"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
         />
         <Form layout="vertical">
-          <Form.Item label="Department Type">
+          <Form.Item label="部门类型">
             <Select
               value={departmentType}
               onChange={setDepartmentType}
-              options={[{ value: 'operations', label: 'Operations (Alert Handling, Change Release)' }, { value: 'rd', label: 'R&D (Code Release, Requirement Change)' }, { value: 'finance', label: 'Finance (Expense Approval, Budget)' }, { value: 'hr', label: 'HR (Leave, Recruitment)' }]}
+              options={[{ value: 'operations', label: '运维（告警处理、变更发布）' }, { value: 'rd', label: '研发（代码发布、需求变更）' }, { value: 'finance', label: '财务（费用审批、预算管理）' }, { value: 'hr', label: '人力（请假、招聘）' }]}
             />
           </Form.Item>
         </Form>

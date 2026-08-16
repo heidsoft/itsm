@@ -2,6 +2,20 @@
  * Formatters 测试
  */
 
+// jest.setup.js 为 Ant Design DatePicker 全局 mock 了 dayjs（isValid 恒 true），
+// 本文件需要真实解析行为（invalid/零值检测），因此用 requireActual 覆盖 mock。
+type DayjsFactory = typeof import('dayjs');
+
+jest.mock('dayjs', () => {
+  const actual = jest.requireActual('dayjs');
+  const realDayjs = jest.fn((date?: string) => actual(date)) as jest.Mock & DayjsFactory;
+  realDayjs.extend = actual.extend;
+  realDayjs.locale = actual.locale;
+  realDayjs.unix = actual.unix;
+  realDayjs.isDayjs = actual.isDayjs;
+  return realDayjs;
+});
+
 import { formatDateTime, mapLabel } from '../formatters';
 
 describe('formatDateTime', () => {
@@ -23,10 +37,10 @@ describe('formatDateTime', () => {
     expect(formatDateTime('')).toBe('');
   });
 
-  it('should return Invalid Date for invalid date', () => {
+  it('should return empty string for invalid date', () => {
     const invalidDate = 'invalid-date';
     const result = formatDateTime(invalidDate);
-    expect(result).toBe('Invalid Date');
+    expect(result).toBe('');
   });
 
   it('should handle ISO format with milliseconds', () => {

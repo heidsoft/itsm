@@ -68,8 +68,8 @@ export default function HomePage() {
     },
     {
       icon: <BrainCircuit className="w-6 h-6" />,
-      title: 'AI 智能分诊',
-      description: 'AI 驱动的工单智能分诊与分类，自动推荐处理人与解决方案。',
+      title: 'AI 辅助分诊',
+      description: 'AI 驱动的工单分诊与分类，自动推荐处理人与解决方案。',
     },
   ];
 
@@ -141,7 +141,7 @@ export default function HomePage() {
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
               一款开源的 AI 驱动 IT 服务管理系统，涵盖工单管理、CMDB、知识库 RAG、
-              BPMN 工作流、SLA 监控与 AI 智能分诊，帮助企业高效管理 IT 服务全流程。
+              BPMN 工作流、SLA 监控与 AI 辅助分诊，帮助企业高效管理 IT 服务全流程。
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
               <Link

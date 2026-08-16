@@ -129,7 +129,7 @@ function WelcomeStep() {
         <Alert
           type="info"
           showIcon
-          message="本引导不影响生产数据，所有演示均使用 mock 接口"
+          message="本引导为功能演示，不会写入实际数据"
         />
       }
     />
@@ -191,23 +191,23 @@ function AITriageStep() {
     <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
       <Title level={4}>
         第 4 步：体验 AI 分诊
-        <Tag color="orange" style={{ marginLeft: 12 }}>Coming Soon</Tag>
+        <Tag color="blue" style={{ marginLeft: 12 }}>抢先体验</Tag>
       </Title>
       <Paragraph>
         AI 分诊会自动分析工单内容，推荐分类、优先级和处理人。
       </Paragraph>
       <Alert
-        type="warning"
+        type="info"
         showIcon
-        message="实验性功能"
-        description="当前版本仅展示 mock 响应，正式 RAG 能力将在 v2.0 推出。"
+        message="AI 辅助分诊"
+        description="根据工单内容推荐分类、优先级和处理人。仅供参考。"
       />
-      <Card type="inner" title="Mock 演示">
+      <Card type="inner" title="效果演示">
         <Paragraph>
-          <Tag color="blue">mock</Tag> 工单：「VPN 连不上」→ 建议分类：网络 / 优先级：高 / 处理人：网络组
+          工单：「VPN 连不上」→ 建议分类：网络 / 优先级：高 / 处理人：网络组
         </Paragraph>
         <Paragraph type="secondary" style={{ fontSize: 12 }}>
-          数据来源：/api/v1/ai/mock/triage
+          （演示数据，仅供参考）
         </Paragraph>
       </Card>
     </Space>

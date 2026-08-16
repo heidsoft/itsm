@@ -6,10 +6,11 @@
 'use client';
 
 import React from 'react';
-import { Modal, Progress, Space, Button, Alert, Statistic, Row, Col, List, Tag, Spin } from 'antd';
-import { Download, CheckCircle, XCircle, PlayCircle, PauseCircle, Square } from 'lucide-react';
+import { Modal, Progress, Space, Button, Alert, Statistic, Row, Col, Spin } from 'antd';
+import { CheckCircle, XCircle, PlayCircle, PauseCircle, Square } from 'lucide-react';
 import { useBatchOperationProgressQuery } from '@/lib/hooks/useBatchOperations';
 import { BatchOperationStatus } from '@/types/batch-operations';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 export interface BatchProgressModalProps {
   visible: boolean;
@@ -22,6 +23,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
   operationId,
   onClose,
 }) => {
+  const { t } = useI18n();
   const { data: progress, isLoading, isError, refetch } = useBatchOperationProgressQuery(operationId, {
     enabled: visible,
     refetchInterval: 2000,
@@ -42,22 +44,22 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
     }
   };
 
-  const getStatusText = () => {
+  const getStatusText = (): string => {
     switch (progress?.status) {
       case BatchOperationStatus.PENDING:
-        return '等待中';
+        return t('batchProgress.statusPending');
       case BatchOperationStatus.RUNNING:
-        return '执行中';
+        return t('batchProgress.statusRunning');
       case BatchOperationStatus.PAUSED:
-        return '已暂停';
+        return t('batchProgress.statusPaused');
       case BatchOperationStatus.COMPLETED:
-        return '已完成';
+        return t('batchProgress.statusCompleted');
       case BatchOperationStatus.FAILED:
-        return '失败';
+        return t('batchProgress.statusFailed');
       case BatchOperationStatus.CANCELLED:
-        return '已取消';
+        return t('batchProgress.statusCancelled');
       default:
-        return '未知';
+        return t('batchProgress.statusUnknown');
     }
   };
 
@@ -68,26 +70,25 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
 
   return (
     <Modal
-      title="批量操作进度"
+      title={t('batchProgress.title')}
       open={visible}
       onCancel={onClose}
       width={700}
       footer={[
         <Button key="close" type="primary" onClick={onClose} disabled={isRunning && !isPaused}>
-          {isCompleted || isFailed ? '关闭' : '后台运行'}
+          {isCompleted || isFailed ? t('common.close') : t('batchProgress.runInBackground')}
         </Button>,
       ]}
     >
       {isError ? (
-        <Alert type="error" showIcon message="进度加载失败" description="操作仍可能在后台执行，请重试获取最新结果。"
-          action={<Button onClick={() => refetch()}>重试</Button>} />
+        <Alert type="error" showIcon message={t('batchProgress.loadFailed')} description={t('batchProgress.loadFailedDesc')}
+          action={<Button onClick={() => refetch()}>{t('common.retry')}</Button>} />
       ) : isLoading || !progress ? (
         <div className="flex justify-center items-center py-12">
-          <Spin size="large" description="正在获取执行进度" />
+          <Spin size="large" description={t('batchProgress.loading')} />
         </div>
       ) : (
         <Space orientation="vertical" size="large" className="w-full">
-          {/* 进度条 */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-base font-semibold">{getStatusText()}</span>
@@ -98,18 +99,17 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
             <Progress percent={progress.percentage} status={getStatusColor()} strokeWidth={12} />
           </div>
 
-          {/* 统计信息 */}
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={8}>
               <Statistic
-                title="总数"
+                title={t('batchProgress.total')}
                 value={progress.totalCount}
                 prefix={<CheckCircle />}
               />
             </Col>
             <Col xs={24} sm={8}>
               <Statistic
-                title="成功"
+                title={t('batchProgress.success')}
                 value={progress.successCount}
                 styles={{ content: { color: '#3f8600' } }}
                 prefix={<CheckCircle />}
@@ -117,7 +117,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
             </Col>
             <Col xs={24} sm={8}>
               <Statistic
-                title="失败"
+                title={t('batchProgress.failed')}
                 value={progress.failedCount}
                 styles={{ content: { color: '#cf1322' } }}
                 prefix={<XCircle />}
@@ -125,56 +125,52 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
             </Col>
           </Row>
 
-          {/* 当前处理工单 */}
           {isRunning && progress.currentTicket && (
             <Alert
-              message="正在处理"
-              description={`工单 #${progress.currentTicket.ticketNumber}`}
+              message={t('batchProgress.processing')}
+              description={t('batchProgress.processingDesc', { ticketNumber: progress.currentTicket.ticketNumber })}
               type="info"
               showIcon
             />
           )}
 
-          {/* 完成提示 */}
           {isCompleted && (
             <Alert
-              message="批量操作完成"
-              description={`成功处理 ${progress.successCount} 个工单${
-                progress.failedCount > 0 ? `，失败 ${progress.failedCount} 个` : ''
-              }`}
+              message={t('batchProgress.completed')}
+              description={t('batchProgress.completedDesc', {
+                successCount: progress.successCount,
+                failedCount: progress.failedCount,
+              })}
               type={progress.failedCount > 0 ? 'warning' : 'success'}
               showIcon
             />
           )}
 
-          {/* 失败提示 */}
           {isFailed && (
             <Alert
-              message="批量操作失败"
-              description="请查看错误日志了解详情"
+              message={t('batchProgress.failedTitle')}
+              description={t('batchProgress.failedDesc')}
               type="error"
               showIcon
             />
           )}
 
-          {/* 预计完成时间 */}
           {isRunning && progress.estimatedCompletionTime && (
             <div className="text-sm text-gray-500">
-              预计完成时间：
+              {t('batchProgress.estimatedTime')}
               {new Date(progress.estimatedCompletionTime).toLocaleTimeString()}
             </div>
           )}
 
-          {/* 操作按钮 */}
           {isRunning && (
             <Space>
               {isPaused ? (
-                <Button icon={<PlayCircle />}>继续</Button>
+                <Button icon={<PlayCircle />}>{t('batchProgress.resume')}</Button>
               ) : (
-                <Button icon={<PauseCircle />}>暂停</Button>
+                <Button icon={<PauseCircle />}>{t('batchProgress.pause')}</Button>
               )}
               <Button danger icon={<Square />}>
-                取消
+                {t('common.cancel')}
               </Button>
             </Space>
           )}

@@ -6,6 +6,7 @@
 import React from 'react';
 import { Modal, Form, Input, Select } from 'antd';
 import type { FormInstance } from 'antd';
+import { useI18n } from '@/lib/i18n/useI18n';
 const { TextArea } = Input;
 
 interface WorkflowMetadataModalProps {
@@ -21,6 +22,8 @@ export default function WorkflowMetadataModal({
   onSave,
   form,
 }: WorkflowMetadataModalProps) {
+  const { t } = useI18n();
+
   const handleOk = () => {
     form
       .validateFields()
@@ -30,26 +33,32 @@ export default function WorkflowMetadataModal({
 
   return (
     <Modal
-      title="编辑工作流信息"
+      title={t('workflow.metadataModal.title')}
       open={visible}
       onOk={handleOk}
       onCancel={onClose}
-      okText="保存"
-      cancelText="取消"
+      okText={t('common.save')}
+      cancelText={t('common.cancel')}
     >
       <Form form={form} layout="vertical">
         <Form.Item
-          label="工作流名称"
+          label={t('workflow.metadataModal.name')}
           name="name"
-          rules={[{ required: true, message: '请输入工作流名称' }]}
+          rules={[{ required: true, message: t('workflow.metadataModal.nameRequired') }]}
         >
-          <Input placeholder="请输入工作流名称" />
+          <Input placeholder={t('workflow.metadataModal.namePlaceholder')} />
         </Form.Item>
-        <Form.Item label="描述" name="description">
-          <TextArea rows={3} placeholder="请输入工作流描述" />
+        <Form.Item label={t('workflow.metadataModal.description')} name="description">
+          <TextArea rows={3} placeholder={t('workflow.metadataModal.descriptionPlaceholder')} />
         </Form.Item>
-        <Form.Item label="分类" name="category">
-          <Select placeholder="请选择分类" options={[{ value: "general", label: "通用" }, { value: "approval", label: "审批流程" }, { value: "ticket", label: "工单流程" }, { value: "incident", label: "事件流程" }, { value: "change", label: "变更流程" }]} />
+        <Form.Item label={t('workflow.metadataModal.category')} name="category">
+          <Select placeholder={t('workflow.metadataModal.categoryPlaceholder')} options={[
+            { value: 'general', label: t('workflow.metadataModal.categoryGeneral') },
+            { value: 'approval', label: t('workflow.metadataModal.categoryApproval') },
+            { value: 'ticket', label: t('workflow.metadataModal.categoryTicket') },
+            { value: 'incident', label: t('workflow.metadataModal.categoryIncident') },
+            { value: 'change', label: t('workflow.metadataModal.categoryChange') },
+          ]} />
         </Form.Item>
       </Form>
     </Modal>

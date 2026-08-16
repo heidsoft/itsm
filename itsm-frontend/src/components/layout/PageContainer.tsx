@@ -1,3 +1,6 @@
+/**
+ * @deprecated 请使用 BusinessPageTemplate 替代，此组件为历史遗留实现
+ */
 'use client';
 
 import React from 'react';

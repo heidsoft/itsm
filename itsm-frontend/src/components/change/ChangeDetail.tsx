@@ -28,6 +28,7 @@ import dayjs from 'dayjs';
 import { Modal, Input } from 'antd';
 
 import { ChangeApi } from '@/lib/api/';
+import { useI18n } from '@/lib/i18n/useI18n';
 import {
   ChangeStatus,
   ChangeStatusLabels,
@@ -59,6 +60,7 @@ const statusColors: Record<string, string> = {
 const ChangeDetail: React.FC = () => {
   const { id } = useParams() as { id: string };
   const router = useRouter();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [change, setChange] = useState<Change | null>(null);
   const [approvals, setApprovals] = useState<ApprovalRecord[]>([]);
@@ -109,10 +111,10 @@ const ChangeDetail: React.FC = () => {
     setProcessing(true);
     try {
       await ChangeApi.submitForApproval(change.id);
-      message.success('变更已提交审批');
+      message.success(t('changeDetail.submitSuccess'));
       loadDetail();
     } catch (error) {
-      message.error('提交审批失败');
+      message.error(t('changeDetail.submitFailed'));
     } finally {
       setProcessing(false);
     }
@@ -124,10 +126,10 @@ const ChangeDetail: React.FC = () => {
     setProcessing(true);
     try {
       await ChangeApi.scheduleChange(change.id);
-      message.success('变更已排期');
+      message.success(t('changeDetail.scheduleSuccess'));
       loadDetail();
     } catch (error) {
-      message.error('排期失败');
+      message.error(t('changeDetail.scheduleFailed'));
     } finally {
       setProcessing(false);
     }
@@ -139,10 +141,10 @@ const ChangeDetail: React.FC = () => {
     setProcessing(true);
     try {
       await ChangeApi.startImplementation(change.id);
-      message.success('变更已开始实施');
+      message.success(t('changeDetail.startSuccess'));
       loadDetail();
     } catch (error) {
-      message.error('开始实施失败');
+      message.error(t('changeDetail.startFailed'));
     } finally {
       setProcessing(false);
     }
@@ -154,10 +156,10 @@ const ChangeDetail: React.FC = () => {
     setProcessing(true);
     try {
       await ChangeApi.completeImplementation(change.id);
-      message.success('变更实施完成');
+      message.success(t('changeDetail.completeSuccess'));
       loadDetail();
     } catch (error) {
-      message.error('完成实施失败');
+      message.error(t('changeDetail.completeFailed'));
     } finally {
       setProcessing(false);
     }
@@ -169,10 +171,10 @@ const ChangeDetail: React.FC = () => {
     setProcessing(true);
     try {
       await ChangeApi.closeChange(change.id);
-      message.success('变更已关闭归档');
+      message.success(t('changeDetail.closeSuccess'));
       loadDetail();
     } catch (error) {
-      message.error('关闭变更失败');
+      message.error(t('changeDetail.closeFailed'));
     } finally {
       setProcessing(false);
     }
@@ -184,11 +186,11 @@ const ChangeDetail: React.FC = () => {
     setProcessing(true);
     try {
       await ChangeApi.rollbackChange(change.id, approvalComment);
-      message.success('变更已回滚');
+      message.success(t('changeDetail.rollbackSuccess'));
       setApprovalComment('');
       loadDetail();
     } catch (error) {
-      message.error('回滚失败');
+      message.error(t('changeDetail.rollbackFailed'));
     } finally {
       setProcessing(false);
     }
@@ -200,11 +202,11 @@ const ChangeDetail: React.FC = () => {
     setProcessing(true);
     try {
       await ChangeApi.cancelChange(change.id, approvalComment);
-      message.success('变更已取消');
+      message.success(t('changeDetail.cancelSuccess'));
       setApprovalComment('');
       loadDetail();
     } catch (error) {
-      message.error('取消失败');
+      message.error(t('changeDetail.cancelFailed'));
     } finally {
       setProcessing(false);
     }
@@ -216,12 +218,12 @@ const ChangeDetail: React.FC = () => {
     setProcessing(true);
     try {
       await ChangeApi.approveChange(change.id, { comment: approvalComment });
-      message.success('变更已批准');
+      message.success(t('changeDetail.approveSuccess'));
       setApprovalModalVisible(false);
       setApprovalComment('');
       loadDetail();
     } catch (error) {
-      message.error('批准失败');
+      message.error(t('changeDetail.approveFailed'));
     } finally {
       setProcessing(false);
     }
@@ -233,12 +235,12 @@ const ChangeDetail: React.FC = () => {
     setProcessing(true);
     try {
       await ChangeApi.rejectChange(change.id, { comment: approvalComment });
-      message.success('变更已拒绝');
+      message.success(t('changeDetail.rejectSuccess'));
       setRejectModalVisible(false);
       setApprovalComment('');
       loadDetail();
     } catch (error) {
-      message.error('拒绝失败');
+      message.error(t('changeDetail.rejectFailed'));
     } finally {
       setProcessing(false);
     }
@@ -259,7 +261,7 @@ const ChangeDetail: React.FC = () => {
       }
     } catch (error) {
       // console.error(error);
-      message.error('加载变更详情失败');
+      message.error(t('changeDetail.loadDetailFailed'));
     } finally {
       setLoading(false);
     }
@@ -298,10 +300,10 @@ const ChangeDetail: React.FC = () => {
     if (!id) return;
     try {
       await ChangeApi.updateRisk(Number(id), data);
-      message.success('风险评估保存成功');
+      message.success(t('changeDetail.riskSaveSuccess'));
       loadRiskAssessment();
     } catch (error) {
-      message.error('保存失败');
+      message.error(t('changeDetail.saveFailed'));
     }
   };
 
@@ -310,10 +312,10 @@ const ChangeDetail: React.FC = () => {
     if (!id) return;
     try {
       await ChangeApi.updateImpactAnalysis(Number(id), data);
-      message.success('影响分析保存成功');
+      message.success(t('changeDetail.impactSaveSuccess'));
       loadImpactAnalysis();
     } catch (error) {
-      message.error('保存失败');
+      message.error(t('changeDetail.saveFailed'));
     }
   };
 
@@ -323,9 +325,9 @@ const ChangeDetail: React.FC = () => {
     try {
       // 回滚计划暂时通过更新变更的rollback_plan字段实现
       await ChangeApi.updateChange(Number(id), { rollbackPlan: JSON.stringify(data) });
-      message.success('回滚计划保存成功');
+      message.success(t('changeDetail.rollbackPlanSaveSuccess'));
     } catch (error) {
-      message.error('保存失败');
+      message.error(t('changeDetail.saveFailed'));
     }
   };
 
@@ -342,10 +344,10 @@ const ChangeDetail: React.FC = () => {
         <Result
           status="404"
           title="404"
-          subTitle="抱歉，您访问的变更不存在"
+          subTitle={t('changeDetail.notFoundDesc')}
           extra={
             <Button type="primary" onClick={() => router.push('/changes')}>
-              返回列表
+              {t('changeDetail.back')}
             </Button>
           }
         />
@@ -362,7 +364,7 @@ const ChangeDetail: React.FC = () => {
             onClick={() => router.push('/changes')}
             style={{ marginBottom: 16 }}
           >
-            返回列表
+            {t('changeDetail.back')}
           </Button>
           <div
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
@@ -375,7 +377,7 @@ const ChangeDetail: React.FC = () => {
               <Space>
                 {canSubmit && (
                   <Button type="primary" loading={processing} onClick={handleSubmit}>
-                    提交审批
+                    {t('changeDetail.submit')}
                   </Button>
                 )}
                 {canApprove && (
@@ -386,7 +388,7 @@ const ChangeDetail: React.FC = () => {
                       loading={processing}
                       onClick={() => setApprovalModalVisible(true)}
                     >
-                      批准
+                      {t('changeDetail.approve')}
                     </Button>
                     <Button
                       danger
@@ -394,64 +396,64 @@ const ChangeDetail: React.FC = () => {
                       loading={processing}
                       onClick={() => setRejectModalVisible(true)}
                     >
-                      拒绝
+                      {t('changeDetail.reject')}
                     </Button>
                   </>
                 )}
                 {canSchedule && (
                   <Button type="primary" loading={processing} onClick={handleSchedule}>
-                    排期
+                    {t('changeDetail.schedule')}
                   </Button>
                 )}
                 {canStart && (
                   <Button type="primary" loading={processing} onClick={handleStart}>
-                    开始实施
+                    {t('changeDetail.startImplementation')}
                   </Button>
                 )}
                 {canComplete && (
                   <>
                     <Button type="primary" loading={processing} onClick={handleComplete}>
-                      完成实施
+                      {t('changeDetail.complete')}
                     </Button>
                     <Button danger loading={processing} onClick={handleRollback}>
-                      回滚
+                      {t('changeDetail.rollback')}
                     </Button>
                   </>
                 )}
                 {canCancel && (
                   <Button danger loading={processing} onClick={handleCancel}>
-                    取消变更
+                    {t('changeDetail.cancelChange')}
                   </Button>
                 )}
               </Space>
             )}
             {canClose && (
               <Button type="primary" loading={processing} onClick={handleClose} style={{ marginLeft: 12 }}>
-                关闭
+                {t('changeDetail.close')}
               </Button>
             )}
           </div>
         </div>
 
         <Descriptions bordered column={2}>
-          <Descriptions.Item label="变更编号">{change.id}</Descriptions.Item>
-          <Descriptions.Item label="变更类型">{ChangeTypeLabels[change.type]}</Descriptions.Item>
-          <Descriptions.Item label="优先级">
+          <Descriptions.Item label={t('changeDetail.labelChangeNumber')}>{change.id}</Descriptions.Item>
+          <Descriptions.Item label={t('changeDetail.labelType')}>{ChangeTypeLabels[change.type]}</Descriptions.Item>
+          <Descriptions.Item label={t('changeDetail.labelPriority')}>
             {ChangePriorityLabels[change.priority]}
           </Descriptions.Item>
-          <Descriptions.Item label="风险等级">
+          <Descriptions.Item label={t('changeDetail.labelRisk')}>
             {ChangeRiskLabels[change.riskLevel]}
           </Descriptions.Item>
-          <Descriptions.Item label="影响范围">
+          <Descriptions.Item label={t('changeDetail.labelImpactScope')}>
             {ChangeImpactLabels[change.impactScope]}
           </Descriptions.Item>
-          <Descriptions.Item label="负责人">{change.assigneeName || '未分配'}</Descriptions.Item>
-          <Descriptions.Item label="计划起始">
+          <Descriptions.Item label={t('changeDetail.labelAssignee')}>{change.assigneeName || t('changeDetail.unassigned')}</Descriptions.Item>
+          <Descriptions.Item label={t('changeDetail.labelPlannedStart')}>
             {change.plannedStartDate
               ? formatDateTime(change.plannedStartDate) || '-'
               : '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="计划截止">
+          <Descriptions.Item label={t('changeDetail.labelPlannedEnd')}>
             {formatDateTime(change.plannedEndDate) || '-'}
           </Descriptions.Item>
         </Descriptions>
@@ -466,28 +468,28 @@ const ChangeDetail: React.FC = () => {
           items={[
             {
               key: '1',
-              label: '基础信息',
+              label: t('changeDetail.basicInfo'),
               children: (
                 <>
-                  <Title level={5}>变更原因 / 理由</Title>
-                  <SafeTextBlock content={change.justification} fallback="无" />
+                  <Title level={5}>{t('changeDetail.justificationTitle')}</Title>
+                  <SafeTextBlock content={change.justification} fallback={t('changeDetail.none')} />
 
-                  <Title level={5}>变更描述</Title>
-                  <SafeTextBlock content={change.description} fallback="无" />
+                  <Title level={5}>{t('changeDetail.descriptionTitle')}</Title>
+                  <SafeTextBlock content={change.description} fallback={t('changeDetail.none')} />
 
                   <Divider />
 
-                  <Title level={5}>实施计划</Title>
+                  <Title level={5}>{t('changeDetail.implementationPlanTitle')}</Title>
                   <SafeTextBlock
                     content={change.implementationPlan}
-                    fallback="未提供实施计划"
+                    fallback={t('changeDetail.noImplementationPlan')}
                     preserveNewlines
                   />
 
-                  <Title level={5}>回滚计划</Title>
+                  <Title level={5}>{t('changeDetail.rollbackPlan')}</Title>
                   <SafeTextBlock
                     content={change.rollbackPlan}
-                    fallback="未提供回滚计划"
+                    fallback={t('changeDetail.noRollbackPlan')}
                     preserveNewlines
                   />
                 </>
@@ -495,7 +497,7 @@ const ChangeDetail: React.FC = () => {
             },
             {
               key: '2',
-              label: '审批记录',
+              label: t('changeDetail.approvalRecords'),
               children:
                 approvals.length > 0 ? (
                   <List
@@ -522,18 +524,18 @@ const ChangeDetail: React.FC = () => {
                               </Text>
                             </Space>
                           }
-                          description={record.comment || '无意见'}
+                          description={record.comment || t('changeDetail.noComment')}
                         />
                       </List.Item>
                     )}
                   />
                 ) : (
-                  <Empty description="暂无审批记录" />
+                  <Empty description={t('changeDetail.noApprovalRecords')} />
                 ),
             },
             {
               key: '3',
-              label: '风险评估',
+              label: t('changeDetail.riskAssessment'),
               children: (
                 <Spin spinning={assessmentLoading}>
                   <ChangeRiskAssessment
@@ -546,7 +548,7 @@ const ChangeDetail: React.FC = () => {
             },
             {
               key: '4',
-              label: '影响分析',
+              label: t('changeDetail.impactAnalysis'),
               children: (
                 <Spin spinning={assessmentLoading}>
                   <ChangeImpactAnalysis
@@ -559,7 +561,7 @@ const ChangeDetail: React.FC = () => {
             },
             {
               key: '5',
-              label: '回滚计划',
+              label: t('changeDetail.rollbackPlan'),
               children: (
                 <Spin spinning={assessmentLoading}>
                   <ChangeRollbackPlan
@@ -572,17 +574,17 @@ const ChangeDetail: React.FC = () => {
             },
             {
               key: '7',
-              label: 'CMDB 影响摘要',
+              label: t('changeDetail.cmdbImpactSummary'),
               children: <ChangeCMDBImpactPanel changeId={Number(id)} />,
             },
             {
               key: '6',
-              label: '实施后审查 (PIR)',
+              label: t('changeDetail.pir'),
               children: (
                 <div className="py-4">
-                  <p className="text-gray-500 mb-4">评估变更实施结果，总结经验教训</p>
+                  <p className="text-gray-500 mb-4">{t('changeDetail.pirDescription')}</p>
                   <Button type="primary" onClick={() => router.push(`/changes/${id}/pir`)}>
-                    {change.status === 'completed' ? '填写PIR' : '查看PIR'}
+                    {change.status === 'completed' ? t('changeDetail.fillPir') : t('changeDetail.viewPir')}
                   </Button>
                 </div>
               ),
@@ -593,24 +595,24 @@ const ChangeDetail: React.FC = () => {
 
       {/* 批准弹窗 */}
       <Modal
-        title="批准变更"
+        title={t('changeDetail.approveTitle')}
         open={approvalModalVisible}
         onCancel={() => setApprovalModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setApprovalModalVisible(false)}>
-            取消
+            {t('changeDetail.cancel')}
           </Button>,
           <Button key="approve" type="primary" loading={processing} onClick={handleApprove}>
-            批准
+            {t('changeDetail.approve')}
           </Button>,
         ]}
       >
         <div className="py-4">
-          <p className="mb-2">审批意见（可选）：</p>
+          <p className="mb-2">{t('changeDetail.approvalCommentOptional')}</p>
           <Input.TextArea
             value={approvalComment}
             onChange={e => setApprovalComment(e.target.value)}
-            placeholder="请输入审批意见..."
+            placeholder={t('changeDetail.approvalCommentPlaceholder')}
             rows={3}
           />
         </div>
@@ -618,24 +620,24 @@ const ChangeDetail: React.FC = () => {
 
       {/* 拒绝弹窗 */}
       <Modal
-        title="拒绝变更"
+        title={t('changeDetail.rejectTitle')}
         open={rejectModalVisible}
         onCancel={() => setRejectModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setRejectModalVisible(false)}>
-            取消
+            {t('changeDetail.cancel')}
           </Button>,
           <Button key="reject" danger loading={processing} onClick={handleReject}>
-            拒绝
+            {t('changeDetail.reject')}
           </Button>,
         ]}
       >
         <div className="py-4">
-          <p className="mb-2">拒绝原因（可选）：</p>
+          <p className="mb-2">{t('changeDetail.rejectReasonOptional')}</p>
           <Input.TextArea
             value={approvalComment}
             onChange={e => setApprovalComment(e.target.value)}
-            placeholder="请输入拒绝原因..."
+            placeholder={t('changeDetail.rejectReasonPlaceholder')}
             rows={3}
           />
         </div>

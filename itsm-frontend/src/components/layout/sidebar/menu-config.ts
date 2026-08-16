@@ -385,7 +385,7 @@ export function getMenuConfig(): MenuConfig {
         label: 'AI助手',
         path: '/ai/chat',
         permission: 'ai:use',
-        description: 'AI 智能助手',
+        description: 'AI 助手',
         children: [
           {
             key: '/ai/chat/list',
@@ -550,13 +550,6 @@ export function getMenuConfig(): MenuConfig {
             label: '自动化规则',
             path: '/admin/tickets/automation-rules',
             permission: 'ticket:manage',
-          },
-          {
-            key: '/admin/approvals',
-            icon: getIconByName('GitMerge')!,
-            label: '审批管理',
-            path: '/admin/approvals',
-            permission: 'approval:manage',
           },
           {
             key: '/admin/approval-chains',

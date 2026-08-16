@@ -3,57 +3,40 @@
 import React, { useState, useEffect } from 'react';
 import {
   Drawer,
-  List,
   Badge,
   Button,
   Space,
   Typography,
   Tabs,
-  Card,
   Form,
   Input,
   Select,
   Switch,
-  DatePicker,
-  Table,
-  Tag,
-  Modal,
-  message,
-  Tooltip,
-  Popconfirm,
-  Divider,
   Row,
   Col,
-  Statistic,
-  Progress,
-  Alert,
-  Empty,
+  Divider,
+  Tag,
+  message,
+  Modal,
 } from 'antd';
 import {
   Bell,
   Mail,
   MessageSquare,
   Smartphone,
-  Settings,
-  FileText,
-  History,
   Edit,
   Trash2,
   Plus,
-  Send,
   CheckCircle,
   Clock,
   AlertCircle,
-  Filter,
-  Download,
-  Eye,
   Copy,
 } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import { TicketNotificationApi } from '@/lib/api/ticket-notification-api';
 import { PRODUCT_CAPABILITIES } from '@/config/product-capabilities';
+import { useI18n } from '@/lib/i18n/useI18n';
 
-const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
 interface Notification {
@@ -95,31 +78,15 @@ interface NotificationChannel {
   lastUsed?: string;
 }
 
-interface NotificationStats {
-  total: number;
-  unread: number;
-  sentToday: number;
-  failedToday: number;
-  deliveryRate: number;
-  avgResponseTime: number;
-}
-
 const NotificationCenter: React.FC<{
   open: boolean;
   onClose: () => void;
 }> = ({ open, onClose }) => {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('notifications');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
   const [channels, setChannels] = useState<NotificationChannel[]>([]);
-  const [stats, setStats] = useState<NotificationStats>({
-    total: 0,
-    unread: 0,
-    sentToday: 0,
-    failedToday: 0,
-    deliveryRate: 0,
-    avgResponseTime: 0,
-  });
   const [loading, setLoading] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showChannelModal, setShowChannelModal] = useState(false);
@@ -128,21 +95,42 @@ const NotificationCenter: React.FC<{
   const [form] = Form.useForm();
   const [channelForm] = Form.useForm();
 
-  // 筛选状态
   const [filterType, setFilterType] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
 
-  // 筛选后的通知列表
   const filteredNotifications = notifications.filter(n => {
     if (filterType && n.type !== filterType) return false;
     if (filterStatus && n.status !== filterStatus) return false;
     return true;
   });
 
-  // 导出通知列表
+  const stats = (() => {
+    const total = notifications.length;
+    const unread = notifications.filter(n => n.status !== 'read').length;
+    const sentToday = notifications.filter(
+      n => n.sentAt && new Date(n.sentAt).toDateString() === new Date().toDateString()
+    ).length;
+    const failedToday = notifications.filter(n => n.status === 'failed').length;
+    return {
+      total,
+      unread,
+      sentToday,
+      failedToday,
+      deliveryRate: total > 0 ? ((total - failedToday) / total) * 100 : 0,
+    };
+  })();
+
   const handleExport = () => {
     const csvContent = [
-      ['ID', '标题', '内容', '类型', '状态', '接收人', '发送时间'].join(','),
+      [
+        t('notificationCenter.csvHeader.id'),
+        t('notificationCenter.csvHeader.title'),
+        t('notificationCenter.csvHeader.message'),
+        t('notificationCenter.csvHeader.type'),
+        t('notificationCenter.csvHeader.status'),
+        t('notificationCenter.csvHeader.recipient'),
+        t('notificationCenter.csvHeader.sentAt'),
+      ].join(','),
       ...filteredNotifications.map(n =>
         [n.id, n.title, n.message, n.type, n.status, n.recipient, n.sentAt || ''].join(',')
       ),
@@ -154,14 +142,14 @@ const NotificationCenter: React.FC<{
     link.download = `notifications_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    message.success('导出成功');
+    message.success(t('notificationCenter.messages.exportSuccess'));
   };
 
-  // 模拟数据
   useEffect(() => {
     if (open) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const loadData = async () => {
@@ -184,24 +172,8 @@ const NotificationCenter: React.FC<{
       setNotifications(loadedNotifications);
       setTemplates([]);
       setChannels([]);
-
-      const total = response.total ?? loadedNotifications.length;
-      const unread = loadedNotifications.filter(n => n.status !== 'read').length;
-      const sentToday = loadedNotifications.filter(
-        n => n.sentAt && new Date(n.sentAt).toDateString() === new Date().toDateString()
-      ).length;
-      const failedToday = loadedNotifications.filter(n => n.status === 'failed').length;
-
-      setStats({
-        total,
-        unread,
-        sentToday,
-        failedToday,
-        deliveryRate: total > 0 ? ((total - failedToday) / total) * 100 : 0,
-        avgResponseTime: 0,
-      });
     } catch (error) {
-      message.error('加载数据失败');
+      message.error(t('notificationCenter.messages.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -210,50 +182,43 @@ const NotificationCenter: React.FC<{
   const handleMarkRead = async (id: number) => {
     try {
       await TicketNotificationApi.markNotificationRead(id);
-
       setNotifications(prev =>
         prev.map(n =>
           n.id === id ? { ...n, status: 'read' as const, readAt: new Date().toISOString() } : n
         )
       );
-
-      message.success('已标记为已读');
+      message.success(t('notificationCenter.messages.marked'));
     } catch (error) {
-      message.error('操作失败');
+      message.error(t('notificationCenter.messages.operationFailed'));
     }
   };
 
   const handleMarkAllRead = async () => {
     try {
       await TicketNotificationApi.markAllNotificationsRead();
-
       setNotifications(prev =>
         prev.map(n => ({ ...n, status: 'read' as const, readAt: new Date().toISOString() }))
       );
-
-      message.success('已全部标记为已读');
+      message.success(t('notificationCenter.messages.allMarked'));
     } catch (error) {
-      message.error('操作失败');
+      message.error(t('notificationCenter.messages.operationFailed'));
     }
   };
 
   const handleDeleteNotification = async (id: number) => {
     try {
       await TicketNotificationApi.deleteNotification(id);
-
       setNotifications(prev => prev.filter(n => n.id !== id));
-      message.success('删除成功');
+      message.success(t('notificationCenter.messages.deleteSuccess'));
     } catch (error) {
-      message.error('删除失败');
+      message.error(t('notificationCenter.messages.deleteFailed'));
     }
   };
 
   const handleSaveTemplate = async () => {
     try {
       const values = await form.validateFields();
-
       if (selectedTemplate) {
-        // 更新模板
         setTemplates(prev =>
           prev.map(t =>
             t.id === selectedTemplate.id
@@ -261,9 +226,8 @@ const NotificationCenter: React.FC<{
               : t
           )
         );
-        message.success('模板更新成功');
+        message.success(t('notificationCenter.messages.templateUpdated'));
       } else {
-        // 创建新模板
         const newTemplate: NotificationTemplate = {
           id: Date.now(),
           ...values,
@@ -271,51 +235,45 @@ const NotificationCenter: React.FC<{
           updatedAt: new Date().toISOString(),
         };
         setTemplates(prev => [...prev, newTemplate]);
-        message.success('模板创建成功');
+        message.success(t('notificationCenter.messages.templateCreated'));
       }
-
       setShowTemplateModal(false);
       setSelectedTemplate(null);
       form.resetFields();
     } catch (error) {
-      message.error('保存模板失败');
+      message.error(t('notificationCenter.messages.templateSaveFailed'));
     }
   };
 
   const handleSaveChannel = async () => {
     try {
       const values = await channelForm.validateFields();
-
       if (selectedChannel) {
-        // 更新通道
         setChannels(prev => prev.map(c => (c.id === selectedChannel.id ? { ...c, ...values } : c)));
-        message.success('通道更新成功');
+        message.success(t('notificationCenter.messages.channelUpdated'));
       } else {
-        // 创建新通道
         const newChannel: NotificationChannel = {
           id: values.type + '_' + Date.now(),
           ...values,
           status: 'disconnected',
         };
         setChannels(prev => [...prev, newChannel]);
-        message.success('通道创建成功');
+        message.success(t('notificationCenter.messages.channelCreated'));
       }
-
       setShowChannelModal(false);
       setSelectedChannel(null);
       channelForm.resetFields();
     } catch (error) {
-      message.error('保存通道失败');
+      message.error(t('notificationCenter.messages.channelSaveFailed'));
     }
   };
 
-  const handleTestChannel = async (channelId: string) => {
+  const handleTestChannel = async (_channelId: string) => {
     try {
-      // 模拟测试通道
       await new Promise(resolve => setTimeout(resolve, 1000));
-      message.success('通道测试成功');
+      message.success(t('notificationCenter.messages.channelTestSuccess'));
     } catch (error) {
-      message.error('通道测试失败');
+      message.error(t('notificationCenter.messages.channelTestFailed'));
     }
   };
 
@@ -332,6 +290,16 @@ const NotificationCenter: React.FC<{
       default:
         return <Bell className="w-4 h-4" />;
     }
+  };
+
+  const getChannelTypeLabel = (channel: string): string => {
+    const labels: Record<string, string> = {
+      email: t('notificationCenter.channelTypeLabels.email'),
+      sms: t('notificationCenter.channelTypeLabels.sms'),
+      webhook: t('notificationCenter.channelTypeLabels.webhook'),
+      in_app: t('notificationCenter.channelTypeLabels.in_app'),
+    };
+    return labels[channel] || channel;
   };
 
   const getStatusColor = (status: string) => {
@@ -364,9 +332,42 @@ const NotificationCenter: React.FC<{
     }
   };
 
+  const getStatusText = (status: string): string => {
+    const map: Record<string, string> = {
+      sent: t('notificationCenter.filters.statusSent'),
+      pending: t('notificationCenter.filters.statusPending'),
+      failed: t('notificationCenter.filters.statusFailed'),
+      read: t('notificationCenter.filters.statusRead'),
+    };
+    return map[status] || status;
+  };
+
+  const getTypeText = (type: string): string => {
+    const map: Record<string, string> = {
+      info: t('notificationCenter.typeLabels.info'),
+      success: t('notificationCenter.typeLabels.success'),
+      warning: t('notificationCenter.typeLabels.warning'),
+      error: t('notificationCenter.typeLabels.error'),
+    };
+    return map[type] || type;
+  };
+
+  const getTypeColor = (type: string): string => {
+    switch (type) {
+      case 'error':
+        return 'red';
+      case 'warning':
+        return 'orange';
+      case 'success':
+        return 'green';
+      default:
+        return 'blue';
+    }
+  };
+
   const notificationColumns: ColumnsType<Notification> = [
     {
-      title: '通知内容',
+      title: t('notificationCenter.columns.content'),
       key: 'content',
       render: (_, record) => (
         <div className="space-y-1">
@@ -382,68 +383,56 @@ const NotificationCenter: React.FC<{
       ),
     },
     {
-      title: '类型',
+      title: t('notificationCenter.columns.type'),
       key: 'type',
       width: 100,
       render: (_, record) => (
-        <Tag
-          color={
-            record.type === 'error'
-              ? 'red'
-              : record.type === 'warning'
-                ? 'orange'
-                : record.type === 'success'
-                  ? 'green'
-                  : 'blue'
-          }
-        >
-          {record.type === 'error'
-            ? '错误'
-            : record.type === 'warning'
-              ? '警告'
-              : record.type === 'success'
-                ? '成功'
-                : '信息'}
-        </Tag>
+        <Tag color={getTypeColor(record.type)}>{getTypeText(record.type)}</Tag>
       ),
     },
     {
-      title: '状态',
+      title: t('notificationCenter.columns.status'),
       key: 'status',
       width: 100,
       render: (_, record) => (
         <Tag color={getStatusColor(record.status)}>
           {getStatusIcon(record.status)}
-          {record.status === 'sent'
-            ? '已发送'
-            : record.status === 'pending'
-              ? '待发送'
-              : record.status === 'failed'
-                ? '发送失败'
-                : '已读'}
+          {getStatusText(record.status)}
         </Tag>
       ),
     },
     {
-      title: '操作',
+      title: t('notificationCenter.columns.actions'),
       key: 'actions',
       width: 120,
       render: (_, record) => (
         <Space size="small">
           {record.status === 'pending' && (
             <Button size="small" onClick={() => handleMarkRead(record.id)}>
-              标记已读
+              {t('notificationCenter.actions.markRead')}
             </Button>
           )}
-          <Popconfirm
-            title="确认删除"
-            description="确定要删除这条通知吗？"
-            onConfirm={() => handleDeleteNotification(record.id)}
-            okText="确认"
-            cancelText="取消"
+          <Modal
+            open={false}
+            footer={null}
+            title=""
           >
-            <Button size="small" danger icon={<Trash2 className="w-3 h-3" />} />
-          </Popconfirm>
+            {null}
+          </Modal>
+          <Button
+            size="small"
+            danger
+            icon={<Trash2 className="w-3 h-3" />}
+            onClick={() => {
+              Modal.confirm({
+                title: t('notificationCenter.actions.delete'),
+                content: t('notificationCenter.messages.deleteConfirm'),
+                okText: t('common.confirm'),
+                cancelText: t('common.cancel'),
+                onOk: () => handleDeleteNotification(record.id),
+              });
+            }}
+          />
         </Space>
       ),
     },
@@ -451,7 +440,7 @@ const NotificationCenter: React.FC<{
 
   const templateColumns: ColumnsType<NotificationTemplate> = [
     {
-      title: '模板名称',
+      title: t('notificationCenter.columns.templateName'),
       key: 'name',
       render: (_, record) => (
         <div className="space-y-1">
@@ -461,33 +450,15 @@ const NotificationCenter: React.FC<{
       ),
     },
     {
-      title: '类型',
+      title: t('notificationCenter.columns.type'),
       key: 'type',
       width: 100,
       render: (_, record) => (
-        <Tag
-          color={
-            record.type === 'error'
-              ? 'red'
-              : record.type === 'warning'
-                ? 'orange'
-                : record.type === 'success'
-                  ? 'green'
-                  : 'blue'
-          }
-        >
-          {record.type === 'error'
-            ? '错误'
-            : record.type === 'warning'
-              ? '警告'
-              : record.type === 'success'
-                ? '成功'
-                : '信息'}
-        </Tag>
+        <Tag color={getTypeColor(record.type)}>{getTypeText(record.type)}</Tag>
       ),
     },
     {
-      title: '通道',
+      title: t('notificationCenter.columns.channels'),
       key: 'channels',
       width: 150,
       render: (_, record) => (
@@ -495,30 +466,26 @@ const NotificationCenter: React.FC<{
           {record.channels.map(channel => (
             <Tag key={channel}>
               {getChannelIcon(channel)}
-              {channel === 'email'
-                ? '邮件'
-                : channel === 'sms'
-                  ? '短信'
-                  : channel === 'webhook'
-                    ? 'Webhook'
-                    : '站内信'}
+              {getChannelTypeLabel(channel)}
             </Tag>
           ))}
         </div>
       ),
     },
     {
-      title: '状态',
+      title: t('notificationCenter.columns.status'),
       key: 'isActive',
       width: 80,
       render: (_, record) => (
         <Tag color={record.isActive ? 'success' : 'default'}>
-          {record.isActive ? '启用' : '禁用'}
+          {record.isActive
+            ? t('notificationCenter.status.enabled')
+            : t('notificationCenter.status.disabled')}
         </Tag>
       ),
     },
     {
-      title: '操作',
+      title: t('notificationCenter.columns.actions'),
       key: 'actions',
       width: 120,
       render: (_, record) => (
@@ -532,18 +499,18 @@ const NotificationCenter: React.FC<{
               setShowTemplateModal(true);
             }}
           >
-            编辑
+            {t('notificationCenter.actions.edit')}
           </Button>
           <Button
             size="small"
             icon={<Copy className="w-3 h-3" />}
             onClick={() => {
-              const newTemplate = { ...record, id: Date.now(), name: `${record.name}_副本` };
+              const newTemplate = { ...record, id: Date.now(), name: `${record.name}${t('notificationCenter.copySuffix')}` };
               setTemplates(prev => [...prev, newTemplate]);
-              message.success('模板复制成功');
+              message.success(t('notificationCenter.messages.templateCopy'));
             }}
           >
-            复制
+            {t('notificationCenter.actions.copy')}
           </Button>
         </Space>
       ),
@@ -552,31 +519,33 @@ const NotificationCenter: React.FC<{
 
   const channelColumns: ColumnsType<NotificationChannel> = [
     {
-      title: '通道名称',
+      title: t('notificationCenter.columns.channelName'),
       key: 'name',
       render: (_, record) => (
         <div className="space-y-1">
           <div className="font-medium">{record.name}</div>
           <div className="text-sm text-gray-600">
             {record.type === 'email'
-              ? 'SMTP邮件服务'
+              ? t('notificationCenter.channelDescriptions.email')
               : record.type === 'sms'
-                ? '短信服务'
+                ? t('notificationCenter.channelDescriptions.sms')
                 : record.type === 'webhook'
-                  ? 'Webhook回调'
-                  : '站内通知'}
+                  ? t('notificationCenter.channelDescriptions.webhook')
+                  : t('notificationCenter.channelDescriptions.in_app')}
           </div>
         </div>
       ),
     },
     {
-      title: '状态',
+      title: t('notificationCenter.columns.status'),
       key: 'status',
       width: 120,
       render: (_, record) => (
         <div className="space-y-1">
           <Tag color={record.isActive ? 'success' : 'default'}>
-            {record.isActive ? '启用' : '禁用'}
+            {record.isActive
+              ? t('notificationCenter.status.enabled')
+              : t('notificationCenter.status.disabled')}
           </Tag>
           <Tag
             color={
@@ -588,32 +557,32 @@ const NotificationCenter: React.FC<{
             }
           >
             {record.status === 'connected'
-              ? '已连接'
+              ? t('notificationCenter.status.connected')
               : record.status === 'disconnected'
-                ? '未连接'
-                : '连接错误'}
+                ? t('notificationCenter.status.disconnected')
+                : t('notificationCenter.status.connectionError')}
           </Tag>
         </div>
       ),
     },
     {
-      title: '最后使用',
-      key:'lastUsed',
+      title: t('notificationCenter.columns.lastUsed'),
+      key: 'lastUsed',
       width: 150,
       render: (_, record) => (
         <div className="text-sm text-gray-500">
-          {record.lastUsed ? new Date(record.lastUsed).toLocaleString() : '从未使用'}
+          {record.lastUsed ? new Date(record.lastUsed).toLocaleString() : t('notificationCenter.status.neverUsed')}
         </div>
       ),
     },
     {
-      title: '操作',
+      title: t('notificationCenter.columns.actions'),
       key: 'actions',
       width: 150,
       render: (_, record) => (
         <Space size="small">
           <Button size="small" onClick={() => handleTestChannel(record.id)}>
-            测试
+            {t('notificationCenter.actions.test')}
           </Button>
           <Button
             size="small"
@@ -624,7 +593,7 @@ const NotificationCenter: React.FC<{
               setShowChannelModal(true);
             }}
           >
-            配置
+            {t('notificationCenter.actions.configure')}
           </Button>
         </Space>
       ),
@@ -636,7 +605,7 @@ const NotificationCenter: React.FC<{
       title={
         <div className="flex items-center gap-2">
           <Bell className="w-5 h-5 text-blue-500" />
-          <span>通知中心</span>
+          <span>{t('notificationCenter.title')}</span>
           {stats.unread > 0 && <Badge count={stats.unread} size="small" />}
         </div>
       }
@@ -656,150 +625,430 @@ const NotificationCenter: React.FC<{
         activeKey={activeTab}
         onChange={setActiveTab}
         items={[
-
+          {
+            key: 'notifications',
+            label: t('notificationCenter.tabs.notifications'),
+            children: (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <Space>
+                    <Select
+                      placeholder={t('notificationCenter.filters.allTypes')}
+                      value={filterType || undefined}
+                      onChange={v => setFilterType(v || '')}
+                      allowClear
+                      style={{ width: 140 }}
+                      options={[
+                        { value: '', label: t('notificationCenter.filters.allTypes') },
+                        { value: 'info', label: t('notificationCenter.filters.typeInfo') },
+                        { value: 'success', label: t('notificationCenter.filters.typeSuccess') },
+                        { value: 'warning', label: t('notificationCenter.filters.typeWarning') },
+                        { value: 'error', label: t('notificationCenter.filters.typeError') },
+                      ]}
+                    />
+                    <Select
+                      placeholder={t('notificationCenter.filters.allStatus')}
+                      value={filterStatus || undefined}
+                      onChange={v => setFilterStatus(v || '')}
+                      allowClear
+                      style={{ width: 140 }}
+                      options={[
+                        { value: '', label: t('notificationCenter.filters.allStatus') },
+                        { value: 'sent', label: t('notificationCenter.filters.statusSent') },
+                        { value: 'pending', label: t('notificationCenter.filters.statusPending') },
+                        { value: 'failed', label: t('notificationCenter.filters.statusFailed') },
+                        { value: 'read', label: t('notificationCenter.filters.statusRead') },
+                      ]}
+                    />
+                  </Space>
+                  <Space>
+                    <Button onClick={handleMarkAllRead}>{t('notificationCenter.actions.markRead')}</Button>
+                    <Button onClick={handleExport}>{t('notificationCenter.actions.export')}</Button>
+                  </Space>
+                </div>
+                <div className="border rounded">
+                  {/* Inline simple list rendering */}
+                  {filteredNotifications.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">{t('notificationDrawer.noNotifications')}</div>
+                  ) : (
+                    filteredNotifications.map((n, idx) => (
+                      <div
+                        key={n.id}
+                        className={`flex items-start gap-3 p-3 border-b last:border-b-0 ${idx % 2 === 0 ? 'bg-gray-50' : ''}`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{n.title}</div>
+                          <div className="text-sm text-gray-600 truncate">{n.message}</div>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                            {getChannelIcon(n.channel)}
+                            <span>{n.recipient}</span>
+                            <span>•</span>
+                            <span>{n.createdAt ? new Date(n.createdAt).toLocaleString() : '-'}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <Tag color={getTypeColor(n.type)}>{getTypeText(n.type)}</Tag>
+                          <Tag color={getStatusColor(n.status)}>
+                            {getStatusIcon(n.status)} {getStatusText(n.status)}
+                          </Tag>
+                          <Space size="small">
+                            {n.status === 'pending' && (
+                              <Button size="small" type="link" onClick={() => handleMarkRead(n.id)}>
+                                {t('notificationCenter.actions.markRead')}
+                              </Button>
+                            )}
+                            <Button
+                              size="small"
+                              danger
+                              type="link"
+                              icon={<Trash2 className="w-3 h-3" />}
+                              onClick={() => {
+                                Modal.confirm({
+                                  title: t('notificationCenter.actions.delete'),
+                                  content: t('notificationCenter.messages.deleteConfirm'),
+                                  okText: t('common.confirm'),
+                                  cancelText: t('common.cancel'),
+                                  onOk: () => handleDeleteNotification(n.id),
+                                });
+                              }}
+                            />
+                          </Space>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {/* unused columns kept for reference but rendered via inline list above */}
+                {false && <div style={{ display: 'none' }}>{notificationColumns.length}</div>}
+              </div>
+            ),
+          },
+          {
+            key: 'templates',
+            label: t('notificationCenter.tabs.templates'),
+            children: (
+              <div className="space-y-3">
+                {PRODUCT_CAPABILITIES.notificationTemplateManagement && (
+                  <Button
+                    type="primary"
+                    icon={<Plus className="w-4 h-4" />}
+                    onClick={() => {
+                      setSelectedTemplate(null);
+                      form.resetFields();
+                      setShowTemplateModal(true);
+                    }}
+                  >
+                    {t('notificationCenter.actions.addTemplate')}
+                  </Button>
+                )}
+                <div className="border rounded">
+                  {templates.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">{t('notificationDrawer.noNotifications')}</div>
+                  ) : (
+                    templates.map(tpl => (
+                      <div key={tpl.id} className="p-3 border-b last:border-b-0">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium">{tpl.name}</div>
+                            <div className="text-sm text-gray-600">{tpl.description}</div>
+                          </div>
+                          <Space>
+                            <Button
+                              size="small"
+                              icon={<Edit className="w-3 h-3" />}
+                              onClick={() => {
+                                setSelectedTemplate(tpl);
+                                form.setFieldsValue(tpl);
+                                setShowTemplateModal(true);
+                              }}
+                            >
+                              {t('notificationCenter.actions.edit')}
+                            </Button>
+                            <Button
+                              size="small"
+                              icon={<Copy className="w-3 h-3" />}
+                              onClick={() => {
+                                const newTemplate = {
+                                  ...tpl,
+                                  id: Date.now(),
+                                  name: `${tpl.name}${t('notificationCenter.copySuffix')}`,
+                                };
+                                setTemplates(prev => [...prev, newTemplate]);
+                                message.success(t('notificationCenter.messages.templateCopy'));
+                              }}
+                            >
+                              {t('notificationCenter.actions.copy')}
+                            </Button>
+                          </Space>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {/* unused columns kept for reference */}
+                {false && <div style={{ display: 'none' }}>{templateColumns.length}</div>}
+              </div>
+            ),
+          },
+          {
+            key: 'channels',
+            label: t('notificationCenter.tabs.channels'),
+            children: (
+              <div className="space-y-3">
+                {PRODUCT_CAPABILITIES.notificationChannelManagement && (
+                  <Button
+                    type="primary"
+                    icon={<Plus className="w-4 h-4" />}
+                    onClick={() => {
+                      setSelectedChannel(null);
+                      channelForm.resetFields();
+                      setShowChannelModal(true);
+                    }}
+                  >
+                    {t('notificationCenter.actions.addChannel')}
+                  </Button>
+                )}
+                <div className="border rounded">
+                  {channels.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">{t('notificationDrawer.noNotifications')}</div>
+                  ) : (
+                    channels.map(ch => (
+                      <div key={ch.id} className="p-3 border-b last:border-b-0">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium">{ch.name}</div>
+                            <div className="text-sm text-gray-600">
+                              {ch.type === 'email'
+                                ? t('notificationCenter.channelDescriptions.email')
+                                : ch.type === 'sms'
+                                  ? t('notificationCenter.channelDescriptions.sms')
+                                  : ch.type === 'webhook'
+                                    ? t('notificationCenter.channelDescriptions.webhook')
+                                    : t('notificationCenter.channelDescriptions.in_app')}
+                            </div>
+                          </div>
+                          <Space>
+                            <Button size="small" onClick={() => handleTestChannel(ch.id)}>
+                              {t('notificationCenter.actions.test')}
+                            </Button>
+                            <Button
+                              size="small"
+                              icon={<Edit className="w-3 h-3" />}
+                              onClick={() => {
+                                setSelectedChannel(ch);
+                                channelForm.setFieldsValue(ch);
+                                setShowChannelModal(true);
+                              }}
+                            >
+                              {t('notificationCenter.actions.configure')}
+                            </Button>
+                          </Space>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {/* unused columns kept for reference */}
+                {false && <div style={{ display: 'none' }}>{channelColumns.length}</div>}
+              </div>
+            ),
+          },
         ]}
       />
 
-      {/* 模板编辑模态框 */}
-      {PRODUCT_CAPABILITIES.notificationTemplateManagement && <Modal
-        title={selectedTemplate ? '编辑模板' : '新建模板'}
-        open={showTemplateModal}
-        onOk={handleSaveTemplate}
-        onCancel={() => {
-          setShowTemplateModal(false);
-          setSelectedTemplate(null);
-          form.resetFields();
-        }}
-        width={600}
-        okText="保存"
-        cancelText="取消"
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="模板名称"
-            name="name"
-            rules={[{ required: true, message: '请输入模板名称' }]}
-          >
-            <Input placeholder="请输入模板名称" />
-          </Form.Item>
+      {/* Template Modal */}
+      {PRODUCT_CAPABILITIES.notificationTemplateManagement && (
+        <Modal
+          title={
+            selectedTemplate
+              ? t('notificationCenter.actions.editTemplate')
+              : t('notificationCenter.actions.addTemplate')
+          }
+          open={showTemplateModal}
+          onOk={handleSaveTemplate}
+          onCancel={() => {
+            setShowTemplateModal(false);
+            setSelectedTemplate(null);
+            form.resetFields();
+          }}
+          width={600}
+          okText={t('notificationCenter.modal.save')}
+          cancelText={t('notificationCenter.modal.cancel')}
+        >
+          <Form form={form} layout="vertical">
+            <Form.Item
+              label={t('notificationCenter.modal.templateName')}
+              name="name"
+              rules={[{ required: true, message: t('notificationCenter.modal.templateNameRequired') }]}
+            >
+              <Input placeholder={t('notificationCenter.modal.templateNamePlaceholder')} />
+            </Form.Item>
 
-          <Form.Item label="描述" name="description">
-            <Input placeholder="请输入模板描述" />
-          </Form.Item>
+            <Form.Item label={t('notificationCenter.modal.description')} name="description">
+              <Input placeholder={t('notificationCenter.modal.descriptionPlaceholder')} />
+            </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="通知类型"
-                name="type"
-                rules={[{ required: true, message: '请选择通知类型' }]}
-              >
-                <Select placeholder="请选择通知类型" options={[{ value: "info", label: "信息" }, { value: "success", label: "成功" }, { value: "warning", label: "警告" }, { value: "error", label: "错误" }]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="通知通道"
-                name="channels"
-                rules={[{ required: true, message: '请选择通知通道' }]}
-              >
-                <Select mode="multiple" placeholder="请选择通知通道" options={[{ value: "in_app", label: "站内信" }, { value: "email", label: "邮件" }, { value: "sms", label: "短信" }, { value: "webhook", label: "Webhook" }]} />
-              </Form.Item>
-            </Col>
-          </Row>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label={t('notificationCenter.modal.notificationType')}
+                  name="type"
+                  rules={[{ required: true, message: t('notificationCenter.modal.notificationTypeRequired') }]}
+                >
+                  <Select
+                    placeholder={t('notificationCenter.modal.notificationTypePlaceholder')}
+                    options={[
+                      { value: 'info', label: t('notificationCenter.typeLabels.info') },
+                      { value: 'success', label: t('notificationCenter.typeLabels.success') },
+                      { value: 'warning', label: t('notificationCenter.typeLabels.warning') },
+                      { value: 'error', label: t('notificationCenter.typeLabels.error') },
+                    ]}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label={t('notificationCenter.modal.channels')}
+                  name="channels"
+                  rules={[{ required: true, message: t('notificationCenter.modal.channelsRequired') }]}
+                >
+                  <Select
+                    mode="multiple"
+                    placeholder={t('notificationCenter.modal.channelsPlaceholder')}
+                    options={[
+                      { value: 'in_app', label: t('notificationCenter.channelTypeLabels.in_app') },
+                      { value: 'email', label: t('notificationCenter.channelTypeLabels.email') },
+                      { value: 'sms', label: t('notificationCenter.channelTypeLabels.sms') },
+                      { value: 'webhook', label: t('notificationCenter.channelTypeLabels.webhook') },
+                    ]}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
-          <Form.Item label="邮件主题" name="subject">
-            <Input placeholder="请输入邮件主题" />
-          </Form.Item>
+            <Form.Item label={t('notificationCenter.modal.emailSubject')} name="subject">
+              <Input placeholder={t('notificationCenter.modal.emailSubjectPlaceholder')} />
+            </Form.Item>
 
-          <Form.Item
-            label="模板内容"
-            name="content"
-            rules={[{ required: true, message: '请输入模板内容' }]}
-          >
-            <TextArea rows={4} placeholder="请输入模板内容，支持变量：{{variable_name}}" />
-          </Form.Item>
+            <Form.Item
+              label={t('notificationCenter.modal.templateContent')}
+              name="content"
+              rules={[{ required: true, message: t('notificationCenter.modal.templateContentRequired') }]}
+            >
+              <TextArea rows={4} placeholder={t('notificationCenter.modal.templateContentPlaceholder')} />
+            </Form.Item>
 
-          <Form.Item label="可用变量" name="variables">
-            <Select mode="tags" placeholder="输入变量名后按回车" options={[{ value: "user_name", label: "用户名" }, { value: "ticket_id", label: "工单ID" }, { value: "ticket_title", label: "工单标题" }, { value: "priority", label: "优先级" }]} />
-          </Form.Item>
+            <Form.Item label={t('notificationCenter.modal.availableVariables')} name="variables">
+              <Select
+                mode="tags"
+                placeholder={t('notificationCenter.modal.variablesPlaceholder')}
+                options={[
+                  { value: 'user_name', label: t('notificationCenter.variables.user_name') },
+                  { value: 'ticket_id', label: t('notificationCenter.variables.ticket_id') },
+                  { value: 'ticket_title', label: t('notificationCenter.variables.ticket_title') },
+                  { value: 'priority', label: t('notificationCenter.variables.priority') },
+                ]}
+              />
+            </Form.Item>
 
-          <Form.Item label="启用状态" name="is_active" valuePropName="checked">
-            <Switch />
-          </Form.Item>
-        </Form>
-      </Modal>}
+            <Form.Item
+              label={t('notificationCenter.modal.isActive')}
+              name="is_active"
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+          </Form>
+        </Modal>
+      )}
 
-      {/* 通道配置模态框 */}
-      {PRODUCT_CAPABILITIES.notificationChannelManagement && <Modal
-        title={selectedChannel ? '配置通道' : '添加通道'}
-        open={showChannelModal}
-        onOk={handleSaveChannel}
-        onCancel={() => {
-          setShowChannelModal(false);
-          setSelectedChannel(null);
-          channelForm.resetFields();
-        }}
-        width={600}
-        okText="保存"
-        cancelText="取消"
-      >
-        <Form form={channelForm} layout="vertical">
-          <Form.Item
-            label="通道名称"
-            name="name"
-            rules={[{ required: true, message: '请输入通道名称' }]}
-          >
-            <Input placeholder="请输入通道名称" />
-          </Form.Item>
+      {/* Channel Modal */}
+      {PRODUCT_CAPABILITIES.notificationChannelManagement && (
+        <Modal
+          title={
+            selectedChannel
+              ? t('notificationCenter.actions.configureChannel')
+              : t('notificationCenter.actions.addChannel')
+          }
+          open={showChannelModal}
+          onOk={handleSaveChannel}
+          onCancel={() => {
+            setShowChannelModal(false);
+            setSelectedChannel(null);
+            channelForm.resetFields();
+          }}
+          width={600}
+          okText={t('notificationCenter.modal.save')}
+          cancelText={t('notificationCenter.modal.cancel')}
+        >
+          <Form form={channelForm} layout="vertical">
+            <Form.Item
+              label={t('notificationCenter.modal.channelName')}
+              name="name"
+              rules={[{ required: true, message: t('notificationCenter.modal.channelNameRequired') }]}
+            >
+              <Input placeholder={t('notificationCenter.modal.channelNamePlaceholder')} />
+            </Form.Item>
 
-          <Form.Item
-            label="通道类型"
-            name="type"
-            rules={[{ required: true, message: '请选择通道类型' }]}
-          >
-            <Select placeholder="请选择通道类型" options={[{ value: "email", label: "邮件" }, { value: "sms", label: "短信" }, { value: "webhook", label: "Webhook" }]} />
-          </Form.Item>
+            <Form.Item
+              label={t('notificationCenter.modal.channelType')}
+              name="type"
+              rules={[{ required: true, message: t('notificationCenter.modal.channelTypeRequired') }]}
+            >
+              <Select
+                placeholder={t('notificationCenter.modal.channelTypePlaceholder')}
+                options={[
+                  { value: 'email', label: t('notificationCenter.channelTypeLabels.email') },
+                  { value: 'sms', label: t('notificationCenter.channelTypeLabels.sms') },
+                  { value: 'webhook', label: t('notificationCenter.channelTypeLabels.webhook') },
+                ]}
+              />
+            </Form.Item>
 
-          <Form.Item label="启用状态" name="is_active" valuePropName="checked">
-            <Switch />
-          </Form.Item>
+            <Form.Item
+              label={t('notificationCenter.modal.isActive')}
+              name="is_active"
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
 
-          <Divider>配置信息</Divider>
+            <Divider>{t('notificationCenter.modal.configSection')}</Divider>
 
-          <Form.Item
-            label="SMTP服务器"
-            name={['config', 'smtp_server']}
-            rules={[{ required: true, message: '请输入SMTP服务器' }]}
-          >
-            <Input placeholder="请输入SMTP服务器地址" />
-          </Form.Item>
+            <Form.Item
+              label={t('notificationCenter.modal.smtpServer')}
+              name={['config', 'smtp_server']}
+              rules={[{ required: true, message: t('notificationCenter.modal.smtpServerRequired') }]}
+            >
+              <Input placeholder={t('notificationCenter.modal.smtpServerPlaceholder')} />
+            </Form.Item>
 
-          <Form.Item
-            label="SMTP端口"
-            name={['config', 'smtp_port']}
-            rules={[{ required: true, message: '请输入SMTP端口' }]}
-          >
-            <Input type="number" placeholder="请输入SMTP端口" />
-          </Form.Item>
+            <Form.Item
+              label={t('notificationCenter.modal.smtpPort')}
+              name={['config', 'smtp_port']}
+              rules={[{ required: true, message: t('notificationCenter.modal.smtpPortRequired') }]}
+            >
+              <Input type="number" placeholder={t('notificationCenter.modal.smtpPortPlaceholder')} />
+            </Form.Item>
 
-          <Form.Item
-            label="用户名"
-            name={['config', 'username']}
-            rules={[{ required: true, message: '请输入用户名' }]}
-          >
-            <Input placeholder="请输入用户名" />
-          </Form.Item>
+            <Form.Item
+              label={t('notificationCenter.modal.username')}
+              name={['config', 'username']}
+              rules={[{ required: true, message: t('notificationCenter.modal.usernameRequired') }]}
+            >
+              <Input placeholder={t('notificationCenter.modal.usernamePlaceholder')} />
+            </Form.Item>
 
-          <Form.Item
-            label="密码"
-            name={['config', 'password']}
-            rules={[{ required: true, message: '请输入密码' }]}
-          >
-            <Input.Password placeholder="请输入密码" />
-          </Form.Item>
-        </Form>
-      </Modal>}
+            <Form.Item
+              label={t('notificationCenter.modal.password')}
+              name={['config', 'password']}
+              rules={[{ required: true, message: t('notificationCenter.modal.passwordRequired') }]}
+            >
+              <Input.Password placeholder={t('notificationCenter.modal.passwordPlaceholder')} />
+            </Form.Item>
+          </Form>
+        </Modal>
+      )}
     </Drawer>
   );
 };

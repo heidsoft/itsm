@@ -36,13 +36,13 @@ const ServiceCatalogSkeleton: React.FC = () => (
 );
 
 // 分类配置
-const categoryConfig = [
-  { key: 'all', label: '全部服务', icon: <Server /> },
-  { key: 'cloud', label: '云资源服务', icon: <Cloud /> },
-  { key: 'account', label: '账号与权限', icon: <UserCog /> },
-  { key: 'security', label: '安全服务', icon: <ShieldCheck /> },
-  { key: 'database', label: '数据库服务', icon: <Database /> },
-  { key: 'network', label: '网络服务', icon: <Lock /> },
+const getCategoryConfig = (t: (k: string) => string) => [
+  { key: 'all', label: t('serviceCatalog.categories.all'), icon: <Server /> },
+  { key: 'cloud', label: t('serviceCatalog.categories.cloud'), icon: <Cloud /> },
+  { key: 'account', label: t('serviceCatalog.categories.account'), icon: <UserCog /> },
+  { key: 'security', label: t('serviceCatalog.categories.security'), icon: <ShieldCheck /> },
+  { key: 'database', label: t('serviceCatalog.categories.database'), icon: <Database /> },
+  { key: 'network', label: t('serviceCatalog.categories.network'), icon: <Lock /> },
 ];
 
 export default function ServiceCatalogPage() {
@@ -77,11 +77,11 @@ export default function ServiceCatalogPage() {
     let result = catalogs;
 
     const categoryMap: Record<string, string[]> = {
-      cloud: ['云资源服务', 'Cloud Service'],
-      account: ['账号与权限', 'Account Service'],
-      security: ['安全服务', 'Security Service'],
-      database: ['数据库服务', 'Database Service'],
-      network: ['网络服务', 'Network Service'],
+      cloud: [t('serviceCatalog.categories.cloud'), 'Cloud Service'],
+      account: [t('serviceCatalog.categories.account'), 'Account Service'],
+      security: [t('serviceCatalog.categories.security'), 'Security Service'],
+      database: [t('serviceCatalog.categories.database'), 'Database Service'],
+      network: [t('serviceCatalog.categories.network'), 'Network Service'],
     };
 
     const targetCategories = categoryMap[activeCategory] || [];
@@ -92,7 +92,7 @@ export default function ServiceCatalogPage() {
     if (ciTypeFilter) result = result.filter(catalog => catalog.ciTypeId === ciTypeFilter);
     if (cloudServiceFilter) result = result.filter(catalog => catalog.cloudServiceId === cloudServiceFilter);
     return result;
-  }, [catalogs, activeCategory, categoryFilter, ciTypeFilter, cloudServiceFilter]);
+  }, [catalogs, activeCategory, categoryFilter, ciTypeFilter, cloudServiceFilter, t]);
 
   const popularCatalogs = React.useMemo(
     () => [...catalogs]
@@ -129,11 +129,11 @@ export default function ServiceCatalogPage() {
     // 更新筛选条件
     const categoryMap: Record<string, string> = {
       all: '',
-      cloud: '云资源服务',
-      account: '账号与权限',
-      security: '安全服务',
-      database: '数据库服务',
-      network: '网络服务',
+      cloud: t('serviceCatalog.categories.cloud'),
+      account: t('serviceCatalog.categories.account'),
+      security: t('serviceCatalog.categories.security'),
+      database: t('serviceCatalog.categories.database'),
+      network: t('serviceCatalog.categories.network'),
     };
     setCategoryFilter(categoryMap[category] || '');
   };
@@ -173,15 +173,17 @@ export default function ServiceCatalogPage() {
     return <ServiceCatalogSkeleton />;
   }
 
+  const categoryConfig = getCategoryConfig(t);
+
   return (
     <div className="p-6 min-h-screen" style={{ backgroundColor: 'var(--color-bg-secondary, #f9fafb)' }}>
       {/* 页面头部 */}
       <div className="mb-6">
         <Title level={2} style={{ marginBottom: 4 }}>
-          服务目录
+          {t('serviceCatalog.title')}
         </Title>
         <Text type="secondary">
-          浏览和申请IT服务，支持云资源、账号权限、安全服务等多种服务类型
+          {t('serviceCatalog.pageDescription')}
         </Text>
       </div>
 
@@ -191,8 +193,8 @@ export default function ServiceCatalogPage() {
       {popularCatalogs.length > 0 && (
         <Card
           className="mb-6"
-          title={<span className="flex items-center gap-2"><Flame size={18} className="text-orange-500" />热门服务</span>}
-          extra={<Text type="secondary">按申请热度推荐</Text>}
+          title={<span className="flex items-center gap-2"><Flame size={18} className="text-orange-500" />{t('serviceCatalog.popularServices')}</span>}
+          extra={<Text type="secondary">{t('serviceCatalog.popularRecommended')}</Text>}
         >
           <Row gutter={[16, 16]}>
             {popularCatalogs.map((catalog, index) => (
@@ -203,7 +205,7 @@ export default function ServiceCatalogPage() {
                   onClick={() => window.location.assign(`/service-catalog/request/${catalog.id}`)}
                 >
                   <span><span className="block font-medium">{catalog.name}</span><span className="text-xs text-gray-500">{catalog.category}</span></span>
-                  <Tag color={index === 0 ? 'volcano' : 'blue'}>{catalog.requestCount ?? 0} 次申请</Tag>
+                  <Tag color={index === 0 ? 'volcano' : 'blue'}>{catalog.requestCount ?? 0} {t('serviceCatalog.requestsCount')}</Tag>
                 </button>
               </Col>
             ))}
@@ -214,7 +216,7 @@ export default function ServiceCatalogPage() {
       {/* 分类标签页 */}
       <Card className="mb-6">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <Text strong>快速选择：</Text>
+          <Text strong>{t('serviceCatalog.quickSelect')}</Text>
           {categoryConfig.slice(1).map(category => (
             <Button key={category.key} size="small" type={activeCategory === category.key ? 'primary' : 'default'} onClick={() => handleCategoryChange(category.key)}>
               {category.label}
@@ -228,11 +230,11 @@ export default function ServiceCatalogPage() {
           size="large"
           items={categoryConfig.map(cat => {
             const categoryMap: Record<string, string[]> = {
-              cloud: ['云资源服务', 'Cloud Service'],
-              account: ['账号与权限', 'Account Service'],
-              security: ['安全服务', 'Security Service'],
-              database: ['数据库服务', 'Database Service'],
-              network: ['网络服务', 'Network Service'],
+              cloud: [t('serviceCatalog.categories.cloud'), 'Cloud Service'],
+              account: [t('serviceCatalog.categories.account'), 'Account Service'],
+              security: [t('serviceCatalog.categories.security'), 'Security Service'],
+              database: [t('serviceCatalog.categories.database'), 'Database Service'],
+              network: [t('serviceCatalog.categories.network'), 'Network Service'],
             };
             const keywords = categoryMap[cat.key] || [];
             const count =
@@ -257,8 +259,8 @@ export default function ServiceCatalogPage() {
 
       {/* 筛选和搜索 */}
       {error && (
-        <Alert className="mb-4" type="error" showIcon message="服务目录加载失败" description={error}
-          action={<Button onClick={loadServiceCatalogs}>重新加载</Button>} />
+        <Alert className="mb-4" type="error" showIcon message={t('serviceCatalog.loadFailed')} description={error}
+          action={<Button onClick={loadServiceCatalogs}>{t('serviceCatalog.reload')}</Button>} />
       )}
       <ServiceCatalogFilters
         onSearch={setSearchText}
@@ -278,9 +280,9 @@ export default function ServiceCatalogPage() {
           <Empty
             description={
               <div>
-                <p className="text-gray-500 mb-4">暂无符合条件的服务</p>
+                <p className="text-gray-500 mb-4">{t('serviceCatalog.noMatchingServices')}</p>
                 <Button type="primary" onClick={handleCreateService}>
-                  创建第一个服务
+                  {t('serviceCatalog.createFirst')}
                 </Button>
               </div>
             }
