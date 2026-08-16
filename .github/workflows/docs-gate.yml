@@ -38,6 +38,13 @@ on:
       - '.env.prod'
       - 'scripts/docs-gate/**'
       - '.github/workflows/docs-gate.yml'
+  workflow_call:
+    inputs:
+      strict:
+        description: 'Enable hard mode (v2.0+). Default: advisory only.'
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       strict:
