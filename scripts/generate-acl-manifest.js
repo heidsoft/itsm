@@ -225,6 +225,12 @@ const KNOWN_PUBLIC = new Set([
   "/api/v1/connectors/feishu/callback",
   "/api/v1/feishu/oauth/callback",
   "/api/v1/feishu/webhook",
+  // 首次启动初始化：创建初始管理员之前不存在任何账号，无法要求登录态
+  "/api/v1/bootstrap/status",
+  "/api/v1/bootstrap/create-admin",
+  // 飞书 OAuth/Webhook 回调带实例参数，外部系统回调仍由实例签名保护
+  "/api/v1/feishu/oauth/callback/:instance_id",
+  "/api/v1/feishu/webhook/:instance_id",
 ]);
 
 // 认证即可访问的身份/自服务类端点：登录后任意角色都需要，
@@ -242,6 +248,7 @@ const AUTH_ONLY = new Set([
   "/api/v1/auth/switch-tenant",  // 租户切换：JWT 认证即可，无需 RBAC 资源权限
   "/api/v1/users/profile",
   "/api/v1/users/me",
+  "/api/v1/capabilities",  // 产品能力开关清单：登录后任意角色需要用于功能开关渲染
 ]);
 
 // ---------------------------------------------------------------------------
