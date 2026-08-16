@@ -166,7 +166,7 @@ jobs:
         include:
           - name: backend
             context: ./itsm-backend
-            file: ./itsm-backend/Dockerfile
+            file: ./itsm-backend/Dockerfile.prod
             image: ghcr.io/${{ github.repository_owner }}/itsm-backend
           - name: frontend
             context: ./itsm-frontend
