@@ -74,6 +74,11 @@ var RegisteredMigrations = []Migration{
 		Description: "Enforce one active process binding for each tenant-scoped routing business key",
 		RollbackSQL: "DROP INDEX IF EXISTS uq_process_bindings_active_route_key;",
 	},
+	{
+		Version:     "014_add_change_approval_quorum",
+		Description: "Add approval_type and threshold columns to change_approval_chains to support OR/parallel/threshold-N quorum (engine-driven change approvals)",
+		RollbackSQL: "ALTER TABLE change_approval_chains DROP COLUMN IF EXISTS approval_type; ALTER TABLE change_approval_chains DROP COLUMN IF EXISTS threshold;",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -636,6 +641,12 @@ ON process_bindings (
     category
 )
 WHERE is_active = TRUE;
+`
+	case "014_add_change_approval_quorum":
+		return `
+ALTER TABLE change_approval_chains
+  ADD COLUMN IF NOT EXISTS approval_type TEXT NOT NULL DEFAULT 'serial',
+  ADD COLUMN IF NOT EXISTS threshold INTEGER NOT NULL DEFAULT 1;
 `
 	default:
 		return ""

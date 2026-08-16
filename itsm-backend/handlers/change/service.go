@@ -23,17 +23,22 @@ type Service struct {
 	entClient      *ent.Client
 	pirService     *service.ChangePIRService
 	approvalBridge *service.BPMNApprovalBridge
+	// approvalChain 审批链求值引擎：提交变更时按实体类型 "change" 解析租户级激活链，
+	// 以解析出的审批人（租户隔离、含 fallback）覆盖调用方传入的审批人，
+	// 堵住「无审批人时自审」与越权自选审批人；链阻塞则失败关闭。
+	approvalChain *service.ApprovalChainService
 }
 
 type workflowCommandCreator interface {
 	CreateWithWorkflowCommand(context.Context, *Change) (*Change, error)
 }
 
-func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogger, approvalChain *service.ApprovalChainService) *Service {
 	svc := &Service{
-		repo:      repo,
-		entClient: entClient,
-		logger:    logger,
+		repo:          repo,
+		entClient:     entClient,
+		logger:        logger,
+		approvalChain: approvalChain,
 	}
 	// Initialize PIR service
 	svc.pirService = service.NewChangePIRService(entClient, logger)
@@ -182,32 +187,49 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		return nil, fmt.Errorf("change must be in draft status to submit")
 	}
 
-	// 3.5. If no approvers specified, default to the change creator
-	if len(req.ApproverIDs) == 0 {
-		req.ApproverIDs = []int{c.CreatedBy}
-		s.logger.Infow("No approvers specified, defaulting to change creator", "change_id", changeID, "creator_id", c.CreatedBy)
+	// 3. 解析审批计划（引擎层级 + quorum）。
+	//     命中激活 "change" 链时以引擎解析结果（保留每层 approval_type/threshold）覆盖
+	//     调用方传入审批人，杜绝「无审批人自审」与越权自选审批人；链阻塞（必需层无审批人
+	//     且策略为阻断）→ 失败关闭；无激活链 → 回退旧逻辑（调用方传入 / 默认创建人）。
+	var plan []ApprovalLevelPlan
+	if s.approvalChain != nil {
+		chainPlan, cerr := s.resolveChangeChainPlan(ctx, tenantID, c.ID, c.CreatedBy)
+		if cerr != nil {
+			return nil, fmt.Errorf("变更审批链解析失败，无法提交：%w", cerr)
+		}
+		plan = chainPlan
 	}
 
-	// 4. Validate approvers belong to the same tenant before creating approval records
-	for _, approverID := range req.ApproverIDs {
-		valid, err := s.repo.ValidateApproverBelongsToTenant(ctx, approverID, tenantID)
-		if err != nil {
-			s.logger.Warnw("Failed to validate approver", "error", err, "approver_id", approverID)
-			return nil, fmt.Errorf("验证审批人失败")
+	if len(plan) == 0 {
+		// 旧逻辑：调用方传入审批人，或缺省创建人；租户校验后构建单级 serial 计划
+		// （阈值 1 = 全员顺序必需，等价旧 AND 行为，字节级不变）。
+		ids := req.ApproverIDs
+		if len(ids) == 0 {
+			ids = []int{c.CreatedBy}
+			s.logger.Infow("No approvers specified, defaulting to change creator", "change_id", changeID, "creator_id", c.CreatedBy)
 		}
-		if !valid {
-			s.logger.Warnw("Approver does not belong to tenant", "approver_id", approverID, "tenant_id", tenantID)
-			return nil, fmt.Errorf("审批人 %d 不属于当前租户", approverID)
+		for _, approverID := range ids {
+			valid, verr := s.repo.ValidateApproverBelongsToTenant(ctx, approverID, tenantID)
+			if verr != nil {
+				s.logger.Warnw("Failed to validate approver", "error", verr, "approver_id", approverID)
+				return nil, fmt.Errorf("验证审批人失败")
+			}
+			if !valid {
+				s.logger.Warnw("Approver does not belong to tenant", "approver_id", approverID, "tenant_id", tenantID)
+				return nil, fmt.Errorf("审批人 %d 不属于当前租户", approverID)
+			}
 		}
+		plan = []ApprovalLevelPlan{{Level: 1, ApprovalType: "serial", Threshold: 1, Required: true, ApproverIDs: ids}}
 	}
 
-	if err := s.repo.SubmitForApproval(ctx, changeID, tenantID, req.ApproverIDs, req.Comment); err != nil {
+	// 4. 提交（写入 change_approval_chains，保留层级与 quorum 元数据）
+	if err := s.repo.SubmitForApproval(ctx, changeID, tenantID, plan, req.Comment); err != nil {
 		s.logger.Warnw("Failed to atomically submit change", "error", err, "change_id", changeID)
 		return nil, fmt.Errorf("提交变更审批失败: %w", err)
 	}
 
 	// P0-2：提交审批后同步完成流程中的“变更评估”任务，推进到审批网关。
-	// 失败不回滚已提交的业务审批（后续动作会自愈推进流程），仅记录告警。
+	// 这一段失败不回滚已提交的业务审批（后续动作会自愈推进流程），仅记录告警。
 	if s.approvalBridge != nil {
 		if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
 			ctx, tenantID, submitterID, string(dto.BusinessTypeChange), changeID, nil, 1,
@@ -217,10 +239,59 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 	}
 
 	// 审批记录、审批链和 notification.deliver 命令已由仓储在同一事务提交。
-	s.logger.Infow("Change submitted for approval", "change_id", changeID, "submitter_id", submitterID, "approvers", req.ApproverIDs)
+	s.logger.Infow("Change submitted for approval", "change_id", changeID, "submitter_id", submitterID, "levels", len(plan))
 
 	c.Status = "pending"
 	return c, nil
+}
+
+// resolveChangeChainPlan 解析租户内 "change" 类型的激活审批链，按引擎层级结构
+// 输出审批计划（含每层的 approval_type / threshold / required / approver_ids）。
+// 返回 (nil, nil) 表示无激活链（调用方应回退旧逻辑）；
+// 返回 (nil, err) 表示链存在但被阻塞（必需层无审批人且策略为阻断），调用方应失败关闭。
+func (s *Service) resolveChangeChainPlan(ctx context.Context, tenantID, changeID, submitterID int) ([]ApprovalLevelPlan, error) {
+	evalCtx := service.ApprovalEvalContext{
+		TenantID:    tenantID,
+		EntityType:  "change",
+		RequesterID: submitterID,
+	}
+	plan, err := s.approvalChain.ResolveApprovalPlan(ctx, tenantID, "change", evalCtx, nil)
+	if err != nil {
+		// 未找到激活链或解析异常 → 降级为旧逻辑（不阻断提交可用性，仅记录）
+		s.logger.Warnw("变更审批链解析降级为旧逻辑", "error", err, "change_id", changeID, "tenant_id", tenantID)
+		return nil, nil
+	}
+	if plan.Blocked {
+		return nil, fmt.Errorf("审批链存在阻塞层级（缺少审批人且策略为阻断）")
+	}
+	out := make([]ApprovalLevelPlan, 0, len(plan.Levels))
+	for _, lv := range plan.Levels {
+		if len(lv.ApproverIDs) == 0 {
+			// 非必需层且无审批人：引擎已视其 satisfied，提交阶段无审批人可插，跳过。
+			continue
+		}
+		at := lv.ApprovalType
+		if at == "" {
+			at = "serial"
+		}
+		thr := lv.Threshold
+		if thr <= 0 {
+			// serial/or 默认 1；parallel/all 在引擎已置为候选人数。
+			if at == "serial" || at == "or" {
+				thr = 1
+			} else {
+				thr = len(lv.ApproverIDs)
+			}
+		}
+		out = append(out, ApprovalLevelPlan{
+			Level:        lv.Level,
+			ApprovalType: at,
+			Threshold:    thr,
+			Required:     lv.Required,
+			ApproverIDs:  lv.ApproverIDs,
+		})
+	}
+	return out, nil
 }
 
 // Approval methods
@@ -326,45 +397,107 @@ func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenant
 		return err
 	}
 
-	// Simple logic: if all required members approved, transition to 'approved'
-	allApproved := true
-	requiredCount := 0
-	approvedMap := make(map[int]bool)
-	for _, h := range history {
-		if h.Status == "approved" {
-			approvedMap[h.ApproverID] = true
+	// 按 level 聚合每层：审批人集合、已批准/已驳回、该层阈值（quorum）。
+	type levelAgg struct {
+		required    bool
+		threshold   int
+		approverIDs map[int]struct{}
+		approved    map[int]struct{}
+		rejected    bool
+	}
+	levels := map[int]*levelAgg{}
+	var order []int
+	for _, item := range chain {
+		agg, ok := levels[item.Level]
+		if !ok {
+			agg = &levelAgg{approverIDs: map[int]struct{}{}, approved: map[int]struct{}{}}
+			levels[item.Level] = agg
+			order = append(order, item.Level)
+		}
+		agg.approverIDs[item.ApproverID] = struct{}{}
+		if item.IsRequired {
+			agg.required = true
+		}
+		// 该层阈值：引擎写入的 threshold 优先；缺省按类型推导
+		// （parallel/all = 候选人数，serial/or = 1）。
+		if item.Threshold > 0 {
+			agg.threshold = item.Threshold
+		} else if item.ApprovalType == "parallel" || item.ApprovalType == "all" {
+			agg.threshold = len(agg.approverIDs)
+		} else {
+			agg.threshold = 1
 		}
 	}
-
-	for _, item := range chain {
-		if item.IsRequired {
-			requiredCount++
-			if !approvedMap[item.ApproverID] {
-				allApproved = false
-				break
+	// 标记历史决定（租户过滤由仓储保证）
+	for _, h := range history {
+		for _, agg := range levels {
+			if _, ok := agg.approverIDs[h.ApproverID]; !ok {
+				continue
+			}
+			if h.Status == "approved" {
+				agg.approved[h.ApproverID] = struct{}{}
+			}
+			if h.Status == "rejected" {
+				agg.rejected = true
 			}
 		}
 	}
 
-	if allApproved && requiredCount > 0 {
+	// 计算每层满意度
+	allRequiredSatisfied := true
+	anyRequiredRejected := false
+	hasRequired := false
+	for _, lvl := range order {
+		agg := levels[lvl]
+		if !agg.required {
+			continue
+		}
+		hasRequired = true
+		if agg.rejected {
+			anyRequiredRejected = true
+			break
+		}
+		if len(agg.approved) < agg.threshold {
+			allRequiredSatisfied = false
+		}
+	}
+
+	// 任一必需层被驳回 → 整体驳回
+	if anyRequiredRejected {
 		c, err := s.repo.Get(ctx, changeID, tenantID)
 		if err != nil {
-			s.logger.Errorw("checkAndTransitionChange: failed to get change", "error", err, "change_id", changeID)
 			return err
 		}
-		if c != nil {
-			// C-2 修复：通过状态机校验禁止非法转换（如 cancelled → approved 终态复活）
-			target := "approved"
-			if !service.IsValidChangeStatusTransition(c.Status, target, c.Type) {
-				s.logger.Warnw("checkAndTransitionChange: skip invalid change status transition",
-					"change_id", changeID, "from", c.Status, "to", target)
-				return nil
-			}
-			c.Status = target
-			if _, err := s.repo.Update(ctx, c); err != nil {
-				s.logger.Errorw("checkAndTransitionChange: failed to update change status to approved", "error", err, "change_id", changeID)
-				return err
-			}
+		target := "rejected"
+		if !service.IsValidChangeStatusTransition(c.Status, target, c.Type) {
+			s.logger.Warnw("checkAndTransitionChange: skip invalid change status transition (reject)",
+				"change_id", changeID, "from", c.Status, "to", target)
+			return nil
+		}
+		c.Status = target
+		if _, err := s.repo.Update(ctx, c); err != nil {
+			s.logger.Errorw("checkAndTransitionChange: failed to update change status to rejected", "error", err, "change_id", changeID)
+			return err
+		}
+		return nil
+	}
+
+	// 所有必需层均满足 → 整体批准（至少存在一个必需层）
+	if allRequiredSatisfied && hasRequired {
+		c, err := s.repo.Get(ctx, changeID, tenantID)
+		if err != nil {
+			return err
+		}
+		target := "approved"
+		if !service.IsValidChangeStatusTransition(c.Status, target, c.Type) {
+			s.logger.Warnw("checkAndTransitionChange: skip invalid change status transition (approve)",
+				"change_id", changeID, "from", c.Status, "to", target)
+			return nil
+		}
+		c.Status = target
+		if _, err := s.repo.Update(ctx, c); err != nil {
+			s.logger.Errorw("checkAndTransitionChange: failed to update change status to approved", "error", err, "change_id", changeID)
+			return err
 		}
 	}
 	return nil

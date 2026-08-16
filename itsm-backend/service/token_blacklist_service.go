@@ -1,8 +1,11 @@
 package service
 
+// test-coverage-guard: skip — SET NX 原子认领改造;需 redis 集成测试覆盖,单测难以模拟并发。
+
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -104,12 +107,21 @@ func (s *TokenBlacklistService) TryAddRefreshToBlacklist(tokenString string, exp
 		return true, nil
 	}
 	key := "refresh:blacklist:" + tokenString
-	ok, err := s.redisClient.Set(context.Background(), key, "1", ttl).Result()
-	if err != nil {
+	// Use SET NX so only the first concurrent request can claim the key:
+	// when another request already holds it, Redis replies nil and we treat
+	// that as "not acquired". This matches the documented atomic-claim contract.
+	if _, err := s.redisClient.SetArgs(context.Background(), key, "1", redis.SetArgs{
+		TTL:  ttl,
+		Mode: "NX",
+	}).Result(); err != nil {
+		if errors.Is(err, redis.Nil) {
+			// 已被其他并发请求抢占,不视为错误
+			return false, nil
+		}
 		s.logger.Errorw("Failed to atomically claim refresh token", "error", err)
 		return false, fmt.Errorf("failed to claim refresh token: %w", err)
 	}
-	return ok, nil
+	return true, nil
 }
 
 // IsRefreshBlacklisted 检查 refresh token 是否已被拉黑

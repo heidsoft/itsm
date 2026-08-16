@@ -12,6 +12,7 @@ import (
 	"itsm-backend/connector"
 	feishuConnector "itsm-backend/connector/builtin/feishu"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/group"
@@ -562,6 +563,29 @@ func isTicketDataScopeAllRole(role string) bool {
 	}
 }
 
+// enforceTicketRowScope 行级数据权限（M-7 修复）：非全量数据角色
+// （isTicketDataScopeAllRole==false）只能删除自己创建(requester)或分配给自己
+// (assignee)的工单；全量角色放行。越权时返回 common.ForbiddenError，使上层
+// 映射为 HTTP 403 而非 500。这是安全关键路径：即使调用方忘记传归属过滤，
+// 这里仍会兜底拒绝跨 Owner 删除。
+func (s *TicketService) enforceTicketRowScope(ctx context.Context, id, tenantID, currentUserID int, currentRole string) error {
+	if isTicketDataScopeAllRole(currentRole) {
+		return nil
+	}
+	t, err := s.repo.GetByID(ctx, id, tenantID)
+	if err != nil {
+		return err
+	}
+	owned := t.RequesterID == currentUserID
+	if t.AssigneeID != nil {
+		owned = owned || *t.AssigneeID == currentUserID
+	}
+	if !owned {
+		return common.NewForbiddenError(fmt.Sprintf("无权限删除工单 %d：仅工单创建人或处理人可删除", id))
+	}
+	return nil
+}
+
 // triggerWorkflowForTicket 异步触发工单关联的 BPMN 流程
 // 逻辑参考 V1 (ticket_service.go:221-279)，适配 V2 的 DDD 领域模型
 func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, tkt *ticket.Ticket, tenantID int, workflowDefinitionKey string) error {
@@ -947,7 +971,10 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 }
 
 // DeleteTicket 删除工单
-func (s *TicketService) DeleteTicket(ctx context.Context, id int, tenantID int) error {
+func (s *TicketService) DeleteTicket(ctx context.Context, id int, tenantID int, currentUserID int, currentRole string) error {
+	if err := s.enforceTicketRowScope(ctx, id, tenantID, currentUserID, currentRole); err != nil {
+		return err
+	}
 	return s.repo.Delete(ctx, id, tenantID)
 }
 
@@ -1518,10 +1545,27 @@ func (s *TicketService) GetTicketSLAInfo(ctx context.Context, ticketID int, tena
 }
 
 // BatchDeleteTickets 批量删除工单
-func (s *TicketService) BatchDeleteTickets(ctx context.Context, ticketIDs []int, tenantID int) error {
+func (s *TicketService) BatchDeleteTickets(ctx context.Context, ticketIDs []int, tenantID int, currentUserID int, currentRole string) error {
 	s.logger.Infow("Batch deleting tickets", "ticket_ids", ticketIDs, "tenant_id", tenantID)
 	if len(ticketIDs) == 0 {
 		return nil
+	}
+	// M-7 修复：行级数据权限。非全量角色必须对集合中每一个工单都有归属，
+	// 任一越权即整体拒绝（fail closed），避免“夹带”他人工单。
+	if !isTicketDataScopeAllRole(currentRole) {
+		for _, id := range ticketIDs {
+			t, err := s.repo.GetByID(ctx, id, tenantID)
+			if err != nil {
+				return err
+			}
+			owned := t.RequesterID == currentUserID
+			if t.AssigneeID != nil {
+				owned = owned || *t.AssigneeID == currentUserID
+			}
+			if !owned {
+				return common.NewForbiddenError(fmt.Sprintf("批量删除被拒绝：工单 %d 非当前用户创建或分配", id))
+			}
+		}
 	}
 	return s.repo.BatchDelete(ctx, ticketIDs, tenantID)
 }

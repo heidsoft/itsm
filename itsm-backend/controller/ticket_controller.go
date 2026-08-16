@@ -252,9 +252,16 @@ func (tc *TicketController) DeleteTicket(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	// M-7 修复：注入当前用户身份，执行工单行级删除归属校验。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 
-	err = tc.ticketService.DeleteTicket(c.Request.Context(), ticketID, tenantID)
+	err = tc.ticketService.DeleteTicket(c.Request.Context(), ticketID, tenantID, currentUserID, currentRole)
 	if err != nil {
+		if isForbiddenErr(err) {
+			common.Fail(c, common.ForbiddenCode, err.Error())
+			return
+		}
 		tc.logger.Errorw("Failed to delete ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -301,9 +308,16 @@ func (tc *TicketController) BatchDeleteTickets(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	// M-7 修复：注入当前用户身份，执行工单行级删除归属校验。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 
-	err := tc.ticketService.BatchDeleteTickets(c.Request.Context(), req.TicketIDs, tenantID)
+	err := tc.ticketService.BatchDeleteTickets(c.Request.Context(), req.TicketIDs, tenantID, currentUserID, currentRole)
 	if err != nil {
+		if isForbiddenErr(err) {
+			common.Fail(c, common.ForbiddenCode, err.Error())
+			return
+		}
 		tc.logger.Errorw("Failed to batch delete tickets", "error", err, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -1056,14 +1070,28 @@ func (tc *TicketController) DeleteSubtask(c *gin.Context) {
 		return
 	}
 
-	err = tc.ticketService.DeleteTicket(c.Request.Context(), subtaskID, tenantID)
+	err = tc.ticketService.DeleteTicket(c.Request.Context(), subtaskID, tenantID, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
+		if isForbiddenErr(err) {
+			common.Fail(c, common.ForbiddenCode, err.Error())
+			return
+		}
 		tc.logger.Errorw("Failed to delete subtask", "error", err, "subtask_id", subtaskID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 
 	common.Success(c, gin.H{"message": "子任务删除成功"})
+}
+
+// isForbiddenErr 判断错误是否为行级数据权限被拒绝（common.ForbiddenError）。
+// 命中时由调用方映射为 HTTP 403（common.ForbiddenCode），避免越权误报成 500。
+func isForbiddenErr(err error) bool {
+	var appErr *common.AppError
+	if errors.As(err, &appErr) {
+		return appErr.Code == common.ErrCodeForbidden
+	}
+	return false
 }
 
 // isUserInputUpdateError 判断工单更新失败是否为用户输入错误（分类/标签/处理人不存在等），

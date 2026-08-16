@@ -476,6 +476,12 @@ type AddCABMemberRequest struct {
 	Role   string `json:"role" binding:"omitempty,oneof=member chair secretary"`
 }
 
+// UpdateCABMemberRequest 更新CAB成员请求（角色 / 激活状态）
+type UpdateCABMemberRequest struct {
+	Role     string `json:"role" binding:"required,oneof=member chair secretary"`
+	IsActive bool   `json:"isActive"`
+}
+
 // CABApprovalRequest CAB审批请求
 type CABApprovalRequest struct {
 	ChangeID   int                  `json:"changeId" binding:"required"`

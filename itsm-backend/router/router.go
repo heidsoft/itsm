@@ -17,6 +17,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
+	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/capability"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
@@ -266,6 +267,7 @@ type RouterConfig struct {
 
 	ProblemHandler        *problem.Handler
 	ChangeHandler         *change.Handler
+	CABHandler            *cab.Handler
 	KnowledgeHandler      *knowledge.Handler
 	SLAHandler            *sla.Handler
 	SLATemplateController *controller.SLATemplateController
@@ -602,7 +604,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			// 审批流程管理
 			if config.ApprovalController != nil {
-				tickets.POST("/approval/submit", middleware.RequirePermission("approval", "create"), config.ApprovalController.SubmitApproval)
+				tickets.POST("/approval/submit", middleware.RequirePermission("approval", "write"), config.ApprovalController.SubmitApproval)
 				tickets.GET("/approval/records", middleware.RequirePermission("approval", "read"), config.ApprovalController.GetApprovalRecords)
 
 				// 审批工作流CRUD
@@ -986,6 +988,19 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				changes.POST("/:id/pir", middleware.RequirePermission("change", "write"), config.ChangeHandler.CreatePIR)
 				changes.PUT("/pir/:id", middleware.RequirePermission("change", "write"), config.ChangeHandler.UpdatePIR)
 				changes.DELETE("/pir/:id", middleware.RequirePermission("change", "delete"), config.ChangeHandler.DeletePIR)
+			}
+		}
+
+		// ==================== CAB (Change Advisory Board) ====================
+		// 名册管理走 change 权限（CAB 属变更管理范畴，变更管理员/管理员已持该权限）。
+		// CAB 审批流转由审批链引擎（cab:CAB / cab:ECAB 解析器）统一驱动，不在此暴露。
+		if config.CABHandler != nil {
+			cabGrp := tenant.(*gin.RouterGroup).Group("/cab")
+			{
+				cabGrp.GET("/members", middleware.RequirePermission("change", "read"), config.CABHandler.ListCABMembers)
+				cabGrp.POST("/members", middleware.RequirePermission("change", "write"), config.CABHandler.AddCABMember)
+				cabGrp.PUT("/members/:id", middleware.RequirePermission("change", "write"), config.CABHandler.UpdateCABMember)
+				cabGrp.DELETE("/members/:id", middleware.RequirePermission("change", "write"), config.CABHandler.RemoveCABMember)
 			}
 		}
 

@@ -361,7 +361,7 @@ func (r *EntRepository) CreateApprovalRecord(ctx context.Context, rec *ApprovalR
 func (r *EntRepository) SubmitForApproval(
 	ctx context.Context,
 	changeID, tenantID int,
-	approverIDs []int,
+	plan []ApprovalLevelPlan,
 	comment string,
 ) error {
 	tx, err := r.db.BeginTx(ctx, nil)
@@ -386,40 +386,45 @@ func (r *EntRepository) SubmitForApproval(
 	}
 
 	now := time.Now()
-	seenApprovers := make(map[int]struct{}, len(approverIDs))
-	for _, approverID := range approverIDs {
-		if _, exists := seenApprovers[approverID]; exists {
-			continue
+	for _, lvl := range plan {
+		approvalType := lvl.ApprovalType
+		if approvalType == "" {
+			approvalType = "serial"
 		}
-		approvalLevel := len(seenApprovers) + 1
-		seenApprovers[approverID] = struct{}{}
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO change_approvals
-				(change_id, tenant_id, approver_id, status, comment, created_at, updated_at)
-			VALUES ($1, $2, $3, 'pending', $4, $5, $5)
-		`, changeID, tenantID, approverID, comment, now); err != nil {
-			return err
-		}
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO change_approval_chains
-				(change_id, tenant_id, level, approver_id, role, status, is_required, created_at)
-			VALUES ($1, $2, $3, $4, 'approver', 'pending', true, $5)
-		`, changeID, tenantID, approvalLevel, approverID, now); err != nil {
-			return err
-		}
-		content := fmt.Sprintf("【变更审批】变更 #%d 等待您的审批（第 %d 级）", changeID, approvalLevel)
-		occurrenceKey := fmt.Sprintf("change_approval_required:%d:%d:%d:%d", tenantID, changeID, approvalLevel, approverID)
-		digest := sha256.Sum256([]byte(fmt.Sprintf("%d|change|%d|%d|%s|in_app|%s", tenantID, changeID, approverID, "change_approval_required", occurrenceKey)))
-		if err := commandbus.EnqueueSQLTx(ctx, tx, commandbus.EnqueueRequest{
-			TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
-			AggregateType: "change", AggregateID: changeID,
-			IdempotencyKey: "notification:" + hex.EncodeToString(digest[:16]),
-			Payload: map[string]interface{}{
-				"resourceType": "change", "resourceId": changeID, "recipientId": approverID,
-				"type": "change_approval_required", "channel": "in_app", "content": content,
-			},
-		}); err != nil {
-			return fmt.Errorf("enqueue change approval notification: %w", err)
+		seen := make(map[int]struct{}, len(lvl.ApproverIDs))
+		for _, approverID := range lvl.ApproverIDs {
+			if _, ok := seen[approverID]; ok {
+				continue
+			}
+			seen[approverID] = struct{}{}
+			if _, err := tx.ExecContext(ctx, `
+				INSERT INTO change_approvals
+					(change_id, tenant_id, approver_id, status, comment, created_at, updated_at)
+				VALUES ($1, $2, $3, 'pending', $4, $5, $5)
+			`, changeID, tenantID, approverID, comment, now); err != nil {
+				return err
+			}
+			if _, err := tx.ExecContext(ctx, `
+				INSERT INTO change_approval_chains
+					(change_id, tenant_id, level, approver_id, role, status, is_required, approval_type, threshold, created_at)
+				VALUES ($1, $2, $3, $4, 'approver', 'pending', $5, $6, $7, $8)
+			`, changeID, tenantID, lvl.Level, approverID, lvl.Required, approvalType, lvl.Threshold, now); err != nil {
+				return err
+			}
+			content := fmt.Sprintf("【变更审批】变更 #%d 等待您的审批（第 %d 级）", changeID, lvl.Level)
+			occurrenceKey := fmt.Sprintf("change_approval_required:%d:%d:%d:%d", tenantID, changeID, lvl.Level, approverID)
+			digest := sha256.Sum256([]byte(fmt.Sprintf("%d|change|%d|%d|%s|in_app|%s", tenantID, changeID, approverID, "change_approval_required", occurrenceKey)))
+			if err := commandbus.EnqueueSQLTx(ctx, tx, commandbus.EnqueueRequest{
+				TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
+				AggregateType: "change", AggregateID: changeID,
+				IdempotencyKey: "notification:" + hex.EncodeToString(digest[:16]),
+				Payload: map[string]interface{}{
+					"resourceType": "change", "resourceId": changeID, "recipientId": approverID,
+					"type": "change_approval_required", "channel": "in_app", "content": content,
+				},
+			}); err != nil {
+				return fmt.Errorf("enqueue change approval notification: %w", err)
+			}
 		}
 	}
 	return tx.Commit()
@@ -514,7 +519,7 @@ func (r *EntRepository) CreateApprovalChain(ctx context.Context, chain []*Approv
 
 func (r *EntRepository) GetApprovalChain(ctx context.Context, changeID int, tenantID int) ([]*ApprovalChain, error) {
 	query := `
-		SELECT c.id, c.level, c.approver_id, u.name as approver_name, c.role, c.status, c.is_required, c.created_at
+		SELECT c.id, c.level, c.approver_id, u.name as approver_name, c.role, c.status, c.is_required, c.approval_type, c.threshold, c.created_at
 		FROM change_approval_chains c
 		LEFT JOIN users u ON c.approver_id = u.id
 		WHERE c.change_id = $1 AND c.tenant_id = $2
@@ -530,7 +535,7 @@ func (r *EntRepository) GetApprovalChain(ctx context.Context, changeID int, tena
 	chain := make([]*ApprovalChain, 0)
 	for rows.Next() {
 		var item ApprovalChain
-		err := rows.Scan(&item.ID, &item.Level, &item.ApproverID, &item.ApproverName, &item.Role, &item.Status, &item.IsRequired, &item.CreatedAt)
+		err := rows.Scan(&item.ID, &item.Level, &item.ApproverID, &item.ApproverName, &item.Role, &item.Status, &item.IsRequired, &item.ApprovalType, &item.Threshold, &item.CreatedAt)
 		if err != nil {
 			return nil, err
 		}

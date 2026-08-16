@@ -106,6 +106,7 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 				ticket.TenantIDEQ(tenantID),
 				ticket.SLADefinitionIDNEQ(0),
 				ticket.ResolvedAtIsNil(),
+				ticket.DeletedAtIsNil(),
 			).
 			Limit(pageSize).
 			Offset(offset).
@@ -387,6 +388,7 @@ func (s *SLAMonitorService) CalculateSLAMetrics(ctx context.Context, tenantID in
 			ticket.TenantIDEQ(tenantID),
 			ticket.CreatedAtGTE(startTime),
 			ticket.CreatedAtLTE(endTime),
+			ticket.DeletedAtIsNil(),
 		).
 		All(ctx)
 	if err != nil {
@@ -468,6 +470,7 @@ func (s *SLAMonitorService) GetSLAComplianceByDefinition(ctx context.Context, te
 			Where(
 				ticket.TenantIDEQ(tenantID),
 				ticket.SLADefinitionID(sla.ID),
+				ticket.DeletedAtIsNil(),
 			).
 			All(ctx)
 		if err != nil {
@@ -591,6 +594,7 @@ func (s *SLAMonitorService) GetDashboardMetrics(ctx context.Context, tenantID in
 		Where(
 			ticket.TenantIDEQ(tenantID),
 			ticket.SLADefinitionIDNEQ(0),
+			ticket.DeletedAtIsNil(),
 		).
 		All(ctx)
 	if err != nil {

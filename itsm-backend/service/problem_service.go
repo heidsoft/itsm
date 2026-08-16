@@ -313,6 +313,8 @@ func (s *ProblemService) GetProblemStats(ctx context.Context, tenantID int) (*dt
 }
 
 // _triggerWorkflowForProblem 为问题触发工作流（保留用于将来工作流集成）
+//
+//lint:ignore U1000 reserved for future workflow integration
 func (s *ProblemService) _triggerWorkflowForProblem(ctx context.Context, problemID int, tenantID int) error {
 	// 获取问题信息
 	p, err := s.client.Problem.Query().

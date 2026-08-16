@@ -431,6 +431,8 @@ func (s *DashboardService) getResourceMetrics(ctx context.Context, tenantID int)
 }
 
 // _stringPtr 返回字符串指针（保留用于将来使用）
+//
+//lint:ignore U1000 reserved for future use
 func (s *DashboardService) _stringPtr(str string) *string {
 	return &str
 }

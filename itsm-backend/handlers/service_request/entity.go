@@ -52,8 +52,10 @@ type ServiceRequestApproval struct {
 	TimeoutHours     int
 	DueAt            *time.Time
 	ProcessedAt      *time.Time
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	// Node 承载审批链求值结果（审批人ID、会签阈值、已批准ID等），用于 quorum/层级求值。
+	Node      map[string]interface{}
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // ListFilters defines filters for listing service requests

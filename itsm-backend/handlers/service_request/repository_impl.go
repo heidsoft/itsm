@@ -87,6 +87,7 @@ func (r *EntRepository) toDomainApproval(app *ent.ServiceRequestApproval) *Servi
 		TimeoutHours:     app.TimeoutHours,
 		DueAt:            itemOrNil(app.DueAt),
 		ProcessedAt:      itemOrNil(app.ProcessedAt),
+		Node:             app.Node,
 		CreatedAt:        app.CreatedAt,
 		// UpdatedAt not in ent schema
 	}
@@ -153,6 +154,9 @@ func (r *EntRepository) Create(ctx context.Context, req *ServiceRequest, approva
 
 			if app.DueAt != nil {
 				bulk[i].SetDueAt(*app.DueAt)
+			}
+			if app.Node != nil {
+				bulk[i].SetNode(app.Node)
 			}
 		}
 		if _, err := tx.ServiceRequestApproval.CreateBulk(bulk...).Save(ctx); err != nil {
@@ -324,6 +328,9 @@ func (r *EntRepository) UpdateApproval(ctx context.Context, approval *ServiceReq
 	if approval.ProcessedAt != nil {
 		update.SetProcessedAt(*approval.ProcessedAt)
 	}
+	if approval.Node != nil {
+		update.SetNode(approval.Node)
+	}
 
 	return update.Exec(ctx)
 }
@@ -371,6 +378,9 @@ func (r *EntRepository) UpdateRequestAndApproval(ctx context.Context, req *Servi
 	}
 	if approval.ProcessedAt != nil {
 		appUpdate.SetProcessedAt(*approval.ProcessedAt)
+	}
+	if approval.Node != nil {
+		appUpdate.SetNode(approval.Node)
 	}
 	if err := appUpdate.Exec(ctx); err != nil {
 		return err

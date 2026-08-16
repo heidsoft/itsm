@@ -27,7 +27,7 @@ func setupTestHandler(t *testing.T) (*gin.Engine, *Handler, *mockRepository) {
 
 	logger := zaptest.NewLogger(t).Sugar()
 	repo := newMockRepository()
-	svc := NewService(repo, nil, logger)
+	svc := NewService(repo, nil, logger, nil)
 	handler := NewHandler(svc)
 
 	r := gin.New()
@@ -191,7 +191,7 @@ func (m *mockRepository) GetStats(ctx context.Context, tenantID int) (*Stats, er
 	return stats, nil
 }
 
-func (m *mockRepository) SubmitForApproval(ctx context.Context, changeID, tenantID int, approverIDs []int, comment string) error {
+func (m *mockRepository) SubmitForApproval(ctx context.Context, changeID, tenantID int, plan []ApprovalLevelPlan, comment string) error {
 	if m.submitErr != nil {
 		return m.submitErr
 	}
@@ -200,17 +200,19 @@ func (m *mockRepository) SubmitForApproval(ctx context.Context, changeID, tenant
 		return fmt.Errorf("change is not an editable draft")
 	}
 	c.Status = "pending"
-	for _, approverID := range approverIDs {
-		record := &ApprovalRecord{
-			ID:         m.nextID,
-			ChangeID:   changeID,
-			TenantID:   tenantID,
-			ApproverID: approverID,
-			Status:     "pending",
-			CreatedAt:  time.Now(),
+	for _, lvl := range plan {
+		for _, approverID := range lvl.ApproverIDs {
+			record := &ApprovalRecord{
+				ID:         m.nextID,
+				ChangeID:   changeID,
+				TenantID:   tenantID,
+				ApproverID: approverID,
+				Status:     "pending",
+				CreatedAt:  time.Now(),
+			}
+			m.nextID++
+			m.approvals[record.ID] = record
 		}
-		m.nextID++
-		m.approvals[record.ID] = record
 	}
 	return nil
 }
@@ -395,7 +397,7 @@ func TestChangeService_GetCMDBImpactSummary_WithoutEntClient(t *testing.T) {
 	repo := newMockRepository()
 	createTestChange(repo, 1, 1)
 
-	svc := NewService(repo, nil, logger)
+	svc := NewService(repo, nil, logger, nil)
 	_, err := svc.GetCMDBImpactSummary(context.Background(), 1, 1)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "CMDB impact summary unavailable")
@@ -888,7 +890,7 @@ func TestSubmitChangeAtomicFailureLeavesDraftUnchanged(t *testing.T) {
 	repo := newMockRepository()
 	repo.changes[1] = &Change{ID: 1, TenantID: 1, CreatedBy: 1, Status: "draft"}
 	repo.submitErr = errors.New("injected transaction failure")
-	svc := NewService(repo, nil, logger)
+	svc := NewService(repo, nil, logger, nil)
 
 	_, err := svc.SubmitChange(context.Background(), 1, 1, 1, &dto.SubmitChangeRequest{
 		ApproverIDs: []int{1},
@@ -908,7 +910,7 @@ func TestConfigureWorkflowAtomicFailurePreservesOldChain(t *testing.T) {
 	oldChain := []*ApprovalChain{{ID: 10, ChangeID: 1, TenantID: 1, Level: 1, ApproverID: 1}}
 	repo.chains[1] = oldChain
 	repo.replaceErr = errors.New("injected transaction failure")
-	svc := NewService(repo, nil, logger)
+	svc := NewService(repo, nil, logger, nil)
 
 	err := svc.ConfigureWorkflow(context.Background(), 1, 1, []*ApprovalChain{
 		{Level: 1, ApproverID: 2},

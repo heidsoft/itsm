@@ -2,6 +2,7 @@ package service_request
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -56,14 +57,18 @@ type Service struct {
 	cmdbRepo       cmdb.Repository
 	logger         *zap.SugaredLogger
 	approvalBridge *service.BPMNApprovalBridge
+	// approvalChain 审批链求值引擎：驱动服务请求的分级/会签/或签/fallback 审批。
+	// 仅当 BPMN 桥接未处理（无运行中流程实例）时消费，避免双轨推进。
+	approvalChain *service.ApprovalChainService
 }
 
-func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmdb.Repository, entClient *ent.Client, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmdb.Repository, entClient *ent.Client, logger *zap.SugaredLogger, approvalChain *service.ApprovalChainService) *Service {
 	svc := &Service{
-		repo:     repo,
-		scRepo:   scRepo,
-		cmdbRepo: cmdbRepo,
-		logger:   logger,
+		repo:          repo,
+		scRepo:        scRepo,
+		cmdbRepo:      cmdbRepo,
+		logger:        logger,
+		approvalChain: approvalChain,
 	}
 	if entClient != nil {
 		// P0-1：服务请求审批桥接到 BPMN 任务，避免流程实例悬挂
@@ -138,30 +143,76 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 		newReq.CiID = ciID
 	}
 
-	// 4. Create Approval Steps
-	steps := []struct {
-		level        int
-		step         string
-		timeoutHours int
-	}{
-		{1, ApprovalStepManager, ApprovalTimeoutManager},
-		{2, ApprovalStepIT, ApprovalTimeoutIT},
-		{3, ApprovalStepSecurity, ApprovalTimeoutSecurity},
-	}
-
-	approvals := make([]*ServiceRequestApproval, len(steps))
+	// 4. 构建审批步骤：若服务目录关联了审批链，则用审批链求值引擎解析
+	//    审批人/会签阈值/fallback（全程租户隔离，堵住跨租户注入与无审批人自审）；
+	//    否则回退默认三级（manager/it/security）。状态机/前端/履约门禁仅支持三级，
+	//    故审批链超过 3 级时仅取前 3 级（多于 3 级的链式审批为后续独立重构项）。
 	now := time.Now()
-	for i, st := range steps {
-		dueAt := now.Add(time.Duration(st.timeoutHours) * time.Hour)
-		approvals[i] = &ServiceRequestApproval{
-			TenantID:     tenantID,
-			Level:        st.level,
-			Step:         st.step,
-			Status:       ApprovalStatusPending,
-			TimeoutHours: st.timeoutHours,
-			DueAt:        &dueAt,
+	totalLevels := 3
+	approvals := make([]*ServiceRequestApproval, 0)
+
+	if s.approvalChain != nil {
+		if plan, perr := s.resolveServiceRequestChain(ctx, tenantID, requesterID); perr == nil && plan != nil && len(plan.Levels) > 0 {
+			levels := plan.Levels
+			if len(levels) > 3 {
+				levels = levels[:3]
+				s.logger.Warnw("服务请求审批链层级超过3，仅取前3级", "catalogID", catalogID, "levels", len(plan.Levels))
+			}
+			stepLabels := []string{ApprovalStepManager, ApprovalStepIT, ApprovalStepSecurity}
+			for i, lv := range levels {
+				label := stepLabels[i]
+				timeout := []int{ApprovalTimeoutManager, ApprovalTimeoutIT, ApprovalTimeoutSecurity}[i]
+				dueAt := now.Add(time.Duration(timeout) * time.Hour)
+				approvals = append(approvals, &ServiceRequestApproval{
+					TenantID:     tenantID,
+					Level:        i + 1,
+					Step:         label,
+					Status:       ApprovalStatusPending,
+					TimeoutHours: timeout,
+					DueAt:        &dueAt,
+					Node: map[string]interface{}{
+						"approver_ids":     intsToIfaces(lv.ApproverIDs),
+						"approver_names":   stringsToIfaces(lv.ApproverNames),
+						"quorum_type":      lv.ApprovalType,
+						"quorum_threshold": lv.Threshold,
+						"required":         lv.Required,
+						"approved_ids":     []interface{}{},
+						"step_label":       label,
+					},
+				})
+			}
+			totalLevels = len(levels)
+		} else if perr != nil {
+			s.logger.Warnw("审批链解析失败，回退默认三级审批", "catalogID", catalogID, "err", perr)
 		}
 	}
+
+	if len(approvals) == 0 {
+		// 默认三级审批（manager/it/security）
+		defaultSteps := []struct {
+			level        int
+			step         string
+			timeoutHours int
+		}{
+			{1, ApprovalStepManager, ApprovalTimeoutManager},
+			{2, ApprovalStepIT, ApprovalTimeoutIT},
+			{3, ApprovalStepSecurity, ApprovalTimeoutSecurity},
+		}
+		for _, st := range defaultSteps {
+			dueAt := now.Add(time.Duration(st.timeoutHours) * time.Hour)
+			approvals = append(approvals, &ServiceRequestApproval{
+				TenantID:     tenantID,
+				Level:        st.level,
+				Step:         st.step,
+				Status:       ApprovalStatusPending,
+				TimeoutHours: st.timeoutHours,
+				DueAt:        &dueAt,
+			})
+		}
+		totalLevels = 3
+	}
+
+	newReq.TotalLevels = totalLevels
 
 	// 5. Save
 	created, err := s.repo.Create(ctx, newReq, approvals)
@@ -265,13 +316,14 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	if actorDept == "" {
 		actorDept = userDept
 	}
-	if err := s.checkEligibility(userRole, actorDept, requesterDept, currentApproval.Step); err != nil {
+	if err := s.checkEligibility(actorID, userRole, actorDept, requesterDept, currentApproval); err != nil {
 		return nil, nil, err
 	}
 
-	// P0-1：审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源）。
-	// 无关联运行中流程实例时回退旧审批链，兼容未绑定流程的历史数据；
-	// 若存在待办流程任务但完成失败（如操作人不是流程任务审批人），则中止业务审批，避免双轨分叉。
+	// P0-1：审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源，
+	// 仅流程任务指派人才可完成；无关联运行中流程实例时该调用为 no-op）。
+	// 桥接仅完成流程任务、做操作人鉴权，不改变服务请求状态；请求状态的层级/
+	// quorum 推进仍由下方逻辑统一处理（审批链驱动或遗留三级），避免双轨分叉。
 	if s.approvalBridge != nil {
 		if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
 			ctx, tenantID, actorID, string(dto.BusinessTypeServiceRequest), id, action, comment,
@@ -290,17 +342,61 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 		status = ApprovalStatusRejected
 		nextReqStatus = SRStatusRejected
 	} else {
-		// Approve logic
-		switch currentApproval.Step {
-		case ApprovalStepManager:
-			nextReqStatus = SRStatusManagerApproved
-		case ApprovalStepIT:
-			nextReqStatus = SRStatusITApproved
-		case ApprovalStepSecurity:
-			nextReqStatus = SRStatusSecurityApproved
-		}
-		if req.CurrentLevel < req.TotalLevels {
-			nextLevel = req.CurrentLevel + 1
+		// 审批链驱动的层级：按 node 中解析出的审批人 + 会签阈值(quorum)判定本级是否通过。
+		// 串行(阈值1)行为与遗留一致；会签(阈值=审批人数)需全员批准才推进。
+		if nodeIDs, ok := currentApproval.Node["approver_ids"].([]interface{}); ok && len(nodeIDs) > 0 {
+			threshold := 1
+			if t, ok2 := currentApproval.Node["quorum_threshold"].(float64); ok2 && int(t) > 0 {
+				threshold = int(t)
+			}
+			// 记录本次审批人（去重）
+			approved := []interface{}{}
+			if existing, ok3 := currentApproval.Node["approved_ids"].([]interface{}); ok3 {
+				approved = append(approved, existing...)
+			}
+			already := false
+			for _, a := range approved {
+				if aid, ok4 := a.(float64); ok4 && int(aid) == actorID {
+					already = true
+					break
+				}
+			}
+			if !already {
+				approved = append(approved, float64(actorID))
+			}
+			currentApproval.Node["approved_ids"] = approved
+
+			if len(approved) >= threshold {
+				// 本级 quorum 满足
+				nextReqStatus = srLevelApprovedStatus(req.CurrentLevel, req.TotalLevels)
+				if req.CurrentLevel < req.TotalLevels {
+					nextLevel = req.CurrentLevel + 1
+				}
+			} else {
+				// quorum 未满足：本级仍 pending，仅记录审批进度，不推进请求/状态机
+				currentApproval.Action = action
+				currentApproval.Comment = comment
+				currentApproval.ApproverID = &actorID
+				currentApproval.ApproverName = actorName
+				currentApproval.ProcessedAt = &now
+				if err := s.repo.UpdateApproval(ctx, currentApproval); err != nil {
+					return nil, nil, common.NewDatabaseError("Failed to update approval", err)
+				}
+				return s.Get(ctx, id, tenantID)
+			}
+		} else {
+			// 遗留三级：按步骤映射状态
+			switch currentApproval.Step {
+			case ApprovalStepManager:
+				nextReqStatus = SRStatusManagerApproved
+			case ApprovalStepIT:
+				nextReqStatus = SRStatusITApproved
+			case ApprovalStepSecurity:
+				nextReqStatus = SRStatusSecurityApproved
+			}
+			if req.CurrentLevel < req.TotalLevels {
+				nextLevel = req.CurrentLevel + 1
+			}
 		}
 	}
 
@@ -324,12 +420,28 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	return s.Get(ctx, id, tenantID)
 }
 
-func (s *Service) checkEligibility(actorRole, actorDept, requesterDept, step string) error {
+func (s *Service) checkEligibility(actorID int, actorRole, actorDept, requesterDept string, approval *ServiceRequestApproval) error {
 	actorRole = strings.ToLower(actorRole)
 	if actorRole == RoleAdmin || actorRole == RoleSuperAdmin {
 		return nil
 	}
 
+	// 审批链驱动的层级：仅链上解析出的租户内审批人可审（堵住跨租户注入 / 无审批人自审）。
+	if approval != nil {
+		if ids, ok := approval.Node["approver_ids"].([]interface{}); ok && len(ids) > 0 {
+			for _, a := range ids {
+				if aid, ok2 := a.(float64); ok2 && int(aid) == actorID {
+					return nil
+				}
+			}
+			return common.NewForbiddenError("无权限执行该审批链层级的审批")
+		}
+	}
+
+	step := ""
+	if approval != nil {
+		step = approval.Step
+	}
 	switch step {
 	case ApprovalStepManager:
 		if actorRole == RoleManager && actorDept != "" && strings.EqualFold(actorDept, requesterDept) {
@@ -345,6 +457,56 @@ func (s *Service) checkEligibility(actorRole, actorDept, requesterDept, step str
 		}
 	}
 	return common.NewForbiddenError("Permission denied for this approval step")
+}
+
+// srLevelApprovedStatus 返回第 level 级审批通过后的请求状态。
+// 末级统一为 security_approved（履约门禁），保证与状态机/前端/履约一致；
+// 中间级为 manager_approved / it_approved，与遗留三级语义对齐。
+func srLevelApprovedStatus(level, total int) string {
+	if level >= total {
+		return SRStatusSecurityApproved
+	}
+	if level == 1 {
+		return SRStatusManagerApproved
+	}
+	return SRStatusITApproved
+}
+
+// resolveServiceRequestChain 解析租户内 service_request 类型的激活审批链并求值。
+// 返回 nil 表示应回退默认三级（无激活链 / 解析失败 / 链阻塞 / 无层级）。
+// 注：当前按实体类型解析（租户级激活链），未绑定到具体服务目录项；
+// 若需按目录项维度绑定审批链，需为 ServiceCatalog 增加 approval_chain_id 字段
+// （schema 变更 + 迁移），列为后续独立重构项。
+func (s *Service) resolveServiceRequestChain(ctx context.Context, tenantID, requesterID int) (*service.ApprovalChainEvaluation, error) {
+	evalCtx := service.ApprovalEvalContext{
+		TenantID:    tenantID,
+		EntityType:  "service_request",
+		RequesterID: requesterID,
+	}
+	plan, err := s.approvalChain.ResolveApprovalPlan(ctx, tenantID, "service_request", evalCtx, nil)
+	if err != nil {
+		return nil, err
+	}
+	if plan.Blocked {
+		return nil, fmt.Errorf("审批链存在阻塞层级（缺少审批人且策略为阻断）")
+	}
+	return plan, nil
+}
+
+func intsToIfaces(in []int) []interface{} {
+	out := make([]interface{}, 0, len(in))
+	for _, v := range in {
+		out = append(out, float64(v))
+	}
+	return out
+}
+
+func stringsToIfaces(in []string) []interface{} {
+	out := make([]interface{}, 0, len(in))
+	for _, v := range in {
+		out = append(out, v)
+	}
+	return out
 }
 
 // ListPendingApprovals lists pending approvals for current user

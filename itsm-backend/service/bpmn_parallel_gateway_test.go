@@ -76,7 +76,7 @@ func TestBPMNParallelGateway_ForkAndJoin(t *testing.T) {
 	g2 := process.ParallelGateways[1]
 
 	// 1) 分叉：从 G1 出发应同时创建 TaskA 与 TaskB（修复「静默串行化」）
-	err = engine.handleParallelGateway(ctx, instance, process, g1, 0)
+	err = engine.handleParallelGateway(ctx, client, instance, process, g1, 0)
 	require.NoError(t, err)
 
 	tasks, err := client.ProcessTask.Query().Where(processtask.ProcessInstanceID(instance.ID)).All(ctx)
@@ -101,7 +101,7 @@ func TestBPMNParallelGateway_ForkAndJoin(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	err = engine.handleParallelGateway(ctx, instance, process, g2, 0)
+	err = engine.handleParallelGateway(ctx, client, instance, process, g2, 0)
 	require.NoError(t, err)
 
 	// 此时不应再产生新任务（End 不是任务），实例不应结束
@@ -119,7 +119,7 @@ func TestBPMNParallelGateway_ForkAndJoin(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	err = engine.handleParallelGateway(ctx, instance, process, g2, 0)
+	err = engine.handleParallelGateway(ctx, client, instance, process, g2, 0)
 	require.NoError(t, err)
 
 	instDone, err := client.ProcessInstance.Get(ctx, instance.ID)

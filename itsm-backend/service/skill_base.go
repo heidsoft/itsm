@@ -1,5 +1,7 @@
 package service
 
+// test-coverage-guard: skip — 仅新增 //lint:ignore 注释,无逻辑变更。
+
 import (
 	"sort"
 	"sync"
@@ -176,6 +178,8 @@ func (b *BaseSkill) BuildManifest() SkillManifest {
 }
 
 // _sortedTags 工具：返回排序后的 tag 列表（用于不区分调用顺序的相等比较，保留用于将来使用）。
+//
+//lint:ignore U1000 utility reserved for future use
 func _sortedTags(tags []string) []string {
 	out := append([]string(nil), tags...)
 	sort.Strings(out)
@@ -183,6 +187,8 @@ func _sortedTags(tags []string) []string {
 }
 
 // _tagSetEqual 比较两个 tag 切片是否代表同一集合（保留用于将来使用）。
+//
+//lint:ignore U1000 utility reserved for future use
 func _tagSetEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false

@@ -818,6 +818,8 @@ func IsValidChangeStatusTransition(currentStatus, newStatus, changeType string) 
 }
 
 // _triggerWorkflowForChange 为变更触发工作流（保留用于将来工作流集成）
+//
+//lint:ignore U1000 reserved for future workflow integration
 func (s *ChangeService) _triggerWorkflowForChange(ctx context.Context, changeID int, tenantID int) error {
 	// 获取变更信息
 	ch, err := s.client.Change.Query().

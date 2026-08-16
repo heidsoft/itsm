@@ -14,6 +14,8 @@ import (
 )
 
 // _createTestTicket wires the minimum required fields for a ticket row（保留用于将来使用）。
+//
+//lint:ignore U1000 test helper reserved for future use
 func _createTestTicket(ctx context.Context, t *testing.T, client interface {
 	Create() interface {
 		SetTicketNumber(string) interface {

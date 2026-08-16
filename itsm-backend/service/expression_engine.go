@@ -215,7 +215,7 @@ func (e *ExpressionEngine) registerBuiltinFunctions(env map[string]interface{}) 
 		return !b
 	}
 
-	// 日期时间函数（简化版）
+	// 日期时间函数
 	env["now"] = func() int64 {
 		return Now().Unix()
 	}
@@ -225,6 +225,104 @@ func (e *ExpressionEngine) registerBuiltinFunctions(env map[string]interface{}) 
 			diff = -diff
 		}
 		return float64(diff / 86400) // 天数
+	}
+	// 解析 RFC3339 时间字符串为 Unix 时间戳（毫秒级自动降为秒）
+	env["parseTime"] = func(s string) (int64, error) {
+		t, err := time.Parse(time.RFC3339, s)
+		if err != nil {
+			// 兼容常见的 "2006-01-02 15:04:05" 形式
+			if t2, err2 := time.Parse("2006-01-02 15:04:05", s); err2 == nil {
+				return t2.Unix(), nil
+			}
+			return 0, fmt.Errorf("无法解析时间 %q: %w", s, err)
+		}
+		return t.Unix(), nil
+	}
+	// 当前时间 ISO8601 字符串
+	env["nowISO"] = func() string {
+		return Now().Format(time.RFC3339)
+	}
+	// 两个时间戳相差的天数（绝对值）
+	env["daysBetween"] = func(a, b int64) float64 {
+		diff := a - b
+		if diff < 0 {
+			diff = -diff
+		}
+		return float64(diff) / 86400.0
+	}
+	env["isAfter"] = func(a, b int64) bool { return a > b }
+	env["isBefore"] = func(a, b int64) bool { return a < b }
+
+	// 正则匹配（命名为 regexMatch 以避开 expr-lang 将 matches 解析为运算符的问题）
+	env["regexMatch"] = func(s, pattern string) bool {
+		matched, err := regexp.MatchString(pattern, s)
+		if err != nil {
+			return false
+		}
+		return matched
+	}
+	env["regexReplace"] = func(s, pattern, repl string) string {
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			return s
+		}
+		return re.ReplaceAllString(s, repl)
+	}
+
+	// 通用辅助函数
+	env["coalesce"] = func(vals ...interface{}) interface{} {
+		for _, v := range vals {
+			if v != nil {
+				return v
+			}
+		}
+		return nil
+	}
+	env["isEmpty"] = func(v interface{}) bool {
+		if v == nil {
+			return true
+		}
+		switch x := v.(type) {
+		case string:
+			return x == ""
+		case []interface{}:
+			return len(x) == 0
+		case map[string]interface{}:
+			return len(x) == 0
+		}
+		return false
+	}
+	env["toInt"] = func(v interface{}) int64 {
+		switch x := v.(type) {
+		case int64:
+			return x
+		case int:
+			return int64(x)
+		case float64:
+			return int64(x)
+		case string:
+			var n int64
+			if _, err := fmt.Sscanf(x, "%d", &n); err == nil {
+				return n
+			}
+		}
+		return 0
+	}
+	env["toFloat"] = func(v interface{}) float64 {
+		switch x := v.(type) {
+		case float64:
+			return x
+		case int64:
+			return float64(x)
+		case int:
+			return float64(x)
+		case string:
+			var f float64
+			if _, err := fmt.Sscanf(x, "%f", &f); err == nil {
+				return f
+			}
+		}
+		return 0
 	}
 
 	// 数组函数

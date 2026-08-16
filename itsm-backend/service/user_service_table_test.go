@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"testing"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -718,12 +718,17 @@ func TestDeleteUser_TableDriven(t *testing.T) {
 // 辅助函数
 // ============================================================
 
+// userTestSeq 提供单调递增的序列号，保证并发/同纳秒内多次调用
+// createTestUsers* 时，生成的 username/email 仍唯一（原实现用
+// time.Now().UnixNano() 在同纳秒两次调用会撞号，导致 users.email
+// UNIQUE 约束失败——属既有测试自身的偶发 flake，与 RBAC 改动无关）。
+var userTestSeq int64
+
 func createTestUsers(t *testing.T, ctx context.Context, client *ent.Client, tenantID int, count int, inactive bool) []int {
 	t.Helper()
 	ids := make([]int, 0, count)
-	// Use timestamp to ensure uniqueness across test runs
-	ts := time.Now().UnixNano()
-	prefix := fmt.Sprintf("u%d", ts%100000)
+	seq := atomic.AddInt64(&userTestSeq, 1)
+	prefix := fmt.Sprintf("u%d", seq)
 	for i := 0; i < count; i++ {
 		u, err := client.User.Create().
 			SetUsername(fmt.Sprintf("%s%d", prefix, i)).
@@ -742,8 +747,8 @@ func createTestUsers(t *testing.T, ctx context.Context, client *ent.Client, tena
 func createTestUsersWithDept(t *testing.T, ctx context.Context, client *ent.Client, tenantID int, count int, dept string) []int {
 	t.Helper()
 	ids := make([]int, 0, count)
-	ts := time.Now().UnixNano()
-	prefix := fmt.Sprintf("d%d%s", ts%100000, dept)
+	seq := atomic.AddInt64(&userTestSeq, 1)
+	prefix := fmt.Sprintf("d%d%s", seq, dept)
 	for i := 0; i < count; i++ {
 		u, err := client.User.Create().
 			SetUsername(fmt.Sprintf("%s%d", prefix, i)).
@@ -763,8 +768,8 @@ func createTestUsersWithDept(t *testing.T, ctx context.Context, client *ent.Clie
 func createTestUsersWithDeptAndActive(t *testing.T, ctx context.Context, client *ent.Client, tenantID int, count int, dept string, active bool) []int {
 	t.Helper()
 	ids := make([]int, 0, count)
-	ts := time.Now().UnixNano()
-	prefix := fmt.Sprintf("da%d%s", ts%100000, dept)
+	seq := atomic.AddInt64(&userTestSeq, 1)
+	prefix := fmt.Sprintf("da%d%s", seq, dept)
 	for i := 0; i < count; i++ {
 		u, err := client.User.Create().
 			SetUsername(fmt.Sprintf("%s%d", prefix, i)).
@@ -784,8 +789,8 @@ func createTestUsersWithDeptAndActive(t *testing.T, ctx context.Context, client 
 func createTestUsersWithPrefix(t *testing.T, ctx context.Context, client *ent.Client, tenantID int, count int, prefix string) []int {
 	t.Helper()
 	ids := make([]int, 0, count)
-	ts := time.Now().UnixNano()
-	uniqPrefix := fmt.Sprintf("p%d%s", ts%100000, prefix)
+	seq := atomic.AddInt64(&userTestSeq, 1)
+	uniqPrefix := fmt.Sprintf("p%d%s", seq, prefix)
 	for i := 0; i < count; i++ {
 		u, err := client.User.Create().
 			SetUsername(fmt.Sprintf("%s%d", uniqPrefix, i)).

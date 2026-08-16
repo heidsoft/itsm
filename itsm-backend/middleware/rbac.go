@@ -956,8 +956,9 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 // hasPermission 检查用户是否有权限访问指定资源
 // Uses Smart Permission Checker (4-layer fallback architecture)
 func hasPermission(client *ent.Client, role, method, path string, userID, tenantID int, c *gin.Context) bool {
-	// 超级管理员拥有所有权限
-	if role == "super_admin" {
+	// 超级管理员与系统管理员拥有所有权限（H-16 修复：sysadmin 与 super_admin
+	// 白名单一致性，避免 DBOnly 模式下 sysadmin 因缺 */* 行而被错误拒绝）。
+	if role == "super_admin" || role == "sysadmin" {
 		return true
 	}
 
@@ -988,8 +989,8 @@ func HasResourcePermission(ctx context.Context, client *ent.Client, role, resour
 
 // hasResourcePermission 检查角色是否有指定资源的操作权限（支持多种配置模式）
 func hasResourcePermission(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
-	// 超级管理员拥有所有权限
-	if role == "super_admin" {
+	// 超级管理员与系统管理员拥有所有权限（H-16 修复：与 super_admin 白名单一致）。
+	if role == "super_admin" || role == "sysadmin" {
 		return true
 	}
 

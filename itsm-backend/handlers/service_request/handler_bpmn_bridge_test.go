@@ -44,7 +44,7 @@ func srSetupBridge(t *testing.T) (*gin.Engine, *ent.Client, int, int, int) {
 	require.NoError(t, err)
 	repo := NewEntRepository(client)
 	cmdbRepo := cmdb.NewEntRepository(client)
-	svc := NewService(repo, scRepo, cmdbRepo, client, logger)
+	svc := NewService(repo, scRepo, cmdbRepo, client, logger, nil)
 	h := NewHandler(svc)
 	requester, err := client.User.Create().
 		SetUsername("sr-bridge-requester-" + srUID()).

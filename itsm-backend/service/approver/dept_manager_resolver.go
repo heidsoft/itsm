@@ -23,10 +23,28 @@ func (r *DeptManagerResolver) GetType() string {
 }
 
 // Resolve resolves department manager as approver
+// It supports fallback to parent departments when:
+// - The current department has no manager
+// - The current department's manager is inactive
+// It also detects circular parent references to prevent infinite recursion
 func (r *DeptManagerResolver) Resolve(ctx context.Context, client *ent.Client, appCtx *ApproverContext) ([]*ApproverInfo, error) {
 	if appCtx.DepartmentID == 0 {
 		return nil, fmt.Errorf("department_id is required for dept_manager resolver")
 	}
+
+	// Track visited departments to detect circular references
+	visited := make(map[int]bool)
+
+	return r.resolveWithVisited(ctx, client, appCtx, visited)
+}
+
+// resolveWithVisited internal method that tracks visited departments for cycle detection
+func (r *DeptManagerResolver) resolveWithVisited(ctx context.Context, client *ent.Client, appCtx *ApproverContext, visited map[int]bool) ([]*ApproverInfo, error) {
+	// Check for circular reference
+	if visited[appCtx.DepartmentID] {
+		return nil, fmt.Errorf("circular parent reference detected for department %d", appCtx.DepartmentID)
+	}
+	visited[appCtx.DepartmentID] = true
 
 	// Get department with manager
 	dept, err := client.Department.Query().
@@ -43,13 +61,14 @@ func (r *DeptManagerResolver) Resolve(ctx context.Context, client *ent.Client, a
 		return nil, fmt.Errorf("failed to query department: %w", err)
 	}
 
-	// If no manager, try parent department
+	// If no manager, try parent department (fallback)
 	if dept.ManagerID == 0 {
 		if dept.ParentID > 0 {
-			// Recursive call with parent department
-			parentCtx := *appCtx
-			parentCtx.DepartmentID = dept.ParentID
-			return r.Resolve(ctx, client, &parentCtx)
+			parentCtx := &ApproverContext{
+				TenantID:     appCtx.TenantID,
+				DepartmentID: dept.ParentID,
+			}
+			return r.resolveWithVisited(ctx, client, parentCtx, visited)
 		}
 		return nil, fmt.Errorf("no manager found for department %d or its ancestors", appCtx.DepartmentID)
 	}
@@ -64,7 +83,15 @@ func (r *DeptManagerResolver) Resolve(ctx context.Context, client *ent.Client, a
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("manager user not found or inactive: %d", dept.ManagerID)
+			// Manager is inactive or not found - try parent department (fallback)
+			if dept.ParentID > 0 {
+				parentCtx := &ApproverContext{
+					TenantID:     appCtx.TenantID,
+					DepartmentID: dept.ParentID,
+				}
+				return r.resolveWithVisited(ctx, client, parentCtx, visited)
+			}
+			return nil, fmt.Errorf("no active manager found for department %d or its ancestors", appCtx.DepartmentID)
 		}
 		return nil, fmt.Errorf("failed to query manager: %w", err)
 	}

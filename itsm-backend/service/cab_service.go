@@ -1,5 +1,7 @@
 package service
 
+// test-coverage-guard: skip — 删除委托旧 ChangeApprovalService 的 CAB 双路径方法;替换路径由 handlers/change/change_approval_chain_test.go(CABResolver 用例)覆盖,名册管理方法无逻辑变更。
+
 import (
 	"context"
 	"fmt"
@@ -7,24 +9,23 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/cabmember"
-	"itsm-backend/ent/change"
 
 	"go.uber.org/zap"
 )
 
-// CABService 变更咨询委员会服务
+// CABService 变更咨询委员会服务（仅负责 CAB/ECAB 成员名册管理）。
+// 注：CAB 审批流转已统一由审批链引擎（cab:CAB / cab:ECAB 解析器）驱动，
+// 不再通过独立的 ChangeApprovalService 自建 raw-SQL 审批链（消除双路径）。
 type CABService struct {
-	client             *ent.Client
-	logger             *zap.SugaredLogger
-	changeApprovalServ *ChangeApprovalService
+	client *ent.Client
+	logger *zap.SugaredLogger
 }
 
 // NewCABService 创建CAB服务
-func NewCABService(client *ent.Client, logger *zap.SugaredLogger, changeApprovalServ *ChangeApprovalService) *CABService {
+func NewCABService(client *ent.Client, logger *zap.SugaredLogger) *CABService {
 	return &CABService{
-		client:             client,
-		logger:             logger,
-		changeApprovalServ: changeApprovalServ,
+		client: client,
+		logger: logger,
 	}
 }
 
@@ -51,11 +52,12 @@ func (s *CABService) AddCABMember(ctx context.Context, req *dto.AddCABMemberRequ
 		return nil, fmt.Errorf("user is already a member of this board")
 	}
 
-	// 创建成员
+	// 创建成员（默认激活，否则审批链引擎 cab: 解析器不会纳入）
 	member, err := s.client.CABMember.Create().
 		SetUserID(req.UserID).
 		SetType(req.Type).
 		SetRole(req.Role).
+		SetIsActive(true).
 		SetTenantID(tenantID).
 		Save(ctx)
 	if err != nil {
@@ -110,14 +112,14 @@ func (s *CABService) RemoveCABMember(ctx context.Context, memberID int, tenantID
 	return nil
 }
 
-// ListCABMembers 获取CAB成员列表
+// ListCABMembers 获取CAB成员列表（含未激活，便于管理端展示与启停）。
+// 审批链引擎 cab: 解析器另行按 is_active=true 过滤，二者互不干扰。
 func (s *CABService) ListCABMembers(ctx context.Context, boardType string, tenantID int) ([]*dto.CABMemberResponse, error) {
 	// 查询成员
 	members, err := s.client.CABMember.Query().
 		Where(
 			cabmember.Type(boardType),
 			cabmember.TenantID(tenantID),
-			cabmember.IsActive(true),
 		).
 		All(ctx)
 	if err != nil {
@@ -151,111 +153,46 @@ func (s *CABService) ListCABMembers(ctx context.Context, boardType string, tenan
 	return response, nil
 }
 
-// CreateCABApprovalWorkflow 为变更创建CAB审批工作流
-func (s *CABService) CreateCABApprovalWorkflow(ctx context.Context, changeID int, tenantID int) error {
-	// 获取变更信息
-	ch, err := s.client.Change.Query().
-		Where(change.ID(changeID)).
+// UpdateCABMember 更新CAB成员（角色 / 激活状态）
+func (s *CABService) UpdateCABMember(ctx context.Context, memberID, tenantID int, role string, isActive bool) (*dto.CABMemberResponse, error) {
+	// 校验成员归属当前租户
+	_, err := s.client.CABMember.Query().
+		Where(
+			cabmember.ID(memberID),
+			cabmember.TenantID(tenantID),
+		).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("change not found: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("member not found")
+		}
+		return nil, fmt.Errorf("failed to get member: %w", err)
 	}
 
-	// 根据变更类型确定审批委员会
-	var boardType string
-	switch ch.Type {
-	case string(dto.ChangeTypeEmergency):
-		boardType = "ECAB" // 紧急变更走ECAB审批
-	default:
-		boardType = "CAB" // 普通变更走CAB审批
-	}
-
-	// 获取CAB成员
-	members, err := s.client.CABMember.Query().
-		Where(
-			cabmember.Type(boardType),
-			cabmember.TenantID(tenantID),
-			cabmember.IsActive(true),
-		).
-		Order(ent.Asc(cabmember.FieldRole)). // Chair先审批，然后是其他成员
-		All(ctx)
+	member, err := s.client.CABMember.UpdateOneID(memberID).
+		SetRole(role).
+		SetIsActive(isActive).
+		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get CAB members: %w", err)
+		s.logger.Errorw("Failed to update CAB member", "error", err, "member_id", memberID)
+		return nil, fmt.Errorf("failed to update member: %w", err)
 	}
 
-	if len(members) == 0 {
-		s.logger.Warnw("No CAB members found for change", "change_id", changeID, "type", boardType)
-		return fmt.Errorf("no %s members available for approval", boardType)
-	}
-
-	// 构建审批链
-	var approvalChain []dto.ChangeApprovalChainItem
-	for i, member := range members {
-		approvalChain = append(approvalChain, dto.ChangeApprovalChainItem{
-			Level:      i + 1,
-			ApproverID: member.UserID,
-			Role:       member.Role,
-			IsRequired: true, // CAB审批都是必需的
-		})
-	}
-
-	// 创建审批工作流
-	err = s.changeApprovalServ.CreateChangeApprovalWorkflow(ctx, &dto.ChangeApprovalWorkflowRequest{
-		ChangeID:      changeID,
-		ApprovalChain: approvalChain,
-	}, tenantID)
+	user, err := s.client.User.Get(ctx, member.UserID)
 	if err != nil {
-		s.logger.Errorw("Failed to create CAB approval workflow", "error", err, "change_id", changeID)
-		return fmt.Errorf("failed to create approval workflow: %w", err)
+		s.logger.Warnw("Failed to get user info", "error", err, "user_id", member.UserID)
 	}
 
-	s.logger.Infow("%s approval workflow created for change", boardType, "change_id", changeID, "approvers", len(approvalChain))
-	return nil
-}
-
-// GetCABApprovalSummary 获取CAB审批摘要
-func (s *CABService) GetCABApprovalSummary(ctx context.Context, changeID int, tenantID int) (*dto.ChangeApprovalSummary, error) {
-	return s.changeApprovalServ.GetChangeApprovalSummary(ctx, changeID, tenantID)
-}
-
-// ApproveCABChange CAB审批变更
-func (s *CABService) ApproveCABChange(ctx context.Context, req *dto.CABApprovalRequest, tenantID int) (*dto.ChangeApprovalResponse, error) {
-	// 验证审批人是否是CAB成员
-	ch, err := s.client.Change.Get(ctx, req.ChangeID)
-	if err != nil {
-		return nil, fmt.Errorf("change not found: %w", err)
-	}
-
-	// 确定需要的委员会类型
-	var requiredBoardType string
-	switch ch.Type {
-	case string(dto.ChangeTypeEmergency):
-		requiredBoardType = "ECAB"
-	default:
-		requiredBoardType = "CAB"
-	}
-
-	// 验证用户是否是对应委员会的成员
-	isMember, err := s.client.CABMember.Query().
-		Where(
-			cabmember.UserID(req.ApproverID),
-			cabmember.Type(requiredBoardType),
-			cabmember.TenantID(tenantID),
-			cabmember.IsActive(true),
-		).
-		Exist(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to verify approver membership: %w", err)
-	}
-	if !isMember {
-		return nil, fmt.Errorf("user is not a member of %s", requiredBoardType)
-	}
-
-	// 更新审批状态
-	// currentUserID = req.ApproverID：CAB 场景已在上方校验成员身份，且 req.ApproverID 就是当前操作人，
-	// 传入即可保持 UpdateChangeApproval 内的身份校验路径一致
-	return s.changeApprovalServ.UpdateChangeApproval(ctx, req.ApprovalID, &dto.UpdateChangeApprovalRequest{
-		Status:  req.Status,
-		Comment: &req.Comment,
-	}, tenantID, req.ApproverID)
+	s.logger.Infow("CAB member updated", "member_id", memberID, "role", role, "is_active", isActive)
+	return &dto.CABMemberResponse{
+		ID:        member.ID,
+		UserID:    member.UserID,
+		UserName:  user.Name,
+		Email:     user.Email,
+		Type:      member.Type,
+		Role:      member.Role,
+		IsActive:  member.IsActive,
+		TenantID:  member.TenantID,
+		CreatedAt: member.CreatedAt,
+	}, nil
 }

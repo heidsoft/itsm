@@ -595,11 +595,16 @@ func ToApprovalChainResponse(chain *ent.ApprovalChain) *ApprovalChainResponse {
 	chainDTO := make([]ApprovalChainStepDTO, len(chain.Chain))
 	for i, step := range chain.Chain {
 		chainDTO[i] = ApprovalChainStepDTO{
-			Level:      step.Level,
-			ApproverID: step.ApproverID,
-			Role:       step.Role,
-			Name:       step.Name,
-			IsRequired: step.IsRequired,
+			Level:              step.Level,
+			ApproverID:         step.ApproverID,
+			Role:               step.Role,
+			Name:               step.Name,
+			IsRequired:         step.IsRequired,
+			ApprovalType:       step.ApprovalType,
+			Threshold:          step.Threshold,
+			FallbackAction:     step.FallbackAction,
+			FallbackApproverID: step.FallbackApproverID,
+			FallbackRole:       step.FallbackRole,
 		}
 	}
 

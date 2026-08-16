@@ -36,6 +36,7 @@ import (
 	"itsm-backend/ent/user"
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
+	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
@@ -577,9 +578,12 @@ func NewApplication() *Application {
 	cmdbServiceDomain := cmdb.NewService(cmdbRepo, sugar)
 	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
 
+	// Approval Chain Service（供服务请求审批链求值引擎消费）
+	approvalChainService := service.NewApprovalChainService(client, sugar)
+
 	// Domain: Service Request (DDD)
 	srRepo := service_request.NewEntRepository(client)
-	srService := service_request.NewService(srRepo, scRepo, cmdbRepo, client, sugar)
+	srService := service_request.NewService(srRepo, scRepo, cmdbRepo, client, sugar, approvalChainService)
 	srHandler := service_request.NewHandler(srService)
 
 	// Domain: Incident (DDD)
@@ -598,8 +602,12 @@ func NewApplication() *Application {
 
 	// Domain: Change (DDD)
 	changeRepo := change.NewEntRepository(client, database.GetRawDB())
-	changeServiceDomain := change.NewService(changeRepo, client, sugar)
+	changeServiceDomain := change.NewService(changeRepo, client, sugar, approvalChainService)
 	changeHandler := change.NewHandler(changeServiceDomain)
+
+	// CAB 成员名册 handler（审批流转由审批链引擎 cab: 解析器驱动，handler 仅管名册）
+	cabService := service.NewCABService(client, sugar)
+	cabHandler := cab.NewHandler(cabService, sugar)
 
 	// Analytics & Prediction Controllers
 	analyticsController := controller.NewAnalyticsController(analyticsService)
@@ -712,7 +720,6 @@ func NewApplication() *Application {
 	vendorController := controller.NewVendorController(vendorService)
 
 	// Approval Chain Controller
-	approvalChainService := service.NewApprovalChainService(client, sugar)
 	approvalChainController := controller.NewApprovalChainController(approvalChainService, sugar)
 
 	// SLA Monitor & Alert Services (legacy, for background tasks)
@@ -845,6 +852,7 @@ func NewApplication() *Application {
 		ProblemHandler:                 problemHandler,
 		ProblemInvestigationController: problemInvestigationController,
 		ChangeHandler:                  changeHandler,
+		CABHandler:                     cabHandler,
 		KnowledgeHandler:               knowledgeHandler,
 		SLAHandler:                     slaHandler,
 		SLATemplateController:          slaTemplateController,

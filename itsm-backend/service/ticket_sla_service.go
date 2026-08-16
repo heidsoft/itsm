@@ -330,6 +330,7 @@ type businessHoursConfig struct {
 	endHour   int                   // 工作时段结束小时（不含），18 表示 18:00
 	endMin    int                   // 工作时段结束分钟
 	holidays  map[string]bool       // 节假日集合，格式 "2006-01-02"
+	loc       *time.Location        // 时区：工作时间窗口按此时区计算（默认 time.Local）
 }
 
 // defaultBusinessHoursConfig 返回默认业务时间配置（周一至周五 9:00-18:00）。
@@ -342,6 +343,7 @@ func defaultBusinessHoursConfig() businessHoursConfig {
 		startHour: 9,
 		endHour:   18,
 		holidays:  map[string]bool{},
+		loc:       time.Local,
 	}
 }
 
@@ -399,6 +401,17 @@ func parseBusinessHoursConfig(raw map[string]interface{}) businessHoursConfig {
 			if hs, ok := h.(string); ok {
 				cfg.holidays[hs] = true
 			}
+		}
+	}
+	// 时区：SLA 工作时间窗口必须按配置时区计算，否则跨时区租户违约判定整体偏移。
+	// 兼容 "time_zone"（文档约定）与 "timezone"（DTO 示例）两种键名。
+	if tz, ok := raw["time_zone"].(string); ok && tz != "" {
+		if loc, e := time.LoadLocation(tz); e == nil {
+			cfg.loc = loc
+		}
+	} else if tz, ok := raw["timezone"].(string); ok && tz != "" {
+		if loc, e := time.LoadLocation(tz); e == nil {
+			cfg.loc = loc
 		}
 	}
 	return cfg
@@ -465,7 +478,13 @@ func adjustToBusinessHoursStart(t time.Time, cfg businessHoursConfig) time.Time 
 //  3. 否则扣减当天剩余工时，跳到下一个工作日起点继续消耗，直到 minutes 耗尽。
 func addBusinessMinutes(start time.Time, minutes int, cfg businessHoursConfig) time.Time {
 	remaining := time.Duration(minutes) * time.Minute
-	cursor := adjustToBusinessHoursStart(start, cfg)
+	loc := cfg.loc
+	if loc == nil {
+		loc = time.Local
+	}
+	// 关键修复：把起始时刻换算到配置时区后再计算工作窗口，
+	// 否则 9:00-18:00 窗口会按宿主机/UTC 时区计算，跨时区租户违约整体偏移。
+	cursor := adjustToBusinessHoursStart(start.In(loc), cfg)
 
 	// 防御性上限：避免极端 minutes 导致死循环（最多循环 365 天）。
 	for i := 0; i < 366 && remaining > 0; i++ {
@@ -536,8 +555,9 @@ func (s *TicketSLAService) CalculateSLADeadlineFromRequest(ctx context.Context, 
 			s.logger.Warnw("No SLA definition found, using defaults", "service_type", serviceType, "priority", normalizedPriority)
 			return &SLADeadlineResult{
 				SLADefinitionID:    0,
-				ResponseDeadline:   toPointer(now.Add(8 * time.Hour)),
-				ResolutionDeadline: toPointer(now.Add(24 * time.Hour)),
+				ResponseDeadline:   toPointer(s.calculateDeadlineWithBusinessHours(now, 60, nil)),
+				ResolutionDeadline: toPointer(s.calculateDeadlineWithBusinessHours(now, 480, nil)),
+				BusinessHoursOnly:  false,
 			}, nil
 		}
 	}

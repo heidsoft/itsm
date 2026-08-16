@@ -51,7 +51,21 @@ type ApprovalChain struct {
 	Role         string
 	Status       string
 	IsRequired   bool
+	// Quorum 元数据（014 迁移新增）：本层法定人数语义。
+	// ApprovalType: serial|parallel|all|or；Threshold: 本层需要的批准人数。
+	ApprovalType string
+	Threshold    int
 	CreatedAt    time.Time
+}
+
+// ApprovalLevelPlan 是提交审批时的一层计划（来自引擎求值或旧逻辑兼容）。
+// 多个 approver 同属一层时按 ApprovalType/Threshold 计算会签/或签。
+type ApprovalLevelPlan struct {
+	Level        int
+	ApprovalType string // serial | parallel | all | or
+	Threshold    int    // 本层需要的批准人数（0 表示由下游按类型推导）
+	Required     bool
+	ApproverIDs  []int
 }
 
 // ApprovalRecord represents an individual approval action

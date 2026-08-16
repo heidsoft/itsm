@@ -13,7 +13,7 @@ type Repository interface {
 	Update(ctx context.Context, c *Change) (*Change, error)
 	Delete(ctx context.Context, id int, tenantID int) error
 	GetStats(ctx context.Context, tenantID int) (*Stats, error)
-	SubmitForApproval(ctx context.Context, changeID, tenantID int, approverIDs []int, comment string) error
+	SubmitForApproval(ctx context.Context, changeID, tenantID int, plan []ApprovalLevelPlan, comment string) error
 
 	// Approvals
 	CreateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error)

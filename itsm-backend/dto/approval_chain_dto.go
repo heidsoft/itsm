@@ -9,6 +9,13 @@ type ApprovalChainStepDTO struct {
 	Role       string `json:"role"`
 	Name       string `json:"name"`
 	IsRequired bool   `json:"isRequired"`
+	// 会签/或签语义（修复此前 DTO 丢弃这两个字段的缺陷）
+	ApprovalType string `json:"approvalType,omitempty"` // serial | parallel | all | or
+	Threshold    int    `json:"threshold,omitempty"`    // 会签阈值，默认=审批人数
+	// 兜底策略（无审批人且必需时触发）
+	FallbackAction     string `json:"fallbackAction,omitempty"`     // block(默认) | auto_approve | escalate | auto_reject
+	FallbackApproverID int    `json:"fallbackApproverId,omitempty"` // escalate 时的显式兜底审批人
+	FallbackRole       string `json:"fallbackRole,omitempty"`       // escalate 时的兜底角色/组
 }
 
 // ApprovalChainRequest 创建审批链请求

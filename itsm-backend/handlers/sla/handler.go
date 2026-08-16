@@ -137,10 +137,30 @@ func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 	if req.Description != nil {
 		existing.Description = *req.Description
 	}
+	if req.ServiceType != nil {
+		existing.ServiceType = *req.ServiceType
+	}
+	if req.Priority != nil {
+		existing.Priority = *req.Priority
+	}
+	if req.ResponseTime != nil {
+		existing.ResponseTime = *req.ResponseTime
+	}
+	if req.ResolutionTime != nil {
+		existing.ResolutionTime = *req.ResolutionTime
+	}
+	if req.BusinessHours != nil {
+		existing.BusinessHours = req.BusinessHours
+	}
+	if req.EscalationRules != nil {
+		existing.EscalationRules = req.EscalationRules
+	}
+	if req.Conditions != nil {
+		existing.Conditions = req.Conditions
+	}
 	if req.IsActive != nil {
 		existing.IsActive = *req.IsActive
 	}
-	// Map other fields as needed
 
 	res, err := h.svc.UpdateDefinition(c.Request.Context(), existing)
 	if err != nil {

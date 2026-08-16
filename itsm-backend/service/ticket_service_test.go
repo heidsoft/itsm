@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
@@ -895,7 +897,7 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ticketService.DeleteTicket(ctx, tt.ticketID, tt.tenantID)
+			err := ticketService.DeleteTicket(ctx, tt.ticketID, tt.tenantID, 0, "super_admin")
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -911,6 +913,157 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestTicketService_DeleteTicket_RowScope 验证 M-7 行级删除归属：
+// 非全量角色只能删除自己创建或分配给自己的工单，越权返回 ForbiddenError(403)。
+func TestTicketService_DeleteTicket_RowScope(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	ticketService := NewTicketServiceForTest(client, logger)
+	ctx := context.Background()
+
+	tenant, err := client.Tenant.Create().
+		SetName("Scope Tenant").SetCode("scope").SetDomain("scope.com").SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	owner, err := client.User.Create().
+		SetUsername("owner").SetEmail("owner@x.com").SetName("Owner").
+		SetPasswordHash("h").SetRole("end_user").SetActive(true).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	assignee, err := client.User.Create().
+		SetUsername("assignee").SetEmail("assignee@x.com").SetName("Assignee").
+		SetPasswordHash("h").SetRole("end_user").SetActive(true).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	admin, err := client.User.Create().
+		SetUsername("admin").SetEmail("admin@x.com").SetName("Admin").
+		SetPasswordHash("h").SetRole("admin").SetActive(true).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 工单属于 owner，并分配给 assignee
+	tk, err := client.Ticket.Create().
+		SetTitle("Scope Ticket").SetDescription("d").SetPriority("low").SetStatus("open").
+		SetTicketNumber("SCOPE-001").SetRequesterID(owner.ID).SetAssigneeID(assignee.ID).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	t.Run("无关用户删除->拒绝(403)", func(t *testing.T) {
+		stranger, err := client.User.Create().
+			SetUsername("stranger").SetEmail("stranger@x.com").SetName("Stranger").
+			SetPasswordHash("h").SetRole("end_user").SetActive(true).SetTenantID(tenant.ID).
+			Save(ctx)
+		require.NoError(t, err)
+		err = ticketService.DeleteTicket(ctx, tk.ID, tenant.ID, stranger.ID, "end_user")
+		require.Error(t, err)
+		var appErr *common.AppError
+		require.True(t, errors.As(err, &appErr), "应返回 *common.AppError")
+		assert.Equal(t, common.ErrCodeForbidden, appErr.Code)
+		// 工单仍可见（未被删除）
+		_, gerr := ticketService.GetTicket(ctx, tk.ID, tenant.ID)
+		assert.NoError(t, gerr)
+	})
+
+	t.Run("创建人删除->放行", func(t *testing.T) {
+		err := ticketService.DeleteTicket(ctx, tk.ID, tenant.ID, owner.ID, "end_user")
+		assert.NoError(t, err)
+		_, gerr := ticketService.GetTicket(ctx, tk.ID, tenant.ID)
+		assert.Error(t, gerr, "owner 删除后应对业务查询不可见")
+	})
+
+	// 重建一个分配给 assignee 的工单，验证处理人维度
+	tk2, err := client.Ticket.Create().
+		SetTitle("Scope Ticket 2").SetDescription("d").SetPriority("low").SetStatus("open").
+		SetTicketNumber("SCOPE-002").SetRequesterID(owner.ID).SetAssigneeID(assignee.ID).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	t.Run("处理人删除->放行", func(t *testing.T) {
+		err := ticketService.DeleteTicket(ctx, tk2.ID, tenant.ID, assignee.ID, "end_user")
+		assert.NoError(t, err)
+	})
+
+	t.Run("管理员删除他人工单->放行(全量角色)", func(t *testing.T) {
+		tk3, err := client.Ticket.Create().
+			SetTitle("Scope Ticket 3").SetDescription("d").SetPriority("low").SetStatus("open").
+			SetTicketNumber("SCOPE-003").SetRequesterID(owner.ID).
+			SetTenantID(tenant.ID).
+			Save(ctx)
+		require.NoError(t, err)
+		err = ticketService.DeleteTicket(ctx, tk3.ID, tenant.ID, admin.ID, "admin")
+		assert.NoError(t, err)
+	})
+}
+
+// TestTicketService_BatchDeleteTickets_RowScope 验证批量删除的行级归属：
+// 非全量角色若集合中存在任一非本人工单，整体拒绝（fail closed）。
+func TestTicketService_BatchDeleteTickets_RowScope(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	ticketService := NewTicketServiceForTest(client, logger)
+	ctx := context.Background()
+
+	tenant, err := client.Tenant.Create().
+		SetName("BatchScope Tenant").SetCode("bscope").SetDomain("bscope.com").SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	owner, err := client.User.Create().
+		SetUsername("bowner").SetEmail("bowner@x.com").SetName("BOwner").
+		SetPasswordHash("h").SetRole("end_user").SetActive(true).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	stranger, err := client.User.Create().
+		SetUsername("bstranger").SetEmail("bstranger@x.com").SetName("BStranger").
+		SetPasswordHash("h").SetRole("end_user").SetActive(true).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	ownA, err := client.Ticket.Create().
+		SetTitle("BA").SetDescription("d").SetPriority("low").SetStatus("open").
+		SetTicketNumber("BSCOPE-A").SetRequesterID(owner.ID).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	ownB, err := client.Ticket.Create().
+		SetTitle("BB").SetDescription("d").SetPriority("low").SetStatus("open").
+		SetTicketNumber("BSCOPE-B").SetRequesterID(owner.ID).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	other, err := client.Ticket.Create().
+		SetTitle("BC").SetDescription("d").SetPriority("low").SetStatus("open").
+		SetTicketNumber("BSCOPE-C").SetRequesterID(stranger.ID).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	t.Run("集合含他人工单->整体拒绝", func(t *testing.T) {
+		err := ticketService.BatchDeleteTickets(ctx, []int{ownA.ID, other.ID}, tenant.ID, owner.ID, "end_user")
+		require.Error(t, err)
+		var appErr *common.AppError
+		require.True(t, errors.As(err, &appErr))
+		assert.Equal(t, common.ErrCodeForbidden, appErr.Code)
+		// 全部保留
+		_, e1 := ticketService.GetTicket(ctx, ownA.ID, tenant.ID)
+		_, e2 := ticketService.GetTicket(ctx, other.ID, tenant.ID)
+		assert.NoError(t, e1)
+		assert.NoError(t, e2)
+	})
+
+	t.Run("集合全为本人工单->放行", func(t *testing.T) {
+		err := ticketService.BatchDeleteTickets(ctx, []int{ownA.ID, ownB.ID}, tenant.ID, owner.ID, "end_user")
+		assert.NoError(t, err)
+	})
 }
 
 func TestTicketService_DeleteTicket_CascadeTenantIsolation(t *testing.T) {
@@ -988,7 +1141,7 @@ func TestTicketService_DeleteTicket_CascadeTenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Tenant 2 tries to delete tenant 1's ticket.
-	err = ticketService.DeleteTicket(ctx, ticket1.ID, tenant2.ID)
+	err = ticketService.DeleteTicket(ctx, ticket1.ID, tenant2.ID, 0, "end_user")
 	assert.Error(t, err)
 
 	// Verify ticket still exists (未被删除，跨租户隔离仍然有效)
@@ -999,6 +1152,74 @@ func TestTicketService_DeleteTicket_CascadeTenantIsolation(t *testing.T) {
 	comments, err := client.TicketComment.Query().Where(ticketcomment.TicketIDEQ(ticket1.ID)).Count(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, comments, "comment should still exist after failed cross-tenant delete attempt")
+}
+
+// scopeTicketIDs 从列表响应中提取工单 ID 集合，便于断言行级可见范围。
+func scopeTicketIDs(tickets []*dto.TicketResponse) []int {
+	ids := make([]int, 0, len(tickets))
+	for _, t := range tickets {
+		ids = append(ids, t.ID)
+	}
+	return ids
+}
+
+// TestTicketService_ListTickets_RowScope 验证 H-14 行级列表过滤：
+// 非全量角色仅见本人创建/分配工单；全量角色见全租户。
+func TestTicketService_ListTickets_RowScope(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	ticketService := NewTicketServiceForTest(client, logger)
+	ctx := context.Background()
+
+	tenant, err := client.Tenant.Create().
+		SetName("ListScope").SetCode("lscope").SetDomain("lscope.com").SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	alice, err := client.User.Create().
+		SetUsername("lalice").SetEmail("lalice@x.com").SetName("Alice").
+		SetPasswordHash("h").SetRole("end_user").SetActive(true).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	bob, err := client.User.Create().
+		SetUsername("lbob").SetEmail("lbob@x.com").SetName("Bob").
+		SetPasswordHash("h").SetRole("end_user").SetActive(true).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	admin, err := client.User.Create().
+		SetUsername("ladmin").SetEmail("ladmin@x.com").SetName("Admin").
+		SetPasswordHash("h").SetRole("admin").SetActive(true).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	tA, err := client.Ticket.Create().
+		SetTitle("A").SetDescription("d").SetPriority("low").SetStatus("open").
+		SetTicketNumber("LSCOPE-A").SetRequesterID(alice.ID).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	tB, err := client.Ticket.Create().
+		SetTitle("B").SetDescription("d").SetPriority("low").SetStatus("open").
+		SetTicketNumber("LSCOPE-B").SetRequesterID(bob.ID).SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	t.Run("alice 仅见自己的工单", func(t *testing.T) {
+		resp, err := ticketService.ListTickets(ctx, &dto.ListTicketsRequest{Page: 1, PageSize: 50}, tenant.ID, alice.ID, "end_user")
+		require.NoError(t, err)
+		ids := scopeTicketIDs(resp.Tickets)
+		assert.Contains(t, ids, tA.ID)
+		assert.NotContains(t, ids, tB.ID)
+	})
+
+	t.Run("admin 见全租户工单", func(t *testing.T) {
+		resp, err := ticketService.ListTickets(ctx, &dto.ListTicketsRequest{Page: 1, PageSize: 50}, tenant.ID, admin.ID, "admin")
+		require.NoError(t, err)
+		ids := scopeTicketIDs(resp.Tickets)
+		assert.Contains(t, ids, tA.ID)
+		assert.Contains(t, ids, tB.ID)
+	})
 }
 
 func TestTicketService_SearchTickets(t *testing.T) {
@@ -1186,7 +1407,7 @@ func BenchmarkTicketService_CreateTicket(b *testing.B) {
 		SetStatus("active").
 		Save(ctx)
 
-	testUser, _ := client.User.Create().
+	testUser, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
 		SetName("Test User").
@@ -1195,6 +1416,7 @@ func BenchmarkTicketService_CreateTicket(b *testing.B) {
 		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
+	require.NoError(b, err)
 
 	request := &dto.CreateTicketRequest{
 		Title:       "基准测试工单",

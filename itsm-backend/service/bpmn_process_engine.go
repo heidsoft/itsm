@@ -270,7 +270,7 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 	}
 
 	// 5. 执行流程推进（从StartEvent开始）
-	if err := e.executeStep(ctx, instance, process, startEvent.ID, variables); err != nil {
+	if err := e.executeStep(ctx, e.client, instance, process, startEvent.ID, variables); err != nil {
 		return nil, err
 	}
 
@@ -289,7 +289,9 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 	return instance, nil
 }
 
-// CompleteTask 完成任务（使用乐观锁保护变量合并，防止并发覆写）
+// CompleteTask 完成任务。
+// 整个「置完成 → 合并变量 → 推进流程 → 记录审批决策」包进单个 ent.Tx，
+// 任一步骤失败整体回滚，彻底消除并发下的半成品状态（P2 事务原子化）。
 func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error {
 	// P1-4：租户上下文必须显式有效（>0），禁止缺上下文时全局查任务
 	tenantID, err := requireBPMNTenantContext(ctx)
@@ -297,20 +299,36 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 		return err
 	}
 
+	tx, err := e.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	txc := tx.Client()
+	// 异常时回滚，保证不会留下半提交状态
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		}
+	}()
+
 	// 1. 获取任务（固定按当前租户过滤，不存在"无过滤跨租户"分支）
-	task, err := e.client.ProcessTask.Query().
+	task, err := txc.ProcessTask.Query().
 		Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
+		_ = tx.Rollback()
 		return fmt.Errorf("获取任务失败: %w", err)
 	}
 	if err := e.authorizeTaskActor(ctx, task); err != nil {
+		_ = tx.Rollback()
 		return err
 	}
 
 	// 2. 获取流程实例 - 使用任务中存储的ProcessInstanceID (ent自动生成的ID)
-	instance, err := e.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
+	instance, err := txc.ProcessInstance.Get(ctx, task.ProcessInstanceID)
 	if err != nil {
+		_ = tx.Rollback()
 		return fmt.Errorf("获取流程实例失败: %w", err)
 	}
 
@@ -318,29 +336,31 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	// A running instance is immutable with respect to its deployed definition.
 	// Looking up the latest definition here can silently move an old instance
 	// onto a newly published graph halfway through execution.
-	definition, err := e.client.ProcessDefinition.Query().
+	definition, err := txc.ProcessDefinition.Query().
 		Where(
 			processdefinition.ID(instance.ProcessDefinitionID),
 			processdefinition.TenantID(instance.TenantID),
 		).
 		Only(ctx)
 	if err != nil {
+		_ = tx.Rollback()
 		return fmt.Errorf("获取流程定义失败: %w", err)
 	}
 
 	bpmnDefinitions, err := e.parser.ParseXML(definition.BpmnXML)
 	if err != nil {
+		_ = tx.Rollback()
 		return fmt.Errorf("解析BPMN失败: %w", err)
 	}
 	process := bpmnDefinitions.Processes[0]
 
 	// 4. 更新当前任务状态
 	if task.Status == "completed" || task.Status == "cancelled" {
+		_ = tx.Rollback()
 		return fmt.Errorf("任务已结束，不能重复完成")
 	}
-	priorStatus := task.Status // 推进失败时回滚到此状态，保证可重试（F-2 防卡死）
 
-	updated, err := e.client.ProcessTask.Update().
+	updated, err := txc.ProcessTask.Update().
 		Where(
 			processtask.ID(task.ID),
 			processtask.TenantID(instance.TenantID),
@@ -352,30 +372,37 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 		SetTaskVariables(variables).
 		Save(ctx)
 	if err != nil {
+		_ = tx.Rollback()
 		return fmt.Errorf("更新任务状态失败: %w", err)
 	}
 	if updated != 1 {
+		_ = tx.Rollback()
 		return fmt.Errorf("任务已被处理，请刷新后重试")
 	}
 
-	// 5. 使用乐观锁合并变量（最多重试3次）
-	instance, err = e.mergeVariablesWithOptimisticLock(ctx, instance.ID, variables)
+	// 5. 在事务内合并变量（无并发写者，直接合并即可）
+	instance, err = e.mergeVariablesInTx(ctx, txc, instance.ID, variables)
 	if err != nil {
-		e.revertTaskStatus(ctx, task.ID, instance.TenantID, priorStatus)
+		_ = tx.Rollback()
 		return fmt.Errorf("合并实例变量失败: %w", err)
 	}
 
 	// 6. 执行流程推进（从当前UserTask继续）
-	if err := e.executeStep(ctx, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
-		e.revertTaskStatus(ctx, task.ID, instance.TenantID, priorStatus)
+	if err := e.executeStep(ctx, txc, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
+		_ = tx.Rollback()
 		return err
 	}
-	if err := e.recordApprovalDecision(ctx, instance, task, variables); err != nil {
-		e.revertTaskStatus(ctx, task.ID, instance.TenantID, priorStatus)
+	if err := e.recordApprovalDecision(ctx, txc, instance, task, variables); err != nil {
+		_ = tx.Rollback()
 		return err
 	}
 
-	// 7. 记录审计日志 - 任务完成
+	// 7. 提交事务；任一步骤失败已在上方回滚
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %w", err)
+	}
+
+	// 8. 记录审计日志 - 任务完成（事务外，仅审计，失败不阻断）
 	userID := 0
 	userName := ""
 	if u, ok := ctx.Value("user").(*ent.User); ok {
@@ -390,26 +417,31 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	return nil
 }
 
-// revertTaskStatus 将刚置为 completed 的任务回滚到推进前状态，使 CompleteTask 在流程推进失败时可被安全重试（F-2）。
-// 用 StatusEQ("completed") 乐观条件确保仅回滚本调用刚完成、尚未推进的任务，避免误改其他状态。
-func (e *CustomProcessEngine) revertTaskStatus(ctx context.Context, taskID int, tenantID int, status string) {
-	if status == "completed" || status == "cancelled" {
-		return
+// mergeVariablesInTx 在事务内合并流程实例变量并返回更新后的实例。
+// 与 mergeVariablesWithOptimisticLock 不同：调用方已持有事务，无需再开事务或重试。
+func (e *CustomProcessEngine) mergeVariablesInTx(ctx context.Context, txc *ent.Client, instanceID int, newVars map[string]interface{}) (*ent.ProcessInstance, error) {
+	inst, err := txc.ProcessInstance.Get(ctx, instanceID)
+	if err != nil {
+		return nil, fmt.Errorf("查询流程实例失败: %w", err)
 	}
-	_, err := e.client.ProcessTask.Update().
-		Where(
-			processtask.ID(taskID),
-			processtask.TenantID(tenantID),
-			processtask.StatusEQ("completed"),
-		).
-		SetStatus(status).
+	merged := make(map[string]interface{})
+	for k, v := range inst.Variables {
+		merged[k] = v
+	}
+	for k, v := range newVars {
+		merged[k] = v
+	}
+	updated, err := txc.ProcessInstance.UpdateOneID(instanceID).
+		SetVariables(merged).
+		SetVersion(inst.Version + 1).
 		Save(ctx)
 	if err != nil {
-		e.logger.Warnw("revertTaskStatus failed", "taskID", taskID, "error", err)
+		return nil, fmt.Errorf("更新实例变量失败: %w", err)
 	}
+	return updated, nil
 }
 
-func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, instance *ent.ProcessInstance, task *ent.ProcessTask, variables map[string]interface{}) error {
+func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, task *ent.ProcessTask, variables map[string]interface{}) error {
 	action, _ := variables["approvalAction"].(string)
 	if action == "" {
 		return nil
@@ -421,12 +453,12 @@ func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, instan
 		return fmt.Errorf("审批决策缺少认证操作人")
 	}
 	actorName := ""
-	if actor, err := e.client.User.Get(ctx, actorID); err == nil {
+	if actor, err := txc.User.Get(ctx, actorID); err == nil {
 		actorName = actor.Name
 	}
 	businessType := fmt.Sprint(instance.Variables["business_type"])
 	businessID := fmt.Sprint(instance.Variables["business_id"])
-	_, err := e.client.ProcessApprovalDecision.Create().
+	_, err := txc.ProcessApprovalDecision.Create().
 		SetProcessInstanceID(instance.ID).SetProcessTaskID(task.ID).
 		SetProcessInstanceKey(instance.ProcessInstanceID).SetTaskID(task.TaskID).
 		SetProcessDefinitionKey(instance.ProcessDefinitionKey).SetNodeKey(task.TaskDefinitionKey).
@@ -466,74 +498,13 @@ func (e *CustomProcessEngine) authorizeTaskActor(ctx context.Context, task *ent.
 	return fmt.Errorf("当前用户不是该任务的审批人或候选人")
 }
 
-// mergeVariablesWithOptimisticLock 使用乐观锁合并流程实例变量，防止并发覆写
-func (e *CustomProcessEngine) mergeVariablesWithOptimisticLock(ctx context.Context, instanceID int, newVars map[string]interface{}) (*ent.ProcessInstance, error) {
-	const maxRetries = 3
-
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		tx, err := e.client.Tx(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("开启事务失败: %w", err)
-		}
-
-		// 在事务内读取最新实例
-		inst, err := tx.Client().ProcessInstance.Get(ctx, instanceID)
-		if err != nil {
-			tx.Rollback()
-			return nil, fmt.Errorf("查询流程实例失败: %w", err)
-		}
-
-		// 合并变量
-		merged := make(map[string]interface{})
-		if inst.Variables != nil {
-			for k, v := range inst.Variables {
-				merged[k] = v
-			}
-		}
-		for k, v := range newVars {
-			merged[k] = v
-		}
-
-		// 带版本号条件更新（乐观锁）
-		count, err := tx.Client().ProcessInstance.Update().
-			Where(
-				processinstance.ID(instanceID),
-				processinstance.Version(inst.Version), // 乐观锁条件
-			).
-			SetVariables(merged).
-			SetVersion(inst.Version + 1).
-			Save(ctx)
-		if err != nil {
-			tx.Rollback()
-			return nil, fmt.Errorf("更新实例变量失败: %w", err)
-		}
-
-		if count > 0 {
-			// 更新成功，提交事务
-			if err := tx.Commit(); err != nil {
-				return nil, fmt.Errorf("提交事务失败: %w", err)
-			}
-			// 返回更新后的实例（包含新变量）
-			inst.Variables = merged
-			inst.Version = inst.Version + 1
-			return inst, nil
-		}
-
-		// count == 0，版本冲突，回滚并重试
-		tx.Rollback()
-		e.logger.Infow("变量更新版本冲突，重试", "attempt", attempt+1, "instance_id", instanceID)
-	}
-
-	return nil, fmt.Errorf("变量更新冲突，已重试%d次", maxRetries)
-}
-
 // executeStep 执行流程步骤
-func (e *CustomProcessEngine) executeStep(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, currentElementID string, variables map[string]interface{}) error {
+func (e *CustomProcessEngine) executeStep(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, currentElementID string, variables map[string]interface{}) error {
 	outgoingFlows := e.findOutgoingFlows(process, currentElementID)
 
 	if len(outgoingFlows) == 0 {
 		if e.isEndEvent(process, currentElementID) {
-			return e.completeProcess(ctx, instance)
+			return e.completeProcess(ctx, txc, instance)
 		}
 		return nil
 	}
@@ -552,13 +523,13 @@ func (e *CustomProcessEngine) executeStep(ctx context.Context, instance *ent.Pro
 
 	// 记录排他网关路由决策，使「走哪条分支」可审计（F-4）
 	if e.findExclusiveGateway(process, currentElementID) != nil {
-		e.recordGatewayHistory(ctx, instance, currentElementID, "exclusive", "fork", []string{targetRef}, variables)
+		e.recordGatewayHistory(ctx, txc, instance, currentElementID, "exclusive", "fork", []string{targetRef}, variables)
 	}
 
-	return e.handleElement(ctx, instance, process, targetRef)
+	return e.handleElement(ctx, txc, instance, process, targetRef)
 }
 
-func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, elementID string) error {
+func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, elementID string) error {
 	// Find the element name for logging
 	elementName := elementID
 	if task := e.findUserTask(process, elementID); task != nil {
@@ -567,7 +538,7 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.P
 		elementName = endEvent.Name
 	}
 
-	_, err := e.client.ProcessInstance.UpdateOne(instance).
+	_, err := txc.ProcessInstance.UpdateOne(instance).
 		SetCurrentActivityID(elementID).
 		SetCurrentActivityName(elementName).
 		Save(ctx)
@@ -580,17 +551,19 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.P
 
 	if task := e.findUserTask(process, elementID); task != nil {
 		e.logger.Infow("Found user task, creating task", "taskID", task.ID, "taskName", task.Name)
-		return e.createUserTask(ctx, instance, task)
+		return e.createUserTask(ctx, txc, instance, task)
 	} else if endEvent := e.findEndEvent(process, elementID); endEvent != nil {
-		return e.completeProcess(ctx, instance)
+		e.markElementDone(ctx, txc, instance, elementID)
+		return e.completeProcess(ctx, txc, instance)
 	} else if gateway := e.findParallelGateway(process, elementID); gateway != nil {
 		// 并行网关：分叉激活所有出边；汇聚等待所有入边分支完成（F-1）
-		return e.handleParallelGateway(ctx, instance, process, gateway, 0)
+		return e.handleParallelGateway(ctx, txc, instance, process, gateway, 0)
 	} else if gateway := e.findInclusiveGateway(process, elementID); gateway != nil {
 		// 包容网关：分叉激活所有命中条件的出边；汇聚等待所有入边分支完成（F-1）
-		return e.handleInclusiveGateway(ctx, instance, process, gateway, 0)
+		return e.handleInclusiveGateway(ctx, txc, instance, process, gateway, 0)
 	} else if gateway := e.findExclusiveGateway(process, elementID); gateway != nil {
-		return e.executeStep(ctx, instance, process, elementID, instance.Variables)
+		e.markElementDone(ctx, txc, instance, elementID)
+		return e.executeStep(ctx, txc, instance, process, elementID, instance.Variables)
 	} else if serviceTask := e.findServiceTask(process, elementID); serviceTask != nil {
 		// 通过 CallbackRegistry 执行真实的服务任务逻辑
 		serviceRef := serviceTask.ID
@@ -626,10 +599,12 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.P
 				e.logger.Warnw("未注册的 ServiceTask，跳过执行", "serviceRef", serviceRef, "elementID", elementID)
 			}
 		}
-		return e.executeStep(ctx, instance, process, elementID, instance.Variables)
+		e.markElementDone(ctx, txc, instance, elementID)
+		return e.executeStep(ctx, txc, instance, process, elementID, instance.Variables)
 	}
 
-	return e.executeStep(ctx, instance, process, elementID, instance.Variables)
+	e.markElementDone(ctx, txc, instance, elementID)
+	return e.executeStep(ctx, txc, instance, process, elementID, instance.Variables)
 }
 
 func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *BPMNServiceTask) map[string]interface{} {
@@ -670,7 +645,7 @@ func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *B
 	return variables
 }
 
-func (e *CustomProcessEngine) createUserTask(ctx context.Context, instance *ent.ProcessInstance, task *BPMNUserTask) error {
+func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, task *BPMNUserTask) error {
 	// 幂等：同实例同节点已存在未结束任务时直接复用，避免 CompleteTask 流程推进失败重试时重复创建任务（F-2）
 	if existing, _ := e.client.ProcessTask.Query().
 		Where(
@@ -758,7 +733,7 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, instance *ent.
 		"allowAddApprover":        task.AllowAddApprover,
 		"commentRequiredOnReject": task.CommentRequiredOnReject,
 	}
-	createdTask, err := e.client.ProcessTask.Create().
+	createdTask, err := txc.ProcessTask.Create().
 		SetTaskID(fmt.Sprintf("TASK-%s-%d", task.ID, time.Now().UnixNano())).
 		SetProcessInstanceID(instance.ID).
 		SetProcessDefinitionKey(instance.ProcessDefinitionKey).
@@ -962,8 +937,8 @@ func matchRuleConditions(conditions []map[string]interface{}, taskName string) b
 	return false
 }
 
-func (e *CustomProcessEngine) completeProcess(ctx context.Context, instance *ent.ProcessInstance) error {
-	_, err := e.client.ProcessInstance.UpdateOne(instance).
+func (e *CustomProcessEngine) completeProcess(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance) error {
+	_, err := txc.ProcessInstance.UpdateOne(instance).
 		SetStatus("completed").
 		SetEndTime(time.Now()).
 		Save(ctx)
@@ -974,7 +949,7 @@ func (e *CustomProcessEngine) completeProcess(ctx context.Context, instance *ent
 // 分叉（fork）与汇聚等待（join-wait）可审计（F-4）。字段与 bpmn_gateway_engine.go 的
 // recordGatewayExecution 同构，GetGatewayExecutionHistory 可按 activity_type=gateway 检索。
 // 写历史属于辅助审计，失败仅告警不阻断主流程。
-func (e *CustomProcessEngine) recordGatewayHistory(ctx context.Context, instance *ent.ProcessInstance, gatewayID, gatewayType, eventType string, nextActivities []string, variables map[string]interface{}) {
+func (e *CustomProcessEngine) recordGatewayHistory(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, gatewayID, gatewayType, eventType string, nextActivities []string, variables map[string]interface{}) {
 	detail := map[string]interface{}{
 		"gateway_id":      gatewayID,
 		"gateway_type":    gatewayType,
@@ -987,7 +962,7 @@ func (e *CustomProcessEngine) recordGatewayHistory(ctx context.Context, instance
 		e.logger.Warnw("recordGatewayHistory 序列化事件详情失败", "error", err)
 		detailBytes = []byte("{}")
 	}
-	_, err = e.client.ProcessExecutionHistory.Create().
+	_, err = txc.ProcessExecutionHistory.Create().
 		SetHistoryID(fmt.Sprintf("HIST-%s-%d", gatewayID, time.Now().UnixNano())).
 		SetProcessInstanceID(instance.ID).
 		SetProcessDefinitionKey(instance.ProcessDefinitionKey).
@@ -1124,36 +1099,37 @@ func (e *CustomProcessEngine) findIncomingFlows(process *BPMNProcess, targetRef 
 const maxGatewayForkDepth = 64
 
 // handleParallelGateway 处理并行网关：多入边时作为汇聚节点等待所有分支完成；否则作为分叉节点激活所有出边（F-1）。
-func (e *CustomProcessEngine) handleParallelGateway(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, gateway *BPMNParallelGateway, depth int) error {
+func (e *CustomProcessEngine) handleParallelGateway(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, gateway *BPMNParallelGateway, depth int) error {
 	if depth > maxGatewayForkDepth {
 		return fmt.Errorf("并行网关分叉层级超过上限，可能存在环路: %s", gateway.ID)
 	}
 	incoming := e.findIncomingFlows(process, gateway.ID)
 	if len(incoming) > 1 && !e.allIncomingBranchesCompleted(ctx, instance, process, gateway.ID) {
 		e.logger.Infow("并行网关汇聚等待其余分支完成", "gateway", gateway.ID, "instance", instance.ID)
-		e.recordGatewayHistory(ctx, instance, gateway.ID, "parallel", "join-wait", nil, instance.Variables)
+		e.recordGatewayHistory(ctx, txc, instance, gateway.ID, "parallel", "join-wait", nil, instance.Variables)
 		return nil // 仍有分支未结束，等待，不推进
 	}
 	var next []string
 	for _, flow := range e.findOutgoingFlows(process, gateway.ID) {
 		next = append(next, flow.TargetRef)
-		if err := e.dispatchGatewayOrElement(ctx, instance, process, flow.TargetRef, depth); err != nil {
+		if err := e.dispatchGatewayOrElement(ctx, txc, instance, process, flow.TargetRef, depth); err != nil {
 			return err
 		}
 	}
-	e.recordGatewayHistory(ctx, instance, gateway.ID, "parallel", "fork", next, instance.Variables)
+	e.markElementDone(ctx, txc, instance, gateway.ID)
+	e.recordGatewayHistory(ctx, txc, instance, gateway.ID, "parallel", "fork", next, instance.Variables)
 	return nil
 }
 
 // handleInclusiveGateway 处理包容网关：汇聚等待所有入边分支完成；分叉时激活所有命中条件的出边（F-1）。
-func (e *CustomProcessEngine) handleInclusiveGateway(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, gateway *BPMNInclusiveGateway, depth int) error {
+func (e *CustomProcessEngine) handleInclusiveGateway(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, gateway *BPMNInclusiveGateway, depth int) error {
 	if depth > maxGatewayForkDepth {
 		return fmt.Errorf("包容网关分叉层级超过上限，可能存在环路: %s", gateway.ID)
 	}
 	incoming := e.findIncomingFlows(process, gateway.ID)
 	if len(incoming) > 1 && !e.allIncomingBranchesCompleted(ctx, instance, process, gateway.ID) {
 		e.logger.Infow("包容网关汇聚等待其余分支完成", "gateway", gateway.ID, "instance", instance.ID)
-		e.recordGatewayHistory(ctx, instance, gateway.ID, "inclusive", "join-wait", nil, instance.Variables)
+		e.recordGatewayHistory(ctx, txc, instance, gateway.ID, "inclusive", "join-wait", nil, instance.Variables)
 		return nil
 	}
 	var next []string
@@ -1162,12 +1138,13 @@ func (e *CustomProcessEngine) handleInclusiveGateway(ctx context.Context, instan
 		if e.evaluateCondition(flow, instance.Variables) {
 			matched = true
 			next = append(next, flow.TargetRef)
-			if err := e.dispatchGatewayOrElement(ctx, instance, process, flow.TargetRef, depth); err != nil {
+			if err := e.dispatchGatewayOrElement(ctx, txc, instance, process, flow.TargetRef, depth); err != nil {
 				return err
 			}
 		}
 	}
-	e.recordGatewayHistory(ctx, instance, gateway.ID, "inclusive", "fork", next, instance.Variables)
+	e.markElementDone(ctx, txc, instance, gateway.ID)
+	e.recordGatewayHistory(ctx, txc, instance, gateway.ID, "inclusive", "fork", next, instance.Variables)
 	if !matched {
 		e.logger.Warnw("包容网关无满足条件的出边，流程在此等待", "gateway", gateway.ID, "instance", instance.ID)
 	}
@@ -1175,41 +1152,90 @@ func (e *CustomProcessEngine) handleInclusiveGateway(ctx context.Context, instan
 }
 
 // dispatchGatewayOrElement 优先分发到嵌套的并行/包容网关（depth+1 用于环路防护），其余交给 handleElement。
-func (e *CustomProcessEngine) dispatchGatewayOrElement(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, elementID string, depth int) error {
+func (e *CustomProcessEngine) dispatchGatewayOrElement(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, elementID string, depth int) error {
 	if pg := e.findParallelGateway(process, elementID); pg != nil {
-		return e.handleParallelGateway(ctx, instance, process, pg, depth+1)
+		return e.handleParallelGateway(ctx, txc, instance, process, pg, depth+1)
 	}
 	if ig := e.findInclusiveGateway(process, elementID); ig != nil {
-		return e.handleInclusiveGateway(ctx, instance, process, ig, depth+1)
+		return e.handleInclusiveGateway(ctx, txc, instance, process, ig, depth+1)
 	}
-	return e.handleElement(ctx, instance, process, elementID)
+	return e.handleElement(ctx, txc, instance, process, elementID)
+}
+
+// markElementDone 标记某流程元素已执行完成（写入实例变量 _done_ 并持久化）。
+// 用于并行/包容网关汇聚时判断「非用户任务源」分支（服务任务、子网关、排他网关、结束事件）
+// 是否已真正结束——这是修复「汇聚只认 user-task 源而漏掉其他分支导致提前汇聚/死锁」的关键。
+// 直接就地修改 instance.Variables（同一 map 引用会在同一次执行内对汇聚判断可见），
+// 并通过 txc 持久化，使后续 CompleteTask 的汇聚判断也能读到。
+func (e *CustomProcessEngine) markElementDone(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, elementID string) {
+	if instance.Variables == nil {
+		instance.Variables = map[string]interface{}{}
+	}
+	done, ok := instance.Variables["_done_"].(map[string]interface{})
+	if !ok {
+		done = map[string]interface{}{}
+		instance.Variables["_done_"] = done
+	}
+	done[elementID] = true
+	if _, err := txc.ProcessInstance.UpdateOneID(instance.ID).SetVariables(instance.Variables).Save(ctx); err != nil {
+		e.logger.Warnw("markElementDone 持久化失败", "elementID", elementID, "error", err)
+	}
 }
 
 // allIncomingBranchesCompleted 判断汇聚网关的所有入边分支是否均已结束。
-// 仅检查以用户任务为入边源的分支（网关源保守跳过），覆盖常见的 gateway->task->gateway 模式；
-// 查询失败时保守返回 false（视为未完成），避免提前汇聚。
+//   - 以用户任务为源的分支：按 DB 中该任务是否已 completed/cancelled 判断（与历史行为一致）。
+//   - 以服务任务/子网关/排他网关/结束事件为源的分支：必须已在 _done_ 中标记为完成。
+//     旧实现对这些非用户任务源直接 continue（永远视为完成），会导致提前汇聚或死锁（P1 网关完整性）。
+//   - 查询失败时保守返回 false（视为未完成），避免提前汇聚。
 func (e *CustomProcessEngine) allIncomingBranchesCompleted(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, gatewayID string) bool {
+	done := map[string]interface{}{}
+	if instance.Variables != nil {
+		if d, ok := instance.Variables["_done_"].(map[string]interface{}); ok {
+			done = d
+		}
+	}
 	for _, flow := range e.findIncomingFlows(process, gatewayID) {
 		src := flow.SourceRef
-		if e.findUserTask(process, src) == nil {
+		if e.findUserTask(process, src) != nil {
+			// 用户任务源：以 DB 实际完成状态为准
+			open, err := e.client.ProcessTask.Query().
+				Where(
+					processtask.ProcessInstanceID(instance.ID),
+					processtask.TaskDefinitionKey(src),
+					processtask.StatusNotIn("completed", "cancelled"),
+				).
+				Exist(ctx)
+			if err != nil {
+				e.logger.Warnw("allIncomingBranchesCompleted 查询失败，保守视为未完成", "error", err)
+				return false
+			}
+			if open {
+				return false
+			}
 			continue
 		}
-		open, err := e.client.ProcessTask.Query().
-			Where(
-				processtask.ProcessInstanceID(instance.ID),
-				processtask.TaskDefinitionKey(src),
-				processtask.StatusNotIn("completed", "cancelled"),
-			).
-			Exist(ctx)
-		if err != nil {
-			e.logger.Warnw("allIncomingBranchesCompleted 查询失败，保守视为未完成", "error", err)
-			return false
-		}
-		if open {
+		// 服务任务/子网关/排他网关/结束事件源：必须已记录完成
+		if v, ok := done[src]; !ok || v != true {
+			e.logger.Infow("并行/包容网关汇聚等待分支完成", "gateway", gatewayID, "waitingSrc", src)
 			return false
 		}
 	}
 	return true
+}
+
+// DetectStuckInstances 返回运行时间超过 olderThan 仍未结束（running）的流程实例，
+// 用于可观测性与卡死检测（P3）。结合日志中的 "并行/包容网关汇聚等待分支完成" 可定位汇聚死锁。
+func (e *CustomProcessEngine) DetectStuckInstances(ctx context.Context, tenantID int, olderThan time.Time) ([]*ent.ProcessInstance, error) {
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("DetectStuckInstances 需要有效的租户上下文")
+	}
+	return e.client.ProcessInstance.Query().
+		Where(
+			processinstance.TenantID(tenantID),
+			processinstance.Status("running"),
+			processinstance.StartTimeLT(olderThan),
+		).
+		All(ctx)
 }
 
 func (e *CustomProcessEngine) findServiceTask(process *BPMNProcess, id string) *BPMNServiceTask {
@@ -2733,7 +2759,7 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 			action, decision = "approve", "approved"
 		}
 		engine := NewCustomProcessEngine(s.client, s.logger).(*CustomProcessEngine)
-		if err := engine.recordApprovalDecision(ctx, instance, task, map[string]interface{}{"approvalAction": action, "approvalResult": decision, "approvalComment": req.Comment}); err != nil {
+		if err := engine.recordApprovalDecision(ctx, s.client, instance, task, map[string]interface{}{"approvalAction": action, "approvalResult": decision, "approvalComment": req.Comment}); err != nil {
 			return err
 		}
 	}

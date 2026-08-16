@@ -375,7 +375,7 @@ func TestTicketService_BatchDeleteTickets(t *testing.T) {
 
 	t.Run("批量删除空列表", func(t *testing.T) {
 		tenantID := fx.tenantID()
-		err := fx.svc.BatchDeleteTickets(fx.ctx, []int{}, tenantID)
+		err := fx.svc.BatchDeleteTickets(fx.ctx, []int{}, tenantID, 0, "super_admin")
 		assert.NoError(t, err)
 	})
 
@@ -385,7 +385,7 @@ func TestTicketService_BatchDeleteTickets(t *testing.T) {
 		id3 := fx.makeTicket(t, "b3", ticket.StatusNew)
 		tenantID := fx.tenantID()
 
-		err := fx.svc.BatchDeleteTickets(fx.ctx, []int{id1, id2, id3}, tenantID)
+		err := fx.svc.BatchDeleteTickets(fx.ctx, []int{id1, id2, id3}, tenantID, 0, "super_admin")
 		require.NoError(t, err)
 
 		// 验证已删除（GetByID 应失败）
@@ -572,7 +572,7 @@ func TestTicketService_BatchDeleteTickets_TenantIsolation(t *testing.T) {
 	tenantID := fx.tenantID()
 
 	// 用 tenant2 删除不应该成功（保护原租户）
-	err = fx.svc.BatchDeleteTickets(fx.ctx, []int{id}, tenant2.ID)
+	err = fx.svc.BatchDeleteTickets(fx.ctx, []int{id}, tenant2.ID, 0, "super_admin")
 	// 跨租户删除行为：可能返回错误或部分成功；主要验证原租户 ticket 仍然存在
 	tkt, err2 := fx.svc.GetTicket(fx.ctx, id, tenantID)
 	require.NoError(t, err2, "原租户 ticket 仍应可查询")

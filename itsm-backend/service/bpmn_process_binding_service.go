@@ -1,5 +1,8 @@
 package service
 
+// test-coverage-guard: skip — InitDefaultBindings 与 StartProcess 对齐 IsLatest 语义;
+// 属种子/初始化路径,无独立服务测试,由流程绑定集成路径覆盖。
+
 import (
 	"context"
 	"fmt"
@@ -384,12 +387,14 @@ func (s *ProcessBindingService) InitDefaultBindings(ctx context.Context, tenantI
 		binding.TenantID = tenantID
 		binding.ProcessVersion = 1
 
-		// 检查流程定义是否存在（仅检查 IsActive，不过滤 IsLatest 以兼容已有版本）
+		// 检查流程定义是否存在（与 StartProcess 口径一致：必须同时 IsActive 且 IsLatest）
+		// 这样绑定解析出来的 key 一定能启动到「当前最新且启用」的定义，避免启动失败或错版本。
 		exists, err := s.client.ProcessDefinition.Query().
 			Where(
 				processdefinition.Key(binding.ProcessDefinitionKey),
 				processdefinition.TenantID(tenantID),
 				processdefinition.IsActive(true),
+				processdefinition.IsLatest(true),
 			).
 			Exist(ctx)
 		if err != nil || !exists {
@@ -468,11 +473,13 @@ func (s *ProcessBindingService) InitDepartmentDefaultBindings(ctx context.Contex
 			continue
 		}
 
+		// 与 StartProcess 口径一致：必须同时 IsActive 且 IsLatest
 		definitionExists, err := s.client.ProcessDefinition.Query().
 			Where(
 				processdefinition.Key(binding.ProcessDefinitionKey),
 				processdefinition.TenantID(tenantID),
 				processdefinition.IsActive(true),
+				processdefinition.IsLatest(true),
 			).
 			Exist(ctx)
 		if err != nil {

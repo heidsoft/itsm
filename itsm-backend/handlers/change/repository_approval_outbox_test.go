@@ -33,7 +33,7 @@ func TestSubmitForApprovalPersistsApprovalAndNotificationAtomically(t *testing.T
 		CREATE TABLE change_approval_chains (
 			id INTEGER PRIMARY KEY AUTOINCREMENT, change_id INTEGER NOT NULL, tenant_id INTEGER NOT NULL,
 			level INTEGER NOT NULL, approver_id INTEGER NOT NULL, role TEXT NOT NULL, status TEXT NOT NULL,
-			is_required BOOLEAN NOT NULL, created_at DATETIME
+			is_required BOOLEAN NOT NULL, approval_type TEXT NOT NULL DEFAULT 'serial', threshold INTEGER NOT NULL DEFAULT 1, created_at DATETIME
 		);
 	`)
 	require.NoError(t, err)
@@ -52,7 +52,7 @@ func TestSubmitForApprovalPersistsApprovalAndNotificationAtomically(t *testing.T
 	require.NoError(t, err)
 
 	repo := NewEntRepository(client, db)
-	require.NoError(t, repo.SubmitForApproval(ctx, changeEntity.ID, tenant.ID, []int{approver.ID}, "please review"))
+	require.NoError(t, repo.SubmitForApproval(ctx, changeEntity.ID, tenant.ID, []ApprovalLevelPlan{{Level: 1, ApprovalType: "serial", Threshold: 1, Required: true, ApproverIDs: []int{approver.ID}}}, "please review"))
 
 	commands, err := client.OperationalCommand.Query().Where(
 		operationalcommand.TenantIDEQ(tenant.ID),

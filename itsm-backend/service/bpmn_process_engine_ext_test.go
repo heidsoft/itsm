@@ -799,7 +799,7 @@ func TestRecordApprovalDecision_PersistsApproveReject(t *testing.T) {
 		"approvalResult":  "approved",
 		"approvalComment": "lgtm",
 	}
-	require.NoError(t, engine.recordApprovalDecision(ctx, instance, task, variables))
+	require.NoError(t, engine.recordApprovalDecision(ctx, engine.client, instance, task, variables))
 
 	stored, err := engine.client.ProcessApprovalDecision.Query().All(ctx)
 	require.NoError(t, err)
@@ -824,7 +824,7 @@ func TestRecordApprovalDecision_SkippedWhenActionMissing(t *testing.T) {
 	task, err := engine.client.ProcessTask.Get(ctx, taskID)
 	require.NoError(t, err)
 
-	require.NoError(t, engine.recordApprovalDecision(ctx, instance, task, map[string]interface{}{"unrelated": "x"}))
+	require.NoError(t, engine.recordApprovalDecision(ctx, engine.client, instance, task, map[string]interface{}{"unrelated": "x"}))
 	count, err := engine.client.ProcessApprovalDecision.Query().Count(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, 0, count)
@@ -841,7 +841,7 @@ func TestRecordApprovalDecision_RejectsMissingActor(t *testing.T) {
 	task, err := engine.client.ProcessTask.Get(ctx, taskID)
 	require.NoError(t, err)
 
-	err = engine.recordApprovalDecision(ctx, instance, task, map[string]interface{}{"approvalAction": "approve"})
+	err = engine.recordApprovalDecision(ctx, engine.client, instance, task, map[string]interface{}{"approvalAction": "approve"})
 	assert.Error(t, err)
 }
 

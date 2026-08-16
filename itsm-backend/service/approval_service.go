@@ -14,6 +14,7 @@ import (
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"itsm-backend/service/approver"
+	"itsm-backend/service/bpmn"
 
 	"go.uber.org/zap"
 )
@@ -301,6 +302,18 @@ func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, user
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit approval transaction: %w", err)
 	}
+
+	// ③ 同步驱动 BPMN 审批任务：若工单已启动审批流程实例，则经桥接完成对应 BPMN 任务，
+	// 保证流程实例与审批记录状态一致。桥接失败（如当前用户非该任务候选）仅告警，不回滚记录。
+	if action == "approve" || action == "reject" {
+		if rec, rerr := s.client.ApprovalRecord.Get(ctx, recordID); rerr == nil && rec != nil {
+			bridge := NewBPMNApprovalBridge(s.client, s.logger)
+			if _, berr := bridge.CompleteBusinessApprovalTask(ctx, tenantID, userID, "approval", rec.TicketID, action, comment); berr != nil {
+				s.logger.Warnw("同步BPMN审批任务失败（审批记录已更新）", "error", berr, "record_id", recordID, "ticket_id", rec.TicketID)
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -522,9 +535,13 @@ func (s *ApprovalService) canPerformAction(workflow *ent.ApprovalWorkflow, level
 		return false
 	}
 
-	// 查找当前级别的节点配置
-	for _, node := range configs {
-		if node.Level == level {
+	// 查找当前级别的节点配置（缺失 level 时回退索引+1，与 parseWorkflowNodes 一致）
+	for i, node := range configs {
+		nodeLevel := node.Level
+		if nodeLevel < 1 {
+			nodeLevel = i + 1
+		}
+		if nodeLevel == level {
 			switch dto.ApprovalAction(action) {
 			case dto.ApprovalActionApprove:
 				return true // 审批通过总是允许
@@ -678,16 +695,22 @@ type ApprovalTriggerRequest struct {
 func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTriggerRequest) ([]*ent.ApprovalRecord, error) {
 	s.logger.Infow("Triggering approval", "ticket_number", req.TicketNumber, "ticket_type", req.TicketType, "priority", req.Priority)
 
-	// 查找匹配的审批工作流
-	workflow, err := s.findMatchingWorkflow(ctx, req.TicketType, req.Priority, req.TenantID)
+	// ②/③ 解析审批的工单类型对应的流程：BPMN ProcessBinding 优先，未迁移类型回退旧 ApprovalWorkflow。
+	workflow, defKey, err := s.resolveApprovalWorkflow(ctx, req.TicketType, req.Priority, req.TenantID)
 	if err != nil {
-		s.logger.Warnw("Error finding matching workflow", "error", err)
+		s.logger.Warnw("Error resolving approval workflow", "error", err)
 		return nil, nil
 	}
 
 	if workflow == nil {
 		s.logger.Info("No active approval workflow found, skipping approval")
 		return nil, nil
+	}
+
+	// ③ 解析到 BPMN 审批流程：启动流程实例，由引擎真实求值（候选组→审批人）并生成待办任务。
+	// 失败仅告警，不阻塞工单创建。
+	if defKey != "" {
+		s.startApprovalProcess(ctx, req, defKey)
 	}
 
 	existing, err := s.client.ApprovalRecord.Query().
@@ -788,6 +811,58 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 	return records, nil
 }
 
+// resolveApprovalWorkflow 解析工单类型对应的审批工作流。
+// ② 改为优先通过 BPMN ProcessBinding(business_type="approval", subType=工单类型) 解析迁移后的
+// legacy_approval_* 流程定义；未迁移的工单类型回退旧 ApprovalWorkflow 查询以兼容历史数据。
+// 返回值：(用于生成审批记录的原始 ApprovalWorkflow, BPMN 流程定义 Key 或空串)。
+func (s *ApprovalService) resolveApprovalWorkflow(ctx context.Context, ticketType, priority string, tenantID int) (*ent.ApprovalWorkflow, string, error) {
+	bindingSvc := NewProcessBindingService(s.client)
+	binding, err := bindingSvc.FindBestBinding(ctx, dto.BusinessType("approval"), ticketType, tenantID)
+	if err == nil && binding != nil {
+		if wid := parseLegacyApprovalWorkflowID(binding.ProcessDefinitionKey); wid > 0 {
+			if wf, werr := s.client.ApprovalWorkflow.Get(ctx, wid); werr == nil {
+				return wf, binding.ProcessDefinitionKey, nil
+			}
+		}
+	}
+	// 兼容回退：未迁移类型仍按旧 ApprovalWorkflow 查询。
+	wf, ferr := s.findMatchingWorkflow(ctx, ticketType, priority, tenantID)
+	if ferr != nil {
+		return nil, "", ferr
+	}
+	return wf, "", nil
+}
+
+// startApprovalProcess 启动审批 BPMN 流程实例（业务键 approval:<ticketID>），
+// 由 BPMN 引擎真实求值候选组并生成待办任务。失败仅告警，不阻塞工单创建。
+func (s *ApprovalService) startApprovalProcess(ctx context.Context, req *ApprovalTriggerRequest, defKey string) {
+	triggerCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, req.TenantID)
+	engine := NewCustomProcessEngine(s.client, s.logger)
+	businessKey := fmt.Sprintf("approval:%d", req.TicketID)
+	variables := map[string]interface{}{
+		"ticketId":     req.TicketID,
+		"ticketNumber": req.TicketNumber,
+		"ticketType":   req.TicketType,
+		"priority":     req.Priority,
+	}
+	if _, err := engine.StartProcess(triggerCtx, defKey, businessKey, variables); err != nil {
+		s.logger.Warnw("启动审批BPMN流程实例失败", "error", err, "ticket_id", req.TicketID, "def_key", defKey)
+	}
+}
+
+// parseLegacyApprovalWorkflowID 从迁移流程定义 Key（legacy_approval_<id>）提取原始工作流 ID。
+func parseLegacyApprovalWorkflowID(key string) int {
+	const prefix = "legacy_approval_"
+	if !strings.HasPrefix(key, prefix) {
+		return 0
+	}
+	id, err := strconv.Atoi(strings.TrimPrefix(key, prefix))
+	if err != nil {
+		return 0
+	}
+	return id
+}
+
 // findMatchingWorkflow 查找匹配的审批工作流
 func (s *ApprovalService) findMatchingWorkflow(ctx context.Context, ticketType, priority string, tenantID int) (*ent.ApprovalWorkflow, error) {
 	// 先尝试精确匹配（类型+优先级）
@@ -883,15 +958,26 @@ func (s *ApprovalService) parseWorkflowNodes(nodesJSON interface{}) ([]workflowN
 			node.TimeoutHours = *config.TimeoutHours
 		}
 
-		// 如果 AssigneeType 为空，检查 ApproverType 中的动态类型
+		// 如果 AssigneeType 仍为空：尝试从原始节点 map 提取审批人规格，
+		// 兼容 legacy snake_case 形状（approver_type / assignee_type / role 等），
+		// 与迁移脚本 resolveLegacyApprovalAssignee 的 candidateGroups 语义保持一致。
+		// 动态角色（如 manager）一律按候选组（group）解析，使 ApprovalRecord 镜像的
+		// 审批人与 BPMN 引擎任务的候选用户一致；同时兼容 camelCase ApproverType 直接为 manager。
 		if node.AssigneeType == "" {
-			switch config.ApproverType {
-			case dto.ApprovalNodeTypeDeptManager,
-				dto.ApprovalNodeTypeTeamLeader,
-				dto.ApprovalNodeTypeProjectManager,
-				dto.ApprovalNodeTypeTempTeamLeader,
-				dto.ApprovalNodeTypeAmountBased:
-				node.AssigneeType = string(config.ApproverType)
+			if at, av := extractApproverSpec(nodesArray[i]); at != "" {
+				node.AssigneeType, node.AssigneeValue = at, av
+			} else {
+				switch config.ApproverType {
+				case "manager":
+					node.AssigneeType = "group"
+					node.AssigneeValue = "manager"
+				case dto.ApprovalNodeTypeDeptManager,
+					dto.ApprovalNodeTypeTeamLeader,
+					dto.ApprovalNodeTypeProjectManager,
+					dto.ApprovalNodeTypeTempTeamLeader,
+					dto.ApprovalNodeTypeAmountBased:
+					node.AssigneeType = string(config.ApproverType)
+				}
 			}
 		}
 
@@ -899,6 +985,33 @@ func (s *ApprovalService) parseWorkflowNodes(nodesJSON interface{}) ([]workflowN
 	}
 
 	return nodes, nil
+}
+
+// extractApproverSpec 从原始节点 map 提取审批人规格（assigneeType/assigneeValue）。
+// 兼容三种 legacy 形状：camelCase(assigneeType/assigneeValue)、snake_case(assignee_type/assignee_value)、
+// 以及 seeder 形状(approver_type + role/user_id/group)。动态角色（如 manager/dept_manager）按候选组解析，
+// 与 BPMN 引擎 resolveLegacyApprovalAssignee 的 candidateGroups 语义对齐，保证镜像审批人与引擎候选用户一致。
+func extractApproverSpec(raw map[string]interface{}) (string, string) {
+	if v, ok := raw["assigneeType"].(string); ok && v != "" {
+		return v, fmt.Sprint(raw["assigneeValue"])
+	}
+	if v, ok := raw["assignee_type"].(string); ok && v != "" {
+		return v, fmt.Sprint(raw["assignee_value"])
+	}
+	if at, ok := raw["approver_type"].(string); ok && at != "" {
+		switch at {
+		case "role":
+			return "role", fmt.Sprint(raw["role"])
+		case "user":
+			return "user", fmt.Sprint(raw["user_id"])
+		case "group":
+			return "group", fmt.Sprint(raw["group"])
+		default:
+			// 动态角色（manager 等）按候选组名解析
+			return "group", at
+		}
+	}
+	return "", ""
 }
 
 // resolveApprover 解析审批人
@@ -927,6 +1040,18 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 			return 0, "", fmt.Errorf("未找到用户ID: %d", userID)
 		}
 		return user.ID, user.Name, nil
+	case "group":
+		// 候选组解析，与 BPMN 引擎的 GroupResolver 一致，保证镜像审批人与引擎候选用户同源。
+		// ApprovalRecord 单记录模型与 legacy role 解析一致：取组内首位候选人为该节点审批人。
+		resolver := bpmn.NewGroupResolver(s.client)
+		ids, _, err := resolver.ExpandGroupsToUsers(ctx, tenantID, assigneeValue)
+		if err != nil {
+			return 0, "", err
+		}
+		if len(ids) == 0 {
+			return 0, "", fmt.Errorf("审批组 '%s' 未解析到成员", assigneeValue)
+		}
+		return ids[0], "", nil
 	case "dept_manager", "team_leader", "project_manager", "temp_team_leader":
 		scopeID, err := strconv.Atoi(assigneeValue)
 		if err != nil {
