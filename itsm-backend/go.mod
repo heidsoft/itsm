@@ -11,9 +11,9 @@ require (
 	entgo.io/ent v0.14.6
 	github.com/ThreeDotsLabs/watermill v1.5.2
 	github.com/ThreeDotsLabs/watermill-redisstream v1.4.5
-	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.2
+	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
 	github.com/alibabacloud-go/ecs-20140526/v7 v7.9.2
-	github.com/alibabacloud-go/tea v1.5.1
+	github.com/alibabacloud-go/tea v1.5.2
 	github.com/expr-lang/expr v1.17.8
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-playground/validator/v10 v10.30.3
