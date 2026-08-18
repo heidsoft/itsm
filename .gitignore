@@ -235,3 +235,4 @@ production-mode-test-report-*.md
 output/
 # Local verification/rebuild reports (often embed real credentials) — never commit
 reports/
+tmp-audit/
