@@ -33,7 +33,7 @@ type UpdateUserRequest struct {
 // ListUsersRequest 获取用户列表请求
 type ListUsersRequest struct {
 	Page       int    `form:"page,default=1" binding:"min=1"`
-	PageSize   int    `form:"pageSize,default=10" binding:"min=1,max=100"`
+	PageSize   int    `form:"pageSize,default=10" binding:"min=1,max=200"`
 	TenantID   int    `form:"tenant_id"`
 	Status     string `form:"status"` // active, inactive
 	Department string `form:"department"`

@@ -17,8 +17,8 @@ import (
 	"itsm-backend/service"
 
 	entsql "entgo.io/ent/dialect/sql"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )

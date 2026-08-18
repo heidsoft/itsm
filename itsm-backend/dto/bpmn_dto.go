@@ -27,22 +27,22 @@ import (
 //   - CreatedAt: 创建时间
 //   - UpdatedAt: 更新时间
 type BPMNProcessDefinitionResponse struct {
-	ID                int                    `json:"id"`
-	Key               string                 `json:"key"`
-	Name              string                 `json:"name"`
-	Description       string                 `json:"description"`
-	Version           string                 `json:"version"`
-	Category          string                 `json:"category"`
-	BpmnXML           string                 `json:"bpmnXml"`
-	ProcessVariables  map[string]interface{} `json:"processVariables"`
-	IsActive          bool                   `json:"isActive"`
-	IsLatest          bool                   `json:"isLatest"`
-	DeploymentID      int                    `json:"deploymentId"`
-	DeploymentName    string                 `json:"deploymentName"`
-	DeployedAt        time.Time              `json:"deployedAt,omitempty"`
-	TenantID          int                    `json:"tenantId"`
-	CreatedAt         time.Time              `json:"createdAt"`
-	UpdatedAt         time.Time              `json:"updatedAt"`
+	ID               int                    `json:"id"`
+	Key              string                 `json:"key"`
+	Name             string                 `json:"name"`
+	Description      string                 `json:"description"`
+	Version          string                 `json:"version"`
+	Category         string                 `json:"category"`
+	BpmnXML          string                 `json:"bpmnXml"`
+	ProcessVariables map[string]interface{} `json:"processVariables"`
+	IsActive         bool                   `json:"isActive"`
+	IsLatest         bool                   `json:"isLatest"`
+	DeploymentID     int                    `json:"deploymentId"`
+	DeploymentName   string                 `json:"deploymentName"`
+	DeployedAt       time.Time              `json:"deployedAt,omitempty"`
+	TenantID         int                    `json:"tenantId"`
+	CreatedAt        time.Time              `json:"createdAt"`
+	UpdatedAt        time.Time              `json:"updatedAt"`
 }
 
 // ToBPMNProcessDefinitionResponse 将 ent.ProcessDefinition 转换为 BPMNProcessDefinitionResponse
