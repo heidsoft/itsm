@@ -1,5 +1,5 @@
 // 工作流属性面板组件
-// Workflow Properties Component - 流程配置 Tab
+// Workflow Properties Component - 版本管理/流程配置 Tab
 
 'use client';
 
@@ -33,6 +33,7 @@ import type {
   GroupInfo,
   SLAConfig,
 } from './WorkflowTypes';
+
 interface WorkflowPropertiesProps {
   workflow: WorkflowDefinition | null;
   approvalConfig: ApprovalConfig;
@@ -45,6 +46,8 @@ interface WorkflowPropertiesProps {
   loadingRoles: boolean;
   loadingGroups?: boolean;
   activeTab?: string;
+  /** 显示模式：versions=版本管理, config=流程配置 */
+  mode?: 'versions' | 'config';
   onSwitchVersion?: (versionId: string) => void;
   onShowVersionModal?: () => void;
   onUpdateSLA?: (config: Partial<SLAConfig>) => void;
@@ -61,6 +64,7 @@ export default function WorkflowProperties({
   loadingUsers,
   loadingRoles,
   loadingGroups = false,
+  mode = 'config',
   onSwitchVersion,
   onShowVersionModal,
   onUpdateSLA,
@@ -73,7 +77,7 @@ export default function WorkflowProperties({
     });
   };
 
-  // 审批人变更（流程级兌底，不覆盖节点级）
+  // 审批人变更（流程级兜底，不覆盖节点级）
   const handleApproversChange = (value: string[]) => {
     setApprovalConfig({
       ...approvalConfig,
@@ -124,71 +128,80 @@ export default function WorkflowProperties({
     });
   };
 
+  // 版本管理模式：只显示版本历史
+  if (mode === 'versions') {
+    return (
+      <div className="h-full">
+        <Card className="rounded-lg shadow-sm border border-gray-200">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-base font-semibold mb-0">版本历史</h3>
+            <Button
+              type="primary"
+              icon={<GitBranch className="w-4 h-4" />}
+              onClick={onShowVersionModal}
+            >
+              创建新版本
+            </Button>
+          </div>
+
+          {workflowVersions.length === 0 ? (
+            <Empty description="暂无版本记录" />
+          ) : (
+            <Timeline className="mt-4">
+              {workflowVersions.map((version: WorkflowVersion) => (
+                <Timeline.Item
+                  key={version.id}
+                  dot={
+                    <Badge
+                      status={version.status === 'active' ? 'success' : 'default'}
+                      text={version.status === 'active' ? '当前' : ''}
+                    />
+                  }
+                >
+                  <div className="flex justify-between items-center ml-2">
+                    <div>
+                      <Text strong>版本 {version.version}</Text>
+                      <div className="text-sm text-gray-500 mt-1">{version.changeLog}</div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {new Date(version.createdAt).toLocaleString()} - {version.createdBy}
+                      </div>
+                    </div>
+                    <Space>
+                      <Button
+                        size="small"
+                        icon={<Eye className="w-3 h-3" />}
+                        onClick={() => onSwitchVersion?.(version.id)}
+                      >
+                        查看
+                      </Button>
+                      {version.status !== 'active' && (
+                        <Button
+                          size="small"
+                          type="primary"
+                          onClick={() => onSwitchVersion?.(version.id)}
+                        >
+                          切换到此版本
+                        </Button>
+                      )}
+                    </Space>
+                  </div>
+                </Timeline.Item>
+              ))}
+            </Timeline>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  // 流程配置模式：显示审批配置和SLA配置
   return (
     <div className="h-full">
-      {/* 版本历史内容 */}
-      <Card className="rounded-lg shadow-sm border border-gray-200">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-base font-semibold mb-0">版本历史</h3>
-          <Button
-            type="primary"
-            icon={<GitBranch className="w-4 h-4" />}
-            onClick={onShowVersionModal}
-          >
-            创建新版本
-          </Button>
-        </div>
-
-        <Timeline className="mt-4">
-          {workflowVersions.map((version: WorkflowVersion) => (
-            <Timeline.Item
-              key={version.id}
-              dot={
-                <Badge
-                  status={version.status === 'active' ? 'success' : 'default'}
-                  text={version.status === 'active' ? '当前' : ''}
-                />
-              }
-            >
-              <div className="flex justify-between items-center ml-2">
-                <div>
-                  <Text strong>版本 {version.version}</Text>
-                  <div className="text-sm text-gray-500 mt-1">{version.changeLog}</div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    {new Date(version.createdAt).toLocaleString()} - {version.createdBy}
-                  </div>
-                </div>
-                <Space>
-                  <Button
-                    size="small"
-                    icon={<Eye className="w-3 h-3" />}
-                    onClick={() => onSwitchVersion?.(version.id)}
-                  >
-                    查看
-                  </Button>
-                  {version.status !== 'active' && (
-                    <Button
-                      size="small"
-                      type="primary"
-                      onClick={() => onSwitchVersion?.(version.id)}
-                    >
-                      切换到此版本
-                    </Button>
-                  )}
-                </Space>
-              </div>
-            </Timeline.Item>
-          ))}
-        </Timeline>
-      </Card>
-
-      {/* 流程配置内容 */}
-      <Row gutter={[24, 24]} className="mt-4">
+      <Row gutter={[24, 24]}>
         <Col span={12}>
           <Card
             title="审批配置"
             className="h-full rounded-lg shadow-sm border border-gray-200"
-           
           >
             <div className="space-y-6">
               {/* 审批类型 */}
@@ -214,7 +227,13 @@ export default function WorkflowProperties({
                   value={approvalConfig.approvalType}
                   onChange={handleApprovalTypeChange}
                   className="w-full"
-                 options={[{ value: "single", label: "单人审批" }, { value: "parallel", label: "并行审批" }, { value: "sequential", label: "串行审批" }, { value: "conditional", label: "条件审批" }]} />
+                  options={[
+                    { value: "single", label: "单人审批" },
+                    { value: "parallel", label: "并行审批" },
+                    { value: "sequential", label: "串行审批" },
+                    { value: "conditional", label: "条件审批" },
+                  ]}
+                />
               </div>
 
               {/* 审批人 */}
@@ -230,7 +249,8 @@ export default function WorkflowProperties({
                   className="w-full"
                   loading={loadingUsers}
                   maxTagCount="responsive"
-                 options={userList.map(user => ({ value: String(user.id), label: user.name }))} />
+                  options={userList.map(user => ({ value: String(user.id), label: user.name }))}
+                />
               </div>
 
               {/* 审批组说明（节点级） */}
@@ -262,7 +282,8 @@ export default function WorkflowProperties({
                   onChange={handleAutoApproveRolesChange}
                   className="w-full"
                   loading={loadingRoles}
-                 options={roleList.map(role => ({ value: role.code, label: role.name }))} />
+                  options={roleList.map(role => ({ value: role.code, label: role.name }))}
+                />
               </div>
             </div>
           </Card>
@@ -272,7 +293,6 @@ export default function WorkflowProperties({
           <Card
             title="SLA配置"
             className="h-full rounded-lg shadow-sm border border-gray-200"
-           
           >
             <div className="space-y-6">
               {/* 响应时间 */}

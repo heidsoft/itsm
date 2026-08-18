@@ -3,7 +3,9 @@
                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                 targetNamespace="http://bpmn.io/schema/bpmn">
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 targetNamespace="http://bpmn.io/schema/bpmn"
+                 id="Definitions_1">
 
   <bpmn:process id="ticket_general_flow" name="通用工单流程" isExecutable="true">
     <bpmn:extensionElements>
@@ -35,6 +37,7 @@
         <bpmn:metaData name="action">update_status</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:incoming>Flow_Reject</bpmn:incoming>
       <bpmn:outgoing>Flow_3</bpmn:outgoing>
     </bpmn:userTask>
 
@@ -108,12 +111,12 @@
     <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Assign" targetRef="Activity_Handle" />
     <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Handle" targetRef="Gateway_Escalate" />
     <bpmn:sequenceFlow id="Flow_4" sourceRef="Gateway_Escalate" targetRef="Activity_Escalate">
-      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression">
         <bpmn:body>${variables['need_escalate'] == true}</bpmn:body>
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_Resolve" sourceRef="Gateway_Escalate" targetRef="Activity_Resolve">
-      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression">
         <bpmn:body>${variables['need_escalate'] != true}</bpmn:body>
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
@@ -126,7 +129,146 @@
 
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ticket_general_flow">
-      <!-- 省略DI定义 -->
+      <!-- 开始事件 -->
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="232" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="142" y="275" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- 任务分配 -->
+      <bpmndi:BPMNShape id="Activity_Assign_di" bpmnElement="Activity_Assign">
+        <dc:Bounds x="240" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- 审批判断网关 -->
+      <bpmndi:BPMNShape id="Gateway_Approval_di" bpmnElement="Gateway_Approval" isMarkerVisible="true">
+        <dc:Bounds x="395" y="225" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="378" y="285" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- 审批任务 -->
+      <bpmndi:BPMNShape id="Activity_Approval_di" bpmnElement="Activity_Approval">
+        <dc:Bounds x="500" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- 审批结果网关 -->
+      <bpmndi:BPMNShape id="Gateway_ApprovalResult_di" bpmnElement="Gateway_ApprovalResult" isMarkerVisible="true">
+        <dc:Bounds x="655" y="95" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="643" y="60" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- 工单处理 -->
+      <bpmndi:BPMNShape id="Activity_Handle_di" bpmnElement="Activity_Handle">
+        <dc:Bounds x="630" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- 升级判断网关 -->
+      <bpmndi:BPMNShape id="Gateway_Escalate_di" bpmnElement="Gateway_Escalate" isMarkerVisible="true">
+        <dc:Bounds x="785" y="225" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="770" y="285" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- 升级处理 -->
+      <bpmndi:BPMNShape id="Activity_Escalate_di" bpmnElement="Activity_Escalate">
+        <dc:Bounds x="890" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- 解决工单 -->
+      <bpmndi:BPMNShape id="Activity_Resolve_di" bpmnElement="Activity_Resolve">
+        <dc:Bounds x="890" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- 通知请求人 -->
+      <bpmndi:BPMNShape id="Activity_NotifyRequester_di" bpmnElement="Activity_NotifyRequester">
+        <dc:Bounds x="630" y="360" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- 结束事件 -->
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
+        <dc:Bounds x="462" y="382" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="452" y="425" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Flow_1: 开始 -> 任务分配 -->
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="188" y="250" />
+        <di:waypoint x="240" y="250" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Flow_2: 任务分配 -> 工单处理 -->
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="340" y="250" />
+        <di:waypoint x="630" y="250" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Flow_3: 工单处理 -> 升级判断 -->
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="730" y="250" />
+        <di:waypoint x="785" y="250" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Flow_4: 升级判断 -> 升级处理 (是) -->
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="810" y="225" />
+        <di:waypoint x="810" y="120" />
+        <di:waypoint x="890" y="120" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Flow_Resolve: 升级判断 -> 解决工单 (否) -->
+      <bpmndi:BPMNEdge id="Flow_Resolve_di" bpmnElement="Flow_Resolve">
+        <di:waypoint x="835" y="250" />
+        <di:waypoint x="890" y="250" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Flow_5: 解决工单 -> 通知请求人 -->
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="890" y="290" />
+        <di:waypoint x="890" y="400" />
+        <di:waypoint x="730" y="400" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Flow_6: 通知请求人 -> 结束 -->
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="630" y="400" />
+        <di:waypoint x="498" y="400" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Flow_Approval: 任务分配 -> 审批判断 -->
+      <bpmndi:BPMNEdge id="Flow_Approval_di" bpmnElement="Flow_Approval">
+        <di:waypoint x="290" y="210" />
+        <di:waypoint x="290" y="140" />
+        <di:waypoint x="420" y="140" />
+        <di:waypoint x="420" y="225" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Flow_ApprovalTask: 审批判断 -> 审批任务 -->
+      <bpmndi:BPMNEdge id="Flow_ApprovalTask_di" bpmnElement="Flow_ApprovalTask">
+        <di:waypoint x="445" y="225" />
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="500" y="120" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Flow_ApprovalResult: 审批任务 -> 审批结果 -->
+      <bpmndi:BPMNEdge id="Flow_ApprovalResult_di" bpmnElement="Flow_ApprovalResult">
+        <di:waypoint x="600" y="120" />
+        <di:waypoint x="655" y="120" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Flow_Reject: 审批结果 -> 工单处理 (驳回) -->
+      <bpmndi:BPMNEdge id="Flow_Reject_di" bpmnElement="Flow_Reject">
+        <di:waypoint x="680" y="145" />
+        <di:waypoint x="680" y="210" />
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>

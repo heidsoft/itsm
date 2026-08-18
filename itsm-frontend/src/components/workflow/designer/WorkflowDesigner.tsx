@@ -281,6 +281,12 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         }
       }
 
+      // 检查 XML 是否包含图表坐标数据（bpmn.js 需要）
+      if (xmlContent && !xmlContent.includes('<bpmndi:BPMNDiagram')) {
+        console.warn('XML missing diagram interchange data, using default BPMN XML');
+        xmlContent = getDefaultBPMNXML();
+      }
+
 	  const workflowData: WorkflowDefinition = {
 		id: response.code || response.key || response.id,
         name: response.name || t('workflow.designer.unnamedWorkflow'),
@@ -832,6 +838,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                 label: t('workflow.designer.tabVersions'),
                 children: (
                   <WorkflowProperties
+                    mode="versions"
                     workflow={workflow}
                     approvalConfig={approvalConfig}
                     setApprovalConfig={setApprovalConfig}
@@ -852,6 +859,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                 label: t('workflow.designer.tabConfig'),
                 children: (
                   <WorkflowProperties
+                    mode="config"
                     workflow={workflow}
                     approvalConfig={approvalConfig}
                     setApprovalConfig={setApprovalConfig}

@@ -126,19 +126,27 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   // 等待容器具有有效尺寸后再初始化 BPMN Modeler
   // bpmn-js 在容器尺寸为 0 时会抛出 "Cannot read properties of undefined (reading 'root-0')"
   const initializeModeler = useCallback(() => {
+    console.log('[BPMNDesigner] initializeModeler called', {
+      hasContainer: !!containerRef.current,
+      hasModeler: !!modelerRef.current,
+      initAttempted: initAttemptedRef.current
+    });
+
     if (!containerRef.current || modelerRef.current || initAttemptedRef.current) {
+      console.log('[BPMNDesigner] Skipping init - already initialized or no container');
       return;
     }
 
     const rect = containerRef.current.getBoundingClientRect();
+    console.log('[BPMNDesigner] Container size:', rect);
     if (rect.width <= 0 || rect.height <= 0) {
       // 容器尚未布局完成，等待下一帧重试
+      console.log('[BPMNDesigner] Container not ready, waiting...');
       return;
     }
 
-    initAttemptedRef.current = true;
-
     try {
+      console.log('[BPMNDesigner] Creating BpmnModeler...');
       const additionalModules = [gridModule];
 
       const modeler = new BpmnModeler({
@@ -152,26 +160,41 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       });
 
       modelerRef.current = modeler;
+      initAttemptedRef.current = true;
+      console.log('[BPMNDesigner] BpmnModeler created successfully');
 
       // 加载初始 XML
       if (xml) {
+        console.log('[BPMNDesigner] Importing XML, length:', xml.length);
         modeler
           .importXML(xml)
           .then(() => {
-            const canvas = modeler.get('canvas') as
-              | { zoom: (level?: string | number) => number }
-              | undefined;
-            canvas?.zoom('fit-viewport');
-            setZoom(readCanvasZoom(canvas));
+            // 检查 modeler 是否仍然存在（避免 React StrictMode 卸载后渲染丢失）
+            if (modelerRef.current !== modeler) {
+              console.log('[BPMNDesigner] Modeler destroyed before importXML resolved, skipping render');
+              return;
+            }
+            console.log('[BPMNDesigner] XML imported successfully');
+            try {
+              const canvas = modeler.get('canvas') as
+                | { zoom: (level?: string | number) => number }
+                | undefined;
+              canvas?.zoom('fit-viewport');
+              setZoom(readCanvasZoom(canvas));
+            } catch (renderErr) {
+              console.error('[BPMNDesigner] Error after XML import:', renderErr);
+            }
           })
           .catch((err: Error) => {
-            console.error('Failed to import XML:', err);
+            console.error('[BPMNDesigner] Failed to import XML:', err.message, err);
             message.error(t('bpmnDesigner.messages.loadFailed'));
           });
       } else {
+        console.log('[BPMNDesigner] No XML provided, creating diagram');
         modeler
           .createDiagram()
           .then(() => {
+            if (modelerRef.current !== modeler) return;
             const canvas = modeler.get('canvas') as
               | { zoom: (level?: string) => number }
               | undefined;
@@ -277,38 +300,49 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // 使用 requestAnimationFrame 确保 DOM 已完成布局
-    let rafId: number | null = null;
-    let resizeObserver: ResizeObserver | null = null;
+    console.log('[BPMNDesigner] useEffect running, containerRef exists:', !!containerRef.current);
+
+    // 直接尝试初始化，如果容器未就绪则使用定时器重试
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let retryCount = 0;
+    const MAX_RETRIES = 30;
+    const RETRY_DELAY = 100;
 
     const tryInit = () => {
-      if (!containerRef.current) return;
+      if (modelerRef.current) {
+        console.log('[BPMNDesigner] Modeler already initialized, skipping');
+        return;
+      }
+      if (!containerRef.current) {
+        console.log('[BPMNDesigner] containerRef.current is null in tryInit');
+        return;
+      }
       const rect = containerRef.current.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
+      // 仅当容器显示状态为可见时才初始化（避免被其他面板遮挡时启动）
+      const isVisible = rect.width > 100 && rect.height > 100;
+      if (isVisible) {
+        console.log('[BPMNDesigner] Container ready (' + rect.width + 'x' + rect.height + '), calling initializeModeler');
         initializeModeler();
+      } else if (retryCount < MAX_RETRIES) {
+        retryCount++;
+        if (retryCount % 5 === 0) {
+          console.log('[BPMNDesigner] Container not ready, retry', retryCount + '/' + MAX_RETRIES);
+        }
+        retryTimer = setTimeout(tryInit, RETRY_DELAY);
       } else {
-        // 容器仍未布局，使用 ResizeObserver 等待
-        resizeObserver = new ResizeObserver(entries => {
-          for (const entry of entries) {
-            const { width, height } = entry.contentRect;
-            if (width > 0 && height > 0) {
-              initializeModeler();
-              resizeObserver?.disconnect();
-              break;
-            }
-          }
-        });
-        resizeObserver.observe(containerRef.current);
+        console.error('[BPMNDesigner] Failed to initialize after max retries');
+        // 最后一次重试时强制尝试初始化
+        initializeModeler();
       }
     };
 
-    rafId = requestAnimationFrame(tryInit);
+    // 使用 setTimeout 确保 DOM 已完成布局
+    retryTimer = setTimeout(tryInit, 200);
 
     return () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
+      if (retryTimer !== null) {
+        clearTimeout(retryTimer);
       }
-      resizeObserver?.disconnect();
       if (modelerRef.current) {
         try {
           modelerRef.current.destroy();
