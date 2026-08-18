@@ -593,6 +593,17 @@ export const routes: RouteConfig[] = [
         },
       },
       {
+        path: '/admin/cab',
+        name: 'cab-management',
+        title: 'CAB 成员管理',
+        component: 'CabManagement',
+        permissions: [{ resource: 'change', action: 'read' }],
+        meta: {
+          requireAuth: true,
+          roles: ['admin', 'super_admin', 'change_manager'],
+        },
+      },
+      {
         path: '/admin/roles',
         name: 'role-management',
         title: '角色管理',

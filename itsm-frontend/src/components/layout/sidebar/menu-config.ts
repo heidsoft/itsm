@@ -531,6 +531,13 @@ export function getMenuConfig(): MenuConfig {
             permission: 'team:manage',
           },
           {
+            key: '/admin/cab',
+            icon: getIconByName('Users')!,
+            label: 'CAB 成员管理',
+            path: '/admin/cab',
+            permission: 'change:read',
+          },
+          {
             key: '/admin/ticket-categories',
             icon: getIconByName('Tag')!,
             label: '工单分类',

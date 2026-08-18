@@ -7,6 +7,81 @@ import (
 	"itsm-backend/ent"
 )
 
+// BPMNProcessDefinitionResponse BPMN流程定义响应（camelCase JSON，供前端使用）
+//
+// 字段说明:
+//   - ID: 数据库主键
+//   - Key: 流程定义Key，BPMN标准
+//   - Name: 流程定义名称
+//   - Description: 流程描述
+//   - Version: 版本号
+//   - Category: 流程分类
+//   - BpmnXML: BPMN XML定义内容
+//   - ProcessVariables: 流程变量定义
+//   - IsActive: 是否激活
+//   - IsLatest: 是否最新版本
+//   - DeploymentID: 部署ID
+//   - DeploymentName: 部署名称
+//   - DeployedAt: 部署时间
+//   - TenantID: 租户ID
+//   - CreatedAt: 创建时间
+//   - UpdatedAt: 更新时间
+type BPMNProcessDefinitionResponse struct {
+	ID                int                    `json:"id"`
+	Key               string                 `json:"key"`
+	Name              string                 `json:"name"`
+	Description       string                 `json:"description"`
+	Version           string                 `json:"version"`
+	Category          string                 `json:"category"`
+	BpmnXML           string                 `json:"bpmnXml"`
+	ProcessVariables  map[string]interface{} `json:"processVariables"`
+	IsActive          bool                   `json:"isActive"`
+	IsLatest          bool                   `json:"isLatest"`
+	DeploymentID      int                    `json:"deploymentId"`
+	DeploymentName    string                 `json:"deploymentName"`
+	DeployedAt        time.Time              `json:"deployedAt,omitempty"`
+	TenantID          int                    `json:"tenantId"`
+	CreatedAt         time.Time              `json:"createdAt"`
+	UpdatedAt         time.Time              `json:"updatedAt"`
+}
+
+// ToBPMNProcessDefinitionResponse 将 ent.ProcessDefinition 转换为 BPMNProcessDefinitionResponse
+func ToBPMNProcessDefinitionResponse(p *ent.ProcessDefinition) *BPMNProcessDefinitionResponse {
+	if p == nil {
+		return nil
+	}
+	return &BPMNProcessDefinitionResponse{
+		ID:               p.ID,
+		Key:              p.Key,
+		Name:             p.Name,
+		Description:      p.Description,
+		Version:          p.Version,
+		Category:         p.Category,
+		BpmnXML:          string(p.BpmnXML),
+		ProcessVariables: p.ProcessVariables,
+		IsActive:         p.IsActive,
+		IsLatest:         p.IsLatest,
+		DeploymentID:     p.DeploymentID,
+		DeploymentName:   p.DeploymentName,
+		DeployedAt:       p.DeployedAt,
+		TenantID:         p.TenantID,
+		CreatedAt:        p.CreatedAt,
+		UpdatedAt:        p.UpdatedAt,
+	}
+}
+
+// ToBPMNProcessDefinitionListResponse 批量转换
+func ToBPMNProcessDefinitionListResponse(definitions []*ent.ProcessDefinition) []*BPMNProcessDefinitionResponse {
+	if definitions == nil {
+		return []*BPMNProcessDefinitionResponse{}
+	}
+	result := make([]*BPMNProcessDefinitionResponse, 0, len(definitions))
+	for _, p := range definitions {
+		result = append(result, ToBPMNProcessDefinitionResponse(p))
+	}
+	return result
+}
+
 // BPMNProcessInstanceResponse BPMN流程实例响应（camelCase JSON，供前端使用）
 //
 // 字段说明:

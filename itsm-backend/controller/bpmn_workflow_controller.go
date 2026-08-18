@@ -229,8 +229,11 @@ func (c *BPMNWorkflowController) ListProcessDefinitions(ctx *gin.Context) {
 		return
 	}
 
-	// 使用统一响应格式
-	listResponse := common.NewListResponse(definitions, common.NewPaginationResponse(int(req.Page), int(req.PageSize), int64(total)))
+	// 使用统一响应格式，转换为 camelCase DTO
+	listResponse := common.NewListResponse(
+		dto.ToBPMNProcessDefinitionListResponse(definitions),
+		common.NewPaginationResponse(int(req.Page), int(req.PageSize), int64(total)),
+	)
 	common.Success(ctx, listResponse)
 }
 
@@ -257,7 +260,7 @@ func (c *BPMNWorkflowController) GetProcessDefinition(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, definition)
+	common.Success(ctx, dto.ToBPMNProcessDefinitionResponse(definition))
 }
 
 // UpdateProcessDefinition 更新流程定义
@@ -465,13 +468,12 @@ func (c *BPMNWorkflowController) ListProcessInstances(ctx *gin.Context) {
 		return
 	}
 
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.AuthFailed(ctx, "未授权访问")
+	// P1-4：从JWT获取租户ID，并注入 BPMN 租户上下文（fail-closed by 引擎）。
+	reqCtx, tenantID, ok := getBPMNTenantContext(ctx)
+	if !ok {
 		return
 	}
-	req.TenantID = tenantID.(int)
+	req.TenantID = tenantID
 
 	// 设置默认分页参数
 	if req.Page <= 0 {
@@ -481,7 +483,7 @@ func (c *BPMNWorkflowController) ListProcessInstances(ctx *gin.Context) {
 		req.PageSize = 20
 	}
 
-	instances, total, err := c.processEngine.ProcessInstanceService().ListProcessInstances(ctx, &req)
+	instances, total, err := c.processEngine.ProcessInstanceService().ListProcessInstances(reqCtx, &req)
 	if err != nil {
 		common.InternalError(ctx, "获取流程实例列表失败: "+err.Error())
 		return
@@ -1033,15 +1035,14 @@ func (c *BPMNWorkflowController) GetInstanceStats(ctx *gin.Context) {
 		return
 	}
 
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.AuthFailed(ctx, "未授权访问")
+	// P1-4：从JWT获取租户ID，并注入 BPMN 租户上下文（fail-closed by 引擎）。
+	reqCtx, tenantID, ok := getBPMNTenantContext(ctx)
+	if !ok {
 		return
 	}
-	req.TenantID = tenantID.(int)
+	req.TenantID = tenantID
 
-	stats, err := c.processEngine.ProcessInstanceService().GetInstanceStatistics(ctx, &req)
+	stats, err := c.processEngine.ProcessInstanceService().GetInstanceStatistics(reqCtx, &req)
 	if err != nil {
 		common.InternalError(ctx, "获取实例统计失败: "+err.Error())
 		return

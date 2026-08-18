@@ -16,9 +16,33 @@ ITIL 流程 · BPMN 编排 · CMDB · SLA · 知识库/RAG · 多租户 · 企�
 
 [简体中文](./README.md) · [English](./README.en.md) · [日本語](./README.ja.md)
 
-[快速开始](#快速开始) · [能力边界](#能力与成熟度) · [生产部署](#生产部署) · [文档中心](./docs/README.md) · [参与贡献](#参与贡献)
-
 </div>
+
+## 目录
+
+- [项目定位](#项目定位)
+- [适用场景](#适用场景)
+- [能力与成熟度](#能力与成熟度)
+- [快速开始](#快速开始)
+  - [环境要求](#环境要求)
+  - [使用 Docker 启动开发环境](#使用-docker-启动开发环境)
+  - [验证启动结果](#验证启动结果)
+  - [本机热更新开发](#本机热更新开发)
+  - [可选 AI 与监控组件](#可选-ai-与监控组件)
+- [使用示例](#使用示例)
+  - [API 调用示例](#api-调用示例)
+  - [常用开发命令](#常用开发命令)
+  - [常见场景](#常见场景)
+- [关键业务闭环](#关键业务闭环)
+- [可靠执行架构](#可靠执行架构)
+- [产品界面](#产品界面)
+- [技术栈与仓库结构](#技术栈与仓库结构)
+- [开发与测试](#开发与测试)
+- [生产部署](#生产部署)
+- [文档导航](#文档导航)
+- [参与贡献](#参与贡献)
+- [Star 趋势](#star-趋势)
+- [License](#license)
 
 ![ITSM 仪表盘](./docs/images/01-仪表盘.png)
 
@@ -157,6 +181,90 @@ docker compose --env-file .env -f docker-compose.dev.yml \
 ```
 
 没有可用模型时，ITIL 主流程应保持运行；AI 能力必须按配置降级。
+
+## 使用示例
+
+### API 调用示例
+
+所有 API 返回统一格式 `{ code: number, message: string, data: any }`。
+
+```bash
+# 1. 登录获取 Token
+curl -X POST http://localhost:8090/api/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+
+# 响应示例
+# {"code":0,"message":"success","data":{"accessToken":"eyJhbGciOiJIUzI1NiIs...","user":{"id":1,"username":"admin"}}}
+
+# 2. 创建工单（需 Token）
+TOKEN="your-access-token"
+
+curl -X POST http://localhost:8090/api/v1/tickets \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "title": "打印机无法使用",
+    "description": "3楼会议室打印机故障",
+    "priority": 2,
+    "category": "hardware"
+  }'
+
+# 3. 查询工单列表
+curl -X GET "http://localhost:8090/api/v1/tickets?page=1&pageSize=10" \
+  -H "Authorization: Bearer $TOKEN"
+
+# 4. 创建变更请求
+curl -X POST http://localhost:8090/api/v1/changes \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "title": "数据库升级计划",
+    "description": "PostgreSQL 14 升级到 16",
+    "type": "standard",
+    "riskLevel": "medium",
+    "implementationPlan": "采用蓝绿部署"
+  }'
+
+# 5. 查询 SLA 状态
+curl -X GET http://localhost:8090/api/v1/sla/policies \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### 常用开发命令
+
+```bash
+# 后端开发
+cd itsm-backend
+go run main.go                           # 启动后端服务
+go test ./...                            # 运行测试
+go build -o itsm-backend main.go         # 构建二进制
+
+# 前端开发
+cd itsm-frontend
+npm install                              # 安装依赖
+npm run dev                              # 启动开发服务器
+npm run build                            # 生产构建
+
+# 数据库迁移
+cd itsm-backend
+go run -tags migrate main.go             # 执行迁移
+
+# 查看 API 文档
+open http://localhost:8090/swagger/index.html
+```
+
+### 常见场景
+
+| 场景 | 操作 |
+|:---|:---|
+| 创建租户 | `POST /api/v1/tenants` 创建租户后，可在该租户下创建用户 |
+| 配置 SLA | 通过 `POST /api/v1/sla/policies` 创建 SLA 策略，绑定到工单类别 |
+| 设计工作流 | 在前端「工作流」模块设计 BPMN 流程，绑定到业务对象 |
+| 管理 CMDB | 通过 `POST /api/v1/cmdb/ci` 创建配置项，建立 CI 关系 |
+| 知识库检索 | `GET /api/v1/knowledge/search?q=关键词` 搜索知识文章 |
+
+完整 API 文档见 [API 参考](./docs/api/API_REFERENCE.md)。
 
 ## 关键业务闭环
 
@@ -315,14 +423,50 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 
 欢迎提交 Issue、文档和代码。开始前请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 
+### 快速贡献流程
+
 ```bash
+# 1. Fork 并克隆仓库
+git clone https://github.com/heidsoft/itsm.git
+cd itsm
+
+# 2. 创建功能分支
 git checkout -b feature/your-feature
-# 修改并运行相关测试
+
+# 3. 安装开发环境
+make dev-start-docker
+
+# 4. 开发并测试
+# 后端：cd itsm-backend && go test ./...
+# 前端：cd itsm-frontend && npm test
+
+# 5. 提交（使用 Conventional Commits）
+git add .
 git commit -m "feat: describe your change"
+
+# 6. 推送并创建 PR
+git push origin feature/your-feature
 ```
 
-- [提交 Bug](https://github.com/heidsoft/itsm/issues/new)
-- [参与讨论](https://github.com/heidsoft/itsm/discussions)
+### 贡献方式
+
+| 方式 | 说明 |
+|:---|:---|
+| 🐛 报告 Bug | 使用 [GitHub Issues](https://github.com/heidsoft/itsm/issues/new) |
+| 💡 提出功能 | 在 [Discussions](https://github.com/heidsoft/itsm/discussions) 中讨论 |
+| 📖 完善文档 | 提交文档改进 PR |
+| 🔧 提交代码 | 通过 Pull Request 贡献代码 |
+| 👀 代码审查 | 参与 PR 审查 |
+
+### 贡献要求
+
+- 遵循项目代码风格（ESLint + gofmt）
+- 新功能需附带测试用例
+- 提交信息使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式
+- PR 必须通过所有 CI 检查
+
+详细规范见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+
 - [查看贡献者](https://github.com/heidsoft/itsm/graphs/contributors)
 
 ## Star 趋势

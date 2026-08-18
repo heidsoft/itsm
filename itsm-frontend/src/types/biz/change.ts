@@ -59,6 +59,9 @@ export interface ApprovalChainItem {
   role: string;
   status: string;
   isRequired: boolean;
+  approvalType?: string;
+  threshold?: number;
+  createdAt?: string;
 }
 
 // 风险评估

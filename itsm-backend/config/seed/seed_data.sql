@@ -155,7 +155,8 @@ BEGIN
         ('系统管理', '/admin', 'Shield', 'admin:view', 102, tenant_id, true, true, '系统管理', NOW(), NOW()),
         ('部门管理', '/enterprise/departments', 'Users', 'admin:write', 103, tenant_id, true, true, '部门管理', NOW(), NOW()),
         ('团队管理', '/enterprise/teams', 'Users', 'admin:write', 104, tenant_id, true, true, '团队管理', NOW(), NOW()),
-        ('CMDB管理', '/admin/cmdb-types', 'Database', 'cmdb:write', 105, tenant_id, true, true, 'CMDB类型管理', NOW(), NOW())
+        ('CMDB管理', '/admin/cmdb-types', 'Database', 'cmdb:write', 105, tenant_id, true, true, 'CMDB类型管理', NOW(), NOW()),
+        ('CAB 成员管理', '/admin/cab', 'Users', 'change:read', 106, tenant_id, true, true, 'CAB 与 ECAB 成员名册管理', NOW(), NOW())
     ) AS v(name, path, icon, permission_code, sort_order, tenant_id, is_visible, is_enabled, description, created_at, updated_at)
     WHERE NOT EXISTS (SELECT 1 FROM menus WHERE path = '/msp' AND tenant_id = tenant_id);
 

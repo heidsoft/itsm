@@ -53,6 +53,9 @@ export { IncidentAPI as IncidentApi } from './incident-api';
 export { ChangeApi } from './change-api';
 export { ChangeClassificationApi } from './change-classification-api';
 
+// CAB 成员名册
+export { CabApi } from './cab-api';
+
 // 问题管理
 export { ProblemApi } from './problem-api';
 

@@ -37,7 +37,8 @@ import {
   ChangeImpactLabels,
   ChangeRiskLabels,
 } from '@/constants/change';
-import type { Change, ApprovalRecord } from '@/types/biz/change';
+import type { Change, ApprovalChainItem } from '@/types/biz/change';
+import CabStepBadge from '@/components/cab/CabStepBadge';
 import ChangeRiskAssessment from './ChangeRiskAssessment';
 import ChangeCMDBImpactPanel from './ChangeCMDBImpactPanel';
 import ChangeImpactAnalysis from './ChangeImpactAnalysis';
@@ -63,7 +64,7 @@ const ChangeDetail: React.FC = () => {
   const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [change, setChange] = useState<Change | null>(null);
-  const [approvals, setApprovals] = useState<ApprovalRecord[]>([]);
+  const [approvalChain, setApprovalChain] = useState<ApprovalChainItem[]>([]);
   const [riskAssessment, setRiskAssessment] = useState<any>(null);
   const [impactAnalysis, setImpactAnalysis] = useState<any>(null);
   const [rollbackPlan, setRollbackPlan] = useState<any>(null);
@@ -255,7 +256,8 @@ const ChangeDetail: React.FC = () => {
       // Try to load approval summary
       try {
         const summary = await ChangeApi.getApprovalSummary(Number(id));
-        setApprovals(summary as unknown as ApprovalRecord[]);
+        const chain = (summary as { chain?: ApprovalChainItem[] })?.chain ?? [];
+        setApprovalChain(chain);
       } catch (e) {
         // console.warn('Failed to load approval summary', e);
       }
@@ -499,10 +501,10 @@ const ChangeDetail: React.FC = () => {
               key: '2',
               label: t('changeDetail.approvalRecords'),
               children:
-                approvals.length > 0 ? (
+                approvalChain.length > 0 ? (
                   <List
                     itemLayout="horizontal"
-                    dataSource={approvals}
+                    dataSource={approvalChain}
                     renderItem={record => (
                       <List.Item>
                         <List.Item.Meta
@@ -514,17 +516,22 @@ const ChangeDetail: React.FC = () => {
                             )
                           }
                           title={
-                            <Space>
+                            <Space wrap>
                               <Text strong>{record.approverName}</Text>
+                              <CabStepBadge role={record.role} isRequired={record.isRequired} />
                               <Tag color={statusColors[record.status]}>
-                                {ChangeStatusLabels[record.status]}
+                                {ChangeStatusLabels[record.status as ChangeStatus]}
                               </Tag>
                               <Text type="secondary">
                                 {record.createdAt ? dayjs(record.createdAt).format('YYYY-MM-DD HH:mm') : '-'}
                               </Text>
                             </Space>
                           }
-                          description={record.comment || t('changeDetail.noComment')}
+                          description={
+                            record.approvalType && record.approvalType !== 'serial' && record.threshold ? (
+                              <Tag>{`${record.approvalType} (${record.threshold})`}</Tag>
+                            ) : undefined
+                          }
                         />
                       </List.Item>
                     )}
