@@ -19,11 +19,18 @@ const mockDelete = httpClient.delete as jest.Mock;
 const mockRequest = (httpClient as any).request as jest.Mock;
 
 describe('ProblemApi', () => {
-  beforeEach(() => { jest.clearAllMocks(); });
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe('getProblems', () => {
     it('should get problems list', async () => {
-      mockGet.mockResolvedValue({ problems: [{ id: 1, title: 'Memory leak' }], total: 1, page: 1, pageSize: 10 });
+      mockGet.mockResolvedValue({
+        problems: [{ id: 1, title: 'Memory leak' }],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+      });
       const result = await ProblemApi.getProblems({ page: 1 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/problems', { page: 1 });
       expect(result.problems).toHaveLength(1);
@@ -106,7 +113,10 @@ describe('ProblemApi', () => {
     it('should add association', async () => {
       mockPost.mockResolvedValue(undefined);
       await ProblemApi.addAssociation(1, { relatedType: 'ticket', relatedIds: [2, 3] });
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/problems/1/associations', { relatedType: 'ticket', relatedIds: [2, 3] });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/problems/1/associations', {
+        relatedType: 'ticket',
+        relatedIds: [2, 3],
+      });
     });
   });
 
@@ -114,31 +124,53 @@ describe('ProblemApi', () => {
     it('should remove association', async () => {
       mockRequest.mockResolvedValue(undefined);
       await ProblemApi.removeAssociation(1, { relatedType: 'ticket', relatedId: 2 });
-      expect(mockRequest).toHaveBeenCalledWith(expect.objectContaining({ method: 'DELETE', url: '/api/v1/problems/1/associations' }));
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ method: 'DELETE', url: '/api/v1/problems/1/associations' })
+      );
     });
   });
 
   describe('getProblemSLA', () => {
     it('should get problem SLA', async () => {
-      mockGet.mockResolvedValue({ slaStatus: 'ok', responseBreached: false, resolutionBreached: false, responseTimeUsed: 10, resolutionTimeUsed: 20 });
+      mockGet.mockResolvedValue({
+        slaStatus: 'ok',
+        responseBreached: false,
+        resolutionBreached: false,
+        responseTimeUsed: 10,
+        resolutionTimeUsed: 20,
+      });
       const result = await ProblemApi.getProblemSLA(1);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/problems/1/sla');
       expect(result.slaStatus).toBe('ok');
     });
   });
 
-  describe('stub methods', () => {
-    it('investigateProblem should throw', async () => {
-      await expect(ProblemApi.investigateProblem(1, {})).rejects.toThrow();
+  describe('lifecycle methods', () => {
+    it('investigateProblem should call POST', async () => {
+      mockPost.mockResolvedValue({ id: 1, status: 'investigating' });
+      const result = await ProblemApi.investigateProblem(1, {});
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/problems/1/investigate');
+      expect(result.status).toBe('investigating');
     });
-    it('recordRootCause should throw', async () => {
-      await expect(ProblemApi.recordRootCause(1, 'cause')).rejects.toThrow();
+    it('recordRootCause should call PUT', async () => {
+      mockPut.mockResolvedValue({ id: 1, rootCause: 'server issue' });
+      const result = await ProblemApi.recordRootCause(1, 'server issue');
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/problems/1/root-cause', {
+        rootCause: 'server issue',
+      });
+      expect(result.rootCause).toBe('server issue');
     });
-    it('provideSolution should throw', async () => {
-      await expect(ProblemApi.provideSolution(1, 'sol')).rejects.toThrow();
+    it('provideSolution should call PUT', async () => {
+      mockPut.mockResolvedValue({ id: 1, resolution: 'reboot' });
+      const result = await ProblemApi.provideSolution(1, 'reboot');
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/problems/1/solution', { solution: 'reboot' });
+      expect(result.resolution).toBe('reboot');
     });
-    it('closeProblem should throw', async () => {
-      await expect(ProblemApi.closeProblem(1, 'done')).rejects.toThrow();
+    it('closeProblem should call POST', async () => {
+      mockPost.mockResolvedValue({ id: 1, status: 'closed' });
+      const result = await ProblemApi.closeProblem(1, 'resolved');
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/problems/1/close', { resolution: 'resolved' });
+      expect(result.status).toBe('closed');
     });
   });
 });

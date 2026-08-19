@@ -154,34 +154,37 @@ export class ProblemApi {
 
   /**
    * 调查问题
+   * 后端: POST /api/v1/problems/:id/investigate
    */
-  static async investigateProblem(_id: number, _data: unknown): Promise<Problem> {
-    throw new Error('功能开发中');
+  static async investigateProblem(id: number, _data: unknown): Promise<Problem> {
+    return httpClient.post<Problem>(`/api/v1/problems/${id}/investigate`);
   }
 
   /**
    * 记录根本原因
+   * 后端: PUT /api/v1/problems/:id/root-cause
    */
-  static async recordRootCause(_id: number, _rootCause: string): Promise<Problem> {
-    throw new Error('功能开发中');
+  static async recordRootCause(id: number, rootCause: string): Promise<Problem> {
+    return httpClient.put<Problem>(`/api/v1/problems/${id}/root-cause`, { rootCause });
   }
 
   /**
    * 提供解决方案
+   * 后端: PUT /api/v1/problems/:id/solution
    */
-  static async provideSolution(_id: number, _solution: string): Promise<Problem> {
-    throw new Error('功能开发中');
+  static async provideSolution(id: number, solution: string): Promise<Problem> {
+    return httpClient.put<Problem>(`/api/v1/problems/${id}/solution`, { solution });
   }
 
   /**
    * 关闭问题
+   * 后端: POST /api/v1/problems/:id/close
    */
-  static async closeProblem(_id: number, _resolution: string): Promise<Problem> {
-    throw new Error('功能开发中');
+  static async closeProblem(id: number, resolution: string): Promise<Problem> {
+    return httpClient.post<Problem>(`/api/v1/problems/${id}/close`, { resolution });
   }
 
   // ==================== 趋势分析 ====================
-
 
   /**
    * 获取问题趋势分析
@@ -216,7 +219,10 @@ export class ProblemApi {
   /**
    * 移除问题关联
    */
-  static async removeAssociation(problemId: number, req: ProblemRemoveAssociationRequest): Promise<void> {
+  static async removeAssociation(
+    problemId: number,
+    req: ProblemRemoveAssociationRequest
+  ): Promise<void> {
     return httpClient.request({
       method: 'DELETE',
       url: `/api/v1/problems/${problemId}/associations`,
