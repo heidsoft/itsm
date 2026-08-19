@@ -3,6 +3,7 @@ package problem
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -484,4 +485,144 @@ func (h *Handler) GetStats(c *gin.Context) {
 		HighPriority: stats.HighPriority,
 	}
 	common.Success(c, resp)
+}
+
+// GetTrends handles GET /api/v1/problems/trend
+func (h *Handler) GetTrends(c *gin.Context) {
+	tenantID, _ := c.Get("tenant_id")
+
+	startDateStr := c.DefaultQuery("startDate", "")
+	endDateStr := c.DefaultQuery("endDate", "")
+
+	now := time.Now()
+	endDate := now
+	startDate := now.AddDate(0, -6, 0)
+
+	if startDateStr != "" {
+		if parsed, err := time.Parse("2006-01-02", startDateStr); err == nil {
+			startDate = parsed
+		}
+	}
+	if endDateStr != "" {
+		if parsed, err := time.Parse("2006-01-02", endDateStr); err == nil {
+			endDate = parsed
+		}
+	}
+
+	data, err := h.service.GetTrend(c.Request.Context(), tenantID.(int), startDate, endDate)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(c, data)
+}
+
+// GetHotspots handles GET /api/v1/problems/hotspots
+func (h *Handler) GetHotspots(c *gin.Context) {
+	tenantID, _ := c.Get("tenant_id")
+
+	startDateStr := c.DefaultQuery("startDate", "")
+	endDateStr := c.DefaultQuery("endDate", "")
+
+	now := time.Now()
+	endDate := now
+	startDate := now.AddDate(0, -3, 0)
+
+	if startDateStr != "" {
+		if parsed, err := time.Parse("2006-01-02", startDateStr); err == nil {
+			startDate = parsed
+		}
+	}
+	if endDateStr != "" {
+		if parsed, err := time.Parse("2006-01-02", endDateStr); err == nil {
+			endDate = parsed
+		}
+	}
+
+	data, err := h.service.GetHotspot(c.Request.Context(), tenantID.(int), startDate, endDate)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(c, data)
+}
+
+// GetProblemSLA handles GET /api/v1/problems/:id/sla
+func (h *Handler) GetProblemSLA(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return
+	}
+
+	tenantID, _ := c.Get("tenant_id")
+	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
+		} else {
+			common.Fail(c, common.InternalErrorCode, err.Error())
+		}
+		return
+	}
+
+	// Problems don't have SLA tracking in the current schema;
+	// return a sensible default indicating no SLA configured.
+	common.Success(c, gin.H{
+		"slaStatus":         "none",
+		"responseTimeUsed":  0,
+		"resolutionTimeUsed": 0,
+		"responseBreached":  false,
+		"resolutionBreached": false,
+	})
+}
+
+// GetProblemComments handles GET /api/v1/problems/:id/comments
+func (h *Handler) GetProblemComments(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return
+	}
+
+	tenantID, _ := c.Get("tenant_id")
+	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
+		} else {
+			common.Fail(c, common.InternalErrorCode, err.Error())
+		}
+		return
+	}
+
+	// Problem comments are not yet stored in a dedicated table;
+	// return an empty list to satisfy the API contract.
+	common.Success(c, gin.H{
+		"comments": []interface{}{},
+		"total":    0,
+	})
+}
+
+// AddProblemComment handles POST /api/v1/problems/:id/comments
+func (h *Handler) AddProblemComment(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return
+	}
+
+	tenantID, _ := c.Get("tenant_id")
+	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
+		} else {
+			common.Fail(c, common.InternalErrorCode, err.Error())
+		}
+		return
+	}
+
+	// Problem comments are not yet stored in a dedicated table.
+	common.Fail(c, common.InternalErrorCode, "problem comments are not yet supported")
 }

@@ -47,3 +47,42 @@ type ProblemStats struct {
 	Closed       int
 	HighPriority int
 }
+
+// CategoryCount represents a category and its count.
+type CategoryCount struct {
+	Category string
+	Count    int
+}
+
+// MonthlyCount represents a monthly count for trend analysis.
+type MonthlyCount struct {
+	Month    string
+	Count    int
+	Resolved int
+	Open     int
+}
+
+// ProblemTrendData holds trend analytics data.
+type ProblemTrendData struct {
+	Period                  string
+	TotalProblems           int
+	ResolvedProblems         int
+	OpenProblems             int
+	ResolutionRate          float64
+	AvgResolutionTimeHours  float64
+	CategoryBreakdown       map[string]int
+	PriorityBreakdown       map[string]int
+	TrendDirection          string
+	TopCategories           []CategoryCount
+	MonthlyTrend            []MonthlyCount
+}
+
+// ProblemHotspotData holds hotspot analytics data.
+type ProblemHotspotData struct {
+	PeriodStart        string
+	PeriodEnd          string
+	CategoryBreakdown  map[string]int
+	PriorityBreakdown  map[string]int
+	Hotspots           []string
+	AvgPerCategory     float64
+}

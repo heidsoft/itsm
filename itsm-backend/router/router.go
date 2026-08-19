@@ -857,8 +857,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				inc.PUT("/:id/status", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateIncident)
 
 				// 评论
-				inc.GET("/:id/comments", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentComments)
-				inc.POST("/:id/comments", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentComment)
+			inc.GET("/:id/comments", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentComments)
+			inc.POST("/:id/comments", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentComment)
+			inc.DELETE("/:id/comments/:commentId", middleware.RequirePermission("incident", "write"), config.IncidentController.DeleteIncidentComment)
 
 				// 监控
 				inc.POST("/monitoring", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentMonitoring)
@@ -932,14 +933,19 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				problems.GET("", middleware.RequirePermission("problem", "read"), config.ProblemHandler.List)
 				problems.POST("", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Create)
 				problems.GET("/stats", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetStats)
-				problems.GET("/:id", middleware.RequirePermission("problem", "read"), config.ProblemHandler.Get)
-				problems.PUT("/:id", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Update)
-				problems.DELETE("/:id", middleware.RequirePermission("problem", "delete"), config.ProblemHandler.Delete)
-				problems.POST("/:id/investigate", middleware.RequirePermission("problem", "write"), config.ProblemHandler.InvestigateProblem)
-				problems.PUT("/:id/root-cause", middleware.RequirePermission("problem", "write"), config.ProblemHandler.UpdateRootCause)
-				problems.PUT("/:id/solution", middleware.RequirePermission("problem", "write"), config.ProblemHandler.UpdateSolution)
-				problems.POST("/:id/close", middleware.RequirePermission("problem", "write"), config.ProblemHandler.CloseProblem)
-				// 关联管理
+			problems.GET("/trend", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetTrends)
+			problems.GET("/hotspots", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetHotspots)
+			problems.GET("/:id", middleware.RequirePermission("problem", "read"), config.ProblemHandler.Get)
+			problems.PUT("/:id", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Update)
+			problems.DELETE("/:id", middleware.RequirePermission("problem", "delete"), config.ProblemHandler.Delete)
+			problems.POST("/:id/investigate", middleware.RequirePermission("problem", "write"), config.ProblemHandler.InvestigateProblem)
+			problems.PUT("/:id/root-cause", middleware.RequirePermission("problem", "write"), config.ProblemHandler.UpdateRootCause)
+			problems.PUT("/:id/solution", middleware.RequirePermission("problem", "write"), config.ProblemHandler.UpdateSolution)
+			problems.POST("/:id/close", middleware.RequirePermission("problem", "write"), config.ProblemHandler.CloseProblem)
+			problems.GET("/:id/sla", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetProblemSLA)
+			problems.GET("/:id/comments", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetProblemComments)
+			problems.POST("/:id/comments", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddProblemComment)
+			// 关联管理
 				problems.GET("/:id/associations", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetAssociations)
 				problems.POST("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddAssociation)
 				problems.DELETE("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.RemoveAssociation)

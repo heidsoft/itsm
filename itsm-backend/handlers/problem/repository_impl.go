@@ -343,6 +343,22 @@ func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error 
 	return nil
 }
 
+func (r *EntRepository) GetAllForAnalytics(ctx context.Context, tenantID int, since time.Time) ([]*Problem, error) {
+	list, err := r.client.Problem.Query().
+		Where(problem.TenantIDEQ(tenantID), problem.DeletedAtIsNil(), problem.CreatedAtGTE(since)).
+		Order(ent.Desc(problem.FieldCreatedAt)).
+		Limit(1000).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*Problem, 0, len(list))
+	for _, item := range list {
+		result = append(result, r.toDomain(item))
+	}
+	return result, nil
+}
+
 func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*ProblemStats, error) {
 	base := []entpredicate.Problem{problem.TenantIDEQ(tenantID), problem.DeletedAtIsNil()}
 	query := r.client.Problem.Query().Where(base...)

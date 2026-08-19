@@ -206,3 +206,153 @@ func (s *Service) Delete(ctx context.Context, id int, tenantID int) error {
 func (s *Service) GetStats(ctx context.Context, tenantID int) (*ProblemStats, error) {
 	return s.repo.GetStats(ctx, tenantID)
 }
+
+// GetTrend computes problem trend data for the given period.
+func (s *Service) GetTrend(ctx context.Context, tenantID int, startDate, endDate time.Time) (*ProblemTrendData, error) {
+	problems, err := s.repo.GetAllForAnalytics(ctx, tenantID, startDate)
+	if err != nil {
+		return nil, err
+	}
+
+	total := len(problems)
+	resolved := 0
+	open := 0
+	categoryMap := make(map[string]int)
+	priorityMap := make(map[string]int)
+	monthlyMap := make(map[string]*MonthlyCount)
+	var totalResolutionHours float64
+	resolvedCount := 0
+
+	for _, p := range problems {
+		if p.Category != "" {
+			categoryMap[p.Category]++
+		}
+		if p.Priority != "" {
+			priorityMap[p.Priority]++
+		}
+		month := p.CreatedAt.Format("2006-01")
+		mc, ok := monthlyMap[month]
+		if !ok {
+			mc = &MonthlyCount{Month: month}
+			monthlyMap[month] = mc
+		}
+		mc.Count++
+		switch p.Status {
+		case "resolved", "closed":
+			resolved++
+			mc.Resolved++
+			if p.ResolvedAt != nil {
+				hours := p.ResolvedAt.Sub(p.CreatedAt).Hours()
+				totalResolutionHours += hours
+				resolvedCount++
+			}
+		case "open", "investigating", "identified", "in_progress":
+			open++
+			mc.Open++
+		}
+	}
+
+	resolutionRate := 0.0
+	if total > 0 {
+		resolutionRate = float64(resolved) / float64(total) * 100
+	}
+	avgResolutionHours := 0.0
+	if resolvedCount > 0 {
+		avgResolutionHours = totalResolutionHours / float64(resolvedCount)
+	}
+
+	// Build top categories
+	topCategories := make([]CategoryCount, 0, len(categoryMap))
+	for cat, cnt := range categoryMap {
+		topCategories = append(topCategories, CategoryCount{Category: cat, Count: cnt})
+	}
+	for i := 0; i < len(topCategories); i++ {
+		for j := i + 1; j < len(topCategories); j++ {
+			if topCategories[j].Count > topCategories[i].Count {
+				topCategories[i], topCategories[j] = topCategories[j], topCategories[i]
+			}
+		}
+	}
+	if len(topCategories) > 5 {
+		topCategories = topCategories[:5]
+	}
+
+	// Build monthly trend sorted
+	monthlyTrend := make([]MonthlyCount, 0, len(monthlyMap))
+	for _, mc := range monthlyMap {
+		monthlyTrend = append(monthlyTrend, *mc)
+	}
+	for i := 0; i < len(monthlyTrend); i++ {
+		for j := i + 1; j < len(monthlyTrend); j++ {
+			if monthlyTrend[j].Month < monthlyTrend[i].Month {
+				monthlyTrend[i], monthlyTrend[j] = monthlyTrend[j], monthlyTrend[i]
+			}
+		}
+	}
+
+	trendDirection := "stable"
+	if len(monthlyTrend) >= 2 {
+		last := monthlyTrend[len(monthlyTrend)-1].Count
+		prev := monthlyTrend[len(monthlyTrend)-2].Count
+		if last > prev {
+			trendDirection = "increasing"
+		} else if last < prev {
+			trendDirection = "decreasing"
+		}
+	}
+
+	return &ProblemTrendData{
+		Period:               startDate.Format("2006-01-02") + " ~ " + endDate.Format("2006-01-02"),
+		TotalProblems:        total,
+		ResolvedProblems:     resolved,
+		OpenProblems:         open,
+		ResolutionRate:       resolutionRate,
+		AvgResolutionTimeHours: avgResolutionHours,
+		CategoryBreakdown:    categoryMap,
+		PriorityBreakdown:    priorityMap,
+		TrendDirection:       trendDirection,
+		TopCategories:        topCategories,
+		MonthlyTrend:         monthlyTrend,
+	}, nil
+}
+
+// GetHotspot computes problem hotspot data for the given period.
+func (s *Service) GetHotspot(ctx context.Context, tenantID int, startDate, endDate time.Time) (*ProblemHotspotData, error) {
+	problems, err := s.repo.GetAllForAnalytics(ctx, tenantID, startDate)
+	if err != nil {
+		return nil, err
+	}
+
+	categoryMap := make(map[string]int)
+	priorityMap := make(map[string]int)
+	for _, p := range problems {
+		if p.Category != "" {
+			categoryMap[p.Category]++
+		}
+		if p.Priority != "" {
+			priorityMap[p.Priority]++
+		}
+	}
+
+	hotspots := make([]string, 0)
+	avgPerCategory := 0.0
+	if len(categoryMap) > 0 {
+		totalCount := 0
+		for cat, cnt := range categoryMap {
+			totalCount += cnt
+			if cnt > 1 {
+				hotspots = append(hotspots, cat)
+			}
+		}
+		avgPerCategory = float64(totalCount) / float64(len(categoryMap))
+	}
+
+	return &ProblemHotspotData{
+		PeriodStart:      startDate.Format("2006-01-02"),
+		PeriodEnd:        endDate.Format("2006-01-02"),
+		CategoryBreakdown: categoryMap,
+		PriorityBreakdown: priorityMap,
+		Hotspots:         hotspots,
+		AvgPerCategory:   avgPerCategory,
+	}, nil
+}
