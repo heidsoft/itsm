@@ -8,7 +8,7 @@
 
 1. 当前源码、数据库迁移、运行时 API 与当前 CI 结果。
 2. 根目录 `README.md`、`ROADMAP.md`、`CHANGELOG.md` 和 `AGENTS.md`。
-3. `docs/product/`、`docs/architecture/`、`docs/deployment.md`、`docs/testing/` 中未标记为 historical/superseded 的规范。
+3. `docs/product/`、`docs/architecture/`、`docs/DEPLOYMENT_OPTIMIZATION.md`、`docs/testing/` 中未标记为 historical/superseded 的规范。
 4. `plans/`：计划和设计输入，不证明已经实现。
 5. `output/`、`docs/review/`、`docs/test-plan/`：带日期的历史快照和测试证据，只证明当次运行。
 6. `docs/archive/`：归档资料，不参与当前设计决策。
@@ -41,7 +41,7 @@ GitHub Issue、Project 或旧认证报告中的“完成”不能覆盖源码、
 ## 维护规则
 
 1. 路线图只维护根目录 `ROADMAP.md`；`docs/roadmap.md` 仅保留跳转说明。
-2. 生产部署命令只维护 `docs/deployment.md`；其他文档链接到它，不复制整段命令。
+2. 生产部署命令只维护 `docs/DEPLOYMENT_OPTIMIZATION.md`；其他文档链接到它，不复制整段命令。
 3. 开发默认账号必须明确标注“仅本地开发”；生产文档不得提供固定默认密码。
 4. `plans/` 中的 checklist 完成后不能直接写“已发布”，必须链接对应测试/部署证据。
 5. `output/` 中报告不回写成当前规范；发现仍有效的问题，应迁移到 roadmap、issue 或 current 文档。

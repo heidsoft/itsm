@@ -9,21 +9,20 @@
 | 角色 | 建议阅读 |
 |:---|:---|
 | 试用者 | [README 快速开始](../README.md#快速开始)、[安装指南](./getting-started/install.md) |
-| 部署人员 | [部署指南](./deployment.md)、[配置参考](./configuration.md)、[运维手册](./operations.md) |
-| 后端开发 | [开发指南](./development.md)、[数据库说明](./database.md)、[后端 CI](../.github/workflows/backend-ci.yml) |
-| 前端开发 | [开发指南](./development.md)、[前端 CI](../.github/workflows/frontend-ci.yml) |
+| 部署人员 | [部署优化报告](./DEPLOYMENT_OPTIMIZATION.md)、[运维运行手册](./runbooks/production-initialization.md) |
+| 后端开发 | [本地开发命令](./dev-commands-reference.md)、[PostgreSQL 升级运行手册](./pg-upgrade-runbook.md)、[后端 CI](../.github/workflows/backend-ci.yml) |
+| 前端开发 | [本地开发命令](./dev-commands-reference.md)、[前端 CI](../.github/workflows/frontend-ci.yml) |
 | 产品/方案 | [开源发布能力说明](./product/open-source-release-capability.md)、ServiceNow 对标评审（参见 [archive](./archive/reviews/servicenow-benchmark-2026-06-18.md)） |
 | 测试/QA | [角色视角测试方案](./testing/role-based-product-test-plan.md)、[深度业务测试报告](./review/deep-business-test-report-2026-06-18.md) |
-| 发布维护 | [Release workflow](../.github/workflows/release.yml)、[CI/CD 评审](./delivery/cicd-review.md) |
+| 发布维护 | [Release workflow](../.github/workflows/release.yml)、[Production Readiness Program](./delivery/production-readiness-program.md) |
 | 文档维护 | [文档状态与事实源](./documentation-governance.md)、[文档命名与维护规范](./documentation-style-guide.md) |
 
 ## 核心文档
 
-- [部署指南](./deployment.md): Docker Compose、生产部署、反向代理和发布部署建议。
-- [配置参考](./configuration.md): 环境变量、端口、数据库、Redis、AI 服务配置。
-- [开发指南](./development.md): 本地开发、前后端命令、调试和常见问题。
-- [数据库说明](./database.md): 数据库迁移、备份和模型说明。
-- [运维手册](./operations.md): 日志、健康检查、备份、恢复和故障排查。
+- [部署优化报告](./DEPLOYMENT_OPTIMIZATION.md): Docker Compose、生产部署、反向代理和发布部署建议。
+- [本地开发命令](./dev-commands-reference.md): 本地开发、前后端命令、调试和常见问题。
+- [PostgreSQL 升级运行手册](./pg-upgrade-runbook.md): 数据库迁移、备份和模型说明。
+- [运维运行手册](./runbooks/production-initialization.md): 日志、健康检查、备份、恢复和故障排查。
 - [文档状态与事实源](./documentation-governance.md): 当前规范、计划、测试报告和归档材料的权威层级。
 - [文档命名与维护规范](./documentation-style-guide.md): 目录分层、命名规则和归档标准。
 

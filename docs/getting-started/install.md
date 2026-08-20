@@ -1,6 +1,6 @@
 # 安装
 
-> Status: current。开发账号仅用于本地环境；生产初始化和认证以[部署指南](../deployment.md)及当前发布的 bootstrap/readiness 接口为准。
+> Status: current。开发账号仅用于本地环境；生产初始化和认证以[部署优化报告](../DEPLOYMENT_OPTIMIZATION.md)及当前发布的 bootstrap/readiness 接口为准。
 
 > 适用版本：ITSM v1.0+
 > 阅读时间：约 5 分钟
@@ -111,7 +111,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 
 生产环境不得假定存在默认管理员密码。部署后应先检查当前版本的 bootstrap 状态，由初始化 CLI 生成一次性 token，再通过受支持的 bootstrap API 创建首位管理员；token 必须过期、单次消费并产生审计。如果当前发布没有 bootstrap 状态接口，则该版本不满足本文的生产首次认证要求。
 
-详见 [生产部署指南](../deployment.md)。
+详见 [生产部署指南](../DEPLOYMENT_OPTIMIZATION.md)。
 
 ## 7. 卸载
 
@@ -125,6 +125,6 @@ docker compose --env-file .env -f docker-compose.dev.yml --profile dev down -v
 
 ## 下一步
 
-- [开发指南](../development.md)：如何修改代码、运行测试
+- [本地开发命令](../dev-commands-reference.md)：如何修改代码、运行测试
 - [项目快速开始](../../README.md#快速开始)：当前开发环境入口
 - [架构总览](../architecture/overview.md)：理解模块划分

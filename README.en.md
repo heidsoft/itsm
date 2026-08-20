@@ -127,9 +127,9 @@ cd ../itsm-frontend && npm run type-check && npm run build
 ## Documentation
 
 - [Documentation index](./docs/README.md)
-- [Build and deployment guide](./docs/deployment.md)
-- [Operations guide](./docs/operations.md)
-- [Configuration](./docs/configuration.md)
+- [Build and deployment guide](./docs/DEPLOYMENT_OPTIMIZATION.md)
+- [Operations runbook](./docs/runbooks/production-initialization.md)
+- [Configuration reference](./docs/getting-started/install.md)
 - [Production readiness program](./docs/delivery/production-readiness-program.md)
 - [Contributing](./CONTRIBUTING.md)
 

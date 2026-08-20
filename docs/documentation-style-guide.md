@@ -24,15 +24,15 @@
 使用 lowercase kebab-case：
 
 ```text
-deployment.md
-commercial-ready-architecture.md
+dev-commands-reference.md
+pg-upgrade-runbook.md
 browser-e2e-test-report-2026-06-18.md
 ```
 
 规则：
 
 - 文件名使用英文小写、数字和连字符。
-- 长期指南不带日期，例如 `deployment.md`。
+- 长期指南不带日期，例如 `dev-commands-reference.md`。
 - 阶段性报告带日期，例如 `frontend-ux-review-2026-06-19.md`。
 - 文章可以带序号保持阅读顺序，例如 `07-ai-native-architecture-guidance-harness-skill.md`。
 - 测试用例文件允许保留用例编号前缀，例如 `TC-TICKET.md`，因为编号本身是测试资产的一部分。

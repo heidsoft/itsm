@@ -164,7 +164,7 @@ make dev-start-local
 make dev-status
 ```
 
-本机模式、PostgreSQL 17/pgvector 和代理排查见[开发指南](./docs/development.md)与[开发命令参考](./docs/dev-commands-reference.md)。
+本机模式、PostgreSQL 17/pgvector 和代理排查见[本地开发命令](./docs/dev-commands-reference.md)。
 
 ### 可选 AI 与监控组件
 
@@ -369,7 +369,7 @@ cd ..
 make check-contracts
 ```
 
-详细分层、测试策略和 E2E 用法见[开发指南](./docs/development.md)和[测试指南](./docs/testing/README.md)。
+详细分层、测试策略和 E2E 用法见[本地开发命令](./docs/dev-commands-reference.md)和[测试指南](./docs/testing/README.md)。
 
 ## 生产部署
 
@@ -403,7 +403,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 - 容量、故障恢复、队列积压和死信重放测试。
 - 对启用的 CMDB、AI、RAG、连接器逐项完成 readiness 验收。
 
-不要把开发默认配置用于生产。完整操作见[部署指南](./docs/deployment.md)、[生产就绪计划](./docs/delivery/production-readiness-program.md)和[运维手册](./docs/operations.md)。
+不要把开发默认配置用于生产。完整操作见[部署优化报告](./docs/DEPLOYMENT_OPTIMIZATION.md)、[生产就绪计划](./docs/delivery/production-readiness-program.md)和[运维运行手册](./docs/runbooks/production-initialization.md)。
 
 ## 文档导航
 
@@ -415,7 +415,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 | [CMDB 商业 MVP](./docs/product/cmdb-commercial-mvp.md) | CMDB GA/Pilot 边界和验收门槛 |
 | [Outbox 架构](./docs/architecture/operational-command-outbox.md) | 可靠异步执行规范 |
 | [API 参考](./docs/api/API_REFERENCE.md) | HTTP 接口文档 |
-| [配置参考](./docs/configuration.md) | 环境变量和配置项 |
+| [本地开发命令](./docs/dev-commands-reference.md) | 开发命令、调试与故障排查 |
 | [测试指南](./docs/testing/README.md) | 单元、集成、契约和 E2E 测试 |
 | [Roadmap](./ROADMAP.md) | 当前迭代方向唯一事实源 |
 

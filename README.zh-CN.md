@@ -131,7 +131,7 @@ VERSION=v1.2.0 make build-backend
 | **对比** | [ServiceNow 差距分析](./docs/cmdb/servicenow-gap-analysis.md) · [CMDB-ITIL4 集成](./docs/cmdb/cmdb-workflow-itil4-integration.md) |
 | **审批** | [审批节点语义](./docs/architecture/approval-node-semantics.md) |
 | **质量** | [RBAC 跨租户回归](./docs/rbac/regression-report.md) · [Raw SQL 治理清单](./docs/sqlx/inventory.md) |
-| **运维** | [部署指南](./docs/deployment.md) · [运维手册](./docs/operations.md) · [配置说明](./docs/configuration.md) |
+| **运维** | [部署优化报告](./docs/DEPLOYMENT_OPTIMIZATION.md) · [运维运行手册](./docs/runbooks/production-initialization.md) · [安装说明](./docs/getting-started/install.md) |
 
 ## 验证 GA 准入
 

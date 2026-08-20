@@ -127,9 +127,9 @@ cd ../itsm-frontend && npm run type-check && npm run build
 ## ドキュメント
 
 - [ドキュメント一覧](./docs/README.md)
-- [ビルド・デプロイガイド](./docs/deployment.md)
-- [運用ガイド](./docs/operations.md)
-- [設定リファレンス](./docs/configuration.md)
+- [ビルド・デプロイガイド](./docs/DEPLOYMENT_OPTIMIZATION.md)
+- [運用ランブック](./docs/runbooks/production-initialization.md)
+- [設定リファレンス](./docs/getting-started/install.md)
 - [本番準備プログラム](./docs/delivery/production-readiness-program.md)
 - [コントリビューションガイド](./CONTRIBUTING.md)
 
