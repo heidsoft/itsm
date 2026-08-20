@@ -214,7 +214,13 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                 />
               </div>
             )}
+            <label htmlFor={`comment-content-${targetId}`} className="sr-only">
+              {t('detailTabs.commentPlaceholder')}
+            </label>
             <TextArea
+              id={`comment-content-${targetId}`}
+              name="newComment"
+              aria-label={t('detailTabs.commentPlaceholder')}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder={t('detailTabs.commentPlaceholder')}
@@ -240,7 +246,16 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
           <Card key={comment.id} className="shadow-sm">
             {editingCommentId === comment.id ? (
               <div className="space-y-3">
+                <label
+                  htmlFor={`edit-comment-${comment.id}`}
+                  className="sr-only"
+                >
+                  {t('detailTabs.commentPlaceholder')}
+                </label>
                 <TextArea
+                  id={`edit-comment-${comment.id}`}
+                  name={`editComment-${comment.id}`}
+                  aria-label={t('detailTabs.commentPlaceholder')}
                   value={editingCommentContent}
                   onChange={(e) => setEditingCommentContent(e.target.value)}
                   rows={3}
