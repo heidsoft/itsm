@@ -236,3 +236,5 @@ output/
 # Local verification/rebuild reports (often embed real credentials) — never commit
 reports/
 tmp-audit/
+# One-shot AI code review artifacts at backend root (CMDB/BPMN/...) — keep local, never commit
+itsm-backend/audit*.md
