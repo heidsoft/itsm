@@ -1,61 +1,105 @@
+'use client';
+
 import React from 'react';
 import { Select as AntSelect } from 'antd';
+import type { SelectProps as AntSelectProps } from 'antd';
+import type { DefaultOptionType } from 'antd/es/select';
 
-interface SelectProps {
-  value?: string;
-  onValueChange?: (value: string) => void;
-  children?: React.ReactNode;
+/**
+ * Select - 兼容 shadcn 风格的 Select 组件
+ * 基于 Ant Design Select 实现
+ *
+ * 设计差异：
+ * - shadcn: <Select value={x} onValueChange={fn}><SelectTrigger><SelectValue placeholder="..." /></SelectTrigger><SelectContent><SelectItem value="a">A</SelectItem></SelectContent></Select>
+ * - antd: <Select value={x} onChange={fn} options={[{ value: 'a', label: 'A' }]} placeholder="..." />
+ */
+
+export interface SelectContextValue {
+  registerOption: (value: string, label: React.ReactNode) => void;
 }
 
-interface SelectTriggerProps {
+const SelectContext = React.createContext<SelectContextValue | null>(null);
+
+export interface SelectProps extends Omit<AntSelectProps, 'value' | 'onChange' | 'options' | 'placeholder'> {
+  value?: string | number | null;
+  onValueChange?: (value: string) => void;
+  placeholder?: string;
   className?: string;
   children?: React.ReactNode;
 }
 
-interface SelectContentProps {
+export interface SelectTriggerProps {
   children?: React.ReactNode;
 }
 
-interface SelectItemProps {
-  value: string;
-  children?: React.ReactNode;
-}
-
-interface SelectValueProps {
+export interface SelectValueProps {
   placeholder?: string;
 }
 
-// Collect SelectItem values from children for Ant Select options
-function extractOptions(children: React.ReactNode): { value: string; label: React.ReactNode }[] {
-  const options: { value: string; label: React.ReactNode }[] = [];
-  React.Children.forEach(children, (child) => {
-    if (React.isValidElement<SelectItemProps>(child) && child.type === SelectItem) {
-      options.push({ value: child.props.value, label: child.props.children });
-    }
-  });
-  return options;
+export interface SelectContentProps {
+  className?: string;
+  children?: React.ReactNode;
 }
 
-export const Select = ({ value, onValueChange, children }: SelectProps) => {
-  // Find SelectContent children and extract SelectItems
-  let options: { value: string; label: React.ReactNode }[] = [];
-  React.Children.forEach(children, (child) => {
-    if (React.isValidElement<SelectContentProps>(child) && child.type === SelectContent) {
-      options = extractOptions(child.props.children);
-    }
-  });
+export interface SelectItemProps {
+  value: string;
+  className?: string;
+  children?: React.ReactNode;
+  disabled?: boolean;
+}
+
+export const Select: React.FC<SelectProps> = ({
+  value,
+  onValueChange,
+  placeholder,
+  className,
+  children,
+  ...rest
+}) => {
+  const optionsRef = React.useRef<DefaultOptionType[]>([]);
+  const [, force] = React.useReducer((x: number) => x + 1, 0);
+
+  const registerOption = React.useCallback((val: string, label: React.ReactNode) => {
+    const idx = optionsRef.current.findIndex((o) => o.value === val);
+    const next = { value: val, label };
+    if (idx >= 0) optionsRef.current[idx] = next;
+    else optionsRef.current.push(next);
+    force();
+  }, []);
+
+  const ctxValue = React.useMemo<SelectContextValue>(
+    () => ({ registerOption }),
+    [registerOption],
+  );
 
   return (
-    <AntSelect
-      value={value}
-      onChange={onValueChange}
-      style={{ width: '100%' }}
-      options={options}
-    />
+    <SelectContext.Provider value={ctxValue}>
+      <span style={{ display: 'inline-block', width: '100%' }} className={className}>
+        <AntSelect
+          {...rest}
+          value={value === undefined || value === null ? undefined : value}
+          onChange={(v) => onValueChange?.(String(v))}
+          placeholder={placeholder}
+          options={optionsRef.current}
+          style={{ width: '100%' }}
+        >
+          {children}
+        </AntSelect>
+      </span>
+    </SelectContext.Provider>
   );
 };
 
-export const SelectTrigger = ({ children }: SelectTriggerProps) => <>{children}</>;
-export const SelectContent = ({ children }: SelectContentProps) => <>{children}</>;
-export const SelectItem = ({ value, children }: SelectItemProps) => <>{children}</>;
-export const SelectValue = ({ placeholder }: SelectValueProps) => <>{placeholder}</>;
+export const SelectTrigger: React.FC<SelectTriggerProps> = ({ children }) => <>{children}</>;
+export const SelectValue: React.FC<SelectValueProps> = () => null;
+export const SelectContent: React.FC<SelectContentProps> = ({ children }) => <>{children}</>;
+
+export const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
+  const ctx = React.useContext(SelectContext);
+  React.useEffect(() => {
+    ctx?.registerOption(value, children);
+  }, [ctx, value, children]);
+  return null;
+};
+
+export default Select;
