@@ -1522,3 +1522,90 @@ func (c *IncidentController) CreateIncidentComment(ctx *gin.Context) {
 
 	common.Success(ctx, dto.ToIncidentCommentResponse(event, userEntity))
 }
+
+// DeleteIncidentComment 删除事件评论
+// @Summary 删除事件评论
+// @Description 删除指定的事件评论（IncidentEvent with event_type=comment）
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param commentId path int true "评论ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/comments/{commentId} [delete]
+func (c *IncidentController) DeleteIncidentComment(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	commentIDStr := ctx.Param("commentId")
+	commentID, err := strconv.Atoi(commentIDStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的评论ID")
+		return
+	}
+
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
+		return
+	}
+
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get user ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取用户ID失败")
+		return
+	}
+
+	client, exists := ctx.Get("client")
+	if !exists {
+		common.Fail(ctx, common.InternalErrorCode, "数据库客户端未找到")
+		return
+	}
+	entClient, ok := client.(*ent.Client)
+	if !ok || entClient == nil {
+		c.logger.Errorw("Invalid database client in request context")
+		common.Fail(ctx, common.InternalErrorCode, "数据库客户端无效")
+		return
+	}
+
+	// 查找评论（IncidentEvent with event_type=comment）
+	event, err := entClient.IncidentEvent.Query().
+		Where(
+			incidentevent.IDEQ(commentID),
+			incidentevent.IncidentIDEQ(id),
+			incidentevent.TenantIDEQ(tenantID),
+			incidentevent.EventType("comment"),
+		).
+		Only(ctx.Request.Context())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(ctx, common.NotFoundErrorCode, "评论不存在")
+		} else {
+			c.logger.Errorw("Failed to query comment", "error", err, "comment_id", commentID)
+			common.Fail(ctx, common.InternalErrorCode, "查询评论失败")
+		}
+		return
+	}
+
+	// 仅允许评论作者或管理员删除
+	if event.UserID != userID {
+		common.Fail(ctx, common.AuthErrorCode, "无权删除他人的评论")
+		return
+	}
+
+	err = entClient.IncidentEvent.DeleteOneID(commentID).Exec(ctx.Request.Context())
+	if err != nil {
+		c.logger.Errorw("Failed to delete comment", "error", err, "comment_id", commentID)
+		common.Fail(ctx, common.InternalErrorCode, "删除评论失败")
+		return
+	}
+
+	common.Success(ctx, nil)
+}

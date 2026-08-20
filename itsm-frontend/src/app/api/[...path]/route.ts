@@ -1,5 +1,6 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+import { isValidJwtToken } from '@/lib/auth/jwt-decoder';
 
 const BACKEND_BASE_URL = process.env.ITSM_BACKEND_URL || 'http://localhost:8090';
 
@@ -52,19 +53,7 @@ function getAuthToken(request: NextRequest): string | null {
 }
 
 function isValidToken(token: string | null): boolean {
-  if (!token) return false;
-  const parts = token.split('.');
-  if (parts.length !== 3) return false;
-  try {
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
-    if (payload.exp) {
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (payload.exp < currentTime) return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
+  return isValidJwtToken(token);
 }
 
 function isPathBlocked(path: string[]): boolean {

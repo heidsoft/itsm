@@ -369,10 +369,7 @@ export class IncidentAPI {
         Object.entries(normalizedParams).filter(([_, value]) => value !== undefined)
       );
 
-      const response = await httpClient.get<IncidentListPayload>(
-        API_URLS.INCIDENTS(),
-        cleanParams
-      );
+      const response = await httpClient.get<IncidentListPayload>(API_URLS.INCIDENTS(), cleanParams);
       const incidents = response.incidents ?? response.items ?? response.data ?? [];
       const page = response.page ?? params.page ?? 1;
       const pageSize = response.pageSize ?? params.pageSize ?? incidents.length;
@@ -439,7 +436,9 @@ export class IncidentAPI {
 
   // 分配事件
   static async assignIncident(id: number, assigneeId: number): Promise<Incident> {
-    const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/assign`, { assigneeId });
+    const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/assign`, {
+      assigneeId,
+    });
     return response;
   }
 
@@ -528,12 +527,12 @@ export class IncidentAPI {
     }
   }
 
-  /** 删除事件评论（后端暂未提供该 API） */
-  static async deleteIncidentComment(
-    _incidentId: number,
-    _commentId: number
-  ): Promise<void> {
-    throw new Error('事件评论删除功能开发中');
+  /**
+   * 删除事件评论
+   * 后端: DELETE /api/v1/incidents/:id/comments/:commentId
+   */
+  static async deleteIncidentComment(incidentId: number, commentId: number): Promise<void> {
+    await httpClient.delete(`/api/v1/incidents/${incidentId}/comments/${commentId}`);
   }
 
   /**
@@ -848,11 +847,14 @@ export class IncidentAPI {
 
   /** @deprecated 使用 listIncidents */
   static async getIncidents(params?: ListIncidentsRequest): Promise<ListIncidentsResponse> {
-    return this.listIncidents(params && {
-      ...params,
-      assignee_id: params.assigneeId,
-      assigneeId: undefined,
-    } as ListIncidentsRequest);
+    return this.listIncidents(
+      params &&
+        ({
+          ...params,
+          assignee_id: params.assigneeId,
+          assigneeId: undefined,
+        } as ListIncidentsRequest)
+    );
   }
 
   /** @deprecated 使用 listIncidents */

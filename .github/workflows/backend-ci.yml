@@ -58,8 +58,25 @@ jobs:
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
-      - name: Install gofumpt
-        run: go install mvdan.cc/gofumpt@latest
+      # Cache compiled lint tools so we don't recompile gofumpt/staticcheck
+      # on every run. Keyed on go.mod so a toolchain bump invalidates cleanly.
+      - name: Cache Go lint tools
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin
+          key: go-lint-tools-${{ hashFiles('itsm-backend/go.mod') }}
+          restore-keys: go-lint-tools-
+
+      - name: Install gofumpt (pinned)
+        # Pinned for determinism: @latest previously let upstream changes
+        # silently alter formatting results between runs.
+        run: |
+          if [ ! -x "$(go env GOPATH)/bin/gofumpt" ]; then
+            go install mvdan.cc/gofumpt@v0.7.0
+          fi
+
+      - name: Add GOBIN to PATH
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Check formatting
         run: |
@@ -106,11 +123,10 @@ jobs:
         # ent-generated code is reviewed at generation time, not via lint.
         run: |
           cd itsm-backend
-          go install honnef.co/go/tools/cmd/staticcheck@v0.6.1
-          staticcheck_bin="$(go env GOBIN)/staticcheck"
-          if [ "$(go env GOBIN)" = "" ]; then
-            staticcheck_bin="$(go env GOPATH)/bin/staticcheck"
+          if [ ! -x "$(go env GOPATH)/bin/staticcheck" ]; then
+            go install honnef.co/go/tools/cmd/staticcheck@v0.6.1
           fi
+          staticcheck_bin="$(go env GOPATH)/bin/staticcheck"
           go list ./... | grep -v -e '^itsm-backend/migrations$' -e '^itsm-backend/migrations/' | xargs "$staticcheck_bin"
 
       - name: Code quality checks

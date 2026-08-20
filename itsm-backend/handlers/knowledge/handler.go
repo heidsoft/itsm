@@ -358,14 +358,56 @@ func snippet(s string, maxLen int) string {
 
 // GetRecommendations handles GET /api/v1/knowledge/recommendations
 func (h *Handler) GetRecommendations(c *gin.Context) {
-	// Stub implementation
-	common.Success(c, []interface{}{})
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.ParamError(c, "Tenant ID not found")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok || tenantID == 0 {
+		common.ParamError(c, "Invalid tenant ID")
+		return
+	}
+
+	limit := 5
+	articles, _, err := h.svc.ListArticles(c.Request.Context(), tenantID, 1, limit, "", "", "published")
+	if err != nil {
+		common.InternalError(c, "获取推荐文章失败: "+err.Error())
+		return
+	}
+
+	items := make([]interface{}, 0, len(articles))
+	for _, a := range articles {
+		items = append(items, toArticleDTO(a))
+	}
+	common.Success(c, items)
 }
 
 // GetRecentArticles handles GET /api/v1/knowledge/recent
 func (h *Handler) GetRecentArticles(c *gin.Context) {
-	// Stub implementation
-	common.Success(c, []interface{}{})
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.ParamError(c, "Tenant ID not found")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok || tenantID == 0 {
+		common.ParamError(c, "Invalid tenant ID")
+		return
+	}
+
+	limit := 10
+	articles, _, err := h.svc.ListArticles(c.Request.Context(), tenantID, 1, limit, "", "", "published")
+	if err != nil {
+		common.InternalError(c, "获取最近文章失败: "+err.Error())
+		return
+	}
+
+	items := make([]interface{}, 0, len(articles))
+	for _, a := range articles {
+		items = append(items, toArticleDTO(a))
+	}
+	common.Success(c, items)
 }
 
 // GetCategories handles GET /api/v1/knowledge-articles/categories
