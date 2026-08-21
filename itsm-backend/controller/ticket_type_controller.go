@@ -227,6 +227,20 @@ func (tc *TicketTypeController) CloneTicketType(c *gin.Context) {
 	common.Success(c, result)
 }
 
+func (tc *TicketTypeController) RestoreTicketType(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单类型ID")
+		return
+	}
+	result, err := tc.ticketTypeService.RestoreTicketType(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"))
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(c, result)
+}
+
 func (tc *TicketTypeController) ListPresets(c *gin.Context) {
 	common.Success(c, tc.ticketTypeService.ListPresets())
 }

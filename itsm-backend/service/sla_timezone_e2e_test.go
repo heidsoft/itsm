@@ -39,6 +39,12 @@ func setupSLATimezoneE2ETest(t *testing.T) (*ent.Client, *TicketSLAService, cont
 	return client, service, ctx, tenant
 }
 
+// fixedShanghaiMonday returns 2026-08-17 01:00:00 UTC, which is Monday 09:00 in Asia/Shanghai.
+// Used to make deadline assertions deterministic instead of depending on time.Now().
+func fixedShanghaiMonday() time.Time {
+	return time.Date(2026, 8, 17, 1, 0, 0, 0, time.UTC)
+}
+
 // TestSLATimezone_E2E_AsiaShanghaiDeadline 端到端测试 Asia/Shanghai 时区 deadline 计算
 // 场景：
 //   - SLA 定义配置 time_zone: "Asia/Shanghai"
@@ -51,6 +57,7 @@ func setupSLATimezoneE2ETest(t *testing.T) (*ent.Client, *TicketSLAService, cont
 func TestSLATimezone_E2E_AsiaShanghaiDeadline(t *testing.T) {
 	client, service, ctx, tenant := setupSLATimezoneE2ETest(t)
 	defer client.Close()
+	service = service.withNowFunc(fixedShanghaiMonday)
 
 	// 创建 SLA 定义，配置 Asia/Shanghai 时区
 	slaDef, err := client.SLADefinition.Create().

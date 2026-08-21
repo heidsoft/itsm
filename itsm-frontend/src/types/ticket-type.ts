@@ -29,6 +29,10 @@ export enum CustomFieldType {
   FILE = 'file',
   USER_PICKER = 'user_picker',
   DEPARTMENT_PICKER = 'department_picker',
+	BOOLEAN = 'boolean',
+	USER = 'user',
+	DEPARTMENT = 'department',
+	CI = 'ci',
 }
 
 /**
@@ -59,6 +63,8 @@ export interface CustomFieldDefinition {
     value: unknown;
   };
   order: number;
+	visible?: boolean;
+	readonly?: boolean;
 }
 
 /**
@@ -72,6 +78,13 @@ export interface TicketTypeDefinition {
   icon?: string;
   color?: string;
   status: TicketTypeStatus;
+	categoryId?: number;
+	defaultPriority: 'low' | 'medium' | 'high' | 'urgent' | 'critical';
+	sortOrder: number;
+	workflowDefinitionKey?: string;
+	assignmentRuleId?: number;
+	archivedAt?: string | null;
+	archivedBy?: number | null;
 
   // 表单配置
   customFields: CustomFieldDefinition[];
@@ -202,6 +215,11 @@ export interface CreateTicketTypeRequest {
   description?: string;
   icon?: string;
   color?: string;
+	categoryId?: number;
+	defaultPriority?: 'low' | 'medium' | 'high' | 'urgent' | 'critical';
+	sortOrder?: number;
+	workflowDefinitionKey?: string;
+	assignmentRuleId?: number;
   customFields: CustomFieldDefinition[];
   approvalEnabled: boolean;
   approvalChain?: ApprovalChainDefinition[];
@@ -223,6 +241,11 @@ export interface UpdateTicketTypeRequest {
   icon?: string;
   color?: string;
   status?: TicketTypeStatus;
+	categoryId?: number;
+	defaultPriority?: 'low' | 'medium' | 'high' | 'urgent' | 'critical';
+	sortOrder?: number;
+	workflowDefinitionKey?: string;
+	assignmentRuleId?: number;
   customFields?: CustomFieldDefinition[];
   approvalEnabled?: boolean;
   approvalChain?: ApprovalChainDefinition[];
@@ -233,6 +256,14 @@ export interface UpdateTicketTypeRequest {
   notificationConfig?: NotificationConfig;
   permissionConfig?: PermissionConfig;
   departmentId?: number;
+}
+
+export interface TicketTypePresetDefinition {
+	id: string;
+	name: string;
+	description: string;
+	category: string;
+	definition: CreateTicketTypeRequest;
 }
 
 /**

@@ -340,7 +340,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		return nil, err
 	}
 	if configuredType != nil {
-		_ = s.client.TicketType.UpdateOneID(configuredType.ID).AddUsageCount(1).SetUpdatedAt(time.Now()).Exec(ctx)
+		if err := s.client.TicketType.UpdateOneID(configuredType.ID).AddUsageCount(1).SetUpdatedAt(time.Now()).Exec(ctx); err != nil {
+			s.logger.Warnw("Failed to increment ticket type usage count", "error", err, "ticket_type_id", configuredType.ID, "ticket_id", tkt.ID)
+		}
 	}
 
 	if tkt.AssigneeID == nil && s.assignmentSmartService != nil {

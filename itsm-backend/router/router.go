@@ -224,6 +224,7 @@ type RouterConfig struct {
 
 	// Ticket related controllers
 	TicketCategoryController *controller.TicketCategoryController
+	TicketTypeController     *controller.TicketTypeController
 
 	// CMDB Controllers
 	CMDBController      *controller.CMDBController
@@ -857,9 +858,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				inc.PUT("/:id/status", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateIncident)
 
 				// 评论
-			inc.GET("/:id/comments", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentComments)
-			inc.POST("/:id/comments", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentComment)
-			inc.DELETE("/:id/comments/:commentId", middleware.RequirePermission("incident", "write"), config.IncidentController.DeleteIncidentComment)
+				inc.GET("/:id/comments", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentComments)
+				inc.POST("/:id/comments", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentComment)
+				inc.DELETE("/:id/comments/:commentId", middleware.RequirePermission("incident", "write"), config.IncidentController.DeleteIncidentComment)
 
 				// 监控
 				inc.POST("/monitoring", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentMonitoring)
@@ -933,19 +934,19 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				problems.GET("", middleware.RequirePermission("problem", "read"), config.ProblemHandler.List)
 				problems.POST("", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Create)
 				problems.GET("/stats", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetStats)
-			problems.GET("/trend", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetTrends)
-			problems.GET("/hotspots", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetHotspots)
-			problems.GET("/:id", middleware.RequirePermission("problem", "read"), config.ProblemHandler.Get)
-			problems.PUT("/:id", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Update)
-			problems.DELETE("/:id", middleware.RequirePermission("problem", "delete"), config.ProblemHandler.Delete)
-			problems.POST("/:id/investigate", middleware.RequirePermission("problem", "write"), config.ProblemHandler.InvestigateProblem)
-			problems.PUT("/:id/root-cause", middleware.RequirePermission("problem", "write"), config.ProblemHandler.UpdateRootCause)
-			problems.PUT("/:id/solution", middleware.RequirePermission("problem", "write"), config.ProblemHandler.UpdateSolution)
-			problems.POST("/:id/close", middleware.RequirePermission("problem", "write"), config.ProblemHandler.CloseProblem)
-			problems.GET("/:id/sla", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetProblemSLA)
-			problems.GET("/:id/comments", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetProblemComments)
-			problems.POST("/:id/comments", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddProblemComment)
-			// 关联管理
+				problems.GET("/trend", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetTrends)
+				problems.GET("/hotspots", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetHotspots)
+				problems.GET("/:id", middleware.RequirePermission("problem", "read"), config.ProblemHandler.Get)
+				problems.PUT("/:id", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Update)
+				problems.DELETE("/:id", middleware.RequirePermission("problem", "delete"), config.ProblemHandler.Delete)
+				problems.POST("/:id/investigate", middleware.RequirePermission("problem", "write"), config.ProblemHandler.InvestigateProblem)
+				problems.PUT("/:id/root-cause", middleware.RequirePermission("problem", "write"), config.ProblemHandler.UpdateRootCause)
+				problems.PUT("/:id/solution", middleware.RequirePermission("problem", "write"), config.ProblemHandler.UpdateSolution)
+				problems.POST("/:id/close", middleware.RequirePermission("problem", "write"), config.ProblemHandler.CloseProblem)
+				problems.GET("/:id/sla", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetProblemSLA)
+				problems.GET("/:id/comments", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetProblemComments)
+				problems.POST("/:id/comments", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddProblemComment)
+				// 关联管理
 				problems.GET("/:id/associations", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetAssociations)
 				problems.POST("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddAssociation)
 				problems.DELETE("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.RemoveAssociation)
@@ -1835,18 +1836,18 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/knowledge/articles")
 		})
 
-		// Static ticket type lookup kept for old clients.
-		tenant.GET("/ticket-types", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
-			common.Success(c, gin.H{"types": []gin.H{
-				{"id": 1, "name": " Incident", "code": "incident"},
-				{"id": 2, "name": "Problem", "code": "problem"},
-				{"id": 3, "name": "Change", "code": "change"},
-				{"id": 4, "name": "Request", "code": "request"},
-			}, "total": 4})
-		})
-		tenant.POST("/ticket-types", middleware.RequirePermission("ticket", "create"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，工单类型由系统配置和分类接口维护")
-		})
+		if config.TicketTypeController != nil {
+			tenant.GET("/ticket-types", middleware.RequirePermission("ticket", "read"), config.TicketTypeController.ListTicketTypes)
+			tenant.POST("/ticket-types", middleware.RequirePermission("ticket", "create"), config.TicketTypeController.CreateTicketType)
+			tenant.GET("/ticket-types/:id", middleware.RequirePermission("ticket", "read"), config.TicketTypeController.GetTicketType)
+			tenant.PUT("/ticket-types/:id", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.UpdateTicketType)
+			tenant.POST("/ticket-types/:id/enable", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.EnableTicketType)
+			tenant.POST("/ticket-types/:id/disable", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.DisableTicketType)
+			tenant.POST("/ticket-types/:id/clone", middleware.RequirePermission("ticket", "create"), config.TicketTypeController.CloneTicketType)
+			tenant.POST("/ticket-types/:id/restore", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.RestoreTicketType)
+			tenant.GET("/ticket-type-presets", middleware.RequirePermission("ticket", "read"), config.TicketTypeController.ListPresets)
+			tenant.POST("/ticket-type-presets/:presetId/install", middleware.RequirePermission("ticket", "create"), config.TicketTypeController.InstallPreset)
+		}
 	}
 
 	// 飞书相关路由

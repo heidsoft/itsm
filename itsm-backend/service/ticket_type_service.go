@@ -334,9 +334,9 @@ func (s *TicketTypeService) GetTicketType(ctx context.Context, id, tenantID int)
 func (s *TicketTypeService) ListTicketTypes(ctx context.Context, req *dto.ListTicketTypesRequest, tenantID int) (*dto.TicketTypeListResponse, error) {
 	predicates := []predicate.TicketType{
 		tickettype.TenantID(int64(tenantID)),
-		// 默认隐藏已归档项；当显式按状态查询时（如 status=inactive 查全部停用项）不额外过滤，
-		// 因为 archived_at 是归档动作的内部标记，停用/草稿等状态仍应可查。
-		tickettype.ArchivedAtIsNil(),
+	}
+	if !req.IncludeArchived {
+		predicates = append(predicates, tickettype.ArchivedAtIsNil())
 	}
 	if req.Status != nil && *req.Status != "" {
 		predicates = append(predicates, tickettype.Status(string(*req.Status)))
@@ -421,8 +421,50 @@ func (s *TicketTypeService) DeleteTicketType(ctx context.Context, id, tenantID, 
 	return nil
 }
 
-func (s *TicketTypeService) recordTicketTypeAudit(ctx context.Context, tenantID, userID, ticketTypeID int, action string, details interface{}) error {
-	body, err := json.Marshal(details)
+// RestoreTicketType reverses an archive (reactivates a soft-deleted ticket type).
+func (s *TicketTypeService) RestoreTicketType(ctx context.Context, id, tenantID, userID int) (*dto.TicketTypeDefinition, error) {
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("开启恢复事务失败: %w", err)
+	}
+	txc := tx.Client()
+	existing, err := txc.TicketType.Get(ctx, int(id))
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, fmt.Errorf("ticket type not found: %w", err)
+	}
+	if int(existing.TenantID) != tenantID {
+		_ = tx.Rollback()
+		return nil, fmt.Errorf("ticket type not found")
+	}
+	if existing.ArchivedAt == nil {
+		_ = tx.Rollback()
+		return nil, fmt.Errorf("工单类型未归档，无需恢复")
+	}
+
+	restored, err := txc.TicketType.UpdateOne(existing).
+		ClearArchivedAt().
+		ClearArchivedBy().
+		SetStatus(string(dto.TicketTypeStatusActive)).
+		SetUpdatedBy(int64(userID)).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, fmt.Errorf("failed to restore ticket type: %w", err)
+	}
+	txService := &TicketTypeService{client: txc, logger: s.logger}
+	if err := txService.recordTicketTypeAudit(ctx, tenantID, userID, id, "restore", map[string]interface{}{"code": existing.Code, "previousStatus": existing.Status, "status": dto.TicketTypeStatusActive}); err != nil {
+		_ = tx.Rollback()
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交恢复事务失败: %w", err)
+	}
+	return s.toDefinition(restored), nil
+}
+
+func (s *TicketTypeService) recordTicketTypeAudit(ctx context.Context, tenantID, userID, ticketTypeID int, action string, details interface{}) error {	body, err := json.Marshal(details)
 	if err != nil {
 		return fmt.Errorf("序列化工单类型审计详情失败: %w", err)
 	}

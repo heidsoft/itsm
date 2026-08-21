@@ -1,157 +1,80 @@
 'use client';
 
-'use client';
-
-/**
- * 工单类型管理页面
- * Bug 9 修复：原本是 dev 占位文案，现在调 /api/v1/ticket-categories 渲染真实工单类型
- */
-
-import React, { useEffect, useState } from 'react';
-import {
-  Card,
-  Table,
-  Tag,
-  Typography,
-  Spin,
-  Alert,
-  Space,
-  Empty,
-} from 'antd';
-import { httpClient } from '@/lib/api/http-client';
+import { useCallback, useEffect, useState } from 'react';
+import { App, Button, Card, Input, List, Modal, Space, Switch, Table, Tag, Typography } from 'antd';
+import { Copy, Pencil, Plus, RotateCcw } from 'lucide-react';
+import { TicketTypeFormModal } from '@/components/business/TicketTypeFormModal';
+import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
+import type { CreateTicketTypeRequest, TicketTypeDefinition, TicketTypePresetDefinition, UpdateTicketTypeRequest } from '@/types/ticket-type';
 
 const { Title, Text } = Typography;
 
-interface TicketCategory {
-  id: number;
-  name: string;
-  code?: string;
-  description?: string;
-  parentId?: number | null;
-  slaHours?: number;
-  priority?: string;
-  requiredFields?: string[];
-  sortOrder?: number;
-}
-
 export default function TicketTypesPage() {
-  const [data, setData] = useState<TicketCategory[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { message, modal } = App.useApp();
+  const [items, setItems] = useState<TicketTypeDefinition[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [keyword, setKeyword] = useState('');
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const [editing, setEditing] = useState<TicketTypeDefinition | null>(null);
+  const [open, setOpen] = useState(false);
+	const [presetOpen, setPresetOpen] = useState(false);
+	const [presets, setPresets] = useState<TicketTypePresetDefinition[]>([]);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     setLoading(true);
-    httpClient
-      .get<any>('/api/v1/ticket-categories', { page: 1, pageSize: 200 })
-      .then((res: any) => {
-        const items = res?.data?.items || res?.items || res?.data || [];
-        setData(items);
-      })
-      .catch(err => setError(err?.message || '加载工单类型失败'))
-      .finally(() => setLoading(false));
-  }, []);
+    try {
+      const result = await TicketTypeApi.list({ keyword, includeArchived, page: 1, pageSize: 100 });
+      setItems(result.types ?? []);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '加载工单类型失败');
+    } finally { setLoading(false); }
+  }, [keyword, includeArchived, message]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Spin size="large" tip="加载工单类型..." />
-      </div>
-    );
-  }
+  useEffect(() => { void load(); }, [load]);
 
-  return (
-    <div className="max-w-6xl mx-auto p-6">
-      <Card>
-        <Space orientation="vertical" size={8} className="mb-4">
-          <Title level={2} style={{ marginBottom: 0 }}>
-            工单类型
-          </Title>
-          <Text type="secondary">
-            系统内置的工单分类及其 SLA / 必填字段 / 审批模板
-          </Text>
-        </Space>
+  const save = async (values: unknown) => {
+    if (editing) await TicketTypeApi.update(editing.id, values as UpdateTicketTypeRequest);
+    else await TicketTypeApi.create(values as CreateTicketTypeRequest);
+    message.success(editing ? '工单类型已更新' : '工单类型已创建');
+    setOpen(false); setEditing(null); await load();
+  };
 
-        {error && (
-          <Alert
-            type="error"
-            showIcon
-            className="mb-4"
-            message="加载失败"
-            description={error}
-          />
-        )}
+  const clone = (item: TicketTypeDefinition) => {
+    let code = `${item.code}_copy`;
+    let name = `${item.name} 副本`;
+    modal.confirm({
+      title: '复制工单类型',
+      content: <Space orientation="vertical" className="w-full"><Input defaultValue={code} onChange={e => { code = e.target.value; }} /><Input defaultValue={name} onChange={e => { name = e.target.value; }} /></Space>,
+      onOk: async () => { await TicketTypeApi.clone(item.id, code, name); await load(); },
+    });
+  };
 
-        {data.length === 0 && !error ? (
-          <Empty description="暂无工单类型数据" />
-        ) : (
-          <Table<TicketCategory>
-            rowKey="id"
-            dataSource={data}
-            pagination={{ pageSize: 20 }}
-            columns={[
-              {
-                title: 'ID',
-                dataIndex: 'id',
-                width: 60,
-              },
-              {
-                title: '名称',
-                dataIndex: 'name',
-                width: 160,
-                render: (text: string) => <Text strong>{text}</Text>,
-              },
-              {
-                title: '编码',
-                dataIndex: 'code',
-                width: 140,
-                render: (text?: string) =>
-                  text ? <Tag color="blue">{text}</Tag> : '-',
-              },
-              {
-                title: '默认优先级',
-                dataIndex: 'priority',
-                width: 100,
-                render: (text?: string) => {
-                  if (!text) return '-';
-                  const colorMap: Record<string, string> = {
-                    critical: 'red',
-                    high: 'orange',
-                    medium: 'blue',
-                    low: 'green',
-                  };
-                  return <Tag color={colorMap[text] || 'default'}>{text}</Tag>;
-                },
-              },
-              {
-                title: 'SLA（小时）',
-                dataIndex:'slaHours',
-                width: 100,
-                render: (v?: number) => (v != null ? `${v} h` : '-'),
-              },
-              {
-                title: '描述',
-                dataIndex: 'description',
-                ellipsis: true,
-              },
-              {
-                title: '必填字段',
-                dataIndex:'requiredFields',
-                width: 200,
-                render: (fields?: string[]) =>
-                  fields && fields.length > 0 ? (
-                    <Space size={4} wrap>
-                      {fields.map(f => (
-                        <Tag key={f}>{f}</Tag>
-                      ))}
-                    </Space>
-                  ) : (
-                    '-'
-                  ),
-              },
-            ]}
-          />
-        )}
-      </Card>
-    </div>
-  );
+	const openPresets = async () => { setPresets(await TicketTypeApi.listPresets()); setPresetOpen(true); };
+
+  const restore = (item: TicketTypeDefinition) => {
+    modal.confirm({
+      title: '恢复工单类型',
+      content: `确定恢复已归档的类型「${item.name}」吗？恢复后将重新启用。`,
+      okText: '恢复',
+      onOk: async () => { await TicketTypeApi.restore(item.id); message.success('工单类型已恢复'); await load(); },
+    });
+  };
+
+  return <div className="p-6"><Card>
+    <div className="mb-5 flex items-start justify-between gap-4"><div><Title level={2} className="!mb-1">工单类型</Title><Text type="secondary">租户级类型、动态表单及流程策略配置</Text></div><Space><Button onClick={() => void openPresets()}>从预设安装</Button><Button type="primary" icon={<Plus className="h-4 w-4" />} onClick={() => { setEditing(null); setOpen(true); }}>新建类型</Button></Space></div>
+    <Input.Search className="mb-4 max-w-sm" allowClear placeholder="搜索名称或编码" onSearch={setKeyword} />
+    <div className="mb-3"><label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={includeArchived} onChange={e => setIncludeArchived(e.target.checked)} />显示已归档类型</label></div>
+    <Table rowKey="id" loading={loading} dataSource={items} columns={[
+      { title: '名称', dataIndex: 'name', render: (value: string) => <Text strong>{value}</Text> },
+      { title: '编码', dataIndex: 'code', render: (value: string) => <Tag color="blue">{value}</Tag> },
+      { title: '动态字段', dataIndex: 'customFields', render: (value: unknown[]) => `${value?.length ?? 0} 个` },
+	  { title: '默认优先级', dataIndex: 'defaultPriority', render: (value: string) => <Tag>{value}</Tag> },
+	  { title: '工作流', dataIndex: 'workflowDefinitionKey', render: (value?: string) => value || '-' },
+      { title: 'SLA', dataIndex: 'slaEnabled', render: (value: boolean) => value ? '已绑定' : '-' },
+	  { title: '排序', dataIndex: 'sortOrder', width: 70 },
+      { title: '状态', dataIndex: 'status', render: (value: string, item) => item.archivedAt ? <Tag color="default">已归档</Tag> : <Tag color={value === 'active' ? 'green' : 'default'}>{value === 'active' ? '启用' : '停用'}</Tag> },
+      { title: '更新时间', dataIndex: 'updatedAt', render: (value: string) => value ? new Date(value).toLocaleString() : '-' },
+      { title: '操作', width: 300, render: (_, item) => item.archivedAt ? <Space><Button size="small" type="primary" ghost icon={<RotateCcw className="h-3.5 w-3.5" />} onClick={() => restore(item)}>恢复</Button></Space> : <Space><Button size="small" icon={<Pencil className="h-3.5 w-3.5" />} onClick={() => { setEditing(item); setOpen(true); }}>编辑</Button><Button size="small" icon={<Copy className="h-3.5 w-3.5" />} onClick={() => clone(item)}>复制</Button><Switch size="small" checked={item.status === 'active'} onChange={async enabled => { await TicketTypeApi.setEnabled(item.id, enabled); await load(); }} /></Space> },
+    ]} />
+  </Card><TicketTypeFormModal visible={open} editingType={editing} onCancel={() => { setOpen(false); setEditing(null); }} onSubmit={save} /><Modal title="工单类型预设库" open={presetOpen} footer={null} onCancel={() => setPresetOpen(false)}><List dataSource={presets} renderItem={preset => <List.Item actions={[<Button key="install" type="link" onClick={async () => { await TicketTypeApi.installPreset(preset.id); message.success('预设已安装'); setPresetOpen(false); await load(); }}>安装</Button>]}><List.Item.Meta title={preset.name} description={`${preset.category} · ${preset.description}`} /></List.Item>} /></Modal></div>;
 }

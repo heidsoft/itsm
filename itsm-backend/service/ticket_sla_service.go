@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -66,16 +67,24 @@ type TicketStats struct {
 
 // TicketSLAService 工单SLA服务
 type TicketSLAService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client  *ent.Client
+	logger  *zap.SugaredLogger
+	nowFunc func() time.Time
 }
 
 // NewTicketSLAService 创建工单SLA服务
 func NewTicketSLAService(client *ent.Client, logger *zap.SugaredLogger) *TicketSLAService {
 	return &TicketSLAService{
-		client: client,
-		logger: logger,
+		client:  client,
+		logger:  logger,
+		nowFunc: time.Now,
 	}
+}
+
+// withNowFunc overrides the clock used for deadline calculation. Intended for tests.
+func (s *TicketSLAService) withNowFunc(f func() time.Time) *TicketSLAService {
+	s.nowFunc = f
+	return s
 }
 
 // GetTicketSLAInfo 获取工单SLA信息
@@ -507,7 +516,7 @@ func addBusinessMinutes(start time.Time, minutes int, cfg businessHoursConfig) t
 
 // CalculateSLADeadlineFromRequest 根据请求参数计算SLA截止时间（包含SLADefinitionID）
 func (s *TicketSLAService) CalculateSLADeadlineFromRequest(ctx context.Context, tenantID int, ticketType, priority string) (*SLADeadlineResult, error) {
-	now := time.Now()
+	now := s.nowFunc()
 
 	// 确定service_type
 	var serviceType string
@@ -576,6 +585,18 @@ func (s *TicketSLAService) CalculateSLADeadlineFromRequest(ctx context.Context, 
 		ResolutionDeadline: &resolutionDeadline,
 		BusinessHoursOnly:  businessHoursOnly,
 	}, nil
+}
+
+// CalculateSLADeadlineByDefinition applies the exact tenant-owned SLA bound to a TicketType.
+func (s *TicketSLAService) CalculateSLADeadlineByDefinition(ctx context.Context, tenantID, definitionID int) (*SLADeadlineResult, error) {
+	sla, err := s.client.SLADefinition.Query().Where(sladefinition.IDEQ(definitionID), sladefinition.TenantIDEQ(tenantID), sladefinition.IsActiveEQ(true)).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("bound SLA definition is unavailable: %w", err)
+	}
+	now := s.nowFunc()
+	responseDeadline := s.calculateDeadlineWithBusinessHours(now, sla.ResponseTime, sla.BusinessHours)
+	resolutionDeadline := s.calculateDeadlineWithBusinessHours(now, sla.ResolutionTime, sla.BusinessHours)
+	return &SLADeadlineResult{SLADefinitionID: sla.ID, ResponseDeadline: &responseDeadline, ResolutionDeadline: &resolutionDeadline, BusinessHoursOnly: len(sla.BusinessHours) > 0}, nil
 }
 
 // toPointer 返回指针（辅助函数）

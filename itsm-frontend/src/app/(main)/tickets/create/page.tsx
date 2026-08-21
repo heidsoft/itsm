@@ -69,6 +69,17 @@ const iconMap: Record<string, React.ReactNode> = {
   FileText: <FileText className="w-5 h-5" />,
 };
 
+const priorityLabel = (priority: string): string => {
+  switch (priority) {
+    case 'critical': return '严重';
+    case 'urgent': return '紧急';
+    case 'high': return '高';
+    case 'medium': return '中';
+    case 'low': return '低';
+    default: return priority;
+  }
+};
+
 const inferTicketType = (selectedType: RuntimeTicketType | null): TicketCreateType => {
   if (!selectedType) {
     return 'incident';
@@ -435,20 +446,16 @@ export default function CreateTicketPage() {
                         <Space>
                           <Tag
                             color={
-                              selectedType.priority === 'urgent'
-                                ? 'red'
-                                : selectedType.priority === 'high'
-                                  ? 'orange'
-                                  : 'blue'
+                              selectedType.priority === 'critical'
+                                ? 'magenta'
+                                : selectedType.priority === 'urgent'
+                                  ? 'red'
+                                  : selectedType.priority === 'high'
+                                    ? 'orange'
+                                    : 'blue'
                             }
                           >
-                            {selectedType.priority === 'urgent'
-                              ? '紧急'
-                              : selectedType.priority === 'high'
-                                ? '高'
-                                : selectedType.priority === 'medium'
-                                  ? '中'
-                                  : '低'}
+                            {priorityLabel(selectedType.priority)}
                           </Tag>
                           <Text type="secondary">审批流程: </Text>
                           <Text strong>{selectedType.workflowDefinitionKey}</Text>
@@ -585,6 +592,7 @@ export default function CreateTicketPage() {
                             { label: '中', value: 'medium' },
                             { label: '高', value: 'high' },
                             { label: '紧急', value: 'urgent' },
+                            { label: '严重', value: 'critical' },
                           ]}
                           placeholder="选择优先级"
                           aria-label="选择工单优先级"

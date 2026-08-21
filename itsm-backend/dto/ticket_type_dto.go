@@ -27,6 +27,10 @@ const (
 	CustomFieldTypeFile             CustomFieldType = "file"
 	CustomFieldTypeUserPicker       CustomFieldType = "user_picker"
 	CustomFieldTypeDepartmentPicker CustomFieldType = "department_picker"
+	CustomFieldTypeBoolean          CustomFieldType = "boolean"
+	CustomFieldTypeUser             CustomFieldType = "user"
+	CustomFieldTypeDepartment       CustomFieldType = "department"
+	CustomFieldTypeCI               CustomFieldType = "ci"
 )
 
 // CustomFieldOption 字段选项
@@ -64,6 +68,8 @@ type CustomFieldDefinition struct {
 	Validation         *CustomFieldValidation         `json:"validation,omitempty"`
 	ConditionalDisplay *CustomFieldConditionalDisplay `json:"conditionalDisplay,omitempty"`
 	Order              int                            `json:"order"`
+	Visible            *bool                          `json:"visible,omitempty"`
+	Readonly           bool                           `json:"readonly"`
 }
 
 // ApproverInfo 审批人信息
@@ -147,75 +153,91 @@ type PermissionConfig struct {
 
 // TicketTypeDefinition 工单类型定义
 type TicketTypeDefinition struct {
-	ID                 int                       `json:"id"`
-	Code               string                    `json:"code"`
-	Name               string                    `json:"name"`
-	Description        string                    `json:"description,omitempty"`
-	Icon               string                    `json:"icon,omitempty"`
-	Color              string                    `json:"color,omitempty"`
-	Status             TicketTypeStatus          `json:"status"`
-	CustomFields       []CustomFieldDefinition   `json:"customFields"`
-	ApprovalEnabled    bool                      `json:"approvalEnabled"`
-	ApprovalWorkflowID *string                   `json:"approvalWorkflowId,omitempty"`
-	ApprovalChain      []ApprovalChainDefinition `json:"approvalChain,omitempty"`
-	SLAEnabled         bool                      `json:"slaEnabled"`
-	DefaultSLAID       *int                      `json:"defaultSlaId,omitempty"`
-	AutoAssignEnabled  bool                      `json:"autoAssignEnabled"`
-	AssignmentRules    []AssignmentRule          `json:"assignmentRules,omitempty"`
-	NotificationConfig *NotificationConfig       `json:"notificationConfig,omitempty"`
-	PermissionConfig   *PermissionConfig         `json:"permissionConfig,omitempty"`
-	CreatedBy          int                       `json:"createdBy"`
-	CreatedByName      string                    `json:"createdByName"`
-	UpdatedBy          *int                      `json:"updatedBy,omitempty"`
-	UpdatedByName      *string                   `json:"updatedByName,omitempty"`
-	CreatedAt          time.Time                 `json:"createdAt"`
-	UpdatedAt          time.Time                 `json:"updatedAt"`
-	TenantID           int                       `json:"tenantId"`
-	UsageCount         int                       `json:"usageCount,omitempty"`
+	ID                    int                       `json:"id"`
+	Code                  string                    `json:"code"`
+	Name                  string                    `json:"name"`
+	Description           string                    `json:"description,omitempty"`
+	Icon                  string                    `json:"icon,omitempty"`
+	Color                 string                    `json:"color,omitempty"`
+	Status                TicketTypeStatus          `json:"status"`
+	CategoryID            *int                      `json:"categoryId,omitempty"`
+	DefaultPriority       string                    `json:"defaultPriority"`
+	SortOrder             int                       `json:"sortOrder"`
+	WorkflowDefinitionKey string                    `json:"workflowDefinitionKey,omitempty"`
+	AssignmentRuleID      *int                      `json:"assignmentRuleId,omitempty"`
+	CustomFields          []CustomFieldDefinition   `json:"customFields"`
+	ApprovalEnabled       bool                      `json:"approvalEnabled"`
+	ApprovalWorkflowID    *string                   `json:"approvalWorkflowId,omitempty"`
+	ApprovalChain         []ApprovalChainDefinition `json:"approvalChain,omitempty"`
+	SLAEnabled            bool                      `json:"slaEnabled"`
+	DefaultSLAID          *int                      `json:"defaultSlaId,omitempty"`
+	AutoAssignEnabled     bool                      `json:"autoAssignEnabled"`
+	AssignmentRules       []AssignmentRule          `json:"assignmentRules,omitempty"`
+	NotificationConfig    *NotificationConfig       `json:"notificationConfig,omitempty"`
+	PermissionConfig      *PermissionConfig         `json:"permissionConfig,omitempty"`
+	CreatedBy             int                       `json:"createdBy"`
+	CreatedByName         string                    `json:"createdByName"`
+	UpdatedBy             *int                      `json:"updatedBy,omitempty"`
+	UpdatedByName         *string                   `json:"updatedByName,omitempty"`
+	CreatedAt             time.Time                 `json:"createdAt"`
+	UpdatedAt             time.Time                 `json:"updatedAt"`
+	TenantID              int                       `json:"tenantId"`
+	UsageCount            int                       `json:"usageCount,omitempty"`
 }
 
 // CreateTicketTypeRequest 创建工单类型请求
 type CreateTicketTypeRequest struct {
-	Code               string                    `json:"code" binding:"required"`
-	Name               string                    `json:"name" binding:"required"`
-	Description        string                    `json:"description"`
-	Icon               string                    `json:"icon"`
-	Color              string                    `json:"color"`
-	CustomFields       []CustomFieldDefinition   `json:"customFields"`
-	ApprovalEnabled    bool                      `json:"approvalEnabled"`
-	ApprovalChain      []ApprovalChainDefinition `json:"approvalChain,omitempty"`
-	SLAEnabled         bool                      `json:"slaEnabled"`
-	DefaultSLAID       *int                      `json:"defaultSlaId,omitempty"`
-	AutoAssignEnabled  bool                      `json:"autoAssignEnabled"`
-	AssignmentRules    []AssignmentRule          `json:"assignmentRules,omitempty"`
-	NotificationConfig *NotificationConfig       `json:"notificationConfig,omitempty"`
-	PermissionConfig   *PermissionConfig         `json:"permissionConfig,omitempty"`
+	Code                  string                    `json:"code" binding:"required"`
+	Name                  string                    `json:"name" binding:"required"`
+	Description           string                    `json:"description"`
+	Icon                  string                    `json:"icon"`
+	Color                 string                    `json:"color"`
+	CategoryID            *int                      `json:"categoryId,omitempty"`
+	DefaultPriority       string                    `json:"defaultPriority" binding:"omitempty,oneof=low medium high urgent critical"`
+	SortOrder             int                       `json:"sortOrder"`
+	WorkflowDefinitionKey string                    `json:"workflowDefinitionKey,omitempty"`
+	AssignmentRuleID      *int                      `json:"assignmentRuleId,omitempty"`
+	CustomFields          []CustomFieldDefinition   `json:"customFields"`
+	ApprovalEnabled       bool                      `json:"approvalEnabled"`
+	ApprovalChain         []ApprovalChainDefinition `json:"approvalChain,omitempty"`
+	SLAEnabled            bool                      `json:"slaEnabled"`
+	DefaultSLAID          *int                      `json:"defaultSlaId,omitempty"`
+	AutoAssignEnabled     bool                      `json:"autoAssignEnabled"`
+	AssignmentRules       []AssignmentRule          `json:"assignmentRules,omitempty"`
+	NotificationConfig    *NotificationConfig       `json:"notificationConfig,omitempty"`
+	PermissionConfig      *PermissionConfig         `json:"permissionConfig,omitempty"`
 }
 
 // UpdateTicketTypeRequest 更新工单类型请求
 type UpdateTicketTypeRequest struct {
-	Name               *string                    `json:"name"`
-	Description        *string                    `json:"description"`
-	Icon               *string                    `json:"icon"`
-	Color              *string                    `json:"color"`
-	Status             *TicketTypeStatus          `json:"status"`
-	CustomFields       *[]CustomFieldDefinition   `json:"customFields"`
-	ApprovalEnabled    *bool                      `json:"approvalEnabled"`
-	ApprovalChain      *[]ApprovalChainDefinition `json:"approvalChain"`
-	SLAEnabled         *bool                      `json:"slaEnabled"`
-	DefaultSLAID       *int                       `json:"defaultSlaId"`
-	AutoAssignEnabled  *bool                      `json:"autoAssignEnabled"`
-	AssignmentRules    *[]AssignmentRule          `json:"assignmentRules"`
-	NotificationConfig *NotificationConfig        `json:"notificationConfig"`
-	PermissionConfig   *PermissionConfig          `json:"permissionConfig"`
+	Name                  *string                    `json:"name"`
+	Description           *string                    `json:"description"`
+	Icon                  *string                    `json:"icon"`
+	Color                 *string                    `json:"color"`
+	Status                *TicketTypeStatus          `json:"status"`
+	CategoryID            *int                       `json:"categoryId"`
+	DefaultPriority       *string                    `json:"defaultPriority"`
+	SortOrder             *int                       `json:"sortOrder"`
+	WorkflowDefinitionKey *string                    `json:"workflowDefinitionKey"`
+	AssignmentRuleID      *int                       `json:"assignmentRuleId"`
+	CustomFields          *[]CustomFieldDefinition   `json:"customFields"`
+	ApprovalEnabled       *bool                      `json:"approvalEnabled"`
+	ApprovalChain         *[]ApprovalChainDefinition `json:"approvalChain"`
+	SLAEnabled            *bool                      `json:"slaEnabled"`
+	DefaultSLAID          *int                       `json:"defaultSlaId"`
+	AutoAssignEnabled     *bool                      `json:"autoAssignEnabled"`
+	AssignmentRules       *[]AssignmentRule          `json:"assignmentRules"`
+	NotificationConfig    *NotificationConfig        `json:"notificationConfig"`
+	PermissionConfig      *PermissionConfig          `json:"permissionConfig"`
 }
 
 // ListTicketTypesRequest 查询工单类型列表请求
 type ListTicketTypesRequest struct {
-	Status   *TicketTypeStatus `form:"status"`
-	Keyword  string            `form:"keyword"`
-	Page     int               `form:"page" binding:"min=1"`
-	PageSize int               `form:"page_size" binding:"min=1,max=100"`
+	Status          *TicketTypeStatus `form:"status"`
+	Keyword         string            `form:"keyword"`
+	IncludeArchived bool              `form:"includeArchived"`
+	Page            int               `form:"page" binding:"min=1"`
+	PageSize        int               `form:"pageSize" binding:"min=1,max=100"`
 }
 
 // TicketTypeListResponse 工单类型列表响应
@@ -225,4 +247,17 @@ type TicketTypeListResponse struct {
 	Page       int                    `json:"page"`
 	PageSize   int                    `json:"pageSize"`
 	TotalPages int                    `json:"totalPages"`
+}
+
+type TicketTypePreset struct {
+	ID          string                  `json:"id"`
+	Name        string                  `json:"name"`
+	Description string                  `json:"description"`
+	Category    string                  `json:"category"`
+	Definition  CreateTicketTypeRequest `json:"definition"`
+}
+
+type InstallTicketTypePresetRequest struct {
+	Code string `json:"code,omitempty"`
+	Name string `json:"name,omitempty"`
 }
