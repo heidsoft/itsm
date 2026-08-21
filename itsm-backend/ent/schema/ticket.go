@@ -29,6 +29,10 @@ func (Ticket) Fields() []ent.Field {
 		field.String("type").
 			Comment("工单类型").
 			Default("incident"),
+		field.Int("ticket_type_id").Comment("租户配置工单类型ID").Optional(),
+		field.String("ticket_type_code_snapshot").Comment("创建时工单类型编码快照").Optional().MaxLen(64),
+		field.String("ticket_type_name_snapshot").Comment("创建时工单类型名称快照").Optional().MaxLen(128),
+		field.JSON("form_fields", map[string]interface{}{}).Default(map[string]interface{}{}).Comment("动态表单值"),
 		field.String("priority").
 			Comment("优先级").
 			Default("medium"),
@@ -153,6 +157,7 @@ func (Ticket) Edges() []ent.Edge {
 			Unique(),
 		edge.From("category", TicketCategory.Type).
 			Ref("tickets"),
+		edge.From("configured_type", TicketType.Type).Ref("tickets").Field("ticket_type_id").Unique(),
 	}
 }
 
@@ -169,6 +174,7 @@ func (Ticket) Indexes() []ent.Index {
 		index.Fields("tenant_id"),
 		index.Fields("tenant_id", "status"),
 		index.Fields("tenant_id", "requester_id"),
+		index.Fields("tenant_id", "ticket_type_id"),
 		index.Fields("status", "priority"),
 		index.Fields("requester_id", "status"),
 	}

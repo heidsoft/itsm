@@ -82,6 +82,19 @@ func (r *EntRepository) Create(ctx context.Context, params *CreateParams, tenant
 			SetRequesterID(params.RequesterID).
 			SetTenantID(tenantID).
 			SetStatus(string(StatusNew))
+		if params.FormFields == nil {
+			params.FormFields = map[string]interface{}{}
+		}
+		builder.SetFormFields(params.FormFields)
+		if params.TicketTypeID != nil {
+			builder.SetTicketTypeID(*params.TicketTypeID)
+		}
+		if params.TicketTypeCode != "" {
+			builder.SetTicketTypeCodeSnapshot(params.TicketTypeCode)
+		}
+		if params.TicketTypeName != "" {
+			builder.SetTicketTypeNameSnapshot(params.TicketTypeName)
+		}
 
 		if params.AssigneeID != nil {
 			builder.SetAssigneeID(*params.AssigneeID)
@@ -141,6 +154,19 @@ func (r *EntRepository) CreateWithTx(ctx context.Context, tx *ent.Tx, params *Cr
 			SetRequesterID(params.RequesterID).
 			SetTenantID(tenantID).
 			SetStatus(string(StatusNew))
+		if params.FormFields == nil {
+			params.FormFields = map[string]interface{}{}
+		}
+		builder.SetFormFields(params.FormFields)
+		if params.TicketTypeID != nil {
+			builder.SetTicketTypeID(*params.TicketTypeID)
+		}
+		if params.TicketTypeCode != "" {
+			builder.SetTicketTypeCodeSnapshot(params.TicketTypeCode)
+		}
+		if params.TicketTypeName != "" {
+			builder.SetTicketTypeNameSnapshot(params.TicketTypeName)
+		}
 
 		if params.AssigneeID != nil {
 			builder.SetAssigneeID(*params.AssigneeID)
@@ -275,6 +301,9 @@ func (r *EntRepository) Update(ctx context.Context, id int, params *UpdateParams
 	if params.Resolution != nil {
 		builder.SetResolution(*params.Resolution)
 	}
+	if params.FormFields != nil {
+		builder.SetFormFields(*params.FormFields)
+	}
 
 	entity, err := builder.Save(ctx)
 	if err != nil {
@@ -339,6 +368,9 @@ func (r *EntRepository) UpdateWithTxHook(ctx context.Context, id int, params *Up
 		} else {
 			builder.SetCategoryID(*params.CategoryID)
 		}
+	}
+	if params.FormFields != nil {
+		builder.SetFormFields(*params.FormFields)
 	}
 	if params.ReplaceTags {
 		builder.ClearTags()
@@ -869,6 +901,9 @@ func toDomainModel(e *ent.Ticket) *Ticket {
 		Description:    e.Description,
 		Status:         Status(e.Status),
 		Type:           Type(e.Type),
+		TicketTypeCode: e.TicketTypeCodeSnapshot,
+		TicketTypeName: e.TicketTypeNameSnapshot,
+		FormFields:     e.FormFields,
 		Priority:       Priority(e.Priority),
 		RequesterID:    e.RequesterID,
 		TenantID:       e.TenantID,
@@ -881,6 +916,9 @@ func toDomainModel(e *ent.Ticket) *Ticket {
 	// 可选字段
 	if e.AssigneeID != 0 {
 		t.AssigneeID = &e.AssigneeID
+	}
+	if e.TicketTypeID != 0 {
+		t.TicketTypeID = &e.TicketTypeID
 	}
 	if e.TemplateID != 0 {
 		t.TemplateID = &e.TemplateID

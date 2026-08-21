@@ -3993,6 +3993,9 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "status", Type: field.TypeString, Default: "open"},
 		{Name: "type", Type: field.TypeString, Default: "incident"},
+		{Name: "ticket_type_code_snapshot", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "ticket_type_name_snapshot", Type: field.TypeString, Nullable: true, Size: 128},
+		{Name: "form_fields", Type: field.TypeJSON},
 		{Name: "priority", Type: field.TypeString, Default: "medium"},
 		{Name: "ticket_number", Type: field.TypeString, Unique: true},
 		{Name: "tenant_id", Type: field.TypeInt},
@@ -4027,6 +4030,7 @@ var (
 		{Name: "sla_policy_tickets", Type: field.TypeInt, Nullable: true},
 		{Name: "ticket_tag_tickets", Type: field.TypeInt, Nullable: true},
 		{Name: "ticket_template_tickets", Type: field.TypeInt, Nullable: true},
+		{Name: "ticket_type_id", Type: field.TypeInt, Nullable: true},
 		{Name: "requester_id", Type: field.TypeInt},
 		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
 	}
@@ -4038,55 +4042,61 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tickets_configuration_items_tickets",
-				Columns:    []*schema.Column{TicketsColumns[32]},
+				Columns:    []*schema.Column{TicketsColumns[35]},
 				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_departments_tickets",
-				Columns:    []*schema.Column{TicketsColumns[33]},
+				Columns:    []*schema.Column{TicketsColumns[36]},
 				RefColumns: []*schema.Column{DepartmentsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_problems_tickets",
-				Columns:    []*schema.Column{TicketsColumns[34]},
+				Columns:    []*schema.Column{TicketsColumns[37]},
 				RefColumns: []*schema.Column{ProblemsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_sla_definitions_tickets",
-				Columns:    []*schema.Column{TicketsColumns[35]},
+				Columns:    []*schema.Column{TicketsColumns[38]},
 				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_sla_policies_tickets",
-				Columns:    []*schema.Column{TicketsColumns[36]},
+				Columns:    []*schema.Column{TicketsColumns[39]},
 				RefColumns: []*schema.Column{SLAPoliciesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_tags_tickets",
-				Columns:    []*schema.Column{TicketsColumns[37]},
+				Columns:    []*schema.Column{TicketsColumns[40]},
 				RefColumns: []*schema.Column{TicketTagsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_templates_tickets",
-				Columns:    []*schema.Column{TicketsColumns[38]},
+				Columns:    []*schema.Column{TicketsColumns[41]},
 				RefColumns: []*schema.Column{TicketTemplatesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
+				Symbol:     "tickets_ticket_types_tickets",
+				Columns:    []*schema.Column{TicketsColumns[42]},
+				RefColumns: []*schema.Column{TicketTypesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
 				Symbol:     "tickets_users_tickets",
-				Columns:    []*schema.Column{TicketsColumns[39]},
+				Columns:    []*schema.Column{TicketsColumns[43]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "tickets_users_assigned_tickets",
-				Columns:    []*schema.Column{TicketsColumns[40]},
+				Columns:    []*schema.Column{TicketsColumns[44]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -4095,7 +4105,7 @@ var (
 			{
 				Name:    "ticket_ticket_number",
 				Unique:  true,
-				Columns: []*schema.Column{TicketsColumns[6]},
+				Columns: []*schema.Column{TicketsColumns[9]},
 			},
 			{
 				Name:    "ticket_status",
@@ -4105,7 +4115,7 @@ var (
 			{
 				Name:    "ticket_priority",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[5]},
+				Columns: []*schema.Column{TicketsColumns[8]},
 			},
 			{
 				Name:    "ticket_type",
@@ -4115,42 +4125,47 @@ var (
 			{
 				Name:    "ticket_requester_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[39]},
+				Columns: []*schema.Column{TicketsColumns[43]},
 			},
 			{
 				Name:    "ticket_assignee_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[40]},
+				Columns: []*schema.Column{TicketsColumns[44]},
 			},
 			{
 				Name:    "ticket_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[25]},
+				Columns: []*schema.Column{TicketsColumns[28]},
 			},
 			{
 				Name:    "ticket_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[7]},
+				Columns: []*schema.Column{TicketsColumns[10]},
 			},
 			{
 				Name:    "ticket_tenant_id_status",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[7], TicketsColumns[3]},
+				Columns: []*schema.Column{TicketsColumns[10], TicketsColumns[3]},
 			},
 			{
 				Name:    "ticket_tenant_id_requester_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[7], TicketsColumns[39]},
+				Columns: []*schema.Column{TicketsColumns[10], TicketsColumns[43]},
+			},
+			{
+				Name:    "ticket_tenant_id_ticket_type_id",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[10], TicketsColumns[42]},
 			},
 			{
 				Name:    "ticket_status_priority",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[3], TicketsColumns[5]},
+				Columns: []*schema.Column{TicketsColumns[3], TicketsColumns[8]},
 			},
 			{
 				Name:    "ticket_requester_id_status",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[39], TicketsColumns[3]},
+				Columns: []*schema.Column{TicketsColumns[43], TicketsColumns[3]},
 			},
 		},
 	}
@@ -4457,6 +4472,13 @@ var (
 		{Name: "icon", Type: field.TypeString, Size: 50},
 		{Name: "color", Type: field.TypeString, Size: 20},
 		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "category_id", Type: field.TypeInt, Nullable: true},
+		{Name: "default_priority", Type: field.TypeString, Size: 20, Default: "medium"},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "workflow_definition_key", Type: field.TypeString, Nullable: true, Size: 128},
+		{Name: "assignment_rule_id", Type: field.TypeInt, Nullable: true},
+		{Name: "archived_at", Type: field.TypeTime, Nullable: true},
+		{Name: "archived_by", Type: field.TypeInt64, Nullable: true},
 		{Name: "custom_fields", Type: field.TypeJSON},
 		{Name: "approval_enabled", Type: field.TypeBool, Default: false},
 		{Name: "approval_workflow_id", Type: field.TypeInt64, Nullable: true},
@@ -4483,17 +4505,22 @@ var (
 			{
 				Name:    "tickettype_code_tenant_id",
 				Unique:  true,
-				Columns: []*schema.Column{TicketTypesColumns[1], TicketTypesColumns[17]},
+				Columns: []*schema.Column{TicketTypesColumns[1], TicketTypesColumns[24]},
 			},
 			{
 				Name:    "tickettype_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketTypesColumns[17]},
+				Columns: []*schema.Column{TicketTypesColumns[24]},
 			},
 			{
 				Name:    "tickettype_status",
 				Unique:  false,
 				Columns: []*schema.Column{TicketTypesColumns[6]},
+			},
+			{
+				Name:    "tickettype_tenant_id_sort_order",
+				Unique:  false,
+				Columns: []*schema.Column{TicketTypesColumns[24], TicketTypesColumns[9]},
 			},
 		},
 	}
@@ -5418,8 +5445,9 @@ func init() {
 	TicketsTable.ForeignKeys[4].RefTable = SLAPoliciesTable
 	TicketsTable.ForeignKeys[5].RefTable = TicketTagsTable
 	TicketsTable.ForeignKeys[6].RefTable = TicketTemplatesTable
-	TicketsTable.ForeignKeys[7].RefTable = UsersTable
+	TicketsTable.ForeignKeys[7].RefTable = TicketTypesTable
 	TicketsTable.ForeignKeys[8].RefTable = UsersTable
+	TicketsTable.ForeignKeys[9].RefTable = UsersTable
 	TicketApprovalsTable.ForeignKeys[0].RefTable = TicketsTable
 	TicketAttachmentsTable.ForeignKeys[0].RefTable = TicketsTable
 	TicketAttachmentsTable.ForeignKeys[1].RefTable = UsersTable

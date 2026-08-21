@@ -50,6 +50,10 @@ type Ticket struct {
 	Description           string
 	Status                Status
 	Type                  Type
+	TicketTypeID          *int
+	TicketTypeCode        string
+	TicketTypeName        string
+	FormFields            map[string]interface{}
 	Priority              Priority
 	RequesterID           int
 	AssigneeID            *int
@@ -195,6 +199,10 @@ type CreateParams struct {
 	Title          string
 	Description    string
 	Type           Type
+	TicketTypeID   *int
+	TicketTypeCode string
+	TicketTypeName string
+	FormFields     map[string]interface{}
 	Priority       Priority
 	RequesterID    int
 	AssigneeID     *int
@@ -217,5 +225,6 @@ type UpdateParams struct {
 	ReplaceTags bool
 	TagIDs      []int
 	Resolution  *string
+	FormFields  *map[string]interface{}
 	Version     int // 乐观锁版本号
 }

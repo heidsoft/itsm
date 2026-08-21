@@ -208,6 +208,9 @@ export interface CreateTicketRequest {
   description: string;
   priority: string;
   type?: 'incident' | 'service_request' | 'change' | 'problem' | string;
+	/** Tenant-scoped configured TicketType code. `type` remains the ITIL lifecycle domain. */
+	typeId?: string;
+	ticketTypeId?: number;
   category?: string;
   categoryId?: number;
   formFields?: Record<string, unknown>;

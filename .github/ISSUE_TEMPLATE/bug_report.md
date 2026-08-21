@@ -51,6 +51,18 @@ Steps to reproduce the behavior:
 **ITSM Version:**
 - Version/Commit: [e.g. v1.0.0 or commit hash]
 - Deployment: [e.g. Docker, Source, Binary]
+- Start command: [e.g. `npm run start`; do not use `next dev` in production]
+
+## Freeze / High CPU diagnostics
+<!-- Required when reporting freeze, high CPU, memory growth, or request storms. -->
+- Affected page and duration:
+- Browser CPU / Next.js Node CPU / Backend CPU:
+- CPU percentage and RSS/heap before and after:
+- Does CPU remain high while the page is idle?:
+- Network requests repeated while idle (endpoint + interval):
+- Browser console errors:
+- Browser/React Performance trace (attach if possible):
+- Node CPU profile or heap snapshot (attach if the Node process is affected):
 
 ## Logs
 <!-- Relevant log output (from backend/frontend logs) -->

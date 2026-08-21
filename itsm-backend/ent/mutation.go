@@ -127770,6 +127770,9 @@ type TicketMutation struct {
 	description                *string
 	status                     *string
 	_type                      *string
+	ticket_type_code_snapshot  *string
+	ticket_type_name_snapshot  *string
+	form_fields                *map[string]interface{}
 	priority                   *string
 	ticket_number              *string
 	tenant_id                  *int
@@ -127855,6 +127858,8 @@ type TicketMutation struct {
 	category                   map[int]struct{}
 	removedcategory            map[int]struct{}
 	clearedcategory            bool
+	configured_type            *int
+	clearedconfigured_type     bool
 	done                       bool
 	oldValue                   func(context.Context) (*Ticket, error)
 	predicates                 []predicate.Ticket
@@ -128113,6 +128118,189 @@ func (m *TicketMutation) OldType(ctx context.Context) (v string, err error) {
 // ResetType resets all changes to the "type" field.
 func (m *TicketMutation) ResetType() {
 	m._type = nil
+}
+
+// SetTicketTypeID sets the "ticket_type_id" field.
+func (m *TicketMutation) SetTicketTypeID(i int) {
+	m.configured_type = &i
+}
+
+// TicketTypeID returns the value of the "ticket_type_id" field in the mutation.
+func (m *TicketMutation) TicketTypeID() (r int, exists bool) {
+	v := m.configured_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTicketTypeID returns the old "ticket_type_id" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldTicketTypeID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTicketTypeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTicketTypeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTicketTypeID: %w", err)
+	}
+	return oldValue.TicketTypeID, nil
+}
+
+// ClearTicketTypeID clears the value of the "ticket_type_id" field.
+func (m *TicketMutation) ClearTicketTypeID() {
+	m.configured_type = nil
+	m.clearedFields[ticket.FieldTicketTypeID] = struct{}{}
+}
+
+// TicketTypeIDCleared returns if the "ticket_type_id" field was cleared in this mutation.
+func (m *TicketMutation) TicketTypeIDCleared() bool {
+	_, ok := m.clearedFields[ticket.FieldTicketTypeID]
+	return ok
+}
+
+// ResetTicketTypeID resets all changes to the "ticket_type_id" field.
+func (m *TicketMutation) ResetTicketTypeID() {
+	m.configured_type = nil
+	delete(m.clearedFields, ticket.FieldTicketTypeID)
+}
+
+// SetTicketTypeCodeSnapshot sets the "ticket_type_code_snapshot" field.
+func (m *TicketMutation) SetTicketTypeCodeSnapshot(s string) {
+	m.ticket_type_code_snapshot = &s
+}
+
+// TicketTypeCodeSnapshot returns the value of the "ticket_type_code_snapshot" field in the mutation.
+func (m *TicketMutation) TicketTypeCodeSnapshot() (r string, exists bool) {
+	v := m.ticket_type_code_snapshot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTicketTypeCodeSnapshot returns the old "ticket_type_code_snapshot" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldTicketTypeCodeSnapshot(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTicketTypeCodeSnapshot is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTicketTypeCodeSnapshot requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTicketTypeCodeSnapshot: %w", err)
+	}
+	return oldValue.TicketTypeCodeSnapshot, nil
+}
+
+// ClearTicketTypeCodeSnapshot clears the value of the "ticket_type_code_snapshot" field.
+func (m *TicketMutation) ClearTicketTypeCodeSnapshot() {
+	m.ticket_type_code_snapshot = nil
+	m.clearedFields[ticket.FieldTicketTypeCodeSnapshot] = struct{}{}
+}
+
+// TicketTypeCodeSnapshotCleared returns if the "ticket_type_code_snapshot" field was cleared in this mutation.
+func (m *TicketMutation) TicketTypeCodeSnapshotCleared() bool {
+	_, ok := m.clearedFields[ticket.FieldTicketTypeCodeSnapshot]
+	return ok
+}
+
+// ResetTicketTypeCodeSnapshot resets all changes to the "ticket_type_code_snapshot" field.
+func (m *TicketMutation) ResetTicketTypeCodeSnapshot() {
+	m.ticket_type_code_snapshot = nil
+	delete(m.clearedFields, ticket.FieldTicketTypeCodeSnapshot)
+}
+
+// SetTicketTypeNameSnapshot sets the "ticket_type_name_snapshot" field.
+func (m *TicketMutation) SetTicketTypeNameSnapshot(s string) {
+	m.ticket_type_name_snapshot = &s
+}
+
+// TicketTypeNameSnapshot returns the value of the "ticket_type_name_snapshot" field in the mutation.
+func (m *TicketMutation) TicketTypeNameSnapshot() (r string, exists bool) {
+	v := m.ticket_type_name_snapshot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTicketTypeNameSnapshot returns the old "ticket_type_name_snapshot" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldTicketTypeNameSnapshot(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTicketTypeNameSnapshot is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTicketTypeNameSnapshot requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTicketTypeNameSnapshot: %w", err)
+	}
+	return oldValue.TicketTypeNameSnapshot, nil
+}
+
+// ClearTicketTypeNameSnapshot clears the value of the "ticket_type_name_snapshot" field.
+func (m *TicketMutation) ClearTicketTypeNameSnapshot() {
+	m.ticket_type_name_snapshot = nil
+	m.clearedFields[ticket.FieldTicketTypeNameSnapshot] = struct{}{}
+}
+
+// TicketTypeNameSnapshotCleared returns if the "ticket_type_name_snapshot" field was cleared in this mutation.
+func (m *TicketMutation) TicketTypeNameSnapshotCleared() bool {
+	_, ok := m.clearedFields[ticket.FieldTicketTypeNameSnapshot]
+	return ok
+}
+
+// ResetTicketTypeNameSnapshot resets all changes to the "ticket_type_name_snapshot" field.
+func (m *TicketMutation) ResetTicketTypeNameSnapshot() {
+	m.ticket_type_name_snapshot = nil
+	delete(m.clearedFields, ticket.FieldTicketTypeNameSnapshot)
+}
+
+// SetFormFields sets the "form_fields" field.
+func (m *TicketMutation) SetFormFields(value map[string]interface{}) {
+	m.form_fields = &value
+}
+
+// FormFields returns the value of the "form_fields" field in the mutation.
+func (m *TicketMutation) FormFields() (r map[string]interface{}, exists bool) {
+	v := m.form_fields
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFormFields returns the old "form_fields" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldFormFields(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFormFields is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFormFields requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFormFields: %w", err)
+	}
+	return oldValue.FormFields, nil
+}
+
+// ResetFormFields resets all changes to the "form_fields" field.
+func (m *TicketMutation) ResetFormFields() {
+	m.form_fields = nil
 }
 
 // SetPriority sets the "priority" field.
@@ -130471,6 +130659,46 @@ func (m *TicketMutation) ResetCategory() {
 	m.removedcategory = nil
 }
 
+// SetConfiguredTypeID sets the "configured_type" edge to the TicketType entity by id.
+func (m *TicketMutation) SetConfiguredTypeID(id int) {
+	m.configured_type = &id
+}
+
+// ClearConfiguredType clears the "configured_type" edge to the TicketType entity.
+func (m *TicketMutation) ClearConfiguredType() {
+	m.clearedconfigured_type = true
+	m.clearedFields[ticket.FieldTicketTypeID] = struct{}{}
+}
+
+// ConfiguredTypeCleared reports if the "configured_type" edge to the TicketType entity was cleared.
+func (m *TicketMutation) ConfiguredTypeCleared() bool {
+	return m.TicketTypeIDCleared() || m.clearedconfigured_type
+}
+
+// ConfiguredTypeID returns the "configured_type" edge ID in the mutation.
+func (m *TicketMutation) ConfiguredTypeID() (id int, exists bool) {
+	if m.configured_type != nil {
+		return *m.configured_type, true
+	}
+	return
+}
+
+// ConfiguredTypeIDs returns the "configured_type" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ConfiguredTypeID instead. It exists only for internal usage by the builders.
+func (m *TicketMutation) ConfiguredTypeIDs() (ids []int) {
+	if id := m.configured_type; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetConfiguredType resets all changes to the "configured_type" edge.
+func (m *TicketMutation) ResetConfiguredType() {
+	m.configured_type = nil
+	m.clearedconfigured_type = false
+}
+
 // Where appends a list predicates to the TicketMutation builder.
 func (m *TicketMutation) Where(ps ...predicate.Ticket) {
 	m.predicates = append(m.predicates, ps...)
@@ -130505,7 +130733,7 @@ func (m *TicketMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TicketMutation) Fields() []string {
-	fields := make([]string, 0, 33)
+	fields := make([]string, 0, 37)
 	if m.title != nil {
 		fields = append(fields, ticket.FieldTitle)
 	}
@@ -130517,6 +130745,18 @@ func (m *TicketMutation) Fields() []string {
 	}
 	if m._type != nil {
 		fields = append(fields, ticket.FieldType)
+	}
+	if m.configured_type != nil {
+		fields = append(fields, ticket.FieldTicketTypeID)
+	}
+	if m.ticket_type_code_snapshot != nil {
+		fields = append(fields, ticket.FieldTicketTypeCodeSnapshot)
+	}
+	if m.ticket_type_name_snapshot != nil {
+		fields = append(fields, ticket.FieldTicketTypeNameSnapshot)
+	}
+	if m.form_fields != nil {
+		fields = append(fields, ticket.FieldFormFields)
 	}
 	if m.priority != nil {
 		fields = append(fields, ticket.FieldPriority)
@@ -130621,6 +130861,14 @@ func (m *TicketMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case ticket.FieldType:
 		return m.GetType()
+	case ticket.FieldTicketTypeID:
+		return m.TicketTypeID()
+	case ticket.FieldTicketTypeCodeSnapshot:
+		return m.TicketTypeCodeSnapshot()
+	case ticket.FieldTicketTypeNameSnapshot:
+		return m.TicketTypeNameSnapshot()
+	case ticket.FieldFormFields:
+		return m.FormFields()
 	case ticket.FieldPriority:
 		return m.Priority()
 	case ticket.FieldTicketNumber:
@@ -130696,6 +130944,14 @@ func (m *TicketMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldStatus(ctx)
 	case ticket.FieldType:
 		return m.OldType(ctx)
+	case ticket.FieldTicketTypeID:
+		return m.OldTicketTypeID(ctx)
+	case ticket.FieldTicketTypeCodeSnapshot:
+		return m.OldTicketTypeCodeSnapshot(ctx)
+	case ticket.FieldTicketTypeNameSnapshot:
+		return m.OldTicketTypeNameSnapshot(ctx)
+	case ticket.FieldFormFields:
+		return m.OldFormFields(ctx)
 	case ticket.FieldPriority:
 		return m.OldPriority(ctx)
 	case ticket.FieldTicketNumber:
@@ -130790,6 +131046,34 @@ func (m *TicketMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetType(v)
+		return nil
+	case ticket.FieldTicketTypeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTicketTypeID(v)
+		return nil
+	case ticket.FieldTicketTypeCodeSnapshot:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTicketTypeCodeSnapshot(v)
+		return nil
+	case ticket.FieldTicketTypeNameSnapshot:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTicketTypeNameSnapshot(v)
+		return nil
+	case ticket.FieldFormFields:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFormFields(v)
 		return nil
 	case ticket.FieldPriority:
 		v, ok := value.(string)
@@ -131162,6 +131446,15 @@ func (m *TicketMutation) ClearedFields() []string {
 	if m.FieldCleared(ticket.FieldDescription) {
 		fields = append(fields, ticket.FieldDescription)
 	}
+	if m.FieldCleared(ticket.FieldTicketTypeID) {
+		fields = append(fields, ticket.FieldTicketTypeID)
+	}
+	if m.FieldCleared(ticket.FieldTicketTypeCodeSnapshot) {
+		fields = append(fields, ticket.FieldTicketTypeCodeSnapshot)
+	}
+	if m.FieldCleared(ticket.FieldTicketTypeNameSnapshot) {
+		fields = append(fields, ticket.FieldTicketTypeNameSnapshot)
+	}
 	if m.FieldCleared(ticket.FieldAssigneeID) {
 		fields = append(fields, ticket.FieldAssigneeID)
 	}
@@ -131241,6 +131534,15 @@ func (m *TicketMutation) ClearField(name string) error {
 	switch name {
 	case ticket.FieldDescription:
 		m.ClearDescription()
+		return nil
+	case ticket.FieldTicketTypeID:
+		m.ClearTicketTypeID()
+		return nil
+	case ticket.FieldTicketTypeCodeSnapshot:
+		m.ClearTicketTypeCodeSnapshot()
+		return nil
+	case ticket.FieldTicketTypeNameSnapshot:
+		m.ClearTicketTypeNameSnapshot()
 		return nil
 	case ticket.FieldAssigneeID:
 		m.ClearAssigneeID()
@@ -131324,6 +131626,18 @@ func (m *TicketMutation) ResetField(name string) error {
 		return nil
 	case ticket.FieldType:
 		m.ResetType()
+		return nil
+	case ticket.FieldTicketTypeID:
+		m.ResetTicketTypeID()
+		return nil
+	case ticket.FieldTicketTypeCodeSnapshot:
+		m.ResetTicketTypeCodeSnapshot()
+		return nil
+	case ticket.FieldTicketTypeNameSnapshot:
+		m.ResetTicketTypeNameSnapshot()
+		return nil
+	case ticket.FieldFormFields:
+		m.ResetFormFields()
 		return nil
 	case ticket.FieldPriority:
 		m.ResetPriority()
@@ -131418,7 +131732,7 @@ func (m *TicketMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TicketMutation) AddedEdges() []string {
-	edges := make([]string, 0, 16)
+	edges := make([]string, 0, 17)
 	if m.comments != nil {
 		edges = append(edges, ticket.EdgeComments)
 	}
@@ -131466,6 +131780,9 @@ func (m *TicketMutation) AddedEdges() []string {
 	}
 	if m.category != nil {
 		edges = append(edges, ticket.EdgeCategory)
+	}
+	if m.configured_type != nil {
+		edges = append(edges, ticket.EdgeConfiguredType)
 	}
 	return edges
 }
@@ -131566,13 +131883,17 @@ func (m *TicketMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ticket.EdgeConfiguredType:
+		if id := m.configured_type; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TicketMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 16)
+	edges := make([]string, 0, 17)
 	if m.removedcomments != nil {
 		edges = append(edges, ticket.EdgeComments)
 	}
@@ -131712,7 +132033,7 @@ func (m *TicketMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TicketMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 16)
+	edges := make([]string, 0, 17)
 	if m.clearedcomments {
 		edges = append(edges, ticket.EdgeComments)
 	}
@@ -131761,6 +132082,9 @@ func (m *TicketMutation) ClearedEdges() []string {
 	if m.clearedcategory {
 		edges = append(edges, ticket.EdgeCategory)
 	}
+	if m.clearedconfigured_type {
+		edges = append(edges, ticket.EdgeConfiguredType)
+	}
 	return edges
 }
 
@@ -131800,6 +132124,8 @@ func (m *TicketMutation) EdgeCleared(name string) bool {
 		return m.clearedassignee
 	case ticket.EdgeCategory:
 		return m.clearedcategory
+	case ticket.EdgeConfiguredType:
+		return m.clearedconfigured_type
 	}
 	return false
 }
@@ -131813,6 +132139,9 @@ func (m *TicketMutation) ClearEdge(name string) error {
 		return nil
 	case ticket.EdgeAssignee:
 		m.ClearAssignee()
+		return nil
+	case ticket.EdgeConfiguredType:
+		m.ClearConfiguredType()
 		return nil
 	}
 	return fmt.Errorf("unknown Ticket unique edge %s", name)
@@ -131869,6 +132198,9 @@ func (m *TicketMutation) ResetEdge(name string) error {
 		return nil
 	case ticket.EdgeCategory:
 		m.ResetCategory()
+		return nil
+	case ticket.EdgeConfiguredType:
+		m.ResetConfiguredType()
 		return nil
 	}
 	return fmt.Errorf("unknown Ticket edge %s", name)
@@ -142337,6 +142669,17 @@ type TicketTypeMutation struct {
 	icon                    *string
 	color                   *string
 	status                  *string
+	category_id             *int
+	addcategory_id          *int
+	default_priority        *string
+	sort_order              *int
+	addsort_order           *int
+	workflow_definition_key *string
+	assignment_rule_id      *int
+	addassignment_rule_id   *int
+	archived_at             *time.Time
+	archived_by             *int64
+	addarchived_by          *int64
 	custom_fields           *map[string]interface{}
 	approval_enabled        *bool
 	approval_workflow_id    *int64
@@ -142362,6 +142705,9 @@ type TicketTypeMutation struct {
 	usage_count             *int
 	addusage_count          *int
 	clearedFields           map[string]struct{}
+	tickets                 map[int]struct{}
+	removedtickets          map[int]struct{}
+	clearedtickets          bool
 	done                    bool
 	oldValue                func(context.Context) (*TicketType, error)
 	predicates              []predicate.TicketType
@@ -142679,6 +143025,406 @@ func (m *TicketTypeMutation) OldStatus(ctx context.Context) (v string, err error
 // ResetStatus resets all changes to the "status" field.
 func (m *TicketTypeMutation) ResetStatus() {
 	m.status = nil
+}
+
+// SetCategoryID sets the "category_id" field.
+func (m *TicketTypeMutation) SetCategoryID(i int) {
+	m.category_id = &i
+	m.addcategory_id = nil
+}
+
+// CategoryID returns the value of the "category_id" field in the mutation.
+func (m *TicketTypeMutation) CategoryID() (r int, exists bool) {
+	v := m.category_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCategoryID returns the old "category_id" field's value of the TicketType entity.
+// If the TicketType object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketTypeMutation) OldCategoryID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCategoryID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCategoryID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCategoryID: %w", err)
+	}
+	return oldValue.CategoryID, nil
+}
+
+// AddCategoryID adds i to the "category_id" field.
+func (m *TicketTypeMutation) AddCategoryID(i int) {
+	if m.addcategory_id != nil {
+		*m.addcategory_id += i
+	} else {
+		m.addcategory_id = &i
+	}
+}
+
+// AddedCategoryID returns the value that was added to the "category_id" field in this mutation.
+func (m *TicketTypeMutation) AddedCategoryID() (r int, exists bool) {
+	v := m.addcategory_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearCategoryID clears the value of the "category_id" field.
+func (m *TicketTypeMutation) ClearCategoryID() {
+	m.category_id = nil
+	m.addcategory_id = nil
+	m.clearedFields[tickettype.FieldCategoryID] = struct{}{}
+}
+
+// CategoryIDCleared returns if the "category_id" field was cleared in this mutation.
+func (m *TicketTypeMutation) CategoryIDCleared() bool {
+	_, ok := m.clearedFields[tickettype.FieldCategoryID]
+	return ok
+}
+
+// ResetCategoryID resets all changes to the "category_id" field.
+func (m *TicketTypeMutation) ResetCategoryID() {
+	m.category_id = nil
+	m.addcategory_id = nil
+	delete(m.clearedFields, tickettype.FieldCategoryID)
+}
+
+// SetDefaultPriority sets the "default_priority" field.
+func (m *TicketTypeMutation) SetDefaultPriority(s string) {
+	m.default_priority = &s
+}
+
+// DefaultPriority returns the value of the "default_priority" field in the mutation.
+func (m *TicketTypeMutation) DefaultPriority() (r string, exists bool) {
+	v := m.default_priority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDefaultPriority returns the old "default_priority" field's value of the TicketType entity.
+// If the TicketType object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketTypeMutation) OldDefaultPriority(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDefaultPriority is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDefaultPriority requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDefaultPriority: %w", err)
+	}
+	return oldValue.DefaultPriority, nil
+}
+
+// ResetDefaultPriority resets all changes to the "default_priority" field.
+func (m *TicketTypeMutation) ResetDefaultPriority() {
+	m.default_priority = nil
+}
+
+// SetSortOrder sets the "sort_order" field.
+func (m *TicketTypeMutation) SetSortOrder(i int) {
+	m.sort_order = &i
+	m.addsort_order = nil
+}
+
+// SortOrder returns the value of the "sort_order" field in the mutation.
+func (m *TicketTypeMutation) SortOrder() (r int, exists bool) {
+	v := m.sort_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSortOrder returns the old "sort_order" field's value of the TicketType entity.
+// If the TicketType object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketTypeMutation) OldSortOrder(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSortOrder is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSortOrder requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSortOrder: %w", err)
+	}
+	return oldValue.SortOrder, nil
+}
+
+// AddSortOrder adds i to the "sort_order" field.
+func (m *TicketTypeMutation) AddSortOrder(i int) {
+	if m.addsort_order != nil {
+		*m.addsort_order += i
+	} else {
+		m.addsort_order = &i
+	}
+}
+
+// AddedSortOrder returns the value that was added to the "sort_order" field in this mutation.
+func (m *TicketTypeMutation) AddedSortOrder() (r int, exists bool) {
+	v := m.addsort_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSortOrder resets all changes to the "sort_order" field.
+func (m *TicketTypeMutation) ResetSortOrder() {
+	m.sort_order = nil
+	m.addsort_order = nil
+}
+
+// SetWorkflowDefinitionKey sets the "workflow_definition_key" field.
+func (m *TicketTypeMutation) SetWorkflowDefinitionKey(s string) {
+	m.workflow_definition_key = &s
+}
+
+// WorkflowDefinitionKey returns the value of the "workflow_definition_key" field in the mutation.
+func (m *TicketTypeMutation) WorkflowDefinitionKey() (r string, exists bool) {
+	v := m.workflow_definition_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkflowDefinitionKey returns the old "workflow_definition_key" field's value of the TicketType entity.
+// If the TicketType object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketTypeMutation) OldWorkflowDefinitionKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkflowDefinitionKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkflowDefinitionKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkflowDefinitionKey: %w", err)
+	}
+	return oldValue.WorkflowDefinitionKey, nil
+}
+
+// ClearWorkflowDefinitionKey clears the value of the "workflow_definition_key" field.
+func (m *TicketTypeMutation) ClearWorkflowDefinitionKey() {
+	m.workflow_definition_key = nil
+	m.clearedFields[tickettype.FieldWorkflowDefinitionKey] = struct{}{}
+}
+
+// WorkflowDefinitionKeyCleared returns if the "workflow_definition_key" field was cleared in this mutation.
+func (m *TicketTypeMutation) WorkflowDefinitionKeyCleared() bool {
+	_, ok := m.clearedFields[tickettype.FieldWorkflowDefinitionKey]
+	return ok
+}
+
+// ResetWorkflowDefinitionKey resets all changes to the "workflow_definition_key" field.
+func (m *TicketTypeMutation) ResetWorkflowDefinitionKey() {
+	m.workflow_definition_key = nil
+	delete(m.clearedFields, tickettype.FieldWorkflowDefinitionKey)
+}
+
+// SetAssignmentRuleID sets the "assignment_rule_id" field.
+func (m *TicketTypeMutation) SetAssignmentRuleID(i int) {
+	m.assignment_rule_id = &i
+	m.addassignment_rule_id = nil
+}
+
+// AssignmentRuleID returns the value of the "assignment_rule_id" field in the mutation.
+func (m *TicketTypeMutation) AssignmentRuleID() (r int, exists bool) {
+	v := m.assignment_rule_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAssignmentRuleID returns the old "assignment_rule_id" field's value of the TicketType entity.
+// If the TicketType object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketTypeMutation) OldAssignmentRuleID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAssignmentRuleID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAssignmentRuleID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAssignmentRuleID: %w", err)
+	}
+	return oldValue.AssignmentRuleID, nil
+}
+
+// AddAssignmentRuleID adds i to the "assignment_rule_id" field.
+func (m *TicketTypeMutation) AddAssignmentRuleID(i int) {
+	if m.addassignment_rule_id != nil {
+		*m.addassignment_rule_id += i
+	} else {
+		m.addassignment_rule_id = &i
+	}
+}
+
+// AddedAssignmentRuleID returns the value that was added to the "assignment_rule_id" field in this mutation.
+func (m *TicketTypeMutation) AddedAssignmentRuleID() (r int, exists bool) {
+	v := m.addassignment_rule_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAssignmentRuleID clears the value of the "assignment_rule_id" field.
+func (m *TicketTypeMutation) ClearAssignmentRuleID() {
+	m.assignment_rule_id = nil
+	m.addassignment_rule_id = nil
+	m.clearedFields[tickettype.FieldAssignmentRuleID] = struct{}{}
+}
+
+// AssignmentRuleIDCleared returns if the "assignment_rule_id" field was cleared in this mutation.
+func (m *TicketTypeMutation) AssignmentRuleIDCleared() bool {
+	_, ok := m.clearedFields[tickettype.FieldAssignmentRuleID]
+	return ok
+}
+
+// ResetAssignmentRuleID resets all changes to the "assignment_rule_id" field.
+func (m *TicketTypeMutation) ResetAssignmentRuleID() {
+	m.assignment_rule_id = nil
+	m.addassignment_rule_id = nil
+	delete(m.clearedFields, tickettype.FieldAssignmentRuleID)
+}
+
+// SetArchivedAt sets the "archived_at" field.
+func (m *TicketTypeMutation) SetArchivedAt(t time.Time) {
+	m.archived_at = &t
+}
+
+// ArchivedAt returns the value of the "archived_at" field in the mutation.
+func (m *TicketTypeMutation) ArchivedAt() (r time.Time, exists bool) {
+	v := m.archived_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldArchivedAt returns the old "archived_at" field's value of the TicketType entity.
+// If the TicketType object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketTypeMutation) OldArchivedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldArchivedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldArchivedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldArchivedAt: %w", err)
+	}
+	return oldValue.ArchivedAt, nil
+}
+
+// ClearArchivedAt clears the value of the "archived_at" field.
+func (m *TicketTypeMutation) ClearArchivedAt() {
+	m.archived_at = nil
+	m.clearedFields[tickettype.FieldArchivedAt] = struct{}{}
+}
+
+// ArchivedAtCleared returns if the "archived_at" field was cleared in this mutation.
+func (m *TicketTypeMutation) ArchivedAtCleared() bool {
+	_, ok := m.clearedFields[tickettype.FieldArchivedAt]
+	return ok
+}
+
+// ResetArchivedAt resets all changes to the "archived_at" field.
+func (m *TicketTypeMutation) ResetArchivedAt() {
+	m.archived_at = nil
+	delete(m.clearedFields, tickettype.FieldArchivedAt)
+}
+
+// SetArchivedBy sets the "archived_by" field.
+func (m *TicketTypeMutation) SetArchivedBy(i int64) {
+	m.archived_by = &i
+	m.addarchived_by = nil
+}
+
+// ArchivedBy returns the value of the "archived_by" field in the mutation.
+func (m *TicketTypeMutation) ArchivedBy() (r int64, exists bool) {
+	v := m.archived_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldArchivedBy returns the old "archived_by" field's value of the TicketType entity.
+// If the TicketType object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketTypeMutation) OldArchivedBy(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldArchivedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldArchivedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldArchivedBy: %w", err)
+	}
+	return oldValue.ArchivedBy, nil
+}
+
+// AddArchivedBy adds i to the "archived_by" field.
+func (m *TicketTypeMutation) AddArchivedBy(i int64) {
+	if m.addarchived_by != nil {
+		*m.addarchived_by += i
+	} else {
+		m.addarchived_by = &i
+	}
+}
+
+// AddedArchivedBy returns the value that was added to the "archived_by" field in this mutation.
+func (m *TicketTypeMutation) AddedArchivedBy() (r int64, exists bool) {
+	v := m.addarchived_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearArchivedBy clears the value of the "archived_by" field.
+func (m *TicketTypeMutation) ClearArchivedBy() {
+	m.archived_by = nil
+	m.addarchived_by = nil
+	m.clearedFields[tickettype.FieldArchivedBy] = struct{}{}
+}
+
+// ArchivedByCleared returns if the "archived_by" field was cleared in this mutation.
+func (m *TicketTypeMutation) ArchivedByCleared() bool {
+	_, ok := m.clearedFields[tickettype.FieldArchivedBy]
+	return ok
+}
+
+// ResetArchivedBy resets all changes to the "archived_by" field.
+func (m *TicketTypeMutation) ResetArchivedBy() {
+	m.archived_by = nil
+	m.addarchived_by = nil
+	delete(m.clearedFields, tickettype.FieldArchivedBy)
 }
 
 // SetCustomFields sets the "custom_fields" field.
@@ -143449,6 +144195,60 @@ func (m *TicketTypeMutation) ResetUsageCount() {
 	m.addusage_count = nil
 }
 
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by ids.
+func (m *TicketTypeMutation) AddTicketIDs(ids ...int) {
+	if m.tickets == nil {
+		m.tickets = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tickets[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTickets clears the "tickets" edge to the Ticket entity.
+func (m *TicketTypeMutation) ClearTickets() {
+	m.clearedtickets = true
+}
+
+// TicketsCleared reports if the "tickets" edge to the Ticket entity was cleared.
+func (m *TicketTypeMutation) TicketsCleared() bool {
+	return m.clearedtickets
+}
+
+// RemoveTicketIDs removes the "tickets" edge to the Ticket entity by IDs.
+func (m *TicketTypeMutation) RemoveTicketIDs(ids ...int) {
+	if m.removedtickets == nil {
+		m.removedtickets = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tickets, ids[i])
+		m.removedtickets[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTickets returns the removed IDs of the "tickets" edge to the Ticket entity.
+func (m *TicketTypeMutation) RemovedTicketsIDs() (ids []int) {
+	for id := range m.removedtickets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TicketsIDs returns the "tickets" edge IDs in the mutation.
+func (m *TicketTypeMutation) TicketsIDs() (ids []int) {
+	for id := range m.tickets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTickets resets all changes to the "tickets" edge.
+func (m *TicketTypeMutation) ResetTickets() {
+	m.tickets = nil
+	m.clearedtickets = false
+	m.removedtickets = nil
+}
+
 // Where appends a list predicates to the TicketTypeMutation builder.
 func (m *TicketTypeMutation) Where(ps ...predicate.TicketType) {
 	m.predicates = append(m.predicates, ps...)
@@ -143483,7 +144283,7 @@ func (m *TicketTypeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TicketTypeMutation) Fields() []string {
-	fields := make([]string, 0, 22)
+	fields := make([]string, 0, 29)
 	if m.code != nil {
 		fields = append(fields, tickettype.FieldCode)
 	}
@@ -143501,6 +144301,27 @@ func (m *TicketTypeMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, tickettype.FieldStatus)
+	}
+	if m.category_id != nil {
+		fields = append(fields, tickettype.FieldCategoryID)
+	}
+	if m.default_priority != nil {
+		fields = append(fields, tickettype.FieldDefaultPriority)
+	}
+	if m.sort_order != nil {
+		fields = append(fields, tickettype.FieldSortOrder)
+	}
+	if m.workflow_definition_key != nil {
+		fields = append(fields, tickettype.FieldWorkflowDefinitionKey)
+	}
+	if m.assignment_rule_id != nil {
+		fields = append(fields, tickettype.FieldAssignmentRuleID)
+	}
+	if m.archived_at != nil {
+		fields = append(fields, tickettype.FieldArchivedAt)
+	}
+	if m.archived_by != nil {
+		fields = append(fields, tickettype.FieldArchivedBy)
 	}
 	if m.custom_fields != nil {
 		fields = append(fields, tickettype.FieldCustomFields)
@@ -143570,6 +144391,20 @@ func (m *TicketTypeMutation) Field(name string) (ent.Value, bool) {
 		return m.Color()
 	case tickettype.FieldStatus:
 		return m.Status()
+	case tickettype.FieldCategoryID:
+		return m.CategoryID()
+	case tickettype.FieldDefaultPriority:
+		return m.DefaultPriority()
+	case tickettype.FieldSortOrder:
+		return m.SortOrder()
+	case tickettype.FieldWorkflowDefinitionKey:
+		return m.WorkflowDefinitionKey()
+	case tickettype.FieldAssignmentRuleID:
+		return m.AssignmentRuleID()
+	case tickettype.FieldArchivedAt:
+		return m.ArchivedAt()
+	case tickettype.FieldArchivedBy:
+		return m.ArchivedBy()
 	case tickettype.FieldCustomFields:
 		return m.CustomFields()
 	case tickettype.FieldApprovalEnabled:
@@ -143623,6 +144458,20 @@ func (m *TicketTypeMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldColor(ctx)
 	case tickettype.FieldStatus:
 		return m.OldStatus(ctx)
+	case tickettype.FieldCategoryID:
+		return m.OldCategoryID(ctx)
+	case tickettype.FieldDefaultPriority:
+		return m.OldDefaultPriority(ctx)
+	case tickettype.FieldSortOrder:
+		return m.OldSortOrder(ctx)
+	case tickettype.FieldWorkflowDefinitionKey:
+		return m.OldWorkflowDefinitionKey(ctx)
+	case tickettype.FieldAssignmentRuleID:
+		return m.OldAssignmentRuleID(ctx)
+	case tickettype.FieldArchivedAt:
+		return m.OldArchivedAt(ctx)
+	case tickettype.FieldArchivedBy:
+		return m.OldArchivedBy(ctx)
 	case tickettype.FieldCustomFields:
 		return m.OldCustomFields(ctx)
 	case tickettype.FieldApprovalEnabled:
@@ -143705,6 +144554,55 @@ func (m *TicketTypeMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case tickettype.FieldCategoryID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCategoryID(v)
+		return nil
+	case tickettype.FieldDefaultPriority:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDefaultPriority(v)
+		return nil
+	case tickettype.FieldSortOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSortOrder(v)
+		return nil
+	case tickettype.FieldWorkflowDefinitionKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkflowDefinitionKey(v)
+		return nil
+	case tickettype.FieldAssignmentRuleID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAssignmentRuleID(v)
+		return nil
+	case tickettype.FieldArchivedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetArchivedAt(v)
+		return nil
+	case tickettype.FieldArchivedBy:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetArchivedBy(v)
 		return nil
 	case tickettype.FieldCustomFields:
 		v, ok := value.(map[string]interface{})
@@ -143826,6 +144724,18 @@ func (m *TicketTypeMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *TicketTypeMutation) AddedFields() []string {
 	var fields []string
+	if m.addcategory_id != nil {
+		fields = append(fields, tickettype.FieldCategoryID)
+	}
+	if m.addsort_order != nil {
+		fields = append(fields, tickettype.FieldSortOrder)
+	}
+	if m.addassignment_rule_id != nil {
+		fields = append(fields, tickettype.FieldAssignmentRuleID)
+	}
+	if m.addarchived_by != nil {
+		fields = append(fields, tickettype.FieldArchivedBy)
+	}
 	if m.addapproval_workflow_id != nil {
 		fields = append(fields, tickettype.FieldApprovalWorkflowID)
 	}
@@ -143852,6 +144762,14 @@ func (m *TicketTypeMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *TicketTypeMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case tickettype.FieldCategoryID:
+		return m.AddedCategoryID()
+	case tickettype.FieldSortOrder:
+		return m.AddedSortOrder()
+	case tickettype.FieldAssignmentRuleID:
+		return m.AddedAssignmentRuleID()
+	case tickettype.FieldArchivedBy:
+		return m.AddedArchivedBy()
 	case tickettype.FieldApprovalWorkflowID:
 		return m.AddedApprovalWorkflowID()
 	case tickettype.FieldDefaultSLAID:
@@ -143873,6 +144791,34 @@ func (m *TicketTypeMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *TicketTypeMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case tickettype.FieldCategoryID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCategoryID(v)
+		return nil
+	case tickettype.FieldSortOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSortOrder(v)
+		return nil
+	case tickettype.FieldAssignmentRuleID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAssignmentRuleID(v)
+		return nil
+	case tickettype.FieldArchivedBy:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddArchivedBy(v)
+		return nil
 	case tickettype.FieldApprovalWorkflowID:
 		v, ok := value.(int64)
 		if !ok {
@@ -143923,6 +144869,21 @@ func (m *TicketTypeMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *TicketTypeMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(tickettype.FieldCategoryID) {
+		fields = append(fields, tickettype.FieldCategoryID)
+	}
+	if m.FieldCleared(tickettype.FieldWorkflowDefinitionKey) {
+		fields = append(fields, tickettype.FieldWorkflowDefinitionKey)
+	}
+	if m.FieldCleared(tickettype.FieldAssignmentRuleID) {
+		fields = append(fields, tickettype.FieldAssignmentRuleID)
+	}
+	if m.FieldCleared(tickettype.FieldArchivedAt) {
+		fields = append(fields, tickettype.FieldArchivedAt)
+	}
+	if m.FieldCleared(tickettype.FieldArchivedBy) {
+		fields = append(fields, tickettype.FieldArchivedBy)
+	}
 	if m.FieldCleared(tickettype.FieldApprovalWorkflowID) {
 		fields = append(fields, tickettype.FieldApprovalWorkflowID)
 	}
@@ -143946,6 +144907,21 @@ func (m *TicketTypeMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *TicketTypeMutation) ClearField(name string) error {
 	switch name {
+	case tickettype.FieldCategoryID:
+		m.ClearCategoryID()
+		return nil
+	case tickettype.FieldWorkflowDefinitionKey:
+		m.ClearWorkflowDefinitionKey()
+		return nil
+	case tickettype.FieldAssignmentRuleID:
+		m.ClearAssignmentRuleID()
+		return nil
+	case tickettype.FieldArchivedAt:
+		m.ClearArchivedAt()
+		return nil
+	case tickettype.FieldArchivedBy:
+		m.ClearArchivedBy()
+		return nil
 	case tickettype.FieldApprovalWorkflowID:
 		m.ClearApprovalWorkflowID()
 		return nil
@@ -143980,6 +144956,27 @@ func (m *TicketTypeMutation) ResetField(name string) error {
 		return nil
 	case tickettype.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case tickettype.FieldCategoryID:
+		m.ResetCategoryID()
+		return nil
+	case tickettype.FieldDefaultPriority:
+		m.ResetDefaultPriority()
+		return nil
+	case tickettype.FieldSortOrder:
+		m.ResetSortOrder()
+		return nil
+	case tickettype.FieldWorkflowDefinitionKey:
+		m.ResetWorkflowDefinitionKey()
+		return nil
+	case tickettype.FieldAssignmentRuleID:
+		m.ResetAssignmentRuleID()
+		return nil
+	case tickettype.FieldArchivedAt:
+		m.ResetArchivedAt()
+		return nil
+	case tickettype.FieldArchivedBy:
+		m.ResetArchivedBy()
 		return nil
 	case tickettype.FieldCustomFields:
 		m.ResetCustomFields()
@@ -144035,49 +145032,85 @@ func (m *TicketTypeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TicketTypeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.tickets != nil {
+		edges = append(edges, tickettype.EdgeTickets)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *TicketTypeMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case tickettype.EdgeTickets:
+		ids := make([]ent.Value, 0, len(m.tickets))
+		for id := range m.tickets {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TicketTypeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removedtickets != nil {
+		edges = append(edges, tickettype.EdgeTickets)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *TicketTypeMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case tickettype.EdgeTickets:
+		ids := make([]ent.Value, 0, len(m.removedtickets))
+		for id := range m.removedtickets {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TicketTypeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedtickets {
+		edges = append(edges, tickettype.EdgeTickets)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *TicketTypeMutation) EdgeCleared(name string) bool {
+	switch name {
+	case tickettype.EdgeTickets:
+		return m.clearedtickets
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *TicketTypeMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown TicketType unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *TicketTypeMutation) ResetEdge(name string) error {
+	switch name {
+	case tickettype.EdgeTickets:
+		m.ResetTickets()
+		return nil
+	}
 	return fmt.Errorf("unknown TicketType edge %s", name)
 }
 

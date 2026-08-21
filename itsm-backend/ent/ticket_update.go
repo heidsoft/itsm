@@ -20,6 +20,7 @@ import (
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
+	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/user"
 	"time"
@@ -101,6 +102,72 @@ func (_u *TicketUpdate) SetNillableType(v *string) *TicketUpdate {
 	if v != nil {
 		_u.SetType(*v)
 	}
+	return _u
+}
+
+// SetTicketTypeID sets the "ticket_type_id" field.
+func (_u *TicketUpdate) SetTicketTypeID(v int) *TicketUpdate {
+	_u.mutation.SetTicketTypeID(v)
+	return _u
+}
+
+// SetNillableTicketTypeID sets the "ticket_type_id" field if the given value is not nil.
+func (_u *TicketUpdate) SetNillableTicketTypeID(v *int) *TicketUpdate {
+	if v != nil {
+		_u.SetTicketTypeID(*v)
+	}
+	return _u
+}
+
+// ClearTicketTypeID clears the value of the "ticket_type_id" field.
+func (_u *TicketUpdate) ClearTicketTypeID() *TicketUpdate {
+	_u.mutation.ClearTicketTypeID()
+	return _u
+}
+
+// SetTicketTypeCodeSnapshot sets the "ticket_type_code_snapshot" field.
+func (_u *TicketUpdate) SetTicketTypeCodeSnapshot(v string) *TicketUpdate {
+	_u.mutation.SetTicketTypeCodeSnapshot(v)
+	return _u
+}
+
+// SetNillableTicketTypeCodeSnapshot sets the "ticket_type_code_snapshot" field if the given value is not nil.
+func (_u *TicketUpdate) SetNillableTicketTypeCodeSnapshot(v *string) *TicketUpdate {
+	if v != nil {
+		_u.SetTicketTypeCodeSnapshot(*v)
+	}
+	return _u
+}
+
+// ClearTicketTypeCodeSnapshot clears the value of the "ticket_type_code_snapshot" field.
+func (_u *TicketUpdate) ClearTicketTypeCodeSnapshot() *TicketUpdate {
+	_u.mutation.ClearTicketTypeCodeSnapshot()
+	return _u
+}
+
+// SetTicketTypeNameSnapshot sets the "ticket_type_name_snapshot" field.
+func (_u *TicketUpdate) SetTicketTypeNameSnapshot(v string) *TicketUpdate {
+	_u.mutation.SetTicketTypeNameSnapshot(v)
+	return _u
+}
+
+// SetNillableTicketTypeNameSnapshot sets the "ticket_type_name_snapshot" field if the given value is not nil.
+func (_u *TicketUpdate) SetNillableTicketTypeNameSnapshot(v *string) *TicketUpdate {
+	if v != nil {
+		_u.SetTicketTypeNameSnapshot(*v)
+	}
+	return _u
+}
+
+// ClearTicketTypeNameSnapshot clears the value of the "ticket_type_name_snapshot" field.
+func (_u *TicketUpdate) ClearTicketTypeNameSnapshot() *TicketUpdate {
+	_u.mutation.ClearTicketTypeNameSnapshot()
+	return _u
+}
+
+// SetFormFields sets the "form_fields" field.
+func (_u *TicketUpdate) SetFormFields(v map[string]interface{}) *TicketUpdate {
+	_u.mutation.SetFormFields(v)
 	return _u
 }
 
@@ -925,6 +992,25 @@ func (_u *TicketUpdate) AddCategory(v ...*TicketCategory) *TicketUpdate {
 	return _u.AddCategoryIDs(ids...)
 }
 
+// SetConfiguredTypeID sets the "configured_type" edge to the TicketType entity by ID.
+func (_u *TicketUpdate) SetConfiguredTypeID(id int) *TicketUpdate {
+	_u.mutation.SetConfiguredTypeID(id)
+	return _u
+}
+
+// SetNillableConfiguredTypeID sets the "configured_type" edge to the TicketType entity by ID if the given value is not nil.
+func (_u *TicketUpdate) SetNillableConfiguredTypeID(id *int) *TicketUpdate {
+	if id != nil {
+		_u = _u.SetConfiguredTypeID(*id)
+	}
+	return _u
+}
+
+// SetConfiguredType sets the "configured_type" edge to the TicketType entity.
+func (_u *TicketUpdate) SetConfiguredType(v *TicketType) *TicketUpdate {
+	return _u.SetConfiguredTypeID(v.ID)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (_u *TicketUpdate) Mutation() *TicketMutation {
 	return _u.mutation
@@ -1236,6 +1322,12 @@ func (_u *TicketUpdate) RemoveCategory(v ...*TicketCategory) *TicketUpdate {
 	return _u.RemoveCategoryIDs(ids...)
 }
 
+// ClearConfiguredType clears the "configured_type" edge to the TicketType entity.
+func (_u *TicketUpdate) ClearConfiguredType() *TicketUpdate {
+	_u.mutation.ClearConfiguredType()
+	return _u
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *TicketUpdate) Save(ctx context.Context) (int, error) {
 	_u.defaults()
@@ -1277,6 +1369,16 @@ func (_u *TicketUpdate) check() error {
 	if v, ok := _u.mutation.Title(); ok {
 		if err := ticket.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Ticket.title": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.TicketTypeCodeSnapshot(); ok {
+		if err := ticket.TicketTypeCodeSnapshotValidator(v); err != nil {
+			return &ValidationError{Name: "ticket_type_code_snapshot", err: fmt.Errorf(`ent: validator failed for field "Ticket.ticket_type_code_snapshot": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.TicketTypeNameSnapshot(); ok {
+		if err := ticket.TicketTypeNameSnapshotValidator(v); err != nil {
+			return &ValidationError{Name: "ticket_type_name_snapshot", err: fmt.Errorf(`ent: validator failed for field "Ticket.ticket_type_name_snapshot": %w`, err)}
 		}
 	}
 	if v, ok := _u.mutation.TicketNumber(); ok {
@@ -1336,6 +1438,21 @@ func (_u *TicketUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(ticket.FieldType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.TicketTypeCodeSnapshot(); ok {
+		_spec.SetField(ticket.FieldTicketTypeCodeSnapshot, field.TypeString, value)
+	}
+	if _u.mutation.TicketTypeCodeSnapshotCleared() {
+		_spec.ClearField(ticket.FieldTicketTypeCodeSnapshot, field.TypeString)
+	}
+	if value, ok := _u.mutation.TicketTypeNameSnapshot(); ok {
+		_spec.SetField(ticket.FieldTicketTypeNameSnapshot, field.TypeString, value)
+	}
+	if _u.mutation.TicketTypeNameSnapshotCleared() {
+		_spec.ClearField(ticket.FieldTicketTypeNameSnapshot, field.TypeString)
+	}
+	if value, ok := _u.mutation.FormFields(); ok {
+		_spec.SetField(ticket.FieldFormFields, field.TypeJSON, value)
 	}
 	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(ticket.FieldPriority, field.TypeString, value)
@@ -2199,6 +2316,35 @@ func (_u *TicketUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.ConfiguredTypeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.ConfiguredTypeTable,
+			Columns: []string{ticket.ConfiguredTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tickettype.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ConfiguredTypeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.ConfiguredTypeTable,
+			Columns: []string{ticket.ConfiguredTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tickettype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticket.Label}
@@ -2278,6 +2424,72 @@ func (_u *TicketUpdateOne) SetNillableType(v *string) *TicketUpdateOne {
 	if v != nil {
 		_u.SetType(*v)
 	}
+	return _u
+}
+
+// SetTicketTypeID sets the "ticket_type_id" field.
+func (_u *TicketUpdateOne) SetTicketTypeID(v int) *TicketUpdateOne {
+	_u.mutation.SetTicketTypeID(v)
+	return _u
+}
+
+// SetNillableTicketTypeID sets the "ticket_type_id" field if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableTicketTypeID(v *int) *TicketUpdateOne {
+	if v != nil {
+		_u.SetTicketTypeID(*v)
+	}
+	return _u
+}
+
+// ClearTicketTypeID clears the value of the "ticket_type_id" field.
+func (_u *TicketUpdateOne) ClearTicketTypeID() *TicketUpdateOne {
+	_u.mutation.ClearTicketTypeID()
+	return _u
+}
+
+// SetTicketTypeCodeSnapshot sets the "ticket_type_code_snapshot" field.
+func (_u *TicketUpdateOne) SetTicketTypeCodeSnapshot(v string) *TicketUpdateOne {
+	_u.mutation.SetTicketTypeCodeSnapshot(v)
+	return _u
+}
+
+// SetNillableTicketTypeCodeSnapshot sets the "ticket_type_code_snapshot" field if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableTicketTypeCodeSnapshot(v *string) *TicketUpdateOne {
+	if v != nil {
+		_u.SetTicketTypeCodeSnapshot(*v)
+	}
+	return _u
+}
+
+// ClearTicketTypeCodeSnapshot clears the value of the "ticket_type_code_snapshot" field.
+func (_u *TicketUpdateOne) ClearTicketTypeCodeSnapshot() *TicketUpdateOne {
+	_u.mutation.ClearTicketTypeCodeSnapshot()
+	return _u
+}
+
+// SetTicketTypeNameSnapshot sets the "ticket_type_name_snapshot" field.
+func (_u *TicketUpdateOne) SetTicketTypeNameSnapshot(v string) *TicketUpdateOne {
+	_u.mutation.SetTicketTypeNameSnapshot(v)
+	return _u
+}
+
+// SetNillableTicketTypeNameSnapshot sets the "ticket_type_name_snapshot" field if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableTicketTypeNameSnapshot(v *string) *TicketUpdateOne {
+	if v != nil {
+		_u.SetTicketTypeNameSnapshot(*v)
+	}
+	return _u
+}
+
+// ClearTicketTypeNameSnapshot clears the value of the "ticket_type_name_snapshot" field.
+func (_u *TicketUpdateOne) ClearTicketTypeNameSnapshot() *TicketUpdateOne {
+	_u.mutation.ClearTicketTypeNameSnapshot()
+	return _u
+}
+
+// SetFormFields sets the "form_fields" field.
+func (_u *TicketUpdateOne) SetFormFields(v map[string]interface{}) *TicketUpdateOne {
+	_u.mutation.SetFormFields(v)
 	return _u
 }
 
@@ -3102,6 +3314,25 @@ func (_u *TicketUpdateOne) AddCategory(v ...*TicketCategory) *TicketUpdateOne {
 	return _u.AddCategoryIDs(ids...)
 }
 
+// SetConfiguredTypeID sets the "configured_type" edge to the TicketType entity by ID.
+func (_u *TicketUpdateOne) SetConfiguredTypeID(id int) *TicketUpdateOne {
+	_u.mutation.SetConfiguredTypeID(id)
+	return _u
+}
+
+// SetNillableConfiguredTypeID sets the "configured_type" edge to the TicketType entity by ID if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableConfiguredTypeID(id *int) *TicketUpdateOne {
+	if id != nil {
+		_u = _u.SetConfiguredTypeID(*id)
+	}
+	return _u
+}
+
+// SetConfiguredType sets the "configured_type" edge to the TicketType entity.
+func (_u *TicketUpdateOne) SetConfiguredType(v *TicketType) *TicketUpdateOne {
+	return _u.SetConfiguredTypeID(v.ID)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (_u *TicketUpdateOne) Mutation() *TicketMutation {
 	return _u.mutation
@@ -3413,6 +3644,12 @@ func (_u *TicketUpdateOne) RemoveCategory(v ...*TicketCategory) *TicketUpdateOne
 	return _u.RemoveCategoryIDs(ids...)
 }
 
+// ClearConfiguredType clears the "configured_type" edge to the TicketType entity.
+func (_u *TicketUpdateOne) ClearConfiguredType() *TicketUpdateOne {
+	_u.mutation.ClearConfiguredType()
+	return _u
+}
+
 // Where appends a list predicates to the TicketUpdate builder.
 func (_u *TicketUpdateOne) Where(ps ...predicate.Ticket) *TicketUpdateOne {
 	_u.mutation.Where(ps...)
@@ -3467,6 +3704,16 @@ func (_u *TicketUpdateOne) check() error {
 	if v, ok := _u.mutation.Title(); ok {
 		if err := ticket.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Ticket.title": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.TicketTypeCodeSnapshot(); ok {
+		if err := ticket.TicketTypeCodeSnapshotValidator(v); err != nil {
+			return &ValidationError{Name: "ticket_type_code_snapshot", err: fmt.Errorf(`ent: validator failed for field "Ticket.ticket_type_code_snapshot": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.TicketTypeNameSnapshot(); ok {
+		if err := ticket.TicketTypeNameSnapshotValidator(v); err != nil {
+			return &ValidationError{Name: "ticket_type_name_snapshot", err: fmt.Errorf(`ent: validator failed for field "Ticket.ticket_type_name_snapshot": %w`, err)}
 		}
 	}
 	if v, ok := _u.mutation.TicketNumber(); ok {
@@ -3543,6 +3790,21 @@ func (_u *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err erro
 	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(ticket.FieldType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.TicketTypeCodeSnapshot(); ok {
+		_spec.SetField(ticket.FieldTicketTypeCodeSnapshot, field.TypeString, value)
+	}
+	if _u.mutation.TicketTypeCodeSnapshotCleared() {
+		_spec.ClearField(ticket.FieldTicketTypeCodeSnapshot, field.TypeString)
+	}
+	if value, ok := _u.mutation.TicketTypeNameSnapshot(); ok {
+		_spec.SetField(ticket.FieldTicketTypeNameSnapshot, field.TypeString, value)
+	}
+	if _u.mutation.TicketTypeNameSnapshotCleared() {
+		_spec.ClearField(ticket.FieldTicketTypeNameSnapshot, field.TypeString)
+	}
+	if value, ok := _u.mutation.FormFields(); ok {
+		_spec.SetField(ticket.FieldFormFields, field.TypeJSON, value)
 	}
 	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(ticket.FieldPriority, field.TypeString, value)
@@ -4399,6 +4661,35 @@ func (_u *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticketcategory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ConfiguredTypeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.ConfiguredTypeTable,
+			Columns: []string{ticket.ConfiguredTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tickettype.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ConfiguredTypeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.ConfiguredTypeTable,
+			Columns: []string{ticket.ConfiguredTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tickettype.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

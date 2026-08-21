@@ -19,6 +19,7 @@ import (
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
+	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/user"
 	"time"
@@ -79,6 +80,54 @@ func (_c *TicketCreate) SetNillableType(v *string) *TicketCreate {
 	if v != nil {
 		_c.SetType(*v)
 	}
+	return _c
+}
+
+// SetTicketTypeID sets the "ticket_type_id" field.
+func (_c *TicketCreate) SetTicketTypeID(v int) *TicketCreate {
+	_c.mutation.SetTicketTypeID(v)
+	return _c
+}
+
+// SetNillableTicketTypeID sets the "ticket_type_id" field if the given value is not nil.
+func (_c *TicketCreate) SetNillableTicketTypeID(v *int) *TicketCreate {
+	if v != nil {
+		_c.SetTicketTypeID(*v)
+	}
+	return _c
+}
+
+// SetTicketTypeCodeSnapshot sets the "ticket_type_code_snapshot" field.
+func (_c *TicketCreate) SetTicketTypeCodeSnapshot(v string) *TicketCreate {
+	_c.mutation.SetTicketTypeCodeSnapshot(v)
+	return _c
+}
+
+// SetNillableTicketTypeCodeSnapshot sets the "ticket_type_code_snapshot" field if the given value is not nil.
+func (_c *TicketCreate) SetNillableTicketTypeCodeSnapshot(v *string) *TicketCreate {
+	if v != nil {
+		_c.SetTicketTypeCodeSnapshot(*v)
+	}
+	return _c
+}
+
+// SetTicketTypeNameSnapshot sets the "ticket_type_name_snapshot" field.
+func (_c *TicketCreate) SetTicketTypeNameSnapshot(v string) *TicketCreate {
+	_c.mutation.SetTicketTypeNameSnapshot(v)
+	return _c
+}
+
+// SetNillableTicketTypeNameSnapshot sets the "ticket_type_name_snapshot" field if the given value is not nil.
+func (_c *TicketCreate) SetNillableTicketTypeNameSnapshot(v *string) *TicketCreate {
+	if v != nil {
+		_c.SetTicketTypeNameSnapshot(*v)
+	}
+	return _c
+}
+
+// SetFormFields sets the "form_fields" field.
+func (_c *TicketCreate) SetFormFields(v map[string]interface{}) *TicketCreate {
+	_c.mutation.SetFormFields(v)
 	return _c
 }
 
@@ -684,6 +733,25 @@ func (_c *TicketCreate) AddCategory(v ...*TicketCategory) *TicketCreate {
 	return _c.AddCategoryIDs(ids...)
 }
 
+// SetConfiguredTypeID sets the "configured_type" edge to the TicketType entity by ID.
+func (_c *TicketCreate) SetConfiguredTypeID(id int) *TicketCreate {
+	_c.mutation.SetConfiguredTypeID(id)
+	return _c
+}
+
+// SetNillableConfiguredTypeID sets the "configured_type" edge to the TicketType entity by ID if the given value is not nil.
+func (_c *TicketCreate) SetNillableConfiguredTypeID(id *int) *TicketCreate {
+	if id != nil {
+		_c = _c.SetConfiguredTypeID(*id)
+	}
+	return _c
+}
+
+// SetConfiguredType sets the "configured_type" edge to the TicketType entity.
+func (_c *TicketCreate) SetConfiguredType(v *TicketType) *TicketCreate {
+	return _c.SetConfiguredTypeID(v.ID)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (_c *TicketCreate) Mutation() *TicketMutation {
 	return _c.mutation
@@ -727,6 +795,10 @@ func (_c *TicketCreate) defaults() {
 		v := ticket.DefaultType
 		_c.mutation.SetType(v)
 	}
+	if _, ok := _c.mutation.FormFields(); !ok {
+		v := ticket.DefaultFormFields
+		_c.mutation.SetFormFields(v)
+	}
 	if _, ok := _c.mutation.Priority(); !ok {
 		v := ticket.DefaultPriority
 		_c.mutation.SetPriority(v)
@@ -764,6 +836,19 @@ func (_c *TicketCreate) check() error {
 	}
 	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Ticket.type"`)}
+	}
+	if v, ok := _c.mutation.TicketTypeCodeSnapshot(); ok {
+		if err := ticket.TicketTypeCodeSnapshotValidator(v); err != nil {
+			return &ValidationError{Name: "ticket_type_code_snapshot", err: fmt.Errorf(`ent: validator failed for field "Ticket.ticket_type_code_snapshot": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.TicketTypeNameSnapshot(); ok {
+		if err := ticket.TicketTypeNameSnapshotValidator(v); err != nil {
+			return &ValidationError{Name: "ticket_type_name_snapshot", err: fmt.Errorf(`ent: validator failed for field "Ticket.ticket_type_name_snapshot": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.FormFields(); !ok {
+		return &ValidationError{Name: "form_fields", err: errors.New(`ent: missing required field "Ticket.form_fields"`)}
 	}
 	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "Ticket.priority"`)}
@@ -858,6 +943,18 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(ticket.FieldType, field.TypeString, value)
 		_node.Type = value
+	}
+	if value, ok := _c.mutation.TicketTypeCodeSnapshot(); ok {
+		_spec.SetField(ticket.FieldTicketTypeCodeSnapshot, field.TypeString, value)
+		_node.TicketTypeCodeSnapshot = value
+	}
+	if value, ok := _c.mutation.TicketTypeNameSnapshot(); ok {
+		_spec.SetField(ticket.FieldTicketTypeNameSnapshot, field.TypeString, value)
+		_node.TicketTypeNameSnapshot = value
+	}
+	if value, ok := _c.mutation.FormFields(); ok {
+		_spec.SetField(ticket.FieldFormFields, field.TypeJSON, value)
+		_node.FormFields = value
 	}
 	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(ticket.FieldPriority, field.TypeString, value)
@@ -1223,6 +1320,23 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ConfiguredTypeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.ConfiguredTypeTable,
+			Columns: []string{ticket.ConfiguredTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tickettype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.TicketTypeID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

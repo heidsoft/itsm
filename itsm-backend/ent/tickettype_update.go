@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/tickettype"
 	"time"
 
@@ -110,6 +111,162 @@ func (_u *TicketTypeUpdate) SetNillableStatus(v *string) *TicketTypeUpdate {
 	if v != nil {
 		_u.SetStatus(*v)
 	}
+	return _u
+}
+
+// SetCategoryID sets the "category_id" field.
+func (_u *TicketTypeUpdate) SetCategoryID(v int) *TicketTypeUpdate {
+	_u.mutation.ResetCategoryID()
+	_u.mutation.SetCategoryID(v)
+	return _u
+}
+
+// SetNillableCategoryID sets the "category_id" field if the given value is not nil.
+func (_u *TicketTypeUpdate) SetNillableCategoryID(v *int) *TicketTypeUpdate {
+	if v != nil {
+		_u.SetCategoryID(*v)
+	}
+	return _u
+}
+
+// AddCategoryID adds value to the "category_id" field.
+func (_u *TicketTypeUpdate) AddCategoryID(v int) *TicketTypeUpdate {
+	_u.mutation.AddCategoryID(v)
+	return _u
+}
+
+// ClearCategoryID clears the value of the "category_id" field.
+func (_u *TicketTypeUpdate) ClearCategoryID() *TicketTypeUpdate {
+	_u.mutation.ClearCategoryID()
+	return _u
+}
+
+// SetDefaultPriority sets the "default_priority" field.
+func (_u *TicketTypeUpdate) SetDefaultPriority(v string) *TicketTypeUpdate {
+	_u.mutation.SetDefaultPriority(v)
+	return _u
+}
+
+// SetNillableDefaultPriority sets the "default_priority" field if the given value is not nil.
+func (_u *TicketTypeUpdate) SetNillableDefaultPriority(v *string) *TicketTypeUpdate {
+	if v != nil {
+		_u.SetDefaultPriority(*v)
+	}
+	return _u
+}
+
+// SetSortOrder sets the "sort_order" field.
+func (_u *TicketTypeUpdate) SetSortOrder(v int) *TicketTypeUpdate {
+	_u.mutation.ResetSortOrder()
+	_u.mutation.SetSortOrder(v)
+	return _u
+}
+
+// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
+func (_u *TicketTypeUpdate) SetNillableSortOrder(v *int) *TicketTypeUpdate {
+	if v != nil {
+		_u.SetSortOrder(*v)
+	}
+	return _u
+}
+
+// AddSortOrder adds value to the "sort_order" field.
+func (_u *TicketTypeUpdate) AddSortOrder(v int) *TicketTypeUpdate {
+	_u.mutation.AddSortOrder(v)
+	return _u
+}
+
+// SetWorkflowDefinitionKey sets the "workflow_definition_key" field.
+func (_u *TicketTypeUpdate) SetWorkflowDefinitionKey(v string) *TicketTypeUpdate {
+	_u.mutation.SetWorkflowDefinitionKey(v)
+	return _u
+}
+
+// SetNillableWorkflowDefinitionKey sets the "workflow_definition_key" field if the given value is not nil.
+func (_u *TicketTypeUpdate) SetNillableWorkflowDefinitionKey(v *string) *TicketTypeUpdate {
+	if v != nil {
+		_u.SetWorkflowDefinitionKey(*v)
+	}
+	return _u
+}
+
+// ClearWorkflowDefinitionKey clears the value of the "workflow_definition_key" field.
+func (_u *TicketTypeUpdate) ClearWorkflowDefinitionKey() *TicketTypeUpdate {
+	_u.mutation.ClearWorkflowDefinitionKey()
+	return _u
+}
+
+// SetAssignmentRuleID sets the "assignment_rule_id" field.
+func (_u *TicketTypeUpdate) SetAssignmentRuleID(v int) *TicketTypeUpdate {
+	_u.mutation.ResetAssignmentRuleID()
+	_u.mutation.SetAssignmentRuleID(v)
+	return _u
+}
+
+// SetNillableAssignmentRuleID sets the "assignment_rule_id" field if the given value is not nil.
+func (_u *TicketTypeUpdate) SetNillableAssignmentRuleID(v *int) *TicketTypeUpdate {
+	if v != nil {
+		_u.SetAssignmentRuleID(*v)
+	}
+	return _u
+}
+
+// AddAssignmentRuleID adds value to the "assignment_rule_id" field.
+func (_u *TicketTypeUpdate) AddAssignmentRuleID(v int) *TicketTypeUpdate {
+	_u.mutation.AddAssignmentRuleID(v)
+	return _u
+}
+
+// ClearAssignmentRuleID clears the value of the "assignment_rule_id" field.
+func (_u *TicketTypeUpdate) ClearAssignmentRuleID() *TicketTypeUpdate {
+	_u.mutation.ClearAssignmentRuleID()
+	return _u
+}
+
+// SetArchivedAt sets the "archived_at" field.
+func (_u *TicketTypeUpdate) SetArchivedAt(v time.Time) *TicketTypeUpdate {
+	_u.mutation.SetArchivedAt(v)
+	return _u
+}
+
+// SetNillableArchivedAt sets the "archived_at" field if the given value is not nil.
+func (_u *TicketTypeUpdate) SetNillableArchivedAt(v *time.Time) *TicketTypeUpdate {
+	if v != nil {
+		_u.SetArchivedAt(*v)
+	}
+	return _u
+}
+
+// ClearArchivedAt clears the value of the "archived_at" field.
+func (_u *TicketTypeUpdate) ClearArchivedAt() *TicketTypeUpdate {
+	_u.mutation.ClearArchivedAt()
+	return _u
+}
+
+// SetArchivedBy sets the "archived_by" field.
+func (_u *TicketTypeUpdate) SetArchivedBy(v int64) *TicketTypeUpdate {
+	_u.mutation.ResetArchivedBy()
+	_u.mutation.SetArchivedBy(v)
+	return _u
+}
+
+// SetNillableArchivedBy sets the "archived_by" field if the given value is not nil.
+func (_u *TicketTypeUpdate) SetNillableArchivedBy(v *int64) *TicketTypeUpdate {
+	if v != nil {
+		_u.SetArchivedBy(*v)
+	}
+	return _u
+}
+
+// AddArchivedBy adds value to the "archived_by" field.
+func (_u *TicketTypeUpdate) AddArchivedBy(v int64) *TicketTypeUpdate {
+	_u.mutation.AddArchivedBy(v)
+	return _u
+}
+
+// ClearArchivedBy clears the value of the "archived_by" field.
+func (_u *TicketTypeUpdate) ClearArchivedBy() *TicketTypeUpdate {
+	_u.mutation.ClearArchivedBy()
 	return _u
 }
 
@@ -369,9 +526,45 @@ func (_u *TicketTypeUpdate) AddUsageCount(v int) *TicketTypeUpdate {
 	return _u
 }
 
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
+func (_u *TicketTypeUpdate) AddTicketIDs(ids ...int) *TicketTypeUpdate {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
+}
+
+// AddTickets adds the "tickets" edges to the Ticket entity.
+func (_u *TicketTypeUpdate) AddTickets(v ...*Ticket) *TicketTypeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTicketIDs(ids...)
+}
+
 // Mutation returns the TicketTypeMutation object of the builder.
 func (_u *TicketTypeUpdate) Mutation() *TicketTypeMutation {
 	return _u.mutation
+}
+
+// ClearTickets clears all "tickets" edges to the Ticket entity.
+func (_u *TicketTypeUpdate) ClearTickets() *TicketTypeUpdate {
+	_u.mutation.ClearTickets()
+	return _u
+}
+
+// RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
+func (_u *TicketTypeUpdate) RemoveTicketIDs(ids ...int) *TicketTypeUpdate {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
+}
+
+// RemoveTickets removes "tickets" edges to Ticket entities.
+func (_u *TicketTypeUpdate) RemoveTickets(v ...*Ticket) *TicketTypeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTicketIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -423,6 +616,16 @@ func (_u *TicketTypeUpdate) check() error {
 			return &ValidationError{Name: "color", err: fmt.Errorf(`ent: validator failed for field "TicketType.color": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.DefaultPriority(); ok {
+		if err := tickettype.DefaultPriorityValidator(v); err != nil {
+			return &ValidationError{Name: "default_priority", err: fmt.Errorf(`ent: validator failed for field "TicketType.default_priority": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.WorkflowDefinitionKey(); ok {
+		if err := tickettype.WorkflowDefinitionKeyValidator(v); err != nil {
+			return &ValidationError{Name: "workflow_definition_key", err: fmt.Errorf(`ent: validator failed for field "TicketType.workflow_definition_key": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -455,6 +658,54 @@ func (_u *TicketTypeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(tickettype.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.CategoryID(); ok {
+		_spec.SetField(tickettype.FieldCategoryID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCategoryID(); ok {
+		_spec.AddField(tickettype.FieldCategoryID, field.TypeInt, value)
+	}
+	if _u.mutation.CategoryIDCleared() {
+		_spec.ClearField(tickettype.FieldCategoryID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.DefaultPriority(); ok {
+		_spec.SetField(tickettype.FieldDefaultPriority, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SortOrder(); ok {
+		_spec.SetField(tickettype.FieldSortOrder, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSortOrder(); ok {
+		_spec.AddField(tickettype.FieldSortOrder, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.WorkflowDefinitionKey(); ok {
+		_spec.SetField(tickettype.FieldWorkflowDefinitionKey, field.TypeString, value)
+	}
+	if _u.mutation.WorkflowDefinitionKeyCleared() {
+		_spec.ClearField(tickettype.FieldWorkflowDefinitionKey, field.TypeString)
+	}
+	if value, ok := _u.mutation.AssignmentRuleID(); ok {
+		_spec.SetField(tickettype.FieldAssignmentRuleID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedAssignmentRuleID(); ok {
+		_spec.AddField(tickettype.FieldAssignmentRuleID, field.TypeInt, value)
+	}
+	if _u.mutation.AssignmentRuleIDCleared() {
+		_spec.ClearField(tickettype.FieldAssignmentRuleID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.ArchivedAt(); ok {
+		_spec.SetField(tickettype.FieldArchivedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ArchivedAtCleared() {
+		_spec.ClearField(tickettype.FieldArchivedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ArchivedBy(); ok {
+		_spec.SetField(tickettype.FieldArchivedBy, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedArchivedBy(); ok {
+		_spec.AddField(tickettype.FieldArchivedBy, field.TypeInt64, value)
+	}
+	if _u.mutation.ArchivedByCleared() {
+		_spec.ClearField(tickettype.FieldArchivedBy, field.TypeInt64)
 	}
 	if value, ok := _u.mutation.CustomFields(); ok {
 		_spec.SetField(tickettype.FieldCustomFields, field.TypeJSON, value)
@@ -540,6 +791,51 @@ func (_u *TicketTypeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	}
 	if value, ok := _u.mutation.AddedUsageCount(); ok {
 		_spec.AddField(tickettype.FieldUsageCount, field.TypeInt, value)
+	}
+	if _u.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tickettype.TicketsTable,
+			Columns: []string{tickettype.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tickettype.TicketsTable,
+			Columns: []string{tickettype.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tickettype.TicketsTable,
+			Columns: []string{tickettype.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -642,6 +938,162 @@ func (_u *TicketTypeUpdateOne) SetNillableStatus(v *string) *TicketTypeUpdateOne
 	if v != nil {
 		_u.SetStatus(*v)
 	}
+	return _u
+}
+
+// SetCategoryID sets the "category_id" field.
+func (_u *TicketTypeUpdateOne) SetCategoryID(v int) *TicketTypeUpdateOne {
+	_u.mutation.ResetCategoryID()
+	_u.mutation.SetCategoryID(v)
+	return _u
+}
+
+// SetNillableCategoryID sets the "category_id" field if the given value is not nil.
+func (_u *TicketTypeUpdateOne) SetNillableCategoryID(v *int) *TicketTypeUpdateOne {
+	if v != nil {
+		_u.SetCategoryID(*v)
+	}
+	return _u
+}
+
+// AddCategoryID adds value to the "category_id" field.
+func (_u *TicketTypeUpdateOne) AddCategoryID(v int) *TicketTypeUpdateOne {
+	_u.mutation.AddCategoryID(v)
+	return _u
+}
+
+// ClearCategoryID clears the value of the "category_id" field.
+func (_u *TicketTypeUpdateOne) ClearCategoryID() *TicketTypeUpdateOne {
+	_u.mutation.ClearCategoryID()
+	return _u
+}
+
+// SetDefaultPriority sets the "default_priority" field.
+func (_u *TicketTypeUpdateOne) SetDefaultPriority(v string) *TicketTypeUpdateOne {
+	_u.mutation.SetDefaultPriority(v)
+	return _u
+}
+
+// SetNillableDefaultPriority sets the "default_priority" field if the given value is not nil.
+func (_u *TicketTypeUpdateOne) SetNillableDefaultPriority(v *string) *TicketTypeUpdateOne {
+	if v != nil {
+		_u.SetDefaultPriority(*v)
+	}
+	return _u
+}
+
+// SetSortOrder sets the "sort_order" field.
+func (_u *TicketTypeUpdateOne) SetSortOrder(v int) *TicketTypeUpdateOne {
+	_u.mutation.ResetSortOrder()
+	_u.mutation.SetSortOrder(v)
+	return _u
+}
+
+// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
+func (_u *TicketTypeUpdateOne) SetNillableSortOrder(v *int) *TicketTypeUpdateOne {
+	if v != nil {
+		_u.SetSortOrder(*v)
+	}
+	return _u
+}
+
+// AddSortOrder adds value to the "sort_order" field.
+func (_u *TicketTypeUpdateOne) AddSortOrder(v int) *TicketTypeUpdateOne {
+	_u.mutation.AddSortOrder(v)
+	return _u
+}
+
+// SetWorkflowDefinitionKey sets the "workflow_definition_key" field.
+func (_u *TicketTypeUpdateOne) SetWorkflowDefinitionKey(v string) *TicketTypeUpdateOne {
+	_u.mutation.SetWorkflowDefinitionKey(v)
+	return _u
+}
+
+// SetNillableWorkflowDefinitionKey sets the "workflow_definition_key" field if the given value is not nil.
+func (_u *TicketTypeUpdateOne) SetNillableWorkflowDefinitionKey(v *string) *TicketTypeUpdateOne {
+	if v != nil {
+		_u.SetWorkflowDefinitionKey(*v)
+	}
+	return _u
+}
+
+// ClearWorkflowDefinitionKey clears the value of the "workflow_definition_key" field.
+func (_u *TicketTypeUpdateOne) ClearWorkflowDefinitionKey() *TicketTypeUpdateOne {
+	_u.mutation.ClearWorkflowDefinitionKey()
+	return _u
+}
+
+// SetAssignmentRuleID sets the "assignment_rule_id" field.
+func (_u *TicketTypeUpdateOne) SetAssignmentRuleID(v int) *TicketTypeUpdateOne {
+	_u.mutation.ResetAssignmentRuleID()
+	_u.mutation.SetAssignmentRuleID(v)
+	return _u
+}
+
+// SetNillableAssignmentRuleID sets the "assignment_rule_id" field if the given value is not nil.
+func (_u *TicketTypeUpdateOne) SetNillableAssignmentRuleID(v *int) *TicketTypeUpdateOne {
+	if v != nil {
+		_u.SetAssignmentRuleID(*v)
+	}
+	return _u
+}
+
+// AddAssignmentRuleID adds value to the "assignment_rule_id" field.
+func (_u *TicketTypeUpdateOne) AddAssignmentRuleID(v int) *TicketTypeUpdateOne {
+	_u.mutation.AddAssignmentRuleID(v)
+	return _u
+}
+
+// ClearAssignmentRuleID clears the value of the "assignment_rule_id" field.
+func (_u *TicketTypeUpdateOne) ClearAssignmentRuleID() *TicketTypeUpdateOne {
+	_u.mutation.ClearAssignmentRuleID()
+	return _u
+}
+
+// SetArchivedAt sets the "archived_at" field.
+func (_u *TicketTypeUpdateOne) SetArchivedAt(v time.Time) *TicketTypeUpdateOne {
+	_u.mutation.SetArchivedAt(v)
+	return _u
+}
+
+// SetNillableArchivedAt sets the "archived_at" field if the given value is not nil.
+func (_u *TicketTypeUpdateOne) SetNillableArchivedAt(v *time.Time) *TicketTypeUpdateOne {
+	if v != nil {
+		_u.SetArchivedAt(*v)
+	}
+	return _u
+}
+
+// ClearArchivedAt clears the value of the "archived_at" field.
+func (_u *TicketTypeUpdateOne) ClearArchivedAt() *TicketTypeUpdateOne {
+	_u.mutation.ClearArchivedAt()
+	return _u
+}
+
+// SetArchivedBy sets the "archived_by" field.
+func (_u *TicketTypeUpdateOne) SetArchivedBy(v int64) *TicketTypeUpdateOne {
+	_u.mutation.ResetArchivedBy()
+	_u.mutation.SetArchivedBy(v)
+	return _u
+}
+
+// SetNillableArchivedBy sets the "archived_by" field if the given value is not nil.
+func (_u *TicketTypeUpdateOne) SetNillableArchivedBy(v *int64) *TicketTypeUpdateOne {
+	if v != nil {
+		_u.SetArchivedBy(*v)
+	}
+	return _u
+}
+
+// AddArchivedBy adds value to the "archived_by" field.
+func (_u *TicketTypeUpdateOne) AddArchivedBy(v int64) *TicketTypeUpdateOne {
+	_u.mutation.AddArchivedBy(v)
+	return _u
+}
+
+// ClearArchivedBy clears the value of the "archived_by" field.
+func (_u *TicketTypeUpdateOne) ClearArchivedBy() *TicketTypeUpdateOne {
+	_u.mutation.ClearArchivedBy()
 	return _u
 }
 
@@ -901,9 +1353,45 @@ func (_u *TicketTypeUpdateOne) AddUsageCount(v int) *TicketTypeUpdateOne {
 	return _u
 }
 
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
+func (_u *TicketTypeUpdateOne) AddTicketIDs(ids ...int) *TicketTypeUpdateOne {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
+}
+
+// AddTickets adds the "tickets" edges to the Ticket entity.
+func (_u *TicketTypeUpdateOne) AddTickets(v ...*Ticket) *TicketTypeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTicketIDs(ids...)
+}
+
 // Mutation returns the TicketTypeMutation object of the builder.
 func (_u *TicketTypeUpdateOne) Mutation() *TicketTypeMutation {
 	return _u.mutation
+}
+
+// ClearTickets clears all "tickets" edges to the Ticket entity.
+func (_u *TicketTypeUpdateOne) ClearTickets() *TicketTypeUpdateOne {
+	_u.mutation.ClearTickets()
+	return _u
+}
+
+// RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
+func (_u *TicketTypeUpdateOne) RemoveTicketIDs(ids ...int) *TicketTypeUpdateOne {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
+}
+
+// RemoveTickets removes "tickets" edges to Ticket entities.
+func (_u *TicketTypeUpdateOne) RemoveTickets(v ...*Ticket) *TicketTypeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTicketIDs(ids...)
 }
 
 // Where appends a list predicates to the TicketTypeUpdate builder.
@@ -968,6 +1456,16 @@ func (_u *TicketTypeUpdateOne) check() error {
 			return &ValidationError{Name: "color", err: fmt.Errorf(`ent: validator failed for field "TicketType.color": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.DefaultPriority(); ok {
+		if err := tickettype.DefaultPriorityValidator(v); err != nil {
+			return &ValidationError{Name: "default_priority", err: fmt.Errorf(`ent: validator failed for field "TicketType.default_priority": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.WorkflowDefinitionKey(); ok {
+		if err := tickettype.WorkflowDefinitionKeyValidator(v); err != nil {
+			return &ValidationError{Name: "workflow_definition_key", err: fmt.Errorf(`ent: validator failed for field "TicketType.workflow_definition_key": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -1017,6 +1515,54 @@ func (_u *TicketTypeUpdateOne) sqlSave(ctx context.Context) (_node *TicketType, 
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(tickettype.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.CategoryID(); ok {
+		_spec.SetField(tickettype.FieldCategoryID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCategoryID(); ok {
+		_spec.AddField(tickettype.FieldCategoryID, field.TypeInt, value)
+	}
+	if _u.mutation.CategoryIDCleared() {
+		_spec.ClearField(tickettype.FieldCategoryID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.DefaultPriority(); ok {
+		_spec.SetField(tickettype.FieldDefaultPriority, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SortOrder(); ok {
+		_spec.SetField(tickettype.FieldSortOrder, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSortOrder(); ok {
+		_spec.AddField(tickettype.FieldSortOrder, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.WorkflowDefinitionKey(); ok {
+		_spec.SetField(tickettype.FieldWorkflowDefinitionKey, field.TypeString, value)
+	}
+	if _u.mutation.WorkflowDefinitionKeyCleared() {
+		_spec.ClearField(tickettype.FieldWorkflowDefinitionKey, field.TypeString)
+	}
+	if value, ok := _u.mutation.AssignmentRuleID(); ok {
+		_spec.SetField(tickettype.FieldAssignmentRuleID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedAssignmentRuleID(); ok {
+		_spec.AddField(tickettype.FieldAssignmentRuleID, field.TypeInt, value)
+	}
+	if _u.mutation.AssignmentRuleIDCleared() {
+		_spec.ClearField(tickettype.FieldAssignmentRuleID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.ArchivedAt(); ok {
+		_spec.SetField(tickettype.FieldArchivedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ArchivedAtCleared() {
+		_spec.ClearField(tickettype.FieldArchivedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ArchivedBy(); ok {
+		_spec.SetField(tickettype.FieldArchivedBy, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedArchivedBy(); ok {
+		_spec.AddField(tickettype.FieldArchivedBy, field.TypeInt64, value)
+	}
+	if _u.mutation.ArchivedByCleared() {
+		_spec.ClearField(tickettype.FieldArchivedBy, field.TypeInt64)
 	}
 	if value, ok := _u.mutation.CustomFields(); ok {
 		_spec.SetField(tickettype.FieldCustomFields, field.TypeJSON, value)
@@ -1102,6 +1648,51 @@ func (_u *TicketTypeUpdateOne) sqlSave(ctx context.Context) (_node *TicketType, 
 	}
 	if value, ok := _u.mutation.AddedUsageCount(); ok {
 		_spec.AddField(tickettype.FieldUsageCount, field.TypeInt, value)
+	}
+	if _u.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tickettype.TicketsTable,
+			Columns: []string{tickettype.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tickettype.TicketsTable,
+			Columns: []string{tickettype.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tickettype.TicketsTable,
+			Columns: []string{tickettype.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &TicketType{config: _u.config}
 	_spec.Assign = _node.assignValues

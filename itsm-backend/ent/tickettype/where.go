@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -82,6 +83,41 @@ func Color(v string) predicate.TicketType {
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.TicketType {
 	return predicate.TicketType(sql.FieldEQ(FieldStatus, v))
+}
+
+// CategoryID applies equality check predicate on the "category_id" field. It's identical to CategoryIDEQ.
+func CategoryID(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldCategoryID, v))
+}
+
+// DefaultPriority applies equality check predicate on the "default_priority" field. It's identical to DefaultPriorityEQ.
+func DefaultPriority(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldDefaultPriority, v))
+}
+
+// SortOrder applies equality check predicate on the "sort_order" field. It's identical to SortOrderEQ.
+func SortOrder(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldSortOrder, v))
+}
+
+// WorkflowDefinitionKey applies equality check predicate on the "workflow_definition_key" field. It's identical to WorkflowDefinitionKeyEQ.
+func WorkflowDefinitionKey(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldWorkflowDefinitionKey, v))
+}
+
+// AssignmentRuleID applies equality check predicate on the "assignment_rule_id" field. It's identical to AssignmentRuleIDEQ.
+func AssignmentRuleID(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldAssignmentRuleID, v))
+}
+
+// ArchivedAt applies equality check predicate on the "archived_at" field. It's identical to ArchivedAtEQ.
+func ArchivedAt(v time.Time) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldArchivedAt, v))
+}
+
+// ArchivedBy applies equality check predicate on the "archived_by" field. It's identical to ArchivedByEQ.
+func ArchivedBy(v int64) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldArchivedBy, v))
 }
 
 // ApprovalEnabled applies equality check predicate on the "approval_enabled" field. It's identical to ApprovalEnabledEQ.
@@ -529,6 +565,386 @@ func StatusContainsFold(v string) predicate.TicketType {
 	return predicate.TicketType(sql.FieldContainsFold(FieldStatus, v))
 }
 
+// CategoryIDEQ applies the EQ predicate on the "category_id" field.
+func CategoryIDEQ(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldCategoryID, v))
+}
+
+// CategoryIDNEQ applies the NEQ predicate on the "category_id" field.
+func CategoryIDNEQ(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNEQ(FieldCategoryID, v))
+}
+
+// CategoryIDIn applies the In predicate on the "category_id" field.
+func CategoryIDIn(vs ...int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldIn(FieldCategoryID, vs...))
+}
+
+// CategoryIDNotIn applies the NotIn predicate on the "category_id" field.
+func CategoryIDNotIn(vs ...int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotIn(FieldCategoryID, vs...))
+}
+
+// CategoryIDGT applies the GT predicate on the "category_id" field.
+func CategoryIDGT(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGT(FieldCategoryID, v))
+}
+
+// CategoryIDGTE applies the GTE predicate on the "category_id" field.
+func CategoryIDGTE(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGTE(FieldCategoryID, v))
+}
+
+// CategoryIDLT applies the LT predicate on the "category_id" field.
+func CategoryIDLT(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLT(FieldCategoryID, v))
+}
+
+// CategoryIDLTE applies the LTE predicate on the "category_id" field.
+func CategoryIDLTE(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLTE(FieldCategoryID, v))
+}
+
+// CategoryIDIsNil applies the IsNil predicate on the "category_id" field.
+func CategoryIDIsNil() predicate.TicketType {
+	return predicate.TicketType(sql.FieldIsNull(FieldCategoryID))
+}
+
+// CategoryIDNotNil applies the NotNil predicate on the "category_id" field.
+func CategoryIDNotNil() predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotNull(FieldCategoryID))
+}
+
+// DefaultPriorityEQ applies the EQ predicate on the "default_priority" field.
+func DefaultPriorityEQ(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldDefaultPriority, v))
+}
+
+// DefaultPriorityNEQ applies the NEQ predicate on the "default_priority" field.
+func DefaultPriorityNEQ(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNEQ(FieldDefaultPriority, v))
+}
+
+// DefaultPriorityIn applies the In predicate on the "default_priority" field.
+func DefaultPriorityIn(vs ...string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldIn(FieldDefaultPriority, vs...))
+}
+
+// DefaultPriorityNotIn applies the NotIn predicate on the "default_priority" field.
+func DefaultPriorityNotIn(vs ...string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotIn(FieldDefaultPriority, vs...))
+}
+
+// DefaultPriorityGT applies the GT predicate on the "default_priority" field.
+func DefaultPriorityGT(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGT(FieldDefaultPriority, v))
+}
+
+// DefaultPriorityGTE applies the GTE predicate on the "default_priority" field.
+func DefaultPriorityGTE(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGTE(FieldDefaultPriority, v))
+}
+
+// DefaultPriorityLT applies the LT predicate on the "default_priority" field.
+func DefaultPriorityLT(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLT(FieldDefaultPriority, v))
+}
+
+// DefaultPriorityLTE applies the LTE predicate on the "default_priority" field.
+func DefaultPriorityLTE(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLTE(FieldDefaultPriority, v))
+}
+
+// DefaultPriorityContains applies the Contains predicate on the "default_priority" field.
+func DefaultPriorityContains(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldContains(FieldDefaultPriority, v))
+}
+
+// DefaultPriorityHasPrefix applies the HasPrefix predicate on the "default_priority" field.
+func DefaultPriorityHasPrefix(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldHasPrefix(FieldDefaultPriority, v))
+}
+
+// DefaultPriorityHasSuffix applies the HasSuffix predicate on the "default_priority" field.
+func DefaultPriorityHasSuffix(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldHasSuffix(FieldDefaultPriority, v))
+}
+
+// DefaultPriorityEqualFold applies the EqualFold predicate on the "default_priority" field.
+func DefaultPriorityEqualFold(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEqualFold(FieldDefaultPriority, v))
+}
+
+// DefaultPriorityContainsFold applies the ContainsFold predicate on the "default_priority" field.
+func DefaultPriorityContainsFold(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldContainsFold(FieldDefaultPriority, v))
+}
+
+// SortOrderEQ applies the EQ predicate on the "sort_order" field.
+func SortOrderEQ(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldSortOrder, v))
+}
+
+// SortOrderNEQ applies the NEQ predicate on the "sort_order" field.
+func SortOrderNEQ(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNEQ(FieldSortOrder, v))
+}
+
+// SortOrderIn applies the In predicate on the "sort_order" field.
+func SortOrderIn(vs ...int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldIn(FieldSortOrder, vs...))
+}
+
+// SortOrderNotIn applies the NotIn predicate on the "sort_order" field.
+func SortOrderNotIn(vs ...int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotIn(FieldSortOrder, vs...))
+}
+
+// SortOrderGT applies the GT predicate on the "sort_order" field.
+func SortOrderGT(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGT(FieldSortOrder, v))
+}
+
+// SortOrderGTE applies the GTE predicate on the "sort_order" field.
+func SortOrderGTE(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGTE(FieldSortOrder, v))
+}
+
+// SortOrderLT applies the LT predicate on the "sort_order" field.
+func SortOrderLT(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLT(FieldSortOrder, v))
+}
+
+// SortOrderLTE applies the LTE predicate on the "sort_order" field.
+func SortOrderLTE(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLTE(FieldSortOrder, v))
+}
+
+// WorkflowDefinitionKeyEQ applies the EQ predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyEQ(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyNEQ applies the NEQ predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyNEQ(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNEQ(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyIn applies the In predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyIn(vs ...string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldIn(FieldWorkflowDefinitionKey, vs...))
+}
+
+// WorkflowDefinitionKeyNotIn applies the NotIn predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyNotIn(vs ...string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotIn(FieldWorkflowDefinitionKey, vs...))
+}
+
+// WorkflowDefinitionKeyGT applies the GT predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyGT(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGT(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyGTE applies the GTE predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyGTE(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGTE(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyLT applies the LT predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyLT(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLT(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyLTE applies the LTE predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyLTE(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLTE(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyContains applies the Contains predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyContains(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldContains(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyHasPrefix applies the HasPrefix predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyHasPrefix(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldHasPrefix(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyHasSuffix applies the HasSuffix predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyHasSuffix(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldHasSuffix(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyIsNil applies the IsNil predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyIsNil() predicate.TicketType {
+	return predicate.TicketType(sql.FieldIsNull(FieldWorkflowDefinitionKey))
+}
+
+// WorkflowDefinitionKeyNotNil applies the NotNil predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyNotNil() predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotNull(FieldWorkflowDefinitionKey))
+}
+
+// WorkflowDefinitionKeyEqualFold applies the EqualFold predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyEqualFold(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEqualFold(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyContainsFold applies the ContainsFold predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyContainsFold(v string) predicate.TicketType {
+	return predicate.TicketType(sql.FieldContainsFold(FieldWorkflowDefinitionKey, v))
+}
+
+// AssignmentRuleIDEQ applies the EQ predicate on the "assignment_rule_id" field.
+func AssignmentRuleIDEQ(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldAssignmentRuleID, v))
+}
+
+// AssignmentRuleIDNEQ applies the NEQ predicate on the "assignment_rule_id" field.
+func AssignmentRuleIDNEQ(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNEQ(FieldAssignmentRuleID, v))
+}
+
+// AssignmentRuleIDIn applies the In predicate on the "assignment_rule_id" field.
+func AssignmentRuleIDIn(vs ...int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldIn(FieldAssignmentRuleID, vs...))
+}
+
+// AssignmentRuleIDNotIn applies the NotIn predicate on the "assignment_rule_id" field.
+func AssignmentRuleIDNotIn(vs ...int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotIn(FieldAssignmentRuleID, vs...))
+}
+
+// AssignmentRuleIDGT applies the GT predicate on the "assignment_rule_id" field.
+func AssignmentRuleIDGT(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGT(FieldAssignmentRuleID, v))
+}
+
+// AssignmentRuleIDGTE applies the GTE predicate on the "assignment_rule_id" field.
+func AssignmentRuleIDGTE(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGTE(FieldAssignmentRuleID, v))
+}
+
+// AssignmentRuleIDLT applies the LT predicate on the "assignment_rule_id" field.
+func AssignmentRuleIDLT(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLT(FieldAssignmentRuleID, v))
+}
+
+// AssignmentRuleIDLTE applies the LTE predicate on the "assignment_rule_id" field.
+func AssignmentRuleIDLTE(v int) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLTE(FieldAssignmentRuleID, v))
+}
+
+// AssignmentRuleIDIsNil applies the IsNil predicate on the "assignment_rule_id" field.
+func AssignmentRuleIDIsNil() predicate.TicketType {
+	return predicate.TicketType(sql.FieldIsNull(FieldAssignmentRuleID))
+}
+
+// AssignmentRuleIDNotNil applies the NotNil predicate on the "assignment_rule_id" field.
+func AssignmentRuleIDNotNil() predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotNull(FieldAssignmentRuleID))
+}
+
+// ArchivedAtEQ applies the EQ predicate on the "archived_at" field.
+func ArchivedAtEQ(v time.Time) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldArchivedAt, v))
+}
+
+// ArchivedAtNEQ applies the NEQ predicate on the "archived_at" field.
+func ArchivedAtNEQ(v time.Time) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNEQ(FieldArchivedAt, v))
+}
+
+// ArchivedAtIn applies the In predicate on the "archived_at" field.
+func ArchivedAtIn(vs ...time.Time) predicate.TicketType {
+	return predicate.TicketType(sql.FieldIn(FieldArchivedAt, vs...))
+}
+
+// ArchivedAtNotIn applies the NotIn predicate on the "archived_at" field.
+func ArchivedAtNotIn(vs ...time.Time) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotIn(FieldArchivedAt, vs...))
+}
+
+// ArchivedAtGT applies the GT predicate on the "archived_at" field.
+func ArchivedAtGT(v time.Time) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGT(FieldArchivedAt, v))
+}
+
+// ArchivedAtGTE applies the GTE predicate on the "archived_at" field.
+func ArchivedAtGTE(v time.Time) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGTE(FieldArchivedAt, v))
+}
+
+// ArchivedAtLT applies the LT predicate on the "archived_at" field.
+func ArchivedAtLT(v time.Time) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLT(FieldArchivedAt, v))
+}
+
+// ArchivedAtLTE applies the LTE predicate on the "archived_at" field.
+func ArchivedAtLTE(v time.Time) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLTE(FieldArchivedAt, v))
+}
+
+// ArchivedAtIsNil applies the IsNil predicate on the "archived_at" field.
+func ArchivedAtIsNil() predicate.TicketType {
+	return predicate.TicketType(sql.FieldIsNull(FieldArchivedAt))
+}
+
+// ArchivedAtNotNil applies the NotNil predicate on the "archived_at" field.
+func ArchivedAtNotNil() predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotNull(FieldArchivedAt))
+}
+
+// ArchivedByEQ applies the EQ predicate on the "archived_by" field.
+func ArchivedByEQ(v int64) predicate.TicketType {
+	return predicate.TicketType(sql.FieldEQ(FieldArchivedBy, v))
+}
+
+// ArchivedByNEQ applies the NEQ predicate on the "archived_by" field.
+func ArchivedByNEQ(v int64) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNEQ(FieldArchivedBy, v))
+}
+
+// ArchivedByIn applies the In predicate on the "archived_by" field.
+func ArchivedByIn(vs ...int64) predicate.TicketType {
+	return predicate.TicketType(sql.FieldIn(FieldArchivedBy, vs...))
+}
+
+// ArchivedByNotIn applies the NotIn predicate on the "archived_by" field.
+func ArchivedByNotIn(vs ...int64) predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotIn(FieldArchivedBy, vs...))
+}
+
+// ArchivedByGT applies the GT predicate on the "archived_by" field.
+func ArchivedByGT(v int64) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGT(FieldArchivedBy, v))
+}
+
+// ArchivedByGTE applies the GTE predicate on the "archived_by" field.
+func ArchivedByGTE(v int64) predicate.TicketType {
+	return predicate.TicketType(sql.FieldGTE(FieldArchivedBy, v))
+}
+
+// ArchivedByLT applies the LT predicate on the "archived_by" field.
+func ArchivedByLT(v int64) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLT(FieldArchivedBy, v))
+}
+
+// ArchivedByLTE applies the LTE predicate on the "archived_by" field.
+func ArchivedByLTE(v int64) predicate.TicketType {
+	return predicate.TicketType(sql.FieldLTE(FieldArchivedBy, v))
+}
+
+// ArchivedByIsNil applies the IsNil predicate on the "archived_by" field.
+func ArchivedByIsNil() predicate.TicketType {
+	return predicate.TicketType(sql.FieldIsNull(FieldArchivedBy))
+}
+
+// ArchivedByNotNil applies the NotNil predicate on the "archived_by" field.
+func ArchivedByNotNil() predicate.TicketType {
+	return predicate.TicketType(sql.FieldNotNull(FieldArchivedBy))
+}
+
 // ApprovalEnabledEQ applies the EQ predicate on the "approval_enabled" field.
 func ApprovalEnabledEQ(v bool) predicate.TicketType {
 	return predicate.TicketType(sql.FieldEQ(FieldApprovalEnabled, v))
@@ -907,6 +1323,29 @@ func UsageCountLT(v int) predicate.TicketType {
 // UsageCountLTE applies the LTE predicate on the "usage_count" field.
 func UsageCountLTE(v int) predicate.TicketType {
 	return predicate.TicketType(sql.FieldLTE(FieldUsageCount, v))
+}
+
+// HasTickets applies the HasEdge predicate on the "tickets" edge.
+func HasTickets() predicate.TicketType {
+	return predicate.TicketType(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTicketsWith applies the HasEdge predicate on the "tickets" edge with a given conditions (other predicates).
+func HasTicketsWith(preds ...predicate.Ticket) predicate.TicketType {
+	return predicate.TicketType(func(s *sql.Selector) {
+		step := newTicketsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

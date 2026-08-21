@@ -16892,6 +16892,22 @@ func (c *TicketClient) QueryCategory(_m *Ticket) *TicketCategoryQuery {
 	return query
 }
 
+// QueryConfiguredType queries the configured_type edge of a Ticket.
+func (c *TicketClient) QueryConfiguredType(_m *Ticket) *TicketTypeQuery {
+	query := (&TicketTypeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(tickettype.Table, tickettype.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.ConfiguredTypeTable, ticket.ConfiguredTypeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TicketClient) Hooks() []Hook {
 	return c.hooks.Ticket
@@ -18609,6 +18625,22 @@ func (c *TicketTypeClient) GetX(ctx context.Context, id int) *TicketType {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryTickets queries the tickets edge of a TicketType.
+func (c *TicketTypeClient) QueryTickets(_m *TicketType) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tickettype.Table, tickettype.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tickettype.TicketsTable, tickettype.TicketsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

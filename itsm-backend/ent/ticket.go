@@ -3,8 +3,10 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/user"
 	"strings"
 	"time"
@@ -26,6 +28,14 @@ type Ticket struct {
 	Status string `json:"status,omitempty"`
 	// 工单类型
 	Type string `json:"type,omitempty"`
+	// 租户配置工单类型ID
+	TicketTypeID int `json:"ticket_type_id,omitempty"`
+	// 创建时工单类型编码快照
+	TicketTypeCodeSnapshot string `json:"ticket_type_code_snapshot,omitempty"`
+	// 创建时工单类型名称快照
+	TicketTypeNameSnapshot string `json:"ticket_type_name_snapshot,omitempty"`
+	// 动态表单值
+	FormFields map[string]interface{} `json:"form_fields,omitempty"`
 	// 优先级
 	Priority string `json:"priority,omitempty"`
 	// 工单编号
@@ -131,9 +141,11 @@ type TicketEdges struct {
 	Assignee *User `json:"assignee,omitempty"`
 	// Category holds the value of the category edge.
 	Category []*TicketCategory `json:"category,omitempty"`
+	// ConfiguredType holds the value of the configured_type edge.
+	ConfiguredType *TicketType `json:"configured_type,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [16]bool
+	loadedTypes [17]bool
 }
 
 // CommentsOrErr returns the Comments value or an error if the edge
@@ -284,16 +296,29 @@ func (e TicketEdges) CategoryOrErr() ([]*TicketCategory, error) {
 	return nil, &NotLoadedError{edge: "category"}
 }
 
+// ConfiguredTypeOrErr returns the ConfiguredType value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketEdges) ConfiguredTypeOrErr() (*TicketType, error) {
+	if e.ConfiguredType != nil {
+		return e.ConfiguredType, nil
+	} else if e.loadedTypes[16] {
+		return nil, &NotFoundError{label: tickettype.Label}
+	}
+	return nil, &NotLoadedError{edge: "configured_type"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Ticket) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case ticket.FieldFormFields:
+			values[i] = new([]byte)
 		case ticket.FieldIsManagedByMsp:
 			values[i] = new(sql.NullBool)
-		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID, ticket.FieldRating, ticket.FieldRatedBy, ticket.FieldVersion, ticket.FieldMspProviderID, ticket.FieldManagedByUserID:
+		case ticket.FieldID, ticket.FieldTicketTypeID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID, ticket.FieldRating, ticket.FieldRatedBy, ticket.FieldVersion, ticket.FieldMspProviderID, ticket.FieldManagedByUserID:
 			values[i] = new(sql.NullInt64)
-		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldResolution, ticket.FieldResolutionCategory, ticket.FieldRatingComment, ticket.FieldMspTicketID:
+		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldTicketTypeCodeSnapshot, ticket.FieldTicketTypeNameSnapshot, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldResolution, ticket.FieldResolutionCategory, ticket.FieldRatingComment, ticket.FieldMspTicketID:
 			values[i] = new(sql.NullString)
 		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldClosedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt, ticket.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -355,6 +380,32 @@ func (_m *Ticket) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
 				_m.Type = value.String
+			}
+		case ticket.FieldTicketTypeID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field ticket_type_id", values[i])
+			} else if value.Valid {
+				_m.TicketTypeID = int(value.Int64)
+			}
+		case ticket.FieldTicketTypeCodeSnapshot:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ticket_type_code_snapshot", values[i])
+			} else if value.Valid {
+				_m.TicketTypeCodeSnapshot = value.String
+			}
+		case ticket.FieldTicketTypeNameSnapshot:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ticket_type_name_snapshot", values[i])
+			} else if value.Valid {
+				_m.TicketTypeNameSnapshot = value.String
+			}
+		case ticket.FieldFormFields:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field form_fields", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.FormFields); err != nil {
+					return fmt.Errorf("unmarshal field form_fields: %w", err)
+				}
 			}
 		case ticket.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -674,6 +725,11 @@ func (_m *Ticket) QueryCategory() *TicketCategoryQuery {
 	return NewTicketClient(_m.config).QueryCategory(_m)
 }
 
+// QueryConfiguredType queries the "configured_type" edge of the Ticket entity.
+func (_m *Ticket) QueryConfiguredType() *TicketTypeQuery {
+	return NewTicketClient(_m.config).QueryConfiguredType(_m)
+}
+
 // Update returns a builder for updating this Ticket.
 // Note that you need to call Ticket.Unwrap() before calling this method if this Ticket
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -708,6 +764,18 @@ func (_m *Ticket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(_m.Type)
+	builder.WriteString(", ")
+	builder.WriteString("ticket_type_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TicketTypeID))
+	builder.WriteString(", ")
+	builder.WriteString("ticket_type_code_snapshot=")
+	builder.WriteString(_m.TicketTypeCodeSnapshot)
+	builder.WriteString(", ")
+	builder.WriteString("ticket_type_name_snapshot=")
+	builder.WriteString(_m.TicketTypeNameSnapshot)
+	builder.WriteString(", ")
+	builder.WriteString("form_fields=")
+	builder.WriteString(fmt.Sprintf("%v", _m.FormFields))
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
 	builder.WriteString(_m.Priority)

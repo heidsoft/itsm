@@ -20,6 +20,7 @@ import (
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
+	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/user"
 	"math"
@@ -53,6 +54,7 @@ type TicketQuery struct {
 	withRequester         *UserQuery
 	withAssignee          *UserQuery
 	withCategory          *TicketCategoryQuery
+	withConfiguredType    *TicketTypeQuery
 	withFKs               bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -442,6 +444,28 @@ func (_q *TicketQuery) QueryCategory() *TicketCategoryQuery {
 	return query
 }
 
+// QueryConfiguredType chains the current query on the "configured_type" edge.
+func (_q *TicketQuery) QueryConfiguredType() *TicketTypeQuery {
+	query := (&TicketTypeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(tickettype.Table, tickettype.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.ConfiguredTypeTable, ticket.ConfiguredTypeColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Ticket entity from the query.
 // Returns a *NotFoundError when no Ticket was found.
 func (_q *TicketQuery) First(ctx context.Context) (*Ticket, error) {
@@ -650,6 +674,7 @@ func (_q *TicketQuery) Clone() *TicketQuery {
 		withRequester:         _q.withRequester.Clone(),
 		withAssignee:          _q.withAssignee.Clone(),
 		withCategory:          _q.withCategory.Clone(),
+		withConfiguredType:    _q.withConfiguredType.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -832,6 +857,17 @@ func (_q *TicketQuery) WithCategory(opts ...func(*TicketCategoryQuery)) *TicketQ
 	return _q
 }
 
+// WithConfiguredType tells the query-builder to eager-load the nodes that are connected to
+// the "configured_type" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithConfiguredType(opts ...func(*TicketTypeQuery)) *TicketQuery {
+	query := (&TicketTypeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withConfiguredType = query
+	return _q
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -911,7 +947,7 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		nodes       = []*Ticket{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [16]bool{
+		loadedTypes = [17]bool{
 			_q.withComments != nil,
 			_q.withAttachments != nil,
 			_q.withTags != nil,
@@ -928,6 +964,7 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 			_q.withRequester != nil,
 			_q.withAssignee != nil,
 			_q.withCategory != nil,
+			_q.withConfiguredType != nil,
 		}
 	)
 	if withFKs {
@@ -1060,6 +1097,12 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		if err := _q.loadCategory(ctx, query, nodes,
 			func(n *Ticket) { n.Edges.Category = []*TicketCategory{} },
 			func(n *Ticket, e *TicketCategory) { n.Edges.Category = append(n.Edges.Category, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withConfiguredType; query != nil {
+		if err := _q.loadConfiguredType(ctx, query, nodes, nil,
+			func(n *Ticket, e *TicketType) { n.Edges.ConfiguredType = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -1607,6 +1650,35 @@ func (_q *TicketQuery) loadCategory(ctx context.Context, query *TicketCategoryQu
 	}
 	return nil
 }
+func (_q *TicketQuery) loadConfiguredType(ctx context.Context, query *TicketTypeQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketType)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Ticket)
+	for i := range nodes {
+		fk := nodes[i].TicketTypeID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(tickettype.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "ticket_type_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (_q *TicketQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1638,6 +1710,9 @@ func (_q *TicketQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withAssignee != nil {
 			_spec.Node.AddColumnOnce(ticket.FieldAssigneeID)
+		}
+		if _q.withConfiguredType != nil {
+			_spec.Node.AddColumnOnce(ticket.FieldTicketTypeID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

@@ -30,6 +30,20 @@ type TicketType struct {
 	Color string `json:"color,omitempty"`
 	// Status holds the value of the "status" field.
 	Status string `json:"status,omitempty"`
+	// CategoryID holds the value of the "category_id" field.
+	CategoryID int `json:"category_id,omitempty"`
+	// DefaultPriority holds the value of the "default_priority" field.
+	DefaultPriority string `json:"default_priority,omitempty"`
+	// SortOrder holds the value of the "sort_order" field.
+	SortOrder int `json:"sort_order,omitempty"`
+	// WorkflowDefinitionKey holds the value of the "workflow_definition_key" field.
+	WorkflowDefinitionKey string `json:"workflow_definition_key,omitempty"`
+	// AssignmentRuleID holds the value of the "assignment_rule_id" field.
+	AssignmentRuleID int `json:"assignment_rule_id,omitempty"`
+	// ArchivedAt holds the value of the "archived_at" field.
+	ArchivedAt *time.Time `json:"archived_at,omitempty"`
+	// ArchivedBy holds the value of the "archived_by" field.
+	ArchivedBy int64 `json:"archived_by,omitempty"`
 	// CustomFields holds the value of the "custom_fields" field.
 	CustomFields map[string]interface{} `json:"custom_fields,omitempty"`
 	// ApprovalEnabled holds the value of the "approval_enabled" field.
@@ -61,8 +75,29 @@ type TicketType struct {
 	// UpdatedBy holds the value of the "updated_by" field.
 	UpdatedBy int64 `json:"updated_by,omitempty"`
 	// UsageCount holds the value of the "usage_count" field.
-	UsageCount   int `json:"usage_count,omitempty"`
+	UsageCount int `json:"usage_count,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the TicketTypeQuery when eager-loading is set.
+	Edges        TicketTypeEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// TicketTypeEdges holds the relations/edges for other nodes in the graph.
+type TicketTypeEdges struct {
+	// Tickets holds the value of the tickets edge.
+	Tickets []*Ticket `json:"tickets,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// TicketsOrErr returns the Tickets value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketTypeEdges) TicketsOrErr() ([]*Ticket, error) {
+	if e.loadedTypes[0] {
+		return e.Tickets, nil
+	}
+	return nil, &NotLoadedError{edge: "tickets"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -74,11 +109,11 @@ func (*TicketType) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case tickettype.FieldApprovalEnabled, tickettype.FieldSLAEnabled, tickettype.FieldAutoAssignEnabled:
 			values[i] = new(sql.NullBool)
-		case tickettype.FieldID, tickettype.FieldApprovalWorkflowID, tickettype.FieldDefaultSLAID, tickettype.FieldTenantID, tickettype.FieldCreatedBy, tickettype.FieldUpdatedBy, tickettype.FieldUsageCount:
+		case tickettype.FieldID, tickettype.FieldCategoryID, tickettype.FieldSortOrder, tickettype.FieldAssignmentRuleID, tickettype.FieldArchivedBy, tickettype.FieldApprovalWorkflowID, tickettype.FieldDefaultSLAID, tickettype.FieldTenantID, tickettype.FieldCreatedBy, tickettype.FieldUpdatedBy, tickettype.FieldUsageCount:
 			values[i] = new(sql.NullInt64)
-		case tickettype.FieldCode, tickettype.FieldName, tickettype.FieldDescription, tickettype.FieldIcon, tickettype.FieldColor, tickettype.FieldStatus:
+		case tickettype.FieldCode, tickettype.FieldName, tickettype.FieldDescription, tickettype.FieldIcon, tickettype.FieldColor, tickettype.FieldStatus, tickettype.FieldDefaultPriority, tickettype.FieldWorkflowDefinitionKey:
 			values[i] = new(sql.NullString)
-		case tickettype.FieldCreatedAt, tickettype.FieldUpdatedAt:
+		case tickettype.FieldArchivedAt, tickettype.FieldCreatedAt, tickettype.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -136,6 +171,49 @@ func (_m *TicketType) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				_m.Status = value.String
+			}
+		case tickettype.FieldCategoryID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field category_id", values[i])
+			} else if value.Valid {
+				_m.CategoryID = int(value.Int64)
+			}
+		case tickettype.FieldDefaultPriority:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field default_priority", values[i])
+			} else if value.Valid {
+				_m.DefaultPriority = value.String
+			}
+		case tickettype.FieldSortOrder:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sort_order", values[i])
+			} else if value.Valid {
+				_m.SortOrder = int(value.Int64)
+			}
+		case tickettype.FieldWorkflowDefinitionKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field workflow_definition_key", values[i])
+			} else if value.Valid {
+				_m.WorkflowDefinitionKey = value.String
+			}
+		case tickettype.FieldAssignmentRuleID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field assignment_rule_id", values[i])
+			} else if value.Valid {
+				_m.AssignmentRuleID = int(value.Int64)
+			}
+		case tickettype.FieldArchivedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field archived_at", values[i])
+			} else if value.Valid {
+				_m.ArchivedAt = new(time.Time)
+				*_m.ArchivedAt = value.Time
+			}
+		case tickettype.FieldArchivedBy:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field archived_by", values[i])
+			} else if value.Valid {
+				_m.ArchivedBy = value.Int64
 			}
 		case tickettype.FieldCustomFields:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -256,6 +334,11 @@ func (_m *TicketType) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
+// QueryTickets queries the "tickets" edge of the TicketType entity.
+func (_m *TicketType) QueryTickets() *TicketQuery {
+	return NewTicketTypeClient(_m.config).QueryTickets(_m)
+}
+
 // Update returns a builder for updating this TicketType.
 // Note that you need to call TicketType.Unwrap() before calling this method if this TicketType
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -296,6 +379,29 @@ func (_m *TicketType) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(_m.Status)
+	builder.WriteString(", ")
+	builder.WriteString("category_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CategoryID))
+	builder.WriteString(", ")
+	builder.WriteString("default_priority=")
+	builder.WriteString(_m.DefaultPriority)
+	builder.WriteString(", ")
+	builder.WriteString("sort_order=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SortOrder))
+	builder.WriteString(", ")
+	builder.WriteString("workflow_definition_key=")
+	builder.WriteString(_m.WorkflowDefinitionKey)
+	builder.WriteString(", ")
+	builder.WriteString("assignment_rule_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AssignmentRuleID))
+	builder.WriteString(", ")
+	if v := _m.ArchivedAt; v != nil {
+		builder.WriteString("archived_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("archived_by=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ArchivedBy))
 	builder.WriteString(", ")
 	builder.WriteString("custom_fields=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CustomFields))

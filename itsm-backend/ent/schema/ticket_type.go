@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -20,6 +21,13 @@ func (TicketType) Fields() []ent.Field {
 		field.String("icon").MaxLen(50),
 		field.String("color").MaxLen(20),
 		field.String("status").Default("active"),
+		field.Int("category_id").Optional(),
+		field.String("default_priority").Default("medium").MaxLen(20),
+		field.Int("sort_order").Default(0),
+		field.String("workflow_definition_key").Optional().MaxLen(128),
+		field.Int("assignment_rule_id").Optional(),
+		field.Time("archived_at").Optional().Nillable(),
+		field.Int64("archived_by").Optional(),
 		field.JSON("custom_fields", map[string]interface{}{}),
 		field.Bool("approval_enabled").Default(false),
 		field.Int64("approval_workflow_id").Optional(),
@@ -41,7 +49,7 @@ func (TicketType) Fields() []ent.Field {
 
 // Edges of the TicketType.
 func (TicketType) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{edge.To("tickets", Ticket.Type)}
 }
 
 // Indexes of the TicketType.
@@ -50,5 +58,6 @@ func (TicketType) Indexes() []ent.Index {
 		index.Fields("code", "tenant_id").Unique(),
 		index.Fields("tenant_id"),
 		index.Fields("status"),
+		index.Fields("tenant_id", "sort_order"),
 	}
 }

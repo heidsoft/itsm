@@ -34,7 +34,7 @@ func TestRunPostSchemaMigrationsAppliesRegisteredStream(t *testing.T) {
 
 	require.NoError(t, err)
 	require.True(t, runner.ensured)
-	require.Len(t, runner.migrations, 8)
+	require.Len(t, runner.migrations, 9)
 	require.Equal(t, "007_add_change_execution_tables", runner.migrations[0].Version)
 	require.Equal(t, "008_add_initialization_ledger", runner.migrations[1].Version)
 	require.Equal(t, "009_enable_rls_tenant_isolation", runner.migrations[2].Version)
@@ -43,6 +43,7 @@ func TestRunPostSchemaMigrationsAppliesRegisteredStream(t *testing.T) {
 	require.Equal(t, "012_deduplicate_active_process_bindings", runner.migrations[5].Version)
 	require.Equal(t, "013_enforce_active_process_binding_route_key", runner.migrations[6].Version)
 	require.Equal(t, "014_add_change_approval_quorum", runner.migrations[7].Version)
+	require.Equal(t, "015_ticket_type_runtime_binding", runner.migrations[8].Version)
 }
 
 func TestRunPostSchemaMigrationsFailsClosed(t *testing.T) {

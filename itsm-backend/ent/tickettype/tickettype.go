@@ -4,6 +4,7 @@ package tickettype
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -23,6 +24,20 @@ const (
 	FieldColor = "color"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldCategoryID holds the string denoting the category_id field in the database.
+	FieldCategoryID = "category_id"
+	// FieldDefaultPriority holds the string denoting the default_priority field in the database.
+	FieldDefaultPriority = "default_priority"
+	// FieldSortOrder holds the string denoting the sort_order field in the database.
+	FieldSortOrder = "sort_order"
+	// FieldWorkflowDefinitionKey holds the string denoting the workflow_definition_key field in the database.
+	FieldWorkflowDefinitionKey = "workflow_definition_key"
+	// FieldAssignmentRuleID holds the string denoting the assignment_rule_id field in the database.
+	FieldAssignmentRuleID = "assignment_rule_id"
+	// FieldArchivedAt holds the string denoting the archived_at field in the database.
+	FieldArchivedAt = "archived_at"
+	// FieldArchivedBy holds the string denoting the archived_by field in the database.
+	FieldArchivedBy = "archived_by"
 	// FieldCustomFields holds the string denoting the custom_fields field in the database.
 	FieldCustomFields = "custom_fields"
 	// FieldApprovalEnabled holds the string denoting the approval_enabled field in the database.
@@ -55,8 +70,17 @@ const (
 	FieldUpdatedBy = "updated_by"
 	// FieldUsageCount holds the string denoting the usage_count field in the database.
 	FieldUsageCount = "usage_count"
+	// EdgeTickets holds the string denoting the tickets edge name in mutations.
+	EdgeTickets = "tickets"
 	// Table holds the table name of the tickettype in the database.
 	Table = "ticket_types"
+	// TicketsTable is the table that holds the tickets relation/edge.
+	TicketsTable = "tickets"
+	// TicketsInverseTable is the table name for the Ticket entity.
+	// It exists in this package in order to avoid circular dependency with the "ticket" package.
+	TicketsInverseTable = "tickets"
+	// TicketsColumn is the table column denoting the tickets relation/edge.
+	TicketsColumn = "ticket_type_id"
 )
 
 // Columns holds all SQL columns for tickettype fields.
@@ -68,6 +92,13 @@ var Columns = []string{
 	FieldIcon,
 	FieldColor,
 	FieldStatus,
+	FieldCategoryID,
+	FieldDefaultPriority,
+	FieldSortOrder,
+	FieldWorkflowDefinitionKey,
+	FieldAssignmentRuleID,
+	FieldArchivedAt,
+	FieldArchivedBy,
 	FieldCustomFields,
 	FieldApprovalEnabled,
 	FieldApprovalWorkflowID,
@@ -107,6 +138,14 @@ var (
 	ColorValidator func(string) error
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
+	// DefaultDefaultPriority holds the default value on creation for the "default_priority" field.
+	DefaultDefaultPriority string
+	// DefaultPriorityValidator is a validator for the "default_priority" field. It is called by the builders before save.
+	DefaultPriorityValidator func(string) error
+	// DefaultSortOrder holds the default value on creation for the "sort_order" field.
+	DefaultSortOrder int
+	// WorkflowDefinitionKeyValidator is a validator for the "workflow_definition_key" field. It is called by the builders before save.
+	WorkflowDefinitionKeyValidator func(string) error
 	// DefaultApprovalEnabled holds the default value on creation for the "approval_enabled" field.
 	DefaultApprovalEnabled bool
 	// DefaultSLAEnabled holds the default value on creation for the "sla_enabled" field.
@@ -153,6 +192,41 @@ func ByColor(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByCategoryID orders the results by the category_id field.
+func ByCategoryID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCategoryID, opts...).ToFunc()
+}
+
+// ByDefaultPriority orders the results by the default_priority field.
+func ByDefaultPriority(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDefaultPriority, opts...).ToFunc()
+}
+
+// BySortOrder orders the results by the sort_order field.
+func BySortOrder(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSortOrder, opts...).ToFunc()
+}
+
+// ByWorkflowDefinitionKey orders the results by the workflow_definition_key field.
+func ByWorkflowDefinitionKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkflowDefinitionKey, opts...).ToFunc()
+}
+
+// ByAssignmentRuleID orders the results by the assignment_rule_id field.
+func ByAssignmentRuleID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAssignmentRuleID, opts...).ToFunc()
+}
+
+// ByArchivedAt orders the results by the archived_at field.
+func ByArchivedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldArchivedAt, opts...).ToFunc()
+}
+
+// ByArchivedBy orders the results by the archived_by field.
+func ByArchivedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldArchivedBy, opts...).ToFunc()
 }
 
 // ByApprovalEnabled orders the results by the approval_enabled field.
@@ -208,4 +282,25 @@ func ByUpdatedBy(opts ...sql.OrderTermOption) OrderOption {
 // ByUsageCount orders the results by the usage_count field.
 func ByUsageCount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUsageCount, opts...).ToFunc()
+}
+
+// ByTicketsCount orders the results by tickets count.
+func ByTicketsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTicketsStep(), opts...)
+	}
+}
+
+// ByTickets orders the results by tickets terms.
+func ByTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newTicketsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TicketsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
+	)
 }

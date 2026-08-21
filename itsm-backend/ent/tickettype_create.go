@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/tickettype"
 	"time"
 
@@ -60,6 +61,104 @@ func (_c *TicketTypeCreate) SetStatus(v string) *TicketTypeCreate {
 func (_c *TicketTypeCreate) SetNillableStatus(v *string) *TicketTypeCreate {
 	if v != nil {
 		_c.SetStatus(*v)
+	}
+	return _c
+}
+
+// SetCategoryID sets the "category_id" field.
+func (_c *TicketTypeCreate) SetCategoryID(v int) *TicketTypeCreate {
+	_c.mutation.SetCategoryID(v)
+	return _c
+}
+
+// SetNillableCategoryID sets the "category_id" field if the given value is not nil.
+func (_c *TicketTypeCreate) SetNillableCategoryID(v *int) *TicketTypeCreate {
+	if v != nil {
+		_c.SetCategoryID(*v)
+	}
+	return _c
+}
+
+// SetDefaultPriority sets the "default_priority" field.
+func (_c *TicketTypeCreate) SetDefaultPriority(v string) *TicketTypeCreate {
+	_c.mutation.SetDefaultPriority(v)
+	return _c
+}
+
+// SetNillableDefaultPriority sets the "default_priority" field if the given value is not nil.
+func (_c *TicketTypeCreate) SetNillableDefaultPriority(v *string) *TicketTypeCreate {
+	if v != nil {
+		_c.SetDefaultPriority(*v)
+	}
+	return _c
+}
+
+// SetSortOrder sets the "sort_order" field.
+func (_c *TicketTypeCreate) SetSortOrder(v int) *TicketTypeCreate {
+	_c.mutation.SetSortOrder(v)
+	return _c
+}
+
+// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
+func (_c *TicketTypeCreate) SetNillableSortOrder(v *int) *TicketTypeCreate {
+	if v != nil {
+		_c.SetSortOrder(*v)
+	}
+	return _c
+}
+
+// SetWorkflowDefinitionKey sets the "workflow_definition_key" field.
+func (_c *TicketTypeCreate) SetWorkflowDefinitionKey(v string) *TicketTypeCreate {
+	_c.mutation.SetWorkflowDefinitionKey(v)
+	return _c
+}
+
+// SetNillableWorkflowDefinitionKey sets the "workflow_definition_key" field if the given value is not nil.
+func (_c *TicketTypeCreate) SetNillableWorkflowDefinitionKey(v *string) *TicketTypeCreate {
+	if v != nil {
+		_c.SetWorkflowDefinitionKey(*v)
+	}
+	return _c
+}
+
+// SetAssignmentRuleID sets the "assignment_rule_id" field.
+func (_c *TicketTypeCreate) SetAssignmentRuleID(v int) *TicketTypeCreate {
+	_c.mutation.SetAssignmentRuleID(v)
+	return _c
+}
+
+// SetNillableAssignmentRuleID sets the "assignment_rule_id" field if the given value is not nil.
+func (_c *TicketTypeCreate) SetNillableAssignmentRuleID(v *int) *TicketTypeCreate {
+	if v != nil {
+		_c.SetAssignmentRuleID(*v)
+	}
+	return _c
+}
+
+// SetArchivedAt sets the "archived_at" field.
+func (_c *TicketTypeCreate) SetArchivedAt(v time.Time) *TicketTypeCreate {
+	_c.mutation.SetArchivedAt(v)
+	return _c
+}
+
+// SetNillableArchivedAt sets the "archived_at" field if the given value is not nil.
+func (_c *TicketTypeCreate) SetNillableArchivedAt(v *time.Time) *TicketTypeCreate {
+	if v != nil {
+		_c.SetArchivedAt(*v)
+	}
+	return _c
+}
+
+// SetArchivedBy sets the "archived_by" field.
+func (_c *TicketTypeCreate) SetArchivedBy(v int64) *TicketTypeCreate {
+	_c.mutation.SetArchivedBy(v)
+	return _c
+}
+
+// SetNillableArchivedBy sets the "archived_by" field if the given value is not nil.
+func (_c *TicketTypeCreate) SetNillableArchivedBy(v *int64) *TicketTypeCreate {
+	if v != nil {
+		_c.SetArchivedBy(*v)
 	}
 	return _c
 }
@@ -216,6 +315,21 @@ func (_c *TicketTypeCreate) SetNillableUsageCount(v *int) *TicketTypeCreate {
 	return _c
 }
 
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
+func (_c *TicketTypeCreate) AddTicketIDs(ids ...int) *TicketTypeCreate {
+	_c.mutation.AddTicketIDs(ids...)
+	return _c
+}
+
+// AddTickets adds the "tickets" edges to the Ticket entity.
+func (_c *TicketTypeCreate) AddTickets(v ...*Ticket) *TicketTypeCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddTicketIDs(ids...)
+}
+
 // Mutation returns the TicketTypeMutation object of the builder.
 func (_c *TicketTypeCreate) Mutation() *TicketTypeMutation {
 	return _c.mutation
@@ -254,6 +368,14 @@ func (_c *TicketTypeCreate) defaults() {
 	if _, ok := _c.mutation.Status(); !ok {
 		v := tickettype.DefaultStatus
 		_c.mutation.SetStatus(v)
+	}
+	if _, ok := _c.mutation.DefaultPriority(); !ok {
+		v := tickettype.DefaultDefaultPriority
+		_c.mutation.SetDefaultPriority(v)
+	}
+	if _, ok := _c.mutation.SortOrder(); !ok {
+		v := tickettype.DefaultSortOrder
+		_c.mutation.SetSortOrder(v)
 	}
 	if _, ok := _c.mutation.ApprovalEnabled(); !ok {
 		v := tickettype.DefaultApprovalEnabled
@@ -312,6 +434,22 @@ func (_c *TicketTypeCreate) check() error {
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "TicketType.status"`)}
+	}
+	if _, ok := _c.mutation.DefaultPriority(); !ok {
+		return &ValidationError{Name: "default_priority", err: errors.New(`ent: missing required field "TicketType.default_priority"`)}
+	}
+	if v, ok := _c.mutation.DefaultPriority(); ok {
+		if err := tickettype.DefaultPriorityValidator(v); err != nil {
+			return &ValidationError{Name: "default_priority", err: fmt.Errorf(`ent: validator failed for field "TicketType.default_priority": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.SortOrder(); !ok {
+		return &ValidationError{Name: "sort_order", err: errors.New(`ent: missing required field "TicketType.sort_order"`)}
+	}
+	if v, ok := _c.mutation.WorkflowDefinitionKey(); ok {
+		if err := tickettype.WorkflowDefinitionKeyValidator(v); err != nil {
+			return &ValidationError{Name: "workflow_definition_key", err: fmt.Errorf(`ent: validator failed for field "TicketType.workflow_definition_key": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.CustomFields(); !ok {
 		return &ValidationError{Name: "custom_fields", err: errors.New(`ent: missing required field "TicketType.custom_fields"`)}
@@ -402,6 +540,34 @@ func (_c *TicketTypeCreate) createSpec() (*TicketType, *sqlgraph.CreateSpec) {
 		_spec.SetField(tickettype.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
+	if value, ok := _c.mutation.CategoryID(); ok {
+		_spec.SetField(tickettype.FieldCategoryID, field.TypeInt, value)
+		_node.CategoryID = value
+	}
+	if value, ok := _c.mutation.DefaultPriority(); ok {
+		_spec.SetField(tickettype.FieldDefaultPriority, field.TypeString, value)
+		_node.DefaultPriority = value
+	}
+	if value, ok := _c.mutation.SortOrder(); ok {
+		_spec.SetField(tickettype.FieldSortOrder, field.TypeInt, value)
+		_node.SortOrder = value
+	}
+	if value, ok := _c.mutation.WorkflowDefinitionKey(); ok {
+		_spec.SetField(tickettype.FieldWorkflowDefinitionKey, field.TypeString, value)
+		_node.WorkflowDefinitionKey = value
+	}
+	if value, ok := _c.mutation.AssignmentRuleID(); ok {
+		_spec.SetField(tickettype.FieldAssignmentRuleID, field.TypeInt, value)
+		_node.AssignmentRuleID = value
+	}
+	if value, ok := _c.mutation.ArchivedAt(); ok {
+		_spec.SetField(tickettype.FieldArchivedAt, field.TypeTime, value)
+		_node.ArchivedAt = &value
+	}
+	if value, ok := _c.mutation.ArchivedBy(); ok {
+		_spec.SetField(tickettype.FieldArchivedBy, field.TypeInt64, value)
+		_node.ArchivedBy = value
+	}
 	if value, ok := _c.mutation.CustomFields(); ok {
 		_spec.SetField(tickettype.FieldCustomFields, field.TypeJSON, value)
 		_node.CustomFields = value
@@ -465,6 +631,22 @@ func (_c *TicketTypeCreate) createSpec() (*TicketType, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UsageCount(); ok {
 		_spec.SetField(tickettype.FieldUsageCount, field.TypeInt, value)
 		_node.UsageCount = value
+	}
+	if nodes := _c.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tickettype.TicketsTable,
+			Columns: []string{tickettype.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

@@ -22,6 +22,14 @@ const (
 	FieldStatus = "status"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
+	// FieldTicketTypeID holds the string denoting the ticket_type_id field in the database.
+	FieldTicketTypeID = "ticket_type_id"
+	// FieldTicketTypeCodeSnapshot holds the string denoting the ticket_type_code_snapshot field in the database.
+	FieldTicketTypeCodeSnapshot = "ticket_type_code_snapshot"
+	// FieldTicketTypeNameSnapshot holds the string denoting the ticket_type_name_snapshot field in the database.
+	FieldTicketTypeNameSnapshot = "ticket_type_name_snapshot"
+	// FieldFormFields holds the string denoting the form_fields field in the database.
+	FieldFormFields = "form_fields"
 	// FieldPriority holds the string denoting the priority field in the database.
 	FieldPriority = "priority"
 	// FieldTicketNumber holds the string denoting the ticket_number field in the database.
@@ -112,6 +120,8 @@ const (
 	EdgeAssignee = "assignee"
 	// EdgeCategory holds the string denoting the category edge name in mutations.
 	EdgeCategory = "category"
+	// EdgeConfiguredType holds the string denoting the configured_type edge name in mutations.
+	EdgeConfiguredType = "configured_type"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
 	// CommentsTable is the table that holds the comments relation/edge.
@@ -219,6 +229,13 @@ const (
 	// CategoryInverseTable is the table name for the TicketCategory entity.
 	// It exists in this package in order to avoid circular dependency with the "ticketcategory" package.
 	CategoryInverseTable = "ticket_categories"
+	// ConfiguredTypeTable is the table that holds the configured_type relation/edge.
+	ConfiguredTypeTable = "tickets"
+	// ConfiguredTypeInverseTable is the table name for the TicketType entity.
+	// It exists in this package in order to avoid circular dependency with the "tickettype" package.
+	ConfiguredTypeInverseTable = "ticket_types"
+	// ConfiguredTypeColumn is the table column denoting the configured_type relation/edge.
+	ConfiguredTypeColumn = "ticket_type_id"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -228,6 +245,10 @@ var Columns = []string{
 	FieldDescription,
 	FieldStatus,
 	FieldType,
+	FieldTicketTypeID,
+	FieldTicketTypeCodeSnapshot,
+	FieldTicketTypeNameSnapshot,
+	FieldFormFields,
 	FieldPriority,
 	FieldTicketNumber,
 	FieldRequesterID,
@@ -302,6 +323,12 @@ var (
 	DefaultStatus string
 	// DefaultType holds the default value on creation for the "type" field.
 	DefaultType string
+	// TicketTypeCodeSnapshotValidator is a validator for the "ticket_type_code_snapshot" field. It is called by the builders before save.
+	TicketTypeCodeSnapshotValidator func(string) error
+	// TicketTypeNameSnapshotValidator is a validator for the "ticket_type_name_snapshot" field. It is called by the builders before save.
+	TicketTypeNameSnapshotValidator func(string) error
+	// DefaultFormFields holds the default value on creation for the "form_fields" field.
+	DefaultFormFields map[string]interface{}
 	// DefaultPriority holds the default value on creation for the "priority" field.
 	DefaultPriority string
 	// TicketNumberValidator is a validator for the "ticket_number" field. It is called by the builders before save.
@@ -352,6 +379,21 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByType orders the results by the type field.
 func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
+}
+
+// ByTicketTypeID orders the results by the ticket_type_id field.
+func ByTicketTypeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTicketTypeID, opts...).ToFunc()
+}
+
+// ByTicketTypeCodeSnapshot orders the results by the ticket_type_code_snapshot field.
+func ByTicketTypeCodeSnapshot(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTicketTypeCodeSnapshot, opts...).ToFunc()
+}
+
+// ByTicketTypeNameSnapshot orders the results by the ticket_type_name_snapshot field.
+func ByTicketTypeNameSnapshot(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTicketTypeNameSnapshot, opts...).ToFunc()
 }
 
 // ByPriority orders the results by the priority field.
@@ -708,6 +750,13 @@ func ByCategory(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCategoryStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByConfiguredTypeField orders the results by configured_type field.
+func ByConfiguredTypeField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newConfiguredTypeStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newCommentsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -818,5 +867,12 @@ func newCategoryStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CategoryInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, CategoryTable, CategoryPrimaryKey...),
+	)
+}
+func newConfiguredTypeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ConfiguredTypeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ConfiguredTypeTable, ConfiguredTypeColumn),
 	)
 }

@@ -75,6 +75,21 @@ func Type(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldType, v))
 }
 
+// TicketTypeID applies equality check predicate on the "ticket_type_id" field. It's identical to TicketTypeIDEQ.
+func TicketTypeID(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldTicketTypeID, v))
+}
+
+// TicketTypeCodeSnapshot applies equality check predicate on the "ticket_type_code_snapshot" field. It's identical to TicketTypeCodeSnapshotEQ.
+func TicketTypeCodeSnapshot(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeNameSnapshot applies equality check predicate on the "ticket_type_name_snapshot" field. It's identical to TicketTypeNameSnapshotEQ.
+func TicketTypeNameSnapshot(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldTicketTypeNameSnapshot, v))
+}
+
 // Priority applies equality check predicate on the "priority" field. It's identical to PriorityEQ.
 func Priority(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldPriority, v))
@@ -488,6 +503,186 @@ func TypeEqualFold(v string) predicate.Ticket {
 // TypeContainsFold applies the ContainsFold predicate on the "type" field.
 func TypeContainsFold(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldContainsFold(FieldType, v))
+}
+
+// TicketTypeIDEQ applies the EQ predicate on the "ticket_type_id" field.
+func TicketTypeIDEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldTicketTypeID, v))
+}
+
+// TicketTypeIDNEQ applies the NEQ predicate on the "ticket_type_id" field.
+func TicketTypeIDNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldTicketTypeID, v))
+}
+
+// TicketTypeIDIn applies the In predicate on the "ticket_type_id" field.
+func TicketTypeIDIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldTicketTypeID, vs...))
+}
+
+// TicketTypeIDNotIn applies the NotIn predicate on the "ticket_type_id" field.
+func TicketTypeIDNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldTicketTypeID, vs...))
+}
+
+// TicketTypeIDIsNil applies the IsNil predicate on the "ticket_type_id" field.
+func TicketTypeIDIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldTicketTypeID))
+}
+
+// TicketTypeIDNotNil applies the NotNil predicate on the "ticket_type_id" field.
+func TicketTypeIDNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldTicketTypeID))
+}
+
+// TicketTypeCodeSnapshotEQ applies the EQ predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeCodeSnapshotNEQ applies the NEQ predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeCodeSnapshotIn applies the In predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldTicketTypeCodeSnapshot, vs...))
+}
+
+// TicketTypeCodeSnapshotNotIn applies the NotIn predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldTicketTypeCodeSnapshot, vs...))
+}
+
+// TicketTypeCodeSnapshotGT applies the GT predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeCodeSnapshotGTE applies the GTE predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeCodeSnapshotLT applies the LT predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeCodeSnapshotLTE applies the LTE predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeCodeSnapshotContains applies the Contains predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeCodeSnapshotHasPrefix applies the HasPrefix predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeCodeSnapshotHasSuffix applies the HasSuffix predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeCodeSnapshotIsNil applies the IsNil predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldTicketTypeCodeSnapshot))
+}
+
+// TicketTypeCodeSnapshotNotNil applies the NotNil predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldTicketTypeCodeSnapshot))
+}
+
+// TicketTypeCodeSnapshotEqualFold applies the EqualFold predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeCodeSnapshotContainsFold applies the ContainsFold predicate on the "ticket_type_code_snapshot" field.
+func TicketTypeCodeSnapshotContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldTicketTypeCodeSnapshot, v))
+}
+
+// TicketTypeNameSnapshotEQ applies the EQ predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldTicketTypeNameSnapshot, v))
+}
+
+// TicketTypeNameSnapshotNEQ applies the NEQ predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldTicketTypeNameSnapshot, v))
+}
+
+// TicketTypeNameSnapshotIn applies the In predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldTicketTypeNameSnapshot, vs...))
+}
+
+// TicketTypeNameSnapshotNotIn applies the NotIn predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldTicketTypeNameSnapshot, vs...))
+}
+
+// TicketTypeNameSnapshotGT applies the GT predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldTicketTypeNameSnapshot, v))
+}
+
+// TicketTypeNameSnapshotGTE applies the GTE predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldTicketTypeNameSnapshot, v))
+}
+
+// TicketTypeNameSnapshotLT applies the LT predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldTicketTypeNameSnapshot, v))
+}
+
+// TicketTypeNameSnapshotLTE applies the LTE predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldTicketTypeNameSnapshot, v))
+}
+
+// TicketTypeNameSnapshotContains applies the Contains predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldTicketTypeNameSnapshot, v))
+}
+
+// TicketTypeNameSnapshotHasPrefix applies the HasPrefix predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldTicketTypeNameSnapshot, v))
+}
+
+// TicketTypeNameSnapshotHasSuffix applies the HasSuffix predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldTicketTypeNameSnapshot, v))
+}
+
+// TicketTypeNameSnapshotIsNil applies the IsNil predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldTicketTypeNameSnapshot))
+}
+
+// TicketTypeNameSnapshotNotNil applies the NotNil predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldTicketTypeNameSnapshot))
+}
+
+// TicketTypeNameSnapshotEqualFold applies the EqualFold predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldTicketTypeNameSnapshot, v))
+}
+
+// TicketTypeNameSnapshotContainsFold applies the ContainsFold predicate on the "ticket_type_name_snapshot" field.
+func TicketTypeNameSnapshotContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldTicketTypeNameSnapshot, v))
 }
 
 // PriorityEQ applies the EQ predicate on the "priority" field.
@@ -2300,6 +2495,29 @@ func HasCategory() predicate.Ticket {
 func HasCategoryWith(preds ...predicate.TicketCategory) predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
 		step := newCategoryStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasConfiguredType applies the HasEdge predicate on the "configured_type" edge.
+func HasConfiguredType() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ConfiguredTypeTable, ConfiguredTypeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasConfiguredTypeWith applies the HasEdge predicate on the "configured_type" edge with a given conditions (other predicates).
+func HasConfiguredTypeWith(preds ...predicate.TicketType) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newConfiguredTypeStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

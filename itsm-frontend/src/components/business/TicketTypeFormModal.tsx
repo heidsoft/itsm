@@ -46,6 +46,9 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
   const { t } = useI18n();
   const { message } = App.useApp();
   const [form] = Form.useForm();
+	const approvalEnabled = Form.useWatch('approvalEnabled', form);
+	const slaEnabled = Form.useWatch('slaEnabled', form);
+	const autoAssignEnabled = Form.useWatch('autoAssignEnabled', form);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
@@ -53,6 +56,9 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
   const [assignmentRules, setAssignmentRules] = useState<AssignmentRule[]>([]);
   const [slas, setSlas] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+	const [categories, setCategories] = useState<any[]>([]);
+	const [workflows, setWorkflows] = useState<any[]>([]);
+	const [assignmentRuleOptions, setAssignmentRuleOptions] = useState<any[]>([]);
 
   useEffect(() => {
     if (visible) {
@@ -66,13 +72,20 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
       const { SLAApi } = await import('@/lib/api/sla-api');
       const { UserApi } = await import('@/lib/api/user-api');
 
-      const [slaResponse, userResponse] = await Promise.all([
+	  const { httpClient } = await import('@/lib/api/http-client');
+      const [slaResponse, userResponse, categoryResponse, workflowResponse, ruleResponse] = await Promise.all([
         SLAApi.getSLADefinitions(),
         UserApi.getUsers({ page: 1, pageSize: 100, status: 'active' }),
+		httpClient.get<any>('/api/v1/ticket-categories', { page: 1, pageSize: 200, isActive: true }),
+		httpClient.get<any>('/api/v1/bpmn/process-definitions', { page: 1, pageSize: 200, isActive: true }),
+		httpClient.get<any>('/api/v1/tickets/assignment-rules'),
       ]);
 
       setSlas(slaResponse.items);
       setUsers(userResponse.users);
+	  setCategories(categoryResponse.categories ?? categoryResponse.items ?? []);
+	  setWorkflows(workflowResponse.definitions ?? workflowResponse.items ?? []);
+	  setAssignmentRuleOptions(ruleResponse.rules ?? ruleResponse.items ?? []);
     } catch (error) {
       console.error('Failed to load dependencies:', error);
     }
@@ -91,6 +104,11 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
           slaEnabled: editingType.slaEnabled,
           defaultSlaId: editingType.defaultSlaId,
           autoAssignEnabled: editingType.autoAssignEnabled,
+		  categoryId: editingType.categoryId,
+		  defaultPriority: editingType.defaultPriority,
+		  sortOrder: editingType.sortOrder,
+		  workflowDefinitionKey: editingType.workflowDefinitionKey,
+		  assignmentRuleId: editingType.assignmentRuleId,
         });
         setCustomFields(editingType.customFields || []);
         setApprovalChain(editingType.approvalChain || []);
@@ -237,6 +255,9 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                 </Form.Item>
 
                 <div className="grid grid-cols-2 gap-4">
+				  <Form.Item label="分类" name="categoryId"><Select allowClear options={categories.map(item => ({ value: item.id, label: item.name }))} /></Form.Item>
+				  <Form.Item label="默认优先级" name="defaultPriority" initialValue="medium"><Select options={['low', 'medium', 'high', 'urgent', 'critical'].map(value => ({ value, label: value }))} /></Form.Item>
+				  <Form.Item label="排序" name="sortOrder" initialValue={0}><InputNumber min={0} className="w-full" /></Form.Item>
                   <Form.Item label={t('ticketTypeForm.icon')} name="icon">
                     <Select
                       placeholder={t('ticketTypeForm.selectIcon')}
@@ -325,6 +346,14 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                               updateCustomField(index, { name: e.target.value })
                             }
                           />
+						  {['select', 'multi_select', 'radio'].includes(field.type) && <Input className="col-span-2" placeholder="选项，使用英文逗号分隔" value={field.options?.map(option => option.label).join(',') ?? ''} onChange={e => updateCustomField(index, { options: e.target.value.split(',').map(value => value.trim()).filter(Boolean).map(value => ({ label: value, value })) })} />}
+						  <Input className="col-span-2" placeholder="占位提示" value={field.placeholder} onChange={e => updateCustomField(index, { placeholder: e.target.value })} />
+						  <Input className="col-span-2" placeholder="默认值（可选）" value={typeof field.defaultValue === 'string' || typeof field.defaultValue === 'number' ? String(field.defaultValue) : ''} onChange={e => updateCustomField(index, { defaultValue: e.target.value })} />
+						  <InputNumber className="w-full" placeholder="最小长度/值" value={field.validation?.min} onChange={value => updateCustomField(index, { validation: { ...field.validation, min: value ?? undefined } })} />
+						  <InputNumber className="w-full" placeholder="最大长度/值" value={field.validation?.max} onChange={value => updateCustomField(index, { validation: { ...field.validation, max: value ?? undefined } })} />
+						  <Input className="col-span-2" placeholder="正则校验表达式（可选）" value={field.validation?.pattern} onChange={e => updateCustomField(index, { validation: { ...field.validation, pattern: e.target.value } })} />
+						  <div><Switch checked={field.visible !== false} onChange={visible => updateCustomField(index, { visible })} /> <span className="ml-2">可见</span></div>
+						  <div><Switch checked={field.readonly === true} onChange={readonly => updateCustomField(index, { readonly })} /> <span className="ml-2">只读</span></div>
                           <Input
                             placeholder={t('ticketTypeForm.fieldLabelPlaceholder')}
                             value={field.label}
@@ -368,6 +397,9 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                                 value: CustomFieldType.USER_PICKER,
                                 label: t('ticketTypeForm.typeUserPicker'),
                               },
+							  { value: CustomFieldType.BOOLEAN, label: '布尔值' },
+							  { value: CustomFieldType.DEPARTMENT, label: '部门' },
+							  { value: CustomFieldType.CI, label: '配置项（CI）' },
                             ]}
                           />
                           <div className="flex items-center">
@@ -398,6 +430,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
             label: t('ticketTypeForm.tabApproval'),
             children: (
               <>
+				<Form.Item label="绑定 BPMN Workflow" name="workflowDefinitionKey"><Select allowClear showSearch optionFilterProp="label" options={workflows.map(item => ({ value: item.key, label: `${item.name} (${item.key})` }))} /></Form.Item>
                 <Form.Item
                   label={t('ticketTypeForm.enableApproval')}
                   name="approvalEnabled"
@@ -406,7 +439,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                   <Switch />
                 </Form.Item>
 
-                {form.getFieldValue('approvalEnabled') && (
+				{approvalEnabled && (
                   <div className="space-y-4 mt-4">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">
@@ -568,7 +601,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                   <Switch />
                 </Form.Item>
 
-                {form.getFieldValue('slaEnabled') && (
+				{slaEnabled && (
                   <Form.Item label={t('ticketTypeForm.defaultSla')} name="defaultSlaId">
                     <Select
                       placeholder={t('ticketTypeForm.selectDefaultSla')}
@@ -595,15 +628,13 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                   <Switch />
                 </Form.Item>
 
-                {form.getFieldValue('autoAssignEnabled') && (
+				{autoAssignEnabled && (
                   <div className="mt-4">
                     <div className="text-sm text-gray-600 mb-2">
                       <Info className="mr-1" />
                       {t('ticketTypeForm.autoAssignHint')}
                     </div>
-                    <Button type="dashed" block icon={<Plus />}>
-                      {t('ticketTypeForm.addAssignmentRule')}
-                    </Button>
+					<Form.Item label="绑定分配规则" name="assignmentRuleId"><Select allowClear options={assignmentRuleOptions.map(rule => ({ value: rule.id, label: rule.name }))} /></Form.Item>
                   </div>
                 )}
               </>

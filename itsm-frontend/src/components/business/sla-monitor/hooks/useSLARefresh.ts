@@ -8,6 +8,7 @@ import type { UseSLARefreshReturn } from '../types';
 
 export const useSLARefresh = (): UseSLARefreshReturn => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+	const inFlightRef = useRef(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
@@ -19,6 +20,8 @@ export const useSLARefresh = (): UseSLARefreshReturn => {
       stopAutoRefresh(); // 清除已有的
 
       const doRefresh = async () => {
+		if (inFlightRef.current || document.visibilityState === 'hidden') return;
+		inFlightRef.current = true;
         setIsRefreshing(true);
         try {
           await callback();
@@ -26,6 +29,7 @@ export const useSLARefresh = (): UseSLARefreshReturn => {
         } catch (error) {
           console.error('Auto refresh failed:', error);
         } finally {
+		  inFlightRef.current = false;
           setIsRefreshing(false);
         }
       };
@@ -34,7 +38,9 @@ export const useSLARefresh = (): UseSLARefreshReturn => {
       doRefresh();
 
       // 设置定时器
-      intervalRef.current = setInterval(doRefresh, interval);
+	  // 防止错误配置形成高频轮询；实时事件应使用 WebSocket，而不是亚秒级 timer。
+	  const safeInterval = Math.max(interval, 5000);
+      intervalRef.current = setInterval(doRefresh, safeInterval);
     },
     []
   );
@@ -46,6 +52,7 @@ export const useSLARefresh = (): UseSLARefreshReturn => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
+	  inFlightRef.current = false;
     }
   }, []);
 

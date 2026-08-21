@@ -741,6 +741,8 @@ func NewApplication() *Application {
 	// Cloud Service & Controller
 	cloudService := service.NewCloudService(client, sugar)
 	cloudController := controller.NewCloudController(cloudService, sugar)
+	ticketTypeService := service.NewTicketTypeService(client, sugar)
+	ticketTypeController := controller.NewTicketTypeController(ticketTypeService, sugar)
 
 	// WebSocket Service
 	wsService := service.NewWebSocketService(sugar)
@@ -813,6 +815,7 @@ func NewApplication() *Application {
 		ProjectController:        projectController,
 		ApplicationController:    applicationController,
 		TicketCategoryController: ticketCategoryController,
+		TicketTypeController:     ticketTypeController,
 		TicketTagController:      ticketTagController,
 		UserController:           userController,
 		GroupController:          groupController,
