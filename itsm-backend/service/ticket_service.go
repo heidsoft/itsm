@@ -6,6 +6,8 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,6 +17,8 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/processinstance"
 	entTicket "itsm-backend/ent/ticket"
@@ -22,6 +26,7 @@ import (
 	entTicketComment "itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
+	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/repository/base"
@@ -222,6 +227,10 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	if err := s.validateCreateTicketReferences(ctx, req, tenantID); err != nil {
 		return nil, err
 	}
+	configuredType, err := s.validateConfiguredTicketType(ctx, req, tenantID)
+	if err != nil {
+		return nil, err
+	}
 
 	ticketType := normalizeCreateTicketType(req.Type, req.FormFields)
 	assigneeID := req.AssigneeID
@@ -243,17 +252,29 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		categoryID = &category.ID
 	}
 	workflowDefinitionKey := req.WorkflowDefinitionKey
+	if configuredType != nil && configuredType.WorkflowDefinitionKey != "" {
+		workflowDefinitionKey = configuredType.WorkflowDefinitionKey
+	}
 
 	// 转换 DTO 到领域参数
 	params := &ticket.CreateParams{
 		Title:          req.Title,
 		Description:    req.Description,
 		Type:           ticketType,
+		FormFields:     req.FormFields,
 		Priority:       ticket.Priority(req.Priority),
 		RequesterID:    req.RequesterID,
 		TemplateID:     req.TemplateID,
 		ParentTicketID: req.ParentTicketID,
 		TagIDs:         uniqueIDs(req.TagIDs),
+	}
+	if configuredType != nil {
+		params.TicketTypeID = &configuredType.ID
+		params.TicketTypeCode = configuredType.Code
+		params.TicketTypeName = configuredType.Name
+		if req.Priority == "" || req.Priority == "medium" {
+			params.Priority = ticket.Priority(configuredType.DefaultPriority)
+		}
 	}
 
 	if assigneeID != 0 {
@@ -268,7 +289,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 其他后续副作用（智能分配 / SLA 期限 / 审批触发）不在本次事务范围内，按原语义保持
 	// 独立提交，其失败仅记 warnw 不阻塞工单创建。
 	var tkt *ticket.Ticket
-	err := s.runCreateTicketTx(ctx, params, tenantID, func(tx *ent.Tx) error {
+	err = s.runCreateTicketTx(ctx, params, tenantID, func(tx *ent.Tx) error {
 		created, err := s.repo.CreateWithTx(ctx, tx, params, tenantID)
 		if err != nil {
 			return err
@@ -318,19 +339,34 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		s.logger.Errorw("Failed to create ticket", "error", err)
 		return nil, err
 	}
+	if configuredType != nil {
+		_ = s.client.TicketType.UpdateOneID(configuredType.ID).AddUsageCount(1).SetUpdatedAt(time.Now()).Exec(ctx)
+	}
 
 	if tkt.AssigneeID == nil && s.assignmentSmartService != nil {
-		assignment, err := s.assignmentSmartService.AutoAssign(ctx, tkt.ID, tenantID)
+		var assignment *dto.AutoAssignResponse
+		var err error
+		if configuredType != nil && configuredType.AutoAssignEnabled && configuredType.AssignmentRuleID != 0 {
+			assignment, err = s.assignmentSmartService.AutoAssignWithRule(ctx, tkt.ID, tenantID, configuredType.AssignmentRuleID)
+		} else if configuredType == nil || configuredType.AutoAssignEnabled {
+			assignment, err = s.assignmentSmartService.AutoAssign(ctx, tkt.ID, tenantID)
+		}
 		if err != nil {
 			s.logger.Warnw("Automatic ticket assignment failed", "error", err, "ticket_id", tkt.ID)
-		} else {
+		} else if assignment != nil {
 			tkt.AssigneeID = assignment.AssignedTo
 		}
 	}
 
 	// 计算 SLA（如果配置了 SLA 服务）
 	if s.slaSvc != nil {
-		slaResult, err := s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, string(tkt.Type), string(tkt.Priority))
+		var slaResult *SLADeadlineResult
+		var err error
+		if configuredType != nil && configuredType.SLAEnabled && configuredType.DefaultSLAID != 0 {
+			slaResult, err = s.slaSvc.CalculateSLADeadlineByDefinition(ctx, tenantID, int(configuredType.DefaultSLAID))
+		} else {
+			slaResult, err = s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, string(tkt.Type), string(tkt.Priority))
+		}
 		if err != nil {
 			s.logger.Warnw("Failed to calculate SLA", "error", err)
 		} else {
@@ -424,6 +460,176 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	}
 
 	return tkt, nil
+}
+
+func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ent.TicketType, error) {
+	code := strings.TrimSpace(req.TypeID)
+	if req.TicketTypeID == nil && code == "" {
+		return nil, nil
+	}
+	if s.client == nil {
+		return nil, fmt.Errorf("无法校验工单类型")
+	}
+	query := s.client.TicketType.Query().Where(tickettype.TenantIDEQ(int64(tenantID)))
+	if req.TicketTypeID != nil {
+		query = query.Where(tickettype.IDEQ(*req.TicketTypeID))
+	} else {
+		query = query.Where(tickettype.CodeEQ(code))
+	}
+	configured, err := query.Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("工单类型不存在")
+	}
+	if configured.Status != string(dto.TicketTypeStatusActive) {
+		return nil, fmt.Errorf("工单类型已停用")
+	}
+	if req.FormFields == nil {
+		req.FormFields = make(map[string]interface{})
+	}
+	definitions := convertCustomFields(configured.CustomFields)
+	allowed := make(map[string]dto.CustomFieldDefinition, len(definitions))
+	for _, field := range definitions {
+		allowed[field.Name] = field
+		if field.Readonly {
+			if suppliedValue, supplied := req.FormFields[field.Name]; supplied && fmt.Sprint(suppliedValue) != fmt.Sprint(field.DefaultValue) {
+				return nil, fmt.Errorf("字段 %s 为只读字段", field.Label)
+			}
+			if field.DefaultValue != nil {
+				req.FormFields[field.Name] = field.DefaultValue
+			}
+		}
+	}
+	for key := range req.FormFields {
+		if _, ok := allowed[key]; !ok {
+			return nil, fmt.Errorf("包含未定义字段: %s", key)
+		}
+	}
+	for _, field := range definitions {
+		value, exists := req.FormFields[field.Name]
+		if !exists && field.DefaultValue != nil {
+			value, exists = field.DefaultValue, true
+			req.FormFields[field.Name] = value
+		}
+		if field.Required && (!exists || value == nil || strings.TrimSpace(fmt.Sprint(value)) == "") {
+			return nil, fmt.Errorf("字段 %s 为必填项", field.Label)
+		}
+		if !exists || value == nil {
+			continue
+		}
+		if (field.Type == dto.CustomFieldTypeSelect || field.Type == dto.CustomFieldTypeRadio) && !customFieldOptionExists(field.Options, value) {
+			return nil, fmt.Errorf("字段 %s 的选项无效", field.Label)
+		}
+		if field.Type == dto.CustomFieldTypeMultiSelect {
+			values, ok := value.([]interface{})
+			if !ok {
+				return nil, fmt.Errorf("字段 %s 必须是数组", field.Label)
+			}
+			for _, item := range values {
+				if !customFieldOptionExists(field.Options, item) {
+					return nil, fmt.Errorf("字段 %s 的选项无效", field.Label)
+				}
+			}
+		}
+		if err := s.validateCustomFieldValue(ctx, tenantID, field, value); err != nil {
+			return nil, err
+		}
+	}
+	return configured, nil
+}
+
+func (s *TicketService) validateCustomFieldValue(ctx context.Context, tenantID int, field dto.CustomFieldDefinition, value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	switch field.Type {
+	case dto.CustomFieldTypeText, dto.CustomFieldTypeTextarea:
+		text, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("字段 %s 必须是文本", field.Label)
+		}
+		if field.Validation != nil {
+			if field.Validation.Min != nil && len([]rune(text)) < *field.Validation.Min {
+				return fmt.Errorf("字段 %s 长度不足", field.Label)
+			}
+			if field.Validation.Max != nil && len([]rune(text)) > *field.Validation.Max {
+				return fmt.Errorf("字段 %s 长度超限", field.Label)
+			}
+			if field.Validation.Pattern != "" {
+				pattern, err := regexp.Compile(field.Validation.Pattern)
+				if err != nil || !pattern.MatchString(text) {
+					return fmt.Errorf("字段 %s 格式无效", field.Label)
+				}
+			}
+		}
+	case dto.CustomFieldTypeNumber:
+		number, err := strconv.ParseFloat(fmt.Sprint(value), 64)
+		if err != nil {
+			return fmt.Errorf("字段 %s 必须是数字", field.Label)
+		}
+		if field.Validation != nil {
+			if field.Validation.Min != nil && number < float64(*field.Validation.Min) {
+				return fmt.Errorf("字段 %s 小于最小值", field.Label)
+			}
+			if field.Validation.Max != nil && number > float64(*field.Validation.Max) {
+				return fmt.Errorf("字段 %s 超过最大值", field.Label)
+			}
+		}
+	case dto.CustomFieldTypeBoolean, dto.CustomFieldTypeCheckbox:
+		if _, ok := value.(bool); !ok {
+			return fmt.Errorf("字段 %s 必须是布尔值", field.Label)
+		}
+	case dto.CustomFieldTypeDate, dto.CustomFieldTypeDatetime:
+		dateValue, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("字段 %s 必须是日期字符串", field.Label)
+		}
+		layout := "2006-01-02"
+		if field.Type == dto.CustomFieldTypeDatetime {
+			layout = time.RFC3339
+		}
+		if _, err := time.Parse(layout, dateValue); err != nil {
+			return fmt.Errorf("字段 %s 日期格式无效", field.Label)
+		}
+	case dto.CustomFieldTypeUser, dto.CustomFieldTypeUserPicker:
+		id, err := interfaceInt(value)
+		if err != nil {
+			return fmt.Errorf("字段 %s 的用户无效", field.Label)
+		}
+		exists, _ := s.client.User.Query().Where(user.IDEQ(id), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Exist(ctx)
+		if !exists {
+			return fmt.Errorf("字段 %s 的用户不存在或无权引用", field.Label)
+		}
+	case dto.CustomFieldTypeDepartment, dto.CustomFieldTypeDepartmentPicker:
+		id, err := interfaceInt(value)
+		if err != nil {
+			return fmt.Errorf("字段 %s 的部门无效", field.Label)
+		}
+		exists, _ := s.client.Department.Query().Where(department.IDEQ(id), department.TenantIDEQ(tenantID)).Exist(ctx)
+		if !exists {
+			return fmt.Errorf("字段 %s 的部门不存在或无权引用", field.Label)
+		}
+	case dto.CustomFieldTypeCI:
+		id, err := interfaceInt(value)
+		if err != nil {
+			return fmt.Errorf("字段 %s 的CI无效", field.Label)
+		}
+		exists, _ := s.client.ConfigurationItem.Query().Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID)).Exist(ctx)
+		if !exists {
+			return fmt.Errorf("字段 %s 的CI不存在或无权引用", field.Label)
+		}
+	}
+	return nil
+}
+
+func interfaceInt(value interface{}) (int, error) { return strconv.Atoi(fmt.Sprint(value)) }
+
+func customFieldOptionExists(options []dto.CustomFieldOption, value interface{}) bool {
+	for _, option := range options {
+		if fmt.Sprint(option.Value) == fmt.Sprint(value) {
+			return true
+		}
+	}
+	return false
 }
 
 // defaultTierOneAssignee selects a stable, active member of the tenant's
@@ -863,6 +1069,24 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 	if req.Priority != "" {
 		priority := ticket.Priority(req.Priority)
 		params.Priority = &priority
+	}
+	if req.FormFields != nil {
+		if current.TicketTypeID == nil {
+			return nil, fmt.Errorf("未配置工单类型的工单不能写入动态字段")
+		}
+		// 更新是 patch 语义：先合并已有值，再做整体校验，避免未传的必填字段误报缺失。
+		merged := make(map[string]interface{}, len(current.FormFields)+len(req.FormFields))
+		for k, v := range current.FormFields {
+			merged[k] = v
+		}
+		for k, v := range req.FormFields {
+			merged[k] = v
+		}
+		validationRequest := &dto.CreateTicketRequest{TicketTypeID: current.TicketTypeID, FormFields: merged}
+		if _, err := s.validateConfiguredTicketType(ctx, validationRequest, tenantID); err != nil {
+			return nil, err
+		}
+		params.FormFields = &validationRequest.FormFields
 	}
 	if req.AssigneeID != 0 {
 		if s.client != nil {
@@ -1315,22 +1539,28 @@ func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.
 // toTicketResponse 转换为 DTO 响应
 func (s *TicketService) toTicketResponse(t *ticket.Ticket) *dto.TicketResponse {
 	resp := &dto.TicketResponse{
-		ID:           t.ID,
-		TicketNumber: t.TicketNumber,
-		Title:        t.Title,
-		Description:  t.Description,
-		Status:       string(t.Status),
-		Priority:     string(t.Priority),
-		Type:         string(t.Type),
-		RequesterID:  t.RequesterID,
-		TenantID:     t.TenantID,
-		Version:      t.Version,
-		CreatedAt:    t.CreatedAt,
-		UpdatedAt:    t.UpdatedAt,
+		ID:             t.ID,
+		TicketNumber:   t.TicketNumber,
+		Title:          t.Title,
+		Description:    t.Description,
+		Status:         string(t.Status),
+		Priority:       string(t.Priority),
+		Type:           string(t.Type),
+		TicketTypeCode: t.TicketTypeCode,
+		TicketTypeName: t.TicketTypeName,
+		FormFields:     t.FormFields,
+		RequesterID:    t.RequesterID,
+		TenantID:       t.TenantID,
+		Version:        t.Version,
+		CreatedAt:      t.CreatedAt,
+		UpdatedAt:      t.UpdatedAt,
 	}
 
 	if t.AssigneeID != nil {
 		resp.AssigneeID = *t.AssigneeID
+	}
+	if t.TicketTypeID != nil {
+		resp.TicketTypeID = *t.TicketTypeID
 	}
 	if t.CategoryID != nil {
 		resp.CategoryID = *t.CategoryID
@@ -1359,21 +1589,27 @@ func (s *TicketService) toTicketResponse(t *ticket.Ticket) *dto.TicketResponse {
 // 这是一个临时方案：理想情况下 ProcessResolver 应该接受领域模型。
 func (s *TicketService) toEntTicket(t *ticket.Ticket) *ent.Ticket {
 	entTicket := &ent.Ticket{
-		ID:           t.ID,
-		TicketNumber: t.TicketNumber,
-		Title:        t.Title,
-		Description:  t.Description,
-		Status:       string(t.Status),
-		Type:         string(t.Type),
-		Priority:     string(t.Priority),
-		RequesterID:  t.RequesterID,
-		TenantID:     t.TenantID,
-		Version:      t.Version,
-		CreatedAt:    t.CreatedAt,
-		UpdatedAt:    t.UpdatedAt,
+		ID:                     t.ID,
+		TicketNumber:           t.TicketNumber,
+		Title:                  t.Title,
+		Description:            t.Description,
+		Status:                 string(t.Status),
+		Type:                   string(t.Type),
+		TicketTypeCodeSnapshot: t.TicketTypeCode,
+		TicketTypeNameSnapshot: t.TicketTypeName,
+		FormFields:             t.FormFields,
+		Priority:               string(t.Priority),
+		RequesterID:            t.RequesterID,
+		TenantID:               t.TenantID,
+		Version:                t.Version,
+		CreatedAt:              t.CreatedAt,
+		UpdatedAt:              t.UpdatedAt,
 	}
 	if t.AssigneeID != nil {
 		entTicket.AssigneeID = *t.AssigneeID
+	}
+	if t.TicketTypeID != nil {
+		entTicket.TicketTypeID = *t.TicketTypeID
 	}
 	if t.CategoryID != nil {
 		entTicket.CategoryID = *t.CategoryID

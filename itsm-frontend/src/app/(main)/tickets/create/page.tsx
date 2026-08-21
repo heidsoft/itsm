@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -18,6 +18,8 @@ import {
   Alert,
   DatePicker,
   Select,
+	Checkbox,
+	InputNumber,
 } from 'antd';
 import AppSelect from '@/components/ui/AppSelect';
 import {
@@ -41,18 +43,15 @@ import { TicketApi } from '@/lib/api/ticket-api';
 import { TicketCategoryApi } from '@/lib/api/ticket-category-api';
 import { useI18n } from '@/lib/i18n';
 import { httpClient } from '@/lib/api/http-client';
-import {
-  ticketTypePresets,
-  ticketTypeCategories,
-  getTicketTypesByCategory,
-  type TicketTypePreset,
-} from '@/lib/ticket-type-presets';
+import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
+import type { CustomFieldDefinition } from '@/types/ticket-type';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-type Priority = 'low' | 'medium' | 'high' | 'urgent';
+type Priority = 'low' | 'medium' | 'high' | 'urgent' | 'critical';
 type TicketCreateType = 'incident' | 'service_request' | 'change' | 'problem';
+type RuntimeTicketType = { id: number; code: string; name: string; description: string; icon: string; color: string; priority: Priority; workflowDefinitionKey?: string; fields: CustomFieldDefinition[] };
 
 // 图标映射
 const iconMap: Record<string, React.ReactNode> = {
@@ -70,12 +69,12 @@ const iconMap: Record<string, React.ReactNode> = {
   FileText: <FileText className="w-5 h-5" />,
 };
 
-const inferTicketType = (selectedType: TicketTypePreset | null): TicketCreateType => {
+const inferTicketType = (selectedType: RuntimeTicketType | null): TicketCreateType => {
   if (!selectedType) {
     return 'incident';
   }
 
-  const value = `${selectedType.id} ${selectedType.code} ${selectedType.name} ${selectedType.workflowTemplateId || ''}`;
+  const value = `${selectedType.id} ${selectedType.code} ${selectedType.name} ${selectedType.workflowDefinitionKey || ''}`;
   if (/change|变更|ddl|firewall|domain/i.test(value)) {
     return 'change';
   }
@@ -91,11 +90,14 @@ export default function CreateTicketPage() {
   const { t } = useI18n();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+	const [ticketTypes, setTicketTypes] = useState<RuntimeTicketType[]>([]);
+	const [ticketTypesLoading, setTicketTypesLoading] = useState(true);
+	const [ticketTypesError, setTicketTypesError] = useState<string | null>(null);
 
   // 选中的工单类型
-  const [selectedType, setSelectedType] = useState<TicketTypePreset | null>(null);
+  const [selectedType, setSelectedType] = useState<RuntimeTicketType | null>(null);
+	const [referenceOptions, setReferenceOptions] = useState<Record<'user' | 'department' | 'ci', { label: string; value: number }[]>>({ user: [], department: [], ci: [] });
   // 分类筛选
-  const [categoryFilter, setCategoryFilter] = useState('all');
   // AI 分类建议
   const [aiSuggestions, setAiSuggestions] = useState<{
     category?: string;
@@ -109,6 +111,35 @@ export default function CreateTicketPage() {
   // 分类下拉选项：从后端 TicketCategory 主数据动态拉取，避免前后端分类词表零重合
   const [categoryOptions, setCategoryOptions] = useState<{ label: string; value: string }[]>([]);
   const [categoryLoading, setCategoryLoading] = useState(false);
+
+	useEffect(() => {
+		let cancelled = false;
+		TicketTypeApi.list({ status: 'active', page: 1, pageSize: 100 })
+			.then(result => {
+				if (cancelled) return;
+				setTicketTypes(result.types.map(type => ({
+					id: type.id, code: type.code, name: type.name,
+					description: type.description ?? '', icon: type.icon ?? 'FileText', color: type.color ?? '#1677ff',
+					priority: type.defaultPriority ?? 'medium', workflowDefinitionKey: type.workflowDefinitionKey,
+					fields: type.customFields.filter(field => field.visible !== false),
+				})));
+			})
+			.catch(error => { if (!cancelled) setTicketTypesError(error instanceof Error ? error.message : '工单类型加载失败'); })
+			.finally(() => { if (!cancelled) setTicketTypesLoading(false); });
+		return () => { cancelled = true; };
+	}, []);
+
+	useEffect(() => {
+		Promise.allSettled([
+			httpClient.get<any>('/api/v1/users', { page: 1, pageSize: 200, status: 'active' }),
+			httpClient.get<any>('/api/v1/departments', { page: 1, pageSize: 200 }),
+			httpClient.get<any>('/api/v1/configuration-items', { page: 1, size: 200 }),
+		]).then(([users, departments, cis]) => setReferenceOptions({
+			user: users.status === 'fulfilled' ? (users.value.users ?? users.value.items ?? []).map((item: any) => ({ label: item.name ?? item.username, value: item.id })) : [],
+			department: departments.status === 'fulfilled' ? (departments.value.departments ?? departments.value.items ?? departments.value ?? []).map((item: any) => ({ label: item.name, value: item.id })) : [],
+			ci: cis.status === 'fulfilled' ? (cis.value.items ?? cis.value.cis ?? []).map((item: any) => ({ label: item.name, value: item.id })) : [],
+		}));
+	}, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -135,13 +166,19 @@ export default function CreateTicketPage() {
     };
   }, []);
 
-  // 过滤后的类型列表
-  const filteredTypes = getTicketTypesByCategory(categoryFilter);
+  // 过滤后的类型列表（后端已按 sortOrder 排序，前端不再做分类筛选）
+  const filteredTypes = ticketTypes;
 
-  // 选中类型时自动设置优先级（注意：不再自动设置"分类"字段，
-  // 预设的 .category 是筛选用的分组标签，与后端 TicketCategory 主数据不是同一套词表，
-  // 若灌入分类下拉会导致提交时后端按名解析失败）
+  // 跟踪上一次选中类型的动态字段名，切换类型时清理残留值
+  const prevFieldNames = useRef<string[]>([]);
+
+  // 选中类型时自动设置优先级并重置动态字段
   useEffect(() => {
+    // 清理上一个类型遗留在 form store 中的动态字段值
+    if (prevFieldNames.current.length > 0) {
+      form.resetFields(prevFieldNames.current);
+    }
+    prevFieldNames.current = selectedType?.fields.map(f => f.name) ?? [];
     if (selectedType) {
       form.setFieldValue('priority', selectedType.priority);
     }
@@ -192,9 +229,13 @@ export default function CreateTicketPage() {
         description: description,
         priority: priority,
         type: inferTicketType(selectedType),
+		ticketTypeId: selectedType?.id,
         category: values.category || undefined,
-        formFields: selectedType ? { presetTypeId: selectedType.id } : undefined,
-        workflowDefinitionKey: selectedType?.workflowTemplateId,
+		formFields: selectedType ? selectedType.fields?.reduce<Record<string, unknown>>((fields, field) => {
+			const value = values[field.name];
+			fields[field.name] = field.type === 'date' && value?.format ? value.format('YYYY-MM-DD') : value?.toISOString?.() ?? value;
+			return fields;
+		}, {}) : undefined,
       });
 
       message.success('工单创建成功');
@@ -253,7 +294,7 @@ export default function CreateTicketPage() {
   };
 
   // 渲染类型选择卡片
-  const renderTypeCard = (type: TicketTypePreset) => {
+  const renderTypeCard = (type: RuntimeTicketType) => {
     const isSelected = selectedType?.id === type.id;
 
     return (
@@ -327,28 +368,6 @@ export default function CreateTicketPage() {
               styles={{ body: { padding: '12px' } }}
               aria-label="工单类型选择区域"
             >
-              {/* 分类筛选 */}
-              <div style={{ marginBottom: 12 }} role="group" aria-label="类型分类筛选">
-                <Space wrap>
-                  {ticketTypeCategories.map(cat => (
-                    <Tag
-                      key={cat.key}
-                      color={categoryFilter === cat.key ? 'blue' : 'default'}
-                      style={{
-                        cursor: 'pointer',
-                        borderWidth: categoryFilter === cat.key ? '2px' : '1px',
-                        borderStyle: 'solid',
-                      }}
-                      onClick={() => setCategoryFilter(cat.key)}
-                      aria-pressed={categoryFilter === cat.key}
-                      role="button"
-                    >
-                      {cat.label}
-                    </Tag>
-                  ))}
-                </Space>
-              </div>
-
               {/* 类型列表 */}
               <div
                 style={{
@@ -364,7 +383,7 @@ export default function CreateTicketPage() {
                   size={8}
                   role="presentation"
                 >
-                  {filteredTypes.map(type => renderTypeCard(type))}
+                  {ticketTypesLoading ? <Spin /> : ticketTypesError ? <Alert type="error" showIcon title={ticketTypesError} /> : filteredTypes.length === 0 ? <Empty description="暂无已启用的工单类型" /> : filteredTypes.map(type => renderTypeCard(type))}
                 </Space>
               </div>
             </Card>
@@ -403,7 +422,7 @@ export default function CreateTicketPage() {
                       </Button>
                     </Space>
                     {/* 关联的工作流信息 */}
-                    {selectedType.workflowTemplateId && (
+                    {selectedType.workflowDefinitionKey && (
                       <div
                         style={{
                           marginTop: 8,
@@ -432,7 +451,7 @@ export default function CreateTicketPage() {
                                   : '低'}
                           </Tag>
                           <Text type="secondary">审批流程: </Text>
-                          <Text strong>{selectedType.workflowTemplateId}</Text>
+                          <Text strong>{selectedType.workflowDefinitionKey}</Text>
                         </Space>
                       </div>
                     )}
@@ -444,6 +463,7 @@ export default function CreateTicketPage() {
               {selectedType?.fields && selectedType.fields.length > 0 ? (
                 /* 有自定义字段：只显示自定义表单（已包含所有必要信息） */
                 <Card
+                  key={selectedType.id}
                   title={`${selectedType.name} - 详细信息`}
                   style={{ marginBottom: 16 }}
                   aria-label={`${selectedType.name} 自定义表单`}
@@ -454,6 +474,8 @@ export default function CreateTicketPage() {
                         <Form.Item
                           name={field.name}
                           label={field.label}
+						  initialValue={field.defaultValue}
+						  valuePropName={['boolean', 'checkbox'].includes(field.type) ? 'checked' : 'value'}
                           rules={
                             field.required
                               ? [{ required: true, message: `请填写${field.label}` }]
@@ -463,29 +485,38 @@ export default function CreateTicketPage() {
                           {field.type === 'textarea' ? (
                             <TextArea
                               rows={3}
+							  disabled={field.readonly}
                               placeholder={field.placeholder}
                               aria-label={field.label}
                             />
                           ) : field.type === 'select' ? (
                             <AppSelect
+							  disabled={field.readonly}
                               placeholder={field.placeholder || `请选择${field.label}`}
                               options={field.options}
                               aria-label={field.label}
                             />
-                          ) : field.type === 'number' ? (
-                            <Input
-                              type="number"
-                              placeholder={field.placeholder}
-                              aria-label={field.label}
-                            />
-                          ) : field.type === 'date' ? (
+						  ) : field.type === 'multi_select' ? (
+							<Select disabled={field.readonly} mode="multiple" options={field.options} placeholder={field.placeholder} />
+						  ) : field.type === 'radio' ? (
+							<Select disabled={field.readonly} options={field.options} placeholder={field.placeholder} />
+						  ) : field.type === 'number' ? (
+							<InputNumber disabled={field.readonly} style={{ width: '100%' }} placeholder={field.placeholder} />
+						  ) : field.type === 'date' ? (
                             <DatePicker
+							  disabled={field.readonly}
                               style={{ width: '100%' }}
                               aria-label={field.label}
                               placeholder={field.placeholder || `请选择${field.label}`}
                             />
-                          ) : (
-                            <Input placeholder={field.placeholder} aria-label={field.label} />
+						  ) : field.type === 'datetime' ? (
+							<DatePicker disabled={field.readonly} showTime style={{ width: '100%' }} />
+						  ) : ['boolean', 'checkbox'].includes(field.type) ? (
+							<Checkbox disabled={field.readonly}>{field.placeholder}</Checkbox>
+						  ) : ['user', 'user_picker', 'department', 'department_picker', 'ci'].includes(field.type) ? (
+							<Select disabled={field.readonly} showSearch optionFilterProp="label" options={referenceOptions[field.type === 'ci' ? 'ci' : field.type.startsWith('department') ? 'department' : 'user']} placeholder={field.placeholder} />
+						  ) : (
+							<Input disabled={field.readonly} placeholder={field.placeholder} aria-label={field.label} />
                           )}
                         </Form.Item>
                       </Col>

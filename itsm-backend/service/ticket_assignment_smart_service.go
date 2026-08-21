@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketassignmentrule"
 
 	"go.uber.org/zap"
@@ -82,6 +83,33 @@ func (s *TicketAssignmentSmartService) AutoAssign(
 		Reason:         assignment.Reason,
 		Score:          assignment.Score,
 	}, nil
+}
+
+// AutoAssignWithRule executes the exact tenant-owned rule bound to a TicketType.
+func (s *TicketAssignmentSmartService) AutoAssignWithRule(ctx context.Context, ticketID, tenantID, ruleID int) (*dto.AutoAssignResponse, error) {
+	ticketEntity, err := s.client.Ticket.Query().Where(ticket.IDEQ(ticketID), ticket.TenantIDEQ(tenantID)).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("ticket not found: %w", err)
+	}
+	rule, err := s.client.TicketAssignmentRule.Query().Where(ticketassignmentrule.IDEQ(ruleID), ticketassignmentrule.TenantIDEQ(tenantID), ticketassignmentrule.IsActiveEQ(true)).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("bound assignment rule is unavailable: %w", err)
+	}
+	matched, _ := s.ruleService.matchRule(ctx, rule, ticketEntity)
+	if !matched {
+		return nil, fmt.Errorf("bound assignment rule does not match ticket")
+	}
+	assignedTo, score, err := s.ruleService.executeRuleAction(ctx, rule, ticketEntity)
+	if err != nil {
+		return nil, err
+	}
+	if assignedTo == nil {
+		return nil, fmt.Errorf("bound assignment rule matched but produced no assignee")
+	}
+	if _, err = s.client.Ticket.UpdateOneID(ticketID).SetAssigneeID(*assignedTo).Save(ctx); err != nil {
+		return nil, err
+	}
+	return &dto.AutoAssignResponse{TicketID: ticketID, AssignedTo: assignedTo, AssignmentType: "ticket_type_rule", Reason: fmt.Sprintf("工单类型绑定规则 '%s'", rule.Name), Score: score}, nil
 }
 
 // GetAssignRecommendations 获取分配推荐
