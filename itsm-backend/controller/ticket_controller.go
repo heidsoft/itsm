@@ -41,21 +41,28 @@ func ticketToResponse(t *ticket.Ticket) *dto.TicketResponse {
 		return nil
 	}
 	resp := &dto.TicketResponse{
-		ID:           t.ID,
-		TicketNumber: t.TicketNumber,
-		Title:        t.Title,
-		Description:  t.Description,
-		Status:       string(t.Status),
-		Priority:     string(t.Priority),
-		Type:         string(t.Type),
-		RequesterID:  t.RequesterID,
-		TenantID:     t.TenantID,
-		Version:      t.Version,
-		CreatedAt:    t.CreatedAt,
-		UpdatedAt:    t.UpdatedAt,
+		ID:             t.ID,
+		TicketNumber:   t.TicketNumber,
+		Title:          t.Title,
+		Description:    t.Description,
+		Status:         string(t.Status),
+		Priority:       string(t.Priority),
+		Type:           string(t.Type),
+		TicketTypeID:   0,
+		TicketTypeCode: t.TicketTypeCode,
+		TicketTypeName: t.TicketTypeName,
+		FormFields:     t.FormFields,
+		RequesterID:    t.RequesterID,
+		TenantID:       t.TenantID,
+		Version:        t.Version,
+		CreatedAt:      t.CreatedAt,
+		UpdatedAt:      t.UpdatedAt,
 	}
 	if t.AssigneeID != nil {
 		resp.AssigneeID = *t.AssigneeID
+	}
+	if t.TicketTypeID != nil {
+		resp.TicketTypeID = *t.TicketTypeID
 	}
 	if t.CategoryID != nil {
 		resp.CategoryID = *t.CategoryID

@@ -79,6 +79,11 @@ var RegisteredMigrations = []Migration{
 		Description: "Add approval_type and threshold columns to change_approval_chains to support OR/parallel/threshold-N quorum (engine-driven change approvals)",
 		RollbackSQL: "ALTER TABLE change_approval_chains DROP COLUMN IF EXISTS approval_type; ALTER TABLE change_approval_chains DROP COLUMN IF EXISTS threshold;",
 	},
+	{
+		Version:     "015_ticket_type_runtime_binding",
+		Description: "Persist configured ticket type snapshots and dynamic form data; add runtime bindings",
+		RollbackSQL: "",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -647,6 +652,27 @@ WHERE is_active = TRUE;
 ALTER TABLE change_approval_chains
   ADD COLUMN IF NOT EXISTS approval_type TEXT NOT NULL DEFAULT 'serial',
   ADD COLUMN IF NOT EXISTS threshold INTEGER NOT NULL DEFAULT 1;
+`
+	case "015_ticket_type_runtime_binding":
+		return `
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ticket_type_id BIGINT REFERENCES ticket_types(id) ON DELETE RESTRICT;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ticket_type_code_snapshot VARCHAR(64) NOT NULL DEFAULT '';
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ticket_type_name_snapshot VARCHAR(128) NOT NULL DEFAULT '';
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS form_fields JSONB NOT NULL DEFAULT '{}'::jsonb;
+CREATE INDEX IF NOT EXISTS idx_tickets_tenant_ticket_type ON tickets(tenant_id, ticket_type_id);
+
+ALTER TABLE ticket_types ADD COLUMN IF NOT EXISTS category_id BIGINT REFERENCES ticket_categories(id) ON DELETE RESTRICT;
+ALTER TABLE ticket_types ADD COLUMN IF NOT EXISTS default_priority VARCHAR(20) NOT NULL DEFAULT 'medium';
+ALTER TABLE ticket_types ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE ticket_types ADD COLUMN IF NOT EXISTS workflow_definition_key VARCHAR(128) NOT NULL DEFAULT '';
+ALTER TABLE ticket_types ADD COLUMN IF NOT EXISTS assignment_rule_id BIGINT REFERENCES ticket_assignment_rules(id) ON DELETE RESTRICT;
+ALTER TABLE ticket_types ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
+ALTER TABLE ticket_types ADD COLUMN IF NOT EXISTS archived_by BIGINT;
+CREATE INDEX IF NOT EXISTS idx_ticket_types_tenant_sort ON ticket_types(tenant_id, sort_order);
+
+-- 修复历史脏数据：旧 seeder 误将 custom_fields 写成 JSON 数组 '[]'，
+-- 但 ent schema 定义为 object(map[string]interface{})，会导致查询列表时 unmarshal 失败 500。
+UPDATE ticket_types SET custom_fields = '{}'::jsonb WHERE jsonb_typeof(custom_fields) = 'array';
 `
 	default:
 		return ""

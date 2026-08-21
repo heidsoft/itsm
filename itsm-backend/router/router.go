@@ -1841,6 +1841,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tenant.POST("/ticket-types", middleware.RequirePermission("ticket", "create"), config.TicketTypeController.CreateTicketType)
 			tenant.GET("/ticket-types/:id", middleware.RequirePermission("ticket", "read"), config.TicketTypeController.GetTicketType)
 			tenant.PUT("/ticket-types/:id", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.UpdateTicketType)
+			tenant.DELETE("/ticket-types/:id", middleware.RequirePermission("ticket", "delete"), config.TicketTypeController.DeleteTicketType)
 			tenant.POST("/ticket-types/:id/enable", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.EnableTicketType)
 			tenant.POST("/ticket-types/:id/disable", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.DisableTicketType)
 			tenant.POST("/ticket-types/:id/clone", middleware.RequirePermission("ticket", "create"), config.TicketTypeController.CloneTicketType)

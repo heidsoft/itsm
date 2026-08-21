@@ -2142,7 +2142,7 @@ func (s *Seeder) seedTicketTypes(ctx context.Context) {
 			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, 0)
 		`,
 			tt.Code, tt.Name, tt.Description, tt.Icon, tt.Color, "active",
-			"[]", false, "[]",
+			"{}", false, "[]",
 			false, false, "[]",
 			"{}", "{}",
 			admin.ID, t.ID, time.Now(), time.Now(),
