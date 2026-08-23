@@ -65,19 +65,15 @@ describe('useTickets', () => {
     expect(mockTicketService.listTickets).toHaveBeenCalled();
   });
 
-  it('should fetch stats on mount', async () => {
+  it('should not call stats API (stats is owned by page layer)', async () => {
     const { result } = renderHook(() => useTickets());
 
     await waitFor(() => {
-      expect(result.current.stats.total).toBe(10);
+      expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.stats).toEqual({
-      total: 10,
-      open: 5,
-      resolved: 3,
-      highPriority: 2,
-    });
+    // stats 接口由上层页面统一拉取，useTickets 不应重复调用
+    expect(mockTicketService.getTicketStats).not.toHaveBeenCalled();
   });
 
   it('should handle fetchTickets error', async () => {

@@ -235,18 +235,30 @@ export default function CreateTicketPage() {
       // 构建 priority：如果没有选择类型，使用表单中的 priority；否则使用预设优先级
       const priority = values.priority || (selectedType ? selectedType.priority : 'medium');
 
+      // field.name 已经是 schema 存储 key（snake_case），直接透传，
+      // 不再做驼峰转换避免与后端 schema 不一致。
       const created = await TicketApi.createTicket({
         title: title,
         description: description,
         priority: priority,
         type: inferTicketType(selectedType),
-		ticketTypeId: selectedType?.id,
+        ticketTypeId: selectedType?.id,
         category: values.category || undefined,
-		formFields: selectedType ? selectedType.fields?.reduce<Record<string, unknown>>((fields, field) => {
-			const value = values[field.name];
-			fields[field.name] = field.type === 'date' && value?.format ? value.format('YYYY-MM-DD') : value?.toISOString?.() ?? value;
-			return fields;
-		}, {}) : undefined,
+        formFields: selectedType ? selectedType.fields?.reduce<Record<string, unknown>>((fields, field) => {
+          const value = values[field.name];
+          if (value === undefined || value === null || value === '') {
+            return fields;
+          }
+          // 日期 / 日期时间统一转为字符串，其它原始类型（number/boolean/string）直接透传
+          let normalized: unknown = value;
+          if (field.type === 'date' && typeof value === 'object' && value && typeof (value as { format?: unknown }).format === 'function') {
+            normalized = (value as { format: (fmt: string) => string }).format('YYYY-MM-DD');
+          } else if (field.type === 'datetime' && typeof value === 'object' && value && typeof (value as { toISOString?: unknown }).toISOString === 'function') {
+            normalized = (value as { toISOString: () => string }).toISOString();
+          }
+          fields[field.name] = normalized;
+          return fields;
+        }, {}) : undefined,
       });
 
       message.success('工单创建成功');

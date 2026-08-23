@@ -24,13 +24,6 @@ export interface TicketQueryFilters {
   urgency?: string;
 }
 
-export interface TicketStats {
-  total: number;
-  open: number;
-  resolved: number;
-  highPriority: number;
-}
-
 export interface BatchDeleteResult {
   readonly successCount: number;
   readonly failedIds: number[];
@@ -40,7 +33,6 @@ export interface BatchDeleteResult {
 export interface UseTicketsReturn {
   // Data
   tickets: Ticket[];
-  stats: TicketStats;
   loading: boolean;
   error: string | null;
 
@@ -56,7 +48,6 @@ export interface UseTicketsReturn {
 
   // Actions
   fetchTickets: (customFilters?: Partial<TicketQueryFilters>) => Promise<void>;
-  fetchStats: () => Promise<void>;
   refreshData: () => Promise<void>;
   updateFilters: (newFilters: Partial<TicketQueryFilters>) => void;
   updatePagination: (page: number, pageSize: number) => void;
@@ -70,12 +61,6 @@ export interface UseTicketsReturn {
 
 export const useTickets = (): UseTicketsReturn => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [stats, setStats] = useState<TicketStats>({
-    total: 0,
-    open: 0,
-    resolved: 0,
-    highPriority: 0,
-  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
@@ -134,24 +119,10 @@ export const useTickets = (): UseTicketsReturn => {
     }
   }, []); // 空依赖，永不重建
 
-  // Fetch statistics
-  const fetchStats = useCallback(async () => {
-    try {
-      const response = await ticketService.getTicketStats();
-      setStats({
-        total: response.total,
-        open: response.open,
-        resolved: response.resolved,
-        highPriority: response.highPriority,
-      });
-    } catch (err) {
-      console.error('Failed to load statistics:', err);
-    }
-  }, []);
-
   const refreshData = useCallback(async () => {
-    await Promise.all([fetchTickets(), fetchStats()]);
-  }, [fetchTickets, fetchStats]);
+    // 仅刷新工单列表。统计由上层页面负责，避免重复调用 stats 接口。
+    await fetchTickets();
+  }, [fetchTickets]);
 
   // updateFilters：更新 filters state 并触发重新拉取
   const updateFilters = useCallback((newFilters: Partial<TicketQueryFilters>) => {
@@ -270,20 +241,16 @@ export const useTickets = (): UseTicketsReturn => {
     fetchTickets();
   }, [fetchTrigger]);
 
-  // 初始加载统计
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+  // 注：统计拉取由上层页面（tickets/page.tsx）统一负责，避免同一会话内
+  // /api/v1/tickets/stats 被多次重复调用。TicketList 组件不需要 stats 状态。
 
   return {
     tickets,
-    stats,
     loading,
     error,
     pagination,
     filters,
     fetchTickets,
-    fetchStats,
     refreshData,
     updateFilters,
     updatePagination,

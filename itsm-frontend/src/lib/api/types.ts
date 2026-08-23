@@ -80,6 +80,8 @@ export interface Ticket {
   resolution?: string;
   slaId?: number;
   slaInfo?: SLAInfo;
+  /** 动态表单字段（与后端 DTO FormFields 对齐，键为 snake_case schema field.name） */
+  formFields?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   dueTime?: string;

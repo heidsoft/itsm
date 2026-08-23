@@ -33,10 +33,15 @@ export default function TicketTypesPage() {
   useEffect(() => { void load(); }, [load]);
 
   const save = async (values: unknown) => {
-    if (editing) await TicketTypeApi.update(editing.id, values as UpdateTicketTypeRequest);
-    else await TicketTypeApi.create(values as CreateTicketTypeRequest);
-    message.success(editing ? '工单类型已更新' : '工单类型已创建');
-    setOpen(false); setEditing(null); await load();
+    try {
+      if (editing) await TicketTypeApi.update(editing.id, values as UpdateTicketTypeRequest);
+      else await TicketTypeApi.create(values as CreateTicketTypeRequest);
+      message.success(editing ? '工单类型已更新' : '工单类型已创建');
+      setOpen(false); setEditing(null); await load();
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '保存工单类型失败');
+      throw error; // 通知表单弹窗保持打开，便于修改后重试
+    }
   };
 
   const clone = (item: TicketTypeDefinition) => {
@@ -45,11 +50,27 @@ export default function TicketTypesPage() {
     modal.confirm({
       title: '复制工单类型',
       content: <Space orientation="vertical" className="w-full"><Input defaultValue={code} onChange={e => { code = e.target.value; }} /><Input defaultValue={name} onChange={e => { name = e.target.value; }} /></Space>,
-      onOk: async () => { await TicketTypeApi.clone(item.id, code, name); await load(); },
+      onOk: async () => {
+        try {
+          await TicketTypeApi.clone(item.id, code, name);
+          message.success('工单类型已复制');
+          await load();
+        } catch (error) {
+          message.error(error instanceof Error ? error.message : '复制工单类型失败');
+          throw error;
+        }
+      },
     });
   };
 
-	const openPresets = async () => { setPresets(await TicketTypeApi.listPresets()); setPresetOpen(true); };
+	const openPresets = async () => {
+    try {
+      setPresets(await TicketTypeApi.listPresets());
+      setPresetOpen(true);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '加载预设库失败');
+    }
+  };
 
   const restore = (item: TicketTypeDefinition) => {
     modal.confirm({
@@ -74,7 +95,7 @@ export default function TicketTypesPage() {
 	  { title: '排序', dataIndex: 'sortOrder', width: 70 },
       { title: '状态', dataIndex: 'status', render: (value: string, item) => item.archivedAt ? <Tag color="default">已归档</Tag> : <Tag color={value === 'active' ? 'green' : 'default'}>{value === 'active' ? '启用' : '停用'}</Tag> },
       { title: '更新时间', dataIndex: 'updatedAt', render: (value: string) => value ? new Date(value).toLocaleString() : '-' },
-      { title: '操作', width: 300, render: (_, item) => item.archivedAt ? <Space><Button size="small" type="primary" ghost icon={<RotateCcw className="h-3.5 w-3.5" />} onClick={() => restore(item)}>恢复</Button></Space> : <Space><Button size="small" icon={<Pencil className="h-3.5 w-3.5" />} onClick={() => { setEditing(item); setOpen(true); }}>编辑</Button><Button size="small" icon={<Copy className="h-3.5 w-3.5" />} onClick={() => clone(item)}>复制</Button><Switch size="small" checked={item.status === 'active'} onChange={async enabled => { await TicketTypeApi.setEnabled(item.id, enabled); await load(); }} /></Space> },
+      { title: '操作', width: 300, render: (_, item) => item.archivedAt ? <Space><Button size="small" type="primary" ghost icon={<RotateCcw className="h-3.5 w-3.5" />} onClick={() => restore(item)}>恢复</Button></Space> : <Space><Button size="small" icon={<Pencil className="h-3.5 w-3.5" />} onClick={() => { setEditing(item); setOpen(true); }}>编辑</Button><Button size="small" icon={<Copy className="h-3.5 w-3.5" />} onClick={() => clone(item)}>复制</Button><Switch size="small" checked={item.status === 'active'} onChange={async enabled => { try { await TicketTypeApi.setEnabled(item.id, enabled); message.success(enabled ? '工单类型已启用' : '工单类型已停用'); await load(); } catch (error) { message.error(error instanceof Error ? error.message : '操作失败'); } }} /></Space> },
     ]} />
   </Card><TicketTypeFormModal visible={open} editingType={editing} onCancel={() => { setOpen(false); setEditing(null); }} onSubmit={save} /><Modal title="工单类型预设库" open={presetOpen} footer={null} onCancel={() => setPresetOpen(false)}><List dataSource={presets} renderItem={preset => <List.Item actions={[<Button key="install" type="link" onClick={async () => { await TicketTypeApi.installPreset(preset.id); message.success('预设已安装'); setPresetOpen(false); await load(); }}>安装</Button>]}><List.Item.Meta title={preset.name} description={`${preset.category} · ${preset.description}`} /></List.Item>} /></Modal></div>;
 }

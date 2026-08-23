@@ -217,12 +217,12 @@ func (s *TicketService) runCreateTicketTx(
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ticket.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
 	if strings.TrimSpace(req.Title) == "" {
-		return nil, fmt.Errorf("title不能为空")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "title不能为空", "")
 	}
 	switch ticket.Priority(req.Priority) {
 	case ticket.PriorityLow, ticket.PriorityMedium, ticket.PriorityHigh, ticket.PriorityUrgent, ticket.PriorityCritical:
 	default:
-		return nil, fmt.Errorf("无效的工单优先级: %s", req.Priority)
+		return nil, common.NewBusinessError(common.ParamErrorCode, "无效的工单优先级", req.Priority)
 	}
 	if err := s.validateCreateTicketReferences(ctx, req, tenantID); err != nil {
 		return nil, err
@@ -241,13 +241,13 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 若仅传入分类名称（前端下拉选值），按名解析为分类ID，与 UpdateTicket 行为保持一致
 	if categoryID == nil && strings.TrimSpace(req.Category) != "" {
 		if s.client == nil {
-			return nil, fmt.Errorf("无法解析工单分类")
+			return nil, common.NewBusinessError(common.ParamErrorCode, "无法解析工单分类", "")
 		}
 		category, err := s.client.TicketCategory.Query().
 			Where(ticketcategory.NameEQ(strings.TrimSpace(req.Category)), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
 			Only(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("工单分类不存在或不可用")
+			return nil, common.NewBusinessError(common.NotFoundCode, "工单分类不存在或不可用", req.Category)
 		}
 		categoryID = &category.ID
 	}
@@ -470,7 +470,7 @@ func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *d
 		return nil, nil
 	}
 	if s.client == nil {
-		return nil, fmt.Errorf("无法校验工单类型")
+		return nil, common.NewBusinessError(common.InternalErrorCode, "无法校验工单类型", "")
 	}
 	query := s.client.TicketType.Query().Where(tickettype.TenantIDEQ(int64(tenantID)))
 	if req.TicketTypeID != nil {
@@ -480,10 +480,10 @@ func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *d
 	}
 	configured, err := query.Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("工单类型不存在")
+		return nil, common.NewBusinessError(common.NotFoundCode, "工单类型不存在", "")
 	}
 	if configured.Status != string(dto.TicketTypeStatusActive) {
-		return nil, fmt.Errorf("工单类型已停用")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "工单类型已停用", "")
 	}
 	if req.FormFields == nil {
 		req.FormFields = make(map[string]interface{})
@@ -494,7 +494,7 @@ func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *d
 		allowed[field.Name] = field
 		if field.Readonly {
 			if suppliedValue, supplied := req.FormFields[field.Name]; supplied && fmt.Sprint(suppliedValue) != fmt.Sprint(field.DefaultValue) {
-				return nil, fmt.Errorf("字段 %s 为只读字段", field.Label)
+				return nil, common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 为只读字段", "")
 			}
 			if field.DefaultValue != nil {
 				req.FormFields[field.Name] = field.DefaultValue
@@ -503,7 +503,7 @@ func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *d
 	}
 	for key := range req.FormFields {
 		if _, ok := allowed[key]; !ok {
-			return nil, fmt.Errorf("包含未定义字段: %s", key)
+			return nil, common.NewBusinessError(common.ParamErrorCode, "包含未定义字段", key)
 		}
 	}
 	for _, field := range definitions {
@@ -513,22 +513,22 @@ func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *d
 			req.FormFields[field.Name] = value
 		}
 		if field.Required && (!exists || value == nil || strings.TrimSpace(fmt.Sprint(value)) == "") {
-			return nil, fmt.Errorf("字段 %s 为必填项", field.Label)
+			return nil, common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 为必填项", "")
 		}
 		if !exists || value == nil {
 			continue
 		}
 		if (field.Type == dto.CustomFieldTypeSelect || field.Type == dto.CustomFieldTypeRadio) && !customFieldOptionExists(field.Options, value) {
-			return nil, fmt.Errorf("字段 %s 的选项无效", field.Label)
+			return nil, common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的选项无效", "")
 		}
 		if field.Type == dto.CustomFieldTypeMultiSelect {
 			values, ok := value.([]interface{})
 			if !ok {
-				return nil, fmt.Errorf("字段 %s 必须是数组", field.Label)
+				return nil, common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 必须是数组", "")
 			}
 			for _, item := range values {
 				if !customFieldOptionExists(field.Options, item) {
-					return nil, fmt.Errorf("字段 %s 的选项无效", field.Label)
+					return nil, common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的选项无效", "")
 				}
 			}
 		}
@@ -547,77 +547,77 @@ func (s *TicketService) validateCustomFieldValue(ctx context.Context, tenantID i
 	case dto.CustomFieldTypeText, dto.CustomFieldTypeTextarea:
 		text, ok := value.(string)
 		if !ok {
-			return fmt.Errorf("字段 %s 必须是文本", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 必须是文本", "")
 		}
 		if field.Validation != nil {
 			if field.Validation.Min != nil && len([]rune(text)) < *field.Validation.Min {
-				return fmt.Errorf("字段 %s 长度不足", field.Label)
+				return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 长度不足", "")
 			}
 			if field.Validation.Max != nil && len([]rune(text)) > *field.Validation.Max {
-				return fmt.Errorf("字段 %s 长度超限", field.Label)
+				return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 长度超限", "")
 			}
 			if field.Validation.Pattern != "" {
 				pattern, err := regexp.Compile(field.Validation.Pattern)
 				if err != nil || !pattern.MatchString(text) {
-					return fmt.Errorf("字段 %s 格式无效", field.Label)
+					return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 格式无效", "")
 				}
 			}
 		}
 	case dto.CustomFieldTypeNumber:
 		number, err := strconv.ParseFloat(fmt.Sprint(value), 64)
 		if err != nil {
-			return fmt.Errorf("字段 %s 必须是数字", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 必须是数字", "")
 		}
 		if field.Validation != nil {
 			if field.Validation.Min != nil && number < float64(*field.Validation.Min) {
-				return fmt.Errorf("字段 %s 小于最小值", field.Label)
+				return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 小于最小值", "")
 			}
 			if field.Validation.Max != nil && number > float64(*field.Validation.Max) {
-				return fmt.Errorf("字段 %s 超过最大值", field.Label)
+				return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 超过最大值", "")
 			}
 		}
 	case dto.CustomFieldTypeBoolean, dto.CustomFieldTypeCheckbox:
 		if _, ok := value.(bool); !ok {
-			return fmt.Errorf("字段 %s 必须是布尔值", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 必须是布尔值", "")
 		}
 	case dto.CustomFieldTypeDate, dto.CustomFieldTypeDatetime:
 		dateValue, ok := value.(string)
 		if !ok {
-			return fmt.Errorf("字段 %s 必须是日期字符串", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 必须是日期字符串", "")
 		}
 		layout := "2006-01-02"
 		if field.Type == dto.CustomFieldTypeDatetime {
 			layout = time.RFC3339
 		}
 		if _, err := time.Parse(layout, dateValue); err != nil {
-			return fmt.Errorf("字段 %s 日期格式无效", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 日期格式无效", "")
 		}
 	case dto.CustomFieldTypeUser, dto.CustomFieldTypeUserPicker:
 		id, err := interfaceInt(value)
 		if err != nil {
-			return fmt.Errorf("字段 %s 的用户无效", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的用户无效", "")
 		}
 		exists, _ := s.client.User.Query().Where(user.IDEQ(id), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Exist(ctx)
 		if !exists {
-			return fmt.Errorf("字段 %s 的用户不存在或无权引用", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的用户不存在或无权引用", "")
 		}
 	case dto.CustomFieldTypeDepartment, dto.CustomFieldTypeDepartmentPicker:
 		id, err := interfaceInt(value)
 		if err != nil {
-			return fmt.Errorf("字段 %s 的部门无效", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的部门无效", "")
 		}
 		exists, _ := s.client.Department.Query().Where(department.IDEQ(id), department.TenantIDEQ(tenantID)).Exist(ctx)
 		if !exists {
-			return fmt.Errorf("字段 %s 的部门不存在或无权引用", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的部门不存在或无权引用", "")
 		}
 	case dto.CustomFieldTypeCI:
 		id, err := interfaceInt(value)
 		if err != nil {
-			return fmt.Errorf("字段 %s 的CI无效", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的CI无效", "")
 		}
 		exists, _ := s.client.ConfigurationItem.Query().Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID)).Exist(ctx)
 		if !exists {
-			return fmt.Errorf("字段 %s 的CI不存在或无权引用", field.Label)
+			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的CI不存在或无权引用", "")
 		}
 	}
 	return nil
@@ -663,7 +663,7 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 		return nil
 	}
 	if req.RequesterID <= 0 {
-		return fmt.Errorf("requesterId必须为当前租户中的有效用户")
+		return common.NewBusinessError(common.ParamErrorCode, "requesterId必须为当前租户中的有效用户", "")
 	}
 	requesterExists, err := s.client.User.Query().
 		Where(user.IDEQ(req.RequesterID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
@@ -672,7 +672,7 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 		return fmt.Errorf("验证申请人失败: %w", err)
 	}
 	if !requesterExists {
-		return fmt.Errorf("申请人不存在或不可用")
+		return common.NewBusinessError(common.NotFoundCode, "申请人不存在或不可用", "")
 	}
 	if req.AssigneeID > 0 {
 		assigneeExists, err := s.client.User.Query().
@@ -682,7 +682,7 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 			return fmt.Errorf("验证处理人失败: %w", err)
 		}
 		if !assigneeExists {
-			return fmt.Errorf("处理人不存在或不可用")
+			return common.NewBusinessError(common.NotFoundCode, "处理人不存在或不可用", "")
 		}
 	}
 	if req.CategoryID != nil {
@@ -693,7 +693,7 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 			return fmt.Errorf("验证工单分类失败: %w", err)
 		}
 		if !categoryExists {
-			return fmt.Errorf("工单分类不存在或不可用")
+			return common.NewBusinessError(common.NotFoundCode, "工单分类不存在或不可用", "")
 		}
 	}
 	if req.TemplateID != nil {

@@ -127,6 +127,11 @@ func (tc *TicketController) CreateTicket(c *gin.Context) {
 	ticket, err := tc.ticketService.CreateTicket(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to create ticket", "error", err, "tenant_id", tenantID)
+		// 业务错误（参数、字段验证、状态约束等）应映射为 4xx，而不是 500
+		if businessErr, ok := err.(*common.BusinessError); ok {
+			common.Fail(c, businessErr.Code, businessErr.Message)
+			return
+		}
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
@@ -993,6 +998,10 @@ func (tc *TicketController) CreateSubtask(c *gin.Context) {
 	ticket, err := tc.ticketService.CreateTicket(c.Request.Context(), &fullReq, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to create subtask", "error", err, "parent_id", parentID, "tenant_id", tenantID)
+		if businessErr, ok := err.(*common.BusinessError); ok {
+			common.Fail(c, businessErr.Code, businessErr.Message)
+			return
+		}
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}

@@ -9,9 +9,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { TicketApi } from '@/lib/api/ticket-api';
-import { UserApi } from '@/lib/api/user-api';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
+import { useUserListQuery } from '@/lib/hooks/useUserListQuery';
 import type { TicketPriority } from '@/types/ticket';
 import {
   ArrowLeft,
@@ -116,6 +116,30 @@ const ticketPriorities: TicketPriority[] = ['low', 'medium', 'high', 'urgent', '
 const toTicketPriority = (value: string): TicketPriority =>
   ticketPriorities.includes(value as TicketPriority) ? (value as TicketPriority) : 'medium';
 
+// 把任意 formFields 值渲染为只读文案。避免对 object / array 直接 toString 产生 [object Object]
+const renderFormFieldValue = (value: unknown): React.ReactNode => {
+  if (value === null || value === undefined || value === '') {
+    return <Text type="secondary">-</Text>;
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map(item => (typeof item === 'object' ? JSON.stringify(item) : String(item))).join(', ');
+  }
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return '-';
+    }
+  }
+  return String(value);
+};
+
 const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const params = useParams();
   const { message: antMessage } = App.useApp();
@@ -142,8 +166,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [ccing, setCCing] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
+  // users / loadingUsers 由 useUserListQuery 提供（带缓存）
   const [slaInfo, setSlaInfo] = useState<{
     slaName: string;
     responseDeadline: string | null;
@@ -186,19 +209,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     }
   }, [ticketId]);
 
-  // Get users for assignment
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoadingUsers(true);
-      const data = await UserApi.getUsers({ pageSize: 100 });
-      setUsers(data.users || []);
-    } catch (error) {
-      // 用户获取失败时使用空数组，不显示错误提示
-      setUsers([]);
-    } finally {
-      setLoadingUsers(false);
-    }
-  }, [antMessage]);
+  // Get users for assignment（通过 React Query 缓存，避免每次详情页挂载都重新拉取）
+  const usersQuery = useUserListQuery({ pageSize: 100 });
+  const users = (usersQuery.data?.users ?? []) as User[];
+  const loadingUsers = usersQuery.isLoading;
 
   // Get ticket SLA info
   const fetchSLAInfo = useCallback(async () => {
@@ -223,9 +237,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     }
   }, [ticketId]);
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  // 用户列表由 useUserListQuery 内部处理挂载与缓存。
 
   // Handle approval (轻量版：仅改状态)
   const handleApprove = async () => {
@@ -534,6 +546,19 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               <SafeTextBlock content={ticket.description} fallback={t('ticketDetail.labelNoDescription')} />
             </Descriptions.Item>
           </Descriptions>
+
+          {/* 动态表单字段（来自 tenant 工单类型配置） */}
+          {ticket.formFields && Object.keys(ticket.formFields).length > 0 && (
+            <Card size="small" title={t('ticketDetail.formFields') || '动态表单字段'} className="mt-2">
+              <Descriptions column={2} bordered size="small">
+                {Object.entries(ticket.formFields).map(([key, value]) => (
+                  <Descriptions.Item key={key} label={key}>
+                    {renderFormFieldValue(value)}
+                  </Descriptions.Item>
+                ))}
+              </Descriptions>
+            </Card>
+          )}
 
           {/* SLA Information */}
           {slaInfo && (
