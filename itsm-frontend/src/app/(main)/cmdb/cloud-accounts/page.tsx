@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Breadcrumb,
@@ -49,6 +49,14 @@ export default function CloudAccountPage() {
   const [editingAccount, setEditingAccount] = useState<CloudAccount | null>(null);
   const [searchText, setSearchText] = useState('');
   const [filterProvider, setFilterProvider] = useState<string | undefined>(undefined);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // 过滤后的数据
   const filteredData = useCallback(() => {
@@ -63,30 +71,25 @@ export default function CloudAccountPage() {
   }, [data, searchText, filterProvider]);
 
   const loadData = async () => {
-    const isMounted = true;
     setLoading(true);
     try {
       const list = await CMDBApi.getCloudAccounts();
-      if (isMounted) {
+      if (isMountedRef.current) {
         setData(list || []);
       }
     } catch (error) {
-      if (isMounted) {
+      if (isMountedRef.current) {
         message.error('加载云账号失败');
       }
     } finally {
-      if (isMounted) {
+      if (isMountedRef.current) {
         setLoading(false);
       }
     }
   };
 
   useEffect(() => {
-    let isMounted = true;
     loadData();
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   const handleCreate = async () => {

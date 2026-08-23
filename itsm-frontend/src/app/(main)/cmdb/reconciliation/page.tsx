@@ -6,7 +6,6 @@ import {
   Breadcrumb,
   Button,
   Card,
-  Input,
   Modal,
   Space,
   Statistic,
@@ -17,6 +16,7 @@ import {
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
 
+import CISearchSelect, { type CISelectOption } from '@/components/cmdb/CISearchSelect';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type {
   CloudResource,
@@ -43,7 +43,9 @@ export default function ReconciliationPage() {
   const [services, setServices] = useState<CloudService[]>([]);
   const [bindOpen, setBindOpen] = useState(false);
   const [bindResource, setBindResource] = useState<CloudResource | null>(null);
-  const [bindCIID, setBindCIID] = useState<string>('');
+  const [bindCIID, setBindCIID] = useState<number | undefined>(undefined);
+  const [bindCIOption, setBindCIOption] = useState<CISelectOption | undefined>(undefined);
+  const [bindSubmitting, setBindSubmitting] = useState(false);
 
   const serviceMap = useMemo(() => new Map(services.map(item => [item.id, item])), [services]);
 
@@ -72,32 +74,34 @@ export default function ReconciliationPage() {
   }, []);
 
   const handleBindExisting = async () => {
-    if (!bindResource || !bindCIID) return;
-    const ciID = Number(bindCIID);
-    if (Number.isNaN(ciID)) {
-      message.error('请输入有效的配置项ID');
+    if (!bindResource || !bindCIID) {
+      message.warning('请先选择要绑定的配置项');
       return;
     }
     try {
-      const service = serviceMap.get(bindResource.serviceId ?? bindResource.serviceId);
-      await CMDBApi.updateCI(String(ciID), {
+      const service = serviceMap.get(bindResource.serviceId);
+      setBindSubmitting(true);
+      await CMDBApi.updateCI(String(bindCIID), {
         cloudResourceRefId: bindResource.id,
         cloudProvider: service?.provider,
-        cloudAccountId: String(bindResource.cloudAccountId ?? bindResource.cloudAccountId),
+        cloudAccountId: bindResource.cloudAccountId ? String(bindResource.cloudAccountId) : undefined,
         cloudRegion: bindResource.region,
         cloudZone: bindResource.zone,
-        cloudResourceId: bindResource.resourceId ?? bindResource.resourceId,
-        cloudResourceType: service?.resourceTypeCode ?? service?.resourceTypeCode,
+        cloudResourceId: bindResource.resourceId,
+        cloudResourceType: service?.resourceTypeCode,
         cloudMetadata: bindResource.metadata,
         cloudSyncStatus: 'success',
       });
-      message.success('绑定成功');
+      message.success(`已将资源绑定到配置项「${bindCIOption?.name ?? bindCIID}」`);
       setBindOpen(false);
       setBindResource(null);
-      setBindCIID('');
+      setBindCIID(undefined);
+      setBindCIOption(undefined);
       loadData();
     } catch (error) {
-      message.error('绑定失败');
+      message.error(error instanceof Error ? error.message || '绑定失败' : '绑定失败');
+    } finally {
+      setBindSubmitting(false);
     }
   };
 
@@ -117,9 +121,8 @@ export default function ReconciliationPage() {
       title: '资源类型',
       width: 160,
       render: (_: unknown, record: CloudResource) => {
-        const serviceID = record.serviceId ?? record.serviceId;
-        const service = serviceMap.get(serviceID);
-        return service?.resourceTypeName ?? service?.resourceTypeName ?? `#${serviceID}`;
+        const service = serviceMap.get(record.serviceId);
+        return service?.resourceTypeName || `#${record.serviceId}`;
       },
     },
     {
@@ -138,8 +141,7 @@ export default function ReconciliationPage() {
       title: '最近发现',
       width: 160,
       render: (_: unknown, record: CloudResource) => {
-        const value = record.lastSeenAt ?? record.lastSeenAt;
-        return value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-';
+        return record.lastSeenAt ? dayjs(record.lastSeenAt).format('YYYY-MM-DD HH:mm') : '-';
       },
     },
     {
@@ -158,7 +160,8 @@ export default function ReconciliationPage() {
             type="link"
             onClick={() => {
               setBindResource(record);
-              setBindCIID('');
+              setBindCIID(undefined);
+              setBindCIOption(undefined);
               setBindOpen(true);
             }}
           >
@@ -188,14 +191,12 @@ export default function ReconciliationPage() {
     {
       title: '云资源ID',
       width: 200,
-      render: (_: unknown, record: ConfigurationItem) =>
-        record.cloudResourceId ?? record.cloudResourceId ?? '-',
+      render: (_: unknown, record: ConfigurationItem) => record.cloudResourceId || '-',
     },
     {
       title: '云厂商',
       width: 120,
-      render: (_: unknown, record: ConfigurationItem) =>
-        record.cloudProvider ?? record.cloudProvider ?? '-',
+      render: (_: unknown, record: ConfigurationItem) => record.cloudProvider || '-',
     },
   ];
 
@@ -260,13 +261,32 @@ export default function ReconciliationPage() {
         open={bindOpen}
         onCancel={() => setBindOpen(false)}
         onOk={handleBindExisting}
+        okButtonProps={{ disabled: !bindCIID }}
+        confirmLoading={bindSubmitting}
+        okText="绑定"
+        destroyOnClose
       >
-        <div style={{ marginBottom: 12 }}>请输入配置项ID后进行绑定。</div>
-        <Input
+        <div style={{ marginBottom: 12 }}>
+          搜索并选择一个已存在的配置项，云资源信息将写入该配置项。
+        </div>
+        <CISearchSelect
           value={bindCIID}
-          onChange={event => setBindCIID(event.target.value)}
-          placeholder="配置项ID"
+          onChange={(value, option) => {
+            setBindCIID(value);
+            setBindCIOption(option);
+          }}
+          style={{ width: '100%' }}
+          placeholder="输入名称搜索配置项"
         />
+        {bindResource && (
+          <div className="p-3 bg-gray-50 rounded text-sm text-gray-600" style={{ marginTop: 12 }}>
+            <div className="font-medium mb-1">将绑定资源：</div>
+            <div>{bindResource.resourceName || bindResource.resourceId}</div>
+            <div className="text-gray-400 mt-1">
+              {bindResource.region || '-'} / {bindResource.zone || '-'}
+            </div>
+          </div>
+        )}
       </Modal>
     </Card>
   );

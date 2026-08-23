@@ -214,10 +214,10 @@ export function getMenuConfig(): MenuConfig {
         description: '配置管理数据库',
         children: [
           {
-            key: '/cmdb/cis/list',
+            key: '/cmdb/cis',
             icon: getIconByName('Server')!,
             label: '配置项列表',
-            path: '/cmdb/ci',
+            path: '/cmdb/cis',
             permission: 'cmdb:read',
           },
           {

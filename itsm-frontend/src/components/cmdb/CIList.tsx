@@ -98,10 +98,11 @@ const CIList: React.FC = () => {
         status: currentFilters.status,
       });
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;
-	  setData(resp.items ?? []);
+      setData(resp.items ?? []);
       setTotal(resp.total ?? 0);
     } catch (error) {
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;
+      setLoadError(true);
       const errorMessage = getErrorMessage(error);
       message.error(errorMessage ? `加载配置项列表失败：${errorMessage}` : '加载配置项列表失败');
     } finally {
@@ -262,14 +263,13 @@ const CIList: React.FC = () => {
       title: '类型',
       width: 120,
       render: (_: unknown, record: ConfigurationItem) => {
-        const typeId = record.ciTypeId ?? record.ciTypeId;
-        return types.find(t => t.id === typeId)?.name || record.type || `类型 ${typeId}`;
+        return types.find(t => t.id === record.ciTypeId)?.name || record.type || `类型 ${record.ciTypeId}`;
       },
     },
     {
       title: '云厂商',
       width: 120,
-      render: (_: unknown, record: ConfigurationItem) => record.cloudProvider ?? record.cloudProvider ?? '-',
+      render: (_: unknown, record: ConfigurationItem) => record.cloudProvider || '-',
     },
     {
       title: '状态',
@@ -293,8 +293,7 @@ const CIList: React.FC = () => {
       title: '最后更新',
       width: 160,
       render: (_: unknown, record: ConfigurationItem) => {
-        const date = record.updatedAt ?? record.updatedAt;
-        return date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-';
+        return record.updatedAt ? dayjs(record.updatedAt).format('YYYY-MM-DD HH:mm') : '-';
       },
     },
     {
@@ -326,23 +325,7 @@ const CIList: React.FC = () => {
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">配置管理</h1>
-          <p className="text-gray-500 mt-1">管理和维护系统中的所有配置项(CI)及其关系</p>
-        </div>
-        <Space wrap>
-          <Button
-            type="primary"
-            icon={<Plus />}
-            onClick={() => router.push('/cmdb/cis/create')}
-          >
-            录入资产
-          </Button>
-        </Space>
-      </div>
-
+    <div>
       <Card className="rounded-lg shadow-sm border border-gray-200">
         {/* 搜索工具栏 */}
         <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -379,6 +362,14 @@ const CIList: React.FC = () => {
               刷新
             </Button>
           </Space>
+          <Button
+            type="primary"
+            icon={<Plus />}
+            className="ml-auto"
+            onClick={() => router.push('/cmdb/cis/create')}
+          >
+            录入资产
+          </Button>
         </div>
 
         {/* 批量操作工具栏 */}

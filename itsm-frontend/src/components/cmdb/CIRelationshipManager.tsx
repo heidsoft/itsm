@@ -170,16 +170,11 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
 
   // 加载可用CI列表
   const loadAvailableCIs = async (search?: string) => {
-    const isMounted = true;
     try {
       const cIs = await CIRelationshipAPI.getAvailableCIs(ciId, search);
-      if (isMounted) {
-        setAvailableCIs(cIs.map(c => ({ id: c.id, name: c.name, type: c.type })));
-      }
+      setAvailableCIs(cIs.map(c => ({ id: c.id, name: c.name, type: c.type })));
     } catch (error) {
-      if (isMounted) {
-        message.error('加载可用CI失败，请稍后重试');
-      }
+      message.error('加载可用CI失败，请稍后重试');
     }
   };
 
@@ -350,7 +345,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           dataSource={outgoingRelations}
           rowKey='id'
           scroll={{ x: 'max-content' }}
-          pagination={false}
+          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: total => `共 ${total} 条` }}
           size='small'
           loading={loading}
         />
@@ -369,7 +364,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           dataSource={incomingRelations}
           rowKey='id'
           scroll={{ x: 'max-content' }}
-          pagination={false}
+          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: total => `共 ${total} 条` }}
           size='small'
           loading={loading}
         />

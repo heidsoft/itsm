@@ -1,18 +1,8 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import React from 'react';
-
-import CIList from '@/components/cmdb/CIList';
-import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
-
-export default function CIPage() {
-  return (
-    <div className="space-y-6 p-6">
-      <ManagementPageHeader
-        title="配置项工作台"
-        description="面向 CSDM 的配置项清单，不是纯资产表。这里保留清单管理，但它只是 Service Graph 的一个视图。"
-      />
-      <CIList />
-    </div>
-  );
+// 历史路由兼容：早期版本使用单数 /cmdb/ci 作为 CI 清单入口，
+// 现行规范统一为复数 /cmdb/cis。详见菜单配置 menu-config.ts。
+// 注意：本路由仅作为兼容入口，不再渲染任何业务 UI。
+export default function LegacyCIPage(): never {
+  redirect('/cmdb/cis');
 }

@@ -3,7 +3,7 @@
  * 简化版：使用拆分的子组件和自定义 hooks
  */
 
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Card, Tabs, Breadcrumb, Button, Space, Tag, Typography, Result, Skeleton } from 'antd';
 import { ArrowLeft, History, Link, Network } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
@@ -34,6 +34,18 @@ export const CIDetail: React.FC = () => {
     typeInfo,
   } = useCIDetail();
 
+  // 标签页首次激活时自动加载数据，避免展示空态再点按钮
+  const visitedTabsRef = useRef(new Set<string>());
+  const handleTabChange = useCallback(
+    (key: string) => {
+      if (visitedTabsRef.current.has(key)) return;
+      visitedTabsRef.current.add(key);
+      if (key === 'impact') loadImpactAnalysis();
+      if (key === 'history') loadChangeHistory();
+    },
+    [loadImpactAnalysis, loadChangeHistory]
+  );
+
   if (loading) {
     return (
       <Card>
@@ -50,7 +62,7 @@ export const CIDetail: React.FC = () => {
           title='404'
           subTitle='抱歉，您访问的配置项不存在'
           extra={
-            <Button type='primary' onClick={() => router.push('/cmdb/ci')}>
+            <Button type='primary' onClick={() => router.push('/cmdb/cis')}>
               返回列表
             </Button>
           }
@@ -130,7 +142,7 @@ export const CIDetail: React.FC = () => {
         items={[
           { title: '首页' },
           { title: '配置管理' },
-          { title: <a onClick={() => router.push('/cmdb/ci')}>配置项列表</a> },
+          { title: <a onClick={() => router.push('/cmdb/cis')}>配置项列表</a> },
           { title: '资产详情' },
         ]}
       />
@@ -139,7 +151,7 @@ export const CIDetail: React.FC = () => {
         <div style={{ marginBottom: 24 }}>
           <Button
             icon={<ArrowLeft />}
-            onClick={() => router.push('/cmdb/ci')}
+            onClick={() => router.push('/cmdb/cis')}
             style={{ marginBottom: 16 }}
           >
             返回列表
@@ -159,7 +171,7 @@ export const CIDetail: React.FC = () => {
           </div>
         </div>
 
-        <Tabs defaultActiveKey='basic' items={tabItems} />
+        <Tabs defaultActiveKey='basic' items={tabItems} onChange={handleTabChange} />
       </Card>
     </div>
   );

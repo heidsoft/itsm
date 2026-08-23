@@ -14,7 +14,7 @@ export const CMDB_CAPABILITIES = [
     key: 'configuration-items',
     title: '配置项管理',
     description: '配置项录入、查询、编辑、生命周期与历史审计。',
-    href: '/cmdb/ci',
+    href: '/cmdb/cis',
     capabilityKey: 'cmdb.configurationItems',
   },
   {

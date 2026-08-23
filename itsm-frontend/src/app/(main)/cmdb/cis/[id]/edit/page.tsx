@@ -116,25 +116,25 @@ const EditCIPage: React.FC = () => {
       ciTypeId: ciTypeId,
       status: ci.status,
       description: ci.description,
-      serialNumber: ci.serialNumber ?? ci.serialNumber,
+      serialNumber: ci.serialNumber,
       model: ci.model,
       vendor: ci.vendor,
       location: ci.location,
-      assetTag: ci.assetTag ?? ci.assetTag,
-      assignedTo: ci.assignedTo ?? ci.assignedTo,
-      ownedBy: ci.ownedBy ?? ci.ownedBy,
+      assetTag: ci.assetTag,
+      assignedTo: ci.assignedTo,
+      ownedBy: ci.ownedBy,
       environment: ci.environment,
       criticality: ci.criticality,
-      discoverySource: ci.discoverySource ?? ci.discoverySource,
+      discoverySource: ci.discoverySource,
       source: ci.source,
-      cloudProvider: ci.cloudProvider ?? ci.cloudProvider,
+      cloudProvider: ci.cloudProvider,
       cloudAccountId: ci.cloudAccountId ? String(ci.cloudAccountId) : undefined,
-      cloudRegion: ci.cloudRegion ?? ci.cloudRegion,
-      cloudZone: ci.cloudZone ?? ci.cloudZone,
-      cloudResourceId: ci.cloudResourceId ?? ci.cloudResourceId,
-      cloudResourceType: ci.cloudResourceType ?? ci.cloudResourceType,
-      cloudSyncStatus: ci.cloudSyncStatus ?? ci.cloudSyncStatus,
-      cloudResourceRefId: ci.cloudResourceRefId ?? ci.cloudResourceRefId,
+      cloudRegion: ci.cloudRegion,
+      cloudZone: ci.cloudZone,
+      cloudResourceId: ci.cloudResourceId,
+      cloudResourceType: ci.cloudResourceType,
+      cloudSyncStatus: ci.cloudSyncStatus,
+      cloudResourceRefId: ci.cloudResourceRefId,
       cloudMetadata: ci.cloudMetadata as Record<string, {} | undefined> | undefined,
       customAttributes: attributeRecord as Record<string, {} | undefined> | undefined,
     };
@@ -233,7 +233,8 @@ const EditCIPage: React.FC = () => {
       });
       message.success('配置项更新成功');
       clearDirty();
-      router.push('/cmdb/ci');
+      // 保存后留在详情页，与"创建成功 -> 详情页"保持一致，避免丢失当前操作上下文
+      router.push(`/cmdb/cis/${id}`);
     } catch (error) {
       if (error instanceof Error) {
         message.error(error.message || '更新配置项失败');

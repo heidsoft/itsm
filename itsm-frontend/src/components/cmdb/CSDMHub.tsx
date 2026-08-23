@@ -148,7 +148,7 @@ export function CSDMHub() {
 
       <Card title={t('cmdb.hub.recommendedActions')}>
         <Space wrap size="middle">
-          <Button type="primary" icon={<Server className="h-4 w-4" />} onClick={() => router.push('/cmdb/ci')}>
+          <Button type="primary" icon={<Server className="h-4 w-4" />} onClick={() => router.push('/cmdb/cis')}>
             {t('cmdb.hub.ciWorkbench')}
           </Button>
           <Button icon={<Database className="h-4 w-4" />} onClick={() => router.push('/admin/cmdb-types')}>

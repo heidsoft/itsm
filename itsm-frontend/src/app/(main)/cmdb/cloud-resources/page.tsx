@@ -20,6 +20,7 @@ import { Search, Plus, Eye, RotateCcw, Link } from 'lucide-react';
 import dayjs from 'dayjs';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import CISearchSelect, { type CISelectOption } from '@/components/cmdb/CISearchSelect';
 import type { CloudResource, CloudService } from '@/types/biz/cmdb';
 
 
@@ -65,6 +66,7 @@ export default function CloudResourcePage() {
   const [services, setServices] = useState<CloudService[]>([]);
   const [binding, setBinding] = useState<CloudResource | null>(null);
   const [bindSubmitting, setBindSubmitting] = useState(false);
+  const [bindCIOption, setBindCIOption] = useState<CISelectOption | undefined>(undefined);
   const [selectedRow, setSelectedRow] = useState<CloudResource | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const isMountedRef = useRef(true);
@@ -236,12 +238,11 @@ export default function CloudResourcePage() {
             新建CI
           </Button>
           <Button
-            type='link'
-            size='small'
+            type="link"
+            size="small"
             onClick={() => {
               setBinding(record);
-              bindForm.resetFields();
-              bindForm.setFieldsValue({ ciId: undefined });
+              setBindCIOption(undefined);
             }}
           >
             绑定
@@ -366,18 +367,30 @@ export default function CloudResourcePage() {
       <Modal
         title='绑定已有配置项'
         open={Boolean(binding)}
-        onCancel={() => setBinding(null)}
+        onCancel={() => {
+          setBinding(null);
+          setBindCIOption(undefined);
+        }}
         onOk={handleBindExisting}
         confirmLoading={bindSubmitting}
+        okText='绑定'
+        destroyOnClose
         width={480}
       >
         <Form form={bindForm} layout='vertical'>
           <Form.Item
             name='ciId'
-            label='配置项ID'
-            rules={[{ required: true, message: '请输入配置项ID' }]}
+            label='配置项'
+            rules={[{ required: true, message: '请选择要绑定的配置项' }]}
           >
-            <Input placeholder='请输入已存在的配置项ID' />
+            <CISearchSelect
+              onChange={(value, option) => {
+                bindForm.setFieldValue('ciId', value);
+                setBindCIOption(option);
+              }}
+              style={{ width: '100%' }}
+              placeholder='输入名称搜索配置项'
+            />
           </Form.Item>
           {binding && (
             <div className='p-3 bg-gray-50 rounded text-sm text-gray-600'>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Breadcrumb,
@@ -51,6 +51,14 @@ export default function CloudServicePage() {
   }, [data]);
 
   const createProvider = Form.useWatch('provider', createForm);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const buildPayload = (values: Record<string, any>) => {
     const payload: Record<string, any> = {
@@ -90,31 +98,26 @@ export default function CloudServicePage() {
   };
 
   const loadData = async () => {
-    const isMounted = true;
     setLoading(true);
     try {
       const values = form.getFieldsValue();
       const list = await CMDBApi.getCloudServices(values.provider);
-      if (isMounted) {
+      if (isMountedRef.current) {
         setData(list || []);
       }
     } catch (error) {
-      if (isMounted) {
+      if (isMountedRef.current) {
         message.error(t('cmdb.loadCloudServicesFailed'));
       }
     } finally {
-      if (isMounted) {
+      if (isMountedRef.current) {
         setLoading(false);
       }
     }
   };
 
   useEffect(() => {
-    let isMounted = true;
     loadData();
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   const handleCreate = async () => {

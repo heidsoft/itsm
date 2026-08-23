@@ -6,7 +6,7 @@ describe('CMDB commercial menu', () => {
     const paths = cmdb?.children?.map(item => item.path);
 
     expect(paths).toEqual([
-      '/cmdb/ci',
+      '/cmdb/cis',
       '/cmdb/cis/create',
       '/cmdb/relationships',
       '/cmdb/topology',

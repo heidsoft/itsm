@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, Select, Button, Space, Tag, Spin, message, Drawer, Descriptions, Empty } from 'antd';
 import { RotateCcw, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ import dagre from 'dagre';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { CIRelationshipAPI, type TopologyNode } from '@/lib/api/cmdb-relationship';
+import { CIStatusLabels } from '@/constants/cmdb';
 
 const ciTypeIcons: Record<string, string> = {
   server: '🖥️', database: '🗄️', application: '📦', network: '🌐', storage: '💾', cloud: '☁️', default: '📋'
@@ -96,7 +97,11 @@ export default function TopologyPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedCI, setSelectedCI] = useState<number | null>(null);
-  const [ciList, setCIList] = useState<{ id: number; name: string; type: string }[]>([]);
+  const [ciOptions, setCIOptions] = useState<{ id: number; name: string; type: string; status?: string }[]>([]);
+  const [ciFetching, setCiFetching] = useState(false);
+  const ciSearchTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ciFetchSeqRef = React.useRef(0);
+  const isMountedRef = React.useRef(true);
   const [depth, setDepth] = useState(2);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -105,13 +110,45 @@ export default function TopologyPage() {
   // 当前点击高亮的节点 id（一跳影响面高亮）
   const [highlightNodeId, setHighlightNodeId] = useState<string | null>(null);
 
-  const loadCIList = useCallback(async () => {
+  // 服务端搜索 CI，防抖 300ms
+  const searchCIs = useCallback(async (search?: string) => {
+    const seq = ++ciFetchSeqRef.current;
+    setCiFetching(true);
     try {
-      const result = await CMDBApi.getCIs({});
-	  const items = result.items || [];
-      setCIList(items.map((ci: any) => ({ id: ci.id, name: ci.name, type: ci.ciType || ci.type })));
-    } catch (error) { console.error('Failed to load CI list:', error); }
+      const result = await CMDBApi.getCIs({ search: search || undefined, size: 20 });
+      if (!isMountedRef.current || seq !== ciFetchSeqRef.current) return;
+      const items = result.items ?? [];
+      setCIOptions(items.map((ci: any) => ({
+        id: ci.id,
+        name: ci.name,
+        type: ci.ciType || ci.type || '',
+        status: ci.status,
+      })));
+    } catch (error) {
+      if (isMountedRef.current && seq === ciFetchSeqRef.current) {
+        setCIOptions([]);
+      }
+    } finally {
+      if (isMountedRef.current && seq === ciFetchSeqRef.current) {
+        setCiFetching(false);
+      }
+    }
   }, []);
+
+  // 预加载第一页，保证未输入关键字也有候选
+  useEffect(() => {
+    isMountedRef.current = true;
+    searchCIs();
+    return () => {
+      isMountedRef.current = false;
+      if (ciSearchTimerRef.current) clearTimeout(ciSearchTimerRef.current);
+    };
+  }, [searchCIs]);
+
+  const handleCISelectSearch = (search: string) => {
+    if (ciSearchTimerRef.current) clearTimeout(ciSearchTimerRef.current);
+    ciSearchTimerRef.current = setTimeout(() => searchCIs(search), 300);
+  };
 
   const loadTopology = useCallback(async () => {
     if (!selectedCI) return;
@@ -134,7 +171,6 @@ export default function TopologyPage() {
     finally { setLoading(false); }
   }, [selectedCI, depth, setNodes, setEdges]);
 
-  React.useEffect(() => { loadCIList(); }, [loadCIList]);
   React.useEffect(() => { if (selectedCI) loadTopology(); }, [selectedCI, depth, loadTopology]);
 
   const onNodeClick = useCallback((_: any, node: Node) => {
@@ -194,8 +230,30 @@ export default function TopologyPage() {
     <PageContainer title="CMDB 拓扑图" description="可视化配置项之间的依赖关系">
       <Card className="shadow-sm rounded-lg mb-4">
         <Space wrap>
-          <Select placeholder="选择根配置项" showSearch style={{ width: 300 }} value={selectedCI} onChange={setSelectedCI}
-            options={ciList.map(ci => ({ value: ci.id, label: ci.name + ' (' + ci.type + ')' }))} allowClear />
+          <Select
+            placeholder="输入名称搜索配置项"
+            showSearch
+            style={{ width: 300 }}
+            value={selectedCI}
+            onChange={setSelectedCI}
+            onSearch={handleCISelectSearch}
+            filterOption={false}
+            loading={ciFetching}
+            notFoundContent={ciFetching ? '搜索中...' : '无匹配配置项'}
+            allowClear
+            options={ciOptions.map(ci => ({
+              value: ci.id,
+              label: (
+                <span>
+                  {ci.name}
+                  <Tag style={{ marginLeft: 8 }}>{ci.type}</Tag>
+                  {ci.status && (CIStatusLabels as Record<string, string>)[ci.status] && (
+                    <Tag>{(CIStatusLabels as Record<string, string>)[ci.status]}</Tag>
+                  )}
+                </span>
+              ),
+            }))}
+          />
           <Select placeholder="关系深度" value={depth} onChange={setDepth} style={{ width: 120 }}
             options={[{ value: 1, label: '1 层' }, { value: 2, label: '2 层' }, { value: 3, label: '3 层' }, { value: 4, label: '4 层' }]} />
           <Button icon={<RotateCcw />} onClick={loadTopology} loading={loading} disabled={!selectedCI}>刷新</Button>
