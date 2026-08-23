@@ -1,5 +1,3 @@
-'use client';
-
 import { redirect } from 'next/navigation';
 
 // /reports/catalog-usage 是历史/别名入口。
