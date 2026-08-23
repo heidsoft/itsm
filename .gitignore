@@ -233,8 +233,10 @@ ignored
 .qoder/better-harness/
 production-mode-test-report-*.md
 output/
-# Local verification/rebuild reports (often embed real credentials) — never commit
-reports/
+# Local verification/rebuild reports at repo root (often embed real credentials) — never commit
+/reports/
 tmp-audit/
+# Playwright custom reporter output under tests/ (junit/report html) — never commit
+/tests/reports/
 # One-shot AI code review artifacts at backend root (CMDB/BPMN/...) — keep local, never commit
 itsm-backend/audit*.md
