@@ -74,7 +74,11 @@ func (h *IncidentServiceTaskHandler) createIncident(ctx context.Context, variabl
 	incidentType, _ := variables["type"].(string)
 	priority, _ := variables["priority"].(string)
 	severity, _ := variables["severity"].(string)
-	tenantID := GetTenantIDFromVars(variables)
+	tenantID, err := ResolveTenantID(ctx, variables)
+	if err != nil {
+		h.logger.Errorw("BPMN createIncident 缺少租户上下文", "error", err)
+		return nil, fmt.Errorf("创建事件失败: %w", err)
+	}
 
 	if title == "" {
 		return nil, fmt.Errorf("事件标题不能为空")

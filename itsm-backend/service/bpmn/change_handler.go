@@ -79,7 +79,11 @@ func (h *ChangeServiceTaskHandler) createChange(ctx context.Context, variables m
 	description, _ := variables["description"].(string)
 	changeType, _ := variables["type"].(string)
 	priority, _ := variables["priority"].(string)
-	tenantID := GetTenantIDFromVars(variables)
+	tenantID, err := ResolveTenantID(ctx, variables)
+	if err != nil {
+		h.logger.Errorw("BPMN createChange 缺少租户上下文", "error", err)
+		return nil, fmt.Errorf("创建变更失败: %w", err)
+	}
 
 	if title == "" {
 		return nil, fmt.Errorf("变更标题不能为空")

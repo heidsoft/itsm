@@ -84,7 +84,7 @@ type TaskService interface {
 	RetryTask(ctx context.Context, taskID string, maxRetries int) error
 	DelegateTask(ctx context.Context, taskID string, newAssignee string) error
 	EscalateTask(ctx context.Context, taskID string, reason string) error
-	BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string) error
+	BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string, tenantID int) error
 	GetTaskStatistics(ctx context.Context, req *TaskStatisticsRequest) (*TaskStatistics, error)
 	ListApprovalDecisions(ctx context.Context, processInstanceKey string) ([]*ent.ProcessApprovalDecision, error)
 	// 会签相关
@@ -2508,13 +2508,17 @@ func (s *bpmnTaskService) EscalateTask(ctx context.Context, taskID string, reaso
 	return err
 }
 
-func (s *bpmnTaskService) BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string) error {
+func (s *bpmnTaskService) BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string, tenantID int) error {
 	if len(taskIDs) == 0 {
 		return fmt.Errorf("任务ID列表为空")
 	}
 
+	// 租户过滤，防止跨租户批量指派
 	_, err := s.client.ProcessTask.Update().
-		Where(processtask.TaskIDIn(taskIDs...)).
+		Where(
+			processtask.TaskIDIn(taskIDs...),
+			processtask.TenantID(tenantID),
+		).
 		SetAssignee(assignee).
 		SetStatus(common.ProcessTaskStatusAssigned).
 		SetAssignedTime(time.Now()).

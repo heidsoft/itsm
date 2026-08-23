@@ -75,7 +75,10 @@ func (h *CCTaskHandler) Execute(ctx context.Context, task *ent.ProcessTask, vari
 		"tenant_id", tenantID,
 	)
 
-	// 解析获取最终的抄送人ID列表
+	// 解析获取最终的抄送人ID列表（传入 variables 用于 ${placeholder} 替换）
+	ccUserIds = resolvePlaceholders(ccUserIds, variables)
+	ccGroupIds = resolvePlaceholders(ccGroupIds, variables)
+	ccRoleIds = resolvePlaceholders(ccRoleIds, variables)
 	ccUsers, err := h.resolveCCUsers(ctx, ccType, ccUserIds, ccGroupIds, ccRoleIds, ccVariable, variables, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to resolve CC users", "error", err)
@@ -201,6 +204,60 @@ func (h *CCTaskHandler) resolveCCUsers(ctx context.Context, ccType, ccUserIds, c
 	}
 }
 
+// resolvePlaceholders 将字符串中的 ${variableName} 占位符替换为流程变量中的实际值。
+// 支持单个占位符（如 "${approverId}"）和混合格式（如 "1,${managerId},3"）。
+// 如果变量不存在或类型不兼容，该占位符被替换为空字符串（即在结果中被跳过）。
+func resolvePlaceholders(str string, variables map[string]interface{}) string {
+	if str == "" || variables == nil {
+		return str
+	}
+	var sb strings.Builder
+	i := 0
+	for i < len(str) {
+		if i+1 < len(str) && str[i] == '$' && str[i+1] == '{' {
+			end := strings.IndexByte(str[i:], '}')
+			if end < 0 {
+				sb.WriteString(str[i:])
+				break
+			}
+			varName := str[i+2 : i+end]
+			if val, ok := variables[varName]; ok {
+				switch v := val.(type) {
+				case string:
+					sb.WriteString(v)
+				case float64:
+					sb.WriteString(strconv.FormatInt(int64(v), 10))
+				case int:
+					sb.WriteString(strconv.Itoa(v))
+				case int64:
+					sb.WriteString(strconv.FormatInt(v, 10))
+				case []interface{}:
+					for j, item := range v {
+						if j > 0 {
+							sb.WriteByte(',')
+						}
+						switch iv := item.(type) {
+						case string:
+							sb.WriteString(iv)
+						case float64:
+							sb.WriteString(strconv.FormatInt(int64(iv), 10))
+						case int:
+							sb.WriteString(strconv.Itoa(iv))
+						case int64:
+							sb.WriteString(strconv.FormatInt(iv, 10))
+						}
+					}
+				}
+			}
+			i += end + 1
+		} else {
+			sb.WriteByte(str[i])
+			i++
+		}
+	}
+	return sb.String()
+}
+
 // parseCommaSeparatedInts 解析逗号分隔的整数列表
 func (h *CCTaskHandler) parseCommaSeparatedInts(str string) ([]int, error) {
 	if str == "" {
@@ -211,13 +268,6 @@ func (h *CCTaskHandler) parseCommaSeparatedInts(str string) ([]int, error) {
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
 		if part == "" {
-			continue
-		}
-		// 处理变量占位符，如 ${applyUserId}
-		if strings.HasPrefix(part, "${") && strings.HasSuffix(part, "}") {
-			// 这里会在流程变量替换阶段处理，暂时保留原样，由上层替换
-			// TODO: 支持变量解析
-			h.logger.Warnw("Variable placeholder in CC user ID not supported yet", "placeholder", part)
 			continue
 		}
 		id, err := strconv.Atoi(part)

@@ -2,6 +2,7 @@ package bpmn
 
 import (
 	"context"
+	"fmt"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -106,14 +107,47 @@ func GetStringFromVars(variables map[string]interface{}, key string) string {
 	return ""
 }
 
-// GetTenantIDFromVars 从变量中提取租户ID
-func GetTenantIDFromVars(variables map[string]interface{}) int {
-	// 首先检查 tenant_id
+// GetTenantIDFromVars 从流程变量中提取租户ID。
+// 缺失或非法时返回错误，禁止回退到默认租户（tenant_id=1），
+// 否则会把无租户上下文的流程数据写入 admin 租户，造成越权。
+func GetTenantIDFromVars(variables map[string]interface{}) (int, error) {
 	if id := GetIntFromVars(variables, "tenant_id"); id > 0 {
-		return id
+		return id, nil
 	}
-	// 如果没有，返回默认租户ID 1
-	return 1
+	return 0, fmt.Errorf("流程变量缺少有效的 tenant_id，拒绝执行以避免跨租户写入")
+}
+
+// GetTenantIDFromContext 从 context 中提取 BPMN 租户ID，作为流程变量的补充来源。
+func GetTenantIDFromContext(ctx context.Context) (int, bool) {
+	if v := ctx.Value(BPMNTenantIDContextKey); v != nil {
+		switch id := v.(type) {
+		case int:
+			if id > 0 {
+				return id, true
+			}
+		case int64:
+			if id > 0 {
+				return int(id), true
+			}
+		case float64:
+			if id > 0 {
+				return int(id), true
+			}
+		}
+	}
+	return 0, false
+}
+
+// ResolveTenantID 优先使用流程变量中的租户ID，其次回退到 context 中经认证注入的租户ID。
+// 两者都不可用时返回错误，绝不静默落到租户 1。
+func ResolveTenantID(ctx context.Context, variables map[string]interface{}) (int, error) {
+	if id := GetIntFromVars(variables, "tenant_id"); id > 0 {
+		return id, nil
+	}
+	if id, ok := GetTenantIDFromContext(ctx); ok {
+		return id, nil
+	}
+	return 0, fmt.Errorf("无法确定租户ID：流程变量与上下文均缺少 tenant_id")
 }
 
 // HandlerRegistry 处理器注册中心

@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Card, Empty, Select, Input, Tag, Typography, Space, Divider, Alert, Button, Switch, Tooltip, Collapse, Badge } from 'antd';
 import {
   User, Users, UserCheck, Hash, Tag as TagIcon, RefreshCw,
@@ -51,6 +51,119 @@ function toCsv(values: string[]): string {
     .map(s => (s || '').trim())
     .filter(Boolean)
     .join(',');
+}
+
+/**
+ * 防抖提交的受控输入。
+ * 逐键 updateProperties 会触发命令栈变化 + 全量 saveXML 序列化，导致输入卡顿、
+ * 命令栈被逐键污染（撤销粒度变成单个字符）。这里改为：
+ * - 输入时仅更新本地 state（300ms 防抖后提交）
+ * - 失焦时立即提交未保存的值
+ * - 仅当外部值变化（选中节点切换 / 画布同步）时才重置本地值
+ */
+function useDebouncedCommit(
+  externalValue: string,
+  onCommit: (value: string) => void,
+  delay = 300
+) {
+  const [localValue, setLocalValue] = useState(externalValue);
+  const lastCommittedRef = useRef(externalValue);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (externalValue !== lastCommittedRef.current) {
+      lastCommittedRef.current = externalValue;
+      setLocalValue(externalValue);
+    }
+  }, [externalValue]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const commit = useCallback(
+    (value: string) => {
+      lastCommittedRef.current = value;
+      onCommit(value);
+    },
+    [onCommit]
+  );
+
+  const handleChange = useCallback(
+    (value: string) => {
+      setLocalValue(value);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        timerRef.current = null;
+        commit(value);
+      }, delay);
+    },
+    [commit, delay]
+  );
+
+  const handleBlur = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (localValue !== lastCommittedRef.current) {
+      commit(localValue);
+    }
+  }, [localValue, commit]);
+
+  return { value: localValue, onChange: handleChange, onBlur: handleBlur };
+}
+
+interface DebouncedInputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onBlur' | 'value' | 'size'> {
+  value: string;
+  onCommit: (value: string) => void;
+  delay?: number;
+  size?: 'small' | 'middle' | 'large';
+  addonBefore?: React.ReactNode;
+  allowClear?: boolean;
+}
+
+function DebouncedInput({ value, onCommit, delay, size, addonBefore, allowClear, ...rest }: DebouncedInputProps) {
+  const { value: localValue, onChange, onBlur } = useDebouncedCommit(value, onCommit, delay);
+  return (
+    <Input
+      {...rest}
+      size={size}
+      addonBefore={addonBefore}
+      allowClear={allowClear}
+      value={localValue}
+      onChange={e => onChange(e.target.value)}
+      onBlur={onBlur}
+    />
+  );
+}
+
+interface DebouncedTextAreaProps {
+  value: string;
+  onCommit: (value: string) => void;
+  delay?: number;
+  rows?: number;
+  size?: 'small' | 'middle' | 'large';
+  placeholder?: string;
+  className?: string;
+}
+
+function DebouncedTextArea({ value, onCommit, delay, rows, size, placeholder, className }: DebouncedTextAreaProps) {
+  const { value: localValue, onChange, onBlur } = useDebouncedCommit(value, onCommit, delay);
+  return (
+    <TextArea
+      rows={rows}
+      size={size}
+      placeholder={placeholder}
+      className={className}
+      value={localValue}
+      onChange={e => onChange(e.target.value)}
+      onBlur={onBlur}
+    />
+  );
 }
 
 /**
@@ -438,9 +551,9 @@ export default function WorkflowNodeInspector({
             <Text type="secondary" className="text-xs">
               节点名称
             </Text>
-            <Input
+            <DebouncedInput
               value={currentName}
-              onChange={e => apply({ name: e.target.value })}
+              onCommit={value => apply({ name: value })}
               placeholder="输入节点显示名称"
               size="small"
               className="mt-1"
@@ -451,9 +564,9 @@ export default function WorkflowNodeInspector({
             <Text type="secondary" className="text-xs">
               描述信息
             </Text>
-            <TextArea
+            <DebouncedTextArea
               value={currentDocumentation}
-              onChange={e => apply({ documentation: e.target.value })}
+              onCommit={value => apply({ documentation: value })}
               placeholder="输入节点功能描述（可选）"
               size="small"
               rows={2}
@@ -490,8 +603,8 @@ export default function WorkflowNodeInspector({
                     className="w-full" size="small"
                   />
                   {currentApprovalMode === 'threshold' && (
-                    <Input type="number" min={1} value={currentApprovalThreshold}
-                      onChange={e => apply({ approvalThreshold: Number(e.target.value || 1) })}
+                    <DebouncedInput type="number" min={1} value={String(currentApprovalThreshold)}
+                      onCommit={value => apply({ approvalThreshold: Number(value || 1) })}
                       addonBefore="通过人数" size="small" />
                   )}
                   <Select value={currentRejectStrategy} onChange={value => apply({ rejectStrategy: value })}
@@ -649,10 +762,10 @@ export default function WorkflowNodeInspector({
                 <FileText className="w-3.5 h-3.5 mr-1" />
                 表单键 (formKey)
               </Text>
-              <Input
+              <DebouncedInput
                 placeholder="例如：approve_form_v1"
                 value={currentFormKey}
-                onChange={e => apply({ formKey: e.target.value })}
+                onCommit={value => apply({ formKey: value })}
                 allowClear
                 size="small"
               />
@@ -663,11 +776,11 @@ export default function WorkflowNodeInspector({
                 <Hash className="w-3.5 h-3.5 mr-1" />
                 优先级 (priority)
               </Text>
-              <Input
+              <DebouncedInput
                 type="number"
                 placeholder="例如：50（数值越高越优先）"
                 value={currentPriority}
-                onChange={e => apply({ priority: e.target.value })}
+                onCommit={value => apply({ priority: value })}
                 allowClear
                 size="small"
                 min={0}
@@ -680,10 +793,10 @@ export default function WorkflowNodeInspector({
                 <Clock className="w-3.5 h-3.5 mr-1" />
                 截止时间 (dueDate)
               </Text>
-              <Input
+              <DebouncedInput
                 placeholder="ISO 8601 或 P0Y0M0DT2H0M0S 格式"
                 value={currentDueDate}
-                onChange={e => apply({ dueDate: e.target.value })}
+                onCommit={value => apply({ dueDate: value })}
                 allowClear
                 size="small"
               />
@@ -694,10 +807,10 @@ export default function WorkflowNodeInspector({
                 <Timer className="w-3.5 h-3.5 mr-1" />
                 提醒时间 (followUpDate)
               </Text>
-              <Input
+              <DebouncedInput
                 placeholder="ISO 8601 或 P0Y0M0DT1H0M0S 格式"
                 value={currentFollowUpDate}
-                onChange={e => apply({ followUpDate: e.target.value })}
+                onCommit={value => apply({ followUpDate: value })}
                 allowClear
                 size="small"
               />
@@ -730,9 +843,9 @@ export default function WorkflowNodeInspector({
                 <Webhook className="w-3.5 h-3.5 mr-1" />
                 操作引用 (operationRef)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentOperationRef}
-                onChange={e => apply({ operationRef: e.target.value })}
+                onCommit={value => apply({ operationRef: value })}
                 placeholder="输入操作标识或URL"
                 size="small"
               />
@@ -743,9 +856,9 @@ export default function WorkflowNodeInspector({
                 <Hash className="w-3.5 h-3.5 mr-1" />
                 结果存储变量名
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentResultVariable}
-                onChange={e => apply({ resultVariable: e.target.value })}
+                onCommit={value => apply({ resultVariable: value })}
                 placeholder="例如：httpResult（执行结果将存入该变量）"
                 size="small"
               />
@@ -870,9 +983,9 @@ export default function WorkflowNodeInspector({
                   <Hash className="w-3.5 h-3.5 mr-1" />
                   动态变量名
                 </Text>
-                <Input
+                <DebouncedInput
                   value={currentCCVariable}
-                  onChange={e => apply({ ccVariable: e.target.value })}
+                  onCommit={value => apply({ ccVariable: value })}
                   placeholder="变量名，如 ccUserIds，变量值应为用户ID数组"
                   size="small"
                 />
@@ -921,9 +1034,9 @@ export default function WorkflowNodeInspector({
                 <Mail className="w-3.5 h-3.5 mr-1" />
                 收件人 (To)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentMailTo}
-                onChange={e => apply({ mailTo: e.target.value })}
+                onCommit={value => apply({ mailTo: value })}
                 placeholder="多个收件人用逗号分隔，支持变量如 ${applyUser.email}"
                 size="small"
               />
@@ -934,9 +1047,9 @@ export default function WorkflowNodeInspector({
                 <Mail className="w-3.5 h-3.5 mr-1" />
                 抄送人 (Cc)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentMailCc}
-                onChange={e => apply({ mailCc: e.target.value })}
+                onCommit={value => apply({ mailCc: value })}
                 placeholder="多个抄送人用逗号分隔"
                 size="small"
               />
@@ -947,9 +1060,9 @@ export default function WorkflowNodeInspector({
                 <MessageSquare className="w-3.5 h-3.5 mr-1" />
                 邮件主题
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentMailSubject}
-                onChange={e => apply({ mailSubject: e.target.value })}
+                onCommit={value => apply({ mailSubject: value })}
                 placeholder="邮件主题，支持变量如 ${order.title}"
                 size="small"
               />
@@ -960,9 +1073,9 @@ export default function WorkflowNodeInspector({
                 <FileText className="w-3.5 h-3.5 mr-1" />
                 邮件模板
               </Text>
-              <TextArea
+              <DebouncedTextArea
                 value={currentMailTemplate}
-                onChange={e => apply({ mailTemplate: e.target.value })}
+                onCommit={value => apply({ mailTemplate: value })}
                 placeholder="邮件内容模板，支持HTML和变量"
                 rows={5}
                 size="small"
@@ -1007,9 +1120,9 @@ export default function WorkflowNodeInspector({
                 <Code className="w-3.5 h-3.5 mr-1" />
                 脚本内容
               </Text>
-              <TextArea
+              <DebouncedTextArea
                 value={currentScript}
-                onChange={e => apply({ script: e.target.value })}
+                onCommit={value => apply({ script: value })}
                 placeholder="输入要执行的脚本代码"
                 rows={6}
                 className="font-mono text-xs"
@@ -1031,9 +1144,9 @@ export default function WorkflowNodeInspector({
                 <Database className="w-3.5 h-3.5 mr-1" />
                 规则引用 (ruleRef)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentRuleRef}
-                onChange={e => apply({ ruleRef: e.target.value })}
+                onCommit={value => apply({ ruleRef: value })}
                 placeholder="业务规则ID或名称"
                 size="small"
               />
@@ -1044,9 +1157,9 @@ export default function WorkflowNodeInspector({
                 <FileText className="w-3.5 h-3.5 mr-1" />
                 输入参数
               </Text>
-              <TextArea
+              <DebouncedTextArea
                 value={currentRuleInput}
-                onChange={e => apply({ ruleInput: e.target.value })}
+                onCommit={value => apply({ ruleInput: value })}
                 placeholder="输入参数映射，JSON格式"
                 rows={3}
                 className="font-mono text-xs"
@@ -1058,9 +1171,9 @@ export default function WorkflowNodeInspector({
                 <FileText className="w-3.5 h-3.5 mr-1" />
                 输出参数
               </Text>
-              <TextArea
+              <DebouncedTextArea
                 value={currentRuleOutput}
-                onChange={e => apply({ ruleOutput: e.target.value })}
+                onCommit={value => apply({ ruleOutput: value })}
                 placeholder="输出结果映射，JSON格式"
                 rows={3}
                 className="font-mono text-xs"
@@ -1091,9 +1204,9 @@ export default function WorkflowNodeInspector({
                 <MessageCircle className="w-3.5 h-3.5 mr-1" />
                 消息引用 (messageRef)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentMessageRef}
-                onChange={e => apply({ messageRef: e.target.value })}
+                onCommit={value => apply({ messageRef: value })}
                 placeholder="消息定义ID"
                 size="small"
               />
@@ -1104,9 +1217,9 @@ export default function WorkflowNodeInspector({
                 <Settings className="w-3.5 h-3.5 mr-1" />
                 操作 (operation)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentOperation}
-                onChange={e => apply({ operation: e.target.value })}
+                onCommit={value => apply({ operation: value })}
                 placeholder="发送操作标识"
                 size="small"
               />
@@ -1124,9 +1237,9 @@ export default function WorkflowNodeInspector({
                 <MessageCircle className="w-3.5 h-3.5 mr-1" />
                 消息引用 (messageRef)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentMessageRef}
-                onChange={e => apply({ messageRef: e.target.value })}
+                onCommit={value => apply({ messageRef: value })}
                 placeholder="等待接收的消息定义ID"
                 size="small"
               />
@@ -1144,9 +1257,9 @@ export default function WorkflowNodeInspector({
                 <GitBranch className="w-3.5 h-3.5 mr-1" />
                 默认分支
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentDefaultFlow}
-                onChange={e => apply({ default: e.target.value })}
+                onCommit={value => apply({ default: value })}
                 placeholder="输入默认流转的节点ID"
                 size="small"
               />
@@ -1174,9 +1287,9 @@ export default function WorkflowNodeInspector({
                 <GitBranch className="w-3.5 h-3.5 mr-1" />
                 默认分支
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentDefaultFlow}
-                onChange={e => apply({ default: e.target.value })}
+                onCommit={value => apply({ default: value })}
                 placeholder="输入默认流转的节点ID"
                 size="small"
               />
@@ -1201,9 +1314,9 @@ export default function WorkflowNodeInspector({
                 <Settings className="w-3.5 h-3.5 mr-1" />
                 激活条件
               </Text>
-              <TextArea
+              <DebouncedTextArea
                 value={currentCondition}
-                onChange={e => apply({ activationCondition: e.target.value })}
+                onCommit={value => apply({ activationCondition: value })}
                 placeholder="输入激活条件表达式"
                 rows={3}
                 className="font-mono text-xs"
@@ -1229,9 +1342,9 @@ export default function WorkflowNodeInspector({
                 <GitBranch className="w-3.5 h-3.5 mr-1" />
                 流转条件表达式
               </Text>
-              <TextArea
+              <DebouncedTextArea
                 value={currentConditionExpression}
-                onChange={e => applyCondition(e.target.value)}
+                onCommit={value => applyCondition(value)}
                 placeholder="例如：${order.amount > 10000} 或 JavaScript 表达式"
                 rows={3}
                 className="font-mono text-xs"
@@ -1268,9 +1381,9 @@ export default function WorkflowNodeInspector({
                   <Timer className="w-3.5 h-3.5 mr-1" />
                   持续时间
                 </Text>
-                <Input
+                <DebouncedInput
                   value={currentTimerDefinition}
-                  onChange={e => apply({ timeDuration: e.target.value })}
+                  onCommit={value => apply({ timeDuration: value })}
                   placeholder="例如：PT1H（1小时后执行）"
                   size="small"
                 />
@@ -1286,9 +1399,9 @@ export default function WorkflowNodeInspector({
                   <Timer className="w-3.5 h-3.5 mr-1" />
                   周期表达式
                 </Text>
-                <Input
+                <DebouncedInput
                   value={currentTimerCycle}
-                  onChange={e => apply({ timeCycle: e.target.value })}
+                  onCommit={value => apply({ timeCycle: value })}
                   placeholder="例如：R/PT1H（每小时执行一次）或 cron 表达式"
                   size="small"
                 />
@@ -1304,9 +1417,9 @@ export default function WorkflowNodeInspector({
                   <Timer className="w-3.5 h-3.5 mr-1" />
                   指定时间
                 </Text>
-                <Input
+                <DebouncedInput
                   value={currentTimerDate}
-                  onChange={e => apply({ timeDate: e.target.value })}
+                  onCommit={value => apply({ timeDate: value })}
                   placeholder="例如：2025-12-31T23:59:59Z"
                   size="small"
                 />
@@ -1328,9 +1441,9 @@ export default function WorkflowNodeInspector({
                 <MessageCircle className="w-3.5 h-3.5 mr-1" />
                 消息引用 (messageRef)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentMessageRef}
-                onChange={e => apply({ messageRef: e.target.value })}
+                onCommit={value => apply({ messageRef: value })}
                 placeholder="消息定义ID或名称"
                 size="small"
               />
@@ -1348,9 +1461,9 @@ export default function WorkflowNodeInspector({
                 <Radio className="w-3.5 h-3.5 mr-1" />
                 信号引用 (signalRef)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentSignalRef}
-                onChange={e => apply({ signalRef: e.target.value })}
+                onCommit={value => apply({ signalRef: value })}
                 placeholder="信号定义ID或名称"
                 size="small"
               />
@@ -1368,9 +1481,9 @@ export default function WorkflowNodeInspector({
                 <AlertTriangle className="w-3.5 h-3.5 mr-1" />
                 错误代码 (errorCode)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentErrorCode}
-                onChange={e => apply({ errorCode: e.target.value })}
+                onCommit={value => apply({ errorCode: value })}
                 placeholder="要捕获或抛出的错误代码"
                 size="small"
               />
@@ -1388,9 +1501,9 @@ export default function WorkflowNodeInspector({
                 <AlertTriangle className="w-3.5 h-3.5 mr-1" />
                 升级代码 (escalationCode)
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentEscalationCode}
-                onChange={e => apply({ escalationCode: e.target.value })}
+                onCommit={value => apply({ escalationCode: value })}
                 placeholder="升级事件代码"
                 size="small"
               />
@@ -1408,9 +1521,9 @@ export default function WorkflowNodeInspector({
                 <Settings className="w-3.5 h-3.5 mr-1" />
                 条件表达式
               </Text>
-              <TextArea
+              <DebouncedTextArea
                 value={currentCondition}
-                onChange={e => apply({ condition: e.target.value })}
+                onCommit={value => apply({ condition: value })}
                 placeholder="输入条件表达式，返回true时触发事件"
                 rows={3}
                 className="font-mono text-xs"
@@ -1508,9 +1621,9 @@ export default function WorkflowNodeInspector({
                 <Link className="w-3.5 h-3.5 mr-1" />
                 调用流程ID
               </Text>
-              <Input
+              <DebouncedInput
                 value={currentCalledElement}
-                onChange={e => apply({ calledElement: e.target.value })}
+                onCommit={value => apply({ calledElement: value })}
                 placeholder="要调用的外部流程定义ID"
                 size="small"
               />

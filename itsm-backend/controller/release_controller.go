@@ -39,8 +39,11 @@ func (rc *ReleaseController) ListReleases(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	status := c.Query("status")
 	releaseType := c.Query("type")
+	// 行级数据权限：从鉴权中间件注入的 user_id/role 取得，下传给 service 判定 DataScope。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 
-	releases, err := rc.releaseService.ListReleases(c.Request.Context(), tenantID, page, pageSize, status, releaseType)
+	releases, err := rc.releaseService.ListReleases(c.Request.Context(), tenantID, page, pageSize, status, releaseType, currentUserID, currentRole)
 	if err != nil {
 		rc.logger.Errorw("List releases failed", "error", err, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, "获取发布列表失败: "+err.Error())

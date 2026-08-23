@@ -715,6 +715,18 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     setActiveTab(key);
   };
 
+  // 未保存离开拦截：浏览器刷新/关闭时
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [hasChanges]);
+
   // 提供给子组件的值
   const contextValue = useMemo(
     () => ({
@@ -793,12 +805,15 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           workflow={workflow}
           saving={saving}
           deploying={deploying}
+          hasChanges={hasChanges}
           onSave={handleSave}
           onSaveAndDeploy={handleSaveAndDeploy}
           onDeploy={handleDeploy}
           currentXML={currentXML}
           onValidate={validateWorkflow}
-          validationIssues={validationIssues} onAIClick={() => setShowAIModal(true)}
+          validationIssues={validationIssues}
+          onAIClick={() => setShowAIModal(true)}
+          onTabChange={handleTabChange}
         />
 
         <Content className="p-4 md:p-6 bg-gray-50 overflow-hidden">

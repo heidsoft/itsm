@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { MenuProps } from 'antd';
-import { Button, Tooltip, App, Input, Space, Dropdown } from 'antd';
+import { Button, Tooltip, App, Input, AutoComplete, Dropdown } from 'antd';
 import {
   Save,
   PlayCircle,
@@ -77,25 +77,18 @@ export interface BpmnNodeSelection {
   businessObject?: Record<string, unknown>;
 }
 
-// 历史记录项
-interface HistoryItem {
-  xml: string;
-  timestamp: number;
-  description?: string;
+// 搜索结果项
+interface SearchMatch {
+  id: string;
+  name: string;
+  type: string;
 }
 
-const readCanvasZoom = (canvas: unknown): number => {
-  const typedCanvas = canvas as
-    | { getZoom?: () => number; zoom?: (level?: string | number) => number }
-    | undefined;
-  if (typeof typedCanvas?.getZoom === 'function') {
-    return typedCanvas.getZoom();
-  }
-  if (typeof typedCanvas?.zoom === 'function') {
-    const zoom = typedCanvas.zoom();
-    return typeof zoom === 'number' ? zoom : 1;
-  }
-  return 1;
+/** 判断事件目标是否为可编辑元素（输入框/文本域），快捷键不应劫持 */
+const isEditableTarget = (target: EventTarget | null): boolean => {
+  const el = target as HTMLElement | null;
+  if (!el) return false;
+  return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable;
 };
 
 const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
@@ -115,38 +108,97 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   const initAttemptedRef = useRef(false);
   const [currentXML, setCurrentXML] = useState(xml);
   const [zoom, setZoom] = useState(1);
-  const [history, setHistory] = useState<HistoryItem[]>([{ xml, timestamp: Date.now(), description: t('bpmnDesigner.messages.initial') }]);
-  const [historyIndex, setHistoryIndex] = useState(0);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchMatches, setSearchMatches] = useState<SearchMatch[]>([]);
   const [selectedElements, setSelectedElements] = useState<string[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
+
+  // ---------------------------------------------------------------------------
+  // refs：保持回调/配置的最新引用，保证 modeler 只初始化一次（不随编辑重建）
+  // ---------------------------------------------------------------------------
+  const onChangeRef = useRef(onChange);
+  const onSaveRef = useRef(onSave);
+  const onSelectionChangeRef = useRef(onSelectionChange);
+  const messageRef = useRef(message);
+  const tRef = useRef(t);
+  const snapToGridRef = useRef(snapToGrid);
+  const showGridRef = useRef(showGrid);
+  const selectedElementsRef = useRef<string[]>([]);
+  const currentXMLRef = useRef(currentXML);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+    onSaveRef.current = onSave;
+    onSelectionChangeRef.current = onSelectionChange;
+    messageRef.current = message;
+    tRef.current = t;
+  }, [onChange, onSave, onSelectionChange, message, t]);
+
+  useEffect(() => {
+    snapToGridRef.current = snapToGrid;
+    showGridRef.current = showGrid;
+    selectedElementsRef.current = selectedElements;
+    currentXMLRef.current = currentXML;
+  }, [snapToGrid, showGrid, selectedElements, currentXML]);
+
+  // 防抖同步 XML：命令触发后延迟序列化，避免连续操作时反复 saveXML
+  const xmlSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 最近一次通过 onChange 向外发出的 XML，用于识别父组件回传的"回环"更新
+  const emittedXmlRef = useRef<string | null>(xml || null);
+  // import 并发令牌：仅接受最新一次导入的结果
+  const importTokenRef = useRef(0);
+
+  /** 撤销/重做可用状态（来自 bpmn-js 原生命令栈） */
+  const syncCommandStackState = useCallback(() => {
+    const modeler = modelerRef.current;
+    if (!modeler) return;
+    try {
+      const commandStack = modeler.get('commandStack') as {
+        canUndo: () => boolean;
+        canRedo: () => boolean;
+      };
+      setCanUndo(commandStack.canUndo());
+      setCanRedo(commandStack.canRedo());
+    } catch {
+      // commandStack 不可用时保持现状
+    }
+  }, []);
+
+  const scheduleXmlSync = useCallback((delay = 150) => {
+    if (xmlSyncTimerRef.current) clearTimeout(xmlSyncTimerRef.current);
+    xmlSyncTimerRef.current = setTimeout(async () => {
+      const modeler = modelerRef.current;
+      if (!modeler) return;
+      try {
+        const result = await modeler.saveXML({ format: true });
+        if (result.xml) {
+          setCurrentXML(result.xml);
+          emittedXmlRef.current = result.xml;
+          onChangeRef.current?.(result.xml);
+        }
+      } catch (err) {
+        console.error('Failed to serialize BPMN XML:', err);
+      }
+    }, delay);
+  }, []);
 
   // 等待容器具有有效尺寸后再初始化 BPMN Modeler
   // bpmn-js 在容器尺寸为 0 时会抛出 "Cannot read properties of undefined (reading 'root-0')"
   const initializeModeler = useCallback(() => {
-    console.log('[BPMNDesigner] initializeModeler called', {
-      hasContainer: !!containerRef.current,
-      hasModeler: !!modelerRef.current,
-      initAttempted: initAttemptedRef.current
-    });
-
     if (!containerRef.current || modelerRef.current || initAttemptedRef.current) {
-      console.log('[BPMNDesigner] Skipping init - already initialized or no container');
       return;
     }
 
     const rect = containerRef.current.getBoundingClientRect();
-    console.log('[BPMNDesigner] Container size:', rect);
     if (rect.width <= 0 || rect.height <= 0) {
-      // 容器尚未布局完成，等待下一帧重试
-      console.log('[BPMNDesigner] Container not ready, waiting...');
+      // 容器尚未布局完成，由外部重试逻辑处理
       return;
     }
 
     try {
-      console.log('[BPMNDesigner] Creating BpmnModeler...');
       const additionalModules = [gridModule];
 
       const modeler = new BpmnModeler({
@@ -155,182 +207,115 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         moddleExtensions: { itsm: itsmModdleDescriptor },
         grid: {
           size: 10,
-          visible: showGrid
-        }
+          visible: showGridRef.current,
+        },
       });
 
       modelerRef.current = modeler;
       initAttemptedRef.current = true;
-      console.log('[BPMNDesigner] BpmnModeler created successfully');
 
-      // 加载初始 XML
-      if (xml) {
-        console.log('[BPMNDesigner] Importing XML, length:', xml.length);
-        modeler
-          .importXML(xml)
-          .then(() => {
-            // 检查 modeler 是否仍然存在（避免 React StrictMode 卸载后渲染丢失）
-            if (modelerRef.current !== modeler) {
-              console.log('[BPMNDesigner] Modeler destroyed before importXML resolved, skipping render');
-              return;
-            }
-            console.log('[BPMNDesigner] XML imported successfully');
-            try {
-              const canvas = modeler.get('canvas') as
-                | { zoom: (level?: string | number) => number }
-                | undefined;
-              canvas?.zoom('fit-viewport');
-              setZoom(readCanvasZoom(canvas));
-            } catch (renderErr) {
-              console.error('[BPMNDesigner] Error after XML import:', renderErr);
-            }
-          })
-          .catch((err: Error) => {
-            console.error('[BPMNDesigner] Failed to import XML:', err.message, err);
-            message.error(t('bpmnDesigner.messages.loadFailed'));
-          });
-      } else {
-        console.log('[BPMNDesigner] No XML provided, creating diagram');
-        modeler
-          .createDiagram()
-          .then(() => {
-            if (modelerRef.current !== modeler) return;
-            const canvas = modeler.get('canvas') as
-              | { zoom: (level?: string) => number }
-              | undefined;
-            canvas?.zoom('fit-viewport');
-            setZoom(readCanvasZoom(canvas));
-          })
-          .catch((err: Error) => {
-            console.error('Failed to create blank diagram:', err);
-          });
-      }
-
-      // 监听变化
-      modeler.on('commandStack.changed', () => {
-        modeler.saveXML({ format: true }).then(result => {
-          const savedXml = result.xml;
-          if (savedXml) {
-            setCurrentXML(savedXml);
-            onChange?.(savedXml);
-
-            // 更新历史记录，避免连续重复添加
-            setHistory(prev => {
-              // 如果当前不是在最后位置，先截断后面的历史
-              const newHistory = prev.slice(0, historyIndex + 1);
-              
-              // 避免完全相同的内容重复添加
-              const lastItem = newHistory[newHistory.length - 1];
-              if (lastItem && lastItem.xml === savedXml) {
-                return prev;
-              }
-
-              // 添加新的历史项，最多保留50步
-              newHistory.push({ 
-                xml: savedXml, 
-                timestamp: Date.now(),
-                description: t('bpmnDesigner.messages.modifyFlow')
-              });
-              return newHistory.slice(-50);
-            });
-            setHistoryIndex(prev => Math.min(prev + 1, history.length));
+      // 加载初始 XML（仅挂载时使用当时的 prop，后续变化由 [xml] effect 处理）
+      const importInitial = async () => {
+        try {
+          if (xml) {
+            await modeler.importXML(xml);
+          } else {
+            await modeler.createDiagram();
           }
-        });
+        } catch (err) {
+          console.error('Failed to import initial XML:', err);
+          messageRef.current.error(tRef.current('bpmnDesigner.messages.loadFailed'));
+          return;
+        }
+        // 避免 React StrictMode 卸载后渲染丢失
+        if (modelerRef.current !== modeler) return;
+        try {
+          const canvas = modeler.get('canvas') as { zoom: (level?: string | number) => number };
+          canvas.zoom('fit-viewport');
+        } catch (renderErr) {
+          console.error('Error after XML import:', renderErr);
+        }
+      };
+      void importInitial();
+
+      // 命令栈变化：同步撤销/重做状态 + 防抖序列化 XML 推给父组件
+      modeler.on('commandStack.changed', () => {
+        syncCommandStackState();
+        scheduleXmlSync();
       });
 
-      // 监听选中节点变化，向父组件传递当前节点
-      if (onSelectionChange) {
-        const selection = modeler.get('selection') as {
-          get: () => any[];
-          select: (elements: any[]) => void;
-        };
-        const elementRegistry = modeler.get('elementRegistry') as {
-          get: (id: string) => any;
-          filter: (fn: (element: any) => boolean) => any[];
-        };
+      // 视口变化（滚轮缩放、fit-viewport 等）时同步缩放比例显示
+      modeler.on('canvas.viewbox.changed', (event: { viewbox?: { scale?: number } }) => {
+        const scale = event?.viewbox?.scale;
+        if (typeof scale === 'number' && scale > 0) {
+          setZoom(scale);
+        }
+      });
 
-        const notifySelection = () => {
-          const elements = selection.get();
-          setSelectedElements(elements.map(e => e.id));
-          
-          if (elements.length === 0) {
-            onSelectionChange(null);
-            return;
-          }
-          
-          // 只返回第一个选中的元素给父组件（保持向后兼容）
-          const el = elements[0];
-          if (!el) {
-            onSelectionChange(null);
-            return;
-          }
-          const nodeSelection: BpmnNodeSelection = {
-            id: el.id,
-            type: el.type || (el.businessObject && el.businessObject.$type) || 'unknown',
-            businessObject: el.businessObject || {},
-          };
-          if (el.businessObject?.name) {
-            nodeSelection.name = el.businessObject.name;
-          }
-          onSelectionChange(nodeSelection);
-        };
+      // 选中变化：更新本地选中集合，并通知父组件（驱动节点属性面板）
+      modeler.on('selection.changed', () => {
+        const selection = modeler.get('selection') as { get: () => any[] };
+        const elements = selection.get() || [];
+        setSelectedElements(elements.map(e => e.id));
 
-        modeler.on('selection.changed', notifySelection);
+        const cb = onSelectionChangeRef.current;
+        if (!cb) return;
+        if (elements.length === 0) {
+          cb(null);
+          return;
+        }
+        const el = elements[0];
+        if (!el) {
+          cb(null);
+          return;
+        }
+        const nodeSelection: BpmnNodeSelection = {
+          id: el.id,
+          type: el.type || (el.businessObject && el.businessObject.$type) || 'unknown',
+          businessObject: el.businessObject || {},
+        };
+        if (el.businessObject?.name) {
+          nodeSelection.name = el.businessObject.name;
+        }
+        cb(nodeSelection);
+      });
+
+      // 初始网格吸附状态
+      try {
+        const gridSnapping = modeler.get('gridSnapping') as
+          | { setActive?: (active: boolean) => void }
+          | undefined;
+        gridSnapping?.setActive?.(snapToGridRef.current);
+      } catch {
+        // gridSnapping 服务不可用时忽略
       }
-
-      // 监听拖拽事件
-      modeler.on('drag.start', () => setIsDragging(true));
-      modeler.on('drag.end', () => setIsDragging(false));
-
-      // 设置网格吸附
-      const gridSnapping = modeler.get('gridSnapping') as {
-        setActive: (active: boolean) => void;
-      };
-      if (gridSnapping) {
-        gridSnapping.setActive(snapToGrid);
-      }
-
     } catch (err) {
       console.error('Failed to initialize BPMN Modeler:', err);
       initAttemptedRef.current = false;
     }
-  }, [xml, historyIndex, message, onChange, onSelectionChange, showGrid, snapToGrid, t]);
+  }, [syncCommandStackState, scheduleXmlSync]);
 
-  // 初始化 BPMN Modeler - 等待容器布局完成
+  // 初始化 BPMN Modeler - 等待容器布局完成（initializeModeler 引用稳定，effect 仅在挂载时执行）
   useEffect(() => {
     if (!containerRef.current) return;
 
-    console.log('[BPMNDesigner] useEffect running, containerRef exists:', !!containerRef.current);
-
-    // 直接尝试初始化，如果容器未就绪则使用定时器重试
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
     let retryCount = 0;
     const MAX_RETRIES = 30;
     const RETRY_DELAY = 100;
 
     const tryInit = () => {
-      if (modelerRef.current) {
-        console.log('[BPMNDesigner] Modeler already initialized, skipping');
-        return;
-      }
-      if (!containerRef.current) {
-        console.log('[BPMNDesigner] containerRef.current is null in tryInit');
-        return;
-      }
+      if (modelerRef.current) return;
+      if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       // 仅当容器显示状态为可见时才初始化（避免被其他面板遮挡时启动）
       const isVisible = rect.width > 100 && rect.height > 100;
       if (isVisible) {
-        console.log('[BPMNDesigner] Container ready (' + rect.width + 'x' + rect.height + '), calling initializeModeler');
         initializeModeler();
       } else if (retryCount < MAX_RETRIES) {
         retryCount++;
-        if (retryCount % 5 === 0) {
-          console.log('[BPMNDesigner] Container not ready, retry', retryCount + '/' + MAX_RETRIES);
-        }
         retryTimer = setTimeout(tryInit, RETRY_DELAY);
       } else {
-        console.error('[BPMNDesigner] Failed to initialize after max retries');
         // 最后一次重试时强制尝试初始化
         initializeModeler();
       }
@@ -355,110 +340,76 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     };
   }, [initializeModeler]);
 
-  // 同步 xml prop 变化 - 仅在父组件传入新的 XML 时才更新
-  // 使用 ref 跟踪上次 prop 避免命令栈变化触发的回环
+  // 同步 xml prop 变化（版本切换、模板选择、AI 生成等外部来源）
+  // 通过 emittedXmlRef 识别"编辑回环"：父组件把 onChange 发出的 XML 原样传回时不重新导入，
+  // 否则每次编辑都会触发 importXML 导致视口重置、选中丢失、命令栈被清空。
   const lastPropXmlRef = useRef(xml);
   useEffect(() => {
     if (xml === lastPropXmlRef.current) return;
     lastPropXmlRef.current = xml;
+    if (xml && xml === emittedXmlRef.current) return;
 
-    if (modelerRef.current && xml) {
-      modelerRef.current
-        .importXML(xml)
-        .then(() => {
-          const canvas = modelerRef.current!.get('canvas') as
-            | { zoom: (level?: string) => number }
-            | undefined;
-          canvas?.zoom('fit-viewport');
-          setZoom(readCanvasZoom(canvas));
-          setCurrentXML(xml);
-          // 重置历史记录
-          setHistory([{ xml, timestamp: Date.now(), description: t('bpmnDesigner.messages.loadFlow') }]);
-          setHistoryIndex(0);
-        })
-        .catch((err: Error) => {
-          console.error('Failed to import XML:', err);
-        });
-    }
+    const modeler = modelerRef.current;
+    if (!modeler || !xml) return;
+
+    const token = ++importTokenRef.current;
+    modeler
+      .importXML(xml)
+      .then(() => {
+        if (token !== importTokenRef.current || modelerRef.current !== modeler) return;
+        try {
+          const canvas = modeler.get('canvas') as { zoom: (level?: string) => number };
+          canvas.zoom('fit-viewport');
+        } catch (err) {
+          console.error('Failed to fit viewport after import:', err);
+        }
+        setCurrentXML(xml);
+        // 导入新流程会重置命令栈
+        setCanUndo(false);
+        setCanRedo(false);
+      })
+      .catch((err: Error) => {
+        if (token !== importTokenRef.current) return;
+        console.error('Failed to import XML:', err);
+        message.error(t('bpmnDesigner.messages.importFailed') + ': ' + err.message);
+      });
   }, [xml, t]);
 
-  // 键盘快捷键处理
+  // 卸载时清理防抖定时器
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (readOnly) return;
-      
-      // Ctrl/Cmd + S: 保存
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        handleSave();
-      }
-      
-      // Ctrl/Cmd + Z: 撤销
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        handleUndo();
-      }
-      
-      // Ctrl/Cmd + Y / Ctrl/Cmd + Shift + Z: 重做
-      if (((e.ctrlKey || e.metaKey) && e.key === 'y') || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Z')) {
-        e.preventDefault();
-        handleRedo();
-      }
-      
-      // Delete / Backspace: 删除选中元素
-      if ((e.key === 'Delete' || e.key === 'Backspace') && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
-        e.preventDefault();
-        handleDelete();
-      }
-      
-      // Ctrl/Cmd + A: 全选
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-        e.preventDefault();
-        handleSelectAll();
-      }
-      
-      // Ctrl/Cmd + C: 复制
-      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-        e.preventDefault();
-        handleCopy();
-      }
-      
-      // Ctrl/Cmd + V: 粘贴
-      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-        e.preventDefault();
-        handlePaste();
-      }
-      
-      // Ctrl/Cmd + F: 搜索
-      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-        e.preventDefault();
-        // 聚焦搜索框
-        const searchInput = document.getElementById('bpmn-search-input');
-        if (searchInput) {
-          searchInput.focus();
-        }
-      }
+    return () => {
+      if (xmlSyncTimerRef.current) clearTimeout(xmlSyncTimerRef.current);
     };
+  }, []);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [readOnly, historyIndex, history]);
-
-  // 保存
-  const handleSave = useCallback(() => {
-    if (onSave) {
-      onSave(currentXML);
-      message.success(t('bpmnDesigner.messages.saveSuccess'));
+  // 保存：序列化最新 XML 后交给父组件（由父组件统一反馈保存结果）
+  const handleSave = useCallback(async () => {
+    if (readOnly) return;
+    const modeler = modelerRef.current;
+    let xmlToSave = currentXMLRef.current;
+    if (modeler) {
+      try {
+        const result = await modeler.saveXML({ format: true });
+        if (result.xml) {
+          xmlToSave = result.xml;
+          setCurrentXML(result.xml);
+          emittedXmlRef.current = result.xml;
+        }
+      } catch (err) {
+        console.error('Failed to save XML:', err);
+      }
     }
-  }, [currentXML, onSave, message, t]);
+    if (xmlToSave) {
+      onSaveRef.current?.(xmlToSave);
+    }
+  }, [readOnly]);
 
   // 部署
   const handleDeploy = useCallback(() => {
-    if (onDeploy) {
-      onDeploy(currentXML);
-      message.success(t('bpmnDesigner.messages.deploySuccess'));
+    if (onDeploy && !readOnly) {
+      onDeploy(currentXMLRef.current);
     }
-  }, [currentXML, onDeploy, message, t]);
+  }, [onDeploy, readOnly]);
 
   // 导出图片
   const handleExportSVG = useCallback(async () => {
@@ -482,7 +433,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
   // 导出XML
   const handleExportXML = useCallback(() => {
-    const blob = new Blob([currentXML], { type: 'application/xml' });
+    const blob = new Blob([currentXMLRef.current], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -490,96 +441,93 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     link.click();
     URL.revokeObjectURL(url);
     message.success(t('bpmnDesigner.messages.exportBpmn'));
-  }, [currentXML, message, t]);
-
-  // 导入XML
-  const handleImportXML = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = e => {
-      const content = e.target?.result as string;
-      modelerRef.current
-        ?.importXML(content)
-        .then(() => {
-          message.success(t('bpmnDesigner.messages.importSuccess'));
-          // 更新历史记录
-          setHistory([{ xml: content, timestamp: Date.now(), description: t('bpmnDesigner.messages.importFlow') }]);
-          setHistoryIndex(0);
-        })
-        .catch((err: Error) => {
-          message.error(t('bpmnDesigner.messages.importFailed') + ': ' + err.message);
-        });
-    };
-    reader.readAsText(file);
   }, [message, t]);
 
-  // 缩放
-  const handleZoom = useCallback(
-    (delta: number) => {
-      if (!modelerRef.current) return;
-      const canvas = modelerRef.current.get('canvas') as
-        | { zoom: (level: number) => void; getZoom: () => number }
-        | undefined;
-      if (canvas) {
-        const newZoom = Math.min(Math.max(canvas.getZoom() + delta, 0.2), 4);
-        canvas.zoom(newZoom);
-        setZoom(newZoom);
-      }
+  // 导入XML
+  const handleImportXML = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const content = e.target?.result as string;
+        modelerRef.current
+          ?.importXML(content)
+          .then(() => {
+            message.success(t('bpmnDesigner.messages.importSuccess'));
+            setCurrentXML(content);
+            setCanUndo(false);
+            setCanRedo(false);
+            // 导入视为外部流程变更，同步给父组件
+            emittedXmlRef.current = content;
+            lastPropXmlRef.current = content;
+            onChangeRef.current?.(content);
+          })
+          .catch((err: Error) => {
+            message.error(t('bpmnDesigner.messages.importFailed') + ': ' + err.message);
+          });
+      };
+      reader.readAsText(file);
+      // 允许重复选择同一文件
+      event.target.value = '';
     },
-    []
+    [message, t]
   );
 
-  // 重置缩放
-  const handleZoomReset = useCallback(() => {
+  // 缩放
+  const handleZoom = useCallback((delta: number) => {
     if (!modelerRef.current) return;
-    const canvas = modelerRef.current.get('canvas') as
-      | { zoom: (level: string) => void; getZoom: () => number }
-      | undefined;
-    if (canvas) {
-      canvas.zoom('fit-viewport');
-      setZoom(canvas.getZoom() || 1);
+    try {
+      const canvas = modelerRef.current.get('canvas') as {
+        zoom: (level: number) => void;
+        viewbox: () => { scale: number };
+      };
+      const currentScale = canvas.viewbox().scale;
+      const newZoom = Math.min(Math.max(currentScale + delta, 0.2), 4);
+      canvas.zoom(newZoom);
+    } catch (err) {
+      console.error('Zoom failed:', err);
     }
   }, []);
 
-  // 撤销
-  const handleUndo = useCallback(() => {
-    if (!modelerRef.current || historyIndex <= 0) return;
-    const newIndex = historyIndex - 1;
-    const historyItem = history[newIndex];
-    if (historyItem) {
-      modelerRef.current.importXML(historyItem.xml)
-        .then(() => {
-          setHistoryIndex(newIndex);
-          setCurrentXML(historyItem.xml);
-          message.info(t('bpmnDesigner.messages.undoSuccess'));
-        })
-        .catch(err => {
-          console.error('Undo failed:', err);
-          message.error(t('bpmnDesigner.messages.undoFailed'));
-        });
+  // 适应画布
+  const handleZoomReset = useCallback(() => {
+    if (!modelerRef.current) return;
+    try {
+      const canvas = modelerRef.current.get('canvas') as { zoom: (level: string) => void };
+      canvas.zoom('fit-viewport');
+    } catch (err) {
+      console.error('Fit viewport failed:', err);
     }
-  }, [history, historyIndex, message, t]);
+  }, []);
 
-  // 重做
-  const handleRedo = useCallback(() => {
-    if (!modelerRef.current || historyIndex >= history.length - 1) return;
-    const newIndex = historyIndex + 1;
-    const historyItem = history[newIndex];
-    if (historyItem) {
-      modelerRef.current.importXML(historyItem.xml)
-        .then(() => {
-          setHistoryIndex(newIndex);
-          setCurrentXML(historyItem.xml);
-          message.info(t('bpmnDesigner.messages.redoSuccess'));
-        })
-        .catch(err => {
-          console.error('Redo failed:', err);
-          message.error(t('bpmnDesigner.messages.redoFailed'));
-        });
+  // 撤销/重做：直接使用 bpmn-js 原生命令栈，保证视口/选中和性能稳定
+  const handleUndo = useCallback(() => {
+    if (readOnly) return;
+    const modeler = modelerRef.current;
+    if (!modeler) return;
+    try {
+      const commandStack = modeler.get('commandStack') as { undo: () => void; canUndo: () => boolean };
+      if (!commandStack.canUndo()) return;
+      commandStack.undo();
+    } catch (err) {
+      console.error('Undo failed:', err);
     }
-  }, [history, historyIndex, message, t]);
+  }, [readOnly]);
+
+  const handleRedo = useCallback(() => {
+    if (readOnly) return;
+    const modeler = modelerRef.current;
+    if (!modeler) return;
+    try {
+      const commandStack = modeler.get('commandStack') as { redo: () => void; canRedo: () => boolean };
+      if (!commandStack.canRedo()) return;
+      commandStack.redo();
+    } catch (err) {
+      console.error('Redo failed:', err);
+    }
+  }, [readOnly]);
 
   // 删除选中
   const handleDelete = useCallback(() => {
@@ -604,7 +552,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     const selection = modelerRef.current.get('selection') as {
       select: (elements: any[]) => void;
     };
-    
+
     // 选择所有可见元素
     const allElements = elementRegistry.filter(element => !element.hidden && element.type !== 'label');
     selection.select(allElements);
@@ -613,156 +561,192 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
   // 复制
   const handleCopy = useCallback(() => {
-    if (!modelerRef.current || selectedElements.length === 0 || readOnly) return;
-    const copyPaste = modelerRef.current.get('copyPaste') as {
-      copy: (elements: any[]) => void;
-    };
-    const elementRegistry = modelerRef.current.get('elementRegistry') as {
-      get: (id: string) => any;
-    };
-    
-    const elements = selectedElements.map(id => elementRegistry.get(id)).filter(Boolean);
-    if (elements.length > 0) {
-      copyPaste.copy(elements);
-      message.success(t('bpmnDesigner.messages.elementsCopied', { count: elements.length }));
+    if (!modelerRef.current || readOnly) return;
+    const ids = selectedElementsRef.current;
+    if (ids.length === 0) return;
+    try {
+      const copyPaste = modelerRef.current.get('copyPaste') as {
+        copy: (elements: any[]) => void;
+      };
+      const elementRegistry = modelerRef.current.get('elementRegistry') as {
+        get: (id: string) => any;
+      };
+
+      const elements = ids.map(id => elementRegistry.get(id)).filter(Boolean);
+      if (elements.length > 0) {
+        copyPaste.copy(elements);
+        message.success(t('bpmnDesigner.messages.elementsCopied', { count: elements.length }));
+      }
+    } catch (err) {
+      console.error('Copy failed:', err);
     }
-  }, [selectedElements, readOnly, message, t]);
+  }, [readOnly, message, t]);
 
   // 粘贴
   const handlePaste = useCallback(() => {
     if (!modelerRef.current || readOnly) return;
-    const copyPaste = modelerRef.current.get('copyPaste') as {
-      paste: (options?: { point?: { x: number; y: number } }) => any[];
-      isClipboardEmpty: () => boolean;
-    };
-    
-    if (copyPaste.isClipboardEmpty()) {
-      message.warning(t('bpmnDesigner.messages.clipboardEmpty'));
-      return;
-    }
-    
-    const pastedElements = copyPaste.paste();
-    if (pastedElements.length > 0) {
-      message.success(t('bpmnDesigner.messages.elementsPasted', { count: pastedElements.length }));
+    try {
+      const copyPaste = modelerRef.current.get('copyPaste') as {
+        paste: (options?: { point?: { x: number; y: number } }) => any[];
+        isClipboardEmpty: () => boolean;
+      };
+
+      if (copyPaste.isClipboardEmpty()) {
+        message.warning(t('bpmnDesigner.messages.clipboardEmpty'));
+        return;
+      }
+
+      const pastedElements = copyPaste.paste();
+      if (pastedElements.length > 0) {
+        message.success(t('bpmnDesigner.messages.elementsPasted', { count: pastedElements.length }));
+      }
+    } catch (err) {
+      console.error('Paste failed:', err);
     }
   }, [readOnly, message, t]);
 
   // 对齐操作
-  const handleAlign = useCallback((type: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => {
-    if (!modelerRef.current || selectedElements.length < 2 || readOnly) return;
-    const alignElements = modelerRef.current.get('alignElements') as {
-      trigger: (type: string) => void;
-    };
-    
-    try {
-      alignElements.trigger(type);
-      const alignMsg =
-        type === 'left' ? t('bpmnDesigner.messages.alignLeftSuccess') :
-        type === 'center' ? t('bpmnDesigner.messages.alignCenterSuccess') :
-        type === 'right' ? t('bpmnDesigner.messages.alignRightSuccess') :
-        type === 'top' ? t('bpmnDesigner.messages.alignTopSuccess') :
-        type === 'middle' ? t('bpmnDesigner.messages.alignMiddleSuccess') :
-        t('bpmnDesigner.messages.alignBottomSuccess');
-      message.success(alignMsg);
-    } catch (err) {
-      console.error('Align failed:', err);
-      message.error(t('bpmnDesigner.messages.alignFailed'));
-    }
-  }, [selectedElements.length, readOnly, message, t]);
+  const handleAlign = useCallback(
+    (type: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => {
+      if (!modelerRef.current || readOnly) return;
+      if (selectedElementsRef.current.length < 2) return;
+      const alignElements = modelerRef.current.get('alignElements') as {
+        trigger: (type: string) => void;
+      };
+
+      try {
+        alignElements.trigger(type);
+        const alignMsg =
+          type === 'left' ? t('bpmnDesigner.messages.alignLeftSuccess') :
+          type === 'center' ? t('bpmnDesigner.messages.alignCenterSuccess') :
+          type === 'right' ? t('bpmnDesigner.messages.alignRightSuccess') :
+          type === 'top' ? t('bpmnDesigner.messages.alignTopSuccess') :
+          type === 'middle' ? t('bpmnDesigner.messages.alignMiddleSuccess') :
+          t('bpmnDesigner.messages.alignBottomSuccess');
+        message.success(alignMsg);
+      } catch (err) {
+        console.error('Align failed:', err);
+        message.error(t('bpmnDesigner.messages.alignFailed'));
+      }
+    },
+    [readOnly, message, t]
+  );
 
   // 分布操作
-  const handleDistribute = useCallback((direction: 'horizontal' | 'vertical') => {
-    if (!modelerRef.current || selectedElements.length < 3 || readOnly) return;
-    const distributeElements = modelerRef.current.get('distributeElements') as {
-      trigger: (type: string) => void;
-    };
-    
-    try {
-      distributeElements.trigger(direction);
-      message.success(
-        direction === 'horizontal'
-          ? t('bpmnDesigner.messages.distributeHorizontalSuccess')
-          : t('bpmnDesigner.messages.distributeVerticalSuccess')
-      );
-    } catch (err) {
-      console.error('Distribute failed:', err);
-      message.error(t('bpmnDesigner.messages.distributeFailed'));
-    }
-  }, [selectedElements.length, readOnly, message, t]);
+  const handleDistribute = useCallback(
+    (direction: 'horizontal' | 'vertical') => {
+      if (!modelerRef.current || readOnly) return;
+      if (selectedElementsRef.current.length < 3) return;
+      const distributeElements = modelerRef.current.get('distributeElements') as {
+        trigger: (type: string) => void;
+      };
+
+      try {
+        distributeElements.trigger(direction);
+        message.success(
+          direction === 'horizontal'
+            ? t('bpmnDesigner.messages.distributeHorizontalSuccess')
+            : t('bpmnDesigner.messages.distributeVerticalSuccess')
+        );
+      } catch (err) {
+        console.error('Distribute failed:', err);
+        message.error(t('bpmnDesigner.messages.distributeFailed'));
+      }
+    },
+    [readOnly, message, t]
+  );
 
   // 切换网格显示
   const toggleGrid = useCallback(() => {
-    if (!modelerRef.current) return;
-    const newShowGrid = !showGrid;
+    const newShowGrid = !showGridRef.current;
     setShowGrid(newShowGrid);
-    
-    const grid = modelerRef.current.get('grid') as {
-      toggle: () => void;
-    };
-    
-    if (grid) {
-      grid.toggle();
+    showGridRef.current = newShowGrid;
+
+    try {
+      const grid = modelerRef.current?.get('grid') as { toggle?: () => void } | undefined;
+      grid?.toggle?.();
+    } catch (err) {
+      console.warn('Grid toggle not supported:', err);
     }
-  }, [showGrid]);
+  }, []);
 
   // 切换网格吸附
   const toggleSnapToGrid = useCallback(() => {
-    if (!modelerRef.current) return;
-    const newSnapToGrid = !snapToGrid;
+    const newSnapToGrid = !snapToGridRef.current;
     setSnapToGrid(newSnapToGrid);
-    
-    const gridSnapping = modelerRef.current.get('gridSnapping') as {
-      setActive: (active: boolean) => void;
-    };
-    
-    if (gridSnapping) {
-      gridSnapping.setActive(newSnapToGrid);
+    snapToGridRef.current = newSnapToGrid;
+
+    try {
+      const gridSnapping = modelerRef.current?.get('gridSnapping') as
+        | { setActive?: (active: boolean) => void }
+        | undefined;
+      gridSnapping?.setActive?.(newSnapToGrid);
+    } catch (err) {
+      console.warn('Grid snapping toggle not supported:', err);
     }
-    
+
     message.success(
       newSnapToGrid ? t('bpmnDesigner.messages.gridSnapEnabled') : t('bpmnDesigner.messages.gridSnapDisabled')
     );
-  }, [snapToGrid, message, t]);
-
-  // 搜索节点
-  const handleSearch = useCallback((value: string) => {
-    setSearchKeyword(value);
-    if (!modelerRef.current || !value) return;
-    
-    const elementRegistry = modelerRef.current.get('elementRegistry') as {
-      filter: (fn: (element: any) => boolean) => any[];
-    };
-    const selection = modelerRef.current.get('selection') as {
-      select: (elements: any[]) => void;
-      focus: (element: any) => void;
-    };
-    const canvas = modelerRef.current.get('canvas') as {
-      zoom: (level: number, point?: { x: number; y: number }) => void;
-    };
-    
-    // 搜索名称或ID包含关键词的元素
-    const keyword = value.toLowerCase();
-    const matchedElements = elementRegistry.filter(element => {
-      const name = (element.businessObject?.name || '').toLowerCase();
-      const id = element.id.toLowerCase();
-      const type = (element.type || '').toLowerCase();
-      return name.includes(keyword) || id.includes(keyword) || type.includes(keyword);
-    });
-    
-    if (matchedElements.length > 0) {
-      selection.select(matchedElements);
-      // 缩放并聚焦到第一个匹配的元素
-      const firstElement = matchedElements[0];
-      const center = {
-        x: firstElement.x + firstElement.width / 2,
-        y: firstElement.y + firstElement.height / 2
-      };
-      canvas.zoom(1.5, center);
-      message.success(t('bpmnDesigner.messages.searchFound', { count: matchedElements.length }));
-    } else {
-      message.info(t('bpmnDesigner.messages.searchNotFound'));
-    }
   }, [message, t]);
+
+  // 搜索：输入时仅过滤联想列表，选中/回车后再定位（避免每击键全选+缩放跳变）
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchKeyword(value);
+    const modeler = modelerRef.current;
+    const keyword = value.trim().toLowerCase();
+    if (!modeler || !keyword) {
+      setSearchMatches([]);
+      return;
+    }
+
+    try {
+      const elementRegistry = modeler.get('elementRegistry') as {
+        filter: (fn: (element: any) => boolean) => any[];
+      };
+      const matches = elementRegistry
+        .filter(element => {
+          if (element.hidden || element.type === 'label') return false;
+          const name = (element.businessObject?.name || '').toLowerCase();
+          const id = (element.id || '').toLowerCase();
+          return name.includes(keyword) || id.includes(keyword);
+        })
+        .slice(0, 12)
+        .map(element => ({
+          id: element.id,
+          name: element.businessObject?.name || element.id,
+          type: (element.type || '').replace('bpmn:', ''),
+        }));
+      setSearchMatches(matches);
+    } catch (err) {
+      console.error('Search failed:', err);
+    }
+  }, []);
+
+  // 定位元素：选中并平移视口居中（不改变缩放比例）
+  const focusElement = useCallback((elementId: string) => {
+    const modeler = modelerRef.current;
+    if (!modeler) return;
+    try {
+      const elementRegistry = modeler.get('elementRegistry') as { get: (id: string) => any };
+      const selection = modeler.get('selection') as { select: (elements: any[]) => void };
+      const canvas = modeler.get('canvas') as { viewbox: (vb?: unknown) => { x: number; y: number; width: number; height: number } };
+
+      const el = elementRegistry.get(elementId);
+      if (!el) return;
+      selection.select([el]);
+
+      const viewbox = canvas.viewbox();
+      canvas.viewbox({
+        x: el.x + el.width / 2 - viewbox.width / 2,
+        y: el.y + el.height / 2 - viewbox.height / 2,
+        width: viewbox.width,
+        height: viewbox.height,
+      });
+    } catch (err) {
+      console.error('Focus element failed:', err);
+    }
+  }, []);
 
   // 验证流程
   const handleValidate = useCallback(async () => {
@@ -770,69 +754,81 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     const elementRegistry = modelerRef.current.get('elementRegistry') as {
       filter: (fn: (element: any) => boolean) => any[];
     };
-    
+
     const errors: any[] = [];
-    
+
     // 检查流程是否有开始和结束事件
     const startEvents = elementRegistry.filter(el => el.type === 'bpmn:StartEvent');
     const endEvents = elementRegistry.filter(el => el.type === 'bpmn:EndEvent');
-    
+
     if (startEvents.length === 0) {
       errors.push({ type: 'error', message: t('bpmnDesigner.messages.missingStartEvent') });
     }
-    
+
     if (endEvents.length === 0) {
       errors.push({ type: 'error', message: t('bpmnDesigner.messages.missingEndEvent') });
     }
-    
+
     // 检查用户任务是否有配置
     const userTasks = elementRegistry.filter(el => el.type === 'bpmn:UserTask');
     userTasks.forEach(task => {
       const bo = task.businessObject;
       if (!bo.assignee && !bo.candidateUsers && !bo.candidateGroups) {
-        errors.push({ 
-          type: 'warning', 
-          message: t('bpmnDesigner.messages.userTaskNoConfig', { name: bo.name || task.id })
+        errors.push({
+          type: 'warning',
+          message: t('bpmnDesigner.messages.userTaskNoConfig', { name: bo.name || task.id }),
+          elementId: task.id,
+          elementType: task.type,
+          elementName: bo.name || task.id,
         });
       }
     });
-    
+
     // 检查服务任务是否有配置
     const serviceTasks = elementRegistry.filter(el => el.type === 'bpmn:ServiceTask');
     serviceTasks.forEach(task => {
       const bo = task.businessObject;
       if (!bo.implementation && !bo.operationRef) {
-        errors.push({ 
-          type: 'warning', 
-          message: t('bpmnDesigner.messages.serviceTaskNoConfig', { name: bo.name || task.id })
+        errors.push({
+          type: 'warning',
+          message: t('bpmnDesigner.messages.serviceTaskNoConfig', { name: bo.name || task.id }),
+          elementId: task.id,
+          elementType: task.type,
+          elementName: bo.name || task.id,
         });
       }
     });
-    
+
     // 检查网关是否有默认分支和条件
     const gateways = elementRegistry.filter(el => el.type.includes('Gateway'));
     gateways.forEach(gateway => {
       const bo = gateway.businessObject;
       const outgoing = gateway.outgoing || [];
-      
+
       if (bo.$type === 'bpmn:ExclusiveGateway' && outgoing.length > 1 && !bo.default) {
-        errors.push({ 
-          type: 'warning', 
-          message: t('bpmnDesigner.messages.gatewayNoDefault', { name: bo.name || gateway.id })
+        errors.push({
+          type: 'warning',
+          message: t('bpmnDesigner.messages.gatewayNoDefault', { name: bo.name || gateway.id }),
+          elementId: gateway.id,
+          elementType: gateway.type,
+          elementName: bo.name || gateway.id,
         });
       }
-      
+
       // 检查输出流是否有条件
       outgoing.forEach((flow: any) => {
         if (!flow.conditionExpression && outgoing.length > 1) {
-          errors.push({ 
-            type: 'warning', 
-            message: t('bpmnDesigner.messages.flowNoCondition', { name: bo.name || gateway.id, flowId: flow.id })
+          errors.push({
+            type: 'warning',
+            message: t('bpmnDesigner.messages.flowNoCondition', { name: bo.name || gateway.id, flowId: flow.id }),
+            elementId: flow.id,
+            elementType: flow.type,
+            elementName: flow.name || flow.id,
           });
         }
       });
     });
-    
+
     // 显示验证结果
     if (errors.length === 0) {
       message.success(t('bpmnDesigner.messages.validationPassed'));
@@ -841,7 +837,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       const warningCount = errors.filter(e => e.type === 'warning').length;
       message.warning(t('bpmnDesigner.messages.validationResult', { errors: errorCount, warnings: warningCount }));
     }
-    
+
     return errors;
   }, [message, t]);
 
@@ -850,43 +846,42 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
    * 通过 modeling.updateProperties 走命令栈，会触发 commandStack.changed，
    * 进而通过 saveXML 把最新的 XML 推回父组件。
    */
-  const updateElementProperties = useCallback(
-    (elementId: string, properties: Record<string, unknown>) => {
-      if (!modelerRef.current) {
-        console.warn('Modeler not ready');
+  const updateElementProperties = useCallback((elementId: string, properties: Record<string, unknown>) => {
+    if (!modelerRef.current) {
+      console.warn('Modeler not ready');
+      return false;
+    }
+    try {
+      const modeling = modelerRef.current.get('modeling') as
+        | { updateProperties: (el: any, props: Record<string, unknown>) => void }
+        | undefined;
+      const elementRegistry = modelerRef.current.get('elementRegistry') as {
+        get: (id: string) => any;
+      };
+      const element = elementRegistry.get(elementId);
+      if (!element || !modeling) {
+        console.warn('Element or modeling not found:', elementId);
         return false;
       }
-      try {
-        const modeling = modelerRef.current.get('modeling') as
-          | { updateProperties: (el: any, props: Record<string, unknown>) => void }
-          | undefined;
-        const elementRegistry = modelerRef.current.get('elementRegistry') as {
-          get: (id: string) => any;
-        };
-        const element = elementRegistry.get(elementId);
-        if (!element || !modeling) {
-          console.warn('Element or modeling not found:', elementId);
-          return false;
-        }
-        modeling.updateProperties(element, properties);
-        return true;
-      } catch (err) {
-        console.error('Failed to update element properties:', err);
-        return false;
-      }
-    },
-    []
-  );
+      modeling.updateProperties(element, properties);
+      return true;
+    } catch (err) {
+      console.error('Failed to update element properties:', err);
+      return false;
+    }
+  }, []);
 
   /**
    * 供父组件调用：触发 fit-viewport（节点改变或初始加载后可用）
    */
   const fitViewport = useCallback(() => {
     if (!modelerRef.current) return;
-    const canvas = modelerRef.current.get('canvas') as
-      | { zoom: (level: string) => void }
-      | undefined;
-    canvas?.zoom('fit-viewport');
+    try {
+      const canvas = modelerRef.current.get('canvas') as { zoom: (level: string) => void };
+      canvas?.zoom('fit-viewport');
+    } catch (err) {
+      console.error('Fit viewport failed:', err);
+    }
   }, []);
 
   /**
@@ -921,7 +916,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     const selection = modelerRef.current.get('selection') as {
       select: (elements: any[]) => void;
     };
-    
+
     const element = elementRegistry.get(elementId);
     if (element) {
       selection.select([element]);
@@ -934,6 +929,80 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       apiRef.current = { updateElementProperties, fitViewport, getXML, validate, selectElement };
     }
   }, [apiRef, updateElementProperties, fitViewport, getXML, validate, selectElement]);
+
+  // 键盘快捷键处理
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (readOnly) return;
+
+      const mod = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+
+      // Ctrl/Cmd + S: 保存（任何焦点下都生效，避免浏览器默认"保存网页"）
+      if (mod && key === 's') {
+        e.preventDefault();
+        void handleSave();
+        return;
+      }
+
+      // 输入框内不劫持其余快捷键（避免影响正常输入/复制粘贴）
+      if (isEditableTarget(e.target)) return;
+
+      // Ctrl/Cmd + Z: 撤销
+      if (mod && key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+
+      // Ctrl/Cmd + Y / Ctrl/Cmd + Shift + Z: 重做
+      if ((mod && key === 'y') || (mod && e.shiftKey && key === 'z')) {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+
+      // Delete / Backspace: 删除选中元素
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedElementsRef.current.length === 0) return;
+        e.preventDefault();
+        handleDelete();
+        return;
+      }
+
+      // Ctrl/Cmd + A: 全选
+      if (mod && key === 'a') {
+        e.preventDefault();
+        handleSelectAll();
+        return;
+      }
+
+      // Ctrl/Cmd + C: 复制
+      if (mod && key === 'c') {
+        if (selectedElementsRef.current.length === 0) return;
+        e.preventDefault();
+        handleCopy();
+        return;
+      }
+
+      // Ctrl/Cmd + V: 粘贴
+      if (mod && key === 'v') {
+        e.preventDefault();
+        handlePaste();
+        return;
+      }
+
+      // Ctrl/Cmd + F: 搜索
+      if (mod && key === 'f') {
+        e.preventDefault();
+        const searchInput = document.getElementById('bpmn-search-input');
+        searchInput?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [readOnly, handleSave, handleUndo, handleRedo, handleDelete, handleSelectAll, handleCopy, handlePaste]);
 
   // 对齐菜单
   const alignMenuItems: MenuProps['items'] = [
@@ -1027,6 +1096,17 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     }
   ];
 
+  // 搜索下拉选项
+  const searchOptions = searchMatches.map(match => ({
+    value: match.id,
+    label: (
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate">{match.name}</span>
+        <span className="text-xs text-gray-400 shrink-0">{match.type}</span>
+      </div>
+    ),
+  }));
+
   return (
     <div style={{ display: 'flex', height, border: '1px solid #d9d9d9', borderRadius: '6px', position: 'relative' }}>
       {/* 工具栏 */}
@@ -1045,20 +1125,22 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         <Tooltip title={t('bpmnDesigner.buttons.saveShortcut')} placement="right">
           <Button type="text" icon={<Save size={18} />} onClick={handleSave} disabled={readOnly} />
         </Tooltip>
-        <Tooltip title={t('bpmnDesigner.buttons.deploy')} placement="right">
-          <Button
-            type="text"
-            icon={<PlayCircle size={18} />}
-            onClick={handleDeploy}
-            disabled={readOnly}
-          />
-        </Tooltip>
+        {onDeploy && (
+          <Tooltip title={t('bpmnDesigner.buttons.deploy')} placement="right">
+            <Button
+              type="text"
+              icon={<PlayCircle size={18} />}
+              onClick={handleDeploy}
+              disabled={readOnly}
+            />
+          </Tooltip>
+        )}
         <Tooltip title={t('bpmnDesigner.buttons.undoShortcut')} placement="right">
           <Button
             type="text"
             icon={<Undo size={18} />}
             onClick={handleUndo}
-            disabled={readOnly || historyIndex <= 0}
+            disabled={readOnly || !canUndo}
           />
         </Tooltip>
         <Tooltip title={t('bpmnDesigner.buttons.redoShortcut')} placement="right">
@@ -1066,7 +1148,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
             type="text"
             icon={<Redo size={18} />}
             onClick={handleRedo}
-            disabled={readOnly || historyIndex >= history.length - 1}
+            disabled={readOnly || !canRedo}
           />
         </Tooltip>
 
@@ -1162,15 +1244,30 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         borderRadius: '6px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
       }}>
-        <Input
-          id="bpmn-search-input"
-          placeholder={t('bpmnDesigner.buttons.searchPlaceholder')}
-          prefix={<Search size={14} />}
+        <AutoComplete
           value={searchKeyword}
-          onChange={e => handleSearch(e.target.value)}
-          allowClear
+          options={searchOptions}
+          onSearch={handleSearchChange}
+          onSelect={value => focusElement(String(value))}
+          onChange={(value: string) => {
+            if (!value) {
+              setSearchKeyword('');
+              setSearchMatches([]);
+            }
+          }}
+          popupMatchSelectWidth={280}
+          defaultActiveFirstOption
           size="small"
-        />
+          style={{ width: '100%' }}
+        >
+          <Input
+            id="bpmn-search-input"
+            placeholder={t('bpmnDesigner.buttons.searchPlaceholder')}
+            prefix={<Search size={14} />}
+            allowClear
+            size="small"
+          />
+        </AutoComplete>
       </div>
 
       {/* 缩放控制 */}

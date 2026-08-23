@@ -110,7 +110,7 @@ func (f *fakeTaskService) EscalateTask(ctx context.Context, taskID, reason strin
 	return nil
 }
 
-func (f *fakeTaskService) BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string) error {
+func (f *fakeTaskService) BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string, tenantID int) error {
 	return nil
 }
 

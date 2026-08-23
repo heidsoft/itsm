@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { App, Button, Card, Descriptions, Form, Input, Modal, Select, Space, Table, Tag, Tabs, Timeline, Empty, Badge } from 'antd';
 import { Eye, PauseCircle, PlayCircle, RefreshCw, StopCircle, Clock, User, FileText, MessageSquare, Rocket } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 import { FilterToolbarCard } from '@/components/ui/FilterToolbarCard';
 import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
@@ -78,7 +79,17 @@ const auditActionColorMap: Record<string, string> = {
 };
 
 export default function WorkflowInstancesPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center text-gray-500">加载中…</div>}>
+      <WorkflowInstancesContent />
+    </Suspense>
+  );
+}
+
+function WorkflowInstancesContent() {
   const { message, modal } = App.useApp();
+  const searchParams = useSearchParams();
+  const urlWorkflowId = searchParams.get('workflowId') || searchParams.get('processDefinitionKey') || '';
   const [loading, setLoading] = useState(false);
   const [instances, setInstances] = useState<InstanceRow[]>([]);
   const [stats, setStats] = useState({
@@ -88,8 +99,16 @@ export default function WorkflowInstancesPage() {
     suspended: 0,
     terminated: 0,
   });
-  const [keyword, setKeyword] = useState('');
+  const [keyword, setKeyword] = useState(urlWorkflowId);
   const [status, setStatus] = useState<string | undefined>();
+
+  // URL 参数变化时（例如从流程设计器跳转过来）同步 keyword 并重新查询
+  useEffect(() => {
+    if (urlWorkflowId && urlWorkflowId !== keyword) {
+      setKeyword(urlWorkflowId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlWorkflowId]);
   
   // 详情弹窗状态
   const [detailModalVisible, setDetailModalVisible] = useState(false);

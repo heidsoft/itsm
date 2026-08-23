@@ -4,10 +4,11 @@
 'use client';
 
 import React from 'react';
-import type { MenuProps} from 'antd';
+import type { MenuProps } from 'antd';
 import { Button, Space, Tag, Breadcrumb, Typography, Dropdown, Tooltip } from 'antd';
-import { Save, Pencil, Download, Settings, History, Bug, Rocket, PlayCircle, CloudUpload, Bot } from 'lucide-react';
+import { Save, Download, Settings, History, Bug, Rocket, PlayCircle, CloudUpload, Bot } from 'lucide-react';
 import Link from 'next/link';
+import { useI18n } from '@/lib/i18n/useI18n';
 import type { WorkflowDefinition } from './WorkflowTypes';
 
 const { Text } = Typography;
@@ -16,6 +17,7 @@ interface WorkflowToolbarProps {
   workflow: WorkflowDefinition | null;
   saving: boolean;
   deploying: boolean;
+  hasChanges?: boolean;
   onSave: (xml: string) => void;
   onSaveAndDeploy: (xml: string) => void;
   onDeploy: () => void;
@@ -23,20 +25,25 @@ interface WorkflowToolbarProps {
   onValidate?: () => void;
   validationIssues?: any[];
   onAIClick?: () => void;
+  onTabChange?: (key: string) => void;
 }
 
 export default function WorkflowToolbar({
   workflow,
   saving,
   deploying,
+  hasChanges = false,
   onSave,
   onSaveAndDeploy,
   onDeploy,
   currentXML,
   onValidate,
   validationIssues = [],
-  onAIClick
+  onAIClick,
+  onTabChange,
 }: WorkflowToolbarProps) {
+  const { t } = useI18n();
+
   // 导出XML
   const handleExportXML = () => {
     if (!currentXML) return;
@@ -54,30 +61,20 @@ export default function WorkflowToolbar({
     {
       key: 'export',
       icon: <Download />,
-      label: '导出BPMN',
+      label: t('workflow.designer.toolbarExportBpmn'),
       onClick: handleExportXML
     },
     {
       key: 'history',
       icon: <History />,
-      label: '版本历史',
-      onClick: () => {
-        // 切换到版本标签页
-        const event = new MouseEvent('click', { bubbles: true });
-        const tab = document.querySelector('.ant-tabs-tab:nth-child(2)');
-        if (tab) tab.dispatchEvent(event);
-      }
+      label: t('workflow.designer.toolbarVersionHistory'),
+      onClick: () => onTabChange?.('versions')
     },
     {
       key: 'settings',
       icon: <Settings />,
-      label: '流程设置',
-      onClick: () => {
-        // 切换到配置标签页
-        const event = new MouseEvent('click', { bubbles: true });
-        const tab = document.querySelector('.ant-tabs-tab:nth-child(3)');
-        if (tab) tab.dispatchEvent(event);
-      }
+      label: t('workflow.designer.toolbarProcessSettings'),
+      onClick: () => onTabChange?.('config')
     },
     {
       type: 'divider'
@@ -87,7 +84,7 @@ export default function WorkflowToolbar({
       icon: <Bug />,
       label: (
         <Space>
-          校验流程
+          {t('workflow.designer.toolbarValidate')}
           {validationIssues.length > 0 && (
             <Tag color={validationIssues.some(i => i.type === 'error') ? 'error' : 'warning'}>
               {validationIssues.length}
@@ -104,19 +101,19 @@ export default function WorkflowToolbar({
     {
       key: 'generate',
       icon: <Rocket />,
-      label: 'AI生成流程',
+      label: t('workflow.designer.toolbarAIGenerate'),
       onClick: onAIClick
     },
     {
       key: 'optimize',
       icon: <Bot />,
-      label: 'AI优化建议',
+      label: t('workflow.designer.toolbarAIOptimize'),
       onClick: onAIClick
     },
     {
       key: 'check',
       icon: <Bug />,
-      label: 'AI合规检查',
+      label: t('workflow.designer.toolbarAICheck'),
       onClick: onAIClick
     }
   ];
@@ -127,10 +124,10 @@ export default function WorkflowToolbar({
         <Breadcrumb
           items={[
             {
-              title: <Link href="/workflow">工作流管理</Link>,
+              title: <Link href="/workflow">{t('workflow.designer.toolbarBreadcrumb')}</Link>,
             },
             {
-              title: workflow?.name || '新工作流设计',
+              title: workflow?.name || t('workflow.designer.toolbarNewWorkflow'),
             },
           ]}
         />
@@ -141,23 +138,27 @@ export default function WorkflowToolbar({
 
         {workflow?.status && (
           <Tag color={workflow.status === 'active' ? 'success' : 'default'}>
-            {workflow.status === 'active' ? '已部署' : '草稿'}
+            {workflow.status === 'active' ? t('workflow.designer.toolbarDeployed') : t('workflow.designer.toolbarDraft')}
           </Tag>
+        )}
+
+        {hasChanges && (
+          <Tag color="warning">{t('workflow.designer.toolbarUnsaved')}</Tag>
         )}
       </div>
 
       <Space>
         <Dropdown menu={{ items: aiMenuItems }} placement="bottomRight">
-          <Tooltip title="AI辅助功能">
+          <Tooltip title={t('workflow.designer.toolbarAITooltip')}>
             <Button icon={<Bot />}>
-              AI助手
+              {t('workflow.designer.toolbarAI')}
             </Button>
           </Tooltip>
         </Dropdown>
 
         <Dropdown menu={{ items: moreMenuItems }} placement="bottomRight">
           <Button>
-            更多操作
+            {t('workflow.designer.toolbarMore')}
           </Button>
         </Dropdown>
 
@@ -166,7 +167,7 @@ export default function WorkflowToolbar({
           loading={saving}
           onClick={() => onSave(currentXML)}
         >
-          保存
+          {t('workflow.designer.toolbarSave')}
         </Button>
 
         {workflow?.status !== 'active' && (
@@ -176,7 +177,7 @@ export default function WorkflowToolbar({
             loading={deploying}
             onClick={() => onSaveAndDeploy(currentXML)}
           >
-            保存并部署
+            {t('workflow.designer.toolbarSaveDeploy')}
           </Button>
         )}
 
@@ -187,7 +188,7 @@ export default function WorkflowToolbar({
             loading={deploying}
             onClick={onDeploy}
           >
-            重新部署
+            {t('workflow.designer.toolbarRedeploy')}
           </Button>
         )}
       </Space>
