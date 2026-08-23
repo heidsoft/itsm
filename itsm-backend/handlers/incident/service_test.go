@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/handlers/common/datascope"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -67,7 +68,7 @@ func (m *slaMockRepository) Get(ctx context.Context, id, tenantID int) (*Inciden
 	return inc, nil
 }
 
-func (m *slaMockRepository) List(ctx context.Context, tenantID, page, size int, filters map[string]interface{}) ([]*Incident, int, error) {
+func (m *slaMockRepository) List(ctx context.Context, tenantID, page, size int, filters map[string]interface{}, dataScope datascope.DataScope, currentUserID int) ([]*Incident, int, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	out := make([]*Incident, 0)

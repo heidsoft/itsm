@@ -14,6 +14,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/handlers/common/datascope"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -73,7 +74,7 @@ func (m *mockRepository) Get(ctx context.Context, id, tenantID int) (*Incident, 
 	return inc, nil
 }
 
-func (m *mockRepository) List(ctx context.Context, tenantID, page, size int, filters map[string]interface{}) ([]*Incident, int, error) {
+func (m *mockRepository) List(ctx context.Context, tenantID, page, size int, filters map[string]interface{}, dataScope datascope.DataScope, currentUserID int) ([]*Incident, int, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	out := make([]*Incident, 0)

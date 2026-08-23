@@ -3,6 +3,8 @@ package incident
 import (
 	"context"
 	"time"
+
+	"itsm-backend/handlers/common/datascope"
 )
 
 // Repository defines the interface for incident data access
@@ -10,7 +12,7 @@ type Repository interface {
 	// Incident operations
 	Create(ctx context.Context, incident *Incident) (*Incident, error)
 	Get(ctx context.Context, id int, tenantID int) (*Incident, error)
-	List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*Incident, int, error)
+	List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, dataScope datascope.DataScope, currentUserID int) ([]*Incident, int, error)
 	Update(ctx context.Context, incident *Incident) (*Incident, error)
 	Delete(ctx context.Context, id int, tenantID int) error
 	GenerateIncidentNumber(ctx context.Context, tenantID int, year int, month int) (string, error)

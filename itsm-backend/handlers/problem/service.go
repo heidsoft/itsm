@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/handlers/common/datascope"
+
 	"go.uber.org/zap"
 )
 
@@ -57,8 +59,15 @@ func (s *Service) RemoveAssociation(ctx context.Context, tenantID, problemID int
 	return s.repo.RemoveAssociation(ctx, tenantID, problemID, relatedType, relatedID)
 }
 
-func (s *Service) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*Problem, int, error) {
-	return s.repo.List(ctx, tenantID, page, size, filters)
+// List 列出问题单。推广 ticket 的 DataScope 行级权限：
+// 管理角色可见全租户，其余角色仅可见本人创建或分配给自己的问题单。
+// currentUserID/currentRole 由 handler 从鉴权中间件注入的 user_id/role 取得。
+func (s *Service) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, currentUserID int, currentRole string) ([]*Problem, int, error) {
+	dataScope := datascope.DataScopeAll
+	if !datascope.IsDataScopeAllRole(currentRole) {
+		dataScope = datascope.DataScopeOwnedOrAssigned
+	}
+	return s.repo.List(ctx, tenantID, page, size, filters, dataScope, currentUserID)
 }
 
 func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem) (*Problem, error) {
@@ -84,7 +93,11 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem) 
 		now := time.Now()
 		switch p.Status {
 		case "resolved":
-			existing.ResolvedAt = &now
+			// P1 修复：重复提交 resolved（current==next）时不再刷新 ResolvedAt，
+			// 避免 MTTR 被反复拉长。仅在从非 resolved 状态进入时才记录首次解决时间。
+			if existing.Status != "resolved" {
+				existing.ResolvedAt = &now
+			}
 			existing.ClosedAt = nil
 		case "closed":
 			existing.ClosedAt = &now
@@ -209,7 +222,7 @@ func (s *Service) GetStats(ctx context.Context, tenantID int) (*ProblemStats, er
 
 // GetTrend computes problem trend data for the given period.
 func (s *Service) GetTrend(ctx context.Context, tenantID int, startDate, endDate time.Time) (*ProblemTrendData, error) {
-	problems, err := s.repo.GetAllForAnalytics(ctx, tenantID, startDate)
+	problems, err := s.repo.GetAllForAnalytics(ctx, tenantID, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +331,7 @@ func (s *Service) GetTrend(ctx context.Context, tenantID int, startDate, endDate
 
 // GetHotspot computes problem hotspot data for the given period.
 func (s *Service) GetHotspot(ctx context.Context, tenantID int, startDate, endDate time.Time) (*ProblemHotspotData, error) {
-	problems, err := s.repo.GetAllForAnalytics(ctx, tenantID, startDate)
+	problems, err := s.repo.GetAllForAnalytics(ctx, tenantID, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}

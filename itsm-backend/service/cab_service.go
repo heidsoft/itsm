@@ -9,6 +9,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/cabmember"
+	entuser "itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -31,10 +32,15 @@ func NewCABService(client *ent.Client, logger *zap.SugaredLogger) *CABService {
 
 // AddCABMember 添加CAB成员
 func (s *CABService) AddCABMember(ctx context.Context, req *dto.AddCABMemberRequest, tenantID int) (*dto.CABMemberResponse, error) {
-	// 验证用户是否存在
-	_, err := s.client.User.Get(ctx, req.UserID)
+	// 验证用户是否存在且属于当前租户（防止跨租户注入）
+	user, err := s.client.User.Query().
+		Where(entuser.ID(req.UserID), entuser.TenantID(tenantID)).
+		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("user not found: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("user not found or does not belong to current tenant")
+		}
+		return nil, fmt.Errorf("failed to query user: %w", err)
 	}
 
 	// 检查是否已经是CAB成员
@@ -65,10 +71,9 @@ func (s *CABService) AddCABMember(ctx context.Context, req *dto.AddCABMemberRequ
 		return nil, fmt.Errorf("failed to add member: %w", err)
 	}
 
-	// 获取用户信息
-	user, err := s.client.User.Get(ctx, req.UserID)
-	if err != nil {
-		s.logger.Warnw("Failed to get user info", "error", err, "user_id", req.UserID)
+	// user 已在上面查询时获取，此处仅做安全检查
+	if user == nil {
+		s.logger.Warnw("User is nil after tenant check", "user_id", req.UserID)
 	}
 
 	s.logger.Infow("CAB member added", "member_id", member.ID, "user_id", req.UserID, "type", req.Type)

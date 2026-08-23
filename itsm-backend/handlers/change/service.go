@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
+	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/service"
 
 	"go.uber.org/zap"
@@ -62,8 +63,16 @@ func (s *Service) GetChange(ctx context.Context, id int, tenantID int) (*Change,
 	return s.repo.Get(ctx, id, tenantID)
 }
 
-func (s *Service) ListChanges(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string) ([]*Change, int, error) {
-	return s.repo.List(ctx, tenantID, page, size, status, search, riskLevel)
+// ListChanges 列出变更单。推广 ticket 的 DataScope 行级权限：
+// 管理角色（super_admin/admin/manager/sysadmin）可见全租户，其余角色仅可见
+// 本人创建或分配给自己的变更单。currentUserID/currentRole 由 handler 从
+// 鉴权中间件注入的 user_id/role 取得。
+func (s *Service) ListChanges(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string, currentUserID int, currentRole string) ([]*Change, int, error) {
+	dataScope := datascope.DataScopeAll
+	if !datascope.IsDataScopeAllRole(currentRole) {
+		dataScope = datascope.DataScopeOwnedOrAssigned
+	}
+	return s.repo.List(ctx, tenantID, page, size, status, search, riskLevel, dataScope, currentUserID)
 }
 
 func (s *Service) UpdateChange(ctx context.Context, c *Change) (*Change, error) {
@@ -302,6 +311,31 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 		return nil, fmt.Errorf("change not found")
 	}
 
+	// P0-1 修复：审批人来源只能取自本变更的审批链（change_approval_chains），
+	// 禁止请求体任意指定。否则持 change:write 的用户可注入以自己为审批人的
+	// pending 记录再调用 /transition 直接 approved，绕过 CAB / quorum / 标准
+	// 变更门禁。
+	// 1) 审批人必须属于本租户。
+	belongs, err := s.repo.ValidateApproverBelongsToTenant(ctx, record.ApproverID, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("校验审批人失败: %w", err)
+	}
+	if !belongs {
+		return nil, fmt.Errorf("审批人 %d 不属于租户 %d，无权作为该变更审批人", record.ApproverID, tenantID)
+	}
+	// 2) 审批人必须是该变更审批链中指定的审批人。
+	chain, err := s.repo.GetApprovalChain(ctx, record.ChangeID, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("获取审批链失败: %w", err)
+	}
+	designated := make(map[int]struct{}, len(chain))
+	for _, node := range chain {
+		designated[node.ApproverID] = struct{}{}
+	}
+	if _, ok := designated[record.ApproverID]; !ok {
+		return nil, fmt.Errorf("用户 %d 不是变更 %d 的指定审批人，无法提交审批", record.ApproverID, record.ChangeID)
+	}
+
 	record.Status = "pending"
 	record.TenantID = tenantID
 	res, err := s.repo.CreateApprovalRecord(ctx, record)
@@ -428,9 +462,15 @@ func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenant
 			agg.threshold = 1
 		}
 	}
-	// 标记历史决定（租户过滤由仓储保证）
+	// 标记历史决定（租户过滤由仓储保证）。
+	// P1 修复：按 (approverID, level) 双重匹配——仅当该审批人确实属于该层级时，
+	// 其批准/驳回才计入该层 quorum，避免跨层互相串（一次性审批可满足多层，但绝不串层）。
 	for _, h := range history {
-		for _, agg := range levels {
+		for _, lvl := range h.Levels {
+			agg, ok := levels[lvl]
+			if !ok {
+				continue
+			}
 			if _, ok := agg.approverIDs[h.ApproverID]; !ok {
 				continue
 			}

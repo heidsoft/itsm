@@ -119,7 +119,7 @@ func TestProblemRepositorySoftDeleteExcludedEverywhere(t *testing.T) {
 	require.NoError(t, service.Delete(ctx, p.ID, tenant.ID))
 	_, err := service.Get(ctx, p.ID, tenant.ID)
 	require.True(t, ent.IsNotFound(err))
-	list, total, err := service.List(ctx, tenant.ID, 1, 10, nil)
+	list, total, err := service.List(ctx, tenant.ID, 1, 10, nil, user.ID, "super_admin")
 	require.NoError(t, err)
 	assert.Zero(t, total)
 	assert.Empty(t, list)

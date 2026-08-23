@@ -2,6 +2,8 @@ package change
 
 import (
 	"context"
+
+	"itsm-backend/handlers/common/datascope"
 )
 
 // Repository interface for Change domain
@@ -9,7 +11,7 @@ type Repository interface {
 	// Change CRUD
 	Create(ctx context.Context, c *Change) (*Change, error)
 	Get(ctx context.Context, id int, tenantID int) (*Change, error)
-	List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string) ([]*Change, int, error)
+	List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string, dataScope datascope.DataScope, currentUserID int) ([]*Change, int, error)
 	Update(ctx context.Context, c *Change) (*Change, error)
 	Delete(ctx context.Context, id int, tenantID int) error
 	GetStats(ctx context.Context, tenantID int) (*Stats, error)
@@ -21,7 +23,6 @@ type Repository interface {
 	GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error)
 
 	// Approval Workflow/Chain
-	CreateApprovalChain(ctx context.Context, chain []*ApprovalChain) error
 	GetApprovalChain(ctx context.Context, changeID int, tenantID int) ([]*ApprovalChain, error)
 	DeleteApprovalChain(ctx context.Context, changeID int, tenantID int) error
 	ReplaceApprovalChain(ctx context.Context, changeID, tenantID int, chain []*ApprovalChain) error

@@ -105,6 +105,9 @@ func (h *Handler) List(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
 	tenantID := c.GetInt("tenant_id")
+	// 行级数据权限：从鉴权中间件注入的 user_id/role 取得，下传给 service 判定 DataScope。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 
 	filters := make(map[string]interface{})
 	if v := c.Query("status"); v != "" {
@@ -123,7 +126,7 @@ func (h *Handler) List(c *gin.Context) {
 		filters["assignee_id"] = userID // Service needs to support this filter
 	}
 
-	incidents, total, err := h.service.List(c.Request.Context(), tenantID, page, size, filters)
+	incidents, total, err := h.service.List(c.Request.Context(), tenantID, page, size, filters, currentUserID, currentRole)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return

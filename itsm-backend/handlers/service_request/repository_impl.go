@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/user"
+	"itsm-backend/handlers/common/datascope"
 )
 
 type EntRepository struct {
@@ -216,6 +217,21 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters ListFilt
 		query.Where(servicerequest.RequesterID(filters.UserID))
 	}
 
+	// 行级数据权限（推广自 ticket DataScope 模式）：
+	// OwnedOrAssigned 时强制追加 Or(RequesterIDEQ(uid), ProcessorIDEQ(uid))，
+	// 使普通用户只能看到自己创建或自己处理的请求单。
+	// CurrentUserID<=0 时 fail-closed，返回空集而非全量。
+	if filters.DataScope == datascope.DataScopeOwnedOrAssigned {
+		if filters.CurrentUserID <= 0 {
+			query = query.Where(servicerequest.IDEQ(-1))
+		} else {
+			query = query.Where(servicerequest.Or(
+				servicerequest.RequesterIDEQ(filters.CurrentUserID),
+				servicerequest.ProcessorIDEQ(filters.CurrentUserID),
+			))
+		}
+	}
+
 	total, err := query.Count(ctx)
 	if err != nil {
 		return nil, 0, err
@@ -313,8 +329,15 @@ func (r *EntRepository) GetApproval(ctx context.Context, requestID int, level in
 	return r.toDomainApproval(app), nil
 }
 
+// UpdateApproval 更新单条审批记录。P1 修复：补上租户隔离 + 所属请求 + pending 守卫，
+// 与同文件 UpdateRequestAndApproval 的三守卫保持一致，避免越权/跨请求覆盖或重复标记。
 func (r *EntRepository) UpdateApproval(ctx context.Context, approval *ServiceRequestApproval) error {
 	update := r.client.ServiceRequestApproval.UpdateOneID(approval.ID).
+		Where(
+			servicerequestapproval.TenantIDEQ(approval.TenantID),
+			servicerequestapproval.ServiceRequestIDEQ(approval.ServiceRequestID),
+			servicerequestapproval.StatusEQ(ApprovalStatusPending),
+		).
 		SetStatus(approval.Status).
 		SetAction(approval.Action).
 		SetComment(approval.Comment)

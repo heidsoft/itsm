@@ -6,11 +6,14 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	entuser "itsm-backend/ent/user"
+	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/internal/commandbus"
 )
 
@@ -188,7 +191,7 @@ func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Change,
 	return result, nil
 }
 
-func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string) ([]*Change, int, error) {
+func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string, dataScope datascope.DataScope, currentUserID int) ([]*Change, int, error) {
 	q := r.client.Change.Query().Where(change.TenantID(tenantID))
 
 	if status != "" && status != "全部" {
@@ -202,6 +205,22 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 			change.TitleContains(search),
 			change.DescriptionContains(search),
 		))
+	}
+
+	// 行级数据权限（推广自 ticket DataScope 模式）：
+	// OwnedOrAssigned 时强制追加 Or(CreatedByEQ(uid), AssigneeIDEQ(uid))，
+	// 使普通用户只能看到自己创建或分配给自己的变更单。
+	// 安全关键路径：即使上层忘记传归属过滤，这里仍会兜底收窄；
+	// CurrentUserID<=0 时 fail-closed，返回空集而非全量。
+	if dataScope == datascope.DataScopeOwnedOrAssigned {
+		if currentUserID <= 0 {
+			q = q.Where(change.IDEQ(-1))
+		} else {
+			q = q.Where(change.Or(
+				change.CreatedByEQ(currentUserID),
+				change.AssigneeIDEQ(currentUserID),
+			))
+		}
 	}
 
 	total, err := q.Count(ctx)
@@ -228,7 +247,10 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 }
 
 func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) {
+	// P1 修复：写路径强制租户隔离，避免越权更新跨租户变更。
+	// 注：change schema 无 deleted_at（物理删），故不附加 DeletedAtIsNil 守卫。
 	update := r.client.Change.UpdateOneID(c.ID).
+		Where(change.TenantIDEQ(c.TenantID)).
 		SetTitle(c.Title).
 		SetDescription(c.Description).
 		SetJustification(c.Justification).
@@ -463,8 +485,16 @@ func (r *EntRepository) UpdateApprovalRecord(ctx context.Context, rec *ApprovalR
 }
 
 func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
+	// P1 修复：同时派生该审批人在审批链中所属层级（levels，逗号分隔），供 service 层按
+	// (approverID, level) 双重匹配，避免跨层互相串。level 不存在于 change_approvals，
+	// 由 change_approval_chains 子查询派生（不产生行扇出，保持历史记录条数不变）。
 	query := `
-		SELECT a.id, a.approver_id, u.name as approver_name, a.status, a.comment, a.approved_at, a.created_at
+		SELECT a.id, a.approver_id, u.name as approver_name, a.status, a.comment, a.approved_at, a.created_at,
+		       COALESCE((
+				   SELECT string_agg(c.level::text, ',' ORDER BY c.level)
+				   FROM change_approval_chains c
+				   WHERE c.change_id = a.change_id AND c.tenant_id = a.tenant_id AND c.approver_id = a.approver_id
+			   ), '') AS levels
 		FROM change_approvals a
 		LEFT JOIN users u ON a.approver_id = u.id
 		LEFT JOIN changes c ON a.change_id = c.id
@@ -482,13 +512,15 @@ func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, te
 	for rows.Next() {
 		var rec ApprovalRecord
 		var approvedAt sql.NullTime
-		err := rows.Scan(&rec.ID, &rec.ApproverID, &rec.ApproverName, &rec.Status, &rec.Comment, &approvedAt, &rec.CreatedAt)
+		var levelsCSV string
+		err := rows.Scan(&rec.ID, &rec.ApproverID, &rec.ApproverName, &rec.Status, &rec.Comment, &approvedAt, &rec.CreatedAt, &levelsCSV)
 		if err != nil {
 			return nil, err
 		}
 		if approvedAt.Valid {
 			rec.ApprovedAt = &approvedAt.Time
 		}
+		rec.Levels = parseLevelCSV(levelsCSV)
 		rec.ChangeID = changeID
 		rec.TenantID = tenantID
 		records = append(records, &rec)
@@ -496,27 +528,27 @@ func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, te
 	return records, nil
 }
 
-// Approval Chain (Raw SQL)
-func (r *EntRepository) CreateApprovalChain(ctx context.Context, chain []*ApprovalChain) error {
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
+// parseLevelCSV 将 "1,2,3" 解析为 []int{1,2,3}；空串返回 nil。
+func parseLevelCSV(s string) []int {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil
 	}
-	defer tx.Rollback()
-
-	for _, item := range chain {
-		query := `
-			INSERT INTO change_approval_chains (change_id, tenant_id, level, approver_id, role, status, is_required, created_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		`
-		_, err = tx.ExecContext(ctx, query, item.ChangeID, item.TenantID, item.Level, item.ApproverID, item.Role, item.Status, item.IsRequired, time.Now())
-		if err != nil {
-			return err
+	parts := strings.Split(s, ",")
+	out := make([]int, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		if v, err := strconv.Atoi(p); err == nil {
+			out = append(out, v)
 		}
 	}
-	return tx.Commit()
+	return out
 }
 
+// Approval Chain (Raw SQL)
 func (r *EntRepository) GetApprovalChain(ctx context.Context, changeID int, tenantID int) ([]*ApprovalChain, error) {
 	query := `
 		SELECT c.id, c.level, c.approver_id, u.name as approver_name, c.role, c.status, c.is_required, c.approval_type, c.threshold, c.created_at
@@ -568,11 +600,17 @@ func (r *EntRepository) ReplaceApprovalChain(
 		return err
 	}
 	for _, item := range chain {
+		// 保留 Quorum 元数据（与 SubmitForApproval 一致），否则重解析审批链会丢失
+		// approval_type/threshold，导致推进逻辑退化为纯串行、会签/或签失效。
+		approvalType := item.ApprovalType
+		if approvalType == "" {
+			approvalType = "serial"
+		}
 		if _, err := tx.ExecContext(ctx, `
 			INSERT INTO change_approval_chains
-				(change_id, tenant_id, level, approver_id, role, status, is_required, created_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		`, changeID, tenantID, item.Level, item.ApproverID, item.Role, item.Status, item.IsRequired, time.Now()); err != nil {
+				(change_id, tenant_id, level, approver_id, role, status, is_required, approval_type, threshold, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		`, changeID, tenantID, item.Level, item.ApproverID, item.Role, item.Status, item.IsRequired, approvalType, item.Threshold, time.Now()); err != nil {
 			return err
 		}
 	}

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -53,10 +54,17 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 	affectedCIs := uniqueNonEmptyStrings(req.AffectedCIs)
 	relatedTickets := uniqueNonEmptyStrings(req.RelatedTickets)
 	initialStatus := dto.ChangeStatusDraft
-	if req.Type == string(dto.ChangeTypeStandard) && req.RiskLevel == string(dto.ChangeRiskLow) &&
-		strings.TrimSpace(req.ImplementationPlan) != "" && strings.TrimSpace(req.RollbackPlan) != "" {
-		initialStatus = dto.ChangeStatusApproved
+
+	// 标准变更自动免审配置：环境变量 ENABLE_STANDARD_CHANGE_AUTO_APPROVE（默认 true）
+	// 当为 true 时，低风险标准变更（有实施计划和回滚计划）可直接跳过审批
+	enableAutoApprove := os.Getenv("ENABLE_STANDARD_CHANGE_AUTO_APPROVE")
+	if enableAutoApprove == "" || enableAutoApprove == "true" {
+		if req.Type == string(dto.ChangeTypeStandard) && req.RiskLevel == string(dto.ChangeRiskLow) &&
+			strings.TrimSpace(req.ImplementationPlan) != "" && strings.TrimSpace(req.RollbackPlan) != "" {
+			initialStatus = dto.ChangeStatusApproved
+		}
 	}
+	// 注：若需更细粒度控制，可在 Change 表增加 approval_required 字段并在模板/配置中设置
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {

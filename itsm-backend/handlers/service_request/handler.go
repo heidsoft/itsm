@@ -8,6 +8,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/handlers/common/datascope"
 
 	"github.com/gin-gonic/gin"
 )
@@ -52,6 +53,8 @@ func (h *Handler) toDTO(req *ServiceRequest, approvals []*ServiceRequestApproval
 	}
 	resp := &dto.ServiceRequestResponse{
 		ID:                 req.ID,
+		RequestNumber:      dto.GenerateServiceRequestNumber(req.ID, req.CreatedAt),
+		TicketNumber:       dto.GenerateServiceRequestNumber(req.ID, req.CreatedAt),
 		CatalogID:          req.CatalogID,
 		RequesterID:        req.RequesterID,
 		CIID:               req.CiID,
@@ -59,6 +62,7 @@ func (h *Handler) toDTO(req *ServiceRequest, approvals []*ServiceRequestApproval
 		Title:              req.Title,
 		Reason:             req.Reason,
 		FormData:           req.FormData,
+		FormFields:         req.FormData,
 		CostCenter:         req.CostCenter,
 		DataClassification: req.DataClassification,
 		NeedsPublicIP:      req.NeedsPublicIP,
@@ -194,6 +198,9 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
+	// 行级数据权限：从鉴权中间件注入的 user_id/role 取得。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 
 	// If listing "me", we need user ID
 	userID := 0
@@ -206,11 +213,20 @@ func (h *Handler) List(c *gin.Context) {
 		userID = uid
 	}
 
+	// 行级数据权限（推广自 ticket DataScope 模式）：管理角色可见全租户，
+	// 其余角色仅可见本人创建或处理的请求单。
+	dataScope := datascope.DataScopeAll
+	if !datascope.IsDataScopeAllRole(currentRole) {
+		dataScope = datascope.DataScopeOwnedOrAssigned
+	}
+
 	filters := ListFilters{
-		Status: normalizeServiceRequestStatus(req.Status),
-		UserID: userID,
-		Page:   req.Page,
-		Size:   req.Size,
+		Status:        normalizeServiceRequestStatus(req.Status),
+		UserID:        userID,
+		Page:          req.Page,
+		Size:          req.Size,
+		CurrentUserID: currentUserID,
+		DataScope:     dataScope,
 	}
 	if filters.Page == 0 {
 		filters.Page = 1

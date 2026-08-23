@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
+	"itsm-backend/handlers/common/datascope"
 
 	"go.uber.org/zap"
 )
@@ -101,8 +102,15 @@ func (s *Service) Get(ctx context.Context, id int, tenantID int) (*Incident, err
 	return s.repo.Get(ctx, id, tenantID)
 }
 
-func (s *Service) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*Incident, int, error) {
-	return s.repo.List(ctx, tenantID, page, size, filters)
+// List 列出事件单。推广 ticket 的 DataScope 行级权限：
+// 管理角色可见全租户，其余角色仅可见本人创建或分配给自己的事件单。
+// currentUserID/currentRole 由 handler 从鉴权中间件注入的 user_id/role 取得。
+func (s *Service) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, currentUserID int, currentRole string) ([]*Incident, int, error) {
+	dataScope := datascope.DataScopeAll
+	if !datascope.IsDataScopeAllRole(currentRole) {
+		dataScope = datascope.DataScopeOwnedOrAssigned
+	}
+	return s.repo.List(ctx, tenantID, page, size, filters, dataScope, currentUserID)
 }
 
 func (s *Service) Update(ctx context.Context, tenantID int, id int, updates *Incident) (*Incident, error) {

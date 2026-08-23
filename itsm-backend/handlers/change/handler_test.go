@@ -19,6 +19,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/handlers/common/datascope"
 )
 
 // setupTestHandler creates a test handler with in-memory repository
@@ -133,7 +134,7 @@ func cloneChange(c *Change) *Change {
 	return &cc
 }
 
-func (m *mockRepository) List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string) ([]*Change, int, error) {
+func (m *mockRepository) List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string, dataScope datascope.DataScope, currentUserID int) ([]*Change, int, error) {
 	var result []*Change
 	for _, c := range m.changes {
 		if c.TenantID != tenantID {
@@ -238,10 +239,6 @@ func (m *mockRepository) GetApprovalHistory(ctx context.Context, changeID int, t
 		}
 	}
 	return result, nil
-}
-
-func (m *mockRepository) CreateApprovalChain(ctx context.Context, chain []*ApprovalChain) error {
-	return nil
 }
 
 func (m *mockRepository) GetApprovalChain(ctx context.Context, changeID int, tenantID int) ([]*ApprovalChain, error) {

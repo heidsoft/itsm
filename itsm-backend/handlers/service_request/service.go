@@ -345,10 +345,19 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 		// 审批链驱动的层级：按 node 中解析出的审批人 + 会签阈值(quorum)判定本级是否通过。
 		// 串行(阈值1)行为与遗留一致；会签(阈值=审批人数)需全员批准才推进。
 		if nodeIDs, ok := currentApproval.Node["approver_ids"].([]interface{}); ok && len(nodeIDs) > 0 {
-			threshold := 1
+			// P1 修复：阈值取不到时兜底取「该层级候选审批人数」而非 1，
+			// 避免会签（需全员批准）退化为任意一人即可通过导致 threshold 退化。
+			threshold := len(nodeIDs)
 			if t, ok2 := currentApproval.Node["quorum_threshold"].(float64); ok2 && int(t) > 0 {
 				threshold = int(t)
 			}
+
+			// P1 修复：并发先读后写保护。标记前重新读取 DB 中最新的审批记录，
+			// 基于最新 approved_ids 做合并，避免并发互相覆盖导致会签永不达标。
+			if fresh, ferr := s.repo.GetApproval(ctx, id, currentApproval.Level); ferr == nil && fresh != nil && fresh.Node != nil {
+				currentApproval = fresh
+			}
+
 			// 记录本次审批人（去重）
 			approved := []interface{}{}
 			if existing, ok3 := currentApproval.Node["approved_ids"].([]interface{}); ok3 {
@@ -558,7 +567,26 @@ func (s *Service) Update(ctx context.Context, id, tenantID, actorID int, actorRo
 		return nil, common.NewForbiddenError("Only the requester or an administrator can edit this request")
 	}
 
-	// 2. Update fields
+	// 2. 复用 Create 的业务校验（写路径一致性）：编辑态也须满足同样的合规约束，
+	// 否则攻击者可在 submitted 阶段绕过创建时的校验写入不合规数据。
+	if reqData.ComplianceAckSet && !reqData.ComplianceAck {
+		return nil, common.NewBadRequestError("Compliance acknowledgement required", nil)
+	}
+	if reqData.DataClassification != "" {
+		switch reqData.DataClassification {
+		case "public", "internal", "confidential", "restricted":
+		default:
+			return nil, common.NewBadRequestError("Invalid data classification", nil)
+		}
+	}
+	if reqData.NeedsPublicIPSet && reqData.NeedsPublicIP && len(reqData.SourceIPWhitelist) == 0 {
+		return nil, common.NewBadRequestError("Source IP whitelist required for public IP", nil)
+	}
+	if reqData.ExpireAt != nil && !reqData.ExpireAt.After(time.Now()) {
+		return nil, common.NewBadRequestError("Expiration date must be in the future", nil)
+	}
+
+	// 3. Update fields
 	if reqData.Title != "" {
 		req.Title = reqData.Title
 	}

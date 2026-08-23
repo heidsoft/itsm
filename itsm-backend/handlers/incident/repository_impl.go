@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/database"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentrule"
+	"itsm-backend/handlers/common/datascope"
 )
 
 type EntRepository struct {
@@ -151,7 +153,7 @@ func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Inciden
 	return r.toDomain(i), nil
 }
 
-func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*Incident, int, error) {
+func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, dataScope datascope.DataScope, currentUserID int) ([]*Incident, int, error) {
 	query := r.client.Incident.Query().Where(incident.TenantIDEQ(tenantID))
 
 	if v, ok := filters["status"].(string); ok && v != "" {
@@ -166,6 +168,21 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 			incident.DescriptionContains(v),
 			incident.IncidentNumberContains(v),
 		))
+	}
+
+	// 行级数据权限（推广自 ticket DataScope 模式）：
+	// OwnedOrAssigned 时强制追加 Or(ReporterIDEQ(uid), AssigneeIDEQ(uid))，
+	// 使普通用户只能看到自己创建或分配给自己的事件单。
+	// CurrentUserID<=0 时 fail-closed，返回空集而非全量。
+	if dataScope == datascope.DataScopeOwnedOrAssigned {
+		if currentUserID <= 0 {
+			query = query.Where(incident.IDEQ(-1))
+		} else {
+			query = query.Where(incident.Or(
+				incident.ReporterIDEQ(currentUserID),
+				incident.AssigneeIDEQ(currentUserID),
+			))
+		}
 	}
 
 	total, err := query.Count(ctx)
@@ -190,7 +207,13 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 }
 
 func (r *EntRepository) Update(ctx context.Context, i *Incident) (*Incident, error) {
+	// P1-infra 修复：写路径强制租户隔离 + 软删守卫，避免越权更新与已软删记录被
+	// 覆盖（此前缺 TenantIDEQ / DeletedAtIsNil，并发陈旧快照上状态机判定失效）。
 	u := r.client.Incident.UpdateOneID(i.ID).
+		Where(
+			incident.TenantIDEQ(i.TenantID),
+			incident.DeletedAtIsNil(),
+		).
 		SetUpdatedAt(time.Now()).
 		SetTitle(i.Title).
 		SetDescription(i.Description).
@@ -226,8 +249,12 @@ func (r *EntRepository) Update(ctx context.Context, i *Incident) (*Incident, err
 }
 
 func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error {
-	return r.client.Incident.DeleteOneID(id).
+	// P0-2 修复：改为软删除，避免物理删除导致 CountByPeriod 计数回退、历史
+	// 编号被复用，并使 incident_events / incident_metrics / problem↔incident
+	// 关联成为孤儿。软删后读路径由全局拦截器自动过滤。
+	return r.client.Incident.UpdateOneID(id).
 		Where(incident.TenantIDEQ(tenantID)).
+		SetDeletedAt(time.Now()).
 		Exec(ctx)
 }
 
@@ -242,13 +269,21 @@ func (r *EntRepository) CountByPeriod(ctx context.Context, tenantID int, start, 
 }
 
 func (r *EntRepository) GenerateIncidentNumber(ctx context.Context, tenantID int, year int, month int) (string, error) {
-	start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
-	end := start.AddDate(0, 1, 0)
-	count, err := r.CountByPeriod(ctx, tenantID, start, end)
-	if err != nil {
-		return "", err
+	// P0-2 修复：编号改为由数据库序列 incident_number_seq 原子生成，彻底消除
+	// 「COUNT+1 并发复用 / 删除回退 / UTC 窗口错乱」三类编号冲突。
+	//   1) 序列单调递增且全局唯一，后缀永不重复，跨月也不会与历史编号碰撞；
+	//   2) 前缀 INC-YYYYMM 使用调用方传入的本地年月（service.go 用 time.Now()
+	//      本地时区），与统计窗口口径一致，不再出现 UTC 空窗 INC-...-000001；
+	//   3) (tenant_id, incident_number) 唯一索引作为最后兜底，即便异常也不会
+	//      落库重复编号。
+	// 序列在 database.InitDatabase 中创建并播种为「历史最大后缀+1」。
+	var seq int64
+	if err := database.GetRawDB().QueryRowContext(ctx,
+		"SELECT nextval('incident_number_seq')",
+	).Scan(&seq); err != nil {
+		return "", fmt.Errorf("generate incident number: %w", err)
 	}
-	return fmt.Sprintf("INC-%04d%02d-%06d", year, month, count+1), nil
+	return fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq), nil
 }
 
 func (r *EntRepository) CreateEvent(ctx context.Context, e *IncidentEvent) (*IncidentEvent, error) {

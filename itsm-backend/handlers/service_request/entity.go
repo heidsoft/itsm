@@ -3,6 +3,8 @@ package service_request
 import (
 	"context"
 	"time"
+
+	"itsm-backend/handlers/common/datascope"
 )
 
 // ServiceRequest represents the domain entity for a service request
@@ -64,6 +66,11 @@ type ListFilters struct {
 	UserID int // Requester ID
 	Page   int
 	Size   int
+	// 行级数据权限（推广自 ticket DataScope 模式）。
+	// DataScopeOwnedOrAssigned 时 repository 强制收窄到本人创建或处理的请求单；
+	// CurrentUserID 为调用者身份，<=0 时 repository fail-closed 返回空集。
+	DataScope     datascope.DataScope
+	CurrentUserID int
 }
 
 // Repository defines the interface for data persistence

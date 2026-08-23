@@ -79,6 +79,10 @@ type ApprovalRecord struct {
 	Comment      *string    `json:"comment,omitempty"`
 	ApprovedAt   *time.Time `json:"approvedAt,omitempty"`
 	CreatedAt    time.Time  `json:"createdAt"`
+	// Levels 该审批人在本变更审批链中所属的层级（可能跨多层）。
+	// 由 change_approval_chains 派生，用于按 (approverID, level) 双重匹配，
+	// 避免跨层互相串（P1 修复）。
+	Levels []int `json:"levels,omitempty"`
 }
 
 // RiskAssessment represents the risk evaluation of a change

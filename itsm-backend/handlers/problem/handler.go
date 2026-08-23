@@ -257,6 +257,9 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	tenantID, _ := c.Get("tenant_id")
+	// 行级数据权限：从鉴权中间件注入的 user_id/role 取得，下传给 service 判定 DataScope。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 
 	// Convert DTO filters to map
 	filters := make(map[string]interface{})
@@ -273,7 +276,7 @@ func (h *Handler) List(c *gin.Context) {
 		filters["keyword"] = req.Keyword
 	}
 
-	list, total, err := h.service.List(c.Request.Context(), tenantID.(int), req.Page, req.PageSize, filters)
+	list, total, err := h.service.List(c.Request.Context(), tenantID.(int), req.Page, req.PageSize, filters, currentUserID, currentRole)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return

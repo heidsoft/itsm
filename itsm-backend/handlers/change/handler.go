@@ -250,8 +250,11 @@ func (h *Handler) ListChanges(c *gin.Context) {
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
+	// 行级数据权限：从鉴权中间件注入的 user_id/role 取得，下传给 service 判定 DataScope。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 
-	list, total, err := h.svc.ListChanges(c.Request.Context(), tenantID, page, pageSize, status, search, riskLevel)
+	list, total, err := h.svc.ListChanges(c.Request.Context(), tenantID, page, pageSize, status, search, riskLevel, currentUserID, currentRole)
 	if err != nil {
 		common.InternalError(c, "查询变更列表失败: "+err.Error())
 		return

@@ -9,6 +9,7 @@ import (
 	"itsm-backend/common" // Import common package
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/servicecatalogitem"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
@@ -317,14 +318,25 @@ func (s *ServiceRequestService) GetServiceRequestDetail(ctx context.Context, id,
 		).
 		Only(ctx)
 	if err == nil && catalogItem != nil {
+		// 查询 SLA 信息
+		var slaName string
+		if catalogItem.SLAID > 0 {
+			sla, err := s.client.SLADefinition.Query().
+				Where(sladefinition.ID(catalogItem.SLAID), sladefinition.TenantIDEQ(tenantID)).
+				Only(ctx)
+			if err == nil && sla != nil {
+				slaName = sla.Name
+			}
+		}
 		// 转换为ServiceCatalogResponse
-		// TODO: 完善转换逻辑，包含SLA信息
 		resp.Catalog = &dto.ServiceCatalogResponse{
 			ID:           catalogItem.ID,
 			Name:         catalogItem.Name,
 			Description:  catalogItem.Description,
 			Category:     catalogItem.Category,
 			DeliveryTime: fmt.Sprintf("%d天", catalogItem.EstimatedDays),
+			SLAID:        catalogItem.SLAID,
+			SLAName:      slaName,
 		}
 	}
 

@@ -11,6 +11,7 @@ import (
 	entpredicate "itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/handlers/common/datascope"
 )
 
 type EntRepository struct {
@@ -243,7 +244,7 @@ func (r *EntRepository) GetWithAssociations(ctx context.Context, id int, tenantI
 	return r.toDomainWithAssociations(e), nil
 }
 
-func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*Problem, int, error) {
+func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, dataScope datascope.DataScope, currentUserID int) ([]*Problem, int, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -269,6 +270,21 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 			problem.TitleContains(v),
 			problem.DescriptionContains(v),
 		))
+	}
+
+	// 行级数据权限（推广自 ticket DataScope 模式）：
+	// OwnedOrAssigned 时强制追加 Or(CreatedByEQ(uid), AssigneeIDEQ(uid))，
+	// 使普通用户只能看到自己创建或分配给自己的问题单。
+	// CurrentUserID<=0 时 fail-closed，返回空集而非全量。
+	if dataScope == datascope.DataScopeOwnedOrAssigned {
+		if currentUserID <= 0 {
+			query = query.Where(problem.IDEQ(-1))
+		} else {
+			query = query.Where(problem.Or(
+				problem.CreatedByEQ(currentUserID),
+				problem.AssigneeIDEQ(currentUserID),
+			))
+		}
 	}
 
 	total, err := query.Count(ctx)
@@ -343,9 +359,12 @@ func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error 
 	return nil
 }
 
-func (r *EntRepository) GetAllForAnalytics(ctx context.Context, tenantID int, since time.Time) ([]*Problem, error) {
+// GetAllForAnalytics 拉取 [start, end) 区间内的问题单用于趋势/热点统计。
+// P1 修复：此前只用 start 做下界（CreatedAtGTE），导致区间之后的全量数据被计入，
+// 月度趋势与计数失真。这里同时约束上界 CreatedAtLT(end)，区间外数据不再混入。
+func (r *EntRepository) GetAllForAnalytics(ctx context.Context, tenantID int, start, end time.Time) ([]*Problem, error) {
 	list, err := r.client.Problem.Query().
-		Where(problem.TenantIDEQ(tenantID), problem.DeletedAtIsNil(), problem.CreatedAtGTE(since)).
+		Where(problem.TenantIDEQ(tenantID), problem.DeletedAtIsNil(), problem.CreatedAtGTE(start), problem.CreatedAtLT(end)).
 		Order(ent.Desc(problem.FieldCreatedAt)).
 		Limit(1000).
 		All(ctx)

@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/release"
 	"itsm-backend/ent/user"
+	"itsm-backend/handlers/common/datascope"
 
 	"go.uber.org/zap"
 )
@@ -35,9 +37,21 @@ func NewReleaseService(client *ent.Client, logger *zap.SugaredLogger) *ReleaseSe
 }
 
 // CreateRelease 创建发布
+// P1 修复：
+//  1. release_number 由服务端生成，不信任客户端传入值（避免越权/冲突编号）。
+//  2. 两段写（先 Create 再对 JSON 字段二次 Save）包进单个事务，失败回滚，不留半成品。
 func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateReleaseRequest, createdBy, tenantID int) (*dto.ReleaseResponse, error) {
-	releaseEntity, err := s.client.Release.Create().
-		SetReleaseNumber(req.ReleaseNumber).
+	releaseNumber := s.generateReleaseNumber(tenantID)
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to start transaction", "error", err, "tenant_id", tenantID)
+		return nil, fmt.Errorf("failed to create release: %w", err)
+	}
+	defer tx.Rollback()
+
+	releaseEntity, err := tx.Release.Create().
+		SetReleaseNumber(releaseNumber).
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetType(req.Type).
@@ -90,6 +104,11 @@ func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateRelea
 		releaseEntity = updated
 	}
 
+	if err := tx.Commit(); err != nil {
+		s.logger.Errorw("Failed to commit release transaction", "error", err, "tenant_id", tenantID)
+		return nil, fmt.Errorf("failed to create release: %w", err)
+	}
+
 	// 获取创建人信息
 	creator, _ := s.client.User.Get(ctx, createdBy)
 	creatorName := ""
@@ -100,8 +119,15 @@ func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateRelea
 	response := dto.ToReleaseResponse(releaseEntity)
 	response.CreatedByName = creatorName
 
-	s.logger.Infow("Release created successfully", "release_id", releaseEntity.ID, "tenant_id", tenantID)
+	s.logger.Infow("Release created successfully", "release_id", releaseEntity.ID, "tenant_id", tenantID, "release_number", releaseNumber)
 	return response, nil
+}
+
+// generateReleaseNumber 服务端生成发布编号（REL-YYYYMMDD-xxxxxx），
+// 不依赖客户端传入，避免越权/编号冲突。
+func (s *ReleaseService) generateReleaseNumber(tenantID int) string {
+	randPart := fmt.Sprintf("%06d", rand.Intn(1000000))
+	return fmt.Sprintf("REL-%s-%s", time.Now().Format("20060102"), randPart)
 }
 
 // GetReleaseByID 根据ID获取发布
@@ -138,8 +164,11 @@ func (s *ReleaseService) GetReleaseByID(ctx context.Context, id, tenantID int) (
 	return response, nil
 }
 
-// ListReleases 获取发布列表
-func (s *ReleaseService) ListReleases(ctx context.Context, tenantID int, page, pageSize int, status, releaseType string) (*dto.ReleaseListResponse, error) {
+// ListReleases 获取发布列表。推广 ticket 的 DataScope 行级权限：
+// 管理角色（super_admin/admin/manager/sysadmin）可见全租户，其余角色仅可见
+// 本人创建或分配给自己的发布单。currentUserID/currentRole 由 controller 从
+// 鉴权中间件注入的 user_id/role 取得。
+func (s *ReleaseService) ListReleases(ctx context.Context, tenantID int, page, pageSize int, status, releaseType string, currentUserID int, currentRole string) (*dto.ReleaseListResponse, error) {
 	query := s.client.Release.Query().Where(release.TenantIDEQ(tenantID))
 
 	if status != "" {
@@ -147,6 +176,25 @@ func (s *ReleaseService) ListReleases(ctx context.Context, tenantID int, page, p
 	}
 	if releaseType != "" {
 		query = query.Where(release.TypeEQ(releaseType))
+	}
+
+	// 行级数据权限（推广自 ticket DataScope 模式）：
+	// OwnedOrAssigned 时强制追加 Or(CreatedByEQ(uid), OwnerIDEQ(uid))，
+	// 使普通用户只能看到自己创建或分配给自己的发布单。
+	// CurrentUserID<=0 时 fail-closed，返回空集而非全量。
+	dataScope := datascope.DataScopeAll
+	if !datascope.IsDataScopeAllRole(currentRole) {
+		dataScope = datascope.DataScopeOwnedOrAssigned
+	}
+	if dataScope == datascope.DataScopeOwnedOrAssigned {
+		if currentUserID <= 0 {
+			query = query.Where(release.IDEQ(-1))
+		} else {
+			query = query.Where(release.Or(
+				release.CreatedByEQ(currentUserID),
+				release.OwnerIDEQ(currentUserID),
+			))
+		}
 	}
 
 	// 统计总数
@@ -371,8 +419,9 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 		return nil, fmt.Errorf("failed to get release: %w", err)
 	}
 
-	// 仅草稿态允许审批，防止已排期/已执行的发布被重复审批
-	if releaseEntity.Status != string(dto.ReleaseStatusDraft) {
+	// 仅草稿态/失败态允许审批：失败态审批即「重新排期(reschedule)」，使发布历史不断裂、
+	// 关联变更不丢（P1 修复：放宽此前硬要求 draft 的死锁）。
+	if releaseEntity.Status != string(dto.ReleaseStatusDraft) && releaseEntity.Status != string(dto.ReleaseStatusFailed) {
 		return nil, fmt.Errorf("当前发布状态不允许审批: %s", releaseEntity.Status)
 	}
 
@@ -415,13 +464,19 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 }
 
 // DeleteRelease 删除发布
+// P1 修复：release 在 schema 中无 deleted_at（物理删），无法软删；故此处检查
+// RowsAffected，未匹配到（已删/不存在/跨租户）时返回未找到错误，避免硬删成功却返回 200。
 func (s *ReleaseService) DeleteRelease(ctx context.Context, id, tenantID int) error {
-	_, err := s.client.Release.Delete().
+	deleted, err := s.client.Release.Delete().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to delete release", "error", err, "release_id", id)
 		return fmt.Errorf("failed to delete release: %w", err)
+	}
+	if deleted == 0 {
+		s.logger.Warnw("Release delete matched 0 rows", "release_id", id, "tenant_id", tenantID)
+		return fmt.Errorf("release not found")
 	}
 
 	s.logger.Infow("Release deleted", "release_id", id)
