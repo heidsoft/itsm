@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- Reworked the open-source capability guide around user roles, executable business journeys, TicketType-driven dynamic forms, maturity boundaries, deployment acceptance, and explicit non-goals.
+- Updated README authentication and ticket examples for HttpOnly cookie sessions, CSRF protection, camelCase DTOs, string priorities, and runtime TicketType selection.
+- Resynchronized the roadmap with the v1.6.x hardening line and corrected obsolete BPMN goroutine claims now that ticket and incident production wiring uses persistent command/outbox execution.
+
 ---
 
 ## [1.6.9] - 2026-08-20

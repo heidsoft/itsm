@@ -1,18 +1,18 @@
 /**
  * SLA 升级矩阵 API
  *
- * 对应后端 service/escalation_matrix.go（service 层）
+ * 对应后端 service/escalation_matrix.go（service 层）和
+ * controller/escalation_matrix_controller.go（HTTP 层）。
  *
- * 状态说明：
- * - 当前后端**没有** HTTP controller/router，矩阵是进程内缓存
+ * - 后端已注册路由 /api/v1/escalation-matrices（EscalationMatrixController）
  * - 矩阵被 EscalationMatrixService.GetMatrix() 在以下场景隐式使用：
  *   - SLA 告警升级
  *   - 工单超时升级
  *   - BPMN 任务超时
- * - 这里仅提供前端类型定义和可视化辅助函数，UI 可作为"只读预览"
- *
- * 字段与 service/escalation_matrix.go 保持一致。
+ * - 这里提供前端 HTTP 客户端 + 默认值兜底，便于 UI 展示当前生效矩阵。
  */
+
+import { httpClient } from '@/lib/api/http-client';
 
 // 单级升级策略
 export interface EscalationLevel {
@@ -92,13 +92,28 @@ export interface EscalationHistoryEntry {
 
 export class EscalationMatrixApi {
   /**
-   * 当前后端没有 HTTP 端点暴露矩阵，因此前端展示的是默认矩阵。
-   * 后续若后端添加 controller，可替换实现为 httpClient.get(...)。
+   * 获取当前生效的升级矩阵。
+   * - 优先调用 /api/v1/escalation-matrices（EscalationMatrixController）
+   * - 后端无响应/网络异常时回落到默认矩阵，避免页面空白
    */
   static async getMatrix(): Promise<EscalationMatrix> {
-    // 后端当前为进程内缓存，无 HTTP API。
-    // 兜底返回默认矩阵，避免页面空白。
-    return Promise.resolve(DEFAULT_ESCALATION_MATRIX);
+    try {
+      const resp = await httpClient.get<{
+        matrix?: EscalationMatrix;
+        data?: EscalationMatrix;
+        priorities?: Record<string, EscalationLevel[]>;
+      }>('/api/v1/escalation-matrices');
+      const payload = (resp as { matrix?: EscalationMatrix; data?: EscalationMatrix }).matrix
+        || (resp as { data?: EscalationMatrix }).data
+        || (resp as { priorities?: Record<string, EscalationLevel[]> }).priorities;
+      if (payload && typeof payload === 'object' && Object.keys(payload).length > 0) {
+        return payload as EscalationMatrix;
+      }
+    } catch (err) {
+      // 网络或后端 5xx 时回落到默认矩阵
+      console.warn('EscalationMatrixApi.getMatrix fallback to default:', err);
+    }
+    return DEFAULT_ESCALATION_MATRIX;
   }
 }
 

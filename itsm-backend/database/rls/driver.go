@@ -131,35 +131,130 @@ func (d *Driver) Dialect() string { return d.inner.Dialect() }
 // Close closes the underlying driver.
 func (d *Driver) Close() error { return d.inner.Close() }
 
-// Tx delegates transaction creation to the inner driver. Enforce-mode
-// SET LOCAL is applied via Exec/Query below rather than here, so that
-// shadow mode does not need to intercept transaction boundaries.
+// Tx delegates transaction creation to the inner driver. In enforce mode,
+// we execute SET LOCAL immediately after transaction creation to set the
+// tenant context for all subsequent queries in this transaction.
 func (d *Driver) Tx(ctx context.Context) (dialect.Tx, error) {
 	d.observe(ctx, "Tx", "")
-	return d.inner.Tx(ctx)
+	tx, err := d.inner.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// In enforce mode, set tenant context immediately after transaction start
+	if d.mode == ModeEnforce && !tenantctx.IsSystemBypass(ctx) {
+		if tid, ok := tenantctx.TenantID(ctx); ok {
+			// Execute SET LOCAL to set tenant context for this transaction
+			if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL app.current_tenant = %d", tid), nil, nil); err != nil {
+				// Rollback on failure - don't return a broken tx
+				_ = tx.Rollback()
+				return nil, fmt.Errorf("rls: failed to set tenant in transaction: %w", err)
+			}
+			d.nEnforceApplied.Add(1)
+			d.log.Debugw("rls: SET LOCAL applied in transaction", "tenant_id", tid)
+		} else {
+			// No tenant in context - fail closed in enforce mode
+			_ = tx.Rollback()
+			return nil, fmt.Errorf("rls: enforce mode requires tenant_id in context")
+		}
+	}
+
+	return tx, nil
 }
 
-// BeginTx delegates to the inner driver. See Tx() for rationale.
+// BeginTx delegates to the inner driver. In enforce mode, we execute
+// SET LOCAL immediately after transaction creation (same as Tx).
 func (d *Driver) BeginTx(ctx context.Context, opts *sql.TxOptions) (dialect.Tx, error) {
 	d.observe(ctx, "BeginTx", "")
+
+	var tx dialect.Tx
+	var err error
+
 	if t, ok := d.inner.(interface {
 		BeginTx(context.Context, *sql.TxOptions) (dialect.Tx, error)
 	}); ok {
-		return t.BeginTx(ctx, opts)
+		tx, err = t.BeginTx(ctx, opts)
+	} else {
+		tx, err = d.inner.Tx(ctx)
 	}
-	return d.inner.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// In enforce mode, set tenant context immediately after transaction start
+	if d.mode == ModeEnforce && !tenantctx.IsSystemBypass(ctx) {
+		if tid, ok := tenantctx.TenantID(ctx); ok {
+			if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL app.current_tenant = %d", tid), nil, nil); err != nil {
+				_ = tx.Rollback()
+				return nil, fmt.Errorf("rls: failed to set tenant in transaction: %w", err)
+			}
+			d.nEnforceApplied.Add(1)
+			d.log.Debugw("rls: SET LOCAL applied in BeginTx", "tenant_id", tid)
+		} else {
+			_ = tx.Rollback()
+			return nil, fmt.Errorf("rls: enforce mode requires tenant_id in context")
+		}
+	}
+
+	return tx, nil
 }
 
 // Exec implements dialect.ExecQuerier.
 func (d *Driver) Exec(ctx context.Context, query string, args, v any) error {
+	// 全路径接线：enforce 模式下，每个非事务（autocommit）语句都包裹进一个
+	// 带 SET LOCAL app.current_tenant 的短事务，使 RLS 策略对读/写路径一致生效。
+	// 此前 SET LOCAL 仅在 Tx/BeginTx 注入，导致绝大多数 autocommit 查询隔离失效。
+	if d.mode == ModeEnforce {
+		return d.withTenantTx(ctx, func(tx dialect.Tx) error {
+			return tx.Exec(ctx, query, args, v)
+		})
+	}
 	d.observe(ctx, "Exec", firstToken(query))
 	return d.inner.Exec(ctx, query, args, v)
 }
 
 // Query implements dialect.ExecQuerier.
 func (d *Driver) Query(ctx context.Context, query string, args, v any) error {
+	if d.mode == ModeEnforce {
+		return d.withTenantTx(ctx, func(tx dialect.Tx) error {
+			return tx.Query(ctx, query, args, v)
+		})
+	}
 	d.observe(ctx, "Query", firstToken(query))
 	return d.inner.Query(ctx, query, args, v)
+}
+
+// withTenantTx 在 enforce 模式下为单条语句建立短事务并注入租户上下文。
+//
+// 设计要点：
+//   - SystemBypass 上下文或缺失租户：直接内层事务执行，不注入（由 BYPASSRLS
+//     角色或调用方负责跨租户语义）。缺失租户时 fail-close 拒绝，避免 NULL 租户
+//     使 RLS 策略要么全漏要么全拒。
+//   - SET LOCAL 仅在事务内有效，提交后即失效，绝不会泄漏到后续连接/查询。
+//   - 每条 autocommit 语句多一次 BEGIN/SET LOCAL/COMMIT 往返，换取读/写隔离
+//     一致性；仅在 enforce 模式启用，off/shadow 零开销。
+func (d *Driver) withTenantTx(ctx context.Context, fn func(dialect.Tx) error) error {
+	tx, err := d.inner.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	// 任何失败路径都回滚，避免悬挂事务。
+	defer func() { _ = tx.Rollback() }()
+
+	if !tenantctx.IsSystemBypass(ctx) {
+		tid, ok := tenantctx.TenantID(ctx)
+		if !ok {
+			return fmt.Errorf("rls: enforce mode requires tenant_id in context")
+		}
+		if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL app.current_tenant = %d", tid), nil, nil); err != nil {
+			return fmt.Errorf("rls: failed to set tenant in statement: %w", err)
+		}
+		d.nEnforceApplied.Add(1)
+	}
+	if err := fn(tx); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 // -----------------------------------------------------------------------

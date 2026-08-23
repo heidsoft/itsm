@@ -57,7 +57,7 @@ ITSM 用一套可审计、可扩展的后端规则连接服务台、事件、问
 - **AI 是决策支持**：分诊、摘要、检索和建议可降级、可审计，不绕过权限和人工责任。
 - **异步动作必须可靠**：工作流启动和关键通知通过事务 command/outbox、租约、fencing、重试和死信执行，不依赖请求内 goroutine。
 
-> 当前处于商业化收敛阶段。核心 ITIL 能力已经具备可运行基础，但不同领域成熟度不同。代码或页面存在不等于已达到生产承诺；请以[商业能力契约](./docs/product/itsm-commercial-capability-contract.md)和对应验收结果为准。
+> 当前处于生产加固阶段。核心 ITIL 能力已经具备可运行基础，但不同领域成熟度不同。代码或页面存在不等于已达到生产承诺；开源用户请先看[开源产品能力说明](./docs/product/open-source-release-capability.md)，生产选型再结合[商业能力契约](./docs/product/itsm-commercial-capability-contract.md)和对应验收结果。
 
 开发前请先阅读[文档状态与事实源](./docs/documentation-governance.md)。`output/`、`docs/review/`、`docs/test-plan/` 和 `docs/archive/` 中的报告是历史快照，不能覆盖当前源码、运行时和最新发布证据。
 
@@ -82,6 +82,7 @@ ITSM 用一套可审计、可扩展的后端规则连接服务台、事件、问
 | 能力域 | 当前状态 | 已有基础 | 进入生产前重点 |
 |:---|:---:|:---|:---|
 | 工单与事件 | GA 候选 | 状态流转、分派、CI、SLA、BPMN、租户隔离 | 固化事件恢复旅程和容量验收 |
+| 工单类型与动态表单 | GA 候选 | 类型快照、动态字段、Preset 安装、Workflow/SLA/Assignment 绑定、独立权限与审计 | 大规模字段配置、升级兼容和管理员 E2E 验收 |
 | 变更管理 | GA 候选 | 风险、受影响 CI、审批、回滚方案、PIR 基础 | 影响分析门禁、窗口冲突与回滚演练 |
 | 问题与 Known Error | Pilot | 根因、临时方案、关联事件、知识沉淀基础 | 强化 CI 引用和知识发布闭环 |
 | 服务目录与请求 | Pilot | 目录、请求、审批、服务任务基础 | 目录版本、交付补偿和 CI 变更闭环 |
@@ -189,35 +190,46 @@ docker compose --env-file .env -f docker-compose.dev.yml \
 所有 API 返回统一格式 `{ code: number, message: string, data: any }`。
 
 ```bash
-# 1. 登录获取 Token
+# 1. 登录并保存 HttpOnly 会话 Cookie（示例账号仅限本地开发）
 curl -X POST http://localhost:8090/api/v1/login \
   -H "Content-Type: application/json" \
+  -c /tmp/itsm-cookies.txt \
   -d '{"username":"admin","password":"admin123"}'
 
-# 响应示例
-# {"code":0,"message":"success","data":{"accessToken":"eyJhbGciOiJIUzI1NiIs...","user":{"id":1,"username":"admin"}}}
+# 登录响应不向 JavaScript 暴露 access token。
+# 写操作还需要双提交 CSRF token；以下示例需要 jq。
+CSRF_TOKEN=$(curl -s -b /tmp/itsm-cookies.txt -c /tmp/itsm-cookies.txt \
+  http://localhost:8090/api/v1/csrf-token | jq -r '.data.csrf_token')
 
-# 2. 创建工单（需 Token）
-TOKEN="your-access-token"
+# 2. 查询当前租户可用的工单类型
+curl -X GET "http://localhost:8090/api/v1/ticket-types?status=active&page=1&pageSize=20" \
+  -b /tmp/itsm-cookies.txt
+
+# 3. 使用返回的类型 ID 创建工单；formFields 必须符合该类型字段定义
+TICKET_TYPE_ID=1
 
 curl -X POST http://localhost:8090/api/v1/tickets \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "X-CSRF-Token: $CSRF_TOKEN" \
+  -b /tmp/itsm-cookies.txt \
   -d '{
     "title": "打印机无法使用",
     "description": "3楼会议室打印机故障",
-    "priority": 2,
-    "category": "hardware"
+    "priority": "medium",
+    "ticketTypeId": '"$TICKET_TYPE_ID"',
+    "category": "hardware",
+    "formFields": {}
   }'
 
-# 3. 查询工单列表
+# 4. 查询工单列表
 curl -X GET "http://localhost:8090/api/v1/tickets?page=1&pageSize=10" \
-  -H "Authorization: Bearer $TOKEN"
+  -b /tmp/itsm-cookies.txt
 
-# 4. 创建变更请求
+# 5. 创建变更请求
 curl -X POST http://localhost:8090/api/v1/changes \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "X-CSRF-Token: $CSRF_TOKEN" \
+  -b /tmp/itsm-cookies.txt \
   -d '{
     "title": "数据库升级计划",
     "description": "PostgreSQL 14 升级到 16",
@@ -226,9 +238,9 @@ curl -X POST http://localhost:8090/api/v1/changes \
     "implementationPlan": "采用蓝绿部署"
   }'
 
-# 5. 查询 SLA 状态
+# 6. 查询 SLA 状态
 curl -X GET http://localhost:8090/api/v1/sla/policies \
-  -H "Authorization: Bearer $TOKEN"
+  -b /tmp/itsm-cookies.txt
 ```
 
 ### 常用开发命令
@@ -410,6 +422,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 | 文档 | 用途 |
 |:---|:---|
 | [文档中心](./docs/README.md) | 按角色和主题查找资料 |
+| [开源产品能力说明](./docs/product/open-source-release-capability.md) | 角色、业务闭环、成熟度、限制与验收入口 |
 | [商业能力契约](./docs/product/itsm-commercial-capability-contract.md) | 能力成熟度、商业 MVP 和非目标 |
 | [商业化架构](./docs/architecture/commercial-ready-architecture.md) | 生产级总体架构 |
 | [CMDB 商业 MVP](./docs/product/cmdb-commercial-mvp.md) | CMDB GA/Pilot 边界和验收门槛 |

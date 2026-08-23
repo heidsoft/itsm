@@ -145,3 +145,16 @@ func TestProcessBindingRouteKeyMigrationsAreSeparated(t *testing.T) {
 	assert.Contains(t, constraintSQL, "WHERE is_active = TRUE")
 	assert.NotContains(t, constraintSQL, "DELETE FROM")
 }
+
+func TestTicketTypePermissionMigrationBackfillsAllTenantsIdempotently(t *testing.T) {
+	sql := GetMigrationSQL("016_add_ticket_type_permissions")
+
+	for _, code := range []string{"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive"} {
+		assert.Contains(t, sql, code)
+	}
+	assert.Contains(t, sql, "FROM tenants tenant")
+	assert.Contains(t, sql, "existing.tenant_id = tenant.id")
+	assert.Contains(t, sql, "existing.role_id = role.id")
+	assert.Contains(t, sql, "existing.permission_id = permission.id")
+	assert.Contains(t, sql, "existing.tenant_id = role.tenant_id")
+}

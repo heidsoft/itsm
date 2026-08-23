@@ -305,7 +305,8 @@ export class SLAApi {
   }
 
   // 获取SLA预警
-  // 从 monitoring 端点获取实时预警数据
+  // 优先从 monitoring 端点获取实时预警数据；如果该端点未返回 alerts（生产环境常见），
+  // 则从 violations 端点派生未关闭的违规作为告警数据源，确保告警 widget 与顶部统计一致。
   static async getSLAAlerts(): Promise<
     Array<{
       ticketId: number;
@@ -317,7 +318,6 @@ export class SLAApi {
       createdAt: string;
     }>
   > {
-    // 从 monitoring 端点获取预警数据
     const monitoring = await httpClient.post<{
       alerts?: Array<{
         ticketId?: number;
@@ -330,8 +330,7 @@ export class SLAApi {
       }>;
     }>('/api/v1/sla/monitor', {});
 
-    // 如果有 alerts 则使用，否则返回空数组
-    if (monitoring.alerts && Array.isArray(monitoring.alerts)) {
+    if (monitoring.alerts && Array.isArray(monitoring.alerts) && monitoring.alerts.length > 0) {
       return monitoring.alerts.map((item) => ({
         ticketId: item.ticketId ?? 0,
         ticketTitle: item.ticketTitle || `Ticket #${item.ticketId ?? 0}`,
@@ -343,7 +342,49 @@ export class SLAApi {
       }));
     }
 
-    return [];
+    // Fallback: 拉取未解决的违规记录作为告警
+    try {
+      const violationResp = await httpClient.get<{
+        items?: Array<{
+          id: number;
+          ticketId?: number;
+          severity?: string;
+          violationType?: string;
+          violationTime?: string;
+          description?: string;
+          isResolved?: boolean;
+        }>;
+      }>('/api/v1/sla/violations', { isResolved: false, page: 1, pageSize: 10 });
+
+      const items = violationResp.items || [];
+      const toAlertLevel = (s?: string): 'warning' | 'critical' | 'severe' => {
+        switch ((s || '').toLowerCase()) {
+          case 'critical':
+            return 'critical';
+          case 'high':
+            return 'severe';
+          case 'medium':
+            return 'warning';
+          default:
+            return 'warning';
+        }
+      };
+
+      return items
+        .filter((v) => v.ticketId)
+        .map((v) => ({
+          ticketId: v.ticketId ?? 0,
+          ticketTitle: `Ticket #${v.ticketId}`,
+          priority: 'medium',
+          slaDefinition: v.violationType || 'SLA',
+          timeRemaining: 0,
+          alertLevel: toAlertLevel(v.severity),
+          createdAt: v.violationTime || new Date().toISOString(),
+        }));
+    } catch (fallbackError) {
+      console.warn('SLA alerts fallback to violations failed:', fallbackError);
+      return [];
+    }
   }
 
   // 触发SLA监控检查

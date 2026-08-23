@@ -448,7 +448,7 @@ export const routes: RouteConfig[] = [
     },
     children: [
       {
-        path: '/cmdb/ci',
+        path: '/cmdb/cis',
         name: 'ci-list',
         title: '配置项',
         component: 'CIList',

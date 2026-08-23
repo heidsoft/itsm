@@ -300,6 +300,9 @@ func NewApplication() *Application {
 	ticketService.EnableSideEffectOutbox()
 	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
 
+	// TicketAssociationService 工单关联服务
+	ticketAssociationService := service.NewTicketAssociationService(client)
+
 	// 为 IncidentService 注入序列服务与原生数据库连接（S-4 编号事务锁）
 	incidentService.SetSequenceService(sequenceService)
 	incidentService.SetRawDB(database.GetRawDB())
@@ -406,6 +409,7 @@ func NewApplication() *Application {
 	slaForecastSkill := service.NewSLAForecastSkill(client, llmGateway, sugar)
 	// 市场服务
 	marketplaceSvc := marketplaceService.NewService(client, sugar)
+	marketplaceSvc.SetConnectorManager(connectorManager)
 	marketplaceCtrl := marketplaceController.NewController(marketplaceSvc, connectorManager)
 
 	// Guidance sidecar for constrained JSON generation
@@ -472,6 +476,8 @@ func NewApplication() *Application {
 	ticketRatingService.SetNotificationService(ticketNotificationService)
 
 	rootCauseAnalysisService := service.NewRootCauseAnalysisService(client)
+	rootCauseAnalysisService.SetGateway(llmGateway)
+	rootCauseAnalysisService.SetLogger(sugar)
 	incidentController := controller.NewIncidentController(incidentService, incidentRuleEngine, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, sugar)
 	approvalController := controller.NewApprovalController(approvalService)
 
@@ -884,6 +890,9 @@ func NewApplication() *Application {
 
 		// WebSocket Service
 		WebSocketService: wsService,
+
+		// Ticket Association Service
+		TicketAssociationService: ticketAssociationService,
 	}
 	router.SetupRoutes(r, routerConfig)
 
@@ -943,6 +952,9 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 		}
 		if err := prepareCMDBModelMigration(ctx, database.GetRawDB(), sugar); err != nil {
 			return fmt.Errorf("prepare CMDB model migration: %w", err)
+		}
+		if err := prepareTicketFormFieldsMigration(ctx, database.GetRawDB(), sugar); err != nil {
+			return fmt.Errorf("prepare ticket form fields migration: %w", err)
 		}
 		if err := client.Schema.Create(ctx); err != nil {
 			return fmt.Errorf("create schema resources: %w", err)

@@ -1324,6 +1324,9 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		{"ticket:import", "导入工单", "ticket", "import", "导入工单"},
 		{"ticket:admin", "工单管理配置", "ticket", "admin", "管理工单自动化和配置"},
 		{"ticket:delete", "删除工单", "ticket", "delete", "删除工单"},
+		{"ticket_type:manage", "管理工单类型", "ticket_type", "manage", "创建、编辑、启停、克隆和恢复工单类型"},
+		{"ticket_type:install_preset", "安装工单类型预设", "ticket_type", "install_preset", "从预设库安装工单类型"},
+		{"ticket_type:archive", "归档工单类型", "ticket_type", "archive", "归档租户工单类型"},
 		{"ticket_category:read", "查看工单分类", "ticket_category", "read", "查看工单分类"},
 		{"ticket_category:create", "创建工单分类", "ticket_category", "create", "创建工单分类"},
 		{"ticket_category:update", "更新工单分类", "ticket_category", "update", "更新工单分类"},
@@ -1755,6 +1758,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		// 运维经理：运维相关读写
 		"ops_manager": {
 			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 			"problem:read", "problem:write", "change:read", "change:write",
 			"asset:read", "asset:write", "cmdb:read", "cmdb:write",
 			"sla:read", "workflow:read", "report:read",
@@ -1781,6 +1785,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		// 服务台主管
 		"sd_manager": {
 			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 			"problem:read", "change:read", "sla:read", "sla:write",
 			"knowledge:read", "knowledge:write", "report:read",
 			"user:read", "team:read",
@@ -1804,6 +1809,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"service_request:read", "service_request:write", "service_request:delete",
 			"ticket_template:read", "ticket_template:create", "ticket_template:update", "ticket_template:delete",
 			"ticket_category:read", "ticket_category:create", "ticket_category:update",
+			"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 			"workflow:read",
 			"approval:read",
 			"sla:read",
@@ -1969,6 +1975,7 @@ func allPermissionCodes() []string {
 		"ticket:read", "ticket:write", "ticket:create", "ticket:update", "ticket:assign",
 		"ticket:escalate", "ticket:resolve", "ticket:close", "ticket:export", "ticket:import",
 		"ticket:admin", "ticket:delete",
+		"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 		"ticket_category:read", "ticket_category:create", "ticket_category:update", "ticket_category:delete",
 		"ticket_tag:read", "ticket_tag:create", "ticket_tag:update", "ticket_tag:delete",
 		"ticket_template:read", "ticket_template:create", "ticket_template:update", "ticket_template:delete",

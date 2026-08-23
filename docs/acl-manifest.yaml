@@ -3033,13 +3033,67 @@ routes:
     permission: ticket.read
     menu: v1
     description: 列表
-    source: router.go:1833
+    source: router.go:1840
   - method: POST
     path: /api/v1/ticket-types
-    permission: ticket.create
+    permission: ticket_type.manage
     menu: v1
     description: 创建
     source: router.go:1841
+  - method: GET
+    path: /api/v1/ticket-types/:id
+    permission: ticket.read
+    menu: v1
+    description: 详情
+    source: router.go:1842
+  - method: PUT
+    path: /api/v1/ticket-types/:id
+    permission: ticket_type.manage
+    menu: v1
+    description: 更新配置及绑定
+    source: router.go:1843
+  - method: DELETE
+    path: /api/v1/ticket-types/:id
+    permission: ticket_type.archive
+    menu: v1
+    description: 归档
+    source: router.go:1844
+  - method: POST
+    path: /api/v1/ticket-types/:id/enable
+    permission: ticket_type.manage
+    menu: v1
+    description: 启用
+    source: router.go:1845
+  - method: POST
+    path: /api/v1/ticket-types/:id/disable
+    permission: ticket_type.manage
+    menu: v1
+    description: 停用
+    source: router.go:1846
+  - method: POST
+    path: /api/v1/ticket-types/:id/clone
+    permission: ticket_type.manage
+    menu: v1
+    description: 克隆
+    source: router.go:1847
+  - method: POST
+    path: /api/v1/ticket-types/:id/restore
+    permission: ticket_type.manage
+    menu: v1
+    description: 恢复归档类型
+    source: router.go:1848
+  - method: GET
+    path: /api/v1/ticket-type-presets
+    permission: ticket_type.manage
+    menu: v1
+    description: 查询预设库
+    source: router.go:1849
+  - method: POST
+    path: /api/v1/ticket-type-presets/:presetId/install
+    permission: ticket_type.install_preset
+    menu: v1
+    description: 安装预设
+    source: router.go:1850
   - method: GET
     path: /api/v1/audit-logs
     permission: audit.read

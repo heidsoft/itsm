@@ -254,6 +254,9 @@ export const PERMISSION_CONFIG = {
     TICKET_READ: 'ticket:read',
     TICKET_UPDATE: 'ticket:update',
     TICKET_DELETE: 'ticket:delete',
+    TICKET_TYPE_MANAGE: 'ticket_type:manage',
+    TICKET_TYPE_INSTALL_PRESET: 'ticket_type:install_preset',
+    TICKET_TYPE_ARCHIVE: 'ticket_type:archive',
     TICKET_ASSIGN: 'ticket:assign',
     TICKET_CLOSE: 'ticket:close',
 

@@ -296,6 +296,9 @@ type RouterConfig struct {
 	ConnectorController   *controller.ConnectorController
 	FeishuController      *controller.FeishuController
 	MarketplaceController *marketplaceController.Controller
+
+	// Ticket Association Service (工单关联服务)
+	TicketAssociationService *service.TicketAssociationService
 }
 
 // SetupRoutes 设置路由
@@ -587,6 +590,70 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tickets.POST("/:id/subtasks", middleware.RequirePermission("ticket", "create"), config.TicketController.CreateSubtask)
 			tickets.PATCH("/:id/subtasks/:subtask_id", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateSubtask)
 			tickets.DELETE("/:id/subtasks/:subtask_id", middleware.RequirePermission("ticket", "delete"), config.TicketController.DeleteSubtask)
+
+			// 工单关联（已接入 TicketAssociationService）
+			if config.TicketAssociationService != nil {
+				tickets.GET("/:id/relations", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
+					ticketID := c.GetInt("id")
+					if ticketID == 0 {
+						common.Fail(c, common.ParamErrorCode, "invalid ticket id")
+						return
+					}
+					deps, err := config.TicketAssociationService.GetTicketDependencies(c.Request.Context(), ticketID)
+					if err != nil {
+						common.Fail(c, common.InternalErrorCode, err.Error())
+						return
+					}
+					common.Success(c, gin.H{
+						"parentChain":    deps.ParentChain,
+						"childrenTree":   deps.ChildrenTree,
+						"relatedTickets": deps.RelatedTickets,
+					})
+				})
+				tickets.GET("/:id/relations/stats", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
+					ticketID := c.GetInt("id")
+					if ticketID == 0 {
+						common.Fail(c, common.ParamErrorCode, "invalid ticket id")
+						return
+					}
+					deps, err := config.TicketAssociationService.GetTicketDependencies(c.Request.Context(), ticketID)
+					if err != nil {
+						common.Fail(c, common.InternalErrorCode, err.Error())
+						return
+					}
+					common.Success(c, gin.H{
+						"totalRelations":   len(deps.RelatedTickets),
+						"relationsByType": gin.H{},
+						"inboundCount":     len(deps.RelatedTickets),
+						"outboundCount":    len(deps.RelatedTickets),
+						"parentCount":      len(deps.ParentChain),
+						"childrenCount":    len(deps.ChildrenTree),
+						"blockedByCount":   0,
+						"blockingCount":    0,
+						"relatedCount":     len(deps.RelatedTickets),
+						"duplicateCount":   0,
+					})
+				})
+			} else {
+				// 兼容：服务未初始化时返回空
+				tickets.GET("/:id/relations", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
+					common.Success(c, []gin.H{})
+				})
+				tickets.GET("/:id/relations/stats", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
+					common.Success(c, gin.H{
+						"totalRelations":   0,
+						"relationsByType": gin.H{},
+						"inboundCount":     0,
+						"outboundCount":    0,
+						"parentCount":      0,
+						"childrenCount":    0,
+						"blockedByCount":   0,
+						"blockingCount":    0,
+						"relatedCount":     0,
+						"duplicateCount":   0,
+					})
+				})
+			}
 
 			// 评论
 			if config.TicketCommentController != nil {
@@ -1838,16 +1905,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		if config.TicketTypeController != nil {
 			tenant.GET("/ticket-types", middleware.RequirePermission("ticket", "read"), config.TicketTypeController.ListTicketTypes)
-			tenant.POST("/ticket-types", middleware.RequirePermission("ticket", "create"), config.TicketTypeController.CreateTicketType)
+			tenant.POST("/ticket-types", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeController.CreateTicketType)
 			tenant.GET("/ticket-types/:id", middleware.RequirePermission("ticket", "read"), config.TicketTypeController.GetTicketType)
-			tenant.PUT("/ticket-types/:id", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.UpdateTicketType)
-			tenant.DELETE("/ticket-types/:id", middleware.RequirePermission("ticket", "delete"), config.TicketTypeController.DeleteTicketType)
-			tenant.POST("/ticket-types/:id/enable", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.EnableTicketType)
-			tenant.POST("/ticket-types/:id/disable", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.DisableTicketType)
-			tenant.POST("/ticket-types/:id/clone", middleware.RequirePermission("ticket", "create"), config.TicketTypeController.CloneTicketType)
-			tenant.POST("/ticket-types/:id/restore", middleware.RequirePermission("ticket", "update"), config.TicketTypeController.RestoreTicketType)
-			tenant.GET("/ticket-type-presets", middleware.RequirePermission("ticket", "read"), config.TicketTypeController.ListPresets)
-			tenant.POST("/ticket-type-presets/:presetId/install", middleware.RequirePermission("ticket", "create"), config.TicketTypeController.InstallPreset)
+			tenant.PUT("/ticket-types/:id", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeController.UpdateTicketType)
+			tenant.DELETE("/ticket-types/:id", middleware.RequirePermission("ticket_type", "archive"), config.TicketTypeController.DeleteTicketType)
+			tenant.POST("/ticket-types/:id/enable", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeController.EnableTicketType)
+			tenant.POST("/ticket-types/:id/disable", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeController.DisableTicketType)
+			tenant.POST("/ticket-types/:id/clone", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeController.CloneTicketType)
+			tenant.POST("/ticket-types/:id/restore", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeController.RestoreTicketType)
+			tenant.GET("/ticket-type-presets", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeController.ListPresets)
+			tenant.POST("/ticket-type-presets/:presetId/install", middleware.RequirePermission("ticket_type", "install_preset"), config.TicketTypeController.InstallPreset)
 		}
 	}
 

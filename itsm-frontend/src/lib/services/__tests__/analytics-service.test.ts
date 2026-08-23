@@ -132,21 +132,47 @@ describe('TicketAnalyticsService', () => {
 
   describe('getAnalytics', () => {
     it('should fetch analytics data', async () => {
-      const analytics = { totalTickets: 200, openTickets: 50, resolvedTickets: 100, closedTickets: 50, overdueTickets: 5, dailyTrend: [], statusDistribution: [], priorityDistribution: [], typeDistribution: [], processingTimeStats: { avgProcessingTime: 30, avgResolutionTime: 60, slaComplianceRate: 0.9 }, teamPerformance: [], hotCategories: [] };
-      mockGet.mockResolvedValue(analytics);
+      const raw = {
+        total: 200,
+        statusGroups: [
+          { status: 'new', count: 80 },
+          { status: 'in_progress', count: 50 },
+          { status: 'resolved', count: 70 },
+        ],
+        priorityGroups: [
+          { priority: 'high', count: 40 },
+          { priority: 'medium', count: 100 },
+          { priority: 'low', count: 60 },
+        ],
+        trend30d: [{ date: '2024-01-15', count: 10 }],
+        generatedAt: '2024-01-31T00:00:00Z',
+      };
+      mockGet.mockResolvedValue(raw);
 
       const result = await ticketAnalyticsService.getAnalytics({ dateFrom: '2024-01-01', dateTo: '2024-01-31' });
 
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/analytics', { dateFrom: '2024-01-01', dateTo: '2024-01-31' });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/analytics/tickets', { dateFrom: '2024-01-01', dateTo: '2024-01-31' });
       expect(result.totalTickets).toBe(200);
+      expect(result.priorityDistribution).toHaveLength(3);
+      expect(result.dailyTrend).toHaveLength(1);
     });
 
     it('should fetch analytics without params', async () => {
-      mockGet.mockResolvedValue({ totalTickets: 0 });
+      mockGet.mockResolvedValue({ total: 0, statusGroups: [], priorityGroups: [], trend30d: [] });
 
       await ticketAnalyticsService.getAnalytics();
 
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/analytics', undefined);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/analytics/tickets', {});
+    });
+
+    it('should gracefully handle empty response', async () => {
+      mockGet.mockResolvedValue({});
+
+      const result = await ticketAnalyticsService.getAnalytics();
+
+      expect(result.totalTickets).toBe(0);
+      expect(result.dailyTrend).toEqual([]);
+      expect(result.priorityDistribution).toEqual([]);
     });
   });
 

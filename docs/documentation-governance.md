@@ -1,6 +1,6 @@
 # 文档状态与事实源
 
-> 最后审查：2026-08-15。本文定义仓库文档的权威层级；历史测试报告不得作为当前功能或发布状态的依据。
+> 最后审查：2026-08-21。本文定义仓库文档的权威层级；历史测试报告不得作为当前功能或发布状态的依据。
 
 ## 权威层级
 
@@ -19,7 +19,7 @@ GitHub Issue、Project 或旧认证报告中的“完成”不能覆盖源码、
 
 | 项目 | 当前判定 |
 |---|---|
-| 产品版本 | 源码声明 `1.6.8`；发布状态仍处于商业化收敛，不等于 P0/P1 Golden Gate 已放行 |
+| 产品版本 | 最新发布标签为 `v1.6.9`；当前工作树可能包含未发布变更，版本号不等于生产门禁已放行 |
 | 当前路线 | 以根目录 `ROADMAP.md` 和 `plans/open-source-commercialization-2026q3-blueprint.md` 为准 |
 | 最新部署事实 | 以 `output/product-deployment-business-test-2026-08-14.md` 及重新执行后的证据为准 |
 | 生产认证 | `docs/initialization-release-certification.md` 与 `docs/release-v1.5.0-certification-evidence.md` 是 2026-07-30 历史快照，不代表当前工作树 |
@@ -51,7 +51,6 @@ GitHub Issue、Project 或旧认证报告中的“完成”不能覆盖源码、
 
 - `docs/initialization-release-certification.md`：已被最新部署测试和当前工作树状态取代。
 - `docs/release-v1.5.0-certification-evidence.md`：仅证明 2026-07-30 当次运行。
-- `docs/v1-ga-readiness.md`：仅用于 v1.0 历史验收，不代表 1.6.8。
+- `docs/v1-ga-readiness.md`：仅用于 v1.0 历史验收，不代表 v1.6.9 或当前工作树。
 - `docs/test-plan/`、`docs/review/`、`output/` 中的“全部通过”“立即上线”：均为历史结论。
 - `docs/ci/postmortem-v1.0-GA.md` 中的默认 `ADMIN_PASSWORD`：仅为历史 CI 复盘，不得复制到生产配置。
-

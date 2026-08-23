@@ -217,6 +217,30 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 		log.Printf("create sla_violation ticket_type index failed (non-fatal): %v", err)
 	}
 
+	// 事件编号序列（P0-2 修复）：保证 INC-YYYYMM-NNNNNN 后缀全局唯一、单调递增，
+	// 彻底消除「COUNT+1 并发复用 / 删除回退 / UTC 窗口错乱」三类编号冲突。
+	// 播种为「已存在事件编号的最大数字后缀 + 1」，避免与历史编号碰撞；历史库
+	// 为空或 incidents 表尚未创建时从 1 开始（best-effort，失败仅告警）。
+	if _, err := db.ExecContext(ctx, `CREATE SEQUENCE IF NOT EXISTS incident_number_seq`); err != nil {
+		log.Printf("create incident_number_seq failed (non-fatal): %v", err)
+	} else if _, err := db.ExecContext(ctx, `
+		SELECT setval('incident_number_seq', COALESCE((
+			SELECT MAX(CAST(substring(incident_number FROM 12) AS BIGINT))
+			FROM incidents
+			WHERE incident_number ~ '^INC-[0-9]{6}-[0-9]{6}$'
+		), 0))
+	`); err != nil {
+		log.Printf("seed incident_number_seq failed (non-fatal, sequence starts at 1): %v", err)
+	}
+	// 事件编号唯一索引兜底（部分索引：仅约束非空编号）。
+	if _, err := db.ExecContext(ctx, `
+		CREATE UNIQUE INDEX IF NOT EXISTS incidents_tenant_number_idx
+		ON incidents (tenant_id, incident_number)
+		WHERE incident_number IS NOT NULL
+	`); err != nil {
+		log.Printf("create incidents unique number index failed (non-fatal): %v", err)
+	}
+
 	// Compatibility fix: if legacy column "author" exists and is NOT NULL, relax constraint to allow inserts via current schema (author_id)
 	var hasAuthorColumn bool
 	if err := db.QueryRowContext(ctx, `SELECT EXISTS (
@@ -236,8 +260,8 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 	// ent.Driver(drv) 设置数据库驱动
 	rawDB = db
 	client := ent.NewClient(ent.Driver(drv))
-	// 注册软删除查询拦截器：读路径默认过滤 deleted_at IS NOT NULL 记录
-	RegisterSoftDeleteInterceptors(client)
+	// 注册全局安全拦截器：软删除读透明 + 写路径租户守卫（fail-closed）
+	RegisterSecurityInterceptors(client, "")
 	return client, nil
 }
 
@@ -282,7 +306,7 @@ func InitDatabaseWithRLS(cfg *config.DatabaseConfig, rlsCfg *config.RLSConfig, l
 		)
 	}
 	rlsClient := ent.NewClient(ent.Driver(deco))
-	RegisterSoftDeleteInterceptors(rlsClient)
+	RegisterSecurityInterceptors(rlsClient, rlsCfg.Mode)
 	return rlsClient, nil
 }
 

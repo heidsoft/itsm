@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and what
-> is parked.** Updated as part of every release. Last synced: 2026-06-28.
+> is parked.** Updated as part of every release. Last synced: 2026-08-21.
 >
 > Cross-references:
 > - PRD library: [prd/](./prd)
@@ -17,7 +17,7 @@
 ServiceNow-class workflows without the lock-in or the footprint.**
 
 Concretely that means:
-1. **Process parity** with the ITIL v4 core (already at ~95% with v1.0 GA).
+1. **Process completeness** across the ITIL core, measured by executable business journeys rather than menu count.
 2. **AI that earns its seat** — classification, summarization, RAG, and
    impact analysis that are measurable, not vibes.
 3. **Native integration surface** — Feishu / DingTalk / WeCom / Webhook
@@ -32,8 +32,8 @@ Concretely that means:
 | Version | Target | Theme | Status |
 |:---|:---|:---|:---|
 | **v1.0 GA** | 2026-Q2 | ITIL core + AI-Native scaffolding + private deploy | ✅ Shipped |
-| **v1.1**     | 2026-Q3 | Coverage backfill + connector marketplace v1 + RBAC hardening | 🟡 In progress |
-| **v1.5**     | 2026-Q4 | Incremental coverage gate (60%) + AI evaluator v1 + Feishu/DingTalk | 🟢 Planned |
+| **v1.6.x**   | 2026-Q3 | TicketType platform + reliability + RBAC/tenant hardening | 🟡 In progress |
+| **v1.7**     | 2026-Q4 | Connector productionization + AI evaluator + business E2E | 🟢 Planned |
 | **v2.0**     | 2027-Q2 | Coverage 70% + AI auto-triage GA + MSP billing + multi-region | 🔵 Roadmap |
 | **v3.0**     | 2027-Q4 | Self-hostable AI inference + Plugin marketplace v2 + agent ecosystem | ⚪ Parked |
 
@@ -68,52 +68,45 @@ Concretely that means:
 - [x] Dependabot weekly scans
 - [x] Security policy + Code of Conduct
 
-### Debt that lands in v1.1
+### 后续持续治理项
 
-- 🟡 Backend coverage 2% → 40%
-- 🟡 Backend controller files > 25k LOC need splitting
-- 🟡 Ent schema `.bak` cleanup (handled in v1.0.x hotfix)
-- 🟡 Connector marketplace: only Feishu/DingTalk/WeCom/Webhook stubs
+- 🟡 关键业务旅程的服务层、集成与 E2E 覆盖继续提升。
+- 🟡 超大 Controller 按现有领域边界渐进拆分，避免形成第二套接口。
+- 🟡 连接器从生命周期框架推进到真实渠道生产验收。
 
 ---
 
-## 🟡 v1.1 — In Progress (2026-Q3)
+## 🟡 v1.6.x — In Progress (2026-Q3)
 
 **Theme:** Cover the seams and harden the foundation.
 
-### Engineering
+### 已落地
 
-- [ ] **Coverage backfill sprint** — bring `service/*` and `controller/*`
-      packages from 2% → **40%** overall, focusing on ticket / incident /
-      change / approval / auth (the user-facing critical paths)
-- [ ] **Controller split** — break up `incident_controller.go` (45k),
-      `ticket_controller.go` (27k), `cmdb_controller.go` (28k),
-      `bpmn_workflow_controller.go` (30k) into feature-scoped sub-controllers
-- [ ] **Integration test suite** — RBAC cross-tenant, BPMN happy paths,
-      CMDB impact analysis, SLA escalation. Lives at `itsm-backend/tests/integration/`.
-- [ ] **itsm-cli / itsm-skill / itsm-agent** in CI (path-scoped workflows
-      + coverage)
+- [x] **TicketType 平台化** — 类型持久化、动态字段、创建快照、Preset Library、归档恢复和管理 UI。
+- [x] **统一绑定解析** — Ticket 创建从已解析 TicketType 执行 Workflow、SLA 与 Assignment。
+- [x] **权限与审计** — TicketType 独立管理/归档/Preset 安装权限，ACL manifest 覆盖；Preset 安装、归档恢复和绑定变更独立审计。
+- [x] **可靠异步执行** — 工单与事件的流程启动进入持久化 command/outbox；关键通知具备 outbox、租约、重试和死信基础。
+- [x] **租户与输入防线** — 覆盖跨租户、禁用类型、非法动态字段与非法绑定引用的回归测试。
+- [x] **发布与安全加固** — HttpOnly cookie、初始化 migration ledger、PostgreSQL RLS、Endpoint ACL、依赖与运行时安全基线。
 
-### Product
+### 当前收敛项
 
-- [ ] **Connector marketplace v1** — Feishu (IM + Approval), DingTalk
-      (IM + Work Notice), WeCom (IM), Webhook. Lifecycles via
-      `/api/v1/connectors/lifecycle`.
-- [ ] **AI Audit console** — review every AI suggestion, accept/reject,
-      feed back to evaluator.
-- [ ] **Standard change templates** — pre-baked change templates for
-      common ops (network, OS patch, DB migration).
+- [ ] **业务旅程 E2E** — 固化 TicketType 安装与绑定、工单创建、Workflow 实例/任务/历史、SLA、Assignment、审计的完整断言。
+- [ ] **可靠执行统一** — 将剩余 ITIL 域从非可靠触发路径迁移到 command/outbox，并提供积压、重放和死信运维。
+- [ ] **生产数据升级门禁** — 对每次 Schema 变化执行脱敏 PostgreSQL 副本迁移、兼容、回滚与耗时验证。
+- [ ] **Connector marketplace 生产化** — Feishu、DingTalk、WeCom、Webhook 的真实渠道健康检查、验签、重放与密钥治理。
+- [ ] **AI Audit/Evaluator** — 对建议保留接受/拒绝反馈，并形成可重复的质量基线。
+- [ ] **CMDB 数据治理** — 发现 Job、Diff、调和、退役、质量指标与规模测试。
 
-### Quality
+### 发布门禁
 
-- [ ] **Incremental coverage gate** (60% on new/modified lines) — already
-      landed via `coverage-diff.yml`.
-- [ ] **Dependabot auto-merge** — patch-level updates auto-merge after
-      green CI (handled in v1.0.x hotfix).
+- [x] 后端全量测试、静态分析、前端类型检查/构建、API 契约和 Endpoint ACL 均有自动化入口。
+- [ ] 每个候选版本保留 Git SHA、镜像 digest、数据库版本、迁移结果、E2E 与恢复演练证据。
+- [ ] 生产放行继续按部署环境验收，不能由仓库中的历史“全部通过”报告替代。
 
 ---
 
-## 🟢 v1.5 — Planned (2026-Q4)
+## 🟢 v1.7 — Planned (2026-Q4)
 
 **Theme:** AI earns its seat, integrations go live.
 
@@ -164,7 +157,7 @@ Concretely that means:
 
 - [ ] **MSP billing** — usage metering, invoicing, allocation reports.
 - [ ] **AI auto-triage (full)** — replaces the human-in-the-loop step
-      from v1.5 with confidence-based auto-accept.
+      from v1.7 with confidence-based auto-accept.
 - [ ] **Impact analysis skill** — given a change, predict affected CIs,
       tickets, and downstream SLAs.
 - [ ] **Plugin marketplace v2** — signed plugins, sandboxed execution,
@@ -197,21 +190,21 @@ These don't belong to a single release; they ship incrementally:
 
 ### Testing & Quality
 
-- Incremental coverage gate (60% on new code) — landed v1.1
+- Incremental coverage gate (60% on new code) — landed
 - End-to-end smoke on every PR — landed v1.0
-- Frontend visual regression — planned v1.5
+- Frontend visual regression — planned v1.7
 - Property-based tests for critical parsers (BPMN XML, RAG chunking)
-  — planned v1.5
+  — planned v1.7
 
 ### Security
 
-- CodeQL + Trivy + govulncheck — landed v1.1
+- CodeQL + Trivy + govulncheck — landed
 - Quarterly threat-model review
 - Annual pen-test
 
 ### Open-Source Governance
 
-- Issue triage SLA (48h first response, 14d close-or-fix) — landed v1.1
+- Issue triage SLA (48h first response, 14d close-or-fix) — ongoing governance target
 - Monthly community digest
 - Quarterly maintainer rotation review
 
@@ -220,7 +213,7 @@ These don't belong to a single release; they ship incrementally:
 - `make dev-*` unified dev environment (already landed v1.0)
 - `itsm-cli` for ops (deploy/seed/inspect) — landed v1.0
 - `itsm-skill` for OpenClaw / Codex agents — landed v1.0
-- Container image size reduction (distroless base) — planned v1.5
+- Container image size reduction (distroless base) — planned v1.7
 
 ---
 
@@ -229,7 +222,7 @@ These don't belong to a single release; they ship incrementally:
 We track these on every release. Numbers below are post-v1.0 GA baseline
 and the **target** for the next major release.
 
-| Metric | v1.0 GA | v1.5 target | v2.0 target |
+| Metric | Historical v1.0 baseline | v1.7 target | v2.0 target |
 |:---|---:|---:|---:|
 | Backend coverage | ~2% | 55% | 70% |
 | Frontend coverage | ~10% (UI only) | 30% | 60% |
@@ -246,7 +239,7 @@ and the **target** for the next major release.
 1. **File an issue** with the `feature-request` template and link to
    the milestone you think it belongs in.
 2. **Vote** on issues with 👍 — we sort milestone backlogs by reactions.
-3. **Propose a major change** via the RFC process (lands v1.5):
+3. **Propose a major change** via the RFC process:
    `docs/rfcs/0000-template.md`.
 4. **Pick up a "good first issue"** — every track has at least one.
 

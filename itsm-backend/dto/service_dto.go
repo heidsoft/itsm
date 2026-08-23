@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -75,21 +76,32 @@ type ServiceCatalogResponse struct {
 	DeliveryTime   string    `json:"deliveryTime"`
 	CITypeID       int       `json:"ciTypeId,omitempty"`
 	CloudServiceID int       `json:"cloudServiceId,omitempty"`
+	SLAID          int       `json:"slaId,omitempty"`
+	SLAName        string    `json:"slaName,omitempty"`
 	Status         string    `json:"status"`
 	CreatedAt      time.Time `json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`
 }
 
 // ServiceRequestResponse 服务请求响应
+//
+// 字段命名约定（与工单对齐）：
+//   - RequestNumber: 服务请求标准编号（推荐使用，前端接口字段）
+//   - TicketNumber: 兼容别名（与工单 TicketNumber 命名一致）
+//   - FormData:    原生气表字段（DB 映射）
+//   - FormFields:  兼容别名（与工单 formFields 命名一致）
 type ServiceRequestResponse struct {
-	ID          int            `json:"id"`
-	CatalogID   int            `json:"catalogId"`
-	RequesterID int            `json:"requesterId"`
-	CIID        int            `json:"ciId,omitempty"`
-	Status      string         `json:"status"`
-	Title       string         `json:"title,omitempty"`
-	Reason      string         `json:"reason,omitempty"`
-	FormData    map[string]any `json:"formData,omitempty"`
+	ID            int            `json:"id"`
+	RequestNumber string         `json:"requestNumber"`
+	TicketNumber  string         `json:"ticketNumber,omitempty"`
+	CatalogID     int            `json:"catalogId"`
+	RequesterID   int            `json:"requesterId"`
+	CIID          int            `json:"ciId,omitempty"`
+	Status        string         `json:"status"`
+	Title         string         `json:"title,omitempty"`
+	Reason        string         `json:"reason,omitempty"`
+	FormData      map[string]any `json:"formData,omitempty"`
+	FormFields    map[string]any `json:"formFields,omitempty"`
 
 	CostCenter         string     `json:"costCenter,omitempty"`
 	DataClassification string     `json:"dataClassification,omitempty"`
@@ -176,6 +188,12 @@ func ToServiceCatalogResponse(catalog *ent.ServiceCatalog) *ServiceCatalogRespon
 }
 
 // ToServiceRequestResponse 转换为服务请求响应
+//
+// RequestNumber / TicketNumber 生成策略：
+//   数据库 service_requests 表当前未持久化 request_number 列
+//   （避免 schema 迁移带来的发布与回滚成本），采用「派生编号」：
+//   格式 SR-YYYYMM-NNNNNN，基于 ID + CreatedAt 生成。
+//   后续如需“按实体持久化”可只补一列 request_number，不影响调用契约。
 func ToServiceRequestResponse(request *ent.ServiceRequest) *ServiceRequestResponse {
 	var expireAt *time.Time
 	if !request.ExpireAt.IsZero() {
@@ -184,6 +202,8 @@ func ToServiceRequestResponse(request *ent.ServiceRequest) *ServiceRequestRespon
 	}
 	resp := &ServiceRequestResponse{
 		ID:                 request.ID,
+		RequestNumber:      GenerateServiceRequestNumber(request.ID, request.CreatedAt),
+		TicketNumber:       GenerateServiceRequestNumber(request.ID, request.CreatedAt),
 		CatalogID:          request.CatalogID,
 		RequesterID:        request.RequesterID,
 		CIID:               request.CiID,
@@ -191,6 +211,7 @@ func ToServiceRequestResponse(request *ent.ServiceRequest) *ServiceRequestRespon
 		Title:              request.Title,
 		Reason:             request.Reason,
 		FormData:           request.FormData,
+		FormFields:         request.FormData,
 		CostCenter:         request.CostCenter,
 		DataClassification: request.DataClassification,
 		NeedsPublicIP:      request.NeedsPublicIP,
@@ -204,6 +225,17 @@ func ToServiceRequestResponse(request *ent.ServiceRequest) *ServiceRequestRespon
 	}
 
 	return resp
+}
+
+// GenerateServiceRequestNumber 生成服务请求编号（派生，不写入数据库）。
+// 格式：SR-YYYYMM-NNNNNN（N 不足 6 位补零）。
+// CreatedAt 为零值时退回到当前月份。
+func GenerateServiceRequestNumber(id int, createdAt time.Time) string {
+	t := createdAt
+	if t.IsZero() {
+		t = time.Now()
+	}
+	return fmt.Sprintf("SR-%04d%02d-%06d", t.Year(), int(t.Month()), id)
 }
 
 func ToServiceRequestApprovalResponse(a *ent.ServiceRequestApproval) ServiceRequestApprovalResponse {

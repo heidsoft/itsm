@@ -84,6 +84,11 @@ var RegisteredMigrations = []Migration{
 		Description: "Persist configured ticket type snapshots and dynamic form data; add runtime bindings",
 		RollbackSQL: "",
 	},
+	{
+		Version:     "016_add_ticket_type_permissions",
+		Description: "Add tenant-scoped TicketType management permissions and backfill administrative role grants",
+		RollbackSQL: "",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -673,6 +678,32 @@ CREATE INDEX IF NOT EXISTS idx_ticket_types_tenant_sort ON ticket_types(tenant_i
 -- 修复历史脏数据：旧 seeder 误将 custom_fields 写成 JSON 数组 '[]'，
 -- 但 ent schema 定义为 object(map[string]interface{})，会导致查询列表时 unmarshal 失败 500。
 UPDATE ticket_types SET custom_fields = '{}'::jsonb WHERE jsonb_typeof(custom_fields) = 'array';
+`
+	case "016_add_ticket_type_permissions":
+		return `
+INSERT INTO permissions (code, name, description, resource, action, tenant_id, created_at, updated_at)
+SELECT permission.code, permission.name, permission.description, 'ticket_type', permission.action, tenant.id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM tenants tenant
+CROSS JOIN (VALUES
+  ('ticket_type:manage', '管理工单类型', '创建、编辑、启停、克隆和恢复工单类型', 'manage'),
+  ('ticket_type:install_preset', '安装工单类型预设', '从预设库安装工单类型', 'install_preset'),
+  ('ticket_type:archive', '归档工单类型', '归档租户工单类型', 'archive')
+) AS permission(code, name, description, action)
+WHERE NOT EXISTS (
+  SELECT 1 FROM permissions existing
+  WHERE existing.tenant_id = tenant.id AND existing.code = permission.code
+);
+
+INSERT INTO role_permissions (role_id, permission_id, tenant_id)
+SELECT role.id, permission.id, role.tenant_id
+FROM roles role
+JOIN permissions permission ON permission.tenant_id = role.tenant_id
+WHERE role.code IN ('sysadmin', 'it_director', 'ops_director', 'ops_manager', 'sd_manager', 'service_catalog_admin')
+  AND permission.code IN ('ticket_type:manage', 'ticket_type:install_preset', 'ticket_type:archive')
+  AND NOT EXISTS (
+    SELECT 1 FROM role_permissions existing
+    WHERE existing.role_id = role.id AND existing.permission_id = permission.id AND existing.tenant_id = role.tenant_id
+  );
 `
 	default:
 		return ""
