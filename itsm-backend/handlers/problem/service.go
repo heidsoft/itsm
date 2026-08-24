@@ -89,21 +89,25 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem) 
 		if !isValidProblemStatusTransition(existing.Status, p.Status) {
 			return nil, fmt.Errorf("invalid problem status transition: %s -> %s", existing.Status, p.Status)
 		}
+		// P1 修复：先捕获前态再修改，时间戳分支才能正确判定"是否首次进入"。
+		// 旧实现在状态写入后才比对 `existing.Status != "resolved"`，此时两侧永远相等，
+		// 导致 ResolvedAt 从未被设置、MTTR 永远为 0、closed_at 派生也走错分支。
+		prevStatus := existing.Status
 		existing.Status = p.Status
 		now := time.Now()
 		switch p.Status {
 		case "resolved":
-			// P1 修复：重复提交 resolved（current==next）时不再刷新 ResolvedAt，
-			// 避免 MTTR 被反复拉长。仅在从非 resolved 状态进入时才记录首次解决时间。
-			if existing.Status != "resolved" {
+			if prevStatus != "resolved" {
 				existing.ResolvedAt = &now
 			}
 			existing.ClosedAt = nil
 		case "closed":
 			existing.ClosedAt = &now
 		case "investigating":
-			existing.ResolvedAt = nil
-			existing.ClosedAt = nil
+			if prevStatus == "resolved" || prevStatus == "closed" {
+				existing.ResolvedAt = nil
+				existing.ClosedAt = nil
+			}
 		}
 	}
 	if p.Priority != "" {

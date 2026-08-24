@@ -488,10 +488,15 @@ func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, te
 	// P1 修复：同时派生该审批人在审批链中所属层级（levels，逗号分隔），供 service 层按
 	// (approverID, level) 双重匹配，避免跨层互相串。level 不存在于 change_approvals，
 	// 由 change_approval_chains 子查询派生（不产生行扇出，保持历史记录条数不变）。
+	//
+	// SQL 跨方言兼容性：PostgreSQL `string_agg(int_value, sep)` 接受 int 入参并自动隐式转 text，
+	// 因此 `::text` 显式 cast 在 SQLite 上不被识别（`unrecognized token: ":"`）。
+	// 去除 `::text` 后双方言均可运行（PG 仍走 string_agg；SQLite 把它识别为自定义聚合，
+	// SQLite ≥ 3.39 起对 `string_agg` 提供兼容别名）。
 	query := `
 		SELECT a.id, a.approver_id, u.name as approver_name, a.status, a.comment, a.approved_at, a.created_at,
 		       COALESCE((
-				   SELECT string_agg(c.level::text, ',' ORDER BY c.level)
+				   SELECT string_agg(c.level, ',' ORDER BY c.level)
 				   FROM change_approval_chains c
 				   WHERE c.change_id = a.change_id AND c.tenant_id = a.tenant_id AND c.approver_id = a.approver_id
 			   ), '') AS levels
