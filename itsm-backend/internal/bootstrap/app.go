@@ -335,6 +335,7 @@ func NewApplication() *Application {
 	// 为 IncidentService 注入序列服务与原生数据库连接（S-4 编号事务锁）
 	incidentService.SetSequenceService(sequenceService)
 	incidentService.SetRawDB(database.GetRawDB())
+	incidentService.SetSLAService(ticketSLAService) // P0-1: Incident 创建时绑定 SLA
 
 	// MSP 服务初始化
 	mspAllocationService := service.NewMSPAllocationService(client, sugar)
