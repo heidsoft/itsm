@@ -223,6 +223,19 @@ class EmailIntakeService {
   async createShift(payload: { scheduleId: number; userId: number; startAt: string; endAt: string }): Promise<void> {
     await httpClient.post(`${this.baseUrl}/on-call/shifts`, payload);
   }
+  async updateBranch(id: number, payload: { name: string; aliases?: string[]; customerId: number; status?: string }): Promise<CustomerBranch> {
+    return httpClient.put(`${this.baseUrl}/branches/${id}`, payload);
+  }
+  async disableBranch(id: number): Promise<void> { await httpClient.delete(`${this.baseUrl}/branches/${id}`); }
+
+  async updateSourceOrganization(id: number, payload: Partial<SourceOrganization>): Promise<SourceOrganization> {
+    return httpClient.put(`${this.baseUrl}/source-organizations/${id}`, payload);
+  }
+  async disableSourceOrganization(id: number): Promise<void> { await httpClient.delete(`${this.baseUrl}/source-organizations/${id}`); }
+
+  async currentOnCall(groupId: number): Promise<{ scheduleId: number; shiftId: number; groupId: number; userId: number; startAt: string; endAt: string } | null> {
+    return httpClient.get(`${this.baseUrl}/on-call/current`, { groupId });
+  }
 }
 
 export const emailIntakeService = new EmailIntakeService();
