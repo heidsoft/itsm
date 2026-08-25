@@ -38,12 +38,14 @@ func NewHandler(client *ent.Client) *Handler {
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	root := rg.Group("/email-intake")
 	root.GET("/conversations", middleware.RequirePermission("email_intake", "read"), h.ListConversations)
-	root.GET("/conversations/:id", middleware.RequirePermission("email_intake", "read"), h.GetConversation)
+	// Conversation detail contains customer email content and therefore requires
+	// the stronger NOC review permission; list metadata remains readable.
+	root.GET("/conversations/:id", middleware.RequirePermission("email_intake", "review"), h.GetConversation)
 	root.POST("/conversations/:id/revalidate", middleware.RequirePermission("email_intake", "review"), h.RevalidateConversation)
 	root.POST("/conversations/:id/corrections", middleware.RequirePermission("email_intake", "review"), h.CorrectConversation)
 	root.POST("/conversations/:id/confirm", middleware.RequirePermission("email_intake", "review"), h.ConfirmConversation)
 	root.POST("/conversations/:id/reject", middleware.RequirePermission("email_intake", "review"), h.RejectConversation)
-	root.POST("/conversations/:id/retry", middleware.RequirePermission("email_intake", "retry"), h.RevalidateConversation)
+	root.POST("/conversations/:id/retry", middleware.RequirePermission("email_intake", "retry"), h.RetryConversation)
 	root.POST("/conversations/:id/override", middleware.RequirePermission("email_intake", "override"), h.OverrideConversation)
 
 	customers := root.Group("/customers")
@@ -740,7 +742,11 @@ func (h *Handler) ListConversations(c *gin.Context) {
 	if p, err := strconv.Atoi(c.Query("page")); err == nil && p > 0 {
 		page = p
 	}
-	if ps, err := strconv.Atoi(c.Query("page_size")); err == nil && ps > 0 {
+	pageSizeValue := c.Query("pageSize")
+	if pageSizeValue == "" {
+		pageSizeValue = c.Query("page_size") // temporary backward compatibility
+	}
+	if ps, err := strconv.Atoi(pageSizeValue); err == nil && ps > 0 {
 		if ps > 100 {
 			ps = 100
 		}
@@ -769,7 +775,7 @@ func (h *Handler) ListConversations(c *gin.Context) {
 		"items":    result,
 		"total":    total,
 		"page":     page,
-		"page_size": pageSize,
+		"pageSize": pageSize,
 	})
 }
 func (h *Handler) GetConversation(c *gin.Context) {
@@ -802,8 +808,9 @@ type correctionRequest struct {
 	Fields  IntakeFields `json:"fields" binding:"required"`
 }
 type overrideRequest struct {
-	Version int    `json:"version" binding:"required,min=1"`
-	Reason  string `json:"reason" binding:"required,min=5,max=1000"`
+	Version   int    `json:"version" binding:"required,min=1"`
+	Reason    string `json:"reason" binding:"required,min=5,max=1000"`
+	Confirmed bool   `json:"confirmed" binding:"required"`
 }
 
 func (h *Handler) RevalidateConversation(c *gin.Context) {
@@ -820,6 +827,15 @@ func (h *Handler) ConfirmConversation(c *gin.Context) {
 		return
 	}
 	updated, err := h.orchestrator.Confirm(c, tenantID, id, version)
+	h.actionResult(c, updated, err)
+}
+
+func (h *Handler) RetryConversation(c *gin.Context) {
+	tenantID, id, version, ok := h.conversationAction(c)
+	if !ok {
+		return
+	}
+	updated, err := h.orchestrator.Retry(c, tenantID, id, version)
 	h.actionResult(c, updated, err)
 }
 func (h *Handler) RejectConversation(c *gin.Context) {
@@ -876,6 +892,10 @@ func (h *Handler) OverrideConversation(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid override request")
 		return
 	}
+	if !req.Confirmed {
+		common.ParamError(c, "explicit override confirmation is required")
+		return
+	}
 	actorID, actorErr := middleware.GetUserID(c)
 	if actorErr != nil {
 		common.Fail(c, common.AuthFailedCode, "user context required")
@@ -907,12 +927,12 @@ func (h *Handler) conversationAction(c *gin.Context) (int, int, int, bool) {
 }
 func (h *Handler) actionResult(c *gin.Context, updated *ent.EmailConversation, err error) {
 	if err != nil {
-		common.Fail(c, common.ConflictCode, err.Error())
+		common.Fail(c, common.ConflictCode, "email intake action conflicts with the current state")
 		return
 	}
 	item, loadErr := h.client.EmailConversation.Query().Where(emailconversation.IDEQ(updated.ID), emailconversation.TenantIDEQ(updated.TenantID)).WithCustomer().WithBranch().WithSupportContract().WithIncidents().Only(c)
 	if loadErr != nil {
-		common.Fail(c, common.InternalErrorCode, loadErr.Error())
+		common.InternalError(c, "failed to load updated email conversation")
 		return
 	}
 	common.Success(c, mapConversation(item))

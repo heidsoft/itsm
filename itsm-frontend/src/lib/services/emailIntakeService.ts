@@ -168,23 +168,40 @@ class EmailIntakeService {
     return httpClient.post(`${this.baseUrl}/conversations/${id}/retry`, { version });
   }
 
-  async correct(id: number, version: number, fields: Record<string, unknown>): Promise<EmailConversation> {
+  async correct(
+    id: number,
+    version: number,
+    fields: Record<string, unknown>
+  ): Promise<EmailConversation> {
     return httpClient.post(`${this.baseUrl}/conversations/${id}/corrections`, { version, fields });
   }
 
   async override(id: number, version: number, reason: string): Promise<EmailConversation> {
-    return httpClient.post(`${this.baseUrl}/conversations/${id}/override`, { version, reason });
+    return httpClient.post(`${this.baseUrl}/conversations/${id}/override`, {
+      version,
+      reason,
+      confirmed: true,
+    });
   }
 
   async customers(): Promise<ListResponse<ServiceCustomer>> {
     return httpClient.get(`${this.baseUrl}/customers`);
   }
 
-  async createCustomer(payload: Omit<ServiceCustomer, 'id' | 'createdAt' | 'updatedAt'>): Promise<ServiceCustomer> {
+  async createCustomer(
+    payload: Omit<ServiceCustomer, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<ServiceCustomer> {
     return httpClient.post(`${this.baseUrl}/customers`, payload);
   }
-  async updateCustomer(id: number, payload: Omit<ServiceCustomer, 'id' | 'createdAt' | 'updatedAt'>): Promise<ServiceCustomer> { return httpClient.put(`${this.baseUrl}/customers/${id}`, payload); }
-  async disableCustomer(id: number): Promise<void> { await httpClient.delete(`${this.baseUrl}/customers/${id}`); }
+  async updateCustomer(
+    id: number,
+    payload: Omit<ServiceCustomer, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<ServiceCustomer> {
+    return httpClient.put(`${this.baseUrl}/customers/${id}`, payload);
+  }
+  async disableCustomer(id: number): Promise<void> {
+    await httpClient.delete(`${this.baseUrl}/customers/${id}`);
+  }
 
   async branches(customerId?: number): Promise<ListResponse<CustomerBranch>> {
     return httpClient.get(`${this.baseUrl}/branches`, customerId ? { customerId } : undefined);
@@ -201,14 +218,20 @@ class EmailIntakeService {
   async createContract(payload: Omit<SupportContract, 'id'>): Promise<SupportContract> {
     return httpClient.post(`${this.baseUrl}/support-contracts`, payload);
   }
-  async updateContract(id: number, payload: Omit<SupportContract, 'id'>): Promise<SupportContract> { return httpClient.put(`${this.baseUrl}/support-contracts/${id}`, payload); }
-  async terminateContract(id: number): Promise<void> { await httpClient.delete(`${this.baseUrl}/support-contracts/${id}`); }
+  async updateContract(id: number, payload: Omit<SupportContract, 'id'>): Promise<SupportContract> {
+    return httpClient.put(`${this.baseUrl}/support-contracts/${id}`, payload);
+  }
+  async terminateContract(id: number): Promise<void> {
+    await httpClient.delete(`${this.baseUrl}/support-contracts/${id}`);
+  }
 
   async sourceOrganizations(): Promise<ListResponse<SourceOrganization>> {
     return httpClient.get(`${this.baseUrl}/source-organizations`);
   }
 
-  async createSourceOrganization(payload: Omit<SourceOrganization, 'id'>): Promise<SourceOrganization> {
+  async createSourceOrganization(
+    payload: Omit<SourceOrganization, 'id'>
+  ): Promise<SourceOrganization> {
     return httpClient.post(`${this.baseUrl}/source-organizations`, payload);
   }
 
@@ -216,10 +239,17 @@ class EmailIntakeService {
     return httpClient.get(`${this.baseUrl}/external-contract-references`);
   }
 
-  async createExternalContractReference(payload: Pick<ExternalContractReference, 'sourceOrganizationId' | 'supportContractId' | 'externalContractNumber'>): Promise<ExternalContractReference> {
+  async createExternalContractReference(
+    payload: Pick<
+      ExternalContractReference,
+      'sourceOrganizationId' | 'supportContractId' | 'externalContractNumber'
+    >
+  ): Promise<ExternalContractReference> {
     return httpClient.post(`${this.baseUrl}/external-contract-references`, payload);
   }
-  async deleteExternalContractReference(id: number): Promise<void> { await httpClient.delete(`${this.baseUrl}/external-contract-references/${id}`); }
+  async deleteExternalContractReference(id: number): Promise<void> {
+    await httpClient.delete(`${this.baseUrl}/external-contract-references/${id}`);
+  }
 
   async schedules(): Promise<ListResponse<OnCallSchedule>> {
     return httpClient.get(`${this.baseUrl}/on-call/schedules`);
@@ -229,32 +259,62 @@ class EmailIntakeService {
     return httpClient.post(`${this.baseUrl}/on-call/schedules`, payload);
   }
 
-  async createShift(payload: { scheduleId: number; userId: number; startAt: string; endAt: string }): Promise<void> {
+  async createShift(payload: {
+    scheduleId: number;
+    userId: number;
+    startAt: string;
+    endAt: string;
+  }): Promise<void> {
     await httpClient.post(`${this.baseUrl}/on-call/shifts`, payload);
   }
 
   async shifts(scheduleId?: number): Promise<ListResponse<OnCallShift>> {
-    return httpClient.get(`${this.baseUrl}/on-call/shifts`, scheduleId ? { scheduleId } : undefined);
+    return httpClient.get(
+      `${this.baseUrl}/on-call/shifts`,
+      scheduleId ? { scheduleId } : undefined
+    );
   }
 
-  async updateShift(id: number, payload: { userId: number; startAt: string; endAt: string }): Promise<OnCallShift> {
+  async updateShift(
+    id: number,
+    payload: { scheduleId: number; userId: number; startAt: string; endAt: string }
+  ): Promise<OnCallShift> {
     return httpClient.put(`${this.baseUrl}/on-call/shifts/${id}`, payload);
   }
 
   async deleteShift(id: number): Promise<void> {
     await httpClient.delete(`${this.baseUrl}/on-call/shifts/${id}`);
   }
-  async updateBranch(id: number, payload: { name: string; aliases?: string[]; customerId: number; status?: string }): Promise<CustomerBranch> {
+  async updateBranch(
+    id: number,
+    payload: { name: string; aliases?: string[]; customerId: number; status?: string }
+  ): Promise<CustomerBranch> {
     return httpClient.put(`${this.baseUrl}/branches/${id}`, payload);
   }
-  async disableBranch(id: number): Promise<void> { await httpClient.delete(`${this.baseUrl}/branches/${id}`); }
+  async disableBranch(id: number): Promise<void> {
+    await httpClient.delete(`${this.baseUrl}/branches/${id}`);
+  }
 
-  async updateSourceOrganization(id: number, payload: Partial<SourceOrganization>): Promise<SourceOrganization> {
+  async updateSourceOrganization(
+    id: number,
+    payload: Partial<SourceOrganization>
+  ): Promise<SourceOrganization> {
     return httpClient.put(`${this.baseUrl}/source-organizations/${id}`, payload);
   }
-  async disableSourceOrganization(id: number): Promise<void> { await httpClient.delete(`${this.baseUrl}/source-organizations/${id}`); }
+  async disableSourceOrganization(id: number): Promise<void> {
+    await httpClient.delete(`${this.baseUrl}/source-organizations/${id}`);
+  }
 
-  async currentOnCall(groupId: number): Promise<{ scheduleId: number; shiftId: number; groupId: number; userId: number; startAt: string; endAt: string } | null> {
+  async currentOnCall(
+    groupId: number
+  ): Promise<{
+    scheduleId: number;
+    shiftId: number;
+    groupId: number;
+    userId: number;
+    startAt: string;
+    endAt: string;
+  } | null> {
     return httpClient.get(`${this.baseUrl}/on-call/current`, { groupId });
   }
 }

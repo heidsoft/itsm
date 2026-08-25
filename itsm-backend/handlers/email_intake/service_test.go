@@ -41,6 +41,26 @@ func TestResolver_VerifiesActiveContractAndBranch(t *testing.T) {
 	require.Equal(t, contract.ID, result.SupportContractID)
 }
 
+func TestResolver_RequiresSourceSpecificExternalContractMapping(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:email-intake-source-contract?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	customer := client.ServiceCustomer.Create().SetTenantID(1).SetName("客户A").SetNormalizedName("客户a").SaveX(ctx)
+	contract := client.SupportContract.Create().SetTenantID(1).SetCustomerID(customer.ID).SetContractNumber("INTERNAL-1").SetNormalizedContractNumber("internal1").SetStatus("active").SaveX(ctx)
+	source := client.SourceOrganization.Create().SetTenantID(1).SetName("运营商A").SetNormalizedName("运营商a").SaveX(ctx)
+
+	resolver := NewResolver(client)
+	result, err := resolver.Resolve(ctx, 1, IntakeFields{CustomerName: "客户A", SourceOrganizationName: "运营商A", ReportedContractNumber: "INTERNAL-1"})
+	require.NoError(t, err)
+	require.Equal(t, ResolutionManualReview, result.Status)
+
+	client.ExternalContractReference.Create().SetTenantID(1).SetSourceOrganizationID(source.ID).SetSupportContractID(contract.ID).SetCustomerID(customer.ID).SetExternalContractNumber("EXT-1").SetNormalizedExternalContractNumber("ext1").SaveX(ctx)
+	result, err = resolver.Resolve(ctx, 1, IntakeFields{CustomerName: "客户A", SourceOrganizationName: "运营商A", ReportedContractNumber: "EXT-1"})
+	require.NoError(t, err)
+	require.Equal(t, ResolutionVerified, result.Status)
+	require.Equal(t, contract.ID, result.SupportContractID)
+}
+
 func TestOrchestrator_AutoCreatesOneIncidentAndDurableReply(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:email-intake-e2e?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
@@ -75,6 +95,17 @@ func TestOrchestrator_AutoCreatesOneIncidentAndDurableReply(t *testing.T) {
 	require.Equal(t, conversation.ID, duplicate.ID)
 	require.Equal(t, 1, client.Incident.Query().Where(incident.TenantIDEQ(tenant.ID)).CountX(ctx))
 	require.Equal(t, 1, client.OperationalCommand.Query().Where(operationalcommand.CommandTypeEQ(commandbus.CommandSendIntakeEmail)).CountX(ctx))
+
+	client.OnCallShift.DeleteOneID(client.OnCallShift.Query().OnlyX(ctx).ID).ExecX(ctx)
+	withoutOnCall := email
+	withoutOnCall.UID = 21
+	withoutOnCall.ExternalMessageID = "<message-no-oncall@example.com>"
+	conversation, err = orchestrator.Ingest(ctx, tenant.ID, withoutOnCall)
+	require.NoError(t, err)
+	require.Equal(t, "INCIDENT_CREATED", conversation.Status)
+	created := client.Incident.Query().Where(incident.EmailConversationIDEQ(conversation.ID)).OnlyX(ctx)
+	require.NotNil(t, created.AssignmentGroupID)
+	require.Zero(t, created.AssigneeID)
 }
 
 func TestOrchestrator_MergesSupplementIntoExistingConversation(t *testing.T) {
@@ -99,6 +130,28 @@ func TestOrchestrator_MergesSupplementIntoExistingConversation(t *testing.T) {
 	require.Len(t, detail.Edges.Messages, 2)
 	require.Equal(t, "客户A", detail.CanonicalData["customerName"])
 	require.Equal(t, "SUP-2", detail.CanonicalData["reportedContractNumber"])
+}
+
+func TestOrchestrator_RetryRerunsFailedExtraction(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:email-intake-retry?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	customer := client.ServiceCustomer.Create().SetTenantID(1).SetName("客户A").SetNormalizedName("客户a").SaveX(ctx)
+	client.SupportContract.Create().SetTenantID(1).SetCustomerID(customer.ID).SetContractNumber("SUP-RETRY").SetNormalizedContractNumber("supretry").SetStatus("active").SaveX(ctx)
+	gateway := &flakyEmailLLM{}
+	orchestrator := NewEmailIntakeOrchestrator(client, NewEmailIntakeExtractor(gateway, "test"), nil, OrchestratorConfig{Mode: ModeManualConfirm})
+
+	conversation, err := orchestrator.Ingest(ctx, 1, ReceivedEmail{MailboxInstanceKey: "box", UIDValidity: 1, UID: 9, ExternalMessageID: "<retry>", FromAddress: "customer@example.com", Subject: "报障", PlainText: "线路中断", RawMIME: []byte("retry")})
+	require.NoError(t, err)
+	require.Equal(t, ResolutionManualReview, conversation.Status)
+
+	conversation, err = orchestrator.Retry(ctx, 1, conversation.ID, conversation.Version)
+	require.NoError(t, err)
+	require.Equal(t, 2, gateway.calls)
+	require.Equal(t, ResolutionManualReview, conversation.Status) // sender remains untrusted
+	message := client.InboundEmailMessage.Query().OnlyX(ctx)
+	require.Equal(t, "PARSED", message.ProcessingStatus)
+	require.Equal(t, 2, client.EmailIntakeAnalysis.Query().CountX(ctx))
 }
 
 func TestResolver_RejectsTerminatedAndCrossTenantContracts(t *testing.T) {

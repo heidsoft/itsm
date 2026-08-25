@@ -12,6 +12,7 @@ import (
 	"mime/multipart"
 	"net"
 	"net/mail"
+	"net/netip"
 	"net/smtp"
 	"strconv"
 	"strings"
@@ -22,6 +23,8 @@ import (
 	imapclient "github.com/emersion/go-imap/client"
 	"itsm-backend/connector"
 )
+
+var errAutomatedMessage = errors.New("automated email is not eligible for intake")
 
 type Connector struct {
 	cfg          connector.Config
@@ -44,7 +47,7 @@ func init()           { connector.MustRegister(func() connector.Connector { retu
 func New() *Connector { return &Connector{} }
 
 func (c *Connector) Manifest() connector.Manifest {
-	return connector.Manifest{Name: "email", Version: "1.1.0", Title: "IMAP/SMTP 邮箱", Provider: "standard", Type: connector.TypeEmail, Description: "通过标准 IMAP 接收报障邮件并通过 SMTP 回复，支持 QQ/163/Gmail/Outlook/企业邮箱等通用 IMAP/SMTP 服务", Capabilities: []connector.Capability{connector.CapSendMessage, connector.CapReceiveMessage, connector.CapReplyMessage, connector.CapHealthCheck}, Tags: []string{"email", "imap", "smtp", "qq", "163", "gmail", "outlook", "exchange"}, IsOfficial: true, RequiredPermissions: []string{"connector:write", "email_intake:review"}, ConfigSchema: `{"type":"object","required":["username","password","imapHost","smtpHost"],"properties":{"username":{"type":"string","title":"邮箱账号"},"password":{"type":"string","format":"password","title":"授权码/密码"},"imapHost":{"type":"string","title":"IMAP 服务器"},"imapPort":{"type":"integer","default":993},"imapTlsMode":{"type":"string","enum":["ssl","starttls","plain"],"default":"ssl"},"smtpHost":{"type":"string","title":"SMTP 服务器"},"smtpPort":{"type":"integer","default":465},"smtpTlsMode":{"type":"string","enum":["ssl","starttls","plain"],"default":"ssl"},"mailbox":{"type":"string","default":"INBOX"},"pollIntervalSeconds":{"type":"integer","minimum":15,"default":30},"fromName":{"type":"string","title":"发件人名称"}}}`}
+	return connector.Manifest{Name: "email", Version: "1.1.1", Title: "IMAP/SMTP 邮箱", Provider: "standard", Type: connector.TypeEmail, Description: "通过安全 IMAP 接收报障邮件并通过 SMTP 回复，支持主流公网邮箱服务", Capabilities: []connector.Capability{connector.CapSendMessage, connector.CapReceiveMessage, connector.CapReplyMessage, connector.CapHealthCheck}, Tags: []string{"email", "imap", "smtp", "qq", "163", "gmail", "outlook", "exchange"}, IsOfficial: true, RequiredPermissions: []string{"connector:write", "email_intake:review"}, ConfigSchema: `{"type":"object","required":["username","password","imapHost","smtpHost"],"properties":{"username":{"type":"string","title":"邮箱账号"},"password":{"type":"string","format":"password","title":"授权码/密码"},"imapHost":{"type":"string","title":"IMAP 服务器"},"imapPort":{"type":"integer","default":993},"imapTlsMode":{"type":"string","enum":["ssl","starttls"],"default":"ssl"},"smtpHost":{"type":"string","title":"SMTP 服务器"},"smtpPort":{"type":"integer","default":465},"smtpTlsMode":{"type":"string","enum":["ssl","starttls"],"default":"ssl"},"mailbox":{"type":"string","default":"INBOX"},"pollIntervalSeconds":{"type":"integer","minimum":15,"default":30},"fromName":{"type":"string","title":"发件人名称"}}}`}
 }
 
 func (c *Connector) Init(_ context.Context, cfg connector.Config) error {
@@ -62,6 +65,15 @@ func (c *Connector) Init(_ context.Context, cfg connector.Config) error {
 	}
 	c.imapTlsMode = normalizeTlsMode(settingString(cfg.Settings, "imapTlsMode", "ssl"))
 	c.smtpTlsMode = normalizeTlsMode(settingString(cfg.Settings, "smtpTlsMode", "ssl"))
+	if c.imapTlsMode == "plain" || c.smtpTlsMode == "plain" {
+		return errors.New("plaintext email transport is not supported")
+	}
+	if err := validateConfiguredHost(imapHost); err != nil {
+		return fmt.Errorf("invalid IMAP host: %w", err)
+	}
+	if err := validateConfiguredHost(smtpHost); err != nil {
+		return fmt.Errorf("invalid SMTP host: %w", err)
+	}
 	pollSeconds := settingInt(cfg.Settings, "pollIntervalSeconds", 30)
 	if pollSeconds < 15 {
 		pollSeconds = 15
@@ -111,11 +123,17 @@ func (c *Connector) loop(ctx context.Context) {
 
 func (c *Connector) dialIMAP() (*imapclient.Client, error) {
 	host := hostOnly(c.imapAddress)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	resolvedAddress, err := resolvePublicEndpoint(ctx, c.imapAddress)
+	if err != nil {
+		return nil, err
+	}
 	switch c.imapTlsMode {
 	case "ssl":
-		return imapclient.DialTLS(c.imapAddress, &tls.Config{MinVersion: tls.VersionTLS12, ServerName: host})
+		return imapclient.DialTLS(resolvedAddress, &tls.Config{MinVersion: tls.VersionTLS12, ServerName: host})
 	case "starttls":
-		cli, err := imapclient.Dial(c.imapAddress)
+		cli, err := imapclient.Dial(resolvedAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -125,7 +143,7 @@ func (c *Connector) dialIMAP() (*imapclient.Client, error) {
 		}
 		return cli, nil
 	default:
-		return imapclient.Dial(c.imapAddress)
+		return nil, errors.New("unsupported IMAP TLS mode")
 	}
 }
 
@@ -178,6 +196,11 @@ func (c *Connector) poll(ctx context.Context) {
 		}
 		inbound, parseErr := parseInbound(raw)
 		if parseErr != nil {
+			if errors.Is(parseErr, errAutomatedMessage) {
+				one := new(imap.SeqSet)
+				one.AddNum(message.Uid)
+				_ = client.UidStore(one, imap.AddFlags, []interface{}{imap.SeenFlag}, nil)
+			}
 			continue
 		}
 		inbound.ConnectorName = "email"
@@ -210,7 +233,7 @@ func (c *Connector) Send(ctx context.Context, msg *connector.Message) error {
 	if err != nil {
 		return errors.New("invalid recipient address")
 	}
-	if strings.ContainsAny(msg.Title, "\r\n") {
+	if strings.ContainsAny(msg.Title+msg.ID, "\r\n") {
 		return errors.New("invalid email title")
 	}
 	fromAddr, err := mail.ParseAddress(c.username)
@@ -221,22 +244,29 @@ func (c *Connector) Send(ctx context.Context, msg *connector.Message) error {
 		fromAddr.Name = c.fromName
 	}
 	subject := mime.QEncoding.Encode("UTF-8", defaultString(msg.Title, "ITSM 通知"))
-	message := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s", fromAddr.String(), to.String(), subject, normalizeBody(msg.Content)))
+	messageID := strings.Trim(strings.TrimSpace(msg.ID), "<>")
+	if messageID == "" {
+		messageID = fmt.Sprintf("email-%d", time.Now().UnixNano())
+	}
+	message := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMessage-ID: <%s@itsm.local>\r\nAuto-Submitted: auto-generated\r\nX-ITSM-Auto-Reply: 1\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s", fromAddr.String(), to.String(), subject, messageID, normalizeBody(msg.Content)))
 	return c.sendSMTP(ctx, to.Address, message)
 }
 
 func (c *Connector) sendSMTP(ctx context.Context, to string, message []byte) error {
 	host := hostOnly(c.smtpAddress)
+	resolvedAddress, err := resolvePublicEndpoint(ctx, c.smtpAddress)
+	if err != nil {
+		return fmt.Errorf("resolve SMTP endpoint: %w", err)
+	}
 	dialer := &net.Dialer{Timeout: 10 * time.Second}
 	var conn net.Conn
-	var err error
 	switch c.smtpTlsMode {
 	case "ssl":
-		conn, err = tls.DialWithDialer(dialer, "tcp", c.smtpAddress, &tls.Config{MinVersion: tls.VersionTLS12, ServerName: host})
+		conn, err = tls.DialWithDialer(dialer, "tcp", resolvedAddress, &tls.Config{MinVersion: tls.VersionTLS12, ServerName: host})
 	case "starttls":
-		conn, err = dialer.DialContext(ctx, "tcp", c.smtpAddress)
+		conn, err = dialer.DialContext(ctx, "tcp", resolvedAddress)
 	default:
-		conn, err = dialer.DialContext(ctx, "tcp", c.smtpAddress)
+		return errors.New("unsupported SMTP TLS mode")
 	}
 	if err != nil {
 		return fmt.Errorf("connect SMTP: %w", err)
@@ -249,16 +279,18 @@ func (c *Connector) sendSMTP(ctx context.Context, to string, message []byte) err
 	}
 	defer client.Close()
 	if c.smtpTlsMode == "starttls" {
-		if ok, _ := client.Extension("STARTTLS"); ok {
-			if err := client.StartTLS(&tls.Config{MinVersion: tls.VersionTLS12, ServerName: host}); err != nil {
-				return err
-			}
+		if ok, _ := client.Extension("STARTTLS"); !ok {
+			return errors.New("SMTP server does not support STARTTLS")
 		}
-	}
-	if ok, _ := client.Extension("AUTH"); ok {
-		if err = client.Auth(smtp.PlainAuth("", c.username, c.password, host)); err != nil {
+		if err := client.StartTLS(&tls.Config{MinVersion: tls.VersionTLS12, ServerName: host}); err != nil {
 			return err
 		}
+	}
+	if ok, _ := client.Extension("AUTH"); !ok {
+		return errors.New("SMTP server does not support authentication")
+	}
+	if err = client.Auth(smtp.PlainAuth("", c.username, c.password, host)); err != nil {
+		return err
 	}
 	if err = client.Mail(c.username); err != nil {
 		return err
@@ -309,7 +341,7 @@ func parseInbound(raw []byte) (*connector.InboundMessage, error) {
 		return nil, errors.New("invalid From header")
 	}
 	if isAutomatedMessage(message.Header) {
-		return nil, errors.New("automated email is not eligible for intake")
+		return nil, errAutomatedMessage
 	}
 	subject, _ := new(mime.WordDecoder).DecodeHeader(message.Header.Get("Subject"))
 	plain, htmlBody, err := readMailBody(message.Header, message.Body)
@@ -429,6 +461,56 @@ func hostOnly(address string) string {
 		return address
 	}
 	return host
+}
+
+func validateConfiguredHost(host string) error {
+	host = strings.TrimSpace(strings.Trim(host, "[]"))
+	if host == "" || strings.EqualFold(host, "localhost") || strings.HasSuffix(strings.ToLower(host), ".localhost") {
+		return errors.New("local mail hosts are not allowed")
+	}
+	if ip, err := netip.ParseAddr(host); err == nil && !isPublicMailIP(ip) {
+		return errors.New("private or local mail addresses are not allowed")
+	}
+	return nil
+}
+
+func resolvePublicEndpoint(ctx context.Context, address string) (string, error) {
+	host, port, err := net.SplitHostPort(address)
+	if err != nil {
+		return "", errors.New("invalid mail endpoint")
+	}
+	if err := validateConfiguredHost(host); err != nil {
+		return "", err
+	}
+	ips, err := net.DefaultResolver.LookupNetIP(ctx, "ip", host)
+	if err != nil || len(ips) == 0 {
+		return "", errors.New("mail host cannot be resolved")
+	}
+	for _, ip := range ips {
+		if !isPublicMailIP(ip) {
+			return "", errors.New("mail host resolves to a private or local address")
+		}
+	}
+	return net.JoinHostPort(ips[0].String(), port), nil
+}
+
+func isPublicMailIP(ip netip.Addr) bool {
+	ip = ip.Unmap()
+	if !ip.IsValid() || !ip.IsGlobalUnicast() || ip.IsPrivate() || ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsMulticast() || ip.IsUnspecified() {
+		return false
+	}
+	for _, blocked := range []netip.Prefix{
+		netip.MustParsePrefix("0.0.0.0/8"), netip.MustParsePrefix("100.64.0.0/10"),
+		netip.MustParsePrefix("192.0.0.0/24"), netip.MustParsePrefix("192.0.2.0/24"),
+		netip.MustParsePrefix("198.18.0.0/15"), netip.MustParsePrefix("198.51.100.0/24"),
+		netip.MustParsePrefix("203.0.113.0/24"), netip.MustParsePrefix("240.0.0.0/4"),
+		netip.MustParsePrefix("2001:db8::/32"),
+	} {
+		if blocked.Contains(ip) {
+			return false
+		}
+	}
+	return true
 }
 func deadline(ctx context.Context, fallback time.Duration) time.Time {
 	if value, ok := ctx.Deadline(); ok {

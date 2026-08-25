@@ -698,6 +698,9 @@ func NewApplication() *Application {
 	emailIntakeOrchestrator := email_intake.NewEmailIntakeOrchestrator(client, emailExtractor, incidentService, email_intake.OrchestratorConfig{
 		Mode: emailIntakeMode, AutomationReporterUserID: automationReporterID, DefaultAssignmentGroupID: assignmentGroupIDPtr,
 	})
+	if err := commandRegistry.Register(commandbus.CommandProcessIntakeEmail, email_intake.NewIntakeProcessCommandHandler(emailIntakeOrchestrator).Handle); err != nil {
+		sugar.Fatalw("Failed to register email intake process handler", "error", err)
+	}
 	emailIntakeHandler.SetOrchestrator(emailIntakeOrchestrator)
 	connectorManager.SetInboundHandler("email", emailIntakeOrchestrator.IngestConnectorMessage)
 

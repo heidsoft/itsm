@@ -164,18 +164,15 @@ func (r *Resolver) Resolve(ctx context.Context, tenantID int, fields IntakeField
 	}
 
 	contractNumber := NormalizeContractNumber(fields.ReportedContractNumber)
-	contracts, err := r.client.SupportContract.Query().Where(
-		supportcontract.TenantIDEQ(tenantID), supportcontract.NormalizedContractNumberEQ(contractNumber),
-	).All(ctx)
-	if err != nil {
-		return result, fmt.Errorf("query support contracts: %w", err)
-	}
-	if len(contracts) == 0 && result.SourceOrganizationID != 0 {
+	var contracts []*ent.SupportContract
+	if result.SourceOrganizationID != 0 {
 		references, refErr := r.client.ExternalContractReference.Query().Where(
 			externalcontractreference.TenantIDEQ(tenantID),
 			externalcontractreference.SourceOrganizationIDEQ(result.SourceOrganizationID),
 			externalcontractreference.NormalizedExternalContractNumberEQ(contractNumber),
-		).WithSupportContract().All(ctx)
+		).WithSupportContract(func(q *ent.SupportContractQuery) {
+			q.Where(supportcontract.TenantIDEQ(tenantID))
+		}).All(ctx)
 		if refErr != nil {
 			return result, fmt.Errorf("query external contract references: %w", refErr)
 		}
@@ -183,6 +180,14 @@ func (r *Resolver) Resolve(ctx context.Context, tenantID int, fields IntakeField
 			if reference.Edges.SupportContract != nil {
 				contracts = append(contracts, reference.Edges.SupportContract)
 			}
+		}
+	} else {
+		var contractErr error
+		contracts, contractErr = r.client.SupportContract.Query().Where(
+			supportcontract.TenantIDEQ(tenantID), supportcontract.NormalizedContractNumberEQ(contractNumber),
+		).All(ctx)
+		if contractErr != nil {
+			return result, fmt.Errorf("query support contracts: %w", contractErr)
 		}
 	}
 	if len(contracts) != 1 {
@@ -245,20 +250,8 @@ func (s *OnCallService) CreateShift(ctx context.Context, tenantID, scheduleID, u
 	if !endAt.After(startAt) {
 		return nil, ErrInvalidShift
 	}
-	schedule, err := s.client.OnCallSchedule.Query().Where(
-		oncallschedule.IDEQ(scheduleID), oncallschedule.TenantIDEQ(tenantID), oncallschedule.StatusEQ("active"),
-	).Only(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("on-call schedule not found: %w", err)
-	}
-	member, err := s.client.Group.Query().Where(
-		group.IDEQ(schedule.GroupID), group.TenantIDEQ(tenantID), group.HasMembersWith(user.IDEQ(userID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)),
-	).Exist(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("validate on-call member: %w", err)
-	}
-	if !member {
-		return nil, errors.New("on-call user must be an active member of the support group")
+	if err := s.validateShiftAssignment(ctx, tenantID, scheduleID, userID); err != nil {
+		return nil, err
 	}
 	overlap, err := s.client.OnCallShift.Query().Where(
 		oncallshift.TenantIDEQ(tenantID), oncallshift.ScheduleIDEQ(scheduleID),
@@ -271,6 +264,25 @@ func (s *OnCallService) CreateShift(ctx context.Context, tenantID, scheduleID, u
 		return nil, ErrOverlappingShift
 	}
 	return s.client.OnCallShift.Create().SetTenantID(tenantID).SetScheduleID(scheduleID).SetUserID(userID).SetStartAt(startAt).SetEndAt(endAt).Save(ctx)
+}
+
+func (s *OnCallService) validateShiftAssignment(ctx context.Context, tenantID, scheduleID, userID int) error {
+	schedule, err := s.client.OnCallSchedule.Query().Where(
+		oncallschedule.IDEQ(scheduleID), oncallschedule.TenantIDEQ(tenantID), oncallschedule.StatusEQ("active"),
+	).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("on-call schedule not found: %w", err)
+	}
+	member, err := s.client.Group.Query().Where(
+		group.IDEQ(schedule.GroupID), group.TenantIDEQ(tenantID), group.HasMembersWith(user.IDEQ(userID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)),
+	).Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("validate on-call member: %w", err)
+	}
+	if !member {
+		return errors.New("on-call user must be an active member of the support group")
+	}
+	return nil
 }
 
 func (s *OnCallService) ListShifts(ctx context.Context, tenantID, scheduleID int) ([]*ent.OnCallShift, error) {
@@ -288,6 +300,9 @@ func (s *OnCallService) UpdateShift(ctx context.Context, tenantID, shiftID, sche
 	shift, err := s.client.OnCallShift.Query().Where(oncallshift.IDEQ(shiftID), oncallshift.TenantIDEQ(tenantID)).Only(ctx)
 	if err != nil {
 		return nil, ErrShiftNotFound
+	}
+	if err := s.validateShiftAssignment(ctx, tenantID, scheduleID, userID); err != nil {
+		return nil, err
 	}
 	if scheduleID != shift.ScheduleID || userID != shift.UserID || !startAt.Equal(shift.StartAt) || !endAt.Equal(shift.EndAt) {
 		overlap, err := s.client.OnCallShift.Query().Where(

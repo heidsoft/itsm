@@ -18,6 +18,18 @@ type sequenceEmailLLM struct {
 	index   int
 }
 
+type flakyEmailLLM struct {
+	calls int
+}
+
+func (f *flakyEmailLLM) Chat(context.Context, string, []service.LLMMessage) (string, error) {
+	f.calls++
+	if f.calls == 1 {
+		return "", context.DeadlineExceeded
+	}
+	return `{"intent":"report_incident","customerName":"客户A","reportedContractNumber":"SUP-RETRY","title":"线路中断","description":"down","impact":"high","urgency":"high","missingFields":[],"confidence":0.95}`, nil
+}
+
 func (f *sequenceEmailLLM) Chat(context.Context, string, []service.LLMMessage) (string, error) {
 	output := f.outputs[f.index]
 	if f.index < len(f.outputs)-1 {
@@ -41,6 +53,12 @@ func TestEmailIntakeExtractorValidatesStructuredOutput(t *testing.T) {
 
 func TestEmailIntakeExtractorRejectsInvalidEnumsAndConfidence(t *testing.T) {
 	extractor := NewEmailIntakeExtractor(fakeEmailLLM{output: `{"intent":"delete_database","customerName":"A","reportedContractNumber":"1","title":"x","description":"x","impact":"extreme","urgency":"high","confidence":2}`}, "test-model")
+	_, _, err := extractor.Extract(context.Background(), "x", "x")
+	require.Error(t, err)
+}
+
+func TestEmailIntakeExtractorRejectsTrailingOutput(t *testing.T) {
+	extractor := NewEmailIntakeExtractor(fakeEmailLLM{output: `{"intent":"other","confidence":0.9} {"unexpected":true}`}, "test-model")
 	_, _, err := extractor.Extract(context.Background(), "x", "x")
 	require.Error(t, err)
 }

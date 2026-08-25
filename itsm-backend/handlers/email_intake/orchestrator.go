@@ -126,6 +126,11 @@ func (o *EmailIntakeOrchestrator) Ingest(ctx context.Context, tenantID int, emai
 	).WithConversation().Only(ctx)
 	if err == nil {
 		_ = tx.Rollback()
+		if existing.ProcessingStatus != "PARSED" {
+			if enqueueErr := o.enqueueMessageProcessing(ctx, tenantID, existing.ID); enqueueErr != nil {
+				return nil, enqueueErr
+			}
+		}
 		return existing.Edges.Conversation, nil
 	}
 	if !ent.IsNotFound(err) {
@@ -160,6 +165,11 @@ func (o *EmailIntakeOrchestrator) Ingest(ctx context.Context, tenantID int, emai
 		if reErr != nil {
 			return nil, fmt.Errorf("idempotency conflict and re-fetch failed: %w", reErr)
 		}
+		if existing.ProcessingStatus != "PARSED" {
+			if enqueueErr := o.enqueueMessageProcessing(ctx, tenantID, existing.ID); enqueueErr != nil {
+				return nil, enqueueErr
+			}
+		}
 		return existing.Edges.Conversation, nil
 	}
 	if err != nil {
@@ -170,22 +180,40 @@ func (o *EmailIntakeOrchestrator) Ingest(ctx context.Context, tenantID int, emai
 		return nil, fmt.Errorf("commit idempotent-write transaction: %w", err)
 	}
 
-	return o.process(ctx, tenantID, conversation, message, email.SenderAuthenticated)
+	return o.process(ctx, tenantID, conversation, message, email.SenderAuthenticated, true)
 }
 
-func (o *EmailIntakeOrchestrator) process(ctx context.Context, tenantID int, conversation *ent.EmailConversation, message *ent.InboundEmailMessage, senderAuthenticated bool) (*ent.EmailConversation, error) {
+func (o *EmailIntakeOrchestrator) process(ctx context.Context, tenantID int, conversation *ent.EmailConversation, message *ent.InboundEmailMessage, senderAuthenticated, enqueueRetry bool) (*ent.EmailConversation, error) {
 	started := time.Now()
 	result, raw, extractionErr := o.extractor.Extract(ctx, message.Subject, message.PlainText)
-	analysisCreate := o.client.EmailIntakeAnalysis.Create().SetTenantID(tenantID).SetConversationID(conversation.ID).SetMessageID(message.ID).SetPromptVersion(EmailIntakePromptVersion).SetRawResult(raw).SetLatencyMs(time.Since(started).Milliseconds())
-	analysisCreate.SetProvider("llm_gateway").SetModel(o.extractor.model)
 	if extractionErr != nil {
-		_, _ = analysisCreate.SetStatus("failed").SetValidationError(extractionErr.Error()).Save(ctx)
-		_, _ = o.client.InboundEmailMessage.UpdateOneID(message.ID).SetProcessingStatus("RETRYABLE_FAILED").SetLastError(extractionErr.Error()).Save(ctx)
+		tx, txErr := o.client.Tx(ctx)
+		if txErr != nil {
+			return nil, fmt.Errorf("start failed-analysis transaction: %w", txErr)
+		}
+		rollback := func(cause error) (*ent.EmailConversation, error) { _ = tx.Rollback(); return nil, cause }
+		if _, txErr = tx.EmailIntakeAnalysis.Create().SetTenantID(tenantID).SetConversationID(conversation.ID).SetMessageID(message.ID).SetPromptVersion(EmailIntakePromptVersion).SetRawResult(raw).SetLatencyMs(time.Since(started).Milliseconds()).SetProvider("llm_gateway").SetModel(o.extractor.model).SetStatus("failed").SetValidationError(extractionErr.Error()).Save(ctx); txErr != nil {
+			return rollback(fmt.Errorf("persist failed email intake analysis: %w", txErr))
+		}
+		if _, txErr = tx.InboundEmailMessage.UpdateOneID(message.ID).SetProcessingStatus("RETRYABLE_FAILED").SetLastError(extractionErr.Error()).Save(ctx); txErr != nil {
+			return rollback(fmt.Errorf("persist retryable email status: %w", txErr))
+		}
+		if txErr = tx.Commit(); txErr != nil {
+			return nil, fmt.Errorf("commit failed-analysis transaction: %w", txErr)
+		}
 		updated, updateErr := o.updateConversation(ctx, conversation, ResolutionManualReview, IntakeFields{}, Resolution{Status: ResolutionManualReview, Reasons: []string{"ai_extraction_failed"}})
+		if enqueueRetry {
+			if enqueueErr := o.enqueueMessageProcessing(ctx, tenantID, message.ID); enqueueErr != nil {
+				return nil, enqueueErr
+			}
+		}
 		if updateErr != nil {
 			return nil, updateErr
 		}
-		return updated, nil
+		if enqueueRetry {
+			return updated, nil
+		}
+		return updated, extractionErr
 	}
 	fields := result.IntakeFields()
 	if existingFields, mapErr := fieldsFromMap(conversation.CanonicalData); mapErr == nil {
@@ -211,14 +239,26 @@ func (o *EmailIntakeOrchestrator) process(ctx context.Context, tenantID int, con
 	resultMap := map[string]interface{}{}
 	encoded, _ := json.Marshal(result)
 	_ = json.Unmarshal(encoded, &resultMap)
-	_, err = analysisCreate.SetResult(resultMap).SetConfidence(result.Confidence).SetStatus("accepted").Save(ctx)
+	tx, err := o.client.Tx(ctx)
 	if err != nil {
+		return nil, fmt.Errorf("start accepted-analysis transaction: %w", err)
+	}
+	if _, err = tx.EmailIntakeAnalysis.Create().SetTenantID(tenantID).SetConversationID(conversation.ID).SetMessageID(message.ID).SetPromptVersion(EmailIntakePromptVersion).SetRawResult(raw).SetLatencyMs(time.Since(started).Milliseconds()).SetProvider("llm_gateway").SetModel(o.extractor.model).SetResult(resultMap).SetConfidence(result.Confidence).SetStatus("accepted").Save(ctx); err != nil {
+		_ = tx.Rollback()
 		return nil, fmt.Errorf("persist email intake analysis: %w", err)
 	}
-	_, _ = o.client.InboundEmailMessage.UpdateOneID(message.ID).SetProcessingStatus("PARSED").ClearLastError().Save(ctx)
+	if err = tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit accepted-analysis transaction: %w", err)
+	}
 	updated, err := o.updateConversation(ctx, conversation, resolution.Status, fields, resolution)
 	if err != nil {
+		if enqueueErr := o.enqueueMessageProcessing(ctx, tenantID, message.ID); enqueueErr != nil {
+			return nil, fmt.Errorf("update conversation: %v; schedule recovery: %w", err, enqueueErr)
+		}
 		return nil, err
+	}
+	if _, err = o.client.InboundEmailMessage.UpdateOneID(message.ID).Where(inboundemailmessage.TenantIDEQ(tenantID)).SetProcessingStatus("PARSED").ClearLastError().Save(ctx); err != nil {
+		return nil, fmt.Errorf("persist parsed email status: %w", err)
 	}
 	if resolution.Status == ResolutionNeedInfo || resolution.Status == ResolutionAmbiguous {
 		if err := o.enqueueMissingInformationReply(ctx, tenantID, updated, message, resolution.MissingFields); err != nil {
@@ -260,7 +300,7 @@ func (o *EmailIntakeOrchestrator) Confirm(ctx context.Context, tenantID, convers
 	var assigneeID *int
 	if runtimeConfig.DefaultAssignmentGroupID != nil {
 		current, currentErr := o.onCall.CurrentResolver(ctx, tenantID, *runtimeConfig.DefaultAssignmentGroupID, time.Now())
-		if currentErr != nil {
+		if currentErr != nil && !errors.Is(currentErr, ErrNoOnCall) {
 			return nil, currentErr
 		}
 		if current != nil {
@@ -281,6 +321,55 @@ func (o *EmailIntakeOrchestrator) Confirm(ctx context.Context, tenantID, convers
 		}
 	}
 	return updated, nil
+}
+
+// Retry reruns extraction for the latest retryable message. It intentionally
+// keeps senderAuthenticated=false because a manual API action cannot upgrade
+// an untrusted RFC From header into an authenticated identity.
+func (o *EmailIntakeOrchestrator) Retry(ctx context.Context, tenantID, conversationID, version int) (*ent.EmailConversation, error) {
+	conversation, err := o.client.EmailConversation.Query().Where(
+		emailconversation.IDEQ(conversationID), emailconversation.TenantIDEQ(tenantID), emailconversation.VersionEQ(version),
+	).WithMessages(func(q *ent.InboundEmailMessageQuery) {
+		q.Where(inboundemailmessage.ProcessingStatusEQ("RETRYABLE_FAILED")).Order(ent.Desc(inboundemailmessage.FieldReceivedAt)).Limit(1)
+	}).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(conversation.Edges.Messages) == 0 {
+		return nil, errors.New("no retryable inbound email is available")
+	}
+	message := conversation.Edges.Messages[0]
+	return o.process(ctx, tenantID, conversation, message, false, false)
+}
+
+func (o *EmailIntakeOrchestrator) RetryMessage(ctx context.Context, tenantID, messageID int) error {
+	message, err := o.client.InboundEmailMessage.Query().Where(
+		inboundemailmessage.IDEQ(messageID), inboundemailmessage.TenantIDEQ(tenantID),
+	).WithConversation().Only(ctx)
+	if err != nil {
+		return err
+	}
+	if message.ProcessingStatus == "PARSED" {
+		return nil
+	}
+	if (message.ProcessingStatus != "RETRYABLE_FAILED" && message.ProcessingStatus != "RECEIVED") || message.Edges.Conversation == nil {
+		return errors.New("inbound email is not retryable")
+	}
+	_, err = o.process(ctx, tenantID, message.Edges.Conversation, message, false, false)
+	return err
+}
+
+func (o *EmailIntakeOrchestrator) enqueueMessageProcessing(ctx context.Context, tenantID, messageID int) error {
+	_, err := commandbus.Enqueue(ctx, o.client, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandProcessIntakeEmail,
+		AggregateType: "inbound_email_message", AggregateID: messageID,
+		IdempotencyKey: fmt.Sprintf("email-intake-process:%d:%d", tenantID, messageID),
+		Payload:        map[string]interface{}{"messageId": messageID},
+	})
+	if err != nil && !ent.IsConstraintError(err) {
+		return fmt.Errorf("enqueue email intake processing: %w", err)
+	}
+	return nil
 }
 
 func (o *EmailIntakeOrchestrator) Revalidate(ctx context.Context, tenantID, conversationID, version int) (*ent.EmailConversation, error) {

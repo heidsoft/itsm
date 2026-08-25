@@ -113,5 +113,6 @@ FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM permission_definitions d WHERE d.resource=p.resource AND d.action=p.action);
 
 INSERT INTO menus (name, path, icon, permission_code, sort_order, tenant_id, is_visible, is_enabled)
-SELECT '邮件智能报障', '/email-intake', 'MailWarning', 'email_intake:read', 125, id, TRUE, TRUE FROM tenants
-ON CONFLICT (tenant_id, path) DO NOTHING;
+SELECT '邮件智能报障', '/email-intake', 'MailWarning', 'email_intake:read', 125, t.id, TRUE, TRUE
+FROM tenants t
+WHERE NOT EXISTS (SELECT 1 FROM menus m WHERE m.tenant_id=t.id AND m.path='/email-intake');
