@@ -15,8 +15,11 @@ type Manager struct {
 	registry *Registry
 	logger   *zap.SugaredLogger
 
-	mu        sync.RWMutex
-	instances map[string]*instance // key = tenantID + "/" + connectorName + "/" + instanceID
+	mu              sync.RWMutex
+	instances       map[string]*instance // key = tenantID + "/" + connectorName + "/" + instanceID
+	inboundHandlers map[string]PollingInboundHandler
+	ctx             context.Context
+	cancel          context.CancelFunc
 }
 
 type instance struct {
@@ -29,10 +32,32 @@ func NewManager(registry *Registry, logger *zap.SugaredLogger) *Manager {
 	if registry == nil {
 		registry = Default()
 	}
+	ctx, cancel := context.WithCancel(context.Background())
 	return &Manager{
-		registry:  registry,
-		logger:    logger,
-		instances: make(map[string]*instance),
+		registry:        registry,
+		logger:          logger,
+		instances:       make(map[string]*instance),
+		inboundHandlers: make(map[string]PollingInboundHandler),
+		ctx:             ctx,
+		cancel:          cancel,
+	}
+}
+
+func (m *Manager) SetInboundHandler(connectorName string, handler PollingInboundHandler) {
+	m.mu.Lock()
+	m.inboundHandlers[connectorName] = handler
+	instances := make([]*instance, 0)
+	for _, inst := range m.instances {
+		if inst.cfg.Name == connectorName {
+			instances = append(instances, inst)
+		}
+	}
+	m.mu.Unlock()
+	for _, inst := range instances {
+		if receiver, ok := inst.conn.(PollingReceiver); ok {
+			receiver.SetInboundHandler(handler)
+			_ = receiver.Start(m.ctx)
+		}
 	}
 }
 
@@ -55,8 +80,21 @@ func (m *Manager) Provision(ctx context.Context, cfg Config) error {
 		return fmt.Errorf("connector %q init failed: %w", cfg.Name, err)
 	}
 	m.mu.Lock()
-	m.instances[instanceKey(cfg)] = &instance{cfg: cfg, conn: c}
+	k := instanceKey(cfg)
+	previous := m.instances[k]
+	m.instances[k] = &instance{cfg: cfg, conn: c}
+	handler := m.inboundHandlers[cfg.Name]
 	m.mu.Unlock()
+	if previous != nil {
+		_ = previous.conn.Close()
+	}
+	if receiver, ok := c.(PollingReceiver); ok && handler != nil {
+		receiver.SetInboundHandler(handler)
+		if err := receiver.Start(m.ctx); err != nil {
+			m.Revoke(cfg)
+			return fmt.Errorf("connector %q polling start failed: %w", cfg.Name, err)
+		}
+	}
 	if m.logger != nil {
 		m.logger.Infow("connector provisioned",
 			"tenant", cfg.TenantID, "name", cfg.Name, "provider", cfg.Provider)
@@ -151,6 +189,7 @@ func (m *Manager) HealthCheckAll(ctx context.Context) map[string]HealthStatus {
 
 // CloseAll 关闭所有连接器（用于优雅停机）
 func (m *Manager) CloseAll() {
+	m.cancel()
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for k, inst := range m.instances {
