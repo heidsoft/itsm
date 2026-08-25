@@ -42,7 +42,7 @@ func (pc *PermissionController) CreatePermission(c *gin.Context) {
 
 	perm, err := pc.permissionService.CreatePermission(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "创建权限失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -61,7 +61,7 @@ func (pc *PermissionController) ListPermissions(c *gin.Context) {
 
 	perms, err := pc.permissionService.ListPermissions(c.Request.Context(), tenantID, resource)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "查询权限列表失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -86,7 +86,7 @@ func (pc *PermissionController) InitDefaultPermissions(c *gin.Context) {
 
 	err = pc.permissionService.InitDefaultPermissions(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "初始化权限失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

@@ -53,7 +53,7 @@ func NewWorkflowController(
 func (wc *WorkflowController) CreateWorkflow(c *gin.Context) {
 	var req service.CreateWorkflowRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -63,7 +63,7 @@ func (wc *WorkflowController) CreateWorkflow(c *gin.Context) {
 	workflow, err := wc.workflowService.CreateWorkflow(c.Request.Context(), &req)
 	if err != nil {
 		wc.logger.Error("Failed to create workflow", zap.Error(err), zap.Int("tenant_id", tenantID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -89,7 +89,7 @@ func (wc *WorkflowController) UpdateWorkflow(c *gin.Context) {
 
 	var req service.UpdateWorkflowRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -102,7 +102,7 @@ func (wc *WorkflowController) UpdateWorkflow(c *gin.Context) {
 	workflow, err := wc.workflowService.UpdateWorkflow(c.Request.Context(), workflowID, &req, tenantID)
 	if err != nil {
 		wc.logger.Error("Failed to update workflow", zap.Error(err), zap.Int("workflow_id", workflowID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -134,7 +134,7 @@ func (wc *WorkflowController) DeleteWorkflow(c *gin.Context) {
 	err = wc.workflowService.DeleteWorkflow(c.Request.Context(), workflowID, tenantID)
 	if err != nil {
 		wc.logger.Error("Failed to delete workflow", zap.Error(err), zap.Int("workflow_id", workflowID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -166,7 +166,7 @@ func (wc *WorkflowController) GetWorkflow(c *gin.Context) {
 	workflow, err := wc.workflowService.GetWorkflow(c.Request.Context(), workflowID, tenantID)
 	if err != nil {
 		wc.logger.Error("Failed to get workflow", zap.Error(err), zap.Int("workflow_id", workflowID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -219,7 +219,7 @@ func (wc *WorkflowController) ListWorkflows(c *gin.Context) {
 	workflows, total, err := wc.workflowService.ListWorkflows(c.Request.Context(), req)
 	if err != nil {
 		wc.logger.Error("Failed to list workflows", zap.Error(err), zap.Int("tenant_id", tenantID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -235,7 +235,7 @@ func (wc *WorkflowController) ListWorkflows(c *gin.Context) {
 func (wc *WorkflowController) StartWorkflow(c *gin.Context) {
 	var req service.StartWorkflowRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -245,7 +245,7 @@ func (wc *WorkflowController) StartWorkflow(c *gin.Context) {
 	instance, err := wc.workflowService.StartWorkflow(c.Request.Context(), &req)
 	if err != nil {
 		wc.logger.Error("Failed to start workflow", zap.Error(err), zap.Int("tenant_id", tenantID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -256,7 +256,7 @@ func (wc *WorkflowController) StartWorkflow(c *gin.Context) {
 func (wc *WorkflowController) ExecuteWorkflowStep(c *gin.Context) {
 	var req service.ExecuteWorkflowStepRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -269,7 +269,7 @@ func (wc *WorkflowController) ExecuteWorkflowStep(c *gin.Context) {
 	err := wc.workflowService.ExecuteWorkflowStep(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		wc.logger.Error("Failed to execute workflow step", zap.Error(err), zap.Int("instance_id", req.InstanceID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -280,7 +280,7 @@ func (wc *WorkflowController) ExecuteWorkflowStep(c *gin.Context) {
 func (wc *WorkflowController) CompleteWorkflowStep(c *gin.Context) {
 	var req service.CompleteWorkflowStepRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -292,14 +292,14 @@ func (wc *WorkflowController) CompleteWorkflowStep(c *gin.Context) {
 
 	if _, err := wc.workflowService.GetWorkflowInstance(c.Request.Context(), req.InstanceID, tenantID); err != nil {
 		wc.logger.Error("Failed to get workflow instance", zap.Error(err), zap.Int("instance_id", req.InstanceID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
 	err := wc.workflowEngine.CompleteWorkflowStep(c.Request.Context(), &req)
 	if err != nil {
 		wc.logger.Error("Failed to complete workflow step", zap.Error(err), zap.Int("instance_id", req.InstanceID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -336,7 +336,7 @@ func (wc *WorkflowController) GetApprovalTasks(c *gin.Context) {
 	tasks, total, err := wc.approvalService.GetApprovalTasks(c.Request.Context(), req)
 	if err != nil {
 		wc.logger.Error("Failed to get approval tasks", zap.Error(err), zap.Int("assignee_id", assigneeID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -350,7 +350,7 @@ func (wc *WorkflowController) GetApprovalTasks(c *gin.Context) {
 func (wc *WorkflowController) ApproveTask(c *gin.Context) {
 	var req service.ApproveTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -359,7 +359,7 @@ func (wc *WorkflowController) ApproveTask(c *gin.Context) {
 	err := wc.approvalService.ApproveTask(c.Request.Context(), &req)
 	if err != nil {
 		wc.logger.Error("Failed to approve task", zap.Error(err), zap.Int("task_id", req.TaskID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -370,7 +370,7 @@ func (wc *WorkflowController) ApproveTask(c *gin.Context) {
 func (wc *WorkflowController) RejectTask(c *gin.Context) {
 	var req service.RejectTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -379,7 +379,7 @@ func (wc *WorkflowController) RejectTask(c *gin.Context) {
 	err := wc.approvalService.RejectTask(c.Request.Context(), &req)
 	if err != nil {
 		wc.logger.Error("Failed to reject task", zap.Error(err), zap.Int("task_id", req.TaskID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -429,7 +429,7 @@ func (wc *WorkflowController) GetWorkflowTasks(c *gin.Context) {
 	tasks, total, err := wc.taskService.GetTasks(c.Request.Context(), req)
 	if err != nil {
 		wc.logger.Error("Failed to get workflow tasks", zap.Error(err), zap.Int("assignee_id", assigneeID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -443,7 +443,7 @@ func (wc *WorkflowController) GetWorkflowTasks(c *gin.Context) {
 func (wc *WorkflowController) StartTask(c *gin.Context) {
 	var req service.StartTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -452,7 +452,7 @@ func (wc *WorkflowController) StartTask(c *gin.Context) {
 	err := wc.taskService.StartTask(c.Request.Context(), &req)
 	if err != nil {
 		wc.logger.Error("Failed to start task", zap.Error(err), zap.Int("task_id", req.TaskID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -463,7 +463,7 @@ func (wc *WorkflowController) StartTask(c *gin.Context) {
 func (wc *WorkflowController) CompleteTask(c *gin.Context) {
 	var req service.CompleteTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -472,7 +472,7 @@ func (wc *WorkflowController) CompleteTask(c *gin.Context) {
 	err := wc.taskService.CompleteTask(c.Request.Context(), &req)
 	if err != nil {
 		wc.logger.Error("Failed to complete task", zap.Error(err), zap.Int("task_id", req.TaskID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -507,7 +507,7 @@ func (wc *WorkflowController) GetWorkflowMetrics(c *gin.Context) {
 	metrics, err := wc.monitorService.GetWorkflowMetrics(c.Request.Context(), &req)
 	if err != nil {
 		wc.logger.Error("Failed to get workflow metrics", zap.Error(err))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -544,7 +544,7 @@ func (wc *WorkflowController) GetStepMetrics(c *gin.Context) {
 	metrics, err := wc.monitorService.GetStepMetrics(c.Request.Context(), &req)
 	if err != nil {
 		wc.logger.Error("Failed to get step metrics", zap.Error(err))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -590,7 +590,7 @@ func (wc *WorkflowController) GetAlerts(c *gin.Context) {
 	alerts, total, err := wc.monitorService.GetAlerts(c.Request.Context(), req)
 	if err != nil {
 		wc.logger.Error("Failed to get alerts", zap.Error(err))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

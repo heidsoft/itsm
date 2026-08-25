@@ -63,7 +63,7 @@ func (ac *AssetController) ListAssets(c *gin.Context) {
 	assets, err := ac.assetService.ListAssets(c.Request.Context(), tenantID, page, pageSize, assetType, status, category)
 	if err != nil {
 		ac.logger.Errorw("List assets failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取资产列表失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -88,14 +88,14 @@ func (ac *AssetController) CreateAsset(c *gin.Context) {
 
 	var req dto.CreateAssetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	asset, err := ac.assetService.CreateAsset(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		ac.logger.Errorw("Create asset failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "创建资产失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -120,14 +120,14 @@ func (ac *AssetController) GetAsset(c *gin.Context) {
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的资产ID")
+		common.ParamError(c, "无效的资产ID")
 		return
 	}
 
 	asset, err := ac.assetService.GetAssetByID(c.Request.Context(), assetID, tenantID)
 	if err != nil {
 		ac.logger.Errorw("Get asset failed", "error", err, "asset_id", assetID)
-		common.Fail(c, common.InternalErrorCode, "获取资产详情失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -149,20 +149,20 @@ func (ac *AssetController) UpdateAsset(c *gin.Context) {
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的资产ID")
+		common.ParamError(c, "无效的资产ID")
 		return
 	}
 
 	var req dto.UpdateAssetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	asset, err := ac.assetService.UpdateAsset(c.Request.Context(), assetID, tenantID, &req)
 	if err != nil {
 		ac.logger.Errorw("Update asset failed", "error", err, "asset_id", assetID)
-		common.Fail(c, common.InternalErrorCode, "更新资产失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -184,20 +184,20 @@ func (ac *AssetController) UpdateAssetStatus(c *gin.Context) {
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的资产ID")
+		common.ParamError(c, "无效的资产ID")
 		return
 	}
 
 	var req dto.AssetStatusUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	asset, err := ac.assetService.UpdateAssetStatus(c.Request.Context(), assetID, tenantID, string(req.Status), req.AssignedTo)
 	if err != nil {
 		ac.logger.Errorw("Update asset status failed", "error", err, "asset_id", assetID)
-		common.Fail(c, common.InternalErrorCode, "更新资产状态失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -219,14 +219,14 @@ func (ac *AssetController) DeleteAsset(c *gin.Context) {
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的资产ID")
+		common.ParamError(c, "无效的资产ID")
 		return
 	}
 
 	err = ac.assetService.DeleteAsset(c.Request.Context(), assetID, tenantID)
 	if err != nil {
 		ac.logger.Errorw("Delete asset failed", "error", err, "asset_id", assetID)
-		common.Fail(c, common.InternalErrorCode, "删除资产失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -244,7 +244,7 @@ func (ac *AssetController) GetAssetStats(c *gin.Context) {
 	stats, err := ac.assetService.GetAssetStats(c.Request.Context(), tenantID)
 	if err != nil {
 		ac.logger.Errorw("Get asset stats failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取资产统计失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -261,20 +261,20 @@ func (ac *AssetController) AssignAsset(c *gin.Context) {
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的资产ID")
+		common.ParamError(c, "无效的资产ID")
 		return
 	}
 
 	var req dto.AssetAssignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	asset, err := ac.assetService.AssignAsset(c.Request.Context(), assetID, tenantID, req.AssignedTo)
 	if err != nil {
 		ac.logger.Errorw("Assign asset failed", "error", err, "asset_id", assetID)
-		common.Fail(c, common.InternalErrorCode, "分配资产失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -291,20 +291,20 @@ func (ac *AssetController) RetireAsset(c *gin.Context) {
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的资产ID")
+		common.ParamError(c, "无效的资产ID")
 		return
 	}
 
 	var req dto.AssetRetireRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	asset, err := ac.assetService.RetireAsset(c.Request.Context(), assetID, tenantID, req.RetireReason)
 	if err != nil {
 		ac.logger.Errorw("Retire asset failed", "error", err, "asset_id", assetID)
-		common.Fail(c, common.InternalErrorCode, "退役资产失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

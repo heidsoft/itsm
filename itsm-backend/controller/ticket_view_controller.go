@@ -36,7 +36,7 @@ func (tvc *TicketViewController) ListTicketViews(c *gin.Context) {
 	views, err := tvc.viewService.ListTicketViews(c.Request.Context(), tenantID, &userID)
 	if err != nil {
 		tvc.logger.Errorw("Failed to list ticket views", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -64,7 +64,7 @@ func (tvc *TicketViewController) GetTicketView(c *gin.Context) {
 	view, err := tvc.viewService.GetTicketView(c.Request.Context(), viewID, tenantID)
 	if err != nil {
 		tvc.logger.Errorw("Failed to get ticket view", "error", err, "view_id", viewID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -76,7 +76,7 @@ func (tvc *TicketViewController) GetTicketView(c *gin.Context) {
 func (tvc *TicketViewController) CreateTicketView(c *gin.Context) {
 	var req dto.CreateTicketViewRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	req.Normalize()
@@ -91,7 +91,7 @@ func (tvc *TicketViewController) CreateTicketView(c *gin.Context) {
 	view, err := tvc.viewService.CreateTicketView(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tvc.logger.Errorw("Failed to create ticket view", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -109,7 +109,7 @@ func (tvc *TicketViewController) UpdateTicketView(c *gin.Context) {
 
 	var req dto.UpdateTicketViewRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	req.Normalize()
@@ -124,7 +124,7 @@ func (tvc *TicketViewController) UpdateTicketView(c *gin.Context) {
 	view, err := tvc.viewService.UpdateTicketView(c.Request.Context(), viewID, &req, userID, tenantID)
 	if err != nil {
 		tvc.logger.Errorw("Failed to update ticket view", "error", err, "view_id", viewID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -150,7 +150,7 @@ func (tvc *TicketViewController) DeleteTicketView(c *gin.Context) {
 	err = tvc.viewService.DeleteTicketView(c.Request.Context(), viewID, userID, tenantID)
 	if err != nil {
 		tvc.logger.Errorw("Failed to delete ticket view", "error", err, "view_id", viewID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -168,7 +168,7 @@ func (tvc *TicketViewController) ShareTicketView(c *gin.Context) {
 
 	var req dto.ShareTicketViewRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	req.Normalize()
@@ -183,7 +183,7 @@ func (tvc *TicketViewController) ShareTicketView(c *gin.Context) {
 	err = tvc.viewService.ShareTicketView(c.Request.Context(), viewID, &req, userID, tenantID)
 	if err != nil {
 		tvc.logger.Errorw("Failed to share ticket view", "error", err, "view_id", viewID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

@@ -148,7 +148,7 @@ func (mc *MSPController) GetAllocations(c *gin.Context) {
 func (mc *MSPController) CreateAllocation(c *gin.Context) {
 	var req dto.CreateAllocationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -170,7 +170,7 @@ func (mc *MSPController) CreateAllocation(c *gin.Context) {
 	)
 	if err != nil {
 		mc.logger.Errorw("Failed to create allocation", "error", err, "operator", operatorID)
-		common.Fail(c, common.InternalErrorCode, "创建分配失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -193,7 +193,7 @@ func (mc *MSPController) CreateAllocation(c *gin.Context) {
 func (mc *MSPController) Deallocate(c *gin.Context) {
 	var req dto.DeallocateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -210,7 +210,7 @@ func (mc *MSPController) Deallocate(c *gin.Context) {
 	)
 	if err != nil {
 		mc.logger.Errorw("Failed to deallocate", "error", err, "operator", operatorID)
-		common.Fail(c, common.InternalErrorCode, "解除分配失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -327,7 +327,7 @@ func (mc *MSPController) AssignMSPTechnician(c *gin.Context) {
 
 	var req dto.AssignMSPTechnicianRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -345,7 +345,7 @@ func (mc *MSPController) AssignMSPTechnician(c *gin.Context) {
 	)
 	if err != nil {
 		mc.logger.Errorw("Failed to assign MSP technician", "error", err, "ticket_id", ticketID)
-		common.Fail(c, common.InternalErrorCode, "分配失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

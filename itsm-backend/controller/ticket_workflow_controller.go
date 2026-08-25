@@ -52,7 +52,7 @@ func getAuthContext(c *gin.Context) (int, int, bool) {
 func (tc *TicketWorkflowController) AcceptTicket(c *gin.Context) {
 	var req dto.AcceptTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -64,7 +64,7 @@ func (tc *TicketWorkflowController) AcceptTicket(c *gin.Context) {
 	err := tc.workflowService.AcceptTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to accept ticket", "error", err, "ticket_id", req.TicketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -83,7 +83,7 @@ func (tc *TicketWorkflowController) AcceptTicket(c *gin.Context) {
 func (tc *TicketWorkflowController) RejectTicket(c *gin.Context) {
 	var req dto.RejectTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -95,7 +95,7 @@ func (tc *TicketWorkflowController) RejectTicket(c *gin.Context) {
 	err := tc.workflowService.RejectTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to reject ticket", "error", err, "ticket_id", req.TicketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -114,7 +114,7 @@ func (tc *TicketWorkflowController) RejectTicket(c *gin.Context) {
 func (tc *TicketWorkflowController) WithdrawTicket(c *gin.Context) {
 	var req dto.WithdrawTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -126,7 +126,7 @@ func (tc *TicketWorkflowController) WithdrawTicket(c *gin.Context) {
 	err := tc.workflowService.WithdrawTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to withdraw ticket", "error", err, "ticket_id", req.TicketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -145,7 +145,7 @@ func (tc *TicketWorkflowController) WithdrawTicket(c *gin.Context) {
 func (tc *TicketWorkflowController) ForwardTicket(c *gin.Context) {
 	var req dto.ForwardTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -157,7 +157,7 @@ func (tc *TicketWorkflowController) ForwardTicket(c *gin.Context) {
 	err := tc.workflowService.ForwardTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to forward ticket", "error", err, "ticket_id", req.TicketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -176,7 +176,7 @@ func (tc *TicketWorkflowController) ForwardTicket(c *gin.Context) {
 func (tc *TicketWorkflowController) CCTicket(c *gin.Context) {
 	var req dto.CCTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -188,7 +188,7 @@ func (tc *TicketWorkflowController) CCTicket(c *gin.Context) {
 	err := tc.workflowService.CCTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to cc ticket", "error", err, "ticket_id", req.TicketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -211,7 +211,7 @@ func (tc *TicketWorkflowController) ListMyCCRecords(c *gin.Context) {
 	resp, err := tc.workflowService.ListMyCCRecords(c.Request.Context(), userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to list my CC records", "error", err, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -241,7 +241,7 @@ func (tc *TicketWorkflowController) ListTicketCCRecords(c *gin.Context) {
 	resp, err := tc.workflowService.ListTicketCCRecords(c.Request.Context(), ticketID, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to list ticket CC records", "error", err, "ticket_id", ticketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -260,7 +260,7 @@ func (tc *TicketWorkflowController) ListTicketCCRecords(c *gin.Context) {
 func (tc *TicketWorkflowController) ApproveTicket(c *gin.Context) {
 	var req dto.ApproveTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -272,7 +272,7 @@ func (tc *TicketWorkflowController) ApproveTicket(c *gin.Context) {
 	err := tc.workflowService.ApproveTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to approve ticket", "error", err, "ticket_id", req.TicketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -303,7 +303,7 @@ func (tc *TicketWorkflowController) ApproveTicket(c *gin.Context) {
 func (tc *TicketWorkflowController) ResolveTicket(c *gin.Context) {
 	var req dto.ResolveTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	// 兼容 ticket_id 和 ticketId 两种字段名（ResolveTicketRequest 的 JSON tag 是反向的）
@@ -316,7 +316,7 @@ func (tc *TicketWorkflowController) ResolveTicket(c *gin.Context) {
 	err := tc.workflowService.ResolveTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to resolve ticket", "error", err, "ticket_id", req.TicketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -335,7 +335,7 @@ func (tc *TicketWorkflowController) ResolveTicket(c *gin.Context) {
 func (tc *TicketWorkflowController) CloseTicket(c *gin.Context) {
 	var req dto.CloseTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	// 兼容 ticket_id 和 ticketId 两种字段名（CloseTicketRequest 的 JSON tag 是反向的）
@@ -348,7 +348,7 @@ func (tc *TicketWorkflowController) CloseTicket(c *gin.Context) {
 	err := tc.workflowService.CloseTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to close ticket", "error", err, "ticket_id", req.TicketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -367,7 +367,7 @@ func (tc *TicketWorkflowController) CloseTicket(c *gin.Context) {
 func (tc *TicketWorkflowController) ReopenTicket(c *gin.Context) {
 	var req dto.ReopenTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -379,7 +379,7 @@ func (tc *TicketWorkflowController) ReopenTicket(c *gin.Context) {
 	err := tc.workflowService.ReopenTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to reopen ticket", "error", err, "ticket_id", req.TicketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -410,7 +410,7 @@ func (tc *TicketWorkflowController) GetTicketWorkflowState(c *gin.Context) {
 	state, err := tc.workflowService.GetTicketWorkflowState(c.Request.Context(), ticketID, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to get ticket workflow state", "error", err, "ticket_id", ticketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -448,7 +448,7 @@ func (tc *TicketWorkflowController) GetTicketWorkflowHistory(c *gin.Context) {
 	`
 	rows, err := tc.db.QueryContext(c.Request.Context(), query, ticketID, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "查询流转历史失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	defer rows.Close()
@@ -475,7 +475,7 @@ func (tc *TicketWorkflowController) GetTicketWorkflowHistory(c *gin.Context) {
 		var commentNS, reasonNS sql.NullString
 		if err := rows.Scan(&r.ID, &r.TicketID, &r.Action, &r.FromStatus, &r.ToStatus,
 			&r.OperatorID, &r.FromUserID, &r.ToUserID, &commentNS, &reasonNS, &metaJSON, &r.CreatedAt); err != nil {
-			common.Fail(c, common.InternalErrorCode, "扫描流转记录失败: "+err.Error())
+			common.FailWithErr(c, err, "操作失败")
 			return
 		}
 		if commentNS.Valid {
@@ -494,7 +494,7 @@ func (tc *TicketWorkflowController) GetTicketWorkflowHistory(c *gin.Context) {
 		records = append(records, r)
 	}
 	if err := rows.Err(); err != nil {
-		common.Fail(c, common.InternalErrorCode, "遍历流转记录失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	if records == nil {

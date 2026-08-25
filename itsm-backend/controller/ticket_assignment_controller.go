@@ -28,7 +28,7 @@ func NewTicketAssignmentController(assignmentService *service.TicketAssignmentSe
 func (tac *TicketAssignmentController) AssignTicket(c *gin.Context) {
 	var req service.AssignmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -38,7 +38,7 @@ func (tac *TicketAssignmentController) AssignTicket(c *gin.Context) {
 	assignment, err := tac.assignmentService.AssignTicket(c.Request.Context(), &req)
 	if err != nil {
 		tac.logger.Error("Failed to assign ticket", zap.Error(err), zap.Int("ticket_id", req.TicketID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -56,7 +56,7 @@ func (tac *TicketAssignmentController) GetUserWorkload(c *gin.Context) {
 	workload, err := tac.assignmentService.GetUserWorkload(c.Request.Context(), userID)
 	if err != nil {
 		tac.logger.Error("Failed to get user workload", zap.Error(err), zap.Int("user_id", userID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -70,7 +70,7 @@ func (tac *TicketAssignmentController) GetTeamWorkload(c *gin.Context) {
 	workloads, err := tac.assignmentService.GetTeamWorkload(c.Request.Context(), tenantID)
 	if err != nil {
 		tac.logger.Error("Failed to get team workload", zap.Error(err), zap.Int("tenant_id", tenantID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -90,14 +90,14 @@ func (tac *TicketAssignmentController) ReassignTicket(c *gin.Context) {
 		Reason        string `json:"reason"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	err = tac.assignmentService.ReassignTicket(c.Request.Context(), ticketID, req.NewAssigneeID, req.Reason)
 	if err != nil {
 		tac.logger.Error("Failed to reassign ticket", zap.Error(err), zap.Int("ticket_id", ticketID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -111,7 +111,7 @@ func (tac *TicketAssignmentController) LoadBalance(c *gin.Context) {
 	err := tac.assignmentService.LoadBalance(c.Request.Context(), tenantID)
 	if err != nil {
 		tac.logger.Error("Failed to load balance", zap.Error(err), zap.Int("tenant_id", tenantID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

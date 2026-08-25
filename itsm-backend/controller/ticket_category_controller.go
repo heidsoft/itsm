@@ -49,7 +49,7 @@ func NewTicketCategoryController(categoryService *service.TicketCategoryService,
 func (tc *TicketCategoryController) CreateCategory(c *gin.Context) {
 	var req service.CreateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -63,7 +63,7 @@ func (tc *TicketCategoryController) CreateCategory(c *gin.Context) {
 	category, err := tc.categoryService.CreateCategory(c.Request.Context(), &req)
 	if err != nil {
 		tc.logger.Errorw("Failed to create ticket category", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -89,7 +89,7 @@ func (tc *TicketCategoryController) UpdateCategory(c *gin.Context) {
 
 	var req service.UpdateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -102,7 +102,7 @@ func (tc *TicketCategoryController) UpdateCategory(c *gin.Context) {
 	category, err := tc.categoryService.UpdateCategory(c.Request.Context(), categoryID, &req, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to update ticket category", "error", err, "category_id", categoryID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -126,7 +126,7 @@ func (tc *TicketCategoryController) DeleteCategory(c *gin.Context) {
 	err = tc.categoryService.DeleteCategory(c.Request.Context(), categoryID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to delete ticket category", "error", err, "category_id", categoryID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -137,7 +137,7 @@ func (tc *TicketCategoryController) DeleteCategory(c *gin.Context) {
 func (tc *TicketCategoryController) PreviewImport(c *gin.Context) {
 	rows, err := tc.parseImportRows(c)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -148,7 +148,7 @@ func (tc *TicketCategoryController) PreviewImport(c *gin.Context) {
 func (tc *TicketCategoryController) ExecuteImport(c *gin.Context) {
 	rows, err := tc.parseImportRows(c)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -357,7 +357,7 @@ func (tc *TicketCategoryController) ListCategories(c *gin.Context) {
 	categories, total, err := tc.categoryService.ListCategories(c.Request.Context(), req)
 	if err != nil {
 		tc.logger.Errorw("Failed to list ticket categories", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -374,7 +374,7 @@ func (tc *TicketCategoryController) GetCategoryTree(c *gin.Context) {
 	tree, err := tc.categoryService.GetCategoryTree(c.Request.Context(), tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to get category tree", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -391,7 +391,7 @@ func (tc *TicketCategoryController) MoveCategory(c *gin.Context) {
 
 	var req service.MoveCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -404,7 +404,7 @@ func (tc *TicketCategoryController) MoveCategory(c *gin.Context) {
 	category, err := tc.categoryService.MoveCategory(c.Request.Context(), categoryID, &req, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to move ticket category", "error", err, "category_id", categoryID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

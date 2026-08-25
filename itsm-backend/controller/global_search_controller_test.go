@@ -108,7 +108,7 @@ func TestGlobalSearch_SearchCaseInsensitiveAndNumber(t *testing.T) {
 			require.NoError(t, json.Unmarshal(dataBytes, &searchResp))
 			require.NotEmpty(t, searchResp.Results)
 			require.Equal(t, tt.expectedType, searchResp.Results[0].Type)
-			require.Equal(t, tt.expectedNo, searchResp.Results[0].Number)
+			require.Equal(t, tt.expectedNo, searchResp.Results[0].TicketNumber)
 		})
 	}
 }

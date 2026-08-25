@@ -92,7 +92,7 @@ func ticketListToResponse(ts []*ticket.Ticket) []*dto.TicketResponse {
 func (tc *TicketController) CreateTicket(c *gin.Context) {
 	var req dto.CreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -132,7 +132,7 @@ func (tc *TicketController) CreateTicket(c *gin.Context) {
 			common.Fail(c, businessErr.Code, businessErr.Message)
 			return
 		}
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -149,7 +149,7 @@ func (tc *TicketController) UpdateTicket(c *gin.Context) {
 
 	var req dto.UpdateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -178,11 +178,11 @@ func (tc *TicketController) UpdateTicket(c *gin.Context) {
 		// 用户输入错误（分类/标签/处理人等）应映射到 400，而不是 500
 		if isUserInputUpdateError(err) {
 			tc.logger.Warnw("Ticket update rejected for invalid input", "error", err, "ticket_id", ticketID)
-			common.Fail(c, common.ParamErrorCode, err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
 		tc.logger.Errorw("Failed to update ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -234,7 +234,7 @@ func (tc *TicketController) GetTicketSLAInfo(c *gin.Context) {
 func (tc *TicketController) ListTickets(c *gin.Context) {
 	var req dto.ListTicketsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -248,7 +248,7 @@ func (tc *TicketController) ListTickets(c *gin.Context) {
 	response, err := tc.ticketService.ListTickets(c.Request.Context(), &req, tenantID, currentUserID, currentRole)
 	if err != nil {
 		tc.logger.Errorw("Failed to list tickets", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -271,11 +271,11 @@ func (tc *TicketController) DeleteTicket(c *gin.Context) {
 	err = tc.ticketService.DeleteTicket(c.Request.Context(), ticketID, tenantID, currentUserID, currentRole)
 	if err != nil {
 		if isForbiddenErr(err) {
-			common.Fail(c, common.ForbiddenCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 			return
 		}
 		tc.logger.Errorw("Failed to delete ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -294,7 +294,7 @@ func (tc *TicketController) UpdateTicketStatus(c *gin.Context) {
 		Status string `json:"status"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -304,7 +304,7 @@ func (tc *TicketController) UpdateTicketStatus(c *gin.Context) {
 	ticket, err := tc.ticketService.UpdateTicketStatus(c.Request.Context(), ticketID, req.Status, tenantID, userID)
 	if err != nil {
 		tc.logger.Errorw("Failed to update ticket status", "error", err, "ticket_id", ticketID, "tenant_id", tenantID, "status", req.Status, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -315,7 +315,7 @@ func (tc *TicketController) UpdateTicketStatus(c *gin.Context) {
 func (tc *TicketController) BatchDeleteTickets(c *gin.Context) {
 	var req dto.BatchDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -327,11 +327,11 @@ func (tc *TicketController) BatchDeleteTickets(c *gin.Context) {
 	err := tc.ticketService.BatchDeleteTickets(c.Request.Context(), req.TicketIDs, tenantID, currentUserID, currentRole)
 	if err != nil {
 		if isForbiddenErr(err) {
-			common.Fail(c, common.ForbiddenCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 			return
 		}
 		tc.logger.Errorw("Failed to batch delete tickets", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -348,7 +348,7 @@ func (tc *TicketController) GetTicketStats(c *gin.Context) {
 	stats, err := tc.ticketService.GetTicketStats(c.Request.Context(), tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to get ticket stats", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -365,7 +365,7 @@ func (tc *TicketController) AssignTicket(c *gin.Context) {
 
 	var req dto.AssignTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	assigneeID := req.AssigneeID
@@ -381,7 +381,7 @@ func (tc *TicketController) AssignTicket(c *gin.Context) {
 	_ = assignedBy // V2 简化：审计参数由 repository / notification 服务处理
 	if err != nil {
 		tc.logger.Errorw("Failed to assign ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -398,7 +398,7 @@ func (tc *TicketController) EscalateTicket(c *gin.Context) {
 
 	var req dto.EscalateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -408,7 +408,7 @@ func (tc *TicketController) EscalateTicket(c *gin.Context) {
 	ticket, err := tc.ticketService.EscalateTicket(c.Request.Context(), ticketID, req.Reason, tenantID, escalatedBy)
 	if err != nil {
 		tc.logger.Errorw("Failed to escalate ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -425,7 +425,7 @@ func (tc *TicketController) ResolveTicket(c *gin.Context) {
 
 	var req dto.ResolveTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -442,7 +442,7 @@ func (tc *TicketController) ResolveTicket(c *gin.Context) {
 	_ = resolvedBy // V2 简化
 	if err != nil {
 		tc.logger.Errorw("Failed to resolve ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -459,7 +459,7 @@ func (tc *TicketController) CloseTicket(c *gin.Context) {
 
 	var req dto.CloseTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -482,7 +482,7 @@ func (tc *TicketController) CloseTicket(c *gin.Context) {
 			return
 		}
 		tc.logger.Errorw("Failed to close ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -502,7 +502,7 @@ func (tc *TicketController) SearchTickets(c *gin.Context) {
 	tickets, err := tc.ticketService.SearchTickets(c.Request.Context(), searchTerm, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to search tickets", "error", err, "search_term", searchTerm, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -516,7 +516,7 @@ func (tc *TicketController) GetOverdueTickets(c *gin.Context) {
 	tickets, err := tc.ticketService.GetOverdueTickets(c.Request.Context(), tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to get overdue tickets", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -536,7 +536,7 @@ func (tc *TicketController) GetTicketsByAssignee(c *gin.Context) {
 	tickets, err := tc.ticketService.GetTicketsByAssignee(c.Request.Context(), assigneeID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to get tickets by assignee", "error", err, "assignee_id", assigneeID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -556,7 +556,7 @@ func (tc *TicketController) GetTicketActivity(c *gin.Context) {
 	activities, err := tc.ticketService.GetTicketActivity(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to get ticket activity", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -567,7 +567,7 @@ func (tc *TicketController) GetTicketActivity(c *gin.Context) {
 func (tc *TicketController) ExportTickets(c *gin.Context) {
 	var req dto.TicketExportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -581,7 +581,7 @@ func (tc *TicketController) ExportTickets(c *gin.Context) {
 	data, err := tc.ticketService.ExportTickets(c.Request.Context(), tenantID, filters, req.Format)
 	if err != nil {
 		tc.logger.Errorw("Export tickets failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "导出失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -596,7 +596,7 @@ func (tc *TicketController) ExportTickets(c *gin.Context) {
 func (tc *TicketController) ImportTickets(c *gin.Context) {
 	var req dto.TicketImportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -609,7 +609,7 @@ func (tc *TicketController) ImportTickets(c *gin.Context) {
 	err := tc.ticketService.ImportTickets(c.Request.Context(), tenantID, fileData, req.Format)
 	if err != nil {
 		tc.logger.Errorw("Import tickets failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "导入失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -624,7 +624,7 @@ func (tc *TicketController) ImportTickets(c *gin.Context) {
 func (tc *TicketController) AssignTickets(c *gin.Context) {
 	var req dto.TicketAssignmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -634,7 +634,7 @@ func (tc *TicketController) AssignTickets(c *gin.Context) {
 	err := tc.ticketService.AssignTickets(c.Request.Context(), tenantID, req.TicketIDs, req.AssigneeID)
 	if err != nil {
 		tc.logger.Errorw("Assign tickets failed", "error", err, "ticket_ids", req.TicketIDs, "assignee_id", req.AssigneeID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "分配失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -649,7 +649,7 @@ func (tc *TicketController) AssignTickets(c *gin.Context) {
 func (tc *TicketController) GetTicketAnalytics(c *gin.Context) {
 	var req dto.TicketAnalyticsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -659,7 +659,7 @@ func (tc *TicketController) GetTicketAnalytics(c *gin.Context) {
 	analytics, err := tc.ticketService.GetTicketAnalytics(c.Request.Context(), tenantID, req.DateFrom, req.DateTo)
 	if err != nil {
 		tc.logger.Errorw("Get ticket analytics failed", "error", err, "date_from", req.DateFrom, "date_to", req.DateTo, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取分析数据失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -681,7 +681,7 @@ func (tc *TicketController) GetTicketTemplates(c *gin.Context) {
 	templates, err := tc.ticketService.GetTicketTemplates(c.Request.Context(), tenantID)
 	if err != nil {
 		tc.logger.Errorw("Get ticket templates failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取模板失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -717,7 +717,7 @@ func (tc *TicketController) GetTicketTemplate(c *gin.Context) {
 	template, err := tc.ticketService.GetTicketTemplate(c.Request.Context(), tenantID, templateID)
 	if err != nil {
 		tc.logger.Errorw("Get ticket template failed", "error", err, "template_id", templateID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取模板失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -728,7 +728,7 @@ func (tc *TicketController) GetTicketTemplate(c *gin.Context) {
 func (tc *TicketController) CreateTicketTemplate(c *gin.Context) {
 	var template dto.TicketTemplate
 	if err := c.ShouldBindJSON(&template); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -742,7 +742,7 @@ func (tc *TicketController) CreateTicketTemplate(c *gin.Context) {
 	created, err := tc.ticketService.CreateTicketTemplate(c.Request.Context(), tenantID, &template)
 	if err != nil {
 		tc.logger.Errorw("Create ticket template failed", "error", err, "name", template.Name, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "创建模板失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -761,7 +761,7 @@ func (tc *TicketController) UpdateTicketTemplate(c *gin.Context) {
 
 	var template dto.TicketTemplate
 	if err := c.ShouldBindJSON(&template); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -775,7 +775,7 @@ func (tc *TicketController) UpdateTicketTemplate(c *gin.Context) {
 	updated, err := tc.ticketService.UpdateTicketTemplate(c.Request.Context(), tenantID, templateID, &template)
 	if err != nil {
 		tc.logger.Errorw("Update ticket template failed", "error", err, "template_id", templateID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "更新模板失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -807,7 +807,7 @@ func (tc *TicketController) DeleteTicketTemplate(c *gin.Context) {
 	err = tc.ticketService.DeleteTicketTemplate(c.Request.Context(), tenantID, id)
 	if err != nil {
 		tc.logger.Errorw("Delete ticket template failed", "error", err, "template_id", id, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "删除模板失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -830,12 +830,12 @@ func (tc *TicketController) UpdateTicketTemplateStatus(c *gin.Context) {
 		IsActive *bool `json:"isActive"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	isActive := req.IsActive
 	if isActive == nil {
-		common.Fail(c, common.ParamErrorCode, "is_active is required")
+		common.Fail(c, common.ParamErrorCode, "isActive 字段不能为空")
 		return
 	}
 
@@ -848,7 +848,7 @@ func (tc *TicketController) UpdateTicketTemplateStatus(c *gin.Context) {
 	template, err := tc.ticketService.UpdateTicketTemplateStatus(c.Request.Context(), tenantID, templateID, *isActive)
 	if err != nil {
 		tc.logger.Errorw("Update ticket template status failed", "error", err, "template_id", templateID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "更新模板状态失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -877,7 +877,7 @@ func (tc *TicketController) CopyTicketTemplate(c *gin.Context) {
 	template, err := tc.ticketService.CopyTicketTemplate(c.Request.Context(), tenantID, templateID, req.Name)
 	if err != nil {
 		tc.logger.Errorw("Copy ticket template failed", "error", err, "template_id", templateID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "复制模板失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -895,7 +895,7 @@ func (tc *TicketController) GetTicketTemplateCategories(c *gin.Context) {
 	categories, err := tc.ticketService.GetTicketTemplateCategories(c.Request.Context(), tenantID)
 	if err != nil {
 		tc.logger.Errorw("Get ticket template categories failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取模板分类失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -919,7 +919,6 @@ func normalizeTicketTemplate(template interface{}) gin.H {
 	if formFields == nil {
 		formFields = gin.H{}
 	}
-	isActive := tmpl.IsActive
 	return gin.H{
 		"id":             tmpl.ID,
 		"name":           tmpl.Name,
@@ -928,14 +927,10 @@ func normalizeTicketTemplate(template interface{}) gin.H {
 		"priority":       tmpl.Priority,
 		"fields":         tmpl.Fields,
 		"formFields":     formFields,
-		"form_fields":    formFields,
 		"workflow_steps": tmpl.WorkflowSteps,
-		"isActive":       isActive,
-		"is_active":      isActive,
+		"isActive":       tmpl.IsActive,
 		"createdAt":      tmpl.CreatedAt,
-		"created_at":     tmpl.CreatedAt,
 		"updatedAt":      tmpl.UpdatedAt,
-		"updated_at":     tmpl.UpdatedAt,
 	}
 }
 
@@ -959,7 +954,7 @@ func (tc *TicketController) GetSubtasks(c *gin.Context) {
 	}, tenantID, currentUserID, currentRole)
 	if err != nil {
 		tc.logger.Errorw("Failed to get subtasks", "error", err, "parent_id", parentID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -976,7 +971,7 @@ func (tc *TicketController) CreateSubtask(c *gin.Context) {
 
 	var req dto.CreateSubtaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -1002,7 +997,7 @@ func (tc *TicketController) CreateSubtask(c *gin.Context) {
 			common.Fail(c, businessErr.Code, businessErr.Message)
 			return
 		}
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -1025,7 +1020,7 @@ func (tc *TicketController) UpdateSubtask(c *gin.Context) {
 
 	var req dto.UpdateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -1049,7 +1044,7 @@ func (tc *TicketController) UpdateSubtask(c *gin.Context) {
 	updatedTicket, err := tc.ticketService.UpdateTicket(c.Request.Context(), subtaskID, &req, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to update subtask", "error", err, "subtask_id", subtaskID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -1089,11 +1084,11 @@ func (tc *TicketController) DeleteSubtask(c *gin.Context) {
 	err = tc.ticketService.DeleteTicket(c.Request.Context(), subtaskID, tenantID, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		if isForbiddenErr(err) {
-			common.Fail(c, common.ForbiddenCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 			return
 		}
 		tc.logger.Errorw("Failed to delete subtask", "error", err, "subtask_id", subtaskID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

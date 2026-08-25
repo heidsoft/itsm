@@ -43,7 +43,7 @@ func (tasc *TicketAssignmentSmartController) AutoAssign(c *gin.Context) {
 	response, err := tasc.smartService.AutoAssign(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		tasc.logger.Errorw("Failed to auto assign ticket", "error", err, "ticket_id", ticketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -64,7 +64,7 @@ func (tasc *TicketAssignmentSmartController) GetAssignRecommendations(c *gin.Con
 	recommendations, err := tasc.smartService.GetAssignRecommendations(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		tasc.logger.Errorw("Failed to get assignment recommendations", "error", err, "ticket_id", ticketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -82,7 +82,7 @@ func (tasc *TicketAssignmentSmartController) ListAssignmentRules(c *gin.Context)
 	rules, err := tasc.ruleService.ListAssignmentRules(c.Request.Context(), tenantID)
 	if err != nil {
 		tasc.logger.Errorw("Failed to list assignment rules", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -106,7 +106,7 @@ func (tasc *TicketAssignmentSmartController) GetAssignmentRule(c *gin.Context) {
 	rule, err := tasc.ruleService.GetAssignmentRule(c.Request.Context(), ruleID, tenantID)
 	if err != nil {
 		tasc.logger.Errorw("Failed to get assignment rule", "error", err, "rule_id", ruleID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -118,7 +118,7 @@ func (tasc *TicketAssignmentSmartController) GetAssignmentRule(c *gin.Context) {
 func (tasc *TicketAssignmentSmartController) CreateAssignmentRule(c *gin.Context) {
 	var req dto.CreateAssignmentRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -127,7 +127,7 @@ func (tasc *TicketAssignmentSmartController) CreateAssignmentRule(c *gin.Context
 	rule, err := tasc.ruleService.CreateAssignmentRule(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		tasc.logger.Errorw("Failed to create assignment rule", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -145,7 +145,7 @@ func (tasc *TicketAssignmentSmartController) UpdateAssignmentRule(c *gin.Context
 
 	var req dto.UpdateAssignmentRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -154,7 +154,7 @@ func (tasc *TicketAssignmentSmartController) UpdateAssignmentRule(c *gin.Context
 	rule, err := tasc.ruleService.UpdateAssignmentRule(c.Request.Context(), ruleID, &req, tenantID)
 	if err != nil {
 		tasc.logger.Errorw("Failed to update assignment rule", "error", err, "rule_id", ruleID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -175,7 +175,7 @@ func (tasc *TicketAssignmentSmartController) DeleteAssignmentRule(c *gin.Context
 	err = tasc.ruleService.DeleteAssignmentRule(c.Request.Context(), ruleID, tenantID)
 	if err != nil {
 		tasc.logger.Errorw("Failed to delete assignment rule", "error", err, "rule_id", ruleID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -187,7 +187,7 @@ func (tasc *TicketAssignmentSmartController) DeleteAssignmentRule(c *gin.Context
 func (tasc *TicketAssignmentSmartController) TestAssignmentRule(c *gin.Context) {
 	var req dto.TestAssignmentRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -196,7 +196,7 @@ func (tasc *TicketAssignmentSmartController) TestAssignmentRule(c *gin.Context) 
 	response, err := tasc.ruleService.TestAssignmentRule(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		tasc.logger.Errorw("Failed to test assignment rule", "error", err, "rule_id", req.RuleID, "ticket_id", req.TicketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

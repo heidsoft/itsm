@@ -32,6 +32,11 @@ type ConnectorController struct {
 	market   *marketplace.Market // optional
 	registry *connector.Registry
 	logger   *zap.SugaredLogger
+	store    *connector.PersistentConfigStore
+}
+
+func (c *ConnectorController) SetPersistentStore(store *connector.PersistentConfigStore) {
+	c.store = store
 }
 
 func NewConnectorController(mgr *connector.Manager, reg *connector.Registry, mkt *marketplace.Market, logger *zap.SugaredLogger) *ConnectorController {
@@ -106,6 +111,14 @@ func (c *ConnectorController) Provision(ctx *gin.Context) {
 		return
 	}
 	tenantID := ctx.GetInt("tenant_id")
+	if len(req.Credentials) == 0 {
+		for _, existing := range c.manager.ListByTenant(tenantID) {
+			if existing.Name == req.Name && existing.Provider == req.Provider {
+				req.Credentials = existing.Credentials
+				break
+			}
+		}
+	}
 	if req.Settings == nil {
 		req.Settings = make(map[string]interface{})
 	}
@@ -138,9 +151,22 @@ func (c *ConnectorController) Provision(ctx *gin.Context) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
+	for _, manifest := range c.registry.List() {
+		if manifest.Name == req.Name {
+			cfg.Type = manifest.Type
+			break
+		}
+	}
 	if err := c.manager.Provision(ctx.Request.Context(), cfg); err != nil {
 		common.Fail(ctx, common.InternalErrorCode, err.Error())
 		return
+	}
+	if c.store != nil {
+		if err := c.store.Save(ctx.Request.Context(), cfg); err != nil {
+			c.manager.Revoke(cfg)
+			common.Fail(ctx, common.InternalErrorCode, err.Error())
+			return
+		}
 	}
 	common.Success(ctx, maskConfig(cfg, c.manager.HealthCheckAll(ctx.Request.Context())))
 }
@@ -149,7 +175,22 @@ func (c *ConnectorController) Provision(ctx *gin.Context) {
 func (c *ConnectorController) Revoke(ctx *gin.Context) {
 	name := ctx.Param("name")
 	tenantID := ctx.GetInt("tenant_id")
-	c.manager.Revoke(connector.Config{TenantID: tenantID, Name: name})
+	provider := ctx.Query("provider")
+	if provider == "" {
+		for _, cfg := range c.manager.ListByTenant(tenantID) {
+			if cfg.Name == name {
+				provider = cfg.Provider
+				break
+			}
+		}
+	}
+	c.manager.Revoke(connector.Config{TenantID: tenantID, Name: name, Provider: provider})
+	if c.store != nil {
+		if err := c.store.Delete(ctx.Request.Context(), tenantID, name, provider); err != nil {
+			common.Fail(ctx, common.InternalErrorCode, err.Error())
+			return
+		}
+	}
 	common.Success(ctx, gin.H{"name": name, "revoked": true})
 }
 

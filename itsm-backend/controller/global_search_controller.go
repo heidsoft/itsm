@@ -28,12 +28,12 @@ func NewGlobalSearchController(client *ent.Client) *GlobalSearchController {
 
 // SearchResult 搜索结果
 type SearchResult struct {
-	ID          int    `json:"id"`
-	Type        string `json:"type"`
-	Title       string `json:"title"`
-	Description string `json:"description,omitempty"`
-	Status      string `json:"status,omitempty"`
-	Number      string `json:"ticketNumber,omitempty"`
+	ID           int    `json:"id"`
+	Type         string `json:"type"`
+	Title        string `json:"title"`
+	Description  string `json:"description,omitempty"`
+	Status       string `json:"status,omitempty"`
+	TicketNumber string `json:"ticketNumber,omitempty"`
 }
 
 // SearchResponse 搜索响应
@@ -78,7 +78,7 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 				Title:       t.Title,
 				Description: t.Description,
 				Status:      t.Status,
-				Number:      t.TicketNumber,
+				TicketNumber: t.TicketNumber,
 			})
 		}
 	}
@@ -103,7 +103,7 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 				Title:       i.Title,
 				Description: i.Description,
 				Status:      i.Status,
-				Number:      i.IncidentNumber,
+				TicketNumber: i.IncidentNumber,
 			})
 		}
 	}

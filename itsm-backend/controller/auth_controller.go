@@ -131,7 +131,7 @@ func (ac *AuthController) GetUserTenants(c *gin.Context) {
 	ctx := c.Request.Context()
 	response, err := ac.authService.GetUserTenants(ctx, userID)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -196,7 +196,7 @@ func (ac *AuthController) GetUserInfo(c *gin.Context) {
 	ctx := c.Request.Context()
 	response, err := ac.authService.GetUserInfo(ctx, userID)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -227,7 +227,7 @@ func (ac *AuthController) Logout(c *gin.Context) {
 	}
 	err := ac.authService.Logout(ctx, userID)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

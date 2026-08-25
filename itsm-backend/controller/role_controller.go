@@ -52,7 +52,7 @@ func (rc *RoleController) CreateRole(c *gin.Context) {
 
 	role, err := rc.roleService.CreateRole(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "创建角色失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -75,7 +75,7 @@ func (rc *RoleController) GetRole(c *gin.Context) {
 
 	role, err := rc.roleService.GetRole(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundCode, err.Error())
+		common.NotFoundWithErr(c, err, "resource not found")
 		return
 	}
 
@@ -96,7 +96,7 @@ func (rc *RoleController) ListRoles(c *gin.Context) {
 
 	roles, total, err := rc.roleService.ListRoles(c.Request.Context(), tenantID, page, pageSize, search)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "查询角色列表失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -163,7 +163,7 @@ func (rc *RoleController) UpdateRole(c *gin.Context) {
 
 	role, err := rc.roleService.UpdateRole(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "更新角色失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -186,7 +186,7 @@ func (rc *RoleController) DeleteRole(c *gin.Context) {
 
 	err = rc.roleService.DeleteRole(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -219,10 +219,10 @@ func (rc *RoleController) AssignPermissions(c *gin.Context) {
 		if errors.Is(err, service.ErrPermissionNotInTenant) {
 			rc.logger.Warnw("Cross-tenant permission assignment rejected",
 				"role_id", id, "tenant_id", tenantID, "error", err)
-			common.Fail(c, common.BadRequestCode, err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
-		common.Fail(c, common.InternalErrorCode, "分配权限失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

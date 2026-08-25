@@ -29,7 +29,7 @@ func NewTicketTagController(tagService *service.TicketTagService, logger *zap.Lo
 func (ttc *TicketTagController) CreateTag(c *gin.Context) {
 	var req service.CreateTagRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -43,7 +43,7 @@ func (ttc *TicketTagController) CreateTag(c *gin.Context) {
 	tag, err := ttc.tagService.CreateTag(c.Request.Context(), &req)
 	if err != nil {
 		ttc.logger.Error("Failed to create tag", zap.Error(err), zap.Int("tenant_id", tenantID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -60,7 +60,7 @@ func (ttc *TicketTagController) UpdateTag(c *gin.Context) {
 
 	var req service.UpdateTagRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -73,7 +73,7 @@ func (ttc *TicketTagController) UpdateTag(c *gin.Context) {
 	tag, err := ttc.tagService.UpdateTag(c.Request.Context(), tagID, &req, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to update tag", zap.Error(err), zap.Int("tag_id", tagID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -97,7 +97,7 @@ func (ttc *TicketTagController) DeleteTag(c *gin.Context) {
 	err = ttc.tagService.DeleteTag(c.Request.Context(), tagID, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to delete tag", zap.Error(err), zap.Int("tag_id", tagID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -121,7 +121,7 @@ func (ttc *TicketTagController) GetTag(c *gin.Context) {
 	tag, err := ttc.tagService.GetTag(c.Request.Context(), tagID, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to get tag", zap.Error(err), zap.Int("tag_id", tagID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -155,7 +155,7 @@ func (ttc *TicketTagController) ListTags(c *gin.Context) {
 	tags, total, err := ttc.tagService.ListTags(c.Request.Context(), req)
 	if err != nil {
 		ttc.logger.Error("Failed to list tags", zap.Error(err), zap.Int("tenant_id", tenantID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -178,7 +178,7 @@ func (ttc *TicketTagController) AssignTagsToTicket(c *gin.Context) {
 		Tags   []string `json:"tags"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -192,7 +192,7 @@ func (ttc *TicketTagController) AssignTagsToTicket(c *gin.Context) {
 	if len(tagIDs) == 0 && len(req.Tags) > 0 {
 		tagIDs, err = ttc.tagService.ResolveTagIDsByNames(c.Request.Context(), req.Tags, tenantID, true)
 		if err != nil {
-			common.Fail(c, common.ParamErrorCode, err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
 	}
@@ -204,7 +204,7 @@ func (ttc *TicketTagController) AssignTagsToTicket(c *gin.Context) {
 	err = ttc.tagService.AssignTagsToTicket(c.Request.Context(), ticketID, tagIDs, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to assign tags to ticket", zap.Error(err), zap.Int("ticket_id", ticketID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -224,7 +224,7 @@ func (ttc *TicketTagController) RemoveTagsFromTicket(c *gin.Context) {
 		Tags   []string `json:"tags"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -238,7 +238,7 @@ func (ttc *TicketTagController) RemoveTagsFromTicket(c *gin.Context) {
 	if len(tagIDs) == 0 && len(req.Tags) > 0 {
 		tagIDs, err = ttc.tagService.ResolveTagIDsByNames(c.Request.Context(), req.Tags, tenantID, false)
 		if err != nil {
-			common.Fail(c, common.ParamErrorCode, err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
 	}
@@ -250,7 +250,7 @@ func (ttc *TicketTagController) RemoveTagsFromTicket(c *gin.Context) {
 	err = ttc.tagService.RemoveTagsFromTicket(c.Request.Context(), ticketID, tagIDs, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to remove tags from ticket", zap.Error(err), zap.Int("ticket_id", ticketID))
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

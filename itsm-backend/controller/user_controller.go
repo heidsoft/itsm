@@ -38,7 +38,7 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 	var req dto.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		uc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -75,10 +75,10 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 		uc.logger.Errorf("创建用户失败: %v", err)
 		// 业务错误：用户名/邮箱重复
 		if strings.Contains(err.Error(), "已存在") {
-			common.Fail(c, common.ParamErrorCode, err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
-		common.Fail(c, 5001, "创建用户失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -106,7 +106,7 @@ func (uc *UserController) ListUsers(c *gin.Context) {
 	var req dto.ListUsersRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		uc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -127,7 +127,7 @@ func (uc *UserController) ListUsers(c *gin.Context) {
 	result, err := uc.userService.ListUsers(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		uc.logger.Errorf("获取用户列表失败: %v", err)
-		common.Fail(c, 5001, "获取用户列表失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -166,7 +166,7 @@ func (uc *UserController) GetUser(c *gin.Context) {
 			common.NotFound(c, "用户不存在")
 			return
 		}
-		common.Fail(c, 5001, "获取用户详情失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -198,7 +198,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 	var req dto.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		uc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -225,10 +225,10 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 			return
 		}
 		if strings.Contains(err.Error(), "已存在") {
-			common.Fail(c, common.ParamErrorCode, err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
-		common.Fail(c, 5001, "更新用户失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -269,7 +269,7 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 			common.NotFound(c, "用户不存在")
 			return
 		}
-		common.Fail(c, 5001, "删除用户失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -299,7 +299,7 @@ func (uc *UserController) ChangeUserStatus(c *gin.Context) {
 	var req dto.ChangeUserStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		uc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -318,7 +318,7 @@ func (uc *UserController) ChangeUserStatus(c *gin.Context) {
 			common.NotFound(c, "用户不存在")
 			return
 		}
-		common.Fail(c, 5001, "更改用户状态失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -348,7 +348,7 @@ func (uc *UserController) ResetPassword(c *gin.Context) {
 	var req dto.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		uc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -365,7 +365,7 @@ func (uc *UserController) ResetPassword(c *gin.Context) {
 			common.NotFound(c, "用户不存在")
 			return
 		}
-		common.Fail(c, 5001, "重置密码失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -392,7 +392,7 @@ func (uc *UserController) GetUserStats(c *gin.Context) {
 	stats, err := uc.userService.GetUserStats(c.Request.Context(), tenantID)
 	if err != nil {
 		uc.logger.Errorf("获取用户统计失败: %v", err)
-		common.Fail(c, 5001, "获取用户统计失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -413,7 +413,7 @@ func (uc *UserController) BatchUpdateUsers(c *gin.Context) {
 	var req dto.BatchUpdateUsersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		uc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -427,7 +427,7 @@ func (uc *UserController) BatchUpdateUsers(c *gin.Context) {
 	err := uc.userService.BatchUpdateUsers(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		uc.logger.Errorf("批量更新用户失败: %v", err)
-		common.Fail(c, 5001, "批量更新用户失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -452,13 +452,13 @@ func (uc *UserController) SearchUsers(c *gin.Context) {
 	if c.Request.Method == "POST" {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			uc.logger.Errorf("参数绑定失败: %v", err)
-			common.Fail(c, 1001, "参数错误: "+err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
 	} else {
 		if err := c.ShouldBindQuery(&req); err != nil {
 			uc.logger.Errorf("参数绑定失败: %v", err)
-			common.Fail(c, 1001, "参数错误: "+err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
 	}
@@ -482,7 +482,7 @@ func (uc *UserController) SearchUsers(c *gin.Context) {
 	users, err := uc.userService.SearchUsers(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		uc.logger.Errorf("搜索用户失败: %v", err)
-		common.Fail(c, 5001, "搜索用户失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

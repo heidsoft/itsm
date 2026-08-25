@@ -59,7 +59,7 @@ func (kic *KnowledgeIntegrationController) RecommendSolutions(c *gin.Context) {
 	)
 	if err != nil {
 		kic.logger.Errorw("推荐解决方案失败", "error", err, "ticket_id", ticketID)
-		common.Fail(c, common.InternalErrorCode, "推荐解决方案失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -87,7 +87,7 @@ func (kic *KnowledgeIntegrationController) AssociateWithKnowledge(c *gin.Context
 
 	var req service.AssociateWithKnowledgeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -99,7 +99,7 @@ func (kic *KnowledgeIntegrationController) AssociateWithKnowledge(c *gin.Context
 	)
 	if err != nil {
 		kic.logger.Errorw("关联知识库文章失败", "error", err, "ticket_id", ticketID, "article_id", req.ArticleID)
-		common.Fail(c, common.InternalErrorCode, "关联知识库文章失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -130,7 +130,7 @@ func (kic *KnowledgeIntegrationController) GetAIRecommendations(c *gin.Context) 
 	)
 	if err != nil {
 		kic.logger.Errorw("获取AI建议失败", "error", err, "ticket_id", ticketID)
-		common.Fail(c, common.InternalErrorCode, "获取AI建议失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -169,7 +169,7 @@ func (kic *KnowledgeIntegrationController) GetRelatedArticles(c *gin.Context) {
 	)
 	if err != nil {
 		kic.logger.Errorw("获取相关文章失败", "error", err, "ticket_id", ticketID)
-		common.Fail(c, common.InternalErrorCode, "获取相关文章失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -190,7 +190,7 @@ func (kic *KnowledgeIntegrationController) GetRelatedArticles(c *gin.Context) {
 func (kic *KnowledgeIntegrationController) SearchKnowledgeBase(c *gin.Context) {
 	var req service.SearchKnowledgeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -208,7 +208,7 @@ func (kic *KnowledgeIntegrationController) SearchKnowledgeBase(c *gin.Context) {
 	)
 	if err != nil {
 		kic.logger.Errorw("搜索知识库失败", "error", err, "keywords", req.Keywords, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "搜索知识库失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -239,7 +239,7 @@ func (kic *KnowledgeIntegrationController) GetKnowledgeAssociations(c *gin.Conte
 	)
 	if err != nil {
 		kic.logger.Errorw("获取知识库关联失败", "error", err, "ticket_id", ticketID)
-		common.Fail(c, common.InternalErrorCode, "获取知识库关联失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

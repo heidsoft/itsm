@@ -77,7 +77,7 @@ func TestAssetLicenseController_CreateLicense_MissingName(t *testing.T) {
 	r, _, _, _ := setupLicenseController(t)
 	// 缺少 name（binding:"required"）→ BadRequest
 	resp := doReq(t, r, "POST", "/api/v1/licenses", dto.CreateLicenseRequest{Vendor: "X"}, false)
-	assert.Equal(t, common.BadRequestCode, resp.Code, "body=%s", mustString(resp))
+	assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", mustString(resp))
 }
 
 func TestAssetLicenseController_CreateLicense_Unauthorized(t *testing.T) {
@@ -99,7 +99,7 @@ func TestAssetLicenseController_GetLicense_Success(t *testing.T) {
 func TestAssetLicenseController_GetLicense_InvalidID(t *testing.T) {
 	r, _, _, _ := setupLicenseController(t)
 	resp := doReq(t, r, "GET", "/api/v1/licenses/abc", nil, false)
-	assert.Equal(t, common.BadRequestCode, resp.Code, "body=%s", mustString(resp))
+	assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", mustString(resp))
 }
 
 func TestAssetLicenseController_GetLicense_NotFound(t *testing.T) {
@@ -134,7 +134,7 @@ func TestAssetLicenseController_AssignUsers_MissingUserIDs(t *testing.T) {
 	id := createTestLicense(t, r, "AssignLic-"+uniqueTestID())
 	// UserIDs 为空（binding:"required"）→ BadRequest
 	resp := doReq(t, r, "PUT", "/api/v1/licenses/"+strconv.Itoa(id)+"/assign", dto.LicenseAssignRequest{}, false)
-	assert.Equal(t, common.BadRequestCode, resp.Code, "body=%s", mustString(resp))
+	assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", mustString(resp))
 }
 
 func TestAssetLicenseController_GetLicenseStats(t *testing.T) {

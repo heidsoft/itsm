@@ -38,7 +38,7 @@ func (gc *GroupController) CreateGroup(c *gin.Context) {
 	var req dto.CreateGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		gc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -54,7 +54,7 @@ func (gc *GroupController) CreateGroup(c *gin.Context) {
 	group, err := gc.groupService.CreateGroup(c.Request.Context(), &req)
 	if err != nil {
 		gc.logger.Errorf("创建组失败: %v", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (gc *GroupController) ListGroups(c *gin.Context) {
 	var req dto.ListGroupsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		gc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -105,7 +105,7 @@ func (gc *GroupController) ListGroups(c *gin.Context) {
 	groups, total, err := gc.groupService.ListGroups(c.Request.Context(), &req)
 	if err != nil {
 		gc.logger.Errorf("查询组列表失败: %v", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -163,7 +163,7 @@ func (gc *GroupController) GetGroup(c *gin.Context) {
 	group, err := gc.groupService.GetGroup(c.Request.Context(), id, tenantID)
 	if err != nil {
 		gc.logger.Errorf("查询组失败: %v", err)
-		common.Fail(c, common.NotFoundCode, err.Error())
+		common.NotFoundWithErr(c, err, "resource not found")
 		return
 	}
 
@@ -215,7 +215,7 @@ func (gc *GroupController) UpdateGroup(c *gin.Context) {
 	var req dto.UpdateGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		gc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -228,7 +228,7 @@ func (gc *GroupController) UpdateGroup(c *gin.Context) {
 	group, err := gc.groupService.UpdateGroup(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
 		gc.logger.Errorf("更新组失败: %v", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -263,7 +263,7 @@ func (gc *GroupController) DeleteGroup(c *gin.Context) {
 	err = gc.groupService.DeleteGroup(c.Request.Context(), id, tenantID)
 	if err != nil {
 		gc.logger.Errorf("删除组失败: %v", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -293,7 +293,7 @@ func (gc *GroupController) AddUserToGroup(c *gin.Context) {
 	var req dto.AddUserToGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		gc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -306,7 +306,7 @@ func (gc *GroupController) AddUserToGroup(c *gin.Context) {
 	err = gc.groupService.AddUserToGroup(c.Request.Context(), groupID, req.UserID, tenantID)
 	if err != nil {
 		gc.logger.Errorf("添加用户到组失败: %v", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -336,7 +336,7 @@ func (gc *GroupController) RemoveUserFromGroup(c *gin.Context) {
 	var req dto.RemoveUserFromGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		gc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -349,7 +349,7 @@ func (gc *GroupController) RemoveUserFromGroup(c *gin.Context) {
 	err = gc.groupService.RemoveUserFromGroup(c.Request.Context(), groupID, req.UserID, tenantID)
 	if err != nil {
 		gc.logger.Errorf("从组移除用户失败: %v", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -396,7 +396,7 @@ func (gc *GroupController) GetGroupMembers(c *gin.Context) {
 	users, total, err := gc.groupService.GetGroupMembers(c.Request.Context(), groupID, tenantID, page, pageSize)
 	if err != nil {
 		gc.logger.Errorf("查询组成员失败: %v", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

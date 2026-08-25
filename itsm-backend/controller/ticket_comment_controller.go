@@ -49,7 +49,7 @@ func (tcc *TicketCommentController) ListTicketComments(c *gin.Context) {
 	comments, err := tcc.commentService.ListTicketComments(c.Request.Context(), ticketID, tenantID, userID)
 	if err != nil {
 		tcc.logger.Errorw("Failed to list ticket comments", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (tcc *TicketCommentController) CreateTicketComment(c *gin.Context) {
 
 	var req dto.CreateTicketCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	req.Normalize()
@@ -93,7 +93,7 @@ func (tcc *TicketCommentController) CreateTicketComment(c *gin.Context) {
 	comment, err := tcc.commentService.CreateTicketComment(c.Request.Context(), ticketID, &req, userID, tenantID)
 	if err != nil {
 		tcc.logger.Errorw("Failed to create ticket comment", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -117,7 +117,7 @@ func (tcc *TicketCommentController) UpdateTicketComment(c *gin.Context) {
 
 	var req dto.UpdateTicketCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	req.Normalize()
@@ -132,7 +132,7 @@ func (tcc *TicketCommentController) UpdateTicketComment(c *gin.Context) {
 	comment, err := tcc.commentService.UpdateTicketComment(c.Request.Context(), ticketID, commentID, &req, userID, tenantID)
 	if err != nil {
 		tcc.logger.Errorw("Failed to update ticket comment", "error", err, "ticket_id", ticketID, "comment_id", commentID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -164,7 +164,7 @@ func (tcc *TicketCommentController) DeleteTicketComment(c *gin.Context) {
 	err = tcc.commentService.DeleteTicketComment(c.Request.Context(), ticketID, commentID, userID, tenantID)
 	if err != nil {
 		tcc.logger.Errorw("Failed to delete ticket comment", "error", err, "ticket_id", ticketID, "comment_id", commentID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

@@ -35,7 +35,7 @@ func NewTicketTypeController(ticketTypeService *service.TicketTypeService, logge
 func (tc *TicketTypeController) CreateTicketType(c *gin.Context) {
 	var req dto.CreateTicketTypeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -45,7 +45,7 @@ func (tc *TicketTypeController) CreateTicketType(c *gin.Context) {
 	ticketType, err := tc.ticketTypeService.CreateTicketType(c.Request.Context(), &req, tenantID, userID)
 	if err != nil {
 		tc.logger.Errorw("Failed to create ticket type", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -71,7 +71,7 @@ func (tc *TicketTypeController) UpdateTicketType(c *gin.Context) {
 
 	var req dto.UpdateTicketTypeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -81,7 +81,7 @@ func (tc *TicketTypeController) UpdateTicketType(c *gin.Context) {
 	ticketType, err := tc.ticketTypeService.UpdateTicketType(c.Request.Context(), id, &req, tenantID, userID)
 	if err != nil {
 		tc.logger.Errorw("Failed to update ticket type", "error", err, "id", id, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -131,7 +131,7 @@ func (tc *TicketTypeController) GetTicketType(c *gin.Context) {
 func (tc *TicketTypeController) ListTicketTypes(c *gin.Context) {
 	var req dto.ListTicketTypesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -148,7 +148,7 @@ func (tc *TicketTypeController) ListTicketTypes(c *gin.Context) {
 	response, err := tc.ticketTypeService.ListTicketTypes(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to list ticket types", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -177,7 +177,7 @@ func (tc *TicketTypeController) DeleteTicketType(c *gin.Context) {
 	err = tc.ticketTypeService.DeleteTicketType(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
 		tc.logger.Errorw("Failed to delete ticket type", "error", err, "id", id, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -199,7 +199,7 @@ func (tc *TicketTypeController) setStatus(c *gin.Context, status dto.TicketTypeS
 	}
 	result, err := tc.ticketTypeService.SetStatus(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"), status)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, result)
@@ -216,12 +216,12 @@ func (tc *TicketTypeController) CloneTicketType(c *gin.Context) {
 		Name string `json:"name" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	result, err := tc.ticketTypeService.CloneTicketType(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"), req.Code, req.Name)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, result)
@@ -235,7 +235,7 @@ func (tc *TicketTypeController) RestoreTicketType(c *gin.Context) {
 	}
 	result, err := tc.ticketTypeService.RestoreTicketType(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"))
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, result)
@@ -248,12 +248,12 @@ func (tc *TicketTypeController) ListPresets(c *gin.Context) {
 func (tc *TicketTypeController) InstallPreset(c *gin.Context) {
 	var req dto.InstallTicketTypePresetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	result, err := tc.ticketTypeService.InstallPreset(c.Request.Context(), c.Param("presetId"), &req, c.GetInt("tenant_id"), c.GetInt("user_id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	common.Success(c, result)

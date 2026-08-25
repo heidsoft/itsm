@@ -37,7 +37,7 @@ func (tnc *TicketNotificationController) ListTicketNotifications(c *gin.Context)
 	notifications, err := tnc.notificationService.ListTicketNotifications(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		tnc.logger.Errorw("Failed to list ticket notifications", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -58,7 +58,7 @@ func (tnc *TicketNotificationController) SendTicketNotification(c *gin.Context) 
 
 	var req dto.SendTicketNotificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -67,7 +67,7 @@ func (tnc *TicketNotificationController) SendTicketNotification(c *gin.Context) 
 	err = tnc.notificationService.SendNotification(c.Request.Context(), ticketID, &req, tenantID)
 	if err != nil {
 		tnc.logger.Errorw("Failed to send ticket notification", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -102,7 +102,7 @@ func (tnc *TicketNotificationController) ListUserNotifications(c *gin.Context) {
 	)
 	if err != nil {
 		tnc.logger.Errorw("Failed to list user notifications", "error", err, "user_id", userID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -129,7 +129,7 @@ func (tnc *TicketNotificationController) MarkNotificationRead(c *gin.Context) {
 	err = tnc.notificationService.MarkNotificationRead(c.Request.Context(), notificationID, userID, tenantID)
 	if err != nil {
 		tnc.logger.Errorw("Failed to mark notification as read", "error", err, "notification_id", notificationID, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -145,7 +145,7 @@ func (tnc *TicketNotificationController) MarkAllNotificationsRead(c *gin.Context
 	err := tnc.notificationService.MarkAllNotificationsRead(c.Request.Context(), userID, tenantID)
 	if err != nil {
 		tnc.logger.Errorw("Failed to mark all notifications as read", "error", err, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -171,7 +171,7 @@ func (tnc *TicketNotificationController) GetNotificationPreferences(c *gin.Conte
 	preferences, err := tnc.notificationService.GetUserNotificationPreferences(c.Request.Context(), userID)
 	if err != nil {
 		tnc.logger.Errorw("Failed to get notification preferences", "error", err, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -196,14 +196,14 @@ func (tnc *TicketNotificationController) UpdateNotificationPreferences(c *gin.Co
 
 	var req dto.UpdateNotificationPreferencesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	preferences, err := tnc.notificationService.UpdateUserNotificationPreferences(c.Request.Context(), userID, &req)
 	if err != nil {
 		tnc.logger.Errorw("Failed to update notification preferences", "error", err, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

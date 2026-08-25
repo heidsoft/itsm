@@ -34,7 +34,7 @@ func (trc *TicketRatingController) SubmitRating(c *gin.Context) {
 
 	var req dto.SubmitTicketRatingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -44,7 +44,7 @@ func (trc *TicketRatingController) SubmitRating(c *gin.Context) {
 	rating, err := trc.ratingService.SubmitRating(c.Request.Context(), ticketID, &req, userID, tenantID)
 	if err != nil {
 		trc.logger.Errorw("Failed to submit rating", "error", err, "ticket_id", ticketID, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -65,7 +65,7 @@ func (trc *TicketRatingController) GetRating(c *gin.Context) {
 	rating, err := trc.ratingService.GetRating(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		trc.logger.Errorw("Failed to get rating", "error", err, "ticket_id", ticketID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -82,7 +82,7 @@ func (trc *TicketRatingController) GetRating(c *gin.Context) {
 func (trc *TicketRatingController) GetRatingStats(c *gin.Context) {
 	var req dto.GetRatingStatsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -91,7 +91,7 @@ func (trc *TicketRatingController) GetRatingStats(c *gin.Context) {
 	stats, err := trc.ratingService.GetRatingStats(c.Request.Context(), &req)
 	if err != nil {
 		trc.logger.Errorw("Failed to get rating stats", "error", err, "tenant_id", req.TenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

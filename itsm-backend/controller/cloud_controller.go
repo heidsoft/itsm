@@ -60,14 +60,14 @@ func (cc *CloudController) CreateCloudAccount(c *gin.Context) {
 	var req dto.CreateCloudAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		cc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	account, err := cc.cloudService.CreateCloudAccount(c.Request.Context(), tenantID, &req)
 	if err != nil {
 		cc.logger.Errorf("创建云账号失败: %v", err)
-		common.Fail(c, 5001, "创建云账号失败: "+err.Error())
+		common.FailWithErr(c, err, "create cloud account failed")
 		return
 	}
 
@@ -101,7 +101,7 @@ func (cc *CloudController) GetCloudAccount(c *gin.Context) {
 	account, err := cc.cloudService.GetCloudAccount(c.Request.Context(), tenantID, id)
 	if err != nil {
 		cc.logger.Errorf("获取云账号失败: %v", err)
-		common.Fail(c, 5001, "获取云账号失败: "+err.Error())
+		common.FailWithErr(c, err, "get cloud account failed")
 		return
 	}
 
@@ -136,14 +136,14 @@ func (cc *CloudController) UpdateCloudAccount(c *gin.Context) {
 	var req dto.UpdateCloudAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		cc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	account, err := cc.cloudService.UpdateCloudAccount(c.Request.Context(), tenantID, id, &req)
 	if err != nil {
 		cc.logger.Errorf("更新云账号失败: %v", err)
-		common.Fail(c, 5001, "更新云账号失败: "+err.Error())
+		common.FailWithErr(c, err, "update cloud account failed")
 		return
 	}
 
@@ -177,7 +177,7 @@ func (cc *CloudController) DeleteCloudAccount(c *gin.Context) {
 	err = cc.cloudService.DeleteCloudAccount(c.Request.Context(), tenantID, id)
 	if err != nil {
 		cc.logger.Errorf("删除云账号失败: %v", err)
-		common.Fail(c, 5001, "删除云账号失败: "+err.Error())
+		common.FailWithErr(c, err, "delete cloud account failed")
 		return
 	}
 
@@ -208,14 +208,14 @@ func (cc *CloudController) ListCloudAccounts(c *gin.Context) {
 	var req dto.ListCloudAccountsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		cc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	accounts, total, err := cc.cloudService.ListCloudAccounts(c.Request.Context(), tenantID, &req)
 	if err != nil {
 		cc.logger.Errorf("获取云账号列表失败: %v", err)
-		common.Fail(c, 5001, "获取云账号列表失败: "+err.Error())
+		common.FailWithErr(c, err, "list cloud accounts failed")
 		return
 	}
 
@@ -258,14 +258,14 @@ func (cc *CloudController) CreateCloudService(c *gin.Context) {
 	var req dto.CreateCloudServiceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		cc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	service, err := cc.cloudService.CreateCloudService(c.Request.Context(), tenantID, &req)
 	if err != nil {
 		cc.logger.Errorf("创建云服务失败: %v", err)
-		common.Fail(c, 5001, "创建云服务失败: "+err.Error())
+		common.FailWithErr(c, err, "create cloud service failed")
 		return
 	}
 
@@ -299,7 +299,7 @@ func (cc *CloudController) GetCloudService(c *gin.Context) {
 	service, err := cc.cloudService.GetCloudService(c.Request.Context(), tenantID, id)
 	if err != nil {
 		cc.logger.Errorf("获取云服务失败: %v", err)
-		common.Fail(c, 5001, "获取云服务失败: "+err.Error())
+		common.FailWithErr(c, err, "get cloud service failed")
 		return
 	}
 
@@ -334,14 +334,14 @@ func (cc *CloudController) UpdateCloudService(c *gin.Context) {
 	var req dto.UpdateCloudServiceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		cc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	service, err := cc.cloudService.UpdateCloudService(c.Request.Context(), tenantID, id, &req)
 	if err != nil {
 		cc.logger.Errorf("更新云服务失败: %v", err)
-		common.Fail(c, 5001, "更新云服务失败: "+err.Error())
+		common.FailWithErr(c, err, "update cloud service failed")
 		return
 	}
 
@@ -375,7 +375,7 @@ func (cc *CloudController) DeleteCloudService(c *gin.Context) {
 	err = cc.cloudService.DeleteCloudService(c.Request.Context(), tenantID, id)
 	if err != nil {
 		cc.logger.Errorf("删除云服务失败: %v", err)
-		common.Fail(c, 5001, "删除云服务失败: "+err.Error())
+		common.FailWithErr(c, err, "delete cloud service failed")
 		return
 	}
 
@@ -409,14 +409,14 @@ func (cc *CloudController) ListCloudServices(c *gin.Context) {
 	var req dto.ListCloudServicesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		cc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	services, total, err := cc.cloudService.ListCloudServices(c.Request.Context(), tenantID, &req)
 	if err != nil {
 		cc.logger.Errorf("获取云服务列表失败: %v", err)
-		common.Fail(c, 5001, "获取云服务列表失败: "+err.Error())
+		common.FailWithErr(c, err, "list cloud services failed")
 		return
 	}
 
@@ -459,14 +459,14 @@ func (cc *CloudController) CreateCloudResource(c *gin.Context) {
 	var req dto.CreateCloudResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		cc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	resource, err := cc.cloudService.CreateCloudResource(c.Request.Context(), tenantID, &req)
 	if err != nil {
 		cc.logger.Errorf("创建云资源失败: %v", err)
-		common.Fail(c, 5001, "创建云资源失败: "+err.Error())
+		common.FailWithErr(c, err, "create cloud resource failed")
 		return
 	}
 
@@ -500,7 +500,7 @@ func (cc *CloudController) GetCloudResource(c *gin.Context) {
 	resource, err := cc.cloudService.GetCloudResource(c.Request.Context(), tenantID, id)
 	if err != nil {
 		cc.logger.Errorf("获取云资源失败: %v", err)
-		common.Fail(c, 5001, "获取云资源失败: "+err.Error())
+		common.FailWithErr(c, err, "get cloud resource failed")
 		return
 	}
 
@@ -535,14 +535,14 @@ func (cc *CloudController) UpdateCloudResource(c *gin.Context) {
 	var req dto.UpdateCloudResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		cc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	resource, err := cc.cloudService.UpdateCloudResource(c.Request.Context(), tenantID, id, &req)
 	if err != nil {
 		cc.logger.Errorf("更新云资源失败: %v", err)
-		common.Fail(c, 5001, "更新云资源失败: "+err.Error())
+		common.FailWithErr(c, err, "update cloud resource failed")
 		return
 	}
 
@@ -576,7 +576,7 @@ func (cc *CloudController) DeleteCloudResource(c *gin.Context) {
 	err = cc.cloudService.DeleteCloudResource(c.Request.Context(), tenantID, id)
 	if err != nil {
 		cc.logger.Errorf("删除云资源失败: %v", err)
-		common.Fail(c, 5001, "删除云资源失败: "+err.Error())
+		common.FailWithErr(c, err, "delete cloud resource failed")
 		return
 	}
 
@@ -609,14 +609,14 @@ func (cc *CloudController) ListCloudResources(c *gin.Context) {
 	var req dto.ListCloudResourcesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		cc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	resources, total, err := cc.cloudService.ListCloudResources(c.Request.Context(), tenantID, &req)
 	if err != nil {
 		cc.logger.Errorf("获取云资源列表失败: %v", err)
-		common.Fail(c, 5001, "获取云资源列表失败: "+err.Error())
+		common.FailWithErr(c, err, "list cloud resources failed")
 		return
 	}
 

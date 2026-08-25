@@ -41,7 +41,7 @@ func NewServiceController(catalogService *service.ServiceCatalogService, request
 func (sc *ServiceController) GetServiceCatalogs(c *gin.Context) {
 	var req dto.GetServiceCatalogsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -54,7 +54,7 @@ func (sc *ServiceController) GetServiceCatalogs(c *gin.Context) {
 
 	result, err := sc.serviceCatalogService.ListServiceCatalogs(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -76,7 +76,7 @@ func (sc *ServiceController) GetServiceCatalogs(c *gin.Context) {
 func (sc *ServiceController) CreateServiceRequest(c *gin.Context) {
 	var req dto.CreateServiceRequestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -95,7 +95,7 @@ func (sc *ServiceController) CreateServiceRequest(c *gin.Context) {
 
 	serviceRequest, err := sc.serviceRequestService.CreateServiceRequest(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -119,7 +119,7 @@ func (sc *ServiceController) CreateServiceRequest(c *gin.Context) {
 func (sc *ServiceController) GetUserServiceRequests(c *gin.Context) {
 	var req dto.GetServiceRequestsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -140,7 +140,7 @@ func (sc *ServiceController) GetUserServiceRequests(c *gin.Context) {
 
 	result, err := sc.serviceRequestService.ListServiceRequests(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -177,7 +177,7 @@ func (sc *ServiceController) GetServiceRequestByID(c *gin.Context) {
 
 	serviceRequest, err := sc.serviceRequestService.GetServiceRequestDetail(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -208,7 +208,7 @@ func (sc *ServiceController) ApplyServiceRequestApproval(c *gin.Context) {
 
 	var req dto.ServiceRequestApprovalActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -226,7 +226,7 @@ func (sc *ServiceController) ApplyServiceRequestApproval(c *gin.Context) {
 	updated, err := sc.serviceRequestService.ApplyApprovalAction(c.Request.Context(), id, tenantID, userID, req.Action, req.Comment)
 	if err != nil {
 		// 统一按业务错误返回 400/403 由 common.Fail code 区分，这里简单用 5001 并透传 message
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, updated)
@@ -260,7 +260,7 @@ func (sc *ServiceController) GetServiceRequestApprovals(c *gin.Context) {
 
 	detail, err := sc.serviceRequestService.GetServiceRequestDetail(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, detail.Approvals)
@@ -296,7 +296,7 @@ func (sc *ServiceController) GetPendingServiceRequestApprovals(c *gin.Context) {
 
 	result, err := sc.serviceRequestService.ListPendingApprovals(c.Request.Context(), tenantID, userID, page, size)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, result)
@@ -326,7 +326,7 @@ func (sc *ServiceController) UpdateServiceRequestStatus(c *gin.Context) {
 
 	var req dto.UpdateServiceRequestStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -339,7 +339,7 @@ func (sc *ServiceController) UpdateServiceRequestStatus(c *gin.Context) {
 
 	err = sc.serviceRequestService.UpdateServiceRequestStatus(c.Request.Context(), id, req.Status, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -368,7 +368,7 @@ func (sc *ServiceController) UpdateServiceRequestStatus(c *gin.Context) {
 func (sc *ServiceController) CreateServiceCatalog(c *gin.Context) {
 	var req dto.CreateServiceCatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -381,7 +381,7 @@ func (sc *ServiceController) CreateServiceCatalog(c *gin.Context) {
 
 	catalog, err := sc.serviceCatalogService.CreateServiceCatalog(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -412,7 +412,7 @@ func (sc *ServiceController) UpdateServiceCatalog(c *gin.Context) {
 
 	var req dto.UpdateServiceCatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -425,7 +425,7 @@ func (sc *ServiceController) UpdateServiceCatalog(c *gin.Context) {
 
 	catalog, err := sc.serviceCatalogService.UpdateServiceCatalog(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -448,7 +448,7 @@ func (sc *ServiceController) DeleteServiceCatalog(c *gin.Context) {
 
 	err = sc.serviceCatalogService.DeleteServiceCatalog(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -471,7 +471,7 @@ func (sc *ServiceController) GetServiceCatalogByID(c *gin.Context) {
 
 	catalog, err := sc.serviceCatalogService.GetServiceCatalogByID(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

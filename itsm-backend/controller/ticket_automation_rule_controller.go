@@ -40,7 +40,7 @@ func (tarc *TicketAutomationRuleController) ListAutomationRules(c *gin.Context) 
 	rules, err := tarc.ruleService.ListAutomationRules(c.Request.Context(), tenantID)
 	if err != nil {
 		tarc.logger.Errorw("Failed to list automation rules", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -71,7 +71,7 @@ func (tarc *TicketAutomationRuleController) GetAutomationRule(c *gin.Context) {
 	rule, err := tarc.ruleService.GetAutomationRule(c.Request.Context(), ruleID, tenantID)
 	if err != nil {
 		tarc.logger.Errorw("Failed to get automation rule", "error", err, "rule_id", ruleID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -90,7 +90,7 @@ func (tarc *TicketAutomationRuleController) GetAutomationRule(c *gin.Context) {
 func (tarc *TicketAutomationRuleController) CreateAutomationRule(c *gin.Context) {
 	var req dto.CreateAutomationRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -100,7 +100,7 @@ func (tarc *TicketAutomationRuleController) CreateAutomationRule(c *gin.Context)
 	rule, err := tarc.ruleService.CreateAutomationRule(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		tarc.logger.Errorw("Failed to create automation rule", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -126,7 +126,7 @@ func (tarc *TicketAutomationRuleController) UpdateAutomationRule(c *gin.Context)
 
 	var req dto.UpdateAutomationRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -135,7 +135,7 @@ func (tarc *TicketAutomationRuleController) UpdateAutomationRule(c *gin.Context)
 	rule, err := tarc.ruleService.UpdateAutomationRule(c.Request.Context(), ruleID, &req, tenantID)
 	if err != nil {
 		tarc.logger.Errorw("Failed to update automation rule", "error", err, "rule_id", ruleID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -163,7 +163,7 @@ func (tarc *TicketAutomationRuleController) DeleteAutomationRule(c *gin.Context)
 	err = tarc.ruleService.DeleteAutomationRule(c.Request.Context(), ruleID, tenantID)
 	if err != nil {
 		tarc.logger.Errorw("Failed to delete automation rule", "error", err, "rule_id", ruleID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -189,7 +189,7 @@ func (tarc *TicketAutomationRuleController) TestAutomationRule(c *gin.Context) {
 
 	var req dto.TestAutomationRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -199,7 +199,7 @@ func (tarc *TicketAutomationRuleController) TestAutomationRule(c *gin.Context) {
 	response, err := tarc.ruleService.TestAutomationRule(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		tarc.logger.Errorw("Failed to test automation rule", "error", err, "rule_id", ruleID)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

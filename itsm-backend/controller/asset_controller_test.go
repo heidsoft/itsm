@@ -66,7 +66,7 @@ func TestAssetController_CreateAsset_MissingRequired(t *testing.T) {
 	r, _, _, _ := setupAssetController(t)
 	// 缺少 assetNumber 与 name（均 binding:"required"）→ 4000
 	resp := doReq(t, r, "POST", "/api/v1/assets", dto.CreateAssetRequest{Type: "hardware"}, false)
-	assert.Equal(t, common.BadRequestCode, resp.Code, "body=%s", mustString(resp))
+	assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", mustString(resp))
 }
 
 func TestAssetController_GetAsset_Success(t *testing.T) {
@@ -86,7 +86,7 @@ func TestAssetController_GetAsset_Success(t *testing.T) {
 func TestAssetController_GetAsset_InvalidID(t *testing.T) {
 	r, _, _, _ := setupAssetController(t)
 	resp := doReq(t, r, "GET", "/api/v1/assets/notanint", nil, false)
-	assert.Equal(t, common.BadRequestCode, resp.Code, "body=%s", mustString(resp))
+	assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", mustString(resp))
 }
 
 func TestAssetController_GetAsset_NotFound(t *testing.T) {

@@ -41,7 +41,7 @@ func (ac *ApprovalChainController) ListChains(c *gin.Context) {
 
 	chains, total, err := ac.chainService.ListApprovalChains(c.Request.Context(), tenantID, entityType, status, page, pageSize)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "查询审批链列表失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -71,7 +71,7 @@ func (ac *ApprovalChainController) GetChain(c *gin.Context) {
 
 	chain, err := ac.chainService.GetApprovalChain(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundCode, err.Error())
+		common.NotFoundWithErr(c, err, "resource not found")
 		return
 	}
 
@@ -95,7 +95,7 @@ func (ac *ApprovalChainController) CreateChain(c *gin.Context) {
 
 	entity, err := ac.chainService.CreateApprovalChain(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "创建审批链失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -124,7 +124,7 @@ func (ac *ApprovalChainController) UpdateChain(c *gin.Context) {
 
 	entity, err := ac.chainService.UpdateApprovalChain(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "更新审批链失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -147,7 +147,7 @@ func (ac *ApprovalChainController) DeleteChain(c *gin.Context) {
 
 	err = ac.chainService.DeleteApprovalChain(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "删除审批链失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -164,7 +164,7 @@ func (ac *ApprovalChainController) GetStats(c *gin.Context) {
 
 	stats, err := ac.chainService.GetApprovalChainStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取统计数据失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

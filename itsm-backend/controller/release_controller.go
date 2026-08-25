@@ -46,7 +46,7 @@ func (rc *ReleaseController) ListReleases(c *gin.Context) {
 	releases, err := rc.releaseService.ListReleases(c.Request.Context(), tenantID, page, pageSize, status, releaseType, currentUserID, currentRole)
 	if err != nil {
 		rc.logger.Errorw("List releases failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取发布列表失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -69,14 +69,14 @@ func (rc *ReleaseController) CreateRelease(c *gin.Context) {
 
 	var req dto.CreateReleaseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	release, err := rc.releaseService.CreateRelease(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		rc.logger.Errorw("Create release failed", "error", err, "tenant_id", tenantID, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, "创建发布失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -93,14 +93,14 @@ func (rc *ReleaseController) GetRelease(c *gin.Context) {
 
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的发布ID")
+		common.ParamError(c, "无效的发布ID")
 		return
 	}
 
 	release, err := rc.releaseService.GetReleaseByID(c.Request.Context(), releaseID, tenantID)
 	if err != nil {
 		rc.logger.Errorw("Get release failed", "error", err, "release_id", releaseID)
-		common.Fail(c, common.InternalErrorCode, "获取发布详情失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -122,20 +122,20 @@ func (rc *ReleaseController) UpdateRelease(c *gin.Context) {
 
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的发布ID")
+		common.ParamError(c, "无效的发布ID")
 		return
 	}
 
 	var req dto.UpdateReleaseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	release, err := rc.releaseService.UpdateRelease(c.Request.Context(), releaseID, tenantID, &req)
 	if err != nil {
 		rc.logger.Errorw("Update release failed", "error", err, "release_id", releaseID)
-		common.Fail(c, common.InternalErrorCode, "更新发布失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -157,13 +157,13 @@ func (rc *ReleaseController) UpdateReleaseStatus(c *gin.Context) {
 
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的发布ID")
+		common.ParamError(c, "无效的发布ID")
 		return
 	}
 
 	var req dto.ReleaseStatusUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -173,11 +173,11 @@ func (rc *ReleaseController) UpdateReleaseStatus(c *gin.Context) {
 		// 避免客户端把"被安全策略拦截"误判为服务端故障而重试。
 		if errors.Is(err, service.ErrInvalidReleaseTransition) {
 			rc.logger.Warnw("Release status transition rejected", "error", err, "release_id", releaseID)
-			common.Fail(c, common.BadRequestCode, err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
 		rc.logger.Errorw("Update release status failed", "error", err, "release_id", releaseID)
-		common.Fail(c, common.InternalErrorCode, "更新发布状态失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -197,7 +197,7 @@ func (rc *ReleaseController) ApproveRelease(c *gin.Context) {
 	// approve 的审批意见可选，允许空请求体；非空但格式错误的请求仍应拒绝。
 	if c.Request.ContentLength != 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
-			common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
 	}
@@ -230,13 +230,13 @@ func (rc *ReleaseController) applyReleaseApproval(c *gin.Context, action, commen
 	}
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || releaseID <= 0 {
-		common.Fail(c, common.BadRequestCode, "无效的发布ID")
+		common.ParamError(c, "无效的发布ID")
 		return
 	}
 	release, err := rc.releaseService.ApplyReleaseApproval(c.Request.Context(), releaseID, tenantID, userID, action, comment)
 	if err != nil {
 		rc.logger.Errorw("Release approval failed", "error", err, "release_id", releaseID, "action", action)
-		common.Fail(c, common.InternalErrorCode, "发布审批失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	if release == nil {
@@ -268,13 +268,13 @@ func (rc *ReleaseController) updateReleaseActionStatus(c *gin.Context, status, r
 	}
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || releaseID <= 0 {
-		common.Fail(c, common.BadRequestCode, "无效的发布ID")
+		common.ParamError(c, "无效的发布ID")
 		return
 	}
 	release, err := rc.releaseService.UpdateReleaseStatus(c.Request.Context(), releaseID, tenantID, status)
 	if err != nil {
 		rc.logger.Errorw("Release action failed", "error", err, "release_id", releaseID, "status", status)
-		common.Fail(c, common.InternalErrorCode, "更新发布状态失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	if release == nil {
@@ -295,14 +295,14 @@ func (rc *ReleaseController) DeleteRelease(c *gin.Context) {
 
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的发布ID")
+		common.ParamError(c, "无效的发布ID")
 		return
 	}
 
 	err = rc.releaseService.DeleteRelease(c.Request.Context(), releaseID, tenantID)
 	if err != nil {
 		rc.logger.Errorw("Delete release failed", "error", err, "release_id", releaseID)
-		common.Fail(c, common.InternalErrorCode, "删除发布失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -320,7 +320,7 @@ func (rc *ReleaseController) GetReleaseStats(c *gin.Context) {
 	stats, err := rc.releaseService.GetReleaseStats(c.Request.Context(), tenantID)
 	if err != nil {
 		rc.logger.Errorw("Get release stats failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取发布统计失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

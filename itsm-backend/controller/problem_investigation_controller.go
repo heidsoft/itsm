@@ -32,7 +32,7 @@ func NewProblemInvestigationController(logger *zap.SugaredLogger, problemInvesti
 func (pc *ProblemInvestigationController) CreateProblemInvestigation(c *gin.Context) {
 	var req dto.CreateProblemInvestigationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -47,7 +47,7 @@ func (pc *ProblemInvestigationController) CreateProblemInvestigation(c *gin.Cont
 	investigation, err := pc.problemInvestigationService.CreateProblemInvestigation(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Create problem investigation failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "创建问题调查失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -71,7 +71,7 @@ func (pc *ProblemInvestigationController) GetProblemInvestigation(c *gin.Context
 	investigation, err := pc.problemInvestigationService.GetProblemInvestigation(c.Request.Context(), investigationID, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Get problem investigation failed", "error", err, "investigation_id", investigationID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取问题调查失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -88,7 +88,7 @@ func (pc *ProblemInvestigationController) UpdateProblemInvestigation(c *gin.Cont
 
 	var req dto.UpdateProblemInvestigationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -97,7 +97,7 @@ func (pc *ProblemInvestigationController) UpdateProblemInvestigation(c *gin.Cont
 	investigation, err := pc.problemInvestigationService.UpdateProblemInvestigation(c.Request.Context(), investigationID, &req, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Update problem investigation failed", "error", err, "investigation_id", investigationID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "更新问题调查失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -111,7 +111,7 @@ func (pc *ProblemInvestigationController) UpdateProblemInvestigation(c *gin.Cont
 func (pc *ProblemInvestigationController) CreateInvestigationStep(c *gin.Context) {
 	var req dto.CreateInvestigationStepRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -120,7 +120,7 @@ func (pc *ProblemInvestigationController) CreateInvestigationStep(c *gin.Context
 	step, err := pc.problemInvestigationService.CreateInvestigationStep(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Create investigation step failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "创建调查步骤失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -140,7 +140,7 @@ func (pc *ProblemInvestigationController) UpdateInvestigationStep(c *gin.Context
 
 	var req dto.UpdateInvestigationStepRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -149,7 +149,7 @@ func (pc *ProblemInvestigationController) UpdateInvestigationStep(c *gin.Context
 	step, err := pc.problemInvestigationService.UpdateInvestigationStep(c.Request.Context(), stepID, &req, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Update investigation step failed", "error", err, "step_id", stepID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "更新调查步骤失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -163,7 +163,7 @@ func (pc *ProblemInvestigationController) UpdateInvestigationStep(c *gin.Context
 func (pc *ProblemInvestigationController) CreateRootCauseAnalysis(c *gin.Context) {
 	var req dto.CreateRootCauseAnalysisRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -178,7 +178,7 @@ func (pc *ProblemInvestigationController) CreateRootCauseAnalysis(c *gin.Context
 	analysis, err := pc.problemInvestigationService.CreateRootCauseAnalysis(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Create root cause analysis failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "创建根本原因分析失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -192,7 +192,7 @@ func (pc *ProblemInvestigationController) CreateRootCauseAnalysis(c *gin.Context
 func (pc *ProblemInvestigationController) CreateProblemSolution(c *gin.Context) {
 	var req dto.CreateProblemSolutionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -207,7 +207,7 @@ func (pc *ProblemInvestigationController) CreateProblemSolution(c *gin.Context) 
 	solution, err := pc.problemInvestigationService.CreateProblemSolution(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Create problem solution failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "创建问题解决方案失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -230,7 +230,7 @@ func (pc *ProblemInvestigationController) GetProblemInvestigationSummary(c *gin.
 	summary, err := pc.problemInvestigationService.GetProblemInvestigationSummary(c.Request.Context(), problemID, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Get problem investigation summary failed", "error", err, "problem_id", problemID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取问题调查摘要失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -259,7 +259,7 @@ func (pc *ProblemInvestigationController) GetInvestigationSteps(c *gin.Context) 
 	summary, err := pc.problemInvestigationService.GetProblemInvestigationSummary(c.Request.Context(), investigation.ProblemID, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Get investigation steps failed", "error", err, "investigation_id", investigationID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取调查步骤失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -282,7 +282,7 @@ func (pc *ProblemInvestigationController) GetProblemSolutions(c *gin.Context) {
 	summary, err := pc.problemInvestigationService.GetProblemInvestigationSummary(c.Request.Context(), problemID, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Get problem solutions failed", "error", err, "problem_id", problemID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取问题解决方案失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -302,7 +302,7 @@ func (pc *ProblemInvestigationController) UpdateRootCauseAnalysis(c *gin.Context
 
 	var req dto.UpdateRootCauseAnalysisRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -311,7 +311,7 @@ func (pc *ProblemInvestigationController) UpdateRootCauseAnalysis(c *gin.Context
 	analysis, err := pc.problemInvestigationService.UpdateRootCauseAnalysis(c.Request.Context(), analysisID, &req, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Update root cause analysis failed", "error", err, "analysis_id", analysisID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "更新根本原因分析失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -331,7 +331,7 @@ func (pc *ProblemInvestigationController) UpdateProblemSolution(c *gin.Context) 
 
 	var req dto.UpdateProblemSolutionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -340,7 +340,7 @@ func (pc *ProblemInvestigationController) UpdateProblemSolution(c *gin.Context) 
 	solution, err := pc.problemInvestigationService.UpdateProblemSolution(c.Request.Context(), solutionID, &req, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Update problem solution failed", "error", err, "solution_id", solutionID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "更新问题解决方案失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -354,7 +354,7 @@ func (pc *ProblemInvestigationController) UpdateProblemSolution(c *gin.Context) 
 func (pc *ProblemInvestigationController) CreateProblemRelationship(c *gin.Context) {
 	var req dto.CreateProblemRelationshipRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -400,7 +400,7 @@ func (pc *ProblemInvestigationController) GetProblemRelationships(c *gin.Context
 func (pc *ProblemInvestigationController) CreateKnowledgeArticle(c *gin.Context) {
 	var req dto.CreateProblemKnowledgeArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -430,7 +430,7 @@ func (pc *ProblemInvestigationController) CreateKnowledgeArticle(c *gin.Context)
 		Save(c.Request.Context())
 	if err != nil {
 		pc.logger.Errorw("Create knowledge article failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "创建知识库文章失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

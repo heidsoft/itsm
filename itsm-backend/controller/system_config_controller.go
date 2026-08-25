@@ -40,7 +40,7 @@ func (sc *SystemConfigController) ListConfigs(c *gin.Context) {
 
 	configs, total, err := sc.configService.ListSystemConfigs(c.Request.Context(), tenantID, category, page, pageSize)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "查询配置列表失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (sc *SystemConfigController) GetConfig(c *gin.Context) {
 
 	config, err := sc.configService.GetSystemConfig(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundCode, err.Error())
+		common.NotFoundWithErr(c, err, "resource not found")
 		return
 	}
 
@@ -115,7 +115,7 @@ func (sc *SystemConfigController) GetConfigByKey(c *gin.Context) {
 
 	config, err := sc.configService.GetSystemConfigByKey(c.Request.Context(), key, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundCode, err.Error())
+		common.NotFoundWithErr(c, err, "resource not found")
 		return
 	}
 
@@ -155,7 +155,7 @@ func (sc *SystemConfigController) UpdateConfig(c *gin.Context) {
 
 	config, err := sc.configService.UpdateSystemConfig(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "更新配置失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -189,7 +189,7 @@ func (sc *SystemConfigController) BatchUpdateConfigs(c *gin.Context) {
 
 	configs, err := sc.configService.BatchUpdateSystemConfigs(c.Request.Context(), reqs, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "批量更新配置失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -223,7 +223,7 @@ func (sc *SystemConfigController) InitDefaultConfigs(c *gin.Context) {
 
 	err = sc.configService.InitDefaultConfigs(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "初始化默认配置失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

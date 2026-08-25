@@ -53,7 +53,7 @@ func (kc *KnowledgeController) CreateArticle(c *gin.Context) {
 	var req dto.CreateKnowledgeArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		kc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -66,7 +66,7 @@ func (kc *KnowledgeController) CreateArticle(c *gin.Context) {
 	article, err := kc.knowledgeService.CreateArticle(c.Request.Context(), &req, tenantID, userId.(int))
 	if err != nil {
 		kc.logger.Errorf("创建知识库文章失败: %v", err)
-		common.Fail(c, 5001, "创建文章失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -99,7 +99,7 @@ func (kc *KnowledgeController) GetArticle(c *gin.Context) {
 	article, err := kc.knowledgeService.GetArticle(c.Request.Context(), id, tenantID)
 	if err != nil {
 		kc.logger.Errorf("获取知识库文章失败: %v", err)
-		common.Fail(c, 5001, "获取文章失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -124,7 +124,7 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 	var req dto.ListKnowledgeArticlesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		kc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -151,7 +151,7 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 	articles, total, err := kc.knowledgeService.ListArticles(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		kc.logger.Errorf("获取知识库文章列表失败: %v", err)
-		common.Fail(c, 5001, "获取文章列表失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -196,7 +196,7 @@ func (kc *KnowledgeController) UpdateArticle(c *gin.Context) {
 	var req dto.UpdateKnowledgeArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		kc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -208,7 +208,7 @@ func (kc *KnowledgeController) UpdateArticle(c *gin.Context) {
 	article, err := kc.knowledgeService.UpdateArticle(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
 		kc.logger.Errorf("更新知识库文章失败: %v", err)
-		common.Fail(c, 5001, "更新文章失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -241,7 +241,7 @@ func (kc *KnowledgeController) DeleteArticle(c *gin.Context) {
 	err = kc.knowledgeService.DeleteArticle(c.Request.Context(), id, tenantID)
 	if err != nil {
 		kc.logger.Errorf("删除知识库文章失败: %v", err)
-		common.Fail(c, 5001, "删除文章失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -266,7 +266,7 @@ func (kc *KnowledgeController) GetCategories(c *gin.Context) {
 	categories, err := kc.knowledgeService.GetCategories(c.Request.Context(), tenantID)
 	if err != nil {
 		kc.logger.Errorf("获取知识库分类失败: %v", err)
-		common.Fail(c, 5001, "获取分类失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -309,7 +309,7 @@ func (kc *KnowledgeController) ListVersions(c *gin.Context) {
 	versions, total, err := kc.knowledgeService.ListVersions(c.Request.Context(), id, tenantID, req.Page, req.PageSize)
 	if err != nil {
 		kc.logger.Errorf("获取版本列表失败: %v", err)
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -375,7 +375,7 @@ func (kc *KnowledgeController) GetVersion(c *gin.Context) {
 	versionEntity, err := kc.knowledgeService.GetVersion(c.Request.Context(), id, version, tenantID)
 	if err != nil {
 		kc.logger.Errorf("获取版本失败: %v", err)
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -418,7 +418,7 @@ func (kc *KnowledgeController) RestoreVersion(c *gin.Context) {
 
 	var req dto.RestoreArticleVersionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -432,7 +432,7 @@ func (kc *KnowledgeController) RestoreVersion(c *gin.Context) {
 	article, err := kc.knowledgeService.RestoreVersion(c.Request.Context(), id, req.Version, tenantID, userId.(int))
 	if err != nil {
 		kc.logger.Errorf("恢复版本失败: %v", err)
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -468,7 +468,7 @@ func (kc *KnowledgeController) GetSession(c *gin.Context) {
 	session, err := kc.knowledgeService.GetSession(c.Request.Context(), id, userId.(int), tenantID)
 	if err != nil {
 		kc.logger.Errorf("获取会话失败: %v", err)
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -515,7 +515,7 @@ func (kc *KnowledgeController) CreateOrJoinSession(c *gin.Context) {
 	session, err := kc.knowledgeService.CreateSession(c.Request.Context(), id, userId.(int), tenantID)
 	if err != nil {
 		kc.logger.Errorf("创建会话失败: %v", err)
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -543,14 +543,14 @@ func (kc *KnowledgeController) CreateOrJoinSession(c *gin.Context) {
 func (kc *KnowledgeController) Heartbeat(c *gin.Context) {
 	var req dto.SessionHeartbeatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	err := kc.knowledgeService.Heartbeat(c.Request.Context(), req.SessionToken, req.CursorPos)
 	if err != nil {
 		kc.logger.Errorf("心跳失败: %v", err)
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -582,7 +582,7 @@ func (kc *KnowledgeController) GetParticipants(c *gin.Context) {
 	sessions, err := kc.knowledgeService.ListParticipants(c.Request.Context(), id, tenantID)
 	if err != nil {
 		kc.logger.Errorf("获取参与者失败: %v", err)
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -624,7 +624,7 @@ func (kc *KnowledgeController) LeaveSession(c *gin.Context) {
 	err = kc.knowledgeService.LeaveSession(c.Request.Context(), id, userId.(int))
 	if err != nil {
 		kc.logger.Errorf("离开会话失败: %v", err)
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

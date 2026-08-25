@@ -42,7 +42,7 @@ func (lc *AssetLicenseController) ListLicenses(c *gin.Context) {
 	licenses, err := lc.licenseService.ListLicenses(c.Request.Context(), tenantID, page, pageSize, licenseType, status)
 	if err != nil {
 		lc.logger.Errorw("List licenses failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取许可证列表失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -59,14 +59,14 @@ func (lc *AssetLicenseController) CreateLicense(c *gin.Context) {
 
 	var req dto.CreateLicenseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	license, err := lc.licenseService.CreateLicense(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		lc.logger.Errorw("Create license failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "创建许可证失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -83,14 +83,14 @@ func (lc *AssetLicenseController) GetLicense(c *gin.Context) {
 
 	licenseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的许可证ID")
+		common.ParamError(c, "无效的许可证ID")
 		return
 	}
 
 	license, err := lc.licenseService.GetLicenseByID(c.Request.Context(), licenseID, tenantID)
 	if err != nil {
 		lc.logger.Errorw("Get license failed", "error", err, "license_id", licenseID)
-		common.Fail(c, common.InternalErrorCode, "获取许可证详情失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -112,20 +112,20 @@ func (lc *AssetLicenseController) UpdateLicense(c *gin.Context) {
 
 	licenseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的许可证ID")
+		common.ParamError(c, "无效的许可证ID")
 		return
 	}
 
 	var req dto.UpdateLicenseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	license, err := lc.licenseService.UpdateLicense(c.Request.Context(), licenseID, tenantID, &req)
 	if err != nil {
 		lc.logger.Errorw("Update license failed", "error", err, "license_id", licenseID)
-		common.Fail(c, common.InternalErrorCode, "更新许可证失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -147,14 +147,14 @@ func (lc *AssetLicenseController) DeleteLicense(c *gin.Context) {
 
 	licenseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的许可证ID")
+		common.ParamError(c, "无效的许可证ID")
 		return
 	}
 
 	err = lc.licenseService.DeleteLicense(c.Request.Context(), licenseID, tenantID)
 	if err != nil {
 		lc.logger.Errorw("Delete license failed", "error", err, "license_id", licenseID)
-		common.Fail(c, common.InternalErrorCode, "删除许可证失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -172,7 +172,7 @@ func (lc *AssetLicenseController) GetLicenseStats(c *gin.Context) {
 	stats, err := lc.licenseService.GetLicenseStats(c.Request.Context(), tenantID)
 	if err != nil {
 		lc.logger.Errorw("Get license stats failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取许可证统计失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -189,20 +189,20 @@ func (lc *AssetLicenseController) AssignUsers(c *gin.Context) {
 
 	licenseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的许可证ID")
+		common.ParamError(c, "无效的许可证ID")
 		return
 	}
 
 	var req dto.LicenseAssignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	license, err := lc.licenseService.AssignUsers(c.Request.Context(), licenseID, tenantID, req.UserIDs)
 	if err != nil {
 		lc.logger.Errorw("Assign users to license failed", "error", err, "license_id", licenseID)
-		common.Fail(c, common.InternalErrorCode, "分配许可证失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

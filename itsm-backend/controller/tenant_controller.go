@@ -37,14 +37,14 @@ func (tc *TenantController) CreateTenant(c *gin.Context) {
 	var req dto.CreateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		tc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	tenant, err := tc.tenantService.CreateTenant(c.Request.Context(), &req)
 	if err != nil {
 		tc.logger.Errorf("创建租户失败: %v", err)
-		common.Fail(c, 5001, "创建租户失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -70,14 +70,14 @@ func (tc *TenantController) ListTenants(c *gin.Context) {
 	var req dto.ListTenantsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		tc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	tenants, total, err := tc.tenantService.ListTenants(c.Request.Context(), &req)
 	if err != nil {
 		tc.logger.Errorf("获取租户列表失败: %v", err)
-		common.Fail(c, 5001, "获取租户列表失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -123,7 +123,7 @@ func (tc *TenantController) UpdateTenantStatus(c *gin.Context) {
 	var req map[string]string
 	if err := c.ShouldBindJSON(&req); err != nil {
 		tc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -136,7 +136,7 @@ func (tc *TenantController) UpdateTenantStatus(c *gin.Context) {
 	err = tc.tenantService.UpdateTenantStatus(c.Request.Context(), id, status)
 	if err != nil {
 		tc.logger.Errorf("更新租户状态失败: %v", err)
-		common.Fail(c, 5001, "更新租户状态失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -165,7 +165,7 @@ func (tc *TenantController) GetTenant(c *gin.Context) {
 	tenant, err := tc.tenantService.GetTenant(c.Request.Context(), id)
 	if err != nil {
 		tc.logger.Errorf("获取租户详情失败: %v", err)
-		common.Fail(c, 5001, "获取租户详情失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -194,14 +194,14 @@ func (tc *TenantController) UpdateTenant(c *gin.Context) {
 	var req dto.UpdateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		tc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	tenant, err := tc.tenantService.UpdateTenant(c.Request.Context(), id, &req)
 	if err != nil {
 		tc.logger.Errorf("更新租户失败: %v", err)
-		common.Fail(c, 5001, "更新租户失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -230,7 +230,7 @@ func (tc *TenantController) DeleteTenant(c *gin.Context) {
 	err = tc.tenantService.DeleteTenant(c.Request.Context(), id)
 	if err != nil {
 		tc.logger.Errorf("删除租户失败: %v", err)
-		common.Fail(c, 5001, "删除租户失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

@@ -124,7 +124,7 @@ func TestReleaseController_CreateRelease(t *testing.T) {
 
 	t.Run("成功创建发布", func(t *testing.T) {
 		body := dto.CreateReleaseRequest{
-			ReleaseNumber: "REL-2026-001",
+			ReleaseNumber: "REL-2026-001", // 客户端输入，服务端忽略
 			Title:         "Q3 生产环境发布",
 			Description:   "例行版本发布",
 			Type:          "standard",
@@ -133,14 +133,19 @@ func TestReleaseController_CreateRelease(t *testing.T) {
 		resp := doReq(t, r, "POST", "/api/v1/releases", body, false)
 		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustString(resp))
 		data := resp.Data.(map[string]interface{})
-		assert.Equal(t, "REL-2026-001", data["releaseNumber"])
+		// P1 修复：release_number 由服务端生成。响应体里应返回 REL-YYYYMMDD-token 格式，
+		// 不应被客户端传入的 "REL-2026-001" 覆盖，避免越权/编号冲突。
+		assert.Regexp(t, `^REL-\d{8}-[A-Za-z0-9]+$`, data["releaseNumber"].(string),
+			"服务端应生成符合 REL-YYYYMMDD-token 格式的发布编号")
+		assert.NotEqual(t, body.ReleaseNumber, data["releaseNumber"],
+			"客户端传入的 releaseNumber 应被服务端安全覆盖")
 		assert.Equal(t, "Q3 生产环境发布", data["title"])
 	})
 
 	t.Run("缺少必填标题应返回参数错误", func(t *testing.T) {
 		body := dto.CreateReleaseRequest{ReleaseNumber: "REL-X"}
 		resp := doReq(t, r, "POST", "/api/v1/releases", body, false)
-		assert.Equal(t, common.BadRequestCode, resp.Code, "body=%s", mustString(resp))
+		assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", mustString(resp))
 	})
 
 	t.Run("缺少租户上下文应返回未授权", func(t *testing.T) {
@@ -199,7 +204,7 @@ func TestReleaseController_GetRelease(t *testing.T) {
 
 	t.Run("非法ID应返回参数错误", func(t *testing.T) {
 		resp := doReq(t, r, "GET", "/api/v1/releases/abc", nil, false)
-		assert.Equal(t, common.BadRequestCode, resp.Code, "body=%s", mustString(resp))
+		assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", mustString(resp))
 	})
 
 	t.Run("不存在的ID应返回未找到", func(t *testing.T) {
