@@ -29,7 +29,10 @@ type Connector struct {
 	password     string
 	imapAddress  string
 	smtpAddress  string
+	imapTlsMode  string
+	smtpTlsMode  string
 	mailbox      string
+	fromName     string
 	pollInterval time.Duration
 	handler      connector.PollingInboundHandler
 	mu           sync.RWMutex
@@ -41,7 +44,7 @@ func init()           { connector.MustRegister(func() connector.Connector { retu
 func New() *Connector { return &Connector{} }
 
 func (c *Connector) Manifest() connector.Manifest {
-	return connector.Manifest{Name: "email", Version: "1.0.0", Title: "IMAP/SMTP 邮箱", Provider: "standard", Type: connector.TypeEmail, Description: "通过标准 IMAP 接收报障邮件并通过 SMTP 回复，PoC 支持 QQ 邮箱", Capabilities: []connector.Capability{connector.CapSendMessage, connector.CapReceiveMessage, connector.CapReplyMessage, connector.CapHealthCheck}, Tags: []string{"email", "imap", "smtp", "qq"}, IsOfficial: true, RequiredPermissions: []string{"connector:write", "email_intake:review"}, ConfigSchema: `{"type":"object","required":["username","password","imapHost","smtpHost"],"properties":{"username":{"type":"string"},"password":{"type":"string","format":"password"},"imapHost":{"type":"string"},"imapPort":{"type":"integer","default":993},"smtpHost":{"type":"string"},"smtpPort":{"type":"integer","default":465},"mailbox":{"type":"string","default":"INBOX"},"pollIntervalSeconds":{"type":"integer","minimum":15,"default":30}}}`}
+	return connector.Manifest{Name: "email", Version: "1.1.0", Title: "IMAP/SMTP 邮箱", Provider: "standard", Type: connector.TypeEmail, Description: "通过标准 IMAP 接收报障邮件并通过 SMTP 回复，支持 QQ/163/Gmail/Outlook/企业邮箱等通用 IMAP/SMTP 服务", Capabilities: []connector.Capability{connector.CapSendMessage, connector.CapReceiveMessage, connector.CapReplyMessage, connector.CapHealthCheck}, Tags: []string{"email", "imap", "smtp", "qq", "163", "gmail", "outlook", "exchange"}, IsOfficial: true, RequiredPermissions: []string{"connector:write", "email_intake:review"}, ConfigSchema: `{"type":"object","required":["username","password","imapHost","smtpHost"],"properties":{"username":{"type":"string","title":"邮箱账号"},"password":{"type":"string","format":"password","title":"授权码/密码"},"imapHost":{"type":"string","title":"IMAP 服务器"},"imapPort":{"type":"integer","default":993},"imapTlsMode":{"type":"string","enum":["ssl","starttls","plain"],"default":"ssl"},"smtpHost":{"type":"string","title":"SMTP 服务器"},"smtpPort":{"type":"integer","default":465},"smtpTlsMode":{"type":"string","enum":["ssl","starttls","plain"],"default":"ssl"},"mailbox":{"type":"string","default":"INBOX"},"pollIntervalSeconds":{"type":"integer","minimum":15,"default":30},"fromName":{"type":"string","title":"发件人名称"}}}`}
 }
 
 func (c *Connector) Init(_ context.Context, cfg connector.Config) error {
@@ -57,9 +60,8 @@ func (c *Connector) Init(_ context.Context, cfg connector.Config) error {
 	if imapPort < 1 || imapPort > 65535 || smtpPort < 1 || smtpPort > 65535 {
 		return errors.New("invalid email port")
 	}
-	if !strings.EqualFold(imapHost, "imap.qq.com") || imapPort != 993 || !strings.EqualFold(smtpHost, "smtp.qq.com") || smtpPort != 465 {
-		return errors.New("email PoC only supports QQ IMAP/SMTP endpoints")
-	}
+	c.imapTlsMode = normalizeTlsMode(settingString(cfg.Settings, "imapTlsMode", "ssl"))
+	c.smtpTlsMode = normalizeTlsMode(settingString(cfg.Settings, "smtpTlsMode", "ssl"))
 	pollSeconds := settingInt(cfg.Settings, "pollIntervalSeconds", 30)
 	if pollSeconds < 15 {
 		pollSeconds = 15
@@ -70,6 +72,7 @@ func (c *Connector) Init(_ context.Context, cfg connector.Config) error {
 	c.imapAddress = net.JoinHostPort(imapHost, strconv.Itoa(imapPort))
 	c.smtpAddress = net.JoinHostPort(smtpHost, strconv.Itoa(smtpPort))
 	c.mailbox = settingString(cfg.Settings, "mailbox", "INBOX")
+	c.fromName = settingString(cfg.Settings, "fromName", "")
 	c.pollInterval = time.Duration(pollSeconds) * time.Second
 	return nil
 }
@@ -106,6 +109,26 @@ func (c *Connector) loop(ctx context.Context) {
 	}
 }
 
+func (c *Connector) dialIMAP() (*imapclient.Client, error) {
+	host := hostOnly(c.imapAddress)
+	switch c.imapTlsMode {
+	case "ssl":
+		return imapclient.DialTLS(c.imapAddress, &tls.Config{MinVersion: tls.VersionTLS12, ServerName: host})
+	case "starttls":
+		cli, err := imapclient.Dial(c.imapAddress)
+		if err != nil {
+			return nil, err
+		}
+		if err := cli.StartTLS(&tls.Config{MinVersion: tls.VersionTLS12, ServerName: host}); err != nil {
+			cli.Logout()
+			return nil, err
+		}
+		return cli, nil
+	default:
+		return imapclient.Dial(c.imapAddress)
+	}
+}
+
 func (c *Connector) poll(ctx context.Context) {
 	c.mu.RLock()
 	handler := c.handler
@@ -113,7 +136,7 @@ func (c *Connector) poll(ctx context.Context) {
 	if handler == nil {
 		return
 	}
-	client, err := imapclient.DialTLS(c.imapAddress, &tls.Config{MinVersion: tls.VersionTLS12, ServerName: hostOnly(c.imapAddress)})
+	client, err := c.dialIMAP()
 	if err != nil {
 		return
 	}
@@ -190,30 +213,52 @@ func (c *Connector) Send(ctx context.Context, msg *connector.Message) error {
 	if strings.ContainsAny(msg.Title, "\r\n") {
 		return errors.New("invalid email title")
 	}
-	from, err := mail.ParseAddress(c.username)
+	fromAddr, err := mail.ParseAddress(c.username)
 	if err != nil {
 		return errors.New("invalid sender address")
 	}
+	if c.fromName != "" {
+		fromAddr.Name = c.fromName
+	}
 	subject := mime.QEncoding.Encode("UTF-8", defaultString(msg.Title, "ITSM 通知"))
-	message := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s", from.String(), to.String(), subject, normalizeBody(msg.Content)))
+	message := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s", fromAddr.String(), to.String(), subject, normalizeBody(msg.Content)))
 	return c.sendSMTP(ctx, to.Address, message)
 }
 
 func (c *Connector) sendSMTP(ctx context.Context, to string, message []byte) error {
+	host := hostOnly(c.smtpAddress)
 	dialer := &net.Dialer{Timeout: 10 * time.Second}
-	conn, err := tls.DialWithDialer(dialer, "tcp", c.smtpAddress, &tls.Config{MinVersion: tls.VersionTLS12, ServerName: hostOnly(c.smtpAddress)})
+	var conn net.Conn
+	var err error
+	switch c.smtpTlsMode {
+	case "ssl":
+		conn, err = tls.DialWithDialer(dialer, "tcp", c.smtpAddress, &tls.Config{MinVersion: tls.VersionTLS12, ServerName: host})
+	case "starttls":
+		conn, err = dialer.DialContext(ctx, "tcp", c.smtpAddress)
+	default:
+		conn, err = dialer.DialContext(ctx, "tcp", c.smtpAddress)
+	}
 	if err != nil {
 		return fmt.Errorf("connect SMTP: %w", err)
 	}
 	defer conn.Close()
 	_ = conn.SetDeadline(deadline(ctx, 15*time.Second))
-	client, err := smtp.NewClient(conn, hostOnly(c.smtpAddress))
+	client, err := smtp.NewClient(conn, host)
 	if err != nil {
 		return err
 	}
 	defer client.Close()
-	if err = client.Auth(smtp.PlainAuth("", c.username, c.password, hostOnly(c.smtpAddress))); err != nil {
-		return err
+	if c.smtpTlsMode == "starttls" {
+		if ok, _ := client.Extension("STARTTLS"); ok {
+			if err := client.StartTLS(&tls.Config{MinVersion: tls.VersionTLS12, ServerName: host}); err != nil {
+				return err
+			}
+		}
+	}
+	if ok, _ := client.Extension("AUTH"); ok {
+		if err = client.Auth(smtp.PlainAuth("", c.username, c.password, host)); err != nil {
+			return err
+		}
 	}
 	if err = client.Mail(c.username); err != nil {
 		return err
@@ -230,11 +275,10 @@ func (c *Connector) sendSMTP(ctx context.Context, to string, message []byte) err
 	}
 	return writer.Close()
 }
-
 func (c *Connector) HealthCheck(ctx context.Context) connector.HealthStatus {
 	start := time.Now()
 	status := connector.HealthStatus{CheckedAt: start}
-	client, err := imapclient.DialTLS(c.imapAddress, &tls.Config{MinVersion: tls.VersionTLS12, ServerName: hostOnly(c.imapAddress)})
+	client, err := c.dialIMAP()
 	if err == nil {
 		err = client.Login(c.username, c.password)
 		_ = client.Logout()
@@ -348,6 +392,17 @@ func inboundMessageID(message *connector.InboundMessage) string {
 func cfgInstanceKey(cfg connector.Config) string {
 	return fmt.Sprintf("%d/%s/%s", cfg.TenantID, cfg.Name, cfg.Provider)
 }
+func normalizeTlsMode(mode string) string {
+	switch strings.ToLower(strings.TrimSpace(mode)) {
+	case "starttls":
+		return "starttls"
+	case "plain", "none":
+		return "plain"
+	default:
+		return "ssl"
+	}
+}
+
 func settingString(settings map[string]interface{}, key, fallback string) string {
 	if value, ok := settings[key].(string); ok && strings.TrimSpace(value) != "" {
 		return strings.TrimSpace(value)
