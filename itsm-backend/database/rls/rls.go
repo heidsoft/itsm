@@ -83,7 +83,15 @@ func AcquireConn(ctx context.Context, db *sql.DB) (*sql.Conn, error) {
 	// SET SESSION is transactional-safe: SETting inside a tx is scoped by
 	// autocommit; we intentionally SET at connection acquire so subsequent
 	// Ent queries on the same *sql.Conn inherit it.
-	if _, err := conn.ExecContext(ctx, "SET SESSION app.current_tenant = $1", tid); err != nil {
+	//
+	// PostgreSQL's wire protocol does NOT accept `$1` placeholders inside a
+	// bare `SET SESSION` statement, so we use `set_config(name, value, is_local)`
+	// which is a normal function call and accepts parameters cleanly. The
+	// third arg `false` makes the setting session-scoped (true would scope to
+	// the current transaction). tid is int64 from our internal context, not
+	// user input, but routing through parameters keeps the call safe even if
+	// the upstream type ever changes.
+	if _, err := conn.ExecContext(ctx, "SELECT set_config('app.current_tenant', $1, false)", tid); err != nil {
 		_ = conn.Close()
 		return nil, fmt.Errorf("rls: set tenant: %w", err)
 	}
@@ -104,6 +112,24 @@ func ReleaseConn(ctx context.Context, conn *sql.Conn) error {
 		return fmt.Errorf("rls: discard on release: %w", err)
 	}
 	return conn.Close() // Close on *sql.Conn returns it to the pool
+}
+
+// SetTenantOnConn applies the tenant scope to an already-checked-out
+// *sql.Conn. It is the no-pool helper used by callers that already hold a
+// dedicated connection (for example, transaction scopes inside Ent, or
+// long-running workers). Returns the conn unchanged so callers can chain.
+func SetTenantOnConn(ctx context.Context, conn *sql.Conn) (*sql.Conn, error) {
+	if IsSystemBypass(ctx) {
+		return conn, nil
+	}
+	tid, ok := TenantFromContext(ctx)
+	if !ok {
+		return nil, ErrNoTenant
+	}
+	if _, err := conn.ExecContext(ctx, "SELECT set_config('app.current_tenant', $1, false)", tid); err != nil {
+		return nil, fmt.Errorf("rls: set tenant: %w", err)
+	}
+	return conn, nil
 }
 
 // --------------------------------------------------------------------------

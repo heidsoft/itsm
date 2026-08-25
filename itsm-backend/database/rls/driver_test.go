@@ -20,13 +20,25 @@ type fakeDriver struct {
 	lastCtxTID int
 	lastCtxSys bool
 	execErr    error
+	txErr      error // Tx 返回的 error；nil 表示返回可用的 fakeTx
 }
+
+// fakeTx 实现 dialect.Tx：测试中仅需可调用 Exec/Query/Rollback/Commit 即可。
+type fakeTx struct{}
+
+func (fakeTx) Exec(_ context.Context, _ string, _, _ any) error   { return nil }
+func (fakeTx) Query(_ context.Context, _ string, _, _ any) error  { return nil }
+func (fakeTx) Commit() error                                       { return nil }
+func (fakeTx) Rollback() error                                     { return nil }
 
 func (f *fakeDriver) Dialect() string { return "postgres" }
 func (f *fakeDriver) Close() error    { return nil }
 func (f *fakeDriver) Tx(ctx context.Context) (dialect.Tx, error) {
 	f.txCount++
-	return nil, errors.New("tx not used in test")
+	if f.txErr != nil {
+		return nil, f.txErr
+	}
+	return fakeTx{}, nil
 }
 
 func (f *fakeDriver) Exec(ctx context.Context, query string, args, v any) error {

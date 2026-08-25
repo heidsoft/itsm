@@ -21,6 +21,15 @@
 //	    reachable from host (Linux, or Docker Desktop w/ direct routes)
 //	  - Run the test INSIDE the container (docker exec ... go test ...)
 //	  - Stop the local PostgreSQL service and rely on Docker-published :5432
+//	  - Or publish the dev container on a non-conflicting host port (e.g.
+//	    `55432:5432`) and set RLS_TEST_DSN / RLS_SETUP_DSN to that port.
+//
+// Two DSNs are required because RLS DDL (ENABLE ROW LEVEL SECURITY, CREATE
+// POLICY) needs the table owner / superuser, while the application
+// connection uses the RLS-bound `itsm_app` role:
+//
+//	RLS_TEST_DSN   host=... port=... user=itsm_app   dbname=itsm password=...
+//	RLS_SETUP_DSN  host=... port=... user=itsm_user  dbname=itsm password=...  (or any superuser)
 //
 // The test enables policy at setup and disables at teardown, so running
 // it repeatedly is safe. It does NOT mutate business data other than
@@ -52,10 +61,35 @@ func openTestDB(t *testing.T) *sql.DB {
 	return db
 }
 
+// openOwnerDB opens a privileged connection used only for ALTER TABLE /
+// CREATE POLICY setup & teardown. RLS-related DDL requires the table owner
+// (or superuser), so the application user cannot perform these steps.
+func openOwnerDB(t *testing.T) *sql.DB {
+	t.Helper()
+	dsn := os.Getenv("RLS_SETUP_DSN")
+	if dsn == "" {
+		t.Skip("RLS_SETUP_DSN not set, skipping RLS integration test that requires policy setup")
+	}
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		t.Fatalf("open owner db: %v", err)
+	}
+	if err := db.Ping(); err != nil {
+		t.Fatalf("ping owner db: %v", err)
+	}
+	return db
+}
+
 // setupPolicy enables RLS + policy on `changes`, using the NULLIF-safe form.
 // Returns a teardown func that restores the table to no-RLS state.
-func setupPolicy(t *testing.T, db *sql.DB) func() {
+//
+// Uses `RLS_SETUP_DSN` (table-owner / superuser) for DDL because
+// `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` requires owner privilege.
+// The application connection (`RLS_TEST_DSN`) is only used afterwards.
+func setupPolicy(t *testing.T, _ *sql.DB) func() {
 	t.Helper()
+	owner := openOwnerDB(t)
+	defer owner.Close()
 	ctx := context.Background()
 	stmts := []string{
 		`ALTER TABLE changes ENABLE ROW LEVEL SECURITY`,
@@ -66,7 +100,7 @@ func setupPolicy(t *testing.T, db *sql.DB) func() {
 			WITH CHECK  (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::bigint)`,
 	}
 	for _, s := range stmts {
-		if _, err := db.ExecContext(ctx, s); err != nil {
+		if _, err := owner.ExecContext(ctx, s); err != nil {
 			t.Fatalf("setup policy (%q): %v", s, err)
 		}
 	}
@@ -77,7 +111,7 @@ func setupPolicy(t *testing.T, db *sql.DB) func() {
 			`ALTER TABLE changes DISABLE ROW LEVEL SECURITY`,
 		}
 		for _, s := range teardown {
-			_, _ = db.ExecContext(ctx, s)
+			_, _ = owner.ExecContext(ctx, s)
 		}
 	}
 }

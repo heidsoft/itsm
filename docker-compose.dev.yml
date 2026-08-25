@@ -1,6 +1,9 @@
 
 services:
   # PostgreSQL 数据库（开发环境）
+  # 本机 Homebrew PostgreSQL 默认占用 5432，开发容器改为发布到 55432。
+  # 后端使用 `postgres:5432`（容器网络主机名），因此 8090/3000 等对外端口不受影响。
+  # 集成测试可通过 `host=localhost port=55432` 直接连接容器内的真实 PG。
   postgres:
     image: pgvector/pgvector:pg17
     container_name: itsm-postgres-dev
@@ -10,7 +13,7 @@ services:
       POSTGRES_USER: itsm_user
       POSTGRES_PASSWORD: dev123
     ports:
-      - "5432:5432"
+      - "55432:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     networks:

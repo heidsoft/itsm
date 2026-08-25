@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -427,4 +428,74 @@ func TestFail_ContextModified(t *testing.T) {
 	Fail(c, NotFoundCode, "Not found")
 
 	assert.Equal(t, "req-123", c.GetString("request_id"))
+}
+
+// ==================== FailWithErr / ParamErrorWithErr (Phase 4 安全错误映射) ====================
+
+func TestFailWithErr_DoesNotLeakRawError(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("POST", "/api/v1/internal", nil)
+
+	// 模拟驱动层错误：包含 pq / ent 等不应暴露给客户端的字符串
+	rawErr := errors.New("pq: constraint violations: pq: duplicate key value violates unique constraint")
+	FailWithErr(c, rawErr, "operation failed")
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	var resp Response
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, InternalErrorCode, resp.Code)
+	assert.Equal(t, "operation failed", resp.Message)
+	// 核心断言：原始 err 中的 pq: 字符串绝不能出现在响应体中
+	assert.NotContains(t, w.Body.String(), "pq:")
+	assert.NotContains(t, w.Body.String(), "duplicate key")
+}
+
+func TestFailWithErr_NilErrSafe(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/api/v1/x", nil)
+
+	// err 为 nil 时不应该 panic
+	FailWithErr(c, nil, "operation failed")
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	var resp Response
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, "operation failed", resp.Message)
+}
+
+func TestParamErrorWithErr_DoesNotLeakRawError(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("POST", "/api/v1/internal", nil)
+
+	rawErr := errors.New("ent: validation failed: field title required")
+	ParamErrorWithErr(c, rawErr, "invalid request body")
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var resp Response
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, ParamErrorCode, resp.Code)
+	assert.Equal(t, "invalid request body", resp.Message)
+	assert.NotContains(t, w.Body.String(), "ent:")
+	assert.NotContains(t, w.Body.String(), "validation failed")
+}
+
+func TestInternalErrorf_FormatsMessage(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	InternalErrorf(c, "user %s not allowed to perform %s", "alice", "delete")
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	var resp Response
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, "user alice not allowed to perform delete", resp.Message)
 }

@@ -233,6 +233,11 @@ func (d *Driver) Query(ctx context.Context, query string, args, v any) error {
 //   - SET LOCAL 仅在事务内有效，提交后即失效，绝不会泄漏到后续连接/查询。
 //   - 每条 autocommit 语句多一次 BEGIN/SET LOCAL/COMMIT 往返，换取读/写隔离
 //     一致性；仅在 enforce 模式启用，off/shadow 零开销。
+//
+// 计数器语义：
+//   - EnforceApplied 仅在非 SystemBypass 且成功执行 SET LOCAL 后 +1。
+//   - SystemBypass 在 SystemBypass 路径上 +1，避免 enforce 模式下 bypass 路径
+//     不被监控计数，与 shadow 模式保持可观测语义一致。
 func (d *Driver) withTenantTx(ctx context.Context, fn func(dialect.Tx) error) error {
 	tx, err := d.inner.Tx(ctx)
 	if err != nil {
@@ -241,7 +246,9 @@ func (d *Driver) withTenantTx(ctx context.Context, fn func(dialect.Tx) error) er
 	// 任何失败路径都回滚，避免悬挂事务。
 	defer func() { _ = tx.Rollback() }()
 
-	if !tenantctx.IsSystemBypass(ctx) {
+	if tenantctx.IsSystemBypass(ctx) {
+		d.nSystemBypass.Add(1)
+	} else {
 		tid, ok := tenantctx.TenantID(ctx)
 		if !ok {
 			return fmt.Errorf("rls: enforce mode requires tenant_id in context")
