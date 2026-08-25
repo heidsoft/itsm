@@ -47,7 +47,7 @@ type UpdateTicketRequest struct {
 	RequesterID int                    `json:"requesterId"` // 创建人ID
 	Tags        []string               `json:"tags"`
 	Resolution  string                 `json:"resolution" binding:"omitempty"`
-	FormFields  map[string]interface{} `json:"formFields"`
+	FormFields  map[string]interface{} `json:"formFields,omitempty"`
 	UserID      int                    `json:"userId" binding:"omitempty"` // 操作用户ID (后端自动填充)
 	Version     int                    `json:"version"`                    // 版本号（乐观锁）
 	Force       bool                   `json:"-"`                          // 仅限内部受信调用，禁止客户端绕过乐观锁

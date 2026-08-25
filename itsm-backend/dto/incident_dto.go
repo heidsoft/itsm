@@ -62,7 +62,7 @@ type CreateIncidentRequest struct {
 	ConfigurationItemIDs []int                  `json:"configurationItemIds"`
 	AssigneeID           *int                   `json:"assigneeId" example:"1"`
 	ImpactAnalysis       *ImpactAnalysis        `json:"impactAnalysis"`
-	Source               string                 `json:"source" binding:"omitempty,oneof=manual monitoring system user" example:"monitoring"`
+	Source               string                 `json:"source" binding:"omitempty,oneof=manual monitoring system user email" example:"monitoring"`
 	Metadata             map[string]interface{} `json:"metadata"`
 	DetectedAt           *time.Time             `json:"detectedAt" example:"2024-01-01T00:00:00Z"`
 }
@@ -111,6 +111,8 @@ type IncidentResponse struct {
 	IncidentNumber      string                 `json:"incidentNumber" example:"INC-000001"`
 	ReporterID          int                    `json:"reporterId" example:"1"`
 	AssigneeID          *int                   `json:"assigneeId" example:"2"`
+	AssignmentGroupID   *int                   `json:"assignmentGroupId,omitempty"`
+	EmailConversationID *int                   `json:"emailConversationId,omitempty"`
 	ConfigurationItemID *int                   `json:"configurationItemId,omitempty" example:"3"`
 	RelatedCIs          []CIInfo               `json:"relatedCIs"`
 	Category            string                 `json:"category" example:"performance"`

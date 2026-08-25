@@ -464,8 +464,10 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 }
 
 // DeleteRelease 删除发布
-// P1 修复：release 在 schema 中无 deleted_at（物理删），无法软删；故此处检查
-// RowsAffected，未匹配到（已删/不存在/跨租户）时返回未找到错误，避免硬删成功却返回 200。
+// P1 修复：release 在 schema 中无 deleted_at（物理删），无法软删；DELETE 应是幂等操作
+// （RFC 7231 §4.3.5：连续多次 DELETE 同一资源与一次效果相同），故未匹配到（已删/
+// 不存在/跨租户均视为 0 行）时不返回错误，让上游 controller 统一返 200 响应，客户端
+// 不会因为“曾被删”再次发送 DELETE 而误判为 5001 内部错误。
 func (s *ReleaseService) DeleteRelease(ctx context.Context, id, tenantID int) error {
 	deleted, err := s.client.Release.Delete().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
@@ -475,11 +477,13 @@ func (s *ReleaseService) DeleteRelease(ctx context.Context, id, tenantID int) er
 		return fmt.Errorf("failed to delete release: %w", err)
 	}
 	if deleted == 0 {
-		s.logger.Warnw("Release delete matched 0 rows", "release_id", id, "tenant_id", tenantID)
-		return fmt.Errorf("release not found")
+		// 幂等：未匹配 = 视为已删除，不报错。
+		s.logger.Infow("Release delete matched 0 rows (idempotent, treated as success)",
+			"release_id", id, "tenant_id", tenantID)
+		return nil
 	}
 
-	s.logger.Infow("Release deleted", "release_id", id)
+	s.logger.Infow("Release deleted", "release_id", id, "tenant_rows", deleted)
 	return nil
 }
 

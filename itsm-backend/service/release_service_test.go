@@ -50,9 +50,12 @@ func TestReleaseService_CreateRelease(t *testing.T) {
 		expectedError bool
 	}{
 		{
+			// P1 修复：release_number 现由服务端生成（避免越权/冲突编号），不信任
+			// 客户端传入值。故创建成功的断言改为"服务端生成了 REL- 前缀的编号"，
+			// 客户传入的 ReleaseNumber 被安全忽略。
 			name: "成功创建发布",
 			request: &dto.CreateReleaseRequest{
-				ReleaseNumber: "REL-20260222-001",
+				ReleaseNumber: "REL-20260222-001", // 客户端输入，服务端忽略
 				Title:         "测试发布",
 				Description:   "这是一个测试发布",
 				Type:          "minor",
@@ -64,14 +67,16 @@ func TestReleaseService_CreateRelease(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "发布编号为空",
+			// P1 修复：旧实期望客户端必须提供非空 ReleaseNumber，否则报错。
+			// 新实服务端总是生成编号，客户端传空也是合法的（服务端会填上）。
+			name: "发布编号为空（由服务端自动生成）",
 			request: &dto.CreateReleaseRequest{
 				ReleaseNumber: "",
 				Title:         "测试发布",
 			},
 			tenantID:      testTenant.ID,
 			createdBy:     testUser.ID,
-			expectedError: true,
+			expectedError: false,
 		},
 		{
 			name: "标题为空",
@@ -96,7 +101,12 @@ func TestReleaseService_CreateRelease(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, release)
 				assert.Equal(t, tt.request.Title, release.Title)
-				assert.Equal(t, tt.request.ReleaseNumber, release.ReleaseNumber)
+				// P1 修复：release_number 由服务端生成，不信任客户端输入。
+				// 断言仅校验"服务端生成的编号符合 REL-YYYYMMDD- 格式契约"，不再
+				// 硬编码某个具体值，也不再与请求中的 ReleaseNumber 字段强比对。
+				assert.Regexp(t, `^REL-\d{8}-[A-Za-z0-9]+$`, release.ReleaseNumber,
+					"服务端应该生成 REL-YYYYMMDD-token 格式的发布编号")
+				assert.NotEqual(t, "", release.ReleaseNumber, "服务端不应返回空 release_number")
 			}
 		})
 	}
@@ -133,18 +143,24 @@ func TestReleaseService_GetReleaseByID(t *testing.T) {
 
 	// 创建测试发布
 	release, err := releaseService.CreateRelease(ctx, &dto.CreateReleaseRequest{
-		ReleaseNumber: "REL-001",
+		ReleaseNumber: "REL-001", // 客户端输入，服务端忽略
 		Title:         "测试发布",
 		Type:          "minor",
 	}, testUser.ID, testTenant.ID)
 	require.NoError(t, err)
+	require.NotEmpty(t, release.ReleaseNumber, "服务端应生成 release_number")
+	originalNumber := release.ReleaseNumber
 
 	// 测试获取发布
 	t.Run("获取存在的发布", func(t *testing.T) {
 		result, err := releaseService.GetReleaseByID(ctx, release.ID, testTenant.ID)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assert.Equal(t, "REL-001", result.ReleaseNumber)
+		// P1 修复：服务端生成的 release_number 不应与客户端传入值强绑定。
+		// 断言该编号与创建响应一致，并符合 REL-YYYYMMDD-token 格式。
+		assert.Equal(t, originalNumber, result.ReleaseNumber,
+			"重复获取同一发布的 release_number 应稳定")
+		assert.Regexp(t, `^REL-\d{8}-[A-Za-z0-9]+$`, result.ReleaseNumber)
 	})
 
 	// 测试获取不存在的发布

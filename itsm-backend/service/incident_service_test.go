@@ -123,6 +123,36 @@ func TestIncidentService_CreateIncidentPersistsWorkflowCommand(t *testing.T) {
 	require.Equal(t, "pending", rulesCmd.Status)
 }
 
+func TestIncidentService_CreateFromEmailIsIdempotentAndRechecksContract(t *testing.T) {
+	client, incidentService, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenant, err := createIncidentTestTenant(ctx, client, "email")
+	require.NoError(t, err)
+	reporter, err := createIncidentTestUser(ctx, client, tenant.ID, "email")
+	require.NoError(t, err)
+	customer := client.ServiceCustomer.Create().SetTenantID(tenant.ID).SetName("客户").SetNormalizedName("客户").SaveX(ctx)
+	contract := client.SupportContract.Create().SetTenantID(tenant.ID).SetCustomerID(customer.ID).
+		SetContractNumber("SUP-1").SetNormalizedContractNumber("sup1").SetStatus("active").SaveX(ctx)
+	conversation := client.EmailConversation.Create().SetTenantID(tenant.ID).SetConversationToken("email-token").SaveX(ctx)
+
+	command := EmailIncidentCommand{ConversationID: conversation.ID, SupportContractID: contract.ID, ReporterUserID: reporter.ID, Title: "线路中断", Description: "MPLS down"}
+	created, err := incidentService.CreateFromEmail(ctx, tenant.ID, command)
+	require.NoError(t, err)
+	require.True(t, created.IsAutomated)
+	require.Equal(t, "email", created.Source)
+	require.NotNil(t, created.EmailConversationID)
+
+	again, err := incidentService.CreateFromEmail(ctx, tenant.ID, command)
+	require.NoError(t, err)
+	require.Equal(t, created.ID, again.ID)
+
+	otherConversation := client.EmailConversation.Create().SetTenantID(tenant.ID).SetConversationToken("email-token-2").SaveX(ctx)
+	client.SupportContract.UpdateOneID(contract.ID).SetStatus("terminated").SaveX(ctx)
+	command.ConversationID = otherConversation.ID
+	_, err = incidentService.CreateFromEmail(ctx, tenant.ID, command)
+	require.ErrorIs(t, err, ErrEmailContractNotActive)
+}
+
 func TestIncidentService_CreateIncident_WithOptionalFields(t *testing.T) {
 	client, service, ctx := setupIncidentTest(t)
 	defer client.Close()

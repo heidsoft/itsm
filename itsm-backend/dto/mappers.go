@@ -212,6 +212,8 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 	if incident.AssigneeID > 0 {
 		response.AssigneeID = &incident.AssigneeID
 	}
+	response.AssignmentGroupID = incident.AssignmentGroupID
+	response.EmailConversationID = incident.EmailConversationID
 	if incident.ConfigurationItemID > 0 {
 		response.ConfigurationItemID = &incident.ConfigurationItemID
 	}

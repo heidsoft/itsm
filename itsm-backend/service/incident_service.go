@@ -12,12 +12,15 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/emailconversation"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/supportcontract"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/commandbus"
 
@@ -32,7 +35,32 @@ var (
 	ErrIncidentEscalationLevelInvalid    = errors.New("escalation level must be between 1 and 5")
 	ErrIncidentEscalationLevelNotGreater = errors.New("escalation level must be greater than current level")
 	ErrIncidentEscalationReasonRequired  = errors.New("escalation reason is required")
+	ErrEmailContractNotActive            = errors.New("support contract is not active")
 )
+
+type EmailIncidentCommand struct {
+	ConversationID    int
+	SupportContractID int
+	ReporterUserID    int
+	AssignmentGroupID *int
+	AssigneeID        *int
+	Title             string
+	Description       string
+	Impact            string
+	Urgency           string
+	Category          string
+	Metadata          map[string]interface{}
+	OverrideContract  bool
+	OverrideReason    string
+}
+
+type incidentCreateOptions struct {
+	isAutomated           bool
+	emailConversationID   *int
+	supportContractID     *int
+	assignmentGroupID     *int
+	allowInactiveContract bool
+}
 
 type IncidentService struct {
 	priorityMatrixService *PriorityMatrixService
@@ -81,6 +109,47 @@ func (s *IncidentService) SetRuleEngine(engine *IncidentRuleEngine) {
 
 // CreateIncident 创建事件
 func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateIncidentRequest, tenantID, userID int) (*dto.IncidentResponse, error) {
+	return s.createIncident(ctx, req, tenantID, userID, incidentCreateOptions{})
+}
+
+func (s *IncidentService) CreateFromEmail(ctx context.Context, tenantID int, command EmailIncidentCommand) (*dto.IncidentResponse, error) {
+	if command.ConversationID <= 0 || command.SupportContractID <= 0 || command.ReporterUserID <= 0 {
+		return nil, errors.New("email conversation, support contract and automation reporter are required")
+	}
+	existing, err := s.client.Incident.Query().Where(
+		incident.TenantIDEQ(tenantID), incident.EmailConversationIDEQ(command.ConversationID),
+	).Only(ctx)
+	if err == nil {
+		return dto.ToIncidentResponse(existing), nil
+	}
+	if !ent.IsNotFound(err) {
+		return nil, fmt.Errorf("check email incident idempotency: %w", err)
+	}
+	metadata := make(map[string]interface{}, len(command.Metadata)+2)
+	for key, value := range command.Metadata {
+		metadata[key] = value
+	}
+	metadata["emailConversationId"] = command.ConversationID
+	metadata["supportContractId"] = command.SupportContractID
+	if command.OverrideContract {
+		if strings.TrimSpace(command.OverrideReason) == "" {
+			return nil, errors.New("contract override reason is required")
+		}
+		metadata["contractOverride"] = true
+		metadata["contractOverrideReason"] = command.OverrideReason
+	}
+	req := &dto.CreateIncidentRequest{Title: command.Title, Description: command.Description, Type: "incident", Impact: command.Impact, Urgency: command.Urgency, Category: command.Category, Source: "email", AssigneeID: command.AssigneeID, Metadata: metadata}
+	response, createErr := s.createIncident(ctx, req, tenantID, command.ReporterUserID, incidentCreateOptions{isAutomated: true, emailConversationID: &command.ConversationID, supportContractID: &command.SupportContractID, assignmentGroupID: command.AssignmentGroupID, allowInactiveContract: command.OverrideContract})
+	if createErr != nil && ent.IsConstraintError(createErr) {
+		existing, lookupErr := s.client.Incident.Query().Where(incident.TenantIDEQ(tenantID), incident.EmailConversationIDEQ(command.ConversationID)).Only(ctx)
+		if lookupErr == nil {
+			return dto.ToIncidentResponse(existing), nil
+		}
+	}
+	return response, createErr
+}
+
+func (s *IncidentService) createIncident(ctx context.Context, req *dto.CreateIncidentRequest, tenantID, userID int, options incidentCreateOptions) (*dto.IncidentResponse, error) {
 	s.logger.Infow("Creating incident", "title", req.Title, "tenant_id", tenantID, "user_id", userID)
 	if strings.TrimSpace(req.Title) == "" {
 		return nil, fmt.Errorf("incident title is required")
@@ -97,6 +166,18 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 	if req.AssigneeID != nil {
 		if err := s.validateIncidentAssignee(ctx, *req.AssigneeID, tenantID); err != nil {
 			return nil, err
+		}
+	}
+	if options.assignmentGroupID != nil {
+		exists, validateErr := s.client.Group.Query().Where(group.IDEQ(*options.assignmentGroupID), group.TenantIDEQ(tenantID)).Exist(ctx)
+		if validateErr != nil || !exists {
+			return nil, errors.New("assignment group not found in tenant")
+		}
+	}
+	if options.emailConversationID != nil {
+		exists, validateErr := s.client.EmailConversation.Query().Where(emailconversation.IDEQ(*options.emailConversationID), emailconversation.TenantIDEQ(tenantID)).Exist(ctx)
+		if validateErr != nil || !exists {
+			return nil, errors.New("email conversation not found in tenant")
 		}
 	}
 	var configurationItems []*ent.ConfigurationItem
@@ -172,6 +253,19 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 		}
 		return nil, cause
 	}
+	if options.supportContractID != nil {
+		contractQuery := tx.SupportContract.Query().Where(supportcontract.IDEQ(*options.supportContractID), supportcontract.TenantIDEQ(tenantID))
+		if !options.allowInactiveContract {
+			contractQuery.Where(supportcontract.StatusEQ("active"))
+		}
+		active, contractErr := contractQuery.Exist(ctx)
+		if contractErr != nil {
+			return rollback(fmt.Errorf("recheck support contract: %w", contractErr))
+		}
+		if !active {
+			return rollback(ErrEmailContractNotActive)
+		}
+	}
 	create := tx.Incident.Create().
 		SetTitle(req.Title).
 		SetDescription(req.Description).
@@ -189,13 +283,19 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 		SetSource(source).
 		SetMetadata(req.Metadata).
 		SetDetectedAt(detectedAt).
-		SetIsAutomated(false).
+		SetIsAutomated(options.isAutomated).
 		SetTenantID(tenantID).
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
 		AddConfigurationItemIDs(req.ConfigurationItemIDs...)
 	if req.AssigneeID != nil {
 		create.SetAssigneeID(*req.AssigneeID)
+	}
+	if options.assignmentGroupID != nil {
+		create.SetAssignmentGroupID(*options.assignmentGroupID)
+	}
+	if options.emailConversationID != nil {
+		create.SetEmailConversationID(*options.emailConversationID)
 	}
 	incidentEntity, err := create.Save(ctx)
 	if err != nil {
