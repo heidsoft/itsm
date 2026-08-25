@@ -7,17 +7,31 @@ import (
 
 // ServiceCatalog represents the core domain entity
 type ServiceCatalog struct {
-	ID             int
-	Name           string
-	Category       string
-	Description    string
-	DeliveryTime   int
-	CITypeID       int
-	CloudServiceID int
-	Status         string
-	TenantID       int
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID                 int
+	Name               string
+	Category           string
+	Description        string
+	Icon               string
+	ServiceType        string
+	Price              float64
+	DeliveryTime       int
+	Unit               string
+	RequiresApproval   bool
+	ApprovalLevel      int
+	Approvers          []int
+	SLAResponseTime    int
+	SLAResolutionTime  int
+	CITypeID           int
+	CloudServiceID     int
+	FormSchema         map[string]interface{}
+	AvailableRegions   []string
+	AvailableSpecs     []string
+	Status             string
+	TenantID           int
+	IsActive           bool
+	SortOrder          int
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
 
 // Repository defines the interface for data persistence

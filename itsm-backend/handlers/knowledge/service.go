@@ -98,6 +98,90 @@ func (s *Service) GetCategories(ctx context.Context, tenantID int) ([]string, er
 	return s.repo.GetCategories(ctx, tenantID)
 }
 
+// SearchArticles performs a RAG-powered search over published knowledge articles.
+// It first retrieves articles via the RAG service (vector + keyword hybrid search),
+// then fetches the full article records from the database to return complete content.
+// Results are sorted by relevance score descending.
+func (s *Service) SearchArticles(ctx context.Context, tenantID int, query string, category string, limit int) ([]*Article, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	// If RAG service is wired, use it for real vector + keyword retrieval.
+	if s.rag != nil {
+		rawResults, err := s.rag.Ask(ctx, tenantID, query, limit)
+		if err != nil {
+			s.logger.Warnw("KnowledgeService: RAG Ask failed, falling back to keyword", "query", query, "error", err)
+			// Fall through to keyword-only path via repo
+		} else {
+			if len(rawResults) == 0 {
+				return []*Article{}, nil
+			}
+
+			// Collect article IDs from RAG results, preserving order (by relevance).
+			type scoredID struct {
+				id    int
+				score float64
+			}
+			scored := make([]struct{ id int; score float64 }, 0, len(rawResults))
+			for _, r := range rawResults {
+				if id, ok := r["id"].(int); ok {
+					score, _ := r["score"].(float64)
+					scored = append(scored, struct{ id int; score float64 }{id: id, score: score})
+				}
+			}
+
+			if len(scored) == 0 {
+				return []*Article{}, nil
+			}
+
+			// Fetch full articles from DB in a single call.
+			articles, err := s.repo.GetByIDs(ctx, tenantID, scoredIDsToIDs(scored))
+			if err != nil {
+				s.logger.Warnw("KnowledgeService: failed to fetch articles by IDs", "error", err)
+				return nil, err
+			}
+
+			// Re-order by RAG score descending and attach scores.
+			scoreMap := make(map[int]float64, len(scored))
+			for _, s := range scored {
+				scoreMap[s.id] = s.score
+			}
+			sorted := make([]*Article, 0, len(articles))
+			for _, a := range articles {
+				if score, ok := scoreMap[a.ID]; ok {
+					a.RelevanceScore = score
+					sorted = append(sorted, a)
+				}
+			}
+			// Sort by score descending
+			for i := 0; i < len(sorted)-1; i++ {
+				for j := i + 1; j < len(sorted); j++ {
+					if sorted[j].RelevanceScore > sorted[i].RelevanceScore {
+						sorted[i], sorted[j] = sorted[j], sorted[i]
+					}
+				}
+			}
+			return sorted, nil
+		}
+	}
+
+	// No RAG service: fall back to plain ListArticles with keyword search.
+	articles, _, err := s.repo.List(ctx, tenantID, 1, limit, category, query, "published")
+	return articles, err
+}
+
+func scoredIDsToIDs(scored []struct{ id int; score float64 }) []int {
+	ids := make([]int, len(scored))
+	for i, s := range scored {
+		ids[i] = s.id
+	}
+	return ids
+}
+
 func (s *Service) GetStats(ctx context.Context, tenantID int) (*dto.KnowledgeStatsResponse, error) {
 	stats, err := s.repo.GetStats(ctx, tenantID)
 	if err != nil {

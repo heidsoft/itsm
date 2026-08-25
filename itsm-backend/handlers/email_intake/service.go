@@ -224,6 +224,8 @@ func containsNormalized(values []string, needle string) bool {
 var (
 	ErrOverlappingShift = errors.New("on-call shift overlaps an existing shift")
 	ErrInvalidShift     = errors.New("on-call shift end must be after start")
+	ErrShiftNotFound    = errors.New("on-call shift not found")
+	ErrNoOnCall         = errors.New("no on-call resolver found for group")
 )
 
 type CurrentOnCall struct {
@@ -271,6 +273,49 @@ func (s *OnCallService) CreateShift(ctx context.Context, tenantID, scheduleID, u
 	return s.client.OnCallShift.Create().SetTenantID(tenantID).SetScheduleID(scheduleID).SetUserID(userID).SetStartAt(startAt).SetEndAt(endAt).Save(ctx)
 }
 
+func (s *OnCallService) ListShifts(ctx context.Context, tenantID, scheduleID int) ([]*ent.OnCallShift, error) {
+	query := s.client.OnCallShift.Query().Where(oncallshift.TenantIDEQ(tenantID))
+	if scheduleID > 0 {
+		query.Where(oncallshift.ScheduleIDEQ(scheduleID))
+	}
+	return query.Order(ent.Desc(oncallshift.FieldStartAt)).All(ctx)
+}
+
+func (s *OnCallService) UpdateShift(ctx context.Context, tenantID, shiftID, scheduleID, userID int, startAt, endAt time.Time) (*ent.OnCallShift, error) {
+	if !endAt.After(startAt) {
+		return nil, ErrInvalidShift
+	}
+	shift, err := s.client.OnCallShift.Query().Where(oncallshift.IDEQ(shiftID), oncallshift.TenantIDEQ(tenantID)).Only(ctx)
+	if err != nil {
+		return nil, ErrShiftNotFound
+	}
+	if scheduleID != shift.ScheduleID || userID != shift.UserID || !startAt.Equal(shift.StartAt) || !endAt.Equal(shift.EndAt) {
+		overlap, err := s.client.OnCallShift.Query().Where(
+			oncallshift.TenantIDEQ(tenantID), oncallshift.ScheduleIDEQ(scheduleID),
+			oncallshift.StartAtLT(endAt), oncallshift.EndAtGT(startAt),
+			oncallshift.IDNEQ(shiftID),
+		).Exist(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("check overlapping on-call shifts: %w", err)
+		}
+		if overlap {
+			return nil, ErrOverlappingShift
+		}
+	}
+	return s.client.OnCallShift.UpdateOneID(shiftID).SetScheduleID(scheduleID).SetUserID(userID).SetStartAt(startAt).SetEndAt(endAt).Save(ctx)
+}
+
+func (s *OnCallService) DeleteShift(ctx context.Context, tenantID, shiftID int) error {
+	deleted, err := s.client.OnCallShift.Delete().Where(oncallshift.IDEQ(shiftID), oncallshift.TenantIDEQ(tenantID)).Exec(ctx)
+	if err != nil {
+		return err
+	}
+	if deleted == 0 {
+		return ErrShiftNotFound
+	}
+	return nil
+}
+
 func (s *OnCallService) CurrentResolver(ctx context.Context, tenantID, groupID int, at time.Time) (*CurrentOnCall, error) {
 	shifts, err := s.client.OnCallShift.Query().Where(
 		oncallshift.TenantIDEQ(tenantID), oncallshift.StartAtLTE(at), oncallshift.EndAtGT(at),
@@ -281,7 +326,7 @@ func (s *OnCallService) CurrentResolver(ctx context.Context, tenantID, groupID i
 		return nil, fmt.Errorf("query current on-call resolver: %w", err)
 	}
 	if len(shifts) == 0 {
-		return nil, nil
+		return nil, ErrNoOnCall
 	}
 	sort.Slice(shifts, func(i, j int) bool { return shifts[i].StartAt.Before(shifts[j].StartAt) })
 	shift := shifts[0]

@@ -272,3 +272,38 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 		Categories: categories,
 	}, nil
 }
+
+// GetByIDs returns published, non-deleted articles by ID for a given tenant.
+// The returned slice preserves the order of the input ids slice.
+func (r *EntRepository) GetByIDs(ctx context.Context, tenantID int, ids []int) ([]*Article, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	es, err := r.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.IDIn(ids...),
+			knowledgearticle.TenantID(tenantID),
+			knowledgearticle.DeletedAtIsNil(),
+			knowledgearticle.IsPublished(true),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build a map for quick lookup
+	domainMap := make(map[int]*Article, len(es))
+	for _, e := range es {
+		domainMap[e.ID] = toDomain(e)
+	}
+
+	// Preserve input order
+	result := make([]*Article, 0, len(ids))
+	for _, id := range ids {
+		if a, ok := domainMap[id]; ok {
+			result = append(result, a)
+		}
+	}
+	return result, nil
+}

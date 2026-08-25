@@ -13,6 +13,9 @@ type Repository interface {
 	Delete(ctx context.Context, id int, tenantID int) error
 	GetCategories(ctx context.Context, tenantID int) ([]string, error)
 	GetStats(ctx context.Context, tenantID int) (*Stats, error)
+	// GetByIDs returns articles by a list of IDs, preserving the order of IDs.
+	// It filters by tenant and only returns published, non-deleted articles.
+	GetByIDs(ctx context.Context, tenantID int, ids []int) ([]*Article, error)
 }
 
 // Stats represents knowledge base statistics

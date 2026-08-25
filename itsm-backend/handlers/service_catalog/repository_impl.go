@@ -28,7 +28,20 @@ func (r *EntRepository) Create(ctx context.Context, catalog *ServiceCatalog) (*S
 		SetDeliveryTime(catalog.DeliveryTime).
 		SetStatus(catalog.Status).
 		SetIsActive(catalog.Status == "enabled").
-		SetTenantID(catalog.TenantID)
+		SetTenantID(catalog.TenantID).
+		SetIcon(catalog.Icon).
+		SetServiceType(catalog.ServiceType).
+		SetPrice(catalog.Price).
+		SetUnit(catalog.Unit).
+		SetRequiresApproval(catalog.RequiresApproval).
+		SetApprovalLevel(catalog.ApprovalLevel).
+		SetApprovers(catalog.Approvers).
+		SetSLAResponseTime(catalog.SLAResponseTime).
+		SetSLAResolutionTime(catalog.SLAResolutionTime).
+		SetFormSchema(catalog.FormSchema).
+		SetAvailableRegions(catalog.AvailableRegions).
+		SetAvailableSpecs(catalog.AvailableSpecs).
+		SetSortOrder(catalog.SortOrder)
 	if catalog.CITypeID > 0 {
 		entFunc = entFunc.SetCiTypeID(catalog.CITypeID)
 	}
@@ -103,7 +116,20 @@ func (r *EntRepository) Update(ctx context.Context, tenantID int, catalog *Servi
 		SetDescription(catalog.Description).
 		SetDeliveryTime(catalog.DeliveryTime).
 		SetStatus(catalog.Status).
-		SetIsActive(catalog.Status == "enabled")
+		SetIsActive(catalog.Status == "enabled").
+		SetIcon(catalog.Icon).
+		SetServiceType(catalog.ServiceType).
+		SetPrice(catalog.Price).
+		SetUnit(catalog.Unit).
+		SetRequiresApproval(catalog.RequiresApproval).
+		SetApprovalLevel(catalog.ApprovalLevel).
+		SetApprovers(catalog.Approvers).
+		SetSLAResponseTime(catalog.SLAResponseTime).
+		SetSLAResolutionTime(catalog.SLAResolutionTime).
+		SetFormSchema(catalog.FormSchema).
+		SetAvailableRegions(catalog.AvailableRegions).
+		SetAvailableSpecs(catalog.AvailableSpecs).
+		SetSortOrder(catalog.SortOrder)
 	if catalog.CITypeID > 0 {
 		update = update.SetCiTypeID(catalog.CITypeID)
 	}
@@ -240,16 +266,30 @@ func (r *EntRepository) Search(ctx context.Context, tenantID int, keyword string
 
 func (r *EntRepository) toDomain(e *ent.ServiceCatalog) *ServiceCatalog {
 	return &ServiceCatalog{
-		ID:             e.ID,
-		Name:           e.Name,
-		Category:       e.Category,
-		Description:    e.Description,
-		DeliveryTime:   e.DeliveryTime,
-		CITypeID:       e.CiTypeID,
-		CloudServiceID: e.CloudServiceID,
-		Status:         e.Status,
-		TenantID:       e.TenantID,
-		CreatedAt:      e.CreatedAt,
-		UpdatedAt:      e.UpdatedAt,
+		ID:                 e.ID,
+		Name:               e.Name,
+		Category:           e.Category,
+		Description:        e.Description,
+		Icon:               e.Icon,
+		ServiceType:        e.ServiceType,
+		Price:              e.Price,
+		DeliveryTime:       e.DeliveryTime,
+		Unit:               e.Unit,
+		RequiresApproval:    e.RequiresApproval,
+		ApprovalLevel:      e.ApprovalLevel,
+		Approvers:          e.Approvers,
+		SLAResponseTime:    e.SLAResponseTime,
+		SLAResolutionTime:  e.SLAResolutionTime,
+		CITypeID:           e.CiTypeID,
+		CloudServiceID:     e.CloudServiceID,
+		FormSchema:         e.FormSchema,
+		AvailableRegions:   e.AvailableRegions,
+		AvailableSpecs:     e.AvailableSpecs,
+		Status:             e.Status,
+		TenantID:           e.TenantID,
+		IsActive:           e.IsActive,
+		SortOrder:          e.SortOrder,
+		CreatedAt:          e.CreatedAt,
+		UpdatedAt:          e.UpdatedAt,
 	}
 }

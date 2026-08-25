@@ -127,6 +127,15 @@ export interface OnCallSchedule {
   status: string;
 }
 
+export interface OnCallShift {
+  id: number;
+  scheduleId: number;
+  userId: number;
+  startAt: string;
+  endAt: string;
+  createdAt?: string;
+}
+
 interface ListResponse<T> {
   items: T[];
   total: number;
@@ -222,6 +231,18 @@ class EmailIntakeService {
 
   async createShift(payload: { scheduleId: number; userId: number; startAt: string; endAt: string }): Promise<void> {
     await httpClient.post(`${this.baseUrl}/on-call/shifts`, payload);
+  }
+
+  async shifts(scheduleId?: number): Promise<ListResponse<OnCallShift>> {
+    return httpClient.get(`${this.baseUrl}/on-call/shifts`, scheduleId ? { scheduleId } : undefined);
+  }
+
+  async updateShift(id: number, payload: { userId: number; startAt: string; endAt: string }): Promise<OnCallShift> {
+    return httpClient.put(`${this.baseUrl}/on-call/shifts/${id}`, payload);
+  }
+
+  async deleteShift(id: number): Promise<void> {
+    await httpClient.delete(`${this.baseUrl}/on-call/shifts/${id}`);
   }
   async updateBranch(id: number, payload: { name: string; aliases?: string[]; customerId: number; status?: string }): Promise<CustomerBranch> {
     return httpClient.put(`${this.baseUrl}/branches/${id}`, payload);

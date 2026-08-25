@@ -323,7 +323,7 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 		limit = 20
 	}
 
-	articles, total, err := h.svc.ListArticles(c.Request.Context(), tenantIDInt, 1, limit, req.Category, req.Query, "")
+	articles, err := h.svc.SearchArticles(c.Request.Context(), tenantIDInt, req.Query, req.Category, limit)
 	if err != nil {
 		common.InternalError(c, "搜索失败: "+err.Error())
 		return
@@ -332,20 +332,21 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 	items := make([]interface{}, 0, len(articles))
 	for _, a := range articles {
 		items = append(items, map[string]interface{}{
-			"id":           a.ID,
-			"title":        a.Title,
-			"category":     a.Category,
-			"snippet":      snippet(a.Content, 200),
-			"tags":         a.Tags,
-			"is_published": a.IsPublished,
-			"score":        0.8,
-			"search_type":  "keyword",
+			"id":              a.ID,
+			"title":           a.Title,
+			"category":        a.Category,
+			"snippet":         snippet(a.Content, 200),
+			"tags":            a.Tags,
+			"is_published":    a.IsPublished,
+			"relevance_score": a.RelevanceScore,
+			"created_at":      a.CreatedAt,
+			"updated_at":      a.UpdatedAt,
 		})
 	}
 
 	common.Success(c, gin.H{
 		"items": items,
-		"total": total,
+		"total": len(items),
 	})
 }
 

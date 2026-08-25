@@ -22,46 +22,36 @@ func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, name, category, description string, deliveryTime, tenantID int, status string, ciTypeID, cloudServiceID int) (*ServiceCatalog, error) {
-	name = strings.TrimSpace(name)
-	category = strings.TrimSpace(category)
-	if name == "" || category == "" {
+func (s *Service) Create(ctx context.Context, catalog *ServiceCatalog) (*ServiceCatalog, error) {
+	catalog.Name = strings.TrimSpace(catalog.Name)
+	catalog.Category = strings.TrimSpace(catalog.Category)
+	if catalog.Name == "" || catalog.Category == "" {
 		return nil, common.NewBadRequestError("Service name and category are required", nil)
 	}
-	if deliveryTime == 0 {
-		deliveryTime = 1
+	if catalog.DeliveryTime == 0 {
+		catalog.DeliveryTime = 1
 	}
-	if deliveryTime < 1 || deliveryTime > 3650 {
+	if catalog.DeliveryTime < 1 || catalog.DeliveryTime > 3650 {
 		return nil, common.NewBadRequestError("Delivery time must be between 1 and 3650 days", nil)
 	}
-	if status == "" {
-		status = "enabled"
+	if catalog.Status == "" {
+		catalog.Status = "enabled"
 	}
-	if !isValidCatalogStatus(status) {
+	if !isValidCatalogStatus(catalog.Status) {
 		return nil, common.NewBadRequestError("Invalid service catalog status", nil)
 	}
-	if cloudServiceID > 0 && ciTypeID == 0 {
+	if catalog.CloudServiceID > 0 && catalog.CITypeID == 0 {
 		return nil, common.NewBadRequestError("CI type is required when linking a cloud service", nil)
 	}
-	exists, err := s.repo.NameExists(ctx, tenantID, name, 0)
+	exists, err := s.repo.NameExists(ctx, catalog.TenantID, catalog.Name, 0)
 	if err != nil {
 		return nil, common.NewInternalError("Failed to validate service catalog name", err)
 	}
 	if exists {
-		return nil, common.NewConflictError("Service catalog name", name)
+		return nil, common.NewConflictError("Service catalog name", catalog.Name)
 	}
-	if err := s.repo.ValidateReferences(ctx, tenantID, ciTypeID, cloudServiceID); err != nil {
+	if err := s.repo.ValidateReferences(ctx, catalog.TenantID, catalog.CITypeID, catalog.CloudServiceID); err != nil {
 		return nil, common.NewBadRequestError(err.Error(), err)
-	}
-	catalog := &ServiceCatalog{
-		Name:           name,
-		Category:       category,
-		Description:    description,
-		DeliveryTime:   deliveryTime,
-		CITypeID:       ciTypeID,
-		CloudServiceID: cloudServiceID,
-		Status:         status,
-		TenantID:       tenantID,
 	}
 	return s.repo.Create(ctx, catalog)
 }
@@ -83,26 +73,26 @@ func (s *Service) List(ctx context.Context, tenantID int, filters ListFilters) (
 	return s.repo.List(ctx, tenantID, filters)
 }
 
-func (s *Service) Update(ctx context.Context, tenantID int, id int, name, category, description string, deliveryTime int, status string, ciTypeID, cloudServiceID int) (*ServiceCatalog, error) {
+func (s *Service) Update(ctx context.Context, tenantID int, catalog *ServiceCatalog) (*ServiceCatalog, error) {
 	// First check if exists
-	current, err := s.repo.Get(ctx, tenantID, id)
+	current, err := s.repo.Get(ctx, tenantID, catalog.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	name = strings.TrimSpace(name)
-	category = strings.TrimSpace(category)
-	if deliveryTime < 0 || deliveryTime > 3650 {
-		return nil, common.NewBadRequestError("Delivery time must be between 1 and 3650 days", nil)
+	catalog.Name = strings.TrimSpace(catalog.Name)
+	catalog.Category = strings.TrimSpace(catalog.Category)
+	if catalog.DeliveryTime < 0 || catalog.DeliveryTime > 3650 {
+		return nil, common.NewBadRequestError("Delivery time must be between 0 and 3650 days", nil)
 	}
-	if status != "" && !isValidCatalogStatus(status) {
+	if catalog.Status != "" && !isValidCatalogStatus(catalog.Status) {
 		return nil, common.NewBadRequestError("Invalid service catalog status", nil)
 	}
 	effectiveName := current.Name
-	if name != "" {
-		effectiveName = name
+	if catalog.Name != "" {
+		effectiveName = catalog.Name
 	}
-	exists, err := s.repo.NameExists(ctx, tenantID, effectiveName, id)
+	exists, err := s.repo.NameExists(ctx, tenantID, effectiveName, catalog.ID)
 	if err != nil {
 		return nil, common.NewInternalError("Failed to validate service catalog name", err)
 	}
@@ -110,12 +100,12 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, name, catego
 		return nil, common.NewConflictError("Service catalog name", effectiveName)
 	}
 	effectiveCITypeID := current.CITypeID
-	if ciTypeID > 0 {
-		effectiveCITypeID = ciTypeID
+	if catalog.CITypeID > 0 {
+		effectiveCITypeID = catalog.CITypeID
 	}
 	effectiveCloudServiceID := current.CloudServiceID
-	if cloudServiceID > 0 {
-		effectiveCloudServiceID = cloudServiceID
+	if catalog.CloudServiceID > 0 {
+		effectiveCloudServiceID = catalog.CloudServiceID
 	}
 	if effectiveCloudServiceID > 0 && effectiveCITypeID == 0 {
 		return nil, common.NewBadRequestError("CI type is required when linking a cloud service", nil)
@@ -125,27 +115,66 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, name, catego
 	}
 
 	// Apply updates
-	if name != "" {
-		current.Name = name
+	if catalog.Name != "" {
+		current.Name = catalog.Name
 	}
-	if category != "" {
-		current.Category = category
+	if catalog.Category != "" {
+		current.Category = catalog.Category
 	}
-	if description != "" {
-		current.Description = description
+	if catalog.Description != "" {
+		current.Description = catalog.Description
 	}
-	if deliveryTime > 0 {
-		current.DeliveryTime = deliveryTime
+	if catalog.DeliveryTime > 0 {
+		current.DeliveryTime = catalog.DeliveryTime
 	}
-	if status != "" {
-		current.Status = status
+	if catalog.Status != "" {
+		current.Status = catalog.Status
 	}
-	if ciTypeID > 0 {
-		current.CITypeID = ciTypeID
+	if catalog.CITypeID > 0 {
+		current.CITypeID = catalog.CITypeID
 	}
-	if cloudServiceID > 0 {
-		current.CloudServiceID = cloudServiceID
+	if catalog.CloudServiceID > 0 {
+		current.CloudServiceID = catalog.CloudServiceID
 	}
+	// New fields
+	if catalog.Icon != "" {
+		current.Icon = catalog.Icon
+	}
+	if catalog.ServiceType != "" {
+		current.ServiceType = catalog.ServiceType
+	}
+	if catalog.Price > 0 {
+		current.Price = catalog.Price
+	}
+	if catalog.Unit != "" {
+		current.Unit = catalog.Unit
+	}
+	current.RequiresApproval = catalog.RequiresApproval
+	if catalog.ApprovalLevel > 0 {
+		current.ApprovalLevel = catalog.ApprovalLevel
+	}
+	if len(catalog.Approvers) > 0 {
+		current.Approvers = catalog.Approvers
+	}
+	if catalog.SLAResponseTime > 0 {
+		current.SLAResponseTime = catalog.SLAResponseTime
+	}
+	if catalog.SLAResolutionTime > 0 {
+		current.SLAResolutionTime = catalog.SLAResolutionTime
+	}
+	if catalog.FormSchema != nil {
+		current.FormSchema = catalog.FormSchema
+	}
+	if len(catalog.AvailableRegions) > 0 {
+		current.AvailableRegions = catalog.AvailableRegions
+	}
+	if len(catalog.AvailableSpecs) > 0 {
+		current.AvailableSpecs = catalog.AvailableSpecs
+	}
+	if catalog.SortOrder > 0 {
+		current.SortOrder = catalog.SortOrder
+	}
+	current.IsActive = catalog.Status == "enabled"
 
 	return s.repo.Update(ctx, tenantID, current)
 }

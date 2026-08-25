@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   App, Button, Card, DatePicker, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag, Typography,
 } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
   emailIntakeService,
@@ -27,6 +27,7 @@ export default function ContractsPage() {
   const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState(false);
   const [refModal, setRefModal] = useState(false);
+  const [editingContract, setEditingContract] = useState<SupportContract | null>(null);
   const [form] = Form.useForm();
   const [refForm] = Form.useForm();
   const [selectedCustomer, setSelectedCustomer] = useState<number | undefined>();
@@ -54,19 +55,47 @@ export default function ContractsPage() {
   const branchName = (id?: number) => id ? branches.find(b => b.id === id)?.name || `#${id}` : '-';
   const sourceName = (id: number) => sources.find(s => s.id === id)?.name || `#${id}`;
 
+  const openEditModal = (contract: SupportContract) => {
+    setEditingContract(contract);
+    setSelectedCustomer(contract.customerId);
+    const range = contract.startAt || contract.endAt
+      ? [contract.startAt ? dayjs(contract.startAt) : null, contract.endAt ? dayjs(contract.endAt) : null]
+      : undefined;
+    form.setFieldsValue({
+      customerId: contract.customerId,
+      branchId: contract.branchId,
+      contractNumber: contract.contractNumber,
+      status: contract.status,
+      range,
+    });
+    setModal(true);
+  };
+
   const saveContract = async () => {
     const v = await form.validateFields();
     try {
-      await emailIntakeService.createContract({
-        customerId: v.customerId,
-        branchId: v.branchId,
-        contractNumber: v.contractNumber,
-        status: v.status || 'active',
-        startAt: v.range?.[0]?.toISOString(),
-        endAt: v.range?.[1]?.toISOString(),
-      });
-      message.success('合同已创建');
-      setModal(false); form.resetFields(); setSelectedCustomer(undefined);
+      if (editingContract) {
+        await emailIntakeService.updateContract(editingContract.id, {
+          customerId: v.customerId,
+          branchId: v.branchId,
+          contractNumber: v.contractNumber,
+          status: v.status || editingContract.status,
+          startAt: v.range?.[0]?.toISOString(),
+          endAt: v.range?.[1]?.toISOString(),
+        });
+        message.success('合同已更新');
+      } else {
+        await emailIntakeService.createContract({
+          customerId: v.customerId,
+          branchId: v.branchId,
+          contractNumber: v.contractNumber,
+          status: v.status || 'active',
+          startAt: v.range?.[0]?.toISOString(),
+          endAt: v.range?.[1]?.toISOString(),
+        });
+        message.success('合同已创建');
+      }
+      setModal(false); form.resetFields(); setSelectedCustomer(undefined); setEditingContract(null);
       load();
     } catch { message.error('保存失败'); }
   };
@@ -105,12 +134,17 @@ export default function ContractsPage() {
     { title: '有效期', render: (_: unknown, r: SupportContract) =>
       r.startAt || r.endAt ? `${r.startAt ? dayjs(r.startAt).format('YYYY-MM-DD') : '?'} ~ ${r.endAt ? dayjs(r.endAt).format('YYYY-MM-DD') : '?'}` : '永久' },
     {
-      title: '操作', width: 100,
-      render: (_: unknown, r: SupportContract) => r.status === 'active' ? (
-        <Popconfirm title="确定终止该合同？" onConfirm={() => terminate(r.id)}>
-          <Button size="small" danger>终止</Button>
-        </Popconfirm>
-      ) : null,
+      title: '操作', width: 120,
+      render: (_: unknown, r: SupportContract) => (
+        <Space>
+          <Button size="small" icon={<EditOutlined />} onClick={() => openEditModal(r)}>编辑</Button>
+          {r.status === 'active' && (
+            <Popconfirm title="确定终止该合同？" onConfirm={() => terminate(r.id)}>
+              <Button size="small" danger>终止</Button>
+            </Popconfirm>
+          )}
+        </Space>
+      ),
     },
   ];
 
@@ -139,7 +173,7 @@ export default function ContractsPage() {
           <Title level={4} className="!mb-0">支持合同管理</Title>
           <Space>
             <Button icon={<ReloadOutlined />} onClick={load}>刷新</Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedCustomer(undefined); setModal(true); }}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedCustomer(undefined); setEditingContract(null); setModal(true); }}>
               新增合同
             </Button>
           </Space>
@@ -156,7 +190,7 @@ export default function ContractsPage() {
         <Table rowKey="id" size="small" columns={refColumns} dataSource={refs} pagination={false} />
       </Card>
 
-      <Modal title="新增合同" open={modal} onOk={saveContract} onCancel={() => setModal(false)} width={520}>
+      <Modal title={editingContract ? '编辑合同' : '新增合同'} open={modal} onOk={saveContract} onCancel={() => setModal(false)} width={520}>
         <Form form={form} layout="vertical">
           <Form.Item name="customerId" label="客户" rules={[{ required: true }]}>
             <Select placeholder="选择客户" showSearch optionFilterProp="label"

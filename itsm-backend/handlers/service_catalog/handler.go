@@ -142,23 +142,42 @@ func (h *Handler) Create(c *gin.Context) {
 		deliveryTime = val
 	}
 
-	catalog, err := h.service.Create(
-		c.Request.Context(),
-		req.Name,
-		req.Category,
-		req.Description,
-		deliveryTime,
-		tenantID,
-		req.Status,
-		req.CITypeID,
-		req.CloudServiceID,
-	)
+	requiresApproval := true
+	if req.RequiresApproval != nil {
+		requiresApproval = *req.RequiresApproval
+	}
+
+	catalog := &ServiceCatalog{
+		Name:              req.Name,
+		Category:          req.Category,
+		Description:       req.Description,
+		Icon:              req.Icon,
+		ServiceType:       req.ServiceType,
+		Price:             req.Price,
+		DeliveryTime:      deliveryTime,
+		Unit:              req.Unit,
+		RequiresApproval:  requiresApproval,
+		ApprovalLevel:     req.ApprovalLevel,
+		Approvers:         req.Approvers,
+		SLAResponseTime:   req.SLAResponseTime,
+		SLAResolutionTime: req.SLAResolutionTime,
+		CITypeID:          req.CITypeID,
+		CloudServiceID:    req.CloudServiceID,
+		FormSchema:        req.FormSchema,
+		AvailableRegions:  req.AvailableRegions,
+		AvailableSpecs:    req.AvailableSpecs,
+		Status:            req.Status,
+		SortOrder:         req.SortOrder,
+		TenantID:          tenantID,
+	}
+
+	result, err := h.service.Create(c.Request.Context(), catalog)
 	if err != nil {
 		failServiceCatalog(c, err)
 		return
 	}
 
-	common.Success(c, h.toDTO(catalog))
+	common.Success(c, h.toDTO(result))
 }
 
 // Update handles UpdateServiceCatalog
@@ -183,27 +202,40 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	deliveryTime := 0
-	if req.DeliveryTime != "" {
-		val, parseErr := strconv.Atoi(req.DeliveryTime)
-		if parseErr != nil || val <= 0 {
-			common.Fail(c, common.ParamErrorCode, "deliveryTime 必须为正整数天数")
+	if req.DeliveryTime != nil && *req.DeliveryTime != "" {
+		val, parseErr := strconv.Atoi(*req.DeliveryTime)
+		if parseErr != nil || val < 0 {
+			common.Fail(c, common.ParamErrorCode, "deliveryTime 必须为非负整数天数")
 			return
 		}
 		deliveryTime = val
 	}
 
-	_, err = h.service.Update(
-		c.Request.Context(),
-		tenantID,
-		id,
-		req.Name,
-		req.Category,
-		req.Description,
-		deliveryTime,
-		req.Status,
-		req.CITypeID,
-		req.CloudServiceID,
-	)
+	catalog := &ServiceCatalog{
+		ID:                 id,
+		Name:              getStringValue(req.Name),
+		Category:          getStringValue(req.Category),
+		Description:       getStringValue(req.Description),
+		Icon:              getStringValue(req.Icon),
+		ServiceType:       getStringValue(req.ServiceType),
+		Price:             getFloat64Value(req.Price),
+		DeliveryTime:      deliveryTime,
+		Unit:              getStringValue(req.Unit),
+		RequiresApproval:  getBoolValue(req.RequiresApproval),
+		ApprovalLevel:     getIntValue(req.ApprovalLevel),
+		Approvers:         req.Approvers,
+		SLAResponseTime:   getIntValue(req.SLAResponseTime),
+		SLAResolutionTime: getIntValue(req.SLAResolutionTime),
+		CITypeID:          getIntValue(req.CITypeID),
+		CloudServiceID:    getIntValue(req.CloudServiceID),
+		FormSchema:        getMapValue(req.FormSchema),
+		AvailableRegions:  req.AvailableRegions,
+		AvailableSpecs:    req.AvailableSpecs,
+		Status:            getStringValue(req.Status),
+		SortOrder:         getIntValue(req.SortOrder),
+	}
+
+	_, err = h.service.Update(c.Request.Context(), tenantID, catalog)
 	if err != nil {
 		failServiceCatalog(c, err)
 		return
@@ -217,6 +249,41 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	common.Success(c, h.toDTO(updated))
+}
+
+func getStringValue(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+func getIntValue(i *int) int {
+	if i == nil {
+		return 0
+	}
+	return *i
+}
+
+func getFloat64Value(f *float64) float64 {
+	if f == nil {
+		return 0
+	}
+	return *f
+}
+
+func getBoolValue(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
+}
+
+func getMapValue(m *map[string]interface{}) map[string]interface{} {
+	if m == nil {
+		return nil
+	}
+	return *m
 }
 
 func normalizeServiceCatalogRequest(req *dto.CreateServiceCatalogRequest) {
@@ -307,15 +374,29 @@ func (h *Handler) Stats(c *gin.Context) {
 
 func (h *Handler) toDTO(c *ServiceCatalog) dto.ServiceCatalogResponse {
 	return dto.ServiceCatalogResponse{
-		ID:             c.ID,
-		Name:           c.Name,
-		Category:       c.Category,
-		Description:    c.Description,
-		DeliveryTime:   strconv.Itoa(c.DeliveryTime),
-		CITypeID:       c.CITypeID,
-		CloudServiceID: c.CloudServiceID,
-		Status:         c.Status,
-		CreatedAt:      c.CreatedAt,
-		UpdatedAt:      c.UpdatedAt,
+		ID:                 c.ID,
+		Name:               c.Name,
+		Category:           c.Category,
+		Description:        c.Description,
+		Icon:               c.Icon,
+		ServiceType:        c.ServiceType,
+		Price:              c.Price,
+		DeliveryTime:       strconv.Itoa(c.DeliveryTime),
+		Unit:               c.Unit,
+		RequiresApproval:   c.RequiresApproval,
+		ApprovalLevel:      c.ApprovalLevel,
+		Approvers:          c.Approvers,
+		SLAResponseTime:    c.SLAResponseTime,
+		SLAResolutionTime:  c.SLAResolutionTime,
+		CITypeID:           c.CITypeID,
+		CloudServiceID:     c.CloudServiceID,
+		FormSchema:         c.FormSchema,
+		AvailableRegions:   c.AvailableRegions,
+		AvailableSpecs:     c.AvailableSpecs,
+		Status:             c.Status,
+		IsActive:           c.IsActive,
+		SortOrder:          c.SortOrder,
+		CreatedAt:          c.CreatedAt,
+		UpdatedAt:          c.UpdatedAt,
 	}
 }

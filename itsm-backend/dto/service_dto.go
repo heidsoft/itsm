@@ -69,18 +69,32 @@ type GetServiceRequestsRequest struct {
 
 // ServiceCatalogResponse 服务目录响应
 type ServiceCatalogResponse struct {
-	ID             int       `json:"id"`
-	Name           string    `json:"name"`
-	Category       string    `json:"category"`
-	Description    string    `json:"description"`
-	DeliveryTime   string    `json:"deliveryTime"`
-	CITypeID       int       `json:"ciTypeId,omitempty"`
-	CloudServiceID int       `json:"cloudServiceId,omitempty"`
-	SLAID          int       `json:"slaId,omitempty"`
-	SLAName        string    `json:"slaName,omitempty"`
-	Status         string    `json:"status"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	ID                 int                   `json:"id"`
+	Name               string                `json:"name"`
+	Category           string                `json:"category"`
+	Description        string                `json:"description"`
+	Icon               string                `json:"icon,omitempty"`
+	ServiceType        string                `json:"serviceType,omitempty"`
+	Price              float64               `json:"price,omitempty"`
+	DeliveryTime       string                `json:"deliveryTime"`
+	Unit               string                `json:"unit,omitempty"`
+	RequiresApproval   bool                  `json:"requiresApproval,omitempty"`
+	ApprovalLevel      int                   `json:"approvalLevel,omitempty"`
+	Approvers          []int                 `json:"approvers,omitempty"`
+	SLAResponseTime    int                   `json:"slaResponseTime,omitempty"`
+	SLAResolutionTime  int                   `json:"slaResolutionTime,omitempty"`
+	SLAID              int                   `json:"slaId,omitempty"`
+	SLAName            string                `json:"slaName,omitempty"`
+	CITypeID           int                   `json:"ciTypeId,omitempty"`
+	CloudServiceID     int                   `json:"cloudServiceId,omitempty"`
+	FormSchema         map[string]interface{} `json:"formSchema,omitempty"`
+	AvailableRegions   []string              `json:"availableRegions,omitempty"`
+	AvailableSpecs     []string              `json:"availableSpecs,omitempty"`
+	Status             string                `json:"status"`
+	IsActive           bool                  `json:"isActive,omitempty"`
+	SortOrder          int                   `json:"sortOrder,omitempty"`
+	CreatedAt          time.Time             `json:"createdAt"`
+	UpdatedAt          time.Time             `json:"updatedAt"`
 }
 
 // ServiceRequestResponse 服务请求响应
@@ -174,16 +188,30 @@ type ServiceRequestListResponse struct {
 // ToServiceCatalogResponse 转换为服务目录响应
 func ToServiceCatalogResponse(catalog *ent.ServiceCatalog) *ServiceCatalogResponse {
 	return &ServiceCatalogResponse{
-		ID:             catalog.ID,
-		Name:           catalog.Name,
-		Category:       catalog.Category,
-		Description:    catalog.Description,
-		DeliveryTime:   strconv.Itoa(catalog.DeliveryTime),
-		CITypeID:       catalog.CiTypeID,
-		CloudServiceID: catalog.CloudServiceID,
-		Status:         string(catalog.Status),
-		CreatedAt:      catalog.CreatedAt,
-		UpdatedAt:      catalog.UpdatedAt,
+		ID:                 catalog.ID,
+		Name:               catalog.Name,
+		Category:           catalog.Category,
+		Description:        catalog.Description,
+		Icon:               catalog.Icon,
+		ServiceType:        catalog.ServiceType,
+		Price:              catalog.Price,
+		DeliveryTime:       strconv.Itoa(catalog.DeliveryTime),
+		Unit:               catalog.Unit,
+		RequiresApproval:   catalog.RequiresApproval,
+		ApprovalLevel:      catalog.ApprovalLevel,
+		Approvers:          catalog.Approvers,
+		SLAResponseTime:    catalog.SLAResponseTime,
+		SLAResolutionTime:  catalog.SLAResolutionTime,
+		CITypeID:           catalog.CiTypeID,
+		CloudServiceID:     catalog.CloudServiceID,
+		FormSchema:         catalog.FormSchema,
+		AvailableRegions:   catalog.AvailableRegions,
+		AvailableSpecs:     catalog.AvailableSpecs,
+		Status:             string(catalog.Status),
+		IsActive:           catalog.IsActive,
+		SortOrder:          catalog.SortOrder,
+		CreatedAt:          catalog.CreatedAt,
+		UpdatedAt:          catalog.UpdatedAt,
 	}
 }
 
@@ -261,22 +289,48 @@ func ToServiceRequestApprovalResponse(a *ent.ServiceRequestApproval) ServiceRequ
 
 // CreateServiceCatalogRequest 创建服务目录请求
 type CreateServiceCatalogRequest struct {
-	Name           string `json:"name" binding:"required,max=255"`
-	Category       string `json:"category" binding:"required,max=100"`
-	Description    string `json:"description" binding:"omitempty,max=1000"`
-	DeliveryTime   string `json:"deliveryTime" binding:"omitempty,max=50"`
-	CITypeID       int    `json:"ciTypeId,omitempty"`
-	CloudServiceID int    `json:"cloudServiceId,omitempty"`
-	Status         string `json:"status" binding:"omitempty,oneof=enabled disabled"`
+	Name              string                 `json:"name" binding:"required,max=255"`
+	Category          string                 `json:"category" binding:"required,max=100"`
+	Description       string                 `json:"description" binding:"omitempty,max=1000"`
+	Icon              string                 `json:"icon" binding:"omitempty,max=255"`
+	ServiceType       string                 `json:"serviceType" binding:"omitempty,oneof=vm rds oss network storage security custom"`
+	Price             float64                `json:"price" binding:"omitempty"`
+	DeliveryTime      string                 `json:"deliveryTime" binding:"omitempty,max=50"`
+	Unit              string                 `json:"unit" binding:"omitempty,oneof=月 次 用户"`
+	RequiresApproval  *bool                  `json:"requiresApproval"`
+	ApprovalLevel     int                    `json:"approvalLevel" binding:"omitempty,min=1,max=3"`
+	Approvers         []int                  `json:"approvers"`
+	SLAResponseTime   int                    `json:"slaResponseTime" binding:"omitempty"`
+	SLAResolutionTime int                    `json:"slaResolutionTime" binding:"omitempty"`
+	CITypeID          int                    `json:"ciTypeId,omitempty"`
+	CloudServiceID    int                    `json:"cloudServiceId,omitempty"`
+	FormSchema        map[string]interface{} `json:"formSchema"`
+	AvailableRegions  []string               `json:"availableRegions"`
+	AvailableSpecs    []string               `json:"availableSpecs"`
+	Status            string                 `json:"status" binding:"omitempty,oneof=enabled disabled"`
+	SortOrder         int                    `json:"sortOrder"`
 }
 
 // UpdateServiceCatalogRequest 更新服务目录请求
 type UpdateServiceCatalogRequest struct {
-	Name           string `json:"name" binding:"omitempty,max=255"`
-	Category       string `json:"category" binding:"omitempty,max=100"`
-	Description    string `json:"description" binding:"omitempty,max=1000"`
-	DeliveryTime   string `json:"deliveryTime" binding:"omitempty,max=50"`
-	CITypeID       int    `json:"ciTypeId,omitempty"`
-	CloudServiceID int    `json:"cloudServiceId,omitempty"`
-	Status         string `json:"status" binding:"omitempty,oneof=enabled disabled"`
+	Name              *string                 `json:"name" binding:"omitempty,max=255"`
+	Category          *string                 `json:"category" binding:"omitempty,max=100"`
+	Description       *string                 `json:"description" binding:"omitempty,max=1000"`
+	Icon              *string                 `json:"icon" binding:"omitempty,max=255"`
+	ServiceType       *string                 `json:"serviceType" binding:"omitempty,oneof=vm rds oss network storage security custom"`
+	Price             *float64                `json:"price"`
+	DeliveryTime      *string                 `json:"deliveryTime" binding:"omitempty,max=50"`
+	Unit              *string                 `json:"unit" binding:"omitempty,oneof=月 次 用户"`
+	RequiresApproval  *bool                   `json:"requiresApproval"`
+	ApprovalLevel     *int                    `json:"approvalLevel" binding:"omitempty,min=1,max=3"`
+	Approvers         []int                   `json:"approvers"`
+	SLAResponseTime   *int                    `json:"slaResponseTime"`
+	SLAResolutionTime *int                    `json:"slaResolutionTime"`
+	CITypeID          *int                    `json:"ciTypeId"`
+	CloudServiceID    *int                    `json:"cloudServiceId"`
+	FormSchema        *map[string]interface{} `json:"formSchema"`
+	AvailableRegions  []string                `json:"availableRegions"`
+	AvailableSpecs    []string                `json:"availableSpecs"`
+	Status            *string                 `json:"status" binding:"omitempty,oneof=enabled disabled"`
+	SortOrder         *int                    `json:"sortOrder"`
 }

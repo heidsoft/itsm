@@ -105,30 +105,71 @@ func (o *EmailIntakeOrchestrator) Ingest(ctx context.Context, tenantID int, emai
 	if email.ReceivedAt.IsZero() {
 		email.ReceivedAt = time.Now()
 	}
-	existing, err := o.client.InboundEmailMessage.Query().Where(inboundemailmessage.TenantIDEQ(tenantID), inboundemailmessage.MailboxInstanceKeyEQ(email.MailboxInstanceKey), inboundemailmessage.UIDValidityEQ(email.UIDValidity), inboundemailmessage.UIDEQ(email.UID)).WithConversation().Only(ctx)
+
+	// Phase 1 + 2 in a single transaction to ensure idempotent write:
+	// two concurrent poll goroutines hitting the same UID must not create duplicates.
+	var conversation *ent.EmailConversation
+	var message *ent.InboundEmailMessage
+
+	tx, err := o.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("start idempotent-write transaction: %w", err)
+	}
+	rollback := func(cause error) error { _ = tx.Rollback(); return cause }
+
+	// Idempotency check inside the transaction
+	existing, err := tx.InboundEmailMessage.Query().Where(
+		inboundemailmessage.TenantIDEQ(tenantID),
+		inboundemailmessage.MailboxInstanceKeyEQ(email.MailboxInstanceKey),
+		inboundemailmessage.UIDValidityEQ(email.UIDValidity),
+		inboundemailmessage.UIDEQ(email.UID),
+	).WithConversation().Only(ctx)
 	if err == nil {
+		_ = tx.Rollback()
 		return existing.Edges.Conversation, nil
 	}
 	if !ent.IsNotFound(err) {
 		return nil, fmt.Errorf("check inbound email idempotency: %w", err)
 	}
 
-	conversation, err := o.findOrCreateConversation(ctx, tenantID, email)
+	conversation, err = o.findOrCreateConversationTx(ctx, tx, tenantID, email)
 	if err != nil {
-		return nil, err
+		return nil, rollback(err)
 	}
+
 	hash := sha256.Sum256(email.RawMIME)
 	sanitizedHTML := bluemonday.StrictPolicy().Sanitize(email.HTMLBody)
-	message, err := o.client.InboundEmailMessage.Create().SetTenantID(tenantID).SetConversationID(conversation.ID).
+	message, err = tx.InboundEmailMessage.Create().
+		SetTenantID(tenantID).SetConversationID(conversation.ID).
 		SetProvider(defaultString(email.Provider, "imap")).SetMailboxInstanceKey(email.MailboxInstanceKey).
 		SetUIDValidity(email.UIDValidity).SetUID(email.UID).SetExternalMessageID(email.ExternalMessageID).
 		SetInReplyTo(email.InReplyTo).SetReferences(email.References).SetFromAddress(email.FromAddress).
 		SetToAddresses(email.ToAddresses).SetReplyToAddress(email.ReplyToAddress).SetSubject(email.Subject).
 		SetPlainText(limitRunes(email.PlainText, 20000)).SetSanitizedHTML(limitRunes(sanitizedHTML, 50000)).
 		SetRawMime(email.RawMIME).SetRawSha256(hex.EncodeToString(hash[:])).SetReceivedAt(email.ReceivedAt).Save(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("persist inbound email: %w", err)
+
+	if ent.IsConstraintError(err) {
+		// Another goroutine won the race — fetch the winner and abort this write.
+		_ = tx.Rollback()
+		existing, reErr := o.client.InboundEmailMessage.Query().Where(
+			inboundemailmessage.TenantIDEQ(tenantID),
+			inboundemailmessage.MailboxInstanceKeyEQ(email.MailboxInstanceKey),
+			inboundemailmessage.UIDValidityEQ(email.UIDValidity),
+			inboundemailmessage.UIDEQ(email.UID),
+		).WithConversation().Only(ctx)
+		if reErr != nil {
+			return nil, fmt.Errorf("idempotency conflict and re-fetch failed: %w", reErr)
+		}
+		return existing.Edges.Conversation, nil
 	}
+	if err != nil {
+		return nil, rollback(fmt.Errorf("persist inbound email: %w", err))
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit idempotent-write transaction: %w", err)
+	}
+
 	return o.process(ctx, tenantID, conversation, message, email.SenderAuthenticated)
 }
 
@@ -385,6 +426,32 @@ func (o *EmailIntakeOrchestrator) findOrCreateConversation(ctx context.Context, 
 	return o.client.EmailConversation.Create().SetTenantID(tenantID).SetConversationToken(token).SetExternalThreadID(email.ExternalMessageID).SetLastMessageAt(email.ReceivedAt).Save(ctx)
 }
 
+// findOrCreateConversationTx creates or finds a conversation entirely within the provided transaction.
+// It must be called from within an existing transaction so that the conversation and the
+// InboundEmailMessage row land in the same DB transaction, satisfying the two-phase idempotent write.
+func (o *EmailIntakeOrchestrator) findOrCreateConversationTx(ctx context.Context, tx *ent.Tx, tenantID int, email ReceivedEmail) (*ent.EmailConversation, error) {
+	for _, reference := range append([]string{email.InReplyTo}, email.References...) {
+		if reference == "" {
+			continue
+		}
+		message, err := tx.InboundEmailMessage.Query().Where(inboundemailmessage.TenantIDEQ(tenantID), inboundemailmessage.ExternalMessageIDEQ(reference)).WithConversation().First(ctx)
+		if err == nil && message.Edges.Conversation != nil && sameMailbox(message.FromAddress, email.FromAddress) {
+			return message.Edges.Conversation, nil
+		}
+	}
+	if token := conversationTokenFromSubject(email.Subject); token != "" {
+		existing, err := tx.EmailConversation.Query().Where(emailconversation.TenantIDEQ(tenantID), emailconversation.ConversationTokenEQ(token)).Only(ctx)
+		if err == nil && o.conversationHasSenderTx(ctx, tx, tenantID, existing.ID, email.FromAddress) {
+			return existing, nil
+		}
+	}
+	token, err := newConversationToken()
+	if err != nil {
+		return nil, err
+	}
+	return tx.EmailConversation.Create().SetTenantID(tenantID).SetConversationToken(token).SetExternalThreadID(email.ExternalMessageID).SetLastMessageAt(email.ReceivedAt).Save(ctx)
+}
+
 func (o *EmailIntakeOrchestrator) enqueueMissingInformationReply(ctx context.Context, tenantID int, conversation *ent.EmailConversation, message *ent.InboundEmailMessage, fields []string) error {
 	if len(fields) == 0 {
 		fields = []string{"customerName", "reportedContractNumber"}
@@ -438,6 +505,19 @@ func sameMailbox(a, b string) bool {
 
 func (o *EmailIntakeOrchestrator) conversationHasSender(ctx context.Context, tenantID, conversationID int, sender string) bool {
 	messages, err := o.client.InboundEmailMessage.Query().Where(inboundemailmessage.TenantIDEQ(tenantID), inboundemailmessage.ConversationIDEQ(conversationID)).All(ctx)
+	if err != nil {
+		return false
+	}
+	for _, message := range messages {
+		if sameMailbox(message.FromAddress, sender) {
+			return true
+		}
+	}
+	return false
+}
+
+func (o *EmailIntakeOrchestrator) conversationHasSenderTx(ctx context.Context, tx *ent.Tx, tenantID, conversationID int, sender string) bool {
+	messages, err := tx.InboundEmailMessage.Query().Where(inboundemailmessage.TenantIDEQ(tenantID), inboundemailmessage.ConversationIDEQ(conversationID)).All(ctx)
 	if err != nil {
 		return false
 	}

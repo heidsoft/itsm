@@ -76,6 +76,9 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	onCall.GET("/schedules", middleware.RequirePermission("on_call", "read"), h.ListSchedules)
 	onCall.POST("/schedules", middleware.RequirePermission("on_call", "write"), h.CreateSchedule)
 	onCall.POST("/shifts", middleware.RequirePermission("on_call", "write"), h.CreateShift)
+	onCall.GET("/shifts", middleware.RequirePermission("on_call", "read"), h.ListShifts)
+	onCall.PUT("/shifts/:id", middleware.RequirePermission("on_call", "write"), h.UpdateShift)
+	onCall.DELETE("/shifts/:id", middleware.RequirePermission("on_call", "write"), h.DeleteShift)
 	onCall.GET("/current", middleware.RequirePermission("on_call", "read"), h.CurrentOnCall)
 }
 
@@ -630,6 +633,76 @@ func (h *Handler) CreateShift(c *gin.Context) {
 	}
 	common.Success(c, shiftResponse{ID: entity.ID, ScheduleID: entity.ScheduleID, UserID: entity.UserID, StartAt: entity.StartAt, EndAt: entity.EndAt})
 }
+
+func (h *Handler) ListShifts(c *gin.Context) {
+	tenantID, ok := tenant(c)
+	if !ok {
+		return
+	}
+	scheduleID, _ := strconv.Atoi(c.Query("scheduleId"))
+	items, err := h.onCall.ListShifts(c, tenantID, scheduleID)
+	if err != nil {
+		common.InternalError(c, "failed to list shifts")
+		return
+	}
+	result := make([]shiftResponse, 0, len(items))
+	for _, item := range items {
+		result = append(result, shiftResponse{ID: item.ID, ScheduleID: item.ScheduleID, UserID: item.UserID, StartAt: item.StartAt, EndAt: item.EndAt})
+	}
+	common.Success(c, gin.H{"items": result, "total": len(result)})
+}
+
+func (h *Handler) UpdateShift(c *gin.Context) {
+	tenantID, ok := tenant(c)
+	if !ok {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.ParamError(c, "invalid shift id")
+		return
+	}
+	var req shiftRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "invalid shift")
+		return
+	}
+	entity, err := h.onCall.UpdateShift(c, tenantID, id, req.ScheduleID, req.UserID, req.StartAt, req.EndAt)
+	if err != nil {
+		code := common.ParamErrorCode
+		if errors.Is(err, ErrShiftNotFound) {
+			code = common.NotFoundCode
+		} else if !errors.Is(err, ErrOverlappingShift) && !errors.Is(err, ErrInvalidShift) {
+			code = common.InternalErrorCode
+		}
+		common.Fail(c, code, err.Error())
+		return
+	}
+	common.Success(c, shiftResponse{ID: entity.ID, ScheduleID: entity.ScheduleID, UserID: entity.UserID, StartAt: entity.StartAt, EndAt: entity.EndAt})
+}
+
+func (h *Handler) DeleteShift(c *gin.Context) {
+	tenantID, ok := tenant(c)
+	if !ok {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.ParamError(c, "invalid shift id")
+		return
+	}
+	err = h.onCall.DeleteShift(c, tenantID, id)
+	if err != nil {
+		if errors.Is(err, ErrShiftNotFound) {
+			common.NotFound(c, "shift not found")
+		} else {
+			common.InternalError(c, "failed to delete shift")
+		}
+		return
+	}
+	common.Success(c, gin.H{"deleted": true})
+}
+
 func (h *Handler) CurrentOnCall(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -642,7 +715,11 @@ func (h *Handler) CurrentOnCall(c *gin.Context) {
 	}
 	current, err := h.onCall.CurrentResolver(c, tenantID, groupID, time.Now())
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		if errors.Is(err, ErrNoOnCall) {
+			common.Fail(c, common.NotFoundCode, err.Error())
+		} else {
+			common.Fail(c, common.InternalErrorCode, err.Error())
+		}
 		return
 	}
 	common.Success(c, current)
@@ -657,7 +734,29 @@ func (h *Handler) ListConversations(c *gin.Context) {
 	if status := strings.TrimSpace(c.Query("status")); status != "" {
 		query.Where(emailconversation.StatusEQ(status))
 	}
-	items, err := query.WithCustomer().WithBranch().WithSupportContract().WithIncidents().Order(ent.Desc(emailconversation.FieldLastMessageAt)).All(c)
+	// Pagination: page (1-based) and page_size (default 20, max 100)
+	page := 1
+	pageSize := 20
+	if p, err := strconv.Atoi(c.Query("page")); err == nil && p > 0 {
+		page = p
+	}
+	if ps, err := strconv.Atoi(c.Query("page_size")); err == nil && ps > 0 {
+		if ps > 100 {
+			ps = 100
+		}
+		pageSize = ps
+	}
+	total, err := query.Count(c)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+	items, err := query.
+		WithCustomer().WithBranch().WithSupportContract().WithIncidents().
+		Order(ent.Desc(emailconversation.FieldLastMessageAt)).
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		All(c)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -666,7 +765,12 @@ func (h *Handler) ListConversations(c *gin.Context) {
 	for _, item := range items {
 		result = append(result, mapConversation(item))
 	}
-	common.Success(c, gin.H{"items": result, "total": len(result)})
+	common.Success(c, gin.H{
+		"items":    result,
+		"total":    total,
+		"page":     page,
+		"page_size": pageSize,
+	})
 }
 func (h *Handler) GetConversation(c *gin.Context) {
 	tenantID, ok := tenant(c)
