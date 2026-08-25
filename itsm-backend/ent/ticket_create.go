@@ -275,6 +275,48 @@ func (_c *TicketCreate) SetNillableSLAResolutionDeadline(v *time.Time) *TicketCr
 	return _c
 }
 
+// SetSLAStatus sets the "sla_status" field.
+func (_c *TicketCreate) SetSLAStatus(v string) *TicketCreate {
+	_c.mutation.SetSLAStatus(v)
+	return _c
+}
+
+// SetNillableSLAStatus sets the "sla_status" field if the given value is not nil.
+func (_c *TicketCreate) SetNillableSLAStatus(v *string) *TicketCreate {
+	if v != nil {
+		_c.SetSLAStatus(*v)
+	}
+	return _c
+}
+
+// SetSLAPausedAt sets the "sla_paused_at" field.
+func (_c *TicketCreate) SetSLAPausedAt(v time.Time) *TicketCreate {
+	_c.mutation.SetSLAPausedAt(v)
+	return _c
+}
+
+// SetNillableSLAPausedAt sets the "sla_paused_at" field if the given value is not nil.
+func (_c *TicketCreate) SetNillableSLAPausedAt(v *time.Time) *TicketCreate {
+	if v != nil {
+		_c.SetSLAPausedAt(*v)
+	}
+	return _c
+}
+
+// SetSLAPauseReason sets the "sla_pause_reason" field.
+func (_c *TicketCreate) SetSLAPauseReason(v string) *TicketCreate {
+	_c.mutation.SetSLAPauseReason(v)
+	return _c
+}
+
+// SetNillableSLAPauseReason sets the "sla_pause_reason" field if the given value is not nil.
+func (_c *TicketCreate) SetNillableSLAPauseReason(v *string) *TicketCreate {
+	if v != nil {
+		_c.SetSLAPauseReason(*v)
+	}
+	return _c
+}
+
 // SetFirstResponseAt sets the "first_response_at" field.
 func (_c *TicketCreate) SetFirstResponseAt(v time.Time) *TicketCreate {
 	_c.mutation.SetFirstResponseAt(v)
@@ -803,6 +845,10 @@ func (_c *TicketCreate) defaults() {
 		v := ticket.DefaultPriority
 		_c.mutation.SetPriority(v)
 	}
+	if _, ok := _c.mutation.SLAStatus(); !ok {
+		v := ticket.DefaultSLAStatus
+		_c.mutation.SetSLAStatus(v)
+	}
 	if _, ok := _c.mutation.Version(); !ok {
 		v := ticket.DefaultVersion
 		_c.mutation.SetVersion(v)
@@ -876,6 +922,9 @@ func (_c *TicketCreate) check() error {
 		if err := ticket.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.tenant_id": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.SLAStatus(); !ok {
+		return &ValidationError{Name: "sla_status", err: errors.New(`ent: missing required field "Ticket.sla_status"`)}
 	}
 	if v, ok := _c.mutation.Rating(); ok {
 		if err := ticket.RatingValidator(v); err != nil {
@@ -995,6 +1044,18 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.SLAResolutionDeadline(); ok {
 		_spec.SetField(ticket.FieldSLAResolutionDeadline, field.TypeTime, value)
 		_node.SLAResolutionDeadline = value
+	}
+	if value, ok := _c.mutation.SLAStatus(); ok {
+		_spec.SetField(ticket.FieldSLAStatus, field.TypeString, value)
+		_node.SLAStatus = value
+	}
+	if value, ok := _c.mutation.SLAPausedAt(); ok {
+		_spec.SetField(ticket.FieldSLAPausedAt, field.TypeTime, value)
+		_node.SLAPausedAt = value
+	}
+	if value, ok := _c.mutation.SLAPauseReason(); ok {
+		_spec.SetField(ticket.FieldSLAPauseReason, field.TypeString, value)
+		_node.SLAPauseReason = value
 	}
 	if value, ok := _c.mutation.FirstResponseAt(); ok {
 		_spec.SetField(ticket.FieldFirstResponseAt, field.TypeTime, value)

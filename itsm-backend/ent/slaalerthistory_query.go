@@ -26,6 +26,7 @@ type SLAAlertHistoryQuery struct {
 	predicates    []predicate.SLAAlertHistory
 	withTicket    *TicketQuery
 	withAlertRule *SLAAlertRuleQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -405,12 +406,16 @@ func (_q *SLAAlertHistoryQuery) prepareQuery(ctx context.Context) error {
 func (_q *SLAAlertHistoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAAlertHistory, error) {
 	var (
 		nodes       = []*SLAAlertHistory{}
+		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
 			_q.withTicket != nil,
 			_q.withAlertRule != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, slaalerthistory.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SLAAlertHistory).scanValues(nil, columns)
 	}

@@ -26,6 +26,7 @@ type SLAViolationQuery struct {
 	predicates        []predicate.SLAViolation
 	withSLADefinition *SLADefinitionQuery
 	withTicket        *TicketQuery
+	withFKs           bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -405,12 +406,16 @@ func (_q *SLAViolationQuery) prepareQuery(ctx context.Context) error {
 func (_q *SLAViolationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAViolation, error) {
 	var (
 		nodes       = []*SLAViolation{}
+		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
 			_q.withSLADefinition != nil,
 			_q.withTicket != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, slaviolation.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SLAViolation).scanValues(nil, columns)
 	}

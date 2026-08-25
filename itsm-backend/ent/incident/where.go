@@ -80,6 +80,46 @@ func Priority(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldPriority, v))
 }
 
+// SLADefinitionID applies equality check predicate on the "sla_definition_id" field. It's identical to SLADefinitionIDEQ.
+func SLADefinitionID(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLADefinitionID, v))
+}
+
+// SLAResponseDeadline applies equality check predicate on the "sla_response_deadline" field. It's identical to SLAResponseDeadlineEQ.
+func SLAResponseDeadline(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAResponseDeadline, v))
+}
+
+// SLAResolutionDeadline applies equality check predicate on the "sla_resolution_deadline" field. It's identical to SLAResolutionDeadlineEQ.
+func SLAResolutionDeadline(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAResolutionDeadline, v))
+}
+
+// SLAFirstResponseAt applies equality check predicate on the "sla_first_response_at" field. It's identical to SLAFirstResponseAtEQ.
+func SLAFirstResponseAt(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAFirstResponseAt, v))
+}
+
+// SLAResolvedAt applies equality check predicate on the "sla_resolved_at" field. It's identical to SLAResolvedAtEQ.
+func SLAResolvedAt(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAResolvedAt, v))
+}
+
+// SLAStatus applies equality check predicate on the "sla_status" field. It's identical to SLAStatusEQ.
+func SLAStatus(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAStatus, v))
+}
+
+// SLAPausedAt applies equality check predicate on the "sla_paused_at" field. It's identical to SLAPausedAtEQ.
+func SLAPausedAt(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAPausedAt, v))
+}
+
+// SLAPauseReason applies equality check predicate on the "sla_pause_reason" field. It's identical to SLAPauseReasonEQ.
+func SLAPauseReason(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAPauseReason, v))
+}
+
 // Severity applies equality check predicate on the "severity" field. It's identical to SeverityEQ.
 func Severity(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldSeverity, v))
@@ -533,6 +573,446 @@ func PriorityEqualFold(v string) predicate.Incident {
 // PriorityContainsFold applies the ContainsFold predicate on the "priority" field.
 func PriorityContainsFold(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldContainsFold(FieldPriority, v))
+}
+
+// SLADefinitionIDEQ applies the EQ predicate on the "sla_definition_id" field.
+func SLADefinitionIDEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDNEQ applies the NEQ predicate on the "sla_definition_id" field.
+func SLADefinitionIDNEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDIn applies the In predicate on the "sla_definition_id" field.
+func SLADefinitionIDIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldSLADefinitionID, vs...))
+}
+
+// SLADefinitionIDNotIn applies the NotIn predicate on the "sla_definition_id" field.
+func SLADefinitionIDNotIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldSLADefinitionID, vs...))
+}
+
+// SLADefinitionIDGT applies the GT predicate on the "sla_definition_id" field.
+func SLADefinitionIDGT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDGTE applies the GTE predicate on the "sla_definition_id" field.
+func SLADefinitionIDGTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDLT applies the LT predicate on the "sla_definition_id" field.
+func SLADefinitionIDLT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDLTE applies the LTE predicate on the "sla_definition_id" field.
+func SLADefinitionIDLTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDIsNil applies the IsNil predicate on the "sla_definition_id" field.
+func SLADefinitionIDIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldSLADefinitionID))
+}
+
+// SLADefinitionIDNotNil applies the NotNil predicate on the "sla_definition_id" field.
+func SLADefinitionIDNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldSLADefinitionID))
+}
+
+// SLAResponseDeadlineEQ applies the EQ predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineEQ(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineNEQ applies the NEQ predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineNEQ(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineIn applies the In predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineIn(vs ...time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldSLAResponseDeadline, vs...))
+}
+
+// SLAResponseDeadlineNotIn applies the NotIn predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineNotIn(vs ...time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldSLAResponseDeadline, vs...))
+}
+
+// SLAResponseDeadlineGT applies the GT predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineGT(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineGTE applies the GTE predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineGTE(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineLT applies the LT predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineLT(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineLTE applies the LTE predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineLTE(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineIsNil applies the IsNil predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldSLAResponseDeadline))
+}
+
+// SLAResponseDeadlineNotNil applies the NotNil predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldSLAResponseDeadline))
+}
+
+// SLAResolutionDeadlineEQ applies the EQ predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineEQ(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineNEQ applies the NEQ predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineNEQ(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineIn applies the In predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineIn(vs ...time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldSLAResolutionDeadline, vs...))
+}
+
+// SLAResolutionDeadlineNotIn applies the NotIn predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineNotIn(vs ...time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldSLAResolutionDeadline, vs...))
+}
+
+// SLAResolutionDeadlineGT applies the GT predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineGT(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineGTE applies the GTE predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineGTE(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineLT applies the LT predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineLT(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineLTE applies the LTE predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineLTE(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineIsNil applies the IsNil predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldSLAResolutionDeadline))
+}
+
+// SLAResolutionDeadlineNotNil applies the NotNil predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldSLAResolutionDeadline))
+}
+
+// SLAFirstResponseAtEQ applies the EQ predicate on the "sla_first_response_at" field.
+func SLAFirstResponseAtEQ(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAFirstResponseAt, v))
+}
+
+// SLAFirstResponseAtNEQ applies the NEQ predicate on the "sla_first_response_at" field.
+func SLAFirstResponseAtNEQ(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldSLAFirstResponseAt, v))
+}
+
+// SLAFirstResponseAtIn applies the In predicate on the "sla_first_response_at" field.
+func SLAFirstResponseAtIn(vs ...time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldSLAFirstResponseAt, vs...))
+}
+
+// SLAFirstResponseAtNotIn applies the NotIn predicate on the "sla_first_response_at" field.
+func SLAFirstResponseAtNotIn(vs ...time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldSLAFirstResponseAt, vs...))
+}
+
+// SLAFirstResponseAtGT applies the GT predicate on the "sla_first_response_at" field.
+func SLAFirstResponseAtGT(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldSLAFirstResponseAt, v))
+}
+
+// SLAFirstResponseAtGTE applies the GTE predicate on the "sla_first_response_at" field.
+func SLAFirstResponseAtGTE(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldSLAFirstResponseAt, v))
+}
+
+// SLAFirstResponseAtLT applies the LT predicate on the "sla_first_response_at" field.
+func SLAFirstResponseAtLT(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldSLAFirstResponseAt, v))
+}
+
+// SLAFirstResponseAtLTE applies the LTE predicate on the "sla_first_response_at" field.
+func SLAFirstResponseAtLTE(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldSLAFirstResponseAt, v))
+}
+
+// SLAFirstResponseAtIsNil applies the IsNil predicate on the "sla_first_response_at" field.
+func SLAFirstResponseAtIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldSLAFirstResponseAt))
+}
+
+// SLAFirstResponseAtNotNil applies the NotNil predicate on the "sla_first_response_at" field.
+func SLAFirstResponseAtNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldSLAFirstResponseAt))
+}
+
+// SLAResolvedAtEQ applies the EQ predicate on the "sla_resolved_at" field.
+func SLAResolvedAtEQ(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAResolvedAt, v))
+}
+
+// SLAResolvedAtNEQ applies the NEQ predicate on the "sla_resolved_at" field.
+func SLAResolvedAtNEQ(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldSLAResolvedAt, v))
+}
+
+// SLAResolvedAtIn applies the In predicate on the "sla_resolved_at" field.
+func SLAResolvedAtIn(vs ...time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldSLAResolvedAt, vs...))
+}
+
+// SLAResolvedAtNotIn applies the NotIn predicate on the "sla_resolved_at" field.
+func SLAResolvedAtNotIn(vs ...time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldSLAResolvedAt, vs...))
+}
+
+// SLAResolvedAtGT applies the GT predicate on the "sla_resolved_at" field.
+func SLAResolvedAtGT(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldSLAResolvedAt, v))
+}
+
+// SLAResolvedAtGTE applies the GTE predicate on the "sla_resolved_at" field.
+func SLAResolvedAtGTE(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldSLAResolvedAt, v))
+}
+
+// SLAResolvedAtLT applies the LT predicate on the "sla_resolved_at" field.
+func SLAResolvedAtLT(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldSLAResolvedAt, v))
+}
+
+// SLAResolvedAtLTE applies the LTE predicate on the "sla_resolved_at" field.
+func SLAResolvedAtLTE(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldSLAResolvedAt, v))
+}
+
+// SLAResolvedAtIsNil applies the IsNil predicate on the "sla_resolved_at" field.
+func SLAResolvedAtIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldSLAResolvedAt))
+}
+
+// SLAResolvedAtNotNil applies the NotNil predicate on the "sla_resolved_at" field.
+func SLAResolvedAtNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldSLAResolvedAt))
+}
+
+// SLAStatusEQ applies the EQ predicate on the "sla_status" field.
+func SLAStatusEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAStatus, v))
+}
+
+// SLAStatusNEQ applies the NEQ predicate on the "sla_status" field.
+func SLAStatusNEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldSLAStatus, v))
+}
+
+// SLAStatusIn applies the In predicate on the "sla_status" field.
+func SLAStatusIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldSLAStatus, vs...))
+}
+
+// SLAStatusNotIn applies the NotIn predicate on the "sla_status" field.
+func SLAStatusNotIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldSLAStatus, vs...))
+}
+
+// SLAStatusGT applies the GT predicate on the "sla_status" field.
+func SLAStatusGT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldSLAStatus, v))
+}
+
+// SLAStatusGTE applies the GTE predicate on the "sla_status" field.
+func SLAStatusGTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldSLAStatus, v))
+}
+
+// SLAStatusLT applies the LT predicate on the "sla_status" field.
+func SLAStatusLT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldSLAStatus, v))
+}
+
+// SLAStatusLTE applies the LTE predicate on the "sla_status" field.
+func SLAStatusLTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldSLAStatus, v))
+}
+
+// SLAStatusContains applies the Contains predicate on the "sla_status" field.
+func SLAStatusContains(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContains(FieldSLAStatus, v))
+}
+
+// SLAStatusHasPrefix applies the HasPrefix predicate on the "sla_status" field.
+func SLAStatusHasPrefix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasPrefix(FieldSLAStatus, v))
+}
+
+// SLAStatusHasSuffix applies the HasSuffix predicate on the "sla_status" field.
+func SLAStatusHasSuffix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasSuffix(FieldSLAStatus, v))
+}
+
+// SLAStatusEqualFold applies the EqualFold predicate on the "sla_status" field.
+func SLAStatusEqualFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEqualFold(FieldSLAStatus, v))
+}
+
+// SLAStatusContainsFold applies the ContainsFold predicate on the "sla_status" field.
+func SLAStatusContainsFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContainsFold(FieldSLAStatus, v))
+}
+
+// SLAPausedAtEQ applies the EQ predicate on the "sla_paused_at" field.
+func SLAPausedAtEQ(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtNEQ applies the NEQ predicate on the "sla_paused_at" field.
+func SLAPausedAtNEQ(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtIn applies the In predicate on the "sla_paused_at" field.
+func SLAPausedAtIn(vs ...time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldSLAPausedAt, vs...))
+}
+
+// SLAPausedAtNotIn applies the NotIn predicate on the "sla_paused_at" field.
+func SLAPausedAtNotIn(vs ...time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldSLAPausedAt, vs...))
+}
+
+// SLAPausedAtGT applies the GT predicate on the "sla_paused_at" field.
+func SLAPausedAtGT(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtGTE applies the GTE predicate on the "sla_paused_at" field.
+func SLAPausedAtGTE(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtLT applies the LT predicate on the "sla_paused_at" field.
+func SLAPausedAtLT(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtLTE applies the LTE predicate on the "sla_paused_at" field.
+func SLAPausedAtLTE(v time.Time) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtIsNil applies the IsNil predicate on the "sla_paused_at" field.
+func SLAPausedAtIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldSLAPausedAt))
+}
+
+// SLAPausedAtNotNil applies the NotNil predicate on the "sla_paused_at" field.
+func SLAPausedAtNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldSLAPausedAt))
+}
+
+// SLAPauseReasonEQ applies the EQ predicate on the "sla_pause_reason" field.
+func SLAPauseReasonEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonNEQ applies the NEQ predicate on the "sla_pause_reason" field.
+func SLAPauseReasonNEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonIn applies the In predicate on the "sla_pause_reason" field.
+func SLAPauseReasonIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldSLAPauseReason, vs...))
+}
+
+// SLAPauseReasonNotIn applies the NotIn predicate on the "sla_pause_reason" field.
+func SLAPauseReasonNotIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldSLAPauseReason, vs...))
+}
+
+// SLAPauseReasonGT applies the GT predicate on the "sla_pause_reason" field.
+func SLAPauseReasonGT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonGTE applies the GTE predicate on the "sla_pause_reason" field.
+func SLAPauseReasonGTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonLT applies the LT predicate on the "sla_pause_reason" field.
+func SLAPauseReasonLT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonLTE applies the LTE predicate on the "sla_pause_reason" field.
+func SLAPauseReasonLTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonContains applies the Contains predicate on the "sla_pause_reason" field.
+func SLAPauseReasonContains(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContains(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonHasPrefix applies the HasPrefix predicate on the "sla_pause_reason" field.
+func SLAPauseReasonHasPrefix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasPrefix(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonHasSuffix applies the HasSuffix predicate on the "sla_pause_reason" field.
+func SLAPauseReasonHasSuffix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasSuffix(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonIsNil applies the IsNil predicate on the "sla_pause_reason" field.
+func SLAPauseReasonIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldSLAPauseReason))
+}
+
+// SLAPauseReasonNotNil applies the NotNil predicate on the "sla_pause_reason" field.
+func SLAPauseReasonNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldSLAPauseReason))
+}
+
+// SLAPauseReasonEqualFold applies the EqualFold predicate on the "sla_pause_reason" field.
+func SLAPauseReasonEqualFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEqualFold(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonContainsFold applies the ContainsFold predicate on the "sla_pause_reason" field.
+func SLAPauseReasonContainsFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContainsFold(FieldSLAPauseReason, v))
 }
 
 // SeverityEQ applies the EQ predicate on the "severity" field.
@@ -1794,6 +2274,52 @@ func HasIncidentMetrics() predicate.Incident {
 func HasIncidentMetricsWith(preds ...predicate.IncidentMetric) predicate.Incident {
 	return predicate.Incident(func(s *sql.Selector) {
 		step := newIncidentMetricsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSLAViolations applies the HasEdge predicate on the "sla_violations" edge.
+func HasSLAViolations() predicate.Incident {
+	return predicate.Incident(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SLAViolationsTable, SLAViolationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSLAViolationsWith applies the HasEdge predicate on the "sla_violations" edge with a given conditions (other predicates).
+func HasSLAViolationsWith(preds ...predicate.SLAViolation) predicate.Incident {
+	return predicate.Incident(func(s *sql.Selector) {
+		step := newSLAViolationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSLAAlertHistory applies the HasEdge predicate on the "sla_alert_history" edge.
+func HasSLAAlertHistory() predicate.Incident {
+	return predicate.Incident(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SLAAlertHistoryTable, SLAAlertHistoryColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSLAAlertHistoryWith applies the HasEdge predicate on the "sla_alert_history" edge with a given conditions (other predicates).
+func HasSLAAlertHistoryWith(preds ...predicate.SLAAlertHistory) predicate.Incident {
+	return predicate.Incident(func(s *sql.Selector) {
+		step := newSLAAlertHistoryStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

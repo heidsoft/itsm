@@ -15,6 +15,8 @@ import (
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/slaalerthistory"
+	"itsm-backend/ent/slaviolation"
 	"math"
 
 	"entgo.io/ent"
@@ -34,6 +36,8 @@ type IncidentQuery struct {
 	withIncidentEvents     *IncidentEventQuery
 	withIncidentAlerts     *IncidentAlertQuery
 	withIncidentMetrics    *IncidentMetricQuery
+	withSLAViolations      *SLAViolationQuery
+	withSLAAlertHistory    *SLAAlertHistoryQuery
 	withParentIncident     *IncidentQuery
 	withConfigurationItems *ConfigurationItemQuery
 	withProblems           *ProblemQuery
@@ -156,6 +160,50 @@ func (_q *IncidentQuery) QueryIncidentMetrics() *IncidentMetricQuery {
 			sqlgraph.From(incident.Table, incident.FieldID, selector),
 			sqlgraph.To(incidentmetric.Table, incidentmetric.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, incident.IncidentMetricsTable, incident.IncidentMetricsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySLAViolations chains the current query on the "sla_violations" edge.
+func (_q *IncidentQuery) QuerySLAViolations() *SLAViolationQuery {
+	query := (&SLAViolationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, selector),
+			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.SLAViolationsTable, incident.SLAViolationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySLAAlertHistory chains the current query on the "sla_alert_history" edge.
+func (_q *IncidentQuery) QuerySLAAlertHistory() *SLAAlertHistoryQuery {
+	query := (&SLAAlertHistoryClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, selector),
+			sqlgraph.To(slaalerthistory.Table, slaalerthistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.SLAAlertHistoryTable, incident.SLAAlertHistoryColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -469,6 +517,8 @@ func (_q *IncidentQuery) Clone() *IncidentQuery {
 		withIncidentEvents:     _q.withIncidentEvents.Clone(),
 		withIncidentAlerts:     _q.withIncidentAlerts.Clone(),
 		withIncidentMetrics:    _q.withIncidentMetrics.Clone(),
+		withSLAViolations:      _q.withSLAViolations.Clone(),
+		withSLAAlertHistory:    _q.withSLAAlertHistory.Clone(),
 		withParentIncident:     _q.withParentIncident.Clone(),
 		withConfigurationItems: _q.withConfigurationItems.Clone(),
 		withProblems:           _q.withProblems.Clone(),
@@ -521,6 +571,28 @@ func (_q *IncidentQuery) WithIncidentMetrics(opts ...func(*IncidentMetricQuery))
 		opt(query)
 	}
 	_q.withIncidentMetrics = query
+	return _q
+}
+
+// WithSLAViolations tells the query-builder to eager-load the nodes that are connected to
+// the "sla_violations" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *IncidentQuery) WithSLAViolations(opts ...func(*SLAViolationQuery)) *IncidentQuery {
+	query := (&SLAViolationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withSLAViolations = query
+	return _q
+}
+
+// WithSLAAlertHistory tells the query-builder to eager-load the nodes that are connected to
+// the "sla_alert_history" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *IncidentQuery) WithSLAAlertHistory(opts ...func(*SLAAlertHistoryQuery)) *IncidentQuery {
+	query := (&SLAAlertHistoryClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withSLAAlertHistory = query
 	return _q
 }
 
@@ -657,11 +729,13 @@ func (_q *IncidentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Inc
 	var (
 		nodes       = []*Incident{}
 		_spec       = _q.querySpec()
-		loadedTypes = [9]bool{
+		loadedTypes = [11]bool{
 			_q.withRelatedIncidents != nil,
 			_q.withIncidentEvents != nil,
 			_q.withIncidentAlerts != nil,
 			_q.withIncidentMetrics != nil,
+			_q.withSLAViolations != nil,
+			_q.withSLAAlertHistory != nil,
 			_q.withParentIncident != nil,
 			_q.withConfigurationItems != nil,
 			_q.withProblems != nil,
@@ -712,6 +786,20 @@ func (_q *IncidentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Inc
 		if err := _q.loadIncidentMetrics(ctx, query, nodes,
 			func(n *Incident) { n.Edges.IncidentMetrics = []*IncidentMetric{} },
 			func(n *Incident, e *IncidentMetric) { n.Edges.IncidentMetrics = append(n.Edges.IncidentMetrics, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withSLAViolations; query != nil {
+		if err := _q.loadSLAViolations(ctx, query, nodes,
+			func(n *Incident) { n.Edges.SLAViolations = []*SLAViolation{} },
+			func(n *Incident, e *SLAViolation) { n.Edges.SLAViolations = append(n.Edges.SLAViolations, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withSLAAlertHistory; query != nil {
+		if err := _q.loadSLAAlertHistory(ctx, query, nodes,
+			func(n *Incident) { n.Edges.SLAAlertHistory = []*SLAAlertHistory{} },
+			func(n *Incident, e *SLAAlertHistory) { n.Edges.SLAAlertHistory = append(n.Edges.SLAAlertHistory, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -899,6 +987,68 @@ func (_q *IncidentQuery) loadIncidentMetrics(ctx context.Context, query *Inciden
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "incident_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *IncidentQuery) loadSLAViolations(ctx context.Context, query *SLAViolationQuery, nodes []*Incident, init func(*Incident), assign func(*Incident, *SLAViolation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Incident)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.SLAViolation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(incident.SLAViolationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.incident_sla_violations
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "incident_sla_violations" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "incident_sla_violations" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *IncidentQuery) loadSLAAlertHistory(ctx context.Context, query *SLAAlertHistoryQuery, nodes []*Incident, init func(*Incident), assign func(*Incident, *SLAAlertHistory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Incident)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.SLAAlertHistory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(incident.SLAAlertHistoryColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.incident_sla_alert_history
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "incident_sla_alert_history" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "incident_sla_alert_history" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

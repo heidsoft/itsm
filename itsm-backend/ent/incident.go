@@ -30,6 +30,22 @@ type Incident struct {
 	Type string `json:"type,omitempty"`
 	// 优先级
 	Priority string `json:"priority,omitempty"`
+	// SLA定义ID
+	SLADefinitionID int `json:"sla_definition_id,omitempty"`
+	// SLA响应截止时间
+	SLAResponseDeadline time.Time `json:"sla_response_deadline,omitempty"`
+	// SLA解决截止时间
+	SLAResolutionDeadline time.Time `json:"sla_resolution_deadline,omitempty"`
+	// 首次响应时间
+	SLAFirstResponseAt time.Time `json:"sla_first_response_at,omitempty"`
+	// SLA解决时间
+	SLAResolvedAt time.Time `json:"sla_resolved_at,omitempty"`
+	// SLA状态：active/paused
+	SLAStatus string `json:"sla_status,omitempty"`
+	// SLA暂停时间
+	SLAPausedAt time.Time `json:"sla_paused_at,omitempty"`
+	// SLA暂停原因
+	SLAPauseReason string `json:"sla_pause_reason,omitempty"`
 	// 严重程度
 	Severity string `json:"severity,omitempty"`
 	// 影响范围：low/medium/high/critical
@@ -102,6 +118,10 @@ type IncidentEdges struct {
 	IncidentAlerts []*IncidentAlert `json:"incident_alerts,omitempty"`
 	// 事件指标
 	IncidentMetrics []*IncidentMetric `json:"incident_metrics,omitempty"`
+	// SLA违规记录
+	SLAViolations []*SLAViolation `json:"sla_violations,omitempty"`
+	// SLA告警历史
+	SLAAlertHistory []*SLAAlertHistory `json:"sla_alert_history,omitempty"`
 	// 父事件
 	ParentIncident []*Incident `json:"parent_incident,omitempty"`
 	// 关联的配置项
@@ -114,7 +134,7 @@ type IncidentEdges struct {
 	EmailConversation *EmailConversation `json:"email_conversation,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [9]bool
+	loadedTypes [11]bool
 }
 
 // RelatedIncidentsOrErr returns the RelatedIncidents value or an error if the edge
@@ -153,10 +173,28 @@ func (e IncidentEdges) IncidentMetricsOrErr() ([]*IncidentMetric, error) {
 	return nil, &NotLoadedError{edge: "incident_metrics"}
 }
 
+// SLAViolationsOrErr returns the SLAViolations value or an error if the edge
+// was not loaded in eager-loading.
+func (e IncidentEdges) SLAViolationsOrErr() ([]*SLAViolation, error) {
+	if e.loadedTypes[4] {
+		return e.SLAViolations, nil
+	}
+	return nil, &NotLoadedError{edge: "sla_violations"}
+}
+
+// SLAAlertHistoryOrErr returns the SLAAlertHistory value or an error if the edge
+// was not loaded in eager-loading.
+func (e IncidentEdges) SLAAlertHistoryOrErr() ([]*SLAAlertHistory, error) {
+	if e.loadedTypes[5] {
+		return e.SLAAlertHistory, nil
+	}
+	return nil, &NotLoadedError{edge: "sla_alert_history"}
+}
+
 // ParentIncidentOrErr returns the ParentIncident value or an error if the edge
 // was not loaded in eager-loading.
 func (e IncidentEdges) ParentIncidentOrErr() ([]*Incident, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[6] {
 		return e.ParentIncident, nil
 	}
 	return nil, &NotLoadedError{edge: "parent_incident"}
@@ -165,7 +203,7 @@ func (e IncidentEdges) ParentIncidentOrErr() ([]*Incident, error) {
 // ConfigurationItemsOrErr returns the ConfigurationItems value or an error if the edge
 // was not loaded in eager-loading.
 func (e IncidentEdges) ConfigurationItemsOrErr() ([]*ConfigurationItem, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[7] {
 		return e.ConfigurationItems, nil
 	}
 	return nil, &NotLoadedError{edge: "configuration_items"}
@@ -174,7 +212,7 @@ func (e IncidentEdges) ConfigurationItemsOrErr() ([]*ConfigurationItem, error) {
 // ProblemsOrErr returns the Problems value or an error if the edge
 // was not loaded in eager-loading.
 func (e IncidentEdges) ProblemsOrErr() ([]*Problem, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[8] {
 		return e.Problems, nil
 	}
 	return nil, &NotLoadedError{edge: "problems"}
@@ -185,7 +223,7 @@ func (e IncidentEdges) ProblemsOrErr() ([]*Problem, error) {
 func (e IncidentEdges) AssignmentGroupOrErr() (*Group, error) {
 	if e.AssignmentGroup != nil {
 		return e.AssignmentGroup, nil
-	} else if e.loadedTypes[7] {
+	} else if e.loadedTypes[9] {
 		return nil, &NotFoundError{label: group.Label}
 	}
 	return nil, &NotLoadedError{edge: "assignment_group"}
@@ -196,7 +234,7 @@ func (e IncidentEdges) AssignmentGroupOrErr() (*Group, error) {
 func (e IncidentEdges) EmailConversationOrErr() (*EmailConversation, error) {
 	if e.EmailConversation != nil {
 		return e.EmailConversation, nil
-	} else if e.loadedTypes[8] {
+	} else if e.loadedTypes[10] {
 		return nil, &NotFoundError{label: emailconversation.Label}
 	}
 	return nil, &NotLoadedError{edge: "email_conversation"}
@@ -211,11 +249,11 @@ func (*Incident) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case incident.FieldIsAutomated, incident.FieldIsMajorIncident:
 			values[i] = new(sql.NullBool)
-		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldAssignmentGroupID, incident.FieldEmailConversationID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID, incident.FieldVersion:
+		case incident.FieldID, incident.FieldSLADefinitionID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldAssignmentGroupID, incident.FieldEmailConversationID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID, incident.FieldVersion:
 			values[i] = new(sql.NullInt64)
-		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldType, incident.FieldPriority, incident.FieldSeverity, incident.FieldImpact, incident.FieldUrgency, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldSource:
+		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldType, incident.FieldPriority, incident.FieldSLAStatus, incident.FieldSLAPauseReason, incident.FieldSeverity, incident.FieldImpact, incident.FieldUrgency, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldSource:
 			values[i] = new(sql.NullString)
-		case incident.FieldDetectedAt, incident.FieldResolvedAt, incident.FieldClosedAt, incident.FieldEscalatedAt, incident.FieldCreatedAt, incident.FieldUpdatedAt, incident.FieldDeletedAt:
+		case incident.FieldSLAResponseDeadline, incident.FieldSLAResolutionDeadline, incident.FieldSLAFirstResponseAt, incident.FieldSLAResolvedAt, incident.FieldSLAPausedAt, incident.FieldDetectedAt, incident.FieldResolvedAt, incident.FieldClosedAt, incident.FieldEscalatedAt, incident.FieldCreatedAt, incident.FieldUpdatedAt, incident.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -267,6 +305,54 @@ func (_m *Incident) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
 				_m.Priority = value.String
+			}
+		case incident.FieldSLADefinitionID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_definition_id", values[i])
+			} else if value.Valid {
+				_m.SLADefinitionID = int(value.Int64)
+			}
+		case incident.FieldSLAResponseDeadline:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_response_deadline", values[i])
+			} else if value.Valid {
+				_m.SLAResponseDeadline = value.Time
+			}
+		case incident.FieldSLAResolutionDeadline:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_resolution_deadline", values[i])
+			} else if value.Valid {
+				_m.SLAResolutionDeadline = value.Time
+			}
+		case incident.FieldSLAFirstResponseAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_first_response_at", values[i])
+			} else if value.Valid {
+				_m.SLAFirstResponseAt = value.Time
+			}
+		case incident.FieldSLAResolvedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_resolved_at", values[i])
+			} else if value.Valid {
+				_m.SLAResolvedAt = value.Time
+			}
+		case incident.FieldSLAStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_status", values[i])
+			} else if value.Valid {
+				_m.SLAStatus = value.String
+			}
+		case incident.FieldSLAPausedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_paused_at", values[i])
+			} else if value.Valid {
+				_m.SLAPausedAt = value.Time
+			}
+		case incident.FieldSLAPauseReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_pause_reason", values[i])
+			} else if value.Valid {
+				_m.SLAPauseReason = value.String
 			}
 		case incident.FieldSeverity:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -480,6 +566,16 @@ func (_m *Incident) QueryIncidentMetrics() *IncidentMetricQuery {
 	return NewIncidentClient(_m.config).QueryIncidentMetrics(_m)
 }
 
+// QuerySLAViolations queries the "sla_violations" edge of the Incident entity.
+func (_m *Incident) QuerySLAViolations() *SLAViolationQuery {
+	return NewIncidentClient(_m.config).QuerySLAViolations(_m)
+}
+
+// QuerySLAAlertHistory queries the "sla_alert_history" edge of the Incident entity.
+func (_m *Incident) QuerySLAAlertHistory() *SLAAlertHistoryQuery {
+	return NewIncidentClient(_m.config).QuerySLAAlertHistory(_m)
+}
+
 // QueryParentIncident queries the "parent_incident" edge of the Incident entity.
 func (_m *Incident) QueryParentIncident() *IncidentQuery {
 	return NewIncidentClient(_m.config).QueryParentIncident(_m)
@@ -542,6 +638,30 @@ func (_m *Incident) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
 	builder.WriteString(_m.Priority)
+	builder.WriteString(", ")
+	builder.WriteString("sla_definition_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SLADefinitionID))
+	builder.WriteString(", ")
+	builder.WriteString("sla_response_deadline=")
+	builder.WriteString(_m.SLAResponseDeadline.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("sla_resolution_deadline=")
+	builder.WriteString(_m.SLAResolutionDeadline.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("sla_first_response_at=")
+	builder.WriteString(_m.SLAFirstResponseAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("sla_resolved_at=")
+	builder.WriteString(_m.SLAResolvedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("sla_status=")
+	builder.WriteString(_m.SLAStatus)
+	builder.WriteString(", ")
+	builder.WriteString("sla_paused_at=")
+	builder.WriteString(_m.SLAPausedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("sla_pause_reason=")
+	builder.WriteString(_m.SLAPauseReason)
 	builder.WriteString(", ")
 	builder.WriteString("severity=")
 	builder.WriteString(_m.Severity)

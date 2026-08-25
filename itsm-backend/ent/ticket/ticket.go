@@ -54,6 +54,12 @@ const (
 	FieldSLAResponseDeadline = "sla_response_deadline"
 	// FieldSLAResolutionDeadline holds the string denoting the sla_resolution_deadline field in the database.
 	FieldSLAResolutionDeadline = "sla_resolution_deadline"
+	// FieldSLAStatus holds the string denoting the sla_status field in the database.
+	FieldSLAStatus = "sla_status"
+	// FieldSLAPausedAt holds the string denoting the sla_paused_at field in the database.
+	FieldSLAPausedAt = "sla_paused_at"
+	// FieldSLAPauseReason holds the string denoting the sla_pause_reason field in the database.
+	FieldSLAPauseReason = "sla_pause_reason"
 	// FieldFirstResponseAt holds the string denoting the first_response_at field in the database.
 	FieldFirstResponseAt = "first_response_at"
 	// FieldResolvedAt holds the string denoting the resolved_at field in the database.
@@ -261,6 +267,9 @@ var Columns = []string{
 	FieldSLADefinitionID,
 	FieldSLAResponseDeadline,
 	FieldSLAResolutionDeadline,
+	FieldSLAStatus,
+	FieldSLAPausedAt,
+	FieldSLAPauseReason,
 	FieldFirstResponseAt,
 	FieldResolvedAt,
 	FieldResolution,
@@ -337,6 +346,8 @@ var (
 	RequesterIDValidator func(int) error
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
+	// DefaultSLAStatus holds the default value on creation for the "sla_status" field.
+	DefaultSLAStatus string
 	// RatingValidator is a validator for the "rating" field. It is called by the builders before save.
 	RatingValidator func(int) error
 	// DefaultVersion holds the default value on creation for the "version" field.
@@ -454,6 +465,21 @@ func BySLAResponseDeadline(opts ...sql.OrderTermOption) OrderOption {
 // BySLAResolutionDeadline orders the results by the sla_resolution_deadline field.
 func BySLAResolutionDeadline(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSLAResolutionDeadline, opts...).ToFunc()
+}
+
+// BySLAStatus orders the results by the sla_status field.
+func BySLAStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAStatus, opts...).ToFunc()
+}
+
+// BySLAPausedAt orders the results by the sla_paused_at field.
+func BySLAPausedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAPausedAt, opts...).ToFunc()
+}
+
+// BySLAPauseReason orders the results by the sla_pause_reason field.
+func BySLAPauseReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAPauseReason, opts...).ToFunc()
 }
 
 // ByFirstResponseAt orders the results by the first_response_at field.

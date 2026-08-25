@@ -550,6 +550,7 @@ func (_q *SLADefinitionQuery) loadViolations(ctx context.Context, query *SLAViol
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(slaviolation.FieldSLADefinitionID)
 	}

@@ -485,6 +485,7 @@ func (_q *SLAAlertRuleQuery) loadAlertHistory(ctx context.Context, query *SLAAle
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(slaalerthistory.FieldAlertRuleID)
 	}

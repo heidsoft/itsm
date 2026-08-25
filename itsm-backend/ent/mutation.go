@@ -55406,6 +55406,15 @@ type IncidentMutation struct {
 	status                     *string
 	_type                      *string
 	priority                   *string
+	sla_definition_id          *int
+	addsla_definition_id       *int
+	sla_response_deadline      *time.Time
+	sla_resolution_deadline    *time.Time
+	sla_first_response_at      *time.Time
+	sla_resolved_at            *time.Time
+	sla_status                 *string
+	sla_paused_at              *time.Time
+	sla_pause_reason           *string
 	severity                   *string
 	impact                     *string
 	urgency                    *string
@@ -55452,6 +55461,12 @@ type IncidentMutation struct {
 	incident_metrics           map[int]struct{}
 	removedincident_metrics    map[int]struct{}
 	clearedincident_metrics    bool
+	sla_violations             map[int]struct{}
+	removedsla_violations      map[int]struct{}
+	clearedsla_violations      bool
+	sla_alert_history          map[int]struct{}
+	removedsla_alert_history   map[int]struct{}
+	clearedsla_alert_history   bool
 	parent_incident            map[int]struct{}
 	removedparent_incident     map[int]struct{}
 	clearedparent_incident     bool
@@ -55759,6 +55774,406 @@ func (m *IncidentMutation) OldPriority(ctx context.Context) (v string, err error
 // ResetPriority resets all changes to the "priority" field.
 func (m *IncidentMutation) ResetPriority() {
 	m.priority = nil
+}
+
+// SetSLADefinitionID sets the "sla_definition_id" field.
+func (m *IncidentMutation) SetSLADefinitionID(i int) {
+	m.sla_definition_id = &i
+	m.addsla_definition_id = nil
+}
+
+// SLADefinitionID returns the value of the "sla_definition_id" field in the mutation.
+func (m *IncidentMutation) SLADefinitionID() (r int, exists bool) {
+	v := m.sla_definition_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLADefinitionID returns the old "sla_definition_id" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldSLADefinitionID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLADefinitionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLADefinitionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLADefinitionID: %w", err)
+	}
+	return oldValue.SLADefinitionID, nil
+}
+
+// AddSLADefinitionID adds i to the "sla_definition_id" field.
+func (m *IncidentMutation) AddSLADefinitionID(i int) {
+	if m.addsla_definition_id != nil {
+		*m.addsla_definition_id += i
+	} else {
+		m.addsla_definition_id = &i
+	}
+}
+
+// AddedSLADefinitionID returns the value that was added to the "sla_definition_id" field in this mutation.
+func (m *IncidentMutation) AddedSLADefinitionID() (r int, exists bool) {
+	v := m.addsla_definition_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSLADefinitionID clears the value of the "sla_definition_id" field.
+func (m *IncidentMutation) ClearSLADefinitionID() {
+	m.sla_definition_id = nil
+	m.addsla_definition_id = nil
+	m.clearedFields[incident.FieldSLADefinitionID] = struct{}{}
+}
+
+// SLADefinitionIDCleared returns if the "sla_definition_id" field was cleared in this mutation.
+func (m *IncidentMutation) SLADefinitionIDCleared() bool {
+	_, ok := m.clearedFields[incident.FieldSLADefinitionID]
+	return ok
+}
+
+// ResetSLADefinitionID resets all changes to the "sla_definition_id" field.
+func (m *IncidentMutation) ResetSLADefinitionID() {
+	m.sla_definition_id = nil
+	m.addsla_definition_id = nil
+	delete(m.clearedFields, incident.FieldSLADefinitionID)
+}
+
+// SetSLAResponseDeadline sets the "sla_response_deadline" field.
+func (m *IncidentMutation) SetSLAResponseDeadline(t time.Time) {
+	m.sla_response_deadline = &t
+}
+
+// SLAResponseDeadline returns the value of the "sla_response_deadline" field in the mutation.
+func (m *IncidentMutation) SLAResponseDeadline() (r time.Time, exists bool) {
+	v := m.sla_response_deadline
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAResponseDeadline returns the old "sla_response_deadline" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldSLAResponseDeadline(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAResponseDeadline is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAResponseDeadline requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAResponseDeadline: %w", err)
+	}
+	return oldValue.SLAResponseDeadline, nil
+}
+
+// ClearSLAResponseDeadline clears the value of the "sla_response_deadline" field.
+func (m *IncidentMutation) ClearSLAResponseDeadline() {
+	m.sla_response_deadline = nil
+	m.clearedFields[incident.FieldSLAResponseDeadline] = struct{}{}
+}
+
+// SLAResponseDeadlineCleared returns if the "sla_response_deadline" field was cleared in this mutation.
+func (m *IncidentMutation) SLAResponseDeadlineCleared() bool {
+	_, ok := m.clearedFields[incident.FieldSLAResponseDeadline]
+	return ok
+}
+
+// ResetSLAResponseDeadline resets all changes to the "sla_response_deadline" field.
+func (m *IncidentMutation) ResetSLAResponseDeadline() {
+	m.sla_response_deadline = nil
+	delete(m.clearedFields, incident.FieldSLAResponseDeadline)
+}
+
+// SetSLAResolutionDeadline sets the "sla_resolution_deadline" field.
+func (m *IncidentMutation) SetSLAResolutionDeadline(t time.Time) {
+	m.sla_resolution_deadline = &t
+}
+
+// SLAResolutionDeadline returns the value of the "sla_resolution_deadline" field in the mutation.
+func (m *IncidentMutation) SLAResolutionDeadline() (r time.Time, exists bool) {
+	v := m.sla_resolution_deadline
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAResolutionDeadline returns the old "sla_resolution_deadline" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldSLAResolutionDeadline(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAResolutionDeadline is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAResolutionDeadline requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAResolutionDeadline: %w", err)
+	}
+	return oldValue.SLAResolutionDeadline, nil
+}
+
+// ClearSLAResolutionDeadline clears the value of the "sla_resolution_deadline" field.
+func (m *IncidentMutation) ClearSLAResolutionDeadline() {
+	m.sla_resolution_deadline = nil
+	m.clearedFields[incident.FieldSLAResolutionDeadline] = struct{}{}
+}
+
+// SLAResolutionDeadlineCleared returns if the "sla_resolution_deadline" field was cleared in this mutation.
+func (m *IncidentMutation) SLAResolutionDeadlineCleared() bool {
+	_, ok := m.clearedFields[incident.FieldSLAResolutionDeadline]
+	return ok
+}
+
+// ResetSLAResolutionDeadline resets all changes to the "sla_resolution_deadline" field.
+func (m *IncidentMutation) ResetSLAResolutionDeadline() {
+	m.sla_resolution_deadline = nil
+	delete(m.clearedFields, incident.FieldSLAResolutionDeadline)
+}
+
+// SetSLAFirstResponseAt sets the "sla_first_response_at" field.
+func (m *IncidentMutation) SetSLAFirstResponseAt(t time.Time) {
+	m.sla_first_response_at = &t
+}
+
+// SLAFirstResponseAt returns the value of the "sla_first_response_at" field in the mutation.
+func (m *IncidentMutation) SLAFirstResponseAt() (r time.Time, exists bool) {
+	v := m.sla_first_response_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAFirstResponseAt returns the old "sla_first_response_at" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldSLAFirstResponseAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAFirstResponseAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAFirstResponseAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAFirstResponseAt: %w", err)
+	}
+	return oldValue.SLAFirstResponseAt, nil
+}
+
+// ClearSLAFirstResponseAt clears the value of the "sla_first_response_at" field.
+func (m *IncidentMutation) ClearSLAFirstResponseAt() {
+	m.sla_first_response_at = nil
+	m.clearedFields[incident.FieldSLAFirstResponseAt] = struct{}{}
+}
+
+// SLAFirstResponseAtCleared returns if the "sla_first_response_at" field was cleared in this mutation.
+func (m *IncidentMutation) SLAFirstResponseAtCleared() bool {
+	_, ok := m.clearedFields[incident.FieldSLAFirstResponseAt]
+	return ok
+}
+
+// ResetSLAFirstResponseAt resets all changes to the "sla_first_response_at" field.
+func (m *IncidentMutation) ResetSLAFirstResponseAt() {
+	m.sla_first_response_at = nil
+	delete(m.clearedFields, incident.FieldSLAFirstResponseAt)
+}
+
+// SetSLAResolvedAt sets the "sla_resolved_at" field.
+func (m *IncidentMutation) SetSLAResolvedAt(t time.Time) {
+	m.sla_resolved_at = &t
+}
+
+// SLAResolvedAt returns the value of the "sla_resolved_at" field in the mutation.
+func (m *IncidentMutation) SLAResolvedAt() (r time.Time, exists bool) {
+	v := m.sla_resolved_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAResolvedAt returns the old "sla_resolved_at" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldSLAResolvedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAResolvedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAResolvedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAResolvedAt: %w", err)
+	}
+	return oldValue.SLAResolvedAt, nil
+}
+
+// ClearSLAResolvedAt clears the value of the "sla_resolved_at" field.
+func (m *IncidentMutation) ClearSLAResolvedAt() {
+	m.sla_resolved_at = nil
+	m.clearedFields[incident.FieldSLAResolvedAt] = struct{}{}
+}
+
+// SLAResolvedAtCleared returns if the "sla_resolved_at" field was cleared in this mutation.
+func (m *IncidentMutation) SLAResolvedAtCleared() bool {
+	_, ok := m.clearedFields[incident.FieldSLAResolvedAt]
+	return ok
+}
+
+// ResetSLAResolvedAt resets all changes to the "sla_resolved_at" field.
+func (m *IncidentMutation) ResetSLAResolvedAt() {
+	m.sla_resolved_at = nil
+	delete(m.clearedFields, incident.FieldSLAResolvedAt)
+}
+
+// SetSLAStatus sets the "sla_status" field.
+func (m *IncidentMutation) SetSLAStatus(s string) {
+	m.sla_status = &s
+}
+
+// SLAStatus returns the value of the "sla_status" field in the mutation.
+func (m *IncidentMutation) SLAStatus() (r string, exists bool) {
+	v := m.sla_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAStatus returns the old "sla_status" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldSLAStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAStatus: %w", err)
+	}
+	return oldValue.SLAStatus, nil
+}
+
+// ResetSLAStatus resets all changes to the "sla_status" field.
+func (m *IncidentMutation) ResetSLAStatus() {
+	m.sla_status = nil
+}
+
+// SetSLAPausedAt sets the "sla_paused_at" field.
+func (m *IncidentMutation) SetSLAPausedAt(t time.Time) {
+	m.sla_paused_at = &t
+}
+
+// SLAPausedAt returns the value of the "sla_paused_at" field in the mutation.
+func (m *IncidentMutation) SLAPausedAt() (r time.Time, exists bool) {
+	v := m.sla_paused_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAPausedAt returns the old "sla_paused_at" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldSLAPausedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAPausedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAPausedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAPausedAt: %w", err)
+	}
+	return oldValue.SLAPausedAt, nil
+}
+
+// ClearSLAPausedAt clears the value of the "sla_paused_at" field.
+func (m *IncidentMutation) ClearSLAPausedAt() {
+	m.sla_paused_at = nil
+	m.clearedFields[incident.FieldSLAPausedAt] = struct{}{}
+}
+
+// SLAPausedAtCleared returns if the "sla_paused_at" field was cleared in this mutation.
+func (m *IncidentMutation) SLAPausedAtCleared() bool {
+	_, ok := m.clearedFields[incident.FieldSLAPausedAt]
+	return ok
+}
+
+// ResetSLAPausedAt resets all changes to the "sla_paused_at" field.
+func (m *IncidentMutation) ResetSLAPausedAt() {
+	m.sla_paused_at = nil
+	delete(m.clearedFields, incident.FieldSLAPausedAt)
+}
+
+// SetSLAPauseReason sets the "sla_pause_reason" field.
+func (m *IncidentMutation) SetSLAPauseReason(s string) {
+	m.sla_pause_reason = &s
+}
+
+// SLAPauseReason returns the value of the "sla_pause_reason" field in the mutation.
+func (m *IncidentMutation) SLAPauseReason() (r string, exists bool) {
+	v := m.sla_pause_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAPauseReason returns the old "sla_pause_reason" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldSLAPauseReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAPauseReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAPauseReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAPauseReason: %w", err)
+	}
+	return oldValue.SLAPauseReason, nil
+}
+
+// ClearSLAPauseReason clears the value of the "sla_pause_reason" field.
+func (m *IncidentMutation) ClearSLAPauseReason() {
+	m.sla_pause_reason = nil
+	m.clearedFields[incident.FieldSLAPauseReason] = struct{}{}
+}
+
+// SLAPauseReasonCleared returns if the "sla_pause_reason" field was cleared in this mutation.
+func (m *IncidentMutation) SLAPauseReasonCleared() bool {
+	_, ok := m.clearedFields[incident.FieldSLAPauseReason]
+	return ok
+}
+
+// ResetSLAPauseReason resets all changes to the "sla_pause_reason" field.
+func (m *IncidentMutation) ResetSLAPauseReason() {
+	m.sla_pause_reason = nil
+	delete(m.clearedFields, incident.FieldSLAPauseReason)
 }
 
 // SetSeverity sets the "severity" field.
@@ -57305,6 +57720,114 @@ func (m *IncidentMutation) ResetIncidentMetrics() {
 	m.removedincident_metrics = nil
 }
 
+// AddSLAViolationIDs adds the "sla_violations" edge to the SLAViolation entity by ids.
+func (m *IncidentMutation) AddSLAViolationIDs(ids ...int) {
+	if m.sla_violations == nil {
+		m.sla_violations = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.sla_violations[ids[i]] = struct{}{}
+	}
+}
+
+// ClearSLAViolations clears the "sla_violations" edge to the SLAViolation entity.
+func (m *IncidentMutation) ClearSLAViolations() {
+	m.clearedsla_violations = true
+}
+
+// SLAViolationsCleared reports if the "sla_violations" edge to the SLAViolation entity was cleared.
+func (m *IncidentMutation) SLAViolationsCleared() bool {
+	return m.clearedsla_violations
+}
+
+// RemoveSLAViolationIDs removes the "sla_violations" edge to the SLAViolation entity by IDs.
+func (m *IncidentMutation) RemoveSLAViolationIDs(ids ...int) {
+	if m.removedsla_violations == nil {
+		m.removedsla_violations = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.sla_violations, ids[i])
+		m.removedsla_violations[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedSLAViolations returns the removed IDs of the "sla_violations" edge to the SLAViolation entity.
+func (m *IncidentMutation) RemovedSLAViolationsIDs() (ids []int) {
+	for id := range m.removedsla_violations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// SLAViolationsIDs returns the "sla_violations" edge IDs in the mutation.
+func (m *IncidentMutation) SLAViolationsIDs() (ids []int) {
+	for id := range m.sla_violations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetSLAViolations resets all changes to the "sla_violations" edge.
+func (m *IncidentMutation) ResetSLAViolations() {
+	m.sla_violations = nil
+	m.clearedsla_violations = false
+	m.removedsla_violations = nil
+}
+
+// AddSLAAlertHistoryIDs adds the "sla_alert_history" edge to the SLAAlertHistory entity by ids.
+func (m *IncidentMutation) AddSLAAlertHistoryIDs(ids ...int) {
+	if m.sla_alert_history == nil {
+		m.sla_alert_history = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.sla_alert_history[ids[i]] = struct{}{}
+	}
+}
+
+// ClearSLAAlertHistory clears the "sla_alert_history" edge to the SLAAlertHistory entity.
+func (m *IncidentMutation) ClearSLAAlertHistory() {
+	m.clearedsla_alert_history = true
+}
+
+// SLAAlertHistoryCleared reports if the "sla_alert_history" edge to the SLAAlertHistory entity was cleared.
+func (m *IncidentMutation) SLAAlertHistoryCleared() bool {
+	return m.clearedsla_alert_history
+}
+
+// RemoveSLAAlertHistoryIDs removes the "sla_alert_history" edge to the SLAAlertHistory entity by IDs.
+func (m *IncidentMutation) RemoveSLAAlertHistoryIDs(ids ...int) {
+	if m.removedsla_alert_history == nil {
+		m.removedsla_alert_history = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.sla_alert_history, ids[i])
+		m.removedsla_alert_history[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedSLAAlertHistory returns the removed IDs of the "sla_alert_history" edge to the SLAAlertHistory entity.
+func (m *IncidentMutation) RemovedSLAAlertHistoryIDs() (ids []int) {
+	for id := range m.removedsla_alert_history {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// SLAAlertHistoryIDs returns the "sla_alert_history" edge IDs in the mutation.
+func (m *IncidentMutation) SLAAlertHistoryIDs() (ids []int) {
+	for id := range m.sla_alert_history {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetSLAAlertHistory resets all changes to the "sla_alert_history" edge.
+func (m *IncidentMutation) ResetSLAAlertHistory() {
+	m.sla_alert_history = nil
+	m.clearedsla_alert_history = false
+	m.removedsla_alert_history = nil
+}
+
 // AddParentIncidentIDs adds the "parent_incident" edge to the Incident entity by ids.
 func (m *IncidentMutation) AddParentIncidentIDs(ids ...int) {
 	if m.parent_incident == nil {
@@ -57555,7 +58078,7 @@ func (m *IncidentMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *IncidentMutation) Fields() []string {
-	fields := make([]string, 0, 33)
+	fields := make([]string, 0, 41)
 	if m.title != nil {
 		fields = append(fields, incident.FieldTitle)
 	}
@@ -57570,6 +58093,30 @@ func (m *IncidentMutation) Fields() []string {
 	}
 	if m.priority != nil {
 		fields = append(fields, incident.FieldPriority)
+	}
+	if m.sla_definition_id != nil {
+		fields = append(fields, incident.FieldSLADefinitionID)
+	}
+	if m.sla_response_deadline != nil {
+		fields = append(fields, incident.FieldSLAResponseDeadline)
+	}
+	if m.sla_resolution_deadline != nil {
+		fields = append(fields, incident.FieldSLAResolutionDeadline)
+	}
+	if m.sla_first_response_at != nil {
+		fields = append(fields, incident.FieldSLAFirstResponseAt)
+	}
+	if m.sla_resolved_at != nil {
+		fields = append(fields, incident.FieldSLAResolvedAt)
+	}
+	if m.sla_status != nil {
+		fields = append(fields, incident.FieldSLAStatus)
+	}
+	if m.sla_paused_at != nil {
+		fields = append(fields, incident.FieldSLAPausedAt)
+	}
+	if m.sla_pause_reason != nil {
+		fields = append(fields, incident.FieldSLAPauseReason)
 	}
 	if m.severity != nil {
 		fields = append(fields, incident.FieldSeverity)
@@ -57673,6 +58220,22 @@ func (m *IncidentMutation) Field(name string) (ent.Value, bool) {
 		return m.GetType()
 	case incident.FieldPriority:
 		return m.Priority()
+	case incident.FieldSLADefinitionID:
+		return m.SLADefinitionID()
+	case incident.FieldSLAResponseDeadline:
+		return m.SLAResponseDeadline()
+	case incident.FieldSLAResolutionDeadline:
+		return m.SLAResolutionDeadline()
+	case incident.FieldSLAFirstResponseAt:
+		return m.SLAFirstResponseAt()
+	case incident.FieldSLAResolvedAt:
+		return m.SLAResolvedAt()
+	case incident.FieldSLAStatus:
+		return m.SLAStatus()
+	case incident.FieldSLAPausedAt:
+		return m.SLAPausedAt()
+	case incident.FieldSLAPauseReason:
+		return m.SLAPauseReason()
 	case incident.FieldSeverity:
 		return m.Severity()
 	case incident.FieldImpact:
@@ -57748,6 +58311,22 @@ func (m *IncidentMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldType(ctx)
 	case incident.FieldPriority:
 		return m.OldPriority(ctx)
+	case incident.FieldSLADefinitionID:
+		return m.OldSLADefinitionID(ctx)
+	case incident.FieldSLAResponseDeadline:
+		return m.OldSLAResponseDeadline(ctx)
+	case incident.FieldSLAResolutionDeadline:
+		return m.OldSLAResolutionDeadline(ctx)
+	case incident.FieldSLAFirstResponseAt:
+		return m.OldSLAFirstResponseAt(ctx)
+	case incident.FieldSLAResolvedAt:
+		return m.OldSLAResolvedAt(ctx)
+	case incident.FieldSLAStatus:
+		return m.OldSLAStatus(ctx)
+	case incident.FieldSLAPausedAt:
+		return m.OldSLAPausedAt(ctx)
+	case incident.FieldSLAPauseReason:
+		return m.OldSLAPauseReason(ctx)
 	case incident.FieldSeverity:
 		return m.OldSeverity(ctx)
 	case incident.FieldImpact:
@@ -57847,6 +58426,62 @@ func (m *IncidentMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetPriority(v)
+		return nil
+	case incident.FieldSLADefinitionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLADefinitionID(v)
+		return nil
+	case incident.FieldSLAResponseDeadline:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAResponseDeadline(v)
+		return nil
+	case incident.FieldSLAResolutionDeadline:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAResolutionDeadline(v)
+		return nil
+	case incident.FieldSLAFirstResponseAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAFirstResponseAt(v)
+		return nil
+	case incident.FieldSLAResolvedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAResolvedAt(v)
+		return nil
+	case incident.FieldSLAStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAStatus(v)
+		return nil
+	case incident.FieldSLAPausedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAPausedAt(v)
+		return nil
+	case incident.FieldSLAPauseReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAPauseReason(v)
 		return nil
 	case incident.FieldSeverity:
 		v, ok := value.(string)
@@ -58052,6 +58687,9 @@ func (m *IncidentMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *IncidentMutation) AddedFields() []string {
 	var fields []string
+	if m.addsla_definition_id != nil {
+		fields = append(fields, incident.FieldSLADefinitionID)
+	}
 	if m.addreporter_id != nil {
 		fields = append(fields, incident.FieldReporterID)
 	}
@@ -58078,6 +58716,8 @@ func (m *IncidentMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *IncidentMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case incident.FieldSLADefinitionID:
+		return m.AddedSLADefinitionID()
 	case incident.FieldReporterID:
 		return m.AddedReporterID()
 	case incident.FieldAssigneeID:
@@ -58099,6 +58739,13 @@ func (m *IncidentMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *IncidentMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case incident.FieldSLADefinitionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSLADefinitionID(v)
+		return nil
 	case incident.FieldReporterID:
 		v, ok := value.(int)
 		if !ok {
@@ -58151,6 +58798,27 @@ func (m *IncidentMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(incident.FieldDescription) {
 		fields = append(fields, incident.FieldDescription)
+	}
+	if m.FieldCleared(incident.FieldSLADefinitionID) {
+		fields = append(fields, incident.FieldSLADefinitionID)
+	}
+	if m.FieldCleared(incident.FieldSLAResponseDeadline) {
+		fields = append(fields, incident.FieldSLAResponseDeadline)
+	}
+	if m.FieldCleared(incident.FieldSLAResolutionDeadline) {
+		fields = append(fields, incident.FieldSLAResolutionDeadline)
+	}
+	if m.FieldCleared(incident.FieldSLAFirstResponseAt) {
+		fields = append(fields, incident.FieldSLAFirstResponseAt)
+	}
+	if m.FieldCleared(incident.FieldSLAResolvedAt) {
+		fields = append(fields, incident.FieldSLAResolvedAt)
+	}
+	if m.FieldCleared(incident.FieldSLAPausedAt) {
+		fields = append(fields, incident.FieldSLAPausedAt)
+	}
+	if m.FieldCleared(incident.FieldSLAPauseReason) {
+		fields = append(fields, incident.FieldSLAPauseReason)
 	}
 	if m.FieldCleared(incident.FieldAssigneeID) {
 		fields = append(fields, incident.FieldAssigneeID)
@@ -58210,6 +58878,27 @@ func (m *IncidentMutation) ClearField(name string) error {
 	switch name {
 	case incident.FieldDescription:
 		m.ClearDescription()
+		return nil
+	case incident.FieldSLADefinitionID:
+		m.ClearSLADefinitionID()
+		return nil
+	case incident.FieldSLAResponseDeadline:
+		m.ClearSLAResponseDeadline()
+		return nil
+	case incident.FieldSLAResolutionDeadline:
+		m.ClearSLAResolutionDeadline()
+		return nil
+	case incident.FieldSLAFirstResponseAt:
+		m.ClearSLAFirstResponseAt()
+		return nil
+	case incident.FieldSLAResolvedAt:
+		m.ClearSLAResolvedAt()
+		return nil
+	case incident.FieldSLAPausedAt:
+		m.ClearSLAPausedAt()
+		return nil
+	case incident.FieldSLAPauseReason:
+		m.ClearSLAPauseReason()
 		return nil
 	case incident.FieldAssigneeID:
 		m.ClearAssigneeID()
@@ -58275,6 +58964,30 @@ func (m *IncidentMutation) ResetField(name string) error {
 		return nil
 	case incident.FieldPriority:
 		m.ResetPriority()
+		return nil
+	case incident.FieldSLADefinitionID:
+		m.ResetSLADefinitionID()
+		return nil
+	case incident.FieldSLAResponseDeadline:
+		m.ResetSLAResponseDeadline()
+		return nil
+	case incident.FieldSLAResolutionDeadline:
+		m.ResetSLAResolutionDeadline()
+		return nil
+	case incident.FieldSLAFirstResponseAt:
+		m.ResetSLAFirstResponseAt()
+		return nil
+	case incident.FieldSLAResolvedAt:
+		m.ResetSLAResolvedAt()
+		return nil
+	case incident.FieldSLAStatus:
+		m.ResetSLAStatus()
+		return nil
+	case incident.FieldSLAPausedAt:
+		m.ResetSLAPausedAt()
+		return nil
+	case incident.FieldSLAPauseReason:
+		m.ResetSLAPauseReason()
 		return nil
 	case incident.FieldSeverity:
 		m.ResetSeverity()
@@ -58366,7 +59079,7 @@ func (m *IncidentMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *IncidentMutation) AddedEdges() []string {
-	edges := make([]string, 0, 9)
+	edges := make([]string, 0, 11)
 	if m.related_incidents != nil {
 		edges = append(edges, incident.EdgeRelatedIncidents)
 	}
@@ -58378,6 +59091,12 @@ func (m *IncidentMutation) AddedEdges() []string {
 	}
 	if m.incident_metrics != nil {
 		edges = append(edges, incident.EdgeIncidentMetrics)
+	}
+	if m.sla_violations != nil {
+		edges = append(edges, incident.EdgeSLAViolations)
+	}
+	if m.sla_alert_history != nil {
+		edges = append(edges, incident.EdgeSLAAlertHistory)
 	}
 	if m.parent_incident != nil {
 		edges = append(edges, incident.EdgeParentIncident)
@@ -58425,6 +59144,18 @@ func (m *IncidentMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case incident.EdgeSLAViolations:
+		ids := make([]ent.Value, 0, len(m.sla_violations))
+		for id := range m.sla_violations {
+			ids = append(ids, id)
+		}
+		return ids
+	case incident.EdgeSLAAlertHistory:
+		ids := make([]ent.Value, 0, len(m.sla_alert_history))
+		for id := range m.sla_alert_history {
+			ids = append(ids, id)
+		}
+		return ids
 	case incident.EdgeParentIncident:
 		ids := make([]ent.Value, 0, len(m.parent_incident))
 		for id := range m.parent_incident {
@@ -58457,7 +59188,7 @@ func (m *IncidentMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *IncidentMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 9)
+	edges := make([]string, 0, 11)
 	if m.removedrelated_incidents != nil {
 		edges = append(edges, incident.EdgeRelatedIncidents)
 	}
@@ -58469,6 +59200,12 @@ func (m *IncidentMutation) RemovedEdges() []string {
 	}
 	if m.removedincident_metrics != nil {
 		edges = append(edges, incident.EdgeIncidentMetrics)
+	}
+	if m.removedsla_violations != nil {
+		edges = append(edges, incident.EdgeSLAViolations)
+	}
+	if m.removedsla_alert_history != nil {
+		edges = append(edges, incident.EdgeSLAAlertHistory)
 	}
 	if m.removedparent_incident != nil {
 		edges = append(edges, incident.EdgeParentIncident)
@@ -58510,6 +59247,18 @@ func (m *IncidentMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case incident.EdgeSLAViolations:
+		ids := make([]ent.Value, 0, len(m.removedsla_violations))
+		for id := range m.removedsla_violations {
+			ids = append(ids, id)
+		}
+		return ids
+	case incident.EdgeSLAAlertHistory:
+		ids := make([]ent.Value, 0, len(m.removedsla_alert_history))
+		for id := range m.removedsla_alert_history {
+			ids = append(ids, id)
+		}
+		return ids
 	case incident.EdgeParentIncident:
 		ids := make([]ent.Value, 0, len(m.removedparent_incident))
 		for id := range m.removedparent_incident {
@@ -58534,7 +59283,7 @@ func (m *IncidentMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *IncidentMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 9)
+	edges := make([]string, 0, 11)
 	if m.clearedrelated_incidents {
 		edges = append(edges, incident.EdgeRelatedIncidents)
 	}
@@ -58546,6 +59295,12 @@ func (m *IncidentMutation) ClearedEdges() []string {
 	}
 	if m.clearedincident_metrics {
 		edges = append(edges, incident.EdgeIncidentMetrics)
+	}
+	if m.clearedsla_violations {
+		edges = append(edges, incident.EdgeSLAViolations)
+	}
+	if m.clearedsla_alert_history {
+		edges = append(edges, incident.EdgeSLAAlertHistory)
 	}
 	if m.clearedparent_incident {
 		edges = append(edges, incident.EdgeParentIncident)
@@ -58577,6 +59332,10 @@ func (m *IncidentMutation) EdgeCleared(name string) bool {
 		return m.clearedincident_alerts
 	case incident.EdgeIncidentMetrics:
 		return m.clearedincident_metrics
+	case incident.EdgeSLAViolations:
+		return m.clearedsla_violations
+	case incident.EdgeSLAAlertHistory:
+		return m.clearedsla_alert_history
 	case incident.EdgeParentIncident:
 		return m.clearedparent_incident
 	case incident.EdgeConfigurationItems:
@@ -58620,6 +59379,12 @@ func (m *IncidentMutation) ResetEdge(name string) error {
 		return nil
 	case incident.EdgeIncidentMetrics:
 		m.ResetIncidentMetrics()
+		return nil
+	case incident.EdgeSLAViolations:
+		m.ResetSLAViolations()
+		return nil
+	case incident.EdgeSLAAlertHistory:
+		m.ResetSLAAlertHistory()
 		return nil
 	case incident.EdgeParentIncident:
 		m.ResetParentIncident()
@@ -143317,6 +144082,9 @@ type TicketMutation struct {
 	addsla_definition_id       *int
 	sla_response_deadline      *time.Time
 	sla_resolution_deadline    *time.Time
+	sla_status                 *string
+	sla_paused_at              *time.Time
+	sla_pause_reason           *string
 	first_response_at          *time.Time
 	resolved_at                *time.Time
 	resolution                 *string
@@ -144490,6 +145258,140 @@ func (m *TicketMutation) SLAResolutionDeadlineCleared() bool {
 func (m *TicketMutation) ResetSLAResolutionDeadline() {
 	m.sla_resolution_deadline = nil
 	delete(m.clearedFields, ticket.FieldSLAResolutionDeadline)
+}
+
+// SetSLAStatus sets the "sla_status" field.
+func (m *TicketMutation) SetSLAStatus(s string) {
+	m.sla_status = &s
+}
+
+// SLAStatus returns the value of the "sla_status" field in the mutation.
+func (m *TicketMutation) SLAStatus() (r string, exists bool) {
+	v := m.sla_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAStatus returns the old "sla_status" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldSLAStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAStatus: %w", err)
+	}
+	return oldValue.SLAStatus, nil
+}
+
+// ResetSLAStatus resets all changes to the "sla_status" field.
+func (m *TicketMutation) ResetSLAStatus() {
+	m.sla_status = nil
+}
+
+// SetSLAPausedAt sets the "sla_paused_at" field.
+func (m *TicketMutation) SetSLAPausedAt(t time.Time) {
+	m.sla_paused_at = &t
+}
+
+// SLAPausedAt returns the value of the "sla_paused_at" field in the mutation.
+func (m *TicketMutation) SLAPausedAt() (r time.Time, exists bool) {
+	v := m.sla_paused_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAPausedAt returns the old "sla_paused_at" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldSLAPausedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAPausedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAPausedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAPausedAt: %w", err)
+	}
+	return oldValue.SLAPausedAt, nil
+}
+
+// ClearSLAPausedAt clears the value of the "sla_paused_at" field.
+func (m *TicketMutation) ClearSLAPausedAt() {
+	m.sla_paused_at = nil
+	m.clearedFields[ticket.FieldSLAPausedAt] = struct{}{}
+}
+
+// SLAPausedAtCleared returns if the "sla_paused_at" field was cleared in this mutation.
+func (m *TicketMutation) SLAPausedAtCleared() bool {
+	_, ok := m.clearedFields[ticket.FieldSLAPausedAt]
+	return ok
+}
+
+// ResetSLAPausedAt resets all changes to the "sla_paused_at" field.
+func (m *TicketMutation) ResetSLAPausedAt() {
+	m.sla_paused_at = nil
+	delete(m.clearedFields, ticket.FieldSLAPausedAt)
+}
+
+// SetSLAPauseReason sets the "sla_pause_reason" field.
+func (m *TicketMutation) SetSLAPauseReason(s string) {
+	m.sla_pause_reason = &s
+}
+
+// SLAPauseReason returns the value of the "sla_pause_reason" field in the mutation.
+func (m *TicketMutation) SLAPauseReason() (r string, exists bool) {
+	v := m.sla_pause_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAPauseReason returns the old "sla_pause_reason" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldSLAPauseReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAPauseReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAPauseReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAPauseReason: %w", err)
+	}
+	return oldValue.SLAPauseReason, nil
+}
+
+// ClearSLAPauseReason clears the value of the "sla_pause_reason" field.
+func (m *TicketMutation) ClearSLAPauseReason() {
+	m.sla_pause_reason = nil
+	m.clearedFields[ticket.FieldSLAPauseReason] = struct{}{}
+}
+
+// SLAPauseReasonCleared returns if the "sla_pause_reason" field was cleared in this mutation.
+func (m *TicketMutation) SLAPauseReasonCleared() bool {
+	_, ok := m.clearedFields[ticket.FieldSLAPauseReason]
+	return ok
+}
+
+// ResetSLAPauseReason resets all changes to the "sla_pause_reason" field.
+func (m *TicketMutation) ResetSLAPauseReason() {
+	m.sla_pause_reason = nil
+	delete(m.clearedFields, ticket.FieldSLAPauseReason)
 }
 
 // SetFirstResponseAt sets the "first_response_at" field.
@@ -146261,7 +147163,7 @@ func (m *TicketMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TicketMutation) Fields() []string {
-	fields := make([]string, 0, 37)
+	fields := make([]string, 0, 40)
 	if m.title != nil {
 		fields = append(fields, ticket.FieldTitle)
 	}
@@ -146321,6 +147223,15 @@ func (m *TicketMutation) Fields() []string {
 	}
 	if m.sla_resolution_deadline != nil {
 		fields = append(fields, ticket.FieldSLAResolutionDeadline)
+	}
+	if m.sla_status != nil {
+		fields = append(fields, ticket.FieldSLAStatus)
+	}
+	if m.sla_paused_at != nil {
+		fields = append(fields, ticket.FieldSLAPausedAt)
+	}
+	if m.sla_pause_reason != nil {
+		fields = append(fields, ticket.FieldSLAPauseReason)
 	}
 	if m.first_response_at != nil {
 		fields = append(fields, ticket.FieldFirstResponseAt)
@@ -146421,6 +147332,12 @@ func (m *TicketMutation) Field(name string) (ent.Value, bool) {
 		return m.SLAResponseDeadline()
 	case ticket.FieldSLAResolutionDeadline:
 		return m.SLAResolutionDeadline()
+	case ticket.FieldSLAStatus:
+		return m.SLAStatus()
+	case ticket.FieldSLAPausedAt:
+		return m.SLAPausedAt()
+	case ticket.FieldSLAPauseReason:
+		return m.SLAPauseReason()
 	case ticket.FieldFirstResponseAt:
 		return m.FirstResponseAt()
 	case ticket.FieldResolvedAt:
@@ -146504,6 +147421,12 @@ func (m *TicketMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldSLAResponseDeadline(ctx)
 	case ticket.FieldSLAResolutionDeadline:
 		return m.OldSLAResolutionDeadline(ctx)
+	case ticket.FieldSLAStatus:
+		return m.OldSLAStatus(ctx)
+	case ticket.FieldSLAPausedAt:
+		return m.OldSLAPausedAt(ctx)
+	case ticket.FieldSLAPauseReason:
+		return m.OldSLAPauseReason(ctx)
 	case ticket.FieldFirstResponseAt:
 		return m.OldFirstResponseAt(ctx)
 	case ticket.FieldResolvedAt:
@@ -146686,6 +147609,27 @@ func (m *TicketMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSLAResolutionDeadline(v)
+		return nil
+	case ticket.FieldSLAStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAStatus(v)
+		return nil
+	case ticket.FieldSLAPausedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAPausedAt(v)
+		return nil
+	case ticket.FieldSLAPauseReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAPauseReason(v)
 		return nil
 	case ticket.FieldFirstResponseAt:
 		v, ok := value.(time.Time)
@@ -147007,6 +147951,12 @@ func (m *TicketMutation) ClearedFields() []string {
 	if m.FieldCleared(ticket.FieldSLAResolutionDeadline) {
 		fields = append(fields, ticket.FieldSLAResolutionDeadline)
 	}
+	if m.FieldCleared(ticket.FieldSLAPausedAt) {
+		fields = append(fields, ticket.FieldSLAPausedAt)
+	}
+	if m.FieldCleared(ticket.FieldSLAPauseReason) {
+		fields = append(fields, ticket.FieldSLAPauseReason)
+	}
 	if m.FieldCleared(ticket.FieldFirstResponseAt) {
 		fields = append(fields, ticket.FieldFirstResponseAt)
 	}
@@ -147095,6 +148045,12 @@ func (m *TicketMutation) ClearField(name string) error {
 		return nil
 	case ticket.FieldSLAResolutionDeadline:
 		m.ClearSLAResolutionDeadline()
+		return nil
+	case ticket.FieldSLAPausedAt:
+		m.ClearSLAPausedAt()
+		return nil
+	case ticket.FieldSLAPauseReason:
+		m.ClearSLAPauseReason()
 		return nil
 	case ticket.FieldFirstResponseAt:
 		m.ClearFirstResponseAt()
@@ -147202,6 +148158,15 @@ func (m *TicketMutation) ResetField(name string) error {
 		return nil
 	case ticket.FieldSLAResolutionDeadline:
 		m.ResetSLAResolutionDeadline()
+		return nil
+	case ticket.FieldSLAStatus:
+		m.ResetSLAStatus()
+		return nil
+	case ticket.FieldSLAPausedAt:
+		m.ResetSLAPausedAt()
+		return nil
+	case ticket.FieldSLAPauseReason:
+		m.ResetSLAPauseReason()
 		return nil
 	case ticket.FieldFirstResponseAt:
 		m.ResetFirstResponseAt()

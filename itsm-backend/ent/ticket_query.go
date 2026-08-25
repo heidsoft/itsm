@@ -1421,6 +1421,7 @@ func (_q *TicketQuery) loadSLAViolations(ctx context.Context, query *SLAViolatio
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(slaviolation.FieldTicketID)
 	}
@@ -1451,6 +1452,7 @@ func (_q *TicketQuery) loadSLAAlertHistory(ctx context.Context, query *SLAAlertH
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(slaalerthistory.FieldTicketID)
 	}

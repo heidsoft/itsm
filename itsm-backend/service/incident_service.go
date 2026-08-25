@@ -72,6 +72,12 @@ type IncidentService struct {
 	rawDB                 *sql.DB // for transactional SELECT FOR UPDATE (S-4 修复)
 	workflowOutboxEnabled bool
 	rulesOutboxEnabled    bool
+	slaSvc                *TicketSLAService
+}
+
+// SetSLAService 注入SLA服务，用于创建Incident时自动绑定SLA策略
+func (s *IncidentService) SetSLAService(sla *TicketSLAService) {
+	s.slaSvc = sla
 }
 
 func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger) *IncidentService {
@@ -301,6 +307,28 @@ func (s *IncidentService) createIncident(ctx context.Context, req *dto.CreateInc
 	if err != nil {
 		s.logger.Errorw("Failed to create incident", "error", err)
 		return rollback(fmt.Errorf("failed to create incident: %w", err))
+	}
+
+	// 绑定SLA策略（P0-1）：创建Incident时自动匹配SLA并计算截止时间
+	if s.slaSvc != nil {
+		slaResult, slaErr := s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, "incident", priority)
+		if slaErr != nil {
+			s.logger.Warnw("Failed to calculate SLA for incident, continuing without SLA", "error", slaErr)
+		} else {
+			slaUpdater := tx.Incident.UpdateOne(incidentEntity)
+			if slaResult.SLADefinitionID > 0 {
+				slaUpdater.SetSLADefinitionID(slaResult.SLADefinitionID)
+			}
+			if slaResult.ResponseDeadline != nil {
+				slaUpdater.SetSLAResponseDeadline(*slaResult.ResponseDeadline)
+			}
+			if slaResult.ResolutionDeadline != nil {
+				slaUpdater.SetSLAResolutionDeadline(*slaResult.ResolutionDeadline)
+			}
+			if err := slaUpdater.Exec(ctx); err != nil {
+				s.logger.Warnw("Failed to set SLA deadlines on incident, continuing", "error", err)
+			}
+		}
 	}
 
 	_, err = tx.IncidentEvent.Create().

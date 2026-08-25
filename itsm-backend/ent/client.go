@@ -8236,6 +8236,38 @@ func (c *IncidentClient) QueryIncidentMetrics(_m *Incident) *IncidentMetricQuery
 	return query
 }
 
+// QuerySLAViolations queries the sla_violations edge of a Incident.
+func (c *IncidentClient) QuerySLAViolations(_m *Incident) *SLAViolationQuery {
+	query := (&SLAViolationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.SLAViolationsTable, incident.SLAViolationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySLAAlertHistory queries the sla_alert_history edge of a Incident.
+func (c *IncidentClient) QuerySLAAlertHistory(_m *Incident) *SLAAlertHistoryQuery {
+	query := (&SLAAlertHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(slaalerthistory.Table, slaalerthistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.SLAAlertHistoryTable, incident.SLAAlertHistoryColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryParentIncident queries the parent_incident edge of a Incident.
 func (c *IncidentClient) QueryParentIncident(_m *Incident) *IncidentQuery {
 	query := (&IncidentClient{config: c.config}).Query()

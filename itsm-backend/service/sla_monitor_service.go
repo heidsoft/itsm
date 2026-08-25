@@ -8,6 +8,7 @@ import (
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
@@ -192,6 +193,12 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 		}
 	}
 
+	// === Incident SLA 违规检查（P0-1）===
+	incidentStats := s.checkIncidentSLAViolations(ctx, tenantID, now, slaDefMap)
+	stats.TotalChecked += incidentStats.TotalChecked
+	stats.NewViolations += incidentStats.NewViolations
+	stats.ExistingViolations += incidentStats.ExistingViolations
+
 	s.logger.Infow("SLA violation check completed", "tenant_id", tenantID,
 		"total_checked", stats.TotalChecked,
 		"new_violations", stats.NewViolations,
@@ -199,6 +206,177 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 		"warnings", stats.WarningsTriggered,
 		"alerts", stats.AlertsTriggered)
 	return stats, nil
+}
+
+// checkIncidentSLAViolations 检查所有活跃 Incident 的 SLA 违规情况（P0-1）
+func (s *SLAMonitorService) checkIncidentSLAViolations(ctx context.Context, tenantID int, now time.Time, slaDefMap map[int]string) *SLACheckStats {
+	stats := &SLACheckStats{}
+
+	// 预加载该租户 Incident 未解决的 SLA 违规
+	existingViolations, err := s.client.SLAViolation.Query().
+		Where(
+			slaviolation.TenantIDEQ(tenantID),
+			slaviolation.IsResolvedEQ(false),
+			slaviolation.TicketTypeEQ("incident"),
+		).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to query existing incident violations", "error", err)
+		return stats
+	}
+
+	existingViolationMap := make(map[int]map[string]bool)
+	for _, v := range existingViolations {
+		if existingViolationMap[v.TicketID] == nil {
+			existingViolationMap[v.TicketID] = make(map[string]bool)
+		}
+		existingViolationMap[v.TicketID][v.ViolationType] = true
+	}
+
+	incidents, err := s.client.Incident.Query().
+		Where(
+			incident.TenantIDEQ(tenantID),
+			incident.SLADefinitionIDNEQ(0),
+			incident.ResolvedAtIsNil(),
+			incident.DeletedAtIsNil(),
+			incident.SLAStatusEQ("active"),
+		).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to query incidents for SLA check", "error", err)
+		return stats
+	}
+
+	stats.TotalChecked = len(incidents)
+
+	for _, inc := range incidents {
+		// 响应时间 SLA
+		if inc.SLAFirstResponseAt.IsZero() && !inc.SLAResponseDeadline.IsZero() && now.After(inc.SLAResponseDeadline) {
+			existingMap := existingViolationMap[inc.ID]
+			if existingMap == nil || !existingMap["response_time"] {
+				if created, cErr := s.createIncidentViolation(ctx, inc, "response_time", inc.SLAResponseDeadline, slaDefMap); cErr != nil {
+					s.logger.Errorw("Failed to create incident response violation", "incident_id", inc.ID, "error", cErr)
+				} else if created {
+					stats.NewViolations++
+				} else {
+					stats.ExistingViolations++
+				}
+			} else {
+				stats.ExistingViolations++
+			}
+		}
+
+		// 解决时间 SLA
+		if !inc.SLAResolutionDeadline.IsZero() && now.After(inc.SLAResolutionDeadline) {
+			existingMap := existingViolationMap[inc.ID]
+			if existingMap == nil || !existingMap["resolution_time"] {
+				if created, cErr := s.createIncidentViolation(ctx, inc, "resolution_time", inc.SLAResolutionDeadline, slaDefMap); cErr != nil {
+					s.logger.Errorw("Failed to create incident resolution violation", "incident_id", inc.ID, "error", cErr)
+				} else if created {
+					stats.NewViolations++
+				} else {
+					stats.ExistingViolations++
+				}
+			} else {
+				stats.ExistingViolations++
+			}
+		}
+	}
+
+	return stats
+}
+
+// createIncidentViolation 为 Incident 创建 SLA 违规记录（P0-1）
+func (s *SLAMonitorService) createIncidentViolation(ctx context.Context, inc *ent.Incident, violationType string, deadline time.Time, slaDefMap map[int]string) (bool, error) {
+	exceededMinutes := time.Since(deadline).Minutes()
+	if exceededMinutes < 0 {
+		exceededMinutes = 0
+	}
+
+	description := fmt.Sprintf("事件 %s 违反SLA (%s): 超过截止时间 %.1f 分钟",
+		inc.IncidentNumber, violationType, exceededMinutes)
+
+	severity := "low"
+	if exceededMinutes > 60 {
+		severity = "medium"
+	}
+	if exceededMinutes > 240 {
+		severity = "high"
+	}
+	if exceededMinutes > 480 {
+		severity = "critical"
+	}
+
+	now := time.Now()
+	if inc.SLADefinitionID == 0 {
+		return false, nil
+	}
+
+	slaName := slaDefMap[inc.SLADefinitionID]
+	if slaName == "" {
+		slaName = "Default SLA"
+	}
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return false, fmt.Errorf("begin incident SLA violation tx: %w", err)
+	}
+
+	// 幂等检查
+	exists, err := tx.SLAViolation.Query().
+		Where(
+			slaviolation.TicketIDEQ(inc.ID),
+			slaviolation.TenantIDEQ(inc.TenantID),
+			slaviolation.ViolationTypeEQ(violationType),
+			slaviolation.IsResolvedEQ(false),
+			slaviolation.TicketTypeEQ("incident"),
+		).
+		Exist(ctx)
+	if err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			s.logger.Errorw("failed to rollback tx", "error", rbErr)
+		}
+		return false, fmt.Errorf("check existing incident violation: %w", err)
+	}
+	if exists {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			s.logger.Errorw("failed to rollback tx", "error", rbErr)
+		}
+		return false, nil
+	}
+
+	_, err = tx.SLAViolation.Create().
+		SetCreatedBy(0).
+		SetTicketID(inc.ID).
+		SetTicketType("incident").
+		SetSLADefinitionID(inc.SLADefinitionID).
+		SetSLAName(slaName).
+		SetViolationType(violationType).
+		SetViolationTime(now).
+		SetDescription(description).
+		SetSeverity(severity).
+		SetIsResolved(false).
+		SetTenantID(inc.TenantID).
+		SetCreatedAt(now).
+		SetUpdatedAt(now).
+		Save(ctx)
+	if err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			s.logger.Errorw("failed to rollback tx", "error", rbErr)
+		}
+		if ent.IsConstraintError(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("create incident SLA violation: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return false, fmt.Errorf("commit incident SLA violation: %w", err)
+	}
+
+	s.logger.Infow("Incident SLA violation created", "incident_id", inc.ID,
+		"violation_type", violationType, "exceeded_minutes", exceededMinutes)
+	return true, nil
 }
 
 // createViolation 创建SLA违规记录
@@ -417,11 +595,11 @@ func (s *SLAMonitorService) CalculateSLAMetrics(ctx context.Context, tenantID in
 			totalResolutionHours += resolutionHours
 			resolutionCount++
 
-			// 检查是否违反SLA
+			// 检查是否违反SLA（工单已解决，但只要有违规记录即算违规，不要求违规记录未解决）
 			hasViolation, _ := s.client.SLAViolation.Query().
 				Where(
 					slaviolation.TicketID(t.ID),
-					slaviolation.ResolvedAtIsNil(),
+					slaviolation.TenantIDEQ(tenantID),
 				).
 				Exist(ctx)
 			if hasViolation {
@@ -482,13 +660,19 @@ func (s *SLAMonitorService) GetSLAComplianceByDefinition(ctx context.Context, te
 			continue
 		}
 
+		// 统计有SLA违规记录的工单数量（去重）
+		// 注意：不应使用 slaviolation.ResolvedAtIsNil() 过滤，
+		// 因为违规记录的 resolved_at 表示违规是否已处理，
+		// 与工单是否仍未解决是两个语义。
+		// 只要工单有过违规记录，就应计入违规数。
 		violated, _ := s.client.SLAViolation.Query().
 			Where(
 				slaviolation.SLADefinitionID(sla.ID),
-				slaviolation.ResolvedAtIsNil(),
+				slaviolation.TenantIDEQ(tenantID),
 			).
+			Select(slaviolation.FieldTicketID).
+			Unique(true).
 			Count(ctx)
-
 		stats = append(stats, &SLAComplianceStat{
 			SLADefinitionID:   sla.ID,
 			SLADefinitionName: sla.Name,
@@ -552,6 +736,113 @@ func (s *SLAMonitorService) StartSLAWatcher(ctx context.Context, interval time.D
 
 			s.logger.Info("SLA watcher completed one round")
 		}
+	}
+}
+
+// PauseSLA 暂停工单/事件的SLA计时（P0-2）
+func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityType string, entityID int, reason string) error {
+	now := time.Now()
+
+	switch entityType {
+	case "ticket":
+		t, err := s.client.Ticket.Query().
+			Where(ticket.IDEQ(entityID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
+			Only(ctx)
+		if err != nil {
+			return fmt.Errorf("查询工单失败: %w", err)
+		}
+		if t.SLAStatus == "paused" {
+			return fmt.Errorf("工单SLA已处于暂停状态")
+		}
+		return s.client.Ticket.UpdateOneID(entityID).
+			SetSLAStatus("paused").
+			SetSLAPausedAt(now).
+			SetSLAPauseReason(reason).
+			Exec(ctx)
+
+	case "incident":
+		inc, err := s.client.Incident.Query().
+			Where(incident.IDEQ(entityID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
+			Only(ctx)
+		if err != nil {
+			return fmt.Errorf("查询事件失败: %w", err)
+		}
+		if inc.SLAStatus == "paused" {
+			return fmt.Errorf("事件SLA已处于暂停状态")
+		}
+		return s.client.Incident.UpdateOneID(entityID).
+			SetSLAStatus("paused").
+			SetSLAPausedAt(now).
+			SetSLAPauseReason(reason).
+			Exec(ctx)
+
+	default:
+		return fmt.Errorf("不支持的实体类型: %s", entityType)
+	}
+}
+
+// ResumeSLA 恢复工单/事件的SLA计时，将暂停时长追加到deadline（P0-2）
+func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityType string, entityID int) error {
+	now := time.Now()
+
+	switch entityType {
+	case "ticket":
+		t, err := s.client.Ticket.Query().
+			Where(ticket.IDEQ(entityID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
+			Only(ctx)
+		if err != nil {
+			return fmt.Errorf("查询工单失败: %w", err)
+		}
+		if t.SLAStatus != "paused" {
+			return fmt.Errorf("工单SLA未处于暂停状态")
+		}
+
+		// 计算暂停时长，延长deadline
+		updater := s.client.Ticket.UpdateOneID(entityID).
+			SetSLAStatus("active").
+			ClearSLAPausedAt().
+			ClearSLAPauseReason()
+
+		if !t.SLAPausedAt.IsZero() {
+			pausedDuration := now.Sub(t.SLAPausedAt)
+			if !t.SLAResponseDeadline.IsZero() {
+				updater.SetSLAResponseDeadline(t.SLAResponseDeadline.Add(pausedDuration))
+			}
+			if !t.SLAResolutionDeadline.IsZero() {
+				updater.SetSLAResolutionDeadline(t.SLAResolutionDeadline.Add(pausedDuration))
+			}
+		}
+		return updater.Exec(ctx)
+
+	case "incident":
+		inc, err := s.client.Incident.Query().
+			Where(incident.IDEQ(entityID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
+			Only(ctx)
+		if err != nil {
+			return fmt.Errorf("查询事件失败: %w", err)
+		}
+		if inc.SLAStatus != "paused" {
+			return fmt.Errorf("事件SLA未处于暂停状态")
+		}
+
+		updater := s.client.Incident.UpdateOneID(entityID).
+			SetSLAStatus("active").
+			ClearSLAPausedAt().
+			ClearSLAPauseReason()
+
+		if !inc.SLAPausedAt.IsZero() {
+			pausedDuration := now.Sub(inc.SLAPausedAt)
+			if !inc.SLAResponseDeadline.IsZero() {
+				updater.SetSLAResponseDeadline(inc.SLAResponseDeadline.Add(pausedDuration))
+			}
+			if !inc.SLAResolutionDeadline.IsZero() {
+				updater.SetSLAResolutionDeadline(inc.SLAResolutionDeadline.Add(pausedDuration))
+			}
+		}
+		return updater.Exec(ctx)
+
+	default:
+		return fmt.Errorf("不支持的实体类型: %s", entityType)
 	}
 }
 

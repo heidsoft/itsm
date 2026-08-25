@@ -40,6 +40,30 @@ func (Incident) Fields() []ent.Field {
 				return nil
 			}).
 			Default("medium"),
+		field.Int("sla_definition_id").
+			Comment("SLA定义ID").
+			Optional(),
+		field.Time("sla_response_deadline").
+			Comment("SLA响应截止时间").
+			Optional(),
+		field.Time("sla_resolution_deadline").
+			Comment("SLA解决截止时间").
+			Optional(),
+		field.Time("sla_first_response_at").
+			Comment("首次响应时间").
+			Optional(),
+		field.Time("sla_resolved_at").
+			Comment("SLA解决时间").
+			Optional(),
+		field.String("sla_status").
+			Comment("SLA状态：active/paused").
+			Default("active"),
+		field.Time("sla_paused_at").
+			Comment("SLA暂停时间").
+			Optional(),
+		field.String("sla_pause_reason").
+			Comment("SLA暂停原因").
+			Optional(),
 		field.String("severity").
 			Comment("严重程度").
 			Default("medium"),
@@ -158,6 +182,10 @@ func (Incident) Edges() []ent.Edge {
 			Comment("事件告警"),
 		edge.To("incident_metrics", IncidentMetric.Type).
 			Comment("事件指标"),
+		edge.To("sla_violations", SLAViolation.Type).
+			Comment("SLA违规记录"),
+		edge.To("sla_alert_history", SLAAlertHistory.Type).
+			Comment("SLA告警历史"),
 		edge.From("parent_incident", Incident.Type).
 			Ref("related_incidents").
 			Comment("父事件"),

@@ -568,6 +568,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			tickets.POST("/:id/escalate", middleware.RequirePermission("ticket", "escalate"), config.TicketController.EscalateTicket)
 			tickets.GET("/:id/history", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketActivity)
+			tickets.PUT("/:id/sla/pause", middleware.RequirePermission("ticket", "update"), config.TicketController.PauseSLA)
+			tickets.PUT("/:id/sla/resume", middleware.RequirePermission("ticket", "update"), config.TicketController.ResumeSLA)
 			tickets.GET("/types", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
 				common.Success(c, gin.H{"types": []gin.H{
 					{"id": 1, "name": " Incident", "code": "incident"},
@@ -899,6 +901,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				inc.POST("/:id/close", middleware.RequirePermission("incident", "write"), config.IncidentController.CloseIncident)
 				inc.POST("/:id/reopen", middleware.RequirePermission("incident", "write"), config.IncidentController.ReopenIncident)
 				inc.POST("/:id/assign", middleware.RequirePermission("incident", "assign"), config.IncidentController.AssignIncident)
+			inc.PUT("/:id/sla/pause", middleware.RequirePermission("incident", "write"), config.IncidentController.PauseSLA)
+			inc.PUT("/:id/sla/resume", middleware.RequirePermission("incident", "write"), config.IncidentController.ResumeSLA)
 				inc.POST("/:id/major-incident", middleware.RequirePermission("incident", "write"), config.IncidentController.EscalateMajorIncident)
 				inc.POST("/:id/convert-to-problem", middleware.RequirePermission("incident", "write"), config.IncidentController.ConvertToProblem)
 				inc.GET("/:id/impact", middleware.RequirePermission("incident", "read"), config.IncidentController.AnalyzeIncidentImpact)

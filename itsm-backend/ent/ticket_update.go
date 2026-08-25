@@ -429,6 +429,60 @@ func (_u *TicketUpdate) ClearSLAResolutionDeadline() *TicketUpdate {
 	return _u
 }
 
+// SetSLAStatus sets the "sla_status" field.
+func (_u *TicketUpdate) SetSLAStatus(v string) *TicketUpdate {
+	_u.mutation.SetSLAStatus(v)
+	return _u
+}
+
+// SetNillableSLAStatus sets the "sla_status" field if the given value is not nil.
+func (_u *TicketUpdate) SetNillableSLAStatus(v *string) *TicketUpdate {
+	if v != nil {
+		_u.SetSLAStatus(*v)
+	}
+	return _u
+}
+
+// SetSLAPausedAt sets the "sla_paused_at" field.
+func (_u *TicketUpdate) SetSLAPausedAt(v time.Time) *TicketUpdate {
+	_u.mutation.SetSLAPausedAt(v)
+	return _u
+}
+
+// SetNillableSLAPausedAt sets the "sla_paused_at" field if the given value is not nil.
+func (_u *TicketUpdate) SetNillableSLAPausedAt(v *time.Time) *TicketUpdate {
+	if v != nil {
+		_u.SetSLAPausedAt(*v)
+	}
+	return _u
+}
+
+// ClearSLAPausedAt clears the value of the "sla_paused_at" field.
+func (_u *TicketUpdate) ClearSLAPausedAt() *TicketUpdate {
+	_u.mutation.ClearSLAPausedAt()
+	return _u
+}
+
+// SetSLAPauseReason sets the "sla_pause_reason" field.
+func (_u *TicketUpdate) SetSLAPauseReason(v string) *TicketUpdate {
+	_u.mutation.SetSLAPauseReason(v)
+	return _u
+}
+
+// SetNillableSLAPauseReason sets the "sla_pause_reason" field if the given value is not nil.
+func (_u *TicketUpdate) SetNillableSLAPauseReason(v *string) *TicketUpdate {
+	if v != nil {
+		_u.SetSLAPauseReason(*v)
+	}
+	return _u
+}
+
+// ClearSLAPauseReason clears the value of the "sla_pause_reason" field.
+func (_u *TicketUpdate) ClearSLAPauseReason() *TicketUpdate {
+	_u.mutation.ClearSLAPauseReason()
+	return _u
+}
+
 // SetFirstResponseAt sets the "first_response_at" field.
 func (_u *TicketUpdate) SetFirstResponseAt(v time.Time) *TicketUpdate {
 	_u.mutation.SetFirstResponseAt(v)
@@ -1522,6 +1576,21 @@ func (_u *TicketUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.SLAResolutionDeadlineCleared() {
 		_spec.ClearField(ticket.FieldSLAResolutionDeadline, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAStatus(); ok {
+		_spec.SetField(ticket.FieldSLAStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SLAPausedAt(); ok {
+		_spec.SetField(ticket.FieldSLAPausedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SLAPausedAtCleared() {
+		_spec.ClearField(ticket.FieldSLAPausedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAPauseReason(); ok {
+		_spec.SetField(ticket.FieldSLAPauseReason, field.TypeString, value)
+	}
+	if _u.mutation.SLAPauseReasonCleared() {
+		_spec.ClearField(ticket.FieldSLAPauseReason, field.TypeString)
 	}
 	if value, ok := _u.mutation.FirstResponseAt(); ok {
 		_spec.SetField(ticket.FieldFirstResponseAt, field.TypeTime, value)
@@ -2751,6 +2820,60 @@ func (_u *TicketUpdateOne) ClearSLAResolutionDeadline() *TicketUpdateOne {
 	return _u
 }
 
+// SetSLAStatus sets the "sla_status" field.
+func (_u *TicketUpdateOne) SetSLAStatus(v string) *TicketUpdateOne {
+	_u.mutation.SetSLAStatus(v)
+	return _u
+}
+
+// SetNillableSLAStatus sets the "sla_status" field if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableSLAStatus(v *string) *TicketUpdateOne {
+	if v != nil {
+		_u.SetSLAStatus(*v)
+	}
+	return _u
+}
+
+// SetSLAPausedAt sets the "sla_paused_at" field.
+func (_u *TicketUpdateOne) SetSLAPausedAt(v time.Time) *TicketUpdateOne {
+	_u.mutation.SetSLAPausedAt(v)
+	return _u
+}
+
+// SetNillableSLAPausedAt sets the "sla_paused_at" field if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableSLAPausedAt(v *time.Time) *TicketUpdateOne {
+	if v != nil {
+		_u.SetSLAPausedAt(*v)
+	}
+	return _u
+}
+
+// ClearSLAPausedAt clears the value of the "sla_paused_at" field.
+func (_u *TicketUpdateOne) ClearSLAPausedAt() *TicketUpdateOne {
+	_u.mutation.ClearSLAPausedAt()
+	return _u
+}
+
+// SetSLAPauseReason sets the "sla_pause_reason" field.
+func (_u *TicketUpdateOne) SetSLAPauseReason(v string) *TicketUpdateOne {
+	_u.mutation.SetSLAPauseReason(v)
+	return _u
+}
+
+// SetNillableSLAPauseReason sets the "sla_pause_reason" field if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableSLAPauseReason(v *string) *TicketUpdateOne {
+	if v != nil {
+		_u.SetSLAPauseReason(*v)
+	}
+	return _u
+}
+
+// ClearSLAPauseReason clears the value of the "sla_pause_reason" field.
+func (_u *TicketUpdateOne) ClearSLAPauseReason() *TicketUpdateOne {
+	_u.mutation.ClearSLAPauseReason()
+	return _u
+}
+
 // SetFirstResponseAt sets the "first_response_at" field.
 func (_u *TicketUpdateOne) SetFirstResponseAt(v time.Time) *TicketUpdateOne {
 	_u.mutation.SetFirstResponseAt(v)
@@ -3874,6 +3997,21 @@ func (_u *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err erro
 	}
 	if _u.mutation.SLAResolutionDeadlineCleared() {
 		_spec.ClearField(ticket.FieldSLAResolutionDeadline, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAStatus(); ok {
+		_spec.SetField(ticket.FieldSLAStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SLAPausedAt(); ok {
+		_spec.SetField(ticket.FieldSLAPausedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SLAPausedAtCleared() {
+		_spec.ClearField(ticket.FieldSLAPausedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAPauseReason(); ok {
+		_spec.SetField(ticket.FieldSLAPauseReason, field.TypeString, value)
+	}
+	if _u.mutation.SLAPauseReasonCleared() {
+		_spec.ClearField(ticket.FieldSLAPauseReason, field.TypeString)
 	}
 	if value, ok := _u.mutation.FirstResponseAt(); ok {
 		_spec.SetField(ticket.FieldFirstResponseAt, field.TypeTime, value)

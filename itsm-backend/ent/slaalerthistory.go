@@ -47,8 +47,9 @@ type SLAAlertHistory struct {
 	ResolvedAt time.Time `json:"resolved_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SLAAlertHistoryQuery when eager-loading is set.
-	Edges        SLAAlertHistoryEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                      SLAAlertHistoryEdges `json:"edges"`
+	incident_sla_alert_history *int
+	selectValues               sql.SelectValues
 }
 
 // SLAAlertHistoryEdges holds the relations/edges for other nodes in the graph.
@@ -99,6 +100,8 @@ func (*SLAAlertHistory) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case slaalerthistory.FieldCreatedAt, slaalerthistory.FieldResolvedAt:
 			values[i] = new(sql.NullTime)
+		case slaalerthistory.ForeignKeys[0]: // incident_sla_alert_history
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -197,6 +200,13 @@ func (_m *SLAAlertHistory) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
 			} else if value.Valid {
 				_m.ResolvedAt = value.Time
+			}
+		case slaalerthistory.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field incident_sla_alert_history", value)
+			} else if value.Valid {
+				_m.incident_sla_alert_history = new(int)
+				*_m.incident_sla_alert_history = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

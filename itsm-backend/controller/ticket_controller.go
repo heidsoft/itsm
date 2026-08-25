@@ -21,6 +21,7 @@ import (
 type TicketController struct {
 	ticketService           *service.TicketService
 	ticketDependencyService *service.TicketDependencyService
+	slaMonitorService       *service.SLAMonitorService
 	db                      *sql.DB
 	logger                  *zap.SugaredLogger
 }
@@ -32,6 +33,11 @@ func NewTicketController(ticketService *service.TicketService, ticketDependencyS
 		db:                      db,
 		logger:                  logger,
 	}
+}
+
+// SetSLAMonitorService 注入SLA监控服务
+func (tc *TicketController) SetSLAMonitorService(svc *service.SLAMonitorService) {
+	tc.slaMonitorService = svc
 }
 
 // ticketToResponse 将 V2 领域模型 ticket.Ticket 转换为 DTO TicketResponse
@@ -1128,4 +1134,82 @@ func isUserInputUpdateError(err error) bool {
 		}
 	}
 	return false
+}
+
+// PauseSLA 暂停工单SLA计时
+// @Summary 暂停工单SLA
+// @Tags SLA
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Param reason body object{reason=string} true "暂停原因"
+// @Success 200 {object} common.Response
+// @Router /api/v1/tickets/{id}/sla/pause [put]
+func (tc *TicketController) PauseSLA(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的工单ID")
+		return
+	}
+
+	var req struct {
+		Reason string `json:"reason" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamError(c, "暂停原因为必填项")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.AuthFailed(c, "缺少租户上下文")
+		return
+	}
+
+	if tc.slaMonitorService == nil {
+		common.InternalError(c, "SLA监控服务未配置")
+		return
+	}
+
+	if err := tc.slaMonitorService.PauseSLA(c.Request.Context(), tenantID, "ticket", id, req.Reason); err != nil {
+		tc.logger.Errorw("Failed to pause ticket SLA", "ticket_id", id, "error", err)
+		common.InternalError(c, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "SLA已暂停", "ticketId": id})
+}
+
+// ResumeSLA 恢复工单SLA计时
+// @Summary 恢复工单SLA
+// @Tags SLA
+// @Produce json
+// @Param id path int true "工单ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/tickets/{id}/sla/resume [put]
+func (tc *TicketController) ResumeSLA(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的工单ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.AuthFailed(c, "缺少租户上下文")
+		return
+	}
+
+	if tc.slaMonitorService == nil {
+		common.InternalError(c, "SLA监控服务未配置")
+		return
+	}
+
+	if err := tc.slaMonitorService.ResumeSLA(c.Request.Context(), tenantID, "ticket", id); err != nil {
+		tc.logger.Errorw("Failed to resume ticket SLA", "ticket_id", id, "error", err)
+		common.InternalError(c, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "SLA已恢复", "ticketId": id})
 }

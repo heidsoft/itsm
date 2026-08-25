@@ -15,6 +15,8 @@ import (
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/slaalerthistory"
+	"itsm-backend/ent/slaviolation"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -109,6 +111,167 @@ func (_u *IncidentUpdate) SetNillablePriority(v *string) *IncidentUpdate {
 	if v != nil {
 		_u.SetPriority(*v)
 	}
+	return _u
+}
+
+// SetSLADefinitionID sets the "sla_definition_id" field.
+func (_u *IncidentUpdate) SetSLADefinitionID(v int) *IncidentUpdate {
+	_u.mutation.ResetSLADefinitionID()
+	_u.mutation.SetSLADefinitionID(v)
+	return _u
+}
+
+// SetNillableSLADefinitionID sets the "sla_definition_id" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableSLADefinitionID(v *int) *IncidentUpdate {
+	if v != nil {
+		_u.SetSLADefinitionID(*v)
+	}
+	return _u
+}
+
+// AddSLADefinitionID adds value to the "sla_definition_id" field.
+func (_u *IncidentUpdate) AddSLADefinitionID(v int) *IncidentUpdate {
+	_u.mutation.AddSLADefinitionID(v)
+	return _u
+}
+
+// ClearSLADefinitionID clears the value of the "sla_definition_id" field.
+func (_u *IncidentUpdate) ClearSLADefinitionID() *IncidentUpdate {
+	_u.mutation.ClearSLADefinitionID()
+	return _u
+}
+
+// SetSLAResponseDeadline sets the "sla_response_deadline" field.
+func (_u *IncidentUpdate) SetSLAResponseDeadline(v time.Time) *IncidentUpdate {
+	_u.mutation.SetSLAResponseDeadline(v)
+	return _u
+}
+
+// SetNillableSLAResponseDeadline sets the "sla_response_deadline" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableSLAResponseDeadline(v *time.Time) *IncidentUpdate {
+	if v != nil {
+		_u.SetSLAResponseDeadline(*v)
+	}
+	return _u
+}
+
+// ClearSLAResponseDeadline clears the value of the "sla_response_deadline" field.
+func (_u *IncidentUpdate) ClearSLAResponseDeadline() *IncidentUpdate {
+	_u.mutation.ClearSLAResponseDeadline()
+	return _u
+}
+
+// SetSLAResolutionDeadline sets the "sla_resolution_deadline" field.
+func (_u *IncidentUpdate) SetSLAResolutionDeadline(v time.Time) *IncidentUpdate {
+	_u.mutation.SetSLAResolutionDeadline(v)
+	return _u
+}
+
+// SetNillableSLAResolutionDeadline sets the "sla_resolution_deadline" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableSLAResolutionDeadline(v *time.Time) *IncidentUpdate {
+	if v != nil {
+		_u.SetSLAResolutionDeadline(*v)
+	}
+	return _u
+}
+
+// ClearSLAResolutionDeadline clears the value of the "sla_resolution_deadline" field.
+func (_u *IncidentUpdate) ClearSLAResolutionDeadline() *IncidentUpdate {
+	_u.mutation.ClearSLAResolutionDeadline()
+	return _u
+}
+
+// SetSLAFirstResponseAt sets the "sla_first_response_at" field.
+func (_u *IncidentUpdate) SetSLAFirstResponseAt(v time.Time) *IncidentUpdate {
+	_u.mutation.SetSLAFirstResponseAt(v)
+	return _u
+}
+
+// SetNillableSLAFirstResponseAt sets the "sla_first_response_at" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableSLAFirstResponseAt(v *time.Time) *IncidentUpdate {
+	if v != nil {
+		_u.SetSLAFirstResponseAt(*v)
+	}
+	return _u
+}
+
+// ClearSLAFirstResponseAt clears the value of the "sla_first_response_at" field.
+func (_u *IncidentUpdate) ClearSLAFirstResponseAt() *IncidentUpdate {
+	_u.mutation.ClearSLAFirstResponseAt()
+	return _u
+}
+
+// SetSLAResolvedAt sets the "sla_resolved_at" field.
+func (_u *IncidentUpdate) SetSLAResolvedAt(v time.Time) *IncidentUpdate {
+	_u.mutation.SetSLAResolvedAt(v)
+	return _u
+}
+
+// SetNillableSLAResolvedAt sets the "sla_resolved_at" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableSLAResolvedAt(v *time.Time) *IncidentUpdate {
+	if v != nil {
+		_u.SetSLAResolvedAt(*v)
+	}
+	return _u
+}
+
+// ClearSLAResolvedAt clears the value of the "sla_resolved_at" field.
+func (_u *IncidentUpdate) ClearSLAResolvedAt() *IncidentUpdate {
+	_u.mutation.ClearSLAResolvedAt()
+	return _u
+}
+
+// SetSLAStatus sets the "sla_status" field.
+func (_u *IncidentUpdate) SetSLAStatus(v string) *IncidentUpdate {
+	_u.mutation.SetSLAStatus(v)
+	return _u
+}
+
+// SetNillableSLAStatus sets the "sla_status" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableSLAStatus(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetSLAStatus(*v)
+	}
+	return _u
+}
+
+// SetSLAPausedAt sets the "sla_paused_at" field.
+func (_u *IncidentUpdate) SetSLAPausedAt(v time.Time) *IncidentUpdate {
+	_u.mutation.SetSLAPausedAt(v)
+	return _u
+}
+
+// SetNillableSLAPausedAt sets the "sla_paused_at" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableSLAPausedAt(v *time.Time) *IncidentUpdate {
+	if v != nil {
+		_u.SetSLAPausedAt(*v)
+	}
+	return _u
+}
+
+// ClearSLAPausedAt clears the value of the "sla_paused_at" field.
+func (_u *IncidentUpdate) ClearSLAPausedAt() *IncidentUpdate {
+	_u.mutation.ClearSLAPausedAt()
+	return _u
+}
+
+// SetSLAPauseReason sets the "sla_pause_reason" field.
+func (_u *IncidentUpdate) SetSLAPauseReason(v string) *IncidentUpdate {
+	_u.mutation.SetSLAPauseReason(v)
+	return _u
+}
+
+// SetNillableSLAPauseReason sets the "sla_pause_reason" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableSLAPauseReason(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetSLAPauseReason(*v)
+	}
+	return _u
+}
+
+// ClearSLAPauseReason clears the value of the "sla_pause_reason" field.
+func (_u *IncidentUpdate) ClearSLAPauseReason() *IncidentUpdate {
+	_u.mutation.ClearSLAPauseReason()
 	return _u
 }
 
@@ -656,6 +819,36 @@ func (_u *IncidentUpdate) AddIncidentMetrics(v ...*IncidentMetric) *IncidentUpda
 	return _u.AddIncidentMetricIDs(ids...)
 }
 
+// AddSLAViolationIDs adds the "sla_violations" edge to the SLAViolation entity by IDs.
+func (_u *IncidentUpdate) AddSLAViolationIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.AddSLAViolationIDs(ids...)
+	return _u
+}
+
+// AddSLAViolations adds the "sla_violations" edges to the SLAViolation entity.
+func (_u *IncidentUpdate) AddSLAViolations(v ...*SLAViolation) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSLAViolationIDs(ids...)
+}
+
+// AddSLAAlertHistoryIDs adds the "sla_alert_history" edge to the SLAAlertHistory entity by IDs.
+func (_u *IncidentUpdate) AddSLAAlertHistoryIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.AddSLAAlertHistoryIDs(ids...)
+	return _u
+}
+
+// AddSLAAlertHistory adds the "sla_alert_history" edges to the SLAAlertHistory entity.
+func (_u *IncidentUpdate) AddSLAAlertHistory(v ...*SLAAlertHistory) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSLAAlertHistoryIDs(ids...)
+}
+
 // AddParentIncidentIDs adds the "parent_incident" edge to the Incident entity by IDs.
 func (_u *IncidentUpdate) AddParentIncidentIDs(ids ...int) *IncidentUpdate {
 	_u.mutation.AddParentIncidentIDs(ids...)
@@ -798,6 +991,48 @@ func (_u *IncidentUpdate) RemoveIncidentMetrics(v ...*IncidentMetric) *IncidentU
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveIncidentMetricIDs(ids...)
+}
+
+// ClearSLAViolations clears all "sla_violations" edges to the SLAViolation entity.
+func (_u *IncidentUpdate) ClearSLAViolations() *IncidentUpdate {
+	_u.mutation.ClearSLAViolations()
+	return _u
+}
+
+// RemoveSLAViolationIDs removes the "sla_violations" edge to SLAViolation entities by IDs.
+func (_u *IncidentUpdate) RemoveSLAViolationIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.RemoveSLAViolationIDs(ids...)
+	return _u
+}
+
+// RemoveSLAViolations removes "sla_violations" edges to SLAViolation entities.
+func (_u *IncidentUpdate) RemoveSLAViolations(v ...*SLAViolation) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSLAViolationIDs(ids...)
+}
+
+// ClearSLAAlertHistory clears all "sla_alert_history" edges to the SLAAlertHistory entity.
+func (_u *IncidentUpdate) ClearSLAAlertHistory() *IncidentUpdate {
+	_u.mutation.ClearSLAAlertHistory()
+	return _u
+}
+
+// RemoveSLAAlertHistoryIDs removes the "sla_alert_history" edge to SLAAlertHistory entities by IDs.
+func (_u *IncidentUpdate) RemoveSLAAlertHistoryIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.RemoveSLAAlertHistoryIDs(ids...)
+	return _u
+}
+
+// RemoveSLAAlertHistory removes "sla_alert_history" edges to SLAAlertHistory entities.
+func (_u *IncidentUpdate) RemoveSLAAlertHistory(v ...*SLAAlertHistory) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSLAAlertHistoryIDs(ids...)
 }
 
 // ClearParentIncident clears all "parent_incident" edges to the Incident entity.
@@ -985,6 +1220,54 @@ func (_u *IncidentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SLADefinitionID(); ok {
+		_spec.SetField(incident.FieldSLADefinitionID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSLADefinitionID(); ok {
+		_spec.AddField(incident.FieldSLADefinitionID, field.TypeInt, value)
+	}
+	if _u.mutation.SLADefinitionIDCleared() {
+		_spec.ClearField(incident.FieldSLADefinitionID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.SLAResponseDeadline(); ok {
+		_spec.SetField(incident.FieldSLAResponseDeadline, field.TypeTime, value)
+	}
+	if _u.mutation.SLAResponseDeadlineCleared() {
+		_spec.ClearField(incident.FieldSLAResponseDeadline, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAResolutionDeadline(); ok {
+		_spec.SetField(incident.FieldSLAResolutionDeadline, field.TypeTime, value)
+	}
+	if _u.mutation.SLAResolutionDeadlineCleared() {
+		_spec.ClearField(incident.FieldSLAResolutionDeadline, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAFirstResponseAt(); ok {
+		_spec.SetField(incident.FieldSLAFirstResponseAt, field.TypeTime, value)
+	}
+	if _u.mutation.SLAFirstResponseAtCleared() {
+		_spec.ClearField(incident.FieldSLAFirstResponseAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAResolvedAt(); ok {
+		_spec.SetField(incident.FieldSLAResolvedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SLAResolvedAtCleared() {
+		_spec.ClearField(incident.FieldSLAResolvedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAStatus(); ok {
+		_spec.SetField(incident.FieldSLAStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SLAPausedAt(); ok {
+		_spec.SetField(incident.FieldSLAPausedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SLAPausedAtCleared() {
+		_spec.ClearField(incident.FieldSLAPausedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAPauseReason(); ok {
+		_spec.SetField(incident.FieldSLAPauseReason, field.TypeString, value)
+	}
+	if _u.mutation.SLAPauseReasonCleared() {
+		_spec.ClearField(incident.FieldSLAPauseReason, field.TypeString)
 	}
 	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
@@ -1303,6 +1586,96 @@ func (_u *IncidentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.SLAViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAViolationsTable,
+			Columns: []string{incident.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSLAViolationsIDs(); len(nodes) > 0 && !_u.mutation.SLAViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAViolationsTable,
+			Columns: []string{incident.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SLAViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAViolationsTable,
+			Columns: []string{incident.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.SLAAlertHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAAlertHistoryTable,
+			Columns: []string{incident.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSLAAlertHistoryIDs(); len(nodes) > 0 && !_u.mutation.SLAAlertHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAAlertHistoryTable,
+			Columns: []string{incident.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SLAAlertHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAAlertHistoryTable,
+			Columns: []string{incident.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.ParentIncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -1589,6 +1962,167 @@ func (_u *IncidentUpdateOne) SetNillablePriority(v *string) *IncidentUpdateOne {
 	if v != nil {
 		_u.SetPriority(*v)
 	}
+	return _u
+}
+
+// SetSLADefinitionID sets the "sla_definition_id" field.
+func (_u *IncidentUpdateOne) SetSLADefinitionID(v int) *IncidentUpdateOne {
+	_u.mutation.ResetSLADefinitionID()
+	_u.mutation.SetSLADefinitionID(v)
+	return _u
+}
+
+// SetNillableSLADefinitionID sets the "sla_definition_id" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableSLADefinitionID(v *int) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSLADefinitionID(*v)
+	}
+	return _u
+}
+
+// AddSLADefinitionID adds value to the "sla_definition_id" field.
+func (_u *IncidentUpdateOne) AddSLADefinitionID(v int) *IncidentUpdateOne {
+	_u.mutation.AddSLADefinitionID(v)
+	return _u
+}
+
+// ClearSLADefinitionID clears the value of the "sla_definition_id" field.
+func (_u *IncidentUpdateOne) ClearSLADefinitionID() *IncidentUpdateOne {
+	_u.mutation.ClearSLADefinitionID()
+	return _u
+}
+
+// SetSLAResponseDeadline sets the "sla_response_deadline" field.
+func (_u *IncidentUpdateOne) SetSLAResponseDeadline(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetSLAResponseDeadline(v)
+	return _u
+}
+
+// SetNillableSLAResponseDeadline sets the "sla_response_deadline" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableSLAResponseDeadline(v *time.Time) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSLAResponseDeadline(*v)
+	}
+	return _u
+}
+
+// ClearSLAResponseDeadline clears the value of the "sla_response_deadline" field.
+func (_u *IncidentUpdateOne) ClearSLAResponseDeadline() *IncidentUpdateOne {
+	_u.mutation.ClearSLAResponseDeadline()
+	return _u
+}
+
+// SetSLAResolutionDeadline sets the "sla_resolution_deadline" field.
+func (_u *IncidentUpdateOne) SetSLAResolutionDeadline(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetSLAResolutionDeadline(v)
+	return _u
+}
+
+// SetNillableSLAResolutionDeadline sets the "sla_resolution_deadline" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableSLAResolutionDeadline(v *time.Time) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSLAResolutionDeadline(*v)
+	}
+	return _u
+}
+
+// ClearSLAResolutionDeadline clears the value of the "sla_resolution_deadline" field.
+func (_u *IncidentUpdateOne) ClearSLAResolutionDeadline() *IncidentUpdateOne {
+	_u.mutation.ClearSLAResolutionDeadline()
+	return _u
+}
+
+// SetSLAFirstResponseAt sets the "sla_first_response_at" field.
+func (_u *IncidentUpdateOne) SetSLAFirstResponseAt(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetSLAFirstResponseAt(v)
+	return _u
+}
+
+// SetNillableSLAFirstResponseAt sets the "sla_first_response_at" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableSLAFirstResponseAt(v *time.Time) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSLAFirstResponseAt(*v)
+	}
+	return _u
+}
+
+// ClearSLAFirstResponseAt clears the value of the "sla_first_response_at" field.
+func (_u *IncidentUpdateOne) ClearSLAFirstResponseAt() *IncidentUpdateOne {
+	_u.mutation.ClearSLAFirstResponseAt()
+	return _u
+}
+
+// SetSLAResolvedAt sets the "sla_resolved_at" field.
+func (_u *IncidentUpdateOne) SetSLAResolvedAt(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetSLAResolvedAt(v)
+	return _u
+}
+
+// SetNillableSLAResolvedAt sets the "sla_resolved_at" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableSLAResolvedAt(v *time.Time) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSLAResolvedAt(*v)
+	}
+	return _u
+}
+
+// ClearSLAResolvedAt clears the value of the "sla_resolved_at" field.
+func (_u *IncidentUpdateOne) ClearSLAResolvedAt() *IncidentUpdateOne {
+	_u.mutation.ClearSLAResolvedAt()
+	return _u
+}
+
+// SetSLAStatus sets the "sla_status" field.
+func (_u *IncidentUpdateOne) SetSLAStatus(v string) *IncidentUpdateOne {
+	_u.mutation.SetSLAStatus(v)
+	return _u
+}
+
+// SetNillableSLAStatus sets the "sla_status" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableSLAStatus(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSLAStatus(*v)
+	}
+	return _u
+}
+
+// SetSLAPausedAt sets the "sla_paused_at" field.
+func (_u *IncidentUpdateOne) SetSLAPausedAt(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetSLAPausedAt(v)
+	return _u
+}
+
+// SetNillableSLAPausedAt sets the "sla_paused_at" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableSLAPausedAt(v *time.Time) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSLAPausedAt(*v)
+	}
+	return _u
+}
+
+// ClearSLAPausedAt clears the value of the "sla_paused_at" field.
+func (_u *IncidentUpdateOne) ClearSLAPausedAt() *IncidentUpdateOne {
+	_u.mutation.ClearSLAPausedAt()
+	return _u
+}
+
+// SetSLAPauseReason sets the "sla_pause_reason" field.
+func (_u *IncidentUpdateOne) SetSLAPauseReason(v string) *IncidentUpdateOne {
+	_u.mutation.SetSLAPauseReason(v)
+	return _u
+}
+
+// SetNillableSLAPauseReason sets the "sla_pause_reason" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableSLAPauseReason(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSLAPauseReason(*v)
+	}
+	return _u
+}
+
+// ClearSLAPauseReason clears the value of the "sla_pause_reason" field.
+func (_u *IncidentUpdateOne) ClearSLAPauseReason() *IncidentUpdateOne {
+	_u.mutation.ClearSLAPauseReason()
 	return _u
 }
 
@@ -2136,6 +2670,36 @@ func (_u *IncidentUpdateOne) AddIncidentMetrics(v ...*IncidentMetric) *IncidentU
 	return _u.AddIncidentMetricIDs(ids...)
 }
 
+// AddSLAViolationIDs adds the "sla_violations" edge to the SLAViolation entity by IDs.
+func (_u *IncidentUpdateOne) AddSLAViolationIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.AddSLAViolationIDs(ids...)
+	return _u
+}
+
+// AddSLAViolations adds the "sla_violations" edges to the SLAViolation entity.
+func (_u *IncidentUpdateOne) AddSLAViolations(v ...*SLAViolation) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSLAViolationIDs(ids...)
+}
+
+// AddSLAAlertHistoryIDs adds the "sla_alert_history" edge to the SLAAlertHistory entity by IDs.
+func (_u *IncidentUpdateOne) AddSLAAlertHistoryIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.AddSLAAlertHistoryIDs(ids...)
+	return _u
+}
+
+// AddSLAAlertHistory adds the "sla_alert_history" edges to the SLAAlertHistory entity.
+func (_u *IncidentUpdateOne) AddSLAAlertHistory(v ...*SLAAlertHistory) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSLAAlertHistoryIDs(ids...)
+}
+
 // AddParentIncidentIDs adds the "parent_incident" edge to the Incident entity by IDs.
 func (_u *IncidentUpdateOne) AddParentIncidentIDs(ids ...int) *IncidentUpdateOne {
 	_u.mutation.AddParentIncidentIDs(ids...)
@@ -2278,6 +2842,48 @@ func (_u *IncidentUpdateOne) RemoveIncidentMetrics(v ...*IncidentMetric) *Incide
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveIncidentMetricIDs(ids...)
+}
+
+// ClearSLAViolations clears all "sla_violations" edges to the SLAViolation entity.
+func (_u *IncidentUpdateOne) ClearSLAViolations() *IncidentUpdateOne {
+	_u.mutation.ClearSLAViolations()
+	return _u
+}
+
+// RemoveSLAViolationIDs removes the "sla_violations" edge to SLAViolation entities by IDs.
+func (_u *IncidentUpdateOne) RemoveSLAViolationIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.RemoveSLAViolationIDs(ids...)
+	return _u
+}
+
+// RemoveSLAViolations removes "sla_violations" edges to SLAViolation entities.
+func (_u *IncidentUpdateOne) RemoveSLAViolations(v ...*SLAViolation) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSLAViolationIDs(ids...)
+}
+
+// ClearSLAAlertHistory clears all "sla_alert_history" edges to the SLAAlertHistory entity.
+func (_u *IncidentUpdateOne) ClearSLAAlertHistory() *IncidentUpdateOne {
+	_u.mutation.ClearSLAAlertHistory()
+	return _u
+}
+
+// RemoveSLAAlertHistoryIDs removes the "sla_alert_history" edge to SLAAlertHistory entities by IDs.
+func (_u *IncidentUpdateOne) RemoveSLAAlertHistoryIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.RemoveSLAAlertHistoryIDs(ids...)
+	return _u
+}
+
+// RemoveSLAAlertHistory removes "sla_alert_history" edges to SLAAlertHistory entities.
+func (_u *IncidentUpdateOne) RemoveSLAAlertHistory(v ...*SLAAlertHistory) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSLAAlertHistoryIDs(ids...)
 }
 
 // ClearParentIncident clears all "parent_incident" edges to the Incident entity.
@@ -2495,6 +3101,54 @@ func (_u *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err 
 	}
 	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SLADefinitionID(); ok {
+		_spec.SetField(incident.FieldSLADefinitionID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSLADefinitionID(); ok {
+		_spec.AddField(incident.FieldSLADefinitionID, field.TypeInt, value)
+	}
+	if _u.mutation.SLADefinitionIDCleared() {
+		_spec.ClearField(incident.FieldSLADefinitionID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.SLAResponseDeadline(); ok {
+		_spec.SetField(incident.FieldSLAResponseDeadline, field.TypeTime, value)
+	}
+	if _u.mutation.SLAResponseDeadlineCleared() {
+		_spec.ClearField(incident.FieldSLAResponseDeadline, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAResolutionDeadline(); ok {
+		_spec.SetField(incident.FieldSLAResolutionDeadline, field.TypeTime, value)
+	}
+	if _u.mutation.SLAResolutionDeadlineCleared() {
+		_spec.ClearField(incident.FieldSLAResolutionDeadline, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAFirstResponseAt(); ok {
+		_spec.SetField(incident.FieldSLAFirstResponseAt, field.TypeTime, value)
+	}
+	if _u.mutation.SLAFirstResponseAtCleared() {
+		_spec.ClearField(incident.FieldSLAFirstResponseAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAResolvedAt(); ok {
+		_spec.SetField(incident.FieldSLAResolvedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SLAResolvedAtCleared() {
+		_spec.ClearField(incident.FieldSLAResolvedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAStatus(); ok {
+		_spec.SetField(incident.FieldSLAStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SLAPausedAt(); ok {
+		_spec.SetField(incident.FieldSLAPausedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SLAPausedAtCleared() {
+		_spec.ClearField(incident.FieldSLAPausedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SLAPauseReason(); ok {
+		_spec.SetField(incident.FieldSLAPauseReason, field.TypeString, value)
+	}
+	if _u.mutation.SLAPauseReasonCleared() {
+		_spec.ClearField(incident.FieldSLAPauseReason, field.TypeString)
 	}
 	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
@@ -2806,6 +3460,96 @@ func (_u *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.SLAViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAViolationsTable,
+			Columns: []string{incident.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSLAViolationsIDs(); len(nodes) > 0 && !_u.mutation.SLAViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAViolationsTable,
+			Columns: []string{incident.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SLAViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAViolationsTable,
+			Columns: []string{incident.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.SLAAlertHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAAlertHistoryTable,
+			Columns: []string{incident.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSLAAlertHistoryIDs(); len(nodes) > 0 && !_u.mutation.SLAAlertHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAAlertHistoryTable,
+			Columns: []string{incident.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SLAAlertHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAAlertHistoryTable,
+			Columns: []string{incident.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

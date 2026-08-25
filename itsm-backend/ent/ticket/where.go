@@ -150,6 +150,21 @@ func SLAResolutionDeadline(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldSLAResolutionDeadline, v))
 }
 
+// SLAStatus applies equality check predicate on the "sla_status" field. It's identical to SLAStatusEQ.
+func SLAStatus(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLAStatus, v))
+}
+
+// SLAPausedAt applies equality check predicate on the "sla_paused_at" field. It's identical to SLAPausedAtEQ.
+func SLAPausedAt(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLAPausedAt, v))
+}
+
+// SLAPauseReason applies equality check predicate on the "sla_pause_reason" field. It's identical to SLAPauseReasonEQ.
+func SLAPauseReason(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLAPauseReason, v))
+}
+
 // FirstResponseAt applies equality check predicate on the "first_response_at" field. It's identical to FirstResponseAtEQ.
 func FirstResponseAt(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldFirstResponseAt, v))
@@ -1253,6 +1268,196 @@ func SLAResolutionDeadlineIsNil() predicate.Ticket {
 // SLAResolutionDeadlineNotNil applies the NotNil predicate on the "sla_resolution_deadline" field.
 func SLAResolutionDeadlineNotNil() predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotNull(FieldSLAResolutionDeadline))
+}
+
+// SLAStatusEQ applies the EQ predicate on the "sla_status" field.
+func SLAStatusEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLAStatus, v))
+}
+
+// SLAStatusNEQ applies the NEQ predicate on the "sla_status" field.
+func SLAStatusNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldSLAStatus, v))
+}
+
+// SLAStatusIn applies the In predicate on the "sla_status" field.
+func SLAStatusIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldSLAStatus, vs...))
+}
+
+// SLAStatusNotIn applies the NotIn predicate on the "sla_status" field.
+func SLAStatusNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldSLAStatus, vs...))
+}
+
+// SLAStatusGT applies the GT predicate on the "sla_status" field.
+func SLAStatusGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldSLAStatus, v))
+}
+
+// SLAStatusGTE applies the GTE predicate on the "sla_status" field.
+func SLAStatusGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldSLAStatus, v))
+}
+
+// SLAStatusLT applies the LT predicate on the "sla_status" field.
+func SLAStatusLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldSLAStatus, v))
+}
+
+// SLAStatusLTE applies the LTE predicate on the "sla_status" field.
+func SLAStatusLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldSLAStatus, v))
+}
+
+// SLAStatusContains applies the Contains predicate on the "sla_status" field.
+func SLAStatusContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldSLAStatus, v))
+}
+
+// SLAStatusHasPrefix applies the HasPrefix predicate on the "sla_status" field.
+func SLAStatusHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldSLAStatus, v))
+}
+
+// SLAStatusHasSuffix applies the HasSuffix predicate on the "sla_status" field.
+func SLAStatusHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldSLAStatus, v))
+}
+
+// SLAStatusEqualFold applies the EqualFold predicate on the "sla_status" field.
+func SLAStatusEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldSLAStatus, v))
+}
+
+// SLAStatusContainsFold applies the ContainsFold predicate on the "sla_status" field.
+func SLAStatusContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldSLAStatus, v))
+}
+
+// SLAPausedAtEQ applies the EQ predicate on the "sla_paused_at" field.
+func SLAPausedAtEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtNEQ applies the NEQ predicate on the "sla_paused_at" field.
+func SLAPausedAtNEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtIn applies the In predicate on the "sla_paused_at" field.
+func SLAPausedAtIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldSLAPausedAt, vs...))
+}
+
+// SLAPausedAtNotIn applies the NotIn predicate on the "sla_paused_at" field.
+func SLAPausedAtNotIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldSLAPausedAt, vs...))
+}
+
+// SLAPausedAtGT applies the GT predicate on the "sla_paused_at" field.
+func SLAPausedAtGT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtGTE applies the GTE predicate on the "sla_paused_at" field.
+func SLAPausedAtGTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtLT applies the LT predicate on the "sla_paused_at" field.
+func SLAPausedAtLT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtLTE applies the LTE predicate on the "sla_paused_at" field.
+func SLAPausedAtLTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldSLAPausedAt, v))
+}
+
+// SLAPausedAtIsNil applies the IsNil predicate on the "sla_paused_at" field.
+func SLAPausedAtIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldSLAPausedAt))
+}
+
+// SLAPausedAtNotNil applies the NotNil predicate on the "sla_paused_at" field.
+func SLAPausedAtNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldSLAPausedAt))
+}
+
+// SLAPauseReasonEQ applies the EQ predicate on the "sla_pause_reason" field.
+func SLAPauseReasonEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonNEQ applies the NEQ predicate on the "sla_pause_reason" field.
+func SLAPauseReasonNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonIn applies the In predicate on the "sla_pause_reason" field.
+func SLAPauseReasonIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldSLAPauseReason, vs...))
+}
+
+// SLAPauseReasonNotIn applies the NotIn predicate on the "sla_pause_reason" field.
+func SLAPauseReasonNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldSLAPauseReason, vs...))
+}
+
+// SLAPauseReasonGT applies the GT predicate on the "sla_pause_reason" field.
+func SLAPauseReasonGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonGTE applies the GTE predicate on the "sla_pause_reason" field.
+func SLAPauseReasonGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonLT applies the LT predicate on the "sla_pause_reason" field.
+func SLAPauseReasonLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonLTE applies the LTE predicate on the "sla_pause_reason" field.
+func SLAPauseReasonLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonContains applies the Contains predicate on the "sla_pause_reason" field.
+func SLAPauseReasonContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonHasPrefix applies the HasPrefix predicate on the "sla_pause_reason" field.
+func SLAPauseReasonHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonHasSuffix applies the HasSuffix predicate on the "sla_pause_reason" field.
+func SLAPauseReasonHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonIsNil applies the IsNil predicate on the "sla_pause_reason" field.
+func SLAPauseReasonIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldSLAPauseReason))
+}
+
+// SLAPauseReasonNotNil applies the NotNil predicate on the "sla_pause_reason" field.
+func SLAPauseReasonNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldSLAPauseReason))
+}
+
+// SLAPauseReasonEqualFold applies the EqualFold predicate on the "sla_pause_reason" field.
+func SLAPauseReasonEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldSLAPauseReason, v))
+}
+
+// SLAPauseReasonContainsFold applies the ContainsFold predicate on the "sla_pause_reason" field.
+func SLAPauseReasonContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldSLAPauseReason, v))
 }
 
 // FirstResponseAtEQ applies the EQ predicate on the "first_response_at" field.

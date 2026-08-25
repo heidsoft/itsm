@@ -59,12 +59,21 @@ func (r *CallbackRegistry) GetHandler(handlerID string) ServiceTaskHandlerInterf
 
 // HandleCallback 处理流程回调
 func (r *CallbackRegistry) HandleCallback(ctx context.Context, req *dto.CallbackRequest) error {
-	// 1. 获取任务
+	// 0. 租户校验（fail-closed）
+	tenantID, ok := ctx.Value(BPMNTenantIDContextKey).(int)
+	if !ok || tenantID <= 0 {
+		return errors.New("缺少有效租户上下文，拒绝执行回调")
+	}
+
+	// 1. 获取任务（带租户过滤，防止跨租户访问）
 	task, err := r.client.ProcessTask.Query().
-		Where(processtask.ID(req.ProcessInstanceID)). // 实际应该是 task_id
+		Where(
+			processtask.ID(req.ProcessInstanceID),
+			processtask.TenantIDEQ(tenantID),
+		).
 		Only(ctx)
 	if err != nil {
-		return errors.Wrap(err, "查询任务失败")
+		return errors.Wrap(err, "查询任务失败或任务不属于当前租户")
 	}
 
 	// 2. 获取处理器

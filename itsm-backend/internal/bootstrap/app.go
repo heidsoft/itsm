@@ -783,6 +783,10 @@ func NewApplication() *Application {
 	slaAlertService.SetNotificationService(ticketNotificationService)
 	escalationService.SetNotificationService(ticketNotificationService)
 
+	// Inject SLA monitor into controllers for Pause/Resume API (P0-2)
+	ticketController.SetSLAMonitorService(slaMonitorService)
+	incidentController.SetSLAMonitorService(slaMonitorService)
+
 	// Survey Service & Controller
 	surveyService := service.NewSurveyService(client, sugar)
 	surveyController := controller.NewSurveyController(surveyService)

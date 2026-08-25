@@ -67,8 +67,18 @@ func (Ticket) Fields() []ent.Field {
 		field.Time("sla_response_deadline").
 			Comment("SLA响应截止时间").
 			Optional(),
-		field.Time("sla_resolution_deadline").
+
+  		field.Time("sla_resolution_deadline").
 			Comment("SLA解决截止时间").
+			Optional(),
+		field.String("sla_status").
+			Comment("SLA状态：active/paused").
+			Default("active"),
+		field.Time("sla_paused_at").
+			Comment("SLA暂停时间").
+			Optional(),
+		field.String("sla_pause_reason").
+			Comment("SLA暂停原因").
 			Optional(),
 		field.Time("first_response_at").
 			Comment("首次响应时间").

@@ -60,6 +60,12 @@ type Ticket struct {
 	SLAResponseDeadline time.Time `json:"sla_response_deadline,omitempty"`
 	// SLA解决截止时间
 	SLAResolutionDeadline time.Time `json:"sla_resolution_deadline,omitempty"`
+	// SLA状态：active/paused
+	SLAStatus string `json:"sla_status,omitempty"`
+	// SLA暂停时间
+	SLAPausedAt time.Time `json:"sla_paused_at,omitempty"`
+	// SLA暂停原因
+	SLAPauseReason string `json:"sla_pause_reason,omitempty"`
 	// 首次响应时间
 	FirstResponseAt time.Time `json:"first_response_at,omitempty"`
 	// 解决时间
@@ -318,9 +324,9 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case ticket.FieldID, ticket.FieldTicketTypeID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID, ticket.FieldRating, ticket.FieldRatedBy, ticket.FieldVersion, ticket.FieldMspProviderID, ticket.FieldManagedByUserID:
 			values[i] = new(sql.NullInt64)
-		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldTicketTypeCodeSnapshot, ticket.FieldTicketTypeNameSnapshot, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldResolution, ticket.FieldResolutionCategory, ticket.FieldRatingComment, ticket.FieldMspTicketID:
+		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldTicketTypeCodeSnapshot, ticket.FieldTicketTypeNameSnapshot, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldSLAStatus, ticket.FieldSLAPauseReason, ticket.FieldResolution, ticket.FieldResolutionCategory, ticket.FieldRatingComment, ticket.FieldMspTicketID:
 			values[i] = new(sql.NullString)
-		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldClosedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt, ticket.FieldDeletedAt:
+		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldSLAPausedAt, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldClosedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt, ticket.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case ticket.ForeignKeys[0]: // configuration_item_tickets
 			values[i] = new(sql.NullInt64)
@@ -478,6 +484,24 @@ func (_m *Ticket) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field sla_resolution_deadline", values[i])
 			} else if value.Valid {
 				_m.SLAResolutionDeadline = value.Time
+			}
+		case ticket.FieldSLAStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_status", values[i])
+			} else if value.Valid {
+				_m.SLAStatus = value.String
+			}
+		case ticket.FieldSLAPausedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_paused_at", values[i])
+			} else if value.Valid {
+				_m.SLAPausedAt = value.Time
+			}
+		case ticket.FieldSLAPauseReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_pause_reason", values[i])
+			} else if value.Valid {
+				_m.SLAPauseReason = value.String
 			}
 		case ticket.FieldFirstResponseAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -812,6 +836,15 @@ func (_m *Ticket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("sla_resolution_deadline=")
 	builder.WriteString(_m.SLAResolutionDeadline.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("sla_status=")
+	builder.WriteString(_m.SLAStatus)
+	builder.WriteString(", ")
+	builder.WriteString("sla_paused_at=")
+	builder.WriteString(_m.SLAPausedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("sla_pause_reason=")
+	builder.WriteString(_m.SLAPauseReason)
 	builder.WriteString(", ")
 	builder.WriteString("first_response_at=")
 	builder.WriteString(_m.FirstResponseAt.Format(time.ANSIC))

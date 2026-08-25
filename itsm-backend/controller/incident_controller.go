@@ -25,6 +25,7 @@ type IncidentController struct {
 	monitoringService        *service.IncidentMonitoringService
 	alertingService          *service.IncidentAlertingService
 	rootCauseAnalysisService *service.RootCauseAnalysisService
+	slaMonitorService        *service.SLAMonitorService
 	logger                   *zap.SugaredLogger
 }
 
@@ -44,6 +45,11 @@ func NewIncidentController(
 		rootCauseAnalysisService: rootCauseAnalysisService,
 		logger:                   logger,
 	}
+}
+
+// SetSLAMonitorService 注入SLA监控服务
+func (ic *IncidentController) SetSLAMonitorService(svc *service.SLAMonitorService) {
+	ic.slaMonitorService = svc
 }
 
 // CreateIncident 创建事件
@@ -1608,4 +1614,82 @@ func (c *IncidentController) DeleteIncidentComment(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, nil)
+}
+
+// PauseSLA 暂停事件SLA计时
+// @Summary 暂停事件SLA
+// @Tags SLA
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param reason body object{reason=string} true "暂停原因"
+// @Success 200 {object} common.Response
+// @Router /api/v1/incidents/{id}/sla/pause [put]
+func (ic *IncidentController) PauseSLA(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的事件ID")
+		return
+	}
+
+	var req struct {
+		Reason string `json:"reason" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamError(c, "暂停原因为必填项")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.AuthFailed(c, "缺少租户上下文")
+		return
+	}
+
+	if ic.slaMonitorService == nil {
+		common.InternalError(c, "SLA监控服务未配置")
+		return
+	}
+
+	if err := ic.slaMonitorService.PauseSLA(c.Request.Context(), tenantID, "incident", id, req.Reason); err != nil {
+		ic.logger.Errorw("Failed to pause incident SLA", "incident_id", id, "error", err)
+		common.InternalError(c, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "SLA已暂停", "incidentId": id})
+}
+
+// ResumeSLA 恢复事件SLA计时
+// @Summary 恢复事件SLA
+// @Tags SLA
+// @Produce json
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/incidents/{id}/sla/resume [put]
+func (ic *IncidentController) ResumeSLA(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的事件ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.AuthFailed(c, "缺少租户上下文")
+		return
+	}
+
+	if ic.slaMonitorService == nil {
+		common.InternalError(c, "SLA监控服务未配置")
+		return
+	}
+
+	if err := ic.slaMonitorService.ResumeSLA(c.Request.Context(), tenantID, "incident", id); err != nil {
+		ic.logger.Errorw("Failed to resume incident SLA", "incident_id", id, "error", err)
+		common.InternalError(c, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "SLA已恢复", "incidentId": id})
 }

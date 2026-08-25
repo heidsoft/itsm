@@ -61,8 +61,9 @@ type SLAViolation struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SLAViolationQuery when eager-loading is set.
-	Edges        SLAViolationEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                   SLAViolationEdges `json:"edges"`
+	incident_sla_violations *int
+	selectValues            sql.SelectValues
 }
 
 // SLAViolationEdges holds the relations/edges for other nodes in the graph.
@@ -111,6 +112,8 @@ func (*SLAViolation) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case slaviolation.FieldViolationTime, slaviolation.FieldViolationOccurredAt, slaviolation.FieldResolvedAt, slaviolation.FieldCreatedAt, slaviolation.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case slaviolation.ForeignKeys[0]: // incident_sla_violations
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -251,6 +254,13 @@ func (_m *SLAViolation) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
+			}
+		case slaviolation.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field incident_sla_violations", value)
+			} else if value.Valid {
+				_m.incident_sla_violations = new(int)
+				*_m.incident_sla_violations = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

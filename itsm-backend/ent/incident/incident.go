@@ -24,6 +24,22 @@ const (
 	FieldType = "type"
 	// FieldPriority holds the string denoting the priority field in the database.
 	FieldPriority = "priority"
+	// FieldSLADefinitionID holds the string denoting the sla_definition_id field in the database.
+	FieldSLADefinitionID = "sla_definition_id"
+	// FieldSLAResponseDeadline holds the string denoting the sla_response_deadline field in the database.
+	FieldSLAResponseDeadline = "sla_response_deadline"
+	// FieldSLAResolutionDeadline holds the string denoting the sla_resolution_deadline field in the database.
+	FieldSLAResolutionDeadline = "sla_resolution_deadline"
+	// FieldSLAFirstResponseAt holds the string denoting the sla_first_response_at field in the database.
+	FieldSLAFirstResponseAt = "sla_first_response_at"
+	// FieldSLAResolvedAt holds the string denoting the sla_resolved_at field in the database.
+	FieldSLAResolvedAt = "sla_resolved_at"
+	// FieldSLAStatus holds the string denoting the sla_status field in the database.
+	FieldSLAStatus = "sla_status"
+	// FieldSLAPausedAt holds the string denoting the sla_paused_at field in the database.
+	FieldSLAPausedAt = "sla_paused_at"
+	// FieldSLAPauseReason holds the string denoting the sla_pause_reason field in the database.
+	FieldSLAPauseReason = "sla_pause_reason"
 	// FieldSeverity holds the string denoting the severity field in the database.
 	FieldSeverity = "severity"
 	// FieldImpact holds the string denoting the impact field in the database.
@@ -88,6 +104,10 @@ const (
 	EdgeIncidentAlerts = "incident_alerts"
 	// EdgeIncidentMetrics holds the string denoting the incident_metrics edge name in mutations.
 	EdgeIncidentMetrics = "incident_metrics"
+	// EdgeSLAViolations holds the string denoting the sla_violations edge name in mutations.
+	EdgeSLAViolations = "sla_violations"
+	// EdgeSLAAlertHistory holds the string denoting the sla_alert_history edge name in mutations.
+	EdgeSLAAlertHistory = "sla_alert_history"
 	// EdgeParentIncident holds the string denoting the parent_incident edge name in mutations.
 	EdgeParentIncident = "parent_incident"
 	// EdgeConfigurationItems holds the string denoting the configuration_items edge name in mutations.
@@ -123,6 +143,20 @@ const (
 	IncidentMetricsInverseTable = "incident_metrics"
 	// IncidentMetricsColumn is the table column denoting the incident_metrics relation/edge.
 	IncidentMetricsColumn = "incident_id"
+	// SLAViolationsTable is the table that holds the sla_violations relation/edge.
+	SLAViolationsTable = "sla_violations"
+	// SLAViolationsInverseTable is the table name for the SLAViolation entity.
+	// It exists in this package in order to avoid circular dependency with the "slaviolation" package.
+	SLAViolationsInverseTable = "sla_violations"
+	// SLAViolationsColumn is the table column denoting the sla_violations relation/edge.
+	SLAViolationsColumn = "incident_sla_violations"
+	// SLAAlertHistoryTable is the table that holds the sla_alert_history relation/edge.
+	SLAAlertHistoryTable = "sla_alert_histories"
+	// SLAAlertHistoryInverseTable is the table name for the SLAAlertHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "slaalerthistory" package.
+	SLAAlertHistoryInverseTable = "sla_alert_histories"
+	// SLAAlertHistoryColumn is the table column denoting the sla_alert_history relation/edge.
+	SLAAlertHistoryColumn = "incident_sla_alert_history"
 	// ParentIncidentTable is the table that holds the parent_incident relation/edge. The primary key declared below.
 	ParentIncidentTable = "incident_related_incidents"
 	// ConfigurationItemsTable is the table that holds the configuration_items relation/edge. The primary key declared below.
@@ -159,6 +193,14 @@ var Columns = []string{
 	FieldStatus,
 	FieldType,
 	FieldPriority,
+	FieldSLADefinitionID,
+	FieldSLAResponseDeadline,
+	FieldSLAResolutionDeadline,
+	FieldSLAFirstResponseAt,
+	FieldSLAResolvedAt,
+	FieldSLAStatus,
+	FieldSLAPausedAt,
+	FieldSLAPauseReason,
 	FieldSeverity,
 	FieldImpact,
 	FieldUrgency,
@@ -225,6 +267,8 @@ var (
 	DefaultPriority string
 	// PriorityValidator is a validator for the "priority" field. It is called by the builders before save.
 	PriorityValidator func(string) error
+	// DefaultSLAStatus holds the default value on creation for the "sla_status" field.
+	DefaultSLAStatus string
 	// DefaultSeverity holds the default value on creation for the "severity" field.
 	DefaultSeverity string
 	// DefaultImpact holds the default value on creation for the "impact" field.
@@ -294,6 +338,46 @@ func ByType(opts ...sql.OrderTermOption) OrderOption {
 // ByPriority orders the results by the priority field.
 func ByPriority(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPriority, opts...).ToFunc()
+}
+
+// BySLADefinitionID orders the results by the sla_definition_id field.
+func BySLADefinitionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLADefinitionID, opts...).ToFunc()
+}
+
+// BySLAResponseDeadline orders the results by the sla_response_deadline field.
+func BySLAResponseDeadline(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAResponseDeadline, opts...).ToFunc()
+}
+
+// BySLAResolutionDeadline orders the results by the sla_resolution_deadline field.
+func BySLAResolutionDeadline(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAResolutionDeadline, opts...).ToFunc()
+}
+
+// BySLAFirstResponseAt orders the results by the sla_first_response_at field.
+func BySLAFirstResponseAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAFirstResponseAt, opts...).ToFunc()
+}
+
+// BySLAResolvedAt orders the results by the sla_resolved_at field.
+func BySLAResolvedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAResolvedAt, opts...).ToFunc()
+}
+
+// BySLAStatus orders the results by the sla_status field.
+func BySLAStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAStatus, opts...).ToFunc()
+}
+
+// BySLAPausedAt orders the results by the sla_paused_at field.
+func BySLAPausedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAPausedAt, opts...).ToFunc()
+}
+
+// BySLAPauseReason orders the results by the sla_pause_reason field.
+func BySLAPauseReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAPauseReason, opts...).ToFunc()
 }
 
 // BySeverity orders the results by the severity field.
@@ -472,6 +556,34 @@ func ByIncidentMetrics(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// BySLAViolationsCount orders the results by sla_violations count.
+func BySLAViolationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSLAViolationsStep(), opts...)
+	}
+}
+
+// BySLAViolations orders the results by sla_violations terms.
+func BySLAViolations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSLAViolationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// BySLAAlertHistoryCount orders the results by sla_alert_history count.
+func BySLAAlertHistoryCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSLAAlertHistoryStep(), opts...)
+	}
+}
+
+// BySLAAlertHistory orders the results by sla_alert_history terms.
+func BySLAAlertHistory(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSLAAlertHistoryStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByParentIncidentCount orders the results by parent_incident count.
 func ByParentIncidentCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -553,6 +665,20 @@ func newIncidentMetricsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(IncidentMetricsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, IncidentMetricsTable, IncidentMetricsColumn),
+	)
+}
+func newSLAViolationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SLAViolationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SLAViolationsTable, SLAViolationsColumn),
+	)
+}
+func newSLAAlertHistoryStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SLAAlertHistoryInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SLAAlertHistoryTable, SLAAlertHistoryColumn),
 	)
 }
 func newParentIncidentStep() *sqlgraph.Step {

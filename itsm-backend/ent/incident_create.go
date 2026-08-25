@@ -14,6 +14,8 @@ import (
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/slaalerthistory"
+	"itsm-backend/ent/slaviolation"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -85,6 +87,118 @@ func (_c *IncidentCreate) SetPriority(v string) *IncidentCreate {
 func (_c *IncidentCreate) SetNillablePriority(v *string) *IncidentCreate {
 	if v != nil {
 		_c.SetPriority(*v)
+	}
+	return _c
+}
+
+// SetSLADefinitionID sets the "sla_definition_id" field.
+func (_c *IncidentCreate) SetSLADefinitionID(v int) *IncidentCreate {
+	_c.mutation.SetSLADefinitionID(v)
+	return _c
+}
+
+// SetNillableSLADefinitionID sets the "sla_definition_id" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableSLADefinitionID(v *int) *IncidentCreate {
+	if v != nil {
+		_c.SetSLADefinitionID(*v)
+	}
+	return _c
+}
+
+// SetSLAResponseDeadline sets the "sla_response_deadline" field.
+func (_c *IncidentCreate) SetSLAResponseDeadline(v time.Time) *IncidentCreate {
+	_c.mutation.SetSLAResponseDeadline(v)
+	return _c
+}
+
+// SetNillableSLAResponseDeadline sets the "sla_response_deadline" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableSLAResponseDeadline(v *time.Time) *IncidentCreate {
+	if v != nil {
+		_c.SetSLAResponseDeadline(*v)
+	}
+	return _c
+}
+
+// SetSLAResolutionDeadline sets the "sla_resolution_deadline" field.
+func (_c *IncidentCreate) SetSLAResolutionDeadline(v time.Time) *IncidentCreate {
+	_c.mutation.SetSLAResolutionDeadline(v)
+	return _c
+}
+
+// SetNillableSLAResolutionDeadline sets the "sla_resolution_deadline" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableSLAResolutionDeadline(v *time.Time) *IncidentCreate {
+	if v != nil {
+		_c.SetSLAResolutionDeadline(*v)
+	}
+	return _c
+}
+
+// SetSLAFirstResponseAt sets the "sla_first_response_at" field.
+func (_c *IncidentCreate) SetSLAFirstResponseAt(v time.Time) *IncidentCreate {
+	_c.mutation.SetSLAFirstResponseAt(v)
+	return _c
+}
+
+// SetNillableSLAFirstResponseAt sets the "sla_first_response_at" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableSLAFirstResponseAt(v *time.Time) *IncidentCreate {
+	if v != nil {
+		_c.SetSLAFirstResponseAt(*v)
+	}
+	return _c
+}
+
+// SetSLAResolvedAt sets the "sla_resolved_at" field.
+func (_c *IncidentCreate) SetSLAResolvedAt(v time.Time) *IncidentCreate {
+	_c.mutation.SetSLAResolvedAt(v)
+	return _c
+}
+
+// SetNillableSLAResolvedAt sets the "sla_resolved_at" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableSLAResolvedAt(v *time.Time) *IncidentCreate {
+	if v != nil {
+		_c.SetSLAResolvedAt(*v)
+	}
+	return _c
+}
+
+// SetSLAStatus sets the "sla_status" field.
+func (_c *IncidentCreate) SetSLAStatus(v string) *IncidentCreate {
+	_c.mutation.SetSLAStatus(v)
+	return _c
+}
+
+// SetNillableSLAStatus sets the "sla_status" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableSLAStatus(v *string) *IncidentCreate {
+	if v != nil {
+		_c.SetSLAStatus(*v)
+	}
+	return _c
+}
+
+// SetSLAPausedAt sets the "sla_paused_at" field.
+func (_c *IncidentCreate) SetSLAPausedAt(v time.Time) *IncidentCreate {
+	_c.mutation.SetSLAPausedAt(v)
+	return _c
+}
+
+// SetNillableSLAPausedAt sets the "sla_paused_at" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableSLAPausedAt(v *time.Time) *IncidentCreate {
+	if v != nil {
+		_c.SetSLAPausedAt(*v)
+	}
+	return _c
+}
+
+// SetSLAPauseReason sets the "sla_pause_reason" field.
+func (_c *IncidentCreate) SetSLAPauseReason(v string) *IncidentCreate {
+	_c.mutation.SetSLAPauseReason(v)
+	return _c
+}
+
+// SetNillableSLAPauseReason sets the "sla_pause_reason" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableSLAPauseReason(v *string) *IncidentCreate {
+	if v != nil {
+		_c.SetSLAPauseReason(*v)
 	}
 	return _c
 }
@@ -485,6 +599,36 @@ func (_c *IncidentCreate) AddIncidentMetrics(v ...*IncidentMetric) *IncidentCrea
 	return _c.AddIncidentMetricIDs(ids...)
 }
 
+// AddSLAViolationIDs adds the "sla_violations" edge to the SLAViolation entity by IDs.
+func (_c *IncidentCreate) AddSLAViolationIDs(ids ...int) *IncidentCreate {
+	_c.mutation.AddSLAViolationIDs(ids...)
+	return _c
+}
+
+// AddSLAViolations adds the "sla_violations" edges to the SLAViolation entity.
+func (_c *IncidentCreate) AddSLAViolations(v ...*SLAViolation) *IncidentCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddSLAViolationIDs(ids...)
+}
+
+// AddSLAAlertHistoryIDs adds the "sla_alert_history" edge to the SLAAlertHistory entity by IDs.
+func (_c *IncidentCreate) AddSLAAlertHistoryIDs(ids ...int) *IncidentCreate {
+	_c.mutation.AddSLAAlertHistoryIDs(ids...)
+	return _c
+}
+
+// AddSLAAlertHistory adds the "sla_alert_history" edges to the SLAAlertHistory entity.
+func (_c *IncidentCreate) AddSLAAlertHistory(v ...*SLAAlertHistory) *IncidentCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddSLAAlertHistoryIDs(ids...)
+}
+
 // AddParentIncidentIDs adds the "parent_incident" edge to the Incident entity by IDs.
 func (_c *IncidentCreate) AddParentIncidentIDs(ids ...int) *IncidentCreate {
 	_c.mutation.AddParentIncidentIDs(ids...)
@@ -587,6 +731,10 @@ func (_c *IncidentCreate) defaults() {
 		v := incident.DefaultPriority
 		_c.mutation.SetPriority(v)
 	}
+	if _, ok := _c.mutation.SLAStatus(); !ok {
+		v := incident.DefaultSLAStatus
+		_c.mutation.SetSLAStatus(v)
+	}
 	if _, ok := _c.mutation.Severity(); !ok {
 		v := incident.DefaultSeverity
 		_c.mutation.SetSeverity(v)
@@ -656,6 +804,9 @@ func (_c *IncidentCreate) check() error {
 		if err := incident.PriorityValidator(v); err != nil {
 			return &ValidationError{Name: "priority", err: fmt.Errorf(`ent: validator failed for field "Incident.priority": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.SLAStatus(); !ok {
+		return &ValidationError{Name: "sla_status", err: errors.New(`ent: missing required field "Incident.sla_status"`)}
 	}
 	if _, ok := _c.mutation.Severity(); !ok {
 		return &ValidationError{Name: "severity", err: errors.New(`ent: missing required field "Incident.severity"`)}
@@ -774,6 +925,38 @@ func (_c *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)
 		_node.Priority = value
+	}
+	if value, ok := _c.mutation.SLADefinitionID(); ok {
+		_spec.SetField(incident.FieldSLADefinitionID, field.TypeInt, value)
+		_node.SLADefinitionID = value
+	}
+	if value, ok := _c.mutation.SLAResponseDeadline(); ok {
+		_spec.SetField(incident.FieldSLAResponseDeadline, field.TypeTime, value)
+		_node.SLAResponseDeadline = value
+	}
+	if value, ok := _c.mutation.SLAResolutionDeadline(); ok {
+		_spec.SetField(incident.FieldSLAResolutionDeadline, field.TypeTime, value)
+		_node.SLAResolutionDeadline = value
+	}
+	if value, ok := _c.mutation.SLAFirstResponseAt(); ok {
+		_spec.SetField(incident.FieldSLAFirstResponseAt, field.TypeTime, value)
+		_node.SLAFirstResponseAt = value
+	}
+	if value, ok := _c.mutation.SLAResolvedAt(); ok {
+		_spec.SetField(incident.FieldSLAResolvedAt, field.TypeTime, value)
+		_node.SLAResolvedAt = value
+	}
+	if value, ok := _c.mutation.SLAStatus(); ok {
+		_spec.SetField(incident.FieldSLAStatus, field.TypeString, value)
+		_node.SLAStatus = value
+	}
+	if value, ok := _c.mutation.SLAPausedAt(); ok {
+		_spec.SetField(incident.FieldSLAPausedAt, field.TypeTime, value)
+		_node.SLAPausedAt = value
+	}
+	if value, ok := _c.mutation.SLAPauseReason(); ok {
+		_spec.SetField(incident.FieldSLAPauseReason, field.TypeString, value)
+		_node.SLAPauseReason = value
 	}
 	if value, ok := _c.mutation.Severity(); ok {
 		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
@@ -936,6 +1119,38 @@ func (_c *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SLAViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAViolationsTable,
+			Columns: []string{incident.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SLAAlertHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.SLAAlertHistoryTable,
+			Columns: []string{incident.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
