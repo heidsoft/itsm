@@ -216,24 +216,39 @@ const ProblemList: React.FC<ProblemListProps> = ({
     },
   ];
 
+  // When embedded in BusinessPageTemplate (showHeader=false), render a bare table
+  // without Card wrapper, search form, or internal pagination — the parent
+  // provides all of those. This eliminates duplicate filters and pagination.
+  if (!showHeader) {
+    return (
+      <Table
+        rowKey="id"
+        columns={columns}
+        dataSource={data}
+        loading={loading}
+        pagination={false}
+        scroll={{ x: 1000 }}
+        getPopupContainer={node => node.parentElement || document.body}
+      />
+    );
+  }
+
   return (
     <div className="p-6">
-      {showHeader && (
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">问题管理</h1>
-            <p className="text-gray-500 mt-1">识别、分析和消除事件发生的根本原因</p>
-          </div>
-          <Button
-            type="primary"
-            icon={<Plus />}
-            onClick={() => router.push('/problems/new')}
-            size="large"
-          >
-            新建问题
-          </Button>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">问题管理</h1>
+          <p className="text-gray-500 mt-1">识别、分析和消除事件发生的根本原因</p>
         </div>
-      )}
+        <Button
+          type="primary"
+          icon={<Plus />}
+          onClick={() => router.push('/problems/new')}
+          size="large"
+        >
+          新建问题
+        </Button>
+      </div>
 
       <Card className="rounded-lg shadow-sm border border-[var(--color-border-primary)]">
         <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">

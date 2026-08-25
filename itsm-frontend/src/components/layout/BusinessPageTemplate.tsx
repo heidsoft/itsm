@@ -388,7 +388,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
               enterButton
             />
 
-            <Space wrap className="w-full sm:w-auto">
+            <Space wrap={false} className="w-full sm:w-auto flex-nowrap">
               {/* 筛选按钮 */}
               {filters && (
                 <Button
@@ -404,9 +404,6 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
               <Button icon={<RotateCcw />} onClick={() => window.location.reload()}>
                 刷新
               </Button>
-
-              {/* 导出按钮 */}
-              <Button icon={<Download />}>导出</Button>
             </Space>
           </div>
 

@@ -626,33 +626,25 @@ export default function CreateTicketPage() {
                 </Card>
               )}
 
-              <Space
-                orientation="vertical"
-                size="middle"
-                style={{ width: '100%' }}
-                role="group"
-                aria-label="表单操作按钮"
-              >
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end" role="group" aria-label="表单操作按钮">
+                <Button
+                  onClick={() => router.push('/tickets')}
+                  size="large"
+                  aria-label="取消创建，返回工单列表"
+                >
+                  {t('common.cancel')}
+                </Button>
                 <Button
                   type="primary"
                   onClick={handleSubmit}
                   loading={loading}
                   size="large"
-                  block
                   aria-busy={loading}
                   data-testid="ticket-submit-button"
                 >
                   创建工单
                 </Button>
-                <Button
-                  onClick={() => router.push('/tickets')}
-                  size="large"
-                  block
-                  aria-label="取消创建，返回工单列表"
-                >
-                  {t('common.cancel')}
-                </Button>
-              </Space>
+              </div>
 
               {/* AI 智能分类区域 */}
               <Card

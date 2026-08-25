@@ -19,15 +19,46 @@ interface KPICardsProps {
   loading?: boolean;
 }
 
+// 指标极性：positive = 越大越好，negative = 越小越好
+type MetricPolarity = 'positive' | 'negative';
+
+const getMetricPolarity = (id: string): MetricPolarity => {
+  // 越小越好的指标
+  if (
+    id === 'pending-tickets' ||
+    id === 'overdue-tickets' ||
+    id === 'avg-first-response' ||
+    id === 'avg-resolution' ||
+    id.includes('response-time') ||
+    id.includes('resolution-time')
+  ) {
+    return 'negative';
+  }
+  return 'positive';
+};
+
 // 企业级KPI卡片组件
 const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric }) => {
-  // 获取趋势图标
+  const polarity = getMetricPolarity(metric.id);
+
+  // 根据业务极性判断趋势颜色：
+  // - positive 指标（总工单、已完成、SLA达成率）：上升=绿色（好），下降=红色（坏）
+  // - negative 指标（待处理、超时、响应时间）：上升=红色（坏），下降=绿色（好）
+  const isGoodTrend =
+    metric.trend === 'stable'
+      ? true
+      : polarity === 'positive'
+        ? metric.trend === 'up'
+        : metric.trend === 'down';
+
+  const trendColor = isGoodTrend ? 'text-green-500' : 'text-red-500';
+
   const getTrendIcon = () => {
     switch (metric.trend) {
       case 'up':
-        return <ArrowUp className="w-4 h-4 text-green-500" />;
+        return <ArrowUp className={`w-4 h-4 ${trendColor}`} />;
       case 'down':
-        return <ArrowDown className="w-4 h-4 text-red-500" />;
+        return <ArrowDown className={`w-4 h-4 ${trendColor}`} />;
       default:
         return <Minus className="w-4 h-4 text-gray-400" />;
     }
@@ -97,14 +128,7 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
             {/* 简化趋势指示器 */}
             {metric.change !== undefined && (
               <div
-                className={`text-sm font-semibold flex items-center gap-1 ${
-                  // Added flex items-center gap-1
-                  metric.trend === 'up'
-                    ? 'text-green-500' // antdTheme.token.colorSuccess
-                    : metric.trend === 'down'
-                      ? 'text-red-500' // antdTheme.token.colorError
-                      : 'text-gray-500' // antdTheme.token.colorTextSecondary
-                }`}
+                className={`text-sm font-semibold flex items-center gap-1 ${trendColor}`}
               >
                 {getTrendIcon()}
                 {metric.change > 0 ? '+' : ''}
@@ -147,17 +171,12 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
                 <span
                   className="ml-2 font-semibold"
                   style={{
-                    color:
-                      metric.changeType === 'increase'
-                        ? '#10b981' // antdTheme.token.colorSuccess
-                        : metric.changeType === 'decrease'
-                          ? '#ef4444' // antdTheme.token.colorError
-                          : '#6b7280', // antdTheme.token.colorTextSecondary
+                    color: isGoodTrend ? '#10b981' : '#ef4444',
                   }}
                 >
-                  {metric.changeType === 'increase'
+                  {metric.trend === 'up'
                     ? '↑'
-                    : metric.changeType === 'decrease'
+                    : metric.trend === 'down'
                       ? '↓'
                       : '—'}{' '}
                   {Math.abs(metric.change).toFixed(1)}%

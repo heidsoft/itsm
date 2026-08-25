@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Card, Table, Tag, Button, Space, Modal, Form, Input, Switch, Tabs, App, Drawer,
+  Card, Table, Tag, Button, Space, Modal, Form, Input, InputNumber, Switch, Tabs, App, Drawer,
   Typography, Empty, Alert, Tooltip,
 } from 'antd';
 import { Plus, RotateCcw, CheckCircle, XCircle, Plug, Send, Power } from 'lucide-react';
@@ -59,7 +59,7 @@ export default function ConnectorsAdminPage() {
   const openProvision = (m: ConnectorManifest) => {
     setProvisionTarget(m);
     form.resetFields();
-    form.setFieldsValue({ enabled: true, provider: m.provider });
+    form.setFieldsValue({ enabled: true, provider: m.provider, imapHost: 'imap.qq.com', imapPort: 993, smtpHost: 'smtp.qq.com', smtpPort: 465, mailbox: 'INBOX', pollIntervalSeconds: 30 });
     setProvisionOpen(true);
   };
 
@@ -69,6 +69,19 @@ export default function ConnectorsAdminPage() {
       const values = await form.validateFields();
       const credentials: Record<string, string> = {};
       const settings: Record<string, unknown> = {};
+      if (provisionTarget.name === 'email') {
+        credentials.username = values.emailUsername;
+        credentials.password = values.emailPassword;
+        Object.assign(settings, {
+          imapHost: values.imapHost,
+          imapPort: values.imapPort,
+          smtpHost: values.smtpHost,
+          smtpPort: values.smtpPort,
+          mailbox: values.mailbox,
+          pollIntervalSeconds: values.pollIntervalSeconds,
+          debug_channel: values.emailUsername,
+        });
+      }
       if (typeof values.credText === 'string') {
         values.credText.split('\n').forEach((line: string) => {
           const [k, ...rest] = line.split('=');
@@ -342,7 +355,19 @@ export default function ConnectorsAdminPage() {
               <Form.Item name="provider" label={t('connectors.provision.fieldProvider')}>
                 <Input placeholder={t('connectors.provision.providerPlaceholder')} />
               </Form.Item>
-              <Form.Item
+              {provisionTarget.name === 'email' ? <>
+                <Alert type="warning" showIcon message="请使用 QQ 邮箱授权码，不要填写登录密码。凭据只会加密保存在服务端，后续不会回显。" style={{ marginBottom: 16 }} />
+                <Form.Item name="emailUsername" label="邮箱地址" rules={[{ required: true, type: 'email' }]}><Input autoComplete="off" /></Form.Item>
+                <Form.Item name="emailPassword" label="邮箱授权码" rules={[{ required: true }]}><Input.Password autoComplete="new-password" /></Form.Item>
+                <Space align="start" wrap>
+                  <Form.Item name="imapHost" label="IMAP 主机" rules={[{ required: true }]}><Input /></Form.Item>
+                  <Form.Item name="imapPort" label="IMAP 端口" rules={[{ required: true }]}><InputNumber min={1} max={65535} /></Form.Item>
+                  <Form.Item name="smtpHost" label="SMTP 主机" rules={[{ required: true }]}><Input /></Form.Item>
+                  <Form.Item name="smtpPort" label="SMTP 端口" rules={[{ required: true }]}><InputNumber min={1} max={65535} /></Form.Item>
+                </Space>
+                <Form.Item name="mailbox" label="收件箱" rules={[{ required: true }]}><Input /></Form.Item>
+                <Form.Item name="pollIntervalSeconds" label="轮询间隔（秒）" rules={[{ required: true }]}><InputNumber min={15} /></Form.Item>
+              </> : <><Form.Item
                 name="credText"
                 label={t('connectors.provision.fieldCredentials')}
                 tooltip={t('connectors.provision.credentialsTooltip')}
@@ -355,7 +380,7 @@ export default function ConnectorsAdminPage() {
                 tooltip={t('connectors.provision.settingsTooltip')}
               >
                 <Input.TextArea rows={3} placeholder={t('connectors.provision.settingsPlaceholder')} />
-              </Form.Item>
+              </Form.Item></>}
             </Form>
           </>
         )}
