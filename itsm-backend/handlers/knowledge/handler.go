@@ -80,7 +80,7 @@ func (h *Handler) CreateArticle(c *gin.Context) {
 
 	res, err := h.svc.CreateArticle(c.Request.Context(), article)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -135,7 +135,7 @@ func (h *Handler) ListArticles(c *gin.Context) {
 
 	list, total, err := h.svc.ListArticles(c.Request.Context(), tenantID, page, pageSize, category, search, status)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -200,7 +200,7 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 
 	res, err := h.svc.UpdateArticle(c.Request.Context(), existing)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -243,7 +243,7 @@ func (h *Handler) setArticlePublished(c *gin.Context, published bool) {
 	article.IsPublished = published
 	res, err := h.svc.UpdateArticle(c.Request.Context(), article)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -269,7 +269,7 @@ func (h *Handler) DeleteArticle(c *gin.Context) {
 	}
 
 	if err := h.svc.DeleteArticle(c.Request.Context(), id, tenantID); err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -425,7 +425,7 @@ func (h *Handler) GetCategories(c *gin.Context) {
 
 	list, err := h.svc.GetCategories(c.Request.Context(), tenantID)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -447,7 +447,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 	stats, err := h.svc.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

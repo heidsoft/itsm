@@ -54,7 +54,7 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 		Args map[string]interface{} `json:"args"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -86,14 +86,14 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 	if err != nil {
 		// P2-6: 区分权限拒绝与未知工具的错误码
 		if errors.Is(err, ErrToolPermissionDenied) {
-			common.Fail(c, common.ToolPermissionDeniedCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 			return
 		}
 		if errors.Is(err, ErrUnknownTool) {
-			common.Fail(c, common.UnknownToolCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 			return
 		}
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -114,7 +114,7 @@ func (h *Handler) Chat(c *gin.Context) {
 		ConversationID int    `json:"conversationId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -153,7 +153,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		ConversationID int    `json:"conversationId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -177,7 +177,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		// client still gets an answer.
 		answers, convID, err := h.svc.Chat(c.Request.Context(), tenantID, userID, req.Query, req.Limit, req.ConversationID)
 		if err != nil {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 			return
 		}
 		common.Success(c, gin.H{"answers": answers, "conversation_id": convID})
@@ -215,13 +215,13 @@ func (h *Handler) ChatStream(c *gin.Context) {
 func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 	var req dto.DeepAnalyticsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	res, err := h.svc.GetDeepAnalytics(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, res)
@@ -231,13 +231,13 @@ func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 func (h *Handler) GetTrendPrediction(c *gin.Context) {
 	var req dto.TrendPredictionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	res, err := h.svc.GetTrendPrediction(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, res)
@@ -259,7 +259,7 @@ func (h *Handler) AnalyzeTicket(c *gin.Context) {
 
 	res, err := h.svc.AnalyzeTicket(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, res)
@@ -305,7 +305,7 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 		Notes    *string `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -323,7 +323,7 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 
 	err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Kind, req.Query, itemTypeVal, req.ItemID, req.Useful, req.Score, req.Notes)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, gin.H{"message": "Feedback saved"})
@@ -343,7 +343,7 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 		Notes         string                 `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -377,7 +377,7 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 	}
 
 	if err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Scenario, req.InputRef, itemType, nil, req.Accepted, &score, &note); err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -399,7 +399,7 @@ func (h *Handler) GetEvaluation(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	report, err := h.svc.Evaluate(c.Request.Context(), tenantID, days)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, report)
@@ -415,7 +415,7 @@ func (h *Handler) GetAuditLogs(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	entries, total, err := h.svc.ListAuditLogs(c.Request.Context(), tenantID, page, pageSize, kind, days)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, gin.H{"items": entries, "total": total, "page": page, "pageSize": pageSize})
@@ -446,7 +446,7 @@ func (h *Handler) GetMetrics(c *gin.Context) {
 	}
 	metrics, err := h.svc.GetMetrics(c.Request.Context(), tenantID, lookbackDays)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, metrics)
@@ -460,7 +460,7 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 		Type  string `json:"type"` // kb|incident
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -501,7 +501,7 @@ func (h *Handler) Triage(c *gin.Context) {
 		Priority    string `json:"priority"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.BindValidationError(c, err, "请求参数错误")
 		return
 	}
 
@@ -534,7 +534,7 @@ func (h *Handler) CreateTicketByAI(c *gin.Context) {
 		TenantID    int    `json:"tenantId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -547,7 +547,7 @@ func (h *Handler) CreateTicketByAI(c *gin.Context) {
 	// 调用 AI 分析描述，返回工单创建建议
 	result, err := h.svc.CreateTicketByAI(c.Request.Context(), req.Description, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "AI 工单创建失败: "+err.Error())
+		common.FailWithErr(c, err, "AI ticket creation failed")
 		return
 	}
 	c.JSON(http.StatusOK, result)

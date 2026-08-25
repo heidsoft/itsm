@@ -202,7 +202,7 @@ func (h *Handler) Get(c *gin.Context) {
 func (h *Handler) Create(c *gin.Context) {
 	var req SkillUpsertRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	if req.Code == "" {
@@ -249,7 +249,7 @@ func (h *Handler) Create(c *gin.Context) {
 			common.Fail(c, common.ConflictCode, "skill already registered: "+req.Code)
 			return
 		}
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	h.logger.Infow("skill registered", "code", req.Code, "version", req.Version, "category", category)
@@ -273,7 +273,7 @@ func (h *Handler) Update(c *gin.Context) {
 	code := c.Param("code")
 	var req SkillUpsertRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -340,12 +340,12 @@ func (h *Handler) Update(c *gin.Context) {
 
 	// 替换：先 Unregister 再以新元数据 Register。
 	if err := h.registry.Unregister(code); err != nil {
-		common.Fail(c, common.InternalErrorCode, "unregister failed: "+err.Error())
+		common.FailWithErr(c, err, "unregister failed")
 		return
 	}
 	updated := NewCustomSkill(manifestToConfig(newManifest))
 	if err := h.registry.Register(updated); err != nil {
-		common.Fail(c, common.InternalErrorCode, "re-register failed: "+err.Error())
+		common.FailWithErr(c, err, "re-register failed")
 		return
 	}
 	h.logger.Infow("skill updated", "code", code, "version", newManifest.Version)
@@ -377,12 +377,12 @@ func (h *Handler) Promote(c *gin.Context) {
 	m.Category = "ga"
 	m.Checksum = m.ComputeChecksum()
 	if err := h.registry.Unregister(code); err != nil {
-		common.Fail(c, common.InternalErrorCode, "unregister failed: "+err.Error())
+		common.FailWithErr(c, err, "unregister failed")
 		return
 	}
 	updated := NewCustomSkill(manifestToConfig(m))
 	if err := h.registry.Register(updated); err != nil {
-		common.Fail(c, common.InternalErrorCode, "re-register failed: "+err.Error())
+		common.FailWithErr(c, err, "re-register failed")
 		return
 	}
 	h.logger.Infow("skill promoted", "code", code)
@@ -408,7 +408,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 	if err := h.registry.Unregister(code); err != nil {
-		common.Fail(c, common.InternalErrorCode, "unregister failed: "+err.Error())
+		common.FailWithErr(c, err, "unregister failed")
 		return
 	}
 	h.logger.Infow("skill disabled", "code", code)
@@ -435,7 +435,7 @@ func (h *Handler) Invoke(c *gin.Context) {
 	// 调用方可不带 body；此时按 nil 处理。
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
-			common.Fail(c, common.ParamErrorCode, err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
 	}
@@ -489,10 +489,10 @@ func failInvoke(c *gin.Context, code string, err error) {
 	case errors.Is(err, service.ErrSkillNotFound):
 		common.Fail(c, common.NotFoundCode, "skill not found: "+code)
 	case errors.Is(err, service.ErrSkillValidation):
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 	default:
 		// ErrSkillInvoke 与其它内部错误都映射为 500，但保留 err 链路便于排查。
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 	}
 }
 

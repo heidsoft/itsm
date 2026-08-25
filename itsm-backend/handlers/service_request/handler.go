@@ -39,7 +39,7 @@ func failServiceRequest(c *gin.Context, err error) {
 		common.Fail(c, common.NotFoundErrorCode, "Service request not found")
 		return
 	}
-	common.Fail(c, common.InternalErrorCode, err.Error())
+	common.FailWithErr(c, err, "操作失败")
 }
 
 func NewHandler(service *Service) *Handler {
@@ -118,7 +118,7 @@ func (h *Handler) toDTO(req *ServiceRequest, approvals []*ServiceRequestApproval
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateServiceRequestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "Invalid parameters: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	normalizeCreateServiceRequest(&req)
@@ -182,9 +182,9 @@ func (h *Handler) Get(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, 404, "Not Found")
 		} else if common.IsAppError(err) {
-			common.Fail(c, 5001, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		} else {
-			common.Fail(c, 5001, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
@@ -237,7 +237,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	list, total, err := h.service.List(c.Request.Context(), tenantID, filters)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -264,7 +264,7 @@ func (h *Handler) ApplyApproval(c *gin.Context) {
 
 	var req dto.ServiceRequestApprovalActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -345,7 +345,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	var req dto.UpdateServiceRequestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "Invalid parameters: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	normalizeUpdateServiceRequest(&req)
@@ -390,7 +390,7 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 
 	var req dto.UpdateServiceRequestStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "Invalid parameters: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	status := normalizeServiceRequestStatus(req.Status)

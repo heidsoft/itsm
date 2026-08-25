@@ -29,7 +29,7 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateIncidentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -70,7 +70,7 @@ func (h *Handler) Create(c *gin.Context) {
 
 	created, err := h.service.Create(c.Request.Context(), tenantID, incident)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -92,7 +92,7 @@ func (h *Handler) Get(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
@@ -128,7 +128,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	incidents, total, err := h.service.List(c.Request.Context(), tenantID, page, size, filters, currentUserID, currentRole)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -154,7 +154,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	var req dto.UpdateIncidentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -200,7 +200,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -218,7 +218,7 @@ func (h *Handler) Escalate(c *gin.Context) {
 
 	var req dto.IncidentEscalationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -226,7 +226,7 @@ func (h *Handler) Escalate(c *gin.Context) {
 
 	updated, err := h.service.Escalate(c.Request.Context(), tenantID, id, req.EscalationLevel, req.Reason)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -428,7 +428,7 @@ func (h *Handler) UpdateRootCause(c *gin.Context) {
 		RootCause map[string]interface{} `json:"rootCause"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -440,7 +440,7 @@ func (h *Handler) UpdateRootCause(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -482,7 +482,7 @@ func (h *Handler) UpdateImpactAssessment(c *gin.Context) {
 		ImpactAnalysis map[string]interface{} `json:"impactAnalysis"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -494,7 +494,7 @@ func (h *Handler) UpdateImpactAssessment(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -538,7 +538,7 @@ func (h *Handler) UpdateClassification(c *gin.Context) {
 		Subcategory string `json:"subcategory"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -547,7 +547,7 @@ func (h *Handler) UpdateClassification(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -722,7 +722,7 @@ func (h *Handler) GetIncidentComments(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
@@ -737,7 +737,7 @@ func (h *Handler) GetIncidentComments(c *gin.Context) {
 		WithIncident().
 		All(c.Request.Context())
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -777,7 +777,7 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 		IsInternal bool   `json:"isInternal"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -798,7 +798,7 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
@@ -818,7 +818,7 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 		SetOccurredAt(time.Now()).
 		Save(c.Request.Context())
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

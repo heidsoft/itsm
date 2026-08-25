@@ -171,7 +171,7 @@ func (h *Handler) CreateCloudService(c *gin.Context) {
 		return
 	}
 	if err := validateAttributeSchema(req.AttributeSchema); err != nil {
-		common.ParamError(c, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
@@ -297,7 +297,7 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 		return
 	}
 	if err := validateTenantCredentialRef(req.CredentialRef); err != nil {
-		common.ParamError(c, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
@@ -316,7 +316,7 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 	}
 	res, err := h.svc.CreateCloudAccount(c.Request.Context(), ca)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.CloudAccountResponse{
@@ -347,7 +347,7 @@ func (h *Handler) ListCloudResources(c *gin.Context) {
 
 	list, err := h.svc.ListCloudResources(c.Request.Context(), tenantID, provider, serviceID, region)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	resp := make([]*dto.CloudResourceResponse, 0, len(list))
@@ -383,7 +383,7 @@ func (h *Handler) GetCloudService(c *gin.Context) {
 	}
 	result, err := h.svc.GetCloudService(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.CloudServiceResponse{
@@ -437,7 +437,7 @@ func (h *Handler) UpdateCloudService(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateCloudService(c.Request.Context(), cs)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.CloudServiceResponse{
@@ -468,7 +468,7 @@ func (h *Handler) DeleteCloudService(c *gin.Context) {
 	}
 	err := h.svc.DeleteCloudService(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, nil)
@@ -483,7 +483,7 @@ func (h *Handler) GetCloudAccount(c *gin.Context) {
 	}
 	result, err := h.svc.GetCloudAccount(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.CloudAccountResponse{
@@ -514,13 +514,13 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 	}
 	existing, err := h.svc.GetCloudAccount(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	credentialRef := existing.CredentialRef
 	if req.CredentialRef != nil && *req.CredentialRef != "" {
 		if err := validateTenantCredentialRef(*req.CredentialRef); err != nil {
-			common.ParamError(c, err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
 		credentialRef = *req.CredentialRef
@@ -549,7 +549,7 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateCloudAccount(c.Request.Context(), ca)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.CloudAccountResponse{
@@ -576,7 +576,7 @@ func (h *Handler) DeleteCloudAccount(c *gin.Context) {
 
 	err := h.svc.DeleteCloudAccount(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, nil)
@@ -592,7 +592,7 @@ func (h *Handler) GetCloudResource(c *gin.Context) {
 
 	result, err := h.svc.GetCloudResource(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
@@ -635,7 +635,7 @@ func (h *Handler) CreateCloudResource(c *gin.Context) {
 	}
 	result, err := h.svc.CreateCloudResource(c.Request.Context(), cr)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
@@ -681,7 +681,7 @@ func (h *Handler) UpdateCloudResource(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateCloudResource(c.Request.Context(), cr)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
@@ -697,7 +697,7 @@ func (h *Handler) DeleteCloudResource(c *gin.Context) {
 
 	err := h.svc.DeleteCloudResource(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, nil)
@@ -708,7 +708,7 @@ func (h *Handler) ListDiscoverySources(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	list, err := h.svc.ListDiscoverySources(c.Request.Context(), tenantID)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	resp := make([]*dto.DiscoverySourceResponse, 0, len(list))
@@ -750,7 +750,7 @@ func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 	}
 	res, err := h.svc.CreateDiscoverySource(c.Request.Context(), ds)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.DiscoverySourceResponse{
@@ -783,7 +783,7 @@ func (h *Handler) ListDiscoveryResults(c *gin.Context) {
 	jobID, _ := common.ParsePositiveIDFromQuery(c, "job_id")
 	list, err := h.svc.ListDiscoveryResults(c.Request.Context(), tenantID, jobID)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	resp := make([]*dto.DiscoveryResultResponse, 0, len(list))

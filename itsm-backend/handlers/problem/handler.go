@@ -89,7 +89,7 @@ func (h *Handler) toDTO(p *Problem) *dto.ProblemResponse {
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -112,7 +112,7 @@ func (h *Handler) Create(c *gin.Context) {
 
 	created, err := h.service.Create(c.Request.Context(), tenantID.(int), problem)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -132,7 +132,7 @@ func (h *Handler) Get(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
@@ -153,7 +153,7 @@ func (h *Handler) GetAssociations(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
@@ -191,7 +191,7 @@ func (h *Handler) AddAssociation(c *gin.Context) {
 
 	var req dto.ProblemAssociationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -202,13 +202,13 @@ func (h *Handler) AddAssociation(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
 
 	if err := h.service.AddAssociations(c.Request.Context(), tenantID.(int), id, req.RelatedType, req.RelatedIDs); err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -225,7 +225,7 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 
 	var req dto.ProblemRemoveAssociationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -236,13 +236,13 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
 
 	if err := h.service.RemoveAssociation(c.Request.Context(), tenantID.(int), id, req.RelatedType, req.RelatedID); err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -252,7 +252,7 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 func (h *Handler) List(c *gin.Context) {
 	var req dto.ListProblemsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -278,7 +278,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	list, total, err := h.service.List(c.Request.Context(), tenantID.(int), req.Page, req.PageSize, filters, currentUserID, currentRole)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -330,7 +330,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	var req dto.UpdateProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -362,7 +362,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID.(int), id, updates)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -385,7 +385,7 @@ func (h *Handler) UpdateRootCause(c *gin.Context) {
 	}
 	var req dto.UpdateProblemRootCauseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	updated, err := h.service.UpdateRootCause(c.Request.Context(), tenantID, id, req.RootCause)
@@ -399,7 +399,7 @@ func (h *Handler) UpdateSolution(c *gin.Context) {
 	}
 	var req dto.UpdateProblemResolutionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	resolution := req.Resolution
@@ -417,7 +417,7 @@ func (h *Handler) CloseProblem(c *gin.Context) {
 	}
 	var req dto.CloseProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	updated, err := h.service.CloseProblem(c.Request.Context(), tenantID, id, req.Resolution)
@@ -444,9 +444,9 @@ func (h *Handler) respondProblemMutation(c *gin.Context, updated *Problem, err e
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else if strings.Contains(err.Error(), "required") {
-			common.Fail(c, common.ParamErrorCode, err.Error())
+			common.ParamErrorWithErr(c, err, "请求参数错误")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
@@ -463,7 +463,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 	err = h.service.Delete(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -474,7 +474,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 	stats, err := h.service.GetStats(c.Request.Context(), tenantID.(int))
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -514,7 +514,7 @@ func (h *Handler) GetTrends(c *gin.Context) {
 
 	data, err := h.service.GetTrend(c.Request.Context(), tenantID.(int), startDate, endDate)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, data)
@@ -544,7 +544,7 @@ func (h *Handler) GetHotspots(c *gin.Context) {
 
 	data, err := h.service.GetHotspot(c.Request.Context(), tenantID.(int), startDate, endDate)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, data)
@@ -564,7 +564,7 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
@@ -594,7 +594,7 @@ func (h *Handler) GetProblemComments(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}
@@ -621,7 +621,7 @@ func (h *Handler) AddProblemComment(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		}
 		return
 	}

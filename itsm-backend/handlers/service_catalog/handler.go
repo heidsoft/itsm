@@ -33,7 +33,7 @@ func failServiceCatalog(c *gin.Context, err error) {
 		common.Fail(c, common.NotFoundErrorCode, "服务目录不存在")
 		return
 	}
-	common.Fail(c, common.InternalErrorCode, err.Error())
+	common.FailWithErr(c, err, "操作失败")
 }
 
 // NewHandler creates a new Handler
@@ -45,7 +45,7 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) List(c *gin.Context) {
 	var req dto.GetServiceCatalogsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	catalogs, total, err := h.service.List(c.Request.Context(), tenantID, filters)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -117,7 +117,7 @@ func (h *Handler) Get(c *gin.Context) {
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateServiceCatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	normalizeServiceCatalogRequest(&req)
@@ -171,7 +171,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	var req dto.UpdateServiceCatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	normalizeUpdateServiceCatalogRequest(&req)
@@ -271,7 +271,7 @@ func (h *Handler) Search(c *gin.Context) {
 
 	catalogs, total, err := h.service.Search(c.Request.Context(), tenantID, keyword, filters)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -298,7 +298,7 @@ func (h *Handler) Stats(c *gin.Context) {
 
 	stats, err := h.service.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

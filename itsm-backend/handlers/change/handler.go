@@ -562,7 +562,7 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 
 	res, err := h.svc.GetCalendarView(c.Request.Context(), tenantID, req.StartDate, req.EndDate, req.Status)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -596,7 +596,7 @@ func (h *Handler) CreatePIR(c *gin.Context) {
 			common.Conflict(c, err.Error(), nil)
 			return
 		}
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -616,10 +616,10 @@ func (h *Handler) GetPIR(c *gin.Context) {
 	pir, err := h.svc.GetPIRByChange(c.Request.Context(), changeID, tenantID)
 	if err != nil {
 		if strings.Contains(err.Error(), "无PIR记录") {
-			common.NotFound(c, err.Error())
+			common.NotFoundWithErr(c, err, "resource not found")
 			return
 		}
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -637,7 +637,7 @@ func (h *Handler) ListPIRs(c *gin.Context) {
 
 	pirs, err := h.svc.ListPIRs(c.Request.Context(), tenantID, page, pageSize, result)
 	if err != nil {
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -663,10 +663,10 @@ func (h *Handler) UpdatePIR(c *gin.Context) {
 	pir, err := h.svc.UpdatePIR(c.Request.Context(), pirID, &req, tenantID)
 	if err != nil {
 		if strings.Contains(err.Error(), "不存在") {
-			common.NotFound(c, err.Error())
+			common.NotFoundWithErr(c, err, "resource not found")
 			return
 		}
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
@@ -685,10 +685,10 @@ func (h *Handler) DeletePIR(c *gin.Context) {
 
 	if err := h.svc.DeletePIR(c.Request.Context(), pirID, tenantID); err != nil {
 		if strings.Contains(err.Error(), "不存在") {
-			common.NotFound(c, err.Error())
+			common.NotFoundWithErr(c, err, "resource not found")
 			return
 		}
-		common.InternalError(c, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

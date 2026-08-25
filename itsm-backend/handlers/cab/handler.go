@@ -44,7 +44,7 @@ func (h *Handler) ListCABMembers(c *gin.Context) {
 	}
 	members, err := h.svc.ListCABMembers(c.Request.Context(), boardType, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, members)
@@ -59,12 +59,12 @@ func (h *Handler) AddCABMember(c *gin.Context) {
 	}
 	var req dto.AddCABMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	member, err := h.svc.AddCABMember(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, member)
@@ -84,12 +84,12 @@ func (h *Handler) UpdateCABMember(c *gin.Context) {
 	}
 	var req dto.UpdateCABMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	member, err := h.svc.UpdateCABMember(c.Request.Context(), id, tenantID, req.Role, req.IsActive)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, member)
@@ -108,7 +108,7 @@ func (h *Handler) RemoveCABMember(c *gin.Context) {
 		return
 	}
 	if err := h.svc.RemoveCABMember(c.Request.Context(), id, tenantID); err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, gin.H{"deleted": id})

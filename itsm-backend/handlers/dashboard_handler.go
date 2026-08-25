@@ -648,7 +648,7 @@ func (h *DashboardHandler) GetUserStats(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 	stats, err := h.dashboardService.GetUserStats(c.Request.Context(), tenantID.(int))
 	if err != nil {
-		common.Fail(c, 5001, "获取用户统计失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, stats)
@@ -666,7 +666,7 @@ func (h *DashboardHandler) GetUserStats(c *gin.Context) {
 func (h *DashboardHandler) GetSystemStats(c *gin.Context) {
 	stats, err := h.dashboardService.GetSystemStats(c.Request.Context())
 	if err != nil {
-		common.Fail(c, 5001, "获取系统统计失败: "+err.Error())
+		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 	common.Success(c, stats)
