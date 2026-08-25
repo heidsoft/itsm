@@ -296,6 +296,18 @@ func (f ConfigurationItemHistoryFunc) Mutate(ctx context.Context, m ent.Mutation
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ConfigurationItemHistoryMutation", m)
 }
 
+// The ConnectorConfigFunc type is an adapter to allow the use of ordinary
+// function as ConnectorConfig mutator.
+type ConnectorConfigFunc func(context.Context, *ent.ConnectorConfigMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ConnectorConfigFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ConnectorConfigMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ConnectorConfigMutation", m)
+}
+
 // The ContractFunc type is an adapter to allow the use of ordinary
 // function as Contract mutator.
 type ContractFunc func(context.Context, *ent.ContractMutation) (ent.Value, error)
@@ -318,6 +330,18 @@ func (f ConversationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ConversationMutation", m)
+}
+
+// The CustomerBranchFunc type is an adapter to allow the use of ordinary
+// function as CustomerBranch mutator.
+type CustomerBranchFunc func(context.Context, *ent.CustomerBranchMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CustomerBranchFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CustomerBranchMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CustomerBranchMutation", m)
 }
 
 // The DepartmentFunc type is an adapter to allow the use of ordinary
@@ -380,6 +404,42 @@ func (f DomainConfigFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DomainConfigMutation", m)
 }
 
+// The EmailConversationFunc type is an adapter to allow the use of ordinary
+// function as EmailConversation mutator.
+type EmailConversationFunc func(context.Context, *ent.EmailConversationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EmailConversationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EmailConversationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EmailConversationMutation", m)
+}
+
+// The EmailIntakeAnalysisFunc type is an adapter to allow the use of ordinary
+// function as EmailIntakeAnalysis mutator.
+type EmailIntakeAnalysisFunc func(context.Context, *ent.EmailIntakeAnalysisMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EmailIntakeAnalysisFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EmailIntakeAnalysisMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EmailIntakeAnalysisMutation", m)
+}
+
+// The EmailOutboundMessageFunc type is an adapter to allow the use of ordinary
+// function as EmailOutboundMessage mutator.
+type EmailOutboundMessageFunc func(context.Context, *ent.EmailOutboundMessageMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EmailOutboundMessageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EmailOutboundMessageMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EmailOutboundMessageMutation", m)
+}
+
 // The EndpointACLFunc type is an adapter to allow the use of ordinary
 // function as EndpointACL mutator.
 type EndpointACLFunc func(context.Context, *ent.EndpointACLMutation) (ent.Value, error)
@@ -404,6 +464,18 @@ func (f EngineerSkillFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Valu
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EngineerSkillMutation", m)
 }
 
+// The ExternalContractReferenceFunc type is an adapter to allow the use of ordinary
+// function as ExternalContractReference mutator.
+type ExternalContractReferenceFunc func(context.Context, *ent.ExternalContractReferenceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ExternalContractReferenceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ExternalContractReferenceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ExternalContractReferenceMutation", m)
+}
+
 // The FeishuTicketSyncFunc type is an adapter to allow the use of ordinary
 // function as FeishuTicketSync mutator.
 type FeishuTicketSyncFunc func(context.Context, *ent.FeishuTicketSyncMutation) (ent.Value, error)
@@ -426,6 +498,18 @@ func (f GroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupMutation", m)
+}
+
+// The InboundEmailMessageFunc type is an adapter to allow the use of ordinary
+// function as InboundEmailMessage mutator.
+type InboundEmailMessageFunc func(context.Context, *ent.InboundEmailMessageMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f InboundEmailMessageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.InboundEmailMessageMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.InboundEmailMessageMutation", m)
 }
 
 // The IncidentFunc type is an adapter to allow the use of ordinary
@@ -690,6 +774,30 @@ func (f NotificationPreferenceFunc) Mutate(ctx context.Context, m ent.Mutation) 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NotificationPreferenceMutation", m)
+}
+
+// The OnCallScheduleFunc type is an adapter to allow the use of ordinary
+// function as OnCallSchedule mutator.
+type OnCallScheduleFunc func(context.Context, *ent.OnCallScheduleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OnCallScheduleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OnCallScheduleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OnCallScheduleMutation", m)
+}
+
+// The OnCallShiftFunc type is an adapter to allow the use of ordinary
+// function as OnCallShift mutator.
+type OnCallShiftFunc func(context.Context, *ent.OnCallShiftMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OnCallShiftFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OnCallShiftMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OnCallShiftMutation", m)
 }
 
 // The OperationalCommandFunc type is an adapter to allow the use of ordinary
@@ -1064,6 +1172,18 @@ func (f ServiceCatalogItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceCatalogItemMutation", m)
 }
 
+// The ServiceCustomerFunc type is an adapter to allow the use of ordinary
+// function as ServiceCustomer mutator.
+type ServiceCustomerFunc func(context.Context, *ent.ServiceCustomerMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ServiceCustomerFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ServiceCustomerMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceCustomerMutation", m)
+}
+
 // The ServiceRequestFunc type is an adapter to allow the use of ordinary
 // function as ServiceRequest mutator.
 type ServiceRequestFunc func(context.Context, *ent.ServiceRequestMutation) (ent.Value, error)
@@ -1088,6 +1208,18 @@ func (f ServiceRequestApprovalFunc) Mutate(ctx context.Context, m ent.Mutation) 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceRequestApprovalMutation", m)
 }
 
+// The SourceOrganizationFunc type is an adapter to allow the use of ordinary
+// function as SourceOrganization mutator.
+type SourceOrganizationFunc func(context.Context, *ent.SourceOrganizationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SourceOrganizationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SourceOrganizationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SourceOrganizationMutation", m)
+}
+
 // The StandardChangeFunc type is an adapter to allow the use of ordinary
 // function as StandardChange mutator.
 type StandardChangeFunc func(context.Context, *ent.StandardChangeMutation) (ent.Value, error)
@@ -1098,6 +1230,18 @@ func (f StandardChangeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StandardChangeMutation", m)
+}
+
+// The SupportContractFunc type is an adapter to allow the use of ordinary
+// function as SupportContract mutator.
+type SupportContractFunc func(context.Context, *ent.SupportContractMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SupportContractFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SupportContractMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SupportContractMutation", m)
 }
 
 // The SurveyFunc type is an adapter to allow the use of ordinary

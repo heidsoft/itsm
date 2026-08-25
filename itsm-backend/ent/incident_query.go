@@ -7,6 +7,8 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/emailconversation"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
@@ -35,6 +37,8 @@ type IncidentQuery struct {
 	withParentIncident     *IncidentQuery
 	withConfigurationItems *ConfigurationItemQuery
 	withProblems           *ProblemQuery
+	withAssignmentGroup    *GroupQuery
+	withEmailConversation  *EmailConversationQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -218,6 +222,50 @@ func (_q *IncidentQuery) QueryProblems() *ProblemQuery {
 			sqlgraph.From(incident.Table, incident.FieldID, selector),
 			sqlgraph.To(problem.Table, problem.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, incident.ProblemsTable, incident.ProblemsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAssignmentGroup chains the current query on the "assignment_group" edge.
+func (_q *IncidentQuery) QueryAssignmentGroup() *GroupQuery {
+	query := (&GroupClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, selector),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incident.AssignmentGroupTable, incident.AssignmentGroupColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryEmailConversation chains the current query on the "email_conversation" edge.
+func (_q *IncidentQuery) QueryEmailConversation() *EmailConversationQuery {
+	query := (&EmailConversationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, selector),
+			sqlgraph.To(emailconversation.Table, emailconversation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incident.EmailConversationTable, incident.EmailConversationColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -424,6 +472,8 @@ func (_q *IncidentQuery) Clone() *IncidentQuery {
 		withParentIncident:     _q.withParentIncident.Clone(),
 		withConfigurationItems: _q.withConfigurationItems.Clone(),
 		withProblems:           _q.withProblems.Clone(),
+		withAssignmentGroup:    _q.withAssignmentGroup.Clone(),
+		withEmailConversation:  _q.withEmailConversation.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -507,6 +557,28 @@ func (_q *IncidentQuery) WithProblems(opts ...func(*ProblemQuery)) *IncidentQuer
 	return _q
 }
 
+// WithAssignmentGroup tells the query-builder to eager-load the nodes that are connected to
+// the "assignment_group" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *IncidentQuery) WithAssignmentGroup(opts ...func(*GroupQuery)) *IncidentQuery {
+	query := (&GroupClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAssignmentGroup = query
+	return _q
+}
+
+// WithEmailConversation tells the query-builder to eager-load the nodes that are connected to
+// the "email_conversation" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *IncidentQuery) WithEmailConversation(opts ...func(*EmailConversationQuery)) *IncidentQuery {
+	query := (&EmailConversationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withEmailConversation = query
+	return _q
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -585,7 +657,7 @@ func (_q *IncidentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Inc
 	var (
 		nodes       = []*Incident{}
 		_spec       = _q.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [9]bool{
 			_q.withRelatedIncidents != nil,
 			_q.withIncidentEvents != nil,
 			_q.withIncidentAlerts != nil,
@@ -593,6 +665,8 @@ func (_q *IncidentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Inc
 			_q.withParentIncident != nil,
 			_q.withConfigurationItems != nil,
 			_q.withProblems != nil,
+			_q.withAssignmentGroup != nil,
+			_q.withEmailConversation != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -661,6 +735,18 @@ func (_q *IncidentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Inc
 		if err := _q.loadProblems(ctx, query, nodes,
 			func(n *Incident) { n.Edges.Problems = []*Problem{} },
 			func(n *Incident, e *Problem) { n.Edges.Problems = append(n.Edges.Problems, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAssignmentGroup; query != nil {
+		if err := _q.loadAssignmentGroup(ctx, query, nodes, nil,
+			func(n *Incident, e *Group) { n.Edges.AssignmentGroup = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withEmailConversation; query != nil {
+		if err := _q.loadEmailConversation(ctx, query, nodes, nil,
+			func(n *Incident, e *EmailConversation) { n.Edges.EmailConversation = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -1001,6 +1087,70 @@ func (_q *IncidentQuery) loadProblems(ctx context.Context, query *ProblemQuery, 
 	}
 	return nil
 }
+func (_q *IncidentQuery) loadAssignmentGroup(ctx context.Context, query *GroupQuery, nodes []*Incident, init func(*Incident), assign func(*Incident, *Group)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Incident)
+	for i := range nodes {
+		if nodes[i].AssignmentGroupID == nil {
+			continue
+		}
+		fk := *nodes[i].AssignmentGroupID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(group.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "assignment_group_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *IncidentQuery) loadEmailConversation(ctx context.Context, query *EmailConversationQuery, nodes []*Incident, init func(*Incident), assign func(*Incident, *EmailConversation)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Incident)
+	for i := range nodes {
+		if nodes[i].EmailConversationID == nil {
+			continue
+		}
+		fk := *nodes[i].EmailConversationID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(emailconversation.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "email_conversation_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (_q *IncidentQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1026,6 +1176,12 @@ func (_q *IncidentQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != incident.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if _q.withAssignmentGroup != nil {
+			_spec.Node.AddColumnOnce(incident.FieldAssignmentGroupID)
+		}
+		if _q.withEmailConversation != nil {
+			_spec.Node.AddColumnOnce(incident.FieldEmailConversationID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

@@ -5,6 +5,8 @@ package ent
 import (
 	"encoding/json"
 	"fmt"
+	"itsm-backend/ent/emailconversation"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"strings"
 	"time"
@@ -40,6 +42,10 @@ type Incident struct {
 	ReporterID int `json:"reporter_id,omitempty"`
 	// 处理人ID
 	AssigneeID int `json:"assignee_id,omitempty"`
+	// 处理组ID
+	AssignmentGroupID *int `json:"assignment_group_id,omitempty"`
+	// 来源邮件会话ID，用于自动开单幂等
+	EmailConversationID *int `json:"email_conversation_id,omitempty"`
 	// 配置项ID
 	ConfigurationItemID int `json:"configuration_item_id,omitempty"`
 	// 事件分类
@@ -102,9 +108,13 @@ type IncidentEdges struct {
 	ConfigurationItems []*ConfigurationItem `json:"configuration_items,omitempty"`
 	// 关联的问题
 	Problems []*Problem `json:"problems,omitempty"`
+	// AssignmentGroup holds the value of the assignment_group edge.
+	AssignmentGroup *Group `json:"assignment_group,omitempty"`
+	// EmailConversation holds the value of the email_conversation edge.
+	EmailConversation *EmailConversation `json:"email_conversation,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [9]bool
 }
 
 // RelatedIncidentsOrErr returns the RelatedIncidents value or an error if the edge
@@ -170,6 +180,28 @@ func (e IncidentEdges) ProblemsOrErr() ([]*Problem, error) {
 	return nil, &NotLoadedError{edge: "problems"}
 }
 
+// AssignmentGroupOrErr returns the AssignmentGroup value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e IncidentEdges) AssignmentGroupOrErr() (*Group, error) {
+	if e.AssignmentGroup != nil {
+		return e.AssignmentGroup, nil
+	} else if e.loadedTypes[7] {
+		return nil, &NotFoundError{label: group.Label}
+	}
+	return nil, &NotLoadedError{edge: "assignment_group"}
+}
+
+// EmailConversationOrErr returns the EmailConversation value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e IncidentEdges) EmailConversationOrErr() (*EmailConversation, error) {
+	if e.EmailConversation != nil {
+		return e.EmailConversation, nil
+	} else if e.loadedTypes[8] {
+		return nil, &NotFoundError{label: emailconversation.Label}
+	}
+	return nil, &NotLoadedError{edge: "email_conversation"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Incident) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -179,7 +211,7 @@ func (*Incident) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case incident.FieldIsAutomated, incident.FieldIsMajorIncident:
 			values[i] = new(sql.NullBool)
-		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID, incident.FieldVersion:
+		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldAssignmentGroupID, incident.FieldEmailConversationID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID, incident.FieldVersion:
 			values[i] = new(sql.NullInt64)
 		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldType, incident.FieldPriority, incident.FieldSeverity, incident.FieldImpact, incident.FieldUrgency, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldSource:
 			values[i] = new(sql.NullString)
@@ -271,6 +303,20 @@ func (_m *Incident) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field assignee_id", values[i])
 			} else if value.Valid {
 				_m.AssigneeID = int(value.Int64)
+			}
+		case incident.FieldAssignmentGroupID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field assignment_group_id", values[i])
+			} else if value.Valid {
+				_m.AssignmentGroupID = new(int)
+				*_m.AssignmentGroupID = int(value.Int64)
+			}
+		case incident.FieldEmailConversationID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field email_conversation_id", values[i])
+			} else if value.Valid {
+				_m.EmailConversationID = new(int)
+				*_m.EmailConversationID = int(value.Int64)
 			}
 		case incident.FieldConfigurationItemID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -449,6 +495,16 @@ func (_m *Incident) QueryProblems() *ProblemQuery {
 	return NewIncidentClient(_m.config).QueryProblems(_m)
 }
 
+// QueryAssignmentGroup queries the "assignment_group" edge of the Incident entity.
+func (_m *Incident) QueryAssignmentGroup() *GroupQuery {
+	return NewIncidentClient(_m.config).QueryAssignmentGroup(_m)
+}
+
+// QueryEmailConversation queries the "email_conversation" edge of the Incident entity.
+func (_m *Incident) QueryEmailConversation() *EmailConversationQuery {
+	return NewIncidentClient(_m.config).QueryEmailConversation(_m)
+}
+
 // Update returns a builder for updating this Incident.
 // Note that you need to call Incident.Unwrap() before calling this method if this Incident
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -504,6 +560,16 @@ func (_m *Incident) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("assignee_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.AssigneeID))
+	builder.WriteString(", ")
+	if v := _m.AssignmentGroupID; v != nil {
+		builder.WriteString("assignment_group_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.EmailConversationID; v != nil {
+		builder.WriteString("email_conversation_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("configuration_item_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ConfigurationItemID))

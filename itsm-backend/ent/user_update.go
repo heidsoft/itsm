@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/oncallshift"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/role"
@@ -536,6 +537,21 @@ func (_u *UserUpdate) AddToolInvocations(v ...*ToolInvocation) *UserUpdate {
 	return _u.AddToolInvocationIDs(ids...)
 }
 
+// AddOnCallShiftIDs adds the "on_call_shifts" edge to the OnCallShift entity by IDs.
+func (_u *UserUpdate) AddOnCallShiftIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddOnCallShiftIDs(ids...)
+	return _u
+}
+
+// AddOnCallShifts adds the "on_call_shifts" edges to the OnCallShift entity.
+func (_u *UserUpdate) AddOnCallShifts(v ...*OnCallShift) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOnCallShiftIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -845,6 +861,27 @@ func (_u *UserUpdate) RemoveToolInvocations(v ...*ToolInvocation) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveToolInvocationIDs(ids...)
+}
+
+// ClearOnCallShifts clears all "on_call_shifts" edges to the OnCallShift entity.
+func (_u *UserUpdate) ClearOnCallShifts() *UserUpdate {
+	_u.mutation.ClearOnCallShifts()
+	return _u
+}
+
+// RemoveOnCallShiftIDs removes the "on_call_shifts" edge to OnCallShift entities by IDs.
+func (_u *UserUpdate) RemoveOnCallShiftIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveOnCallShiftIDs(ids...)
+	return _u
+}
+
+// RemoveOnCallShifts removes "on_call_shifts" edges to OnCallShift entities.
+func (_u *UserUpdate) RemoveOnCallShifts(v ...*OnCallShift) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOnCallShiftIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1686,6 +1723,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.OnCallShiftsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OnCallShiftsTable,
+			Columns: []string{user.OnCallShiftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallshift.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOnCallShiftsIDs(); len(nodes) > 0 && !_u.mutation.OnCallShiftsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OnCallShiftsTable,
+			Columns: []string{user.OnCallShiftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallshift.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OnCallShiftsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OnCallShiftsTable,
+			Columns: []string{user.OnCallShiftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallshift.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -2199,6 +2281,21 @@ func (_u *UserUpdateOne) AddToolInvocations(v ...*ToolInvocation) *UserUpdateOne
 	return _u.AddToolInvocationIDs(ids...)
 }
 
+// AddOnCallShiftIDs adds the "on_call_shifts" edge to the OnCallShift entity by IDs.
+func (_u *UserUpdateOne) AddOnCallShiftIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddOnCallShiftIDs(ids...)
+	return _u
+}
+
+// AddOnCallShifts adds the "on_call_shifts" edges to the OnCallShift entity.
+func (_u *UserUpdateOne) AddOnCallShifts(v ...*OnCallShift) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOnCallShiftIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -2508,6 +2605,27 @@ func (_u *UserUpdateOne) RemoveToolInvocations(v ...*ToolInvocation) *UserUpdate
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveToolInvocationIDs(ids...)
+}
+
+// ClearOnCallShifts clears all "on_call_shifts" edges to the OnCallShift entity.
+func (_u *UserUpdateOne) ClearOnCallShifts() *UserUpdateOne {
+	_u.mutation.ClearOnCallShifts()
+	return _u
+}
+
+// RemoveOnCallShiftIDs removes the "on_call_shifts" edge to OnCallShift entities by IDs.
+func (_u *UserUpdateOne) RemoveOnCallShiftIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveOnCallShiftIDs(ids...)
+	return _u
+}
+
+// RemoveOnCallShifts removes "on_call_shifts" edges to OnCallShift entities.
+func (_u *UserUpdateOne) RemoveOnCallShifts(v ...*OnCallShift) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOnCallShiftIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -3372,6 +3490,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(toolinvocation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OnCallShiftsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OnCallShiftsTable,
+			Columns: []string{user.OnCallShiftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallshift.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOnCallShiftsIDs(); len(nodes) > 0 && !_u.mutation.OnCallShiftsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OnCallShiftsTable,
+			Columns: []string{user.OnCallShiftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallshift.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OnCallShiftsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OnCallShiftsTable,
+			Columns: []string{user.OnCallShiftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallshift.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

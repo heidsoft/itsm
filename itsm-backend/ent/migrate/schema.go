@@ -1158,6 +1158,41 @@ var (
 			},
 		},
 	}
+	// ConnectorConfigsColumns holds the columns for the "connector_configs" table.
+	ConnectorConfigsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "provider", Type: field.TypeString, Size: 100},
+		{Name: "connector_type", Type: field.TypeString, Nullable: true, Size: 50},
+		{Name: "enabled", Type: field.TypeBool, Default: false},
+		{Name: "encrypted_credentials", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "settings", Type: field.TypeJSON, Nullable: true},
+		{Name: "labels", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 40, Default: "configured"},
+		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "last_health_check_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ConnectorConfigsTable holds the schema information for the "connector_configs" table.
+	ConnectorConfigsTable = &schema.Table{
+		Name:       "connector_configs",
+		Columns:    ConnectorConfigsColumns,
+		PrimaryKey: []*schema.Column{ConnectorConfigsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "connectorconfig_tenant_id_name_provider",
+				Unique:  true,
+				Columns: []*schema.Column{ConnectorConfigsColumns[1], ConnectorConfigsColumns[2], ConnectorConfigsColumns[3]},
+			},
+			{
+				Name:    "connectorconfig_tenant_id_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{ConnectorConfigsColumns[1], ConnectorConfigsColumns[5]},
+			},
+		},
+	}
 	// ContractsColumns holds the columns for the "contracts" table.
 	ContractsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1201,6 +1236,44 @@ var (
 		Name:       "conversations",
 		Columns:    ConversationsColumns,
 		PrimaryKey: []*schema.Column{ConversationsColumns[0]},
+	}
+	// CustomerBranchesColumns holds the columns for the "customer_branches" table.
+	CustomerBranchesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "normalized_name", Type: field.TypeString, Size: 255},
+		{Name: "aliases", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 32, Default: "active"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "customer_id", Type: field.TypeInt},
+	}
+	// CustomerBranchesTable holds the schema information for the "customer_branches" table.
+	CustomerBranchesTable = &schema.Table{
+		Name:       "customer_branches",
+		Columns:    CustomerBranchesColumns,
+		PrimaryKey: []*schema.Column{CustomerBranchesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "customer_branches_service_customers_branches",
+				Columns:    []*schema.Column{CustomerBranchesColumns[8]},
+				RefColumns: []*schema.Column{ServiceCustomersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "customerbranch_tenant_id_customer_id_normalized_name",
+				Unique:  true,
+				Columns: []*schema.Column{CustomerBranchesColumns[1], CustomerBranchesColumns[8], CustomerBranchesColumns[3]},
+			},
+			{
+				Name:    "customerbranch_tenant_id_customer_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{CustomerBranchesColumns[1], CustomerBranchesColumns[8], CustomerBranchesColumns[5]},
+			},
+		},
 	}
 	// DepartmentsColumns holds the columns for the "departments" table.
 	DepartmentsColumns = []*schema.Column{
@@ -1387,6 +1460,173 @@ var (
 			},
 		},
 	}
+	// EmailConversationsColumns holds the columns for the "email_conversations" table.
+	EmailConversationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "external_thread_id", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "conversation_token", Type: field.TypeString, Size: 120},
+		{Name: "status", Type: field.TypeString, Size: 40, Default: "PROCESSING"},
+		{Name: "canonical_data", Type: field.TypeJSON, Nullable: true},
+		{Name: "field_sources", Type: field.TypeJSON, Nullable: true},
+		{Name: "missing_fields", Type: field.TypeJSON, Nullable: true},
+		{Name: "confidence", Type: field.TypeFloat64, Default: 0},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "last_message_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "branch_id", Type: field.TypeInt, Nullable: true},
+		{Name: "customer_id", Type: field.TypeInt, Nullable: true},
+		{Name: "source_organization_id", Type: field.TypeInt, Nullable: true},
+		{Name: "support_contract_id", Type: field.TypeInt, Nullable: true},
+	}
+	// EmailConversationsTable holds the schema information for the "email_conversations" table.
+	EmailConversationsTable = &schema.Table{
+		Name:       "email_conversations",
+		Columns:    EmailConversationsColumns,
+		PrimaryKey: []*schema.Column{EmailConversationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "email_conversations_customer_branches_conversations",
+				Columns:    []*schema.Column{EmailConversationsColumns[13]},
+				RefColumns: []*schema.Column{CustomerBranchesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "email_conversations_service_customers_conversations",
+				Columns:    []*schema.Column{EmailConversationsColumns[14]},
+				RefColumns: []*schema.Column{ServiceCustomersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "email_conversations_source_organizations_conversations",
+				Columns:    []*schema.Column{EmailConversationsColumns[15]},
+				RefColumns: []*schema.Column{SourceOrganizationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "email_conversations_support_contracts_conversations",
+				Columns:    []*schema.Column{EmailConversationsColumns[16]},
+				RefColumns: []*schema.Column{SupportContractsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "emailconversation_tenant_id_conversation_token",
+				Unique:  true,
+				Columns: []*schema.Column{EmailConversationsColumns[1], EmailConversationsColumns[3]},
+			},
+			{
+				Name:    "emailconversation_tenant_id_external_thread_id",
+				Unique:  false,
+				Columns: []*schema.Column{EmailConversationsColumns[1], EmailConversationsColumns[2]},
+			},
+			{
+				Name:    "emailconversation_tenant_id_status_last_message_at",
+				Unique:  false,
+				Columns: []*schema.Column{EmailConversationsColumns[1], EmailConversationsColumns[4], EmailConversationsColumns[10]},
+			},
+		},
+	}
+	// EmailIntakeAnalysesColumns holds the columns for the "email_intake_analyses" table.
+	EmailIntakeAnalysesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "provider", Type: field.TypeString, Nullable: true, Size: 80},
+		{Name: "model", Type: field.TypeString, Nullable: true, Size: 160},
+		{Name: "prompt_version", Type: field.TypeString, Size: 80},
+		{Name: "raw_result", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "result", Type: field.TypeJSON, Nullable: true},
+		{Name: "confidence", Type: field.TypeFloat64, Default: 0},
+		{Name: "latency_ms", Type: field.TypeInt64, Default: 0},
+		{Name: "status", Type: field.TypeString, Size: 40, Default: "pending"},
+		{Name: "validation_error", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "reviewed_by", Type: field.TypeInt, Nullable: true},
+		{Name: "corrections", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "conversation_id", Type: field.TypeInt},
+		{Name: "message_id", Type: field.TypeInt},
+	}
+	// EmailIntakeAnalysesTable holds the schema information for the "email_intake_analyses" table.
+	EmailIntakeAnalysesTable = &schema.Table{
+		Name:       "email_intake_analyses",
+		Columns:    EmailIntakeAnalysesColumns,
+		PrimaryKey: []*schema.Column{EmailIntakeAnalysesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "email_intake_analyses_email_conversations_analyses",
+				Columns:    []*schema.Column{EmailIntakeAnalysesColumns[15]},
+				RefColumns: []*schema.Column{EmailConversationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "email_intake_analyses_inbound_email_messages_analyses",
+				Columns:    []*schema.Column{EmailIntakeAnalysesColumns[16]},
+				RefColumns: []*schema.Column{InboundEmailMessagesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "emailintakeanalysis_tenant_id_message_id",
+				Unique:  false,
+				Columns: []*schema.Column{EmailIntakeAnalysesColumns[1], EmailIntakeAnalysesColumns[16]},
+			},
+			{
+				Name:    "emailintakeanalysis_tenant_id_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{EmailIntakeAnalysesColumns[1], EmailIntakeAnalysesColumns[9], EmailIntakeAnalysesColumns[13]},
+			},
+		},
+	}
+	// EmailOutboundMessagesColumns holds the columns for the "email_outbound_messages" table.
+	EmailOutboundMessagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "mailbox_instance_key", Type: field.TypeString, Size: 160},
+		{Name: "reply_type", Type: field.TypeString, Size: 40},
+		{Name: "revision", Type: field.TypeInt},
+		{Name: "to_address", Type: field.TypeString, Size: 320},
+		{Name: "subject", Type: field.TypeString, Size: 998},
+		{Name: "body_text", Type: field.TypeString, Size: 2147483647},
+		{Name: "in_reply_to", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "references", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 40, Default: "PENDING"},
+		{Name: "attempts", Type: field.TypeInt, Default: 0},
+		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "sent_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "conversation_id", Type: field.TypeInt},
+	}
+	// EmailOutboundMessagesTable holds the schema information for the "email_outbound_messages" table.
+	EmailOutboundMessagesTable = &schema.Table{
+		Name:       "email_outbound_messages",
+		Columns:    EmailOutboundMessagesColumns,
+		PrimaryKey: []*schema.Column{EmailOutboundMessagesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "email_outbound_messages_email_conversations_outbound_messages",
+				Columns:    []*schema.Column{EmailOutboundMessagesColumns[16]},
+				RefColumns: []*schema.Column{EmailConversationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "emailoutboundmessage_tenant_id_conversation_id_reply_type_revision",
+				Unique:  true,
+				Columns: []*schema.Column{EmailOutboundMessagesColumns[1], EmailOutboundMessagesColumns[16], EmailOutboundMessagesColumns[3], EmailOutboundMessagesColumns[4]},
+			},
+			{
+				Name:    "emailoutboundmessage_tenant_id_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{EmailOutboundMessagesColumns[1], EmailOutboundMessagesColumns[10], EmailOutboundMessagesColumns[14]},
+			},
+		},
+	}
 	// EndpointAcLsColumns holds the columns for the "endpoint_ac_ls" table.
 	EndpointAcLsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1431,6 +1671,51 @@ var (
 		Name:       "engineer_skills",
 		Columns:    EngineerSkillsColumns,
 		PrimaryKey: []*schema.Column{EngineerSkillsColumns[0]},
+	}
+	// ExternalContractReferencesColumns holds the columns for the "external_contract_references" table.
+	ExternalContractReferencesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "customer_id", Type: field.TypeInt},
+		{Name: "branch_id", Type: field.TypeInt, Nullable: true},
+		{Name: "external_contract_number", Type: field.TypeString, Size: 160},
+		{Name: "normalized_external_contract_number", Type: field.TypeString, Size: 160},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "source_organization_id", Type: field.TypeInt},
+		{Name: "support_contract_id", Type: field.TypeInt},
+	}
+	// ExternalContractReferencesTable holds the schema information for the "external_contract_references" table.
+	ExternalContractReferencesTable = &schema.Table{
+		Name:       "external_contract_references",
+		Columns:    ExternalContractReferencesColumns,
+		PrimaryKey: []*schema.Column{ExternalContractReferencesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "external_contract_references_source_organizations_external_contract_references",
+				Columns:    []*schema.Column{ExternalContractReferencesColumns[8]},
+				RefColumns: []*schema.Column{SourceOrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "external_contract_references_support_contracts_external_references",
+				Columns:    []*schema.Column{ExternalContractReferencesColumns[9]},
+				RefColumns: []*schema.Column{SupportContractsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "externalcontractreference_tenant_id_source_organization_id_normalized_external_contract_number",
+				Unique:  true,
+				Columns: []*schema.Column{ExternalContractReferencesColumns[1], ExternalContractReferencesColumns[8], ExternalContractReferencesColumns[5]},
+			},
+			{
+				Name:    "externalcontractreference_tenant_id_support_contract_id",
+				Unique:  false,
+				Columns: []*schema.Column{ExternalContractReferencesColumns[1], ExternalContractReferencesColumns[9]},
+			},
+		},
 	}
 	// FeishuTicketSyncsColumns holds the columns for the "feishu_ticket_syncs" table.
 	FeishuTicketSyncsColumns = []*schema.Column{
@@ -1496,6 +1781,64 @@ var (
 			},
 		},
 	}
+	// InboundEmailMessagesColumns holds the columns for the "inbound_email_messages" table.
+	InboundEmailMessagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "provider", Type: field.TypeString, Size: 40, Default: "imap"},
+		{Name: "mailbox_instance_key", Type: field.TypeString, Size: 160},
+		{Name: "uid_validity", Type: field.TypeUint64},
+		{Name: "uid", Type: field.TypeUint64},
+		{Name: "external_message_id", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "in_reply_to", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "references", Type: field.TypeJSON, Nullable: true},
+		{Name: "from_address", Type: field.TypeString, Size: 320},
+		{Name: "to_addresses", Type: field.TypeJSON, Nullable: true},
+		{Name: "reply_to_address", Type: field.TypeString, Nullable: true, Size: 320},
+		{Name: "subject", Type: field.TypeString, Nullable: true, Size: 998},
+		{Name: "plain_text", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "sanitized_html", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "raw_mime", Type: field.TypeBytes, Nullable: true},
+		{Name: "raw_sha256", Type: field.TypeString, Size: 64},
+		{Name: "attachment_metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "processing_status", Type: field.TypeString, Size: 40, Default: "RECEIVED"},
+		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "received_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "conversation_id", Type: field.TypeInt},
+	}
+	// InboundEmailMessagesTable holds the schema information for the "inbound_email_messages" table.
+	InboundEmailMessagesTable = &schema.Table{
+		Name:       "inbound_email_messages",
+		Columns:    InboundEmailMessagesColumns,
+		PrimaryKey: []*schema.Column{InboundEmailMessagesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "inbound_email_messages_email_conversations_messages",
+				Columns:    []*schema.Column{InboundEmailMessagesColumns[23]},
+				RefColumns: []*schema.Column{EmailConversationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "inboundemailmessage_tenant_id_mailbox_instance_key_uid_validity_uid",
+				Unique:  true,
+				Columns: []*schema.Column{InboundEmailMessagesColumns[1], InboundEmailMessagesColumns[3], InboundEmailMessagesColumns[4], InboundEmailMessagesColumns[5]},
+			},
+			{
+				Name:    "inboundemailmessage_tenant_id_external_message_id",
+				Unique:  false,
+				Columns: []*schema.Column{InboundEmailMessagesColumns[1], InboundEmailMessagesColumns[6]},
+			},
+			{
+				Name:    "inboundemailmessage_tenant_id_processing_status_received_at",
+				Unique:  false,
+				Columns: []*schema.Column{InboundEmailMessagesColumns[1], InboundEmailMessagesColumns[18], InboundEmailMessagesColumns[20]},
+			},
+		},
+	}
 	// IncidentsColumns holds the columns for the "incidents" table.
 	IncidentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1530,12 +1873,40 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "email_conversation_id", Type: field.TypeInt, Nullable: true},
+		{Name: "assignment_group_id", Type: field.TypeInt, Nullable: true},
 	}
 	// IncidentsTable holds the schema information for the "incidents" table.
 	IncidentsTable = &schema.Table{
 		Name:       "incidents",
 		Columns:    IncidentsColumns,
 		PrimaryKey: []*schema.Column{IncidentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "incidents_email_conversations_incidents",
+				Columns:    []*schema.Column{IncidentsColumns[32]},
+				RefColumns: []*schema.Column{EmailConversationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "incidents_groups_assigned_incidents",
+				Columns:    []*schema.Column{IncidentsColumns[33]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "incident_tenant_id_email_conversation_id",
+				Unique:  true,
+				Columns: []*schema.Column{IncidentsColumns[27], IncidentsColumns[32]},
+			},
+			{
+				Name:    "incident_tenant_id_assignment_group_id",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[27], IncidentsColumns[33]},
+			},
+		},
 	}
 	// IncidentAlertsColumns holds the columns for the "incident_alerts" table.
 	IncidentAlertsColumns = []*schema.Column{
@@ -2203,6 +2574,86 @@ var (
 				Columns:    []*schema.Column{NotificationPreferencesColumns[13]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// OnCallSchedulesColumns holds the columns for the "on_call_schedules" table.
+	OnCallSchedulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "name", Type: field.TypeString, Size: 160},
+		{Name: "timezone", Type: field.TypeString, Size: 64, Default: "Asia/Shanghai"},
+		{Name: "status", Type: field.TypeString, Size: 32, Default: "active"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "group_id", Type: field.TypeInt},
+	}
+	// OnCallSchedulesTable holds the schema information for the "on_call_schedules" table.
+	OnCallSchedulesTable = &schema.Table{
+		Name:       "on_call_schedules",
+		Columns:    OnCallSchedulesColumns,
+		PrimaryKey: []*schema.Column{OnCallSchedulesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "on_call_schedules_groups_on_call_schedules",
+				Columns:    []*schema.Column{OnCallSchedulesColumns[7]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "oncallschedule_tenant_id_group_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{OnCallSchedulesColumns[1], OnCallSchedulesColumns[7], OnCallSchedulesColumns[2]},
+			},
+			{
+				Name:    "oncallschedule_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{OnCallSchedulesColumns[1], OnCallSchedulesColumns[4]},
+			},
+		},
+	}
+	// OnCallShiftsColumns holds the columns for the "on_call_shifts" table.
+	OnCallShiftsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "start_at", Type: field.TypeTime},
+		{Name: "end_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "schedule_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// OnCallShiftsTable holds the schema information for the "on_call_shifts" table.
+	OnCallShiftsTable = &schema.Table{
+		Name:       "on_call_shifts",
+		Columns:    OnCallShiftsColumns,
+		PrimaryKey: []*schema.Column{OnCallShiftsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "on_call_shifts_on_call_schedules_shifts",
+				Columns:    []*schema.Column{OnCallShiftsColumns[6]},
+				RefColumns: []*schema.Column{OnCallSchedulesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "on_call_shifts_users_on_call_shifts",
+				Columns:    []*schema.Column{OnCallShiftsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "oncallshift_tenant_id_schedule_id_start_at_end_at",
+				Unique:  false,
+				Columns: []*schema.Column{OnCallShiftsColumns[1], OnCallShiftsColumns[6], OnCallShiftsColumns[2], OnCallShiftsColumns[3]},
+			},
+			{
+				Name:    "oncallshift_tenant_id_user_id_start_at",
+				Unique:  false,
+				Columns: []*schema.Column{OnCallShiftsColumns[1], OnCallShiftsColumns[7], OnCallShiftsColumns[2]},
 			},
 		},
 	}
@@ -3614,6 +4065,38 @@ var (
 			},
 		},
 	}
+	// ServiceCustomersColumns holds the columns for the "service_customers" table.
+	ServiceCustomersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "normalized_name", Type: field.TypeString, Size: 255},
+		{Name: "short_name", Type: field.TypeString, Nullable: true, Size: 120},
+		{Name: "aliases", Type: field.TypeJSON, Nullable: true},
+		{Name: "historical_names", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 32, Default: "active"},
+		{Name: "linked_customer_tenant_id", Type: field.TypeInt, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ServiceCustomersTable holds the schema information for the "service_customers" table.
+	ServiceCustomersTable = &schema.Table{
+		Name:       "service_customers",
+		Columns:    ServiceCustomersColumns,
+		PrimaryKey: []*schema.Column{ServiceCustomersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "servicecustomer_tenant_id_normalized_name",
+				Unique:  true,
+				Columns: []*schema.Column{ServiceCustomersColumns[1], ServiceCustomersColumns[3]},
+			},
+			{
+				Name:    "servicecustomer_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceCustomersColumns[1], ServiceCustomersColumns[7]},
+			},
+		},
+	}
 	// ServiceRequestsColumns holds the columns for the "service_requests" table.
 	ServiceRequestsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -3729,6 +4212,36 @@ var (
 			},
 		},
 	}
+	// SourceOrganizationsColumns holds the columns for the "source_organizations" table.
+	SourceOrganizationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "normalized_name", Type: field.TypeString, Size: 255},
+		{Name: "email_addresses", Type: field.TypeJSON, Nullable: true},
+		{Name: "email_domains", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 32, Default: "active"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// SourceOrganizationsTable holds the schema information for the "source_organizations" table.
+	SourceOrganizationsTable = &schema.Table{
+		Name:       "source_organizations",
+		Columns:    SourceOrganizationsColumns,
+		PrimaryKey: []*schema.Column{SourceOrganizationsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sourceorganization_tenant_id_normalized_name",
+				Unique:  true,
+				Columns: []*schema.Column{SourceOrganizationsColumns[1], SourceOrganizationsColumns[3]},
+			},
+			{
+				Name:    "sourceorganization_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{SourceOrganizationsColumns[1], SourceOrganizationsColumns[6]},
+			},
+		},
+	}
 	// StandardChangesColumns holds the columns for the "standard_changes" table.
 	StandardChangesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -3756,6 +4269,53 @@ var (
 		Name:       "standard_changes",
 		Columns:    StandardChangesColumns,
 		PrimaryKey: []*schema.Column{StandardChangesColumns[0]},
+	}
+	// SupportContractsColumns holds the columns for the "support_contracts" table.
+	SupportContractsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "contract_number", Type: field.TypeString, Size: 160},
+		{Name: "normalized_contract_number", Type: field.TypeString, Size: 160},
+		{Name: "status", Type: field.TypeString, Size: 32, Default: "active"},
+		{Name: "start_at", Type: field.TypeTime, Nullable: true},
+		{Name: "end_at", Type: field.TypeTime, Nullable: true},
+		{Name: "source_document_id", Type: field.TypeInt, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "branch_id", Type: field.TypeInt, Nullable: true},
+		{Name: "customer_id", Type: field.TypeInt},
+	}
+	// SupportContractsTable holds the schema information for the "support_contracts" table.
+	SupportContractsTable = &schema.Table{
+		Name:       "support_contracts",
+		Columns:    SupportContractsColumns,
+		PrimaryKey: []*schema.Column{SupportContractsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "support_contracts_customer_branches_contracts",
+				Columns:    []*schema.Column{SupportContractsColumns[10]},
+				RefColumns: []*schema.Column{CustomerBranchesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "support_contracts_service_customers_contracts",
+				Columns:    []*schema.Column{SupportContractsColumns[11]},
+				RefColumns: []*schema.Column{ServiceCustomersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "supportcontract_tenant_id_normalized_contract_number",
+				Unique:  true,
+				Columns: []*schema.Column{SupportContractsColumns[1], SupportContractsColumns[3]},
+			},
+			{
+				Name:    "supportcontract_tenant_id_customer_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{SupportContractsColumns[1], SupportContractsColumns[11], SupportContractsColumns[4]},
+			},
+		},
 	}
 	// SurveysColumns holds the columns for the "surveys" table.
 	SurveysColumns = []*schema.Column{
@@ -5259,17 +5819,24 @@ var (
 		CloudServicesTable,
 		ConfigurationItemsTable,
 		ConfigurationItemHistoriesTable,
+		ConnectorConfigsTable,
 		ContractsTable,
 		ConversationsTable,
+		CustomerBranchesTable,
 		DepartmentsTable,
 		DiscoveryJobsTable,
 		DiscoveryResultsTable,
 		DiscoverySourcesTable,
 		DomainConfigsTable,
+		EmailConversationsTable,
+		EmailIntakeAnalysesTable,
+		EmailOutboundMessagesTable,
 		EndpointAcLsTable,
 		EngineerSkillsTable,
+		ExternalContractReferencesTable,
 		FeishuTicketSyncsTable,
 		GroupsTable,
+		InboundEmailMessagesTable,
 		IncidentsTable,
 		IncidentAlertsTable,
 		IncidentEscalationRulesTable,
@@ -5292,6 +5859,8 @@ var (
 		NotificationsTable,
 		NotificationDeliveriesTable,
 		NotificationPreferencesTable,
+		OnCallSchedulesTable,
+		OnCallShiftsTable,
 		OperationalCommandsTable,
 		PasswordResetTokensTable,
 		PermissionsTable,
@@ -5323,9 +5892,12 @@ var (
 		SLAViolationsTable,
 		ServiceCatalogsTable,
 		ServiceCatalogItemsTable,
+		ServiceCustomersTable,
 		ServiceRequestsTable,
 		ServiceRequestApprovalsTable,
+		SourceOrganizationsTable,
 		StandardChangesTable,
+		SupportContractsTable,
 		SurveysTable,
 		SurveyResponsesTable,
 		SystemConfigsTable,
@@ -5394,11 +5966,24 @@ func init() {
 	ConfigurationItemsTable.ForeignKeys[2].RefTable = CloudResourcesTable
 	ConfigurationItemHistoriesTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	ContractsTable.ForeignKeys[0].RefTable = VendorsTable
+	CustomerBranchesTable.ForeignKeys[0].RefTable = ServiceCustomersTable
 	DepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	DiscoveryJobsTable.ForeignKeys[0].RefTable = DiscoverySourcesTable
 	DiscoveryResultsTable.ForeignKeys[0].RefTable = DiscoveryJobsTable
+	EmailConversationsTable.ForeignKeys[0].RefTable = CustomerBranchesTable
+	EmailConversationsTable.ForeignKeys[1].RefTable = ServiceCustomersTable
+	EmailConversationsTable.ForeignKeys[2].RefTable = SourceOrganizationsTable
+	EmailConversationsTable.ForeignKeys[3].RefTable = SupportContractsTable
+	EmailIntakeAnalysesTable.ForeignKeys[0].RefTable = EmailConversationsTable
+	EmailIntakeAnalysesTable.ForeignKeys[1].RefTable = InboundEmailMessagesTable
+	EmailOutboundMessagesTable.ForeignKeys[0].RefTable = EmailConversationsTable
+	ExternalContractReferencesTable.ForeignKeys[0].RefTable = SourceOrganizationsTable
+	ExternalContractReferencesTable.ForeignKeys[1].RefTable = SupportContractsTable
 	FeishuTicketSyncsTable.ForeignKeys[0].RefTable = TicketsTable
 	GroupsTable.ForeignKeys[0].RefTable = UsersTable
+	InboundEmailMessagesTable.ForeignKeys[0].RefTable = EmailConversationsTable
+	IncidentsTable.ForeignKeys[0].RefTable = EmailConversationsTable
+	IncidentsTable.ForeignKeys[1].RefTable = GroupsTable
 	IncidentAlertsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentEventsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentMetricsTable.ForeignKeys[0].RefTable = IncidentsTable
@@ -5414,6 +5999,9 @@ func init() {
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
 	NotificationPreferencesTable.ForeignKeys[0].RefTable = UsersTable
+	OnCallSchedulesTable.ForeignKeys[0].RefTable = GroupsTable
+	OnCallShiftsTable.ForeignKeys[0].RefTable = OnCallSchedulesTable
+	OnCallShiftsTable.ForeignKeys[1].RefTable = UsersTable
 	PermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	ProblemsTable.ForeignKeys[0].RefTable = KnownErrorsTable
 	ProcessBindingsTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
@@ -5436,6 +6024,8 @@ func init() {
 	SLAViolationsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLAViolationsTable.ForeignKeys[1].RefTable = TicketsTable
 	ServiceCatalogItemsTable.ForeignKeys[0].RefTable = ServiceCatalogsTable
+	SupportContractsTable.ForeignKeys[0].RefTable = CustomerBranchesTable
+	SupportContractsTable.ForeignKeys[1].RefTable = ServiceCustomersTable
 	SurveyResponsesTable.ForeignKeys[0].RefTable = SurveysTable
 	TenantInstallationsTable.ForeignKeys[0].RefTable = MarketplaceItemsTable
 	TicketsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable

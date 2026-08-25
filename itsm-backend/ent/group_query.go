@@ -7,6 +7,8 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/incident"
+	"itsm-backend/ent/oncallschedule"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/user"
 	"math"
@@ -20,12 +22,14 @@ import (
 // GroupQuery is the builder for querying Group entities.
 type GroupQuery struct {
 	config
-	ctx         *QueryContext
-	order       []group.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Group
-	withMembers *UserQuery
-	withFKs     bool
+	ctx                   *QueryContext
+	order                 []group.OrderOption
+	inters                []Interceptor
+	predicates            []predicate.Group
+	withMembers           *UserQuery
+	withOnCallSchedules   *OnCallScheduleQuery
+	withAssignedIncidents *IncidentQuery
+	withFKs               bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -77,6 +81,50 @@ func (_q *GroupQuery) QueryMembers() *UserQuery {
 			sqlgraph.From(group.Table, group.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, group.MembersTable, group.MembersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOnCallSchedules chains the current query on the "on_call_schedules" edge.
+func (_q *GroupQuery) QueryOnCallSchedules() *OnCallScheduleQuery {
+	query := (&OnCallScheduleClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(oncallschedule.Table, oncallschedule.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.OnCallSchedulesTable, group.OnCallSchedulesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAssignedIncidents chains the current query on the "assigned_incidents" edge.
+func (_q *GroupQuery) QueryAssignedIncidents() *IncidentQuery {
+	query := (&IncidentClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.AssignedIncidentsTable, group.AssignedIncidentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -271,12 +319,14 @@ func (_q *GroupQuery) Clone() *GroupQuery {
 		return nil
 	}
 	return &GroupQuery{
-		config:      _q.config,
-		ctx:         _q.ctx.Clone(),
-		order:       append([]group.OrderOption{}, _q.order...),
-		inters:      append([]Interceptor{}, _q.inters...),
-		predicates:  append([]predicate.Group{}, _q.predicates...),
-		withMembers: _q.withMembers.Clone(),
+		config:                _q.config,
+		ctx:                   _q.ctx.Clone(),
+		order:                 append([]group.OrderOption{}, _q.order...),
+		inters:                append([]Interceptor{}, _q.inters...),
+		predicates:            append([]predicate.Group{}, _q.predicates...),
+		withMembers:           _q.withMembers.Clone(),
+		withOnCallSchedules:   _q.withOnCallSchedules.Clone(),
+		withAssignedIncidents: _q.withAssignedIncidents.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -291,6 +341,28 @@ func (_q *GroupQuery) WithMembers(opts ...func(*UserQuery)) *GroupQuery {
 		opt(query)
 	}
 	_q.withMembers = query
+	return _q
+}
+
+// WithOnCallSchedules tells the query-builder to eager-load the nodes that are connected to
+// the "on_call_schedules" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *GroupQuery) WithOnCallSchedules(opts ...func(*OnCallScheduleQuery)) *GroupQuery {
+	query := (&OnCallScheduleClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withOnCallSchedules = query
+	return _q
+}
+
+// WithAssignedIncidents tells the query-builder to eager-load the nodes that are connected to
+// the "assigned_incidents" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *GroupQuery) WithAssignedIncidents(opts ...func(*IncidentQuery)) *GroupQuery {
+	query := (&IncidentClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAssignedIncidents = query
 	return _q
 }
 
@@ -373,8 +445,10 @@ func (_q *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 		nodes       = []*Group{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [3]bool{
 			_q.withMembers != nil,
+			_q.withOnCallSchedules != nil,
+			_q.withAssignedIncidents != nil,
 		}
 	)
 	if withFKs {
@@ -402,6 +476,20 @@ func (_q *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 		if err := _q.loadMembers(ctx, query, nodes,
 			func(n *Group) { n.Edges.Members = []*User{} },
 			func(n *Group, e *User) { n.Edges.Members = append(n.Edges.Members, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withOnCallSchedules; query != nil {
+		if err := _q.loadOnCallSchedules(ctx, query, nodes,
+			func(n *Group) { n.Edges.OnCallSchedules = []*OnCallSchedule{} },
+			func(n *Group, e *OnCallSchedule) { n.Edges.OnCallSchedules = append(n.Edges.OnCallSchedules, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAssignedIncidents; query != nil {
+		if err := _q.loadAssignedIncidents(ctx, query, nodes,
+			func(n *Group) { n.Edges.AssignedIncidents = []*Incident{} },
+			func(n *Group, e *Incident) { n.Edges.AssignedIncidents = append(n.Edges.AssignedIncidents, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -434,6 +522,69 @@ func (_q *GroupQuery) loadMembers(ctx context.Context, query *UserQuery, nodes [
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "group_members" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *GroupQuery) loadOnCallSchedules(ctx context.Context, query *OnCallScheduleQuery, nodes []*Group, init func(*Group), assign func(*Group, *OnCallSchedule)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(oncallschedule.FieldGroupID)
+	}
+	query.Where(predicate.OnCallSchedule(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(group.OnCallSchedulesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.GroupID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "group_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *GroupQuery) loadAssignedIncidents(ctx context.Context, query *IncidentQuery, nodes []*Group, init func(*Group), assign func(*Group, *Incident)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(incident.FieldAssignmentGroupID)
+	}
+	query.Where(predicate.Incident(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(group.AssignedIncidentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.AssignmentGroupID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "assignment_group_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "assignment_group_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/incident"
+	"itsm-backend/ent/oncallschedule"
 	"itsm-backend/ent/user"
 	"time"
 
@@ -88,6 +90,36 @@ func (_c *GroupCreate) AddMembers(v ...*User) *GroupCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddMemberIDs(ids...)
+}
+
+// AddOnCallScheduleIDs adds the "on_call_schedules" edge to the OnCallSchedule entity by IDs.
+func (_c *GroupCreate) AddOnCallScheduleIDs(ids ...int) *GroupCreate {
+	_c.mutation.AddOnCallScheduleIDs(ids...)
+	return _c
+}
+
+// AddOnCallSchedules adds the "on_call_schedules" edges to the OnCallSchedule entity.
+func (_c *GroupCreate) AddOnCallSchedules(v ...*OnCallSchedule) *GroupCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddOnCallScheduleIDs(ids...)
+}
+
+// AddAssignedIncidentIDs adds the "assigned_incidents" edge to the Incident entity by IDs.
+func (_c *GroupCreate) AddAssignedIncidentIDs(ids ...int) *GroupCreate {
+	_c.mutation.AddAssignedIncidentIDs(ids...)
+	return _c
+}
+
+// AddAssignedIncidents adds the "assigned_incidents" edges to the Incident entity.
+func (_c *GroupCreate) AddAssignedIncidents(v ...*Incident) *GroupCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAssignedIncidentIDs(ids...)
 }
 
 // Mutation returns the GroupMutation object of the builder.
@@ -214,6 +246,38 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.OnCallSchedulesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OnCallSchedulesTable,
+			Columns: []string{group.OnCallSchedulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallschedule.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AssignedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.AssignedIncidentsTable,
+			Columns: []string{group.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

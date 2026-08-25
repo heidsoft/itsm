@@ -60,10 +60,14 @@ type Tx struct {
 	ConfigurationItem *ConfigurationItemClient
 	// ConfigurationItemHistory is the client for interacting with the ConfigurationItemHistory builders.
 	ConfigurationItemHistory *ConfigurationItemHistoryClient
+	// ConnectorConfig is the client for interacting with the ConnectorConfig builders.
+	ConnectorConfig *ConnectorConfigClient
 	// Contract is the client for interacting with the Contract builders.
 	Contract *ContractClient
 	// Conversation is the client for interacting with the Conversation builders.
 	Conversation *ConversationClient
+	// CustomerBranch is the client for interacting with the CustomerBranch builders.
+	CustomerBranch *CustomerBranchClient
 	// Department is the client for interacting with the Department builders.
 	Department *DepartmentClient
 	// DiscoveryJob is the client for interacting with the DiscoveryJob builders.
@@ -74,14 +78,24 @@ type Tx struct {
 	DiscoverySource *DiscoverySourceClient
 	// DomainConfig is the client for interacting with the DomainConfig builders.
 	DomainConfig *DomainConfigClient
+	// EmailConversation is the client for interacting with the EmailConversation builders.
+	EmailConversation *EmailConversationClient
+	// EmailIntakeAnalysis is the client for interacting with the EmailIntakeAnalysis builders.
+	EmailIntakeAnalysis *EmailIntakeAnalysisClient
+	// EmailOutboundMessage is the client for interacting with the EmailOutboundMessage builders.
+	EmailOutboundMessage *EmailOutboundMessageClient
 	// EndpointACL is the client for interacting with the EndpointACL builders.
 	EndpointACL *EndpointACLClient
 	// EngineerSkill is the client for interacting with the EngineerSkill builders.
 	EngineerSkill *EngineerSkillClient
+	// ExternalContractReference is the client for interacting with the ExternalContractReference builders.
+	ExternalContractReference *ExternalContractReferenceClient
 	// FeishuTicketSync is the client for interacting with the FeishuTicketSync builders.
 	FeishuTicketSync *FeishuTicketSyncClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// InboundEmailMessage is the client for interacting with the InboundEmailMessage builders.
+	InboundEmailMessage *InboundEmailMessageClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
 	// IncidentAlert is the client for interacting with the IncidentAlert builders.
@@ -126,6 +140,10 @@ type Tx struct {
 	NotificationDelivery *NotificationDeliveryClient
 	// NotificationPreference is the client for interacting with the NotificationPreference builders.
 	NotificationPreference *NotificationPreferenceClient
+	// OnCallSchedule is the client for interacting with the OnCallSchedule builders.
+	OnCallSchedule *OnCallScheduleClient
+	// OnCallShift is the client for interacting with the OnCallShift builders.
+	OnCallShift *OnCallShiftClient
 	// OperationalCommand is the client for interacting with the OperationalCommand builders.
 	OperationalCommand *OperationalCommandClient
 	// PasswordResetToken is the client for interacting with the PasswordResetToken builders.
@@ -188,12 +206,18 @@ type Tx struct {
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceCatalogItem is the client for interacting with the ServiceCatalogItem builders.
 	ServiceCatalogItem *ServiceCatalogItemClient
+	// ServiceCustomer is the client for interacting with the ServiceCustomer builders.
+	ServiceCustomer *ServiceCustomerClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
 	ServiceRequest *ServiceRequestClient
 	// ServiceRequestApproval is the client for interacting with the ServiceRequestApproval builders.
 	ServiceRequestApproval *ServiceRequestApprovalClient
+	// SourceOrganization is the client for interacting with the SourceOrganization builders.
+	SourceOrganization *SourceOrganizationClient
 	// StandardChange is the client for interacting with the StandardChange builders.
 	StandardChange *StandardChangeClient
+	// SupportContract is the client for interacting with the SupportContract builders.
+	SupportContract *SupportContractClient
 	// Survey is the client for interacting with the Survey builders.
 	Survey *SurveyClient
 	// SurveyResponse is the client for interacting with the SurveyResponse builders.
@@ -405,17 +429,24 @@ func (tx *Tx) init() {
 	tx.CloudService = NewCloudServiceClient(tx.config)
 	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
 	tx.ConfigurationItemHistory = NewConfigurationItemHistoryClient(tx.config)
+	tx.ConnectorConfig = NewConnectorConfigClient(tx.config)
 	tx.Contract = NewContractClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
+	tx.CustomerBranch = NewCustomerBranchClient(tx.config)
 	tx.Department = NewDepartmentClient(tx.config)
 	tx.DiscoveryJob = NewDiscoveryJobClient(tx.config)
 	tx.DiscoveryResult = NewDiscoveryResultClient(tx.config)
 	tx.DiscoverySource = NewDiscoverySourceClient(tx.config)
 	tx.DomainConfig = NewDomainConfigClient(tx.config)
+	tx.EmailConversation = NewEmailConversationClient(tx.config)
+	tx.EmailIntakeAnalysis = NewEmailIntakeAnalysisClient(tx.config)
+	tx.EmailOutboundMessage = NewEmailOutboundMessageClient(tx.config)
 	tx.EndpointACL = NewEndpointACLClient(tx.config)
 	tx.EngineerSkill = NewEngineerSkillClient(tx.config)
+	tx.ExternalContractReference = NewExternalContractReferenceClient(tx.config)
 	tx.FeishuTicketSync = NewFeishuTicketSyncClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
+	tx.InboundEmailMessage = NewInboundEmailMessageClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
 	tx.IncidentAlert = NewIncidentAlertClient(tx.config)
 	tx.IncidentEscalationRule = NewIncidentEscalationRuleClient(tx.config)
@@ -438,6 +469,8 @@ func (tx *Tx) init() {
 	tx.Notification = NewNotificationClient(tx.config)
 	tx.NotificationDelivery = NewNotificationDeliveryClient(tx.config)
 	tx.NotificationPreference = NewNotificationPreferenceClient(tx.config)
+	tx.OnCallSchedule = NewOnCallScheduleClient(tx.config)
+	tx.OnCallShift = NewOnCallShiftClient(tx.config)
 	tx.OperationalCommand = NewOperationalCommandClient(tx.config)
 	tx.PasswordResetToken = NewPasswordResetTokenClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
@@ -469,9 +502,12 @@ func (tx *Tx) init() {
 	tx.SLAViolation = NewSLAViolationClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceCatalogItem = NewServiceCatalogItemClient(tx.config)
+	tx.ServiceCustomer = NewServiceCustomerClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
 	tx.ServiceRequestApproval = NewServiceRequestApprovalClient(tx.config)
+	tx.SourceOrganization = NewSourceOrganizationClient(tx.config)
 	tx.StandardChange = NewStandardChangeClient(tx.config)
+	tx.SupportContract = NewSupportContractClient(tx.config)
 	tx.Survey = NewSurveyClient(tx.config)
 	tx.SurveyResponse = NewSurveyResponseClient(tx.config)
 	tx.SystemConfig = NewSystemConfigClient(tx.config)

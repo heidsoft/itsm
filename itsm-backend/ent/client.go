@@ -35,17 +35,24 @@ import (
 	"itsm-backend/ent/cmdbsavedview"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/configurationitemhistory"
+	"itsm-backend/ent/connectorconfig"
 	"itsm-backend/ent/contract"
 	"itsm-backend/ent/conversation"
+	"itsm-backend/ent/customerbranch"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
 	"itsm-backend/ent/domainconfig"
+	"itsm-backend/ent/emailconversation"
+	"itsm-backend/ent/emailintakeanalysis"
+	"itsm-backend/ent/emailoutboundmessage"
 	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
+	"itsm-backend/ent/externalcontractreference"
 	"itsm-backend/ent/feishuticketsync"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/inboundemailmessage"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentescalationrule"
@@ -68,6 +75,8 @@ import (
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/notificationdelivery"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/oncallschedule"
+	"itsm-backend/ent/oncallshift"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
@@ -93,6 +102,7 @@ import (
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicecatalogitem"
+	"itsm-backend/ent/servicecustomer"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/slaalerthistory"
@@ -101,7 +111,9 @@ import (
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/sourceorganization"
 	"itsm-backend/ent/standardchange"
+	"itsm-backend/ent/supportcontract"
 	"itsm-backend/ent/survey"
 	"itsm-backend/ent/surveyresponse"
 	"itsm-backend/ent/systemconfig"
@@ -190,10 +202,14 @@ type Client struct {
 	ConfigurationItem *ConfigurationItemClient
 	// ConfigurationItemHistory is the client for interacting with the ConfigurationItemHistory builders.
 	ConfigurationItemHistory *ConfigurationItemHistoryClient
+	// ConnectorConfig is the client for interacting with the ConnectorConfig builders.
+	ConnectorConfig *ConnectorConfigClient
 	// Contract is the client for interacting with the Contract builders.
 	Contract *ContractClient
 	// Conversation is the client for interacting with the Conversation builders.
 	Conversation *ConversationClient
+	// CustomerBranch is the client for interacting with the CustomerBranch builders.
+	CustomerBranch *CustomerBranchClient
 	// Department is the client for interacting with the Department builders.
 	Department *DepartmentClient
 	// DiscoveryJob is the client for interacting with the DiscoveryJob builders.
@@ -204,14 +220,24 @@ type Client struct {
 	DiscoverySource *DiscoverySourceClient
 	// DomainConfig is the client for interacting with the DomainConfig builders.
 	DomainConfig *DomainConfigClient
+	// EmailConversation is the client for interacting with the EmailConversation builders.
+	EmailConversation *EmailConversationClient
+	// EmailIntakeAnalysis is the client for interacting with the EmailIntakeAnalysis builders.
+	EmailIntakeAnalysis *EmailIntakeAnalysisClient
+	// EmailOutboundMessage is the client for interacting with the EmailOutboundMessage builders.
+	EmailOutboundMessage *EmailOutboundMessageClient
 	// EndpointACL is the client for interacting with the EndpointACL builders.
 	EndpointACL *EndpointACLClient
 	// EngineerSkill is the client for interacting with the EngineerSkill builders.
 	EngineerSkill *EngineerSkillClient
+	// ExternalContractReference is the client for interacting with the ExternalContractReference builders.
+	ExternalContractReference *ExternalContractReferenceClient
 	// FeishuTicketSync is the client for interacting with the FeishuTicketSync builders.
 	FeishuTicketSync *FeishuTicketSyncClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// InboundEmailMessage is the client for interacting with the InboundEmailMessage builders.
+	InboundEmailMessage *InboundEmailMessageClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
 	// IncidentAlert is the client for interacting with the IncidentAlert builders.
@@ -256,6 +282,10 @@ type Client struct {
 	NotificationDelivery *NotificationDeliveryClient
 	// NotificationPreference is the client for interacting with the NotificationPreference builders.
 	NotificationPreference *NotificationPreferenceClient
+	// OnCallSchedule is the client for interacting with the OnCallSchedule builders.
+	OnCallSchedule *OnCallScheduleClient
+	// OnCallShift is the client for interacting with the OnCallShift builders.
+	OnCallShift *OnCallShiftClient
 	// OperationalCommand is the client for interacting with the OperationalCommand builders.
 	OperationalCommand *OperationalCommandClient
 	// PasswordResetToken is the client for interacting with the PasswordResetToken builders.
@@ -318,12 +348,18 @@ type Client struct {
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceCatalogItem is the client for interacting with the ServiceCatalogItem builders.
 	ServiceCatalogItem *ServiceCatalogItemClient
+	// ServiceCustomer is the client for interacting with the ServiceCustomer builders.
+	ServiceCustomer *ServiceCustomerClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
 	ServiceRequest *ServiceRequestClient
 	// ServiceRequestApproval is the client for interacting with the ServiceRequestApproval builders.
 	ServiceRequestApproval *ServiceRequestApprovalClient
+	// SourceOrganization is the client for interacting with the SourceOrganization builders.
+	SourceOrganization *SourceOrganizationClient
 	// StandardChange is the client for interacting with the StandardChange builders.
 	StandardChange *StandardChangeClient
+	// SupportContract is the client for interacting with the SupportContract builders.
+	SupportContract *SupportContractClient
 	// Survey is the client for interacting with the Survey builders.
 	Survey *SurveyClient
 	// SurveyResponse is the client for interacting with the SurveyResponse builders.
@@ -415,17 +451,24 @@ func (c *Client) init() {
 	c.CloudService = NewCloudServiceClient(c.config)
 	c.ConfigurationItem = NewConfigurationItemClient(c.config)
 	c.ConfigurationItemHistory = NewConfigurationItemHistoryClient(c.config)
+	c.ConnectorConfig = NewConnectorConfigClient(c.config)
 	c.Contract = NewContractClient(c.config)
 	c.Conversation = NewConversationClient(c.config)
+	c.CustomerBranch = NewCustomerBranchClient(c.config)
 	c.Department = NewDepartmentClient(c.config)
 	c.DiscoveryJob = NewDiscoveryJobClient(c.config)
 	c.DiscoveryResult = NewDiscoveryResultClient(c.config)
 	c.DiscoverySource = NewDiscoverySourceClient(c.config)
 	c.DomainConfig = NewDomainConfigClient(c.config)
+	c.EmailConversation = NewEmailConversationClient(c.config)
+	c.EmailIntakeAnalysis = NewEmailIntakeAnalysisClient(c.config)
+	c.EmailOutboundMessage = NewEmailOutboundMessageClient(c.config)
 	c.EndpointACL = NewEndpointACLClient(c.config)
 	c.EngineerSkill = NewEngineerSkillClient(c.config)
+	c.ExternalContractReference = NewExternalContractReferenceClient(c.config)
 	c.FeishuTicketSync = NewFeishuTicketSyncClient(c.config)
 	c.Group = NewGroupClient(c.config)
+	c.InboundEmailMessage = NewInboundEmailMessageClient(c.config)
 	c.Incident = NewIncidentClient(c.config)
 	c.IncidentAlert = NewIncidentAlertClient(c.config)
 	c.IncidentEscalationRule = NewIncidentEscalationRuleClient(c.config)
@@ -448,6 +491,8 @@ func (c *Client) init() {
 	c.Notification = NewNotificationClient(c.config)
 	c.NotificationDelivery = NewNotificationDeliveryClient(c.config)
 	c.NotificationPreference = NewNotificationPreferenceClient(c.config)
+	c.OnCallSchedule = NewOnCallScheduleClient(c.config)
+	c.OnCallShift = NewOnCallShiftClient(c.config)
 	c.OperationalCommand = NewOperationalCommandClient(c.config)
 	c.PasswordResetToken = NewPasswordResetTokenClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
@@ -479,9 +524,12 @@ func (c *Client) init() {
 	c.SLAViolation = NewSLAViolationClient(c.config)
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceCatalogItem = NewServiceCatalogItemClient(c.config)
+	c.ServiceCustomer = NewServiceCustomerClient(c.config)
 	c.ServiceRequest = NewServiceRequestClient(c.config)
 	c.ServiceRequestApproval = NewServiceRequestApprovalClient(c.config)
+	c.SourceOrganization = NewSourceOrganizationClient(c.config)
 	c.StandardChange = NewStandardChangeClient(c.config)
+	c.SupportContract = NewSupportContractClient(c.config)
 	c.Survey = NewSurveyClient(c.config)
 	c.SurveyResponse = NewSurveyResponseClient(c.config)
 	c.SystemConfig = NewSystemConfigClient(c.config)
@@ -626,17 +674,24 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		CloudService:                NewCloudServiceClient(cfg),
 		ConfigurationItem:           NewConfigurationItemClient(cfg),
 		ConfigurationItemHistory:    NewConfigurationItemHistoryClient(cfg),
+		ConnectorConfig:             NewConnectorConfigClient(cfg),
 		Contract:                    NewContractClient(cfg),
 		Conversation:                NewConversationClient(cfg),
+		CustomerBranch:              NewCustomerBranchClient(cfg),
 		Department:                  NewDepartmentClient(cfg),
 		DiscoveryJob:                NewDiscoveryJobClient(cfg),
 		DiscoveryResult:             NewDiscoveryResultClient(cfg),
 		DiscoverySource:             NewDiscoverySourceClient(cfg),
 		DomainConfig:                NewDomainConfigClient(cfg),
+		EmailConversation:           NewEmailConversationClient(cfg),
+		EmailIntakeAnalysis:         NewEmailIntakeAnalysisClient(cfg),
+		EmailOutboundMessage:        NewEmailOutboundMessageClient(cfg),
 		EndpointACL:                 NewEndpointACLClient(cfg),
 		EngineerSkill:               NewEngineerSkillClient(cfg),
+		ExternalContractReference:   NewExternalContractReferenceClient(cfg),
 		FeishuTicketSync:            NewFeishuTicketSyncClient(cfg),
 		Group:                       NewGroupClient(cfg),
+		InboundEmailMessage:         NewInboundEmailMessageClient(cfg),
 		Incident:                    NewIncidentClient(cfg),
 		IncidentAlert:               NewIncidentAlertClient(cfg),
 		IncidentEscalationRule:      NewIncidentEscalationRuleClient(cfg),
@@ -659,6 +714,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Notification:                NewNotificationClient(cfg),
 		NotificationDelivery:        NewNotificationDeliveryClient(cfg),
 		NotificationPreference:      NewNotificationPreferenceClient(cfg),
+		OnCallSchedule:              NewOnCallScheduleClient(cfg),
+		OnCallShift:                 NewOnCallShiftClient(cfg),
 		OperationalCommand:          NewOperationalCommandClient(cfg),
 		PasswordResetToken:          NewPasswordResetTokenClient(cfg),
 		Permission:                  NewPermissionClient(cfg),
@@ -690,9 +747,12 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		SLAViolation:                NewSLAViolationClient(cfg),
 		ServiceCatalog:              NewServiceCatalogClient(cfg),
 		ServiceCatalogItem:          NewServiceCatalogItemClient(cfg),
+		ServiceCustomer:             NewServiceCustomerClient(cfg),
 		ServiceRequest:              NewServiceRequestClient(cfg),
 		ServiceRequestApproval:      NewServiceRequestApprovalClient(cfg),
+		SourceOrganization:          NewSourceOrganizationClient(cfg),
 		StandardChange:              NewStandardChangeClient(cfg),
+		SupportContract:             NewSupportContractClient(cfg),
 		Survey:                      NewSurveyClient(cfg),
 		SurveyResponse:              NewSurveyResponseClient(cfg),
 		SystemConfig:                NewSystemConfigClient(cfg),
@@ -764,17 +824,24 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		CloudService:                NewCloudServiceClient(cfg),
 		ConfigurationItem:           NewConfigurationItemClient(cfg),
 		ConfigurationItemHistory:    NewConfigurationItemHistoryClient(cfg),
+		ConnectorConfig:             NewConnectorConfigClient(cfg),
 		Contract:                    NewContractClient(cfg),
 		Conversation:                NewConversationClient(cfg),
+		CustomerBranch:              NewCustomerBranchClient(cfg),
 		Department:                  NewDepartmentClient(cfg),
 		DiscoveryJob:                NewDiscoveryJobClient(cfg),
 		DiscoveryResult:             NewDiscoveryResultClient(cfg),
 		DiscoverySource:             NewDiscoverySourceClient(cfg),
 		DomainConfig:                NewDomainConfigClient(cfg),
+		EmailConversation:           NewEmailConversationClient(cfg),
+		EmailIntakeAnalysis:         NewEmailIntakeAnalysisClient(cfg),
+		EmailOutboundMessage:        NewEmailOutboundMessageClient(cfg),
 		EndpointACL:                 NewEndpointACLClient(cfg),
 		EngineerSkill:               NewEngineerSkillClient(cfg),
+		ExternalContractReference:   NewExternalContractReferenceClient(cfg),
 		FeishuTicketSync:            NewFeishuTicketSyncClient(cfg),
 		Group:                       NewGroupClient(cfg),
+		InboundEmailMessage:         NewInboundEmailMessageClient(cfg),
 		Incident:                    NewIncidentClient(cfg),
 		IncidentAlert:               NewIncidentAlertClient(cfg),
 		IncidentEscalationRule:      NewIncidentEscalationRuleClient(cfg),
@@ -797,6 +864,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Notification:                NewNotificationClient(cfg),
 		NotificationDelivery:        NewNotificationDeliveryClient(cfg),
 		NotificationPreference:      NewNotificationPreferenceClient(cfg),
+		OnCallSchedule:              NewOnCallScheduleClient(cfg),
+		OnCallShift:                 NewOnCallShiftClient(cfg),
 		OperationalCommand:          NewOperationalCommandClient(cfg),
 		PasswordResetToken:          NewPasswordResetTokenClient(cfg),
 		Permission:                  NewPermissionClient(cfg),
@@ -828,9 +897,12 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		SLAViolation:                NewSLAViolationClient(cfg),
 		ServiceCatalog:              NewServiceCatalogClient(cfg),
 		ServiceCatalogItem:          NewServiceCatalogItemClient(cfg),
+		ServiceCustomer:             NewServiceCustomerClient(cfg),
 		ServiceRequest:              NewServiceRequestClient(cfg),
 		ServiceRequestApproval:      NewServiceRequestApprovalClient(cfg),
+		SourceOrganization:          NewSourceOrganizationClient(cfg),
 		StandardChange:              NewStandardChangeClient(cfg),
+		SupportContract:             NewSupportContractClient(cfg),
 		Survey:                      NewSurveyClient(cfg),
 		SurveyResponse:              NewSurveyResponseClient(cfg),
 		SystemConfig:                NewSystemConfigClient(cfg),
@@ -893,15 +965,18 @@ func (c *Client) Use(hooks ...Hook) {
 		c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType, c.CMDBExportTask,
 		c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR, c.CloudAccount,
 		c.CloudResource, c.CloudService, c.ConfigurationItem,
-		c.ConfigurationItemHistory, c.Contract, c.Conversation, c.Department,
-		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.DomainConfig,
-		c.EndpointACL, c.EngineerSkill, c.FeishuTicketSync, c.Group, c.Incident,
-		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
-		c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion, c.KnowledgeArticle,
-		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
-		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
-		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
-		c.Notification, c.NotificationDelivery, c.NotificationPreference,
+		c.ConfigurationItemHistory, c.ConnectorConfig, c.Contract, c.Conversation,
+		c.CustomerBranch, c.Department, c.DiscoveryJob, c.DiscoveryResult,
+		c.DiscoverySource, c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
+		c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
+		c.ExternalContractReference, c.FeishuTicketSync, c.Group,
+		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
+		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
+		c.ItemVersion, c.KnowledgeArticle, c.KnowledgeArticleLike,
+		c.KnowledgeArticleParticipant, c.KnowledgeArticleSession,
+		c.KnowledgeArticleVersion, c.KnownError, c.MSPAllocation, c.MarketplaceItem,
+		c.Menu, c.Message, c.Microservice, c.Notification, c.NotificationDelivery,
+		c.NotificationPreference, c.OnCallSchedule, c.OnCallShift,
 		c.OperationalCommand, c.PasswordResetToken, c.Permission,
 		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
 		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
@@ -909,8 +984,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
 		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
 		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
-		c.ServiceRequestApproval, c.StandardChange, c.Survey, c.SurveyResponse,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceCustomer,
+		c.ServiceRequest, c.ServiceRequestApproval, c.SourceOrganization,
+		c.StandardChange, c.SupportContract, c.Survey, c.SurveyResponse,
 		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
 		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
 		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
@@ -931,15 +1007,18 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType, c.CMDBExportTask,
 		c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR, c.CloudAccount,
 		c.CloudResource, c.CloudService, c.ConfigurationItem,
-		c.ConfigurationItemHistory, c.Contract, c.Conversation, c.Department,
-		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.DomainConfig,
-		c.EndpointACL, c.EngineerSkill, c.FeishuTicketSync, c.Group, c.Incident,
-		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
-		c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion, c.KnowledgeArticle,
-		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
-		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
-		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
-		c.Notification, c.NotificationDelivery, c.NotificationPreference,
+		c.ConfigurationItemHistory, c.ConnectorConfig, c.Contract, c.Conversation,
+		c.CustomerBranch, c.Department, c.DiscoveryJob, c.DiscoveryResult,
+		c.DiscoverySource, c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
+		c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
+		c.ExternalContractReference, c.FeishuTicketSync, c.Group,
+		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
+		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
+		c.ItemVersion, c.KnowledgeArticle, c.KnowledgeArticleLike,
+		c.KnowledgeArticleParticipant, c.KnowledgeArticleSession,
+		c.KnowledgeArticleVersion, c.KnownError, c.MSPAllocation, c.MarketplaceItem,
+		c.Menu, c.Message, c.Microservice, c.Notification, c.NotificationDelivery,
+		c.NotificationPreference, c.OnCallSchedule, c.OnCallShift,
 		c.OperationalCommand, c.PasswordResetToken, c.Permission,
 		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
 		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
@@ -947,8 +1026,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
 		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
 		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
-		c.ServiceRequestApproval, c.StandardChange, c.Survey, c.SurveyResponse,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceCustomer,
+		c.ServiceRequest, c.ServiceRequestApproval, c.SourceOrganization,
+		c.StandardChange, c.SupportContract, c.Survey, c.SurveyResponse,
 		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
 		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
 		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
@@ -1011,10 +1091,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ConfigurationItem.mutate(ctx, m)
 	case *ConfigurationItemHistoryMutation:
 		return c.ConfigurationItemHistory.mutate(ctx, m)
+	case *ConnectorConfigMutation:
+		return c.ConnectorConfig.mutate(ctx, m)
 	case *ContractMutation:
 		return c.Contract.mutate(ctx, m)
 	case *ConversationMutation:
 		return c.Conversation.mutate(ctx, m)
+	case *CustomerBranchMutation:
+		return c.CustomerBranch.mutate(ctx, m)
 	case *DepartmentMutation:
 		return c.Department.mutate(ctx, m)
 	case *DiscoveryJobMutation:
@@ -1025,14 +1109,24 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.DiscoverySource.mutate(ctx, m)
 	case *DomainConfigMutation:
 		return c.DomainConfig.mutate(ctx, m)
+	case *EmailConversationMutation:
+		return c.EmailConversation.mutate(ctx, m)
+	case *EmailIntakeAnalysisMutation:
+		return c.EmailIntakeAnalysis.mutate(ctx, m)
+	case *EmailOutboundMessageMutation:
+		return c.EmailOutboundMessage.mutate(ctx, m)
 	case *EndpointACLMutation:
 		return c.EndpointACL.mutate(ctx, m)
 	case *EngineerSkillMutation:
 		return c.EngineerSkill.mutate(ctx, m)
+	case *ExternalContractReferenceMutation:
+		return c.ExternalContractReference.mutate(ctx, m)
 	case *FeishuTicketSyncMutation:
 		return c.FeishuTicketSync.mutate(ctx, m)
 	case *GroupMutation:
 		return c.Group.mutate(ctx, m)
+	case *InboundEmailMessageMutation:
+		return c.InboundEmailMessage.mutate(ctx, m)
 	case *IncidentMutation:
 		return c.Incident.mutate(ctx, m)
 	case *IncidentAlertMutation:
@@ -1077,6 +1171,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.NotificationDelivery.mutate(ctx, m)
 	case *NotificationPreferenceMutation:
 		return c.NotificationPreference.mutate(ctx, m)
+	case *OnCallScheduleMutation:
+		return c.OnCallSchedule.mutate(ctx, m)
+	case *OnCallShiftMutation:
+		return c.OnCallShift.mutate(ctx, m)
 	case *OperationalCommandMutation:
 		return c.OperationalCommand.mutate(ctx, m)
 	case *PasswordResetTokenMutation:
@@ -1139,12 +1237,18 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ServiceCatalog.mutate(ctx, m)
 	case *ServiceCatalogItemMutation:
 		return c.ServiceCatalogItem.mutate(ctx, m)
+	case *ServiceCustomerMutation:
+		return c.ServiceCustomer.mutate(ctx, m)
 	case *ServiceRequestMutation:
 		return c.ServiceRequest.mutate(ctx, m)
 	case *ServiceRequestApprovalMutation:
 		return c.ServiceRequestApproval.mutate(ctx, m)
+	case *SourceOrganizationMutation:
+		return c.SourceOrganization.mutate(ctx, m)
 	case *StandardChangeMutation:
 		return c.StandardChange.mutate(ctx, m)
+	case *SupportContractMutation:
+		return c.SupportContract.mutate(ctx, m)
 	case *SurveyMutation:
 		return c.Survey.mutate(ctx, m)
 	case *SurveyResponseMutation:
@@ -4974,6 +5078,139 @@ func (c *ConfigurationItemHistoryClient) mutate(ctx context.Context, m *Configur
 	}
 }
 
+// ConnectorConfigClient is a client for the ConnectorConfig schema.
+type ConnectorConfigClient struct {
+	config
+}
+
+// NewConnectorConfigClient returns a client for the ConnectorConfig from the given config.
+func NewConnectorConfigClient(c config) *ConnectorConfigClient {
+	return &ConnectorConfigClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `connectorconfig.Hooks(f(g(h())))`.
+func (c *ConnectorConfigClient) Use(hooks ...Hook) {
+	c.hooks.ConnectorConfig = append(c.hooks.ConnectorConfig, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `connectorconfig.Intercept(f(g(h())))`.
+func (c *ConnectorConfigClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ConnectorConfig = append(c.inters.ConnectorConfig, interceptors...)
+}
+
+// Create returns a builder for creating a ConnectorConfig entity.
+func (c *ConnectorConfigClient) Create() *ConnectorConfigCreate {
+	mutation := newConnectorConfigMutation(c.config, OpCreate)
+	return &ConnectorConfigCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ConnectorConfig entities.
+func (c *ConnectorConfigClient) CreateBulk(builders ...*ConnectorConfigCreate) *ConnectorConfigCreateBulk {
+	return &ConnectorConfigCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ConnectorConfigClient) MapCreateBulk(slice any, setFunc func(*ConnectorConfigCreate, int)) *ConnectorConfigCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ConnectorConfigCreateBulk{err: fmt.Errorf("calling to ConnectorConfigClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ConnectorConfigCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ConnectorConfigCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ConnectorConfig.
+func (c *ConnectorConfigClient) Update() *ConnectorConfigUpdate {
+	mutation := newConnectorConfigMutation(c.config, OpUpdate)
+	return &ConnectorConfigUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ConnectorConfigClient) UpdateOne(_m *ConnectorConfig) *ConnectorConfigUpdateOne {
+	mutation := newConnectorConfigMutation(c.config, OpUpdateOne, withConnectorConfig(_m))
+	return &ConnectorConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ConnectorConfigClient) UpdateOneID(id int) *ConnectorConfigUpdateOne {
+	mutation := newConnectorConfigMutation(c.config, OpUpdateOne, withConnectorConfigID(id))
+	return &ConnectorConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ConnectorConfig.
+func (c *ConnectorConfigClient) Delete() *ConnectorConfigDelete {
+	mutation := newConnectorConfigMutation(c.config, OpDelete)
+	return &ConnectorConfigDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ConnectorConfigClient) DeleteOne(_m *ConnectorConfig) *ConnectorConfigDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ConnectorConfigClient) DeleteOneID(id int) *ConnectorConfigDeleteOne {
+	builder := c.Delete().Where(connectorconfig.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ConnectorConfigDeleteOne{builder}
+}
+
+// Query returns a query builder for ConnectorConfig.
+func (c *ConnectorConfigClient) Query() *ConnectorConfigQuery {
+	return &ConnectorConfigQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeConnectorConfig},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ConnectorConfig entity by its id.
+func (c *ConnectorConfigClient) Get(ctx context.Context, id int) (*ConnectorConfig, error) {
+	return c.Query().Where(connectorconfig.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ConnectorConfigClient) GetX(ctx context.Context, id int) *ConnectorConfig {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ConnectorConfigClient) Hooks() []Hook {
+	return c.hooks.ConnectorConfig
+}
+
+// Interceptors returns the client interceptors.
+func (c *ConnectorConfigClient) Interceptors() []Interceptor {
+	return c.inters.ConnectorConfig
+}
+
+func (c *ConnectorConfigClient) mutate(ctx context.Context, m *ConnectorConfigMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ConnectorConfigCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ConnectorConfigUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ConnectorConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ConnectorConfigDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ConnectorConfig mutation op: %q", m.Op())
+	}
+}
+
 // ContractClient is a client for the Contract schema.
 type ContractClient struct {
 	config
@@ -5285,6 +5522,187 @@ func (c *ConversationClient) mutate(ctx context.Context, m *ConversationMutation
 		return (&ConversationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Conversation mutation op: %q", m.Op())
+	}
+}
+
+// CustomerBranchClient is a client for the CustomerBranch schema.
+type CustomerBranchClient struct {
+	config
+}
+
+// NewCustomerBranchClient returns a client for the CustomerBranch from the given config.
+func NewCustomerBranchClient(c config) *CustomerBranchClient {
+	return &CustomerBranchClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `customerbranch.Hooks(f(g(h())))`.
+func (c *CustomerBranchClient) Use(hooks ...Hook) {
+	c.hooks.CustomerBranch = append(c.hooks.CustomerBranch, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `customerbranch.Intercept(f(g(h())))`.
+func (c *CustomerBranchClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CustomerBranch = append(c.inters.CustomerBranch, interceptors...)
+}
+
+// Create returns a builder for creating a CustomerBranch entity.
+func (c *CustomerBranchClient) Create() *CustomerBranchCreate {
+	mutation := newCustomerBranchMutation(c.config, OpCreate)
+	return &CustomerBranchCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CustomerBranch entities.
+func (c *CustomerBranchClient) CreateBulk(builders ...*CustomerBranchCreate) *CustomerBranchCreateBulk {
+	return &CustomerBranchCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CustomerBranchClient) MapCreateBulk(slice any, setFunc func(*CustomerBranchCreate, int)) *CustomerBranchCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CustomerBranchCreateBulk{err: fmt.Errorf("calling to CustomerBranchClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CustomerBranchCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CustomerBranchCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CustomerBranch.
+func (c *CustomerBranchClient) Update() *CustomerBranchUpdate {
+	mutation := newCustomerBranchMutation(c.config, OpUpdate)
+	return &CustomerBranchUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CustomerBranchClient) UpdateOne(_m *CustomerBranch) *CustomerBranchUpdateOne {
+	mutation := newCustomerBranchMutation(c.config, OpUpdateOne, withCustomerBranch(_m))
+	return &CustomerBranchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CustomerBranchClient) UpdateOneID(id int) *CustomerBranchUpdateOne {
+	mutation := newCustomerBranchMutation(c.config, OpUpdateOne, withCustomerBranchID(id))
+	return &CustomerBranchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CustomerBranch.
+func (c *CustomerBranchClient) Delete() *CustomerBranchDelete {
+	mutation := newCustomerBranchMutation(c.config, OpDelete)
+	return &CustomerBranchDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CustomerBranchClient) DeleteOne(_m *CustomerBranch) *CustomerBranchDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CustomerBranchClient) DeleteOneID(id int) *CustomerBranchDeleteOne {
+	builder := c.Delete().Where(customerbranch.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CustomerBranchDeleteOne{builder}
+}
+
+// Query returns a query builder for CustomerBranch.
+func (c *CustomerBranchClient) Query() *CustomerBranchQuery {
+	return &CustomerBranchQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCustomerBranch},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CustomerBranch entity by its id.
+func (c *CustomerBranchClient) Get(ctx context.Context, id int) (*CustomerBranch, error) {
+	return c.Query().Where(customerbranch.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CustomerBranchClient) GetX(ctx context.Context, id int) *CustomerBranch {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCustomer queries the customer edge of a CustomerBranch.
+func (c *CustomerBranchClient) QueryCustomer(_m *CustomerBranch) *ServiceCustomerQuery {
+	query := (&ServiceCustomerClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(customerbranch.Table, customerbranch.FieldID, id),
+			sqlgraph.To(servicecustomer.Table, servicecustomer.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, customerbranch.CustomerTable, customerbranch.CustomerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryContracts queries the contracts edge of a CustomerBranch.
+func (c *CustomerBranchClient) QueryContracts(_m *CustomerBranch) *SupportContractQuery {
+	query := (&SupportContractClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(customerbranch.Table, customerbranch.FieldID, id),
+			sqlgraph.To(supportcontract.Table, supportcontract.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, customerbranch.ContractsTable, customerbranch.ContractsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryConversations queries the conversations edge of a CustomerBranch.
+func (c *CustomerBranchClient) QueryConversations(_m *CustomerBranch) *EmailConversationQuery {
+	query := (&EmailConversationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(customerbranch.Table, customerbranch.FieldID, id),
+			sqlgraph.To(emailconversation.Table, emailconversation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, customerbranch.ConversationsTable, customerbranch.ConversationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CustomerBranchClient) Hooks() []Hook {
+	return c.hooks.CustomerBranch
+}
+
+// Interceptors returns the client interceptors.
+func (c *CustomerBranchClient) Interceptors() []Interceptor {
+	return c.inters.CustomerBranch
+}
+
+func (c *CustomerBranchClient) mutate(ctx context.Context, m *CustomerBranchMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CustomerBranchCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CustomerBranchUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CustomerBranchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CustomerBranchDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CustomerBranch mutation op: %q", m.Op())
 	}
 }
 
@@ -6145,6 +6563,581 @@ func (c *DomainConfigClient) mutate(ctx context.Context, m *DomainConfigMutation
 	}
 }
 
+// EmailConversationClient is a client for the EmailConversation schema.
+type EmailConversationClient struct {
+	config
+}
+
+// NewEmailConversationClient returns a client for the EmailConversation from the given config.
+func NewEmailConversationClient(c config) *EmailConversationClient {
+	return &EmailConversationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `emailconversation.Hooks(f(g(h())))`.
+func (c *EmailConversationClient) Use(hooks ...Hook) {
+	c.hooks.EmailConversation = append(c.hooks.EmailConversation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `emailconversation.Intercept(f(g(h())))`.
+func (c *EmailConversationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EmailConversation = append(c.inters.EmailConversation, interceptors...)
+}
+
+// Create returns a builder for creating a EmailConversation entity.
+func (c *EmailConversationClient) Create() *EmailConversationCreate {
+	mutation := newEmailConversationMutation(c.config, OpCreate)
+	return &EmailConversationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EmailConversation entities.
+func (c *EmailConversationClient) CreateBulk(builders ...*EmailConversationCreate) *EmailConversationCreateBulk {
+	return &EmailConversationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EmailConversationClient) MapCreateBulk(slice any, setFunc func(*EmailConversationCreate, int)) *EmailConversationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EmailConversationCreateBulk{err: fmt.Errorf("calling to EmailConversationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EmailConversationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EmailConversationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EmailConversation.
+func (c *EmailConversationClient) Update() *EmailConversationUpdate {
+	mutation := newEmailConversationMutation(c.config, OpUpdate)
+	return &EmailConversationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EmailConversationClient) UpdateOne(_m *EmailConversation) *EmailConversationUpdateOne {
+	mutation := newEmailConversationMutation(c.config, OpUpdateOne, withEmailConversation(_m))
+	return &EmailConversationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EmailConversationClient) UpdateOneID(id int) *EmailConversationUpdateOne {
+	mutation := newEmailConversationMutation(c.config, OpUpdateOne, withEmailConversationID(id))
+	return &EmailConversationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EmailConversation.
+func (c *EmailConversationClient) Delete() *EmailConversationDelete {
+	mutation := newEmailConversationMutation(c.config, OpDelete)
+	return &EmailConversationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EmailConversationClient) DeleteOne(_m *EmailConversation) *EmailConversationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EmailConversationClient) DeleteOneID(id int) *EmailConversationDeleteOne {
+	builder := c.Delete().Where(emailconversation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EmailConversationDeleteOne{builder}
+}
+
+// Query returns a query builder for EmailConversation.
+func (c *EmailConversationClient) Query() *EmailConversationQuery {
+	return &EmailConversationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEmailConversation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EmailConversation entity by its id.
+func (c *EmailConversationClient) Get(ctx context.Context, id int) (*EmailConversation, error) {
+	return c.Query().Where(emailconversation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EmailConversationClient) GetX(ctx context.Context, id int) *EmailConversation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySourceOrganization queries the source_organization edge of a EmailConversation.
+func (c *EmailConversationClient) QuerySourceOrganization(_m *EmailConversation) *SourceOrganizationQuery {
+	query := (&SourceOrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailconversation.Table, emailconversation.FieldID, id),
+			sqlgraph.To(sourceorganization.Table, sourceorganization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emailconversation.SourceOrganizationTable, emailconversation.SourceOrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCustomer queries the customer edge of a EmailConversation.
+func (c *EmailConversationClient) QueryCustomer(_m *EmailConversation) *ServiceCustomerQuery {
+	query := (&ServiceCustomerClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailconversation.Table, emailconversation.FieldID, id),
+			sqlgraph.To(servicecustomer.Table, servicecustomer.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emailconversation.CustomerTable, emailconversation.CustomerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBranch queries the branch edge of a EmailConversation.
+func (c *EmailConversationClient) QueryBranch(_m *EmailConversation) *CustomerBranchQuery {
+	query := (&CustomerBranchClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailconversation.Table, emailconversation.FieldID, id),
+			sqlgraph.To(customerbranch.Table, customerbranch.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emailconversation.BranchTable, emailconversation.BranchColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySupportContract queries the support_contract edge of a EmailConversation.
+func (c *EmailConversationClient) QuerySupportContract(_m *EmailConversation) *SupportContractQuery {
+	query := (&SupportContractClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailconversation.Table, emailconversation.FieldID, id),
+			sqlgraph.To(supportcontract.Table, supportcontract.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emailconversation.SupportContractTable, emailconversation.SupportContractColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMessages queries the messages edge of a EmailConversation.
+func (c *EmailConversationClient) QueryMessages(_m *EmailConversation) *InboundEmailMessageQuery {
+	query := (&InboundEmailMessageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailconversation.Table, emailconversation.FieldID, id),
+			sqlgraph.To(inboundemailmessage.Table, inboundemailmessage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, emailconversation.MessagesTable, emailconversation.MessagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAnalyses queries the analyses edge of a EmailConversation.
+func (c *EmailConversationClient) QueryAnalyses(_m *EmailConversation) *EmailIntakeAnalysisQuery {
+	query := (&EmailIntakeAnalysisClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailconversation.Table, emailconversation.FieldID, id),
+			sqlgraph.To(emailintakeanalysis.Table, emailintakeanalysis.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, emailconversation.AnalysesTable, emailconversation.AnalysesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOutboundMessages queries the outbound_messages edge of a EmailConversation.
+func (c *EmailConversationClient) QueryOutboundMessages(_m *EmailConversation) *EmailOutboundMessageQuery {
+	query := (&EmailOutboundMessageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailconversation.Table, emailconversation.FieldID, id),
+			sqlgraph.To(emailoutboundmessage.Table, emailoutboundmessage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, emailconversation.OutboundMessagesTable, emailconversation.OutboundMessagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryIncidents queries the incidents edge of a EmailConversation.
+func (c *EmailConversationClient) QueryIncidents(_m *EmailConversation) *IncidentQuery {
+	query := (&IncidentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailconversation.Table, emailconversation.FieldID, id),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, emailconversation.IncidentsTable, emailconversation.IncidentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EmailConversationClient) Hooks() []Hook {
+	return c.hooks.EmailConversation
+}
+
+// Interceptors returns the client interceptors.
+func (c *EmailConversationClient) Interceptors() []Interceptor {
+	return c.inters.EmailConversation
+}
+
+func (c *EmailConversationClient) mutate(ctx context.Context, m *EmailConversationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EmailConversationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EmailConversationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EmailConversationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EmailConversationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EmailConversation mutation op: %q", m.Op())
+	}
+}
+
+// EmailIntakeAnalysisClient is a client for the EmailIntakeAnalysis schema.
+type EmailIntakeAnalysisClient struct {
+	config
+}
+
+// NewEmailIntakeAnalysisClient returns a client for the EmailIntakeAnalysis from the given config.
+func NewEmailIntakeAnalysisClient(c config) *EmailIntakeAnalysisClient {
+	return &EmailIntakeAnalysisClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `emailintakeanalysis.Hooks(f(g(h())))`.
+func (c *EmailIntakeAnalysisClient) Use(hooks ...Hook) {
+	c.hooks.EmailIntakeAnalysis = append(c.hooks.EmailIntakeAnalysis, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `emailintakeanalysis.Intercept(f(g(h())))`.
+func (c *EmailIntakeAnalysisClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EmailIntakeAnalysis = append(c.inters.EmailIntakeAnalysis, interceptors...)
+}
+
+// Create returns a builder for creating a EmailIntakeAnalysis entity.
+func (c *EmailIntakeAnalysisClient) Create() *EmailIntakeAnalysisCreate {
+	mutation := newEmailIntakeAnalysisMutation(c.config, OpCreate)
+	return &EmailIntakeAnalysisCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EmailIntakeAnalysis entities.
+func (c *EmailIntakeAnalysisClient) CreateBulk(builders ...*EmailIntakeAnalysisCreate) *EmailIntakeAnalysisCreateBulk {
+	return &EmailIntakeAnalysisCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EmailIntakeAnalysisClient) MapCreateBulk(slice any, setFunc func(*EmailIntakeAnalysisCreate, int)) *EmailIntakeAnalysisCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EmailIntakeAnalysisCreateBulk{err: fmt.Errorf("calling to EmailIntakeAnalysisClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EmailIntakeAnalysisCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EmailIntakeAnalysisCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EmailIntakeAnalysis.
+func (c *EmailIntakeAnalysisClient) Update() *EmailIntakeAnalysisUpdate {
+	mutation := newEmailIntakeAnalysisMutation(c.config, OpUpdate)
+	return &EmailIntakeAnalysisUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EmailIntakeAnalysisClient) UpdateOne(_m *EmailIntakeAnalysis) *EmailIntakeAnalysisUpdateOne {
+	mutation := newEmailIntakeAnalysisMutation(c.config, OpUpdateOne, withEmailIntakeAnalysis(_m))
+	return &EmailIntakeAnalysisUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EmailIntakeAnalysisClient) UpdateOneID(id int) *EmailIntakeAnalysisUpdateOne {
+	mutation := newEmailIntakeAnalysisMutation(c.config, OpUpdateOne, withEmailIntakeAnalysisID(id))
+	return &EmailIntakeAnalysisUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EmailIntakeAnalysis.
+func (c *EmailIntakeAnalysisClient) Delete() *EmailIntakeAnalysisDelete {
+	mutation := newEmailIntakeAnalysisMutation(c.config, OpDelete)
+	return &EmailIntakeAnalysisDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EmailIntakeAnalysisClient) DeleteOne(_m *EmailIntakeAnalysis) *EmailIntakeAnalysisDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EmailIntakeAnalysisClient) DeleteOneID(id int) *EmailIntakeAnalysisDeleteOne {
+	builder := c.Delete().Where(emailintakeanalysis.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EmailIntakeAnalysisDeleteOne{builder}
+}
+
+// Query returns a query builder for EmailIntakeAnalysis.
+func (c *EmailIntakeAnalysisClient) Query() *EmailIntakeAnalysisQuery {
+	return &EmailIntakeAnalysisQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEmailIntakeAnalysis},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EmailIntakeAnalysis entity by its id.
+func (c *EmailIntakeAnalysisClient) Get(ctx context.Context, id int) (*EmailIntakeAnalysis, error) {
+	return c.Query().Where(emailintakeanalysis.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EmailIntakeAnalysisClient) GetX(ctx context.Context, id int) *EmailIntakeAnalysis {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryConversation queries the conversation edge of a EmailIntakeAnalysis.
+func (c *EmailIntakeAnalysisClient) QueryConversation(_m *EmailIntakeAnalysis) *EmailConversationQuery {
+	query := (&EmailConversationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailintakeanalysis.Table, emailintakeanalysis.FieldID, id),
+			sqlgraph.To(emailconversation.Table, emailconversation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emailintakeanalysis.ConversationTable, emailintakeanalysis.ConversationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMessage queries the message edge of a EmailIntakeAnalysis.
+func (c *EmailIntakeAnalysisClient) QueryMessage(_m *EmailIntakeAnalysis) *InboundEmailMessageQuery {
+	query := (&InboundEmailMessageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailintakeanalysis.Table, emailintakeanalysis.FieldID, id),
+			sqlgraph.To(inboundemailmessage.Table, inboundemailmessage.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emailintakeanalysis.MessageTable, emailintakeanalysis.MessageColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EmailIntakeAnalysisClient) Hooks() []Hook {
+	return c.hooks.EmailIntakeAnalysis
+}
+
+// Interceptors returns the client interceptors.
+func (c *EmailIntakeAnalysisClient) Interceptors() []Interceptor {
+	return c.inters.EmailIntakeAnalysis
+}
+
+func (c *EmailIntakeAnalysisClient) mutate(ctx context.Context, m *EmailIntakeAnalysisMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EmailIntakeAnalysisCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EmailIntakeAnalysisUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EmailIntakeAnalysisUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EmailIntakeAnalysisDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EmailIntakeAnalysis mutation op: %q", m.Op())
+	}
+}
+
+// EmailOutboundMessageClient is a client for the EmailOutboundMessage schema.
+type EmailOutboundMessageClient struct {
+	config
+}
+
+// NewEmailOutboundMessageClient returns a client for the EmailOutboundMessage from the given config.
+func NewEmailOutboundMessageClient(c config) *EmailOutboundMessageClient {
+	return &EmailOutboundMessageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `emailoutboundmessage.Hooks(f(g(h())))`.
+func (c *EmailOutboundMessageClient) Use(hooks ...Hook) {
+	c.hooks.EmailOutboundMessage = append(c.hooks.EmailOutboundMessage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `emailoutboundmessage.Intercept(f(g(h())))`.
+func (c *EmailOutboundMessageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EmailOutboundMessage = append(c.inters.EmailOutboundMessage, interceptors...)
+}
+
+// Create returns a builder for creating a EmailOutboundMessage entity.
+func (c *EmailOutboundMessageClient) Create() *EmailOutboundMessageCreate {
+	mutation := newEmailOutboundMessageMutation(c.config, OpCreate)
+	return &EmailOutboundMessageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EmailOutboundMessage entities.
+func (c *EmailOutboundMessageClient) CreateBulk(builders ...*EmailOutboundMessageCreate) *EmailOutboundMessageCreateBulk {
+	return &EmailOutboundMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EmailOutboundMessageClient) MapCreateBulk(slice any, setFunc func(*EmailOutboundMessageCreate, int)) *EmailOutboundMessageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EmailOutboundMessageCreateBulk{err: fmt.Errorf("calling to EmailOutboundMessageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EmailOutboundMessageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EmailOutboundMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EmailOutboundMessage.
+func (c *EmailOutboundMessageClient) Update() *EmailOutboundMessageUpdate {
+	mutation := newEmailOutboundMessageMutation(c.config, OpUpdate)
+	return &EmailOutboundMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EmailOutboundMessageClient) UpdateOne(_m *EmailOutboundMessage) *EmailOutboundMessageUpdateOne {
+	mutation := newEmailOutboundMessageMutation(c.config, OpUpdateOne, withEmailOutboundMessage(_m))
+	return &EmailOutboundMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EmailOutboundMessageClient) UpdateOneID(id int) *EmailOutboundMessageUpdateOne {
+	mutation := newEmailOutboundMessageMutation(c.config, OpUpdateOne, withEmailOutboundMessageID(id))
+	return &EmailOutboundMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EmailOutboundMessage.
+func (c *EmailOutboundMessageClient) Delete() *EmailOutboundMessageDelete {
+	mutation := newEmailOutboundMessageMutation(c.config, OpDelete)
+	return &EmailOutboundMessageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EmailOutboundMessageClient) DeleteOne(_m *EmailOutboundMessage) *EmailOutboundMessageDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EmailOutboundMessageClient) DeleteOneID(id int) *EmailOutboundMessageDeleteOne {
+	builder := c.Delete().Where(emailoutboundmessage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EmailOutboundMessageDeleteOne{builder}
+}
+
+// Query returns a query builder for EmailOutboundMessage.
+func (c *EmailOutboundMessageClient) Query() *EmailOutboundMessageQuery {
+	return &EmailOutboundMessageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEmailOutboundMessage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EmailOutboundMessage entity by its id.
+func (c *EmailOutboundMessageClient) Get(ctx context.Context, id int) (*EmailOutboundMessage, error) {
+	return c.Query().Where(emailoutboundmessage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EmailOutboundMessageClient) GetX(ctx context.Context, id int) *EmailOutboundMessage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryConversation queries the conversation edge of a EmailOutboundMessage.
+func (c *EmailOutboundMessageClient) QueryConversation(_m *EmailOutboundMessage) *EmailConversationQuery {
+	query := (&EmailConversationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailoutboundmessage.Table, emailoutboundmessage.FieldID, id),
+			sqlgraph.To(emailconversation.Table, emailconversation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emailoutboundmessage.ConversationTable, emailoutboundmessage.ConversationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EmailOutboundMessageClient) Hooks() []Hook {
+	return c.hooks.EmailOutboundMessage
+}
+
+// Interceptors returns the client interceptors.
+func (c *EmailOutboundMessageClient) Interceptors() []Interceptor {
+	return c.inters.EmailOutboundMessage
+}
+
+func (c *EmailOutboundMessageClient) mutate(ctx context.Context, m *EmailOutboundMessageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EmailOutboundMessageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EmailOutboundMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EmailOutboundMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EmailOutboundMessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EmailOutboundMessage mutation op: %q", m.Op())
+	}
+}
+
 // EndpointACLClient is a client for the EndpointACL schema.
 type EndpointACLClient struct {
 	config
@@ -6408,6 +7401,171 @@ func (c *EngineerSkillClient) mutate(ctx context.Context, m *EngineerSkillMutati
 		return (&EngineerSkillDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown EngineerSkill mutation op: %q", m.Op())
+	}
+}
+
+// ExternalContractReferenceClient is a client for the ExternalContractReference schema.
+type ExternalContractReferenceClient struct {
+	config
+}
+
+// NewExternalContractReferenceClient returns a client for the ExternalContractReference from the given config.
+func NewExternalContractReferenceClient(c config) *ExternalContractReferenceClient {
+	return &ExternalContractReferenceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `externalcontractreference.Hooks(f(g(h())))`.
+func (c *ExternalContractReferenceClient) Use(hooks ...Hook) {
+	c.hooks.ExternalContractReference = append(c.hooks.ExternalContractReference, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `externalcontractreference.Intercept(f(g(h())))`.
+func (c *ExternalContractReferenceClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ExternalContractReference = append(c.inters.ExternalContractReference, interceptors...)
+}
+
+// Create returns a builder for creating a ExternalContractReference entity.
+func (c *ExternalContractReferenceClient) Create() *ExternalContractReferenceCreate {
+	mutation := newExternalContractReferenceMutation(c.config, OpCreate)
+	return &ExternalContractReferenceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ExternalContractReference entities.
+func (c *ExternalContractReferenceClient) CreateBulk(builders ...*ExternalContractReferenceCreate) *ExternalContractReferenceCreateBulk {
+	return &ExternalContractReferenceCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ExternalContractReferenceClient) MapCreateBulk(slice any, setFunc func(*ExternalContractReferenceCreate, int)) *ExternalContractReferenceCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ExternalContractReferenceCreateBulk{err: fmt.Errorf("calling to ExternalContractReferenceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ExternalContractReferenceCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ExternalContractReferenceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ExternalContractReference.
+func (c *ExternalContractReferenceClient) Update() *ExternalContractReferenceUpdate {
+	mutation := newExternalContractReferenceMutation(c.config, OpUpdate)
+	return &ExternalContractReferenceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ExternalContractReferenceClient) UpdateOne(_m *ExternalContractReference) *ExternalContractReferenceUpdateOne {
+	mutation := newExternalContractReferenceMutation(c.config, OpUpdateOne, withExternalContractReference(_m))
+	return &ExternalContractReferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ExternalContractReferenceClient) UpdateOneID(id int) *ExternalContractReferenceUpdateOne {
+	mutation := newExternalContractReferenceMutation(c.config, OpUpdateOne, withExternalContractReferenceID(id))
+	return &ExternalContractReferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ExternalContractReference.
+func (c *ExternalContractReferenceClient) Delete() *ExternalContractReferenceDelete {
+	mutation := newExternalContractReferenceMutation(c.config, OpDelete)
+	return &ExternalContractReferenceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ExternalContractReferenceClient) DeleteOne(_m *ExternalContractReference) *ExternalContractReferenceDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ExternalContractReferenceClient) DeleteOneID(id int) *ExternalContractReferenceDeleteOne {
+	builder := c.Delete().Where(externalcontractreference.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ExternalContractReferenceDeleteOne{builder}
+}
+
+// Query returns a query builder for ExternalContractReference.
+func (c *ExternalContractReferenceClient) Query() *ExternalContractReferenceQuery {
+	return &ExternalContractReferenceQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeExternalContractReference},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ExternalContractReference entity by its id.
+func (c *ExternalContractReferenceClient) Get(ctx context.Context, id int) (*ExternalContractReference, error) {
+	return c.Query().Where(externalcontractreference.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ExternalContractReferenceClient) GetX(ctx context.Context, id int) *ExternalContractReference {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySourceOrganization queries the source_organization edge of a ExternalContractReference.
+func (c *ExternalContractReferenceClient) QuerySourceOrganization(_m *ExternalContractReference) *SourceOrganizationQuery {
+	query := (&SourceOrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(externalcontractreference.Table, externalcontractreference.FieldID, id),
+			sqlgraph.To(sourceorganization.Table, sourceorganization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, externalcontractreference.SourceOrganizationTable, externalcontractreference.SourceOrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySupportContract queries the support_contract edge of a ExternalContractReference.
+func (c *ExternalContractReferenceClient) QuerySupportContract(_m *ExternalContractReference) *SupportContractQuery {
+	query := (&SupportContractClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(externalcontractreference.Table, externalcontractreference.FieldID, id),
+			sqlgraph.To(supportcontract.Table, supportcontract.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, externalcontractreference.SupportContractTable, externalcontractreference.SupportContractColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ExternalContractReferenceClient) Hooks() []Hook {
+	return c.hooks.ExternalContractReference
+}
+
+// Interceptors returns the client interceptors.
+func (c *ExternalContractReferenceClient) Interceptors() []Interceptor {
+	return c.inters.ExternalContractReference
+}
+
+func (c *ExternalContractReferenceClient) mutate(ctx context.Context, m *ExternalContractReferenceMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ExternalContractReferenceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ExternalContractReferenceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ExternalContractReferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ExternalContractReferenceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ExternalContractReference mutation op: %q", m.Op())
 	}
 }
 
@@ -6684,6 +7842,38 @@ func (c *GroupClient) QueryMembers(_m *Group) *UserQuery {
 	return query
 }
 
+// QueryOnCallSchedules queries the on_call_schedules edge of a Group.
+func (c *GroupClient) QueryOnCallSchedules(_m *Group) *OnCallScheduleQuery {
+	query := (&OnCallScheduleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(oncallschedule.Table, oncallschedule.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.OnCallSchedulesTable, group.OnCallSchedulesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAssignedIncidents queries the assigned_incidents edge of a Group.
+func (c *GroupClient) QueryAssignedIncidents(_m *Group) *IncidentQuery {
+	query := (&IncidentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.AssignedIncidentsTable, group.AssignedIncidentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *GroupClient) Hooks() []Hook {
 	return c.hooks.Group
@@ -6706,6 +7896,171 @@ func (c *GroupClient) mutate(ctx context.Context, m *GroupMutation) (Value, erro
 		return (&GroupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Group mutation op: %q", m.Op())
+	}
+}
+
+// InboundEmailMessageClient is a client for the InboundEmailMessage schema.
+type InboundEmailMessageClient struct {
+	config
+}
+
+// NewInboundEmailMessageClient returns a client for the InboundEmailMessage from the given config.
+func NewInboundEmailMessageClient(c config) *InboundEmailMessageClient {
+	return &InboundEmailMessageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `inboundemailmessage.Hooks(f(g(h())))`.
+func (c *InboundEmailMessageClient) Use(hooks ...Hook) {
+	c.hooks.InboundEmailMessage = append(c.hooks.InboundEmailMessage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `inboundemailmessage.Intercept(f(g(h())))`.
+func (c *InboundEmailMessageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.InboundEmailMessage = append(c.inters.InboundEmailMessage, interceptors...)
+}
+
+// Create returns a builder for creating a InboundEmailMessage entity.
+func (c *InboundEmailMessageClient) Create() *InboundEmailMessageCreate {
+	mutation := newInboundEmailMessageMutation(c.config, OpCreate)
+	return &InboundEmailMessageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of InboundEmailMessage entities.
+func (c *InboundEmailMessageClient) CreateBulk(builders ...*InboundEmailMessageCreate) *InboundEmailMessageCreateBulk {
+	return &InboundEmailMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *InboundEmailMessageClient) MapCreateBulk(slice any, setFunc func(*InboundEmailMessageCreate, int)) *InboundEmailMessageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &InboundEmailMessageCreateBulk{err: fmt.Errorf("calling to InboundEmailMessageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*InboundEmailMessageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &InboundEmailMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for InboundEmailMessage.
+func (c *InboundEmailMessageClient) Update() *InboundEmailMessageUpdate {
+	mutation := newInboundEmailMessageMutation(c.config, OpUpdate)
+	return &InboundEmailMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *InboundEmailMessageClient) UpdateOne(_m *InboundEmailMessage) *InboundEmailMessageUpdateOne {
+	mutation := newInboundEmailMessageMutation(c.config, OpUpdateOne, withInboundEmailMessage(_m))
+	return &InboundEmailMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *InboundEmailMessageClient) UpdateOneID(id int) *InboundEmailMessageUpdateOne {
+	mutation := newInboundEmailMessageMutation(c.config, OpUpdateOne, withInboundEmailMessageID(id))
+	return &InboundEmailMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for InboundEmailMessage.
+func (c *InboundEmailMessageClient) Delete() *InboundEmailMessageDelete {
+	mutation := newInboundEmailMessageMutation(c.config, OpDelete)
+	return &InboundEmailMessageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *InboundEmailMessageClient) DeleteOne(_m *InboundEmailMessage) *InboundEmailMessageDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *InboundEmailMessageClient) DeleteOneID(id int) *InboundEmailMessageDeleteOne {
+	builder := c.Delete().Where(inboundemailmessage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &InboundEmailMessageDeleteOne{builder}
+}
+
+// Query returns a query builder for InboundEmailMessage.
+func (c *InboundEmailMessageClient) Query() *InboundEmailMessageQuery {
+	return &InboundEmailMessageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeInboundEmailMessage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a InboundEmailMessage entity by its id.
+func (c *InboundEmailMessageClient) Get(ctx context.Context, id int) (*InboundEmailMessage, error) {
+	return c.Query().Where(inboundemailmessage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *InboundEmailMessageClient) GetX(ctx context.Context, id int) *InboundEmailMessage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryConversation queries the conversation edge of a InboundEmailMessage.
+func (c *InboundEmailMessageClient) QueryConversation(_m *InboundEmailMessage) *EmailConversationQuery {
+	query := (&EmailConversationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(inboundemailmessage.Table, inboundemailmessage.FieldID, id),
+			sqlgraph.To(emailconversation.Table, emailconversation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, inboundemailmessage.ConversationTable, inboundemailmessage.ConversationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAnalyses queries the analyses edge of a InboundEmailMessage.
+func (c *InboundEmailMessageClient) QueryAnalyses(_m *InboundEmailMessage) *EmailIntakeAnalysisQuery {
+	query := (&EmailIntakeAnalysisClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(inboundemailmessage.Table, inboundemailmessage.FieldID, id),
+			sqlgraph.To(emailintakeanalysis.Table, emailintakeanalysis.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, inboundemailmessage.AnalysesTable, inboundemailmessage.AnalysesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *InboundEmailMessageClient) Hooks() []Hook {
+	return c.hooks.InboundEmailMessage
+}
+
+// Interceptors returns the client interceptors.
+func (c *InboundEmailMessageClient) Interceptors() []Interceptor {
+	return c.inters.InboundEmailMessage
+}
+
+func (c *InboundEmailMessageClient) mutate(ctx context.Context, m *InboundEmailMessageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&InboundEmailMessageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&InboundEmailMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&InboundEmailMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&InboundEmailMessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown InboundEmailMessage mutation op: %q", m.Op())
 	}
 }
 
@@ -6922,6 +8277,38 @@ func (c *IncidentClient) QueryProblems(_m *Incident) *ProblemQuery {
 			sqlgraph.From(incident.Table, incident.FieldID, id),
 			sqlgraph.To(problem.Table, problem.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, incident.ProblemsTable, incident.ProblemsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAssignmentGroup queries the assignment_group edge of a Incident.
+func (c *IncidentClient) QueryAssignmentGroup(_m *Incident) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incident.AssignmentGroupTable, incident.AssignmentGroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEmailConversation queries the email_conversation edge of a Incident.
+func (c *IncidentClient) QueryEmailConversation(_m *Incident) *EmailConversationQuery {
+	query := (&EmailConversationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(emailconversation.Table, emailconversation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incident.EmailConversationTable, incident.EmailConversationColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -10192,6 +11579,336 @@ func (c *NotificationPreferenceClient) mutate(ctx context.Context, m *Notificati
 		return (&NotificationPreferenceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown NotificationPreference mutation op: %q", m.Op())
+	}
+}
+
+// OnCallScheduleClient is a client for the OnCallSchedule schema.
+type OnCallScheduleClient struct {
+	config
+}
+
+// NewOnCallScheduleClient returns a client for the OnCallSchedule from the given config.
+func NewOnCallScheduleClient(c config) *OnCallScheduleClient {
+	return &OnCallScheduleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `oncallschedule.Hooks(f(g(h())))`.
+func (c *OnCallScheduleClient) Use(hooks ...Hook) {
+	c.hooks.OnCallSchedule = append(c.hooks.OnCallSchedule, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `oncallschedule.Intercept(f(g(h())))`.
+func (c *OnCallScheduleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OnCallSchedule = append(c.inters.OnCallSchedule, interceptors...)
+}
+
+// Create returns a builder for creating a OnCallSchedule entity.
+func (c *OnCallScheduleClient) Create() *OnCallScheduleCreate {
+	mutation := newOnCallScheduleMutation(c.config, OpCreate)
+	return &OnCallScheduleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OnCallSchedule entities.
+func (c *OnCallScheduleClient) CreateBulk(builders ...*OnCallScheduleCreate) *OnCallScheduleCreateBulk {
+	return &OnCallScheduleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OnCallScheduleClient) MapCreateBulk(slice any, setFunc func(*OnCallScheduleCreate, int)) *OnCallScheduleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OnCallScheduleCreateBulk{err: fmt.Errorf("calling to OnCallScheduleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OnCallScheduleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OnCallScheduleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OnCallSchedule.
+func (c *OnCallScheduleClient) Update() *OnCallScheduleUpdate {
+	mutation := newOnCallScheduleMutation(c.config, OpUpdate)
+	return &OnCallScheduleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OnCallScheduleClient) UpdateOne(_m *OnCallSchedule) *OnCallScheduleUpdateOne {
+	mutation := newOnCallScheduleMutation(c.config, OpUpdateOne, withOnCallSchedule(_m))
+	return &OnCallScheduleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OnCallScheduleClient) UpdateOneID(id int) *OnCallScheduleUpdateOne {
+	mutation := newOnCallScheduleMutation(c.config, OpUpdateOne, withOnCallScheduleID(id))
+	return &OnCallScheduleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OnCallSchedule.
+func (c *OnCallScheduleClient) Delete() *OnCallScheduleDelete {
+	mutation := newOnCallScheduleMutation(c.config, OpDelete)
+	return &OnCallScheduleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OnCallScheduleClient) DeleteOne(_m *OnCallSchedule) *OnCallScheduleDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OnCallScheduleClient) DeleteOneID(id int) *OnCallScheduleDeleteOne {
+	builder := c.Delete().Where(oncallschedule.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OnCallScheduleDeleteOne{builder}
+}
+
+// Query returns a query builder for OnCallSchedule.
+func (c *OnCallScheduleClient) Query() *OnCallScheduleQuery {
+	return &OnCallScheduleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOnCallSchedule},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OnCallSchedule entity by its id.
+func (c *OnCallScheduleClient) Get(ctx context.Context, id int) (*OnCallSchedule, error) {
+	return c.Query().Where(oncallschedule.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OnCallScheduleClient) GetX(ctx context.Context, id int) *OnCallSchedule {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryGroup queries the group edge of a OnCallSchedule.
+func (c *OnCallScheduleClient) QueryGroup(_m *OnCallSchedule) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(oncallschedule.Table, oncallschedule.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, oncallschedule.GroupTable, oncallschedule.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryShifts queries the shifts edge of a OnCallSchedule.
+func (c *OnCallScheduleClient) QueryShifts(_m *OnCallSchedule) *OnCallShiftQuery {
+	query := (&OnCallShiftClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(oncallschedule.Table, oncallschedule.FieldID, id),
+			sqlgraph.To(oncallshift.Table, oncallshift.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, oncallschedule.ShiftsTable, oncallschedule.ShiftsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *OnCallScheduleClient) Hooks() []Hook {
+	return c.hooks.OnCallSchedule
+}
+
+// Interceptors returns the client interceptors.
+func (c *OnCallScheduleClient) Interceptors() []Interceptor {
+	return c.inters.OnCallSchedule
+}
+
+func (c *OnCallScheduleClient) mutate(ctx context.Context, m *OnCallScheduleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OnCallScheduleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OnCallScheduleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OnCallScheduleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OnCallScheduleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OnCallSchedule mutation op: %q", m.Op())
+	}
+}
+
+// OnCallShiftClient is a client for the OnCallShift schema.
+type OnCallShiftClient struct {
+	config
+}
+
+// NewOnCallShiftClient returns a client for the OnCallShift from the given config.
+func NewOnCallShiftClient(c config) *OnCallShiftClient {
+	return &OnCallShiftClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `oncallshift.Hooks(f(g(h())))`.
+func (c *OnCallShiftClient) Use(hooks ...Hook) {
+	c.hooks.OnCallShift = append(c.hooks.OnCallShift, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `oncallshift.Intercept(f(g(h())))`.
+func (c *OnCallShiftClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OnCallShift = append(c.inters.OnCallShift, interceptors...)
+}
+
+// Create returns a builder for creating a OnCallShift entity.
+func (c *OnCallShiftClient) Create() *OnCallShiftCreate {
+	mutation := newOnCallShiftMutation(c.config, OpCreate)
+	return &OnCallShiftCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OnCallShift entities.
+func (c *OnCallShiftClient) CreateBulk(builders ...*OnCallShiftCreate) *OnCallShiftCreateBulk {
+	return &OnCallShiftCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OnCallShiftClient) MapCreateBulk(slice any, setFunc func(*OnCallShiftCreate, int)) *OnCallShiftCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OnCallShiftCreateBulk{err: fmt.Errorf("calling to OnCallShiftClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OnCallShiftCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OnCallShiftCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OnCallShift.
+func (c *OnCallShiftClient) Update() *OnCallShiftUpdate {
+	mutation := newOnCallShiftMutation(c.config, OpUpdate)
+	return &OnCallShiftUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OnCallShiftClient) UpdateOne(_m *OnCallShift) *OnCallShiftUpdateOne {
+	mutation := newOnCallShiftMutation(c.config, OpUpdateOne, withOnCallShift(_m))
+	return &OnCallShiftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OnCallShiftClient) UpdateOneID(id int) *OnCallShiftUpdateOne {
+	mutation := newOnCallShiftMutation(c.config, OpUpdateOne, withOnCallShiftID(id))
+	return &OnCallShiftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OnCallShift.
+func (c *OnCallShiftClient) Delete() *OnCallShiftDelete {
+	mutation := newOnCallShiftMutation(c.config, OpDelete)
+	return &OnCallShiftDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OnCallShiftClient) DeleteOne(_m *OnCallShift) *OnCallShiftDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OnCallShiftClient) DeleteOneID(id int) *OnCallShiftDeleteOne {
+	builder := c.Delete().Where(oncallshift.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OnCallShiftDeleteOne{builder}
+}
+
+// Query returns a query builder for OnCallShift.
+func (c *OnCallShiftClient) Query() *OnCallShiftQuery {
+	return &OnCallShiftQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOnCallShift},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OnCallShift entity by its id.
+func (c *OnCallShiftClient) Get(ctx context.Context, id int) (*OnCallShift, error) {
+	return c.Query().Where(oncallshift.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OnCallShiftClient) GetX(ctx context.Context, id int) *OnCallShift {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySchedule queries the schedule edge of a OnCallShift.
+func (c *OnCallShiftClient) QuerySchedule(_m *OnCallShift) *OnCallScheduleQuery {
+	query := (&OnCallScheduleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(oncallshift.Table, oncallshift.FieldID, id),
+			sqlgraph.To(oncallschedule.Table, oncallschedule.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, oncallshift.ScheduleTable, oncallshift.ScheduleColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a OnCallShift.
+func (c *OnCallShiftClient) QueryUser(_m *OnCallShift) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(oncallshift.Table, oncallshift.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, oncallshift.UserTable, oncallshift.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *OnCallShiftClient) Hooks() []Hook {
+	return c.hooks.OnCallShift
+}
+
+// Interceptors returns the client interceptors.
+func (c *OnCallShiftClient) Interceptors() []Interceptor {
+	return c.inters.OnCallShift
+}
+
+func (c *OnCallShiftClient) mutate(ctx context.Context, m *OnCallShiftMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OnCallShiftCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OnCallShiftUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OnCallShiftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OnCallShiftDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OnCallShift mutation op: %q", m.Op())
 	}
 }
 
@@ -14974,6 +16691,187 @@ func (c *ServiceCatalogItemClient) mutate(ctx context.Context, m *ServiceCatalog
 	}
 }
 
+// ServiceCustomerClient is a client for the ServiceCustomer schema.
+type ServiceCustomerClient struct {
+	config
+}
+
+// NewServiceCustomerClient returns a client for the ServiceCustomer from the given config.
+func NewServiceCustomerClient(c config) *ServiceCustomerClient {
+	return &ServiceCustomerClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `servicecustomer.Hooks(f(g(h())))`.
+func (c *ServiceCustomerClient) Use(hooks ...Hook) {
+	c.hooks.ServiceCustomer = append(c.hooks.ServiceCustomer, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `servicecustomer.Intercept(f(g(h())))`.
+func (c *ServiceCustomerClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ServiceCustomer = append(c.inters.ServiceCustomer, interceptors...)
+}
+
+// Create returns a builder for creating a ServiceCustomer entity.
+func (c *ServiceCustomerClient) Create() *ServiceCustomerCreate {
+	mutation := newServiceCustomerMutation(c.config, OpCreate)
+	return &ServiceCustomerCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ServiceCustomer entities.
+func (c *ServiceCustomerClient) CreateBulk(builders ...*ServiceCustomerCreate) *ServiceCustomerCreateBulk {
+	return &ServiceCustomerCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ServiceCustomerClient) MapCreateBulk(slice any, setFunc func(*ServiceCustomerCreate, int)) *ServiceCustomerCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ServiceCustomerCreateBulk{err: fmt.Errorf("calling to ServiceCustomerClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ServiceCustomerCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ServiceCustomerCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ServiceCustomer.
+func (c *ServiceCustomerClient) Update() *ServiceCustomerUpdate {
+	mutation := newServiceCustomerMutation(c.config, OpUpdate)
+	return &ServiceCustomerUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ServiceCustomerClient) UpdateOne(_m *ServiceCustomer) *ServiceCustomerUpdateOne {
+	mutation := newServiceCustomerMutation(c.config, OpUpdateOne, withServiceCustomer(_m))
+	return &ServiceCustomerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ServiceCustomerClient) UpdateOneID(id int) *ServiceCustomerUpdateOne {
+	mutation := newServiceCustomerMutation(c.config, OpUpdateOne, withServiceCustomerID(id))
+	return &ServiceCustomerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ServiceCustomer.
+func (c *ServiceCustomerClient) Delete() *ServiceCustomerDelete {
+	mutation := newServiceCustomerMutation(c.config, OpDelete)
+	return &ServiceCustomerDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ServiceCustomerClient) DeleteOne(_m *ServiceCustomer) *ServiceCustomerDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ServiceCustomerClient) DeleteOneID(id int) *ServiceCustomerDeleteOne {
+	builder := c.Delete().Where(servicecustomer.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ServiceCustomerDeleteOne{builder}
+}
+
+// Query returns a query builder for ServiceCustomer.
+func (c *ServiceCustomerClient) Query() *ServiceCustomerQuery {
+	return &ServiceCustomerQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeServiceCustomer},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ServiceCustomer entity by its id.
+func (c *ServiceCustomerClient) Get(ctx context.Context, id int) (*ServiceCustomer, error) {
+	return c.Query().Where(servicecustomer.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ServiceCustomerClient) GetX(ctx context.Context, id int) *ServiceCustomer {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryBranches queries the branches edge of a ServiceCustomer.
+func (c *ServiceCustomerClient) QueryBranches(_m *ServiceCustomer) *CustomerBranchQuery {
+	query := (&CustomerBranchClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicecustomer.Table, servicecustomer.FieldID, id),
+			sqlgraph.To(customerbranch.Table, customerbranch.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, servicecustomer.BranchesTable, servicecustomer.BranchesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryContracts queries the contracts edge of a ServiceCustomer.
+func (c *ServiceCustomerClient) QueryContracts(_m *ServiceCustomer) *SupportContractQuery {
+	query := (&SupportContractClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicecustomer.Table, servicecustomer.FieldID, id),
+			sqlgraph.To(supportcontract.Table, supportcontract.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, servicecustomer.ContractsTable, servicecustomer.ContractsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryConversations queries the conversations edge of a ServiceCustomer.
+func (c *ServiceCustomerClient) QueryConversations(_m *ServiceCustomer) *EmailConversationQuery {
+	query := (&EmailConversationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicecustomer.Table, servicecustomer.FieldID, id),
+			sqlgraph.To(emailconversation.Table, emailconversation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, servicecustomer.ConversationsTable, servicecustomer.ConversationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ServiceCustomerClient) Hooks() []Hook {
+	return c.hooks.ServiceCustomer
+}
+
+// Interceptors returns the client interceptors.
+func (c *ServiceCustomerClient) Interceptors() []Interceptor {
+	return c.inters.ServiceCustomer
+}
+
+func (c *ServiceCustomerClient) mutate(ctx context.Context, m *ServiceCustomerMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ServiceCustomerCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ServiceCustomerUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ServiceCustomerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ServiceCustomerDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ServiceCustomer mutation op: %q", m.Op())
+	}
+}
+
 // ServiceRequestClient is a client for the ServiceRequest schema.
 type ServiceRequestClient struct {
 	config
@@ -15240,6 +17138,171 @@ func (c *ServiceRequestApprovalClient) mutate(ctx context.Context, m *ServiceReq
 	}
 }
 
+// SourceOrganizationClient is a client for the SourceOrganization schema.
+type SourceOrganizationClient struct {
+	config
+}
+
+// NewSourceOrganizationClient returns a client for the SourceOrganization from the given config.
+func NewSourceOrganizationClient(c config) *SourceOrganizationClient {
+	return &SourceOrganizationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sourceorganization.Hooks(f(g(h())))`.
+func (c *SourceOrganizationClient) Use(hooks ...Hook) {
+	c.hooks.SourceOrganization = append(c.hooks.SourceOrganization, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sourceorganization.Intercept(f(g(h())))`.
+func (c *SourceOrganizationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SourceOrganization = append(c.inters.SourceOrganization, interceptors...)
+}
+
+// Create returns a builder for creating a SourceOrganization entity.
+func (c *SourceOrganizationClient) Create() *SourceOrganizationCreate {
+	mutation := newSourceOrganizationMutation(c.config, OpCreate)
+	return &SourceOrganizationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SourceOrganization entities.
+func (c *SourceOrganizationClient) CreateBulk(builders ...*SourceOrganizationCreate) *SourceOrganizationCreateBulk {
+	return &SourceOrganizationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SourceOrganizationClient) MapCreateBulk(slice any, setFunc func(*SourceOrganizationCreate, int)) *SourceOrganizationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SourceOrganizationCreateBulk{err: fmt.Errorf("calling to SourceOrganizationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SourceOrganizationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SourceOrganizationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SourceOrganization.
+func (c *SourceOrganizationClient) Update() *SourceOrganizationUpdate {
+	mutation := newSourceOrganizationMutation(c.config, OpUpdate)
+	return &SourceOrganizationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SourceOrganizationClient) UpdateOne(_m *SourceOrganization) *SourceOrganizationUpdateOne {
+	mutation := newSourceOrganizationMutation(c.config, OpUpdateOne, withSourceOrganization(_m))
+	return &SourceOrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SourceOrganizationClient) UpdateOneID(id int) *SourceOrganizationUpdateOne {
+	mutation := newSourceOrganizationMutation(c.config, OpUpdateOne, withSourceOrganizationID(id))
+	return &SourceOrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SourceOrganization.
+func (c *SourceOrganizationClient) Delete() *SourceOrganizationDelete {
+	mutation := newSourceOrganizationMutation(c.config, OpDelete)
+	return &SourceOrganizationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SourceOrganizationClient) DeleteOne(_m *SourceOrganization) *SourceOrganizationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SourceOrganizationClient) DeleteOneID(id int) *SourceOrganizationDeleteOne {
+	builder := c.Delete().Where(sourceorganization.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SourceOrganizationDeleteOne{builder}
+}
+
+// Query returns a query builder for SourceOrganization.
+func (c *SourceOrganizationClient) Query() *SourceOrganizationQuery {
+	return &SourceOrganizationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSourceOrganization},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SourceOrganization entity by its id.
+func (c *SourceOrganizationClient) Get(ctx context.Context, id int) (*SourceOrganization, error) {
+	return c.Query().Where(sourceorganization.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SourceOrganizationClient) GetX(ctx context.Context, id int) *SourceOrganization {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryExternalContractReferences queries the external_contract_references edge of a SourceOrganization.
+func (c *SourceOrganizationClient) QueryExternalContractReferences(_m *SourceOrganization) *ExternalContractReferenceQuery {
+	query := (&ExternalContractReferenceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sourceorganization.Table, sourceorganization.FieldID, id),
+			sqlgraph.To(externalcontractreference.Table, externalcontractreference.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sourceorganization.ExternalContractReferencesTable, sourceorganization.ExternalContractReferencesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryConversations queries the conversations edge of a SourceOrganization.
+func (c *SourceOrganizationClient) QueryConversations(_m *SourceOrganization) *EmailConversationQuery {
+	query := (&EmailConversationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sourceorganization.Table, sourceorganization.FieldID, id),
+			sqlgraph.To(emailconversation.Table, emailconversation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sourceorganization.ConversationsTable, sourceorganization.ConversationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SourceOrganizationClient) Hooks() []Hook {
+	return c.hooks.SourceOrganization
+}
+
+// Interceptors returns the client interceptors.
+func (c *SourceOrganizationClient) Interceptors() []Interceptor {
+	return c.inters.SourceOrganization
+}
+
+func (c *SourceOrganizationClient) mutate(ctx context.Context, m *SourceOrganizationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SourceOrganizationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SourceOrganizationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SourceOrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SourceOrganizationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SourceOrganization mutation op: %q", m.Op())
+	}
+}
+
 // StandardChangeClient is a client for the StandardChange schema.
 type StandardChangeClient struct {
 	config
@@ -15386,6 +17449,203 @@ func (c *StandardChangeClient) mutate(ctx context.Context, m *StandardChangeMuta
 		return (&StandardChangeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown StandardChange mutation op: %q", m.Op())
+	}
+}
+
+// SupportContractClient is a client for the SupportContract schema.
+type SupportContractClient struct {
+	config
+}
+
+// NewSupportContractClient returns a client for the SupportContract from the given config.
+func NewSupportContractClient(c config) *SupportContractClient {
+	return &SupportContractClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `supportcontract.Hooks(f(g(h())))`.
+func (c *SupportContractClient) Use(hooks ...Hook) {
+	c.hooks.SupportContract = append(c.hooks.SupportContract, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `supportcontract.Intercept(f(g(h())))`.
+func (c *SupportContractClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SupportContract = append(c.inters.SupportContract, interceptors...)
+}
+
+// Create returns a builder for creating a SupportContract entity.
+func (c *SupportContractClient) Create() *SupportContractCreate {
+	mutation := newSupportContractMutation(c.config, OpCreate)
+	return &SupportContractCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SupportContract entities.
+func (c *SupportContractClient) CreateBulk(builders ...*SupportContractCreate) *SupportContractCreateBulk {
+	return &SupportContractCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SupportContractClient) MapCreateBulk(slice any, setFunc func(*SupportContractCreate, int)) *SupportContractCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SupportContractCreateBulk{err: fmt.Errorf("calling to SupportContractClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SupportContractCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SupportContractCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SupportContract.
+func (c *SupportContractClient) Update() *SupportContractUpdate {
+	mutation := newSupportContractMutation(c.config, OpUpdate)
+	return &SupportContractUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SupportContractClient) UpdateOne(_m *SupportContract) *SupportContractUpdateOne {
+	mutation := newSupportContractMutation(c.config, OpUpdateOne, withSupportContract(_m))
+	return &SupportContractUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SupportContractClient) UpdateOneID(id int) *SupportContractUpdateOne {
+	mutation := newSupportContractMutation(c.config, OpUpdateOne, withSupportContractID(id))
+	return &SupportContractUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SupportContract.
+func (c *SupportContractClient) Delete() *SupportContractDelete {
+	mutation := newSupportContractMutation(c.config, OpDelete)
+	return &SupportContractDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SupportContractClient) DeleteOne(_m *SupportContract) *SupportContractDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SupportContractClient) DeleteOneID(id int) *SupportContractDeleteOne {
+	builder := c.Delete().Where(supportcontract.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SupportContractDeleteOne{builder}
+}
+
+// Query returns a query builder for SupportContract.
+func (c *SupportContractClient) Query() *SupportContractQuery {
+	return &SupportContractQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSupportContract},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SupportContract entity by its id.
+func (c *SupportContractClient) Get(ctx context.Context, id int) (*SupportContract, error) {
+	return c.Query().Where(supportcontract.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SupportContractClient) GetX(ctx context.Context, id int) *SupportContract {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCustomer queries the customer edge of a SupportContract.
+func (c *SupportContractClient) QueryCustomer(_m *SupportContract) *ServiceCustomerQuery {
+	query := (&ServiceCustomerClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(supportcontract.Table, supportcontract.FieldID, id),
+			sqlgraph.To(servicecustomer.Table, servicecustomer.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, supportcontract.CustomerTable, supportcontract.CustomerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBranch queries the branch edge of a SupportContract.
+func (c *SupportContractClient) QueryBranch(_m *SupportContract) *CustomerBranchQuery {
+	query := (&CustomerBranchClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(supportcontract.Table, supportcontract.FieldID, id),
+			sqlgraph.To(customerbranch.Table, customerbranch.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, supportcontract.BranchTable, supportcontract.BranchColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryExternalReferences queries the external_references edge of a SupportContract.
+func (c *SupportContractClient) QueryExternalReferences(_m *SupportContract) *ExternalContractReferenceQuery {
+	query := (&ExternalContractReferenceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(supportcontract.Table, supportcontract.FieldID, id),
+			sqlgraph.To(externalcontractreference.Table, externalcontractreference.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, supportcontract.ExternalReferencesTable, supportcontract.ExternalReferencesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryConversations queries the conversations edge of a SupportContract.
+func (c *SupportContractClient) QueryConversations(_m *SupportContract) *EmailConversationQuery {
+	query := (&EmailConversationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(supportcontract.Table, supportcontract.FieldID, id),
+			sqlgraph.To(emailconversation.Table, emailconversation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, supportcontract.ConversationsTable, supportcontract.ConversationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SupportContractClient) Hooks() []Hook {
+	return c.hooks.SupportContract
+}
+
+// Interceptors returns the client interceptors.
+func (c *SupportContractClient) Interceptors() []Interceptor {
+	return c.inters.SupportContract
+}
+
+func (c *SupportContractClient) mutate(ctx context.Context, m *SupportContractMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SupportContractCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SupportContractUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SupportContractUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SupportContractDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SupportContract mutation op: %q", m.Op())
 	}
 }
 
@@ -19495,6 +21755,22 @@ func (c *UserClient) QueryToolInvocations(_m *User) *ToolInvocationQuery {
 	return query
 }
 
+// QueryOnCallShifts queries the on_call_shifts edge of a User.
+func (c *UserClient) QueryOnCallShifts(_m *User) *OnCallShiftQuery {
+	query := (&OnCallShiftClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(oncallshift.Table, oncallshift.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.OnCallShiftsTable, user.OnCallShiftsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -20336,55 +22612,61 @@ type (
 		AssetLicense, AuditLog, BPMNPermission, BootstrapToken, CABMember,
 		CIAttributeDefinition, CIRelationship, CITag, CIType, CMDBExportTask,
 		CMDBImportTask, CMDBSavedView, Change, ChangePIR, CloudAccount, CloudResource,
-		CloudService, ConfigurationItem, ConfigurationItemHistory, Contract,
-		Conversation, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
-		DomainConfig, EndpointACL, EngineerSkill, FeishuTicketSync, Group, Incident,
-		IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
+		CloudService, ConfigurationItem, ConfigurationItemHistory, ConnectorConfig,
+		Contract, Conversation, CustomerBranch, Department, DiscoveryJob,
+		DiscoveryResult, DiscoverySource, DomainConfig, EmailConversation,
+		EmailIntakeAnalysis, EmailOutboundMessage, EndpointACL, EngineerSkill,
+		ExternalContractReference, FeishuTicketSync, Group, InboundEmailMessage,
+		Incident, IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
 		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
 		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
 		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
 		Message, Microservice, Notification, NotificationDelivery,
-		NotificationPreference, OperationalCommand, PasswordResetToken, Permission,
-		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
-		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
-		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
-		ServiceCatalogItem, ServiceRequest, ServiceRequestApproval, StandardChange,
-		Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant, TenantInstallation,
-		Ticket, TicketApproval, TicketAssignmentRule, TicketAttachment,
-		TicketAutomationRule, TicketCC, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketType, TicketView,
-		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
-		WorkflowTask, WorkflowVersion []ent.Hook
+		NotificationPreference, OnCallSchedule, OnCallShift, OperationalCommand,
+		PasswordResetToken, Permission, PermissionDefinition, Problem,
+		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
+		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
+		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
+		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
+		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
+		ServiceRequest, ServiceRequestApproval, SourceOrganization, StandardChange,
+		SupportContract, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
+		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCC, TicketCategory,
+		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketType,
+		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
 		AssetLicense, AuditLog, BPMNPermission, BootstrapToken, CABMember,
 		CIAttributeDefinition, CIRelationship, CITag, CIType, CMDBExportTask,
 		CMDBImportTask, CMDBSavedView, Change, ChangePIR, CloudAccount, CloudResource,
-		CloudService, ConfigurationItem, ConfigurationItemHistory, Contract,
-		Conversation, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
-		DomainConfig, EndpointACL, EngineerSkill, FeishuTicketSync, Group, Incident,
-		IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
+		CloudService, ConfigurationItem, ConfigurationItemHistory, ConnectorConfig,
+		Contract, Conversation, CustomerBranch, Department, DiscoveryJob,
+		DiscoveryResult, DiscoverySource, DomainConfig, EmailConversation,
+		EmailIntakeAnalysis, EmailOutboundMessage, EndpointACL, EngineerSkill,
+		ExternalContractReference, FeishuTicketSync, Group, InboundEmailMessage,
+		Incident, IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
 		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
 		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
 		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
 		Message, Microservice, Notification, NotificationDelivery,
-		NotificationPreference, OperationalCommand, PasswordResetToken, Permission,
-		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
-		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
-		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
-		ServiceCatalogItem, ServiceRequest, ServiceRequestApproval, StandardChange,
-		Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant, TenantInstallation,
-		Ticket, TicketApproval, TicketAssignmentRule, TicketAttachment,
-		TicketAutomationRule, TicketCC, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketType, TicketView,
-		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
-		WorkflowTask, WorkflowVersion []ent.Interceptor
+		NotificationPreference, OnCallSchedule, OnCallShift, OperationalCommand,
+		PasswordResetToken, Permission, PermissionDefinition, Problem,
+		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
+		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
+		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
+		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
+		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
+		ServiceRequest, ServiceRequestApproval, SourceOrganization, StandardChange,
+		SupportContract, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
+		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCC, TicketCategory,
+		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketType,
+		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )

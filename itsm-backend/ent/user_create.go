@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/oncallshift"
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/tenant"
@@ -451,6 +452,21 @@ func (_c *UserCreate) AddToolInvocations(v ...*ToolInvocation) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddToolInvocationIDs(ids...)
+}
+
+// AddOnCallShiftIDs adds the "on_call_shifts" edge to the OnCallShift entity by IDs.
+func (_c *UserCreate) AddOnCallShiftIDs(ids ...int) *UserCreate {
+	_c.mutation.AddOnCallShiftIDs(ids...)
+	return _c
+}
+
+// AddOnCallShifts adds the "on_call_shifts" edges to the OnCallShift entity.
+func (_c *UserCreate) AddOnCallShifts(v ...*OnCallShift) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddOnCallShiftIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -913,6 +929,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(toolinvocation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.OnCallShiftsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OnCallShiftsTable,
+			Columns: []string{user.OnCallShiftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallshift.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

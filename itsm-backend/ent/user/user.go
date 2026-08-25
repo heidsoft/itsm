@@ -79,6 +79,8 @@ const (
 	EdgePirReviews = "pir_reviews"
 	// EdgeToolInvocations holds the string denoting the tool_invocations edge name in mutations.
 	EdgeToolInvocations = "tool_invocations"
+	// EdgeOnCallShifts holds the string denoting the on_call_shifts edge name in mutations.
+	EdgeOnCallShifts = "on_call_shifts"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// DepartmentRefTable is the table that holds the department_ref relation/edge.
@@ -187,6 +189,13 @@ const (
 	ToolInvocationsInverseTable = "tool_invocations"
 	// ToolInvocationsColumn is the table column denoting the tool_invocations relation/edge.
 	ToolInvocationsColumn = "user_id"
+	// OnCallShiftsTable is the table that holds the on_call_shifts relation/edge.
+	OnCallShiftsTable = "on_call_shifts"
+	// OnCallShiftsInverseTable is the table name for the OnCallShift entity.
+	// It exists in this package in order to avoid circular dependency with the "oncallshift" package.
+	OnCallShiftsInverseTable = "on_call_shifts"
+	// OnCallShiftsColumn is the table column denoting the on_call_shifts relation/edge.
+	OnCallShiftsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -620,6 +629,20 @@ func ByToolInvocations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newToolInvocationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByOnCallShiftsCount orders the results by on_call_shifts count.
+func ByOnCallShiftsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOnCallShiftsStep(), opts...)
+	}
+}
+
+// ByOnCallShifts orders the results by on_call_shifts terms.
+func ByOnCallShifts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOnCallShiftsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newDepartmentRefStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -730,5 +753,12 @@ func newToolInvocationsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ToolInvocationsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ToolInvocationsTable, ToolInvocationsColumn),
+	)
+}
+func newOnCallShiftsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OnCallShiftsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OnCallShiftsTable, OnCallShiftsColumn),
 	)
 }

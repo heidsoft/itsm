@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/emailconversation"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
@@ -151,6 +153,34 @@ func (_c *IncidentCreate) SetAssigneeID(v int) *IncidentCreate {
 func (_c *IncidentCreate) SetNillableAssigneeID(v *int) *IncidentCreate {
 	if v != nil {
 		_c.SetAssigneeID(*v)
+	}
+	return _c
+}
+
+// SetAssignmentGroupID sets the "assignment_group_id" field.
+func (_c *IncidentCreate) SetAssignmentGroupID(v int) *IncidentCreate {
+	_c.mutation.SetAssignmentGroupID(v)
+	return _c
+}
+
+// SetNillableAssignmentGroupID sets the "assignment_group_id" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableAssignmentGroupID(v *int) *IncidentCreate {
+	if v != nil {
+		_c.SetAssignmentGroupID(*v)
+	}
+	return _c
+}
+
+// SetEmailConversationID sets the "email_conversation_id" field.
+func (_c *IncidentCreate) SetEmailConversationID(v int) *IncidentCreate {
+	_c.mutation.SetEmailConversationID(v)
+	return _c
+}
+
+// SetNillableEmailConversationID sets the "email_conversation_id" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableEmailConversationID(v *int) *IncidentCreate {
+	if v != nil {
+		_c.SetEmailConversationID(*v)
 	}
 	return _c
 }
@@ -498,6 +528,16 @@ func (_c *IncidentCreate) AddProblems(v ...*Problem) *IncidentCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddProblemIDs(ids...)
+}
+
+// SetAssignmentGroup sets the "assignment_group" edge to the Group entity.
+func (_c *IncidentCreate) SetAssignmentGroup(v *Group) *IncidentCreate {
+	return _c.SetAssignmentGroupID(v.ID)
+}
+
+// SetEmailConversation sets the "email_conversation" edge to the EmailConversation entity.
+func (_c *IncidentCreate) SetEmailConversation(v *EmailConversation) *IncidentCreate {
+	return _c.SetEmailConversationID(v.ID)
 }
 
 // Mutation returns the IncidentMutation object of the builder.
@@ -949,6 +989,40 @@ func (_c *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AssignmentGroupIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   incident.AssignmentGroupTable,
+			Columns: []string{incident.AssignmentGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.AssignmentGroupID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.EmailConversationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   incident.EmailConversationTable,
+			Columns: []string{incident.EmailConversationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailconversation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.EmailConversationID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

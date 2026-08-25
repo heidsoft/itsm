@@ -363,6 +363,52 @@ func HasMembersWith(preds ...predicate.User) predicate.Group {
 	})
 }
 
+// HasOnCallSchedules applies the HasEdge predicate on the "on_call_schedules" edge.
+func HasOnCallSchedules() predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OnCallSchedulesTable, OnCallSchedulesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOnCallSchedulesWith applies the HasEdge predicate on the "on_call_schedules" edge with a given conditions (other predicates).
+func HasOnCallSchedulesWith(preds ...predicate.OnCallSchedule) predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := newOnCallSchedulesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAssignedIncidents applies the HasEdge predicate on the "assigned_incidents" edge.
+func HasAssignedIncidents() predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AssignedIncidentsTable, AssignedIncidentsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAssignedIncidentsWith applies the HasEdge predicate on the "assigned_incidents" edge with a given conditions (other predicates).
+func HasAssignedIncidentsWith(preds ...predicate.Incident) predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := newAssignedIncidentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Group) predicate.Group {
 	return predicate.Group(sql.AndPredicates(predicates...))

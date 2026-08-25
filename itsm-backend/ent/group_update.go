@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/incident"
+	"itsm-backend/ent/oncallschedule"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/user"
 	"time"
@@ -119,6 +121,36 @@ func (_u *GroupUpdate) AddMembers(v ...*User) *GroupUpdate {
 	return _u.AddMemberIDs(ids...)
 }
 
+// AddOnCallScheduleIDs adds the "on_call_schedules" edge to the OnCallSchedule entity by IDs.
+func (_u *GroupUpdate) AddOnCallScheduleIDs(ids ...int) *GroupUpdate {
+	_u.mutation.AddOnCallScheduleIDs(ids...)
+	return _u
+}
+
+// AddOnCallSchedules adds the "on_call_schedules" edges to the OnCallSchedule entity.
+func (_u *GroupUpdate) AddOnCallSchedules(v ...*OnCallSchedule) *GroupUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOnCallScheduleIDs(ids...)
+}
+
+// AddAssignedIncidentIDs adds the "assigned_incidents" edge to the Incident entity by IDs.
+func (_u *GroupUpdate) AddAssignedIncidentIDs(ids ...int) *GroupUpdate {
+	_u.mutation.AddAssignedIncidentIDs(ids...)
+	return _u
+}
+
+// AddAssignedIncidents adds the "assigned_incidents" edges to the Incident entity.
+func (_u *GroupUpdate) AddAssignedIncidents(v ...*Incident) *GroupUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAssignedIncidentIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (_u *GroupUpdate) Mutation() *GroupMutation {
 	return _u.mutation
@@ -143,6 +175,48 @@ func (_u *GroupUpdate) RemoveMembers(v ...*User) *GroupUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMemberIDs(ids...)
+}
+
+// ClearOnCallSchedules clears all "on_call_schedules" edges to the OnCallSchedule entity.
+func (_u *GroupUpdate) ClearOnCallSchedules() *GroupUpdate {
+	_u.mutation.ClearOnCallSchedules()
+	return _u
+}
+
+// RemoveOnCallScheduleIDs removes the "on_call_schedules" edge to OnCallSchedule entities by IDs.
+func (_u *GroupUpdate) RemoveOnCallScheduleIDs(ids ...int) *GroupUpdate {
+	_u.mutation.RemoveOnCallScheduleIDs(ids...)
+	return _u
+}
+
+// RemoveOnCallSchedules removes "on_call_schedules" edges to OnCallSchedule entities.
+func (_u *GroupUpdate) RemoveOnCallSchedules(v ...*OnCallSchedule) *GroupUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOnCallScheduleIDs(ids...)
+}
+
+// ClearAssignedIncidents clears all "assigned_incidents" edges to the Incident entity.
+func (_u *GroupUpdate) ClearAssignedIncidents() *GroupUpdate {
+	_u.mutation.ClearAssignedIncidents()
+	return _u
+}
+
+// RemoveAssignedIncidentIDs removes the "assigned_incidents" edge to Incident entities by IDs.
+func (_u *GroupUpdate) RemoveAssignedIncidentIDs(ids ...int) *GroupUpdate {
+	_u.mutation.RemoveAssignedIncidentIDs(ids...)
+	return _u
+}
+
+// RemoveAssignedIncidents removes "assigned_incidents" edges to Incident entities.
+func (_u *GroupUpdate) RemoveAssignedIncidents(v ...*Incident) *GroupUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAssignedIncidentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -274,6 +348,96 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.OnCallSchedulesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OnCallSchedulesTable,
+			Columns: []string{group.OnCallSchedulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallschedule.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOnCallSchedulesIDs(); len(nodes) > 0 && !_u.mutation.OnCallSchedulesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OnCallSchedulesTable,
+			Columns: []string{group.OnCallSchedulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallschedule.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OnCallSchedulesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OnCallSchedulesTable,
+			Columns: []string{group.OnCallSchedulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallschedule.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AssignedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.AssignedIncidentsTable,
+			Columns: []string{group.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAssignedIncidentsIDs(); len(nodes) > 0 && !_u.mutation.AssignedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.AssignedIncidentsTable,
+			Columns: []string{group.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AssignedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.AssignedIncidentsTable,
+			Columns: []string{group.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{group.Label}
@@ -384,6 +548,36 @@ func (_u *GroupUpdateOne) AddMembers(v ...*User) *GroupUpdateOne {
 	return _u.AddMemberIDs(ids...)
 }
 
+// AddOnCallScheduleIDs adds the "on_call_schedules" edge to the OnCallSchedule entity by IDs.
+func (_u *GroupUpdateOne) AddOnCallScheduleIDs(ids ...int) *GroupUpdateOne {
+	_u.mutation.AddOnCallScheduleIDs(ids...)
+	return _u
+}
+
+// AddOnCallSchedules adds the "on_call_schedules" edges to the OnCallSchedule entity.
+func (_u *GroupUpdateOne) AddOnCallSchedules(v ...*OnCallSchedule) *GroupUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOnCallScheduleIDs(ids...)
+}
+
+// AddAssignedIncidentIDs adds the "assigned_incidents" edge to the Incident entity by IDs.
+func (_u *GroupUpdateOne) AddAssignedIncidentIDs(ids ...int) *GroupUpdateOne {
+	_u.mutation.AddAssignedIncidentIDs(ids...)
+	return _u
+}
+
+// AddAssignedIncidents adds the "assigned_incidents" edges to the Incident entity.
+func (_u *GroupUpdateOne) AddAssignedIncidents(v ...*Incident) *GroupUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAssignedIncidentIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (_u *GroupUpdateOne) Mutation() *GroupMutation {
 	return _u.mutation
@@ -408,6 +602,48 @@ func (_u *GroupUpdateOne) RemoveMembers(v ...*User) *GroupUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMemberIDs(ids...)
+}
+
+// ClearOnCallSchedules clears all "on_call_schedules" edges to the OnCallSchedule entity.
+func (_u *GroupUpdateOne) ClearOnCallSchedules() *GroupUpdateOne {
+	_u.mutation.ClearOnCallSchedules()
+	return _u
+}
+
+// RemoveOnCallScheduleIDs removes the "on_call_schedules" edge to OnCallSchedule entities by IDs.
+func (_u *GroupUpdateOne) RemoveOnCallScheduleIDs(ids ...int) *GroupUpdateOne {
+	_u.mutation.RemoveOnCallScheduleIDs(ids...)
+	return _u
+}
+
+// RemoveOnCallSchedules removes "on_call_schedules" edges to OnCallSchedule entities.
+func (_u *GroupUpdateOne) RemoveOnCallSchedules(v ...*OnCallSchedule) *GroupUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOnCallScheduleIDs(ids...)
+}
+
+// ClearAssignedIncidents clears all "assigned_incidents" edges to the Incident entity.
+func (_u *GroupUpdateOne) ClearAssignedIncidents() *GroupUpdateOne {
+	_u.mutation.ClearAssignedIncidents()
+	return _u
+}
+
+// RemoveAssignedIncidentIDs removes the "assigned_incidents" edge to Incident entities by IDs.
+func (_u *GroupUpdateOne) RemoveAssignedIncidentIDs(ids ...int) *GroupUpdateOne {
+	_u.mutation.RemoveAssignedIncidentIDs(ids...)
+	return _u
+}
+
+// RemoveAssignedIncidents removes "assigned_incidents" edges to Incident entities.
+func (_u *GroupUpdateOne) RemoveAssignedIncidents(v ...*Incident) *GroupUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAssignedIncidentIDs(ids...)
 }
 
 // Where appends a list predicates to the GroupUpdate builder.
@@ -562,6 +798,96 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OnCallSchedulesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OnCallSchedulesTable,
+			Columns: []string{group.OnCallSchedulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallschedule.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOnCallSchedulesIDs(); len(nodes) > 0 && !_u.mutation.OnCallSchedulesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OnCallSchedulesTable,
+			Columns: []string{group.OnCallSchedulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallschedule.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OnCallSchedulesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OnCallSchedulesTable,
+			Columns: []string{group.OnCallSchedulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oncallschedule.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AssignedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.AssignedIncidentsTable,
+			Columns: []string{group.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAssignedIncidentsIDs(); len(nodes) > 0 && !_u.mutation.AssignedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.AssignedIncidentsTable,
+			Columns: []string{group.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AssignedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.AssignedIncidentsTable,
+			Columns: []string{group.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

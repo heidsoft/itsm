@@ -78,11 +78,17 @@ type ConfigurationItem func(*sql.Selector)
 // ConfigurationItemHistory is the predicate function for configurationitemhistory builders.
 type ConfigurationItemHistory func(*sql.Selector)
 
+// ConnectorConfig is the predicate function for connectorconfig builders.
+type ConnectorConfig func(*sql.Selector)
+
 // Contract is the predicate function for contract builders.
 type Contract func(*sql.Selector)
 
 // Conversation is the predicate function for conversation builders.
 type Conversation func(*sql.Selector)
+
+// CustomerBranch is the predicate function for customerbranch builders.
+type CustomerBranch func(*sql.Selector)
 
 // Department is the predicate function for department builders.
 type Department func(*sql.Selector)
@@ -99,17 +105,32 @@ type DiscoverySource func(*sql.Selector)
 // DomainConfig is the predicate function for domainconfig builders.
 type DomainConfig func(*sql.Selector)
 
+// EmailConversation is the predicate function for emailconversation builders.
+type EmailConversation func(*sql.Selector)
+
+// EmailIntakeAnalysis is the predicate function for emailintakeanalysis builders.
+type EmailIntakeAnalysis func(*sql.Selector)
+
+// EmailOutboundMessage is the predicate function for emailoutboundmessage builders.
+type EmailOutboundMessage func(*sql.Selector)
+
 // EndpointACL is the predicate function for endpointacl builders.
 type EndpointACL func(*sql.Selector)
 
 // EngineerSkill is the predicate function for engineerskill builders.
 type EngineerSkill func(*sql.Selector)
 
+// ExternalContractReference is the predicate function for externalcontractreference builders.
+type ExternalContractReference func(*sql.Selector)
+
 // FeishuTicketSync is the predicate function for feishuticketsync builders.
 type FeishuTicketSync func(*sql.Selector)
 
 // Group is the predicate function for group builders.
 type Group func(*sql.Selector)
+
+// InboundEmailMessage is the predicate function for inboundemailmessage builders.
+type InboundEmailMessage func(*sql.Selector)
 
 // Incident is the predicate function for incident builders.
 type Incident func(*sql.Selector)
@@ -176,6 +197,12 @@ type NotificationDelivery func(*sql.Selector)
 
 // NotificationPreference is the predicate function for notificationpreference builders.
 type NotificationPreference func(*sql.Selector)
+
+// OnCallSchedule is the predicate function for oncallschedule builders.
+type OnCallSchedule func(*sql.Selector)
+
+// OnCallShift is the predicate function for oncallshift builders.
+type OnCallShift func(*sql.Selector)
 
 // OperationalCommand is the predicate function for operationalcommand builders.
 type OperationalCommand func(*sql.Selector)
@@ -270,14 +297,23 @@ type ServiceCatalog func(*sql.Selector)
 // ServiceCatalogItem is the predicate function for servicecatalogitem builders.
 type ServiceCatalogItem func(*sql.Selector)
 
+// ServiceCustomer is the predicate function for servicecustomer builders.
+type ServiceCustomer func(*sql.Selector)
+
 // ServiceRequest is the predicate function for servicerequest builders.
 type ServiceRequest func(*sql.Selector)
 
 // ServiceRequestApproval is the predicate function for servicerequestapproval builders.
 type ServiceRequestApproval func(*sql.Selector)
 
+// SourceOrganization is the predicate function for sourceorganization builders.
+type SourceOrganization func(*sql.Selector)
+
 // StandardChange is the predicate function for standardchange builders.
 type StandardChange func(*sql.Selector)
+
+// SupportContract is the predicate function for supportcontract builders.
+type SupportContract func(*sql.Selector)
 
 // Survey is the predicate function for survey builders.
 type Survey func(*sql.Selector)

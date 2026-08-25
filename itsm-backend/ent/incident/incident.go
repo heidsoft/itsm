@@ -36,6 +36,10 @@ const (
 	FieldReporterID = "reporter_id"
 	// FieldAssigneeID holds the string denoting the assignee_id field in the database.
 	FieldAssigneeID = "assignee_id"
+	// FieldAssignmentGroupID holds the string denoting the assignment_group_id field in the database.
+	FieldAssignmentGroupID = "assignment_group_id"
+	// FieldEmailConversationID holds the string denoting the email_conversation_id field in the database.
+	FieldEmailConversationID = "email_conversation_id"
 	// FieldConfigurationItemID holds the string denoting the configuration_item_id field in the database.
 	FieldConfigurationItemID = "configuration_item_id"
 	// FieldCategory holds the string denoting the category field in the database.
@@ -90,6 +94,10 @@ const (
 	EdgeConfigurationItems = "configuration_items"
 	// EdgeProblems holds the string denoting the problems edge name in mutations.
 	EdgeProblems = "problems"
+	// EdgeAssignmentGroup holds the string denoting the assignment_group edge name in mutations.
+	EdgeAssignmentGroup = "assignment_group"
+	// EdgeEmailConversation holds the string denoting the email_conversation edge name in mutations.
+	EdgeEmailConversation = "email_conversation"
 	// Table holds the table name of the incident in the database.
 	Table = "incidents"
 	// RelatedIncidentsTable is the table that holds the related_incidents relation/edge. The primary key declared below.
@@ -127,6 +135,20 @@ const (
 	// ProblemsInverseTable is the table name for the Problem entity.
 	// It exists in this package in order to avoid circular dependency with the "problem" package.
 	ProblemsInverseTable = "problems"
+	// AssignmentGroupTable is the table that holds the assignment_group relation/edge.
+	AssignmentGroupTable = "incidents"
+	// AssignmentGroupInverseTable is the table name for the Group entity.
+	// It exists in this package in order to avoid circular dependency with the "group" package.
+	AssignmentGroupInverseTable = "groups"
+	// AssignmentGroupColumn is the table column denoting the assignment_group relation/edge.
+	AssignmentGroupColumn = "assignment_group_id"
+	// EmailConversationTable is the table that holds the email_conversation relation/edge.
+	EmailConversationTable = "incidents"
+	// EmailConversationInverseTable is the table name for the EmailConversation entity.
+	// It exists in this package in order to avoid circular dependency with the "emailconversation" package.
+	EmailConversationInverseTable = "email_conversations"
+	// EmailConversationColumn is the table column denoting the email_conversation relation/edge.
+	EmailConversationColumn = "email_conversation_id"
 )
 
 // Columns holds all SQL columns for incident fields.
@@ -143,6 +165,8 @@ var Columns = []string{
 	FieldIncidentNumber,
 	FieldReporterID,
 	FieldAssigneeID,
+	FieldAssignmentGroupID,
+	FieldEmailConversationID,
 	FieldConfigurationItemID,
 	FieldCategory,
 	FieldSubcategory,
@@ -300,6 +324,16 @@ func ByReporterID(opts ...sql.OrderTermOption) OrderOption {
 // ByAssigneeID orders the results by the assignee_id field.
 func ByAssigneeID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAssigneeID, opts...).ToFunc()
+}
+
+// ByAssignmentGroupID orders the results by the assignment_group_id field.
+func ByAssignmentGroupID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAssignmentGroupID, opts...).ToFunc()
+}
+
+// ByEmailConversationID orders the results by the email_conversation_id field.
+func ByEmailConversationID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmailConversationID, opts...).ToFunc()
 }
 
 // ByConfigurationItemID orders the results by the configuration_item_id field.
@@ -479,6 +513,20 @@ func ByProblems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newProblemsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAssignmentGroupField orders the results by assignment_group field.
+func ByAssignmentGroupField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAssignmentGroupStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByEmailConversationField orders the results by email_conversation field.
+func ByEmailConversationField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newEmailConversationStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newRelatedIncidentsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -526,5 +574,19 @@ func newProblemsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProblemsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, ProblemsTable, ProblemsPrimaryKey...),
+	)
+}
+func newAssignmentGroupStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AssignmentGroupInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, AssignmentGroupTable, AssignmentGroupColumn),
+	)
+}
+func newEmailConversationStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(EmailConversationInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, EmailConversationTable, EmailConversationColumn),
 	)
 }

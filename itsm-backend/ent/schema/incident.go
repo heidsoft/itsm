@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // Incident holds the schema definition for the Incident entity.
@@ -72,6 +73,14 @@ func (Incident) Fields() []ent.Field {
 		field.Int("assignee_id").
 			Comment("处理人ID").
 			Optional(),
+		field.Int("assignment_group_id").
+			Comment("处理组ID").
+			Optional().
+			Nillable(),
+		field.Int("email_conversation_id").
+			Comment("来源邮件会话ID，用于自动开单幂等").
+			Optional().
+			Nillable(),
 		field.Int("configuration_item_id").
 			Comment("配置项ID").
 			Optional(),
@@ -158,5 +167,20 @@ func (Incident) Edges() []ent.Edge {
 		edge.From("problems", Problem.Type).
 			Ref("incidents").
 			Comment("关联的问题"),
+		edge.From("assignment_group", Group.Type).
+			Ref("assigned_incidents").
+			Field("assignment_group_id").
+			Unique(),
+		edge.From("email_conversation", EmailConversation.Type).
+			Ref("incidents").
+			Field("email_conversation_id").
+			Unique(),
+	}
+}
+
+func (Incident) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("tenant_id", "email_conversation_id").Unique(),
+		index.Fields("tenant_id", "assignment_group_id"),
 	}
 }

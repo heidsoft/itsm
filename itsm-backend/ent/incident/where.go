@@ -110,6 +110,16 @@ func AssigneeID(v int) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldAssigneeID, v))
 }
 
+// AssignmentGroupID applies equality check predicate on the "assignment_group_id" field. It's identical to AssignmentGroupIDEQ.
+func AssignmentGroupID(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldAssignmentGroupID, v))
+}
+
+// EmailConversationID applies equality check predicate on the "email_conversation_id" field. It's identical to EmailConversationIDEQ.
+func EmailConversationID(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldEmailConversationID, v))
+}
+
 // ConfigurationItemID applies equality check predicate on the "configuration_item_id" field. It's identical to ConfigurationItemIDEQ.
 func ConfigurationItemID(v int) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldConfigurationItemID, v))
@@ -873,6 +883,66 @@ func AssigneeIDIsNil() predicate.Incident {
 // AssigneeIDNotNil applies the NotNil predicate on the "assignee_id" field.
 func AssigneeIDNotNil() predicate.Incident {
 	return predicate.Incident(sql.FieldNotNull(FieldAssigneeID))
+}
+
+// AssignmentGroupIDEQ applies the EQ predicate on the "assignment_group_id" field.
+func AssignmentGroupIDEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldAssignmentGroupID, v))
+}
+
+// AssignmentGroupIDNEQ applies the NEQ predicate on the "assignment_group_id" field.
+func AssignmentGroupIDNEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldAssignmentGroupID, v))
+}
+
+// AssignmentGroupIDIn applies the In predicate on the "assignment_group_id" field.
+func AssignmentGroupIDIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldAssignmentGroupID, vs...))
+}
+
+// AssignmentGroupIDNotIn applies the NotIn predicate on the "assignment_group_id" field.
+func AssignmentGroupIDNotIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldAssignmentGroupID, vs...))
+}
+
+// AssignmentGroupIDIsNil applies the IsNil predicate on the "assignment_group_id" field.
+func AssignmentGroupIDIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldAssignmentGroupID))
+}
+
+// AssignmentGroupIDNotNil applies the NotNil predicate on the "assignment_group_id" field.
+func AssignmentGroupIDNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldAssignmentGroupID))
+}
+
+// EmailConversationIDEQ applies the EQ predicate on the "email_conversation_id" field.
+func EmailConversationIDEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldEmailConversationID, v))
+}
+
+// EmailConversationIDNEQ applies the NEQ predicate on the "email_conversation_id" field.
+func EmailConversationIDNEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldEmailConversationID, v))
+}
+
+// EmailConversationIDIn applies the In predicate on the "email_conversation_id" field.
+func EmailConversationIDIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldEmailConversationID, vs...))
+}
+
+// EmailConversationIDNotIn applies the NotIn predicate on the "email_conversation_id" field.
+func EmailConversationIDNotIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldEmailConversationID, vs...))
+}
+
+// EmailConversationIDIsNil applies the IsNil predicate on the "email_conversation_id" field.
+func EmailConversationIDIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldEmailConversationID))
+}
+
+// EmailConversationIDNotNil applies the NotNil predicate on the "email_conversation_id" field.
+func EmailConversationIDNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldEmailConversationID))
 }
 
 // ConfigurationItemIDEQ applies the EQ predicate on the "configuration_item_id" field.
@@ -1793,6 +1863,52 @@ func HasProblems() predicate.Incident {
 func HasProblemsWith(preds ...predicate.Problem) predicate.Incident {
 	return predicate.Incident(func(s *sql.Selector) {
 		step := newProblemsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAssignmentGroup applies the HasEdge predicate on the "assignment_group" edge.
+func HasAssignmentGroup() predicate.Incident {
+	return predicate.Incident(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AssignmentGroupTable, AssignmentGroupColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAssignmentGroupWith applies the HasEdge predicate on the "assignment_group" edge with a given conditions (other predicates).
+func HasAssignmentGroupWith(preds ...predicate.Group) predicate.Incident {
+	return predicate.Incident(func(s *sql.Selector) {
+		step := newAssignmentGroupStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasEmailConversation applies the HasEdge predicate on the "email_conversation" edge.
+func HasEmailConversation() predicate.Incident {
+	return predicate.Incident(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, EmailConversationTable, EmailConversationColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasEmailConversationWith applies the HasEdge predicate on the "email_conversation" edge with a given conditions (other predicates).
+func HasEmailConversationWith(preds ...predicate.EmailConversation) predicate.Incident {
+	return predicate.Incident(func(s *sql.Selector) {
+		step := newEmailConversationStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

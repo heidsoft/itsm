@@ -38,9 +38,13 @@ type Group struct {
 type GroupEdges struct {
 	// 组的成员
 	Members []*User `json:"members,omitempty"`
+	// OnCallSchedules holds the value of the on_call_schedules edge.
+	OnCallSchedules []*OnCallSchedule `json:"on_call_schedules,omitempty"`
+	// AssignedIncidents holds the value of the assigned_incidents edge.
+	AssignedIncidents []*Incident `json:"assigned_incidents,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // MembersOrErr returns the Members value or an error if the edge
@@ -50,6 +54,24 @@ func (e GroupEdges) MembersOrErr() ([]*User, error) {
 		return e.Members, nil
 	}
 	return nil, &NotLoadedError{edge: "members"}
+}
+
+// OnCallSchedulesOrErr returns the OnCallSchedules value or an error if the edge
+// was not loaded in eager-loading.
+func (e GroupEdges) OnCallSchedulesOrErr() ([]*OnCallSchedule, error) {
+	if e.loadedTypes[1] {
+		return e.OnCallSchedules, nil
+	}
+	return nil, &NotLoadedError{edge: "on_call_schedules"}
+}
+
+// AssignedIncidentsOrErr returns the AssignedIncidents value or an error if the edge
+// was not loaded in eager-loading.
+func (e GroupEdges) AssignedIncidentsOrErr() ([]*Incident, error) {
+	if e.loadedTypes[2] {
+		return e.AssignedIncidents, nil
+	}
+	return nil, &NotLoadedError{edge: "assigned_incidents"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -139,6 +161,16 @@ func (_m *Group) Value(name string) (ent.Value, error) {
 // QueryMembers queries the "members" edge of the Group entity.
 func (_m *Group) QueryMembers() *UserQuery {
 	return NewGroupClient(_m.config).QueryMembers(_m)
+}
+
+// QueryOnCallSchedules queries the "on_call_schedules" edge of the Group entity.
+func (_m *Group) QueryOnCallSchedules() *OnCallScheduleQuery {
+	return NewGroupClient(_m.config).QueryOnCallSchedules(_m)
+}
+
+// QueryAssignedIncidents queries the "assigned_incidents" edge of the Group entity.
+func (_m *Group) QueryAssignedIncidents() *IncidentQuery {
+	return NewGroupClient(_m.config).QueryAssignedIncidents(_m)
 }
 
 // Update returns a builder for updating this Group.

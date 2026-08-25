@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/emailconversation"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
@@ -211,6 +213,46 @@ func (_u *IncidentUpdate) AddAssigneeID(v int) *IncidentUpdate {
 // ClearAssigneeID clears the value of the "assignee_id" field.
 func (_u *IncidentUpdate) ClearAssigneeID() *IncidentUpdate {
 	_u.mutation.ClearAssigneeID()
+	return _u
+}
+
+// SetAssignmentGroupID sets the "assignment_group_id" field.
+func (_u *IncidentUpdate) SetAssignmentGroupID(v int) *IncidentUpdate {
+	_u.mutation.SetAssignmentGroupID(v)
+	return _u
+}
+
+// SetNillableAssignmentGroupID sets the "assignment_group_id" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableAssignmentGroupID(v *int) *IncidentUpdate {
+	if v != nil {
+		_u.SetAssignmentGroupID(*v)
+	}
+	return _u
+}
+
+// ClearAssignmentGroupID clears the value of the "assignment_group_id" field.
+func (_u *IncidentUpdate) ClearAssignmentGroupID() *IncidentUpdate {
+	_u.mutation.ClearAssignmentGroupID()
+	return _u
+}
+
+// SetEmailConversationID sets the "email_conversation_id" field.
+func (_u *IncidentUpdate) SetEmailConversationID(v int) *IncidentUpdate {
+	_u.mutation.SetEmailConversationID(v)
+	return _u
+}
+
+// SetNillableEmailConversationID sets the "email_conversation_id" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableEmailConversationID(v *int) *IncidentUpdate {
+	if v != nil {
+		_u.SetEmailConversationID(*v)
+	}
+	return _u
+}
+
+// ClearEmailConversationID clears the value of the "email_conversation_id" field.
+func (_u *IncidentUpdate) ClearEmailConversationID() *IncidentUpdate {
+	_u.mutation.ClearEmailConversationID()
 	return _u
 }
 
@@ -659,6 +701,16 @@ func (_u *IncidentUpdate) AddProblems(v ...*Problem) *IncidentUpdate {
 	return _u.AddProblemIDs(ids...)
 }
 
+// SetAssignmentGroup sets the "assignment_group" edge to the Group entity.
+func (_u *IncidentUpdate) SetAssignmentGroup(v *Group) *IncidentUpdate {
+	return _u.SetAssignmentGroupID(v.ID)
+}
+
+// SetEmailConversation sets the "email_conversation" edge to the EmailConversation entity.
+func (_u *IncidentUpdate) SetEmailConversation(v *EmailConversation) *IncidentUpdate {
+	return _u.SetEmailConversationID(v.ID)
+}
+
 // Mutation returns the IncidentMutation object of the builder.
 func (_u *IncidentUpdate) Mutation() *IncidentMutation {
 	return _u.mutation
@@ -809,6 +861,18 @@ func (_u *IncidentUpdate) RemoveProblems(v ...*Problem) *IncidentUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveProblemIDs(ids...)
+}
+
+// ClearAssignmentGroup clears the "assignment_group" edge to the Group entity.
+func (_u *IncidentUpdate) ClearAssignmentGroup() *IncidentUpdate {
+	_u.mutation.ClearAssignmentGroup()
+	return _u
+}
+
+// ClearEmailConversation clears the "email_conversation" edge to the EmailConversation entity.
+func (_u *IncidentUpdate) ClearEmailConversation() *IncidentUpdate {
+	_u.mutation.ClearEmailConversation()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1374,6 +1438,64 @@ func (_u *IncidentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.AssignmentGroupCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   incident.AssignmentGroupTable,
+			Columns: []string{incident.AssignmentGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AssignmentGroupIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   incident.AssignmentGroupTable,
+			Columns: []string{incident.AssignmentGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.EmailConversationCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   incident.EmailConversationTable,
+			Columns: []string{incident.EmailConversationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailconversation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.EmailConversationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   incident.EmailConversationTable,
+			Columns: []string{incident.EmailConversationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailconversation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incident.Label}
@@ -1571,6 +1693,46 @@ func (_u *IncidentUpdateOne) AddAssigneeID(v int) *IncidentUpdateOne {
 // ClearAssigneeID clears the value of the "assignee_id" field.
 func (_u *IncidentUpdateOne) ClearAssigneeID() *IncidentUpdateOne {
 	_u.mutation.ClearAssigneeID()
+	return _u
+}
+
+// SetAssignmentGroupID sets the "assignment_group_id" field.
+func (_u *IncidentUpdateOne) SetAssignmentGroupID(v int) *IncidentUpdateOne {
+	_u.mutation.SetAssignmentGroupID(v)
+	return _u
+}
+
+// SetNillableAssignmentGroupID sets the "assignment_group_id" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableAssignmentGroupID(v *int) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetAssignmentGroupID(*v)
+	}
+	return _u
+}
+
+// ClearAssignmentGroupID clears the value of the "assignment_group_id" field.
+func (_u *IncidentUpdateOne) ClearAssignmentGroupID() *IncidentUpdateOne {
+	_u.mutation.ClearAssignmentGroupID()
+	return _u
+}
+
+// SetEmailConversationID sets the "email_conversation_id" field.
+func (_u *IncidentUpdateOne) SetEmailConversationID(v int) *IncidentUpdateOne {
+	_u.mutation.SetEmailConversationID(v)
+	return _u
+}
+
+// SetNillableEmailConversationID sets the "email_conversation_id" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableEmailConversationID(v *int) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetEmailConversationID(*v)
+	}
+	return _u
+}
+
+// ClearEmailConversationID clears the value of the "email_conversation_id" field.
+func (_u *IncidentUpdateOne) ClearEmailConversationID() *IncidentUpdateOne {
+	_u.mutation.ClearEmailConversationID()
 	return _u
 }
 
@@ -2019,6 +2181,16 @@ func (_u *IncidentUpdateOne) AddProblems(v ...*Problem) *IncidentUpdateOne {
 	return _u.AddProblemIDs(ids...)
 }
 
+// SetAssignmentGroup sets the "assignment_group" edge to the Group entity.
+func (_u *IncidentUpdateOne) SetAssignmentGroup(v *Group) *IncidentUpdateOne {
+	return _u.SetAssignmentGroupID(v.ID)
+}
+
+// SetEmailConversation sets the "email_conversation" edge to the EmailConversation entity.
+func (_u *IncidentUpdateOne) SetEmailConversation(v *EmailConversation) *IncidentUpdateOne {
+	return _u.SetEmailConversationID(v.ID)
+}
+
 // Mutation returns the IncidentMutation object of the builder.
 func (_u *IncidentUpdateOne) Mutation() *IncidentMutation {
 	return _u.mutation
@@ -2169,6 +2341,18 @@ func (_u *IncidentUpdateOne) RemoveProblems(v ...*Problem) *IncidentUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveProblemIDs(ids...)
+}
+
+// ClearAssignmentGroup clears the "assignment_group" edge to the Group entity.
+func (_u *IncidentUpdateOne) ClearAssignmentGroup() *IncidentUpdateOne {
+	_u.mutation.ClearAssignmentGroup()
+	return _u
+}
+
+// ClearEmailConversation clears the "email_conversation" edge to the EmailConversation entity.
+func (_u *IncidentUpdateOne) ClearEmailConversation() *IncidentUpdateOne {
+	_u.mutation.ClearEmailConversation()
+	return _u
 }
 
 // Where appends a list predicates to the IncidentUpdate builder.
@@ -2757,6 +2941,64 @@ func (_u *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AssignmentGroupCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   incident.AssignmentGroupTable,
+			Columns: []string{incident.AssignmentGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AssignmentGroupIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   incident.AssignmentGroupTable,
+			Columns: []string{incident.AssignmentGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.EmailConversationCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   incident.EmailConversationTable,
+			Columns: []string{incident.EmailConversationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailconversation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.EmailConversationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   incident.EmailConversationTable,
+			Columns: []string{incident.EmailConversationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailconversation.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

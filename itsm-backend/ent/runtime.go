@@ -27,17 +27,24 @@ import (
 	"itsm-backend/ent/cmdbsavedview"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/configurationitemhistory"
+	"itsm-backend/ent/connectorconfig"
 	"itsm-backend/ent/contract"
 	"itsm-backend/ent/conversation"
+	"itsm-backend/ent/customerbranch"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
 	"itsm-backend/ent/domainconfig"
+	"itsm-backend/ent/emailconversation"
+	"itsm-backend/ent/emailintakeanalysis"
+	"itsm-backend/ent/emailoutboundmessage"
 	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
+	"itsm-backend/ent/externalcontractreference"
 	"itsm-backend/ent/feishuticketsync"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/inboundemailmessage"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentescalationrule"
@@ -60,6 +67,8 @@ import (
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/notificationdelivery"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/oncallschedule"
+	"itsm-backend/ent/oncallshift"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
@@ -85,6 +94,7 @@ import (
 	"itsm-backend/ent/schema"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicecatalogitem"
+	"itsm-backend/ent/servicecustomer"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/slaalerthistory"
@@ -93,7 +103,9 @@ import (
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/sourceorganization"
 	"itsm-backend/ent/standardchange"
+	"itsm-backend/ent/supportcontract"
 	"itsm-backend/ent/survey"
 	"itsm-backend/ent/surveyresponse"
 	"itsm-backend/ent/systemconfig"
@@ -949,6 +961,76 @@ func init() {
 	configurationitemhistoryDescCreatedAt := configurationitemhistoryFields[10].Descriptor()
 	// configurationitemhistory.DefaultCreatedAt holds the default value on creation for the created_at field.
 	configurationitemhistory.DefaultCreatedAt = configurationitemhistoryDescCreatedAt.Default.(func() time.Time)
+	connectorconfigFields := schema.ConnectorConfig{}.Fields()
+	_ = connectorconfigFields
+	// connectorconfigDescTenantID is the schema descriptor for tenant_id field.
+	connectorconfigDescTenantID := connectorconfigFields[0].Descriptor()
+	// connectorconfig.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	connectorconfig.TenantIDValidator = connectorconfigDescTenantID.Validators[0].(func(int) error)
+	// connectorconfigDescName is the schema descriptor for name field.
+	connectorconfigDescName := connectorconfigFields[1].Descriptor()
+	// connectorconfig.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	connectorconfig.NameValidator = func() func(string) error {
+		validators := connectorconfigDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// connectorconfigDescProvider is the schema descriptor for provider field.
+	connectorconfigDescProvider := connectorconfigFields[2].Descriptor()
+	// connectorconfig.ProviderValidator is a validator for the "provider" field. It is called by the builders before save.
+	connectorconfig.ProviderValidator = func() func(string) error {
+		validators := connectorconfigDescProvider.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(provider string) error {
+			for _, fn := range fns {
+				if err := fn(provider); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// connectorconfigDescConnectorType is the schema descriptor for connector_type field.
+	connectorconfigDescConnectorType := connectorconfigFields[3].Descriptor()
+	// connectorconfig.ConnectorTypeValidator is a validator for the "connector_type" field. It is called by the builders before save.
+	connectorconfig.ConnectorTypeValidator = connectorconfigDescConnectorType.Validators[0].(func(string) error)
+	// connectorconfigDescEnabled is the schema descriptor for enabled field.
+	connectorconfigDescEnabled := connectorconfigFields[4].Descriptor()
+	// connectorconfig.DefaultEnabled holds the default value on creation for the enabled field.
+	connectorconfig.DefaultEnabled = connectorconfigDescEnabled.Default.(bool)
+	// connectorconfigDescStatus is the schema descriptor for status field.
+	connectorconfigDescStatus := connectorconfigFields[8].Descriptor()
+	// connectorconfig.DefaultStatus holds the default value on creation for the status field.
+	connectorconfig.DefaultStatus = connectorconfigDescStatus.Default.(string)
+	// connectorconfig.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	connectorconfig.StatusValidator = connectorconfigDescStatus.Validators[0].(func(string) error)
+	// connectorconfigDescLastError is the schema descriptor for last_error field.
+	connectorconfigDescLastError := connectorconfigFields[9].Descriptor()
+	// connectorconfig.LastErrorValidator is a validator for the "last_error" field. It is called by the builders before save.
+	connectorconfig.LastErrorValidator = connectorconfigDescLastError.Validators[0].(func(string) error)
+	// connectorconfigDescCreatedAt is the schema descriptor for created_at field.
+	connectorconfigDescCreatedAt := connectorconfigFields[11].Descriptor()
+	// connectorconfig.DefaultCreatedAt holds the default value on creation for the created_at field.
+	connectorconfig.DefaultCreatedAt = connectorconfigDescCreatedAt.Default.(func() time.Time)
+	// connectorconfigDescUpdatedAt is the schema descriptor for updated_at field.
+	connectorconfigDescUpdatedAt := connectorconfigFields[12].Descriptor()
+	// connectorconfig.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	connectorconfig.DefaultUpdatedAt = connectorconfigDescUpdatedAt.Default.(func() time.Time)
+	// connectorconfig.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	connectorconfig.UpdateDefaultUpdatedAt = connectorconfigDescUpdatedAt.UpdateDefault.(func() time.Time)
 	contractFields := schema.Contract{}.Fields()
 	_ = contractFields
 	// contractDescContractNumber is the schema descriptor for contract_number field.
@@ -981,6 +1063,68 @@ func init() {
 	conversationDescTitle := conversationFields[3].Descriptor()
 	// conversation.DefaultTitle holds the default value on creation for the title field.
 	conversation.DefaultTitle = conversationDescTitle.Default.(string)
+	customerbranchFields := schema.CustomerBranch{}.Fields()
+	_ = customerbranchFields
+	// customerbranchDescTenantID is the schema descriptor for tenant_id field.
+	customerbranchDescTenantID := customerbranchFields[0].Descriptor()
+	// customerbranch.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	customerbranch.TenantIDValidator = customerbranchDescTenantID.Validators[0].(func(int) error)
+	// customerbranchDescCustomerID is the schema descriptor for customer_id field.
+	customerbranchDescCustomerID := customerbranchFields[1].Descriptor()
+	// customerbranch.CustomerIDValidator is a validator for the "customer_id" field. It is called by the builders before save.
+	customerbranch.CustomerIDValidator = customerbranchDescCustomerID.Validators[0].(func(int) error)
+	// customerbranchDescName is the schema descriptor for name field.
+	customerbranchDescName := customerbranchFields[2].Descriptor()
+	// customerbranch.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	customerbranch.NameValidator = func() func(string) error {
+		validators := customerbranchDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// customerbranchDescNormalizedName is the schema descriptor for normalized_name field.
+	customerbranchDescNormalizedName := customerbranchFields[3].Descriptor()
+	// customerbranch.NormalizedNameValidator is a validator for the "normalized_name" field. It is called by the builders before save.
+	customerbranch.NormalizedNameValidator = func() func(string) error {
+		validators := customerbranchDescNormalizedName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(normalized_name string) error {
+			for _, fn := range fns {
+				if err := fn(normalized_name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// customerbranchDescStatus is the schema descriptor for status field.
+	customerbranchDescStatus := customerbranchFields[5].Descriptor()
+	// customerbranch.DefaultStatus holds the default value on creation for the status field.
+	customerbranch.DefaultStatus = customerbranchDescStatus.Default.(string)
+	// customerbranch.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	customerbranch.StatusValidator = customerbranchDescStatus.Validators[0].(func(string) error)
+	// customerbranchDescCreatedAt is the schema descriptor for created_at field.
+	customerbranchDescCreatedAt := customerbranchFields[6].Descriptor()
+	// customerbranch.DefaultCreatedAt holds the default value on creation for the created_at field.
+	customerbranch.DefaultCreatedAt = customerbranchDescCreatedAt.Default.(func() time.Time)
+	// customerbranchDescUpdatedAt is the schema descriptor for updated_at field.
+	customerbranchDescUpdatedAt := customerbranchFields[7].Descriptor()
+	// customerbranch.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	customerbranch.DefaultUpdatedAt = customerbranchDescUpdatedAt.Default.(func() time.Time)
+	// customerbranch.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	customerbranch.UpdateDefaultUpdatedAt = customerbranchDescUpdatedAt.UpdateDefault.(func() time.Time)
 	departmentFields := schema.Department{}.Fields()
 	_ = departmentFields
 	// departmentDescName is the schema descriptor for name field.
@@ -1137,6 +1281,250 @@ func init() {
 	domainconfig.DefaultUpdatedAt = domainconfigDescUpdatedAt.Default.(func() time.Time)
 	// domainconfig.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	domainconfig.UpdateDefaultUpdatedAt = domainconfigDescUpdatedAt.UpdateDefault.(func() time.Time)
+	emailconversationFields := schema.EmailConversation{}.Fields()
+	_ = emailconversationFields
+	// emailconversationDescTenantID is the schema descriptor for tenant_id field.
+	emailconversationDescTenantID := emailconversationFields[0].Descriptor()
+	// emailconversation.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	emailconversation.TenantIDValidator = emailconversationDescTenantID.Validators[0].(func(int) error)
+	// emailconversationDescExternalThreadID is the schema descriptor for external_thread_id field.
+	emailconversationDescExternalThreadID := emailconversationFields[1].Descriptor()
+	// emailconversation.ExternalThreadIDValidator is a validator for the "external_thread_id" field. It is called by the builders before save.
+	emailconversation.ExternalThreadIDValidator = emailconversationDescExternalThreadID.Validators[0].(func(string) error)
+	// emailconversationDescConversationToken is the schema descriptor for conversation_token field.
+	emailconversationDescConversationToken := emailconversationFields[2].Descriptor()
+	// emailconversation.ConversationTokenValidator is a validator for the "conversation_token" field. It is called by the builders before save.
+	emailconversation.ConversationTokenValidator = func() func(string) error {
+		validators := emailconversationDescConversationToken.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(conversation_token string) error {
+			for _, fn := range fns {
+				if err := fn(conversation_token); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// emailconversationDescStatus is the schema descriptor for status field.
+	emailconversationDescStatus := emailconversationFields[7].Descriptor()
+	// emailconversation.DefaultStatus holds the default value on creation for the status field.
+	emailconversation.DefaultStatus = emailconversationDescStatus.Default.(string)
+	// emailconversation.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	emailconversation.StatusValidator = emailconversationDescStatus.Validators[0].(func(string) error)
+	// emailconversationDescConfidence is the schema descriptor for confidence field.
+	emailconversationDescConfidence := emailconversationFields[11].Descriptor()
+	// emailconversation.DefaultConfidence holds the default value on creation for the confidence field.
+	emailconversation.DefaultConfidence = emailconversationDescConfidence.Default.(float64)
+	// emailconversationDescVersion is the schema descriptor for version field.
+	emailconversationDescVersion := emailconversationFields[12].Descriptor()
+	// emailconversation.DefaultVersion holds the default value on creation for the version field.
+	emailconversation.DefaultVersion = emailconversationDescVersion.Default.(int)
+	// emailconversation.VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	emailconversation.VersionValidator = emailconversationDescVersion.Validators[0].(func(int) error)
+	// emailconversationDescLastMessageAt is the schema descriptor for last_message_at field.
+	emailconversationDescLastMessageAt := emailconversationFields[13].Descriptor()
+	// emailconversation.DefaultLastMessageAt holds the default value on creation for the last_message_at field.
+	emailconversation.DefaultLastMessageAt = emailconversationDescLastMessageAt.Default.(func() time.Time)
+	// emailconversationDescCreatedAt is the schema descriptor for created_at field.
+	emailconversationDescCreatedAt := emailconversationFields[14].Descriptor()
+	// emailconversation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	emailconversation.DefaultCreatedAt = emailconversationDescCreatedAt.Default.(func() time.Time)
+	// emailconversationDescUpdatedAt is the schema descriptor for updated_at field.
+	emailconversationDescUpdatedAt := emailconversationFields[15].Descriptor()
+	// emailconversation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	emailconversation.DefaultUpdatedAt = emailconversationDescUpdatedAt.Default.(func() time.Time)
+	// emailconversation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	emailconversation.UpdateDefaultUpdatedAt = emailconversationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	emailintakeanalysisFields := schema.EmailIntakeAnalysis{}.Fields()
+	_ = emailintakeanalysisFields
+	// emailintakeanalysisDescTenantID is the schema descriptor for tenant_id field.
+	emailintakeanalysisDescTenantID := emailintakeanalysisFields[0].Descriptor()
+	// emailintakeanalysis.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	emailintakeanalysis.TenantIDValidator = emailintakeanalysisDescTenantID.Validators[0].(func(int) error)
+	// emailintakeanalysisDescConversationID is the schema descriptor for conversation_id field.
+	emailintakeanalysisDescConversationID := emailintakeanalysisFields[1].Descriptor()
+	// emailintakeanalysis.ConversationIDValidator is a validator for the "conversation_id" field. It is called by the builders before save.
+	emailintakeanalysis.ConversationIDValidator = emailintakeanalysisDescConversationID.Validators[0].(func(int) error)
+	// emailintakeanalysisDescMessageID is the schema descriptor for message_id field.
+	emailintakeanalysisDescMessageID := emailintakeanalysisFields[2].Descriptor()
+	// emailintakeanalysis.MessageIDValidator is a validator for the "message_id" field. It is called by the builders before save.
+	emailintakeanalysis.MessageIDValidator = emailintakeanalysisDescMessageID.Validators[0].(func(int) error)
+	// emailintakeanalysisDescProvider is the schema descriptor for provider field.
+	emailintakeanalysisDescProvider := emailintakeanalysisFields[3].Descriptor()
+	// emailintakeanalysis.ProviderValidator is a validator for the "provider" field. It is called by the builders before save.
+	emailintakeanalysis.ProviderValidator = emailintakeanalysisDescProvider.Validators[0].(func(string) error)
+	// emailintakeanalysisDescModel is the schema descriptor for model field.
+	emailintakeanalysisDescModel := emailintakeanalysisFields[4].Descriptor()
+	// emailintakeanalysis.ModelValidator is a validator for the "model" field. It is called by the builders before save.
+	emailintakeanalysis.ModelValidator = emailintakeanalysisDescModel.Validators[0].(func(string) error)
+	// emailintakeanalysisDescPromptVersion is the schema descriptor for prompt_version field.
+	emailintakeanalysisDescPromptVersion := emailintakeanalysisFields[5].Descriptor()
+	// emailintakeanalysis.PromptVersionValidator is a validator for the "prompt_version" field. It is called by the builders before save.
+	emailintakeanalysis.PromptVersionValidator = func() func(string) error {
+		validators := emailintakeanalysisDescPromptVersion.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(prompt_version string) error {
+			for _, fn := range fns {
+				if err := fn(prompt_version); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// emailintakeanalysisDescConfidence is the schema descriptor for confidence field.
+	emailintakeanalysisDescConfidence := emailintakeanalysisFields[8].Descriptor()
+	// emailintakeanalysis.DefaultConfidence holds the default value on creation for the confidence field.
+	emailintakeanalysis.DefaultConfidence = emailintakeanalysisDescConfidence.Default.(float64)
+	// emailintakeanalysisDescLatencyMs is the schema descriptor for latency_ms field.
+	emailintakeanalysisDescLatencyMs := emailintakeanalysisFields[9].Descriptor()
+	// emailintakeanalysis.DefaultLatencyMs holds the default value on creation for the latency_ms field.
+	emailintakeanalysis.DefaultLatencyMs = emailintakeanalysisDescLatencyMs.Default.(int64)
+	// emailintakeanalysis.LatencyMsValidator is a validator for the "latency_ms" field. It is called by the builders before save.
+	emailintakeanalysis.LatencyMsValidator = emailintakeanalysisDescLatencyMs.Validators[0].(func(int64) error)
+	// emailintakeanalysisDescStatus is the schema descriptor for status field.
+	emailintakeanalysisDescStatus := emailintakeanalysisFields[10].Descriptor()
+	// emailintakeanalysis.DefaultStatus holds the default value on creation for the status field.
+	emailintakeanalysis.DefaultStatus = emailintakeanalysisDescStatus.Default.(string)
+	// emailintakeanalysis.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	emailintakeanalysis.StatusValidator = emailintakeanalysisDescStatus.Validators[0].(func(string) error)
+	// emailintakeanalysisDescValidationError is the schema descriptor for validation_error field.
+	emailintakeanalysisDescValidationError := emailintakeanalysisFields[11].Descriptor()
+	// emailintakeanalysis.ValidationErrorValidator is a validator for the "validation_error" field. It is called by the builders before save.
+	emailintakeanalysis.ValidationErrorValidator = emailintakeanalysisDescValidationError.Validators[0].(func(string) error)
+	// emailintakeanalysisDescCreatedAt is the schema descriptor for created_at field.
+	emailintakeanalysisDescCreatedAt := emailintakeanalysisFields[14].Descriptor()
+	// emailintakeanalysis.DefaultCreatedAt holds the default value on creation for the created_at field.
+	emailintakeanalysis.DefaultCreatedAt = emailintakeanalysisDescCreatedAt.Default.(func() time.Time)
+	// emailintakeanalysisDescUpdatedAt is the schema descriptor for updated_at field.
+	emailintakeanalysisDescUpdatedAt := emailintakeanalysisFields[15].Descriptor()
+	// emailintakeanalysis.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	emailintakeanalysis.DefaultUpdatedAt = emailintakeanalysisDescUpdatedAt.Default.(func() time.Time)
+	// emailintakeanalysis.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	emailintakeanalysis.UpdateDefaultUpdatedAt = emailintakeanalysisDescUpdatedAt.UpdateDefault.(func() time.Time)
+	emailoutboundmessageFields := schema.EmailOutboundMessage{}.Fields()
+	_ = emailoutboundmessageFields
+	// emailoutboundmessageDescTenantID is the schema descriptor for tenant_id field.
+	emailoutboundmessageDescTenantID := emailoutboundmessageFields[0].Descriptor()
+	// emailoutboundmessage.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	emailoutboundmessage.TenantIDValidator = emailoutboundmessageDescTenantID.Validators[0].(func(int) error)
+	// emailoutboundmessageDescConversationID is the schema descriptor for conversation_id field.
+	emailoutboundmessageDescConversationID := emailoutboundmessageFields[1].Descriptor()
+	// emailoutboundmessage.ConversationIDValidator is a validator for the "conversation_id" field. It is called by the builders before save.
+	emailoutboundmessage.ConversationIDValidator = emailoutboundmessageDescConversationID.Validators[0].(func(int) error)
+	// emailoutboundmessageDescMailboxInstanceKey is the schema descriptor for mailbox_instance_key field.
+	emailoutboundmessageDescMailboxInstanceKey := emailoutboundmessageFields[2].Descriptor()
+	// emailoutboundmessage.MailboxInstanceKeyValidator is a validator for the "mailbox_instance_key" field. It is called by the builders before save.
+	emailoutboundmessage.MailboxInstanceKeyValidator = func() func(string) error {
+		validators := emailoutboundmessageDescMailboxInstanceKey.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(mailbox_instance_key string) error {
+			for _, fn := range fns {
+				if err := fn(mailbox_instance_key); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// emailoutboundmessageDescReplyType is the schema descriptor for reply_type field.
+	emailoutboundmessageDescReplyType := emailoutboundmessageFields[3].Descriptor()
+	// emailoutboundmessage.ReplyTypeValidator is a validator for the "reply_type" field. It is called by the builders before save.
+	emailoutboundmessage.ReplyTypeValidator = func() func(string) error {
+		validators := emailoutboundmessageDescReplyType.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(reply_type string) error {
+			for _, fn := range fns {
+				if err := fn(reply_type); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// emailoutboundmessageDescRevision is the schema descriptor for revision field.
+	emailoutboundmessageDescRevision := emailoutboundmessageFields[4].Descriptor()
+	// emailoutboundmessage.RevisionValidator is a validator for the "revision" field. It is called by the builders before save.
+	emailoutboundmessage.RevisionValidator = emailoutboundmessageDescRevision.Validators[0].(func(int) error)
+	// emailoutboundmessageDescToAddress is the schema descriptor for to_address field.
+	emailoutboundmessageDescToAddress := emailoutboundmessageFields[5].Descriptor()
+	// emailoutboundmessage.ToAddressValidator is a validator for the "to_address" field. It is called by the builders before save.
+	emailoutboundmessage.ToAddressValidator = func() func(string) error {
+		validators := emailoutboundmessageDescToAddress.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(to_address string) error {
+			for _, fn := range fns {
+				if err := fn(to_address); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// emailoutboundmessageDescSubject is the schema descriptor for subject field.
+	emailoutboundmessageDescSubject := emailoutboundmessageFields[6].Descriptor()
+	// emailoutboundmessage.SubjectValidator is a validator for the "subject" field. It is called by the builders before save.
+	emailoutboundmessage.SubjectValidator = func() func(string) error {
+		validators := emailoutboundmessageDescSubject.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(subject string) error {
+			for _, fn := range fns {
+				if err := fn(subject); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// emailoutboundmessageDescInReplyTo is the schema descriptor for in_reply_to field.
+	emailoutboundmessageDescInReplyTo := emailoutboundmessageFields[8].Descriptor()
+	// emailoutboundmessage.InReplyToValidator is a validator for the "in_reply_to" field. It is called by the builders before save.
+	emailoutboundmessage.InReplyToValidator = emailoutboundmessageDescInReplyTo.Validators[0].(func(string) error)
+	// emailoutboundmessageDescStatus is the schema descriptor for status field.
+	emailoutboundmessageDescStatus := emailoutboundmessageFields[10].Descriptor()
+	// emailoutboundmessage.DefaultStatus holds the default value on creation for the status field.
+	emailoutboundmessage.DefaultStatus = emailoutboundmessageDescStatus.Default.(string)
+	// emailoutboundmessage.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	emailoutboundmessage.StatusValidator = emailoutboundmessageDescStatus.Validators[0].(func(string) error)
+	// emailoutboundmessageDescAttempts is the schema descriptor for attempts field.
+	emailoutboundmessageDescAttempts := emailoutboundmessageFields[11].Descriptor()
+	// emailoutboundmessage.DefaultAttempts holds the default value on creation for the attempts field.
+	emailoutboundmessage.DefaultAttempts = emailoutboundmessageDescAttempts.Default.(int)
+	// emailoutboundmessage.AttemptsValidator is a validator for the "attempts" field. It is called by the builders before save.
+	emailoutboundmessage.AttemptsValidator = emailoutboundmessageDescAttempts.Validators[0].(func(int) error)
+	// emailoutboundmessageDescLastError is the schema descriptor for last_error field.
+	emailoutboundmessageDescLastError := emailoutboundmessageFields[12].Descriptor()
+	// emailoutboundmessage.LastErrorValidator is a validator for the "last_error" field. It is called by the builders before save.
+	emailoutboundmessage.LastErrorValidator = emailoutboundmessageDescLastError.Validators[0].(func(string) error)
+	// emailoutboundmessageDescCreatedAt is the schema descriptor for created_at field.
+	emailoutboundmessageDescCreatedAt := emailoutboundmessageFields[14].Descriptor()
+	// emailoutboundmessage.DefaultCreatedAt holds the default value on creation for the created_at field.
+	emailoutboundmessage.DefaultCreatedAt = emailoutboundmessageDescCreatedAt.Default.(func() time.Time)
+	// emailoutboundmessageDescUpdatedAt is the schema descriptor for updated_at field.
+	emailoutboundmessageDescUpdatedAt := emailoutboundmessageFields[15].Descriptor()
+	// emailoutboundmessage.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	emailoutboundmessage.DefaultUpdatedAt = emailoutboundmessageDescUpdatedAt.Default.(func() time.Time)
+	// emailoutboundmessage.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	emailoutboundmessage.UpdateDefaultUpdatedAt = emailoutboundmessageDescUpdatedAt.UpdateDefault.(func() time.Time)
 	endpointaclFields := schema.EndpointACL{}.Fields()
 	_ = endpointaclFields
 	// endpointaclDescTenantID is the schema descriptor for tenant_id field.
@@ -1225,6 +1613,70 @@ func init() {
 	engineerskill.DefaultUpdatedAt = engineerskillDescUpdatedAt.Default.(func() time.Time)
 	// engineerskill.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	engineerskill.UpdateDefaultUpdatedAt = engineerskillDescUpdatedAt.UpdateDefault.(func() time.Time)
+	externalcontractreferenceFields := schema.ExternalContractReference{}.Fields()
+	_ = externalcontractreferenceFields
+	// externalcontractreferenceDescTenantID is the schema descriptor for tenant_id field.
+	externalcontractreferenceDescTenantID := externalcontractreferenceFields[0].Descriptor()
+	// externalcontractreference.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	externalcontractreference.TenantIDValidator = externalcontractreferenceDescTenantID.Validators[0].(func(int) error)
+	// externalcontractreferenceDescSourceOrganizationID is the schema descriptor for source_organization_id field.
+	externalcontractreferenceDescSourceOrganizationID := externalcontractreferenceFields[1].Descriptor()
+	// externalcontractreference.SourceOrganizationIDValidator is a validator for the "source_organization_id" field. It is called by the builders before save.
+	externalcontractreference.SourceOrganizationIDValidator = externalcontractreferenceDescSourceOrganizationID.Validators[0].(func(int) error)
+	// externalcontractreferenceDescSupportContractID is the schema descriptor for support_contract_id field.
+	externalcontractreferenceDescSupportContractID := externalcontractreferenceFields[2].Descriptor()
+	// externalcontractreference.SupportContractIDValidator is a validator for the "support_contract_id" field. It is called by the builders before save.
+	externalcontractreference.SupportContractIDValidator = externalcontractreferenceDescSupportContractID.Validators[0].(func(int) error)
+	// externalcontractreferenceDescCustomerID is the schema descriptor for customer_id field.
+	externalcontractreferenceDescCustomerID := externalcontractreferenceFields[3].Descriptor()
+	// externalcontractreference.CustomerIDValidator is a validator for the "customer_id" field. It is called by the builders before save.
+	externalcontractreference.CustomerIDValidator = externalcontractreferenceDescCustomerID.Validators[0].(func(int) error)
+	// externalcontractreferenceDescExternalContractNumber is the schema descriptor for external_contract_number field.
+	externalcontractreferenceDescExternalContractNumber := externalcontractreferenceFields[5].Descriptor()
+	// externalcontractreference.ExternalContractNumberValidator is a validator for the "external_contract_number" field. It is called by the builders before save.
+	externalcontractreference.ExternalContractNumberValidator = func() func(string) error {
+		validators := externalcontractreferenceDescExternalContractNumber.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(external_contract_number string) error {
+			for _, fn := range fns {
+				if err := fn(external_contract_number); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// externalcontractreferenceDescNormalizedExternalContractNumber is the schema descriptor for normalized_external_contract_number field.
+	externalcontractreferenceDescNormalizedExternalContractNumber := externalcontractreferenceFields[6].Descriptor()
+	// externalcontractreference.NormalizedExternalContractNumberValidator is a validator for the "normalized_external_contract_number" field. It is called by the builders before save.
+	externalcontractreference.NormalizedExternalContractNumberValidator = func() func(string) error {
+		validators := externalcontractreferenceDescNormalizedExternalContractNumber.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(normalized_external_contract_number string) error {
+			for _, fn := range fns {
+				if err := fn(normalized_external_contract_number); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// externalcontractreferenceDescCreatedAt is the schema descriptor for created_at field.
+	externalcontractreferenceDescCreatedAt := externalcontractreferenceFields[7].Descriptor()
+	// externalcontractreference.DefaultCreatedAt holds the default value on creation for the created_at field.
+	externalcontractreference.DefaultCreatedAt = externalcontractreferenceDescCreatedAt.Default.(func() time.Time)
+	// externalcontractreferenceDescUpdatedAt is the schema descriptor for updated_at field.
+	externalcontractreferenceDescUpdatedAt := externalcontractreferenceFields[8].Descriptor()
+	// externalcontractreference.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	externalcontractreference.DefaultUpdatedAt = externalcontractreferenceDescUpdatedAt.Default.(func() time.Time)
+	// externalcontractreference.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	externalcontractreference.UpdateDefaultUpdatedAt = externalcontractreferenceDescUpdatedAt.UpdateDefault.(func() time.Time)
 	feishuticketsyncFields := schema.FeishuTicketSync{}.Fields()
 	_ = feishuticketsyncFields
 	// feishuticketsyncDescTenantID is the schema descriptor for tenant_id field.
@@ -1273,6 +1725,112 @@ func init() {
 	group.DefaultUpdatedAt = groupDescUpdatedAt.Default.(func() time.Time)
 	// group.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	group.UpdateDefaultUpdatedAt = groupDescUpdatedAt.UpdateDefault.(func() time.Time)
+	inboundemailmessageFields := schema.InboundEmailMessage{}.Fields()
+	_ = inboundemailmessageFields
+	// inboundemailmessageDescTenantID is the schema descriptor for tenant_id field.
+	inboundemailmessageDescTenantID := inboundemailmessageFields[0].Descriptor()
+	// inboundemailmessage.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	inboundemailmessage.TenantIDValidator = inboundemailmessageDescTenantID.Validators[0].(func(int) error)
+	// inboundemailmessageDescConversationID is the schema descriptor for conversation_id field.
+	inboundemailmessageDescConversationID := inboundemailmessageFields[1].Descriptor()
+	// inboundemailmessage.ConversationIDValidator is a validator for the "conversation_id" field. It is called by the builders before save.
+	inboundemailmessage.ConversationIDValidator = inboundemailmessageDescConversationID.Validators[0].(func(int) error)
+	// inboundemailmessageDescProvider is the schema descriptor for provider field.
+	inboundemailmessageDescProvider := inboundemailmessageFields[2].Descriptor()
+	// inboundemailmessage.DefaultProvider holds the default value on creation for the provider field.
+	inboundemailmessage.DefaultProvider = inboundemailmessageDescProvider.Default.(string)
+	// inboundemailmessage.ProviderValidator is a validator for the "provider" field. It is called by the builders before save.
+	inboundemailmessage.ProviderValidator = inboundemailmessageDescProvider.Validators[0].(func(string) error)
+	// inboundemailmessageDescMailboxInstanceKey is the schema descriptor for mailbox_instance_key field.
+	inboundemailmessageDescMailboxInstanceKey := inboundemailmessageFields[3].Descriptor()
+	// inboundemailmessage.MailboxInstanceKeyValidator is a validator for the "mailbox_instance_key" field. It is called by the builders before save.
+	inboundemailmessage.MailboxInstanceKeyValidator = func() func(string) error {
+		validators := inboundemailmessageDescMailboxInstanceKey.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(mailbox_instance_key string) error {
+			for _, fn := range fns {
+				if err := fn(mailbox_instance_key); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// inboundemailmessageDescExternalMessageID is the schema descriptor for external_message_id field.
+	inboundemailmessageDescExternalMessageID := inboundemailmessageFields[6].Descriptor()
+	// inboundemailmessage.ExternalMessageIDValidator is a validator for the "external_message_id" field. It is called by the builders before save.
+	inboundemailmessage.ExternalMessageIDValidator = inboundemailmessageDescExternalMessageID.Validators[0].(func(string) error)
+	// inboundemailmessageDescInReplyTo is the schema descriptor for in_reply_to field.
+	inboundemailmessageDescInReplyTo := inboundemailmessageFields[7].Descriptor()
+	// inboundemailmessage.InReplyToValidator is a validator for the "in_reply_to" field. It is called by the builders before save.
+	inboundemailmessage.InReplyToValidator = inboundemailmessageDescInReplyTo.Validators[0].(func(string) error)
+	// inboundemailmessageDescFromAddress is the schema descriptor for from_address field.
+	inboundemailmessageDescFromAddress := inboundemailmessageFields[9].Descriptor()
+	// inboundemailmessage.FromAddressValidator is a validator for the "from_address" field. It is called by the builders before save.
+	inboundemailmessage.FromAddressValidator = func() func(string) error {
+		validators := inboundemailmessageDescFromAddress.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(from_address string) error {
+			for _, fn := range fns {
+				if err := fn(from_address); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// inboundemailmessageDescReplyToAddress is the schema descriptor for reply_to_address field.
+	inboundemailmessageDescReplyToAddress := inboundemailmessageFields[11].Descriptor()
+	// inboundemailmessage.ReplyToAddressValidator is a validator for the "reply_to_address" field. It is called by the builders before save.
+	inboundemailmessage.ReplyToAddressValidator = inboundemailmessageDescReplyToAddress.Validators[0].(func(string) error)
+	// inboundemailmessageDescSubject is the schema descriptor for subject field.
+	inboundemailmessageDescSubject := inboundemailmessageFields[12].Descriptor()
+	// inboundemailmessage.SubjectValidator is a validator for the "subject" field. It is called by the builders before save.
+	inboundemailmessage.SubjectValidator = inboundemailmessageDescSubject.Validators[0].(func(string) error)
+	// inboundemailmessageDescRawSha256 is the schema descriptor for raw_sha256 field.
+	inboundemailmessageDescRawSha256 := inboundemailmessageFields[16].Descriptor()
+	// inboundemailmessage.RawSha256Validator is a validator for the "raw_sha256" field. It is called by the builders before save.
+	inboundemailmessage.RawSha256Validator = func() func(string) error {
+		validators := inboundemailmessageDescRawSha256.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(raw_sha256 string) error {
+			for _, fn := range fns {
+				if err := fn(raw_sha256); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// inboundemailmessageDescProcessingStatus is the schema descriptor for processing_status field.
+	inboundemailmessageDescProcessingStatus := inboundemailmessageFields[18].Descriptor()
+	// inboundemailmessage.DefaultProcessingStatus holds the default value on creation for the processing_status field.
+	inboundemailmessage.DefaultProcessingStatus = inboundemailmessageDescProcessingStatus.Default.(string)
+	// inboundemailmessage.ProcessingStatusValidator is a validator for the "processing_status" field. It is called by the builders before save.
+	inboundemailmessage.ProcessingStatusValidator = inboundemailmessageDescProcessingStatus.Validators[0].(func(string) error)
+	// inboundemailmessageDescLastError is the schema descriptor for last_error field.
+	inboundemailmessageDescLastError := inboundemailmessageFields[19].Descriptor()
+	// inboundemailmessage.LastErrorValidator is a validator for the "last_error" field. It is called by the builders before save.
+	inboundemailmessage.LastErrorValidator = inboundemailmessageDescLastError.Validators[0].(func(string) error)
+	// inboundemailmessageDescCreatedAt is the schema descriptor for created_at field.
+	inboundemailmessageDescCreatedAt := inboundemailmessageFields[21].Descriptor()
+	// inboundemailmessage.DefaultCreatedAt holds the default value on creation for the created_at field.
+	inboundemailmessage.DefaultCreatedAt = inboundemailmessageDescCreatedAt.Default.(func() time.Time)
+	// inboundemailmessageDescUpdatedAt is the schema descriptor for updated_at field.
+	inboundemailmessageDescUpdatedAt := inboundemailmessageFields[22].Descriptor()
+	// inboundemailmessage.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	inboundemailmessage.DefaultUpdatedAt = inboundemailmessageDescUpdatedAt.Default.(func() time.Time)
+	// inboundemailmessage.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	inboundemailmessage.UpdateDefaultUpdatedAt = inboundemailmessageDescUpdatedAt.UpdateDefault.(func() time.Time)
 	incidentFields := schema.Incident{}.Fields()
 	_ = incidentFields
 	// incidentDescTitle is the schema descriptor for title field.
@@ -1318,41 +1876,41 @@ func init() {
 	// incident.ReporterIDValidator is a validator for the "reporter_id" field. It is called by the builders before save.
 	incident.ReporterIDValidator = incidentDescReporterID.Validators[0].(func(int) error)
 	// incidentDescDetectedAt is the schema descriptor for detected_at field.
-	incidentDescDetectedAt := incidentFields[17].Descriptor()
+	incidentDescDetectedAt := incidentFields[19].Descriptor()
 	// incident.DefaultDetectedAt holds the default value on creation for the detected_at field.
 	incident.DefaultDetectedAt = incidentDescDetectedAt.Default.(func() time.Time)
 	// incidentDescEscalationLevel is the schema descriptor for escalation_level field.
-	incidentDescEscalationLevel := incidentFields[21].Descriptor()
+	incidentDescEscalationLevel := incidentFields[23].Descriptor()
 	// incident.DefaultEscalationLevel holds the default value on creation for the escalation_level field.
 	incident.DefaultEscalationLevel = incidentDescEscalationLevel.Default.(int)
 	// incidentDescIsAutomated is the schema descriptor for is_automated field.
-	incidentDescIsAutomated := incidentFields[22].Descriptor()
+	incidentDescIsAutomated := incidentFields[24].Descriptor()
 	// incident.DefaultIsAutomated holds the default value on creation for the is_automated field.
 	incident.DefaultIsAutomated = incidentDescIsAutomated.Default.(bool)
 	// incidentDescIsMajorIncident is the schema descriptor for is_major_incident field.
-	incidentDescIsMajorIncident := incidentFields[23].Descriptor()
+	incidentDescIsMajorIncident := incidentFields[25].Descriptor()
 	// incident.DefaultIsMajorIncident holds the default value on creation for the is_major_incident field.
 	incident.DefaultIsMajorIncident = incidentDescIsMajorIncident.Default.(bool)
 	// incidentDescSource is the schema descriptor for source field.
-	incidentDescSource := incidentFields[24].Descriptor()
+	incidentDescSource := incidentFields[26].Descriptor()
 	// incident.DefaultSource holds the default value on creation for the source field.
 	incident.DefaultSource = incidentDescSource.Default.(string)
 	// incidentDescTenantID is the schema descriptor for tenant_id field.
-	incidentDescTenantID := incidentFields[26].Descriptor()
+	incidentDescTenantID := incidentFields[28].Descriptor()
 	// incident.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	incident.TenantIDValidator = incidentDescTenantID.Validators[0].(func(int) error)
 	// incidentDescVersion is the schema descriptor for version field.
-	incidentDescVersion := incidentFields[27].Descriptor()
+	incidentDescVersion := incidentFields[29].Descriptor()
 	// incident.DefaultVersion holds the default value on creation for the version field.
 	incident.DefaultVersion = incidentDescVersion.Default.(int)
 	// incident.VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	incident.VersionValidator = incidentDescVersion.Validators[0].(func(int) error)
 	// incidentDescCreatedAt is the schema descriptor for created_at field.
-	incidentDescCreatedAt := incidentFields[28].Descriptor()
+	incidentDescCreatedAt := incidentFields[30].Descriptor()
 	// incident.DefaultCreatedAt holds the default value on creation for the created_at field.
 	incident.DefaultCreatedAt = incidentDescCreatedAt.Default.(func() time.Time)
 	// incidentDescUpdatedAt is the schema descriptor for updated_at field.
-	incidentDescUpdatedAt := incidentFields[29].Descriptor()
+	incidentDescUpdatedAt := incidentFields[31].Descriptor()
 	// incident.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	incident.DefaultUpdatedAt = incidentDescUpdatedAt.Default.(func() time.Time)
 	// incident.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -2021,6 +2579,80 @@ func init() {
 	notificationpreference.DefaultUpdatedAt = notificationpreferenceDescUpdatedAt.Default.(func() time.Time)
 	// notificationpreference.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	notificationpreference.UpdateDefaultUpdatedAt = notificationpreferenceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	oncallscheduleFields := schema.OnCallSchedule{}.Fields()
+	_ = oncallscheduleFields
+	// oncallscheduleDescTenantID is the schema descriptor for tenant_id field.
+	oncallscheduleDescTenantID := oncallscheduleFields[0].Descriptor()
+	// oncallschedule.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	oncallschedule.TenantIDValidator = oncallscheduleDescTenantID.Validators[0].(func(int) error)
+	// oncallscheduleDescGroupID is the schema descriptor for group_id field.
+	oncallscheduleDescGroupID := oncallscheduleFields[1].Descriptor()
+	// oncallschedule.GroupIDValidator is a validator for the "group_id" field. It is called by the builders before save.
+	oncallschedule.GroupIDValidator = oncallscheduleDescGroupID.Validators[0].(func(int) error)
+	// oncallscheduleDescName is the schema descriptor for name field.
+	oncallscheduleDescName := oncallscheduleFields[2].Descriptor()
+	// oncallschedule.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	oncallschedule.NameValidator = func() func(string) error {
+		validators := oncallscheduleDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// oncallscheduleDescTimezone is the schema descriptor for timezone field.
+	oncallscheduleDescTimezone := oncallscheduleFields[3].Descriptor()
+	// oncallschedule.DefaultTimezone holds the default value on creation for the timezone field.
+	oncallschedule.DefaultTimezone = oncallscheduleDescTimezone.Default.(string)
+	// oncallschedule.TimezoneValidator is a validator for the "timezone" field. It is called by the builders before save.
+	oncallschedule.TimezoneValidator = oncallscheduleDescTimezone.Validators[0].(func(string) error)
+	// oncallscheduleDescStatus is the schema descriptor for status field.
+	oncallscheduleDescStatus := oncallscheduleFields[4].Descriptor()
+	// oncallschedule.DefaultStatus holds the default value on creation for the status field.
+	oncallschedule.DefaultStatus = oncallscheduleDescStatus.Default.(string)
+	// oncallschedule.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	oncallschedule.StatusValidator = oncallscheduleDescStatus.Validators[0].(func(string) error)
+	// oncallscheduleDescCreatedAt is the schema descriptor for created_at field.
+	oncallscheduleDescCreatedAt := oncallscheduleFields[5].Descriptor()
+	// oncallschedule.DefaultCreatedAt holds the default value on creation for the created_at field.
+	oncallschedule.DefaultCreatedAt = oncallscheduleDescCreatedAt.Default.(func() time.Time)
+	// oncallscheduleDescUpdatedAt is the schema descriptor for updated_at field.
+	oncallscheduleDescUpdatedAt := oncallscheduleFields[6].Descriptor()
+	// oncallschedule.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	oncallschedule.DefaultUpdatedAt = oncallscheduleDescUpdatedAt.Default.(func() time.Time)
+	// oncallschedule.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	oncallschedule.UpdateDefaultUpdatedAt = oncallscheduleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	oncallshiftFields := schema.OnCallShift{}.Fields()
+	_ = oncallshiftFields
+	// oncallshiftDescTenantID is the schema descriptor for tenant_id field.
+	oncallshiftDescTenantID := oncallshiftFields[0].Descriptor()
+	// oncallshift.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	oncallshift.TenantIDValidator = oncallshiftDescTenantID.Validators[0].(func(int) error)
+	// oncallshiftDescScheduleID is the schema descriptor for schedule_id field.
+	oncallshiftDescScheduleID := oncallshiftFields[1].Descriptor()
+	// oncallshift.ScheduleIDValidator is a validator for the "schedule_id" field. It is called by the builders before save.
+	oncallshift.ScheduleIDValidator = oncallshiftDescScheduleID.Validators[0].(func(int) error)
+	// oncallshiftDescUserID is the schema descriptor for user_id field.
+	oncallshiftDescUserID := oncallshiftFields[2].Descriptor()
+	// oncallshift.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	oncallshift.UserIDValidator = oncallshiftDescUserID.Validators[0].(func(int) error)
+	// oncallshiftDescCreatedAt is the schema descriptor for created_at field.
+	oncallshiftDescCreatedAt := oncallshiftFields[5].Descriptor()
+	// oncallshift.DefaultCreatedAt holds the default value on creation for the created_at field.
+	oncallshift.DefaultCreatedAt = oncallshiftDescCreatedAt.Default.(func() time.Time)
+	// oncallshiftDescUpdatedAt is the schema descriptor for updated_at field.
+	oncallshiftDescUpdatedAt := oncallshiftFields[6].Descriptor()
+	// oncallshift.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	oncallshift.DefaultUpdatedAt = oncallshiftDescUpdatedAt.Default.(func() time.Time)
+	// oncallshift.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	oncallshift.UpdateDefaultUpdatedAt = oncallshiftDescUpdatedAt.UpdateDefault.(func() time.Time)
 	operationalcommandFields := schema.OperationalCommand{}.Fields()
 	_ = operationalcommandFields
 	// operationalcommandDescTenantID is the schema descriptor for tenant_id field.
@@ -3265,6 +3897,68 @@ func init() {
 	servicecatalogitem.DefaultUpdatedAt = servicecatalogitemDescUpdatedAt.Default.(func() time.Time)
 	// servicecatalogitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	servicecatalogitem.UpdateDefaultUpdatedAt = servicecatalogitemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	servicecustomerFields := schema.ServiceCustomer{}.Fields()
+	_ = servicecustomerFields
+	// servicecustomerDescTenantID is the schema descriptor for tenant_id field.
+	servicecustomerDescTenantID := servicecustomerFields[0].Descriptor()
+	// servicecustomer.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	servicecustomer.TenantIDValidator = servicecustomerDescTenantID.Validators[0].(func(int) error)
+	// servicecustomerDescName is the schema descriptor for name field.
+	servicecustomerDescName := servicecustomerFields[1].Descriptor()
+	// servicecustomer.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	servicecustomer.NameValidator = func() func(string) error {
+		validators := servicecustomerDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// servicecustomerDescNormalizedName is the schema descriptor for normalized_name field.
+	servicecustomerDescNormalizedName := servicecustomerFields[2].Descriptor()
+	// servicecustomer.NormalizedNameValidator is a validator for the "normalized_name" field. It is called by the builders before save.
+	servicecustomer.NormalizedNameValidator = func() func(string) error {
+		validators := servicecustomerDescNormalizedName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(normalized_name string) error {
+			for _, fn := range fns {
+				if err := fn(normalized_name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// servicecustomerDescShortName is the schema descriptor for short_name field.
+	servicecustomerDescShortName := servicecustomerFields[3].Descriptor()
+	// servicecustomer.ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
+	servicecustomer.ShortNameValidator = servicecustomerDescShortName.Validators[0].(func(string) error)
+	// servicecustomerDescStatus is the schema descriptor for status field.
+	servicecustomerDescStatus := servicecustomerFields[6].Descriptor()
+	// servicecustomer.DefaultStatus holds the default value on creation for the status field.
+	servicecustomer.DefaultStatus = servicecustomerDescStatus.Default.(string)
+	// servicecustomer.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	servicecustomer.StatusValidator = servicecustomerDescStatus.Validators[0].(func(string) error)
+	// servicecustomerDescCreatedAt is the schema descriptor for created_at field.
+	servicecustomerDescCreatedAt := servicecustomerFields[8].Descriptor()
+	// servicecustomer.DefaultCreatedAt holds the default value on creation for the created_at field.
+	servicecustomer.DefaultCreatedAt = servicecustomerDescCreatedAt.Default.(func() time.Time)
+	// servicecustomerDescUpdatedAt is the schema descriptor for updated_at field.
+	servicecustomerDescUpdatedAt := servicecustomerFields[9].Descriptor()
+	// servicecustomer.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	servicecustomer.DefaultUpdatedAt = servicecustomerDescUpdatedAt.Default.(func() time.Time)
+	// servicecustomer.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	servicecustomer.UpdateDefaultUpdatedAt = servicecustomerDescUpdatedAt.UpdateDefault.(func() time.Time)
 	servicerequestFields := schema.ServiceRequest{}.Fields()
 	_ = servicerequestFields
 	// servicerequestDescTenantID is the schema descriptor for tenant_id field.
@@ -3349,6 +4043,64 @@ func init() {
 	servicerequestapprovalDescCreatedAt := servicerequestapprovalFields[15].Descriptor()
 	// servicerequestapproval.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servicerequestapproval.DefaultCreatedAt = servicerequestapprovalDescCreatedAt.Default.(func() time.Time)
+	sourceorganizationFields := schema.SourceOrganization{}.Fields()
+	_ = sourceorganizationFields
+	// sourceorganizationDescTenantID is the schema descriptor for tenant_id field.
+	sourceorganizationDescTenantID := sourceorganizationFields[0].Descriptor()
+	// sourceorganization.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	sourceorganization.TenantIDValidator = sourceorganizationDescTenantID.Validators[0].(func(int) error)
+	// sourceorganizationDescName is the schema descriptor for name field.
+	sourceorganizationDescName := sourceorganizationFields[1].Descriptor()
+	// sourceorganization.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	sourceorganization.NameValidator = func() func(string) error {
+		validators := sourceorganizationDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// sourceorganizationDescNormalizedName is the schema descriptor for normalized_name field.
+	sourceorganizationDescNormalizedName := sourceorganizationFields[2].Descriptor()
+	// sourceorganization.NormalizedNameValidator is a validator for the "normalized_name" field. It is called by the builders before save.
+	sourceorganization.NormalizedNameValidator = func() func(string) error {
+		validators := sourceorganizationDescNormalizedName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(normalized_name string) error {
+			for _, fn := range fns {
+				if err := fn(normalized_name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// sourceorganizationDescStatus is the schema descriptor for status field.
+	sourceorganizationDescStatus := sourceorganizationFields[5].Descriptor()
+	// sourceorganization.DefaultStatus holds the default value on creation for the status field.
+	sourceorganization.DefaultStatus = sourceorganizationDescStatus.Default.(string)
+	// sourceorganization.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	sourceorganization.StatusValidator = sourceorganizationDescStatus.Validators[0].(func(string) error)
+	// sourceorganizationDescCreatedAt is the schema descriptor for created_at field.
+	sourceorganizationDescCreatedAt := sourceorganizationFields[6].Descriptor()
+	// sourceorganization.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sourceorganization.DefaultCreatedAt = sourceorganizationDescCreatedAt.Default.(func() time.Time)
+	// sourceorganizationDescUpdatedAt is the schema descriptor for updated_at field.
+	sourceorganizationDescUpdatedAt := sourceorganizationFields[7].Descriptor()
+	// sourceorganization.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sourceorganization.DefaultUpdatedAt = sourceorganizationDescUpdatedAt.Default.(func() time.Time)
+	// sourceorganization.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sourceorganization.UpdateDefaultUpdatedAt = sourceorganizationDescUpdatedAt.UpdateDefault.(func() time.Time)
 	standardchangeFields := schema.StandardChange{}.Fields()
 	_ = standardchangeFields
 	// standardchangeDescTitle is the schema descriptor for title field.
@@ -3405,6 +4157,68 @@ func init() {
 	standardchange.DefaultUpdatedAt = standardchangeDescUpdatedAt.Default.(func() time.Time)
 	// standardchange.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	standardchange.UpdateDefaultUpdatedAt = standardchangeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	supportcontractFields := schema.SupportContract{}.Fields()
+	_ = supportcontractFields
+	// supportcontractDescTenantID is the schema descriptor for tenant_id field.
+	supportcontractDescTenantID := supportcontractFields[0].Descriptor()
+	// supportcontract.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	supportcontract.TenantIDValidator = supportcontractDescTenantID.Validators[0].(func(int) error)
+	// supportcontractDescCustomerID is the schema descriptor for customer_id field.
+	supportcontractDescCustomerID := supportcontractFields[1].Descriptor()
+	// supportcontract.CustomerIDValidator is a validator for the "customer_id" field. It is called by the builders before save.
+	supportcontract.CustomerIDValidator = supportcontractDescCustomerID.Validators[0].(func(int) error)
+	// supportcontractDescContractNumber is the schema descriptor for contract_number field.
+	supportcontractDescContractNumber := supportcontractFields[3].Descriptor()
+	// supportcontract.ContractNumberValidator is a validator for the "contract_number" field. It is called by the builders before save.
+	supportcontract.ContractNumberValidator = func() func(string) error {
+		validators := supportcontractDescContractNumber.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(contract_number string) error {
+			for _, fn := range fns {
+				if err := fn(contract_number); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// supportcontractDescNormalizedContractNumber is the schema descriptor for normalized_contract_number field.
+	supportcontractDescNormalizedContractNumber := supportcontractFields[4].Descriptor()
+	// supportcontract.NormalizedContractNumberValidator is a validator for the "normalized_contract_number" field. It is called by the builders before save.
+	supportcontract.NormalizedContractNumberValidator = func() func(string) error {
+		validators := supportcontractDescNormalizedContractNumber.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(normalized_contract_number string) error {
+			for _, fn := range fns {
+				if err := fn(normalized_contract_number); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// supportcontractDescStatus is the schema descriptor for status field.
+	supportcontractDescStatus := supportcontractFields[5].Descriptor()
+	// supportcontract.DefaultStatus holds the default value on creation for the status field.
+	supportcontract.DefaultStatus = supportcontractDescStatus.Default.(string)
+	// supportcontract.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	supportcontract.StatusValidator = supportcontractDescStatus.Validators[0].(func(string) error)
+	// supportcontractDescCreatedAt is the schema descriptor for created_at field.
+	supportcontractDescCreatedAt := supportcontractFields[9].Descriptor()
+	// supportcontract.DefaultCreatedAt holds the default value on creation for the created_at field.
+	supportcontract.DefaultCreatedAt = supportcontractDescCreatedAt.Default.(func() time.Time)
+	// supportcontractDescUpdatedAt is the schema descriptor for updated_at field.
+	supportcontractDescUpdatedAt := supportcontractFields[10].Descriptor()
+	// supportcontract.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	supportcontract.DefaultUpdatedAt = supportcontractDescUpdatedAt.Default.(func() time.Time)
+	// supportcontract.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	supportcontract.UpdateDefaultUpdatedAt = supportcontractDescUpdatedAt.UpdateDefault.(func() time.Time)
 	surveyFields := schema.Survey{}.Fields()
 	_ = surveyFields
 	// surveyDescTitle is the schema descriptor for title field.

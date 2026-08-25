@@ -113,5 +113,7 @@ func (User) Edges() []ent.Edge {
 			Comment("PIR审查记录"),
 		edge.To("tool_invocations", ToolInvocation.Type).
 			Comment("AI 工具调用记录"),
+		edge.To("on_call_shifts", OnCallShift.Type).
+			Comment("用户值班班次"),
 	}
 }

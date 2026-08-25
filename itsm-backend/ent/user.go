@@ -94,9 +94,11 @@ type UserEdges struct {
 	PirReviews []*ChangePIR `json:"pir_reviews,omitempty"`
 	// AI 工具调用记录
 	ToolInvocations []*ToolInvocation `json:"tool_invocations,omitempty"`
+	// 用户值班班次
+	OnCallShifts []*OnCallShift `json:"on_call_shifts,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [16]bool
+	loadedTypes [17]bool
 }
 
 // DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
@@ -245,6 +247,15 @@ func (e UserEdges) ToolInvocationsOrErr() ([]*ToolInvocation, error) {
 		return e.ToolInvocations, nil
 	}
 	return nil, &NotLoadedError{edge: "tool_invocations"}
+}
+
+// OnCallShiftsOrErr returns the OnCallShifts value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) OnCallShiftsOrErr() ([]*OnCallShift, error) {
+	if e.loadedTypes[16] {
+		return e.OnCallShifts, nil
+	}
+	return nil, &NotLoadedError{edge: "on_call_shifts"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -495,6 +506,11 @@ func (_m *User) QueryPirReviews() *ChangePIRQuery {
 // QueryToolInvocations queries the "tool_invocations" edge of the User entity.
 func (_m *User) QueryToolInvocations() *ToolInvocationQuery {
 	return NewUserClient(_m.config).QueryToolInvocations(_m)
+}
+
+// QueryOnCallShifts queries the "on_call_shifts" edge of the User entity.
+func (_m *User) QueryOnCallShifts() *OnCallShiftQuery {
+	return NewUserClient(_m.config).QueryOnCallShifts(_m)
 }
 
 // Update returns a builder for updating this User.

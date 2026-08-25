@@ -40,5 +40,7 @@ func (Group) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("members", User.Type).
 			Comment("组的成员"),
+		edge.To("on_call_schedules", OnCallSchedule.Type),
+		edge.To("assigned_incidents", Incident.Type),
 	}
 }

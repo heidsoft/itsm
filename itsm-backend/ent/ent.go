@@ -30,17 +30,24 @@ import (
 	"itsm-backend/ent/cmdbsavedview"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/configurationitemhistory"
+	"itsm-backend/ent/connectorconfig"
 	"itsm-backend/ent/contract"
 	"itsm-backend/ent/conversation"
+	"itsm-backend/ent/customerbranch"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
 	"itsm-backend/ent/domainconfig"
+	"itsm-backend/ent/emailconversation"
+	"itsm-backend/ent/emailintakeanalysis"
+	"itsm-backend/ent/emailoutboundmessage"
 	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
+	"itsm-backend/ent/externalcontractreference"
 	"itsm-backend/ent/feishuticketsync"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/inboundemailmessage"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentescalationrule"
@@ -63,6 +70,8 @@ import (
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/notificationdelivery"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/oncallschedule"
+	"itsm-backend/ent/oncallshift"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
@@ -88,6 +97,7 @@ import (
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicecatalogitem"
+	"itsm-backend/ent/servicecustomer"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/slaalerthistory"
@@ -96,7 +106,9 @@ import (
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/sourceorganization"
 	"itsm-backend/ent/standardchange"
+	"itsm-backend/ent/supportcontract"
 	"itsm-backend/ent/survey"
 	"itsm-backend/ent/surveyresponse"
 	"itsm-backend/ent/systemconfig"
@@ -215,17 +227,24 @@ func checkColumn(t, c string) error {
 			cloudservice.Table:                cloudservice.ValidColumn,
 			configurationitem.Table:           configurationitem.ValidColumn,
 			configurationitemhistory.Table:    configurationitemhistory.ValidColumn,
+			connectorconfig.Table:             connectorconfig.ValidColumn,
 			contract.Table:                    contract.ValidColumn,
 			conversation.Table:                conversation.ValidColumn,
+			customerbranch.Table:              customerbranch.ValidColumn,
 			department.Table:                  department.ValidColumn,
 			discoveryjob.Table:                discoveryjob.ValidColumn,
 			discoveryresult.Table:             discoveryresult.ValidColumn,
 			discoverysource.Table:             discoverysource.ValidColumn,
 			domainconfig.Table:                domainconfig.ValidColumn,
+			emailconversation.Table:           emailconversation.ValidColumn,
+			emailintakeanalysis.Table:         emailintakeanalysis.ValidColumn,
+			emailoutboundmessage.Table:        emailoutboundmessage.ValidColumn,
 			endpointacl.Table:                 endpointacl.ValidColumn,
 			engineerskill.Table:               engineerskill.ValidColumn,
+			externalcontractreference.Table:   externalcontractreference.ValidColumn,
 			feishuticketsync.Table:            feishuticketsync.ValidColumn,
 			group.Table:                       group.ValidColumn,
+			inboundemailmessage.Table:         inboundemailmessage.ValidColumn,
 			incident.Table:                    incident.ValidColumn,
 			incidentalert.Table:               incidentalert.ValidColumn,
 			incidentescalationrule.Table:      incidentescalationrule.ValidColumn,
@@ -248,6 +267,8 @@ func checkColumn(t, c string) error {
 			notification.Table:                notification.ValidColumn,
 			notificationdelivery.Table:        notificationdelivery.ValidColumn,
 			notificationpreference.Table:      notificationpreference.ValidColumn,
+			oncallschedule.Table:              oncallschedule.ValidColumn,
+			oncallshift.Table:                 oncallshift.ValidColumn,
 			operationalcommand.Table:          operationalcommand.ValidColumn,
 			passwordresettoken.Table:          passwordresettoken.ValidColumn,
 			permission.Table:                  permission.ValidColumn,
@@ -279,9 +300,12 @@ func checkColumn(t, c string) error {
 			slaviolation.Table:                slaviolation.ValidColumn,
 			servicecatalog.Table:              servicecatalog.ValidColumn,
 			servicecatalogitem.Table:          servicecatalogitem.ValidColumn,
+			servicecustomer.Table:             servicecustomer.ValidColumn,
 			servicerequest.Table:              servicerequest.ValidColumn,
 			servicerequestapproval.Table:      servicerequestapproval.ValidColumn,
+			sourceorganization.Table:          sourceorganization.ValidColumn,
 			standardchange.Table:              standardchange.ValidColumn,
+			supportcontract.Table:             supportcontract.ValidColumn,
 			survey.Table:                      survey.ValidColumn,
 			surveyresponse.Table:              surveyresponse.ValidColumn,
 			systemconfig.Table:                systemconfig.ValidColumn,

@@ -26,6 +26,10 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeMembers holds the string denoting the members edge name in mutations.
 	EdgeMembers = "members"
+	// EdgeOnCallSchedules holds the string denoting the on_call_schedules edge name in mutations.
+	EdgeOnCallSchedules = "on_call_schedules"
+	// EdgeAssignedIncidents holds the string denoting the assigned_incidents edge name in mutations.
+	EdgeAssignedIncidents = "assigned_incidents"
 	// Table holds the table name of the group in the database.
 	Table = "groups"
 	// MembersTable is the table that holds the members relation/edge.
@@ -35,6 +39,20 @@ const (
 	MembersInverseTable = "users"
 	// MembersColumn is the table column denoting the members relation/edge.
 	MembersColumn = "group_members"
+	// OnCallSchedulesTable is the table that holds the on_call_schedules relation/edge.
+	OnCallSchedulesTable = "on_call_schedules"
+	// OnCallSchedulesInverseTable is the table name for the OnCallSchedule entity.
+	// It exists in this package in order to avoid circular dependency with the "oncallschedule" package.
+	OnCallSchedulesInverseTable = "on_call_schedules"
+	// OnCallSchedulesColumn is the table column denoting the on_call_schedules relation/edge.
+	OnCallSchedulesColumn = "group_id"
+	// AssignedIncidentsTable is the table that holds the assigned_incidents relation/edge.
+	AssignedIncidentsTable = "incidents"
+	// AssignedIncidentsInverseTable is the table name for the Incident entity.
+	// It exists in this package in order to avoid circular dependency with the "incident" package.
+	AssignedIncidentsInverseTable = "incidents"
+	// AssignedIncidentsColumn is the table column denoting the assigned_incidents relation/edge.
+	AssignedIncidentsColumn = "assignment_group_id"
 )
 
 // Columns holds all SQL columns for group fields.
@@ -127,10 +145,52 @@ func ByMembers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMembersStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByOnCallSchedulesCount orders the results by on_call_schedules count.
+func ByOnCallSchedulesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOnCallSchedulesStep(), opts...)
+	}
+}
+
+// ByOnCallSchedules orders the results by on_call_schedules terms.
+func ByOnCallSchedules(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOnCallSchedulesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAssignedIncidentsCount orders the results by assigned_incidents count.
+func ByAssignedIncidentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAssignedIncidentsStep(), opts...)
+	}
+}
+
+// ByAssignedIncidents orders the results by assigned_incidents terms.
+func ByAssignedIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAssignedIncidentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newMembersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MembersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MembersTable, MembersColumn),
+	)
+}
+func newOnCallSchedulesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OnCallSchedulesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OnCallSchedulesTable, OnCallSchedulesColumn),
+	)
+}
+func newAssignedIncidentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AssignedIncidentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AssignedIncidentsTable, AssignedIncidentsColumn),
 	)
 }
