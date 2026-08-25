@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -20,6 +21,7 @@ import (
 	"itsm-backend/connector"
 	_ "itsm-backend/connector/builtin/console"
 	_ "itsm-backend/connector/builtin/dingtalk"
+	_ "itsm-backend/connector/builtin/email"
 	_ "itsm-backend/connector/builtin/feishu"
 	_ "itsm-backend/connector/builtin/webhook"
 	_ "itsm-backend/connector/builtin/wecom"
@@ -40,6 +42,7 @@ import (
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
+	"itsm-backend/handlers/email_intake"
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
@@ -260,6 +263,32 @@ func NewApplication() *Application {
 	connectorManager := connector.NewManager(connector.Default(), sugar)
 	connectorMarket := marketplace.New()
 	connectorController := controller.NewConnectorController(connectorManager, connector.Default(), connectorMarket, sugar)
+	connectorEncryptionKey := os.Getenv("CONNECTOR_CONFIG_ENCRYPTION_KEY")
+	if connectorEncryptionKey == "" {
+		if os.Getenv("ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+			log.Fatal("CONNECTOR_CONFIG_ENCRYPTION_KEY is required in production")
+		}
+		connectorEncryptionKey = "development-connector-key-" + cfg.JWT.Secret
+		sugar.Warn("CONNECTOR_CONFIG_ENCRYPTION_KEY is not set; development fallback uses JWT secret")
+	}
+	connectorStore, connectorStoreErr := connector.NewPersistentConfigStore(client, connectorEncryptionKey)
+	if connectorStoreErr != nil {
+		sugar.Fatalw("Failed to initialize connector config store", "error", connectorStoreErr)
+	}
+	connectorController.SetPersistentStore(connectorStore)
+	if persistedConfigs, loadErr := connectorStore.LoadAll(context.Background()); loadErr != nil {
+		sugar.Warnw("Failed to reload persisted connector configs", "error", loadErr)
+	} else {
+		for _, persistedConfig := range persistedConfigs {
+			if provisionErr := connectorManager.Provision(context.Background(), persistedConfig); provisionErr != nil {
+				sugar.Errorw("Failed to rehydrate connector", "tenant", persistedConfig.TenantID, "name", persistedConfig.Name, "error", provisionErr)
+			}
+		}
+	}
+	emailOutboundCommandHandler := email_intake.NewOutboundCommandHandler(client, connectorManager)
+	if err := commandRegistry.Register(commandbus.CommandSendIntakeEmail, emailOutboundCommandHandler.Handle); err != nil {
+		sugar.Fatalw("Failed to register email intake outbound handler", "error", err)
+	}
 
 	// 通知 / 审批 / SLA / 自动化 / 序列服务（V2 子服务）
 	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
@@ -656,6 +685,20 @@ func NewApplication() *Application {
 	// Sprint C — Skills Management API：在 SkillRegistry 装配完成后创建 handler。
 	// handler 只是 thin wrapper，所有业务逻辑在 SkillRegistry 内。
 	skillHandler := skill.NewHandler(skillRegistry, sugar)
+	emailIntakeHandler := email_intake.NewHandler(client)
+	emailIntakeMode := email_intake.IntakeMode(os.Getenv("EMAIL_INTAKE_MODE"))
+	automationReporterID, _ := strconv.Atoi(os.Getenv("EMAIL_INTAKE_AUTOMATION_REPORTER_ID"))
+	assignmentGroupID, _ := strconv.Atoi(os.Getenv("EMAIL_INTAKE_DEFAULT_GROUP_ID"))
+	var assignmentGroupIDPtr *int
+	if assignmentGroupID > 0 {
+		assignmentGroupIDPtr = &assignmentGroupID
+	}
+	emailExtractor := email_intake.NewEmailIntakeExtractor(llmGateway, llmConfig.Model)
+	emailIntakeOrchestrator := email_intake.NewEmailIntakeOrchestrator(client, emailExtractor, incidentService, email_intake.OrchestratorConfig{
+		Mode: emailIntakeMode, AutomationReporterUserID: automationReporterID, DefaultAssignmentGroupID: assignmentGroupIDPtr,
+	})
+	emailIntakeHandler.SetOrchestrator(emailIntakeOrchestrator)
+	connectorManager.SetInboundHandler("email", emailIntakeOrchestrator.IngestConnectorMessage)
 
 	// Sprint C — Evaluator bySkill 维度：将 SkillRegistry 注入到 AI 评估服务。
 	// 这样 /ai/evaluation 返回的 bySkill 字段会带上 Skill 的 Name/Category 元数据，
@@ -866,6 +909,7 @@ func NewApplication() *Application {
 		SLAHandler:                     slaHandler,
 		SLATemplateController:          slaTemplateController,
 		AIHandler:                      aiHandler, // Added AI domain handler
+		EmailIntakeHandler:             emailIntakeHandler,
 		CommonHandler:                  commonHandler,
 		AuthController:                 authController,
 		RoleHandler:                    roleHandler,

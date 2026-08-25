@@ -22,6 +22,7 @@ import (
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
+	"itsm-backend/handlers/email_intake"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
 	"itsm-backend/handlers/operations"
@@ -273,6 +274,7 @@ type RouterConfig struct {
 	SLAHandler            *sla.Handler
 	SLATemplateController *controller.SLATemplateController
 	AIHandler             *ai.Handler
+	EmailIntakeHandler    *email_intake.Handler
 	CommonHandler         *domainCommon.Handler
 	AuthController        *controller.AuthController
 	RoleHandler           *common.RoleHandler
@@ -622,16 +624,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 						return
 					}
 					common.Success(c, gin.H{
-						"totalRelations":   len(deps.RelatedTickets),
+						"totalRelations":  len(deps.RelatedTickets),
 						"relationsByType": gin.H{},
-						"inboundCount":     len(deps.RelatedTickets),
-						"outboundCount":    len(deps.RelatedTickets),
-						"parentCount":      len(deps.ParentChain),
-						"childrenCount":    len(deps.ChildrenTree),
-						"blockedByCount":   0,
-						"blockingCount":    0,
-						"relatedCount":     len(deps.RelatedTickets),
-						"duplicateCount":   0,
+						"inboundCount":    len(deps.RelatedTickets),
+						"outboundCount":   len(deps.RelatedTickets),
+						"parentCount":     len(deps.ParentChain),
+						"childrenCount":   len(deps.ChildrenTree),
+						"blockedByCount":  0,
+						"blockingCount":   0,
+						"relatedCount":    len(deps.RelatedTickets),
+						"duplicateCount":  0,
 					})
 				})
 			} else {
@@ -641,16 +643,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				})
 				tickets.GET("/:id/relations/stats", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
 					common.Success(c, gin.H{
-						"totalRelations":   0,
+						"totalRelations":  0,
 						"relationsByType": gin.H{},
-						"inboundCount":     0,
-						"outboundCount":    0,
-						"parentCount":      0,
-						"childrenCount":    0,
-						"blockedByCount":   0,
-						"blockingCount":    0,
-						"relatedCount":     0,
-						"duplicateCount":   0,
+						"inboundCount":    0,
+						"outboundCount":   0,
+						"parentCount":     0,
+						"childrenCount":   0,
+						"blockedByCount":  0,
+						"blockingCount":   0,
+						"relatedCount":    0,
+						"duplicateCount":  0,
 					})
 				})
 			}
@@ -1288,6 +1290,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		//   POST   /api/v1/admin/skills/:code/invoke   统一调用入口
 		if config.SkillHandler != nil {
 			config.SkillHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+		if config.EmailIntakeHandler != nil {
+			config.EmailIntakeHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		// ==================== Common & System (DDD) ====================

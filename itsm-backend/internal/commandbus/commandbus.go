@@ -30,6 +30,7 @@ const (
 	CommandExecuteTicketRules   = "ticket.rules.execute"
 	CommandSyncTicketFeishu     = "ticket.feishu.sync"
 	CommandExecuteIncidentRules = "incident.rules.execute"
+	CommandSendIntakeEmail      = "email_intake.email.send"
 )
 
 var ErrLeaseLost = errors.New("operational command lease lost")
