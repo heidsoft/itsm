@@ -75,7 +75,7 @@ func TestOrchestrator_AutoCreatesOneIncidentAndDurableReply(t *testing.T) {
 	customer := client.ServiceCustomer.Create().SetTenantID(tenant.ID).SetName("上海ABC有限公司").SetNormalizedName("上海abc有限公司").SaveX(ctx)
 	client.SupportContract.Create().SetTenantID(tenant.ID).SetCustomerID(customer.ID).SetContractNumber("SUP-1").SetNormalizedContractNumber("sup1").SetStatus("active").SaveX(ctx)
 
-	incidentService := service.NewIncidentService(client, zaptest.NewLogger(t).Sugar())
+	incidentService := service.NewIncidentService(client, zaptest.NewLogger(t).Sugar(), nil)
 	extractor := NewEmailIntakeExtractor(fakeEmailLLM{output: `{"intent":"report_incident","sourceOrganizationName":"","customerName":"上海ABC有限公司","branchName":"","reportedContractNumber":"SUP-1","title":"MPLS线路中断","description":"链路中断","occurredAt":"","impact":"high","urgency":"high","missingFields":[],"confidence":0.96}`}, "test-model")
 	orchestrator := NewEmailIntakeOrchestrator(client, extractor, incidentService, OrchestratorConfig{Mode: ModeAutoCreate, AutomationReporterUserID: reporter.ID, DefaultAssignmentGroupID: &group.ID})
 	email := ReceivedEmail{SenderAuthenticated: true, MailboxInstanceKey: "mailbox-1", UIDValidity: 10, UID: 20, ExternalMessageID: "<message@example.com>", FromAddress: "customer@example.com", ToAddresses: []string{"noc@example.com"}, Subject: "报障", PlainText: "线路中断", RawMIME: []byte("raw"), ReceivedAt: now}

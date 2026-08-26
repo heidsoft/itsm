@@ -203,7 +203,8 @@ func NewApplication() *Application {
 	// 这部分代码量较大，为了简化，我们先在这里进行组装，后续可以进一步拆分为 wires / container
 
 	// 初始化业务服务层
-	incidentService := service.NewIncidentService(client, sugar)
+	ticketSLAService := service.NewTicketSLAService(client, sugar)
+	incidentService := service.NewIncidentService(client, sugar, ticketSLAService)
 
 	// 初始化 Redis 序列服务（用于工单编号生成）
 	// 如果 Redis 不可用，使用数据库回退方案
@@ -301,7 +302,6 @@ func NewApplication() *Application {
 	// 三个域下沉时，业务事务内调用 Notify*Tx 才能与主表「同生同死」。未启用时 Tx 方法会
 	// fail-closed，避免静默回退到 client 路径产生主表与通知行分离提交的不一致状态。
 	ticketNotificationService.EnableTxOutbox()
-	ticketSLAService := service.NewTicketSLAService(client, sugar)
 	ticketAutomationRuleService := service.NewTicketAutomationRuleService(client, sugar)
 	ticketAutomationCommandHandler := service.NewTicketAutomationCommandHandler(ticketAutomationRuleService)
 	if err := commandRegistry.Register(commandbus.CommandExecuteTicketRules, ticketAutomationCommandHandler.Handle); err != nil {
@@ -335,7 +335,6 @@ func NewApplication() *Application {
 	// 为 IncidentService 注入序列服务与原生数据库连接（S-4 编号事务锁）
 	incidentService.SetSequenceService(sequenceService)
 	incidentService.SetRawDB(database.GetRawDB())
-	incidentService.SetSLAService(ticketSLAService) // P0-1: Incident 创建时绑定 SLA
 
 	// MSP 服务初始化
 	mspAllocationService := service.NewMSPAllocationService(client, sugar)

@@ -29,7 +29,7 @@ import (
 func setupIncidentTest(t *testing.T) (*ent.Client, *IncidentService, context.Context) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	logger := zaptest.NewLogger(t).Sugar()
-	service := NewIncidentService(client, logger)
+	service := NewIncidentService(client, logger, nil)
 	ctx := context.Background()
 	return client, service, ctx
 }

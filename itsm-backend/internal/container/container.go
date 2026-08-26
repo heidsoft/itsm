@@ -102,15 +102,15 @@ func (c *Container) initCoreServices() {
 	// Approval Service
 	c.approvalService = service.NewApprovalService(c.client, c.logger)
 
+	// Ticket SLA Service
+	c.ticketSLAService = service.NewTicketSLAService(c.client, c.logger)
+
 	// Incident Service
-	c.incidentService = service.NewIncidentService(c.client, c.logger)
+	c.incidentService = service.NewIncidentService(c.client, c.logger, c.ticketSLAService)
 	c.incidentService.SetSequenceService(c.sequenceService)
 
 	// Ticket Notification Service
 	c.ticketNotificationService = service.NewTicketNotificationService(c.client, c.logger)
-
-	// Ticket SLA Service
-	c.ticketSLAService = service.NewTicketSLAService(c.client, c.logger)
 
 	// Ticket Automation Service
 	c.ticketAutomationService = service.NewTicketAutomationRuleService(c.client, c.logger)

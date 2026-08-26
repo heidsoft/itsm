@@ -146,7 +146,7 @@ type EscalationAction struct {
 }
 
 func (a *EscalationAction) Execute(ctx context.Context, incident *ent.Incident, tenantID int) error {
-	incidentService := NewIncidentService(a.client, a.logger)
+	incidentService := NewIncidentService(a.client, a.logger, nil)
 
 	_, err := incidentService.EscalateIncident(ctx, &dto.IncidentEscalationRequest{
 		IncidentID:      incident.ID,
@@ -170,7 +170,7 @@ type NotificationAction struct {
 }
 
 func (a *NotificationAction) Execute(ctx context.Context, incident *ent.Incident, tenantID int) error {
-	incidentService := NewIncidentService(a.client, a.logger)
+	incidentService := NewIncidentService(a.client, a.logger, nil)
 
 	_, err := incidentService.CreateIncidentAlert(ctx, &dto.CreateIncidentAlertRequest{
 		IncidentID: incident.ID,
@@ -194,7 +194,7 @@ type AssignmentAction struct {
 }
 
 func (a *AssignmentAction) Execute(ctx context.Context, incident *ent.Incident, tenantID int) error {
-	incidentService := NewIncidentService(a.client, a.logger)
+	incidentService := NewIncidentService(a.client, a.logger, nil)
 
 	_, err := incidentService.UpdateIncident(ctx, incident.ID, &dto.UpdateIncidentRequest{
 		AssigneeID: &a.AssigneeID,
@@ -212,7 +212,7 @@ type StatusChangeAction struct {
 }
 
 func (a *StatusChangeAction) Execute(ctx context.Context, incident *ent.Incident, tenantID int) error {
-	incidentService := NewIncidentService(a.client, a.logger)
+	incidentService := NewIncidentService(a.client, a.logger, nil)
 
 	_, err := incidentService.UpdateIncident(ctx, incident.ID, &dto.UpdateIncidentRequest{
 		Status: &a.Status,
@@ -233,7 +233,7 @@ type MetricCollectionAction struct {
 }
 
 func (a *MetricCollectionAction) Execute(ctx context.Context, incident *ent.Incident, tenantID int) error {
-	incidentService := NewIncidentService(a.client, a.logger)
+	incidentService := NewIncidentService(a.client, a.logger, nil)
 
 	_, err := incidentService.CreateIncidentMetric(ctx, &dto.CreateIncidentMetricRequest{
 		IncidentID:  incident.ID,

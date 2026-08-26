@@ -80,10 +80,11 @@ func (s *IncidentService) SetSLAService(sla *TicketSLAService) {
 	s.slaSvc = sla
 }
 
-func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger) *IncidentService {
+func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger, slaSvc *TicketSLAService) *IncidentService {
 	return &IncidentService{
 		client: client,
 		logger: logger,
+		slaSvc: slaSvc,
 	}
 }
 

@@ -25,7 +25,7 @@ func setupTestIncidentController(t *testing.T) (*gin.Engine, *IncidentController
 	logger := zaptest.NewLogger(t).Sugar()
 
 	// 创建服务
-	incidentService := service.NewIncidentService(client, logger)
+	incidentService := service.NewIncidentService(client, logger, nil)
 
 	// 创建控制器
 	incidentController := NewIncidentController(incidentService, nil, nil, nil, nil, logger)
