@@ -6,32 +6,40 @@ import (
 
 // Incident represents the core incident entity
 type Incident struct {
-	ID                  int
-	Title               string
-	Description         string
-	Status              string // new, in_progress, resolved, closed
-	Priority            string // low, medium, high, urgent
-	Severity            string // low, medium, high, critical
-	IncidentNumber      string
-	ReporterID          int
-	AssigneeID          *int
-	ConfigurationItemID *int
-	Category            string `json:"category"`
-	Subcategory         string `json:"subcategory"`
-	ImpactAnalysis      map[string]interface{}
-	RootCause           map[string]interface{}
-	ResolutionSteps     []map[string]interface{}
-	Metadata            map[string]interface{}
-	DetectedAt          time.Time
-	ResolvedAt          *time.Time
-	ClosedAt            *time.Time
-	EscalatedAt         *time.Time
-	EscalationLevel     int
-	IsAutomated         bool
-	Source              string
-	TenantID            int
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
+	ID                    int
+	Title                 string
+	Description           string
+	Status                string // new, in_progress, resolved, closed
+	Priority              string // low, medium, high, urgent
+	Severity              string // low, medium, high, critical
+	IncidentNumber        string
+	ReporterID            int
+	AssigneeID            *int
+	ConfigurationItemID   *int
+	Category              string `json:"category"`
+	Subcategory           string `json:"subcategory"`
+	ImpactAnalysis        map[string]interface{}
+	RootCause             map[string]interface{}
+	ResolutionSteps       []map[string]interface{}
+	Metadata              map[string]interface{}
+	DetectedAt            time.Time
+	ResolvedAt            *time.Time
+	SLADefinitionID       *int
+	SLAResponseDeadline   *time.Time
+	SLAResolutionDeadline *time.Time
+	SLAFirstResponseAt    *time.Time
+	SLAResolvedAt         *time.Time
+	SLAStatus             string
+	SLAPausedAt           *time.Time
+	SLAPauseReason        string
+	ClosedAt              *time.Time
+	EscalatedAt           *time.Time
+	EscalationLevel       int
+	IsAutomated           bool
+	Source                string
+	TenantID              int
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
 }
 
 // IncidentEvent represents an audit or activity log for an incident
