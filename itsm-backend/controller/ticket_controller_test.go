@@ -163,22 +163,21 @@ func TestTicketController_CreateTicket(t *testing.T) {
 			expectedCode: common.SuccessCode,
 		},
 		{
+			name: "仅基本字段且分类未预配置也可创建",
+			request: dto.CreateTicketRequest{
+				Title:    "基础字段工单",
+				Priority: "medium",
+				Category: "未预配置分类",
+			},
+			tenantHeader: strconv.Itoa(tenant.ID),
+			userHeader:   strconv.Itoa(user.ID),
+			expectedCode: common.SuccessCode,
+		},
+		{
 			name: "标题为空",
 			request: dto.CreateTicketRequest{
 				Title:       "",
 				Description: "描述",
-				Priority:    "medium",
-				Category:    "incident",
-			},
-			tenantHeader: strconv.Itoa(tenant.ID),
-			userHeader:   strconv.Itoa(user.ID),
-			expectedCode: common.ParamErrorCode,
-		},
-		{
-			name: "描述为空",
-			request: dto.CreateTicketRequest{
-				Title:       "标题",
-				Description: "",
 				Priority:    "medium",
 				Category:    "incident",
 			},

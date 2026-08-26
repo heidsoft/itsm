@@ -246,10 +246,11 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		category, err := s.client.TicketCategory.Query().
 			Where(ticketcategory.NameEQ(strings.TrimSpace(req.Category)), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
 			Only(ctx)
-		if err != nil {
-			return nil, common.NewBusinessError(common.NotFoundCode, "工单分类不存在或不可用", req.Category)
+		if err == nil {
+			categoryID = &category.ID
+		} else if !ent.IsNotFound(err) {
+			return nil, fmt.Errorf("resolve ticket category: %w", err)
 		}
-		categoryID = &category.ID
 	}
 	workflowDefinitionKey := req.WorkflowDefinitionKey
 	if configuredType != nil && configuredType.WorkflowDefinitionKey != "" {
