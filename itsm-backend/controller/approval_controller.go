@@ -178,13 +178,13 @@ func (c *ApprovalController) ListWorkflows(ctx *gin.Context) {
 
 	// 强类型过滤条件，取代 map[string]interface{}
 	filter := &dto.WorkflowListFilter{}
-	if ticketType := ctx.Query("ticket_type"); ticketType != "" {
+	if ticketType := ctx.Query("ticketType"); ticketType != "" {
 		filter.TicketType = ticketType
 	}
 	if priority := ctx.Query("priority"); priority != "" {
 		filter.Priority = priority
 	}
-	if isActive := ctx.Query("is_active"); isActive != "" {
+	if isActive := ctx.Query("isActive"); isActive != "" {
 		val := isActive == "true"
 		filter.IsActive = &val
 	}
@@ -196,7 +196,7 @@ func (c *ApprovalController) ListWorkflows(ctx *gin.Context) {
 		}
 	}
 	pageSize := 20
-	if pageSizeStr := ctx.Query("page_size"); pageSizeStr != "" {
+	if pageSizeStr := ctx.Query("pageSize"); pageSizeStr != "" {
 		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {
 			pageSize = ps
 		}
@@ -209,10 +209,10 @@ func (c *ApprovalController) ListWorkflows(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, map[string]interface{}{
-		"items":     workflows,
-		"total":     total,
-		"page":      page,
-		"page_size": pageSize,
+		"items":    workflows,
+		"total":    total,
+		"page":     page,
+		"pageSize": pageSize,
 	})
 }
 
@@ -284,12 +284,12 @@ func (c *ApprovalController) GetApprovalRecords(ctx *gin.Context) {
 	var req dto.GetApprovalRecordsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		// 尝试从查询参数获取
-		if ticketIDStr := ctx.Query("ticket_id"); ticketIDStr != "" {
+		if ticketIDStr := ctx.Query("ticketId"); ticketIDStr != "" {
 			if ticketID, err := strconv.Atoi(ticketIDStr); err == nil {
 				req.TicketID = &ticketID
 			}
 		}
-		if workflowIDStr := ctx.Query("workflow_id"); workflowIDStr != "" {
+		if workflowIDStr := ctx.Query("workflowId"); workflowIDStr != "" {
 			if workflowID, err := strconv.Atoi(workflowIDStr); err == nil {
 				req.WorkflowID = &workflowID
 			}
@@ -304,7 +304,7 @@ func (c *ApprovalController) GetApprovalRecords(ctx *gin.Context) {
 			}
 		}
 		req.PageSize = 20
-		if pageSizeStr := ctx.Query("page_size"); pageSizeStr != "" {
+		if pageSizeStr := ctx.Query("pageSize"); pageSizeStr != "" {
 			if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {
 				req.PageSize = ps
 			}
@@ -324,10 +324,10 @@ func (c *ApprovalController) GetApprovalRecords(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, map[string]interface{}{
-		"items":     records,
-		"total":     total,
-		"page":      req.Page,
-		"page_size": req.PageSize,
+		"items":    records,
+		"total":    total,
+		"page":     req.Page,
+		"pageSize": req.PageSize,
 	})
 }
 

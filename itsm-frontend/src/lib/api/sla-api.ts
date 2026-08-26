@@ -151,16 +151,14 @@ export class SLAApi {
 
   // 获取SLA合规报告
   // 使用后端 /sla/compliance-report 端点
-  // 注意：httpClient 仅对请求体/响应体做 camelCase↔snake_case 转换，
-  // 但 query 参数键名是原样发送的。后端该端点解析的是 snake_case 的
-  // start_date / end_date（startDate/endDate 仅作为兼容兜底），所以此处必须发 snake_case。
+  // 查询参数统一使用 camelCase，与请求体/响应体保持一致。
   static async getSLAComplianceReport(params: {
     startDate: string;
     endDate: string;
   }): Promise<SLAComplianceReport> {
     const report = await httpClient.get<SLAComplianceReport>('/api/v1/sla/compliance-report', {
-      start_date: params.startDate,
-      end_date: params.endDate,
+      startDate: params.startDate,
+      endDate: params.endDate,
     });
 
     return {

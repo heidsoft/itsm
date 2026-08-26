@@ -91,13 +91,13 @@ func (c *BPMNDashboardController) GetDashboardMetrics(ctx *gin.Context) {
 	startTime := time.Now().AddDate(0, 0, -7)
 	endTime := time.Now()
 
-	if startTimeStr := ctx.Query("start_time"); startTimeStr != "" {
+	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", startTimeStr); err == nil {
 			startTime = t
 		}
 	}
 
-	if endTimeStr := ctx.Query("end_time"); endTimeStr != "" {
+	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", endTimeStr); err == nil {
 			endTime = t
 		}
@@ -137,13 +137,13 @@ func (c *BPMNDashboardController) GetProcessMetrics(ctx *gin.Context) {
 	startTime := time.Now().AddDate(0, 0, -7)
 	endTime := time.Now()
 
-	if startTimeStr := ctx.Query("start_time"); startTimeStr != "" {
+	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", startTimeStr); err == nil {
 			startTime = t
 		}
 	}
 
-	if endTimeStr := ctx.Query("end_time"); endTimeStr != "" {
+	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", endTimeStr); err == nil {
 			endTime = t
 		}
@@ -196,23 +196,23 @@ func (c *BPMNDashboardController) GetAuditLogs(ctx *gin.Context) {
 		req.Action = v
 	}
 
-	if v := ctx.Query("user_id"); v != "" {
+	if v := ctx.Query("userId"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			req.UserID = id
 		}
 	}
 
-	if v := ctx.Query("activity_type"); v != "" {
+	if v := ctx.Query("activityType"); v != "" {
 		req.ActivityType = v
 	}
 
-	if startTimeStr := ctx.Query("start_time"); startTimeStr != "" {
+	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", startTimeStr); err == nil {
 			req.StartTime = t
 		}
 	}
 
-	if endTimeStr := ctx.Query("end_time"); endTimeStr != "" {
+	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", endTimeStr); err == nil {
 			req.EndTime = t
 		}
@@ -224,7 +224,7 @@ func (c *BPMNDashboardController) GetAuditLogs(ctx *gin.Context) {
 		}
 	}
 
-	if v := ctx.Query("page_size"); v != "" {
+	if v := ctx.Query("pageSize"); v != "" {
 		if pageSize, err := strconv.Atoi(v); err == nil {
 			req.PageSize = pageSize
 		}
@@ -297,13 +297,13 @@ func (c *BPMNDashboardController) GetUserActivity(ctx *gin.Context) {
 	startTime := time.Now().AddDate(0, 0, -7)
 	endTime := time.Now()
 
-	if startTimeStr := ctx.Query("start_time"); startTimeStr != "" {
+	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", startTimeStr); err == nil {
 			startTime = t
 		}
 	}
 
-	if endTimeStr := ctx.Query("end_time"); endTimeStr != "" {
+	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", endTimeStr); err == nil {
 			endTime = t
 		}
@@ -364,13 +364,13 @@ func (c *BPMNDashboardController) GetSLACompliance(ctx *gin.Context) {
 	startTime := time.Now().AddDate(0, 0, -7)
 	endTime := time.Now()
 
-	if startTimeStr := ctx.Query("start_time"); startTimeStr != "" {
+	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", startTimeStr); err == nil {
 			startTime = t
 		}
 	}
 
-	if endTimeStr := ctx.Query("end_time"); endTimeStr != "" {
+	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", endTimeStr); err == nil {
 			endTime = t
 		}

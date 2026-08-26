@@ -168,7 +168,7 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	// 支持 page_size 和 size 两种参数名
 	pageSizeStr := ctx.Query("pageSize")
 	if pageSizeStr == "" {
-		pageSizeStr = ctx.Query("page_size")
+		pageSizeStr = ctx.Query("pageSize")
 	}
 	if pageSizeStr == "" {
 		pageSizeStr = ctx.DefaultQuery("size", "10")
@@ -204,7 +204,7 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	if keyword := ctx.Query("keyword"); keyword != "" {
 		filters["keyword"] = keyword
 	}
-	if assigneeIDStr := ctx.Query("assignee_id"); assigneeIDStr != "" {
+	if assigneeIDStr := ctx.Query("assigneeId"); assigneeIDStr != "" {
 		assigneeID, err := strconv.Atoi(assigneeIDStr)
 		if err != nil || assigneeID <= 0 {
 			common.Fail(ctx, common.ParamErrorCode, "无效的处理人ID")
@@ -969,8 +969,8 @@ func (c *IncidentController) GetActiveAlerts(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/alerts/statistics [get]
 func (c *IncidentController) GetAlertStatistics(ctx *gin.Context) {
-	startTimeStr := ctx.Query("start_time")
-	endTimeStr := ctx.Query("end_time")
+	startTimeStr := ctx.Query("startTime")
+	endTimeStr := ctx.Query("endTime")
 
 	if startTimeStr == "" || endTimeStr == "" {
 		common.Fail(ctx, common.ParamErrorCode, "开始时间和结束时间不能为空")
@@ -1088,7 +1088,7 @@ func (c *IncidentController) GetRootCause(ctx *gin.Context) {
 
 	// 拆分 dto.RootCause 结构体到顶层字段，匹配前端 RootCauseData 类型
 	// （避免直接序列化整个对象导致前端读取 rootCause 字段拿到 [object Object]）
-	payload := gin.H{"incident_id": incident.ID}
+	payload := gin.H{"incidentId": incident.ID}
 	if rc := incident.RootCause; rc != nil {
 		payload["analysisMethod"] = rc.AnalysisMethod
 		payload["rootCause"] = rc.RootCause
@@ -1185,8 +1185,8 @@ func (c *IncidentController) GetImpactAssessment(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, gin.H{
-		"incident_id":       incident.ID,
-		"impact_assessment": incident.ImpactAnalysis,
+		"incidentId":      incident.ID,
+		"impactAnalysis":  incident.ImpactAnalysis,
 	})
 }
 
@@ -1275,7 +1275,7 @@ func (c *IncidentController) GetClassification(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, gin.H{
-		"incident_id": incident.ID,
+		"incidentId":  incident.ID,
 		"category":    incident.Category,
 		"subcategory": incident.Subcategory,
 	})

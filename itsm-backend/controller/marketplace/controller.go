@@ -89,7 +89,7 @@ func (c *Controller) ListItems(ctx *gin.Context) {
 	itemType := ctx.Query("type")
 	category := ctx.Query("category")
 	search := ctx.Query("search")
-	isOfficialStr := ctx.Query("is_official")
+	isOfficialStr := ctx.Query("isOfficial")
 	pageStr := ctx.DefaultQuery("page", "1")
 	pageSizeStr := ctx.DefaultQuery("page_size", "20")
 

@@ -26,14 +26,14 @@ func NewAuditLogController(s *service.AuditLogService, logger *zap.SugaredLogger
 // @Accept json
 // @Produce json
 // @Param page query int false "页码"
-// @Param page_size query int false "每页数量"
-// @Param user_id query int false "用户ID"
+// @Param pageSize query int false "每页数量"
+// @Param userId query int false "用户ID"
 // @Param resource query string false "资源类型"
 // @Param action query string false "动作"
 // @Param method query string false "HTTP方法"
-// @Param status_code query int false "状态码"
+// @Param statusCode query int false "状态码"
 // @Param path query string false "路径前缀"
-// @Param request_id query string false "请求ID"
+// @Param requestId query string false "请求ID"
 // @Param from query string false "开始时间(RFC3339)"
 // @Param to query string false "结束时间(RFC3339)"
 // @Success 200 {object} common.Response

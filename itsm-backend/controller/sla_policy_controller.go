@@ -202,9 +202,9 @@ func (c *SLAPolicyController) DeleteSLAPolicy(ctx *gin.Context) {
 // @Tags SLA策略管理
 // @Accept json
 // @Produce json
-// @Param ticket_type query string false "工单类型"
+// @Param ticketType query string false "工单类型"
 // @Param priority query string false "优先级"
-// @Param customer_tier query string false "客户等级"
+// @Param customerTier query string false "客户等级"
 // @Success 200 {object} common.Response
 // @Router /api/v1/sla-policies/match [get]
 func (c *SLAPolicyController) MatchSLAPolicy(ctx *gin.Context) {
@@ -214,9 +214,9 @@ func (c *SLAPolicyController) MatchSLAPolicy(ctx *gin.Context) {
 		return
 	}
 
-	ticketType := ctx.Query("ticket_type")
+	ticketType := ctx.Query("ticketType")
 	priority := ctx.Query("priority")
-	customerTier := ctx.Query("customer_tier")
+	customerTier := ctx.Query("customerTier")
 
 	policy, err := c.service.MatchSLAPolicy(ctx.Request.Context(), tenantID, ticketType, priority, customerTier)
 	if err != nil {
@@ -233,8 +233,8 @@ func (c *SLAPolicyController) MatchSLAPolicy(ctx *gin.Context) {
 // @Tags SLA策略管理
 // @Accept json
 // @Produce json
-// @Param start_date query string false "开始日期"
-// @Param end_date query string false "结束日期"
+// @Param startDate query string false "开始日期"
+// @Param endDate query string false "结束日期"
 // @Success 200 {object} common.Response
 // @Router /api/v1/sla-policies/compliance-rate [get]
 func (c *SLAPolicyController) GetSLAComplianceRate(ctx *gin.Context) {

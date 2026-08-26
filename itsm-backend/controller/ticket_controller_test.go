@@ -427,6 +427,84 @@ func TestTicketController_UpdateTicket(t *testing.T) {
 	}
 }
 
+// TestTicketController_BatchDeleteTickets_CamelCase 锁住 Bug 5 修复。
+// 修复前：BatchDeleteTickets 返回 {"deleted_count": N}
+// 修复后：BatchDeleteTickets 返回 {"deletedCount": N} （camelCase）
+// 这一断言同时检查响应里不再包含 deleted_count，确保未来回归会被立刻发现。
+func TestTicketController_BatchDeleteTickets_CamelCase(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	client := enttest.Open(t, "sqlite3", "file:ent-batchdelete?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	ticketService := service.NewTicketServiceForTest(client, logger)
+	ctrl := NewTicketController(ticketService, nil, nil, logger)
+
+	r := gin.New()
+	r.Use(gin.Recovery())
+	// 注入 tenant/user，绕过 RequirePermission 中间件（与 router 中路由同款 body 即可）。
+	r.Use(func(c *gin.Context) {
+		tenantID, _ := strconv.Atoi(c.GetHeader("X-Test-Tenant"))
+		userID, _ := strconv.Atoi(c.GetHeader("X-Test-User"))
+		if tenantID == 0 {
+			tenantID = 1
+		}
+		if userID == 0 {
+			userID = 1
+		}
+		c.Set("tenant_id", tenantID)
+		c.Set("user_id", userID)
+		c.Set("role", "admin")
+		c.Next()
+	})
+	r.POST("/api/v1/tickets/batch-delete", ctrl.BatchDeleteTickets)
+
+	tenant, user := createTestTenantAndUserForTicket(t, client)
+
+	ctx := context.Background()
+	uniqueID := uniqueTestID()
+	var ids []int
+	for i := 0; i < 3; i++ {
+		t1, err := client.Ticket.Create().
+			SetTicketNumber(fmt.Sprintf("TKT-BATCH-%s-%03d", uniqueID, i+1)).
+			SetTitle(fmt.Sprintf("批删除测试 %d", i+1)).
+			SetDescription("可被批量删除的工单").
+			SetPriority("low").
+			SetStatus("open").
+			SetRequesterID(user.ID).
+			SetTenantID(tenant.ID).
+			Save(ctx)
+		require.NoError(t, err)
+		ids = append(ids, t1.ID)
+	}
+
+	body, err := json.Marshal(map[string]interface{}{"ticketIds": ids})
+	require.NoError(t, err)
+	req, err := http.NewRequest("POST", "/api/v1/tickets/batch-delete", bytes.NewReader(body))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Test-Tenant", strconv.Itoa(tenant.ID))
+	req.Header.Set("X-Test-User", strconv.Itoa(user.ID))
+
+	resp, _ := doJSONRequest(t, r, req)
+	assert.Equal(t, common.SuccessCode, resp.Code, "batch delete should succeed, msg=%s", resp.Message)
+
+	// Bug 5 验收：响应 data 必须含 deletedCount（camelCase），不得含 deleted_count。
+	raw := string(resp.Data)
+	assert.Contains(t, raw, "deletedCount",
+		"P0-3 验收：批量删除响应必须使用 camelCase 字段 deletedCount")
+	assert.NotContains(t, raw, "deleted_count",
+		"P0-3 验收：批量删除响应不得再包含 snake_case 字段 deleted_count")
+
+	var data struct {
+		DeletedCount int    `json:"deletedCount"`
+		Message      string `json:"message"`
+	}
+	require.NoError(t, json.Unmarshal(resp.Data, &data))
+	assert.Equal(t, 3, data.DeletedCount, "deletedCount 必须等于请求的 ids 数量")
+}
+
 func TestTicketController_DeleteTicket(t *testing.T) {
 	r, client, _ := setupTestTicketController(t)
 	defer client.Close()

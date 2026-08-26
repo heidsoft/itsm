@@ -653,7 +653,7 @@ func (c *CMDBController) ListCIRelationships(ctx *gin.Context) {
 	}
 
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSizeQuery := ctx.Query("page_size")
+	pageSizeQuery := ctx.Query("pageSize")
 	if pageSizeQuery == "" {
 		pageSizeQuery = ctx.Query("pageSize")
 	}

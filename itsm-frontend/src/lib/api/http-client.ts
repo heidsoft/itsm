@@ -350,7 +350,7 @@ class HttpClient {
       const responseData = (await response.json()) as ApiResponse<T>;
       logger.debug('HTTP Client Raw Response Data:', responseData);
 
-      // Check response code - 容忍后端没有返回 code 字段的情况（如 BPMN workflow controller）
+      // Check response code - defense-in-depth，容忍历史未使用 common.Success 的 controller。
       // 允许 code 为 0、undefined、null 或不存在
       if (
         responseData.code !== undefined &&

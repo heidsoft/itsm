@@ -342,8 +342,8 @@ func (tc *TicketController) BatchDeleteTickets(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"message":       "批量删除成功",
-		"deleted_count": len(req.TicketIDs),
+		"message":      "批量删除成功",
+		"deletedCount": len(req.TicketIDs),
 	})
 }
 
@@ -646,8 +646,8 @@ func (tc *TicketController) AssignTickets(c *gin.Context) {
 
 	tc.logger.Infow("Assign tickets successful", "ticket_ids", req.TicketIDs, "assignee_id", req.AssigneeID, "tenant_id", tenantID)
 	common.Success(c, gin.H{
-		"message":        "工单分配成功",
-		"assigned_count": len(req.TicketIDs),
+		"message":       "工单分配成功",
+		"assignedCount": len(req.TicketIDs),
 	})
 }
 
@@ -701,7 +701,6 @@ func (tc *TicketController) GetTicketTemplates(c *gin.Context) {
 		"templates": normalizeTicketTemplateList(templates),
 		"total":     len(templates),
 		"page":      page,
-		"page_size": pageSize,
 		"pageSize":  pageSize,
 	})
 }
@@ -820,7 +819,7 @@ func (tc *TicketController) DeleteTicketTemplate(c *gin.Context) {
 	tc.logger.Infow("Delete ticket template successful", "template_id", id, "tenant_id", tenantID)
 	common.Success(c, gin.H{
 		"message":     "工单模板删除成功",
-		"template_id": id,
+		"templateId": id,
 	})
 }
 
@@ -933,7 +932,7 @@ func normalizeTicketTemplate(template interface{}) gin.H {
 		"priority":       tmpl.Priority,
 		"fields":         tmpl.Fields,
 		"formFields":     formFields,
-		"workflow_steps": tmpl.WorkflowSteps,
+		"workflowSteps":  tmpl.WorkflowSteps,
 		"isActive":       tmpl.IsActive,
 		"createdAt":      tmpl.CreatedAt,
 		"updatedAt":      tmpl.UpdatedAt,

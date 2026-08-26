@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING: API response fields are now camelCase across controllers and incident handlers** — Ticket, incident, SLA, and BPMN responses no longer expose snake_case fields such as `deleted_count`, `assigned_count`, `page_size`, `workflow_steps`, or `avg_resolution_time`. The new contract uses `deletedCount`, `assignedCount`, `pageSize`, `workflowSteps`, and `avgResolutionTime` to match the existing `dto.IncidentStats` / `dto.IncidentMetrics` types and the OpenAPI schema. External integrations that read snake_case fields must migrate in this release; the frontend `toCamelCase` compatibility layer in `src/lib/api/http-client.ts` is retained for one release as defense-in-depth and will be removed in the next minor.
+
+- **BREAKING: SLA and BPMN monitoring query parameters are now camelCase** — `GET /api/v1/sla-policies/match` expects `ticketType` and `customerTier` instead of `ticket_type` and `customer_tier`; `GET /api/v1/sla-policies/compliance-rate` expects `startDate` / `endDate`; BPMN monitoring endpoints expect `timeRange` / `startTime` / `endTime`. The frontend `src/lib/api/sla-api.ts` sends camelCase directly. Existing callers using snake_case query strings must update their requests.
+
+- **BREAKING: SLA templates and BPMN monitoring endpoints now return the standard envelope** — `controller/sla_template_controller.go` and `controller/bpmn_monitoring_controller.go` return `{code, message, data}` via `common.Success` / `common.Fail`. The previous ad-hoc `{"message": ..., "data": ...}` envelope is gone. HTTP status-code semantics are preserved (400 → `ParamErrorCode`, 404 → `NotFoundCode`, 500 → `InternalErrorCode`); only the body shape changed.
+
+- **BREAKING: Ant Design `direction` prop removed from `Space` / `Steps` components** — Five pages (`admin/cab`, `ai/audit`, `email-intake/on-call`, `admin/config-inheritance`, `workflow/ticket-approval`) now use `orientation="vertical"` instead of `direction="vertical"`, matching the Ant Design v6 API. A new `itsm-frontend/tools/check-antd-direction.sh` CI guard fails the build if the legacy prop reappears in `src/`.
+
+### Fixed
+
+- **Incident priority keyword dedup** — Removed the duplicate `"critical"` entry from the `inferIncidentPriority` keyword list in `handlers/incident/handler.go` so that `autoPriorityByKeyword("critical incident")` returns `"urgent"` exactly once instead of double-matching.
+- **Handler layering violation in `GET /api/v1/incidents/stats`** — The handler no longer reaches into `ent.Client` from a Gin request context. It delegates to `service.GetStats` → `repository.GetStats`, where a single `COUNT(*) FILTER` aggregation replaces the previous seven concurrent goroutine queries and reduces database roundtrips from 7 to 1 (verified via `pprof`).
+- **`avgResolutionTime` is now a real aggregated value** — `GET /api/v1/incidents/stats` computes `AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 60)` for incidents with a non-null `resolved_at` (per tenant), instead of returning a hard-coded `0` for every tenant.
+
+### Tests
+
+- **Bug-fix regression coverage for the seven v1.6.x hardening fixes** — Added unit tests: `handlers/incident/repository_impl_test.go` covers Bug 1 (`autoPriorityByKeyword` single-match) and Bugs 3+4 (`service.GetStats` table-driven, no direct `ent.Client` access, `avgResolutionTime > 0` after resolved events, cross-tenant isolation); `controller/sla_template_controller_test.go` covers Bug 2 (standard `{code, message, data}` envelope, status-code mapping, no raw `ctx.JSON`); `controller/sla_policy_controller_test.go` covers Bug 6 (static source check that no snake_case `ctx.Query("...")` remains and the camelCase counterparts are present); `controller/ticket_controller_test.go` covers Bug 5 (`BatchDeleteTickets` returns `deletedCount` and never `deleted_count`); `itsm-frontend/tools/check-antd-direction.sh` is the Bug 7 CI guard that fails if `direction="vertical"` returns to `src/`. All new tests pass under `go test ./...`.
+
 ### Documentation
 
 - Reworked the open-source capability guide around user roles, executable business journeys, TicketType-driven dynamic forms, maturity boundaries, deployment acceptance, and explicit non-goals.

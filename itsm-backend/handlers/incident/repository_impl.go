@@ -268,6 +268,43 @@ func (r *EntRepository) CountByPeriod(ctx context.Context, tenantID int, start, 
 		Count(ctx)
 }
 
+// GetStats 单次聚合查询返回全量指标。
+// 租户隔离：所有 SQL 均绑定 tenantID = $1，避免跨租户泄露。
+// 指标说明：
+//   - total/open/critical/major/resolved: COUNT(*) FILTER 一次完成
+//   - avgResolutionTime: 已解决/已关闭事件的平均 (resolved_at - created_at) 分钟数；
+//     未解决事件排除；空集通过 COALESCE 返回 0 而非 NULL。
+func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*IncidentStats, error) {
+	stats := &IncidentStats{}
+
+	row := database.GetRawDB().QueryRowContext(ctx, `
+		SELECT
+		  COUNT(*) FILTER (WHERE TRUE) AS total,
+		  COUNT(*) FILTER (WHERE status IN ('open','in_progress')) AS open,
+		  COUNT(*) FILTER (WHERE priority = 'critical') AS critical,
+		  COUNT(*) FILTER (WHERE priority = 'high') AS major,
+		  COUNT(*) FILTER (WHERE status IN ('resolved','closed')) AS resolved,
+		  COALESCE(AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 60.0)
+		           FILTER (WHERE status IN ('resolved','closed') AND resolved_at IS NOT NULL),
+		           0)::int AS avg_minutes
+		FROM incidents
+		WHERE tenant_id = $1 AND deleted_at IS NULL
+	`, tenantID)
+
+	if err := row.Scan(
+		&stats.TotalIncidents,
+		&stats.OpenIncidents,
+		&stats.CriticalIncidents,
+		&stats.MajorIncidents,
+		&stats.ResolvedIncidents,
+		&stats.AvgResolutionTime,
+	); err != nil {
+		return nil, fmt.Errorf("scan incident stats: %w", err)
+	}
+
+	return stats, nil
+}
+
 func (r *EntRepository) GenerateIncidentNumber(ctx context.Context, tenantID int, year int, month int) (string, error) {
 	// P0-2 修复：编号改为由数据库序列 incident_number_seq 原子生成，彻底消除
 	// 「COUNT+1 并发复用 / 删除回退 / UTC 窗口错乱」三类编号冲突。

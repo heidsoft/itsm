@@ -98,11 +98,11 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"status":       "success",
-		"summary":      "tool executed",
-		"next_actions": []string{"If the result is incomplete, refine args and retry."},
-		"artifacts":    []string{},
-		"data":         res,
+		"status":      "success",
+		"summary":     "tool executed",
+		"nextActions": []string{"If the result is incomplete, refine args and retry."},
+		"artifacts":   []string{},
+		"data":        res,
 	})
 }
 
@@ -126,17 +126,17 @@ func (h *Handler) Chat(c *gin.Context) {
 		// RAG 失败时降级处理：返回空结果而非 500 错误，避免前端崩溃
 		h.svc.logger.Warnw("AI Chat RAG 检索失败，返回降级响应", "error", err, "tenantID", tenantID)
 		common.Success(c, gin.H{
-			"answers":         []interface{}{},
-			"conversation_id": 0,
-			"degraded":        true,
-			"message":         "AI 服务暂时不可用，请稍后重试",
+			"answers":        []interface{}{},
+			"conversationId": 0,
+			"degraded":       true,
+			"message":        "AI 服务暂时不可用，请稍后重试",
 		})
 		return
 	}
 
 	common.Success(c, gin.H{
-		"answers":         answers,
-		"conversation_id": convID,
+		"answers":        answers,
+		"conversationId": convID,
 	})
 }
 
@@ -180,7 +180,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 			common.FailWithErr(c, err, "操作失败")
 			return
 		}
-		common.Success(c, gin.H{"answers": answers, "conversation_id": convID})
+		common.Success(c, gin.H{"answers": answers, "conversationId": convID})
 		return
 	}
 
@@ -359,11 +359,11 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 	}
 
 	notePayload := map[string]interface{}{
-		"prompt_version": req.PromptVersion,
-		"model":          req.Model,
-		"confidence":     req.Confidence,
-		"suggestion":     req.Suggestion,
-		"notes":          req.Notes,
+		"promptVersion": req.PromptVersion,
+		"model":         req.Model,
+		"confidence":    req.Confidence,
+		"suggestion":    req.Suggestion,
+		"notes":         req.Notes,
 	}
 	noteBytes, _ := json.Marshal(notePayload)
 	note := string(noteBytes)
@@ -382,13 +382,13 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"request_id":     requestID,
-		"scenario":       req.Scenario,
-		"input_ref":      req.InputRef,
-		"prompt_version": req.PromptVersion,
-		"model":          req.Model,
-		"confidence":     req.Confidence,
-		"accepted":       req.Accepted,
+		"requestId":     requestID,
+		"scenario":      req.Scenario,
+		"inputRef":      req.InputRef,
+		"promptVersion": req.PromptVersion,
+		"model":         req.Model,
+		"confidence":    req.Confidence,
+		"accepted":      req.Accepted,
 	})
 }
 

@@ -158,7 +158,7 @@ const AIAuditConsole: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <Space align="center" style={{ justifyContent: 'space-between', width: '100%' }}>
           <Space align="center">
             <ShieldCheck size={22} color="#1677ff" />

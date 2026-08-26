@@ -33,12 +33,13 @@ import (
 // `executeRules(ctx, ...)` goroutine inside Service.Create that calls
 // ListActiveRules. We serialize via the embedded mutex.
 type mockRepository struct {
-	mu            sync.Mutex
-	incidents     map[int]*Incident
-	eventLog      []string
-	ruleReturnErr error
-	numberCounter int
-	nextID        int
+	mu              sync.Mutex
+	incidents       map[int]*Incident
+	eventLog        []string
+	ruleReturnErr   error
+	numberCounter   int
+	nextID          int
+	statsCallCount  *int
 }
 
 func newMockRepository() *mockRepository {
@@ -152,6 +153,40 @@ func (m *mockRepository) CountByPeriod(ctx context.Context, tenantID int, start,
 		}
 	}
 	return n, nil
+}
+
+func (m *mockRepository) GetStats(ctx context.Context, tenantID int) (*IncidentStats, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.statsCallCount != nil {
+		*m.statsCallCount++
+	}
+	stats := &IncidentStats{}
+	for _, inc := range m.incidents {
+		if inc.TenantID != tenantID {
+			continue
+		}
+		stats.TotalIncidents++
+		switch inc.Status {
+		case "open", "in_progress":
+			stats.OpenIncidents++
+		case "resolved", "closed":
+			stats.ResolvedIncidents++
+		}
+		switch inc.Priority {
+		case "critical":
+			stats.CriticalIncidents++
+		case "high":
+			stats.MajorIncidents++
+		}
+		if inc.ResolvedAt != nil && !inc.ResolvedAt.IsZero() {
+			stats.AvgResolutionTime += int(inc.ResolvedAt.Sub(inc.CreatedAt).Minutes())
+		}
+	}
+	if stats.ResolvedIncidents > 0 {
+		stats.AvgResolutionTime /= stats.ResolvedIncidents
+	}
+	return stats, nil
 }
 
 func (m *mockRepository) CreateEvent(ctx context.Context, e *IncidentEvent) (*IncidentEvent, error) {

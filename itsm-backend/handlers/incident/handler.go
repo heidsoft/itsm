@@ -3,7 +3,6 @@ package incident
 import (
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"itsm-backend/common"
@@ -284,112 +283,25 @@ func (h *Handler) toDTO(i *Incident) *dto.IncidentResponse {
 	}
 }
 
-// GetStats 获取事件统计数据（兼容前端）
+// GetStats 获取事件统计数据（兼容前端）。
+// P0-2 修复：handler 不再直接访问 ent.Client，改为通过 service 层调用仓储。
+// 仓储以单次 COUNT(*) FILTER + AVG 聚合查询完成全部指标，pprof 查询次数由 7 降至 1。
+// 字段已统一为 camelCase（见 dto.IncidentStats / repository.IncidentStats）。
 func (h *Handler) GetStats(c *gin.Context) {
-	tenantIDInt := c.GetInt("tenant_id")
-
-	client, exists := c.Get("client")
-	if !exists {
-		common.Fail(c, common.InternalErrorCode, "Database client not found")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthErrorCode, "Tenant ID missing")
 		return
 	}
-	entClient := client.(*ent.Client)
-	ctx := c.Request.Context()
 
-	// 并发查询所有统计数据
-	var total, open, inProgress, resolved, closed, critical, major int
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	errs := make([]error, 0)
-
-	wg.Add(7)
-	go func() {
-		defer wg.Done()
-		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt)).Count(ctx)
-		mu.Lock()
-		defer mu.Unlock()
-		total = n
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("open")).Count(ctx)
-		mu.Lock()
-		defer mu.Unlock()
-		open = n
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("in_progress")).Count(ctx)
-		mu.Lock()
-		defer mu.Unlock()
-		inProgress = n
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("resolved")).Count(ctx)
-		mu.Lock()
-		defer mu.Unlock()
-		resolved = n
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("closed")).Count(ctx)
-		mu.Lock()
-		defer mu.Unlock()
-		closed = n
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Priority("critical")).Count(ctx)
-		mu.Lock()
-		defer mu.Unlock()
-		critical = n
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Priority("high")).Count(ctx)
-		mu.Lock()
-		defer mu.Unlock()
-		major = n
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}()
-
-	wg.Wait()
-
-	if len(errs) > 0 {
-		zap.S().Errorw("GetStats: DB query failed", "errors", errs)
+	stats, err := h.service.GetStats(c.Request.Context(), tenantID)
+	if err != nil {
+		zap.S().Errorw("GetStats: failed to query incident stats", "tenant_id", tenantID, "error", err)
 		common.Fail(c, common.InternalErrorCode, "Failed to retrieve incident statistics")
 		return
 	}
 
-	common.Success(c, gin.H{
-		"total_incidents":     total,
-		"open_incidents":      open + inProgress,
-		"critical_incidents":  critical,
-		"major_incidents":     major,
-		"resolved_incidents":  resolved + closed,
-		"avg_resolution_time": 0,
-	})
+	common.Success(c, stats)
 }
 
 // GetRootCause 获取根因分析
@@ -409,9 +321,9 @@ func (h *Handler) GetRootCause(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"incident_id":         incident.ID,
-		"root_cause":          incident.RootCause,
-		"root_cause_analysis": incident.ImpactAnalysis,
+		"incidentId":         incident.ID,
+		"rootCause":          incident.RootCause,
+		"rootCauseAnalysis":  incident.ImpactAnalysis,
 	})
 }
 
@@ -464,8 +376,8 @@ func (h *Handler) GetImpactAssessment(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"incident_id":       incident.ID,
-		"impact_assessment": incident.ImpactAnalysis,
+		"incidentId":     incident.ID,
+		"impactAnalysis": incident.ImpactAnalysis,
 	})
 }
 
@@ -518,7 +430,7 @@ func (h *Handler) GetClassification(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"incident_id": incident.ID,
+		"incidentId":  incident.ID,
 		"category":    incident.Category,
 		"subcategory": incident.Subcategory,
 	})
@@ -585,12 +497,12 @@ func (h *Handler) GetIncidentEvents(c *gin.Context) {
 	for _, e := range inc.Edges.IncidentEvents {
 		result = append(result, gin.H{
 			"id":          e.ID,
-			"incident_id": e.IncidentID,
-			"event_type":  e.EventType,
-			"event_name":  e.EventName,
+			"incidentId":  e.IncidentID,
+			"eventType":   e.EventType,
+			"eventName":   e.EventName,
 			"description": e.Description,
-			"occurred_at": e.OccurredAt,
-			"created_at":  e.CreatedAt,
+			"occurredAt":  e.OccurredAt,
+			"createdAt":   e.CreatedAt,
 		})
 	}
 
@@ -834,7 +746,7 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 func autoPriorityByKeyword(title, description string) string {
 	text := strings.ToLower(title + " " + description)
 	switch {
-	case containsAny(text, []string{"down", "outage", "critical", "production", "宕机", "严重", "紧急", "critical"}):
+	case containsAny(text, []string{"down", "outage", "critical", "production", "宕机", "严重", "紧急"}):
 		return "critical"
 	case containsAny(text, []string{"high", "urgent", "高", "高优先"}):
 		return "high"

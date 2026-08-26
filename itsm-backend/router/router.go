@@ -1771,7 +1771,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					c.Data(200, "text/plain; charset=utf-8", []byte("report is not generated yet"))
 				})
 				dashboard.POST("/export", middleware.RequirePermission("report", "create"), func(c *gin.Context) {
-					common.Success(c, gin.H{"download_url": ""})
+					common.Success(c, gin.H{"downloadUrl": ""})
 				})
 				dashboard.GET("/templates", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 					common.Success(c, []gin.H{defaultDashboardTemplate()})

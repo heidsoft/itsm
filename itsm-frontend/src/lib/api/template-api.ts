@@ -302,11 +302,11 @@ export class TemplateApi {
     formData.append('format', data.format);
 
     if (data.overwriteExisting !== undefined) {
-      formData.append('overwrite_existing', String(data.overwriteExisting));
+      formData.append('overwriteExisting', String(data.overwriteExisting));
     }
 
     if (data.validateOnly !== undefined) {
-      formData.append('validate_only', String(data.validateOnly));
+      formData.append('validateOnly', String(data.validateOnly));
     }
 
     return httpClient.post('/api/v1/templates/import', formData);

@@ -254,3 +254,14 @@ func (s *Service) executeAction(ctx context.Context, rule *IncidentRule, inciden
 	// Update stats
 	s.repo.UpdateRuleStats(ctx, rule.ID, rule.ExecutionCount+1, time.Now())
 }
+
+// GetStats 聚合事件统计（按 tenant 隔离）
+// 该方法仅做租户透传，业务规则（如缓存、敏感字段脱敏）由调用层决定；
+// 当前实现直接返回仓储聚合结果，后续若启用 Redis 缓存（见方案「不在本方案范围」）
+// 可在此层加缓存读写与租户失效。
+func (s *Service) GetStats(ctx context.Context, tenantID int) (*IncidentStats, error) {
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("invalid tenant id: %d", tenantID)
+	}
+	return s.repo.GetStats(ctx, tenantID)
+}

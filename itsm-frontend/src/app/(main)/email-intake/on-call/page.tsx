@@ -189,7 +189,7 @@ export default function OnCallPage() {
       render: (_: unknown, r: OnCallSchedule) => {
         const oc = currentOnCall[r.groupId];
         return oc ? (
-          <Space direction='vertical' size={0}>
+          <Space orientation='vertical' size={0}>
             <Badge status='processing' text={<Text strong>{userName(oc.userId)}</Text>} />
             <Text type='secondary' style={{ fontSize: 12 }}>
               <ClockCircleOutlined /> {dayjs(oc.startAt).format('MM-DD HH:mm')} ~{' '}

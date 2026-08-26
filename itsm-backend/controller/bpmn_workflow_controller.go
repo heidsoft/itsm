@@ -868,7 +868,7 @@ func (c *BPMNWorkflowController) SetTaskVariables(ctx *gin.Context) {
 
 // ListVersions 获取版本列表
 func (c *BPMNWorkflowController) ListVersions(ctx *gin.Context) {
-	processKey := ctx.Query("process_key")
+	processKey := ctx.Query("processKey")
 	tenantID := ctx.GetInt("tenant_id")
 
 	if processKey == "" {
@@ -990,8 +990,8 @@ func (c *BPMNWorkflowController) RollbackVersion(ctx *gin.Context) {
 // CompareVersions 比较两个版本
 func (c *BPMNWorkflowController) CompareVersions(ctx *gin.Context) {
 	processKey := ctx.Param("key")
-	baseVersion := ctx.Query("base_version")
-	targetVersion := ctx.Query("target_version")
+	baseVersion := ctx.Query("baseVersion")
+	targetVersion := ctx.Query("targetVersion")
 	tenantID := ctx.GetInt("tenant_id")
 
 	// 如果没有提供版本参数，返回友好错误

@@ -38,7 +38,7 @@ func (c *BPMNAIGeneratorController) GenerateBPMN(ctx *gin.Context) {
 		return
 	}
 
-	autoDeploy := ctx.Query("auto_deploy") == "true"
+	autoDeploy := ctx.Query("autoDeploy") == "true"
 
 	resp, err := c.aiGeneratorService.GenerateBPMN(ctx, &req, autoDeploy)
 	if err != nil {
@@ -95,7 +95,7 @@ func (c *BPMNAIGeneratorController) GetTemplateSuggestions(ctx *gin.Context) {
 		return
 	}
 
-	_ = ctx.Query("process_type")
+	_ = ctx.Query("processType")
 
 	// 这里可以实现基于AI的模板推荐逻辑
 	// 暂时返回空结果

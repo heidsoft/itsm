@@ -175,7 +175,7 @@ export default function ConfigInheritancePage() {
 
         <Col xs={24} lg={8}>
           <Card title="继承链" style={{ marginBottom: 16 }}>
-            <Steps direction="vertical" size="small" current={3} items={chainItems} />
+            <Steps orientation="vertical" size="small" current={3} items={chainItems} />
           </Card>
 
           <Card title="有效配置预览">

@@ -1,8 +1,7 @@
 package controller
 
 import (
-	"net/http"
-
+	"itsm-backend/common"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -32,12 +31,9 @@ func (c *SLATemplateController) RegisterRoutes(r *gin.RouterGroup) {
 // GET /api/v1/sla/templates
 func (c *SLATemplateController) ListTemplates(ctx *gin.Context) {
 	templates := c.templateService.ListTemplates()
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取 SLA 模板列表成功",
-		"data": gin.H{
-			"templates": templates,
-			"total":     len(templates),
-		},
+	common.Success(ctx, gin.H{
+		"templates": templates,
+		"total":     len(templates),
 	})
 }
 
@@ -46,20 +42,17 @@ func (c *SLATemplateController) ListTemplates(ctx *gin.Context) {
 func (c *SLATemplateController) GetTemplate(ctx *gin.Context) {
 	key := ctx.Param("key")
 	if key == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "模板 key 不能为空"})
+		common.Fail(ctx, common.ParamErrorCode, "模板 key 不能为空")
 		return
 	}
 
 	tmpl, err := c.templateService.GetTemplate(key)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		common.Fail(ctx, common.NotFoundCode, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取 SLA 模板详情成功",
-		"data":    tmpl,
-	})
+	common.Success(ctx, tmpl)
 }
 
 // InstallTemplate 将模板安装到当前租户
@@ -67,29 +60,26 @@ func (c *SLATemplateController) GetTemplate(ctx *gin.Context) {
 func (c *SLATemplateController) InstallTemplate(ctx *gin.Context) {
 	key := ctx.Param("key")
 	if key == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "模板 key 不能为空"})
+		common.Fail(ctx, common.ParamErrorCode, "模板 key 不能为空")
 		return
 	}
 
 	tenantIDVal, exists := ctx.Get("tenant_id")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		common.Fail(ctx, common.AuthFailedCode, "未授权访问")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "租户ID类型错误"})
+		common.Fail(ctx, common.InternalErrorCode, "租户ID类型错误")
 		return
 	}
 
 	result, err := c.templateService.InstallTemplate(ctx.Request.Context(), key, tenantID)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		common.Fail(ctx, common.BadRequestCode, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": result.Message,
-		"data":    result,
-	})
+	common.Success(ctx, result)
 }

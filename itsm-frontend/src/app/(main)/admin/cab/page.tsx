@@ -133,7 +133,7 @@ const CabManagementPage: React.FC = () => {
       dataIndex: 'userName',
       key: 'userName',
       render: (_: string, m: CabMember) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>{m.userName}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {m.email}

@@ -116,6 +116,31 @@ func (m *slaMockRepository) CountByPeriod(ctx context.Context, tenantID int, sta
 	return n, nil
 }
 
+func (m *slaMockRepository) GetStats(ctx context.Context, tenantID int) (*IncidentStats, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	stats := &IncidentStats{}
+	for _, inc := range m.incidents {
+		if inc.TenantID != tenantID {
+			continue
+		}
+		stats.TotalIncidents++
+		switch inc.Status {
+		case "open", "in_progress":
+			stats.OpenIncidents++
+		case "resolved", "closed":
+			stats.ResolvedIncidents++
+		}
+		switch inc.Priority {
+		case "critical":
+			stats.CriticalIncidents++
+		case "high":
+			stats.MajorIncidents++
+		}
+	}
+	return stats, nil
+}
+
 func (m *slaMockRepository) CreateEvent(ctx context.Context, e *IncidentEvent) (*IncidentEvent, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

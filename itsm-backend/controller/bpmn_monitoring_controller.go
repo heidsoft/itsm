@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"net/http"
 	"strconv"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -53,34 +53,45 @@ func (c *BPMNMonitoringController) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
-// GetProcessMetrics 获取流程指标
-func (c *BPMNMonitoringController) GetProcessMetrics(ctx *gin.Context) {
-	// 从JWT获取租户ID
+// tenantIDFromCtx 从 gin.Context 解析 tenantID，缺失或类型错误时调用 Fail 并返回 false
+func tenantIDFromCtx(ctx *gin.Context) (int, bool) {
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		common.Fail(ctx, common.AuthFailedCode, "未授权访问")
+		return 0, false
+	}
+	id, ok := tenantID.(int)
+	if !ok {
+		common.Fail(ctx, common.InternalErrorCode, "租户ID类型错误")
+		return 0, false
+	}
+	return id, true
+}
+
+// GetProcessMetrics 获取流程指标
+func (c *BPMNMonitoringController) GetProcessMetrics(ctx *gin.Context) {
+	tenantID, ok := tenantIDFromCtx(ctx)
+	if !ok {
 		return
 	}
 
-	// 解析查询参数
-	timeRange := ctx.Query("time_range")
+	timeRange := ctx.Query("timeRange")
 	if timeRange == "" {
-		timeRange = "24h" // 默认24小时
+		timeRange = "24h"
 	}
 
 	req := &service.ProcessMetricsRequest{
-		TenantID:  tenantID.(int),
+		TenantID:  tenantID,
 		TimeRange: timeRange,
 	}
 
-	// 解析时间范围
-	if startTimeStr := ctx.Query("start_time"); startTimeStr != "" {
+	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
 		if startTime, err := time.Parse(time.RFC3339, startTimeStr); err == nil {
 			req.StartTime = &startTime
 		}
 	}
 
-	if endTimeStr := ctx.Query("end_time"); endTimeStr != "" {
+	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
 		if endTime, err := time.Parse(time.RFC3339, endTimeStr); err == nil {
 			req.EndTime = &endTime
 		}
@@ -88,51 +99,44 @@ func (c *BPMNMonitoringController) GetProcessMetrics(ctx *gin.Context) {
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取流程指标失败: " + err.Error()})
+		common.Fail(ctx, common.InternalErrorCode, "获取流程指标失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取流程指标成功",
-		"data":    metrics,
-	})
+	common.Success(ctx, metrics)
 }
 
 // GetProcessMetricsByKey 根据流程定义键获取指标
 func (c *BPMNMonitoringController) GetProcessMetricsByKey(ctx *gin.Context) {
 	processKey := ctx.Param("processKey")
 	if processKey == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "流程定义键不能为空"})
+		common.Fail(ctx, common.ParamErrorCode, "流程定义键不能为空")
 		return
 	}
 
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+	tenantID, ok := tenantIDFromCtx(ctx)
+	if !ok {
 		return
 	}
 
-	// 解析查询参数
-	timeRange := ctx.Query("time_range")
+	timeRange := ctx.Query("timeRange")
 	if timeRange == "" {
 		timeRange = "24h"
 	}
 
 	req := &service.ProcessMetricsRequest{
 		ProcessDefinitionKey: processKey,
-		TenantID:             tenantID.(int),
+		TenantID:             tenantID,
 		TimeRange:            timeRange,
 	}
 
-	// 解析时间范围
-	if startTimeStr := ctx.Query("start_time"); startTimeStr != "" {
+	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
 		if startTime, err := time.Parse(time.RFC3339, startTimeStr); err == nil {
 			req.StartTime = &startTime
 		}
 	}
 
-	if endTimeStr := ctx.Query("end_time"); endTimeStr != "" {
+	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
 		if endTime, err := time.Parse(time.RFC3339, endTimeStr); err == nil {
 			req.EndTime = &endTime
 		}
@@ -140,14 +144,11 @@ func (c *BPMNMonitoringController) GetProcessMetricsByKey(ctx *gin.Context) {
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取流程指标失败: " + err.Error()})
+		common.Fail(ctx, common.InternalErrorCode, "获取流程指标失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取流程指标成功",
-		"data":    metrics,
-	})
+	common.Success(ctx, metrics)
 }
 
 // GetProcessInstanceStatus 获取流程实例状态
@@ -155,49 +156,40 @@ func (c *BPMNMonitoringController) GetProcessInstanceStatus(ctx *gin.Context) {
 	instanceIDStr := ctx.Param("instanceId")
 	instanceID, err := strconv.Atoi(instanceIDStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的流程实例ID"})
+		common.Fail(ctx, common.ParamErrorCode, "无效的流程实例ID")
 		return
 	}
 
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+	tenantID, ok := tenantIDFromCtx(ctx)
+	if !ok {
 		return
 	}
 
-	status, err := c.monitoringService.GetProcessInstanceStatus(ctx, instanceID, tenantID.(int))
+	status, err := c.monitoringService.GetProcessInstanceStatus(ctx, instanceID, tenantID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取流程实例状态失败: " + err.Error()})
+		common.Fail(ctx, common.InternalErrorCode, "获取流程实例状态失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取流程实例状态成功",
-		"data":    status,
-	})
+	common.Success(ctx, status)
 }
 
 // ListProcessInstancesStatus 获取流程实例状态列表
 func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) {
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+	tenantID, ok := tenantIDFromCtx(ctx)
+	if !ok {
 		return
 	}
 
-	// 解析分页参数
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("page_size", "20"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("pageSize", "20"))
 
-	// 解析查询参数
-	processKey := ctx.Query("process_key")
+	processKey := ctx.Query("processKey")
 	status := ctx.Query("status")
 	assignee := ctx.Query("assignee")
 
 	query := &service.ListProcessInstanceStatusQuery{
-		TenantID:   tenantID.(int),
+		TenantID:   tenantID,
 		Page:       page,
 		PageSize:   pageSize,
 		ProcessKey: processKey,
@@ -205,13 +197,12 @@ func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) 
 		Assignee:   assignee,
 	}
 
-	// 解析时间范围
-	if startTimeStr := ctx.Query("start_time"); startTimeStr != "" {
+	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
 		if startTime, err := time.Parse(time.RFC3339, startTimeStr); err == nil {
 			query.StartTime = &startTime
 		}
 	}
-	if endTimeStr := ctx.Query("end_time"); endTimeStr != "" {
+	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
 		if endTime, err := time.Parse(time.RFC3339, endTimeStr); err == nil {
 			query.EndTime = &endTime
 		}
@@ -219,18 +210,15 @@ func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) 
 
 	statuses, total, err := c.monitoringService.ListProcessInstancesStatus(ctx, query)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取流程实例状态失败: " + err.Error()})
+		common.Fail(ctx, common.InternalErrorCode, "获取流程实例状态失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取流程实例状态成功",
-		"data": gin.H{
-			"instances": statuses,
-			"total":     total,
-			"page":      page,
-			"page_size": pageSize,
-		},
+	common.Success(ctx, gin.H{
+		"instances": statuses,
+		"total":     total,
+		"page":      page,
+		"pageSize":  pageSize,
 	})
 }
 
@@ -238,121 +226,98 @@ func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) 
 func (c *BPMNMonitoringController) GetProcessTimeline(ctx *gin.Context) {
 	processInstanceKey := ctx.Param("instanceId")
 	if processInstanceKey == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "流程实例Key不能为空"})
+		common.Fail(ctx, common.ParamErrorCode, "流程实例Key不能为空")
 		return
 	}
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+	tenantID, ok := tenantIDFromCtx(ctx)
+	if !ok {
 		return
 	}
 
-	entries, err := c.monitoringService.GetProcessTimeline(ctx, processInstanceKey, tenantID.(int))
+	entries, err := c.monitoringService.GetProcessTimeline(ctx, processInstanceKey, tenantID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取流程时间线失败: " + err.Error()})
+		common.Fail(ctx, common.InternalErrorCode, "获取流程时间线失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取流程时间线成功",
-		"data": gin.H{
-			"process_instance_id": processInstanceKey,
-			"entries":             entries,
-			"total":               len(entries),
-		},
+	common.Success(ctx, gin.H{
+		"processInstanceId": processInstanceKey,
+		"entries":           entries,
+		"total":             len(entries),
 	})
 }
 
 // GetPerformanceMetrics 获取性能指标
 func (c *BPMNMonitoringController) GetPerformanceMetrics(ctx *gin.Context) {
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+	tenantID, ok := tenantIDFromCtx(ctx)
+	if !ok {
 		return
 	}
 
-	// 解析时间范围
-	timeRange := ctx.DefaultQuery("time_range", "24h")
+	timeRange := ctx.DefaultQuery("timeRange", "24h")
 
 	req := &service.ProcessMetricsRequest{
-		TenantID:  tenantID.(int),
+		TenantID:  tenantID,
 		TimeRange: timeRange,
 	}
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取性能指标失败: " + err.Error()})
+		common.Fail(ctx, common.InternalErrorCode, "获取性能指标失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取性能指标成功",
-		"data":    metrics.PerformanceMetrics,
-	})
+	common.Success(ctx, metrics.PerformanceMetrics)
 }
 
 // GetPerformanceAlerts 获取性能告警
 func (c *BPMNMonitoringController) GetPerformanceAlerts(ctx *gin.Context) {
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+	tenantID, ok := tenantIDFromCtx(ctx)
+	if !ok {
 		return
 	}
 
-	alerts, err := c.monitoringService.GetPerformanceAlerts(ctx, tenantID.(int))
+	alerts, err := c.monitoringService.GetPerformanceAlerts(ctx, tenantID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取性能告警失败: " + err.Error()})
+		common.Fail(ctx, common.InternalErrorCode, "获取性能告警失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取性能告警成功",
-		"data":    alerts,
-	})
+	common.Success(ctx, alerts)
 }
 
 // GetSystemHealth 获取系统健康状态
 func (c *BPMNMonitoringController) GetSystemHealth(ctx *gin.Context) {
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+	tenantID, ok := tenantIDFromCtx(ctx)
+	if !ok {
 		return
 	}
 
-	health, err := c.monitoringService.GetSystemHealth(ctx, tenantID.(int))
+	health, err := c.monitoringService.GetSystemHealth(ctx, tenantID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取系统健康状态失败: " + err.Error()})
+		common.Fail(ctx, common.InternalErrorCode, "获取系统健康状态失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取系统健康状态成功",
-		"data":    health,
-	})
+	common.Success(ctx, health)
 }
 
 // GetAuditLogs 获取审计日志
 func (c *BPMNMonitoringController) GetAuditLogs(ctx *gin.Context) {
-	// 从JWT获取租户ID
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+	tenantID, ok := tenantIDFromCtx(ctx)
+	if !ok {
 		return
 	}
 
-	// 解析查询参数
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("page_size", "20"))
-	userID := ctx.Query("user_id")
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("pageSize", "20"))
+	userID := ctx.Query("userId")
 	action := ctx.Query("action")
-	resourceType := ctx.Query("resource_type")
-	resourceID := ctx.Query("resource_id")
+	resourceType := ctx.Query("resourceType")
+	resourceID := ctx.Query("resourceId")
 
 	req := &service.AuditLogRequest{
-		TenantID:     tenantID.(int),
+		TenantID:     tenantID,
 		Page:         page,
 		PageSize:     pageSize,
 		UserID:       userID,
@@ -361,14 +326,13 @@ func (c *BPMNMonitoringController) GetAuditLogs(ctx *gin.Context) {
 		ResourceID:   resourceID,
 	}
 
-	// 解析时间范围
-	if startTimeStr := ctx.Query("start_time"); startTimeStr != "" {
+	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
 		if startTime, err := time.Parse(time.RFC3339, startTimeStr); err == nil {
 			req.StartTime = &startTime
 		}
 	}
 
-	if endTimeStr := ctx.Query("end_time"); endTimeStr != "" {
+	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
 		if endTime, err := time.Parse(time.RFC3339, endTimeStr); err == nil {
 			req.EndTime = &endTime
 		}
@@ -376,17 +340,14 @@ func (c *BPMNMonitoringController) GetAuditLogs(ctx *gin.Context) {
 
 	logs, total, err := c.monitoringService.GetAuditLogs(ctx, req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取审计日志失败: " + err.Error()})
+		common.Fail(ctx, common.InternalErrorCode, "获取审计日志失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "获取审计日志成功",
-		"data": gin.H{
-			"logs":      logs,
-			"total":     total,
-			"page":      page,
-			"page_size": pageSize,
-		},
+	common.Success(ctx, gin.H{
+		"logs":     logs,
+		"total":    total,
+		"page":     page,
+		"pageSize": pageSize,
 	})
 }

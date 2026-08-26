@@ -131,8 +131,8 @@ export class BPMNDashboardApi {
    */
   static async getDashboardMetrics(tenantId: number, startTime?: string, endTime?: string): Promise<DashboardMetrics> {
     const params = new URLSearchParams({ tenantId: tenantId.toString() });
-    if (startTime) params.append('start_time', startTime);
-    if (endTime) params.append('end_time', endTime);
+    if (startTime) params.append('startTime', startTime);
+    if (endTime) params.append('endTime', endTime);
 
     return httpClient.get<DashboardMetrics>(`${this.baseUrl}/metrics?${params}`);
   }
@@ -145,8 +145,8 @@ export class BPMNDashboardApi {
       key,
       tenantId: tenantId.toString()
     });
-    if (startTime) params.append('start_time', startTime);
-    if (endTime) params.append('end_time', endTime);
+    if (startTime) params.append('startTime', startTime);
+    if (endTime) params.append('endTime', endTime);
 
     return httpClient.get<ProcessMetrics>(`${this.baseUrl}/process/${key}/metrics?${params}`);
   }
@@ -191,8 +191,8 @@ export class BPMNDashboardApi {
     const params = new URLSearchParams({
       tenantId: tenantId.toString()
     });
-    if (startTime) params.append('start_time', startTime);
-    if (endTime) params.append('end_time', endTime);
+    if (startTime) params.append('startTime', startTime);
+    if (endTime) params.append('endTime', endTime);
 
     return httpClient.get<ProcessAuditLog[]>(`${this.baseUrl}/audit-logs/user/${userId}?${params}`);
   }
@@ -216,8 +216,8 @@ export class BPMNDashboardApi {
       key,
       tenantId: tenantId.toString()
     });
-    if (startTime) params.append('start_time', startTime);
-    if (endTime) params.append('end_time', endTime);
+    if (startTime) params.append('startTime', startTime);
+    if (endTime) params.append('endTime', endTime);
 
     return httpClient.get<{ complianceRate: number; compliant: number; total: number }>(`${this.baseUrl}/sla/compliance?${params}`);
   }
@@ -226,7 +226,7 @@ export class BPMNDashboardApi {
    * 获取租户统计
    */
   static async getTenantStats(tenantId: number): Promise<TenantBPMNStats> {
-    return httpClient.get<TenantBPMNStats>(`${this.baseUrl}/tenant/stats?tenant_id=${tenantId}`);
+    return httpClient.get<TenantBPMNStats>(`${this.baseUrl}/tenant/stats?tenantId=${tenantId}`);
   }
 
   /**

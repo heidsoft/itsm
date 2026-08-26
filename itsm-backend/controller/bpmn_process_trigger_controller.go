@@ -349,7 +349,7 @@ func (c *BPMNProcessTriggerController) InitDepartmentProcesses(ctx *gin.Context)
 // ListDomainConfigs 查询当前租户配置
 func (c *BPMNProcessTriggerController) ListDomainConfigs(ctx *gin.Context) {
 	tenantID, _ := ctx.Get("tenant_id")
-	configType := ctx.Query("config_type")
+	configType := ctx.Query("configType")
 
 	result, err := c.configService.ListConfigs(ctx.Request.Context(), tenantID.(int), configType)
 	if err != nil {
@@ -412,8 +412,8 @@ func (c *BPMNProcessTriggerController) GetEffectiveDomainConfig(ctx *gin.Context
 		common.Fail(ctx, 1001, "无效的团队ID")
 		return
 	}
-	configType := ctx.Query("config_type")
-	configKey := ctx.Query("config_key")
+	configType := ctx.Query("configType")
+	configKey := ctx.Query("configKey")
 	if configType == "" || configKey == "" {
 		common.Fail(ctx, 1001, "config_type 和 config_key 不能为空")
 		return

@@ -352,7 +352,7 @@ const TicketApprovalWorkflowPage = () => {
 
           <div>
             <Title level={5}>{t('workflow.processSteps')}</Title>
-            <Steps direction="vertical" size="small" current={0} items={previewSteps} />
+            <Steps orientation="vertical" size="small" current={0} items={previewSteps} />
           </div>
 
           <div>

@@ -43,14 +43,14 @@ export interface ListAuditLogsResponse {
 export async function listAuditLogs(params: ListAuditLogsParams): Promise<ListAuditLogsResponse> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
-  if (params.pageSize) query.set('page_size', String(params.pageSize));
-  if (params.userId !== undefined) query.set('user_id', String(params.userId));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.userId !== undefined) query.set('userId', String(params.userId));
   if (params.resource) query.set('resource', params.resource);
   if (params.action) query.set('action', params.action);
   if (params.method) query.set('method', params.method);
-  if (params.statusCode !== undefined) query.set('status_code', String(params.statusCode));
+  if (params.statusCode !== undefined) query.set('statusCode', String(params.statusCode));
   if (params.path) query.set('path', params.path);
-  if (params.requestId) query.set('request_id', params.requestId);
+  if (params.requestId) query.set('requestId', params.requestId);
   if (params.from) query.set('from', params.from);
   if (params.to) query.set('to', params.to);
 
