@@ -10,7 +10,7 @@ export default function CIListPage() {
     <div className="space-y-6 p-6">
       <ManagementPageHeader
         title="配置项工作台"
-        description="面向 CSDM 的配置项清单，不是纯资产表。这里保留清单管理，但它只是 Service Graph 的一个视图。"
+        description="查看和管理所有配置项，支持按类型、状态、关键程度等维度筛选。"
       />
       <CIList />
     </div>

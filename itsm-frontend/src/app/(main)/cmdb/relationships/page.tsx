@@ -58,7 +58,7 @@ export default function RelationshipsPage() {
     <div className="space-y-6 p-6">
       <ManagementPageHeader
         title="关系管理"
-        description="围绕 CI 的依赖、托管、影响和包含关系进行建模，这是 Service Graph 的骨架。"
+        description="查看和管理配置项之间的依赖、托管、影响和包含关系。"
       />
 
       <Card

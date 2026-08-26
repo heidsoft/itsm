@@ -227,7 +227,7 @@ export default function TopologyPage() {
   );
 
   return (
-    <PageContainer title="CMDB 拓扑图" description="可视化配置项之间的依赖关系">
+    <PageContainer title="CMDB 拓扑图" description="查看一个配置项周围的依赖关系图，支持 1-4 层关系深度。">
       <Card className="shadow-sm rounded-lg mb-4">
         <Space wrap>
           <Select

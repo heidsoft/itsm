@@ -206,7 +206,7 @@ export default function ServiceGraphRegistryPage() {
     <div className="space-y-6 p-6">
       <ManagementPageHeader
         title="Service Graph Registry"
-        description="把发现源、云服务、云账号和发现历史放到同一张接入注册表里，为 Service Graph 提供统一入口。"
+        description="集中管理发现源、云服务和云账号的接入信息及历史记录。"
         actions={
           <Space wrap>
             <Button icon={<RefreshCw className="h-4 w-4" />} loading={loading} onClick={load}>

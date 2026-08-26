@@ -250,11 +250,11 @@ const EditCIPage: React.FC = () => {
     <div className='space-y-6'>
       <ManagementPageHeader
         title='编辑配置项'
-        description='统一维护资产主数据、云资源映射和扩展属性，避免创建页与编辑页字段表现不一致。'
+        description='修改这个配置项的基础信息、云资源关联和扩展属性。'
         notice={
           <ManagementNotice
             message='编辑时会保留原有云资源映射'
-            description='变更云资源引用后，系统会同步刷新动态属性字段，请确认扩展属性是否仍然适配。'
+            description='如果更换云资源，动态属性字段会重新加载，请确认扩展属性是否仍然适用。'
           />
         }
       />

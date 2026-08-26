@@ -225,11 +225,11 @@ export default function WorkflowVersionsPage() {
     <div className="space-y-6">
       <ManagementPageHeader
         title="工作流版本"
-        description="按流程 Key 查看历史版本、激活版本和回滚操作，先恢复版本管理入口可用性。"
+        description="查看流程的历史版本和当前激活版本，支持版本激活、回滚和比较。"
         notice={
           <ManagementNotice
-            message="版本页已恢复"
-            description="当前版本页先聚焦列表、详情、激活、回滚和比较能力，后续继续补充导入导出和版本说明编辑。"
+            message="本版本"
+            description="支持版本列表、详情查看、激活、回滚与比较。导入导出和版本说明编辑将在后续版本补充。"
           />
         }
       />

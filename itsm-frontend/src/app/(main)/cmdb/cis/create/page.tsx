@@ -226,7 +226,7 @@ const CreateCIPage: React.FC = () => {
     <div className='space-y-6'>
       <ManagementPageHeader
         title='录入配置项'
-        description='统一录入基础资产信息、云资源关联和扩展属性，减少后续补录和字段不一致。'
+        description='填写新配置项的基础信息、云资源关联和扩展属性，所有字段一次录入完整。'
         notice={
           <ManagementNotice
             message='优先选择云资源引用'

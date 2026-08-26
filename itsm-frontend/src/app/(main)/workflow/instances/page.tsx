@@ -579,11 +579,11 @@ function WorkflowInstancesContent() {
     <div className="space-y-6">
       <ManagementPageHeader
         title="工作流实例"
-        description="统一查看流程实例状态、生命周期和关键时间点，先保证实例页可用和可筛选。"
+        description="查看流程实例的运行状态、起止时间和持续时长，支持按状态和流程筛选。"
         notice={
           <ManagementNotice
-            message="实例页已恢复"
-            description="这一版先收口列表、状态操作和详情查看，后续会继续补充任务列表与会签视图。"
+            message="本版本"
+            description="支持实例列表、状态操作（暂停/恢复/终止）和详情查看。任务列表与会签视图将在后续版本补充。"
           />
         }
       />

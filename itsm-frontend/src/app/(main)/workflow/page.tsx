@@ -1023,7 +1023,7 @@ const WorkflowManagementPage = () => {
     <>
       <ManagementPageHeader
         title={t('workflow.workflowManagement')}
-        description="统一管理工作流定义、运行状态、设计入口和批量操作，作为工作流控制台主入口。"
+        description="查看所有工作流定义，进入设计器、版本、实例、监控等子页面，支持批量操作。"
         actions={headerActions}
       />
 
