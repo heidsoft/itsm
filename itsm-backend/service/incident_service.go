@@ -312,7 +312,9 @@ func (s *IncidentService) createIncident(ctx context.Context, req *dto.CreateInc
 
 	// 绑定SLA策略（P0-1）：创建Incident时自动匹配SLA并计算截止时间
 	if s.slaSvc != nil {
+		s.logger.Infow("SLA binding start", "slaSvc_nil", s.slaSvc == nil, "priority", priority)
 		slaResult, slaErr := s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, "incident", priority)
+		s.logger.Infow("SLA calculated", "definition_id", slaResult.SLADefinitionID, "response_deadline", slaResult.ResponseDeadline, "resolution_deadline", slaResult.ResolutionDeadline, "err", slaErr)
 		if slaErr != nil {
 			s.logger.Warnw("Failed to calculate SLA for incident, continuing without SLA", "error", slaErr)
 		} else {
@@ -329,6 +331,7 @@ func (s *IncidentService) createIncident(ctx context.Context, req *dto.CreateInc
 			if err := slaUpdater.Exec(ctx); err != nil {
 				s.logger.Warnw("Failed to set SLA deadlines on incident, continuing", "error", err)
 			}
+			s.logger.Infow("SLA update exec done", "err", err)
 		}
 	}
 
@@ -401,7 +404,14 @@ func (s *IncidentService) createIncident(ctx context.Context, req *dto.CreateInc
 	}
 
 	s.logger.Infow("Incident created successfully", "id", incidentEntity.ID, "number", incidentNumber)
-	return s.toIncidentResponse(incidentEntity), nil
+
+	// 重新查询以获取 SLA 更新后的最新数据（事务 UPDATE 后 incidentEntity 缓存未刷新）
+	freshIncident, err := s.client.Incident.Get(ctx, incidentEntity.ID)
+	if err != nil {
+		s.logger.Warnw("Failed to refetch incident after SLA update, using original", "error", err)
+		freshIncident = incidentEntity
+	}
+	return s.toIncidentResponse(freshIncident), nil
 }
 
 // GetIncident 获取事件
