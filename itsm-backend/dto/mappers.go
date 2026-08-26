@@ -235,6 +235,28 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 		response.ClosedAt = &incident.ClosedAt
 	}
 
+	// SLA fields
+	if incident.SLADefinitionID > 0 {
+		response.SLADefinitionID = &incident.SLADefinitionID
+	}
+	if !incident.SLAResponseDeadline.IsZero() {
+		response.SLAResponseDeadline = &incident.SLAResponseDeadline
+	}
+	if !incident.SLAResolutionDeadline.IsZero() {
+		response.SLAResolutionDeadline = &incident.SLAResolutionDeadline
+	}
+	if !incident.SLAFirstResponseAt.IsZero() {
+		response.SLAFirstResponseAt = &incident.SLAFirstResponseAt
+	}
+	if !incident.SLAResolvedAt.IsZero() {
+		response.SLAResolvedAt = &incident.SLAResolvedAt
+	}
+	response.SLAStatus = incident.SLAStatus
+	if !incident.SLAPausedAt.IsZero() {
+		response.SLAPausedAt = &incident.SLAPausedAt
+	}
+	response.SLAPauseReason = incident.SLAPauseReason
+
 	return response
 }
 
