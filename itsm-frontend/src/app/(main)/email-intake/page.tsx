@@ -33,7 +33,14 @@ import {
   type ServiceCustomer,
   type SourceOrganization,
   type SupportContract,
+  type OnCallSchedule,
 } from '@/lib/services/emailIntakeService';
+
+interface User {
+  id: number;
+  name: string;
+  email?: string;
+}
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -63,6 +70,8 @@ export default function EmailIntakePage() {
   const [contracts, setContracts] = useState<SupportContract[]>([]);
   const [sources, setSources] = useState<SourceOrganization[]>([]);
   const [externalReferences, setExternalReferences] = useState<ExternalContractReference[]>([]);
+  const [schedules, setSchedules] = useState<OnCallSchedule[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [entityModal, setEntityModal] = useState<
     'customer' | 'branch' | 'contract' | 'source' | 'externalReference' | 'schedule' | 'shift'
   >();
@@ -87,18 +96,23 @@ export default function EmailIntakePage() {
 
   const loadMasterData = useCallback(async () => {
     try {
-      const [customerResult, contractResult, sourceResult, externalReferenceResult] =
+      const [customerResult, contractResult, sourceResult, externalReferenceResult, scheduleResult, userResult] =
         await Promise.allSettled([
           emailIntakeService.customers(),
           emailIntakeService.contracts(),
           emailIntakeService.sourceOrganizations(),
           emailIntakeService.externalContractReferences(),
+          emailIntakeService.schedules(),
+          fetch('/api/v1/users?pageSize=200').then(r => r.json()),
         ]);
       if (customerResult.status === 'fulfilled') setCustomers(customerResult.value.items ?? []);
       if (contractResult.status === 'fulfilled') setContracts(contractResult.value.items ?? []);
       if (sourceResult.status === 'fulfilled') setSources(sourceResult.value.items ?? []);
       if (externalReferenceResult.status === 'fulfilled')
         setExternalReferences(externalReferenceResult.value.items ?? []);
+      if (scheduleResult.status === 'fulfilled') setSchedules(scheduleResult.value.items ?? []);
+      if (userResult.status === 'fulfilled')
+        setUsers(userResult.value.items || userResult.value.data?.items || []);
     } catch (error) {
       message.error(`加载主数据失败：${(error as Error).message}`);
     }
@@ -816,11 +830,24 @@ export default function EmailIntakePage() {
           )}
           {entityModal === 'shift' && (
             <>
-              <Form.Item name='scheduleId' label='排班 ID' rules={[{ required: true }]}>
-                <InputNumber className='w-full' min={1} />
+              <Form.Item name='scheduleId' label='排班' rules={[{ required: true }]}>
+                <Select
+                  placeholder='选择排班'
+                  showSearch
+                  optionFilterProp='label'
+                  options={schedules.map(s => ({ value: s.id, label: s.name }))}
+                />
               </Form.Item>
-              <Form.Item name='userId' label='工程师用户 ID' rules={[{ required: true }]}>
-                <InputNumber className='w-full' min={1} />
+              <Form.Item name='userId' label='值班工程师' rules={[{ required: true }]}>
+                <Select
+                  placeholder='选择工程师'
+                  showSearch
+                  optionFilterProp='label'
+                  options={users.map(u => ({
+                    value: u.id,
+                    label: u.name || u.email || `用户#${u.id}`,
+                  }))}
+                />
               </Form.Item>
               <Form.Item name='period' label='班次时间' rules={[{ required: true }]}>
                 <DatePicker.RangePicker showTime className='w-full' />
