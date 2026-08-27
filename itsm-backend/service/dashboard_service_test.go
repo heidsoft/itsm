@@ -166,7 +166,7 @@ func TestDashboardOverviewStats_Structure(t *testing.T) {
 		PendingTickets:    20,
 		InProgressTickets: 30,
 		ResolvedToday:     10,
-		AvgResponseTime:   2.5,
+		AvgResponseTime:   1.25,
 		AvgResolutionTime: 24.0,
 	}
 
@@ -174,7 +174,7 @@ func TestDashboardOverviewStats_Structure(t *testing.T) {
 	assert.Equal(t, 20, stats.PendingTickets)
 	assert.Equal(t, 30, stats.InProgressTickets)
 	assert.Equal(t, 10, stats.ResolvedToday)
-	assert.Equal(t, 2.5, stats.AvgResponseTime)
+	assert.Equal(t, 1.25, stats.AvgResponseTime)
 	assert.Equal(t, 24.0, stats.AvgResolutionTime)
 }
 

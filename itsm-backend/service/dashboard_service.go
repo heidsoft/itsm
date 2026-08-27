@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/database"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/configurationitem"
@@ -190,13 +191,28 @@ func (s *DashboardService) GetDashboardOverviewStats(ctx context.Context, tenant
 		return nil, err
 	}
 
+	// 使用数据库聚合计算真实平均时间（小时）
+	var avgRespHours, avgResHours float64
+	err = database.GetRawDB().QueryRowContext(ctx, `
+		SELECT
+			COALESCE(AVG(EXTRACT(EPOCH FROM (first_response_at - created_at)) / 3600.0)
+				FILTER (WHERE first_response_at IS NOT NULL AND tenant_id = $1), 0),
+			COALESCE(AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600.0)
+				FILTER (WHERE resolved_at IS NOT NULL AND tenant_id = $1), 0)
+		FROM tickets
+		WHERE deleted_at IS NULL
+	`, tenantID).Scan(&avgRespHours, &avgResHours)
+	if err != nil {
+		return nil, err
+	}
+
 	return &DashboardOverviewStats{
 		TotalTickets:      totalTickets,
 		PendingTickets:    pendingTickets,
 		InProgressTickets: inProgressTickets,
 		ResolvedToday:     resolvedToday,
-		AvgResponseTime:   2.5,
-		AvgResolutionTime: 4.8,
+		AvgResponseTime:   math.Round(avgRespHours*100) / 100,
+		AvgResolutionTime: math.Round(avgResHours*100) / 100,
 	}, nil
 }
 
@@ -778,18 +794,84 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 		completedChange = 100
 	}
 
-	// 平均首次响应时间（简化计算）
-	avgFirstResponse := 2.5
-	avgFirstResponseChange := -0.8
+	// 从数据库聚合真实的平均时间与 SLA 达成率
+	var avgRespHoursNow, avgResHoursNow float64
+	var avgRespHoursPrev, avgResHoursPrev float64
+	var totalSLATickets, metSLATickets int
+	err = database.GetRawDB().QueryRowContext(ctx, `
+		WITH current_month AS (
+			SELECT id, first_response_at, resolved_at, created_at
+			FROM tickets
+			WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $2
+		),
+		prev_month AS (
+			SELECT id, first_response_at, resolved_at, created_at
+			FROM tickets
+			WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $3 AND created_at < $2
+		),
+		sla_scope AS (
+			SELECT id, first_response_at, resolved_at, created_at, sla_response_deadline, sla_resolution_deadline
+			FROM tickets
+			WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $3
+		)
+		SELECT
+			COALESCE((SELECT AVG(EXTRACT(EPOCH FROM (first_response_at - created_at)) / 3600.0)
+			           FROM current_month WHERE first_response_at IS NOT NULL), 0),
+			COALESCE((SELECT AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600.0)
+			           FROM current_month WHERE resolved_at IS NOT NULL), 0),
+			COALESCE((SELECT AVG(EXTRACT(EPOCH FROM (first_response_at - created_at)) / 3600.0)
+			           FROM prev_month WHERE first_response_at IS NOT NULL), 0),
+			COALESCE((SELECT AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600.0)
+			           FROM prev_month WHERE resolved_at IS NOT NULL), 0),
+			(SELECT COUNT(*) FROM sla_scope),
+			(SELECT COUNT(*) FROM sla_scope WHERE (
+				sla_response_deadline IS NULL OR first_response_at <= sla_response_deadline
+			) AND (
+				sla_resolution_deadline IS NULL OR resolved_at <= sla_resolution_deadline
+			))
+	`, tenantID, thisMonthStart, lastMonthStart).Scan(
+		&avgRespHoursNow,
+		&avgResHoursNow,
+		&avgRespHoursPrev,
+		&avgResHoursPrev,
+		&totalSLATickets,
+		&metSLATickets,
+	)
+	if err != nil {
+		return nil, err
+	}
 
-	// 平均解决时间（简化计算）
-	avgResolution := 4.8
-	avgResolutionChange := -1.2
+	avgFirstResponse := math.Round(avgRespHoursNow*100) / 100
+	avgResolution := math.Round(avgResHoursNow*100) / 100
 
-	// SLA达成率（简化计算）
-	slaCompliance := 92.5
-	slaComplianceChange := 2.1
+	var avgFirstResponseChange, avgResolutionChange float64
+	if avgRespHoursPrev > 0 {
+		avgFirstResponseChange = math.Round((avgFirstResponse-avgRespHoursPrev)/avgRespHoursPrev*1000) / 10
+	}
+	if avgResHoursPrev > 0 {
+		avgResolutionChange = math.Round((avgResolution-avgResHoursPrev)/avgResHoursPrev*1000) / 10
+	}
+
 	slaTarget := 95.0
+	var slaCompliance float64
+	if totalSLATickets > 0 {
+		slaCompliance = math.Round(float64(metSLATickets)/float64(totalSLATickets)*1000) / 10
+	}
+
+	var slaCompliancePrev float64
+	err = database.GetRawDB().QueryRowContext(ctx, `
+		SELECT COUNT(*), COUNT(*) FILTER (
+			WHERE (sla_response_deadline IS NULL OR first_response_at <= sla_response_deadline)
+			AND (sla_resolution_deadline IS NULL OR resolved_at <= sla_resolution_deadline)
+		)
+		FROM tickets
+		WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $2 AND created_at < $3
+	`, tenantID, lastMonthStart, thisMonthStart).Scan(&totalSLATickets, &metSLATickets)
+	if err == nil && totalSLATickets > 0 {
+		slaCompliancePrev = math.Round(float64(metSLATickets)/float64(totalSLATickets)*1000) / 10
+	}
+
+	slaComplianceChange := math.Round((slaCompliance-slaCompliancePrev)*10) / 10
 
 	// 超时工单
 	overdueTickets, _ := s.client.Ticket.Query().

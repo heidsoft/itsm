@@ -9,11 +9,18 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
 )
+
+const incidentAnalysisPromptVersion = "incident-rca-v1"
+
+var allowedRootCauseCategories = map[string]struct{}{
+	"infrastructure": {}, "software": {}, "process": {}, "network": {}, "security": {}, "other": {},
+}
 
 type RootCauseService struct {
 	client  *ent.Client
@@ -49,7 +56,7 @@ func (s *RootCauseService) AnalyzeTicket(ctx context.Context, ticketID int, tena
 	}
 
 	// 执行根因分析（简化版，实际需要更复杂的算法）
-	rootCauses := s.performAnalysis(ticketEntity, tenantID)
+	rootCauses, _, _ := s.performAnalysis(ctx, ticketEntity)
 
 	// 保存分析结果
 	rootCausesMap := make([]map[string]interface{}, len(rootCauses))
@@ -164,14 +171,14 @@ func (s *RootCauseService) GetAnalysisReport(ctx context.Context, ticketID int, 
 
 // performAnalysis 执行分析
 // 当 LLM Gateway 可用时，使用 AI 进行根因分析；否则回退到基于规则的启发式分析
-func (s *RootCauseService) performAnalysis(ticketEntity *ent.Ticket, tenantID int) []dto.TicketRootCauseResponse {
+func (s *RootCauseService) performAnalysis(ctx context.Context, ticketEntity *ent.Ticket) ([]dto.TicketRootCauseResponse, bool, string) {
 	rootCauses := make([]dto.TicketRootCauseResponse, 0)
 
 	// 如果有 LLM Gateway，使用 AI 分析
 	if s.gateway != nil {
-		aiResults, err := s.performAIAnalysis(ticketEntity)
+		aiResults, err := s.performAIAnalysis(ctx, ticketEntity)
 		if err == nil && len(aiResults) > 0 {
-			return aiResults
+			return aiResults, false, ""
 		}
 		// AI 分析失败，记录日志并继续使用启发式分析
 		s.logger.Warnw("AI root cause analysis failed, falling back to heuristic", "error", err)
@@ -204,13 +211,11 @@ func (s *RootCauseService) performAnalysis(ticketEntity *ent.Ticket, tenantID in
 		})
 	}
 
-	return rootCauses
+	return rootCauses, true, "llm_unavailable_or_invalid"
 }
 
 // performAIAnalysis 使用 LLM 进行根因分析
-func (s *RootCauseService) performAIAnalysis(ticketEntity *ent.Ticket) ([]dto.TicketRootCauseResponse, error) {
-	ctx := context.Background()
-
+func (s *RootCauseService) performAIAnalysis(ctx context.Context, ticketEntity *ent.Ticket) ([]dto.TicketRootCauseResponse, error) {
 	// 构建分析提示词
 	prompt := fmt.Sprintf(`你是一个资深的 IT 运维专家，负责分析工单的根本原因。
 
@@ -274,8 +279,26 @@ func (s *RootCauseService) performAIAnalysis(ticketEntity *ent.Ticket) ([]dto.Ti
 		return nil, fmt.Errorf("failed to parse LLM response: %w", err)
 	}
 
-	rootCauses := make([]dto.TicketRootCauseResponse, 0)
-	for i, rc := range result.RootCauses {
+	return validateAndMapRootCauses(result.RootCauses)
+}
+
+func validateAndMapRootCauses(items []struct {
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Confidence  float64 `json:"confidence"`
+	Category    string  `json:"category"`
+}) ([]dto.TicketRootCauseResponse, error) {
+	if len(items) < 1 || len(items) > 3 {
+		return nil, fmt.Errorf("invalid root cause count")
+	}
+	rootCauses := make([]dto.TicketRootCauseResponse, 0, len(items))
+	for i, rc := range items {
+		if strings.TrimSpace(rc.Title) == "" || strings.TrimSpace(rc.Description) == "" || rc.Confidence < 0 || rc.Confidence > 1 {
+			return nil, fmt.Errorf("invalid root cause fields")
+		}
+		if _, ok := allowedRootCauseCategories[rc.Category]; !ok {
+			return nil, fmt.Errorf("invalid root cause category")
+		}
 		rootCauses = append(rootCauses, dto.TicketRootCauseResponse{
 			ID:          fmt.Sprintf("rc%d", i+1),
 			Title:       rc.Title,
@@ -289,6 +312,74 @@ func (s *RootCauseService) performAIAnalysis(ticketEntity *ent.Ticket) ([]dto.Ti
 	}
 
 	return rootCauses, nil
+}
+
+// AnalyzeIncident performs tenant-scoped AI-assisted analysis for an Incident.
+// LLM failure is an explicit, deterministic degradation and never changes the
+// aggregate automatically; an operator must still confirm a root cause.
+func (s *RootCauseService) AnalyzeIncident(ctx context.Context, incidentID, tenantID int) (*dto.IncidentAIAnalysisResponse, error) {
+	entity, err := s.client.Incident.Query().Where(
+		incident.IDEQ(incidentID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil(),
+	).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrIncidentNotFound
+		}
+		return nil, fmt.Errorf("load incident for analysis: %w", err)
+	}
+
+	rootCauses, degraded, degradedReason := s.analyzeIncidentRootCauses(ctx, entity)
+	now := time.Now()
+	method := "llm"
+	if degraded {
+		method = "heuristic"
+	}
+	return &dto.IncidentAIAnalysisResponse{
+		IncidentID: entity.ID, IncidentNumber: entity.IncidentNumber, IncidentTitle: entity.Title,
+		RootCauses: rootCauses, AnalysisSummary: fmt.Sprintf("识别出 %d 个候选根因，需由 NOC 人员确认", len(rootCauses)),
+		ConfidenceScore: s.calculateAverageConfidence(rootCauses), AnalysisMethod: method,
+		PromptVersion: incidentAnalysisPromptVersion, Degraded: degraded, DegradedReason: degradedReason, GeneratedAt: now,
+	}, nil
+}
+
+func (s *RootCauseService) analyzeIncidentRootCauses(ctx context.Context, entity *ent.Incident) ([]dto.TicketRootCauseResponse, bool, string) {
+	if s.gateway != nil {
+		prompt := fmt.Sprintf(`分析以下 ITSM 事件并返回 JSON：{"root_causes":[{"title":"...","description":"...","confidence":0.8,"category":"infrastructure|software|process|network|security|other"}]}。只允许 1-3 个候选根因。事件编号：%s；标题：%s；描述：%s；分类：%s；优先级：%s；严重度：%s；影响：%s；紧急度：%s。`,
+			entity.IncidentNumber, entity.Title, entity.Description, entity.Category, entity.Priority, entity.Severity, entity.Impact, entity.Urgency)
+		raw, err := s.gateway.Chat(ctx, "", []LLMMessage{{Role: "system", Content: "你是 ITSM NOC 根因分析助手，输出仅供人工决策。"}, {Role: "user", Content: prompt}})
+		if err == nil {
+			var parsed struct {
+				RootCauses []struct {
+					Title       string  `json:"title"`
+					Description string  `json:"description"`
+					Confidence  float64 `json:"confidence"`
+					Category    string  `json:"category"`
+				} `json:"root_causes"`
+			}
+			jsonText := raw
+			if start := strings.Index(jsonText, "{"); start >= 0 {
+				jsonText = jsonText[start:]
+			}
+			if end := strings.LastIndex(jsonText, "}"); end >= 0 {
+				jsonText = jsonText[:end+1]
+			}
+			if json.Unmarshal([]byte(jsonText), &parsed) == nil {
+				if causes, validationErr := validateAndMapRootCauses(parsed.RootCauses); validationErr == nil {
+					return causes, false, ""
+				}
+			}
+		}
+		s.logger.Warnw("incident AI analysis degraded", "incident_id", entity.ID, "tenant_id", entity.TenantID, "error_class", "llm_unavailable_or_invalid")
+	}
+
+	category := entity.Category
+	if _, ok := allowedRootCauseCategories[category]; !ok {
+		category = "other"
+	}
+	return []dto.TicketRootCauseResponse{{
+		ID: "rc1", Title: "需要人工核查", Description: "AI 服务未能生成有效结果，请结合告警、指标、日志和配置项继续分析。",
+		Confidence: 0, Category: category, Status: "candidate", CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	}}, true, "llm_unavailable_or_invalid"
 }
 
 // calculateAverageConfidence 计算平均置信度

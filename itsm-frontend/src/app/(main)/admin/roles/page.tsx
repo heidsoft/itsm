@@ -293,12 +293,14 @@ export default function RoleManagement() {
     {
       title: t('roles.title'),
       key: 'info',
+      width: 300,
+      ellipsis: true,
       render: (_: unknown, record: RoleItem) => (
         <div>
           <div className="font-medium text-gray-900">{record.name}</div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-gray-500 truncate">
             {record.code ? `${record.code} · ` : ''}
-            {record.description}
+            {record.description || '-'}
           </div>
         </div>
       ),
@@ -306,6 +308,7 @@ export default function RoleManagement() {
     {
       title: t('roles.status'),
       key: 'status',
+      width: 120,
       render: (_: unknown, record: RoleItem) => {
         const isActive = record.status !== 'inactive';
         return (
@@ -320,12 +323,14 @@ export default function RoleManagement() {
       title: t('roles.permissionsCount'),
       key: 'permissions',
       dataIndex: 'permissions',
+      width: 120,
       render: (permissions: string[]) => <span>{permissions?.length || 0}</span>,
     },
     {
       title: t('roles.createdAt'),
       key: 'createdAt',
       dataIndex: 'createdAt',
+      width: 160,
       render: (createdAt: string) => (
         <span>{createdAt ? new Date(createdAt).toLocaleDateString() : '-'}</span>
       ),
@@ -608,7 +613,7 @@ export default function RoleManagement() {
             showQuickJumper: true,
             showTotal: total => t('roles.totalLabel', { total }),
           }}
-          scroll={{ x: 760 }}
+          scroll={{ x: 850 }}
           className="enterprise-table"
         />
       </Card>

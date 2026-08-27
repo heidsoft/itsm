@@ -166,7 +166,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
           </Text>
         </div>
         <div>
-          <Rate disabled defaultValue={catalog.rating || 4.5} count={5} className="!text-xs" />
+          <Rate disabled value={catalog.rating ?? 0} count={5} className="!text-xs" />
         </div>
       </div>
 

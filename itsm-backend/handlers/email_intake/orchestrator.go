@@ -18,6 +18,7 @@ import (
 	"itsm-backend/connector"
 	"itsm-backend/ent"
 	"itsm-backend/ent/emailconversation"
+	"itsm-backend/ent/emailintakeanalysis"
 	"itsm-backend/ent/inboundemailmessage"
 	"itsm-backend/ent/sourceorganization"
 	"itsm-backend/ent/systemconfig"
@@ -311,7 +312,7 @@ func (o *EmailIntakeOrchestrator) Confirm(ctx context.Context, tenantID, convers
 	if err != nil {
 		return nil, err
 	}
-	updated, err := o.client.EmailConversation.UpdateOneID(conversation.ID).Where(emailconversation.VersionEQ(version)).SetStatus("INCIDENT_CREATED").SetCustomerID(resolution.CustomerID).SetNillableBranchID(optionalInt(resolution.BranchID)).SetSupportContractID(resolution.SupportContractID).AddVersion(1).Save(ctx)
+	updated, err := o.client.EmailConversation.UpdateOneID(conversation.ID).Where(emailconversation.TenantIDEQ(tenantID), emailconversation.VersionEQ(version)).SetStatus("INCIDENT_CREATED").SetCustomerID(resolution.CustomerID).SetNillableBranchID(optionalInt(resolution.BranchID)).SetSupportContractID(resolution.SupportContractID).AddVersion(1).Save(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -416,10 +417,14 @@ func (o *EmailIntakeOrchestrator) ApplyCorrections(ctx context.Context, tenantID
 	for _, key := range []string{"sourceOrganizationName", "customerName", "branchName", "reportedContractNumber", "title", "description", "occurredAt", "impact", "urgency"} {
 		fieldSources[key] = "human"
 	}
-	_, _ = o.client.EmailConversation.UpdateOneID(updated.ID).SetFieldSources(fieldSources).Save(ctx)
+	if _, err := o.client.EmailConversation.UpdateOneID(updated.ID).Where(emailconversation.TenantIDEQ(tenantID)).SetFieldSources(fieldSources).Save(ctx); err != nil {
+		return nil, fmt.Errorf("persist correction field sources: %w", err)
+	}
 	if len(conversation.Edges.Analyses) > 0 {
 		latest := conversation.Edges.Analyses[len(conversation.Edges.Analyses)-1]
-		_, _ = o.client.EmailIntakeAnalysis.UpdateOneID(latest.ID).SetStatus("corrected").SetCorrections(corrections).SetReviewedBy(reviewerID).Save(ctx)
+		if _, err := o.client.EmailIntakeAnalysis.UpdateOneID(latest.ID).Where(emailintakeanalysis.TenantIDEQ(tenantID)).SetStatus("corrected").SetCorrections(corrections).SetReviewedBy(reviewerID).Save(ctx); err != nil {
+			return nil, fmt.Errorf("persist corrected analysis: %w", err)
+		}
 	}
 	return updated, nil
 }
@@ -458,7 +463,7 @@ func (o *EmailIntakeOrchestrator) Override(ctx context.Context, tenantID, conver
 	if err != nil {
 		return nil, err
 	}
-	updated, err := o.client.EmailConversation.UpdateOneID(conversation.ID).Where(emailconversation.VersionEQ(version)).SetStatus("INCIDENT_CREATED").AddVersion(1).Save(ctx)
+	updated, err := o.client.EmailConversation.UpdateOneID(conversation.ID).Where(emailconversation.TenantIDEQ(tenantID), emailconversation.VersionEQ(version)).SetStatus("INCIDENT_CREATED").AddVersion(1).Save(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -472,7 +477,7 @@ func (o *EmailIntakeOrchestrator) Override(ctx context.Context, tenantID, conver
 
 func (o *EmailIntakeOrchestrator) updateConversation(ctx context.Context, conversation *ent.EmailConversation, status string, fields IntakeFields, resolution Resolution) (*ent.EmailConversation, error) {
 	data, _ := fieldsToMap(fields)
-	update := o.client.EmailConversation.UpdateOneID(conversation.ID).Where(emailconversation.VersionEQ(conversation.Version)).SetStatus(status).SetCanonicalData(data).SetMissingFields(resolution.MissingFields).SetConfidence(fields.Confidence).SetLastMessageAt(time.Now()).AddVersion(1)
+	update := o.client.EmailConversation.UpdateOneID(conversation.ID).Where(emailconversation.TenantIDEQ(conversation.TenantID), emailconversation.VersionEQ(conversation.Version)).SetStatus(status).SetCanonicalData(data).SetMissingFields(resolution.MissingFields).SetConfidence(fields.Confidence).SetLastMessageAt(time.Now()).AddVersion(1)
 	if resolution.CustomerID != 0 {
 		update.SetCustomerID(resolution.CustomerID)
 	}

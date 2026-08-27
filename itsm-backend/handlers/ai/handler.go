@@ -265,6 +265,30 @@ func (h *Handler) AnalyzeTicket(c *gin.Context) {
 	common.Success(c, res)
 }
 
+// AnalyzeIncident handles POST /api/v1/ai/incidents/:id/analyze.
+func (h *Handler) AnalyzeIncident(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.Fail(c, common.ParamErrorCode, "invalid incident id")
+		return
+	}
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	res, err := h.svc.AnalyzeIncident(c.Request.Context(), id, tenantID)
+	if err != nil {
+		if errors.Is(err, service.ErrIncidentNotFound) {
+			common.NotFoundWithErr(c, err, "事件不存在")
+			return
+		}
+		common.FailWithErr(c, err, "事件分析失败")
+		return
+	}
+	common.Success(c, res)
+}
+
 // SummarizeTicket handles GET /api/v1/ai/tickets/:id/summary
 // B9: AI 工单总结 - 优先用 LLM，fallback 用字段拼接
 func (h *Handler) SummarizeTicket(c *gin.Context) {

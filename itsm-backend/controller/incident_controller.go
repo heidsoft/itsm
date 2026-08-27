@@ -77,6 +77,20 @@ func (c *IncidentController) resolveTenantID(ctx *gin.Context) (int, bool) {
 	return 0, false
 }
 
+func (c *IncidentController) writeLifecycleError(ctx *gin.Context, err error) {
+	switch {
+	case errors.Is(err, service.ErrIncidentNotFound), ent.IsNotFound(err):
+		common.NotFoundWithErr(ctx, err, "事件不存在")
+	case errors.Is(err, service.ErrIncidentResolutionRequired), errors.Is(err, service.ErrIncidentCloseNotesRequired):
+		common.BadRequestWithErr(ctx, err, "请求缺少必填处理说明")
+	case errors.Is(err, service.ErrIncidentInvalidTransition), errors.Is(err, service.ErrIncidentVersionConflict):
+		common.Fail(ctx, common.ConflictCode, "事件状态已变化或不允许执行该操作")
+	default:
+		c.logger.Errorw("incident lifecycle action failed", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "事件处理失败")
+	}
+}
+
 func (c *IncidentController) CreateIncident(ctx *gin.Context) {
 	var req dto.CreateIncidentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -663,9 +677,12 @@ func (c *IncidentController) AcknowledgeIncident(ctx *gin.Context) {
 		return
 	}
 	userID := ctx.GetInt("user_id")
-	tenantID := ctx.GetInt("tenant_id")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
+		return
+	}
 	if err := c.incidentService.AcknowledgeIncident(ctx.Request.Context(), id, userID, tenantID); err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		c.writeLifecycleError(ctx, err)
 		return
 	}
 	common.Success(ctx, gin.H{"message": "事件已确认"})
@@ -691,11 +708,17 @@ func (c *IncidentController) ResolveIncident(ctx *gin.Context) {
 		Resolution string `json:"resolution"`
 		RootCause  string `json:"rootCause"`
 	}
-	_ = ctx.ShouldBindJSON(&body)
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		common.ParamErrorWithErr(ctx, err, "请求参数无效")
+		return
+	}
 	userID := ctx.GetInt("user_id")
-	tenantID := ctx.GetInt("tenant_id")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
+		return
+	}
 	if err := c.incidentService.ResolveIncident(ctx.Request.Context(), id, userID, tenantID, body.Resolution, body.RootCause); err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		c.writeLifecycleError(ctx, err)
 		return
 	}
 	common.Success(ctx, gin.H{"message": "事件已解决"})
@@ -720,11 +743,17 @@ func (c *IncidentController) CloseIncident(ctx *gin.Context) {
 	var body struct {
 		CloseNotes string `json:"closeNotes"`
 	}
-	_ = ctx.ShouldBindJSON(&body)
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		common.ParamErrorWithErr(ctx, err, "请求参数无效")
+		return
+	}
 	userID := ctx.GetInt("user_id")
-	tenantID := ctx.GetInt("tenant_id")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
+		return
+	}
 	if err := c.incidentService.CloseIncident(ctx.Request.Context(), id, userID, tenantID, body.CloseNotes); err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		c.writeLifecycleError(ctx, err)
 		return
 	}
 	common.Success(ctx, gin.H{"message": "事件已关闭"})
@@ -745,9 +774,12 @@ func (c *IncidentController) ReopenIncident(ctx *gin.Context) {
 		return
 	}
 	userID := ctx.GetInt("user_id")
-	tenantID := ctx.GetInt("tenant_id")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
+		return
+	}
 	if err := c.incidentService.ReopenIncident(ctx.Request.Context(), id, userID, tenantID); err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		c.writeLifecycleError(ctx, err)
 		return
 	}
 	common.Success(ctx, gin.H{"message": "事件已重新打开"})
@@ -1185,8 +1217,8 @@ func (c *IncidentController) GetImpactAssessment(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, gin.H{
-		"incidentId":      incident.ID,
-		"impactAnalysis":  incident.ImpactAnalysis,
+		"incidentId":     incident.ID,
+		"impactAnalysis": incident.ImpactAnalysis,
 	})
 }
 

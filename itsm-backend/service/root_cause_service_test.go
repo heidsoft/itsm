@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -131,4 +132,49 @@ func TestAnalyzeTicket_TenantIsolation(t *testing.T) {
 	_, err := svc.AnalyzeTicket(context.Background(), ticketID, 1)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "ticket not found")
+}
+
+func TestAnalyzeIncident_UsesIncidentAggregateAndTenantScope(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+	ctx := context.Background()
+	for i := 1; i <= 2; i++ {
+		client.Tenant.Create().SetName(fmt.Sprintf("Incident Tenant %d", i)).SetCode(fmt.Sprintf("incident-rca-%d", i)).SetStatus("active").SaveX(ctx)
+	}
+	user := client.User.Create().SetUsername("incident-rca-user").SetEmail("incident-rca@test.com").SetName("NOC").SetPasswordHash("hash").SetRole("agent").SetActive(true).SetTenantID(2).SaveX(ctx)
+	entity := client.Incident.Create().SetTitle("核心网络中断").SetDescription("监控显示核心交换机不可达").SetStatus("new").SetPriority("critical").SetSeverity("critical").SetImpact("high").SetUrgency("high").SetCategory("network").SetIncidentNumber("INC-AI-001").SetReporterID(user.ID).SetTenantID(2).SetDetectedAt(time.Now()).SaveX(ctx)
+
+	gateway := NewLLMGateway(mockRCALLMProvider{response: `{"root_causes":[{"title":"核心交换机故障","description":"监控与故障现象一致","confidence":0.91,"category":"network"}]}`}, nil, nil, "test")
+	svc := NewRootCauseService(client, zaptest.NewLogger(t).Sugar())
+	svc.SetGateway(gateway)
+
+	resp, err := svc.AnalyzeIncident(ctx, entity.ID, 2)
+	require.NoError(t, err)
+	assert.Equal(t, entity.ID, resp.IncidentID)
+	assert.Equal(t, "INC-AI-001", resp.IncidentNumber)
+	assert.Equal(t, "llm", resp.AnalysisMethod)
+	assert.False(t, resp.Degraded)
+	require.Len(t, resp.RootCauses, 1)
+	assert.Equal(t, "核心交换机故障", resp.RootCauses[0].Title)
+
+	_, err = svc.AnalyzeIncident(ctx, entity.ID, 1)
+	require.ErrorIs(t, err, ErrIncidentNotFound)
+}
+
+func TestAnalyzeIncident_InvalidLLMOutputIsExplicitlyDegraded(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+	ctx := context.Background()
+	tenant := client.Tenant.Create().SetName("Incident Tenant").SetCode("incident-degraded").SetStatus("active").SaveX(ctx)
+	user := client.User.Create().SetUsername("incident-degraded-user").SetEmail("incident-degraded@test.com").SetName("NOC").SetPasswordHash("hash").SetRole("agent").SetActive(true).SetTenantID(tenant.ID).SaveX(ctx)
+	entity := client.Incident.Create().SetTitle("应用故障").SetStatus("new").SetPriority("high").SetSeverity("high").SetCategory("software").SetIncidentNumber("INC-AI-002").SetReporterID(user.ID).SetTenantID(tenant.ID).SetDetectedAt(time.Now()).SaveX(ctx)
+
+	gateway := NewLLMGateway(mockRCALLMProvider{response: `{"root_causes":[{"title":"越界结果","description":"bad","confidence":1.5,"category":"unknown"}]}`}, nil, nil, "test")
+	svc := NewRootCauseService(client, zaptest.NewLogger(t).Sugar())
+	svc.SetGateway(gateway)
+	resp, err := svc.AnalyzeIncident(ctx, entity.ID, tenant.ID)
+	require.NoError(t, err)
+	assert.True(t, resp.Degraded)
+	assert.Equal(t, "heuristic", resp.AnalysisMethod)
+	assert.Equal(t, "llm_unavailable_or_invalid", resp.DegradedReason)
 }

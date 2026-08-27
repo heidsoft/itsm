@@ -337,18 +337,21 @@ export function getMenuConfig(): MenuConfig {
             permission: 'sla:read',
           },
           {
-            key: '/sla-dashboard',
-            icon: getIconByName('BarChart3')!,
-            label: 'SLA仪表盘',
-            path: '/sla-dashboard',
-            permission: 'sla:read',
-          },
-          {
+            // 注：DB 菜单表 seeder 历史值为 /sla-dashboard，实际页面在 /sla-monitor。
+            // 统一将"SLA监控"入口指向真实渲染页 /sla-monitor，避免分享链接 404。
+            // 同时保留 /sla-dashboard 作为兼容别名（middleware 保护，页面路由不存在不会导航）。
             key: '/sla-monitor',
             icon: getIconByName('Activity')!,
             label: 'SLA监控',
             path: '/sla-monitor',
             permission: 'sla:read',
+          },
+          {
+            key: '/workflow/sla',
+            icon: getIconByName('Clock')!,
+            label: 'SLA配置',
+            path: '/workflow/sla',
+            permission: 'sla:manage',
           },
         ],
       },
@@ -419,6 +422,13 @@ export function getMenuConfig(): MenuConfig {
             label: '自动化规则',
             path: '/workflow/automation',
             permission: 'workflow:write',
+          },
+          {
+            key: '/workflow/ticket-approval',
+            icon: getIconByName('CheckSquare')!,
+            label: '审批中心',
+            path: '/workflow/ticket-approval',
+            permission: 'approval:read',
           },
         ],
       },
@@ -669,6 +679,35 @@ export function getMenuConfig(): MenuConfig {
             permission: 'escalation:manage',
           },
           {
+            // 升级矩阵页面：src/app/(main)/admin/escalation-matrices/page.tsx
+            key: '/admin/escalation-matrices',
+            icon: getIconByName('TrendingUp')!,
+            label: '升级矩阵',
+            path: '/admin/escalation-matrices',
+            permission: 'sla:read',
+          },
+          {
+            key: '/admin/sla-templates',
+            icon: getIconByName('Layers')!,
+            label: 'SLA 模板',
+            path: '/admin/sla-templates',
+            permission: 'sla:manage',
+          },
+          {
+            key: '/admin/ticket-categories',
+            icon: getIconByName('Tag')!,
+            label: '工单分类',
+            path: '/admin/ticket-categories',
+            permission: 'ticket:category:manage',
+          },
+          {
+            key: '/tickets/types',
+            icon: getIconByName('ClipboardList')!,
+            label: '工单类型',
+            path: '/tickets/types',
+            permission: 'ticket_type:manage',
+          },
+          {
             key: '/admin/service-catalogs',
             icon: getIconByName('Boxes')!,
             label: '服务目录',
@@ -681,6 +720,14 @@ export function getMenuConfig(): MenuConfig {
             label: 'SLA 定义',
             path: '/admin/sla-definitions',
             permission: 'sla:manage',
+          },
+          {
+            // 菜单管理：src/app/(main)/admin/menus/page.tsx（RBAC菜单配置权威入口）
+            key: '/admin/menus',
+            icon: getIconByName('Menu')!,
+            label: '菜单管理',
+            path: '/admin/menus',
+            permission: 'system:write',
           },
           {
             key: '/admin/workflows',

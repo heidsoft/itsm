@@ -76,6 +76,14 @@ describe('AI API', () => {
     });
   });
 
+  describe('incident analysis contract', () => {
+    it('uses the incident aggregate endpoint', async () => {
+      mockPost.mockResolvedValue({ incidentId: 42, degraded: false });
+      await AIApi.analyzeIncident(42);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/incidents/42/analyze', {});
+    });
+  });
+
   describe('aiSummarize', () => {
     it('should summarize text', async () => {
       mockPost.mockResolvedValue({ answers: ['This is a summary'] });

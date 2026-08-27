@@ -16,10 +16,6 @@ import {
   Select,
   Form,
   App,
-  Statistic,
-  Row,
-  Col,
-  message,
 } from 'antd';
 import { Search, Plus, Pencil, Eye, Monitor } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -56,7 +52,6 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
   const [loadError, setLoadError] = useState(false);
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
-  const [stats, setStats] = useState<any>({});
   const [form] = Form.useForm();
 
   const [query, setQuery] = useState({
@@ -83,18 +78,8 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
     }
   };
 
-  const loadStats = async () => {
-    try {
-      const resp = await AssetApi.getAssetStats();
-      setStats(resp);
-    } catch (error) {
-      message.error('加载统计数据失败');
-    }
-  };
-
   useEffect(() => {
     loadData();
-    loadStats();
   }, [query]);
 
   const handleSearch = () => {
@@ -250,42 +235,6 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12} md={8} lg={6} xl={4}>
-          <Card>
-            <Statistic title="总资产数" value={stats.total || 0} prefix={<Monitor />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8} lg={6} xl={4}>
-          <Card>
-            <Statistic
-              title="可用"
-              value={stats.available || 0}
-              styles={{ content: { color: '#52c41a' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8} lg={6} xl={4}>
-          <Card>
-            <Statistic title="使用中" value={stats.inUse || 0} styles={{ content: { color: '#1890ff' } }} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8} lg={6} xl={4}>
-          <Card>
-            <Statistic
-              title="维护中"
-              value={stats.maintenance || 0}
-              styles={{ content: { color: '#faad14' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8} lg={6} xl={4}>
-          <Card>
-            <Statistic title="已退役" value={stats.retired || 0} />
-          </Card>
-        </Col>
-      </Row>
-
       <Card>
         <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
           <Form.Item name="status" label="状态">

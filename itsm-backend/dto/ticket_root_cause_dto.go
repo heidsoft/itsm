@@ -19,6 +19,24 @@ type TicketRootCauseAnalysisResponse struct {
 	GeneratedAt     time.Time                 `json:"generatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
+// IncidentAIAnalysisResponse is the production contract for AI-assisted
+// incident analysis. It deliberately uses incident identity rather than the
+// generic ticket identity so callers cannot accidentally analyze the wrong
+// aggregate when numeric IDs overlap.
+type IncidentAIAnalysisResponse struct {
+	IncidentID      int                       `json:"incidentId"`
+	IncidentNumber  string                    `json:"incidentNumber"`
+	IncidentTitle   string                    `json:"incidentTitle"`
+	RootCauses      []TicketRootCauseResponse `json:"rootCauses"`
+	AnalysisSummary string                    `json:"analysisSummary"`
+	ConfidenceScore float64                   `json:"confidenceScore"`
+	AnalysisMethod  string                    `json:"analysisMethod"`
+	PromptVersion   string                    `json:"promptVersion"`
+	Degraded        bool                      `json:"degraded"`
+	DegradedReason  string                    `json:"degradedReason,omitempty"`
+	GeneratedAt     time.Time                 `json:"generatedAt"`
+}
+
 type TicketRootCauseResponse struct {
 	ID              string                       `json:"id" example:"rc1"`
 	Title           string                       `json:"title" example:"数据库连接池耗尽"`

@@ -133,6 +133,8 @@ export const translations = {
       ruleEnabled: '规则已启用',
       ruleUpdated: '规则更新成功',
       ruleCreated: '规则创建成功',
+      // 分页
+      totalLabel: '共 {total} 条记录',
     },
     // 工单详情页
     ticketDetail: {
@@ -4910,6 +4912,8 @@ export const translations = {
       ruleEnabled: 'Rule enabled',
       ruleUpdated: 'Rule updated successfully',
       ruleCreated: 'Rule created successfully',
+      // Pagination
+      totalLabel: 'Total {total} records',
     },
     // Ticket Detail Page
     ticketDetail: {

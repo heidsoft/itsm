@@ -196,6 +196,9 @@ type RouterConfig struct {
 	// Redis rate limiter (optional - uses memory fallback if nil)
 	RedisRateLimiter RateLimiterInterface
 
+	// 进程启动时间（用于系统状态接口的 uptime 计算）
+	AppStartTime time.Time
+
 	// Controllers
 	ProblemInvestigationController  *controller.ProblemInvestigationController
 	TicketController                *controller.TicketController
@@ -807,6 +810,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					var m runtime.MemStats
 					runtime.ReadMemStats(&m)
 
+					var uptime string
+					if !config.AppStartTime.IsZero() {
+						uptime = time.Since(config.AppStartTime).Truncate(time.Second).String()
+					}
+
 					c.JSON(200, gin.H{
 						"cpu": gin.H{
 							"usage": 0,
@@ -818,6 +826,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 							"usage": float64(m.Alloc) / float64(m.Sys) * 100,
 						},
 						"goroutines": runtime.NumGoroutine(),
+						"startTime":  config.AppStartTime,
+						"uptime":     uptime,
 						"timestamp":  time.Now(),
 					})
 				})
@@ -836,22 +846,30 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					configs.PUT("/:id", middleware.RequirePermission("config", "update"), config.SystemConfigController.UpdateConfig)
 					configs.PUT("/batch", middleware.RequirePermission("config", "update"), config.SystemConfigController.BatchUpdateConfigs)
 					configs.GET("/status", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
-						var m runtime.MemStats
-						runtime.ReadMemStats(&m)
-						c.JSON(200, gin.H{
-							"cpu": gin.H{
-								"usage": 0,
-								"cores": runtime.NumCPU(),
-							},
-							"memory": gin.H{
-								"used":  m.Alloc / 1024 / 1024,
-								"total": m.Sys / 1024 / 1024,
-								"usage": float64(m.Alloc) / float64(m.Sys) * 100,
-							},
-							"goroutines": runtime.NumGoroutine(),
-							"timestamp":  time.Now(),
-						})
+					var m runtime.MemStats
+					runtime.ReadMemStats(&m)
+
+					var uptime string
+					if !config.AppStartTime.IsZero() {
+						uptime = time.Since(config.AppStartTime).Truncate(time.Second).String()
+					}
+
+					c.JSON(200, gin.H{
+						"cpu": gin.H{
+							"usage": 0,
+							"cores": runtime.NumCPU(),
+						},
+						"memory": gin.H{
+							"used":  m.Alloc / 1024 / 1024,
+							"total": m.Sys / 1024 / 1024,
+							"usage": float64(m.Alloc) / float64(m.Sys) * 100,
+						},
+						"goroutines": runtime.NumGoroutine(),
+						"startTime":  config.AppStartTime,
+						"uptime":     uptime,
+						"timestamp":  time.Now(),
 					})
+				})
 				}
 
 				sysRoot.GET("/config", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
@@ -901,8 +919,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				inc.POST("/:id/close", middleware.RequirePermission("incident", "write"), config.IncidentController.CloseIncident)
 				inc.POST("/:id/reopen", middleware.RequirePermission("incident", "write"), config.IncidentController.ReopenIncident)
 				inc.POST("/:id/assign", middleware.RequirePermission("incident", "assign"), config.IncidentController.AssignIncident)
-			inc.PUT("/:id/sla/pause", middleware.RequirePermission("incident", "write"), config.IncidentController.PauseSLA)
-			inc.PUT("/:id/sla/resume", middleware.RequirePermission("incident", "write"), config.IncidentController.ResumeSLA)
+				inc.PUT("/:id/sla/pause", middleware.RequirePermission("incident", "write"), config.IncidentController.PauseSLA)
+				inc.PUT("/:id/sla/resume", middleware.RequirePermission("incident", "write"), config.IncidentController.ResumeSLA)
 				inc.POST("/:id/major-incident", middleware.RequirePermission("incident", "write"), config.IncidentController.EscalateMajorIncident)
 				inc.POST("/:id/convert-to-problem", middleware.RequirePermission("incident", "write"), config.IncidentController.ConvertToProblem)
 				inc.GET("/:id/impact", middleware.RequirePermission("incident", "read"), config.IncidentController.AnalyzeIncidentImpact)
@@ -1254,6 +1272,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				aiGrp.POST("/analytics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetDeepAnalytics)
 				aiGrp.POST("/predictions", middleware.RequirePermission("ai", "read"), config.AIHandler.GetTrendPrediction)
 				aiGrp.POST("/tickets/:id/analyze", middleware.RequirePermission("ai", "read"), config.AIHandler.AnalyzeTicket)
+				aiGrp.POST("/incidents/:id/analyze", middleware.RequirePermission("ai", "read"), config.AIHandler.AnalyzeIncident)
 				aiGrp.POST("/feedback", middleware.RequirePermission("ai", "write"), config.AIHandler.SaveFeedback)
 				aiGrp.POST("/audit", middleware.RequirePermission("ai", "write"), config.AIHandler.RecordAudit)
 				aiGrp.GET("/metrics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetMetrics)

@@ -33,6 +33,7 @@ const SLAMonitorPage = () => {
 
   // Fetch stats
   const fetchStats = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const [statsData, monitoringData, violationsData] = await Promise.all([

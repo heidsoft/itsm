@@ -767,6 +767,29 @@ func TestIncidentService_DedicatedLifecyclePersistsAuditAndTimestamps(t *testing
 	assert.Len(t, events, 2)
 }
 
+func TestIncidentService_ResolveRollsBackWhenAuditEventFails(t *testing.T) {
+	client, incidentService, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenant, err := createIncidentTestTenant(ctx, client, "lifecycle-rollback")
+	require.NoError(t, err)
+	reporter, err := createIncidentTestUser(ctx, client, tenant.ID, "lifecycle-rollback")
+	require.NoError(t, err)
+	entity, err := client.Incident.Create().SetTitle("Rollback incident").SetStatus("in_progress").
+		SetPriority("high").SetSeverity("high").SetIncidentNumber("INC-ROLLBACK-001").
+		SetReporterID(reporter.ID).SetTenantID(tenant.ID).SetDetectedAt(time.Now()).Save(ctx)
+	require.NoError(t, err)
+
+	err = incidentService.ResolveIncident(ctx, entity.ID, 999999, tenant.ID, "temporary recovery", "unknown")
+	require.Error(t, err)
+	unchanged, err := client.Incident.Get(ctx, entity.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "in_progress", unchanged.Status)
+	assert.True(t, unchanged.ResolvedAt.IsZero())
+	count, err := client.IncidentEvent.Query().Where(incidentevent.IncidentIDEQ(entity.ID)).Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, count)
+}
+
 func TestIncidentService_ResolveRequiresResolutionAndStatusMachineFailsClosed(t *testing.T) {
 	client, service, ctx := setupIncidentTest(t)
 	defer client.Close()

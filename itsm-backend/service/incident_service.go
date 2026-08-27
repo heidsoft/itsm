@@ -36,6 +36,10 @@ var (
 	ErrIncidentEscalationLevelNotGreater = errors.New("escalation level must be greater than current level")
 	ErrIncidentEscalationReasonRequired  = errors.New("escalation reason is required")
 	ErrEmailContractNotActive            = errors.New("support contract is not active")
+	ErrIncidentInvalidTransition         = errors.New("invalid incident status transition")
+	ErrIncidentResolutionRequired        = errors.New("incident resolution is required")
+	ErrIncidentCloseNotesRequired        = errors.New("incident close notes are required")
+	ErrIncidentVersionConflict           = errors.New("incident version conflict")
 )
 
 type EmailIncidentCommand struct {
@@ -865,6 +869,22 @@ func (s *IncidentService) CreateIncidentEvent(ctx context.Context, req *dto.Crea
 	return s.toIncidentEventResponse(event), nil
 }
 
+func createIncidentEventTx(ctx context.Context, tx *ent.Tx, req *dto.CreateIncidentEventRequest, tenantID int) error {
+	occurredAt := time.Now()
+	if req.OccurredAt != nil {
+		occurredAt = *req.OccurredAt
+	}
+	builder := tx.IncidentEvent.Create().SetIncidentID(req.IncidentID).SetEventType(req.EventType).
+		SetEventName(req.EventName).SetDescription(req.Description).SetStatus(req.Status).
+		SetSeverity(req.Severity).SetData(req.Data).SetOccurredAt(occurredAt).SetSource(req.Source).
+		SetMetadata(req.Metadata).SetTenantID(tenantID).SetCreatedAt(time.Now()).SetUpdatedAt(time.Now())
+	if req.UserID != nil {
+		builder.SetUserID(*req.UserID)
+	}
+	_, err := builder.Save(ctx)
+	return err
+}
+
 // CreateIncidentAlert 创建事件告警
 func (s *IncidentService) CreateIncidentAlert(ctx context.Context, req *dto.CreateIncidentAlertRequest, tenantID int) (*dto.IncidentAlertResponse, error) {
 	s.logger.Infow("Creating incident alert", "incident_id", req.IncidentID, "type", req.AlertType)
@@ -1484,8 +1504,13 @@ func (s *IncidentService) toIncidentMetricResponse(metric *ent.IncidentMetric) *
 
 // AcknowledgeIncident 流转事件状态到 acknowledged
 func (s *IncidentService) AcknowledgeIncident(ctx context.Context, id, userID, tenantID int) error {
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("start acknowledge transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
 	// 获取当前事件状态进行验证
-	incidentEntity, err := s.client.Incident.Query().
+	incidentEntity, err := tx.Incident.Query().
 		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
@@ -1494,34 +1519,44 @@ func (s *IncidentService) AcknowledgeIncident(ctx context.Context, id, userID, t
 
 	// 验证状态转换是否合法
 	if !isValidIncidentStatusTransition(incidentEntity.Status, common.IncidentStatusAcknowledged) {
-		return fmt.Errorf("invalid status transition from '%s' to '%s'", incidentEntity.Status, common.IncidentStatusAcknowledged)
+		return fmt.Errorf("%w: from '%s' to '%s'", ErrIncidentInvalidTransition, incidentEntity.Status, common.IncidentStatusAcknowledged)
 	}
 
 	now := time.Now()
-	err = s.client.Incident.UpdateOneID(id).
+	err = tx.Incident.UpdateOneID(id).
 		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil(), incident.VersionEQ(incidentEntity.Version)).
 		SetStatus(common.IncidentStatusAcknowledged).
 		SetUpdatedAt(now).
 		AddVersion(1).
 		Exec(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrIncidentVersionConflict
+		}
 		return err
 	}
-	_, eventErr := s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+	if err := createIncidentEventTx(ctx, tx, &dto.CreateIncidentEventRequest{
 		IncidentID: id, EventType: "acknowledgement", EventName: "事件确认",
 		Description: fmt.Sprintf("事件由用户 %d 确认", userID), Status: "active", Severity: "info",
 		UserID: &userID, Source: "user",
-	}, tenantID)
-	return eventErr
+	}, tenantID); err != nil {
+		return fmt.Errorf("create acknowledgement event: %w", err)
+	}
+	return tx.Commit()
 }
 
 // ResolveIncident 流转事件状态到 resolved
 func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenantID int, resolution, rootCause string) error {
 	if strings.TrimSpace(resolution) == "" {
-		return fmt.Errorf("resolution is required")
+		return ErrIncidentResolutionRequired
 	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("start resolve transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
 	// 获取当前事件状态进行验证
-	incidentEntity, err := s.client.Incident.Query().
+	incidentEntity, err := tx.Incident.Query().
 		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
@@ -1530,7 +1565,7 @@ func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenan
 
 	// 验证状态转换是否合法
 	if !isValidIncidentStatusTransition(incidentEntity.Status, common.IncidentStatusResolved) {
-		return fmt.Errorf("invalid status transition from '%s' to '%s'", incidentEntity.Status, common.IncidentStatusResolved)
+		return fmt.Errorf("%w: from '%s' to '%s'", ErrIncidentInvalidTransition, incidentEntity.Status, common.IncidentStatusResolved)
 	}
 
 	now := time.Now()
@@ -1547,7 +1582,7 @@ func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenan
 		"step": len(resolutionSteps) + 1, "description": strings.TrimSpace(resolution),
 		"executedBy": fmt.Sprintf("%d", userID), "executedAt": now, "status": "completed",
 	})
-	err = s.client.Incident.UpdateOneID(id).
+	err = tx.Incident.UpdateOneID(id).
 		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil(), incident.VersionEQ(incidentEntity.Version)).
 		SetStatus(common.IncidentStatusResolved).
 		SetResolvedAt(now).
@@ -1558,24 +1593,34 @@ func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenan
 		AddVersion(1).
 		Exec(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrIncidentVersionConflict
+		}
 		return err
 	}
-	_, eventErr := s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+	if err := createIncidentEventTx(ctx, tx, &dto.CreateIncidentEventRequest{
 		IncidentID: id, EventType: "resolution", EventName: "事件解决",
 		Description: strings.TrimSpace(resolution), Status: "active", Severity: "info",
 		Data:   map[string]interface{}{"rootCause": strings.TrimSpace(rootCause)},
 		UserID: &userID, Source: "user",
-	}, tenantID)
-	return eventErr
+	}, tenantID); err != nil {
+		return fmt.Errorf("create resolution event: %w", err)
+	}
+	return tx.Commit()
 }
 
 // CloseIncident 流转事件状态到 closed
 func (s *IncidentService) CloseIncident(ctx context.Context, id, userID, tenantID int, closeNotes string) error {
 	if strings.TrimSpace(closeNotes) == "" {
-		return fmt.Errorf("close notes are required")
+		return ErrIncidentCloseNotesRequired
 	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("start close transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
 	// 获取当前事件状态进行验证
-	incidentEntity, err := s.client.Incident.Query().
+	incidentEntity, err := tx.Incident.Query().
 		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
@@ -1584,11 +1629,11 @@ func (s *IncidentService) CloseIncident(ctx context.Context, id, userID, tenantI
 
 	// 验证状态转换是否合法
 	if !isValidIncidentStatusTransition(incidentEntity.Status, common.IncidentStatusClosed) {
-		return fmt.Errorf("invalid status transition from '%s' to '%s'", incidentEntity.Status, common.IncidentStatusClosed)
+		return fmt.Errorf("%w: from '%s' to '%s'", ErrIncidentInvalidTransition, incidentEntity.Status, common.IncidentStatusClosed)
 	}
 
 	now := time.Now()
-	err = s.client.Incident.UpdateOneID(id).
+	err = tx.Incident.UpdateOneID(id).
 		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil(), incident.VersionEQ(incidentEntity.Version)).
 		SetStatus(common.IncidentStatusClosed).
 		SetClosedAt(now).
@@ -1596,19 +1641,29 @@ func (s *IncidentService) CloseIncident(ctx context.Context, id, userID, tenantI
 		AddVersion(1).
 		Exec(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrIncidentVersionConflict
+		}
 		return err
 	}
-	_, eventErr := s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+	if err := createIncidentEventTx(ctx, tx, &dto.CreateIncidentEventRequest{
 		IncidentID: id, EventType: "closure", EventName: "事件关闭",
 		Description: strings.TrimSpace(closeNotes), Status: "active", Severity: "info",
 		UserID: &userID, Source: "user",
-	}, tenantID)
-	return eventErr
+	}, tenantID); err != nil {
+		return fmt.Errorf("create closure event: %w", err)
+	}
+	return tx.Commit()
 }
 
 // ReopenIncident 将已解决或已关闭的事件重新流转到 in_progress
 func (s *IncidentService) ReopenIncident(ctx context.Context, id, userID, tenantID int) error {
-	incidentEntity, err := s.client.Incident.Query().
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("start reopen transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	incidentEntity, err := tx.Incident.Query().
 		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
@@ -1616,11 +1671,11 @@ func (s *IncidentService) ReopenIncident(ctx context.Context, id, userID, tenant
 	}
 
 	if incidentEntity.Status != common.IncidentStatusResolved && incidentEntity.Status != common.IncidentStatusClosed {
-		return fmt.Errorf("only resolved or closed incidents can be reopened")
+		return fmt.Errorf("%w: only resolved or closed incidents can be reopened", ErrIncidentInvalidTransition)
 	}
 
 	now := time.Now()
-	err = s.client.Incident.UpdateOneID(id).
+	err = tx.Incident.UpdateOneID(id).
 		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil(), incident.VersionEQ(incidentEntity.Version)).
 		SetStatus(common.IncidentStatusInProgress).
 		ClearResolvedAt().
@@ -1629,14 +1684,19 @@ func (s *IncidentService) ReopenIncident(ctx context.Context, id, userID, tenant
 		AddVersion(1).
 		Exec(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrIncidentVersionConflict
+		}
 		return err
 	}
-	_, eventErr := s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+	if err := createIncidentEventTx(ctx, tx, &dto.CreateIncidentEventRequest{
 		IncidentID: id, EventType: "reopen", EventName: "事件重新打开",
 		Description: fmt.Sprintf("事件由用户 %d 重新打开", userID), Status: "active", Severity: "info",
 		UserID: &userID, Source: "user",
-	}, tenantID)
-	return eventErr
+	}, tenantID); err != nil {
+		return fmt.Errorf("create reopen event: %w", err)
+	}
+	return tx.Commit()
 }
 
 // EscalateToMajorIncident 将事件升级为重大事件（Major Incident）

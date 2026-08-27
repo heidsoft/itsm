@@ -333,6 +333,10 @@ func (s *Service) AnalyzeTicket(ctx context.Context, ticketID int, tenantID int)
 	return s.rca.AnalyzeTicket(ctx, ticketID, tenantID)
 }
 
+func (s *Service) AnalyzeIncident(ctx context.Context, incidentID int, tenantID int) (interface{}, error) {
+	return s.rca.AnalyzeIncident(ctx, incidentID, tenantID)
+}
+
 // CreateTicketByAI 通过 AI 解析自然语言描述，智能分析并返回工单创建建议
 func (s *Service) CreateTicketByAI(ctx context.Context, description string, tenantID int) (map[string]interface{}, error) {
 	s.logger.Infow("AI CreateTicketByAI", "tenantID", tenantID)

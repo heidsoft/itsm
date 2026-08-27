@@ -605,6 +605,11 @@ export class AIApi {
     return httpClient.post(`/api/v1/ai/tickets/${id}/analyze`, {});
   }
 
+  /** AI-assisted analysis for an Incident aggregate. */
+  static async analyzeIncident(id: number | string): Promise<unknown> {
+    return httpClient.post(`/api/v1/ai/incidents/${id}/analyze`, {});
+  }
+
   static async saveFeedback(feedback: AIFeedbackRequest): Promise<{ message: string }> {
     return aiSaveFeedback(feedback);
   }

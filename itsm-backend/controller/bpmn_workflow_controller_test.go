@@ -13,6 +13,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/service"
+	"itsm-backend/service/bpmn"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -144,6 +145,7 @@ func (e *fakeProcessEngine) ProcessDefinitionService() service.ProcessDefinition
 
 func (e *fakeProcessEngine) ProcessInstanceService() service.ProcessInstanceService { return nil }
 func (e *fakeProcessEngine) TaskService() service.TaskService                       { return e.taskSvc }
+func (e *fakeProcessEngine) SetApprovalService(svc bpmn.ApprovalServiceInterface)   {}
 
 func (e *fakeProcessEngine) StartProcess(ctx context.Context, key, biz string, vars map[string]interface{}) (*ent.ProcessInstance, error) {
 	return nil, nil

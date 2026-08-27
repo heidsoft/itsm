@@ -1520,7 +1520,7 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		{Name: "CMDB", Path: "/cmdb", Icon: "Database", PermissionCode: "cmdb:read", SortOrder: 60},
 		{Name: "服务目录", Path: "/service-catalog", Icon: "Book", PermissionCode: "service:read", SortOrder: 70},
 		{Name: "知识库", Path: "/knowledge", Icon: "HelpCircle", PermissionCode: "knowledge:read", SortOrder: 80},
-		{Name: "SLA监控", Path: "/sla-dashboard", Icon: "Calendar", PermissionCode: "sla:read", SortOrder: 90},
+		{Name: "SLA监控", Path: "/sla-monitor", Icon: "Calendar", PermissionCode: "sla:read", SortOrder: 90},
 		{Name: "报表", Path: "/reports", Icon: "TrendingUp", PermissionCode: "report:read", SortOrder: 100},
 		{Name: "发布管理", Path: "/releases", Icon: "Rocket", PermissionCode: "release:read", SortOrder: 110},
 		{Name: "资产管理", Path: "/assets", Icon: "Monitor", PermissionCode: "asset:read", SortOrder: 120},
@@ -1602,6 +1602,11 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		"/admin/workflows":          "/workflow",
 		"/admin/tickets/assignment": "/admin/tickets/assignment-rules",
 		"/admin/tickets/automation": "/admin/tickets/automation-rules",
+		// P0 路由漂移修复：与前端 src/app/(main)/ 真实目录对齐
+		"/admin/ticket-types":       "/admin/ticket-categories",
+		"/admin/sla-config":         "/workflow/sla",
+		"/admin/escalation-matrix":  "/admin/escalation-matrices",
+		"/sla-dashboard":            "/sla-monitor",
 	}
 
 	for oldPath, newPath := range menuPathFixes {

@@ -127,7 +127,7 @@ function AIAnalyzePanel({ incidentId }: { incidentId: number }) {
   const runAnalyze = async () => {
     setState({ loading: true });
     try {
-      const result = await AIApi.analyzeTicket(incidentId);
+      const result = await AIApi.analyzeIncident(incidentId);
       setState({ loading: false, result });
       message.success('AI 分析完成');
     } catch (e) {

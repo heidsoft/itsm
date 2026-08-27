@@ -60,6 +60,7 @@ import {
   Building,
   Search,
   Edit,
+  Menu,
 } from 'lucide-react';
 
 // 图标样式
@@ -123,6 +124,7 @@ export const iconMap: Record<string, React.ReactNode> = {
   Building: <Building style={iconStyle} />,
   Search: <Search style={iconStyle} />,
   Edit: <Edit style={iconStyle} />,
+  Menu: <Menu style={iconStyle} />,
 };
 
 /**

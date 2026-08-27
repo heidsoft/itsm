@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -78,4 +80,25 @@ func TestIncidentController_ListIncidents(t *testing.T) {
 			r.ServeHTTP(w, req)
 		})
 	}
+}
+
+func TestIncidentController_ResolveRejectsInvalidJSONContract(t *testing.T) {
+	_, incidentController := setupTestIncidentController(t)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("tenant_id", 1)
+		c.Set("user_id", 1)
+		c.Next()
+	})
+	r.POST("/api/v1/incidents/:id/resolve", incidentController.ResolveIncident)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/incidents/1/resolve", strings.NewReader(`{"resolution":`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	var response struct {
+		Code int `json:"code"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+	require.Equal(t, 1001, response.Code)
 }

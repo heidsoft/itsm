@@ -848,6 +848,7 @@ func NewApplication() *Application {
 		RawDB:                           database.GetRawDB(),
 		CSRFEnabled:                     cfg.Security.CSRFEnabled,
 		RedisRateLimiter:                redisRateLimiter,
+		AppStartTime:                    time.Now(),
 		TicketController:                ticketController,
 		TicketDependencyController:      ticketDependencyController,
 		TicketCommentController:         ticketCommentController,
