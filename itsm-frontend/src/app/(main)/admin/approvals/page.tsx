@@ -76,6 +76,7 @@ export default function ApprovalManagement() {
     inactive: 0,
   });
   const [bpmnWorkflows, setBpmnWorkflows] = useState<{ id: string; name: string }[]>([]);
+  const [users, setUsers] = useState<{ id: number; name: string; email?: string }[]>([]);
 
   // 加载审批工作流数据
   const loadWorkflows = useCallback(async () => {
@@ -115,11 +116,22 @@ export default function ApprovalManagement() {
     }
   }, []);
 
+  const loadUsers = useCallback(async () => {
+    try {
+      const res = await fetch('/api/v1/users?pageSize=200');
+      const data = await res.json();
+      setUsers(data.items || data.data?.items || []);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    }
+  }, []);
+
   // 初始化加载
   useEffect(() => {
     loadWorkflows();
     loadBpmnWorkflows();
-  }, [loadWorkflows, loadBpmnWorkflows]);
+    loadUsers();
+  }, [loadWorkflows, loadBpmnWorkflows, loadUsers]);
 
   // 处理保存
   const handleSave = async () => {
@@ -509,8 +521,17 @@ export default function ApprovalManagement() {
                     </Row>
                     <Row gutter={12}>
                       <Col span={8}>
-                        <Form.Item name={[field.name, 'approverIds']} label="固定审批人ID">
-                          <Select mode="tags" tokenSeparators={[',']} placeholder="输入用户ID" />
+                        <Form.Item name={[field.name, 'approverIds']} label="固定审批人">
+                          <Select
+                            mode="multiple"
+                            placeholder="选择审批人"
+                            showSearch
+                            optionFilterProp="label"
+                            options={users.map(u => ({
+                              value: u.id,
+                              label: u.name || u.email || `用户#${u.id}`,
+                            }))}
+                          />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
