@@ -33,7 +33,7 @@ func toCIDomain(e *ent.ConfigurationItem) *ConfigurationItem {
 	return &ConfigurationItem{
 		ID:                 e.ID,
 		Name:               e.Name,
-		Description:        "",
+		Description:        e.Description,
 		Type:               e.CiType,
 		Status:             e.Status,
 		Environment:        e.Environment,

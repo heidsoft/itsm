@@ -87,11 +87,25 @@ func (s *CIHistoryService) RecordCIHistory(
 
 // nextHistoryVersion 取当前最大历史版本号+1
 func (s *CIHistoryService) nextHistoryVersion(ctx context.Context, ciID, tenantID int) (int, error) {
+	// 确保 CI 存在且属于当前租户，防止孤儿历史记录
+	exists, err := s.client.ConfigurationItem.Query().
+		Where(
+			configurationitem.IDEQ(ciID),
+			configurationitem.TenantIDEQ(tenantID),
+		).
+		Exist(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to check CI existence: %w", err)
+	}
+	if !exists {
+		return 0, fmt.Errorf("CI %d not found for tenant %d", ciID, tenantID)
+	}
+
 	// 使用 Scan + sql.NullInt64 兜底：MAX 在无记录时返回 NULL，直接 Int(ctx) 会 "converting NULL to int" 500
 	var aggResult []struct {
 		Max sql.NullInt64 `json:"max"`
 	}
-	err := s.client.ConfigurationItemHistory.Query().
+	err = s.client.ConfigurationItemHistory.Query().
 		Where(
 			configurationitemhistory.CiIDEQ(ciID),
 			configurationitemhistory.TenantIDEQ(tenantID),
