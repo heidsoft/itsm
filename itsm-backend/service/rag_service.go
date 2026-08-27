@@ -284,7 +284,7 @@ func (r *RAGService) AskWithLLM(ctx context.Context, tenantID int, query string,
 	}
 
 	if len(docs) == 0 {
-		return "未找到相关知识库文章。", nil
+		return "知识库中暂无相关内容。请尝试更换关键词或补充上下文，或联系知识管理员补充相关文章。", nil
 	}
 
 	// Build context from retrieved documents
@@ -352,7 +352,12 @@ func (r *RAGService) AskWithLLMStream(
 	onSources(docs)
 
 	if len(docs) == 0 {
-		onDelta("未在知识库中找到相关内容。请尝试换一个关键词或补充上下文。")
+		onDelta("知识库中暂无相关内容。以下为可能的原因与建议：\n\n")
+		onDelta("1. 知识库尚未录入相关文章——请联系知识管理员补充运维手册或FAQ；\n")
+		onDelta("2. 您的问题关键词与文章标题不匹配——请尝试更换关键词或补充上下文，如产品名、错误码、症状等；\n")
+		onDelta("3. 知识文章未发布或处于草稿状态——请在知识库页面检查文章状态；\n")
+		onDelta("4. 当前租户下未创建任何知识文章——可访问「知识库 → 新建文章」录入内容后重试。\n\n")
+		onDelta("您也可以直接联系运维团队或访问服务目录获取人工支持。")
 		return nil
 	}
 

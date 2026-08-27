@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Form, Input, Select, Button, Card, Space, Spin, message } from 'antd';
+import { Form, Input, Select, Button, Card, Space, Spin, App } from 'antd';
 import { Send, Bot, CheckCircle } from 'lucide-react';
 import type { A2UIComponent, A2UIDataModel, ValueDef, OptionItem, ActionDef, TextProps } from '@/types/a2ui';
 import { getValueByPath, setValueByPath } from '@/types/a2ui';
@@ -256,6 +256,7 @@ const A2UIComponentRenderer: React.FC<{
 // ==================== 主渲染器 ====================
 
 export function A2UIFormRenderer() {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [components, setComponents] = useState<A2UIComponent[]>([]);
   const [model, setModel] = useState<A2UIDataModel>({

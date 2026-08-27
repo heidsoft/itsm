@@ -585,6 +585,26 @@ export class AIApi {
     return aiSummarize(text, maxLen);
   }
 
+  /**
+   * 工单/事件 AI 摘要（基于持久化数据，走 LLM Gateway，失败有降级）
+   * 对应后端 GET /api/v1/ai/tickets/:id/summary
+   */
+  static async summarizeTicket(id: number | string): Promise<{
+    degraded?: boolean;
+    message?: string;
+    summary?: string;
+  }> {
+    return httpClient.get(`/api/v1/ai/tickets/${id}/summary`);
+  }
+
+  /**
+   * 工单/事件 AI 分析（影响分析、关联推荐等）
+   * 对应后端 POST /api/v1/ai/tickets/:id/analyze
+   */
+  static async analyzeTicket(id: number | string): Promise<unknown> {
+    return httpClient.post(`/api/v1/ai/tickets/${id}/analyze`, {});
+  }
+
   static async saveFeedback(feedback: AIFeedbackRequest): Promise<{ message: string }> {
     return aiSaveFeedback(feedback);
   }

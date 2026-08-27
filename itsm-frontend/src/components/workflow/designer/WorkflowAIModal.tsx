@@ -400,7 +400,7 @@ export default function WorkflowAIModal({
                       className="mb-4"
                       type="error"
                       showIcon
-                      title={t('workflow.aiModal.generationFailed')}
+                      message={t('workflow.aiModal.generationFailed')}
                       description={generationError}
                     />
                   )}
@@ -444,7 +444,7 @@ export default function WorkflowAIModal({
                         className="mb-3"
                         type="info"
                         showIcon
-                        title={t('workflow.aiModal.optimizationSuggestions')}
+                        message={t('workflow.aiModal.optimizationSuggestions')}
                         description={previewResult.suggestions.join(t('workflow.aiModal.suggestionSeparator'))}
                       />
                     )}
@@ -501,7 +501,7 @@ export default function WorkflowAIModal({
                         className="mb-3"
                         type="success"
                         showIcon
-                        title={t('workflow.aiModal.generationExplanation')}
+                        message={t('workflow.aiModal.generationExplanation')}
                         description={generationResult.explanation}
                       />
                     )}
