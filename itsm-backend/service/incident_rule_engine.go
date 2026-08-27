@@ -438,7 +438,7 @@ func (e *IncidentRuleEngine) ExecuteRulesForIncident(ctx context.Context, incide
 	return nil
 }
 
-// ExecuteRulesForAllIncidents 为所有事件执行规则（批量处理）
+// ExecuteRulesForAllIncidents 为所有事件执行规则（分页批量处理）
 func (e *IncidentRuleEngine) ExecuteRulesForAllIncidents(ctx context.Context, tenantID int) error {
 	e.logger.Infow("Executing rules for all incidents", "tenant_id", tenantID)
 
@@ -453,37 +453,55 @@ func (e *IncidentRuleEngine) ExecuteRulesForAllIncidents(ctx context.Context, te
 		e.logger.Errorw("Failed to get incident rules", "error", err)
 		return fmt.Errorf("failed to get incident rules: %w", err)
 	}
-
-	// 获取所有需要处理的事件
-	incidents, err := e.client.Incident.Query().
-		Where(
-			incidentpkg.TenantIDEQ(tenantID),
-			incidentpkg.DeletedAtIsNil(),
-			incidentpkg.StatusIn("new", "acknowledged", "assigned", "triaged", "in_progress", "on_hold", "escalated"),
-		).
-		All(ctx)
-	if err != nil {
-		e.logger.Errorw("Failed to get incidents", "error", err)
-		return fmt.Errorf("failed to get incidents: %w", err)
+	if len(rules) == 0 {
+		return nil
 	}
 
-	e.logger.Infow("Processing incidents", "count", len(incidents))
-
-	// 为每个事件执行规则
+	// 分页游标批量处理，避免全量加载到内存
+	const batchSize = 100
+	var lastID int
 	var failedExecutions int
-	for _, incidentEntity := range incidents {
-		for _, rule := range rules {
-			err := e.ExecuteRule(ctx, rule, incidentEntity, tenantID)
-			if err != nil {
-				failedExecutions++
-				e.logger.Errorw("Failed to execute rule", "error", err,
-					"rule_id", rule.ID, "incident_id", incidentEntity.ID)
-				// 继续执行其他规则，不中断
+
+	for {
+		incidents, err := e.client.Incident.Query().
+			Where(
+				incidentpkg.TenantIDEQ(tenantID),
+				incidentpkg.DeletedAtIsNil(),
+				incidentpkg.StatusIn("new", "acknowledged", "assigned", "triaged", "in_progress", "on_hold", "escalated"),
+				incidentpkg.IDGT(lastID),
+			).
+			Order(ent.Asc(incidentpkg.FieldID)).
+			Limit(batchSize).
+			All(ctx)
+		if err != nil {
+			e.logger.Errorw("Failed to get incidents batch", "error", err)
+			return fmt.Errorf("failed to get incidents batch: %w", err)
+		}
+		if len(incidents) == 0 {
+			break
+		}
+
+		e.logger.Infow("Processing incidents batch", "count", len(incidents), "last_id", lastID)
+
+		for _, incidentEntity := range incidents {
+			for _, rule := range rules {
+				err := e.ExecuteRule(ctx, rule, incidentEntity, tenantID)
+				if err != nil {
+					failedExecutions++
+					e.logger.Errorw("Failed to execute rule", "error", err,
+						"rule_id", rule.ID, "incident_id", incidentEntity.ID)
+				}
 			}
+			lastID = incidentEntity.ID
+		}
+
+		// 全部处理完即可提前退出
+		if len(incidents) < batchSize {
+			break
 		}
 	}
 
-	e.logger.Infow("Batch rule execution completed", "incidents_processed", len(incidents))
+	e.logger.Infow("Batch rule execution completed", "total_failures", failedExecutions)
 	if failedExecutions > 0 {
 		return fmt.Errorf("%d incident rule executions failed", failedExecutions)
 	}

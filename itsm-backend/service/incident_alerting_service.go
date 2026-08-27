@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/connector"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
@@ -18,6 +19,10 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
+
+// connectorSendFn delegates alert delivery to the managed connector lifecycle.
+// Set by SetConnectorManager at startup; nil means connector lifecycle is unavailable.
+var connectorSendFn func(ctx context.Context, tenantID int, connectorName string, msg *connector.Message) error
 
 type IncidentAlertingService struct {
 	client *ent.Client
@@ -29,6 +34,12 @@ func NewIncidentAlertingService(client *ent.Client, logger *zap.SugaredLogger) *
 		client: client,
 		logger: logger,
 	}
+}
+
+// SetConnectorManager injects the real connector manager so release-mode channels
+// can delegate to the managed connector lifecycle instead of returning errors.
+func (s *IncidentAlertingService) SetConnectorManager(mgr *connector.Manager) {
+	connectorSendFn = mgr.Send
 }
 
 // AlertChannel 告警渠道接口
@@ -101,8 +112,19 @@ type SMSChannel struct {
 
 func (c *SMSChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending SMS alert", "alert_id", alert.ID, "recipients", alert.Recipients)
-	if os.Getenv("GIN_MODE") == "release" {
-		return fmt.Errorf("SMS alert provider is not implemented; use a managed connector")
+	if os.Getenv("GIN_MODE") == "release" && connectorSendFn != nil {
+		msg := &connector.Message{
+			Channel:  "sms",
+			Title:    alert.AlertName,
+			Content:  alert.Message,
+			Metadata: alert.Metadata,
+		}
+		if err := connectorSendFn(ctx, alert.TenantID, "sms", msg); err != nil {
+			c.logger.Errorw("SMS connector delivery failed", "error", err)
+			return fmt.Errorf("SMS delivery failed: %w", err)
+		}
+		c.logger.Infow("SMS delivered via connector", "alert_id", alert.ID)
+		return nil
 	}
 	time.Sleep(200 * time.Millisecond)
 	c.logger.Infow("SMS alert simulated in non-production environment", "alert_id", alert.ID)
@@ -126,8 +148,19 @@ type SlackChannel struct {
 
 func (c *SlackChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending Slack alert", "alert_id", alert.ID, "channel", c.channel)
-	if os.Getenv("GIN_MODE") == "release" {
-		return fmt.Errorf("slack alert delivery must use the connector lifecycle")
+	if os.Getenv("GIN_MODE") == "release" && connectorSendFn != nil {
+		msg := &connector.Message{
+			Channel:  "slack",
+			Title:    alert.AlertName,
+			Content:  alert.Message,
+			Metadata: alert.Metadata,
+		}
+		if err := connectorSendFn(ctx, alert.TenantID, "slack", msg); err != nil {
+			c.logger.Errorw("Slack connector delivery failed", "error", err)
+			return fmt.Errorf("Slack delivery failed: %w", err)
+		}
+		c.logger.Infow("Slack delivered via connector", "alert_id", alert.ID)
+		return nil
 	}
 	time.Sleep(150 * time.Millisecond)
 	c.logger.Infow("Slack alert simulated in non-production environment", "alert_id", alert.ID)
@@ -152,8 +185,19 @@ type WebhookChannel struct {
 
 func (c *WebhookChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending webhook alert", "alert_id", alert.ID, "url", c.url)
-	if os.Getenv("GIN_MODE") == "release" {
-		return fmt.Errorf("webhook alert delivery must use the connector lifecycle")
+	if os.Getenv("GIN_MODE") == "release" && connectorSendFn != nil {
+		msg := &connector.Message{
+			Channel:  "webhook",
+			Title:    alert.AlertName,
+			Content:  alert.Message,
+			Metadata: alert.Metadata,
+		}
+		if err := connectorSendFn(ctx, alert.TenantID, "webhook", msg); err != nil {
+			c.logger.Errorw("Webhook connector delivery failed", "error", err)
+			return fmt.Errorf("Webhook delivery failed: %w", err)
+		}
+		c.logger.Infow("Webhook delivered via connector", "alert_id", alert.ID)
+		return nil
 	}
 	time.Sleep(100 * time.Millisecond)
 	c.logger.Infow("Webhook alert simulated in non-production environment", "alert_id", alert.ID)

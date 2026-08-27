@@ -95,7 +95,10 @@ func (s *IncidentMonitoringService) CollectMetricsFromPrometheus(ctx context.Con
 
 // queryPrometheus 查询Prometheus（模拟实现）
 func (s *IncidentMonitoringService) queryPrometheus(query string) (*PrometheusMetrics, error) {
-	// 这里是模拟实现，实际应该调用Prometheus API
+	// Truncate before logging to prevent log injection from user-controlled query strings.
+	if len(query) > 256 {
+		query = query[:256]
+	}
 	s.logger.Infow("Querying Prometheus", "query", query)
 
 	// 模拟返回数据
