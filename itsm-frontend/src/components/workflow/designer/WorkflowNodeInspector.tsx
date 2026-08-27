@@ -181,33 +181,57 @@ export default function WorkflowNodeInspector({
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [loadingRoles, setLoadingRoles] = useState(false);
+  // 搜索防抖状态
+  const [userSearchText, setUserSearchText] = useState('');
+  const [groupSearchText, setGroupSearchText] = useState('');
+  // 搜索防抖计时器
+  const userSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const groupSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 共享取消标记（跨 useEffect）
+  const cancelledRef = useRef(false);
 
-  // 加载候选数据
+  // 搜索防抖加载用户（300ms）
+  const loadUsers = useCallback(async (search = '') => {
+    setLoadingUsers(true);
+    try {
+      const resp = await UserApi.getUsers({ page: 1, pageSize: 200, search });
+      if (!cancelledRef.current) {
+        setUsers(prev => {
+          const existingIds = new Set(prev.map(u => u.id));
+          const incoming = (resp.users as ApiUser[]).filter(u => !existingIds.has(u.id));
+          return [...prev, ...incoming];
+        });
+      }
+    } catch (err) {
+      console.error('加载用户列表失败:', err);
+    } finally {
+      if (!cancelledRef.current) setLoadingUsers(false);
+    }
+  }, []);
+
+  // 搜索防抖加载组（300ms）
+  const loadGroups = useCallback(async (search = '') => {
+    setLoadingGroups(true);
+    try {
+      const tenantId = httpClient.getTenantId() || 1;
+      const resp = await GroupAPI.getGroups({ page: 1, pageSize: 200, tenantId, search });
+      if (!cancelledRef.current) {
+        setGroups(prev => {
+          const existingIds = new Set(prev.map(g => g.id));
+          const incoming = (resp.groups || []).filter(g => !existingIds.has(g.id));
+          return [...prev, ...incoming];
+        });
+      }
+    } catch (err) {
+      console.error('加载组列表失败:', err);
+    } finally {
+      if (!cancelledRef.current) setLoadingGroups(false);
+    }
+  }, []);
+
+  // 加载角色（仅一次）
   useEffect(() => {
     let cancelled = false;
-    const loadUsers = async () => {
-      setLoadingUsers(true);
-      try {
-        const resp = await UserApi.getUsers({ page: 1, pageSize: 200 });
-        if (!cancelled) setUsers((resp.users as ApiUser[]) || []);
-      } catch (err) {
-        console.error('加载用户列表失败:', err);
-      } finally {
-        if (!cancelled) setLoadingUsers(false);
-      }
-    };
-    const loadGroups = async () => {
-      setLoadingGroups(true);
-      try {
-        const tenantId = httpClient.getTenantId() || 1;
-        const resp = await GroupAPI.getGroups({ page: 1, pageSize: 200, tenantId: tenantId });
-        if (!cancelled) setGroups(resp.groups || []);
-      } catch (err) {
-        console.error('加载组列表失败:', err);
-      } finally {
-        if (!cancelled) setLoadingGroups(false);
-      }
-    };
     const loadRoles = async () => {
       setLoadingRoles(true);
       try {
@@ -220,9 +244,38 @@ export default function WorkflowNodeInspector({
         if (!cancelled) setLoadingRoles(false);
       }
     };
-    loadUsers();
-    loadGroups();
     loadRoles();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 初始加载用户和组（仅一次）
+  useEffect(() => {
+    let cancelled = false;
+    const doLoad = async () => {
+      setLoadingUsers(true);
+      setLoadingGroups(true);
+      try {
+        const tenantId = httpClient.getTenantId() || 1;
+        const [userResp, groupResp] = await Promise.all([
+          UserApi.getUsers({ page: 1, pageSize: 200, search: '' }),
+          GroupAPI.getGroups({ page: 1, pageSize: 200, tenantId, search: '' }),
+        ]);
+        if (!cancelled) {
+          setUsers((userResp.users as ApiUser[]) || []);
+          setGroups(groupResp.groups || []);
+        }
+      } catch (err) {
+        console.error('加载用户/组列表失败:', err);
+      } finally {
+        if (!cancelled) {
+          setLoadingUsers(false);
+          setLoadingGroups(false);
+        }
+      }
+    };
+    doLoad();
     return () => {
       cancelled = true;
     };
@@ -687,12 +740,18 @@ export default function WorkflowNodeInspector({
                 placeholder="选择候选人（多选）"
                 value={currentCandidateUsers}
                 onChange={values => apply({ candidateUsers: toCsv(values) })}
+                onSearch={value => {
+                  const trimmed = value.trim();
+                  setUserSearchText(trimmed);
+                  if (userSearchTimerRef.current) clearTimeout(userSearchTimerRef.current);
+                  userSearchTimerRef.current = setTimeout(() => {
+                    if (trimmed) loadUsers(trimmed);
+                  }, 300);
+                }}
+                filterOption={false}
                 className="w-full"
                 loading={loadingUsers}
                 maxTagCount="responsive"
-                filterOption={(input, option) =>
-                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                }
                 options={userOptions}
                 size="small"
               />
@@ -719,6 +778,15 @@ export default function WorkflowNodeInspector({
                 placeholder="选择审批组（多选）"
                 value={currentCandidateGroups}
                 onChange={values => apply({ candidateGroups: toCsv(values) })}
+                onSearch={value => {
+                  const trimmed = value.trim();
+                  setGroupSearchText(trimmed);
+                  if (groupSearchTimerRef.current) clearTimeout(groupSearchTimerRef.current);
+                  groupSearchTimerRef.current = setTimeout(() => {
+                    if (trimmed) loadGroups(trimmed);
+                  }, 300);
+                }}
+                filterOption={false}
                 className="w-full mt-2"
                 loading={loadingGroups}
                 maxTagCount="responsive"
@@ -739,9 +807,6 @@ export default function WorkflowNodeInspector({
                       }
                     />
                   )
-                }
-                filterOption={(input, option) =>
-                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                 }
                 options={groupOptions}
                 size="small"
