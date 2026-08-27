@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/change"
 
 	"go.uber.org/zap"
 )
@@ -73,12 +74,31 @@ func (h *ChangeServiceTaskHandler) Validate(ctx context.Context, config map[stri
 	return nil
 }
 
+// getChangeByIDWithTenant 按 ID + TenantID 查询 Change，找不到或不属于该租户均返回错误。
+// 这是所有操作的前置守卫，防止 IDOR。
+func (h *ChangeServiceTaskHandler) getChangeByIDWithTenant(ctx context.Context, changeID, tenantID int) (*ent.Change, error) {
+	if changeID <= 0 {
+		return nil, fmt.Errorf("无效的变更ID: %d", changeID)
+	}
+	c, err := h.client.Change.Query().
+		Where(
+			change.ID(changeID),
+			change.TenantID(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("变更不存在或不属于当前租户: %d (tenant=%d)", changeID, tenantID)
+	}
+	return c, nil
+}
+
 // createChange 创建变更
 func (h *ChangeServiceTaskHandler) createChange(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	title, _ := variables["title"].(string)
 	description, _ := variables["description"].(string)
 	changeType, _ := variables["type"].(string)
 	priority, _ := variables["priority"].(string)
+
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
 		h.logger.Errorw("BPMN createChange 缺少租户上下文", "error", err)
@@ -102,20 +122,26 @@ func (h *ChangeServiceTaskHandler) createChange(ctx context.Context, variables m
 		return nil, fmt.Errorf("创建变更失败: %w", err)
 	}
 
-	h.logger.Infow("Change created via BPMN", "change_id", change.ID, "title", title)
+	h.logger.Infow("Change created via BPMN", "change_id", change.ID, "title", title, "tenant_id", tenantID)
 
 	return &dto.ServiceTaskResult{
 		Success:    true,
 		Message:    fmt.Sprintf("变更 %d 已创建", change.ID),
-		OutputVars: map[string]interface{}{"change_id": change.ID},
+		OutputVars: map[string]interface{}{"change_id": change.ID, "tenant_id": tenantID},
 	}, nil
 }
 
 // updateChange 更新变更
 func (h *ChangeServiceTaskHandler) updateChange(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	changeID := GetIntFromVars(variables, "change_id")
-	if changeID <= 0 {
-		return nil, fmt.Errorf("无效的变更ID")
+	tenantID, err := ResolveTenantID(ctx, variables)
+	if err != nil {
+		return nil, fmt.Errorf("更新变更失败: %w", err)
+	}
+
+	// 前置租户校验，防止 IDOR
+	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
+		return nil, err
 	}
 
 	updateQuery := h.client.Change.UpdateOneID(changeID)
@@ -130,12 +156,12 @@ func (h *ChangeServiceTaskHandler) updateChange(ctx context.Context, variables m
 		updateQuery.SetStatus(status)
 	}
 
-	_, err := updateQuery.Save(ctx)
+	_, err = updateQuery.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("更新变更失败: %w", err)
 	}
 
-	h.logger.Infow("Change updated via BPMN", "change_id", changeID)
+	h.logger.Infow("Change updated via BPMN", "change_id", changeID, "tenant_id", tenantID)
 
 	return &dto.ServiceTaskResult{
 		Success: true,
@@ -146,17 +172,15 @@ func (h *ChangeServiceTaskHandler) updateChange(ctx context.Context, variables m
 // approveChange 审批变更
 func (h *ChangeServiceTaskHandler) approveChange(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	changeID := GetIntFromVars(variables, "change_id")
-	if changeID <= 0 {
-		return nil, fmt.Errorf("无效的变更ID")
-	}
-
-	// 获取变更信息
-	change, err := h.client.Change.Get(ctx, changeID)
+	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("变更不存在: %w", err)
+		return nil, fmt.Errorf("审批变更失败: %w", err)
 	}
 
-	// 更新状态为审批中
+	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
+		return nil, err
+	}
+
 	_, err = h.client.Change.UpdateOneID(changeID).
 		SetStatus("pending_approval").
 		Save(ctx)
@@ -164,7 +188,7 @@ func (h *ChangeServiceTaskHandler) approveChange(ctx context.Context, variables 
 		return nil, fmt.Errorf("更新变更状态失败: %w", err)
 	}
 
-	h.logger.Infow("Change submitted for approval via BPMN", "change_id", changeID, "title", change.Title)
+	h.logger.Infow("Change submitted for approval via BPMN", "change_id", changeID, "tenant_id", tenantID)
 
 	return &dto.ServiceTaskResult{
 		Success: true,
@@ -176,19 +200,23 @@ func (h *ChangeServiceTaskHandler) approveChange(ctx context.Context, variables 
 func (h *ChangeServiceTaskHandler) rejectChange(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	changeID := GetIntFromVars(variables, "change_id")
 	reason, _ := variables["reject_reason"].(string)
-
-	if changeID <= 0 {
-		return nil, fmt.Errorf("无效的变更ID")
+	tenantID, err := ResolveTenantID(ctx, variables)
+	if err != nil {
+		return nil, fmt.Errorf("驳回变更失败: %w", err)
 	}
 
-	_, err := h.client.Change.UpdateOneID(changeID).
+	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
+		return nil, err
+	}
+
+	_, err = h.client.Change.UpdateOneID(changeID).
 		SetStatus("rejected").
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("驳回变更失败: %w", err)
 	}
 
-	h.logger.Infow("Change rejected via BPMN", "change_id", changeID, "reason", reason)
+	h.logger.Infow("Change rejected via BPMN", "change_id", changeID, "reason", reason, "tenant_id", tenantID)
 
 	return &dto.ServiceTaskResult{
 		Success: true,
@@ -199,9 +227,13 @@ func (h *ChangeServiceTaskHandler) rejectChange(ctx context.Context, variables m
 // scheduleChange 排期变更
 func (h *ChangeServiceTaskHandler) scheduleChange(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	changeID := GetIntFromVars(variables, "change_id")
+	tenantID, err := ResolveTenantID(ctx, variables)
+	if err != nil {
+		return nil, fmt.Errorf("排期变更失败: %w", err)
+	}
 
-	if changeID <= 0 {
-		return nil, fmt.Errorf("无效的变更ID")
+	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
+		return nil, err
 	}
 
 	// 解析日期时间
@@ -221,12 +253,12 @@ func (h *ChangeServiceTaskHandler) scheduleChange(ctx context.Context, variables
 		updateQuery.SetPlannedEndDate(plannedEnd)
 	}
 
-	_, err := updateQuery.Save(ctx)
+	_, err = updateQuery.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("排期变更失败: %w", err)
 	}
 
-	h.logger.Infow("Change scheduled via BPMN", "change_id", changeID)
+	h.logger.Infow("Change scheduled via BPMN", "change_id", changeID, "tenant_id", tenantID)
 
 	return &dto.ServiceTaskResult{
 		Success: true,
@@ -237,15 +269,14 @@ func (h *ChangeServiceTaskHandler) scheduleChange(ctx context.Context, variables
 // implementChange 实施变更
 func (h *ChangeServiceTaskHandler) implementChange(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	changeID := GetIntFromVars(variables, "change_id")
-
-	if changeID <= 0 {
-		return nil, fmt.Errorf("无效的变更ID")
+	tenantID, err := ResolveTenantID(ctx, variables)
+	if err != nil {
+		return nil, fmt.Errorf("实施变更失败: %w", err)
 	}
 
-	// 获取变更信息
-	change, err := h.client.Change.Get(ctx, changeID)
+	c, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("变更不存在: %w", err)
+		return nil, err
 	}
 
 	now := time.Now()
@@ -257,7 +288,7 @@ func (h *ChangeServiceTaskHandler) implementChange(ctx context.Context, variable
 		return nil, fmt.Errorf("实施变更失败: %w", err)
 	}
 
-	h.logger.Infow("Change implementation started via BPMN", "change_id", changeID, "title", change.Title)
+	h.logger.Infow("Change implementation started via BPMN", "change_id", changeID, "title", c.Title, "tenant_id", tenantID)
 
 	return &dto.ServiceTaskResult{
 		Success: true,
@@ -269,25 +300,28 @@ func (h *ChangeServiceTaskHandler) implementChange(ctx context.Context, variable
 func (h *ChangeServiceTaskHandler) verifyChange(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	changeID := GetIntFromVars(variables, "change_id")
 	verificationResult, _ := variables["verification_result"].(string)
-
-	if changeID <= 0 {
-		return nil, fmt.Errorf("无效的变更ID")
+	tenantID, err := ResolveTenantID(ctx, variables)
+	if err != nil {
+		return nil, fmt.Errorf("验证变更失败: %w", err)
 	}
 
-	// 根据验证结果更新状态
+	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
+		return nil, err
+	}
+
 	newStatus := "verification_passed"
 	if verificationResult == "failed" {
 		newStatus = "verification_failed"
 	}
 
-	_, err := h.client.Change.UpdateOneID(changeID).
+	_, err = h.client.Change.UpdateOneID(changeID).
 		SetStatus(newStatus).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("验证变更失败: %w", err)
 	}
 
-	h.logger.Infow("Change verification via BPMN", "change_id", changeID, "result", verificationResult)
+	h.logger.Infow("Change verification via BPMN", "change_id", changeID, "result", verificationResult, "tenant_id", tenantID)
 
 	return &dto.ServiceTaskResult{
 		Success: true,
@@ -299,13 +333,17 @@ func (h *ChangeServiceTaskHandler) verifyChange(ctx context.Context, variables m
 func (h *ChangeServiceTaskHandler) closeChange(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	changeID := GetIntFromVars(variables, "change_id")
 	feedback, _ := variables["feedback"].(string)
+	tenantID, err := ResolveTenantID(ctx, variables)
+	if err != nil {
+		return nil, fmt.Errorf("关闭变更失败: %w", err)
+	}
 
-	if changeID <= 0 {
-		return nil, fmt.Errorf("无效的变更ID")
+	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
+		return nil, err
 	}
 
 	now := time.Now()
-	_, err := h.client.Change.UpdateOneID(changeID).
+	_, err = h.client.Change.UpdateOneID(changeID).
 		SetStatus("closed").
 		SetActualEndDate(now).
 		Save(ctx)
@@ -313,7 +351,7 @@ func (h *ChangeServiceTaskHandler) closeChange(ctx context.Context, variables ma
 		return nil, fmt.Errorf("关闭变更失败: %w", err)
 	}
 
-	h.logger.Infow("Change closed via BPMN", "change_id", changeID, "feedback", feedback)
+	h.logger.Infow("Change closed via BPMN", "change_id", changeID, "feedback", feedback, "tenant_id", tenantID)
 
 	return &dto.ServiceTaskResult{
 		Success: true,
@@ -324,25 +362,21 @@ func (h *ChangeServiceTaskHandler) closeChange(ctx context.Context, variables ma
 // assessRisk 评估变更风险
 func (h *ChangeServiceTaskHandler) assessRisk(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	changeID := GetIntFromVars(variables, "change_id")
-
-	if changeID <= 0 {
-		return nil, fmt.Errorf("无效的变更ID")
-	}
-
-	// 获取变更信息进行风险评估
-	change, err := h.client.Change.Get(ctx, changeID)
+	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("变更不存在: %w", err)
+		return nil, fmt.Errorf("评估变更风险失败: %w", err)
 	}
 
-	// 简化的风险评估逻辑
-	riskLevel := "medium"
-	impactScope := change.ImpactScope
+	c, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID)
+	if err != nil {
+		return nil, err
+	}
 
-	// 根据变更类型和优先级确定风险等级
-	if change.Type == "emergency" {
+	// 根据变更类型确定风险等级
+	riskLevel := "medium"
+	if c.Type == "emergency" {
 		riskLevel = "high"
-	} else if change.Type == "minor" {
+	} else if c.Type == "minor" {
 		riskLevel = "low"
 	}
 
@@ -353,14 +387,15 @@ func (h *ChangeServiceTaskHandler) assessRisk(ctx context.Context, variables map
 		return nil, fmt.Errorf("评估风险失败: %w", err)
 	}
 
-	h.logger.Infow("Change risk assessed via BPMN", "change_id", changeID, "risk_level", riskLevel, "impact_scope", impactScope)
+	h.logger.Infow("Change risk assessed via BPMN",
+		"change_id", changeID, "risk_level", riskLevel, "impact_scope", c.ImpactScope, "tenant_id", tenantID)
 
 	return &dto.ServiceTaskResult{
 		Success: true,
 		Message: fmt.Sprintf("变更 %d 风险评估完成: %s", changeID, riskLevel),
 		OutputVars: map[string]interface{}{
 			"risk_level":   riskLevel,
-			"impact_scope": impactScope,
+			"impact_scope": c.ImpactScope,
 		},
 	}, nil
 }
@@ -369,23 +404,21 @@ func (h *ChangeServiceTaskHandler) assessRisk(ctx context.Context, variables map
 func (h *ChangeServiceTaskHandler) notifyStakeholders(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	changeID := GetIntFromVars(variables, "change_id")
 	notificationType, _ := variables["notification_type"].(string)
-
-	if changeID <= 0 {
-		return nil, fmt.Errorf("无效的变更ID")
-	}
-
-	// 获取变更信息
-	change, err := h.client.Change.Get(ctx, changeID)
+	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("变更不存在: %w", err)
+		return nil, fmt.Errorf("通知利益相关者失败: %w", err)
 	}
 
-	// 记录通知日志（实际应调用通知服务）
-	h.logger.Infow(
-		"Stakeholders notification via BPMN",
+	c, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	h.logger.Infow("Stakeholders notification via BPMN",
 		"change_id", changeID,
-		"change_title", change.Title,
+		"change_title", c.Title,
 		"notification_type", notificationType,
+		"tenant_id", tenantID,
 	)
 
 	return &dto.ServiceTaskResult{
@@ -394,5 +427,5 @@ func (h *ChangeServiceTaskHandler) notifyStakeholders(ctx context.Context, varia
 	}, nil
 }
 
-// 确保 ChangeServiceTaskHandler 实现了 ServiceTaskHandlerInterface
+// Ensure ChangeServiceTaskHandler implements ServiceTaskHandlerInterface
 var _ ServiceTaskHandlerInterface = (*ChangeServiceTaskHandler)(nil)

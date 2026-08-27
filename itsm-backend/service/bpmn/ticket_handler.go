@@ -79,12 +79,12 @@ func (h *TicketServiceTaskHandler) getTenantID(ctx context.Context, variables ma
 }
 
 func (h *TicketServiceTaskHandler) getTicket(ctx context.Context, ticketID int, tenantID int) (*ent.Ticket, error) {
-	if tenantID > 0 {
-		return h.client.Ticket.Query().
-			Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).
-			Only(ctx)
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("getTicket: 租户ID无效 (ticketID=%d, tenantID=%d)", ticketID, tenantID)
 	}
-	return h.client.Ticket.Get(ctx, ticketID)
+	return h.client.Ticket.Query().
+		Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).
+		Only(ctx)
 }
 
 // Execute 执行工单服务任务
