@@ -270,12 +270,6 @@ const GroupManagement: React.FC = () => {
       ),
     },
     {
-      title: t('groups.tenantId'),
-      dataIndex: 'tenantId',
-      key: 'tenantId',
-      width: 100,
-    },
-    {
       title: t('groups.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',

@@ -137,9 +137,9 @@ export default function RoleManagement() {
 
       setRoles(rolesResponse.roles);
 
+      const activeRoles = rolesResponse.roles.filter((r: RoleItem) => r.status !== 'inactive').length;
       const totalRoles = rolesResponse.roles.length;
-      const activeRoles = totalRoles;
-      const inactiveRoles = 0;
+      const inactiveRoles = totalRoles - activeRoles;
 
       setStats({
         totalRoles,

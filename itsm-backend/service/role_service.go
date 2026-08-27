@@ -32,8 +32,8 @@ func NewRoleService(client *ent.Client, logger *zap.SugaredLogger) *RoleService 
 	}
 }
 
-// getRolePermissionsByIDs 批量查询多个角色的权限（按roleID分组）
-func (s *RoleService) getRolePermissionsByIDs(ctx context.Context, roleIDs []int) (map[int][]dto.PermissionInfo, error) {
+// getRolePermissionsByIDs 批量查询多个角色的权限（按roleID分组，tenantID隔离）
+func (s *RoleService) getRolePermissionsByIDs(ctx context.Context, roleIDs []int, tenantID int) (map[int][]dto.PermissionInfo, error) {
 	result := make(map[int][]dto.PermissionInfo, len(roleIDs))
 	for _, rid := range roleIDs {
 		result[rid] = []dto.PermissionInfo{}
@@ -43,9 +43,12 @@ func (s *RoleService) getRolePermissionsByIDs(ctx context.Context, roleIDs []int
 		return result, nil
 	}
 
-	// 查询 role_permissions 联表
+	// 查询 role_permissions 联表（必须带 TenantID 过滤防止跨租户泄露）
 	rps, err := s.client.RolePermission.Query().
-		Where(rolepermission.RoleIDIn(roleIDs...)).
+		Where(
+			rolepermission.RoleIDIn(roleIDs...),
+			rolepermission.TenantID(tenantID),
+		).
 		All(ctx)
 	if err != nil {
 		return result, fmt.Errorf("查询角色权限关联失败: %w", err)
@@ -60,9 +63,12 @@ func (s *RoleService) getRolePermissionsByIDs(ctx context.Context, roleIDs []int
 		return result, nil
 	}
 
-	// 批量查询权限详情
+	// 批量查询权限详情（带 TenantID 过滤）
 	perms, err := s.client.Permission.Query().
-		Where(permission.IDIn(permIDs...)).
+		Where(
+			permission.IDIn(permIDs...),
+			permission.TenantID(tenantID),
+		).
 		All(ctx)
 	if err != nil {
 		return result, fmt.Errorf("查询权限详情失败: %w", err)
@@ -154,7 +160,7 @@ func (s *RoleService) GetRole(ctx context.Context, id int, tenantID int) (*dto.R
 
 	resp := s.buildRoleResponse(roleEntity)
 
-	perms, err := s.getRolePermissionsByIDs(ctx, []int{id})
+	perms, err := s.getRolePermissionsByIDs(ctx, []int{id}, tenantID)
 	if err != nil {
 		s.logger.Warnw("Failed to load role permissions", "role_id", id, "error", err)
 	} else {
@@ -198,7 +204,7 @@ func (s *RoleService) ListRoles(ctx context.Context, tenantID int, page, pageSiz
 
 	permMap := make(map[int][]dto.PermissionInfo)
 	if len(roleIDs) > 0 {
-		permMap, err = s.getRolePermissionsByIDs(ctx, roleIDs)
+		permMap, err = s.getRolePermissionsByIDs(ctx, roleIDs, tenantID)
 		if err != nil {
 			s.logger.Warnw("Failed to batch load role permissions", "error", err)
 		}
@@ -219,10 +225,16 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRol
 	s.logger.Infow("Updating role", "id", id, "tenant_id", tenantID)
 
 	roleEntity, err := s.client.Role.Query().
-		Where(role.IDEQ(id)).
+		Where(
+			role.IDEQ(id),
+			role.TenantID(tenantID),
+		).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("角色不存在: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("角色不存在或无权访问")
+		}
+		return nil, fmt.Errorf("查询角色失败: %w", err)
 	}
 
 	update := s.client.Role.Update().

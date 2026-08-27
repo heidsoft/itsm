@@ -63,6 +63,7 @@ const UserManagement: React.FC = () => {
     department: '',
     search: '',
   });
+  const [departments, setDepartments] = useState<string[]>([]);
 
   // 模态框状态
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
@@ -89,6 +90,11 @@ const UserManagement: React.FC = () => {
       const response = await UserApi.getUsers(params);
       setUsers(response.users);
       setPagination(prev => ({ ...prev, total: response.pagination.total }));
+
+      // 从用户数据派生部门列表（去重+排序）
+      const depts = Array.from(new Set(response.users.map((u: User) => u.department).filter(Boolean) as string[])).sort();
+      setDepartments(depts);
+
       const userStats = await UserApi.getUserStats(currentTenant?.id);
       setStats(userStats);
     } catch (error) {
@@ -389,13 +395,9 @@ const UserManagement: React.FC = () => {
                 placeholder={t('users.filter.department')}
                 style={{ width: 160 }}
                 allowClear
+                showSearch
                 onChange={value => handleFilterChange('department', value || '')}
-                options={[
-                  { value: 'IT部门', label: t('users.departments.IT') },
-                  { value: '财务部门', label: t('users.departments.Finance') },
-                  { value: '人事部门', label: t('users.departments.HR') },
-                  { value: '市场部门', label: t('users.departments.Marketing') },
-                ]}
+                options={departments.map(d => ({ value: d, label: d }))}
               />
             </Space>
           </Col>
