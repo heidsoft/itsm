@@ -26,7 +26,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// ProcessEngine BPMN流程引擎核心接口
+// ProcessEngine 流程引擎接口
 type ProcessEngine interface {
 	// 流程定义管理
 	ProcessDefinitionService() ProcessDefinitionService
@@ -34,6 +34,8 @@ type ProcessEngine interface {
 	ProcessInstanceService() ProcessInstanceService
 	// 任务管理
 	TaskService() TaskService
+	// 注入 ApprovalService（解决审批处理器循环依赖）
+	SetApprovalService(svc bpmn.ApprovalServiceInterface)
 	// 流程执行
 	StartProcess(ctx context.Context, processDefinitionKey string, businessKey string, variables map[string]interface{}) (*ent.ProcessInstance, error)
 	CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error
@@ -199,6 +201,11 @@ func (e *CustomProcessEngine) ProcessInstanceService() ProcessInstanceService {
 // TaskService 返回任务服务
 func (e *CustomProcessEngine) TaskService() TaskService {
 	return &bpmnTaskService{client: e.client, logger: e.logger, groupResolver: e.groupResolver}
+}
+
+// SetApprovalService 注入 ApprovalService，解决循环依赖
+func (e *CustomProcessEngine) SetApprovalService(svc bpmn.ApprovalServiceInterface) {
+	e.callbackRegistry.SetApprovalService(svc)
 }
 
 // requireBPMNTenantContext 从 ctx 强制提取并校验租户上下文（P1-4 fail-closed）。

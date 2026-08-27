@@ -163,3 +163,15 @@ func (r *CallbackRegistry) ListHandlers() []ServiceTaskHandlerInterface {
 	}
 	return handlers
 }
+
+// SetApprovalService 将 ApprovalService 注入到 ApprovalHandler（避免循环依赖）
+// 需要在 ApprovalService 创建完成后、引擎启动前调用。
+func (r *CallbackRegistry) SetApprovalService(svc ApprovalServiceInterface) {
+	r.handlersMu.Lock()
+	defer r.handlersMu.Unlock()
+	if h, ok := r.handlers["approval_handler"]; ok {
+		if ah, ok := h.(*ApprovalHandler); ok {
+			ah.SetApprovalService(svc)
+		}
+	}
+}

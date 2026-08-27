@@ -343,6 +343,8 @@ func NewApplication() *Application {
 	serviceCatalogService := service.NewServiceCatalogService(client, sugar)
 	// 审批服务
 	approvalService := service.NewApprovalService(client, sugar)
+	// 将 ApprovalService 注入 BPMN 引擎的 ApprovalHandler，解决循环依赖
+	processEngine.SetApprovalService(approvalService)
 
 	// problemService and changeService removed - using Handlers with domain services instead
 

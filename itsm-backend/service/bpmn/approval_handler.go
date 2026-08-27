@@ -11,11 +11,18 @@ import (
 	"go.uber.org/zap"
 )
 
+// ApprovalServiceInterface 审批服务接口（避免循环依赖）
+type ApprovalServiceInterface interface {
+	SubmitApproval(ctx context.Context, recordID int, userID int, action string, comment string, delegateToUserID *int, tenantID int) error
+}
+
 // ApprovalHandler 审批服务任务处理器
+// 通过 BPMN ServiceTask 节点执行审批操作：approve / reject / delegate / escalate
 type ApprovalHandler struct {
 	HandlerBase
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client          *ent.Client
+	logger          *zap.SugaredLogger
+	approvalService ApprovalServiceInterface
 }
 
 // NewApprovalHandler 创建审批处理器
@@ -24,6 +31,11 @@ func NewApprovalHandler(client *ent.Client, logger *zap.SugaredLogger) *Approval
 		client: client,
 		logger: logger,
 	}
+}
+
+// SetApprovalService 设置审批服务（外部注入以避免循环依赖）
+func (h *ApprovalHandler) SetApprovalService(svc ApprovalServiceInterface) {
+	h.approvalService = svc
 }
 
 // GetTaskType 返回任务类型
@@ -37,203 +49,174 @@ func (h *ApprovalHandler) GetHandlerID() string {
 }
 
 // Execute 执行审批服务任务
+// 动作通过 variables["action"] 传入，支持：approve / reject / delegate / escalate
 func (h *ApprovalHandler) Execute(ctx context.Context, task *ent.ProcessTask, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
-	action, _ := variables["action"].(string)
+	// 1. 租户隔离（强制）：拒绝缺失 tenant_id 的执行
+	tenantID, err := ResolveTenantID(ctx, variables)
+	if err != nil {
+		h.logger.Errorw("ApprovalHandler: tenantID missing, rejecting execution",
+			"error", err, "variables", fmt.Sprintf("%v", variables))
+		return nil, fmt.Errorf("拒绝执行：%w", err)
+	}
+
+	// 2. 提取操作参数
+	action := GetStringFromVars(variables, "action")
+	approvalID := GetIntFromVars(variables, "approval_id")
+	comment := GetStringFromVars(variables, "comment")
+	userID := GetIntFromVars(variables, "user_id")
+	delegateToUserID := GetIntFromVars(variables, "delegate_to_user_id")
+
 	switch action {
-	case "submit_approval":
-		return h.submitApproval(ctx, variables)
-	case "approve":
-		return h.approve(ctx, variables)
-	case "reject":
-		return h.reject(ctx, variables)
+	case "approve", "reject":
+		// approve/reject 需要：approvalID + userID
+		if approvalID <= 0 {
+			return nil, fmt.Errorf("approval_id 为空，无法执行审批")
+		}
+		if userID <= 0 {
+			return nil, fmt.Errorf("user_id 为空，无法执行审批")
+		}
+		return h.doApproveReject(ctx, action, approvalID, userID, comment, tenantID)
+
 	case "delegate":
-		return h.delegate(ctx, variables)
+		// delegate 需要：approvalID + userID + delegateToUserID
+		if approvalID <= 0 {
+			return nil, fmt.Errorf("approval_id 为空，无法委托审批")
+		}
+		if userID <= 0 {
+			return nil, fmt.Errorf("user_id 为空，无法委托审批")
+		}
+		if delegateToUserID <= 0 {
+			return nil, fmt.Errorf("delegate_to_user_id 为空，无法委托审批")
+		}
+		return h.doDelegate(ctx, approvalID, userID, delegateToUserID, comment, tenantID)
+
 	case "escalate":
-		return h.escalateApproval(ctx, variables)
+		// escalate 需要：approvalID + userID + delegateToUserID
+		if approvalID <= 0 {
+			return nil, fmt.Errorf("approval_id 为空，无法升级审批")
+		}
+		if delegateToUserID <= 0 {
+			return nil, fmt.Errorf("escalate_to（delegate_to_user_id）为空，无法升级审批")
+		}
+		return h.doEscalate(ctx, approvalID, userID, delegateToUserID, comment, tenantID)
+
 	default:
 		return &dto.ServiceTaskResult{
 			Success: true,
-			Message: "无操作执行",
+			Message: fmt.Sprintf("审批操作 [%s] 无需执行", action),
 		}, nil
 	}
 }
 
-// Validate 验证配置
+// Validate 验证配置（暂不支持 BPMN Extension Properties 预校验）
 func (h *ApprovalHandler) Validate(ctx context.Context, config map[string]interface{}) error {
 	return nil
 }
 
-// submitApproval 提交审批
-func (h *ApprovalHandler) submitApproval(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
-	businessID := GetIntFromVars(variables, "business_id")
-	businessType := GetStringFromVars(variables, "business_type")
-	approverID := GetIntFromVars(variables, "approver_id")
-	title := GetStringFromVars(variables, "title")
-
-	if title == "" {
-		title = "审批请求"
+// doApproveReject 执行 approve 或 reject
+func (h *ApprovalHandler) doApproveReject(ctx context.Context, action string, approvalID, userID int, comment string, tenantID int) (*dto.ServiceTaskResult, error) {
+	if h.approvalService == nil {
+		h.logger.Errorw("ApprovalHandler: approvalService not injected, this handler must be initialized with SetApprovalService before use")
+		return nil, fmt.Errorf("审批服务未初始化，请联系管理员")
 	}
 
-	if businessID == 0 {
-		return nil, fmt.Errorf("业务ID不能为空")
-	}
-
-	h.logger.Infow(
-		"Submitting approval via BPMN",
-		"business_id", businessID,
-		"business_type", businessType,
-		"approver_id", approverID,
-		"title", title,
-	)
-
-	// 这里应该调用审批服务创建审批记录
-	// 简化处理，只记录日志
-
-	return &dto.ServiceTaskResult{
-		Success: true,
-		Message: fmt.Sprintf("审批已提交，业务ID: %d，类型: %s", businessID, businessType),
-		OutputVars: map[string]interface{}{
-			"business_id":   businessID,
-			"business_type": businessType,
-			"status":        "pending",
-		},
-	}, nil
-}
-
-// approve 审批通过
-func (h *ApprovalHandler) approve(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
-	approvalID := GetIntFromVars(variables, "approval_id")
-	businessID := GetIntFromVars(variables, "business_id")
-	comment := GetStringFromVars(variables, "comment")
-
-	if approvalID == 0 && businessID == 0 {
-		return nil, fmt.Errorf("审批ID或业务ID不能为空")
-	}
-
-	h.logger.Infow(
-		"Approval approved via BPMN",
+	h.logger.Infow("Executing approval action via BPMN",
+		"action", action,
 		"approval_id", approvalID,
-		"business_id", businessID,
-		"comment", comment,
+		"user_id", userID,
+		"tenant_id", tenantID,
 	)
 
-	// 这里应该调用审批服务通过审批
-	// 简化处理，只记录日志
+	var delegateTo *int
+	if err := h.approvalService.SubmitApproval(ctx, approvalID, userID, action, comment, delegateTo, tenantID); err != nil {
+		h.logger.Warnw("Approval action failed",
+			"action", action, "approval_id", approvalID, "error", err)
+		return nil, fmt.Errorf("审批操作失败：%w", err)
+	}
+
+	status := "approved"
+	if action == "reject" {
+		status = "rejected"
+	}
 
 	return &dto.ServiceTaskResult{
 		Success: true,
-		Message: fmt.Sprintf("审批已通过，审批ID: %d", approvalID),
+		Message: fmt.Sprintf("审批已%s，审批ID: %d", status, approvalID),
 		OutputVars: map[string]interface{}{
 			"approval_id": approvalID,
-			"status":      "approved",
+			"status":      status,
+			"action":      action,
 			"approved_at": time.Now(),
 		},
 	}, nil
 }
 
-// reject 审批驳回
-func (h *ApprovalHandler) reject(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
-	approvalID := GetIntFromVars(variables, "approval_id")
-	businessID := GetIntFromVars(variables, "business_id")
-	reason := GetStringFromVars(variables, "reject_reason")
-
-	if approvalID == 0 && businessID == 0 {
-		return nil, fmt.Errorf("审批ID或业务ID不能为空")
+// doDelegate 执行委托
+func (h *ApprovalHandler) doDelegate(ctx context.Context, approvalID, userID, delegateToUserID int, comment string, tenantID int) (*dto.ServiceTaskResult, error) {
+	if h.approvalService == nil {
+		return nil, fmt.Errorf("审批服务未初始化，请联系管理员")
 	}
 
-	h.logger.Infow(
-		"Approval rejected via BPMN",
+	h.logger.Infow("Delegating approval via BPMN",
 		"approval_id", approvalID,
-		"business_id", businessID,
-		"reason", reason,
+		"from_user_id", userID,
+		"to_user_id", delegateToUserID,
+		"tenant_id", tenantID,
 	)
 
-	// 这里应该调用审批服务驳回审批
-	// 简化处理，只记录日志
+	delegateTo := &delegateToUserID
+	if err := h.approvalService.SubmitApproval(ctx, approvalID, userID, "delegate", comment, delegateTo, tenantID); err != nil {
+		h.logger.Warnw("Delegate action failed", "approval_id", approvalID, "error", err)
+		return nil, fmt.Errorf("委托审批失败：%w", err)
+	}
 
 	return &dto.ServiceTaskResult{
 		Success: true,
-		Message: fmt.Sprintf("审批已驳回，审批ID: %d，原因: %s", approvalID, reason),
+		Message: fmt.Sprintf("审批已委托，从用户 %d 到用户 %d", userID, delegateToUserID),
 		OutputVars: map[string]interface{}{
-			"approval_id":   approvalID,
-			"status":        "rejected",
-			"reject_reason": reason,
-			"rejected_at":   time.Now(),
+			"approval_id":      approvalID,
+			"status":           "delegated",
+			"delegate_from":    userID,
+			"delegate_to":      delegateToUserID,
+			"delegated_at":    time.Now(),
 		},
 	}, nil
 }
 
-// delegate 审批委托
-func (h *ApprovalHandler) delegate(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
-	approvalID := GetIntFromVars(variables, "approval_id")
-	fromUserID := GetIntFromVars(variables, "from_user_id")
-	toUserID := GetIntFromVars(variables, "to_user_id")
-	reason := GetStringFromVars(variables, "delegate_reason")
-
-	if approvalID == 0 {
-		return nil, fmt.Errorf("审批ID不能为空")
+// doEscalate 执行升级（内部实现为带备注的委托）
+func (h *ApprovalHandler) doEscalate(ctx context.Context, approvalID, userID, escalateTo int, reason string, tenantID int) (*dto.ServiceTaskResult, error) {
+	if h.approvalService == nil {
+		return nil, fmt.Errorf("审批服务未初始化，请联系管理员")
 	}
 
-	if toUserID == 0 {
-		return nil, fmt.Errorf("委托目标用户ID不能为空")
-	}
-
-	h.logger.Infow(
-		"Approval delegated via BPMN",
-		"approval_id", approvalID,
-		"from_user_id", fromUserID,
-		"to_user_id", toUserID,
-		"reason", reason,
-	)
-
-	// 这里应该调用审批服务委托审批
-	// 简化处理，只记录日志
-
-	return &dto.ServiceTaskResult{
-		Success: true,
-		Message: fmt.Sprintf("审批已委托，从用户 %d 到用户 %d", fromUserID, toUserID),
-		OutputVars: map[string]interface{}{
-			"approval_id":     approvalID,
-			"delegate_to":     toUserID,
-			"delegate_reason": reason,
-		},
-	}, nil
-}
-
-// escalateApproval 审批升级
-func (h *ApprovalHandler) escalateApproval(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
-	approvalID := GetIntFromVars(variables, "approval_id")
-	escalateTo := GetIntFromVars(variables, "escalate_to")
-	reason := GetStringFromVars(variables, "escalation_reason")
-
-	if approvalID == 0 {
-		return nil, fmt.Errorf("审批ID不能为空")
-	}
-
-	if escalateTo == 0 {
-		return nil, fmt.Errorf("升级目标用户ID不能为空")
-	}
-
-	h.logger.Infow(
-		"Approval escalated via BPMN",
+	h.logger.Infow("Escalating approval via BPMN",
 		"approval_id", approvalID,
 		"escalate_to", escalateTo,
-		"reason", reason,
+		"tenant_id", tenantID,
 	)
 
-	// 这里应该调用审批服务升级审批
-	// 简化处理，只记录日志
+	escalateToPtr := &escalateTo
+	comment := reason
+	if comment == "" {
+		comment = "系统自动升级"
+	}
+
+	if err := h.approvalService.SubmitApproval(ctx, approvalID, userID, "delegate", comment, escalateToPtr, tenantID); err != nil {
+		h.logger.Warnw("Escalate action failed", "approval_id", approvalID, "error", err)
+		return nil, fmt.Errorf("升级审批失败：%w", err)
+	}
 
 	return &dto.ServiceTaskResult{
 		Success: true,
 		Message: fmt.Sprintf("审批已升级到用户 %d", escalateTo),
 		OutputVars: map[string]interface{}{
-			"approval_id":       approvalID,
-			"escalated_to":      escalateTo,
-			"escalation_reason": reason,
+			"approval_id":   approvalID,
+			"status":       "escalated",
+			"escalated_to": escalateTo,
+			"escalated_at": time.Now(),
 		},
 	}, nil
 }
 
-// 确保 ApprovalHandler 实现了 ServiceTaskHandlerInterface
+// Ensure ApprovalHandler implements ServiceTaskHandlerInterface
 var _ ServiceTaskHandlerInterface = (*ApprovalHandler)(nil)
