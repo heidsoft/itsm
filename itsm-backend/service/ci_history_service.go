@@ -298,7 +298,10 @@ func (s *CIHistoryService) RevertCIVersion(ctx context.Context, ciID, tenantID, 
 
 	// 重新加载CI数据
 	updatedCI, err = s.client.ConfigurationItem.Query().
-		Where(configurationitem.IDEQ(ciID)).
+		Where(
+			configurationitem.IDEQ(ciID),
+			configurationitem.TenantIDEQ(tenantID),
+		).
 		WithOutgoingRelations().
 		WithIncomingRelations().
 		WithTags().
