@@ -451,9 +451,8 @@ func (r *RAGService) AskWithLLMStream(
 }
 
 // IndexArticle adds a knowledge article to all available vector stores.
-// It writes to both the connector store and the legacy store simultaneously
-// to keep dual-write consistent. Failures are logged but non-fatal to avoid
-// blocking article publishing when one store is unavailable.
+// It writes to both the connector store and the legacy store and reports any
+// partial failure so callers do not mistake an incomplete index for success.
 func (r *RAGService) IndexArticle(ctx context.Context, tenantID int, articleID int, title, content string) error {
 	// If both vector and embedder are disabled, skip silently
 	if !r.useVector || (r.vectorStore == nil && r.vectors == nil) {
@@ -492,11 +491,17 @@ func (r *RAGService) IndexArticle(ctx context.Context, tenantID int, articleID i
 	// Dual-write: write to both connector and legacy simultaneously
 	if r.vectorStore != nil {
 		if err := r.vectorStore.Insert(ctx, insertReq); err != nil {
+			if r.vectors != nil {
+				if compensationErr := r.vectors.Delete(ctx, tenantID, "kb", articleID); compensationErr != nil {
+					r.logger.Errorw("RAGService: failed to compensate legacy vector after connector insert failure", "article_id", articleID, "tenant_id", tenantID, "error", compensationErr)
+				}
+			}
 			return fmt.Errorf("connector vector insert: %w", err)
 		}
 	}
 	if r.vectors != nil {
 		if err := r.vectors.Upsert(ctx, tenantID, "kb", articleID, embedding, content, title); err != nil {
+			r.logger.Errorw("RAGService: legacy vector upsert failed after connector insert", "article_id", articleID, "tenant_id", tenantID, "error", err)
 			return fmt.Errorf("legacy vector upsert: %w", err)
 		}
 	}
