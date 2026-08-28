@@ -870,6 +870,27 @@ func (s *IncidentService) CreateIncidentEvent(ctx context.Context, req *dto.Crea
 }
 
 func createIncidentEventTx(ctx context.Context, tx *ent.Tx, req *dto.CreateIncidentEventRequest, tenantID int) error {
+	incidentEntity, err := tx.Incident.Query().
+		Where(incident.IDEQ(req.IncidentID)).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("validate incident for event: %w", err)
+	}
+	if incidentEntity.TenantID != tenantID {
+		return fmt.Errorf("validate incident for event: incident does not belong to tenant")
+	}
+	if req.UserID != nil {
+		actorExists, err := tx.User.Query().
+			Where(user.IDEQ(*req.UserID), user.TenantIDEQ(incidentEntity.TenantID), user.ActiveEQ(true)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("validate incident event actor: %w", err)
+		}
+		if !actorExists {
+			return fmt.Errorf("validate incident event actor: actor not found in tenant or inactive")
+		}
+	}
+
 	occurredAt := time.Now()
 	if req.OccurredAt != nil {
 		occurredAt = *req.OccurredAt
@@ -881,7 +902,7 @@ func createIncidentEventTx(ctx context.Context, tx *ent.Tx, req *dto.CreateIncid
 	if req.UserID != nil {
 		builder.SetUserID(*req.UserID)
 	}
-	_, err := builder.Save(ctx)
+	_, err = builder.Save(ctx)
 	return err
 }
 
@@ -1516,7 +1537,6 @@ func (s *IncidentService) AcknowledgeIncident(ctx context.Context, id, userID, t
 	if err != nil {
 		return err
 	}
-
 	// 验证状态转换是否合法
 	if !isValidIncidentStatusTransition(incidentEntity.Status, common.IncidentStatusAcknowledged) {
 		return fmt.Errorf("%w: from '%s' to '%s'", ErrIncidentInvalidTransition, incidentEntity.Status, common.IncidentStatusAcknowledged)
@@ -1561,6 +1581,15 @@ func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenan
 		Only(ctx)
 	if err != nil {
 		return err
+	}
+	actorExists, err := tx.User.Query().
+		Where(user.IDEQ(userID), user.TenantIDEQ(incidentEntity.TenantID), user.ActiveEQ(true)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("validate incident actor: %w", err)
+	}
+	if !actorExists {
+		return fmt.Errorf("validate incident actor: actor not found in tenant or inactive")
 	}
 
 	// 验证状态转换是否合法
