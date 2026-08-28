@@ -136,21 +136,75 @@ GET    /api/v1/tickets/analytics          # 工单分析
 
 #### 2.2.3 数据模型
 
-- `Incident` - 事件主表
+- `Incident` - 事件主表（含 TenantID 隔离、Version 乐观锁、SoftDelete）
 - `IncidentRule` - 事件规则
 - `IncidentAlert` - 事件告警
 - `IncidentMetric` - 事件指标
-- `IncidentEvent` - 事件事件
+- `IncidentEvent` - 事件生命周期事件（审计日志）
 
 #### 2.2.4 API端点
 
 ```
+# 基础 CRUD
 GET    /api/v1/incidents                  # 事件列表
 POST   /api/v1/incidents                  # 创建事件
 GET    /api/v1/incidents/:id              # 事件详情
-PUT    /api/v1/incidents/:id              # 更新事件
+PUT    /api/v1/incidents/:id              # 更新事件（状态变更走专用端点）
+DELETE /api/v1/incidents/:id              # 删除事件
+
+# 生命周期动作（状态机强制，所有状态流转必须走以下端点）
+POST   /api/v1/incidents/:id/assign      # 分配事件
+POST   /api/v1/incidents/:id/acknowledge # 确认事件
+POST   /api/v1/incidents/:id/escalate     # 升级事件
+POST   /api/v1/incidents/:id/resolve      # 解决事件（需填写 resolution）
+POST   /api/v1/incidents/:id/close       # 关闭事件（需填写 closeNotes）
+POST   /api/v1/incidents/:id/reopen      # 重新打开事件
+
+# SLA
+POST   /api/v1/incidents/:id/sla/pause   # 暂停 SLA 计时
+POST   /api/v1/incidents/:id/sla/resume  # 恢复 SLA 计时
+
+# 关联与转换
+POST   /api/v1/incidents/:id/major-incident    # 升级为重大事件
+POST   /api/v1/incidents/:id/convert-to-problem # 转为问题
+
+# 事件关联数据
+GET    /api/v1/incidents/:id/events       # 事件历史
+GET    /api/v1/incidents/:id/alerts       # 告警列表
+GET    /api/v1/incidents/:id/metrics      # 指标列表
+GET    /api/v1/incidents/:id/comments     # 评论列表
+POST   /api/v1/incidents/:id/comments     # 添加评论
+
+# 分析与评估
+GET    /api/v1/incidents/:id/root-cause        # 根因分析
+GET    /api/v1/incidents/:id/impact-assessment  # 影响评估
+POST   /api/v1/incidents/:id/classification    # 分类
+
+# 监控与告警
+GET    /api/v1/incidents/monitoring            # 监控数据查询
+POST   /api/v1/incidents/:id/alerts/:alertId/acknowledge # 告警确认
+POST   /api/v1/incidents/:id/alerts/:alertId/resolve      # 告警解决
+
+# 统计
 GET    /api/v1/incidents/stats            # 事件统计
 ```
+
+#### 2.2.5 事件状态机
+
+状态流转: `new → acknowledged → assigned → triaged → in_progress → escalated → on_hold → resolved → closed → cancelled`
+
+- `AcknowledgeIncident`/`ResolveIncident`/`CloseIncident`/`ReopenIncident` 均为**事务性操作**（Ent Tx，乐观锁 Version）
+- `UpdateIncident` 通用端点**禁止**直接设置 resolved/closed 状态，必须走专用端点
+- 每次状态流转均生成 `IncidentEvent` 审计记录
+- `incident_number` 全局唯一（非租户内唯一，跨租户编号由业务层处理）
+
+#### 2.2.6 架构约束
+
+- 多租户隔离：所有查询强制 TenantID 过滤
+- 乐观锁：更新时使用 Version 字段防止并发覆盖
+- 软删除：DeletedAt IS NULL 过滤
+- Outbox：事件规则和 BPMN 触发通过 Outbox 表异步执行（生产环境必须启用）
+- 升级通知：当前为占位实现（硬编码收件人），企业级通知需接入 Connector 配置
 
 ### 2.3 问题管理模块 (Problem Management)
 
@@ -237,19 +291,31 @@ GET    /api/v1/problems/stats             # 问题统计
 #### 2.4.4 API端点
 
 ```
+# 基础 CRUD
 GET    /api/v1/changes                    # 变更列表
 POST   /api/v1/changes                    # 创建变更
 GET    /api/v1/changes/:id                # 变更详情
 PUT    /api/v1/changes/:id                # 更新变更
 DELETE /api/v1/changes/:id                # 删除变更
-PUT    /api/v1/changes/:id/status         # 更新变更状态
-POST   /api/v1/changes/approvals          # 创建审批
-POST   /api/v1/changes/approval-workflows # 创建审批工作流
+
+# 状态变更（显式领域动作）
+POST   /api/v1/changes/:id/submit         # 提交变更
+POST   /api/v1/changes/:id/approve        # 审批通过
+POST   /api/v1/changes/:id/reject         # 审批拒绝
+POST   /api/v1/changes/:id/implement      # 实施
+POST   /api/v1/changes/:id/rollback       # 回滚
+PUT    /api/v1/changes/:id/status         # 更新状态
+
+# 风险与评审
+GET    /api/v1/changes/:id/risk-assessment # 风险评估
+PUT    /api/v1/changes/:id/risk           # 更新风险
+
+# 审批（通用审批机制）
+POST   /api/v1/changes/:id/approvals     # 创建审批
 GET    /api/v1/changes/:id/approval-summary # 审批摘要
-POST   /api/v1/changes/risk-assessments   # 风险评估
-POST   /api/v1/changes/implementation-plans # 实施计划
-POST   /api/v1/changes/rollback-plans     # 回滚计划
 ```
+
+> 注: `approval-workflows`、`risk-assessments`、`implementation-plans`、`rollback-plans` 等已整合为变更聚合内字段或通用审批 API，无独立资源端点。
 
 ### 2.5 服务目录与服务请求模块 (Service Catalog & Service Request)
 
@@ -286,20 +352,22 @@ POST   /api/v1/changes/rollback-plans     # 回滚计划
 #### 2.5.4 API端点
 
 ```
+# 服务目录
 GET    /api/v1/service-catalogs           # 服务目录列表
 POST   /api/v1/service-catalogs           # 创建服务目录
 GET    /api/v1/service-catalogs/:id       # 服务目录详情
 PUT    /api/v1/service-catalogs/:id       # 更新服务目录
 DELETE /api/v1/service-catalogs/:id       # 删除服务目录
 
+# 服务请求
 POST   /api/v1/service-requests           # 创建服务请求
 GET    /api/v1/service-requests/me        # 我的服务请求
 GET    /api/v1/service-requests/:id       # 服务请求详情
-GET    /api/v1/service-requests/approvals/pending # 待审批列表
-GET    /api/v1/service-requests/:id/approvals # 审批记录
-POST   /api/v1/service-requests/:id/approvals # 审批操作
 PUT    /api/v1/service-requests/:id/status # 更新状态
+POST   /api/v1/service-requests/:id/approve  # 审批
+POST   /api/v1/service-requests/:id/reject   # 拒绝
 
+# 交付
 POST   /api/v1/service-requests/:id/provision # 开始交付
 GET    /api/v1/service-requests/:id/provisioning-tasks # 交付任务列表
 POST   /api/v1/provisioning-tasks/:id/execute # 执行交付任务
@@ -339,15 +407,49 @@ POST   /api/v1/provisioning-tasks/:id/execute # 执行交付任务
 #### 2.6.4 API端点
 
 ```
+# 配置项
 GET    /api/v1/cmdb/cis                  # 配置项列表
 POST   /api/v1/cmdb/cis                  # 创建配置项
 GET    /api/v1/cmdb/cis/:id              # 配置项详情
 PUT    /api/v1/cmdb/cis/:id              # 更新配置项
 DELETE /api/v1/cmdb/cis/:id              # 删除配置项
-POST   /api/v1/cmdb/cis/search-by-attributes # 按属性搜索
-POST   /api/v1/cmdb/ci-types/attributes  # 创建属性定义
-GET    /api/v1/cmdb/ci-types/:id/attributes # 获取类型属性
-POST   /api/v1/cmdb/ci-attributes/validate # 验证属性
+GET    /api/v1/cmdb/cis/stats            # CI 统计
+
+# 搜索
+POST   /api/v1/cmdb/cis/search           # 搜索配置项
+
+# 批量操作
+POST   /api/v1/cmdb/cis/batch            # 批量创建
+PUT    /api/v1/cmdb/cis/batch            # 批量更新
+DELETE /api/v1/cmdb/cis/batch            # 批量删除
+PUT    /api/v1/cmdb/cis/batch/lifecycle  # 批量更新生命周期状态
+
+# 关系
+POST   /api/v1/cmdb/cis/relationships    # 创建 CI 关系
+GET    /api/v1/cmdb/cis/:id/relationships # 查询某 CI 的关系
+GET    /api/v1/cmdb/relationships        # 关系列表
+
+# CI 类型
+GET    /api/v1/cmdb/ci-types             # CI 类型列表
+GET    /api/v1/cmdb/ci-types/:id         # CI 类型详情
+GET    /api/v1/cmdb/ci-types/:id/attributes # 获取类型属性定义
+
+# 属性定义（独立资源）
+GET    /api/v1/cmdb/attributes            # 属性列表
+POST   /api/v1/cmdb/attributes           # 创建属性定义
+GET    /api/v1/cmdb/attributes/:id       # 属性详情
+PUT    /api/v1/cmdb/attributes/:id       # 更新属性
+DELETE /api/v1/cmdb/attributes/:id       # 删除属性
+
+# 拓扑与影响分析
+GET    /api/v1/cmdb/cis/:id/topology     # 拓扑图
+GET    /api/v1/cmdb/cis/:id/impact-analysis # 影响分析
+GET    /api/v1/cmdb/cis/:id/history      # 变更历史
+POST   /api/v1/cmdb/cis/:id/revert       # 版本回滚
+
+# 生命周期
+GET    /api/v1/cmdb/cis/:id/lifecycle/history # 生命周期历史
+PUT    /api/v1/cmdb/cis/:id/lifecycle    # 更新生命周期状态
 ```
 
 ### 2.7 知识库模块 (Knowledge Base)
@@ -376,12 +478,12 @@ POST   /api/v1/cmdb/ci-attributes/validate # 验证属性
 #### 2.7.4 API端点
 
 ```
-GET    /api/v1/knowledge-articles         # 文章列表
-POST   /api/v1/knowledge-articles         # 创建文章
-GET    /api/v1/knowledge-articles/:id     # 文章详情
-PUT    /api/v1/knowledge-articles/:id     # 更新文章
-DELETE /api/v1/knowledge-articles/:id     # 删除文章
-GET    /api/v1/knowledge-articles/categories # 分类列表
+GET    /api/v1/knowledge/articles         # 文章列表
+POST   /api/v1/knowledge/articles         # 创建文章
+GET    /api/v1/knowledge/articles/:id     # 文章详情
+PUT    /api/v1/knowledge/articles/:id     # 更新文章
+DELETE /api/v1/knowledge/articles/:id     # 删除文章
+GET    /api/v1/knowledge/articles/categories # 分类列表
 ```
 
 ### 2.8 SLA管理模块 (SLA Management)
@@ -425,14 +527,15 @@ GET    /api/v1/sla/definitions            # SLA定义列表
 GET    /api/v1/sla/definitions/:id        # SLA定义详情
 PUT    /api/v1/sla/definitions/:id        # 更新SLA定义
 DELETE /api/v1/sla/definitions/:id        # 删除SLA定义
-POST   /api/v1/sla/compliance/:ticketId   # 检查SLA合规
+
+POST   /api/v1/sla/check-compliance/:ticketId # 检查SLA合规
 GET    /api/v1/sla/metrics                # SLA指标
 GET    /api/v1/sla/violations             # SLA违规列表
 PUT    /api/v1/sla/violations/:id         # 更新违规状态
 POST   /api/v1/sla/monitoring             # SLA监控数据
 POST   /api/v1/sla/alert-rules            # 创建告警规则
 GET    /api/v1/sla/alert-rules            # 告警规则列表
-POST   /api/v1/sla/alert-history          # 告警历史
+GET    /api/v1/sla/alert-history          # 告警历史
 ```
 
 ### 2.9 工作流模块 (Workflow/BPMN)
@@ -471,13 +574,49 @@ POST   /api/v1/sla/alert-history          # 告警历史
 #### 2.9.4 API端点
 
 ```
-POST   /api/v1/workflows                  # 创建工作流
-GET    /api/v1/workflows                  # 工作流列表
-GET    /api/v1/workflows/:id              # 工作流详情
-PUT    /api/v1/workflows/:id              # 更新工作流
-DELETE /api/v1/workflows/:id              # 删除工作流
-POST   /api/v1/workflows/:id/start        # 启动工作流
-GET    /api/v1/workflows/:id/instances     # 工作流实例列表
+# 流程定义 (BPMN)
+POST   /api/v1/bpmn/process-definitions            # 创建流程定义
+GET    /api/v1/bpmn/process-definitions            # 流程定义列表
+GET    /api/v1/bpmn/process-definitions/:key       # 流程定义详情
+PUT    /api/v1/bpmn/process-definitions/:key       # 更新流程定义
+DELETE /api/v1/bpmn/process-definitions/:key       # 删除流程定义
+GET    /api/v1/bpmn/process-definitions/:key/export # 导出流程
+POST   /api/v1/bpmn/process-definitions/:key/clone # 克隆流程
+PUT    /api/v1/bpmn/process-definitions/:key/active # 激活版本
+
+# 流程实例
+POST   /api/v1/bpmn/process-instances             # 启动流程
+GET    /api/v1/bpmn/process-instances             # 流程实例列表
+GET    /api/v1/bpmn/process-instances/:id         # 流程实例详情
+GET    /api/v1/bpmn/process-instances/:id/approval-history # 审批历史
+PUT    /api/v1/bpmn/process-instances/:id/variables # 设置变量
+PUT    /api/v1/bpmn/process-instances/:id/suspend  # 暂停
+PUT    /api/v1/bpmn/process-instances/:id/resume   # 恢复
+PUT    /api/v1/bpmn/process-instances/:id/terminate # 终止
+
+# 任务
+GET    /api/v1/bpmn/tasks                         # 用户任务列表
+GET    /api/v1/bpmn/tasks/:id                    # 任务详情
+PUT    /api/v1/bpmn/tasks/:id/assign             # 分配任务
+PUT    /api/v1/bpmn/tasks/:id/claim             # 拾取任务
+PUT    /api/v1/bpmn/tasks/:id/complete          # 完成任务
+POST   /api/v1/bpmn/tasks/:id/decisions         # 提交决策
+PUT    /api/v1/bpmn/tasks/:id/cancel            # 取消任务
+POST   /api/v1/bpmn/tasks/:id/counter-sign      # 会签
+GET    /api/v1/bpmn/tasks/:id/counter-sign-status # 会签状态
+PUT    /api/v1/bpmn/tasks/:id/vote             # 投票
+
+# 版本管理
+GET    /api/v1/bpmn/versions                     # 版本列表
+GET    /api/v1/bpmn/versions/:key/:version      # 版本详情
+POST   /api/v1/bpmn/versions                   # 创建版本
+PUT    /api/v1/bpmn/versions/:key/:version/activate # 激活版本
+PUT    /api/v1/bpmn/versions/:key/:version/rollback  # 回滚
+GET    /api/v1/bpmn/versions/:key/compare       # 版本对比
+
+# 统计
+GET    /api/v1/bpmn/stats/instances            # 实例统计
+GET    /api/v1/bpmn/stats/tasks                # 任务统计
 ```
 
 ### 2.10 审批管理模块 (Approval Management)
@@ -507,10 +646,10 @@ GET    /api/v1/workflows/:id/instances     # 工作流实例列表
 #### 2.10.4 API端点
 
 ```
-POST   /api/v1/tickets/approval/workflows # 创建审批工作流
-GET    /api/v1/tickets/approval/workflows # 审批工作流列表
-POST   /api/v1/tickets/approval/submit     # 提交审批
-GET    /api/v1/tickets/approval/records    # 审批记录
+POST   /api/v1/approval-workflows          # 创建审批工作流
+GET    /api/v1/approval-workflows          # 审批工作流列表
+POST   /api/v1/approval/submit             # 提交审批
+GET    /api/v1/approval/records            # 审批记录
 ```
 
 ## 3. 支撑模块
@@ -562,16 +701,16 @@ GET    /api/v1/users/:id                 # 用户详情
 PUT    /api/v1/users/:id                  # 更新用户
 DELETE /api/v1/users/:id                  # 删除用户
 
-# 部门管理
-POST   /api/v1/departments                # 创建部门
-GET    /api/v1/departments/tree          # 部门树
-PUT    /api/v1/departments/:id           # 更新部门
-DELETE /api/v1/departments/:id           # 删除部门
+# 部门管理（/org 前缀）
+POST   /api/v1/org/departments                # 创建部门
+GET    /api/v1/org/departments/tree          # 部门树
+PUT    /api/v1/org/departments/:id           # 更新部门
+DELETE /api/v1/org/departments/:id           # 删除部门
 
-# 团队管理
-GET    /api/v1/teams                      # 团队列表
-POST   /api/v1/teams                      # 创建团队
-POST   /api/v1/teams/members              # 添加成员
+# 团队管理（/org 前缀）
+GET    /api/v1/org/teams                      # 团队列表
+POST   /api/v1/org/teams                      # 创建团队
+POST   /api/v1/org/groups/:id/members        # 添加团队成员
 
 # 项目管理
 GET    /api/v1/projects                   # 项目列表
@@ -581,11 +720,6 @@ POST   /api/v1/projects                   # 创建项目
 GET    /api/v1/applications               # 应用列表
 POST   /api/v1/applications               # 创建应用
 GET    /api/v1/applications/microservices # 微服务列表
-
-# 标签管理
-GET    /api/v1/tags                       # 标签列表
-POST   /api/v1/tags                       # 创建标签
-POST   /api/v1/tags/bind                  # 绑定标签
 ```
 
 ### 3.2 认证授权模块 (Auth)
@@ -610,8 +744,8 @@ POST   /api/v1/tags/bind                  # 绑定标签
 #### 3.2.3 API端点
 
 ```
-POST   /api/v1/login                      # 登录
-POST   /api/v1/refresh-token              # 刷新Token
+POST   /api/v1/auth/login                # 登录
+POST   /api/v1/auth/refresh-token        # 刷新Token
 ```
 
 ### 3.3 通知模块 (Notification)
@@ -643,8 +777,8 @@ POST   /api/v1/refresh-token              # 刷新Token
 GET    /api/v1/notifications              # 通知列表
 PUT    /api/v1/notifications/:id/read     # 标记已读
 PUT    /api/v1/notifications/read-all     # 全部标记已读
-GET    /api/v1/users/:id/notification-preferences # 通知偏好
-PUT    /api/v1/users/:id/notification-preferences # 更新偏好
+GET    /api/v1/notification-preferences    # 通知偏好
+PUT    /api/v1/notification-preferences    # 更新偏好
 ```
 
 ### 3.4 多租户模块 (Tenant)
@@ -694,7 +828,7 @@ PUT    /api/v1/users/:id/notification-preferences # 更新偏好
 #### 3.5.4 API端点
 
 ```
-GET    /api/v1/audit-logs                 # 审计日志列表
+GET    /api/v1/system/audit-logs          # 审计日志列表
 ```
 
 ### 3.6 AI功能模块
@@ -742,16 +876,14 @@ GET    /api/v1/audit-logs                 # 审计日志列表
 #### 3.6.4 API端点
 
 ```
-POST   /api/v1/ai/search                  # AI搜索
-POST   /api/v1/ai/triage                  # 智能分类
-POST   /api/v1/ai/summarize               # 智能摘要
-POST   /api/v1/ai/similar-incidents      # 相似事件
-POST   /api/v1/ai/chat                   # AI对话
-GET    /api/v1/ai/tools                   # 工具列表
-POST   /api/v1/ai/tools/:tool_id/execute # 执行工具
-POST   /api/v1/ai/embed                   # 向量嵌入
-POST   /api/v1/ai/feedback               # 反馈
-GET    /api/v1/ai/metrics                 # AI指标
+POST   /api/v1/ai/rag/search             # RAG 语义搜索
+POST   /api/v1/ai/triage                 # 智能分类
+GET    /api/v1/ai/tickets/:id/summary   # 工单摘要
+POST   /api/v1/ai/chat                  # AI 对话
+POST   /api/v1/ai/feedback              # 反馈
+GET    /api/v1/ai/metrics               # AI 指标
+GET    /api/v1/agent/tools              # 工具列表
+POST   /api/v1/agent/tools/execute      # 执行工具
 ```
 
 ### 3.7 报表分析模块 (Analytics)
@@ -932,24 +1064,28 @@ graph TD
 
 ### 6.1 核心实体
 
-| 模块 | 主要实体 | 数量 |
-|-----|---------|------|
-| 工单管理 | Ticket, TicketCategory, TicketTag, TicketComment, TicketAttachment等 | 12+ |
-| 事件管理 | Incident, IncidentRule, IncidentAlert等 | 5+ |
-| 问题管理 | Problem, ProblemInvestigation, RootCauseAnalysis | 3+ |
-| 变更管理 | Change, ChangeApproval, ChangeApprovalWorkflow | 3+ |
-| 服务目录 | ServiceCatalog, ServiceRequest, ServiceRequestApproval, ProvisioningTask | 4+ |
-| CMDB | ConfigurationItem, CIType, CIAttributeDefinition, CIRelationship | 4+ |
-| 知识库 | KnowledgeArticle | 1 |
-| SLA管理 | SLADefinition, SLAMetric, SLAViolation, SLAAlertRule | 5+ |
-| 工作流 | Workflow, WorkflowInstance, ProcessDefinition等 | 8+ |
-| 用户组织 | User, Department, Team, Project, Application, Tag | 7+ |
-| 通知 | Notification, TicketNotification | 2 |
-| 审计 | AuditLog | 1 |
-| AI | Conversation, Message, ToolInvocation, PromptTemplate | 4+ |
-| 多租户 | Tenant | 1 |
+| 模块 | 主要 Ent Schema 实体 |
+|-----|---------|
+| 工单管理 | Ticket, TicketCategory, TicketTag, TicketTemplate, TicketComment, TicketAttachment, TicketNotification, TicketView, TicketAssignmentRule, TicketAutomationRule |
+| 事件管理 | Incident, IncidentRule, IncidentAlert, IncidentMetric, IncidentEvent, IncidentEscalationRule, IncidentRuleExecution |
+| 问题管理 | Problem, RootCauseAnalysis, KnownError |
+| 变更管理 | Change, ChangeApproval, ChangeApprovalWorkflow, ChangePIR, CABMember, StandardChange, Release |
+| 服务目录 | ServiceCatalog, ServiceRequest, ServiceRequestApproval, ProvisioningTask, ServiceCatalogItem |
+| CMDB | ConfigurationItem, CIType, CIAttributeDefinition, CIRelationship, ConfigurationItemHistory, RelationshipType, DiscoverySource/Job/Result, CITag, SavedView |
+| 知识库 | KnowledgeArticle, KnowledgeArticleVersion, KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleLike |
+| SLA管理 | SLADefinition, SLAMetric, SLAViolation, SLAAlertRule, SLAAlertHistory, SLAPolicy |
+| 工作流 | Workflow, WorkflowInstance, WorkflowTask, ProcessDefinition, ProcessInstance, ProcessTask, ProcessVariable, ProcessBinding, ProcessDeployment, ProcessExecutionHistory, ProcessApprovalDecision |
+| 用户组织 | User, Department, Team, Project, Application, Microservice, Tag, Group |
+| 通知 | Notification, TicketNotification, NotificationDelivery, NotificationPreference |
+| 审批 | ApprovalWorkflow, ApprovalChain, ApprovalRecord |
+| 审计 | AuditLog |
+| AI | Conversation, Message, ToolInvocation, PromptTemplate |
+| 邮件接入 | EmailConversation, InboundEmailMessage, EmailOutboundMessage, EmailIntakeAnalysis |
+| 连接器市场 | ConnectorConfig, MarketplaceItem |
+| MSP/租户 | Tenant, MSPAllocation, TenantInstallation |
+| 其他 | OperationalCommand, SupportContract, ExternalContractReference, CloudAccount, CloudService, CloudResource, EngineerSkill, OnCallSchedule, OnCallShift, BootstrapToken, DomainConfig, EndpointACL, SystemConfig |
 
-**总计**：约60+个核心实体
+**总计**：100+ 个 Ent Schema 实体
 
 ## 7. API架构
 
@@ -966,19 +1102,20 @@ graph TD
 | 模块 | API端点数量 | 主要操作 |
 |-----|-----------|---------|
 | 工单管理 | 30+ | CRUD, 分配, 解决, 评论, 附件等 |
-| 事件管理 | 5+ | CRUD, 统计 |
+| 事件管理 | 20+ | CRUD, 生命周期, SLA, 监控, 关联数据 |
 | 问题管理 | 5+ | CRUD, 统计 |
-| 变更管理 | 10+ | CRUD, 审批, 风险评估等 |
+| 变更管理 | 10+ | CRUD, 状态变更, 审批, 风险 |
 | 服务目录 | 10+ | CRUD, 审批, 交付 |
-| CMDB | 8+ | CRUD, 搜索, 属性管理 |
-| 知识库 | 5+ | CRUD, 分类 |
+| CMDB | 20+ | CRUD, 搜索, 批量, 关系, 拓扑, 生命周期 |
+| 知识库 | 6+ | CRUD, 分类 |
 | SLA管理 | 10+ | 定义, 监控, 告警 |
-| 工作流 | 8+ | 定义, 实例, 任务 |
+| 工作流(BPMN) | 30+ | 流程定义, 实例, 任务, 会签, 版本 |
+| 审批管理 | 4+ | 工作流, 提交, 记录 |
 | 用户组织 | 15+ | 用户, 部门, 团队, 项目等 |
-| AI功能 | 10+ | 搜索, 分类, 对话, 工具等 |
+| AI功能 | 8+ | RAG搜索, 分类, 摘要, 对话, 工具 |
 | 报表分析 | 10+ | 仪表盘, 分析, 预测 |
 
-**总计**：约130+个API端点
+**总计**：200+ 个 API 端点
 
 ## 8. 技术栈总结
 
@@ -1058,7 +1195,9 @@ graph TD
 
 ---
 
-**文档版本**：V1.0  
-**创建日期**：2025-12-17  
-**最后更新**：2025-12-17  
+**文档版本**：V2.0（基于代码审查修订）
+**创建日期**：2025-12-17
+**最后更新**：2026-08-28
 **维护人**：产品团队
+
+> 本文档经代码审查后修订，修正了 API 端点路径、数据模型范围、事件生命周期机制和架构约束描述。v2.0 之前的版本与实际实现有较大偏差，请以本文档为准。

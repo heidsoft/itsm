@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	connectorAlert "itsm-backend/connector/alert"
 	"itsm-backend/controller"
 	marketplaceController "itsm-backend/controller/marketplace"
 	"itsm-backend/ent"
@@ -299,6 +300,7 @@ type RouterConfig struct {
 
 	// Connector Controller (连接器/插件/技能市场)
 	ConnectorController   *controller.ConnectorController
+	AlertHandler          *connectorAlert.Handler
 	FeishuController      *controller.FeishuController
 	MarketplaceController *marketplaceController.Controller
 
@@ -1667,6 +1669,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				conns.POST("/:name/test", middleware.RequirePermission("connector", "write"), config.ConnectorController.Test)
 				conns.GET("/health", middleware.RequirePermission("connector", "read"), config.ConnectorController.Health)
 			}
+		}
+
+		if config.AlertHandler != nil {
+			auth.POST("/alerts/sources/:source/ingest", middleware.RequirePermission("alert", "write"), config.AlertHandler.Ingest)
 		}
 
 		if config.DashboardHandler != nil {

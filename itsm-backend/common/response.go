@@ -19,17 +19,18 @@ type Response struct {
 
 // 响应码定义
 const (
-	SuccessCode            = 0
-	ParamErrorCode         = 1001
-	ValidationError        = 1002
-	AuthFailedCode         = 2001
-	UnauthorizedCode       = 2002
-	ForbiddenCode          = 2003
-	NotFoundCode           = 4004
-	BadRequestCode         = 4000
-	ConflictCode           = 4090 // 版本冲突
-	InternalErrorCode      = 5001
-	ServiceUnavailableCode = 5003
+	SuccessCode             = 0
+	ParamErrorCode          = 1001
+	ValidationError         = 1002
+	AuthFailedCode          = 2001
+	UnauthorizedCode        = 2002
+	ForbiddenCode           = 2003
+	NotFoundCode            = 4004
+	BadRequestCode          = 4000
+	ConflictCode            = 4090 // 版本冲突
+	UnprocessableEntityCode = 4220
+	InternalErrorCode       = 5001
+	ServiceUnavailableCode  = 5003
 	// P2-6 AI 工具 RBAC 校验
 	ToolPermissionDeniedCode = 2004 // 工具权限不足
 	UnknownToolCode          = 2005 // 未知工具
@@ -66,6 +67,8 @@ func Fail(c *gin.Context, code int, message string) {
 		statusCode = http.StatusNotFound
 	case ConflictCode:
 		statusCode = http.StatusConflict
+	case UnprocessableEntityCode:
+		statusCode = http.StatusUnprocessableEntity
 	case InternalErrorCode:
 		statusCode = http.StatusInternalServerError
 	case ServiceUnavailableCode:
@@ -93,6 +96,8 @@ func FailWithData(c *gin.Context, code int, message string, data interface{}) {
 		statusCode = http.StatusNotFound
 	case ConflictCode:
 		statusCode = http.StatusConflict
+	case UnprocessableEntityCode:
+		statusCode = http.StatusUnprocessableEntity
 	case InternalErrorCode:
 		statusCode = http.StatusInternalServerError
 	case ServiceUnavailableCode:

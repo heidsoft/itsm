@@ -19,6 +19,7 @@ import (
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/config"
 	"itsm-backend/connector"
+	connectorAlert "itsm-backend/connector/alert"
 	_ "itsm-backend/connector/builtin/console"
 	_ "itsm-backend/connector/builtin/dingtalk"
 	_ "itsm-backend/connector/builtin/email"
@@ -26,6 +27,7 @@ import (
 	_ "itsm-backend/connector/builtin/webhook"
 	_ "itsm-backend/connector/builtin/wecom"
 	"itsm-backend/connector/marketplace"
+	connectorVector "itsm-backend/connector/vector"
 	"itsm-backend/controller"
 	marketplaceController "itsm-backend/controller/marketplace"
 	"itsm-backend/pkg/eventbus"
@@ -69,14 +71,15 @@ import (
 )
 
 type Application struct {
-	Cfg           *config.Config
-	Logger        *zap.SugaredLogger
-	DBClient      *ent.Client
-	Router        *gin.Engine
-	Embedder      service.Embedder
-	VectorStore   *service.VectorStore
-	CommandWorker *commandbus.Worker
-	SkillRegistry *service.SkillRegistry
+	Cfg               *config.Config
+	Logger            *zap.SugaredLogger
+	DBClient          *ent.Client
+	Router            *gin.Engine
+	Embedder          service.Embedder
+	VectorStore       connectorVector.VectorStore
+	LegacyVectorStore *service.VectorStore
+	CommandWorker     *commandbus.Worker
+	SkillRegistry     *service.SkillRegistry
 
 	// backgroundWG 跟踪由 startBackgroundTasks 启动的所有后台 goroutine。
 	// 在 Stop() 中等待它们退出，避免应用关闭时强制杀死进行中的任务。
@@ -262,6 +265,21 @@ func NewApplication() *Application {
 
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	connectorManager := connector.NewManager(connector.Default(), sugar)
+	alertRegistry := connectorAlert.Default()
+	alertConfigPath := os.Getenv("ALERT_SOURCE_CONFIG")
+	if alertConfigPath == "" {
+		alertConfigPath = "etc/alert-sources/prometheus-alertmanager.yaml"
+	}
+	if alertConfig, loadErr := connectorAlert.LoadConfigFile(alertConfigPath); loadErr != nil {
+		sugar.Warnw("Alert source config was not loaded", "path", alertConfigPath, "error", loadErr)
+	} else if alertConfig.Enabled {
+		if _, exists := alertRegistry.Get(alertConfig.Source); !exists {
+			alertRegistry.Register(func() connectorAlert.AlertSource {
+				return connectorAlert.NewWebhookAlertSource(alertConfig)
+			})
+		}
+	}
+	alertHandler := connectorAlert.NewHandler(alertRegistry, connectorManager, alertDevelopmentMode())
 	connectorMarket := marketplace.New()
 	connectorController := controller.NewConnectorController(connectorManager, connector.Default(), connectorMarket, sugar)
 	connectorEncryptionKey := os.Getenv("CONNECTOR_CONFIG_ENCRYPTION_KEY")
@@ -410,6 +428,15 @@ func NewApplication() *Application {
 
 	vectorStore := service.NewVectorStore(database.GetRawDB())
 	ragService := service.NewRAGServiceWithAutoConfig(client, vectorStore, embedder, sugar)
+	vectorCtx, vectorCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	pluggableVectorStore, vectorErr := connectorVector.NewFromEnvironment(vectorCtx)
+	vectorCancel()
+	if vectorErr != nil {
+		sugar.Warnw("vector store initialization failed; RAG keeps database keyword fallback", "error", vectorErr)
+	} else {
+		ragService.SetVectorStore(pluggableVectorStore)
+		sugar.Infow("pluggable vector store initialized")
+	}
 	aiTelemetryService := service.NewAITelemetryService(database.GetRawDB())
 
 	// 同步初始化：向量扩展检测与 vectors 表准备。
@@ -939,6 +966,7 @@ func NewApplication() *Application {
 
 		// Connector Controller
 		ConnectorController: connectorController,
+		AlertHandler:        alertHandler,
 		FeishuController:    feishuController,
 
 		MarketplaceController: marketplaceCtrl,
@@ -961,14 +989,15 @@ func NewApplication() *Application {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return &Application{
-		Cfg:           cfg,
-		Logger:        sugar,
-		DBClient:      client,
-		Router:        r,
-		Embedder:      embedder,
-		VectorStore:   vectorStore,
-		CommandWorker: commandWorker,
-		SkillRegistry: skillRegistry,
+		Cfg:               cfg,
+		Logger:            sugar,
+		DBClient:          client,
+		Router:            r,
+		Embedder:          embedder,
+		VectorStore:       pluggableVectorStore,
+		LegacyVectorStore: vectorStore,
+		CommandWorker:     commandWorker,
+		SkillRegistry:     skillRegistry,
 	}
 }
 
@@ -978,6 +1007,15 @@ func configurePermissionMode(environment string) {
 		middleware.PermissionConfig.Mode = middleware.PermissionConfigModeFallback
 	default:
 		middleware.PermissionConfig.Mode = middleware.PermissionConfigModeDBOnly
+	}
+}
+
+func alertDevelopmentMode() bool {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("ENV"))) {
+	case "development", "dev", "test", "testing", "local":
+		return true
+	default:
+		return false
 	}
 }
 
@@ -1227,7 +1265,7 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 
 	// Embedding pipeline 后台任务
 	safeGo("embedding-pipeline", func() {
-		pipeline := service.NewEmbeddingPipeline(app.DBClient, app.Embedder, app.Logger, app.VectorStore)
+		pipeline := service.NewEmbeddingPipeline(app.DBClient, app.Embedder, app.Logger, app.LegacyVectorStore)
 		// initial full-ish pass per tenant
 		tenants, err := app.DBClient.Tenant.Query().All(ctx)
 		if err == nil {

@@ -1,0 +1,176 @@
+# Alert Source Configuration Examples
+# ==================================
+# These YAML files define how raw webhook payloads from external monitoring systems
+# are mapped to the ITSM StandardAlert format.
+#
+# Place these in etc/alert-sources/ or load via admin API.
+# All fields support three extraction modes (in priority order):
+#   1. jmespath  - JSONPath-like dot notation (e.g. "body.alerts[0].labels.severity")
+#   2. template  - Go text/template with helpers (json, lower, upper, trim, default)
+#   3. literal   - fixed string value
+#
+# Transforms:
+#   "lower" / "upper" / "trim" / "int" / "float" / "bool" / "flatten"
+#   "map{P1:critical,P2:high,Disaster:P1}" for severity mapping
+#   "regex(.*pattern.*)" for regex extraction
+
+# ---------------------------------------------------------------
+# Example 1: Prometheus Alertmanager
+# Payload shape: { "alerts": [{ "labels": {...}, "annotations": {...}, ... }] }
+# ---------------------------------------------------------------
+- source: prometheus
+  type: webhook
+  priority: 1
+  enabled: true
+  title: Prometheus Alertmanager
+  description: 接收 Prometheus Alertmanager 的 webhook 告警
+
+  mapping:
+    alert_id:
+      jmespath: "body.alerts[0].fingerprint"
+      default: "unknown"
+
+    name:
+      jmespath: "body.alerts[0].labels.alertname"
+      default: "未命名告警"
+
+    description:
+      jmespath: "body.alerts[0].annotations.description"
+      template: "{{ .body.alerts[0].annotations.summary | default .body.alerts[0].annotations.description }}"
+
+    severity:
+      jmespath: "body.alerts[0].labels.severity"
+      transform: "map{critical:P1,P1,P2,high:P2,medium:P3,warning:P3,low:P4,info:P4}"
+      default: "P3"
+
+    labels:
+      jmespath: "body.alerts[0].labels"
+      transform: "flatten"
+
+    annotations:
+      jmespath: "body.alerts[0].annotations"
+
+    source_ip:
+      jmespath: "body.externalURL"
+      template: "{{ .body.commonLabels.instance | default \"\" }}"
+
+    service:
+      jmespath: "body.alerts[0].labels.service"
+      default: ""
+
+    tags:
+      jmespath: "body.alerts[0].labels"
+      transform: "flatten"
+
+    fired_at:
+      jmespath: "body.alerts[0].startsAt"
+      default: ""
+
+  cfg:
+    signature_header: "X-Signature"
+    max_payload_bytes: 1048576
+
+# ---------------------------------------------------------------
+# Example 2: Zabbix
+# Payload shape: { "eventid": "...", "severity": 4, "name": "...", ... }
+# ---------------------------------------------------------------
+- source: zabbix_custom
+  type: webhook
+  priority: 2
+  enabled: false
+  title: Zabbix 自定义脚本
+  description: 接收 Zabbix 告警脚本 webhook
+
+  mapping:
+    alert_id:
+      jmespath: "body.eventid"
+
+    name:
+      jmespath: "body.name"
+      default: "Zabbix 告警"
+
+    description:
+      jmespath: "body.description"
+      template: "触发时间: {{ .body.clock }}\n问题: {{ .body.name }}"
+
+    severity:
+      jmespath: "body.severity"
+      transform: "map{0:P4,1:P4,2:P3,3:P2,4:P1,5:P1}"
+      default: "P3"
+
+    labels:
+      jmespath: "body.tags"
+      default: ""
+
+    source_ip:
+      jmespath: "body.ip"
+      default: ""
+
+    service:
+      jmespath: "body.host"
+      default: ""
+
+    fired_at:
+      jmespath: "body.clock"
+      default: ""
+
+  cfg:
+    max_payload_bytes: 65536
+
+# ---------------------------------------------------------------
+# Example 3: Generic / Low-code (minimal config)
+# For systems whose payload already matches StandardAlert field names:
+# ---------------------------------------------------------------
+- source: generic
+  type: webhook
+  priority: 99
+  enabled: false
+  title: 通用 Webhook
+  description: 通用的 webhook 接收器，payload 字段名与 StandardAlert 一一对应
+
+  mapping:
+    alert_id:
+      jmespath: "body.alert_id"
+
+    name:
+      jmespath: "body.name"
+
+    description:
+      jmespath: "body.description"
+      default: ""
+
+    severity:
+      jmespath: "body.severity"
+      transform: "map{P1:critical,P2:high,P3:medium,P4:low}"
+      default: "P3"
+
+    status:
+      jmespath: "body.status"
+      default: "firing"
+
+    labels:
+      jmespath: "body.labels"
+      default: ""
+
+    annotations:
+      jmespath: "body.annotations"
+      default: ""
+
+    source_ip:
+      jmespath: "body.source_ip"
+      default: ""
+
+    service:
+      jmespath: "body.service"
+      default: ""
+
+    tags:
+      jmespath: "body.tags"
+      default: ""
+
+    fired_at:
+      jmespath: "body.fired_at"
+      default: ""
+
+  cfg:
+    max_payload_bytes: 1048576

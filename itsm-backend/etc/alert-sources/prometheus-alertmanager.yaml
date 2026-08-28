@@ -1,0 +1,49 @@
+# Prometheus Alertmanager webhook source.
+# Store the real secret outside source control and inject it through your
+# deployment/configuration management process before enabling in production.
+source: prometheus
+type: webhook
+priority: 1
+enabled: true
+title: Prometheus Alertmanager
+description: Prometheus Alertmanager webhook integration
+
+mapping:
+  alert_id:
+    jmespath: alerts[0].fingerprint
+    required: true
+  name:
+    jmespath: alerts[0].labels.alertname
+    required: true
+  description:
+    jmespath: alerts[0].annotations.description
+    default: Prometheus alert
+  severity:
+    jmespath: alerts[0].labels.severity
+    transform: "map{critical:P1,high:P2,warning:P3,info:P4}"
+    default: P3
+  status:
+    jmespath: status
+    default: firing
+  labels:
+    jmespath: alerts[0].labels
+    transform: flatten
+  annotations:
+    jmespath: alerts[0].annotations
+  source_ip:
+    jmespath: alerts[0].labels.instance
+  service:
+    jmespath: alerts[0].labels.service
+    default: prometheus
+  tags:
+    jmespath: alerts[0].labels
+    transform: flatten
+  fired_at:
+    jmespath: alerts[0].startsAt
+
+cfg:
+  signature_header: X-Signature
+  signature_secret: "${ALERTMANAGER_WEBHOOK_SECRET}"
+  signature_algorithm: hmac-sha256
+  max_payload_bytes: 1048576
+  timeout_seconds: 10

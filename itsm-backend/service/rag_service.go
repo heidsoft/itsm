@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"go.uber.org/zap"
 
+	connectorVector "itsm-backend/connector/vector"
 	"itsm-backend/ent"
 	ka "itsm-backend/ent/knowledgearticle"
 )
@@ -17,11 +19,22 @@ import (
 type RAGService struct {
 	client       *ent.Client
 	vectors      *VectorStore
+	vectorStore  connectorVector.VectorStore
 	embedder     Embedder
 	logger       *zap.SugaredLogger
 	useVector    bool // Whether to use vector search
 	useKeyword   bool // Whether to use keyword fallback
 	hybridSearch bool // Whether to use hybrid (vector + keyword) search
+}
+
+// SetVectorStore installs the pluggable connector-backed store. The legacy
+// PGVector store remains available during migration of existing installations.
+func (r *RAGService) SetVectorStore(store connectorVector.VectorStore) {
+	r.vectorStore = store
+	if store != nil {
+		r.useVector = true
+		r.hybridSearch = true
+	}
 }
 
 // RAGConfig holds RAG service configuration
@@ -158,6 +171,40 @@ func (r *RAGService) Ask(ctx context.Context, tenantID int, query string, limit 
 
 // vectorSearch performs similarity search using vectors
 func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query string, limit int) ([]map[string]any, error) {
+	if r.vectorStore != nil {
+		var embedding []float32
+		if r.embedder != nil {
+			var err error
+			embedding, err = r.embedder.Embed(query)
+			if err != nil {
+				r.logger.Warnw("RAGService: embedding unavailable; trying keyword vector backend", "error", err)
+			}
+		}
+		response, err := r.vectorStore.Search(ctx, connectorVector.SearchRequest{Vector: embedding, Query: query, TopK: limit, Filter: map[string]interface{}{"tenantID": tenantID, "objectType": "kb"}})
+	if err != nil {
+		// Fallback to legacy store if connector fails
+		if r.vectors != nil && r.embedder != nil {
+			r.logger.Warnw("RAGService: connector vector search failed, falling back to legacy store", "error", err)
+		} else {
+			return nil, fmt.Errorf("vector connector search: %w", err)
+		}
+	} else {
+		results := make([]map[string]any, 0, len(response.Results))
+		for _, hit := range response.Results {
+			objID, err := strconv.Atoi(hit.ID)
+			if err != nil {
+				continue
+			}
+			a, err := r.client.KnowledgeArticle.Query().Where(ka.IDEQ(objID), ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil(), ka.IsPublished(true)).Only(ctx)
+			if err != nil {
+				continue
+			}
+			results = append(results, map[string]any{"object_type": "kb", "id": objID, "title": a.Title, "category": a.Category, "snippet": snippet(hit.Content, 200), "score": hit.Score, "search_type": response.Backend})
+		}
+		return results, nil
+	}
+	}
+
 	if !r.useVector || r.vectors == nil || r.embedder == nil {
 		return nil, fmt.Errorf("vector search not available")
 	}
@@ -205,7 +252,7 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 		// 避免向量索引残留（软删除/未发布文章）泄漏到检索结果。
 		if objType == "kb" {
 			a, err := r.client.KnowledgeArticle.Query().
-				Where(ka.IDEQ(objID), ka.DeletedAtIsNil(), ka.IsPublished(true)).
+				Where(ka.IDEQ(objID), ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil(), ka.IsPublished(true)).
 				Only(ctx)
 			if err != nil {
 				r.logger.Debugw("RAGService: skip vector result, article not visible", "article_id", objID, "error", err)
@@ -403,23 +450,54 @@ func (r *RAGService) AskWithLLMStream(
 	return nil
 }
 
-// IndexArticle adds a knowledge article to the vector store
+// IndexArticle adds a knowledge article to all available vector stores.
+// It writes to both the connector store and the legacy store simultaneously
+// to keep dual-write consistent. Failures are logged but non-fatal to avoid
+// blocking article publishing when one store is unavailable.
 func (r *RAGService) IndexArticle(ctx context.Context, tenantID int, articleID int, title, content string) error {
-	if !r.useVector || r.embedder == nil {
+	// If both vector and embedder are disabled, skip silently
+	if !r.useVector || (r.vectorStore == nil && r.vectors == nil) {
 		r.logger.Debugw("RAGService: vector indexing disabled")
 		return nil
 	}
 
-	// Generate embedding for article content
-	embedding, err := r.embedder.Embed(title + "\n" + content)
-	if err != nil {
-		return fmt.Errorf("failed to generate embedding: %w", err)
+	// Generate embedding once; both stores share the same vector
+	var embedding []float32
+	if r.embedder != nil {
+		var err error
+		embedding, err = r.embedder.Embed(title + "\n" + content)
+		if err != nil {
+			r.logger.Warnw("RAGService: failed to generate embedding, skipping all vector stores", "article_id", articleID, "error", err)
+			return fmt.Errorf("failed to generate embedding: %w", err)
+		}
+	} else {
+		// No embedder: keyword fallback can still index if legacy store is available
+		r.logger.Debugw("RAGService: no embedder, skipping vector indexing", "article_id", articleID)
+		return nil
 	}
 
-	// Upsert to vector store
+	insertReq := connectorVector.InsertRequest{
+		Chunks: []connectorVector.ChunkInput{{
+			ID:      strconv.Itoa(articleID),
+			Content: content,
+			Vector:  embedding,
+			Metadata: map[string]interface{}{
+				"tenantID":   tenantID,
+				"objectType": "kb",
+				"source":    title,
+			},
+		}},
+	}
+
+	// Dual-write: write to both connector and legacy simultaneously
+	if r.vectorStore != nil {
+		if err := r.vectorStore.Insert(ctx, insertReq); err != nil {
+			return fmt.Errorf("connector vector insert: %w", err)
+		}
+	}
 	if r.vectors != nil {
 		if err := r.vectors.Upsert(ctx, tenantID, "kb", articleID, embedding, content, title); err != nil {
-			return fmt.Errorf("failed to upsert vector: %w", err)
+			return fmt.Errorf("legacy vector upsert: %w", err)
 		}
 	}
 
@@ -430,16 +508,20 @@ func (r *RAGService) IndexArticle(ctx context.Context, tenantID int, articleID i
 // 真实删除：软删除/取消发布文章时调用，物理移除 vectors 表中的残留向量，
 // 使检索侧不再依赖 enrichment 阶段的兜底过滤。幂等：条目不存在时静默成功。
 func (r *RAGService) RemoveArticle(ctx context.Context, tenantID int, articleID int) error {
+	// Clean connector store
+	if r.vectorStore != nil {
+		if err := r.vectorStore.Delete(ctx, []string{strconv.Itoa(articleID)}); err != nil {
+			r.logger.Warnw("RAGService: failed to remove article from connector vector store", "article_id", articleID, "tenant_id", tenantID, "error", err)
+		}
+	}
+	// Also clean legacy store if available
 	if !r.useVector || r.vectors == nil {
-		r.logger.Debugw("RAGService: vector indexing disabled, skip article removal")
 		return nil
 	}
-
 	if err := r.vectors.Delete(ctx, tenantID, "kb", articleID); err != nil {
-		r.logger.Warnw("RAGService: failed to remove article vector", "article_id", articleID, "tenant_id", tenantID, "error", err)
+		r.logger.Warnw("RAGService: failed to remove article vector from legacy store", "article_id", articleID, "tenant_id", tenantID, "error", err)
 		return fmt.Errorf("failed to remove article vector: %w", err)
 	}
-
 	r.logger.Infow("RAGService: article vector removed", "article_id", articleID, "tenant_id", tenantID)
 	return nil
 }

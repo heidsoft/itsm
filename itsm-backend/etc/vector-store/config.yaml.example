@@ -1,0 +1,38 @@
+# Set VECTOR_STORE_CONFIG to this file path, or to inline YAML. Values such as
+# ${VECTOR_DB_PASSWORD} are expanded from the process environment.
+backend: pgvector # keyword | pgvector | milvus | qdrant
+collection: knowledge_chunks
+fallback: true
+config:
+  dsn: postgres://itsm:${VECTOR_DB_PASSWORD}@localhost:5432/itsm?sslmode=disable
+  table_name: knowledge_vectors
+  dimension: 1536
+  metric: cosine
+
+# Milvus config:
+# backend: milvus
+# collection: knowledge_chunks
+# fallback: true
+# config:
+#   addr: localhost:19530
+#   collection: knowledge_chunks
+#   dimension: 1536
+#   metric_type: COSINE # L2 | IP | COSINE
+#   consistency_level: Bounded
+
+# Qdrant config (addr is the gRPC endpoint):
+# backend: qdrant
+# collection: knowledge_chunks
+# fallback: true
+# config:
+#   addr: localhost:6334
+#   collection: knowledge_chunks
+#   vector_size: 1536
+#   distance: Cosine # Cosine | Dot | Euclidean
+
+# Development/demo-only in-memory keyword search:
+# backend: keyword
+# collection: knowledge_chunks
+# fallback: true
+# config:
+#   top_k: 10
