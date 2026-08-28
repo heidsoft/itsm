@@ -124,6 +124,22 @@ func TestCompleteTask_SuccessCommits(t *testing.T) {
 	assert.Equal(t, "completed", inst.Status, "成功时应到达 End 并结束流程")
 }
 
+// TestCompleteTaskByID_RejectsCrossTenantRead 验证按数据库 ID 完成任务时，
+// 首次读取就按租户过滤，不会读取或完成其他租户的任务。
+func TestCompleteTaskByID_RejectsCrossTenantRead(t *testing.T) {
+	_, client, _, _, _, taskID := seedEngineFixture(t, atomicOKBPMN)
+	service := &bpmnTaskService{client: client, logger: zaptest.NewLogger(t).Sugar()}
+	otherTenantCtx := context.WithValue(context.Background(), bpmn.BPMNTenantIDContextKey, 8)
+
+	err := service.CompleteTaskByID(otherTenantCtx, taskID, map[string]interface{}{})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "获取任务失败")
+
+	task, getErr := client.ProcessTask.Get(context.Background(), taskID)
+	require.NoError(t, getErr)
+	assert.Equal(t, "created", task.Status)
+}
+
 // TestDetectStuckInstances 验证卡死检测（P3 可观测性）。
 func TestDetectStuckInstances(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())

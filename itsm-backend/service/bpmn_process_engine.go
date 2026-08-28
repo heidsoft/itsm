@@ -2030,17 +2030,18 @@ func (s *bpmnTaskService) GetTaskByID(ctx context.Context, id int) (*ent.Process
 
 // CompleteTaskByID 根据数据库自增ID完成任务
 func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variables map[string]interface{}) error {
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	engine := NewCustomProcessEngine(s.client, s.logger)
-	// 直接使用 ent Client 获取任务，确保应用租户过滤
-	task, err := s.client.ProcessTask.Get(ctx, id)
+	// 首次读取即按当前租户过滤，避免先全局读取再事后校验造成跨租户任务泄漏。
+	task, err := s.client.ProcessTask.Query().
+		Where(processtask.ID(id), processtask.TenantID(tenantID)).
+		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("获取任务失败: %w", err)
-	}
-	// 如果上下文中有租户 ID，验证任务属于该租户
-	if tenantID := ctx.Value(bpmn.BPMNTenantIDContextKey); tenantID != nil && tenantID.(int) > 0 {
-		if task.TenantID != tenantID.(int) {
-			return fmt.Errorf("任务不属于当前租户")
-		}
 	}
 	return engine.CompleteTask(ctx, task.TaskID, variables)
 }
