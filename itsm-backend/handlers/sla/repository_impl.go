@@ -275,6 +275,7 @@ func (r *EntRepository) ListAlertRules(ctx context.Context, tenantID int, filter
 
 func (r *EntRepository) UpdateAlertRule(ctx context.Context, ar *SLAAlertRule) (*SLAAlertRule, error) {
 	e, err := r.client.SLAAlertRule.UpdateOneID(ar.ID).
+		Where(slaalertrule.TenantID(ar.TenantID)).
 		SetName(ar.Name).
 		SetThresholdPercentage(ar.ThresholdPercentage).
 		SetAlertLevel(ar.AlertLevel).

@@ -220,6 +220,92 @@ func TestSLAHandler_AlertRule_CRUD(t *testing.T) {
 	})
 }
 
+func TestSLAHandler_UpdateAlertRuleRejectsCrossTenant(t *testing.T) {
+	r, client, tenantAID := setupSLAHandler(t)
+	ctx := context.Background()
+
+	tenantB, err := client.Tenant.Create().
+		SetName("SLA Tenant B").
+		SetCode("SLAB" + slaUniqueID()).
+		SetDomain("sla-b.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	definitionB, err := client.SLADefinition.Create().
+		SetName("Tenant B SLA").
+		SetResponseTime(30).
+		SetResolutionTime(240).
+		SetIsActive(true).
+		SetTenantID(tenantB.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	ruleB, err := client.SLAAlertRule.Create().
+		SetSLADefinitionID(definitionB.ID).
+		SetName("Tenant B Rule").
+		SetThresholdPercentage(80).
+		SetAlertLevel("warning").
+		SetNotificationChannels([]string{"email"}).
+		SetIsActive(true).
+		SetTenantID(tenantB.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	resp := doSLAReq(t, r, http.MethodPut, "/api/v1/sla/alert-rules/"+itoaSLA(ruleB.ID), dto.UpdateSLAAlertRuleRequest{
+		Name: ptrSLAString("compromised"),
+	}, false)
+	assert.Equal(t, common.NotFoundCode, resp.Code, "body=%s", slaStr(resp))
+
+	stored, err := client.SLAAlertRule.Get(ctx, ruleB.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "Tenant B Rule", stored.Name)
+	assert.Equal(t, tenantB.ID, stored.TenantID)
+	assert.NotEqual(t, tenantAID, stored.TenantID)
+}
+
+func TestEntRepository_UpdateAlertRuleScopesUpdateByTenant(t *testing.T) {
+	_, client, _ := setupSLAHandler(t)
+	ctx := context.Background()
+
+	tenantB, err := client.Tenant.Create().
+		SetName("Repository Tenant B").
+		SetCode("REPOB" + slaUniqueID()).
+		SetDomain("repo-b.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+	definitionB, err := client.SLADefinition.Create().
+		SetName("Repository Tenant B SLA").
+		SetResponseTime(30).
+		SetResolutionTime(240).
+		SetIsActive(true).
+		SetTenantID(tenantB.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	ruleB, err := client.SLAAlertRule.Create().
+		SetSLADefinitionID(definitionB.ID).
+		SetName("Original").
+		SetThresholdPercentage(80).
+		SetAlertLevel("warning").
+		SetNotificationChannels([]string{"email"}).
+		SetIsActive(true).
+		SetTenantID(tenantB.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	attackerUpdate := toSLAAlertRuleDomain(ruleB)
+	attackerUpdate.TenantID = tenantB.ID + 1000
+	attackerUpdate.Name = "compromised"
+	_, err = NewEntRepository(client).UpdateAlertRule(ctx, attackerUpdate)
+	require.Error(t, err)
+	assert.True(t, ent.IsNotFound(err), "expected tenant predicate mismatch to return not found: %v", err)
+
+	stored, err := client.SLAAlertRule.Get(ctx, ruleB.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "Original", stored.Name)
+}
+
 // ---- 阶段 1.7:合规报告 / 违规查询 路径 ----
 
 func TestSLAHandler_ComplianceReport(t *testing.T) {
@@ -362,6 +448,8 @@ func doSLAReq(t *testing.T, r *gin.Engine, method, path string, body interface{}
 }
 
 func itoaSLA(i int) string { return strconv.Itoa(i) }
+
+func ptrSLAString(value string) *string { return &value }
 
 func slaUniqueID() string { return strconv.FormatInt(time.Now().UnixNano(), 10) }
 
