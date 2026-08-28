@@ -18,6 +18,7 @@ import (
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/problem"
 	"itsm-backend/internal/commandbus"
+	"itsm-backend/middleware"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -594,8 +595,24 @@ func TestIncidentService_UpdateIncident_VersionControl(t *testing.T) {
 	})
 
 	t.Run("Force=true 忽略版本检查", func(t *testing.T) {
+		originalMode := middleware.PermissionConfig.Mode
+		originalCache := middleware.PermissionConfig.EnableCache
+		middleware.PermissionConfig.Mode = middleware.PermissionConfigModeHardcodeOnly
+		middleware.PermissionConfig.EnableCache = false
+		t.Cleanup(func() {
+			middleware.PermissionConfig.Mode = originalMode
+			middleware.PermissionConfig.EnableCache = originalCache
+		})
+
 		newTitle := "Force Update"
-		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
+		_, err := service.UpdateIncident(middleware.WithRBACRole(ctx, "manager"), testIncident.ID, &dto.UpdateIncidentRequest{
+			Title:   &newTitle,
+			Version: 1,    // 旧版本号
+			Force:   true, // 强制更新
+		}, testTenant.ID)
+		require.EqualError(t, err, "incident:force-update permission required when force=true")
+
+		response, err := service.UpdateIncident(middleware.WithRBACRole(ctx, "admin"), testIncident.ID, &dto.UpdateIncidentRequest{
 			Title:   &newTitle,
 			Version: 1,    // 旧版本号
 			Force:   true, // 强制更新

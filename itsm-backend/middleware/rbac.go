@@ -25,6 +25,19 @@ type Permission struct {
 	Action   string `json:"action"`   // 操作类型，如 "read", "write", "delete", "admin"
 }
 
+type rbacRoleContextKey struct{}
+
+// WithRBACRole 将认证中间件确认的角色写入标准请求 context，供服务层执行细粒度权限检查。
+func WithRBACRole(ctx context.Context, role string) context.Context {
+	return context.WithValue(ctx, rbacRoleContextKey{}, role)
+}
+
+// RBACRoleFromContext 返回认证中间件写入的角色。缺失时调用方必须 fail closed。
+func RBACRoleFromContext(ctx context.Context) (string, bool) {
+	role, ok := ctx.Value(rbacRoleContextKey{}).(string)
+	return role, ok && strings.TrimSpace(role) != ""
+}
+
 // cachedPermission 带过期时间的缓存条目
 type cachedPermission struct {
 	permissions []Permission
@@ -85,6 +98,7 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "cmdb", Action: "delete"},
 		{Resource: "incident", Action: "read"},
 		{Resource: "incident", Action: "write"},
+		{Resource: "incident", Action: "force-update"},
 		{Resource: "incident", Action: "admin"},
 		{Resource: "service_catalog", Action: "read"},
 		{Resource: "service_catalog", Action: "write"},
@@ -930,6 +944,8 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		c.Request = c.Request.WithContext(WithRBACRole(c.Request.Context(), roleStr))
 
 		c.Next()
 	}

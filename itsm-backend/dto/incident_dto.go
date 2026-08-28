@@ -84,7 +84,7 @@ type UpdateIncidentRequest struct {
 	ResolutionSteps []ResolutionStep       `json:"resolutionSteps,omitempty"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 	Version         int                    `json:"version"` // 版本号（乐观锁）
-	Force           bool                   `json:"force"`   // 是否强制更新（忽略版本检查）
+	Force           bool                   `json:"force"`   // 是否强制更新（忽略版本检查）；需要 incident:force-update 权限
 }
 
 // AssignIncidentRequest 分配事件请求

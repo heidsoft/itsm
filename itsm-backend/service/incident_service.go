@@ -23,6 +23,7 @@ import (
 	"itsm-backend/ent/supportcontract"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/commandbus"
+	"itsm-backend/middleware"
 
 	"go.uber.org/zap"
 )
@@ -567,6 +568,12 @@ func (s *IncidentService) GetIncidentCIs(ctx context.Context, incidentID int, te
 // UpdateIncident 更新事件
 func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.UpdateIncidentRequest, tenantID int) (*dto.IncidentResponse, error) {
 	s.logger.Infow("Updating incident", "id", id, "tenant_id", tenantID)
+	if req.Force {
+		role, ok := middleware.RBACRoleFromContext(ctx)
+		if !ok || !middleware.HasResourcePermission(ctx, s.client, role, "incident", "force-update", tenantID) {
+			return nil, errors.New("incident:force-update permission required when force=true")
+		}
+	}
 
 	// 获取当前事件实体
 	currentIncident, err := s.client.Incident.Query().
