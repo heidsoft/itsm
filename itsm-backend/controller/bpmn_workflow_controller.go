@@ -11,6 +11,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 	"itsm-backend/service/bpmn"
 
@@ -75,7 +76,8 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 		bpmn.PUT("/process-instances/:id/terminate", c.TerminateProcess)
 
 		// 任务管理
-		bpmn.GET("/tasks", c.ListUserTasks)
+		bpmn.GET("/tasks", middleware.RequirePermission("task", "read"), c.ListUserTasks)
+		bpmn.GET("/tasks/all", middleware.RequirePermission("task", "admin"), c.ListAllTasks)
 		bpmn.GET("/tasks/:id", c.GetTask)
 		bpmn.PUT("/tasks/:id/assign", c.AssignTask)
 		bpmn.PUT("/tasks/:id/claim", c.ClaimTask)
@@ -622,21 +624,15 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 	}
 	req.TenantID = tenantID.(int)
 
-	// 如果调用方没有指定 user_id / assignee / candidate_users，则按「我的待办」语义
-	// 使用当前登录用户 ID 进行过滤（包含 assign、candidate、组员命中）。
-	if req.UserID <= 0 && req.Assignee == "" && req.CandidateUsers == "" {
-		if uid, ok := ctx.Get("user_id"); ok {
-			switch v := uid.(type) {
-			case int:
-				req.UserID = v
-			case int64:
-				req.UserID = int(v)
-			case string:
-				if id, err := strconv.Atoi(v); err == nil {
-					req.UserID = id
-				}
-			}
-		}
+	// “我的任务”的身份只能来自认证上下文。忽略客户端提交的 assignee、
+	// candidateUsers、candidateGroups 和 userId，避免借此读取其他用户任务。
+	req.UserID = ctx.GetInt("user_id")
+	req.Assignee = ""
+	req.CandidateUsers = ""
+	req.CandidateGroups = ""
+	if req.UserID <= 0 {
+		common.AuthFailed(ctx, "未授权访问：缺少有效用户上下文")
+		return
 	}
 
 	// 设置默认分页参数
@@ -647,7 +643,7 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 		req.PageSize = 20
 	}
 
-	tasks, total, err := c.processEngine.TaskService().ListUserTaskViews(ctx, &req)
+	tasks, total, err := c.processEngine.TaskService().ListUserTaskViews(ctx.Request.Context(), &req)
 	if err != nil {
 		common.InternalError(ctx, "获取用户任务列表失败: "+err.Error())
 		return
@@ -656,6 +652,37 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 	// 使用统一响应格式
 	listResponse := common.NewListResponse(tasks, common.NewPaginationResponse(int(req.Page), int(req.PageSize), int64(total)))
 	common.Success(ctx, listResponse)
+}
+
+// ListAllTasks 获取当前租户全部任务。生产路由必须先通过 task:admin 权限校验。
+func (c *BPMNWorkflowController) ListAllTasks(ctx *gin.Context) {
+	var req service.ListUserTasksRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+	if tenantID <= 0 {
+		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		return
+	}
+	req.TenantID = tenantID
+	req.UserID = 0
+	req.AllTasks = true
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 {
+		req.PageSize = 20
+	}
+
+	tasks, total, err := c.processEngine.TaskService().ListUserTaskViews(ctx.Request.Context(), &req)
+	if err != nil {
+		common.InternalError(ctx, "获取全部任务列表失败: "+err.Error())
+		return
+	}
+	common.Success(ctx, common.NewListResponse(tasks, common.NewPaginationResponse(req.Page, req.PageSize, int64(total))))
 }
 
 // GetTask 获取任务

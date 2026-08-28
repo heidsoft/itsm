@@ -33,6 +33,7 @@ type fakeTaskService struct {
 	historyInstanceKey string
 	historyDecisions   []*ent.ProcessApprovalDecision
 	historyErr         error
+	listRequest        *service.ListUserTasksRequest
 }
 
 func (f *fakeTaskService) GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error) {
@@ -62,6 +63,8 @@ func (f *fakeTaskService) ListUserTasks(ctx context.Context, req *service.ListUs
 }
 
 func (f *fakeTaskService) ListUserTaskViews(ctx context.Context, req *service.ListUserTasksRequest) ([]*dto.BPMNTaskResponse, int, error) {
+	copyReq := *req
+	f.listRequest = &copyReq
 	return nil, 0, nil
 }
 
@@ -210,6 +213,47 @@ func doRequest(t *testing.T, r *gin.Engine, method, path string, body interface{
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	return w
+}
+
+func newTaskListHandlerTestRouter(t *testing.T) (*gin.Engine, *fakeTaskService) {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+	fakeTask := &fakeTaskService{}
+	ctrl := NewBPMNWorkflowController(&fakeProcessEngine{taskSvc: fakeTask}, nil)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("tenant_id", 11)
+		c.Set("user_id", 7)
+		c.Next()
+	})
+	r.GET("/tasks", ctrl.ListUserTasks)
+	r.GET("/tasks/all", ctrl.ListAllTasks)
+	return r, fakeTask
+}
+
+func TestListUserTasksUsesAuthenticatedIdentity(t *testing.T) {
+	r, taskService := newTaskListHandlerTestRouter(t)
+	w := doRequest(t, r, http.MethodGet, "/tasks?userId=99&assignee=other&candidateUsers=other&candidateGroups=other", nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	require.NotNil(t, taskService.listRequest)
+	assert.Equal(t, 11, taskService.listRequest.TenantID)
+	assert.Equal(t, 7, taskService.listRequest.UserID)
+	assert.False(t, taskService.listRequest.AllTasks)
+	assert.Empty(t, taskService.listRequest.Assignee)
+	assert.Empty(t, taskService.listRequest.CandidateUsers)
+	assert.Empty(t, taskService.listRequest.CandidateGroups)
+}
+
+func TestListAllTasksSetsAuthorizedAllTasksScope(t *testing.T) {
+	r, taskService := newTaskListHandlerTestRouter(t)
+	w := doRequest(t, r, http.MethodGet, "/tasks/all?userId=99", nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	require.NotNil(t, taskService.listRequest)
+	assert.Equal(t, 11, taskService.listRequest.TenantID)
+	assert.Zero(t, taskService.listRequest.UserID)
+	assert.True(t, taskService.listRequest.AllTasks)
 }
 
 // doAuthedRequest overrides the router's default authenticated identity.

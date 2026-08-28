@@ -1606,6 +1606,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			workflow.PUT("/instances/:id/resume", middleware.RequirePermission("process_instance", "update"), config.BPMNWorkflowController.ResumeProcess)
 			// 任务
 			workflow.GET("/tasks", middleware.RequirePermission("task", "read"), config.BPMNWorkflowController.ListUserTasks)
+			workflow.GET("/tasks/all", middleware.RequirePermission("task", "admin"), config.BPMNWorkflowController.ListAllTasks)
 			workflow.PUT("/tasks/:id/complete", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.CompleteTask)
 			workflow.POST("/tasks/:id/claim", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.ClaimTask)
 			workflow.PUT("/tasks/:id/reassign", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.ReassignTask)

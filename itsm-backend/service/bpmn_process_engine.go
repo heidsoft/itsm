@@ -1458,7 +1458,10 @@ type ListUserTasksRequest struct {
 	CandidateGroups string `json:"candidateGroups"`
 	// UserID 为「我的待办」语义：查询“分配给我 OR 我在候选人 OR 我所在组作为候选组”的任务。
 	// 传入后：Assignee/CandidateUsers/CandidateGroups 会被忽略（可选透传）。
-	UserID               int    `json:"userId"`
+	UserID int `json:"userId"`
+	// AllTasks is an internal authorization decision made by the controller after
+	// the task:admin middleware succeeds. It must never be populated from HTTP input.
+	AllTasks             bool   `json:"-" form:"-"`
 	Status               string `json:"status"`
 	ProcessDefinitionKey string `json:"processDefinitionKey"`
 	ProcessInstanceID    int    `json:"processInstanceId"`
@@ -2047,18 +2050,22 @@ func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variable
 }
 
 func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error) {
+	if req == nil {
+		return nil, 0, fmt.Errorf("任务列表请求不能为空")
+	}
+	if req.TenantID <= 0 {
+		return nil, 0, fmt.Errorf("缺少有效租户上下文")
+	}
+	if !req.AllTasks && req.UserID <= 0 {
+		return nil, 0, fmt.Errorf("我的任务查询缺少有效用户上下文")
+	}
 	s.logger.Debugw("ListUserTasks called", "assignee", req.Assignee, "userID", req.UserID, "tenantID", req.TenantID)
-	query := s.client.ProcessTask.Query()
+	query := s.client.ProcessTask.Query().Where(processtask.TenantID(req.TenantID))
 
 	// 「我的待办」语义：UserID 透传时，查出“分配给我 OR 我是候选人 OR 我所在组是候选组”的任务。
 	// 这样能同时覆盖 assignee / candidate_users / candidate_groups 三种途径。
-	if req.UserID > 0 {
+	if !req.AllTasks {
 		tenantID := req.TenantID
-		if tenantID == 0 {
-			if v, ok := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); ok {
-				tenantID = v
-			}
-		}
 		userIDStr := strconv.Itoa(req.UserID)
 
 		// 1. 取得该用户所在的组名（逗号分隔）
@@ -2088,8 +2095,10 @@ func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksR
 				orPreds = append(orPreds, processtask.CandidateUsersContains(email))
 			}
 		}
-		if userGroupsCSV != "" {
-			orPreds = append(orPreds, processtask.CandidateGroupsContains(userGroupsCSV))
+		for _, group := range strings.Split(userGroupsCSV, ",") {
+			if group = strings.TrimSpace(group); group != "" {
+				orPreds = append(orPreds, processtask.CandidateGroupsContains(group))
+			}
 		}
 		query = query.Where(processtask.Or(orPreds...))
 	} else {
@@ -2112,10 +2121,6 @@ func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksR
 	if req.ProcessInstanceID > 0 {
 		query = query.Where(processtask.ProcessInstanceID(req.ProcessInstanceID))
 	}
-	if req.TenantID > 0 {
-		query = query.Where(processtask.TenantID(req.TenantID))
-	}
-
 	total, err := query.Count(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("获取任务总数失败: %w", err)
