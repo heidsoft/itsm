@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -26,6 +27,18 @@ func NewKnownErrorService(client *ent.Client, logger *zap.SugaredLogger) *KnownE
 
 // CreateKnownError 创建已知错误
 func (s *KnownErrorService) CreateKnownError(ctx context.Context, input dto.CreateKnownErrorRequest) (*ent.KnownError, error) {
+	// 验证 creator 有效性：用户必须存在、同租户、且处于激活状态
+	creator, err := s.client.User.Query().
+		Where(user.IDEQ(input.CreatedBy), user.TenantIDEQ(input.TenantID), user.ActiveEQ(true)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("creator not found or inactive")
+		}
+		return nil, fmt.Errorf("failed to validate creator: %w", err)
+	}
+	_ = creator // creator 已通过校验
+
 	return s.client.KnownError.Create().
 		SetTitle(input.Title).
 		SetDescription(input.Description).
@@ -52,52 +65,29 @@ func (s *KnownErrorService) GetKnownErrorByID(ctx context.Context, id int) (*ent
 
 // QueryKnownErrors 查询已知错误列表
 func (s *KnownErrorService) QueryKnownErrors(ctx context.Context, tenantID int) ([]*ent.KnownError, error) {
-	// Get all known errors - filter by tenant in the service
-	all, err := s.client.KnownError.Query().All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []*ent.KnownError
-	for _, ke := range all {
-		if ke.TenantID == tenantID {
-			result = append(result, ke)
-		}
-	}
-	return result, nil
+	return s.client.KnownError.Query().
+		Where(knownerror.TenantID(tenantID)).
+		All(ctx)
 }
 
 // GetKnownErrorsByTenant 获取租户的已知错误
 func (s *KnownErrorService) GetKnownErrorsByTenant(ctx context.Context, tenantID int) ([]*ent.KnownError, error) {
-	// Simple query - get all and filter
-	all, err := s.client.KnownError.Query().All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []*ent.KnownError
-	for _, ke := range all {
-		if ke.TenantID == tenantID {
-			result = append(result, ke)
-		}
-	}
-	return result, nil
+	return s.client.KnownError.Query().
+		Where(knownerror.TenantID(tenantID)).
+		All(ctx)
 }
 
 // SearchKnownErrors 搜索已知错误
 func (s *KnownErrorService) SearchKnownErrors(ctx context.Context, tenantID int, keyword string) ([]*ent.KnownError, error) {
-	// Simple search - get all and filter
-	all, err := s.client.KnownError.Query().All(ctx)
+	all, err := s.client.KnownError.Query().
+		Where(knownerror.TenantID(tenantID)).
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var result []*ent.KnownError
 	for _, ke := range all {
-		if ke.TenantID != tenantID {
-			continue
-		}
-		// Simple contains check
 		if ke.Title != "" && contains(ke.Title, keyword) {
 			result = append(result, ke)
 			continue
@@ -111,23 +101,21 @@ func (s *KnownErrorService) SearchKnownErrors(ctx context.Context, tenantID int,
 
 // GetActiveKnownErrors 获取所有激活的已知错误
 func (s *KnownErrorService) GetActiveKnownErrors(ctx context.Context, tenantID int) ([]*ent.KnownError, error) {
-	all, err := s.client.KnownError.Query().All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []*ent.KnownError
-	for _, ke := range all {
-		if ke.TenantID == tenantID && ke.Status == "active" {
-			result = append(result, ke)
-		}
-	}
-	return result, nil
+	return s.client.KnownError.Query().
+		Where(knownerror.TenantID(tenantID), knownerror.Status("active")).
+		All(ctx)
 }
 
 // UpdateKnownError 更新已知错误
 func (s *KnownErrorService) UpdateKnownError(ctx context.Context, id int, input dto.UpdateKnownErrorRequest) (*ent.KnownError, error) {
-	update := s.client.KnownError.UpdateOneID(id)
+	// 先验证记录存在且属于目标租户
+	existing, err := s.client.KnownError.Query().
+		Where(knownerror.ID(id)).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("known error not found: %w", err)
+	}
+	update := s.client.KnownError.UpdateOne(existing)
 	if input.Title != nil {
 		update.SetTitle(*input.Title)
 	}
@@ -169,12 +157,20 @@ func (s *KnownErrorService) UpdateKnownError(ctx context.Context, id int, input 
 
 // DeleteKnownError 删除已知错误
 func (s *KnownErrorService) DeleteKnownError(ctx context.Context, id int) error {
-	return s.client.KnownError.DeleteOneID(id).Exec(ctx)
+	deleted, err := s.client.KnownError.Delete().Where(knownerror.ID(id)).Exec(ctx)
+	if err != nil {
+		return err
+	}
+	if deleted == 0 {
+		return fmt.Errorf("known error not found")
+	}
+	return nil
 }
 
 // ApproveKnownError 审批已知错误
 func (s *KnownErrorService) ApproveKnownError(ctx context.Context, id, approverID int) error {
-	_, err := s.client.KnownError.UpdateOneID(id).
+	_, err := s.client.KnownError.Update().
+		Where(knownerror.ID(id)).
 		SetApprovedBy(approverID).
 		SetApprovedAt(time.Now()).
 		SetStatus("active").
@@ -197,17 +193,15 @@ func (s *KnownErrorService) IncrementOccurrenceCount(ctx context.Context, id int
 
 // MatchKnownErrorBySymptoms 根据症状匹配已知错误
 func (s *KnownErrorService) MatchKnownErrorBySymptoms(ctx context.Context, tenantID int, symptoms string) (*ent.KnownError, error) {
-	all, err := s.client.KnownError.Query().All(ctx)
+	candidates, err := s.client.KnownError.Query().
+		Where(knownerror.TenantID(tenantID), knownerror.Status("active")).
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, e := range all {
-		if e.TenantID != tenantID || e.Status != "active" {
-			continue
-		}
+	for _, e := range candidates {
 		if e.Symptoms != "" && contains(e.Symptoms, symptoms) {
-			// 增加匹配次数
 			if err := s.IncrementOccurrenceCount(ctx, e.ID); err != nil {
 				s.logger.Warnw("failed to increment occurrence count", "knownErrorID", e.ID, "error", err)
 			}
