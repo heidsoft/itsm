@@ -602,8 +602,7 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client
 					return fmt.Errorf("ServiceTask %s 执行失败: %w", serviceRef, err)
 				}
 			} else {
-				// 未注册的 ServiceTask 视为 NoOp，仅记录警告不阻断流程
-				e.logger.Warnw("未注册的 ServiceTask，跳过执行", "serviceRef", serviceRef, "elementID", elementID)
+				return fmt.Errorf("ServiceTask handler '%s' 未注册，无法执行此自动化步骤", serviceRef)
 			}
 		}
 		e.markElementDone(ctx, txc, instance, elementID)
