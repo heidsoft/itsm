@@ -100,6 +100,10 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "sla", Action: "read"},
 		{Resource: "sla", Action: "write"},
 		{Resource: "sla", Action: "delete"},
+		{Resource: "alert", Action: "read"},
+		{Resource: "alert", Action: "write"},
+		{Resource: "alerts", Action: "read"},
+		{Resource: "alerts", Action: "write"},
 		// 审计日志权限：仅管理员及以上可读
 		{Resource: "audit", Action: "read"},
 		{Resource: "ai", Action: "read"},
@@ -206,6 +210,8 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "change", Action: "write"},
 		{Resource: "problem", Action: "read"},
 		{Resource: "problem", Action: "write"},
+		{Resource: "alert", Action: "read"},
+		{Resource: "alerts", Action: "read"},
 		// Groups management permissions
 		{Resource: "groups", Action: "read"},
 		// BPMN Workflow permissions
@@ -223,6 +229,8 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "service_catalog", Action: "read"},
 		{Resource: "service_request", Action: "read"},
 		{Resource: "service_request", Action: "write"},
+		{Resource: "alert", Action: "read"},
+		{Resource: "alerts", Action: "read"},
 		// Groups management permissions
 		{Resource: "groups", Action: "read"},
 		// BPMN Workflow permissions

@@ -181,28 +181,28 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 			}
 		}
 		response, err := r.vectorStore.Search(ctx, connectorVector.SearchRequest{Vector: embedding, Query: query, TopK: limit, Filter: map[string]interface{}{"tenantID": tenantID, "objectType": "kb"}})
-	if err != nil {
-		// Fallback to legacy store if connector fails
-		if r.vectors != nil && r.embedder != nil {
-			r.logger.Warnw("RAGService: connector vector search failed, falling back to legacy store", "error", err)
+		if err != nil {
+			// Fallback to legacy store if connector fails
+			if r.vectors != nil && r.embedder != nil {
+				r.logger.Warnw("RAGService: connector vector search failed, falling back to legacy store", "error", err)
+			} else {
+				return nil, fmt.Errorf("vector connector search: %w", err)
+			}
 		} else {
-			return nil, fmt.Errorf("vector connector search: %w", err)
-		}
-	} else {
-		results := make([]map[string]any, 0, len(response.Results))
-		for _, hit := range response.Results {
-			objID, err := strconv.Atoi(hit.ID)
-			if err != nil {
-				continue
+			results := make([]map[string]any, 0, len(response.Results))
+			for _, hit := range response.Results {
+				objID, err := strconv.Atoi(hit.ID)
+				if err != nil {
+					continue
+				}
+				a, err := r.client.KnowledgeArticle.Query().Where(ka.IDEQ(objID), ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil(), ka.IsPublished(true)).Only(ctx)
+				if err != nil {
+					continue
+				}
+				results = append(results, map[string]any{"object_type": "kb", "id": objID, "title": a.Title, "category": a.Category, "snippet": snippet(hit.Content, 200), "score": hit.Score, "search_type": response.Backend})
 			}
-			a, err := r.client.KnowledgeArticle.Query().Where(ka.IDEQ(objID), ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil(), ka.IsPublished(true)).Only(ctx)
-			if err != nil {
-				continue
-			}
-			results = append(results, map[string]any{"object_type": "kb", "id": objID, "title": a.Title, "category": a.Category, "snippet": snippet(hit.Content, 200), "score": hit.Score, "search_type": response.Backend})
+			return results, nil
 		}
-		return results, nil
-	}
 	}
 
 	if !r.useVector || r.vectors == nil || r.embedder == nil {
@@ -478,13 +478,13 @@ func (r *RAGService) IndexArticle(ctx context.Context, tenantID int, articleID i
 
 	insertReq := connectorVector.InsertRequest{
 		Chunks: []connectorVector.ChunkInput{{
-			ID:      strconv.Itoa(articleID),
+			ID:      fmt.Sprintf("tenant:%d:kb:%d", tenantID, articleID),
 			Content: content,
 			Vector:  embedding,
 			Metadata: map[string]interface{}{
 				"tenantID":   tenantID,
 				"objectType": "kb",
-				"source":    title,
+				"source":     title,
 			},
 		}},
 	}
@@ -510,7 +510,7 @@ func (r *RAGService) IndexArticle(ctx context.Context, tenantID int, articleID i
 func (r *RAGService) RemoveArticle(ctx context.Context, tenantID int, articleID int) error {
 	// Clean connector store
 	if r.vectorStore != nil {
-		if err := r.vectorStore.Delete(ctx, []string{strconv.Itoa(articleID)}); err != nil {
+		if err := r.vectorStore.Delete(ctx, []string{fmt.Sprintf("tenant:%d:kb:%d", tenantID, articleID)}); err != nil {
 			r.logger.Warnw("RAGService: failed to remove article from connector vector store", "article_id", articleID, "tenant_id", tenantID, "error", err)
 		}
 	}

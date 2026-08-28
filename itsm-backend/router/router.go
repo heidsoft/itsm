@@ -848,30 +848,30 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					configs.PUT("/:id", middleware.RequirePermission("config", "update"), config.SystemConfigController.UpdateConfig)
 					configs.PUT("/batch", middleware.RequirePermission("config", "update"), config.SystemConfigController.BatchUpdateConfigs)
 					configs.GET("/status", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
-					var m runtime.MemStats
-					runtime.ReadMemStats(&m)
+						var m runtime.MemStats
+						runtime.ReadMemStats(&m)
 
-					var uptime string
-					if !config.AppStartTime.IsZero() {
-						uptime = time.Since(config.AppStartTime).Truncate(time.Second).String()
-					}
+						var uptime string
+						if !config.AppStartTime.IsZero() {
+							uptime = time.Since(config.AppStartTime).Truncate(time.Second).String()
+						}
 
-					c.JSON(200, gin.H{
-						"cpu": gin.H{
-							"usage": 0,
-							"cores": runtime.NumCPU(),
-						},
-						"memory": gin.H{
-							"used":  m.Alloc / 1024 / 1024,
-							"total": m.Sys / 1024 / 1024,
-							"usage": float64(m.Alloc) / float64(m.Sys) * 100,
-						},
-						"goroutines": runtime.NumGoroutine(),
-						"startTime":  config.AppStartTime,
-						"uptime":     uptime,
-						"timestamp":  time.Now(),
+						c.JSON(200, gin.H{
+							"cpu": gin.H{
+								"usage": 0,
+								"cores": runtime.NumCPU(),
+							},
+							"memory": gin.H{
+								"used":  m.Alloc / 1024 / 1024,
+								"total": m.Sys / 1024 / 1024,
+								"usage": float64(m.Alloc) / float64(m.Sys) * 100,
+							},
+							"goroutines": runtime.NumGoroutine(),
+							"startTime":  config.AppStartTime,
+							"uptime":     uptime,
+							"timestamp":  time.Now(),
+						})
 					})
-				})
 				}
 
 				sysRoot.GET("/config", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
@@ -1672,7 +1672,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		if config.AlertHandler != nil {
-			auth.POST("/alerts/sources/:source/ingest", middleware.RequirePermission("alert", "write"), config.AlertHandler.Ingest)
+			tenant.(*gin.RouterGroup).POST("/alerts/sources/:source/ingest", middleware.RequirePermission("alert", "write"), config.AlertHandler.Ingest)
 		}
 
 		if config.DashboardHandler != nil {

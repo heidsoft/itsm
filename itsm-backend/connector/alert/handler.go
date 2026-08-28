@@ -2,6 +2,7 @@ package alert
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
@@ -21,20 +22,21 @@ const defaultMaxPayloadBytes int64 = 1 << 20
 type Handler struct {
 	registry         *Registry
 	connectorManager *connector.Manager
+	repository       alertRepository
 	envIsDevelopment bool
 }
 
 // NewHandler creates an alert ingestion handler.
-func NewHandler(registry *Registry, connectorManager *connector.Manager, envIsDevelopment bool) *Handler {
+func NewHandler(registry *Registry, connectorManager *connector.Manager, db *sql.DB, envIsDevelopment bool) *Handler {
 	if registry == nil {
 		registry = Default()
 	}
-	return &Handler{registry: registry, connectorManager: connectorManager, envIsDevelopment: envIsDevelopment}
+	return &Handler{registry: registry, connectorManager: connectorManager, repository: newSQLAlertRepository(db), envIsDevelopment: envIsDevelopment}
 }
 
 // Ingest receives a monitoring webhook and normalizes it into StandardAlert.
 func (h *Handler) Ingest(c *gin.Context) {
-	if h == nil || h.registry == nil || h.connectorManager == nil {
+	if h == nil || h.registry == nil || h.connectorManager == nil || h.repository == nil {
 		common.Fail(c, common.InternalErrorCode, "告警接入服务未就绪")
 		return
 	}
@@ -104,6 +106,10 @@ func (h *Handler) Ingest(c *gin.Context) {
 	}
 	if normalized == nil {
 		common.Fail(c, common.InternalErrorCode, "告警源返回了空结果")
+		return
+	}
+	if _, _, err := h.repository.Store(c.Request.Context(), tenantID, normalized); err != nil {
+		common.Fail(c, common.InternalErrorCode, "保存告警失败")
 		return
 	}
 	common.Success(c, gin.H{

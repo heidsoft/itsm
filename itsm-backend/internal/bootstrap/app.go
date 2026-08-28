@@ -279,7 +279,7 @@ func NewApplication() *Application {
 			})
 		}
 	}
-	alertHandler := connectorAlert.NewHandler(alertRegistry, connectorManager, alertDevelopmentMode())
+	alertHandler := connectorAlert.NewHandler(alertRegistry, connectorManager, database.GetRawDB(), alertDevelopmentMode())
 	connectorMarket := marketplace.New()
 	connectorController := controller.NewConnectorController(connectorManager, connector.Default(), connectorMarket, sugar)
 	connectorEncryptionKey := os.Getenv("CONNECTOR_CONFIG_ENCRYPTION_KEY")
