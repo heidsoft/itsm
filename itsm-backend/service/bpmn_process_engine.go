@@ -2344,44 +2344,111 @@ func (s *bpmnTaskService) TerminateTask(ctx context.Context, taskID string, reas
 
 // ClaimTask 认领任务 (根据task_id字符串)
 func (s *bpmnTaskService) ClaimTask(ctx context.Context, taskID string, userID string) error {
-	task, err := s.GetTask(ctx, taskID)
+	currentUserID, err := strconv.Atoi(userID)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid user ID: %w", err)
 	}
-
-	// 检查任务是否已分配 (assignee不为空且不为"0")
-	if task.Assignee != "" && task.Assignee != "0" {
-		return fmt.Errorf("任务已被其他用户认领")
-	}
-
-	_, err = s.client.ProcessTask.UpdateOne(task).
-		SetAssignee(userID).
-		SetStatus(common.ProcessTaskStatusAssigned).
-		SetAssignedTime(time.Now()).
-		Save(ctx)
-
-	return err
+	return s.claimTask(ctx, currentUserID, func(client *ent.Client, tenantID int) (*ent.ProcessTask, error) {
+		return client.ProcessTask.Query().
+			Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).
+			First(ctx)
+	})
 }
 
 // ClaimTaskByID 认领任务 (根据数据库自增ID)
 func (s *bpmnTaskService) ClaimTaskByID(ctx context.Context, id int, userID int) error {
-	task, err := s.GetTaskByID(ctx, id)
+	return s.claimTask(ctx, userID, func(client *ent.Client, tenantID int) (*ent.ProcessTask, error) {
+		return client.ProcessTask.Query().
+			Where(processtask.ID(id), processtask.TenantID(tenantID)).
+			First(ctx)
+	})
+}
+
+func (s *bpmnTaskService) claimTask(
+	ctx context.Context,
+	currentUserID int,
+	findTask func(*ent.Client, int) (*ent.ProcessTask, error),
+) error {
+	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	// 检查任务是否已分配 (assignee不为空且不为"0")
-	if task.Assignee != "" && task.Assignee != "0" {
-		return fmt.Errorf("任务已被其他用户认领")
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("start claim task transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	task, err := findTask(tx.Client(), tenantID)
+	if err != nil {
+		return fmt.Errorf("get task: %w", err)
+	}
+	currentUser := strconv.Itoa(currentUserID)
+	if task.Assignee != "" && task.Assignee != "0" && task.Assignee != currentUser {
+		return fmt.Errorf("task already assigned")
+	}
+	if task.Assignee == currentUser {
+		return tx.Commit()
 	}
 
-	_, err = s.client.ProcessTask.UpdateOne(task).
-		SetAssignee(fmt.Sprintf("%d", userID)).
+	if err = validateTaskCandidate(ctx, tx.Client(), task, tenantID, currentUserID); err != nil {
+		return err
+	}
+
+	if _, err = tx.ProcessTask.UpdateOne(task).
+		SetAssignee(currentUser).
 		SetStatus(common.ProcessTaskStatusAssigned).
 		SetAssignedTime(time.Now()).
-		Save(ctx)
+		Save(ctx); err != nil {
+		return fmt.Errorf("claim task: %w", err)
+	}
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("commit claim task transaction: %w", err)
+	}
+	return nil
+}
 
-	return err
+func validateTaskCandidate(ctx context.Context, client *ent.Client, task *ent.ProcessTask, tenantID, currentUserID int) error {
+	candidateUsers := splitNonEmptyCSV(task.CandidateUsers)
+	candidateGroups := splitNonEmptyCSV(task.CandidateGroups)
+	if len(candidateUsers) == 0 && len(candidateGroups) == 0 {
+		return nil
+	}
+
+	identities := map[string]struct{}{strconv.Itoa(currentUserID): {}}
+	actor, err := client.User.Query().
+		Where(user.ID(currentUserID), user.TenantID(tenantID)).
+		Only(ctx)
+	if err == nil {
+		identities[strings.TrimSpace(actor.Username)] = struct{}{}
+		identities[strings.TrimSpace(actor.Email)] = struct{}{}
+	} else if !ent.IsNotFound(err) {
+		return fmt.Errorf("get claiming user: %w", err)
+	}
+	for _, candidate := range candidateUsers {
+		if _, ok := identities[candidate]; ok {
+			return nil
+		}
+	}
+
+	if len(candidateGroups) > 0 {
+		groupsCSV, groupErr := bpmn.NewGroupResolver(client).GetUserGroupNames(ctx, tenantID, currentUserID)
+		if groupErr != nil {
+			return fmt.Errorf("get user groups: %w", groupErr)
+		}
+		groups := make(map[string]struct{})
+		for _, groupName := range splitNonEmptyCSV(groupsCSV) {
+			groups[groupName] = struct{}{}
+		}
+		for _, candidateGroup := range candidateGroups {
+			if _, ok := groups[candidateGroup]; ok {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("you are not a candidate for this task")
 }
 
 func (s *bpmnTaskService) CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error {

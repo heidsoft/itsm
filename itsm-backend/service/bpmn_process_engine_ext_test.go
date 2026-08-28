@@ -884,6 +884,53 @@ func TestAuthorizeTaskActor_NoActorContextIsPermissive(t *testing.T) {
 	assert.NoError(t, engine.authorizeTaskActor(ctx, task))
 }
 
+func TestClaimTask_ValidatesCandidatesAndExistingAssignee(t *testing.T) {
+	engine, baseCtx := newApprovalDecisionTestEngine(t)
+	tenantID, actorID := setupApprovalDecisionFixture(t, engine)
+	ctx := context.WithValue(baseCtx, bpmn.BPMNTenantIDContextKey, tenantID)
+
+	_, candidateTaskID := createProcessFixture(t, engine, tenantID, "claim-candidate")
+	_, groupTaskID := createProcessFixture(t, engine, tenantID, "claim-group")
+	_, rejectedTaskID := createProcessFixture(t, engine, tenantID, "claim-rejected")
+	_, assignedTaskID := createProcessFixture(t, engine, tenantID, "claim-assigned")
+
+	_, err := engine.client.Group.Create().
+		SetName("claimers").
+		SetTenantID(tenantID).
+		AddMemberIDs(actorID).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = engine.client.ProcessTask.UpdateOneID(candidateTaskID).
+		SetCandidateUsers(strconv.Itoa(actorID)).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = engine.client.ProcessTask.UpdateOneID(groupTaskID).
+		SetCandidateGroups("claimers").
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = engine.client.ProcessTask.UpdateOneID(rejectedTaskID).
+		SetCandidateUsers("another-user").
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = engine.client.ProcessTask.UpdateOneID(assignedTaskID).
+		SetAssignee("999999").
+		Save(ctx)
+	require.NoError(t, err)
+
+	taskService := engine.TaskService()
+	require.NoError(t, taskService.ClaimTaskByID(ctx, candidateTaskID, actorID))
+	require.NoError(t, taskService.ClaimTaskByID(ctx, groupTaskID, actorID))
+	assert.EqualError(t, taskService.ClaimTaskByID(ctx, rejectedTaskID, actorID), "you are not a candidate for this task")
+	assert.EqualError(t, taskService.ClaimTaskByID(ctx, assignedTaskID, actorID), "task already assigned")
+
+	candidateTask, err := engine.client.ProcessTask.Get(ctx, candidateTaskID)
+	require.NoError(t, err)
+	assert.Equal(t, strconv.Itoa(actorID), candidateTask.Assignee)
+	groupTask, err := engine.client.ProcessTask.Get(ctx, groupTaskID)
+	require.NoError(t, err)
+	assert.Equal(t, strconv.Itoa(actorID), groupTask.Assignee)
+}
+
 func TestTaskRecovery_ReassignIsTenantScopedAndAudited(t *testing.T) {
 	engine, baseCtx := newApprovalDecisionTestEngine(t)
 	tenantID, actorID := setupApprovalDecisionFixture(t, engine)
