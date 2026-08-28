@@ -35,6 +35,7 @@ ITIL 流程 · BPMN 编排 · CMDB · SLA · 知识库/RAG · 多租户 · 企�
   - [常见场景](#常见场景)
 - [关键业务闭环](#关键业务闭环)
 - [可靠执行架构](#可靠执行架构)
+- [插件化集成架构](#插件化集成架构)
 - [产品界面](#产品界面)
 - [技术栈与仓库结构](#技术栈与仓库结构)
 - [开发与测试](#开发与测试)
@@ -275,6 +276,7 @@ open http://localhost:8090/swagger/index.html
 | 设计工作流 | 在前端「工作流」模块设计 BPMN 流程，绑定到业务对象 |
 | 管理 CMDB | 通过 `POST /api/v1/cmdb/ci` 创建配置项，建立 CI 关系 |
 | 知识库检索 | `GET /api/v1/knowledge/search?q=关键词` 搜索知识文章 |
+| 接入外部告警 | 配置 `ALERT_SOURCE_CONFIG` 后，通过 `POST /api/v1/alerts/sources/:source/ingest` 接收告警 Webhook |
 
 完整 API 文档见 [API 参考](./docs/api/API_REFERENCE.md)。
 
@@ -324,6 +326,42 @@ flowchart TB
 - 站内通知及企业消息投递的幂等、重试、死信和投递审计基础。
 
 设计与运维约束见 [Operational Command / Outbox](./docs/architecture/operational-command-outbox.md)。
+
+## 插件化集成架构
+
+后端通过连接器契约隔离外部系统差异。当前新增的告警源与向量存储扩展点使用配置驱动注册，业务服务只依赖标准接口，便于在不复制领域规则的前提下替换外部实现。
+
+| 扩展点 | 代码位置 | 当前实现 | 配置与运行方式 |
+|:---|:---|:---|:---|
+| AlertSource | `itsm-backend/connector/alert/` | 通用 Webhook 告警源；通过字段映射将 Prometheus Alertmanager、PagerDuty 等外部告警 JSON 标准化 | `ALERT_SOURCE_CONFIG` 指向 YAML 配置；启用后由 `POST /api/v1/alerts/sources/:source/ingest` 接收请求 |
+| VectorStore | `itsm-backend/connector/vector/` | Milvus、Qdrant、PGVector，以及内存关键词检索后备 | `VECTOR_STORE_CONFIG` 可传 YAML 文件路径或内联 YAML；`fallback: true` 时主存储不可用或检索失败可使用关键词后备 |
+
+### 告警源接入
+
+`AlertSource` 定义告警源元数据、载荷校验和标准化契约。YAML 可声明 source、启用状态、字段映射、payload 大小限制和 Webhook 签名参数；当前 Webhook 实现使用 HMAC-SHA256 验证签名，并从认证上下文获取租户，不接受请求自报租户。
+
+仓库提供 Prometheus Alertmanager 配置示例：
+
+```bash
+cd itsm-backend
+export ALERT_SOURCE_CONFIG=etc/alert-sources/prometheus-alertmanager.yaml
+```
+
+接入端点需要认证及 `alert:write` 权限。`:source` 必须与已启用 YAML 配置中的 `source` 一致；接口当前完成载荷校验、验签与标准化，不在 README 中承诺未接线的自动建单或外部回写能力。
+
+### 向量存储与 RAG 迁移
+
+`VectorStore` 将检索、写入、删除、健康检查与连接关闭统一为插件接口。可参考 `itsm-backend/etc/vector-store/config.yaml.example` 配置后端：
+
+```bash
+cd itsm-backend
+cp etc/vector-store/config.yaml.example etc/vector-store/config.yaml
+export VECTOR_STORE_CONFIG=etc/vector-store/config.yaml
+```
+
+配置也可以直接使用内联 YAML，并支持 `${ENV_VAR}` 展开。未配置时使用关键词存储；配置 Milvus、Qdrant 或 PGVector 且启用 `fallback` 后，查询失败会回退到关键词检索，写入同时维护主存储和关键词后备。
+
+知识文章索引采用迁移期双写：`RAGService` 只生成一次 embedding，同时写入连接器 `VectorStore` 与旧版 `vectors` 表；删除文章时也清理两侧数据。这一策略用于迁移期间保持新旧检索路径同步，不代表两套存储已经可以脱离一致性监控独立运行。
 
 ## 产品界面
 
