@@ -1,0 +1,95 @@
+# ITSM Backend Configuration Example
+# Copy this file to config.yaml and adjust values for your environment.
+# All values support ${ENV_VAR:default} syntax for environment variable substitution.
+
+database:
+  host: "${DB_HOST:localhost}"
+  port: ${DB_PORT:5432}
+  user: "${DB_USER:dev}"
+  password: "${DB_PASSWORD:}"
+  dbname: "${DB_NAME:itsm}"
+  sslmode: "${DB_SSLMODE:disable}"
+  # Optional: separate low-privilege role for application requests (bypasses RLS when empty)
+  app_role_user: "${DB_APP_ROLE_USER:}"
+  app_role_password: "${DB_APP_ROLE_PASSWORD:}"
+  # Optional: superuser role for migrations and background jobs
+  admin_role_user: "${DB_ADMIN_ROLE_USER:}"
+  admin_role_password: "${DB_ADMIN_ROLE_PASSWORD:}"
+
+server:
+  port: ${SERVER_PORT:8080}
+  mode: "${SERVER_MODE:release}"  # debug, release
+  cookie_secure: false           # set true only behind HTTPS
+
+jwt:
+  secret: "${JWT_SECRET:}"        # auto-generated if empty (32-byte random)
+  expire_time: ${JWT_EXPIRE_TIME:15}        # minutes
+  refresh_expire_time: ${JWT_REFRESH_EXPIRE_TIME:604800}  # seconds (7 days)
+
+log:
+  level: "${LOG_LEVEL:info}"      # debug, info, warn, error
+  path: "${LOG_PATH:./logs}"
+  max_size: ${LOG_MAX_SIZE:100}   # MB per file
+  max_backups: ${LOG_MAX_BACKUPS:7}
+  max_age: ${LOG_MAX_AGE:30}      # days
+  compress: true
+  local_time: true
+  development: ${LOG_DEVELOPMENT:false}
+  slow_request_threshold: ${SLOW_REQUEST_THRESHOLD:1000}  # ms
+  enable_stack_trace: true
+  skip_health_check_logs: true
+
+redis:
+  host: "${REDIS_HOST:localhost}"
+  port: ${REDIS_PORT:6379}
+  password: "${REDIS_PASSWORD:}"
+  db: ${REDIS_DB:0}
+
+llm:
+  provider: "${LLM_PROVIDER:openai}"   # openai, azure, local
+  model: "${LLM_MODEL:gpt-4o-mini}"
+  api_key: "${LLM_API_KEY:}"
+  endpoint: "${LLM_ENDPOINT:}"          # for azure or local providers
+  token_cap: ${LLM_TOKEN_CAP:8000}     # per-request soft cap (~chars/4)
+
+sms:
+  provider: "${SMS_PROVIDER:}"          # aliyun, tencent, empty=disabled
+  aliyun:
+    access_key_id: "${ALIYUN_ACCESS_KEY_ID:}"
+    access_key_secret: "${ALIYUN_ACCESS_KEY_SECRET:}"
+    sign_name: "${ALIYUN_SMS_SIGN:}"
+    endpoint: "${ALIYUN_SMS_ENDPOINT:}"
+  tencent:
+    secret_id: "${TENCENT_SECRET_ID:}"
+    secret_key: "${TENCENT_SECRET_KEY:}"
+    app_id: "${TENCENT_SMS_APP_ID:}"
+    sign_name: "${TENCENT_SMS_SIGN:}"
+
+smtp:
+  enabled: ${SMTP_ENABLED:false}
+  host: "${SMTP_HOST:}"
+  port: ${SMTP_PORT:587}
+  username: "${SMTP_USERNAME:}"
+  password: "${SMTP_PASSWORD:}"
+  from_email: "${SMTP_FROM_EMAIL:}"
+  from_name: "${SMTP_FROM_NAME:ITSM}"
+  encryption: "${SMTP_ENCRYPTION:tls}"  # tls, ssl, none
+  skip_verify: false
+
+ticket:
+  default_response_hours: ${TICKET_DEFAULT_RESPONSE_HOURS:4}
+  default_resolution_hours: ${TICKET_DEFAULT_RESOLUTION_HOURS:24}
+
+deployment:
+  mode: "${DEPLOYMENT_MODE:private}"  # private, saas, saas_msp
+  auto_migrate: ${ITSM_AUTO_MIGRATE:true}
+  auto_seed: ${ITSM_AUTO_SEED:true}
+
+security:
+  csrf_enabled: ${CSRF_ENABLED:false}
+
+# RLS controls PostgreSQL Row-Level Security enforcement tiers.
+# Default is "off" (zero risk — middleware still injects tenant_id into context).
+rls:
+  mode: "${RLS_MODE:off}"              # off, shadow, enforce
+  tenant_var_name: "${RLS_TENANT_VAR_NAME:app.current_tenant}"

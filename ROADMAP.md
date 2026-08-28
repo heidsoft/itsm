@@ -4,7 +4,7 @@
 > is parked.** Updated as part of every release. Last synced: 2026-08-21.
 >
 > Cross-references:
-> - PRD library: [prd/](./prd)
+> - PRD library: [docs/prd/](./docs/prd)
 > - v1.0 GA readiness: [docs/v1-ga-readiness.md](./docs/v1-ga-readiness.md)
 > - Architecture: [docs/architecture/](./docs/architecture)
 > - Open issues & milestones: GitHub [Issues](https://github.com/heidsoft/itsm/issues) and [Projects](https://github.com/heidsoft/itsm/projects)
