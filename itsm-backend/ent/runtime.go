@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"itsm-backend/ent/alert"
 	"itsm-backend/ent/application"
 	"itsm-backend/ent/approvalchain"
 	"itsm-backend/ent/approvalrecord"
@@ -141,6 +142,134 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	alertFields := schema.Alert{}.Fields()
+	_ = alertFields
+	// alertDescTenantID is the schema descriptor for tenant_id field.
+	alertDescTenantID := alertFields[0].Descriptor()
+	// alert.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	alert.TenantIDValidator = alertDescTenantID.Validators[0].(func(int) error)
+	// alertDescSource is the schema descriptor for source field.
+	alertDescSource := alertFields[1].Descriptor()
+	// alert.SourceValidator is a validator for the "source" field. It is called by the builders before save.
+	alert.SourceValidator = func() func(string) error {
+		validators := alertDescSource.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(source string) error {
+			for _, fn := range fns {
+				if err := fn(source); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// alertDescExternalAlertID is the schema descriptor for external_alert_id field.
+	alertDescExternalAlertID := alertFields[2].Descriptor()
+	// alert.ExternalAlertIDValidator is a validator for the "external_alert_id" field. It is called by the builders before save.
+	alert.ExternalAlertIDValidator = func() func(string) error {
+		validators := alertDescExternalAlertID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(external_alert_id string) error {
+			for _, fn := range fns {
+				if err := fn(external_alert_id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// alertDescSourceRaw is the schema descriptor for source_raw field.
+	alertDescSourceRaw := alertFields[3].Descriptor()
+	// alert.DefaultSourceRaw holds the default value on creation for the source_raw field.
+	alert.DefaultSourceRaw = alertDescSourceRaw.Default.(string)
+	// alert.SourceRawValidator is a validator for the "source_raw" field. It is called by the builders before save.
+	alert.SourceRawValidator = alertDescSourceRaw.Validators[0].(func(string) error)
+	// alertDescName is the schema descriptor for name field.
+	alertDescName := alertFields[4].Descriptor()
+	// alert.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	alert.NameValidator = func() func(string) error {
+		validators := alertDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// alertDescDescription is the schema descriptor for description field.
+	alertDescDescription := alertFields[5].Descriptor()
+	// alert.DefaultDescription holds the default value on creation for the description field.
+	alert.DefaultDescription = alertDescDescription.Default.(string)
+	// alertDescSeverity is the schema descriptor for severity field.
+	alertDescSeverity := alertFields[6].Descriptor()
+	// alert.SeverityValidator is a validator for the "severity" field. It is called by the builders before save.
+	alert.SeverityValidator = func() func(string) error {
+		validators := alertDescSeverity.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(severity string) error {
+			for _, fn := range fns {
+				if err := fn(severity); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// alertDescStatus is the schema descriptor for status field.
+	alertDescStatus := alertFields[7].Descriptor()
+	// alert.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	alert.StatusValidator = func() func(string) error {
+		validators := alertDescStatus.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(status string) error {
+			for _, fn := range fns {
+				if err := fn(status); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// alertDescSourceIP is the schema descriptor for source_ip field.
+	alertDescSourceIP := alertFields[10].Descriptor()
+	// alert.DefaultSourceIP holds the default value on creation for the source_ip field.
+	alert.DefaultSourceIP = alertDescSourceIP.Default.(string)
+	// alert.SourceIPValidator is a validator for the "source_ip" field. It is called by the builders before save.
+	alert.SourceIPValidator = alertDescSourceIP.Validators[0].(func(string) error)
+	// alertDescService is the schema descriptor for service field.
+	alertDescService := alertFields[11].Descriptor()
+	// alert.DefaultService holds the default value on creation for the service field.
+	alert.DefaultService = alertDescService.Default.(string)
+	// alert.ServiceValidator is a validator for the "service" field. It is called by the builders before save.
+	alert.ServiceValidator = alertDescService.Validators[0].(func(string) error)
+	// alertDescCreatedAt is the schema descriptor for created_at field.
+	alertDescCreatedAt := alertFields[17].Descriptor()
+	// alert.DefaultCreatedAt holds the default value on creation for the created_at field.
+	alert.DefaultCreatedAt = alertDescCreatedAt.Default.(func() time.Time)
+	// alertDescUpdatedAt is the schema descriptor for updated_at field.
+	alertDescUpdatedAt := alertFields[18].Descriptor()
+	// alert.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	alert.DefaultUpdatedAt = alertDescUpdatedAt.Default.(func() time.Time)
+	// alert.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	alert.UpdateDefaultUpdatedAt = alertDescUpdatedAt.UpdateDefault.(func() time.Time)
 	applicationFields := schema.Application{}.Fields()
 	_ = applicationFields
 	// applicationDescName is the schema descriptor for name field.

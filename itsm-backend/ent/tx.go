@@ -12,6 +12,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Alert is the client for interacting with the Alert builders.
+	Alert *AlertClient
 	// Application is the client for interacting with the Application builders.
 	Application *ApplicationClient
 	// ApprovalChain is the client for interacting with the ApprovalChain builders.
@@ -405,6 +407,7 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Alert = NewAlertClient(tx.config)
 	tx.Application = NewApplicationClient(tx.config)
 	tx.ApprovalChain = NewApprovalChainClient(tx.config)
 	tx.ApprovalRecord = NewApprovalRecordClient(tx.config)
@@ -545,7 +548,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Application.QueryXXX(), the query will be executed
+// applies a query, for example: Alert.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

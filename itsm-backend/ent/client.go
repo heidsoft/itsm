@@ -11,6 +11,7 @@ import (
 
 	"itsm-backend/ent/migrate"
 
+	"itsm-backend/ent/alert"
 	"itsm-backend/ent/application"
 	"itsm-backend/ent/approvalchain"
 	"itsm-backend/ent/approvalrecord"
@@ -154,6 +155,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Alert is the client for interacting with the Alert builders.
+	Alert *AlertClient
 	// Application is the client for interacting with the Application builders.
 	Application *ApplicationClient
 	// ApprovalChain is the client for interacting with the ApprovalChain builders.
@@ -427,6 +430,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Alert = NewAlertClient(c.config)
 	c.Application = NewApplicationClient(c.config)
 	c.ApprovalChain = NewApprovalChainClient(c.config)
 	c.ApprovalRecord = NewApprovalRecordClient(c.config)
@@ -650,6 +654,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:                         ctx,
 		config:                      cfg,
+		Alert:                       NewAlertClient(cfg),
 		Application:                 NewApplicationClient(cfg),
 		ApprovalChain:               NewApprovalChainClient(cfg),
 		ApprovalRecord:              NewApprovalRecordClient(cfg),
@@ -800,6 +805,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:                         ctx,
 		config:                      cfg,
+		Alert:                       NewAlertClient(cfg),
 		Application:                 NewApplicationClient(cfg),
 		ApprovalChain:               NewApprovalChainClient(cfg),
 		ApprovalRecord:              NewApprovalRecordClient(cfg),
@@ -937,7 +943,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Application.
+//		Alert.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -960,11 +966,11 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset,
-		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.BootstrapToken, c.CABMember,
-		c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType, c.CMDBExportTask,
-		c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR, c.CloudAccount,
-		c.CloudResource, c.CloudService, c.ConfigurationItem,
+		c.Alert, c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow,
+		c.Asset, c.AssetLicense, c.AuditLog, c.BPMNPermission, c.BootstrapToken,
+		c.CABMember, c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType,
+		c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR,
+		c.CloudAccount, c.CloudResource, c.CloudService, c.ConfigurationItem,
 		c.ConfigurationItemHistory, c.ConnectorConfig, c.Contract, c.Conversation,
 		c.CustomerBranch, c.Department, c.DiscoveryJob, c.DiscoveryResult,
 		c.DiscoverySource, c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
@@ -1002,11 +1008,11 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset,
-		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.BootstrapToken, c.CABMember,
-		c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType, c.CMDBExportTask,
-		c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR, c.CloudAccount,
-		c.CloudResource, c.CloudService, c.ConfigurationItem,
+		c.Alert, c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow,
+		c.Asset, c.AssetLicense, c.AuditLog, c.BPMNPermission, c.BootstrapToken,
+		c.CABMember, c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType,
+		c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR,
+		c.CloudAccount, c.CloudResource, c.CloudService, c.ConfigurationItem,
 		c.ConfigurationItemHistory, c.ConnectorConfig, c.Contract, c.Conversation,
 		c.CustomerBranch, c.Department, c.DiscoveryJob, c.DiscoveryResult,
 		c.DiscoverySource, c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
@@ -1043,6 +1049,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *AlertMutation:
+		return c.Alert.mutate(ctx, m)
 	case *ApplicationMutation:
 		return c.Application.mutate(ctx, m)
 	case *ApprovalChainMutation:
@@ -1307,6 +1315,139 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.WorkflowVersion.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// AlertClient is a client for the Alert schema.
+type AlertClient struct {
+	config
+}
+
+// NewAlertClient returns a client for the Alert from the given config.
+func NewAlertClient(c config) *AlertClient {
+	return &AlertClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `alert.Hooks(f(g(h())))`.
+func (c *AlertClient) Use(hooks ...Hook) {
+	c.hooks.Alert = append(c.hooks.Alert, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `alert.Intercept(f(g(h())))`.
+func (c *AlertClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Alert = append(c.inters.Alert, interceptors...)
+}
+
+// Create returns a builder for creating a Alert entity.
+func (c *AlertClient) Create() *AlertCreate {
+	mutation := newAlertMutation(c.config, OpCreate)
+	return &AlertCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Alert entities.
+func (c *AlertClient) CreateBulk(builders ...*AlertCreate) *AlertCreateBulk {
+	return &AlertCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AlertClient) MapCreateBulk(slice any, setFunc func(*AlertCreate, int)) *AlertCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AlertCreateBulk{err: fmt.Errorf("calling to AlertClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AlertCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AlertCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Alert.
+func (c *AlertClient) Update() *AlertUpdate {
+	mutation := newAlertMutation(c.config, OpUpdate)
+	return &AlertUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AlertClient) UpdateOne(_m *Alert) *AlertUpdateOne {
+	mutation := newAlertMutation(c.config, OpUpdateOne, withAlert(_m))
+	return &AlertUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AlertClient) UpdateOneID(id int) *AlertUpdateOne {
+	mutation := newAlertMutation(c.config, OpUpdateOne, withAlertID(id))
+	return &AlertUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Alert.
+func (c *AlertClient) Delete() *AlertDelete {
+	mutation := newAlertMutation(c.config, OpDelete)
+	return &AlertDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AlertClient) DeleteOne(_m *Alert) *AlertDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AlertClient) DeleteOneID(id int) *AlertDeleteOne {
+	builder := c.Delete().Where(alert.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AlertDeleteOne{builder}
+}
+
+// Query returns a query builder for Alert.
+func (c *AlertClient) Query() *AlertQuery {
+	return &AlertQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAlert},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Alert entity by its id.
+func (c *AlertClient) Get(ctx context.Context, id int) (*Alert, error) {
+	return c.Query().Where(alert.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AlertClient) GetX(ctx context.Context, id int) *Alert {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AlertClient) Hooks() []Hook {
+	return c.hooks.Alert
+}
+
+// Interceptors returns the client interceptors.
+func (c *AlertClient) Interceptors() []Interceptor {
+	return c.inters.Alert
+}
+
+func (c *AlertClient) mutate(ctx context.Context, m *AlertMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AlertCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AlertUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AlertUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AlertDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Alert mutation op: %q", m.Op())
 	}
 }
 
@@ -22640,7 +22781,7 @@ func (c *WorkflowVersionClient) mutate(ctx context.Context, m *WorkflowVersionMu
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
+		Alert, Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
 		AssetLicense, AuditLog, BPMNPermission, BootstrapToken, CABMember,
 		CIAttributeDefinition, CIRelationship, CITag, CIType, CMDBExportTask,
 		CMDBImportTask, CMDBSavedView, Change, ChangePIR, CloudAccount, CloudResource,
@@ -22671,7 +22812,7 @@ type (
 		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
-		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
+		Alert, Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
 		AssetLicense, AuditLog, BPMNPermission, BootstrapToken, CABMember,
 		CIAttributeDefinition, CIRelationship, CITag, CIType, CMDBExportTask,
 		CMDBImportTask, CMDBSavedView, Change, ChangePIR, CloudAccount, CloudResource,

@@ -8,6 +8,42 @@ import (
 )
 
 var (
+	// AlertsColumns holds the columns for the "alerts" table.
+	AlertsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "source", Type: field.TypeString, Size: 100},
+		{Name: "external_alert_id", Type: field.TypeString, Size: 255},
+		{Name: "source_raw", Type: field.TypeString, Size: 100, Default: ""},
+		{Name: "name", Type: field.TypeString, Size: 500},
+		{Name: "description", Type: field.TypeString, Size: 2147483647, Default: ""},
+		{Name: "severity", Type: field.TypeString, Size: 20},
+		{Name: "status", Type: field.TypeString, Size: 40},
+		{Name: "labels", Type: field.TypeJSON, Nullable: true},
+		{Name: "annotations", Type: field.TypeJSON, Nullable: true},
+		{Name: "source_ip", Type: field.TypeString, Size: 255, Default: ""},
+		{Name: "service", Type: field.TypeString, Size: 255, Default: ""},
+		{Name: "tags", Type: field.TypeJSON, Nullable: true},
+		{Name: "fired_at", Type: field.TypeTime},
+		{Name: "acknowledged_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "raw_payload", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// AlertsTable holds the schema information for the "alerts" table.
+	AlertsTable = &schema.Table{
+		Name:       "alerts",
+		Columns:    AlertsColumns,
+		PrimaryKey: []*schema.Column{AlertsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "alert_tenant_id_source_external_alert_id",
+				Unique:  true,
+				Columns: []*schema.Column{AlertsColumns[1], AlertsColumns[2], AlertsColumns[3]},
+			},
+		},
+	}
 	// ApplicationsColumns holds the columns for the "applications" table.
 	ApplicationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -5820,6 +5856,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AlertsTable,
 		ApplicationsTable,
 		ApprovalChainsTable,
 		ApprovalRecordsTable,
