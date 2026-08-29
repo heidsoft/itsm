@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -12,6 +13,8 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/hook"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
@@ -1198,6 +1201,122 @@ func TestIncidentService_GetIncidentStats(t *testing.T) {
 
 // ==================== 升级为重大事件测试 ====================
 
+func TestIncidentService_EscalateIncident_AtomicallyCreatesEventAndAlert(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenant, err := createIncidentTestTenant(ctx, client, "escalate")
+	require.NoError(t, err)
+	reporter, err := createIncidentTestUser(ctx, client, tenant.ID, "escalate")
+	require.NoError(t, err)
+	inc, err := client.Incident.Create().SetTitle("事件升级").SetDescription("desc").SetStatus("in_progress").
+		SetPriority("high").SetSeverity("high").SetIncidentNumber("INC-ESCALATE-ATOMIC").
+		SetReporterID(reporter.ID).SetTenantID(tenant.ID).SetDetectedAt(time.Now()).Save(ctx)
+	require.NoError(t, err)
+
+	response, err := service.EscalateIncident(ctx, &dto.IncidentEscalationRequest{
+		IncidentID: inc.ID, EscalationLevel: 2, Reason: "影响范围扩大",
+	}, tenant.ID)
+	require.NoError(t, err)
+	require.Equal(t, 2, response.EscalationLevel)
+	updated, err := client.Incident.Get(ctx, inc.ID)
+	require.NoError(t, err)
+	require.Equal(t, 2, updated.EscalationLevel)
+	events, err := client.IncidentEvent.Query().Where(incidentevent.IncidentIDEQ(inc.ID)).Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, events)
+	alerts, err := client.IncidentAlert.Query().Where(incidentalert.IncidentIDEQ(inc.ID)).Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, alerts)
+}
+
+func TestIncidentService_EscalateIncident_RejectsResolvedState(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenant, err := createIncidentTestTenant(ctx, client, "escalateresolved")
+	require.NoError(t, err)
+	reporter, err := createIncidentTestUser(ctx, client, tenant.ID, "escalateresolved")
+	require.NoError(t, err)
+	inc, err := client.Incident.Create().SetTitle("已解决事件").SetDescription("desc").SetStatus("resolved").
+		SetPriority("high").SetSeverity("high").SetIncidentNumber("INC-ESCALATE-RESOLVED").
+		SetReporterID(reporter.ID).SetTenantID(tenant.ID).SetDetectedAt(time.Now()).Save(ctx)
+	require.NoError(t, err)
+
+	_, err = service.EscalateIncident(ctx, &dto.IncidentEscalationRequest{
+		IncidentID: inc.ID, EscalationLevel: 2, Reason: "不应允许升级",
+	}, tenant.ID)
+	require.ErrorIs(t, err, ErrIncidentTerminal)
+	unchanged, err := client.Incident.Get(ctx, inc.ID)
+	require.NoError(t, err)
+	require.Equal(t, 0, unchanged.EscalationLevel)
+}
+
+func TestIncidentService_EscalateIncident_RollsBackWhenAlertCreationFails(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenant, err := createIncidentTestTenant(ctx, client, "escalaterollback")
+	require.NoError(t, err)
+	reporter, err := createIncidentTestUser(ctx, client, tenant.ID, "escalaterollback")
+	require.NoError(t, err)
+	inc, err := client.Incident.Create().SetTitle("升级回滚").SetDescription("desc").SetStatus("in_progress").
+		SetPriority("high").SetSeverity("high").SetIncidentNumber("INC-ESCALATE-ROLLBACK").
+		SetReporterID(reporter.ID).SetTenantID(tenant.ID).SetDetectedAt(time.Now()).Save(ctx)
+	require.NoError(t, err)
+	client.IncidentAlert.Use(func(next ent.Mutator) ent.Mutator {
+		return hook.IncidentAlertFunc(func(context.Context, *ent.IncidentAlertMutation) (ent.Value, error) {
+			return nil, errors.New("injected alert persistence failure")
+		})
+	})
+
+	_, err = service.EscalateIncident(ctx, &dto.IncidentEscalationRequest{
+		IncidentID: inc.ID, EscalationLevel: 2, Reason: "触发事务回滚",
+	}, tenant.ID)
+	require.ErrorContains(t, err, "injected alert persistence failure")
+	unchanged, err := client.Incident.Get(ctx, inc.ID)
+	require.NoError(t, err)
+	require.Equal(t, inc.Version, unchanged.Version)
+	require.Equal(t, inc.EscalationLevel, unchanged.EscalationLevel)
+	events, err := client.IncidentEvent.Query().Where(incidentevent.IncidentIDEQ(inc.ID)).Count(ctx)
+	require.NoError(t, err)
+	require.Zero(t, events)
+	alerts, err := client.IncidentAlert.Query().Where(incidentalert.IncidentIDEQ(inc.ID)).Count(ctx)
+	require.NoError(t, err)
+	require.Zero(t, alerts)
+}
+
+func TestIncidentService_EscalateIncident_RejectsCrossTenantAndVersionConflict(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenantA, err := createIncidentTestTenant(ctx, client, "escalatescopea")
+	require.NoError(t, err)
+	tenantB, err := createIncidentTestTenant(ctx, client, "escalatescopeb")
+	require.NoError(t, err)
+	reporter, err := createIncidentTestUser(ctx, client, tenantA.ID, "escalatescopea")
+	require.NoError(t, err)
+	inc, err := client.Incident.Create().SetTitle("升级租户隔离").SetDescription("desc").SetStatus("in_progress").
+		SetPriority("high").SetSeverity("high").SetIncidentNumber("INC-ESCALATE-SCOPE").
+		SetReporterID(reporter.ID).SetTenantID(tenantA.ID).SetDetectedAt(time.Now()).Save(ctx)
+	require.NoError(t, err)
+	req := &dto.IncidentEscalationRequest{IncidentID: inc.ID, EscalationLevel: 2, Reason: "验证隔离"}
+
+	_, err = service.EscalateIncident(ctx, req, tenantB.ID)
+	require.ErrorIs(t, err, ErrIncidentNotFound)
+
+	client.Incident.Use(func(next ent.Mutator) ent.Mutator {
+		return hook.IncidentFunc(func(ctx context.Context, mutation *ent.IncidentMutation) (ent.Value, error) {
+			if mutation.Op().Is(ent.OpUpdateOne) {
+				return nil, &ent.NotFoundError{}
+			}
+			return next.Mutate(ctx, mutation)
+		})
+	})
+	_, err = service.EscalateIncident(ctx, req, tenantA.ID)
+	require.ErrorIs(t, err, ErrIncidentVersionConflict)
+	unchanged, err := client.Incident.Query().Where(incident.IDEQ(inc.ID), incident.TenantIDEQ(tenantA.ID)).Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, inc.Version, unchanged.Version)
+	require.Equal(t, inc.EscalationLevel, unchanged.EscalationLevel)
+}
+
 func TestIncidentService_EscalateToMajorIncident_Success(t *testing.T) {
 	client, service, ctx := setupIncidentTest(t)
 	defer client.Close()
@@ -1312,4 +1431,37 @@ func TestIncidentService_EscalateToMajorIncident_Rejections(t *testing.T) {
 	require.NoError(t, err)
 	err = service.EscalateToMajorIncident(ctx, inc.ID, testUser.ID, otherTenant.ID, req)
 	require.Error(t, err)
+}
+
+func TestIncidentService_EscalateToMajorIncident_RollsBackWhenAuditActorIsInvalid(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	tenant, err := createIncidentTestTenant(ctx, client, "majorrollback")
+	require.NoError(t, err)
+	reporter, err := createIncidentTestUser(ctx, client, tenant.ID, "majorrollback")
+	require.NoError(t, err)
+	otherTenant, err := createIncidentTestTenant(ctx, client, "majorrollbackother")
+	require.NoError(t, err)
+	foreignActor, err := createIncidentTestUser(ctx, client, otherTenant.ID, "majorrollbackother")
+	require.NoError(t, err)
+
+	inc, err := client.Incident.Create().
+		SetTitle("重大事件事务回滚").SetDescription("desc").SetStatus("in_progress").
+		SetPriority("high").SetSeverity("high").SetIncidentNumber("INC-MAJOR-ROLLBACK").
+		SetReporterID(reporter.ID).SetTenantID(tenant.ID).SetDetectedAt(time.Now()).Save(ctx)
+	require.NoError(t, err)
+
+	err = service.EscalateToMajorIncident(ctx, inc.ID, foreignActor.ID, tenant.ID, &dto.EscalateMajorIncidentRequest{
+		ImpactScope: "critical", BusinessImpact: "核心业务中断", CommunicationPlan: "通知应急组",
+	})
+	require.Error(t, err)
+
+	unchanged, err := client.Incident.Get(ctx, inc.ID)
+	require.NoError(t, err)
+	assert.False(t, unchanged.IsMajorIncident)
+	assert.Equal(t, inc.Version, unchanged.Version)
+	eventCount, err := client.IncidentEvent.Query().Where(incidentevent.IncidentIDEQ(inc.ID)).Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, eventCount)
 }

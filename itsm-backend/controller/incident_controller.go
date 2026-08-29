@@ -818,7 +818,10 @@ func (c *IncidentController) EscalateMajorIncident(ctx *gin.Context) {
 		return
 	}
 	userID := ctx.GetInt("user_id")
-	tenantID := ctx.GetInt("tenant_id")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
+		return
+	}
 	if err := c.incidentService.EscalateToMajorIncident(ctx.Request.Context(), id, userID, tenantID, &req); err != nil {
 		common.Fail(ctx, common.InternalErrorCode, err.Error())
 		return
@@ -856,7 +859,10 @@ func (c *IncidentController) AssignIncident(ctx *gin.Context) {
 		return
 	}
 
-	tenantID := ctx.GetInt("tenant_id")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
+		return
+	}
 	incident, err := c.incidentService.AssignIncident(ctx.Request.Context(), id, assigneeID, tenantID)
 	if err != nil {
 		c.logger.Errorw("Failed to assign incident", "error", err, "id", id)
@@ -1079,7 +1085,10 @@ func (c *IncidentController) ConvertToProblem(ctx *gin.Context) {
 		return
 	}
 
-	tenantID := ctx.GetInt("tenant_id")
+	tenantID, ok := c.resolveTenantID(ctx)
+	if !ok {
+		return
+	}
 	problem, err := c.rootCauseAnalysisService.CreateProblemFromIncident(
 		ctx.Request.Context(), incidentID, userID, tenantID, &req,
 	)
@@ -1681,9 +1690,8 @@ func (ic *IncidentController) PauseSLA(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
-		common.AuthFailed(c, "缺少租户上下文")
+	tenantID, ok := ic.resolveTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -1715,9 +1723,8 @@ func (ic *IncidentController) ResumeSLA(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
-		common.AuthFailed(c, "缺少租户上下文")
+	tenantID, ok := ic.resolveTenantID(c)
+	if !ok {
 		return
 	}
 

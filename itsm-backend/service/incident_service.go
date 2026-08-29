@@ -746,7 +746,7 @@ func (s *IncidentService) AssignIncident(ctx context.Context, id int, assigneeID
 	s.logger.Infow("Assigning incident", "id", id, "assignee_id", assigneeID, "tenant_id", tenantID)
 
 	// 获取当前事件
-	_, err := s.client.Incident.Query().
+	current, err := s.client.Incident.Query().
 		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
@@ -760,14 +760,17 @@ func (s *IncidentService) AssignIncident(ctx context.Context, id int, assigneeID
 		return nil, err
 	}
 
-	// 更新分配人
+	// 更新分配人（版本条件更新，防止并发分配静默覆盖）
 	updatedIncident, err := s.client.Incident.UpdateOneID(id).
-		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
+		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil(), incident.VersionEQ(current.Version)).
 		SetAssigneeID(assigneeID).
 		SetUpdatedAt(time.Now()).
 		AddVersion(1).
 		Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrIncidentVersionConflict
+		}
 		s.logger.Errorw("Failed to assign incident", "error", err, "id", id)
 		return nil, fmt.Errorf("failed to assign incident: %w", err)
 	}
@@ -913,6 +916,39 @@ func createIncidentEventTx(ctx context.Context, tx *ent.Tx, req *dto.CreateIncid
 		builder.SetUserID(*req.UserID)
 	}
 	_, err = builder.Save(ctx)
+	return err
+}
+
+func createIncidentAlertTx(ctx context.Context, tx *ent.Tx, req *dto.CreateIncidentAlertRequest, tenantID int) error {
+	incidentExists, err := tx.Incident.Query().
+		Where(incident.IDEQ(req.IncidentID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("validate incident for alert: %w", err)
+	}
+	if !incidentExists {
+		return ErrIncidentNotFound
+	}
+
+	triggeredAt := time.Now()
+	if req.TriggeredAt != nil {
+		triggeredAt = *req.TriggeredAt
+	}
+	_, err = tx.IncidentAlert.Create().
+		SetIncidentID(req.IncidentID).
+		SetAlertType(req.AlertType).
+		SetAlertName(req.AlertName).
+		SetMessage(req.Message).
+		SetSeverity(req.Severity).
+		SetStatus("active").
+		SetChannels(req.Channels).
+		SetRecipients(req.Recipients).
+		SetTriggeredAt(triggeredAt).
+		SetMetadata(req.Metadata).
+		SetTenantID(tenantID).
+		SetCreatedAt(time.Now()).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
 	return err
 }
 
@@ -1114,8 +1150,14 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 		return nil, ErrIncidentEscalationReasonRequired
 	}
 
-	// 获取事件
-	current, err := s.client.Incident.Query().
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin incident escalation transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// 在同一事务内读取并以版本条件更新，升级、事件和告警必须共同成功。
+	current, err := tx.Incident.Query().
 		Where(
 			incident.IDEQ(req.IncidentID),
 			incident.TenantIDEQ(tenantID),
@@ -1128,7 +1170,7 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 		}
 		return nil, fmt.Errorf("failed to get incident: %w", err)
 	}
-	if current.Status == common.IncidentStatusClosed || current.Status == common.IncidentStatusCancelled {
+	if current.Status == common.IncidentStatusResolved || current.Status == common.IncidentStatusClosed || current.Status == common.IncidentStatusCancelled {
 		return nil, ErrIncidentTerminal
 	}
 	if req.EscalationLevel <= current.EscalationLevel {
@@ -1137,7 +1179,7 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 
 	// 更新事件升级信息
 	now := time.Now()
-	incidentEntity, err := s.client.Incident.UpdateOneID(req.IncidentID).
+	incidentEntity, err := tx.Incident.UpdateOneID(req.IncidentID).
 		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil(), incident.VersionEQ(current.Version)).
 		SetEscalationLevel(req.EscalationLevel).
 		SetEscalatedAt(now).
@@ -1145,12 +1187,15 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 		AddVersion(1).
 		Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrIncidentVersionConflict
+		}
 		s.logger.Errorw("Failed to escalate incident", "error", err)
 		return nil, fmt.Errorf("failed to escalate incident: %w", err)
 	}
 
 	// 记录升级活动
-	_, err = s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+	err = createIncidentEventTx(ctx, tx, &dto.CreateIncidentEventRequest{
 		IncidentID:  req.IncidentID,
 		EventType:   "escalation",
 		EventName:   "事件升级",
@@ -1164,11 +1209,11 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 		Source: "system",
 	}, tenantID)
 	if err != nil {
-		s.logger.Errorw("Failed to create escalation event", "error", err)
+		return nil, fmt.Errorf("create escalation event: %w", err)
 	}
 
 	// 创建升级告警
-	_, err = s.CreateIncidentAlert(ctx, &dto.CreateIncidentAlertRequest{
+	err = createIncidentAlertTx(ctx, tx, &dto.CreateIncidentAlertRequest{
 		IncidentID: req.IncidentID,
 		AlertType:  "escalation",
 		AlertName:  "事件升级告警",
@@ -1182,7 +1227,10 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 		},
 	}, tenantID)
 	if err != nil {
-		s.logger.Errorw("Failed to create escalation alert", "error", err)
+		return nil, fmt.Errorf("create escalation alert: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit incident escalation: %w", err)
 	}
 
 	// 构建响应
@@ -1741,7 +1789,12 @@ func (s *IncidentService) ReopenIncident(ctx context.Context, id, userID, tenant
 // EscalateToMajorIncident 将事件升级为重大事件（Major Incident）
 // 写入影响评估信息，提升严重程度，并记录审计事件
 func (s *IncidentService) EscalateToMajorIncident(ctx context.Context, id, userID, tenantID int, req *dto.EscalateMajorIncidentRequest) error {
-	incidentEntity, err := s.client.Incident.Query().
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin major incident escalation transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	incidentEntity, err := tx.Incident.Query().
 		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
@@ -1768,7 +1821,7 @@ func (s *IncidentService) EscalateToMajorIncident(ctx context.Context, id, userI
 		"escalatedAt":       now,
 	}
 
-	err = s.client.Incident.UpdateOneID(id).
+	err = tx.Incident.UpdateOneID(id).
 		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil(), incident.VersionEQ(incidentEntity.Version)).
 		SetIsMajorIncident(true).
 		SetSeverity("critical").
@@ -1779,9 +1832,12 @@ func (s *IncidentService) EscalateToMajorIncident(ctx context.Context, id, userI
 		AddVersion(1).
 		Exec(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrIncidentVersionConflict
+		}
 		return err
 	}
-	_, eventErr := s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+	if err := createIncidentEventTx(ctx, tx, &dto.CreateIncidentEventRequest{
 		IncidentID: id, EventType: "major_incident_escalation", EventName: "升级为重大事件",
 		Description: strings.TrimSpace(req.BusinessImpact), Status: "active", Severity: "critical",
 		Data: map[string]interface{}{
@@ -1789,8 +1845,13 @@ func (s *IncidentService) EscalateToMajorIncident(ctx context.Context, id, userI
 			"communicationPlan": strings.TrimSpace(req.CommunicationPlan),
 		},
 		UserID: &userID, Source: "user",
-	}, tenantID)
-	return eventErr
+	}, tenantID); err != nil {
+		return fmt.Errorf("create major incident event: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit major incident escalation: %w", err)
+	}
+	return nil
 }
 
 func (s *IncidentService) GetIncidentStats(ctx context.Context, tenantID int) (*dto.IncidentStatsResponse, error) {
