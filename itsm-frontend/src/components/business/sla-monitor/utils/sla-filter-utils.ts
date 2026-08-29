@@ -13,9 +13,12 @@ export const filterSLAViolations = (
   filters: SLAFilters
 ): SLAViolation[] => {
   return violations.filter(violation => {
-    // 状态过滤
-    if (filters.status && violation.status !== filters.status) {
-      return false;
+    // 状态过滤（后端契约：isResolved 布尔字段）
+    if (filters.status) {
+      const resolvedStatus = filters.status === 'resolved';
+      if (violation.isResolved !== resolvedStatus) {
+        return false;
+      }
     }
 
     // 严重程度过滤
@@ -30,7 +33,7 @@ export const filterSLAViolations = (
 
     // 日期范围过滤
     if (filters.dateRange && filters.dateRange[0] && filters.dateRange[1]) {
-      const violationDate = dayjs(violation.createdAt);
+      const violationDate = dayjs(violation.violationTime);
       if (
         violationDate.isBefore(filters.dateRange[0], 'day') ||
         violationDate.isAfter(filters.dateRange[1], 'day')
@@ -44,7 +47,9 @@ export const filterSLAViolations = (
       const searchLower = filters.search.toLowerCase();
       const matchesDescription = violation.description?.toLowerCase().includes(searchLower);
       const matchesTicketId = String(violation.ticketId).includes(searchLower);
-      if (!matchesDescription && !matchesTicketId) {
+      const matchesTicketNumber = violation.ticketNumber?.toLowerCase().includes(searchLower);
+      const matchesTicketTitle = violation.ticketTitle?.toLowerCase().includes(searchLower);
+      if (!matchesDescription && !matchesTicketId && !matchesTicketNumber && !matchesTicketTitle) {
         return false;
       }
     }

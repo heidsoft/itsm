@@ -218,6 +218,15 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	if keyword := ctx.Query("keyword"); keyword != "" {
 		filters["keyword"] = keyword
 	}
+	// NOC 工作台需要按“重大事件”过滤；未传=不过滤，传值必须是 bool 字面量。
+	if isMajor := ctx.Query("isMajorIncident"); isMajor != "" {
+		v, err := strconv.ParseBool(isMajor)
+		if err != nil {
+			common.Fail(ctx, common.ParamErrorCode, "无效的isMajorIncident参数")
+			return
+		}
+		filters["is_major_incident"] = v
+	}
 	if assigneeIDStr := ctx.Query("assigneeId"); assigneeIDStr != "" {
 		assigneeID, err := strconv.Atoi(assigneeIDStr)
 		if err != nil || assigneeID <= 0 {

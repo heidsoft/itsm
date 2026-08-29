@@ -17,10 +17,14 @@ export const fetchSLAViolations = async (params?: {
   endDate?: string;
   search?: string;
 }): Promise<SLAViolation[]> => {
+  // 后端仅支持 isResolved / severity / violationType 过滤；
+  // 日期范围与关键字检索由 filterSLAViolations 在客户端完成。
   const response = await SLAApi.getSLAViolations({
-    ...params,
     page: 1,
-    size: 100, // 获取足够多数据
+    pageSize: 100, // 获取足够多数据
+    isResolved: params?.status ? params.status === 'resolved' : undefined,
+    severity: params?.severity,
+    violationType: params?.slaType,
   });
   return response.items;
 };

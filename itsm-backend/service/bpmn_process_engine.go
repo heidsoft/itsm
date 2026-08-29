@@ -51,6 +51,7 @@ type ProcessDefinitionService interface {
 	GetProcessDefinitionByID(ctx context.Context, id int) (*ent.ProcessDefinition, error)
 	GetLatestProcessDefinition(ctx context.Context, key string) (*ent.ProcessDefinition, error)
 	UpdateProcessDefinition(ctx context.Context, key string, version string, req *UpdateProcessDefinitionRequest) (*ent.ProcessDefinition, error)
+	PublishProcessDefinition(ctx context.Context, key string, version string, req *UpdateProcessDefinitionRequest) (*ent.ProcessDefinition, error)
 	DeleteProcessDefinition(ctx context.Context, key string, version string) error
 	ListProcessDefinitions(ctx context.Context, req *ListProcessDefinitionsRequest) ([]*ent.ProcessDefinition, int, error)
 	SetProcessDefinitionActive(ctx context.Context, key string, version string, active bool) error
@@ -394,8 +395,24 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 		return fmt.Errorf("合并实例变量失败: %w", err)
 	}
 
-	// 6. 执行流程推进（从当前UserTask继续）
-	if err := e.executeStep(ctx, txc, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
+	// 6. 执行流程推进（从当前UserTask继续）。审批拒绝策略属于节点
+	// 运行语义，不能只停留在设计器配置中。
+	rejectStrategy, _ := task.TaskVariables["rejectStrategy"].(string)
+	approvalAction, _ := variables["approvalAction"].(string)
+	if approvalAction == "reject" && rejectStrategy == "terminate" {
+		if _, err = txc.ProcessInstance.UpdateOneID(instance.ID).
+			SetStatus("terminated").SetEndTime(time.Now()).Save(ctx); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("终止被拒绝流程失败: %w", err)
+		}
+		if _, err = txc.ProcessTask.Update().Where(
+			processtask.ProcessInstanceID(instance.ID), processtask.TenantID(instance.TenantID),
+			processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled"),
+		).SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("取消被拒绝流程的剩余任务失败: %w", err)
+		}
+	} else if err := e.executeStep(ctx, txc, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
@@ -772,7 +789,7 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 			if task.ApprovalMode == "sequential" {
 				approvalType = "serial"
 			}
-			if _, err := e.taskService.CreateCounterSignTasks(ctx, createdTask.TaskID, &CounterSignRequest{ApprovalType: approvalType, Approvers: approvers, Threshold: threshold}); err != nil {
+			if _, err := createCounterSignTasksWithClient(ctx, txc, createdTask.TaskID, instance.TenantID, &CounterSignRequest{ApprovalType: approvalType, Approvers: approvers, Threshold: threshold}); err != nil {
 				return fmt.Errorf("创建会签任务失败: %w", err)
 			}
 		}
@@ -1732,6 +1749,59 @@ func (s *bpmnProcessDefinitionService) UpdateProcessDefinition(ctx context.Conte
 	return updated, nil
 }
 
+// PublishProcessDefinition atomically persists the draft contents and makes the
+// selected immutable version the sole active/latest version for the key.
+func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Context, key string, version string, req *UpdateProcessDefinitionRequest) (*ent.ProcessDefinition, error) {
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(req.BPMNXML) == "" {
+		return nil, fmt.Errorf("发布流程必须包含 BPMN XML")
+	}
+	if _, err = NewBPMNParser().ParseXML([]byte(req.BPMNXML)); err != nil {
+		return nil, fmt.Errorf("BPMN XML 校验失败: %w", err)
+	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("开始发布事务失败: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	definition, err := tx.ProcessDefinition.Query().Where(
+		processdefinition.Key(key), processdefinition.Version(version), processdefinition.TenantID(tenantID),
+	).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取待发布流程定义失败: %w", err)
+	}
+	if _, err = tx.ProcessDefinition.Update().Where(
+		processdefinition.Key(key), processdefinition.TenantID(tenantID),
+	).SetIsActive(false).SetIsLatest(false).Save(ctx); err != nil {
+		return nil, fmt.Errorf("停用旧流程版本失败: %w", err)
+	}
+	update := tx.ProcessDefinition.UpdateOne(definition).
+		SetBpmnXML([]byte(req.BPMNXML)).SetIsActive(true).SetIsLatest(true).SetDeployedAt(time.Now())
+	if req.Name != "" {
+		update.SetName(req.Name)
+	}
+	if req.Description != "" {
+		update.SetDescription(req.Description)
+	}
+	if req.Category != "" {
+		update.SetCategory(req.Category)
+	}
+	if req.ProcessVariables != nil {
+		update.SetProcessVariables(req.ProcessVariables)
+	}
+	published, err := update.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("保存发布版本失败: %w", err)
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交发布事务失败: %w", err)
+	}
+	return published, nil
+}
+
 func (s *bpmnProcessDefinitionService) DeleteProcessDefinition(ctx context.Context, key string, version string) error {
 	definition, err := s.GetProcessDefinition(ctx, key, version)
 	if err != nil {
@@ -2555,6 +2625,10 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 	if task.TaskVariables == nil {
 		task.TaskVariables = make(map[string]interface{})
 	}
+	allowDelegate, _ := task.TaskVariables["allowDelegate"].(bool)
+	if !allowDelegate {
+		return fmt.Errorf("该审批节点不允许委托")
+	}
 	task.TaskVariables["delegated_from"] = task.Assignee
 	task.TaskVariables["delegated_time"] = time.Now().Format(time.RFC3339)
 
@@ -2673,9 +2747,20 @@ func (s *bpmnTaskService) GetTaskStatistics(ctx context.Context, req *TaskStatis
 
 // CreateCounterSignTasks 创建会签子任务
 func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *CounterSignRequest) ([]*ent.ProcessTask, error) {
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return createCounterSignTasksWithClient(ctx, s.client, parentTaskID, tenantID, req)
+}
+
+func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, parentTaskID string, tenantID int, req *CounterSignRequest) ([]*ent.ProcessTask, error) {
+	if req == nil || len(req.Approvers) == 0 {
+		return nil, fmt.Errorf("会签审批人不能为空")
+	}
 	// 获取父任务
-	parentTask, err := s.client.ProcessTask.Query().
-		Where(processtask.TaskID(parentTaskID)).
+	parentTask, err := client.ProcessTask.Query().
+		Where(processtask.TaskID(parentTaskID), processtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取父任务失败: %w", err)
@@ -2699,7 +2784,7 @@ func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTask
 		if req.ApprovalType == "serial" && i > 0 {
 			status = "created"
 		}
-		task, err := s.client.ProcessTask.Create().
+		task, err := client.ProcessTask.Create().
 			SetTaskID(taskID).
 			SetProcessInstanceID(parentTask.ProcessInstanceID).
 			SetProcessDefinitionKey(parentTask.ProcessDefinitionKey).
@@ -2721,7 +2806,7 @@ func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTask
 	}
 
 	// 更新父任务状态为会签中
-	_, err = s.client.ProcessTask.UpdateOneID(parentTask.ID).
+	_, err = client.ProcessTask.UpdateOneID(parentTask.ID).
 		SetTaskVariables(map[string]interface{}{
 			"approval_type": req.ApprovalType,
 			"threshold":     threshold,
@@ -2732,7 +2817,7 @@ func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTask
 		}).
 		Save(ctx)
 	if err != nil {
-		s.logger.Warnf("更新父任务变量失败: %v", err)
+		return nil, fmt.Errorf("更新父任务会签配置失败: %w", err)
 	}
 
 	return tasks, nil
@@ -2740,9 +2825,13 @@ func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTask
 
 // GetCounterSignStatus 获取会签状态
 func (s *bpmnTaskService) GetCounterSignStatus(ctx context.Context, parentTaskID string) (*CounterSignStatus, error) {
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	// 获取所有会签子任务
 	subTasks, err := s.client.ProcessTask.Query().
-		Where(processtask.ParentTaskID(parentTaskID)).
+		Where(processtask.ParentTaskID(parentTaskID), processtask.TenantID(tenantID)).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取会签子任务失败: %w", err)
@@ -2777,7 +2866,7 @@ func (s *bpmnTaskService) GetCounterSignStatus(ctx context.Context, parentTaskID
 	}
 
 	threshold := status.Total
-	if parent, err := s.client.ProcessTask.Query().Where(processtask.TaskID(parentTaskID)).Only(ctx); err == nil {
+	if parent, err := s.client.ProcessTask.Query().Where(processtask.TaskID(parentTaskID), processtask.TenantID(tenantID)).Only(ctx); err == nil {
 		if value, ok := numericInt(parent.TaskVariables["threshold"]); ok && value > 0 {
 			threshold = value
 		}
@@ -2806,8 +2895,17 @@ func numericInt(value interface{}) (int, bool) {
 
 // Vote 投票（完成会签任务）
 func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequest) error {
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
+	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("开始会签投票事务失败: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
 	task, err := s.client.ProcessTask.Query().
-		Where(processtask.TaskID(taskID)).
+		Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取任务失败: %w", err)
@@ -2824,7 +2922,9 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 	}
 
 	// 更新任务状态为完成
-	_, err = s.client.ProcessTask.UpdateOneID(task.ID).
+	updated, err := tx.ProcessTask.Update().Where(
+		processtask.ID(task.ID), processtask.TenantID(tenantID), processtask.StatusEQ(common.ProcessTaskStatusAssigned),
+	).
 		SetStatus("completed").
 		SetCompletedTime(time.Now()).
 		SetTaskVariables(map[string]interface{}{
@@ -2835,16 +2935,22 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 	if err != nil {
 		return fmt.Errorf("完成任务失败: %w", err)
 	}
-	instance, err := s.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
+	if updated != 1 {
+		return fmt.Errorf("会签任务已被处理，请刷新后重试")
+	}
+	instance, err := tx.ProcessInstance.Query().Where(processinstance.ID(task.ProcessInstanceID), processinstance.TenantID(tenantID)).Only(ctx)
 	if err == nil {
 		action, decision := "reject", "rejected"
 		if req.Approved {
 			action, decision = "approve", "approved"
 		}
 		engine := NewCustomProcessEngine(s.client, s.logger).(*CustomProcessEngine)
-		if err := engine.recordApprovalDecision(ctx, s.client, instance, task, map[string]interface{}{"approvalAction": action, "approvalResult": decision, "approvalComment": req.Comment}); err != nil {
+		if err := engine.recordApprovalDecision(ctx, tx.Client(), instance, task, map[string]interface{}{"approvalAction": action, "approvalResult": decision, "approvalComment": req.Comment}); err != nil {
 			return err
 		}
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("提交会签投票失败: %w", err)
 	}
 
 	// 获取会签状态

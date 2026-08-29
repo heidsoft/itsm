@@ -281,8 +281,8 @@ npx playwright test tests/e2e/comprehensive-e2e.spec.ts   # E2E
 
 ### 9.3 API 冒烟（推荐落 CI）
 ```bash
-# 1) 启后端
-DB_PASSWORD=itsm_password_2026 JWT_SECRET=dev /tmp/itsm-backend-bin &
+# 1) 启后端（口令取本地环境值；不要把真实凭据写进文档或代码）
+DB_PASSWORD="${DB_PASSWORD:-dev123}" JWT_SECRET=dev /tmp/itsm-backend-bin &
 # 2) 跑冒烟
 bash docs/scripts/smoke-api.sh
 ```

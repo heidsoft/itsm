@@ -108,6 +108,14 @@ CMDB 的正式与试点边界见 [CMDB 商业 MVP](./docs/product/cmdb-commercia
 
 ### 使用 Docker 启动开发环境
 
+本仓库提供两份 Compose 文件。请**不要**直接执行不带 `-f` 的 `docker compose up`——
+仓库根目录没有默认的 `docker-compose.yml`：
+
+| 文件 | 用途 |
+|:---|:---|
+| `docker-compose.dev.yml` | 本地开发。核心服务默认启动；`--profile ai` 加 Ollama，`--profile monitoring` 加 Prometheus + Grafana |
+| `docker-compose.prod.yml` | 生产部署。需要 `.env.prod`，包含 nginx 与后台 worker |
+
 ```bash
 git clone https://github.com/heidsoft/itsm.git
 cd itsm
@@ -471,6 +479,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 | [本地开发命令](./docs/dev-commands-reference.md) | 开发命令、调试与故障排查 |
 | [测试指南](./docs/testing/README.md) | 单元、集成、契约和 E2E 测试 |
 | [Roadmap](./ROADMAP.md) | 当前迭代方向唯一事实源 |
+| [升级指南](./UPGRADE.md) | v1.6.x → 最新：破坏性变更、环境变量、迁移与回滚 |
 
 ## 参与贡献
 

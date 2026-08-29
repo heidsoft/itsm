@@ -199,7 +199,7 @@ init_prod_env() {
     set_env_value "$ENV_FILE" "ADMIN_PASSWORD" "$(generate_secret 24)"
     set_env_value "$ENV_FILE" "MINIO_ACCESS_KEY" "itsm_$(generate_hex 12)"
     set_env_value "$ENV_FILE" "MINIO_SECRET_KEY" "$(generate_secret 36)"
-    set_env_value "$ENV_FILE" "GRAFANA_PASSWORD" "$(generate_secret 24)"
+    set_env_value "$ENV_FILE" "GRAFANA_ADMIN_PASSWORD" "$(generate_secret 24)"
 
     chmod 600 "$ENV_FILE"
     mkdir -p "$BACKUP_DIR" "$LOG_DIR" "$PROJECT_ROOT/uploads" "$PROJECT_ROOT/config"
@@ -400,7 +400,7 @@ deploy_services() {
     if ! $DRY_RUN; then
         local pull_retries=0
         while [ $pull_retries -lt 3 ]; do
-            if dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" pull postgres redis minio 2>/dev/null; then
+            if dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" pull postgres redis 2>/dev/null; then
                 break
             fi
             pull_retries=$((pull_retries + 1))
@@ -411,7 +411,7 @@ deploy_services() {
 
     # Start infrastructure
     log_step "Starting infrastructure (PostgreSQL, Redis, MinIO)"
-    if ! run dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" up -d postgres redis minio; then
+    if ! run dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" up -d postgres redis; then
         log_error "Failed to start production infrastructure"
         return 1
     fi
@@ -419,14 +419,14 @@ deploy_services() {
     log_info "Waiting for infrastructure..."
     if ! $DRY_RUN; then
         local infra_ok=true
-        for svc in itsm-postgres-prod itsm-redis-prod itsm-minio-prod; do
+        for svc in itsm-postgres-prod itsm-redis-prod; do
             if ! wait_for_container_healthy "$svc" 45; then
                 log_error "$svc not healthy after 45s"
                 infra_ok=false
             fi
         done
         if ! $infra_ok; then
-            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" logs --tail=30 postgres redis minio
+            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" logs --tail=30 postgres redis
             return 1
         fi
         log_success "Infrastructure healthy"
@@ -469,6 +469,40 @@ deploy_services() {
         fi
     fi
 
+    # Start nginx (public entrypoint on :80/:443) and the background worker.
+    # Historically these were never started by the main deploy path, so a
+    # "successful" deployment served no traffic and ran no SLA / escalation /
+    # indexing schedules. Both must be part of the main flow.
+    log_step "Starting nginx and background worker"
+    if ! run dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" up -d nginx itsm-worker; then
+        log_error "Failed to start nginx or itsm-worker"
+        dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" logs --tail=50 nginx itsm-worker
+        return 1
+    fi
+
+    if ! $DRY_RUN; then
+        # nginx is the public entrypoint: verify it actually serves traffic
+        # through :80 rather than trusting the direct backend/frontend probes.
+        if wait_for_http "http://localhost/health" "nginx" 60; then
+            log_success "Nginx is healthy"
+        else
+            log_error "Nginx did not serve /health on :80 within 60s"
+            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" logs --tail=50 nginx
+            return 1
+        fi
+
+        # The worker has no HTTP endpoint; assert the container stays up.
+        if wait_for_container_healthy "itsm-worker-prod" 60; then
+            log_success "Worker is healthy"
+        elif container_running "itsm-worker-prod"; then
+            log_warn "Worker is running but reports no healthcheck status"
+        else
+            log_error "Worker container exited; SLA/escalation/index schedules will not run"
+            dc --env-file "$ENV_FILE" -f "$COMPOSE_PROD" logs --tail=50 itsm-worker
+            return 1
+        fi
+    fi
+
     timer_end "$start" "Service deployment"
     if $DRY_RUN; then
         log_info "Service deployment plan generated"
@@ -499,7 +533,7 @@ verify_deployment() {
     fi
 
     # Containers
-    for c in itsm-postgres-prod itsm-redis-prod itsm-minio-prod; do
+    for c in itsm-postgres-prod itsm-redis-prod itsm-nginx-prod itsm-worker-prod; do
         if container_running "$c"; then
             log_success "$c: running"
         else
@@ -507,16 +541,26 @@ verify_deployment() {
         fi
     done
 
-    # Smoke test: login
+    # Smoke test: login.
+    # Read the real password from the deployment env file instead of falling
+    # back to a hard-coded default, which silently masked "no admin account
+    # was ever created" as a benign warning.
     log_info "Running API smoke test..."
-    local login_rc
-    login_rc=$(curl -sf -X POST "${BACKEND_URL}/api/v1/auth/login" \
-        -H "Content-Type: application/json" \
-        -d "{\"username\":\"admin\",\"password\":\"${ADMIN_PASSWORD:-admin123}\"}" 2>/dev/null || echo '{"code":-1}')
-    if echo "$login_rc" | grep -q '"code":0'; then
-        log_success "API login: passed"
+    local admin_password
+    admin_password=$(grep -E '^ADMIN_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
+    if [[ -z "$admin_password" ]]; then
+        log_warn "API login: skipped (ADMIN_PASSWORD is empty in $ENV_FILE)"
+        log_warn "  No admin account can be created without it — you will not be able to sign in."
     else
-        log_warn "API login: failed (password may differ from default)"
+        local login_rc
+        login_rc=$(curl -sf -X POST "${BACKEND_URL}/api/v1/auth/login" \
+            -H "Content-Type: application/json" \
+            -d "{\"username\":\"admin\",\"password\":\"${admin_password}\"}" 2>/dev/null || echo '{"code":-1}')
+        if echo "$login_rc" | grep -q '"code":0'; then
+            log_success "API login: passed"
+        else
+            log_warn "API login: failed — admin account likely missing or password mismatched"
+        fi
     fi
 
     [[ $errors -gt 0 ]] && return 1
@@ -595,7 +639,7 @@ show_health() {
     fi
 
     # Containers
-    for c in itsm-postgres-prod itsm-redis-prod itsm-minio-prod itsm-backend-prod itsm-frontend-prod; do
+    for c in itsm-postgres-prod itsm-redis-prod itsm-backend-prod itsm-frontend-prod itsm-nginx-prod itsm-worker-prod; do
         if container_running "$c"; then
             local started; started=$(docker inspect --format='{{.State.StartedAt}}' "$c" 2>/dev/null | cut -d'.' -f1 || echo "?")
             log_success "$c: running since $started"

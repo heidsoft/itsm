@@ -136,9 +136,11 @@ describe('WorkflowApi', () => {
 
       const result = await WorkflowApi.getProcessVersions('test_process');
 
-      expect(httpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/bpmn/versions')
-      );
+      // 后端 ListVersions 只读 ctx.Query("processKey")，缺失时直接 400，
+      // 因此必须断言查询参数而不只是 URL 前缀。
+      expect(httpClient.get).toHaveBeenCalledWith('/api/v1/bpmn/versions', {
+        processKey: 'test_process',
+      });
 
       expect(result).toHaveLength(2);
     });

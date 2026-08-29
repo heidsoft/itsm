@@ -439,6 +439,50 @@ func TestIncidentService_ListIncidents_Filters(t *testing.T) {
 	assert.Equal(t, 1, total)
 }
 
+// TestIncidentService_ListIncidents_MajorIncidentFilter 验证 NOC 工作台依赖的
+// is_major_incident 过滤：只返回重大事件，传 false 时反向过滤，未传时不过滤。
+func TestIncidentService_ListIncidents_MajorIncidentFilter(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "major")
+	require.NoError(t, err)
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "major")
+	require.NoError(t, err)
+
+	for i, isMajor := range []bool{true, false, false} {
+		_, err := client.Incident.Create().
+			SetTitle(fmt.Sprintf("Major filter incident %d", i)).
+			SetDescription("test").
+			SetStatus("in_progress").
+			SetPriority("high").
+			SetSeverity("critical").
+			SetIsMajorIncident(isMajor).
+			SetIncidentNumber(fmt.Sprintf("INC-MAJ-%d", i)).
+			SetReporterID(testUser.ID).
+			SetTenantID(testTenant.ID).
+			SetDetectedAt(time.Now()).
+			Save(ctx)
+		require.NoError(t, err)
+	}
+
+	_, total, err := service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
+		"is_major_incident": true,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 1, total, "只应返回 1 条重大事件")
+
+	_, total, err = service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
+		"is_major_incident": false,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 2, total, "false 应反向过滤出非重大事件")
+
+	_, total, err = service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{})
+	require.NoError(t, err)
+	assert.Equal(t, 3, total, "未传参数时不应施加重大事件过滤")
+}
+
 func TestIncidentService_ListIncidents_KeywordSearch(t *testing.T) {
 	client, service, ctx := setupIncidentTest(t)
 	defer client.Close()

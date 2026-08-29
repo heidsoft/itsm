@@ -32,7 +32,7 @@ const SLAList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<SLADefinition[]>([]);
   const [total, setTotal] = useState(0);
-  const [pagination, setPagination] = useState({ page: 1, size: 10 });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
 
   const loadData = async () => {
     setLoading(true);
@@ -201,13 +201,13 @@ const SLAList: React.FC = () => {
         }}
         pagination={{
           current: pagination.page,
-          pageSize: pagination.size,
+          pageSize: pagination.pageSize,
           total: total,
           showSizeChanger: true,
           showQuickJumper: true,
           showTotal: total => `共 ${total} 条记录`,
           pageSizeOptions: ['10', '20', '50', '100'],
-          onChange: (page, size) => setPagination({ page, size }),
+          onChange: (page, pageSize) => setPagination({ page, pageSize }),
         }}
         getPopupContainer={node => node.parentElement || document.body}
       />

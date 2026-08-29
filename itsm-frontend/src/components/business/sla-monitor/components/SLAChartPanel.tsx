@@ -21,11 +21,12 @@ export const SLAChartPanel: React.FC<SLAChartPanelProps> = ({ violations }) => {
     return stats;
   }, [violations]);
 
-  // 统计各状态的数量
+  // 统计各状态的数量（后端契约：isResolved 布尔，派生 open/resolved 分桶）
   const statusStats = React.useMemo(() => {
     const stats: Record<string, number> = {};
     violations.forEach(v => {
-      stats[v.status] = (stats[v.status] || 0) + 1;
+      const status = v.isResolved ? 'resolved' : 'open';
+      stats[status] = (stats[status] || 0) + 1;
     });
     return stats;
   }, [violations]);

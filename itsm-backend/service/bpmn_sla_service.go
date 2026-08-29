@@ -377,10 +377,12 @@ func (s *BPMNSLAService) GetSLAComplianceRate(ctx context.Context, processDefini
 	}
 
 	if total == 0 {
-		return 100.0, 0, 0, nil
+		// 无已完成样本：诚实返回 0 合规率，由调用方通过 total==0 判断“暂无数据”；
+		// 返回 100 会把未验证的能力伪装成全合规，违反能力状态语义。
+		return 0.0, 0, 0, nil
 	}
 
-	rate := float64(compliant) / float64(total) * 100
+	rate := round1(float64(compliant) / float64(total) * 100)
 	return rate, compliant, total, nil
 }
 

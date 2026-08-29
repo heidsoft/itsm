@@ -115,7 +115,7 @@ jobs:
   ga-readiness:
     runs-on: ubuntu-latest
     services:
-      postgres: { image: postgres:15, env: { POSTGRES_PASSWORD: itsm_password_2026 } }
+      postgres: { image: postgres:15, env: { POSTGRES_PASSWORD: <your-db-password> } }
       redis:    { image: redis:7 }
     steps:
       - checkout

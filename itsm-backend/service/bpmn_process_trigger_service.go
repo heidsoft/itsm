@@ -21,7 +21,6 @@ import (
 type ProcessTriggerService struct {
 	client            *ent.Client
 	processEngine     ProcessEngine
-	processBindingSvc *ProcessBindingService
 	processRoutingSvc *ProcessRoutingService
 }
 
@@ -32,8 +31,6 @@ func NewProcessTriggerService(client *ent.Client, engine ProcessEngine) *Process
 		processEngine: engine,
 	}
 	// 延迟初始化 binding service，避免循环依赖
-	bindingSvc := NewProcessBindingService(client)
-	svc.processBindingSvc = bindingSvc
 	svc.processRoutingSvc = NewProcessRoutingService(client, zap.NewNop().Sugar())
 	return svc
 }
@@ -47,6 +44,7 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 
 	// 2. 如果没有指定流程定义，则根据业务类型查找
 	processDefKey := req.ProcessDefinitionKey
+	processDefVersion := ""
 	if processDefKey == "" {
 		route, err := s.processRoutingSvc.FindBestRoute(ctx, s.buildRoutingContext(req))
 		if err != nil {
@@ -54,27 +52,22 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 		}
 		if route != nil {
 			processDefKey = route.ProcessDefinitionKey
+			processDefVersion = route.ProcessDefinitionVersion
 		}
 	}
 	if processDefKey == "" {
-		binding, err := s.processBindingSvc.FindBestBinding(ctx, req.BusinessType, req.BusinessSubType, req.TenantID)
-		if err != nil {
-			return nil, errors.Wrap(err, "查找默认流程绑定失败")
-		}
-		if binding == nil {
-			return nil, fmt.Errorf("未找到业务类型 %s 对应的流程绑定", req.BusinessType)
-		}
-		processDefKey = binding.ProcessDefinitionKey
+		return nil, fmt.Errorf("未找到业务类型 %s 对应的流程绑定", req.BusinessType)
 	}
 
 	// 3. 获取流程定义（仅要求 IsActive，不过滤 IsLatest 以支持触发特定版本）
-	definition, err := s.client.ProcessDefinition.Query().
-		Where(
-			processdefinition.Key(processDefKey),
-			processdefinition.TenantID(req.TenantID),
-			processdefinition.IsActive(true),
-		).
-		First(ctx)
+	definitionQuery := s.client.ProcessDefinition.Query().Where(
+		processdefinition.TenantID(req.TenantID), processdefinition.IsActive(true),
+		processdefinition.Key(processDefKey),
+	)
+	if processDefVersion != "" {
+		definitionQuery = definitionQuery.Where(processdefinition.Version(processDefVersion))
+	}
+	definition, err := definitionQuery.First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, fmt.Errorf("流程定义 %s 不存在", processDefKey)

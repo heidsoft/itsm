@@ -72,7 +72,10 @@ func setupSLAHandler(t *testing.T) (*gin.Engine, *ent.Client, int) {
 	r.PUT("/api/v1/sla/definitions/:id", h.UpdateSLADefinition)
 	r.DELETE("/api/v1/sla/definitions/:id", h.DeleteSLADefinition)
 	r.GET("/api/v1/sla/stats", h.GetSLAStats)
+	// 与 router.go 保持一致：/monitor 是历史兼容别名，/monitoring 是 canonical 路径
 	r.POST("/api/v1/sla/monitor", h.GetSLAMonitoring)
+	r.POST("/api/v1/sla/monitoring", h.GetSLAMonitoring)
+	r.GET("/api/v1/sla/performance", h.GetSLAPerformance)
 	// 阶段 1.7：补齐告警/违规/合规/指标相关路由
 	r.POST("/api/v1/sla/alert-rules", h.CreateAlertRule)
 	r.GET("/api/v1/sla/alert-rules", h.ListAlertRules)
@@ -157,23 +160,17 @@ func TestSLAHandler_GetStats(t *testing.T) {
 	r, _, _ := setupSLAHandler(t)
 	resp := doSLAReq(t, r, "GET", "/api/v1/sla/stats", nil, false)
 	assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+
+	t.Run("无样本时合规率诚实为0而非伪装100", func(t *testing.T) {
+		data := resp.Data.(map[string]interface{})
+		rate, ok := data["overall_compliance_rate"]
+		require.True(t, ok, "body=%s", slaStr(resp))
+		assert.Equal(t, float64(0), rate)
+	})
 }
 
-func TestSLAHandler_GetMonitoringUsesCamelCaseContract(t *testing.T) {
-	r, _, _ := setupSLAHandler(t)
-	resp := doSLAReq(t, r, "POST", "/api/v1/sla/monitor", dto.SLAMonitoringRequest{
-		StartTime: "30d",
-		EndTime:   "now",
-	}, false)
-	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
-	data := resp.Data.(map[string]interface{})
-	assert.Contains(t, data, "totalViolations")
-	assert.Contains(t, data, "resolvedViolations")
-	assert.Contains(t, data, "activeViolations")
-	assert.Contains(t, data, "complianceRate")
-	assert.Equal(t, float64(1), data["complianceRate"])
-	assert.NotContains(t, data, "total_violations")
-}
+// 监控大屏契约回归（camelCase 字段、零样本诚实性、统计窗口、活跃告警、
+// 租户隔离、绩效分组与过滤）集中在 monitoring_test.go，带确定性数据集。
 
 // ---- 阶段 1.7:告警规则 CRUD 路径 ----
 
@@ -343,7 +340,7 @@ func TestSLAHandler_Violations_AndMetrics(t *testing.T) {
 		assert.Contains(t, data, "items")
 		assert.Contains(t, data, "total")
 		assert.Contains(t, data, "page")
-		assert.Contains(t, data, "size")
+		assert.Contains(t, data, "pageSize")
 	})
 
 	t.Run("按严重度过滤违规记录", func(t *testing.T) {
@@ -367,6 +364,107 @@ func TestSLAHandler_Violations_AndMetrics(t *testing.T) {
 		data := resp.Data.(map[string]interface{})
 		assert.Contains(t, data, "items")
 		assert.Contains(t, data, "pageSize")
+	})
+}
+
+// TestSLAHandler_ViolationsTicketContextRegression 监控大屏回归：
+// /api/v1/sla/violations 必须通过 ticket edge 返回工单标题/编号/优先级，
+// 并支持 camelCase isResolved 过滤；修复前 ticketTitle 缺失导致前端全部展示 Unknown。
+func TestSLAHandler_ViolationsTicketContextRegression(t *testing.T) {
+	_, client, tenantID := setupSLAHandler(t)
+	ctx := context.Background()
+	uid := slaUniqueID()
+
+	def, err := client.SLADefinition.Create().
+		SetName("大屏回归SLA-" + uid).
+		SetPriority("high").
+		SetResponseTime(30).
+		SetResolutionTime(240).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	repo := NewEntRepository(client)
+	user, err := client.User.Create().
+		SetUsername("sla-ctx-user-" + uid).
+		SetEmail("sla-ctx-" + uid + "@example.com").
+		SetName("SLA Context User").
+		SetPasswordHash("hashedpassword").
+		SetRole("agent").
+		SetActive(true).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	tk, err := client.Ticket.Create().
+		SetTitle("打印机故障工单-" + uid).
+		SetPriority("high").
+		SetTicketNumber("TKT-SLA-CTX-" + uid).
+		SetTenantID(tenantID).
+		SetRequesterID(user.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = repo.CreateViolation(ctx, &SLAViolation{
+		TicketID:        tk.ID,
+		SLADefinitionID: def.ID,
+		ViolationType:   "resolution",
+		ViolationTime:   time.Now().Add(-time.Hour),
+		Severity:        "high",
+		IsResolved:      false,
+		TenantID:        tenantID,
+	})
+	require.NoError(t, err)
+
+	// 再创建一条已解决违规，验证 isResolved 过滤
+	_, err = repo.CreateViolation(ctx, &SLAViolation{
+		TicketID:        tk.ID,
+		SLADefinitionID: def.ID,
+		ViolationType:   "response",
+		ViolationTime:   time.Now().Add(-2 * time.Hour),
+		Severity:        "low",
+		IsResolved:      true,
+		TenantID:        tenantID,
+	})
+	require.NoError(t, err)
+
+	svc := NewService(repo, zaptest.NewLogger(t).Sugar())
+	h := NewHandler(svc)
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(slaTestAuth(tenantID, 1))
+	r.GET("/api/v1/sla/violations", h.GetSLAViolations)
+
+	t.Run("列表返回工单标题/编号/优先级与SLA名称", func(t *testing.T) {
+		resp := doSLAReq(t, r, "GET", "/api/v1/sla/violations?page=1&size=20", nil, false)
+		require.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+		data := resp.Data.(map[string]interface{})
+		items := data["items"].([]interface{})
+		require.NotEmpty(t, items)
+
+		var found map[string]interface{}
+		for _, it := range items {
+			m := it.(map[string]interface{})
+			if m["violationType"] == "resolution" {
+				found = m
+			}
+		}
+		require.NotNil(t, found, "未找到 resolution 违规: %v", items)
+		assert.Equal(t, "打印机故障工单-"+uid, found["ticketTitle"])
+		assert.Equal(t, "TKT-SLA-CTX-"+uid, found["ticketNumber"])
+		assert.Equal(t, "high", found["ticketPriority"])
+		assert.Equal(t, "Default SLA", found["slaName"])
+		// 敏感字段不得泄漏
+		assert.NotContains(t, found, "resolution_notes")
+	})
+
+	t.Run("camelCase isResolved=false 只返回未解决违规", func(t *testing.T) {
+		resp := doSLAReq(t, r, "GET", "/api/v1/sla/violations?page=1&size=20&isResolved=false", nil, false)
+		require.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+		data := resp.Data.(map[string]interface{})
+		items := data["items"].([]interface{})
+		require.Len(t, items, 1)
+		assert.Equal(t, "resolution", items[0].(map[string]interface{})["violationType"])
+		assert.Equal(t, float64(1), data["total"])
 	})
 }
 

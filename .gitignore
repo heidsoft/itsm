@@ -108,6 +108,14 @@ debug*.png
 test_result*.log
 server.log
 
+# CI artifacts — produced by .github/workflows and uploaded as build artifacts.
+# These are run output, not configuration.
+test-coverage-guard.json
+
+# Local run/test artifacts — audit reports and test outputs, not source.
+# (History kept locally; tracked copies were removed from the index.)
+output/
+
 # Screenshots (auto-generated during testing)
 *.png
 !docs/images/*.png

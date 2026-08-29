@@ -34,14 +34,32 @@ type fakeTaskService struct {
 	historyDecisions   []*ent.ProcessApprovalDecision
 	historyErr         error
 	listRequest        *service.ListUserTasksRequest
+
+	// taskVariables 模拟 BPMN 节点写进 ProcessTask.TaskVariables 的审批配置，
+	// SubmitTaskDecision 的前置校验（commentRequiredOnReject）依赖它。
+	taskVariables map[string]interface{}
+	// getTaskErr / getTaskByIDErr 用于模拟任务不存在或 tenant 不可见。
+	getTaskErr     error
+	getTaskByIDErr error
+	// 查询调用记录，用于断言 ID 路由与 fallback。
+	getTaskIDs     []string
+	getTaskByIDIDs []int
 }
 
 func (f *fakeTaskService) GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error) {
-	return nil, errors.New("not implemented")
+	f.getTaskIDs = append(f.getTaskIDs, taskID)
+	if f.getTaskErr != nil {
+		return nil, f.getTaskErr
+	}
+	return &ent.ProcessTask{TaskID: taskID, TaskVariables: f.taskVariables}, nil
 }
 
 func (f *fakeTaskService) GetTaskByID(ctx context.Context, id int) (*ent.ProcessTask, error) {
-	return nil, errors.New("not implemented")
+	f.getTaskByIDIDs = append(f.getTaskByIDIDs, id)
+	if f.getTaskByIDErr != nil {
+		return nil, f.getTaskByIDErr
+	}
+	return &ent.ProcessTask{ID: id, TaskVariables: f.taskVariables}, nil
 }
 
 func (f *fakeTaskService) CompleteTaskByID(ctx context.Context, id int, variables map[string]interface{}) error {
@@ -297,6 +315,9 @@ func TestSubmitTaskDecision_ApprovePath(t *testing.T) {
 
 func TestSubmitTaskDecision_RejectRequiresComment(t *testing.T) {
 	r, fakeTask := newBPMNWorkflowTestRouter(t)
+	// 意见是否必填是节点级配置（BPMN commentRequiredOnReject），
+	// 只有节点声明了才构成 1001 参数错误。
+	fakeTask.taskVariables = map[string]interface{}{"commentRequiredOnReject": true}
 	body := map[string]interface{}{"action": "reject"}
 	w := doRequest(t, r, "POST", "/api/v1/bpmn/tasks/1/decisions", body)
 	require.NotNil(t, w)
@@ -305,9 +326,41 @@ func TestSubmitTaskDecision_RejectRequiresComment(t *testing.T) {
 	var resp map[string]interface{}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, float64(1001), resp["code"], "reject without comment must yield ParamErrorCode 1001")
-	assert.Contains(t, resp["message"], "拒绝审批")
+	assert.Contains(t, resp["message"], "拒绝时填写意见")
 	assert.Equal(t, 0, fakeTask.completeByIDCalls, "engine must not be invoked when comment is missing")
 	assert.Equal(t, 0, fakeTask.completeCalls, "engine must not be invoked when comment is missing")
+}
+
+// 节点未声明 commentRequiredOnReject 时，拒绝不强制意见，但必须推进流程。
+func TestSubmitTaskDecision_RejectWithoutNodeConfigIsAllowed(t *testing.T) {
+	r, fakeTask := newBPMNWorkflowTestRouter(t)
+	fakeTask.taskVariables = map[string]interface{}{"approvalMode": "single"}
+	body := map[string]interface{}{"action": "reject"}
+	w := doRequest(t, r, "POST", "/api/v1/bpmn/tasks/8/decisions", body)
+	require.Equal(t, 200, w.Code, w.Body.String())
+	assert.Equal(t, 1, fakeTask.completeByIDCalls)
+	require.Len(t, fakeTask.completeByIDVars, 1)
+	assert.Equal(t, "reject", fakeTask.completeByIDVars[0]["approvalAction"])
+	assert.Equal(t, "rejected", fakeTask.completeByIDVars[0]["approvalResult"])
+}
+
+// 回归：任务不存在（含跨租户不可见）时必须 404，且不得调用引擎。
+func TestSubmitTaskDecision_UnknownTaskFailsClosed(t *testing.T) {
+	r, fakeTask := newBPMNWorkflowTestRouter(t)
+	fakeTask.getTaskErr = errors.New("ent: not found")
+	fakeTask.getTaskByIDErr = errors.New("ent: not found")
+	body := map[string]interface{}{"action": "approve"}
+
+	w := doRequest(t, r, "POST", "/api/v1/bpmn/tasks/42/decisions", body)
+	require.Equal(t, http.StatusNotFound, w.Code, w.Body.String())
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(4004), resp["code"])
+	assert.Equal(t, 0, fakeTask.completeByIDCalls, "不存在的任务不得推进")
+	assert.Equal(t, 0, fakeTask.completeCalls)
+	// 数字 ID 必须先走 string 查询，再 fallback 到主键查询
+	assert.Equal(t, []string{"42"}, fakeTask.getTaskIDs)
+	assert.Equal(t, []int{42}, fakeTask.getTaskByIDIDs)
 }
 
 func TestSubmitTaskDecision_RoutesNumericAndStringIDs(t *testing.T) {

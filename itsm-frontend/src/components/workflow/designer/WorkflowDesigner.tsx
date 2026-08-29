@@ -234,8 +234,9 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const loadGroupList = async () => {
     setLoadingGroups(true);
     try {
-      const tenantId = httpClient.getTenantId() || 1;
-      const response = await GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId: tenantId });
+      const tenantId = httpClient.getTenantId();
+      if (!tenantId) throw new Error('缺少有效租户上下文');
+      const response = await GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId });
       const groups = (response.groups || []).map((g: any) => ({
         id: g.id,
         name: g.name || t('workflow.designer.unnamedGroup'),
@@ -281,10 +282,10 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         }
       }
 
-      // 检查 XML 是否包含图表坐标数据（bpmn.js 需要）
+      // 无 DI 的 BPMN 仍是有效业务定义。绝不能用默认模板覆盖，否则下一次
+      // 保存会破坏原流程；让 modeler 显式报告无法渲染并保留原始 XML。
       if (xmlContent && !xmlContent.includes('<bpmndi:BPMNDiagram')) {
-        console.warn('XML missing diagram interchange data, using default BPMN XML');
-        xmlContent = getDefaultBPMNXML();
+        message.warning('该流程缺少 BPMN 图形坐标（DI），已保留原始 XML；请导入含 DI 的文件后再编辑');
       }
 
 	  const workflowData: WorkflowDefinition = {
@@ -491,13 +492,13 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     setSaving(true);
     try {
       if (workflow.id === 'new') {
-        const tenantId = httpClient.getTenantId() || 1;
         const response = (await WorkflowAPI.createProcessDefinition({
+          code: workflow.id === 'new' ? `process_${Date.now()}` : workflow.id,
           name: workflow.name,
           description: workflow.description,
           category: workflow.category,
+          type: workflow.category,
           bpmnXml: xml,
-          tenantId,
         } as any)) as any;
 
 		updateWorkflow({
@@ -593,7 +594,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           description: workflow.description || '',
           category: workflow.category || 'general',
           bpmnXml: xml,
-          tenantId: httpClient.getTenantId() || 1,
+          code: `process_${Date.now()}`,
+          type: workflow.category || 'general',
         };
 
         const response = (await WorkflowAPI.createProcessDefinition(createData as any)) as any;
@@ -629,8 +631,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           slaConfig: workflow.slaConfig,
         };
 
-        await WorkflowAPI.updateProcessDefinition(workflow.id, updateData, currentVersion);
-        await WorkflowAPI.deployProcessDefinition(workflow.id, currentVersion);
+        await WorkflowAPI.publishProcessDefinition(workflow.id, currentVersion, updateData);
 
         updateWorkflow({ status: 'active' });
         message.success(t('workflow.designer.workflowSavedAndDeployed'));

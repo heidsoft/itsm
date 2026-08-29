@@ -28,7 +28,7 @@ docker compose -f docker-compose.dev.yml up -d postgres redis
 
 ```bash
 cd itsm-backend
-DB_PASSWORD=itsm_password_2026 \
+DB_PASSWORD=<your-db-password> \
 JWT_SECRET=dev-secret \
 ADMIN_PASSWORD=admin123 \
 go run main.go &

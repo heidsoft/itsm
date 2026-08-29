@@ -134,7 +134,8 @@ const WorkflowManagementPage = () => {
           description: w.description || '',
           category: w.category || 'general',
           version: w.version || '1.0.0',
-          status: w.status === 'active' || w.deployed ? 'active' : 'draft',
+          // 后端 BPMN 定义没有独立的 status 字段，已部署即 isActive=true；兼容三种字段命名
+          status: w.status === 'active' || w.isActive || w.deployed ? 'active' : 'draft',
           bpmnXml: w.bpmnXml || w.xml || '',
           createdAt: w.createdAt || new Date().toISOString(),
           updatedAt: w.updatedAt || new Date().toISOString(),
@@ -277,7 +278,7 @@ const WorkflowManagementPage = () => {
     setEditingWorkflow(workflow);
 
     // 统一使用BPMN设计器，传递 key 而不是 id
-    router.push(`/workflow/designer?id=${workflow.id}&key=${workflow.id}`);
+    router.push(`/workflow/designer?key=${encodeURIComponent(workflow.id)}`);
   };
 
   const handleViewBPMN = (workflow: Workflow) => {

@@ -57,7 +57,7 @@ const SLAPerformanceReport = () => {
       const [complianceReport, stats, definitions] = await Promise.allSettled([
         SLAApi.getSLAComplianceReport({ startDate, endDate }),
         SLAApi.getSLAStats(),
-        SLAApi.getSLADefinitions({ page: 1, size: 50 }),
+        SLAApi.getSLADefinitions({ page: 1, pageSize: 50 }),
       ]);
 
       const report =

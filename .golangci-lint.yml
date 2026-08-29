@@ -75,6 +75,11 @@ issues:
     - 'docs/.*'
     - '\.pb\.go$'
     - 'vendor/.*'
+    # Generated code. These files are machine-written and must not be hand-edited,
+    # so linting them only buries contributors in thousands of errors they cannot
+    # fix — which trains people to ignore lint entirely.
+    - 'ent/.*'          # Ent ORM generated client (~1000 files, "DO NOT EDIT")
+    - 'migrations/.*'   # legacy generated copy — kept in case it is regenerated
 
   # 排除特定规则
   exclude-rules:

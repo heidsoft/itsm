@@ -21,7 +21,7 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
     setResolvedParams(params as { id?: string });
   }, [params]);
 
-  const workflowId = resolvedParams?.id || searchParams.get('id');
+  const workflowId = resolvedParams?.id || searchParams.get('key') || searchParams.get('id');
 
   return <WorkflowDesigner workflowId={workflowId || undefined} />;
 };

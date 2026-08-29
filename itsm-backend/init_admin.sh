@@ -6,9 +6,8 @@ DB_HOST=${DB_HOST:-"localhost"}
 DB_PORT=${DB_PORT:-"5432"}
 DB_USER=${DB_USER:-"itsm"}
 DB_NAME=${DB_NAME:-"itsm"}
-DB_PASSWORD=${DB_PASSWORD:-"itsm_password_2026"}
-
-# Admin password is REQUIRED - no hardcoded default
+# Both credentials are REQUIRED - no hardcoded defaults.
+DB_PASSWORD=${DB_PASSWORD:?"DB_PASSWORD must be set. Run: DB_PASSWORD=your_db_password $0"}
 ADMIN_PASSWORD=${ADMIN_PASSWORD:?"ADMIN_PASSWORD must be set. Run: ADMIN_PASSWORD=your_secure_password $0"}
 
 export DATABASE_URL="host=${DB_HOST} user=${DB_USER} password=${DB_PASSWORD} dbname=${DB_NAME} port=${DB_PORT} sslmode=disable"
@@ -65,7 +64,7 @@ BEGIN
 END $$;
 
 -- 显示用户统计
-SELECT '用户统计:' as 信息，COUNT(*) as 数量 FROM users
+SELECT '用户统计:' as 信息, COUNT(*) as 数量 FROM users
 UNION ALL
 SELECT '管理员数量:', COUNT(*) FROM users WHERE role = 'admin';
 EOSQL

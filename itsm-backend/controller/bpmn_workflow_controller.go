@@ -60,6 +60,7 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 		bpmn.GET("/process-definitions", c.ListProcessDefinitions)
 		bpmn.GET("/process-definitions/:key", c.GetProcessDefinition)
 		bpmn.PUT("/process-definitions/:key", c.UpdateProcessDefinition)
+		bpmn.PUT("/process-definitions/:key/publish", c.PublishProcessDefinition)
 		bpmn.DELETE("/process-definitions/:key", c.DeleteProcessDefinition)
 		bpmn.GET("/process-definitions/:key/export", c.ExportProcessDefinition)
 		bpmn.POST("/process-definitions/:key/clone", c.CloneProcessDefinition)
@@ -109,6 +110,29 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
+func (c *BPMNWorkflowController) PublishProcessDefinition(ctx *gin.Context) {
+	key, version := ctx.Param("key"), ctx.Query("version")
+	if version == "" {
+		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
+		return
+	}
+	var req service.UpdateProcessDefinitionRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
+	definition, err := c.processEngine.ProcessDefinitionService().PublishProcessDefinition(workflowCtx, key, version, &req)
+	if err != nil {
+		common.Fail(ctx, common.ConflictCode, "发布流程定义失败: "+err.Error())
+		return
+	}
+	common.SuccessWithMessage(ctx, "流程定义发布成功", dto.ToBPMNProcessDefinitionResponse(definition))
+}
+
 func (c *BPMNWorkflowController) GetApprovalHistory(ctx *gin.Context) {
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
 	if !ok {
@@ -134,12 +158,23 @@ func (c *BPMNWorkflowController) SubmitTaskDecision(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
-	if req.Action == "reject" && strings.TrimSpace(req.Comment) == "" {
-		common.Fail(ctx, common.ParamErrorCode, "拒绝审批时必须填写意见")
-		return
-	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
 	if !ok {
+		return
+	}
+	task, taskErr := c.processEngine.TaskService().GetTask(workflowCtx, taskID)
+	if taskErr != nil {
+		if id, parseErr := strconv.Atoi(taskID); parseErr == nil {
+			task, taskErr = c.processEngine.TaskService().GetTaskByID(workflowCtx, id)
+		}
+	}
+	if taskErr != nil {
+		common.NotFound(ctx, "审批任务不存在")
+		return
+	}
+	commentRequired, configured := task.TaskVariables["commentRequiredOnReject"].(bool)
+	if req.Action == "reject" && configured && commentRequired && strings.TrimSpace(req.Comment) == "" {
+		common.Fail(ctx, common.ParamErrorCode, "该审批节点要求拒绝时填写意见")
 		return
 	}
 	variables := req.Variables

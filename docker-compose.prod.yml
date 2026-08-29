@@ -54,11 +54,18 @@ services:
       retries: 5
     restart: always
 
-  # MinIO 对象存储（生产环境，可替换为 S3）
+  # MinIO 对象存储（可选，默认不启动）
+  #
+  # 当前后端（Go）与前端代码均未使用 MinIO/S3——全仓对 MINIO_* 的引用只存在于
+  # compose 文件自身。因此该服务移入 "storage" profile，默认不参与启动，
+  # 避免让新部署者为一个用不到的组件准备凭据。
+  #
+  # 需要时启用：docker compose --env-file .env.prod -f docker-compose.prod.yml --profile storage up -d minio
   minio:
     image: minio/minio:latest
     container_name: itsm-minio-prod
     hostname: minio
+    profiles: ["storage"]
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY must be set}
@@ -96,14 +103,21 @@ services:
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
       - LOG_LEVEL=error
       - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
-      - BOOTSTRAP_TOKEN_ENABLED=${BOOTSTRAP_TOKEN_ENABLED:-1}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set - without it no admin account is created and you cannot sign in}
       - ITSM_BOOTSTRAP_ONLY=true
       - ITSM_AUTO_MIGRATE=true
       - ITSM_AUTO_SEED=true
-      # Bootstrap flow: init container uses legacy ADMIN_PASSWORD path to ensure
-      # admin user is created in one shot; bootstrap-token flow requires a separate
-      # two-step generate-token + consume-token API dance (planned post-pilot).
+      # Bootstrap flow:
+      # The init container takes the legacy ADMIN_PASSWORD path so the admin user
+      # is created in one shot. BOOTSTRAP_TOKEN_ENABLED=0 is what selects that
+      # path; itsm-backend below keeps it at 1 and therefore skips admin creation
+      # (seeder returns early when bootstrap is enabled).
+      # The bootstrap-token flow would instead require a separate two-step
+      # generate-token + consume-token API dance (planned post-pilot).
+      #
+      # NOTE: do not re-add a BOOTSTRAP_TOKEN_ENABLED=1 line above this one —
+      # a duplicate key in the same environment list is silently overridden by
+      # the last occurrence, which previously made this file self-contradictory.
       - BOOTSTRAP_TOKEN_ENABLED=${BOOTSTRAP_TOKEN_ENABLED:-0}
       - RLS_MODE=off
       - RLS_TENANT_VAR_NAME=app.current_tenant
@@ -113,8 +127,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
     volumes:
       - ./logs:/app/logs
@@ -150,7 +162,10 @@ services:
       # 服务配置
       - SERVER_ENV=production
       - SERVER_HOST=0.0.0.0
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      # Reported by GET /api/v1/version. Tied to the image tag so the API, the
+      # running image and the release version cannot drift apart.
+      - APP_VERSION=${VERSION:-1.6.9}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set - without it no admin account is created and you cannot sign in}
       - BOOTSTRAP_TOKEN_ENABLED=${BOOTSTRAP_TOKEN_ENABLED:-1}
 
       # JWT 配置（生产环境必须更改！）
@@ -170,13 +185,10 @@ services:
       - RLS_MODE=${RLS_MODE:-enforce}
       - RLS_TENANT_VAR_NAME=${RLS_TENANT_VAR_NAME:-app.current_tenant}
 
-      # 监控
-      - ENABLE_METRICS=true
-
       # 对象存储（生产用 S3 或 MinIO）
       - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY must be set}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:?MINIO_SECRET_KEY must be set}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-}
       - MINIO_BUCKET=${MINIO_BUCKET:-itsm-uploads}
       - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
 
@@ -214,8 +226,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
       itsm-init:
         condition: service_completed_successfully
@@ -269,8 +279,8 @@ services:
       - RLS_MODE=${RLS_MODE:-enforce}
       - RLS_TENANT_VAR_NAME=${RLS_TENANT_VAR_NAME:-app.current_tenant}
       - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY must be set}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:?MINIO_SECRET_KEY must be set}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-}
       - MINIO_BUCKET=${MINIO_BUCKET:-itsm-uploads}
       - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
       - no_proxy=localhost,127.0.0.1
@@ -279,8 +289,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
       itsm-init:
         condition: service_completed_successfully

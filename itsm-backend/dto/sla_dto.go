@@ -104,24 +104,12 @@ type SLAMetricResponse struct {
 	UpdatedAt       time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
-// SLA监控相关DTO
+// SLAMonitoringRequest 监控大屏指标查询。窗口缺省时服务端使用最近 30 天。
+// 监控接口只按认证中间件注入的租户上下文 + 时间窗口聚合，不接受请求体里的
+// slaDefinitionId / ticketId 等自报字段，避免跨范围注入。
 type SLAMonitoringRequest struct {
-	SLADefinitionID *int   `json:"slaDefinitionId,omitempty" example:"1"`
-	TicketID        *int   `json:"ticketId,omitempty" example:"1"`
-	StartTime       string `json:"startTime" example:"2024-01-01T00:00:00Z"`
-	EndTime         string `json:"endTime" example:"2024-01-31T23:59:59Z"`
-}
-
-type SLAMonitoringResponse struct {
-	SLADefinitionID       int                    `json:"slaDefinitionId" example:"1"`
-	SLAInfo               SLADefinitionResponse  `json:"slaInfo"`
-	Metrics               []SLAMetricResponse    `json:"metrics"`
-	Violations            []SLAViolationResponse `json:"violations"`
-	ComplianceRate        float64                `json:"complianceRate" example:"95.5"`
-	AverageResponseTime   float64                `json:"averageResponseTime" example:"28.5"`
-	AverageResolutionTime float64                `json:"averageResolutionTime" example:"180.5"`
-	TotalTickets          int                    `json:"totalTickets" example:"100"`
-	ViolatedTickets       int                    `json:"violatedTickets" example:"5"`
+	StartTime string `json:"startTime" example:"2024-01-01T00:00:00Z"`
+	EndTime   string `json:"endTime" example:"2024-01-31T23:59:59Z"`
 }
 
 type SLAReportPeriod struct {

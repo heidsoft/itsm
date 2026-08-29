@@ -600,7 +600,7 @@ func TestBPMNSLAService_GetSLAComplianceRate(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	t.Run("无已完成实例时返回100%合规率", func(t *testing.T) {
+	t.Run("无已完成样本时诚实返回0而非伪装100%", func(t *testing.T) {
 		rate, compliant, total, err := slaService.GetSLAComplianceRate(
 			ctx,
 			"nonexistent_process",
@@ -609,7 +609,8 @@ func TestBPMNSLAService_GetSLAComplianceRate(t *testing.T) {
 			testTenant.ID,
 		)
 		require.NoError(t, err)
-		assert.Equal(t, 100.0, rate)
+		// 能力状态语义：无样本 != 全合规，调用方用 total==0 识别“暂无数据”
+		assert.Equal(t, 0.0, rate)
 		assert.Equal(t, 0, compliant)
 		assert.Equal(t, 0, total)
 	})

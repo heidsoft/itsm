@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"itsm-backend/ent"
@@ -11,6 +12,11 @@ import (
 
 	"go.uber.org/zap"
 )
+
+// round1 保留一位小数，避免仪表盘展示 97.142857… 之类原始浮点噪声
+func round1(v float64) float64 {
+	return math.Round(v*10) / 10
+}
 
 // BPMNMetricsService BPMN指标服务
 type BPMNMetricsService struct {
@@ -35,7 +41,11 @@ type DashboardMetrics struct {
 	CompletedToday    int            `json:"completedToday"`
 	OpenTasks         int            `json:"openTasks"`
 	SLAComplianceRate float64        `json:"slaComplianceRate"`
-	AvgCompletionTime float64        `json:"avgCompletionTimeMinutes"`
+	// SLACompliantSamples/SLATotalSamples 暴露合规率样本量：
+	// 前端据此区分“暂无样本”与“真实 0%”，不得把 0 样本伪装成高合规。
+	SLACompliantSamples int     `json:"slaCompliantSamples"`
+	SLATotalSamples     int     `json:"slaTotalSamples"`
+	AvgCompletionTime   float64 `json:"avgCompletionTimeMinutes"`
 	ProcessHealth     *ProcessHealth `json:"processHealth"`
 	TopProcesses      []ProcessStat  `json:"topProcesses"`
 	TaskDistribution  []TaskStat     `json:"taskDistribution"`
@@ -113,23 +123,23 @@ func (s *BPMNMetricsService) GetDashboardMetrics(ctx context.Context, tenantID i
 		return nil, err
 	}
 
-	// SLA合规率
-	slaRate := 100.0
+	// SLA合规率：按已完成实例加权聚合（compliant/total），无样本时诚实返回 0，
+	// 不得伪装成 100% 合规（能力语义：无数据 != 全合规）
+	slaRate := 0.0
+	var slaCompliantSum, slaTotalSum int
 	definitions, err := s.client.ProcessDefinition.Query().
 		Where(processdefinition.TenantID(tenantID)).
 		All(ctx)
 	if err == nil && len(definitions) > 0 {
-		var totalRate float64
-		var count int
 		for _, def := range definitions {
-			rate, _, _, err := s.slaService.GetSLAComplianceRate(ctx, def.Key, startTime, endTime, tenantID)
+			_, compliant, total, err := s.slaService.GetSLAComplianceRate(ctx, def.Key, startTime, endTime, tenantID)
 			if err == nil {
-				totalRate += rate
-				count++
+				slaCompliantSum += compliant
+				slaTotalSum += total
 			}
 		}
-		if count > 0 {
-			slaRate = totalRate / float64(count)
+		if slaTotalSum > 0 {
+			slaRate = round1(float64(slaCompliantSum) / float64(slaTotalSum) * 100)
 		}
 	}
 
@@ -149,16 +159,18 @@ func (s *BPMNMetricsService) GetDashboardMetrics(ctx context.Context, tenantID i
 	trendData := s.getTrendData(ctx, tenantID, startTime, endTime)
 
 	return &DashboardMetrics{
-		TotalProcesses:    totalProcesses,
-		ActiveInstances:   activeInstances,
-		CompletedToday:    completedToday,
-		OpenTasks:         openTasks,
-		SLAComplianceRate: slaRate,
-		AvgCompletionTime: avgDuration,
-		ProcessHealth:     health,
-		TopProcesses:      topProcesses,
-		TaskDistribution:  taskDistribution,
-		TrendData:         trendData,
+		TotalProcesses:      totalProcesses,
+		ActiveInstances:     activeInstances,
+		CompletedToday:      completedToday,
+		OpenTasks:           openTasks,
+		SLAComplianceRate:   slaRate,
+		SLACompliantSamples: slaCompliantSum,
+		SLATotalSamples:     slaTotalSum,
+		AvgCompletionTime:   avgDuration,
+		ProcessHealth:       health,
+		TopProcesses:        topProcesses,
+		TaskDistribution:    taskDistribution,
+		TrendData:           trendData,
 	}, nil
 }
 
@@ -182,7 +194,7 @@ func (s *BPMNMetricsService) calculateAvgCompletionTime(ctx context.Context, ten
 		}
 	}
 
-	return totalDuration / float64(len(instances))
+	return round1(totalDuration / float64(len(instances)))
 }
 
 // calculateProcessHealth 计算流程健康度
@@ -219,7 +231,7 @@ func (s *BPMNMetricsService) calculateProcessHealth(ctx context.Context, tenantI
 	total := healthy + warning + critical
 	healthScore := 0.0
 	if total > 0 {
-		healthScore = float64(healthy*100+warning*50) / float64(total)
+		healthScore = round1(float64(healthy*100+warning*50) / float64(total))
 	}
 
 	return &ProcessHealth{
@@ -266,6 +278,7 @@ func (s *BPMNMetricsService) getTopProcesses(ctx context.Context, tenantID int, 
 	// 转换为切片并排序
 	result := make([]ProcessStat, 0, len(processMap))
 	for _, stat := range processMap {
+		stat.AvgDuration = round1(stat.AvgDuration)
 		result = append(result, *stat)
 	}
 
@@ -312,7 +325,7 @@ func (s *BPMNMetricsService) getTaskDistribution(ctx context.Context, tenantID i
 		result = append(result, TaskStat{
 			Status:  status,
 			Count:   count,
-			Percent: percent,
+			Percent: round1(percent),
 		})
 	}
 
@@ -390,10 +403,10 @@ func (s *BPMNMetricsService) GetProcessMetrics(ctx context.Context, processDefin
 		return nil, err
 	}
 
-	// SLA合规率
+	// SLA合规率（无样本时为 0，表示暂无数据，而非 100% 合规）
 	slaRate, _, _, err := s.slaService.GetSLAComplianceRate(ctx, processDefinitionKey, startTime, endTime, tenantID)
 	if err != nil {
-		slaRate = 100.0
+		slaRate = 0
 	}
 
 	// 平均处理时间
@@ -408,7 +421,7 @@ func (s *BPMNMetricsService) GetProcessMetrics(ctx context.Context, processDefin
 			if totalInstances == 0 {
 				return 0
 			}
-			return float64(completedInstances) / float64(totalInstances) * 100
+			return round1(float64(completedInstances) / float64(totalInstances) * 100)
 		}(),
 		SLAComplianceRate: slaRate,
 		AvgCompletionTime: avgDuration,

@@ -5,18 +5,20 @@ import type { SLAViolation } from '../types';
 
 const violation: SLAViolation = {
   id: 7,
+  createdBy: 1,
   tenantId: 1,
   ticketId: 10,
-  slaDefId: 2,
+  ticketNumber: 'TKT-0007',
+  ticketTitle: '打印机故障',
+  ticketPriority: 'high',
+  slaName: '标准服务SLA',
+  slaDefinitionId: 2,
   violationType: 'response',
+  violationTime: '2026-01-01T09:00:00Z',
   severity: 'critical',
-  status: 'open',
-  expectedTime: '2026-01-01T08:00:00Z',
-  actualTime: '2026-01-01T09:00:00Z',
-  delayMinutes: 60,
+  isResolved: false,
+  resolutionNotes: '',
   description: '响应超时',
-  createdAt: '2026-01-01T09:00:00Z',
-  updatedAt: '2026-01-01T09:00:00Z',
 };
 
 describe('SLAViolationDetailModal', () => {

@@ -21,7 +21,9 @@ database:
   host: "localhost"
   port: 5432
   user: "itsm"
-  password: "itsm_password_2026"
+  # Leave empty and provide the credential via the DB_PASSWORD environment
+  # variable. Do not commit real credentials here — this file is tracked by git.
+  password: ""
   database: "itsm"
   # Connection pool settings
   pool_size: 10

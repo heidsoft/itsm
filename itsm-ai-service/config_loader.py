@@ -22,11 +22,18 @@ class DatabaseConfig:
     host: str = "localhost"
     port: int = 5432
     user: str = "itsm"
-    password: str = "itsm_password_2026"
+    password: str = ""
     database: str = "itsm"
     pool_size: int = 10
     max_overflow: int = 20
     sslmode: str = "disable"
+
+    def __post_init__(self) -> None:
+        # Never ship a default credential in the repository. When config.yaml
+        # leaves the password empty, fall back to the DB_PASSWORD environment
+        # variable (or point ITSM_AI_CONFIG at a private config file).
+        if not self.password:
+            self.password = os.getenv("DB_PASSWORD", "")
 
     @property
     def url(self) -> str:

@@ -5,13 +5,20 @@ import { test, expect } from '../auth-utils';
 import { loginAndReturn } from '../auth-utils';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
-// 生产环境 admin 密码来自 .env.prod 的 ADMIN_PASSWORD
-const ADMIN_PASSWORD = 'AdminProd2026!';
+// Credentials come from the environment. Never hard-code a real password here:
+// this repository is public and anything committed stays in git history.
+//   E2E_ADMIN_USER      default: admin
+//   E2E_ADMIN_PASSWORD  no default — the suite skips when unset
+const ADMIN_USER = process.env.E2E_ADMIN_USER || 'admin';
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || '';
 
 test.describe('CAB 成员管理业务流程', () => {
+  // Skip rather than fail with a confusing auth error when no password is set.
+  test.skip(!ADMIN_PASSWORD, 'E2E_ADMIN_PASSWORD not set - skipping authenticated flow');
+
   test.beforeEach(async ({ page }) => {
     // 直接用 API 登录并注入 cookie，再访问页面
-    await loginAndReturn(page, 'admin', ADMIN_PASSWORD, '/dashboard');
+    await loginAndReturn(page, ADMIN_USER, ADMIN_PASSWORD, '/dashboard');
   });
 
   test('完整 CRUD 链路 + 状态切换', async ({ page }) => {

@@ -22,7 +22,14 @@ type Repository interface {
 	// Metrics
 	CreateMetric(ctx context.Context, m *SLAMetric) (*SLAMetric, error)
 	GetMetrics(ctx context.Context, tenantID int, filters map[string]interface{}) ([]*SLAMetric, error)
-	GetSLAMonitoring(ctx context.Context, tenantID int, startTime, endTime string) (map[string]interface{}, error)
+
+	// GetSLAMonitoring 返回监控大屏的指标快照。start/end 是强制的统计窗口，
+	// 实现必须将其下推到查询，不得忽略窗口参数。
+	GetSLAMonitoring(ctx context.Context, tenantID int, start, end time.Time) (*SLAMonitoringData, error)
+
+	// ListSLAPerformance 按维度（serviceType / priority）聚合窗口内绩效，
+	// 返回按工单数降序确定的列表；第二个返回值表示窗口内工单数命中扫描上限。
+	ListSLAPerformance(ctx context.Context, tenantID int, dimension string, start, end time.Time, serviceTypeFilter, priorityFilter string) ([]*SLAPerformanceRow, bool, error)
 
 	// Alert Rules
 	CreateAlertRule(ctx context.Context, r *SLAAlertRule) (*SLAAlertRule, error)

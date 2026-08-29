@@ -53,8 +53,10 @@ services:
       - GF_SERVER_ROOT_URL=http://localhost:3001
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      # provisioning/ holds provider + datasource configs; the dashboard JSONs
+      # live in dashboards/ and are loaded via provider.yml `options.path`.
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
     networks:
@@ -81,8 +83,18 @@ services:
       - itsm-network
 
 networks:
+  # Join the network created by the main stack so Prometheus can actually reach
+  # itsm-backend. This stack is also the reason /metrics needs
+  # METRICS_REQUIRE_AUTH=false on the backend — Prometheus cannot present a JWT.
+  #
+  # The default name matches the network created by docker-compose.prod.yml
+  # (compose prefixes networks with the project name, here "itsm"). Override with
+  # ITSM_MONITORING_NETWORK when running against a differently named project.
+  #
+  # The network must already exist: start the main stack first.
   itsm-network:
-    driver: bridge
+    external: true
+    name: ${ITSM_MONITORING_NETWORK:-itsm_itsm-prod-network}
 
 volumes:
   prometheus_data:

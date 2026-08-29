@@ -15,10 +15,23 @@
 
 请**不要**通过公开 Issue、PR、Discussion 报告安全漏洞。
 
-通过以下私密渠道报告：
+### 首选渠道：GitHub 私有漏洞报告
 
-- Email: **security@itsm.local**（PGP key 见 `docs/security/pgp-key.asc`，尚未发布则先用明文并附签名哈希）
-- 或者：项目维护者内部安全邮箱（见 `.github/CODEOWNERS` 中 `security:` 行）
+<https://github.com/heidsoft/itsm/security/advisories/new>
+
+GitHub 原生的私有披露通道，仅维护者可见，支持修复发布前的协同讨论与 CVE 申请。
+
+### 备选渠道：邮件
+
+若无法使用上述通道（例如组织网络限制 GitHub 访问），请发送邮件至维护者安全邮箱。
+
+> **维护者待办 —— 发布前必须完成，否则本节形同虚设**
+>
+> 1. 在仓库 Settings → Code security 中启用 *Private vulnerability reporting*；
+> 2. 将本节占位邮箱替换为**真实可接收**的邮箱。原示例 `security@itsm.local`
+>    使用了 `.local` 保留域名，外部邮件**无法投递**；
+> 3. 如需提供 PGP 加密，请先实际发布公钥再更新路径 —— 原引用
+>    `docs/security/pgp-key.asc` 所在的 `docs/security/` 目录并不存在。
 
 请在报告中包含：
 
@@ -46,4 +59,4 @@
 
 ## Recognition
 
-公开致谢名单见 `docs/security/hall-of-fame.md`（待建）。报告者可在修复发布后选择是否匿名披露。
+公开致谢名单将在首位外部报告者出现后建立于 `docs/security/hall-of-fame.md`（该目录目前尚未创建）。报告者可在修复发布后选择是否匿名披露。

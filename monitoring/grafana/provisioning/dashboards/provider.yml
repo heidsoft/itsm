@@ -1,0 +1,22 @@
+apiVersion: 1
+
+# Grafana dashboard provisioning.
+#
+# This file (not the dashboard JSONs) belongs in /etc/grafana/provisioning/dashboards.
+# The JSON dashboards are mounted at /var/lib/grafana/dashboards and loaded from
+# there via `options.path` below.
+#
+# Previously the dashboard JSONs were mounted directly into the provisioning
+# directory, where Grafana expects provider configs — so they were never loaded.
+
+providers:
+  - name: ITSM dashboards
+    orgId: 1
+    folder: ITSM
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

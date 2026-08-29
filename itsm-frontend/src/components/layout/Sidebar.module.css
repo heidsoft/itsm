@@ -22,6 +22,10 @@
   background: #ffffff;
   border-bottom: 1px solid #f0f0f0;
   flex-shrink: 0;
+  /* 固定侧边栏整体滚动时，Logo 始终吸顶 */
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .logoAreaCollapsed {
@@ -66,8 +70,11 @@
 
 .mainMenu {
   padding: 16px 8px;
-  overflow-y: auto;
-  flex-grow: 1;
+  /* 关键修复：不再让主菜单独占剩余空间并内部滚动，否则会把「管理功能」区块
+     整体挤出可视区域（flex-grow:1 + overflow-y:auto 形成嵌套滚动区）。
+     改为按内容高度排布，由 .sider 统一滚动，保证所有菜单项（含管理功能）可达。 */
+  flex: 0 1 auto;
+  min-height: 0;
   /* Scrollbar styling */
   scrollbar-width: thin;
   scrollbar-color: #e5e7eb transparent;
@@ -137,7 +144,6 @@
 }
 
 .adminMenuContainer {
-  margin-top: auto;
   padding: 16px 8px;
   flex-shrink: 0;
   background: #f9fafb;
@@ -162,6 +168,10 @@
   border-top: 1px solid #f0f0f0;
   background: #ffffff;
   flex-shrink: 0;
+  /* 固定侧边栏整体滚动时，用户信息始终吸底 */
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
 }
 
 .userInfo {

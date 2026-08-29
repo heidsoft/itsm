@@ -53,7 +53,7 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
       onCancel={onClose}
       footer={
         <Space>
-          {canManage && violation.status === 'open' && (
+          {canManage && !violation.isResolved && (
             <>
               <Button loading={actionLoading} onClick={() => void onAcknowledge(violation)}>
                 {t('sla.violation.acknowledge')}
@@ -71,7 +71,16 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
       <Descriptions bordered column={1}>
         <Descriptions.Item label={t('sla.violation.fieldId')}>{violation.id}</Descriptions.Item>
         <Descriptions.Item label={t('sla.violation.fieldTicketId')}>{violation.ticketId}</Descriptions.Item>
-        <Descriptions.Item label={t('sla.violation.fieldSlaDefId')}>{violation.slaDefId}</Descriptions.Item>
+        <Descriptions.Item label={t('sla.violation.fieldTicketNumber')}>
+          {violation.ticketNumber || '-'}
+        </Descriptions.Item>
+        <Descriptions.Item label={t('sla.violation.fieldTicketTitle')}>
+          {violation.ticketTitle || '-'}
+        </Descriptions.Item>
+        <Descriptions.Item label={t('sla.violation.fieldSlaDefId')}>{violation.slaDefinitionId}</Descriptions.Item>
+        <Descriptions.Item label={t('sla.violation.fieldSlaName')}>
+          {violation.slaName || '-'}
+        </Descriptions.Item>
         <Descriptions.Item label={t('sla.violation.fieldViolationType')}>{violation.violationType}</Descriptions.Item>
         <Descriptions.Item label={t('sla.violation.fieldSeverity')}>
           <Tag color={severityColors[violation.severity] || 'default'}>
@@ -79,27 +88,21 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label={t('sla.violation.fieldStatus')}>
-          <Tag color={violation.status === 'resolved' ? 'green' : 'red'}>
-            {violation.status === 'resolved' ? t('sla.violation.statusResolved') : t('sla.violation.statusOpen')}
+          <Tag color={violation.isResolved ? 'green' : 'red'}>
+            {violation.isResolved ? t('sla.violation.statusResolved') : t('sla.violation.statusOpen')}
           </Tag>
         </Descriptions.Item>
-        <Descriptions.Item label={t('sla.violation.fieldExpectedTime')}>
-          {new Date(violation.expectedTime).toLocaleString()}
+        <Descriptions.Item label={t('sla.violation.fieldViolationTime')}>
+          {violation.violationTime ? new Date(violation.violationTime).toLocaleString() : '-'}
         </Descriptions.Item>
-        <Descriptions.Item label={t('sla.violation.fieldActualTime')}>
-          {new Date(violation.actualTime).toLocaleString()}
+        <Descriptions.Item label={t('sla.violation.fieldResolvedAt')}>
+          {violation.resolvedAt ? new Date(violation.resolvedAt).toLocaleString() : '-'}
         </Descriptions.Item>
-        <Descriptions.Item label={t('sla.violation.fieldDelayMinutes')}>
-          {t('sla.violation.delayMinutes', { count: violation.delayMinutes })}
+        <Descriptions.Item label={t('sla.violation.fieldResolutionNotes')}>
+          {violation.resolutionNotes || '-'}
         </Descriptions.Item>
         <Descriptions.Item label={t('sla.violation.fieldDescription')}>
           {violation.description || '-'}
-        </Descriptions.Item>
-        <Descriptions.Item label={t('sla.violation.fieldCreatedAt')}>
-          {violation.createdAt ? new Date(violation.createdAt).toLocaleString() : '-'}
-        </Descriptions.Item>
-        <Descriptions.Item label={t('sla.violation.fieldUpdatedAt')}>
-          {violation.updatedAt ? new Date(violation.updatedAt).toLocaleString() : '-'}
         </Descriptions.Item>
       </Descriptions>
     </Modal>

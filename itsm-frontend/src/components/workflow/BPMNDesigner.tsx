@@ -797,6 +797,27 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           elementName: bo.name || task.id,
         });
       }
+      const implementation = bo.implementation || bo.operationRef;
+      const supported = new Set(['webhook', 'cc_handler', 'ticket_handler', 'change_handler', 'incident_handler', 'service_request_handler', 'notification_handler', 'approval_handler', 'generic_handler']);
+      if (implementation && !supported.has(implementation)) {
+        errors.push({
+          type: 'error',
+          message: `服务任务 ${bo.name || task.id} 的处理器“${implementation}”未注册，当前不可发布`,
+          elementId: task.id,
+          elementType: task.type,
+          elementName: bo.name || task.id,
+        });
+      }
+    });
+
+    elementRegistry.filter(el => el.type === 'bpmn:ScriptTask').forEach(task => {
+      errors.push({
+        type: 'error',
+        message: `脚本任务 ${task.businessObject?.name || task.id} 尚无隔离执行器，当前不可发布`,
+        elementId: task.id,
+        elementType: task.type,
+        elementName: task.businessObject?.name || task.id,
+      });
     });
 
     // 检查网关是否有默认分支和条件

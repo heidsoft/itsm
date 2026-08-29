@@ -102,7 +102,24 @@ verify-scripts:    ## Validate build/start scripts without starting services
 	node --test scripts/__tests__/build-start-scripts.test.js
 
 # Database
-db-migrate:         ## Run database migrations
+db-migrate:         ## Show how schema changes are applied (safe, read-only)
+	@echo "Schema is applied automatically when the backend starts (ITSM_AUTO_MIGRATE=true)."
+	@echo ""
+	@echo "  Apply schema normally :  make dev-start-docker"
+	@echo "  Rebuild empty database:  make db-reset   (DESTRUCTIVE)"
+
+db-reset:           ## DESTRUCTIVE: drop and recreate the database (was db-migrate)
+	@echo ""
+	@echo "  #############################################################"
+	@echo "  #  WARNING: This DROPS the database and recreates it empty.  #"
+	@echo "  #  ALL DATA WILL BE PERMANENTLY LOST.                        #"
+	@echo "  #############################################################"
+	@echo ""
+	@if [ "$${DB_RESET_CONFIRM:-}" != "reset" ]; then \
+		printf "Type 'reset' to continue: "; \
+		read ans; \
+		if [ "$$ans" != "reset" ]; then echo "Aborted."; exit 1; fi; \
+	fi
 	cd itsm-backend && $(MAKE) build && GOTOOLCHAIN="${GOTOOLCHAIN:-auto}" go run -tags migrate main.go
 
 db-seed:            ## Seed database with test data
@@ -157,7 +174,7 @@ coverage-baseline:  ## Snapshot current coverage to docs/testing/coverage-baseli
 .PHONY: dev-init dev-start dev-start-local dev-start-docker dev-stop dev-stop-local dev-stop-docker dev-logs dev-restart dev-status dev-health dev-doctor dev-clean \
         prod-init prod-start prod-stop prod-deploy prod-status prod-health prod-logs \
         prod-restart prod-rollback prod-backup prod-down \
-        db-migrate db-seed \
+        db-migrate db-reset db-seed \
         backend-test backend-test-ci backend-vet backend-build backend-cover backend-cover-html backend-lint backend-tidy \
         release build-images build-backend build-frontend verify-scripts \
         logs-backend logs-frontend logs-postgres check-contracts coverage-report coverage-baseline

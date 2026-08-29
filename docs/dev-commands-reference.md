@@ -109,9 +109,18 @@ make dev-clean             # 停止并删除所有容器 + 数据卷（⚠️ �
 ### 2.2 数据库操作
 
 ```bash
-make db-migrate            # 运行数据库迁移
+make db-migrate            # 查看 schema 变更如何生效（安全，仅打印指引）
 make db-seed               # 填充测试数据
+make db-reset              # 危险：删库重建，需二次确认，会清空所有数据
 ```
+
+> **注意**：`make db-migrate` 只打印指引，不会对数据库做任何改动。schema 变更在后端
+> 启动时通过 `ITSM_AUTO_MIGRATE=true` 自动应用，正常启动服务即可。
+>
+> 若确需从空库重建，使用 `make db-reset`。该命令会打印警告并要求输入 `reset` 二次确认；
+> 非交互环境可用 `DB_RESET_CONFIRM=reset make db-reset` 跳过确认。
+>
+> 早期版本的 `make db-migrate` 会直接执行 `DROP DATABASE`，该行为现已被 `db-reset` 取代。
 
 ### 2.3 后端测试
 
@@ -458,7 +467,8 @@ lsof -nP -iTCP:3000 -sTCP:LISTEN
 | 健康检查 | `make dev-health` |
 | 环境诊断 | `make dev-doctor` |
 | 重置环境（删数据） | `make dev-clean` |
-| 数据库迁移 | `make db-migrate` |
+| 数据库迁移（查看指引） | `make db-migrate` |
+| 数据库删库重建（危险） | `make db-reset` |
 | 填充测试数据 | `make db-seed` |
 | 契约检查 | `make check-contracts` |
 | 生产初始化 | `make prod-init` |

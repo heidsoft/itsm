@@ -483,6 +483,9 @@ func (s *IncidentService) ListIncidents(ctx context.Context, tenantID int, page,
 	if assigneeID, ok := filters["assignee_id"].(int); ok && assigneeID > 0 {
 		query = query.Where(incident.AssigneeIDEQ(assigneeID))
 	}
+	if isMajor, ok := filters["is_major_incident"].(bool); ok {
+		query = query.Where(incident.IsMajorIncidentEQ(isMajor))
+	}
 
 	// 获取总数
 	total, err := query.Count(ctx)

@@ -213,7 +213,8 @@ export default function WorkflowNodeInspector({
   const loadGroups = useCallback(async (search = '') => {
     setLoadingGroups(true);
     try {
-      const tenantId = httpClient.getTenantId() || 1;
+      const tenantId = httpClient.getTenantId();
+      if (!tenantId) throw new Error('缺少有效租户上下文');
       const resp = await GroupAPI.getGroups({ page: 1, pageSize: 200, tenantId, search });
       if (!cancelledRef.current) {
         setGroups(prev => {
@@ -257,7 +258,8 @@ export default function WorkflowNodeInspector({
       setLoadingUsers(true);
       setLoadingGroups(true);
       try {
-        const tenantId = httpClient.getTenantId() || 1;
+        const tenantId = httpClient.getTenantId();
+        if (!tenantId) throw new Error('缺少有效租户上下文');
         const [userResp, groupResp] = await Promise.all([
           UserApi.getUsers({ page: 1, pageSize: 200, search: '' }),
           GroupAPI.getGroups({ page: 1, pageSize: 200, tenantId, search: '' }),
@@ -504,12 +506,12 @@ export default function WorkflowNodeInspector({
 
   // 服务实现类型选项
   const implementationOptions = [
-    { label: 'HTTP 接口调用', value: 'http' },
-    { label: 'Java 类调用', value: 'java' },
-    { label: '表达式', value: 'expression' },
+    { label: 'HTTP 接口调用（未就绪）', value: 'http', disabled: true },
+    { label: 'Java 类调用（未支持）', value: 'java', disabled: true },
+    { label: '表达式（未就绪）', value: 'expression', disabled: true },
     { label: 'Webhook', value: 'webhook' },
-    { label: '系统内置服务', value: 'internal' },
-    { label: '邮件发送', value: 'mail' },
+    { label: '系统内置服务（请选择已注册 handler）', value: 'generic_handler' },
+    { label: '邮件发送（未就绪）', value: 'mail', disabled: true },
     { label: '自动抄送', value: 'cc_handler' }
   ];
 
@@ -661,10 +663,11 @@ export default function WorkflowNodeInspector({
                       addonBefore="通过人数" size="small" />
                   )}
                   <Select value={currentRejectStrategy} onChange={value => apply({ rejectStrategy: value })}
-                    options={[{ label: '终止流程', value: 'terminate' }, { label: '退回发起人', value: 'to_requester' }, { label: '进入拒绝分支', value: 'gateway' }]}
+                    options={[{ label: '终止流程', value: 'terminate' }, { label: '退回发起人（未就绪）', value: 'to_requester', disabled: true }, { label: '进入拒绝分支', value: 'gateway' }]}
                     className="w-full" size="small" />
                   <Select value={currentTimeoutAction} onChange={value => apply({ timeoutAction: value })}
-                    options={[{ label: '仅提醒', value: 'notify' }, { label: '升级审批', value: 'escalate' }, { label: '自动拒绝', value: 'auto_reject' }]}
+                    disabled
+                    options={[{ label: '仅提醒（超时调度未就绪）', value: 'notify' }, { label: '升级审批（未就绪）', value: 'escalate' }, { label: '自动拒绝（未就绪）', value: 'auto_reject' }]}
                     className="w-full" size="small" />
                   <Space wrap>
                     <Switch size="small" checked={currentAllowDelegate} onChange={v => apply({ allowDelegate: v })} />委托
@@ -1166,12 +1169,20 @@ export default function WorkflowNodeInspector({
           <>
             <Divider className="my-2" />
 
+            <Alert
+              type="warning"
+              title="脚本任务尚未提供隔离执行器，配置可保留但流程不可发布"
+              showIcon
+              className="mb-3"
+            />
+
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Code className="w-3.5 h-3.5 mr-1" />
                 脚本语言
               </Text>
               <Select
+                disabled
                 value={currentScriptFormat}
                 onChange={value => apply({ scriptFormat: value })}
                 className="w-full"

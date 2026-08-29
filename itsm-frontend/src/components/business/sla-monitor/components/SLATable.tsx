@@ -48,10 +48,23 @@ export const SLATable: React.FC<SLATableProps> = ({
       width: 60,
     },
     {
-      title: '工单ID',
-      dataIndex:'ticketId',
-      key:'ticketId',
-      width: 100,
+      title: '工单编号',
+      dataIndex:'ticketNumber',
+      key:'ticketNumber',
+      width: 140,
+      render: (number: string | undefined, record: SLAViolation) => (
+        <span>{number || `#${record.ticketId}`}</span>
+      ),
+    },
+    {
+      title: '工单标题',
+      dataIndex:'ticketTitle',
+      key:'ticketTitle',
+      width: 200,
+      ellipsis: true,
+      render: (title: string | undefined, record: SLAViolation) => (
+        <span>{title || `Ticket #${record.ticketId}`}</span>
+      ),
     },
     {
       title: '违规类型',
@@ -71,26 +84,23 @@ export const SLATable: React.FC<SLATableProps> = ({
     },
     {
       title: '状态',
-      dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status: string) => (
-        <Tag color={statusColors[status] || 'default'}>{status}</Tag>
-      ),
+      render: (_: unknown, record: SLAViolation) => {
+        const status = record.isResolved ? 'resolved' : 'open';
+        return (
+          <Tag color={statusColors[status] || 'default'}>
+            {status === 'resolved' ? '已解决' : '待处理'}
+          </Tag>
+        );
+      },
     },
     {
-      title: '延迟分钟数',
-      dataIndex:'delayMinutes',
-      key:'delayMinutes',
-      width: 120,
-      render: (minutes?: number) => <span style={{ color: '#ff4d4f' }}>{minutes || 0} 分钟</span>,
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      title: '违规时间',
+      dataIndex: 'violationTime',
+      key: 'violationTime',
       width: 180,
-      render: (time: string) => new Date(time).toLocaleString(),
+      render: (time: string) => (time ? new Date(time).toLocaleString() : '-'),
     },
     {
       title: '操作',
@@ -104,7 +114,7 @@ export const SLATable: React.FC<SLATableProps> = ({
             icon={<Eye />}
             onClick={() => onView(record)}
           />
-          {record.status === 'open' && (
+          {!record.isResolved && (
             <>
               <Button
                 size="small"

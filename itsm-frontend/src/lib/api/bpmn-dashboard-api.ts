@@ -11,6 +11,10 @@ export interface DashboardMetrics {
   completedToday: number;
   openTasks: number;
   slaComplianceRate: number;
+  /** 合规样本数（后端 weighted compliant），用于区分“暂无样本”与真实 0% */
+  slaCompliantSamples: number;
+  /** 参与 SLA 合规统计的已完成实例总数，0 表示暂无数据 */
+  slaTotalSamples: number;
   avgCompletionTimeMinutes: number;
   processHealth: ProcessHealth;
   topProcesses: ProcessStat[];
@@ -201,7 +205,7 @@ export class BPMNDashboardApi {
    * 获取SLA违规
    */
   static async getSLAViolations(tenantId: number): Promise<SLAViolation[]> {
-    return httpClient.get<SLAViolation[]>(`${this.baseUrl}/sla/violations?tenant_id=${tenantId}`);
+    return httpClient.get<SLAViolation[]>(`${this.baseUrl}/sla/violations?tenantId=${tenantId}`);
   }
 
   /**
@@ -233,7 +237,7 @@ export class BPMNDashboardApi {
    * 获取瓶颈分析
    */
   static async getBottleneckAnalysis(key: string, tenantId: number): Promise<BottleneckInfo[]> {
-    return httpClient.get<BottleneckInfo[]>(`${this.baseUrl}/bottlenecks?key=${key}&tenant_id=${tenantId}`);
+    return httpClient.get<BottleneckInfo[]>(`${this.baseUrl}/bottlenecks?key=${key}&tenantId=${tenantId}`);
   }
 }
 

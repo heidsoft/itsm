@@ -115,9 +115,12 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
     );
 
     // All approval controls must be visible.
+    // 三个 Select 默认值分别为 single/terminate/notify，因此断言的是
+    // “当前选中项标签”，不是下拉展开后的选项。
+    // 超时动作尚未就绪，标签带后缀说明，故用前缀匹配。
     await waitFor(() => {
       expect(screen.getByText('单人审批')).toBeInTheDocument();
-      expect(screen.getByText('仅提醒')).toBeInTheDocument();
+      expect(screen.getByText(/^仅提醒/)).toBeInTheDocument();
       expect(screen.getByText('终止流程')).toBeInTheDocument();
       expect(screen.getByText('委托')).toBeInTheDocument();
       expect(screen.getByText('加签')).toBeInTheDocument();

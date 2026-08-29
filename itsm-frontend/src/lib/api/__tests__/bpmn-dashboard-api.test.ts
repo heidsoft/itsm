@@ -28,7 +28,10 @@ describe('BPMNDashboardApi', () => {
     it('should include time params', async () => {
       mockGet.mockResolvedValue({});
       await BPMNDashboardApi.getDashboardMetrics(1, '2024-01-01', '2024-01-31');
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('start_time=2024-01-01'));
+      // 后端 GetDashboardMetrics 只读 ctx.Query("startTime"/"endTime")，
+      // 发送 snake_case 会被静默丢弃并回退为默认最近7天。
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('startTime=2024-01-01'));
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('endTime=2024-01-31'));
     });
   });
 
@@ -84,7 +87,7 @@ describe('BPMNDashboardApi', () => {
       const expected = [{ resourceType: 'ticket' }];
       mockGet.mockResolvedValue(expected);
       const res = await BPMNDashboardApi.getSLAViolations(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/dashboard/sla/violations?tenant_id=1');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/dashboard/sla/violations?tenantId=1');
       expect(res).toEqual(expected);
     });
   });
@@ -104,7 +107,7 @@ describe('BPMNDashboardApi', () => {
       const expected = { totalDefinitions: 5 };
       mockGet.mockResolvedValue(expected);
       const res = await BPMNDashboardApi.getTenantStats(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/dashboard/tenant/stats?tenant_id=1');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/dashboard/tenant/stats?tenantId=1');
       expect(res).toEqual(expected);
     });
   });
@@ -114,7 +117,7 @@ describe('BPMNDashboardApi', () => {
       const expected = [{ taskName: 'Approval', totalCount: 10 }];
       mockGet.mockResolvedValue(expected);
       const res = await BPMNDashboardApi.getBottleneckAnalysis('proc1', 1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/dashboard/bottlenecks?key=proc1&tenant_id=1');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/dashboard/bottlenecks?key=proc1&tenantId=1');
       expect(res).toEqual(expected);
     });
   });

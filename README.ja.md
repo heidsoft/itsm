@@ -131,6 +131,7 @@ cd ../itsm-frontend && npm run type-check && npm run build
 - [運用ランブック](./docs/runbooks/production-initialization.md)
 - [設定リファレンス](./docs/getting-started/install.md)
 - [本番準備プログラム](./docs/delivery/production-readiness-program.md)
+- [アップグレードガイド](./UPGRADE.md)
 - [コントリビューションガイド](./CONTRIBUTING.md)
 
 ## ライセンス

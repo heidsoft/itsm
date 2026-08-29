@@ -51,6 +51,10 @@ func (s *ProcessBindingService) CreateBinding(ctx context.Context, binding *dto.
 		fmt.Sscanf(def.Version, "%d", &version)
 		binding.ProcessVersion = version
 	}
+	if binding.Overrides == nil {
+		binding.Overrides = map[string]interface{}{}
+	}
+	binding.Overrides["processDefinitionVersion"] = def.Version
 
 	// 如果设置为默认，需要取消同类型其他默认绑定
 	if binding.IsDefault {
@@ -123,7 +127,27 @@ func (s *ProcessBindingService) UpdateBinding(ctx context.Context, id int, bindi
 		update.SetBusinessType(string(binding.BusinessType))
 	}
 	if binding.ProcessDefinitionKey != "" {
+		def, verifyErr := s.client.ProcessDefinition.Query().Where(
+			processdefinition.Key(binding.ProcessDefinitionKey),
+			processdefinition.TenantID(entity.TenantID),
+			processdefinition.IsActive(true),
+		).Order(ent.Desc(processdefinition.FieldCreatedAt)).First(ctx)
+		if verifyErr != nil {
+			return nil, fmt.Errorf("目标流程定义不可用: %w", verifyErr)
+		}
 		update.SetProcessDefinitionKey(binding.ProcessDefinitionKey)
+		var version int
+		fmt.Sscanf(def.Version, "%d", &version)
+		update.SetProcessVersion(version)
+		overrides := binding.Overrides
+		if overrides == nil {
+			overrides = entity.Overrides
+		}
+		if overrides == nil {
+			overrides = map[string]interface{}{}
+		}
+		overrides["processDefinitionVersion"] = def.Version
+		update.SetOverrides(overrides)
 	}
 	if binding.ProcessVersion > 0 {
 		update.SetProcessVersion(binding.ProcessVersion)

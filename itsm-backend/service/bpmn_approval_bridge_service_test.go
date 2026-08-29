@@ -53,11 +53,19 @@ func setupBridgeTenantAndActor(t *testing.T, client *ent.Client, code string) (t
 // businessKey 采用与 ProcessTriggerService 相同的 "{type}:{id}" 约定。
 // BPMN 为单审批节点直通结构：Start → Approval_1 → End。
 func createBridgeProcessFixture(t *testing.T, client *ent.Client, tenantID int, keySuffix, businessKey string, assigneeID int) (instanceID, taskID int) {
+	return createBridgeProcessFixtureWithDelegate(t, client, tenantID, keySuffix, businessKey, assigneeID, true)
+}
+
+// createBridgeProcessFixtureWithDelegate 创建与生产一致的流程/待办任务夹具。
+// 生产路径 bpmn_process_engine.go 会把 BPMN userTask 的审批配置（含 allowDelegate）
+// 写入 ProcessTask.TaskVariables，DelegateTask 依赖该字段做 fail-closed 校验，
+// 因此夹具必须同样写入，否则测的是另一种数据形态。
+func createBridgeProcessFixtureWithDelegate(t *testing.T, client *ent.Client, tenantID int, keySuffix, businessKey string, assigneeID int, allowDelegate bool) (instanceID, taskID int) {
 	t.Helper()
 	ctx := context.Background()
 
 	defKey := "bridge_approval_" + keySuffix
-	bpmnXML := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:itsm="https://github.com/heidsoft/itsm/schema/bpmn" id="Definitions_%s" targetNamespace="https://github.com/heidsoft/itsm"><bpmn:process id="%s" name="Bridge Approval %s" isExecutable="true"><bpmn:startEvent id="StartEvent_1"/><bpmn:userTask id="Approval_1" name="审批" itsm:taskPurpose="approval" itsm:approvalMode="single" itsm:assignee="%d"/><bpmn:endEvent id="EndEvent_1"/><bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Approval_1"/><bpmn:sequenceFlow id="Flow_2" sourceRef="Approval_1" targetRef="EndEvent_1"/></bpmn:process></bpmn:definitions>`, defKey, defKey, keySuffix, assigneeID)
+	bpmnXML := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:itsm="https://github.com/heidsoft/itsm/schema/bpmn" id="Definitions_%s" targetNamespace="https://github.com/heidsoft/itsm"><bpmn:process id="%s" name="Bridge Approval %s" isExecutable="true"><bpmn:startEvent id="StartEvent_1"/><bpmn:userTask id="Approval_1" name="审批" itsm:taskPurpose="approval" itsm:approvalMode="single" itsm:allowDelegate="%t" itsm:assignee="%d"/><bpmn:endEvent id="EndEvent_1"/><bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Approval_1"/><bpmn:sequenceFlow id="Flow_2" sourceRef="Approval_1" targetRef="EndEvent_1"/></bpmn:process></bpmn:definitions>`, defKey, defKey, keySuffix, allowDelegate, assigneeID)
 
 	deployment, err := client.ProcessDeployment.Create().
 		SetDeploymentID("DEP-" + keySuffix).
@@ -111,6 +119,11 @@ func createBridgeProcessFixture(t *testing.T, client *ent.Client, tenantID int, 
 		SetProcessInstanceID(instance.ID).
 		SetAssignee(strconv.Itoa(assigneeID)).
 		SetStatus("assigned").
+		SetTaskVariables(map[string]interface{}{
+			"taskPurpose":   "approval",
+			"approvalMode":  "single",
+			"allowDelegate": allowDelegate,
+		}).
 		SetTenantID(tenantID).
 		Save(ctx)
 	require.NoError(t, err)
@@ -240,6 +253,36 @@ func TestBPMNApprovalBridge_DelegateReassignsTaskAndAllowsNewAssigneeToComplete(
 	task, err = client.ProcessTask.Get(ctx, taskID)
 	require.NoError(t, err)
 	assert.Equal(t, "completed", task.Status)
+}
+
+// 回归：BPMN 节点未声明 allowDelegate 时，桥接委派必须 fail closed，
+// 并把 TaskVariables 原样保留，不得静默重新指派待办任务。
+func TestBPMNApprovalBridge_DelegateRejectedWhenNodeDisallowsDelegation(t *testing.T) {
+	client := newApprovalBridgeTestClient(t, "bridge_delegate_denied")
+	tenantID, actorID := setupBridgeTenantAndActor(t, client, "ddeny")
+	ctx := context.Background()
+	delegatee, err := client.User.Create().
+		SetUsername("bridge-delegatee-ddeny").
+		SetEmail("bridge-delegatee-ddeny@example.com").
+		SetName("Bridge Delegatee Denied").
+		SetPasswordHash("hash").
+		SetRole("agent").
+		SetActive(true).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, taskID := createBridgeProcessFixtureWithDelegate(t, client, tenantID, "ddeny1", "ticket:457", actorID, false)
+	bridge := NewBPMNApprovalBridge(client, zaptest.NewLogger(t).Sugar())
+
+	_, err = bridge.DelegateBusinessApprovalTask(ctx, tenantID, actorID, "ticket", 457, delegatee.ID)
+	require.Error(t, err, "节点不允许委托时不得委派")
+
+	// 任务归属与状态未被修改
+	task, err := client.ProcessTask.Get(ctx, taskID)
+	require.NoError(t, err)
+	assert.Equal(t, "assigned", task.Status)
+	assert.Equal(t, strconv.Itoa(actorID), task.Assignee)
 }
 
 func TestBPMNApprovalBridge_DelegateUnauthorizedActorFailsClosed(t *testing.T) {

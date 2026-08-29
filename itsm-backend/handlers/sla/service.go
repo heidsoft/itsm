@@ -2,13 +2,29 @@ package sla
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"go.uber.org/zap"
 
 	"itsm-backend/dto"
 )
+
+// 监控/绩效查询的失败语义。handler 据此映射 HTTP status 与业务 code，
+// 不得把参数错误、缺少租户和内部故障一律返回 500。
+var (
+	// ErrTenantRequired 缺少租户上下文时 fail closed，禁止回退到默认租户。
+	ErrTenantRequired = errors.New("sla: tenant context is required")
+	// ErrInvalidWindow 统计窗口非法（结束时间必须晚于开始时间）。
+	ErrInvalidWindow = errors.New("sla: invalid monitoring window")
+	// ErrInvalidDimension 绩效分组维度不受支持。
+	ErrInvalidDimension = errors.New("sla: unsupported performance dimension")
+)
+
+// DefaultMonitoringWindow 未显式传入统计窗口时沿用历史默认值：最近 30 天。
+const DefaultMonitoringWindow = 30 * 24 * time.Hour
 
 type Service struct {
 	repo   Repository
@@ -166,8 +182,112 @@ func (s *Service) GetSLAMetrics(ctx context.Context, tenantID int, filters map[s
 	return s.repo.GetMetrics(ctx, tenantID, filters)
 }
 
-func (s *Service) GetSLAMonitoring(ctx context.Context, tenantID int, startTime, endTime string) (map[string]interface{}, error) {
-	return s.repo.GetSLAMonitoring(ctx, tenantID, startTime, endTime)
+func (s *Service) GetSLAMonitoring(ctx context.Context, tenantID int, start, end time.Time) (*SLAMonitoringData, error) {
+	if tenantID <= 0 {
+		return nil, ErrTenantRequired
+	}
+	if end.IsZero() {
+		end = time.Now().UTC()
+	}
+	if start.IsZero() {
+		start = end.Add(-DefaultMonitoringWindow)
+	}
+	if !end.After(start) {
+		return nil, ErrInvalidWindow
+	}
+
+	res, err := s.repo.GetSLAMonitoring(ctx, tenantID, start, end)
+	if err != nil {
+		// 原始错误只进结构化日志，响应体不得携带 SQL/驱动细节。
+		s.logger.Errorw("failed to load SLA monitoring data",
+			"tenantId", tenantID,
+			"startTime", start,
+			"endTime", end,
+			"error", err,
+		)
+		return nil, err
+	}
+	return res, nil
+}
+
+// SLAPerformanceQuery 是按维度聚合绩效的查询条件。
+type SLAPerformanceQuery struct {
+	Dimension   string
+	Start       time.Time
+	End         time.Time
+	ServiceType string
+	Priority    string
+	Page        int
+	PageSize    int
+}
+
+// SLAPerformanceResult 是分页后的绩效结果。Total 是符合过滤条件的分组行数；
+// Truncated 为 true 表示窗口内工单数命中扫描上限，分组结果不完整。
+type SLAPerformanceResult struct {
+	Items     []*SLAPerformanceRow
+	Total     int
+	Page      int
+	PageSize  int
+	Truncated bool
+}
+
+// ListSLAPerformance 校验维度与窗口，聚合后做服务端分页。
+func (s *Service) ListSLAPerformance(ctx context.Context, tenantID int, q SLAPerformanceQuery) (*SLAPerformanceResult, error) {
+	if tenantID <= 0 {
+		return nil, ErrTenantRequired
+	}
+	if q.Dimension != SLADimensionServiceType && q.Dimension != SLADimensionPriority {
+		return nil, ErrInvalidDimension
+	}
+	if q.End.IsZero() {
+		q.End = time.Now().UTC()
+	}
+	if q.Start.IsZero() {
+		q.Start = q.End.Add(-DefaultMonitoringWindow)
+	}
+	if !q.End.After(q.Start) {
+		return nil, ErrInvalidWindow
+	}
+
+	page := q.Page
+	if page <= 0 {
+		page = 1
+	}
+	pageSize := q.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 200 {
+		pageSize = 200
+	}
+
+	rows, truncated, err := s.repo.ListSLAPerformance(ctx, tenantID, q.Dimension, q.Start, q.End, q.ServiceType, q.Priority)
+	if err != nil {
+		s.logger.Errorw("failed to load SLA performance rows",
+			"tenantId", tenantID,
+			"dimension", q.Dimension,
+			"error", err,
+		)
+		return nil, err
+	}
+
+	total := len(rows)
+	start := (page - 1) * pageSize
+	if start > total {
+		start = total
+	}
+	end := start + pageSize
+	if end > total {
+		end = total
+	}
+
+	return &SLAPerformanceResult{
+		Items:     rows[start:end],
+		Total:     total,
+		Page:      page,
+		PageSize:  pageSize,
+		Truncated: truncated,
+	}, nil
 }
 
 // Alert Rules
@@ -261,15 +381,18 @@ func (s *Service) GetSLAStats(ctx context.Context, tenantID int) (map[string]int
 	var complianceRate float64
 	totalTickets, metSLA, err := s.repo.GetTicketStats(ctx, tenantID)
 	if err != nil || totalTickets == 0 {
-		// 如果无法获取工单数据，回退到基于违规的计算
+		// 如果无法获取工单数据，回退到基于违规的计算；
+		// 完全无样本时诚实返回 0（暂无数据），不伪装成 100% 合规。
 		if len(violations) > 0 {
 			complianceRate = float64(len(violations)-openViolations) / float64(len(violations)) * 100
 		} else {
-			complianceRate = 100.0
+			complianceRate = 0
 		}
 	} else {
 		complianceRate = float64(metSLA) / float64(totalTickets) * 100
 	}
+	// 保留一位小数，避免前端展示原始浮点噪声
+	complianceRate = math.Round(complianceRate*10) / 10
 
 	return map[string]interface{}{
 		"total_definitions":       len(definitions),

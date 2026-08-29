@@ -38,6 +38,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 )
 
@@ -279,6 +281,9 @@ type RouterConfig struct {
 	SLATemplateController *controller.SLATemplateController
 	AIHandler             *ai.Handler
 	EmailIntakeHandler    *email_intake.Handler
+	// VectorStoreController 提供向量存储（RAG 检索底座）状态查看与连通性测试，
+	// 注册 /api/v1/system/vector-store*；为 nil 时路由不注册。
+	VectorStoreController *controller.VectorStoreController
 	CommonHandler         *domainCommon.Handler
 	AuthController        *controller.AuthController
 	RoleHandler           *common.RoleHandler
@@ -310,6 +315,11 @@ type RouterConfig struct {
 
 // SetupRoutes 设置路由
 func SetupRoutes(r *gin.Engine, config *RouterConfig) {
+	// Swagger UI：默认关闭，开发环境设 ENABLE_SWAGGER=true 开启（见 .env.dev.example）。
+	// 生产环境不应暴露 API 文档，故不在此无条件注册。
+	if os.Getenv("ENABLE_SWAGGER") == "true" {
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 	// 全局中间件
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
@@ -397,15 +407,34 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			c.JSON(status, readiness)
 		})
 		public.GET("/version", func(c *gin.Context) {
-			c.JSON(200, gin.H{"version": "1.6.8", "build": "release"})
+			// Keep APP_VERSION in sync with itsm-frontend/package.json and the
+			// release tag; the fallback is only used when it is not injected.
+			version := os.Getenv("APP_VERSION")
+			if version == "" {
+				version = "1.6.9"
+			}
+			c.JSON(200, gin.H{"version": version, "build": "release"})
 		})
 		public.GET("/readiness/ga", func(c *gin.Context) {
 			common.Success(c, buildGAReadiness(c.Request.Context(), config.Client))
 		})
 
-		// Prometheus metrics 端点（需要认证，防止信息泄露）
+		// Prometheus metrics endpoint.
+		//
+		// The backend publishes no host port in docker-compose.prod.yml (nginx is
+		// the only entrypoint), so /metrics is not reachable from outside the
+		// container network. It stays authenticated by default so that adding a
+		// port mapping later cannot silently expose metrics.
+		//
+		// To let Prometheus scrape it, set METRICS_REQUIRE_AUTH=false AND keep the
+		// backend unpublished to untrusted networks.
 		metricsAuth := r.Group("")
-		metricsAuth.Use(middleware.AuthMiddleware(config.JWTSecret))
+		if os.Getenv("METRICS_REQUIRE_AUTH") == "false" {
+			zap.S().Warn("METRICS_REQUIRE_AUTH=false: /metrics is unauthenticated; " +
+				"only safe while the backend port is not published to untrusted networks")
+		} else {
+			metricsAuth.Use(middleware.AuthMiddleware(config.JWTSecret))
+		}
 		metricsAuth.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	}
 
@@ -577,14 +606,18 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tickets.PUT("/:id/sla/resume", middleware.RequirePermission("ticket", "update"), config.TicketController.ResumeSLA)
 			tickets.GET("/types", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
 				common.Success(c, gin.H{"types": []gin.H{
-					{"id": 1, "name": " Incident", "code": "incident"},
-					{"id": 2, "name": "Problem", "code": "problem"},
-					{"id": 3, "name": "Change", "code": "change"},
-					{"id": 4, "name": "Request", "code": "request"},
-				}, "total": 4})
+					{"id": 1, "name": "故障工单", "code": "incident"},
+					{"id": 2, "name": "服务请求", "code": "service_request"},
+					{"id": 3, "name": "变更工单", "code": "change"},
+					{"id": 4, "name": "问题工单", "code": "problem"},
+					{"id": 5, "name": "综合工单", "code": "ticket"},
+					{"id": 6, "name": "持续改进", "code": "improvement"},
+				}, "total": 6})
 			})
 			tickets.GET("/:id", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicket)
 			tickets.PUT("/:id", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateTicket)
+			// REST 契约：部分更新使用 PATCH（与 PUT 共用同一 handler，DTO 指针字段区分未传/传零值）
+			tickets.PATCH("/:id", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateTicket)
 			tickets.PUT("/:id/status", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateTicketStatus)
 			tickets.DELETE("/:id", middleware.RequirePermission("ticket", "delete"), config.TicketController.DeleteTicket)
 			tickets.POST("/:id/assign", middleware.RequirePermission("ticket", "assign"), config.TicketController.AssignTicket)
@@ -881,6 +914,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 						"timestamp": time.Now(),
 					})
 				})
+			}
+
+			// 向量存储（RAG）状态与连通性诊断：/api/v1/system/vector-store
+			if config.VectorStoreController != nil {
+				config.VectorStoreController.RegisterRoutes(tenant.(*gin.RouterGroup))
 			}
 		}
 
@@ -1250,6 +1288,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 				// SLA Monitoring
 				slaGrp.POST("/monitoring", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAMonitoring)
+				// SLA 绩效按维度聚合（serviceType / priority），供监控大屏绩效表格使用
+				slaGrp.GET("/performance", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAPerformance)
 
 				// SLA Compliance Check
 				slaGrp.POST("/check-compliance/:ticketId", middleware.RequirePermission("sla", "read"), config.SLAHandler.CheckSLACompliance)
@@ -1274,7 +1314,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				aiGrp.POST("/analytics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetDeepAnalytics)
 				aiGrp.POST("/predictions", middleware.RequirePermission("ai", "read"), config.AIHandler.GetTrendPrediction)
 				aiGrp.POST("/tickets/:id/analyze", middleware.RequirePermission("ai", "read"), config.AIHandler.AnalyzeTicket)
-				aiGrp.POST("/incidents/:id/analyze", middleware.RequirePermission("ai", "read"), config.AIHandler.AnalyzeIncident)
+				aiGrp.POST("/incidents/:id/analyze",
+					middleware.RequirePermission("ai", "read"),
+					middleware.RequirePermission("incident", "read"),
+					config.AIHandler.AnalyzeIncident,
+				)
 				aiGrp.POST("/feedback", middleware.RequirePermission("ai", "write"), config.AIHandler.SaveFeedback)
 				aiGrp.POST("/audit", middleware.RequirePermission("ai", "write"), config.AIHandler.RecordAudit)
 				aiGrp.GET("/metrics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetMetrics)

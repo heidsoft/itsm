@@ -179,7 +179,9 @@ export class WorkflowApi {
       createdAt: string;
       updatedAt: string;
     }) => ({
-      id: String(item.id || ''),
+      // BPMN definition routes are keyed by the stable process key. Keep the
+      // database identifier out of the route-facing id field used by legacy UI.
+      id: item.key || '',
       code: item.key || '',
       name: item.name || '',
       type: WorkflowType.TICKET,
@@ -234,7 +236,7 @@ export class WorkflowApi {
 
     const item = res;
     return {
-      id: String(item.id || ''),
+      id: item.key || '',
       code: item.key || '',
       name: item.name || '',
       type: WorkflowType.TICKET,
@@ -290,6 +292,23 @@ export class WorkflowApi {
   static async deployProcessDefinition(key: string, version?: string): Promise<void> {
     // 激活工作流即视为部署
     await WorkflowApi.activateWorkflow(key, version);
+  }
+
+  static async publishProcessDefinition(
+    key: string,
+    version: string,
+    request: UpdateWorkflowRequest
+  ): Promise<WorkflowDefinition> {
+    return httpClient.put(
+      `/api/v1/bpmn/process-definitions/${encodeURIComponent(key)}/publish?version=${encodeURIComponent(version)}`,
+      {
+        name: request.name,
+        description: request.description,
+        category: request.category,
+        bpmnXml: request.bpmnXml,
+        processVariables: request.variables,
+      }
+    );
   }
 
   static async createProcessVersion(key: string): Promise<WorkflowDefinition> {
@@ -478,7 +497,7 @@ export class WorkflowApi {
       key: request.code || `process_${Date.now()}`,
       name: request.name,
       description: request.description,
-      category: request.type, // Map type to category
+      category: request.category ?? request.type,
       bpmnXml: request.bpmnXml,
     };
     return httpClient.post('/api/v1/bpmn/process-definitions', payload);
@@ -495,7 +514,9 @@ export class WorkflowApi {
     const payload = {
       name: request.name,
       description: request.description,
+      category: request.category,
       bpmnXml: request.bpmnXml,
+      processVariables: request.variables,
     };
     // Backend expects key in path. Assuming id passed here is key.
     // Also backend needs version parameter. We default to 1.0.0 or need to fetch it.
@@ -648,11 +669,11 @@ export class WorkflowApi {
         createdAt: string;
         updatedAt: string;
       }>
-    >(`/api/v1/bpmn/versions?process_key=${workflowId}`);
+    >('/api/v1/bpmn/versions', { processKey: workflowId });
 
     const list = Array.isArray(res) ? res : [];
     return list.map(item => ({
-      id: String(item.id || ''),
+      id: item.key || workflowId,
       code: item.key || '',
       name: item.name || '',
       type: WorkflowType.TICKET,

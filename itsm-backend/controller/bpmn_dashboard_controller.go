@@ -48,6 +48,17 @@ func resolveTenantID(ctx *gin.Context) (int, bool) {
 	return tenantID, true
 }
 
+// failInternal logs the raw error for operators and returns a sanitized 5001 to the client.
+// Raw service/SQL errors must never leak through the API response.
+func (c *BPMNDashboardController) failInternal(ctx *gin.Context, action string, err error) {
+	zap.S().Errorw("BPMN Dashboard: "+action+" failed",
+		"path", ctx.Request.URL.Path,
+		"tenant_id", ctx.GetInt("tenant_id"),
+		"error", err,
+	)
+	common.Fail(ctx, 5001, action+"失败，请稍后重试或联系管理员")
+}
+
 // RegisterRoutes 注册路由
 func (c *BPMNDashboardController) RegisterRoutes(r *gin.RouterGroup) {
 	dashboard := r.Group("/bpmn/dashboard")
@@ -105,7 +116,7 @@ func (c *BPMNDashboardController) GetDashboardMetrics(ctx *gin.Context) {
 
 	metrics, err := c.metricsService.GetDashboardMetrics(ctx.Request.Context(), tenantID, startTime, endTime)
 	if err != nil {
-		common.Fail(ctx, 5001, "获取仪表盘指标失败: "+err.Error())
+		c.failInternal(ctx, "获取仪表盘指标", err)
 		return
 	}
 
@@ -151,7 +162,7 @@ func (c *BPMNDashboardController) GetProcessMetrics(ctx *gin.Context) {
 
 	metrics, err := c.metricsService.GetProcessMetrics(ctx.Request.Context(), key, tenantID, startTime, endTime)
 	if err != nil {
-		common.Fail(ctx, 5001, "获取流程指标失败: "+err.Error())
+		c.failInternal(ctx, "获取流程指标", err)
 		return
 	}
 
@@ -236,7 +247,7 @@ func (c *BPMNDashboardController) GetAuditLogs(ctx *gin.Context) {
 
 	logs, total, err := c.auditService.QueryAuditLogs(ctx.Request.Context(), req)
 	if err != nil {
-		common.Fail(ctx, 5001, "查询审计日志失败: "+err.Error())
+		c.failInternal(ctx, "查询审计日志", err)
 		return
 	}
 
@@ -265,7 +276,7 @@ func (c *BPMNDashboardController) GetProcessTimeline(ctx *gin.Context) {
 
 	timeline, err := c.auditService.GetProcessTimeline(ctx.Request.Context(), processInstanceKey, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, "获取流程时间线失败: "+err.Error())
+		c.failInternal(ctx, "获取流程时间线", err)
 		return
 	}
 
@@ -311,7 +322,7 @@ func (c *BPMNDashboardController) GetUserActivity(ctx *gin.Context) {
 
 	activity, err := c.auditService.GetUserActivity(ctx.Request.Context(), userID, tenantID, startTime, endTime)
 	if err != nil {
-		common.Fail(ctx, 5001, "获取用户活动失败: "+err.Error())
+		c.failInternal(ctx, "获取用户活动", err)
 		return
 	}
 
@@ -332,7 +343,7 @@ func (c *BPMNDashboardController) GetSLAViolations(ctx *gin.Context) {
 
 	violations, err := c.slaService.CheckSLAViolations(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, "获取SLA违规失败: "+err.Error())
+		c.failInternal(ctx, "获取SLA违规", err)
 		return
 	}
 
@@ -378,7 +389,7 @@ func (c *BPMNDashboardController) GetSLACompliance(ctx *gin.Context) {
 
 	rate, compliant, total, err := c.slaService.GetSLAComplianceRate(ctx.Request.Context(), key, startTime, endTime, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, "获取SLA合规率失败: "+err.Error())
+		c.failInternal(ctx, "获取SLA合规率", err)
 		return
 	}
 
@@ -431,7 +442,7 @@ func (c *BPMNDashboardController) GetBottleneckAnalysis(ctx *gin.Context) {
 
 	bottlenecks, err := c.metricsService.GetBottleneckAnalysis(ctx.Request.Context(), key, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, "获取瓶颈分析失败: "+err.Error())
+		c.failInternal(ctx, "获取瓶颈分析", err)
 		return
 	}
 

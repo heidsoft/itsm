@@ -12,8 +12,8 @@ export const useSLAStatistics = (): UseSLAStatisticsReturn => {
    */
   const calculateStats = useCallback((violations: SLAViolation[]): SLAStats => {
     const total = violations.length;
-    const open = violations.filter(v => v.status === 'open').length;
-    const resolved = violations.filter(v => v.status === 'resolved').length;
+    const open = violations.filter(v => !v.isResolved).length;
+    const resolved = violations.filter(v => v.isResolved).length;
     const critical = violations.filter(v => v.severity === 'critical').length;
 
     return { total, open, resolved, critical };

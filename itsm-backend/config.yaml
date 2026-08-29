@@ -2,7 +2,11 @@ database:
   host: "${DB_HOST:localhost}"
   port: 5432
   user: "${DB_USER:itsm}"
-  password: "${DB_PASSWORD:itsm_password_2026}"
+  # No default password is baked in. docker compose always injects DB_PASSWORD
+  # (dev: dev123, prod: required), so this fallback only applies when running
+  # the binary directly — export DB_PASSWORD first, e.g.:
+  #   export DB_PASSWORD=dev123 && go run main.go
+  password: "${DB_PASSWORD:}"
   dbname: "${DB_NAME:itsm}"
   sslmode: "${DB_SSLMODE:disable}"
 

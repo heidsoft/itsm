@@ -131,6 +131,7 @@ cd ../itsm-frontend && npm run type-check && npm run build
 - [Operations runbook](./docs/runbooks/production-initialization.md)
 - [Configuration reference](./docs/getting-started/install.md)
 - [Production readiness program](./docs/delivery/production-readiness-program.md)
+- [Upgrade guide](./UPGRADE.md)
 - [Contributing](./CONTRIBUTING.md)
 
 ## License

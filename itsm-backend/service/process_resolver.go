@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"go.uber.org/zap"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 )
@@ -10,15 +11,15 @@ import (
 // ProcessResolver 解析工单应该使用哪个 BPMN 流程
 // 优先级：1.请求指定 2.ProcessBinding 3.兜底
 type ProcessResolver struct {
-	client         *ent.Client
-	bindingService ProcessBindingServiceInterface
+	client  *ent.Client
+	routing *ProcessRoutingService
 }
 
 // NewProcessResolver 创建流程解析器
 func NewProcessResolver(client *ent.Client, bindingService ProcessBindingServiceInterface) *ProcessResolver {
 	return &ProcessResolver{
-		client:         client,
-		bindingService: bindingService,
+		client:  client,
+		routing: NewProcessRoutingService(client, zap.NewNop().Sugar()),
 	}
 }
 
@@ -30,17 +31,18 @@ func (r *ProcessResolver) Resolve(ctx context.Context, ticket *ent.Ticket, reqKe
 	}
 
 	// 优先级 2：ProcessBinding 表查询（按工单类型匹配）
-	if r.bindingService != nil {
-		binding, err := r.bindingService.FindBestBinding(
-			ctx,
-			dto.BusinessTypeTicket, // businessType
-			ticket.Type,            // businessSubType (incident/problem/change/service_request)
-			ticket.TenantID,
-		)
-		if err == nil && binding != nil {
-			return binding.ProcessDefinitionKey, nil
+	if r.routing != nil {
+		route, err := r.routing.FindBestRoute(ctx, &RoutingContext{
+			BusinessType: string(dto.BusinessTypeTicket), BusinessSubType: ticket.Type,
+			TenantID:  ticket.TenantID,
+			Variables: map[string]interface{}{"priority": ticket.Priority},
+		})
+		if err != nil {
+			return "", err
 		}
-		// 查询失败或未找到，继续兜底
+		if route != nil {
+			return route.ProcessDefinitionKey, nil
+		}
 	}
 
 	// 优先级 3：兜底默认

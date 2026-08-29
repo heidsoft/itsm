@@ -42,12 +42,13 @@ type RoutingContext struct {
 
 // RoutingResult contains the result of a routing decision
 type RoutingResult struct {
-	ProcessDefinitionKey string                 `json:"processDefinitionKey"`
-	ApprovalChainID      string                 `json:"approvalChainId,omitempty"`
-	SLAPolicyID          string                 `json:"slaPolicyId,omitempty"`
-	Overrides            map[string]interface{} `json:"overrides,omitempty"`
-	MatchedRuleID        int                    `json:"matchedRuleId"`
-	MatchedRuleName      string                 `json:"matchedRuleName,omitempty"`
+	ProcessDefinitionKey     string                 `json:"processDefinitionKey"`
+	ProcessDefinitionVersion string                 `json:"processDefinitionVersion,omitempty"`
+	ApprovalChainID          string                 `json:"approvalChainId,omitempty"`
+	SLAPolicyID              string                 `json:"slaPolicyId,omitempty"`
+	Overrides                map[string]interface{} `json:"overrides,omitempty"`
+	MatchedRuleID            int                    `json:"matchedRuleId"`
+	MatchedRuleName          string                 `json:"matchedRuleName,omitempty"`
 }
 
 // FindBestRoute finds the best matching process binding using priority-based scoring
@@ -117,12 +118,14 @@ func (s *ProcessRoutingService) FindBestRoute(ctx context.Context, reqCtx *Routi
 		"score", scored[0].score,
 	)
 
+	definitionVersion, _ := best.Overrides["processDefinitionVersion"].(string)
 	return &RoutingResult{
-		ProcessDefinitionKey: best.ProcessDefinitionKey,
-		ApprovalChainID:      best.ApprovalChainID,
-		SLAPolicyID:          best.SLAPolicyID,
-		Overrides:            best.Overrides,
-		MatchedRuleID:        best.ID,
+		ProcessDefinitionKey:     best.ProcessDefinitionKey,
+		ProcessDefinitionVersion: definitionVersion,
+		ApprovalChainID:          best.ApprovalChainID,
+		SLAPolicyID:              best.SLAPolicyID,
+		Overrides:                best.Overrides,
+		MatchedRuleID:            best.ID,
 	}, nil
 }
 
