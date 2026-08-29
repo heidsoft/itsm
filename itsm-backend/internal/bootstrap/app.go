@@ -342,6 +342,13 @@ func NewApplication() *Application {
 	if err := commandRegistry.Register(commandbus.CommandStartBPMN, workflowCommandHandler.Handle); err != nil {
 		sugar.Fatalw("Failed to register workflow command handler", "error", err)
 	}
+	customProcessEngine, ok := processEngine.(*service.CustomProcessEngine)
+	if !ok {
+		sugar.Fatal("Custom BPMN process engine is required for durable ServiceTask execution")
+	}
+	if err := commandRegistry.Register(commandbus.CommandExecuteBPMNServiceTask, customProcessEngine.HandleBPMNServiceTaskCommand); err != nil {
+		sugar.Fatalw("Failed to register BPMN ServiceTask command handler", "error", err)
+	}
 	workerOwner, _ := os.Hostname()
 	if workerOwner == "" {
 		workerOwner = "itsm-api"
@@ -591,6 +598,8 @@ func NewApplication() *Application {
 	// AI Tools
 	toolRegistry := service.NewToolRegistry(ragService, incidentService, configurationItemService, client)
 	toolQueue := service.NewToolQueue(client, toolRegistry, 100, sugar)
+	// 写工具（create_ticket/update_ticket/create_ticket_type）需要领域服务支撑；ticketService 已就绪，此处注入。
+	toolRegistry.SetTicketService(ticketService)
 
 	ticketController := controller.NewTicketController(ticketService, ticketDependencyService, database.GetRawDB(), sugar)
 	ticketDependencyController := controller.NewTicketDependencyController(ticketDependencyService)
@@ -938,6 +947,9 @@ func NewApplication() *Application {
 	cloudController := controller.NewCloudController(cloudService, sugar)
 	ticketTypeService := service.NewTicketTypeService(client, sugar)
 	ticketTypeController := controller.NewTicketTypeController(ticketTypeService, sugar)
+	// 工单类型服务就绪后注入工具注册表与审批队列，使 create_ticket_type 可经审批流执行。
+	toolRegistry.SetTicketTypeService(ticketTypeService)
+	toolQueue.SetTicketTypeService(ticketTypeService)
 
 	// WebSocket Service
 	wsService := service.NewWebSocketService(sugar)

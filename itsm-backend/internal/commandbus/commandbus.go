@@ -23,15 +23,16 @@ const (
 	StatusSucceeded  = "succeeded"
 	StatusDeadLetter = "dead_letter"
 
-	CommandStartBPMN            = "workflow.start"
-	CommandDeliverNotification  = "notification.deliver"
-	CommandProcessCMDBImport    = "cmdb.import.process"
-	CommandProcessCMDBExport    = "cmdb.export.process"
-	CommandExecuteTicketRules   = "ticket.rules.execute"
-	CommandSyncTicketFeishu     = "ticket.feishu.sync"
-	CommandExecuteIncidentRules = "incident.rules.execute"
-	CommandSendIntakeEmail      = "email_intake.email.send"
-	CommandProcessIntakeEmail   = "email_intake.message.process"
+	CommandStartBPMN              = "workflow.start"
+	CommandExecuteBPMNServiceTask = "workflow.service_task.execute"
+	CommandDeliverNotification    = "notification.deliver"
+	CommandProcessCMDBImport      = "cmdb.import.process"
+	CommandProcessCMDBExport      = "cmdb.export.process"
+	CommandExecuteTicketRules     = "ticket.rules.execute"
+	CommandSyncTicketFeishu       = "ticket.feishu.sync"
+	CommandExecuteIncidentRules   = "incident.rules.execute"
+	CommandSendIntakeEmail        = "email_intake.email.send"
+	CommandProcessIntakeEmail     = "email_intake.message.process"
 )
 
 var ErrLeaseLost = errors.New("operational command lease lost")
