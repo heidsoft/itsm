@@ -222,15 +222,20 @@ export default function SLAPage() {
               <div className="space-y-3">
                 {alerts.slice(0, 6).map(alert => {
                   const priority = priorityConfig[alert.priority] ?? priorityConfig.normal;
+                  // timeRemaining 是 { hours, deadline } 结构：hours 可为负（已超时），
+                  // 无截止时间的告警后端返回 null，此时不渲染剩余时间标签。
+                  const remainingMinutes = alert.timeRemaining
+                    ? Math.round(alert.timeRemaining.hours * 60)
+                    : null;
                   return (
                     <div
-                      key={`${alert.ticketId}-${alert.createdAt}`}
+                      key={alert.id}
                       className="flex flex-wrap items-center justify-between gap-3 rounded border border-gray-200 p-3"
                     >
                       <div>
                         <div className="font-medium">{alert.ticketTitle}</div>
                         <div className="text-xs text-gray-500">
-                          {alert.slaDefinition} · {t('sla.ticketRef', { id: alert.ticketId })}
+                          {alert.alertRuleName} · {t('sla.ticketRef', { id: alert.ticketId })}
                         </div>
                       </div>
                       <Space>
@@ -238,11 +243,13 @@ export default function SLAPage() {
                           {priority.label}
                           {t('sla.prioritySuffix')}
                         </Tag>
-                        <Tag color={alert.timeRemaining <= 0 ? 'red' : 'orange'}>
-                          {alert.timeRemaining <= 0
-                            ? t('sla.overdueMinutes', { minutes: Math.abs(alert.timeRemaining) })
-                            : t('sla.remainingMinutes', { minutes: alert.timeRemaining })}
-                        </Tag>
+                        {remainingMinutes !== null && (
+                          <Tag color={remainingMinutes <= 0 ? 'red' : 'orange'}>
+                            {remainingMinutes <= 0
+                              ? t('sla.overdueMinutes', { minutes: Math.abs(remainingMinutes) })
+                              : t('sla.remainingMinutes', { minutes: remainingMinutes })}
+                          </Tag>
+                        )}
                       </Space>
                     </div>
                   );

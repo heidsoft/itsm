@@ -36,7 +36,9 @@ export function getMenuConfig(): MenuConfig {
         icon: getIconByName('LayoutDashboard')!,
         label: '服务台',
         path: '/dashboard',
-        permission: 'dashboard:view',
+        // 契约对齐：后端无 dashboard:* 权限，DB 菜单 seeder 对 /dashboard 使用空权限
+        //（所有登录用户可见），此处与 ticket:read 对齐，避免孤儿码在非通配角色下永远为 false
+        permission: 'ticket:read',
         description: '服务台概览',
       },
       {
@@ -96,6 +98,14 @@ export function getMenuConfig(): MenuConfig {
             permission: 'incident:write',
           },
         ],
+      },
+      {
+        key: '/noc',
+        icon: getIconByName('Activity')!,
+        label: 'NOC工作台',
+        path: '/noc',
+        permission: 'incident:read',
+        description: '重大事件作战室',
       },
       {
         key: '/problems',
@@ -315,7 +325,7 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('Key')!,
             label: '软件许可证',
             path: '/licenses',
-            permission: 'license:manage',
+            permission: 'license:read',
           },
         ],
       },
@@ -351,7 +361,7 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('Clock')!,
             label: 'SLA配置',
             path: '/workflow/sla',
-            permission: 'sla:manage',
+            permission: 'sla:write',
           },
         ],
       },
@@ -439,7 +449,7 @@ export function getMenuConfig(): MenuConfig {
         icon: getIconByName('Bot')!,
         label: 'AI助手',
         path: '/ai/chat',
-        permission: 'ai:use',
+        permission: 'ai:read',
         description: 'AI 助手',
         children: [
           {
@@ -447,14 +457,14 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('MessageSquare')!,
             label: 'AI对话',
             path: '/ai/chat',
-            permission: 'ai:use',
+            permission: 'ai:read',
           },
           {
             key: '/tickets/ai-create',
             icon: getIconByName('Sparkles')!,
             label: 'AI创建工单',
             path: '/tickets/ai-create',
-            permission: 'ai:use',
+            permission: 'ai:read',
           },
           {
             // AI-Native：评估（有用率/置信度校准）与审计日志控制台，
@@ -497,7 +507,7 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('Settings')!,
             label: '客户管理',
             path: '/msp/management',
-            permission: 'msp:manage',
+            permission: 'msp:write',
           },
         ],
       },
@@ -533,7 +543,7 @@ export function getMenuConfig(): MenuConfig {
         icon: getIconByName('Settings')!,
         label: '系统管理',
         path: '/admin',
-        permission: 'admin:write',
+        permission: 'system:write',
         description: '系统管理',
         children: [
           {
@@ -541,7 +551,7 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('LayoutDashboard')!,
             label: '系统概览',
             path: '/admin',
-            permission: 'admin:write',
+            permission: 'system:write',
           },
           {
             key: '/admin/users',
@@ -569,21 +579,21 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('Building')!,
             label: '租户管理',
             path: '/admin/tenants',
-            permission: 'tenant:manage',
+            permission: 'system:write',
           },
           {
             key: '/admin/departments',
             icon: getIconByName('Building')!,
             label: '部门管理',
             path: '/admin/departments',
-            permission: 'department:manage',
+            permission: 'department:read',
           },
           {
             key: '/admin/teams',
             icon: getIconByName('Users')!,
             label: '团队管理',
             path: '/admin/teams',
-            permission: 'team:manage',
+            permission: 'team:read',
           },
           {
             key: '/admin/cab',
@@ -597,35 +607,35 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('Tag')!,
             label: '工单分类',
             path: '/admin/ticket-categories',
-            permission: 'ticket:category:manage',
+            permission: 'ticket_category:update',
           },
           {
             key: '/admin/tickets/assignment-rules',
             icon: getIconByName('GitBranch')!,
             label: '工单分配规则',
             path: '/admin/tickets/assignment-rules',
-            permission: 'ticket:manage',
+            permission: 'ticket:read',
           },
           {
             key: '/admin/tickets/automation-rules',
             icon: getIconByName('Zap')!,
             label: '自动化规则',
             path: '/admin/tickets/automation-rules',
-            permission: 'ticket:manage',
+            permission: 'ticket:read',
           },
           {
             key: '/admin/approval-chains',
             icon: getIconByName('Link')!,
             label: '审批链',
             path: '/admin/approval-chains',
-            permission: 'approval:manage',
+            permission: 'approval:write',
           },
           {
             key: '/admin/permissions',
             icon: getIconByName('Lock')!,
             label: '权限管理',
             path: '/admin/permissions',
-            permission: 'permission:manage',
+            permission: 'role:write',
           },
           {
             key: '/admin/connectors',
@@ -635,18 +645,25 @@ export function getMenuConfig(): MenuConfig {
             permission: 'connector:write',
           },
           {
+            key: '/admin/vector-store',
+            icon: getIconByName('Database')!,
+            label: '向量存储配置',
+            path: '/admin/vector-store',
+            permission: 'system:read',
+          },
+          {
             key: '/admin/system-config',
             icon: getIconByName('Settings')!,
             label: '系统配置',
             path: '/admin/system-config',
-            permission: 'system:config',
+            permission: 'system:read',
           },
           {
             key: '/notifications',
             icon: getIconByName('Bell')!,
             label: '通知配置',
             path: '/notifications',
-            permission: 'system:config',
+            permission: 'notification:read',
           },
           {
             // 通用审计日志（后端 GET /api/v1/audit-logs，权限 audit:read）
@@ -662,21 +679,21 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('ClipboardList')!,
             label: '操作日志',
             path: '/workflow/audit',
-            permission: 'system:audit',
+            permission: 'audit:read',
           },
           {
             key: '/admin/cmdb-types',
             icon: getIconByName('Database')!,
             label: 'CMDB 类型',
             path: '/admin/cmdb-types',
-            permission: 'cmdb:manage',
+            permission: 'cmdb:write',
           },
           {
             key: '/admin/escalation-rules',
             icon: getIconByName('AlertTriangle')!,
             label: '升级规则',
             path: '/admin/escalation-rules',
-            permission: 'escalation:manage',
+            permission: 'sla:write',
           },
           {
             // 升级矩阵页面：src/app/(main)/admin/escalation-matrices/page.tsx
@@ -691,14 +708,14 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('Layers')!,
             label: 'SLA 模板',
             path: '/admin/sla-templates',
-            permission: 'sla:manage',
+            permission: 'sla:write',
           },
           {
             key: '/admin/ticket-categories',
             icon: getIconByName('Tag')!,
             label: '工单分类',
             path: '/admin/ticket-categories',
-            permission: 'ticket:category:manage',
+            permission: 'ticket_category:update',
           },
           {
             key: '/tickets/types',
@@ -712,14 +729,14 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('Boxes')!,
             label: '服务目录',
             path: '/admin/service-catalogs',
-            permission: 'catalog:manage',
+            permission: 'service_catalog:read',
           },
           {
             key: '/admin/sla-definitions',
             icon: getIconByName('Clock')!,
             label: 'SLA 定义',
             path: '/admin/sla-definitions',
-            permission: 'sla:manage',
+            permission: 'sla:write',
           },
           {
             // 菜单管理：src/app/(main)/admin/menus/page.tsx（RBAC菜单配置权威入口）
@@ -734,7 +751,7 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('GitBranch')!,
             label: '工作流',
             path: '/admin/workflows',
-            permission: 'workflow:manage',
+            permission: 'workflow:write',
           },
         ],
       },

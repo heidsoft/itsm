@@ -133,6 +133,10 @@ func TestTicketServiceTaskHandler_EscalateTicket(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	// 租户隔离加固后，getTicket 对无租户上下文的调用 fail closed；
+	// 测试必须模拟生产链路上 BPMN 引擎注入的租户上下文。
+	ctx = context.WithValue(ctx, BPMNTenantIDContextKey, testTenant.ID)
+
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
@@ -253,6 +257,10 @@ func TestTicketServiceTaskHandler_AssignTicket(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	// 租户隔离加固后，getTicket 对无租户上下文的调用 fail closed；
+	// 测试必须模拟生产链路上 BPMN 引擎注入的租户上下文。
+	ctx = context.WithValue(ctx, BPMNTenantIDContextKey, testTenant.ID)
+
 	assignee, err := client.User.Create().
 		SetUsername("assignee").
 		SetEmail("assignee@example.com").
@@ -360,6 +368,10 @@ func TestTicketServiceTaskHandler_Execute(t *testing.T) {
 		SetStatus("active").
 		Save(ctx)
 	require.NoError(t, err)
+
+	// 租户隔离加固后，getTicket 对无租户上下文的调用 fail closed；
+	// 测试必须模拟生产链路上 BPMN 引擎注入的租户上下文。
+	ctx = context.WithValue(ctx, BPMNTenantIDContextKey, testTenant.ID)
 
 	testUser, err := client.User.Create().
 		SetUsername("testuser").

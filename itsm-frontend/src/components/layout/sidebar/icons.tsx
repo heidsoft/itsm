@@ -61,6 +61,7 @@ import {
   Search,
   Edit,
   Menu,
+  Plug,
 } from 'lucide-react';
 
 // 图标样式
@@ -125,6 +126,7 @@ export const iconMap: Record<string, React.ReactNode> = {
   Search: <Search style={iconStyle} />,
   Edit: <Edit style={iconStyle} />,
   Menu: <Menu style={iconStyle} />,
+  Plug: <Plug style={iconStyle} />,
 };
 
 /**

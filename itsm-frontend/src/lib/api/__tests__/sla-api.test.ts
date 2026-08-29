@@ -22,8 +22,8 @@ describe('SLAApi', () => {
   describe('getSLADefinitions', () => {
     it('should get definitions with params', async () => {
       mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 10 });
-      await SLAApi.getSLADefinitions({ page: 1, size: 10, isActive: true, name: 'test' });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/definitions', { page: '1', size: '10', isActive: 'true', name: 'test' });
+      await SLAApi.getSLADefinitions({ page: 1, pageSize: 10, isActive: true, name: 'test' });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/definitions', { page: '1', pageSize: '10', isActive: 'true', name: 'test' });
     });
 
     it('should get definitions without params', async () => {
@@ -80,8 +80,8 @@ describe('SLAApi', () => {
   describe('getSLAViolations', () => {
     it('should get violations with params', async () => {
       mockGet.mockResolvedValue({ items: [], total: 0 });
-      await SLAApi.getSLAViolations({ page: 1, size: 10, severity: 'high' });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/violations', expect.objectContaining({ page: '1', size: '10', severity: 'high' }));
+      await SLAApi.getSLAViolations({ page: 1, pageSize: 10, severity: 'high' });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/violations', expect.objectContaining({ page: '1', pageSize: '10', severity: 'high' }));
     });
   });
 
@@ -97,7 +97,7 @@ describe('SLAApi', () => {
     it('should get compliance report and transform data', async () => {
       mockGet.mockResolvedValue({ totalTickets: 100, metSla: 90, violatedSla: 10, complianceRate: 90, avgResponseTime: 30, avgResolutionTime: 120, reportPeriod: { startDate: '2024-01-01', endDate: '2024-01-31' } });
       const result = await SLAApi.getSLAComplianceReport({ startDate: '2024-01-01', endDate: '2024-01-31' });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/compliance-report', { start_date: '2024-01-01', end_date: '2024-01-31' });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/compliance-report', { startDate: '2024-01-01', endDate: '2024-01-31' });
       expect(result.totalTickets).toBe(100);
       expect(result.complianceRate).toBe(90);
     });
@@ -111,35 +111,100 @@ describe('SLAApi', () => {
   });
 
   describe('getSLAMonitoring', () => {
-    it('should transform monitoring data', async () => {
-      mockPost.mockResolvedValue({ totalViolations: 10, resolvedViolations: 8, activeViolations: 2, complianceRate: 0.8, activeSlas: 3, activeAlertRules: 1 });
-      const result = await SLAApi.getSLAMonitoring({ startTime: '30d', endTime: 'now' });
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/sla/monitor', { startTime: '30d', endTime: 'now' });
-      expect(result.complianceRate).toBe(80);
-      expect(result.violationRate).toBe(20);
+    it('should post the canonical monitoring contract without fabricating fields', async () => {
+      mockPost.mockResolvedValue({
+        startTime: '2026-08-22T00:00:00Z',
+        endTime: '2026-08-29T00:00:00Z',
+        truncated: false,
+        totalTickets: 10,
+        resolvedTickets: 2,
+        resolutionRate: 20,
+        complianceRate: 75.5,
+        activeAlerts: 3,
+        alerts: [],
+      });
+      const result = await SLAApi.getSLAMonitoring({
+        startTime: '2026-08-22T00:00:00Z',
+        endTime: '2026-08-29T00:00:00Z',
+      });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/sla/monitoring', {
+        startTime: '2026-08-22T00:00:00Z',
+        endTime: '2026-08-29T00:00:00Z',
+      });
+      // 百分数原样透传，客户端禁止做 *100 之类的二次换算或字段改名。
+      expect(result.complianceRate).toBe(75.5);
       expect(result.totalTickets).toBe(10);
+      expect(result.activeAlerts).toBe(3);
+    });
+
+    it('should send an empty body when no window is given', async () => {
+      mockPost.mockResolvedValue({ alerts: null });
+      const result = await SLAApi.getSLAMonitoring();
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/sla/monitoring', {});
+      expect(result.alerts).toEqual([]);
+    });
+
+    it('should throw on empty response instead of faking success', async () => {
+      mockPost.mockResolvedValue(undefined);
+      await expect(SLAApi.getSLAMonitoring()).rejects.toThrow('SLA 监控数据为空');
+    });
+  });
+
+  describe('getSLAPerformance', () => {
+    it('should query the performance endpoint with camelCase params', async () => {
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
+      await SLAApi.getSLAPerformance({
+        dimension: 'serviceType',
+        startDate: '2026-08-01T00:00:00Z',
+        serviceType: 'incident',
+        page: 2,
+        pageSize: 10,
+      });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/performance', {
+        dimension: 'serviceType',
+        startDate: '2026-08-01T00:00:00Z',
+        serviceType: 'incident',
+        page: '2',
+        pageSize: '10',
+      });
     });
   });
 
   describe('getSLAMetrics', () => {
-    it('should get metrics from monitor endpoint', async () => {
-      mockPost.mockResolvedValue({ averageResponseTime: 30, averageResolutionTime: 120, complianceRate: 95, violatedTickets: 5 });
-      const result = await SLAApi.getSLAMetrics({ period: 'month' });
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/sla/monitor', {});
-      expect(result.responseTimeAvg).toBe(30);
-      expect(result.violationCount).toBe(5);
+    it('should get metric records with camelCase query', async () => {
+      mockGet.mockResolvedValue({ metrics: [{ id: 1 }], count: 1 });
+      const result = await SLAApi.getSLAMetrics({ slaDefinitionId: 3, metricType: 'response_time' });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/metrics', {
+        slaDefinitionId: '3',
+        metricType: 'response_time',
+      });
+      expect(result.count).toBe(1);
     });
   });
 
   describe('getSLAAlerts', () => {
-    it('should get alerts from monitor', async () => {
-      mockPost.mockResolvedValue({ alerts: [{ ticketId: 1, ticketTitle: 'Test', priority: 'high', slaDefinition: 'Gold', timeRemaining: 30, alertLevel: 'warning', createdAt: '2024-01-01' }] });
+    it('should return real alert items from monitoring', async () => {
+      mockPost.mockResolvedValue({
+        alerts: [{
+          id: 5,
+          ticketId: 1,
+          ticketNumber: 'TK-1',
+          ticketTitle: 'Test',
+          priority: 'high',
+          alertLevel: 'warning',
+          alertRuleName: 'Gold rule',
+          thresholdPercentage: 80,
+          actualPercentage: 90,
+          createdAt: '2026-01-01T00:00:00Z',
+        }],
+      });
       const result = await SLAApi.getSLAAlerts();
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/sla/monitoring', {});
       expect(result).toHaveLength(1);
-      expect(result[0].ticketId).toBe(1);
+      expect(result[0].alertRuleName).toBe('Gold rule');
     });
 
-    it('should return empty array when no alerts', async () => {
+    it('should return empty array when monitoring has no alerts', async () => {
       mockPost.mockResolvedValue({});
       const result = await SLAApi.getSLAAlerts();
       expect(result).toEqual([]);
@@ -151,14 +216,6 @@ describe('SLAApi', () => {
       mockGet.mockResolvedValue({ totalDefinitions: 5, activeDefinitions: 3 });
       await SLAApi.getSLAStats();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/stats');
-    });
-  });
-
-  describe('triggerSLAMonitoring', () => {
-    it('should trigger monitoring', async () => {
-      mockPost.mockResolvedValue({ checkedTickets: 10, violationsFound: 2, alertsSent: 1 });
-      await SLAApi.triggerSLAMonitoring();
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/sla/monitor');
     });
   });
 

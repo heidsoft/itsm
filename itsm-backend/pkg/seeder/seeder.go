@@ -1383,6 +1383,9 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		{"service_request:read", "查看服务请求", "service_request", "read", "查看服务请求"},
 		{"service_request:write", "处理服务请求", "service_request", "write", "创建、处理服务请求"},
 		{"service_request:delete", "删除服务请求", "service_request", "delete", "删除服务请求"},
+		// 通知权限（路由 RequirePermission("notification", "read"/"create") 依赖）
+		{"notification:read", "查看通知", "notification", "read", "查看通知和偏好设置"},
+		{"notification:create", "发送通知", "notification", "create", "创建/发送通知"},
 		// SLA权限
 		{"sla:read", "查看SLA", "sla", "read", "查看SLA定义"},
 		{"sla:write", "管理SLA", "sla", "write", "管理SLA定义"},
@@ -1515,6 +1518,7 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		{Name: "仪表盘", Path: "/dashboard", Icon: "LayoutDashboard", PermissionCode: "", SortOrder: 10},
 		{Name: "工单管理", Path: "/tickets", Icon: "FileText", PermissionCode: "ticket:read", SortOrder: 20},
 		{Name: "事件管理", Path: "/incidents", Icon: "AlertCircle", PermissionCode: "incident:read", SortOrder: 30},
+		{Name: "NOC工作台", Path: "/noc", Icon: "Activity", PermissionCode: "incident:read", SortOrder: 35},
 		{Name: "问题管理", Path: "/problems", Icon: "HelpCircle", PermissionCode: "problem:read", SortOrder: 40},
 		{Name: "变更管理", Path: "/changes", Icon: "BarChart3", PermissionCode: "change:read", SortOrder: 50},
 		{Name: "CMDB", Path: "/cmdb", Icon: "Database", PermissionCode: "cmdb:read", SortOrder: 60},
@@ -1536,6 +1540,8 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		{Name: "审批管理", Path: "/admin/approvals", Icon: "ClipboardList", PermissionCode: "approval:read", SortOrder: 260},
 		{Name: "SLA配置", Path: "/admin/sla-definitions", Icon: "Calendar", PermissionCode: "sla:write", SortOrder: 270},
 		{Name: "系统配置", Path: "/admin/system-config", Icon: "Settings", PermissionCode: "system:write", SortOrder: 280},
+		{Name: "连接器市场", Path: "/admin/connectors", Icon: "Plug", PermissionCode: "connector:read", SortOrder: 282},
+		{Name: "向量存储配置", Path: "/admin/vector-store", Icon: "Database", PermissionCode: "system:read", SortOrder: 284},
 	}
 	s.expectedMenus = make([]string, 0, len(menus))
 	for _, item := range menus {
@@ -1603,10 +1609,10 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		"/admin/tickets/assignment": "/admin/tickets/assignment-rules",
 		"/admin/tickets/automation": "/admin/tickets/automation-rules",
 		// P0 路由漂移修复：与前端 src/app/(main)/ 真实目录对齐
-		"/admin/ticket-types":       "/admin/ticket-categories",
-		"/admin/sla-config":         "/workflow/sla",
-		"/admin/escalation-matrix":  "/admin/escalation-matrices",
-		"/sla-dashboard":            "/sla-monitor",
+		"/admin/ticket-types":      "/admin/ticket-categories",
+		"/admin/sla-config":        "/workflow/sla",
+		"/admin/escalation-matrix": "/admin/escalation-matrices",
+		"/sla-dashboard":           "/sla-monitor",
 	}
 
 	for oldPath, newPath := range menuPathFixes {
@@ -1708,6 +1714,10 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		{"BPMN节点分析", "/workflow/bottlenecks", "BarChart3", "workflow:read", 205},
 		{"菜单管理", "/admin/menus", "List", "system:write", 285},
 		{"审计日志", "/audit-logs", "Shield", "audit:read", 295},
+		// NOC/连接器市场/向量存储：存量租户补齐菜单入口（页面与后端路由均已就绪）
+		{"NOC工作台", "/noc", "Activity", "incident:read", 35},
+		{"连接器市场", "/admin/connectors", "Plug", "connector:read", 282},
+		{"向量存储配置", "/admin/vector-store", "Database", "system:read", 284},
 	}
 
 	for _, m := range missingMenus {
@@ -1773,38 +1783,42 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		"ops_director": allExcept([]string{"system:write", "msp:write", "msp_allocation:write", "msp_report:write"}),
 		// 运维经理：运维相关读写
 		"ops_manager": {
-			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
+			"ticket:assign", "ticket:escalate", "ticket:export", "ticket:delete",
+			"incident:read", "incident:write",
 			"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 			"problem:read", "problem:write", "change:read", "change:write",
 			"asset:read", "asset:write", "cmdb:read", "cmdb:write",
 			"sla:read", "workflow:read", "report:read",
-			"team:read", "department:read", "user:read",
+			"team:read", "department:read", "user:read", "ai:read",
 		},
 		// 运维工程师：运维操作
 		"ops_engineer": {
 			"ticket:read", "ticket:write", "incident:read", "incident:write",
 			"problem:read", "change:read", "asset:read", "asset:write",
-			"cmdb:read", "cmdb:write", "sla:read", "knowledge:read", "knowledge:write",
+			"cmdb:read", "cmdb:write", "sla:read", "knowledge:read", "knowledge:write", "ai:read",
 		},
 		// DBA工程师
 		"dba": {
 			"ticket:read", "incident:read", "problem:read", "problem:write",
 			"change:read", "change:write", "asset:read", "cmdb:read", "cmdb:write",
-			"knowledge:read", "knowledge:write",
+			"knowledge:read", "knowledge:write", "ai:read",
 		},
 		// 网络安全工程师
 		"network_eng": {
 			"ticket:read", "incident:read", "incident:write", "problem:read",
 			"change:read", "asset:read", "cmdb:read", "sla:read",
-			"knowledge:read", "knowledge:write",
+			"knowledge:read", "knowledge:write", "ai:read",
 		},
 		// 服务台主管
 		"sd_manager": {
-			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
+			"ticket:assign", "ticket:escalate", "ticket:export",
+			"incident:read", "incident:write",
 			"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 			"problem:read", "change:read", "sla:read", "sla:write",
 			"knowledge:read", "knowledge:write", "report:read",
-			"user:read", "team:read",
+			"user:read", "team:read", "ai:read",
 		},
 		// 变更经理：负责变更生命周期、审批协同和发布联动
 		"change_manager": {
@@ -1831,23 +1845,29 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"sla:read",
 			"knowledge:read",
 		},
-		// 一线支持工程师
+		// 一线支持工程师：具备工单全生命周期操作权限
 		"l1_support": {
-			"ticket:read", "ticket:write", "incident:read", "incident:write",
-			"knowledge:read", "user:read", "sla:read",
+			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
+			"ticket:assign", "ticket:escalate", "ticket:export",
+			"incident:read", "incident:write",
+			"knowledge:read", "user:read", "sla:read", "notification:read", "ai:read",
 		},
 		// 二线支持工程师
 		"l2_support": {
-			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
+			"ticket:assign", "ticket:escalate", "ticket:export",
+			"incident:read", "incident:write",
 			"problem:read", "change:read", "asset:read",
-			"knowledge:read", "knowledge:write", "user:read", "sla:read",
+			"knowledge:read", "knowledge:write", "user:read", "sla:read", "notification:read", "ai:read",
 		},
 		// 三线专家
 		"l3_expert": {
-			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
+			"ticket:assign", "ticket:escalate", "ticket:export",
+			"incident:read", "incident:write",
 			"problem:read", "problem:write", "change:read", "change:write",
 			"asset:read", "cmdb:read", "knowledge:read", "knowledge:write",
-			"sla:read", "workflow:read",
+			"sla:read", "workflow:read", "notification:read", "ai:read",
 		},
 		// 研发经理
 		"rd_manager": {
@@ -1901,9 +1921,12 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"asset:read",
 			"team:read", "user:read",
 		},
-		// 普通用户
+		// 普通用户：可提交和维护自己的工单/服务请求
 		"end_user": {
-			"ticket:read", "ticket:write", "knowledge:read", "service_catalog:read",
+			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
+			"knowledge:read", "service_catalog:read",
+			"service_request:read", "service_request:write",
+			"notification:read", "user:read",
 		},
 		// 访客
 		"guest": {
