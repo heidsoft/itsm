@@ -251,8 +251,8 @@ export const Header: React.FC<HeaderProps> = ({
             onOpen={handleOpenSearch}
           />
 
-          {/* AI 助手入口：与侧边栏使用相同的 ai:use 权限，admin 默认放行 */}
-          {hasPermission('ai:use') || isAdmin() ? (
+          {/* AI 助手入口：权限码与后端 permissions 表对齐（ai:read），admin 默认放行 */}
+          {hasPermission('ai:read') || isAdmin() ? (
             <Tooltip title="AI助手">
               <Button
                 type="text"

@@ -126,8 +126,10 @@ describe('IncidentAPI', () => {
   });
 
   describe('deleteIncidentComment', () => {
-    it('should throw not implemented', async () => {
-      await expect(IncidentAPI.deleteIncidentComment(1, 1)).rejects.toThrow();
+    it('should delete an incident comment through the registered route', async () => {
+      mockDelete.mockResolvedValue(undefined);
+      await IncidentAPI.deleteIncidentComment(1, 1);
+      expect(mockDelete).toHaveBeenCalledWith('/api/v1/incidents/1/comments/1');
     });
   });
 

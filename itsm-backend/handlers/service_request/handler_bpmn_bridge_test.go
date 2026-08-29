@@ -40,7 +40,7 @@ func srSetupBridge(t *testing.T) (*gin.Engine, *ent.Client, int, int, int) {
 	require.NoError(t, err)
 	scRepo := service_catalog.NewEntRepository(client)
 	scSvc := service_catalog.NewService(scRepo, logger)
-	cat, err := scSvc.Create(ctx, "SRCatalog-"+srUID(), "software", "for test", 0, tenant.ID, "enabled", 0, 0)
+	cat, err := createServiceCatalogForTest(ctx, scSvc, "SRCatalog-"+srUID(), "software", "for test", 0, tenant.ID, "enabled", 0, 0)
 	require.NoError(t, err)
 	repo := NewEntRepository(client)
 	cmdbRepo := cmdb.NewEntRepository(client)

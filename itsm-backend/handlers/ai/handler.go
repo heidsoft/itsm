@@ -283,6 +283,10 @@ func (h *Handler) AnalyzeIncident(c *gin.Context) {
 			common.NotFoundWithErr(c, err, "事件不存在")
 			return
 		}
+		if errors.Is(err, service.ErrAIAnalysisUnavailable) {
+			common.Fail(c, common.ServiceUnavailableCode, "AI 事件分析服务尚未就绪")
+			return
+		}
 		common.FailWithErr(c, err, "事件分析失败")
 		return
 	}

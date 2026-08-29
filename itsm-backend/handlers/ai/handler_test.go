@@ -177,6 +177,30 @@ func TestTriage_Handler_RequiresTitle(t *testing.T) {
 	assert.Contains(t, resp.Message, "Title")
 }
 
+func TestAnalyzeIncident_Handler_UnwiredServiceReturnsUnavailable(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	h := ai.NewHandler(svc)
+	r := gin.New()
+	r.POST("/api/v1/ai/incidents/:id/analyze", func(c *gin.Context) {
+		c.Set("tenant_id", 1)
+		h.AnalyzeIncident(c)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/ai/incidents/1/analyze", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusServiceUnavailable, w.Code)
+	var resp struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.ServiceUnavailableCode, resp.Code)
+	assert.Equal(t, "AI 事件分析服务尚未就绪", resp.Message)
+}
+
 // ==================== RAG 可见性过滤 HTTP 端到端测试 ====================
 // 完整链路：gin 路由 → Handler.KnowledgeSearch → Service.SearchKnowledge →
 // RAGService.Ask → Ent 查询。验证租户隔离、草稿排除、软删除排除在 HTTP 边界生效。

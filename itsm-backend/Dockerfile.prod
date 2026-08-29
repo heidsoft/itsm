@@ -58,6 +58,12 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -ldflags="-s -w" -o /out/main ./main.go
 
+# Migration/seed CLI (build tag: migrate). Used for one-off operational commands:
+#   docker exec itsm-backend ./migrate-tool -seed-only
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go build -trimpath -ldflags="-s -w" -tags migrate -o /out/migrate-tool ./cmd/migrate/main.go
+
 # ============================================================
 # Stage 2: Runtime (alpine — minimal, non-root)
 # ============================================================
@@ -74,6 +80,7 @@ RUN apk add --no-cache ca-certificates curl tzdata \
     && chown -R app:app /app
 
 COPY --from=builder --chown=app:app /out/main ./main
+COPY --from=builder --chown=app:app /out/migrate-tool ./migrate-tool
 COPY --chown=app:app config.yaml ./
 COPY --chown=app:app migrations ./migrations
 COPY --chown=app:app config/seed ./config/seed

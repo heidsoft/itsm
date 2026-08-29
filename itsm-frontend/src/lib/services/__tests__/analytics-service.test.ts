@@ -201,7 +201,7 @@ describe('TicketAnalyticsService', () => {
       });
 
       expect(mockRequest).toHaveBeenCalledWith({
-        method: 'GET',
+        method: 'POST',
         url: '/api/v1/tickets/analytics/export',
         params: { dateFrom: '2024-01-01', dateTo: '2024-01-31', format: 'csv' },
         responseType: 'blob',
@@ -221,7 +221,7 @@ describe('TicketAnalyticsService', () => {
       });
 
       expect(mockRequest).toHaveBeenCalledWith({
-        method: 'GET',
+        method: 'POST',
         url: '/api/v1/tickets/analytics/export',
         params: { dateFrom: '2024-01-01', dateTo: '2024-12-31', format: 'excel', groupBy: 'month' },
         responseType: 'blob',

@@ -22,6 +22,10 @@ var allowedRootCauseCategories = map[string]struct{}{
 	"infrastructure": {}, "software": {}, "process": {}, "network": {}, "security": {}, "other": {},
 }
 
+// ErrAIAnalysisUnavailable reports an operational readiness problem rather
+// than misclassifying missing AI wiring as invalid input or panicking.
+var ErrAIAnalysisUnavailable = fmt.Errorf("AI incident analysis unavailable")
+
 type RootCauseService struct {
 	client  *ent.Client
 	logger  *zap.SugaredLogger

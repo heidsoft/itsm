@@ -334,6 +334,9 @@ func (s *Service) AnalyzeTicket(ctx context.Context, ticketID int, tenantID int)
 }
 
 func (s *Service) AnalyzeIncident(ctx context.Context, incidentID int, tenantID int) (interface{}, error) {
+	if s.rca == nil {
+		return nil, service.ErrAIAnalysisUnavailable
+	}
 	return s.rca.AnalyzeIncident(ctx, incidentID, tenantID)
 }
 

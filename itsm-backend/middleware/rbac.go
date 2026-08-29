@@ -162,6 +162,11 @@ var RolePermissions = map[string][]Permission{
 	"manager": {
 		{Resource: "ticket", Action: "read"},
 		{Resource: "ticket", Action: "write"},
+		{Resource: "ticket", Action: "create"},
+		{Resource: "ticket", Action: "update"},
+		{Resource: "ticket", Action: "assign"},
+		{Resource: "ticket", Action: "escalate"},
+		{Resource: "ticket", Action: "export"},
 		{Resource: "notification", Action: "read"},
 		{Resource: "notification", Action: "write"},
 		{Resource: "incident", Action: "read"},
@@ -209,6 +214,11 @@ var RolePermissions = map[string][]Permission{
 	"agent": {
 		{Resource: "ticket", Action: "read"},
 		{Resource: "ticket", Action: "write"},
+		{Resource: "ticket", Action: "create"},
+		{Resource: "ticket", Action: "update"},
+		{Resource: "ticket", Action: "assign"},
+		{Resource: "ticket", Action: "escalate"},
+		{Resource: "ticket", Action: "export"},
 		{Resource: "notification", Action: "read"},
 		{Resource: "notification", Action: "write"},
 		{Resource: "dashboard", Action: "read"},
@@ -226,6 +236,7 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "problem", Action: "write"},
 		{Resource: "alert", Action: "read"},
 		{Resource: "alerts", Action: "read"},
+		{Resource: "ai", Action: "read"},
 		// Groups management permissions
 		{Resource: "groups", Action: "read"},
 		// BPMN Workflow permissions
@@ -245,6 +256,7 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "service_request", Action: "write"},
 		{Resource: "alert", Action: "read"},
 		{Resource: "alerts", Action: "read"},
+		{Resource: "ai", Action: "read"},
 		// Groups management permissions
 		{Resource: "groups", Action: "read"},
 		// BPMN Workflow permissions
@@ -294,7 +306,9 @@ var RolePermissions = map[string][]Permission{
 	},
 	"end_user": {
 		{Resource: "ticket", Action: "read"},
-		{Resource: "ticket", Action: "write"}, // 最终用户可以创建和更新自己的工单
+		{Resource: "ticket", Action: "write"},
+		{Resource: "ticket", Action: "create"}, // 最终用户提交工单
+		{Resource: "ticket", Action: "update"}, // 最终用户更新自己的工单
 		{Resource: "notification", Action: "read"},
 		{Resource: "notification", Action: "write"},
 		{Resource: "knowledge", Action: "read"},
@@ -678,6 +692,27 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/msp/tickets/*/assign":       {Resource: "msp_ticket", Action: "write"},
 	},
 	"PUT": {
+		"/api/v1/tickets/*":            {Resource: "ticket", Action: "write"},
+		"/api/v1/notifications/*":      {Resource: "notification", Action: "write"},
+		"/api/v1/ticket-categories/*":  {Resource: "ticket_category", Action: "write"},
+		"/api/v1/ticket-templates/*":   {Resource: "ticket_template", Action: "write"},
+		"/api/v1/ticket-tags/*":        {Resource: "ticket_tag", Action: "write"},
+		"/api/v1/users/*":              {Resource: "user", Action: "write"},
+		"/api/v1/knowledge/*":          {Resource: "knowledge", Action: "write"},
+		"/api/v1/cmdb/*":               {Resource: "cmdb", Action: "write"},
+		"/api/v1/incidents/*":          {Resource: "incident", Action: "write"},
+		"/api/v1/service-catalogs/*":   {Resource: "service_catalog", Action: "write"},
+		"/api/v1/service-requests/*":   {Resource: "service_request", Action: "write"},
+		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "write"},
+		"/api/v1/problems/*":           {Resource: "problem", Action: "write"},
+		"/api/v1/changes/*":            {Resource: "change", Action: "write"},
+		// BPMN Workflow permissions
+		"/api/v1/bpmn/*": {Resource: "bpmn", Action: "write"},
+	},
+	// PATCH 与 PUT 同为部分更新，必须保持同一 RBAC 契约：
+	// 否则 SmartCheckPermission L3 无法从显式映射解析出资源动作，
+	// URL 推断会把复数路径段（tickets）当资源名导致非通配角色误拒 403。
+	"PATCH": {
 		"/api/v1/tickets/*":            {Resource: "ticket", Action: "write"},
 		"/api/v1/notifications/*":      {Resource: "notification", Action: "write"},
 		"/api/v1/ticket-categories/*":  {Resource: "ticket_category", Action: "write"},

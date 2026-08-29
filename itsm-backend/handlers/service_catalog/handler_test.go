@@ -187,8 +187,9 @@ func TestHandler_Update_Success(t *testing.T) {
 	id := int(create.Data.(map[string]interface{})["id"].(float64))
 
 	updated := "Renamed-" + uid
+	disabled := "disabled"
 	resp := scDoReq(t, r, "PUT", "/api/v1/service-catalogs/"+strconv.Itoa(id),
-		dto.UpdateServiceCatalogRequest{Name: updated, Status: "disabled"})
+		dto.UpdateServiceCatalogRequest{Name: &updated, Status: &disabled})
 	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustSC(resp))
 	assert.Equal(t, updated, resp.Data.(map[string]interface{})["name"])
 	assert.Equal(t, "disabled", resp.Data.(map[string]interface{})["status"])

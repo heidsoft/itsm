@@ -2,13 +2,19 @@ package router
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/handlers/ai"
+	"itsm-backend/middleware"
 	"itsm-backend/migration"
+	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -16,6 +22,65 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
+
+func TestSetupRoutes_IncidentAIAnalysis_ProductionRouteTenantScopeAndContract(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:router_incident_ai?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenantA := client.Tenant.Create().SetName("NOC A").SetCode("noc-a").SetStatus("active").SaveX(ctx)
+	tenantB := client.Tenant.Create().SetName("NOC B").SetCode("noc-b").SetStatus("active").SaveX(ctx)
+	adminA := client.User.Create().SetUsername("noc-a-admin").SetEmail("noc-a-admin@test.com").SetName("NOC A Admin").SetPasswordHash("hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantA.ID).SaveX(ctx)
+	adminB := client.User.Create().SetUsername("noc-b-admin").SetEmail("noc-b-admin@test.com").SetName("NOC B Admin").SetPasswordHash("hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantB.ID).SaveX(ctx)
+	reporter := client.User.Create().SetUsername("noc-b-user").SetEmail("noc-b@test.com").SetName("NOC B").SetPasswordHash("hash").SetRole("agent").SetActive(true).SetTenantID(tenantB.ID).SaveX(ctx)
+	incident := client.Incident.Create().SetIncidentNumber("INC-NOC-001").SetTitle("核心网络中断").SetDescription("核心交换机不可达").SetCategory("network").SetPriority("critical").SetSeverity("critical").SetStatus("new").SetReporterID(reporter.ID).SetTenantID(tenantB.ID).SetDetectedAt(time.Now()).SaveX(ctx)
+
+	logger := zaptest.NewLogger(t).Sugar()
+	rca := service.NewRootCauseService(client, logger)
+	aiService := ai.NewService(nil, logger, nil, nil, nil, nil, nil, nil, nil, rca, nil)
+	aiHandler := ai.NewHandler(aiService)
+	const secret = "incident-ai-route-secret"
+	r := gin.New()
+	SetupRoutes(r, &RouterConfig{JWTSecret: secret, Logger: logger, Client: client, AIHandler: aiHandler})
+
+	request := func(userID, tenantID int) *httptest.ResponseRecorder {
+		token, err := middleware.GenerateAccessToken(userID, "noc-admin", "super_admin", tenantID, secret, time.Hour)
+		require.NoError(t, err)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/ai/incidents/"+fmt.Sprint(incident.ID)+"/analyze", nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		return w
+	}
+
+	denied := request(adminA.ID, tenantA.ID)
+	require.Equal(t, http.StatusNotFound, denied.Code)
+	var deniedBody map[string]any
+	require.NoError(t, json.Unmarshal(denied.Body.Bytes(), &deniedBody))
+	assert.Equal(t, float64(4004), deniedBody["code"])
+	assert.NotContains(t, denied.Body.String(), "核心网络中断")
+
+	success := request(adminB.ID, tenantB.ID)
+	require.Equal(t, http.StatusOK, success.Code)
+	var body struct {
+		Code int `json:"code"`
+		Data struct {
+			IncidentID     int    `json:"incidentId"`
+			IncidentNumber string `json:"incidentNumber"`
+			AnalysisMethod string `json:"analysisMethod"`
+			PromptVersion  string `json:"promptVersion"`
+			Degraded       bool   `json:"degraded"`
+			DegradedReason string `json:"degradedReason"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(success.Body.Bytes(), &body))
+	assert.Zero(t, body.Code)
+	assert.Equal(t, incident.ID, body.Data.IncidentID)
+	assert.Equal(t, "INC-NOC-001", body.Data.IncidentNumber)
+	assert.Equal(t, "heuristic", body.Data.AnalysisMethod)
+	assert.Equal(t, "incident-rca-v1", body.Data.PromptVersion)
+	assert.True(t, body.Data.Degraded)
+	assert.Equal(t, "llm_unavailable_or_invalid", body.Data.DegradedReason)
+}
 
 // =====================================================================
 // Test Fixtures

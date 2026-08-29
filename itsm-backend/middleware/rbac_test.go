@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRBACMiddleware(t *testing.T) {
@@ -230,6 +231,29 @@ func TestGetPermissionFromPath(t *testing.T) {
 		perm := getPermissionFromPath("GET", "/api/v1/unknown/path")
 		assert.Nil(t, perm)
 	})
+}
+
+// TestPatchMethodUsesUpdateContract 回归：PATCH 未在 ResourceActionMap 中登记时，
+// SmartCheckPermission L3 会把复数路径段 "tickets" 推断为资源名，导致
+// ticket:write/update 权限真实存在的非通配角色（l1/l2/manager）被 RBACMiddleware 误拒 403。
+func TestPatchMethodUsesUpdateContract(t *testing.T) {
+	cases := []struct {
+		method   string
+		path     string
+		resource string
+		action   string
+	}{
+		{"PATCH", "/api/v1/tickets/123", "ticket", "write"},
+		{"PATCH", "/api/v1/incidents/1", "incident", "write"},
+		{"PATCH", "/api/v1/problems/1", "problem", "write"},
+		{"PATCH", "/api/v1/changes/1", "change", "write"},
+	}
+	for _, tc := range cases {
+		perm := getPermissionFromPath(tc.method, tc.path)
+		require.NotNil(t, perm, "%s %s 必须有显式 RBAC 映射，不得回退到 URL 推断", tc.method, tc.path)
+		assert.Equal(t, tc.resource, perm.Resource)
+		assert.Equal(t, tc.action, perm.Action)
+	}
 }
 
 func TestCheckPermissionMatch_ResourceAdminIncludesActions(t *testing.T) {

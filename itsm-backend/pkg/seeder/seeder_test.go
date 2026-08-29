@@ -554,3 +554,46 @@ func mustCount(t *testing.T, query func() (int, error)) int {
 	require.NoError(t, err)
 	return count
 }
+
+// rolePermissionCodes loads the distinct permission codes bound to a role in the default tenant.
+func rolePermissionCodes(t *testing.T, seeder *Seeder, ctx context.Context, tenantID int, roleCode string) map[string]struct{} {
+	t.Helper()
+	r, err := seeder.client.Role.Query().
+		Where(role.CodeEQ(roleCode), role.TenantIDEQ(tenantID)).
+		Only(ctx)
+	require.NoError(t, err)
+	bindings, err := seeder.client.RolePermission.Query().
+		Where(rolepermission.RoleIDEQ(r.ID), rolepermission.TenantIDEQ(tenantID)).
+		All(ctx)
+	require.NoError(t, err)
+	codes := make(map[string]struct{}, len(bindings))
+	for _, b := range bindings {
+		p, err := seeder.client.Permission.Get(ctx, b.PermissionID)
+		require.NoError(t, err)
+		codes[p.Code] = struct{}{}
+	}
+	return codes
+}
+
+// TestSeedRolePermissionsCoverTicketLifecycle is a regression guard: the engineer and
+// end-user roles must be seeded with the fine-grained ticket permissions that the
+// production Gin routes require (create/update/assign/escalate). Without these, every
+// non-admin user receives 403 on core ticket workflows.
+func TestSeedRolePermissionsCoverTicketLifecycle(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
+	require.NoError(t, seeder.SeedProduction(ctx))
+
+	rootTenant, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+	require.NoError(t, err)
+
+	endUser := rolePermissionCodes(t, seeder, ctx, rootTenant.ID, "end_user")
+	require.Contains(t, endUser, "ticket:create")
+	require.Contains(t, endUser, "ticket:update")
+
+	for _, roleCode := range []string{"l1_support", "l2_support", "ops_manager"} {
+		codes := rolePermissionCodes(t, seeder, ctx, rootTenant.ID, roleCode)
+		for _, want := range []string{"ticket:create", "ticket:update", "ticket:assign", "ticket:escalate"} {
+			assert.Contains(t, codes, want, roleCode+" missing "+want)
+		}
+	}
+}
