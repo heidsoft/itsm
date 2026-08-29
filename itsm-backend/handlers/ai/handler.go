@@ -64,14 +64,11 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 		return
 	}
 
-	// P2-6: 写工具（!ReadOnly）目前仍走审批流，agent v1 直接拒绝执行
+	// P2-6: 校验工具存在性；写工具（!ReadOnly）交由 ExecuteTool 统一走审批流
+	// （创建 pending invocation + 入队等待人工审批），与聊天路径行为一致。
 	toolDef := h.svc.tools.GetTool(req.Name)
 	if toolDef == nil {
 		common.Fail(c, common.UnknownToolCode, "unknown tool: "+req.Name)
-		return
-	}
-	if !toolDef.ReadOnly {
-		common.Fail(c, common.ForbiddenCode, "tool requires approval; write tools are not enabled in agent v1")
 		return
 	}
 

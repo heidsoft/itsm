@@ -254,6 +254,17 @@ func (s *Service) Chat(ctx context.Context, tenantID, userID int, query string, 
 	return items, convID, nil
 }
 
+// chatWritableTools 是允许注入聊天路径的写工具白名单。
+// 这些工具经由 ExecuteTool 的审批流（创建 pending invocation + 入队等待人工审批），
+// 绝不在聊天链路内直接落库，因此可安全暴露给 LLM 自主决策调用。
+var chatWritableTools = map[string]bool{
+	"create_ticket":      true,
+	"update_ticket":      true,
+	"create_ticket_type": true,
+	// CMDB 本体链路：把工单挂到配置项（走同一审批流）
+	"link_ticket_ci":     true,
+}
+
 // ChatStream streams a RAG answer through onDelta while emitting sources
 // separately via onSources. It also persists the resulting conversation and
 // messages after the stream completes so history is preserved.
@@ -277,16 +288,17 @@ func (s *Service) ChatStream(
 		return 0, "", fmt.Errorf("RAG service not initialized")
 	}
 
-	// 按权限过滤只读工具，注入聊天路径；写工具绝不进入聊天路径。
+	// 按权限过滤只读工具注入聊天路径；写工具仅放行经审批流的白名单（创建工单/更新工单/创建工单类型），
+	// 它们经由 ExecuteTool 进入待审批队列，绝不在聊天链路内直接落地写库。
 	var tools []service.LLMTool
 	if s.tools != nil {
 		for _, td := range s.tools.ListTools() {
-			if !td.ReadOnly {
-				continue // 写工具不注入，聊天路径只读
+			if !td.ReadOnly && !chatWritableTools[td.Name] {
+				continue
 			}
 			if IsToolRBACEnabled() && s.entClient != nil && role != "" && role != "super_admin" {
 				if !middleware.HasResourcePermission(ctx, s.entClient, role, td.Resource, td.Action, tenantID) {
-					s.logger.Debugw("AI ChatStream: read-only tool filtered by RBAC",
+					s.logger.Debugw("AI ChatStream: tool filtered by RBAC",
 						"tool", td.Name, "resource", td.Resource, "action", td.Action, "role", role, "tenantID", tenantID)
 					continue
 				}
@@ -300,9 +312,29 @@ func (s *Service) ChatStream(
 	}
 
 	// 工具执行回调：复用 ExecuteTool 的 RBAC Gate 2 + 审计，与 agent 执行路径一致。
+	// 写工具经审批流会返回 (res=nil, invID!=0, err=nil)，这里将其转译为结构化
+	// approval_pending 提示，让 LLM 明确告知用户"操作已提交、待人工审批"。
 	execTool := func(name string, args map[string]any) (any, error) {
-		res, _, err := s.ExecuteTool(ctx, userID, tenantID, role, name, args)
-		return res, err
+		// 注入操作者身份，便于工单归属与审计（审批队列回放时据此归因）
+		if _, ok := args["user_id"]; !ok {
+			args["user_id"] = float64(userID)
+		}
+		if _, ok := args["requester_id"]; !ok {
+			args["requester_id"] = float64(userID)
+		}
+		res, invID, err := s.ExecuteTool(ctx, userID, tenantID, role, name, args)
+		if err != nil {
+			return nil, err
+		}
+		if res == nil && invID != 0 {
+			return map[string]any{
+				"status":       "approval_pending",
+				"tool":         name,
+				"invocationId": invID,
+				"message":      fmt.Sprintf("操作已提交，等待人工审批后执行（invocationId=%d）", invID),
+			}, nil
+		}
+		return res, nil
 	}
 
 	var (
