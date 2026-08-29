@@ -9,27 +9,29 @@ import (
 	"itsm-backend/common/tenantctx"
 
 	"entgo.io/ent/dialect"
+	entsql "entgo.io/ent/dialect/sql"
 	"go.uber.org/zap"
 )
 
 // fakeDriver stubs dialect.Driver so we can test the decorator in isolation.
 type fakeDriver struct {
-	execCount  int
-	queryCount int
-	txCount    int
-	lastCtxTID int
-	lastCtxSys bool
-	execErr    error
-	txErr      error // Tx 返回的 error；nil 表示返回可用的 fakeTx
+	execCount    int
+	queryCount   int
+	txCount      int
+	lastCtxTID   int
+	lastCtxSys   bool
+	lastQueryCtx context.Context
+	execErr      error
+	txErr        error // Tx 返回的 error；nil 表示返回可用的 fakeTx
 }
 
 // fakeTx 实现 dialect.Tx：测试中仅需可调用 Exec/Query/Rollback/Commit 即可。
 type fakeTx struct{}
 
-func (fakeTx) Exec(_ context.Context, _ string, _, _ any) error   { return nil }
-func (fakeTx) Query(_ context.Context, _ string, _, _ any) error  { return nil }
-func (fakeTx) Commit() error                                       { return nil }
-func (fakeTx) Rollback() error                                     { return nil }
+func (fakeTx) Exec(_ context.Context, _ string, _, _ any) error  { return nil }
+func (fakeTx) Query(_ context.Context, _ string, _, _ any) error { return nil }
+func (fakeTx) Commit() error                                     { return nil }
+func (fakeTx) Rollback() error                                   { return nil }
 
 func (f *fakeDriver) Dialect() string { return "postgres" }
 func (f *fakeDriver) Close() error    { return nil }
@@ -52,6 +54,7 @@ func (f *fakeDriver) Exec(ctx context.Context, query string, args, v any) error 
 
 func (f *fakeDriver) Query(ctx context.Context, query string, args, v any) error {
 	f.queryCount++
+	f.lastQueryCtx = ctx
 	return nil
 }
 
@@ -160,5 +163,41 @@ func TestFirstToken(t *testing.T) {
 		if got := firstToken(in); got != want {
 			t.Errorf("firstToken(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+// TestDriverEnforceQueryInjectsSessionVar 回归用例（2026-08-29 生产就绪评估 P0-3）：
+// enforce 模式旧实现把 Query 包进短事务，事务在调用方扫描行之前提交，
+// 行句柄失效报 "sql: Rows are closed"，启动就绪探针因此崩溃，RLS 被迫关闭。
+// 修复后 Query/Exec 不再开事务，而是通过上下文（entsql.WithVar）把租户变量
+// 交给内层驱动，由 ent 在专用池连接上于语句前后 SET/RESET。
+func TestDriverEnforceQueryInjectsSessionVar(t *testing.T) {
+	fake := &fakeDriver{}
+	d := NewDriver(fake, ModeEnforce, zap.NewNop().Sugar())
+
+	ctx := tenantctx.WithTenantID(context.Background(), 42)
+	if err := d.Query(ctx, "SELECT 1", nil, nil); err != nil {
+		t.Fatalf("Query: %v", err)
+	}
+	if fake.txCount != 0 {
+		t.Errorf("enforce Query must not open short tx, txCount = %d", fake.txCount)
+	}
+	got, ok := entsql.VarFromContext(fake.lastQueryCtx, tenantVarName)
+	if !ok || got != "42" {
+		t.Errorf("session var = %q,%v; want \"42\",true", got, ok)
+	}
+
+	// bypass 透传且不注入变量
+	sysCtx := tenantctx.WithSystemBypass(context.Background())
+	if err := d.Query(sysCtx, "SELECT 2", nil, nil); err != nil {
+		t.Fatalf("bypass Query: %v", err)
+	}
+	if _, ok := entsql.VarFromContext(fake.lastQueryCtx, tenantVarName); ok {
+		t.Error("bypass query must not carry tenant session var")
+	}
+
+	// 缺失租户时 fail-close
+	if err := d.Query(context.Background(), "SELECT 3", nil, nil); err == nil {
+		t.Error("expected enforce failure for missing tenant")
 	}
 }

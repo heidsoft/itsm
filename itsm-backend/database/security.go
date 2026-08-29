@@ -33,6 +33,7 @@ import (
 
 	// 各实体谓词包，用于软删过滤
 	"itsm-backend/ent/application"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
@@ -72,6 +73,8 @@ func registerSoftDeleteInterceptor(client *ent.Client) {
 				q.Where(servicerequest.DeletedAtIsNil())
 			case *ent.ApplicationQuery:
 				q.Where(application.DeletedAtIsNil())
+			case *ent.ConfigurationItemQuery:
+				q.Where(configurationitem.LifecycleStatusNEQ("scrapped"))
 			case *ent.DepartmentQuery:
 				q.Where(department.DeletedAtIsNil())
 			case *ent.KnowledgeArticleQuery:
@@ -90,8 +93,8 @@ func registerSoftDeleteInterceptor(client *ent.Client) {
 //
 // 规则（仅当上下文携带租户且非系统绕过时生效）：
 //   - Create 变更：实体含 tenant_id 字段时，
-//     * 未设置（0）→ 自动注入上下文租户，杜绝 NULL tenant_id 插入；
-//     * 已设置但与上下文租户不符 → 拒绝，杜绝跨租户写入。
+//   - 未设置（0）→ 自动注入上下文租户，杜绝 NULL tenant_id 插入；
+//   - 已设置但与上下文租户不符 → 拒绝，杜绝跨租户写入。
 //   - 系统绕过 / 无租户上下文 → 放行（迁移、种子、MSP 跨租户作业）。
 func registerTenantWriteGuard(client *ent.Client) {
 	client.Use(ent.Hook(func(next ent.Mutator) ent.Mutator {

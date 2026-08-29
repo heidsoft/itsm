@@ -37,11 +37,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"sync/atomic"
 
 	"itsm-backend/common/tenantctx"
 
 	"entgo.io/ent/dialect"
+	entsql "entgo.io/ent/dialect/sql"
 	"go.uber.org/zap"
 )
 
@@ -145,7 +147,7 @@ func (d *Driver) Tx(ctx context.Context) (dialect.Tx, error) {
 	if d.mode == ModeEnforce && !tenantctx.IsSystemBypass(ctx) {
 		if tid, ok := tenantctx.TenantID(ctx); ok {
 			// Execute SET LOCAL to set tenant context for this transaction
-			if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL app.current_tenant = %d", tid), nil, nil); err != nil {
+			if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL %s = %d", tenantVarName, tid), nil, nil); err != nil {
 				// Rollback on failure - don't return a broken tx
 				_ = tx.Rollback()
 				return nil, fmt.Errorf("rls: failed to set tenant in transaction: %w", err)
@@ -184,7 +186,7 @@ func (d *Driver) BeginTx(ctx context.Context, opts *sql.TxOptions) (dialect.Tx, 
 	// In enforce mode, set tenant context immediately after transaction start
 	if d.mode == ModeEnforce && !tenantctx.IsSystemBypass(ctx) {
 		if tid, ok := tenantctx.TenantID(ctx); ok {
-			if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL app.current_tenant = %d", tid), nil, nil); err != nil {
+			if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL %s = %d", tenantVarName, tid), nil, nil); err != nil {
 				_ = tx.Rollback()
 				return nil, fmt.Errorf("rls: failed to set tenant in transaction: %w", err)
 			}
@@ -201,13 +203,12 @@ func (d *Driver) BeginTx(ctx context.Context, opts *sql.TxOptions) (dialect.Tx, 
 
 // Exec implements dialect.ExecQuerier.
 func (d *Driver) Exec(ctx context.Context, query string, args, v any) error {
-	// 全路径接线：enforce 模式下，每个非事务（autocommit）语句都包裹进一个
-	// 带 SET LOCAL app.current_tenant 的短事务，使 RLS 策略对读/写路径一致生效。
-	// 此前 SET LOCAL 仅在 Tx/BeginTx 注入，导致绝大多数 autocommit 查询隔离失效。
 	if d.mode == ModeEnforce {
-		return d.withTenantTx(ctx, func(tx dialect.Tx) error {
-			return tx.Exec(ctx, query, args, v)
-		})
+		ec, err := d.enforceContext(ctx, "Exec", firstToken(query))
+		if err != nil {
+			return err
+		}
+		return d.inner.Exec(ec, query, args, v)
 	}
 	d.observe(ctx, "Exec", firstToken(query))
 	return d.inner.Exec(ctx, query, args, v)
@@ -216,53 +217,49 @@ func (d *Driver) Exec(ctx context.Context, query string, args, v any) error {
 // Query implements dialect.ExecQuerier.
 func (d *Driver) Query(ctx context.Context, query string, args, v any) error {
 	if d.mode == ModeEnforce {
-		return d.withTenantTx(ctx, func(tx dialect.Tx) error {
-			return tx.Query(ctx, query, args, v)
-		})
+		ec, err := d.enforceContext(ctx, "Query", firstToken(query))
+		if err != nil {
+			return err
+		}
+		return d.inner.Query(ec, query, args, v)
 	}
 	d.observe(ctx, "Query", firstToken(query))
 	return d.inner.Query(ctx, query, args, v)
 }
 
-// withTenantTx 在 enforce 模式下为单条语句建立短事务并注入租户上下文。
+// enforceContext 为 enforce 模式下的单条语句准备上下文。
 //
-// 设计要点：
-//   - SystemBypass 上下文或缺失租户：直接内层事务执行，不注入（由 BYPASSRLS
-//     角色或调用方负责跨租户语义）。缺失租户时 fail-close 拒绝，避免 NULL 租户
-//     使 RLS 策略要么全漏要么全拒。
-//   - SET LOCAL 仅在事务内有效，提交后即失效，绝不会泄漏到后续连接/查询。
-//   - 每条 autocommit 语句多一次 BEGIN/SET LOCAL/COMMIT 往返，换取读/写隔离
-//     一致性；仅在 enforce 模式启用，off/shadow 零开销。
+// 2026-08-29 回归修复（生产就绪评估 P0-3）：旧实现把每条 autocommit 语句包进
+// 短事务（BEGIN + SET LOCAL + 语句 + COMMIT）。但 ent 的 Query 把 *sql.Rows 句柄
+// 原样交回调用方、由调用方稍后迭代；短事务在调用方扫描前就已提交，行句柄随之
+// 失效，启动就绪探针等读路径报 "sql: Rows are closed"。
+//
+// 现改用 ent 原生会话变量机制（entsql.WithVar）：执行语句前在专用池连接上
+// `SET app.current_tenant = '<tid>'`，结果集关闭时自动 `RESET` 并归还连接。
+// 行句柄全程有效，租户状态不会泄漏回连接池；显式事务路径仍由 Tx/BeginTx 中
+// 的 SET LOCAL 覆盖。
 //
 // 计数器语义：
-//   - EnforceApplied 仅在非 SystemBypass 且成功执行 SET LOCAL 后 +1。
-//   - SystemBypass 在 SystemBypass 路径上 +1，避免 enforce 模式下 bypass 路径
-//     不被监控计数，与 shadow 模式保持可观测语义一致。
-func (d *Driver) withTenantTx(ctx context.Context, fn func(dialect.Tx) error) error {
-	tx, err := d.inner.Tx(ctx)
-	if err != nil {
-		return err
-	}
-	// 任何失败路径都回滚，避免悬挂事务。
-	defer func() { _ = tx.Rollback() }()
-
+//   - SystemBypass：计数后原样透传（由 BYPASSRLS 角色负责跨租户语义）。
+//   - 缺失租户：fail-close 拒绝，避免 NULL 租户使策略要么全漏要么全拒。
+//   - 其余：注入变量并计 EnforceApplied。
+func (d *Driver) enforceContext(ctx context.Context, op, firstTok string) (context.Context, error) {
 	if tenantctx.IsSystemBypass(ctx) {
 		d.nSystemBypass.Add(1)
-	} else {
-		tid, ok := tenantctx.TenantID(ctx)
-		if !ok {
-			return fmt.Errorf("rls: enforce mode requires tenant_id in context")
-		}
-		if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL app.current_tenant = %d", tid), nil, nil); err != nil {
-			return fmt.Errorf("rls: failed to set tenant in statement: %w", err)
-		}
-		d.nEnforceApplied.Add(1)
+		return ctx, nil
 	}
-	if err := fn(tx); err != nil {
-		return err
+	tid, ok := tenantctx.TenantID(ctx)
+	if !ok {
+		d.nMissingTenant.Add(1)
+		d.log.Warnw("rls: statement without tenant scope", "op", op, "stmt", firstTok, "mode", string(d.mode))
+		return nil, fmt.Errorf("rls: enforce mode requires tenant_id in context")
 	}
-	return tx.Commit()
+	d.nEnforceApplied.Add(1)
+	return entsql.WithVar(ctx, tenantVarName, strconv.Itoa(tid)), nil
 }
+
+// tenantVarName 是 RLS 策略读取的会话变量名，与 002_pilot_policies.sql 保持一致。
+const tenantVarName = "app.current_tenant"
 
 // -----------------------------------------------------------------------
 // Observation (used by off + shadow)
