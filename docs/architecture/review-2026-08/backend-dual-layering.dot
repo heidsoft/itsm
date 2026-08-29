@@ -1,0 +1,54 @@
+digraph dual_layering {
+  rankdir=LR;
+  label="ITSM 后端双分层现状（2026-08-29）\n证据：router/router.go、internal/bootstrap/app.go、controller/、handlers/";
+  labelloc=t;
+  fontsize=16;
+  node [shape=box, fontname="Helvetica", style="rounded,filled", fillcolor="#f8fafc"];
+  edge [fontname="Helvetica", fontsize=10];
+
+  subgraph cluster_legacy {
+    label="旧式水平分层（仍承载部分生产路由）";
+    style=rounded;
+    color="#94a3b8";
+    ctl_ticket [label="controller/ticket*\n15 个文件\n（唯一入口）"];
+    ctl_incident [label="controller/incident*\n2 个文件（承载生产流量）", fillcolor="#fee2e2"];
+    ctl_cmdb [label="controller/cmdb*\n3 个文件", fillcolor="#fef9c3"];
+    ctl_knowledge [label="controller/knowledge*\n3 个文件", fillcolor="#fef9c3"];
+    ctl_problem [label="controller/problem*\n2 个文件", fillcolor="#fef9c3"];
+    ctl_sla [label="controller/sla*\n5 个文件", fillcolor="#fef9c3"];
+    svc [label="service/\n281 个文件（上帝目录）\nbpmn_process_engine.go 3060 行\nticket_service.go 2754 行", fillcolor="#fed7aa"];
+  }
+
+  subgraph cluster_domain {
+    label="新式领域切分 handlers/<domain>/（目标架构）";
+    style=rounded;
+    color="#16a34a";
+    h_change [label="handlers/change\n完整五件套", fillcolor="#dcfce7"];
+    h_cmdb [label="handlers/cmdb\n已接线路由", fillcolor="#dcfce7"];
+    h_knowledge [label="handlers/knowledge\n已接线路由", fillcolor="#dcfce7"];
+    h_problem [label="handlers/problem\n已接线路由", fillcolor="#dcfce7"];
+    h_sla [label="handlers/sla\n已接线路由", fillcolor="#dcfce7"];
+    h_incident [label="handlers/incident\n未接线（仅 app.go:765\n压制未使用导入）", fillcolor="#fecaca", color="#dc2626"];
+    h_partial [label="cab / capability / known_error /\nstandard_change / dashboard / email_intake\n结构不完整或异型", fillcolor="#fef9c3"];
+  }
+
+  router [label="router/router.go\n2004 行，路由注册", shape=ellipse, fillcolor="#e2e8f0"];
+  appgo [label="internal/bootstrap/app.go\n1481 行 / 161 处手工装配", shape=ellipse, fillcolor="#e2e8f0"];
+
+  router -> ctl_ticket [label="生产路由"];
+  router -> ctl_incident [label="生产路由"];
+  router -> ctl_cmdb [label="部分端点", style=dashed];
+  router -> ctl_knowledge [label="部分端点", style=dashed];
+  router -> ctl_problem [label="部分端点", style=dashed];
+  router -> ctl_sla [label="部分端点", style=dashed];
+  router -> h_cmdb [label="已切路由"];
+  router -> h_knowledge [label="已切路由"];
+  router -> h_problem [label="已切路由"];
+  router -> h_sla [label="已切路由"];
+  router -> h_incident [label="无路由", style=dashed, color="#dc2626"];
+  appgo -> h_incident [label="_ = incident.NewEntRepository\n（编译占位）", style=dashed, color="#dc2626"];
+
+  ctl_ticket -> svc;
+  ctl_incident -> svc;
+  h_change -> svc [label="事务/命令", style=dotted];
+}

@@ -1,0 +1,53 @@
+digraph risk_map {
+  rankdir=TB;
+  label="ITSM 架构风险地图（2026-08-29）\n节点 = 结构性原因（左）与质量影响（右）";
+  labelloc=t;
+  fontsize=16;
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11];
+  edge [fontname="Helvetica", fontsize=10, color="#475569"];
+
+  subgraph cluster_causes {
+    label="结构性原因";
+    style=rounded;
+    color="#94a3b8";
+    node [fillcolor="#fee2e2"];
+    C1 [label="R1 五域双分层重叠\ncmdb/knowledge/problem/sla 双入口并存"];
+    C2 [label="R2 incident 迁移半途：\n新层 0 路由，旧层承载流量"];
+    C3 [label="R3 分层穿透：\n29 controller + 13 handler 直访 Ent"];
+    C4 [label="R4 巨型文件与装配：\nbpmn_engine 3060 行 / app.go 1481 行 161 装配"];
+    C5 [label="R5 service/ 上帝目录（281 文件）"];
+    node [fillcolor="#fef9c3"];
+    C6 [label="R6 前端类型手工同步：\n35 个类型文件无 codegen"];
+    C7 [label="R7 巨型前端组件：\nBPMN designer 1745 行等"];
+    C8 [label="R8 浮动 AI 资产：\nai-service/agent/rag 未编排"];
+  }
+
+  subgraph cluster_effects {
+    label="质量影响";
+    style=rounded;
+    color="#94a3b8";
+    node [fillcolor="#e0f2fe"];
+    E1 [label="同一用例双入口：\n行为不一致 / 状态机分裂风险"];
+    E2 [label="可维护性下降：\n合并冲突、理解成本"];
+    E3 [label="契约漂移：\n前后端字段失配"];
+    E4 [label="测试难度：\nhandler 层测试偏薄"];
+    E5 [label="租户/审计面扩大：\n边界绕过难审计"];
+    E6 [label="死代码与困惑：\n所有权不明"];
+    E7 [label="回归风险：\n改动波及面广"];
+  }
+
+  C1 -> E1;
+  C1 -> E2;
+  C2 -> E1;
+  C2 -> E6;
+  C3 -> E5;
+  C3 -> E2;
+  C4 -> E2;
+  C4 -> E7;
+  C5 -> E2;
+  C5 -> E4;
+  C6 -> E3;
+  C7 -> E2;
+  C7 -> E7;
+  C8 -> E6;
+}
