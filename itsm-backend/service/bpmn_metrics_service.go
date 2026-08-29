@@ -36,20 +36,20 @@ func NewBPMNMetricsService(client *ent.Client, logger *zap.SugaredLogger) *BPMNM
 
 // DashboardMetrics 仪表盘指标
 type DashboardMetrics struct {
-	TotalProcesses    int            `json:"totalProcesses"`
-	ActiveInstances   int            `json:"activeInstances"`
-	CompletedToday    int            `json:"completedToday"`
-	OpenTasks         int            `json:"openTasks"`
-	SLAComplianceRate float64        `json:"slaComplianceRate"`
+	TotalProcesses    int     `json:"totalProcesses"`
+	ActiveInstances   int     `json:"activeInstances"`
+	CompletedToday    int     `json:"completedToday"`
+	OpenTasks         int     `json:"openTasks"`
+	SLAComplianceRate float64 `json:"slaComplianceRate"`
 	// SLACompliantSamples/SLATotalSamples 暴露合规率样本量：
 	// 前端据此区分“暂无样本”与“真实 0%”，不得把 0 样本伪装成高合规。
-	SLACompliantSamples int     `json:"slaCompliantSamples"`
-	SLATotalSamples     int     `json:"slaTotalSamples"`
-	AvgCompletionTime   float64 `json:"avgCompletionTimeMinutes"`
-	ProcessHealth     *ProcessHealth `json:"processHealth"`
-	TopProcesses      []ProcessStat  `json:"topProcesses"`
-	TaskDistribution  []TaskStat     `json:"taskDistribution"`
-	TrendData         []TrendPoint   `json:"trendData"`
+	SLACompliantSamples int            `json:"slaCompliantSamples"`
+	SLATotalSamples     int            `json:"slaTotalSamples"`
+	AvgCompletionTime   float64        `json:"avgCompletionTimeMinutes"`
+	ProcessHealth       *ProcessHealth `json:"processHealth"`
+	TopProcesses        []ProcessStat  `json:"topProcesses"`
+	TaskDistribution    []TaskStat     `json:"taskDistribution"`
+	TrendData           []TrendPoint   `json:"trendData"`
 }
 
 // ProcessHealth 流程健康度

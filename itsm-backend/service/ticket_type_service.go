@@ -464,7 +464,8 @@ func (s *TicketTypeService) RestoreTicketType(ctx context.Context, id, tenantID,
 	return s.toDefinition(restored), nil
 }
 
-func (s *TicketTypeService) recordTicketTypeAudit(ctx context.Context, tenantID, userID, ticketTypeID int, action string, details interface{}) error {	body, err := json.Marshal(details)
+func (s *TicketTypeService) recordTicketTypeAudit(ctx context.Context, tenantID, userID, ticketTypeID int, action string, details interface{}) error {
+	body, err := json.Marshal(details)
 	if err != nil {
 		return fmt.Errorf("序列化工单类型审计详情失败: %w", err)
 	}

@@ -291,7 +291,8 @@ func validateAndMapRootCauses(items []struct {
 	Description string  `json:"description"`
 	Confidence  float64 `json:"confidence"`
 	Category    string  `json:"category"`
-}) ([]dto.TicketRootCauseResponse, error) {
+},
+) ([]dto.TicketRootCauseResponse, error) {
 	if len(items) < 1 || len(items) > 3 {
 		return nil, fmt.Errorf("invalid root cause count")
 	}

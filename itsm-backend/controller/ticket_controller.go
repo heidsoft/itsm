@@ -818,7 +818,7 @@ func (tc *TicketController) DeleteTicketTemplate(c *gin.Context) {
 
 	tc.logger.Infow("Delete ticket template successful", "template_id", id, "tenant_id", tenantID)
 	common.Success(c, gin.H{
-		"message":     "工单模板删除成功",
+		"message":    "工单模板删除成功",
 		"templateId": id,
 	})
 }
@@ -925,17 +925,17 @@ func normalizeTicketTemplate(template interface{}) gin.H {
 		formFields = gin.H{}
 	}
 	return gin.H{
-		"id":             tmpl.ID,
-		"name":           tmpl.Name,
-		"description":    tmpl.Description,
-		"category":       tmpl.Category,
-		"priority":       tmpl.Priority,
-		"fields":         tmpl.Fields,
-		"formFields":     formFields,
-		"workflowSteps":  tmpl.WorkflowSteps,
-		"isActive":       tmpl.IsActive,
-		"createdAt":      tmpl.CreatedAt,
-		"updatedAt":      tmpl.UpdatedAt,
+		"id":            tmpl.ID,
+		"name":          tmpl.Name,
+		"description":   tmpl.Description,
+		"category":      tmpl.Category,
+		"priority":      tmpl.Priority,
+		"fields":        tmpl.Fields,
+		"formFields":    formFields,
+		"workflowSteps": tmpl.WorkflowSteps,
+		"isActive":      tmpl.IsActive,
+		"createdAt":     tmpl.CreatedAt,
+		"updatedAt":     tmpl.UpdatedAt,
 	}
 }
 

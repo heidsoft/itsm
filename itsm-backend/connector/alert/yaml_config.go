@@ -16,7 +16,7 @@ import (
 
 var (
 	errInvalidMapping  = errors.New("alert config: invalid field mapping")
-	errTemplateRender = errors.New("alert config: template render error")
+	errTemplateRender  = errors.New("alert config: template render error")
 	errMissingRequired = errors.New("alert config: missing required field")
 )
 
@@ -183,14 +183,14 @@ func (n *Normalizer) Normalize(
 	rawPayload map[string]interface{},
 ) (*StandardAlert, error) {
 	alert := &StandardAlert{
-		Source:     n.config.Source,
-		SourceRaw:  n.config.Type,
-		TenantID:   tenantID,
-		Labels:     make(map[string]string),
+		Source:      n.config.Source,
+		SourceRaw:   n.config.Type,
+		TenantID:    tenantID,
+		Labels:      make(map[string]string),
 		Annotations: make(map[string]string),
-		Tags:       []string{},
-		Status:     "firing",
-		RawPayload: rawPayload,
+		Tags:        []string{},
+		Status:      "firing",
+		RawPayload:  rawPayload,
 	}
 
 	// Build extraction context with helpers

@@ -33,16 +33,16 @@ func NewWebhookAlertSource(cfg *AlertSourceConfig) *WebhookAlertSource {
 // Manifest returns the self-describing manifest for this alert source.
 func (w *WebhookAlertSource) Manifest() AlertSourceManifest {
 	return AlertSourceManifest{
-		Name:                 w.config.Source,
-		Version:              "1.0.0",
-		Title:                w.config.Title,
-		Description:          w.config.Description,
-		Provider:             "generic",
-		Capabilities:         []string{"ingest"},
-		RequiredPermissions:   []string{"alerts:write"},
-		IsOfficial:           false,
-		Category:             "alerting",
-		Tags:                 []string{"webhook", "configurable", w.config.Source},
+		Name:                w.config.Source,
+		Version:             "1.0.0",
+		Title:               w.config.Title,
+		Description:         w.config.Description,
+		Provider:            "generic",
+		Capabilities:        []string{"ingest"},
+		RequiredPermissions: []string{"alerts:write"},
+		IsOfficial:          false,
+		Category:            "alerting",
+		Tags:                []string{"webhook", "configurable", w.config.Source},
 	}
 }
 

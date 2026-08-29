@@ -32,7 +32,8 @@ type durableTestHandler struct {
 	idempotencyKey string
 }
 
-func (h *durableTestHandler) GetTaskType() string                                    { return "ServiceTask" }
+func (h *durableTestHandler) GetTaskType() string { return "ServiceTask" }
+
 func (h *durableTestHandler) GetHandlerID() string                                   { return "test_durable_handler" }
 func (h *durableTestHandler) Validate(context.Context, map[string]interface{}) error { return nil }
 func (h *durableTestHandler) Execute(_ context.Context, _ *ent.ProcessTask, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {

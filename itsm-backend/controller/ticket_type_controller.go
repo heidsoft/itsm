@@ -187,6 +187,7 @@ func (tc *TicketTypeController) DeleteTicketType(c *gin.Context) {
 func (tc *TicketTypeController) EnableTicketType(c *gin.Context) {
 	tc.setStatus(c, dto.TicketTypeStatusActive)
 }
+
 func (tc *TicketTypeController) DisableTicketType(c *gin.Context) {
 	tc.setStatus(c, dto.TicketTypeStatusInactive)
 }

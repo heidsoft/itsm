@@ -37,6 +37,7 @@ func newMilvus(collection string, cfg map[string]interface{}) (VectorStore, erro
 	}
 	return &milvusStore{client: c, collection: collection, dimension: intConfig(cfg, "dimension", 0), metric: metric}, nil
 }
+
 func (s *milvusStore) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
 	if len(req.Vector) == 0 {
 		return SearchResponse{}, fmt.Errorf("query vector is required")
@@ -78,6 +79,7 @@ func (s *milvusStore) Search(ctx context.Context, req SearchRequest) (SearchResp
 	}
 	return out, nil
 }
+
 func (s *milvusStore) Insert(ctx context.Context, req InsertRequest) error {
 	ids := make([]string, len(req.Chunks))
 	contents := make([]string, len(req.Chunks))
@@ -96,6 +98,7 @@ func (s *milvusStore) Insert(ctx context.Context, req InsertRequest) error {
 	_, err := s.client.Upsert(ctx, s.collection, "", entity.NewColumnVarChar("id", ids), entity.NewColumnVarChar("content", contents), entity.NewColumnVarChar("metadata", metas), entity.NewColumnFloatVector("embedding", s.dimension, vectors))
 	return err
 }
+
 func (s *milvusStore) Delete(ctx context.Context, ids []string) error {
 	if len(ids) == 0 {
 		return nil
@@ -106,6 +109,7 @@ func (s *milvusStore) Delete(ctx context.Context, ids []string) error {
 	}
 	return s.client.Delete(ctx, s.collection, "", "id in ["+strings.Join(quoted, ",")+"]")
 }
+
 func (s *milvusStore) Ping(ctx context.Context) error {
 	state, err := s.client.CheckHealth(ctx)
 	if err != nil {

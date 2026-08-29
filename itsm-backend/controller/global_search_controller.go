@@ -73,11 +73,11 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 	if err == nil {
 		for _, t := range tickets {
 			results = append(results, &SearchResult{
-				ID:          t.ID,
-				Type:        "ticket",
-				Title:       t.Title,
-				Description: t.Description,
-				Status:      t.Status,
+				ID:           t.ID,
+				Type:         "ticket",
+				Title:        t.Title,
+				Description:  t.Description,
+				Status:       t.Status,
 				TicketNumber: t.TicketNumber,
 			})
 		}
@@ -98,11 +98,11 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 	if err == nil {
 		for _, i := range incidents {
 			results = append(results, &SearchResult{
-				ID:          i.ID,
-				Type:        "incident",
-				Title:       i.Title,
-				Description: i.Description,
-				Status:      i.Status,
+				ID:           i.ID,
+				Type:         "incident",
+				Title:        i.Title,
+				Description:  i.Description,
+				Status:       i.Status,
 				TicketNumber: i.IncidentNumber,
 			})
 		}

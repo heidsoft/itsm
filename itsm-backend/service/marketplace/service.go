@@ -25,10 +25,10 @@ type Service struct {
 }
 
 var (
-	ErrMarketplaceItemNotFound       = errors.New("marketplace item not found")
-	ErrMarketplaceItemUnavailable    = errors.New("marketplace item unavailable")
-	ErrMarketplaceInstallationAbsent = errors.New("marketplace installation not found")
-	ErrMarketplaceInstalledByMissing = errors.New("marketplace installed_by is required")
+	ErrMarketplaceItemNotFound        = errors.New("marketplace item not found")
+	ErrMarketplaceItemUnavailable     = errors.New("marketplace item unavailable")
+	ErrMarketplaceInstallationAbsent  = errors.New("marketplace installation not found")
+	ErrMarketplaceInstalledByMissing  = errors.New("marketplace installed_by is required")
 	ErrMarketplaceConfigSchemaInvalid = errors.New("config does not match item schema")
 )
 

@@ -329,9 +329,9 @@ func (h *Handler) GetRootCause(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"incidentId":         incident.ID,
-		"rootCause":          incident.RootCause,
-		"rootCauseAnalysis":  incident.ImpactAnalysis,
+		"incidentId":        incident.ID,
+		"rootCause":         incident.RootCause,
+		"rootCauseAnalysis": incident.ImpactAnalysis,
 	})
 }
 

@@ -87,6 +87,7 @@ func (s *fallbackStore) Search(ctx context.Context, r SearchRequest) (SearchResp
 	}
 	return s.fallback.Search(ctx, r)
 }
+
 func (s *fallbackStore) Insert(ctx context.Context, r InsertRequest) error {
 	fallbackErr := s.fallback.Insert(ctx, r)
 	if err := s.primary.Insert(ctx, r); err != nil {
@@ -97,6 +98,7 @@ func (s *fallbackStore) Insert(ctx context.Context, r InsertRequest) error {
 	}
 	return fallbackErr
 }
+
 func (s *fallbackStore) Delete(ctx context.Context, ids []string) error {
 	if err := s.primary.Delete(ctx, ids); err != nil {
 		return err

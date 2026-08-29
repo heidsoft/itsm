@@ -135,7 +135,7 @@ func TestGoldenPath_Ticket(t *testing.T) {
 
 		// 同租户查询应可见
 		visible, err := client.Ticket.Query().
-			Where(/* tenant_id = */).
+			Where( /* tenant_id = */ ).
 			All(ctx)
 		require.NoError(t, err)
 		_ = visible

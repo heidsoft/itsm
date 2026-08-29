@@ -37,6 +37,7 @@ func newQdrant(collection string, cfg map[string]interface{}) (VectorStore, erro
 	}
 	return &qdrantStore{client: client, collection: collection, vectorSize: intConfig(cfg, "vector_size", 0)}, nil
 }
+
 func (s *qdrantStore) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
 	if len(req.Vector) == 0 {
 		return SearchResponse{}, fmt.Errorf("query vector is required")
@@ -64,6 +65,7 @@ func (s *qdrantStore) Search(ctx context.Context, req SearchRequest) (SearchResp
 	}
 	return out, nil
 }
+
 func (s *qdrantStore) Insert(ctx context.Context, req InsertRequest) error {
 	points := make([]*q.PointStruct, 0, len(req.Chunks))
 	for _, c := range req.Chunks {
@@ -88,6 +90,7 @@ func (s *qdrantStore) Insert(ctx context.Context, req InsertRequest) error {
 	}
 	return nil
 }
+
 func (s *qdrantStore) Delete(ctx context.Context, ids []string) error {
 	if len(ids) == 0 {
 		return nil
@@ -100,6 +103,7 @@ func (s *qdrantStore) Delete(ctx context.Context, ids []string) error {
 	_, err := s.client.Delete(ctx, &q.DeletePoints{CollectionName: s.collection, Wait: &wait, Points: q.NewPointsSelector(p...)})
 	return err
 }
+
 func (s *qdrantStore) Ping(ctx context.Context) error {
 	_, err := s.client.GetQdrantClient().HealthCheck(ctx, &q.HealthCheckRequest{})
 	return err
@@ -128,6 +132,7 @@ func qdrantFilter(values map[string]interface{}) (*q.Filter, error) {
 	}
 	return f, nil
 }
+
 func qdrantID(id *q.PointId) string {
 	if id == nil {
 		return ""
@@ -137,6 +142,7 @@ func qdrantID(id *q.PointId) string {
 	}
 	return id.GetUuid()
 }
+
 func qdrantValue(v *q.Value) interface{} {
 	if v == nil {
 		return nil

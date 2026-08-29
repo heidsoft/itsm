@@ -563,6 +563,7 @@ func (o *EmailIntakeOrchestrator) enqueueIncidentCreatedReply(ctx context.Contex
 	body := fmt.Sprintf("您好，您的报障已受理。\n\n工单编号：%s\n当前状态：已创建\n\n会话编号：[%s]", incidentNumber, conversation.ConversationToken)
 	return o.enqueueReply(ctx, tenantID, conversation, message, "incident_created", body)
 }
+
 func (o *EmailIntakeOrchestrator) enqueueReply(ctx context.Context, tenantID int, conversation *ent.EmailConversation, message *ent.InboundEmailMessage, replyType, body string) error {
 	to := message.FromAddress
 	if _, err := mail.ParseAddress(to); err != nil {
@@ -671,6 +672,7 @@ func conversationTokenFromSubject(subject string) string {
 	}
 	return ""
 }
+
 func newConversationToken() (string, error) {
 	b := make([]byte, 6)
 	if _, err := rand.Read(b); err != nil {
@@ -678,6 +680,7 @@ func newConversationToken() (string, error) {
 	}
 	return strings.ToUpper(hex.EncodeToString(b)), nil
 }
+
 func fieldsToMap(fields IntakeFields) (map[string]interface{}, error) {
 	data := map[string]interface{}{}
 	raw, err := json.Marshal(fields)
@@ -687,6 +690,7 @@ func fieldsToMap(fields IntakeFields) (map[string]interface{}, error) {
 	err = json.Unmarshal(raw, &data)
 	return data, err
 }
+
 func fieldsFromMap(data map[string]interface{}) (IntakeFields, error) {
 	var fields IntakeFields
 	raw, err := json.Marshal(data)
@@ -696,18 +700,21 @@ func fieldsFromMap(data map[string]interface{}) (IntakeFields, error) {
 	err = json.Unmarshal(raw, &fields)
 	return fields, err
 }
+
 func optionalInt(value int) *int {
 	if value == 0 {
 		return nil
 	}
 	return &value
 }
+
 func defaultString(value, fallback string) string {
 	if strings.TrimSpace(value) == "" {
 		return fallback
 	}
 	return value
 }
+
 func limitRunes(value string, max int) string {
 	r := []rune(value)
 	if len(r) > max {

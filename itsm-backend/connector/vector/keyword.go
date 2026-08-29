@@ -18,6 +18,7 @@ type keywordStore struct {
 func newKeyword(_ string, cfg map[string]interface{}) (VectorStore, error) {
 	return &keywordStore{chunks: make(map[string]ChunkInput), defaultTopK: intConfig(cfg, "top_k", DefaultTopK)}, nil
 }
+
 func (s *keywordStore) Insert(ctx context.Context, req InsertRequest) error {
 	if err := ctx.Err(); err != nil {
 		return err
@@ -31,6 +32,7 @@ func (s *keywordStore) Insert(ctx context.Context, req InsertRequest) error {
 	}
 	return nil
 }
+
 func (s *keywordStore) Delete(ctx context.Context, ids []string) error {
 	if err := ctx.Err(); err != nil {
 		return err
@@ -42,6 +44,7 @@ func (s *keywordStore) Delete(ctx context.Context, ids []string) error {
 	}
 	return nil
 }
+
 func (s *keywordStore) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
 	if err := ctx.Err(); err != nil {
 		return SearchResponse{}, err
@@ -96,6 +99,7 @@ func (s *keywordStore) Close() error               { return nil }
 func tokenize(v string) []string {
 	return strings.FieldsFunc(strings.ToLower(v), func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsNumber(r) })
 }
+
 func frequencies(terms []string) map[string]int {
 	m := map[string]int{}
 	for _, t := range terms {
@@ -103,6 +107,7 @@ func frequencies(terms []string) map[string]int {
 	}
 	return m
 }
+
 func matches(metadata, filter map[string]interface{}) bool {
 	for k, v := range filter {
 		if metadata[k] != v {

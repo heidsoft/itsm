@@ -94,6 +94,7 @@ func (c *Connector) SetInboundHandler(handler connector.PollingInboundHandler) {
 	c.handler = handler
 	c.mu.Unlock()
 }
+
 func (c *Connector) Start(parent context.Context) error {
 	var startErr error
 	c.startOnce.Do(func() {
@@ -107,6 +108,7 @@ func (c *Connector) Start(parent context.Context) error {
 	})
 	return startErr
 }
+
 func (c *Connector) loop(ctx context.Context) {
 	ticker := time.NewTicker(c.pollInterval)
 	defer ticker.Stop()
@@ -307,6 +309,7 @@ func (c *Connector) sendSMTP(ctx context.Context, to string, message []byte) err
 	}
 	return writer.Close()
 }
+
 func (c *Connector) HealthCheck(ctx context.Context) connector.HealthStatus {
 	start := time.Now()
 	status := connector.HealthStatus{CheckedAt: start}
@@ -324,6 +327,7 @@ func (c *Connector) HealthCheck(ctx context.Context) connector.HealthStatus {
 	}
 	return status
 }
+
 func (c *Connector) Close() error {
 	if c.cancel != nil {
 		c.cancel()
@@ -358,6 +362,7 @@ func parseInbound(raw []byte) (*connector.InboundMessage, error) {
 	extrasRaw, _ := json.Marshal(extras)
 	return &connector.InboundMessage{UserID: from, Content: plain, Type: "email", Raw: raw, Extras: map[string]interface{}{"headers": json.RawMessage(extrasRaw), "subject": subject, "toAddresses": toAddresses, "replyToAddress": replyTo, "inReplyTo": strings.TrimSpace(message.Header.Get("In-Reply-To")), "references": references, "htmlBody": htmlBody, "externalMessageId": strings.TrimSpace(message.Header.Get("Message-ID"))}}, nil
 }
+
 func isAutomatedMessage(header mail.Header) bool {
 	autoSubmitted := strings.ToLower(strings.TrimSpace(header.Get("Auto-Submitted")))
 	precedence := strings.ToLower(strings.TrimSpace(header.Get("Precedence")))
@@ -365,6 +370,7 @@ func isAutomatedMessage(header mail.Header) bool {
 	from := strings.ToLower(header.Get("From"))
 	return (autoSubmitted != "" && autoSubmitted != "no") || precedence == "bulk" || precedence == "list" || header.Get("X-Autoreply") != "" || strings.Contains(contentType, "multipart/report") || strings.Contains(from, "mailer-daemon") || strings.Contains(from, "postmaster")
 }
+
 func readMailBody(header mail.Header, body io.Reader) (string, string, error) {
 	mediaType, params, _ := mime.ParseMediaType(header.Get("Content-Type"))
 	if strings.HasPrefix(mediaType, "multipart/") {
@@ -404,6 +410,7 @@ func readMailBody(header mail.Header, body io.Reader) (string, string, error) {
 	}
 	return string(content), "", nil
 }
+
 func headerAddresses(header mail.Header, key string) []string {
 	values, err := header.AddressList(key)
 	if err != nil {
@@ -415,15 +422,18 @@ func headerAddresses(header mail.Header, key string) []string {
 	}
 	return out
 }
+
 func inboundMessageID(message *connector.InboundMessage) string {
 	if value, ok := message.Extras["externalMessageId"].(string); ok {
 		return value
 	}
 	return ""
 }
+
 func cfgInstanceKey(cfg connector.Config) string {
 	return fmt.Sprintf("%d/%s/%s", cfg.TenantID, cfg.Name, cfg.Provider)
 }
+
 func normalizeTlsMode(mode string) string {
 	switch strings.ToLower(strings.TrimSpace(mode)) {
 	case "starttls":
@@ -441,6 +451,7 @@ func settingString(settings map[string]interface{}, key, fallback string) string
 	}
 	return fallback
 }
+
 func settingInt(settings map[string]interface{}, key string, fallback int) int {
 	switch value := settings[key].(type) {
 	case int:
@@ -455,6 +466,7 @@ func settingInt(settings map[string]interface{}, key string, fallback int) int {
 	}
 	return fallback
 }
+
 func hostOnly(address string) string {
 	host, _, err := net.SplitHostPort(address)
 	if err != nil {
@@ -512,21 +524,25 @@ func isPublicMailIP(ip netip.Addr) bool {
 	}
 	return true
 }
+
 func deadline(ctx context.Context, fallback time.Duration) time.Time {
 	if value, ok := ctx.Deadline(); ok {
 		return value
 	}
 	return time.Now().Add(fallback)
 }
+
 func normalizeBody(value string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(value, "\r\n", "\n"), "\n", "\r\n")
 }
+
 func defaultString(value, fallback string) string {
 	if strings.TrimSpace(value) == "" {
 		return fallback
 	}
 	return value
 }
+
 func stripHTML(value string) string {
 	var out strings.Builder
 	inTag := false

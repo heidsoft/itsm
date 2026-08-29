@@ -39,6 +39,7 @@ func newPGVector(collection string, cfg map[string]interface{}) (VectorStore, er
 	}
 	return &pgVectorStore{db: db, table: table, metric: metric, dimension: intConfig(cfg, "dimension", 0)}, nil
 }
+
 func (s *pgVectorStore) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
 	if len(req.Vector) == 0 {
 		return SearchResponse{}, fmt.Errorf("query vector is required")
@@ -91,6 +92,7 @@ func (s *pgVectorStore) Search(ctx context.Context, req SearchRequest) (SearchRe
 	}
 	return out, rows.Err()
 }
+
 func (s *pgVectorStore) Insert(ctx context.Context, req InsertRequest) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -112,6 +114,7 @@ func (s *pgVectorStore) Insert(ctx context.Context, req InsertRequest) error {
 	}
 	return tx.Commit()
 }
+
 func (s *pgVectorStore) Delete(ctx context.Context, ids []string) error {
 	if len(ids) == 0 {
 		return nil

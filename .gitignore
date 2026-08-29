@@ -196,6 +196,8 @@ __pycache__/
 # Compiled binary (large file)
 itsm-backend/main
 easycloud
+OpenViking
+OpenViking/*
 easycloud/*
 itsm-rag
 itsm-rag/*

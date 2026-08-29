@@ -319,17 +319,17 @@ func (s *Service) GetTrend(ctx context.Context, tenantID int, startDate, endDate
 	}
 
 	return &ProblemTrendData{
-		Period:               startDate.Format("2006-01-02") + " ~ " + endDate.Format("2006-01-02"),
-		TotalProblems:        total,
-		ResolvedProblems:     resolved,
-		OpenProblems:         open,
-		ResolutionRate:       resolutionRate,
+		Period:                 startDate.Format("2006-01-02") + " ~ " + endDate.Format("2006-01-02"),
+		TotalProblems:          total,
+		ResolvedProblems:       resolved,
+		OpenProblems:           open,
+		ResolutionRate:         resolutionRate,
 		AvgResolutionTimeHours: avgResolutionHours,
-		CategoryBreakdown:    categoryMap,
-		PriorityBreakdown:    priorityMap,
-		TrendDirection:       trendDirection,
-		TopCategories:        topCategories,
-		MonthlyTrend:         monthlyTrend,
+		CategoryBreakdown:      categoryMap,
+		PriorityBreakdown:      priorityMap,
+		TrendDirection:         trendDirection,
+		TopCategories:          topCategories,
+		MonthlyTrend:           monthlyTrend,
 	}, nil
 }
 
@@ -365,11 +365,11 @@ func (s *Service) GetHotspot(ctx context.Context, tenantID int, startDate, endDa
 	}
 
 	return &ProblemHotspotData{
-		PeriodStart:      startDate.Format("2006-01-02"),
-		PeriodEnd:        endDate.Format("2006-01-02"),
+		PeriodStart:       startDate.Format("2006-01-02"),
+		PeriodEnd:         endDate.Format("2006-01-02"),
 		CategoryBreakdown: categoryMap,
 		PriorityBreakdown: priorityMap,
-		Hotspots:         hotspots,
-		AvgPerCategory:   avgPerCategory,
+		Hotspots:          hotspots,
+		AvgPerCategory:    avgPerCategory,
 	}, nil
 }

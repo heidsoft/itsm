@@ -36,7 +36,7 @@ func NewToolRegistry(rag *RAGService, incident *IncidentService, cmdb *Configura
 // SetTicketService / SetTicketTypeService 注入写工具所需的领域服务。
 // 采用 setter 而非构造函数参数，避免破坏既有 NewToolRegistry(nil,...) 测试调用，
 // 也便于在 bootstrap 中按依赖就绪顺序分别装配（ticketType 在 ticket 之后构造）。
-func (t *ToolRegistry) SetTicketService(s *TicketService) { t.ticket = s }
+func (t *ToolRegistry) SetTicketService(s *TicketService)         { t.ticket = s }
 func (t *ToolRegistry) SetTicketTypeService(s *TicketTypeService) { t.ticketType = s }
 
 // GetTool 按名称查找工具定义，找不到返回 nil
@@ -220,12 +220,12 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"code": map[string]interface{}{"type": "string", "description": "工单类型编码，小写字母/数字/下划线，如 general_incident"},
-					"name": map[string]interface{}{"type": "string", "description": "工单类型名称，如 通用事件"},
-					"description": map[string]interface{}{"type": "string", "description": "类型说明"},
+					"code":             map[string]interface{}{"type": "string", "description": "工单类型编码，小写字母/数字/下划线，如 general_incident"},
+					"name":             map[string]interface{}{"type": "string", "description": "工单类型名称，如 通用事件"},
+					"description":      map[string]interface{}{"type": "string", "description": "类型说明"},
 					"default_priority": map[string]interface{}{"type": "string", "enum": []any{"low", "medium", "high", "critical", "urgent"}},
-					"icon": map[string]interface{}{"type": "string"},
-					"color": map[string]interface{}{"type": "string"},
+					"icon":             map[string]interface{}{"type": "string"},
+					"color":            map[string]interface{}{"type": "string"},
 				},
 				"required": []string{"code", "name"},
 			},
@@ -441,10 +441,10 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			assigneeID = int(v)
 		}
 		req := &dto.UpdateTicketRequest{
-			Status:      status,
-			Priority:    priority,
-			Resolution:  resolution,
-			AssigneeID:  assigneeID,
+			Status:     status,
+			Priority:   priority,
+			Resolution: resolution,
+			AssigneeID: assigneeID,
 		}
 		updated, err := t.ticket.UpdateTicket(ctx, ticketID, req, tenantID)
 		if err != nil {

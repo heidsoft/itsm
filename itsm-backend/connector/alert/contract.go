@@ -22,23 +22,23 @@ const (
 // StandardAlert is the normalized alert structure all AlertSources must produce.
 // It is the canonical representation inside ITSM regardless of the source system.
 type StandardAlert struct {
-	AlertID       string                 `json:"alert_id"`                 // External unique alert ID
-	Source        string                 `json:"source"`                   // Source system name (e.g. "zabbix", "prometheus")
-	SourceRaw     string                 `json:"source_raw,omitempty"`     // Raw source type from config
-	TenantID      int                    `json:"tenant_id"`
-	Name          string                 `json:"name"`                     // Short alert title
-	Description   string                 `json:"description"`             // Detailed description
-	Severity      Severity               `json:"severity"`                // P1-P4
-	Status        string                 `json:"status"`                  // firing / acknowledged / resolved
-	Labels        map[string]string      `json:"labels"`                  // Key-value tags
-	Annotations   map[string]string      `json:"annotations"`             // Human-readable metadata
-	SourceIP      string                 `json:"source_ip,omitempty"`     // Originating host/IP
-	Service       string                 `json:"service,omitempty"`        // Affected service/app name
-	Tags          []string               `json:"tags"`                    // Flat tag list
-	FiredAt       time.Time              `json:"fired_at"`               // When the alert was first triggered
-	AcknowledgedAt *time.Time            `json:"acknowledged_at,omitempty"`
-	ResolvedAt    *time.Time             `json:"resolved_at,omitempty"`
-	RawPayload    map[string]interface{} `json:"raw_payload,omitempty"`   // Original payload preserved
+	AlertID        string                 `json:"alert_id"`             // External unique alert ID
+	Source         string                 `json:"source"`               // Source system name (e.g. "zabbix", "prometheus")
+	SourceRaw      string                 `json:"source_raw,omitempty"` // Raw source type from config
+	TenantID       int                    `json:"tenant_id"`
+	Name           string                 `json:"name"`                // Short alert title
+	Description    string                 `json:"description"`         // Detailed description
+	Severity       Severity               `json:"severity"`            // P1-P4
+	Status         string                 `json:"status"`              // firing / acknowledged / resolved
+	Labels         map[string]string      `json:"labels"`              // Key-value tags
+	Annotations    map[string]string      `json:"annotations"`         // Human-readable metadata
+	SourceIP       string                 `json:"source_ip,omitempty"` // Originating host/IP
+	Service        string                 `json:"service,omitempty"`   // Affected service/app name
+	Tags           []string               `json:"tags"`                // Flat tag list
+	FiredAt        time.Time              `json:"fired_at"`            // When the alert was first triggered
+	AcknowledgedAt *time.Time             `json:"acknowledged_at,omitempty"`
+	ResolvedAt     *time.Time             `json:"resolved_at,omitempty"`
+	RawPayload     map[string]interface{} `json:"raw_payload,omitempty"` // Original payload preserved
 }
 
 // AlertSource is the contract for any monitoring system that pushes alerts into ITSM.
@@ -55,12 +55,12 @@ type AlertSource interface {
 	ValidatePayload(rawPayload map[string]interface{}) bool
 
 	// Normalize converts a raw payload from this specific monitoring system
-		// into the ITSM-standard StandardAlert structure.
-		// tenantID must be > 0; the implementation MUST fail closed if not.
-		// Implementations MUST NOT return nil *StandardAlert on success.
-		// If Normalize returns an error, the raw payload should still be preserved
-		// (e.g. stored in a raw_events table) for later investigation.
-		Normalize(ctx context.Context, tenantID int, rawPayload map[string]interface{}) (*StandardAlert, error)
+	// into the ITSM-standard StandardAlert structure.
+	// tenantID must be > 0; the implementation MUST fail closed if not.
+	// Implementations MUST NOT return nil *StandardAlert on success.
+	// If Normalize returns an error, the raw payload should still be preserved
+	// (e.g. stored in a raw_events table) for later investigation.
+	Normalize(ctx context.Context, tenantID int, rawPayload map[string]interface{}) (*StandardAlert, error)
 
 	// Acknowledge marks an alert as acknowledged in the source system (if applicable).
 	// If the source does not support acknowledgment, return ErrNotSupported.
@@ -76,17 +76,17 @@ type AlertSource interface {
 
 // AlertSourceManifest is the self-describing metadata for an AlertSource.
 type AlertSourceManifest struct {
-	Name                 string   `json:"name"`                  // Unique key, e.g. "prometheus", "zabbix", "webhook-generic"
-	Version              string   `json:"version"`              // Semver
-	Title                string   `json:"title"`                 // Display name
-	Description          string   `json:"description"`          // One-liner
-	Provider             string   `json:"provider"`              // e.g. "cncf", "zabbix", "custom"
-	Capabilities         []string `json:"capabilities"`         // ["ingest", "acknowledge", "resolve"]
-	ConfigSchema         string   `json:"config_schema,omitempty"`
-	RequiredPermissions  []string `json:"required_permissions"` // e.g. ["alerts:write"]
-	IsOfficial           bool     `json:"is_official"`
-	Category             string   `json:"category"` // "monitoring" | "alerting" | "custom"
-	Tags                 []string `json:"tags,omitempty"`
+	Name                string   `json:"name"`         // Unique key, e.g. "prometheus", "zabbix", "webhook-generic"
+	Version             string   `json:"version"`      // Semver
+	Title               string   `json:"title"`        // Display name
+	Description         string   `json:"description"`  // One-liner
+	Provider            string   `json:"provider"`     // e.g. "cncf", "zabbix", "custom"
+	Capabilities        []string `json:"capabilities"` // ["ingest", "acknowledge", "resolve"]
+	ConfigSchema        string   `json:"config_schema,omitempty"`
+	RequiredPermissions []string `json:"required_permissions"` // e.g. ["alerts:write"]
+	IsOfficial          bool     `json:"is_official"`
+	Category            string   `json:"category"` // "monitoring" | "alerting" | "custom"
+	Tags                []string `json:"tags,omitempty"`
 }
 
 // ErrNotSupported signals that an AlertSource capability is not implemented.
@@ -95,7 +95,7 @@ type ErrNotSupported = interface{ IsErrNotSupported() bool }
 type errNotSupported struct{}
 
 func (e errNotSupported) IsErrNotSupported() bool { return true }
-func (e errNotSupported) Error() string            { return "alert source: capability not supported" }
+func (e errNotSupported) Error() string           { return "alert source: capability not supported" }
 
 // ErrNotSupportedInstance is the singleton error value.
 var ErrNotSupportedInstance = errNotSupported{}

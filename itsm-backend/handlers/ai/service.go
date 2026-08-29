@@ -262,7 +262,7 @@ var chatWritableTools = map[string]bool{
 	"update_ticket":      true,
 	"create_ticket_type": true,
 	// CMDB 本体链路：把工单挂到配置项（走同一审批流）
-	"link_ticket_ci":     true,
+	"link_ticket_ci": true,
 }
 
 // ChatStream streams a RAG answer through onDelta while emitting sources

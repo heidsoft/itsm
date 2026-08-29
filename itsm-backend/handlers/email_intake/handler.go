@@ -155,6 +155,7 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 	}
 	common.Success(c, mapCustomer(entity))
 }
+
 func (h *Handler) DisableCustomer(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -225,6 +226,7 @@ func (h *Handler) ListBranches(c *gin.Context) {
 	}
 	common.Success(c, gin.H{"items": result, "total": len(result)})
 }
+
 func (h *Handler) UpdateBranch(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -250,6 +252,7 @@ func (h *Handler) UpdateBranch(c *gin.Context) {
 	}
 	common.Success(c, mapBranch(entity))
 }
+
 func (h *Handler) DisableBranch(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -312,6 +315,7 @@ func (h *Handler) ListSourceOrganizations(c *gin.Context) {
 	}
 	common.Success(c, gin.H{"items": result, "total": len(result)})
 }
+
 func (h *Handler) UpdateSourceOrganization(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -333,6 +337,7 @@ func (h *Handler) UpdateSourceOrganization(c *gin.Context) {
 	}
 	common.Success(c, mapSourceOrganization(entity))
 }
+
 func (h *Handler) DisableSourceOrganization(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -407,6 +412,7 @@ func (h *Handler) ListSupportContracts(c *gin.Context) {
 	}
 	common.Success(c, gin.H{"items": result, "total": len(result)})
 }
+
 func (h *Handler) UpdateSupportContract(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -438,6 +444,7 @@ func (h *Handler) UpdateSupportContract(c *gin.Context) {
 	}
 	common.Success(c, mapSupportContract(entity))
 }
+
 func (h *Handler) TerminateSupportContract(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -506,6 +513,7 @@ func (h *Handler) ListExternalContractReferences(c *gin.Context) {
 	}
 	common.Success(c, gin.H{"items": result, "total": len(result)})
 }
+
 func (h *Handler) UpdateExternalContractReference(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -536,6 +544,7 @@ func (h *Handler) UpdateExternalContractReference(c *gin.Context) {
 	}
 	common.Success(c, mapExternalReference(entity))
 }
+
 func (h *Handler) DeleteExternalContractReference(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -590,6 +599,7 @@ func (h *Handler) CreateSchedule(c *gin.Context) {
 	}
 	common.Success(c, mapSchedule(entity))
 }
+
 func (h *Handler) ListSchedules(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -778,6 +788,7 @@ func (h *Handler) ListConversations(c *gin.Context) {
 		"pageSize": pageSize,
 	})
 }
+
 func (h *Handler) GetConversation(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -821,6 +832,7 @@ func (h *Handler) RevalidateConversation(c *gin.Context) {
 	updated, err := h.orchestrator.Revalidate(c, tenantID, id, version)
 	h.actionResult(c, updated, err)
 }
+
 func (h *Handler) ConfirmConversation(c *gin.Context) {
 	tenantID, id, version, ok := h.conversationAction(c)
 	if !ok {
@@ -838,6 +850,7 @@ func (h *Handler) RetryConversation(c *gin.Context) {
 	updated, err := h.orchestrator.Retry(c, tenantID, id, version)
 	h.actionResult(c, updated, err)
 }
+
 func (h *Handler) RejectConversation(c *gin.Context) {
 	tenantID, id, version, ok := h.conversationAction(c)
 	if !ok {
@@ -846,6 +859,7 @@ func (h *Handler) RejectConversation(c *gin.Context) {
 	updated, err := h.orchestrator.Reject(c, tenantID, id, version)
 	h.actionResult(c, updated, err)
 }
+
 func (h *Handler) CorrectConversation(c *gin.Context) {
 	if h.orchestrator == nil {
 		common.Fail(c, common.InternalErrorCode, "email intake orchestrator is unavailable")
@@ -873,6 +887,7 @@ func (h *Handler) CorrectConversation(c *gin.Context) {
 	updated, err := h.orchestrator.ApplyCorrections(c, tenantID, id, req.Version, userID, req.Fields)
 	h.actionResult(c, updated, err)
 }
+
 func (h *Handler) OverrideConversation(c *gin.Context) {
 	if h.orchestrator == nil {
 		common.Fail(c, common.InternalErrorCode, "email intake orchestrator is unavailable")
@@ -904,6 +919,7 @@ func (h *Handler) OverrideConversation(c *gin.Context) {
 	updated, err := h.orchestrator.Override(c, tenantID, id, req.Version, actorID, req.Reason)
 	h.actionResult(c, updated, err)
 }
+
 func (h *Handler) conversationAction(c *gin.Context) (int, int, int, bool) {
 	if h.orchestrator == nil {
 		common.Fail(c, common.InternalErrorCode, "email intake orchestrator is unavailable")
@@ -925,6 +941,7 @@ func (h *Handler) conversationAction(c *gin.Context) (int, int, int, bool) {
 	}
 	return tenantID, id, req.Version, true
 }
+
 func (h *Handler) actionResult(c *gin.Context, updated *ent.EmailConversation, err error) {
 	if err != nil {
 		common.Fail(c, common.ConflictCode, "email intake action conflicts with the current state")
@@ -946,6 +963,7 @@ func tenant(c *gin.Context) (int, bool) {
 	}
 	return id, true
 }
+
 func pathID(c *gin.Context) (int, bool) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id < 1 {

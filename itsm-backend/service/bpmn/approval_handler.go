@@ -174,11 +174,11 @@ func (h *ApprovalHandler) doDelegate(ctx context.Context, approvalID, userID, de
 		Success: true,
 		Message: fmt.Sprintf("审批已委托，从用户 %d 到用户 %d", userID, delegateToUserID),
 		OutputVars: map[string]interface{}{
-			"approval_id":      approvalID,
-			"status":           "delegated",
-			"delegate_from":    userID,
-			"delegate_to":      delegateToUserID,
-			"delegated_at":    time.Now(),
+			"approval_id":   approvalID,
+			"status":        "delegated",
+			"delegate_from": userID,
+			"delegate_to":   delegateToUserID,
+			"delegated_at":  time.Now(),
 		},
 	}, nil
 }
@@ -210,7 +210,7 @@ func (h *ApprovalHandler) doEscalate(ctx context.Context, approvalID, userID, es
 		Success: true,
 		Message: fmt.Sprintf("审批已升级到用户 %d", escalateTo),
 		OutputVars: map[string]interface{}{
-			"approval_id":   approvalID,
+			"approval_id":  approvalID,
 			"status":       "escalated",
 			"escalated_to": escalateTo,
 			"escalated_at": time.Now(),

@@ -19,6 +19,7 @@ func stringConfig(c map[string]interface{}, key, fallback string) string {
 	}
 	return fallback
 }
+
 func intConfig(c map[string]interface{}, key string, fallback int) int {
 	switch v := c[key].(type) {
 	case int:
@@ -34,6 +35,7 @@ func intConfig(c map[string]interface{}, key string, fallback int) int {
 	}
 	return fallback
 }
+
 func topK(n, fallback int) int {
 	if n > 0 {
 		return n
@@ -43,6 +45,7 @@ func topK(n, fallback int) int {
 	}
 	return DefaultTopK
 }
+
 func validIdentifier(s string) error {
 	if !identifierRE.MatchString(s) {
 		return fmt.Errorf("invalid SQL identifier %q", s)

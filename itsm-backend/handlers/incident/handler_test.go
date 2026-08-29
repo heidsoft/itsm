@@ -33,13 +33,13 @@ import (
 // `executeRules(ctx, ...)` goroutine inside Service.Create that calls
 // ListActiveRules. We serialize via the embedded mutex.
 type mockRepository struct {
-	mu              sync.Mutex
-	incidents       map[int]*Incident
-	eventLog        []string
-	ruleReturnErr   error
-	numberCounter   int
-	nextID          int
-	statsCallCount  *int
+	mu             sync.Mutex
+	incidents      map[int]*Incident
+	eventLog       []string
+	ruleReturnErr  error
+	numberCounter  int
+	nextID         int
+	statsCallCount *int
 }
 
 func newMockRepository() *mockRepository {

@@ -69,32 +69,32 @@ type GetServiceRequestsRequest struct {
 
 // ServiceCatalogResponse 服务目录响应
 type ServiceCatalogResponse struct {
-	ID                 int                   `json:"id"`
-	Name               string                `json:"name"`
-	Category           string                `json:"category"`
-	Description        string                `json:"description"`
-	Icon               string                `json:"icon,omitempty"`
-	ServiceType        string                `json:"serviceType,omitempty"`
-	Price              float64               `json:"price,omitempty"`
-	DeliveryTime       string                `json:"deliveryTime"`
-	Unit               string                `json:"unit,omitempty"`
-	RequiresApproval   bool                  `json:"requiresApproval,omitempty"`
-	ApprovalLevel      int                   `json:"approvalLevel,omitempty"`
-	Approvers          []int                 `json:"approvers,omitempty"`
-	SLAResponseTime    int                   `json:"slaResponseTime,omitempty"`
-	SLAResolutionTime  int                   `json:"slaResolutionTime,omitempty"`
-	SLAID              int                   `json:"slaId,omitempty"`
-	SLAName            string                `json:"slaName,omitempty"`
-	CITypeID           int                   `json:"ciTypeId,omitempty"`
-	CloudServiceID     int                   `json:"cloudServiceId,omitempty"`
-	FormSchema         map[string]interface{} `json:"formSchema,omitempty"`
-	AvailableRegions   []string              `json:"availableRegions,omitempty"`
-	AvailableSpecs     []string              `json:"availableSpecs,omitempty"`
-	Status             string                `json:"status"`
-	IsActive           bool                  `json:"isActive,omitempty"`
-	SortOrder          int                   `json:"sortOrder,omitempty"`
-	CreatedAt          time.Time             `json:"createdAt"`
-	UpdatedAt          time.Time             `json:"updatedAt"`
+	ID                int                    `json:"id"`
+	Name              string                 `json:"name"`
+	Category          string                 `json:"category"`
+	Description       string                 `json:"description"`
+	Icon              string                 `json:"icon,omitempty"`
+	ServiceType       string                 `json:"serviceType,omitempty"`
+	Price             float64                `json:"price,omitempty"`
+	DeliveryTime      string                 `json:"deliveryTime"`
+	Unit              string                 `json:"unit,omitempty"`
+	RequiresApproval  bool                   `json:"requiresApproval,omitempty"`
+	ApprovalLevel     int                    `json:"approvalLevel,omitempty"`
+	Approvers         []int                  `json:"approvers,omitempty"`
+	SLAResponseTime   int                    `json:"slaResponseTime,omitempty"`
+	SLAResolutionTime int                    `json:"slaResolutionTime,omitempty"`
+	SLAID             int                    `json:"slaId,omitempty"`
+	SLAName           string                 `json:"slaName,omitempty"`
+	CITypeID          int                    `json:"ciTypeId,omitempty"`
+	CloudServiceID    int                    `json:"cloudServiceId,omitempty"`
+	FormSchema        map[string]interface{} `json:"formSchema,omitempty"`
+	AvailableRegions  []string               `json:"availableRegions,omitempty"`
+	AvailableSpecs    []string               `json:"availableSpecs,omitempty"`
+	Status            string                 `json:"status"`
+	IsActive          bool                   `json:"isActive,omitempty"`
+	SortOrder         int                    `json:"sortOrder,omitempty"`
+	CreatedAt         time.Time              `json:"createdAt"`
+	UpdatedAt         time.Time              `json:"updatedAt"`
 }
 
 // ServiceRequestResponse 服务请求响应
@@ -188,40 +188,41 @@ type ServiceRequestListResponse struct {
 // ToServiceCatalogResponse 转换为服务目录响应
 func ToServiceCatalogResponse(catalog *ent.ServiceCatalog) *ServiceCatalogResponse {
 	return &ServiceCatalogResponse{
-		ID:                 catalog.ID,
-		Name:               catalog.Name,
-		Category:           catalog.Category,
-		Description:        catalog.Description,
-		Icon:               catalog.Icon,
-		ServiceType:        catalog.ServiceType,
-		Price:              catalog.Price,
-		DeliveryTime:       strconv.Itoa(catalog.DeliveryTime),
-		Unit:               catalog.Unit,
-		RequiresApproval:   catalog.RequiresApproval,
-		ApprovalLevel:      catalog.ApprovalLevel,
-		Approvers:          catalog.Approvers,
-		SLAResponseTime:    catalog.SLAResponseTime,
-		SLAResolutionTime:  catalog.SLAResolutionTime,
-		CITypeID:           catalog.CiTypeID,
-		CloudServiceID:     catalog.CloudServiceID,
-		FormSchema:         catalog.FormSchema,
-		AvailableRegions:   catalog.AvailableRegions,
-		AvailableSpecs:     catalog.AvailableSpecs,
-		Status:             string(catalog.Status),
-		IsActive:           catalog.IsActive,
-		SortOrder:          catalog.SortOrder,
-		CreatedAt:          catalog.CreatedAt,
-		UpdatedAt:          catalog.UpdatedAt,
+		ID:                catalog.ID,
+		Name:              catalog.Name,
+		Category:          catalog.Category,
+		Description:       catalog.Description,
+		Icon:              catalog.Icon,
+		ServiceType:       catalog.ServiceType,
+		Price:             catalog.Price,
+		DeliveryTime:      strconv.Itoa(catalog.DeliveryTime),
+		Unit:              catalog.Unit,
+		RequiresApproval:  catalog.RequiresApproval,
+		ApprovalLevel:     catalog.ApprovalLevel,
+		Approvers:         catalog.Approvers,
+		SLAResponseTime:   catalog.SLAResponseTime,
+		SLAResolutionTime: catalog.SLAResolutionTime,
+		CITypeID:          catalog.CiTypeID,
+		CloudServiceID:    catalog.CloudServiceID,
+		FormSchema:        catalog.FormSchema,
+		AvailableRegions:  catalog.AvailableRegions,
+		AvailableSpecs:    catalog.AvailableSpecs,
+		Status:            string(catalog.Status),
+		IsActive:          catalog.IsActive,
+		SortOrder:         catalog.SortOrder,
+		CreatedAt:         catalog.CreatedAt,
+		UpdatedAt:         catalog.UpdatedAt,
 	}
 }
 
 // ToServiceRequestResponse 转换为服务请求响应
 //
 // RequestNumber / TicketNumber 生成策略：
-//   数据库 service_requests 表当前未持久化 request_number 列
-//   （避免 schema 迁移带来的发布与回滚成本），采用「派生编号」：
-//   格式 SR-YYYYMM-NNNNNN，基于 ID + CreatedAt 生成。
-//   后续如需“按实体持久化”可只补一列 request_number，不影响调用契约。
+//
+//	数据库 service_requests 表当前未持久化 request_number 列
+//	（避免 schema 迁移带来的发布与回滚成本），采用「派生编号」：
+//	格式 SR-YYYYMM-NNNNNN，基于 ID + CreatedAt 生成。
+//	后续如需“按实体持久化”可只补一列 request_number，不影响调用契约。
 func ToServiceRequestResponse(request *ent.ServiceRequest) *ServiceRequestResponse {
 	var expireAt *time.Time
 	if !request.ExpireAt.IsZero() {

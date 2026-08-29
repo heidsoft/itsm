@@ -126,11 +126,17 @@ func (s *Service) SearchArticles(ctx context.Context, tenantID int, query string
 				id    int
 				score float64
 			}
-			scored := make([]struct{ id int; score float64 }, 0, len(rawResults))
+			scored := make([]struct {
+				id    int
+				score float64
+			}, 0, len(rawResults))
 			for _, r := range rawResults {
 				if id, ok := r["id"].(int); ok {
 					score, _ := r["score"].(float64)
-					scored = append(scored, struct{ id int; score float64 }{id: id, score: score})
+					scored = append(scored, struct {
+						id    int
+						score float64
+					}{id: id, score: score})
 				}
 			}
 
@@ -174,7 +180,11 @@ func (s *Service) SearchArticles(ctx context.Context, tenantID int, query string
 	return articles, err
 }
 
-func scoredIDsToIDs(scored []struct{ id int; score float64 }) []int {
+func scoredIDsToIDs(scored []struct {
+	id    int
+	score float64
+},
+) []int {
 	ids := make([]int, len(scored))
 	for i, s := range scored {
 		ids[i] = s.id

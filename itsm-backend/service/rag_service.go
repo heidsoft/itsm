@@ -14,6 +14,7 @@ import (
 	connectorVector "itsm-backend/connector/vector"
 	"itsm-backend/ent"
 	ka "itsm-backend/ent/knowledgearticle"
+	"itsm-backend/handlers/common/knowledgeaccess"
 )
 
 // RAGService provides retrieval augmented generation over Knowledge Base
@@ -27,7 +28,15 @@ type RAGService struct {
 	useKeyword   bool             // Whether to use keyword fallback
 	hybridSearch bool             // Whether to use hybrid (vector + keyword) search
 	ontology     *OntologyService // 本体图检索：实体识别 + 关系扩展（可选注入）
+
+	// knowledgeGuard 知识分类可见性守卫（知识可引用性 L0 权限边界）。
+	// 阻断「同租户内任何用户都能通过 AI 助手问出受限知识」的越权路径。
+	// nil 时守卫不生效（仅本地/测试环境允许），生产装配必须注入。
+	knowledgeGuard *knowledgeaccess.Guard
 }
+
+// SetKnowledgeGuard 注入知识分类可见性守卫。
+func (r *RAGService) SetKnowledgeGuard(g *knowledgeaccess.Guard) { r.knowledgeGuard = g }
 
 // SetVectorStore installs the pluggable connector-backed store. The legacy
 // PGVector store remains available during migration of existing installations.
@@ -70,7 +79,7 @@ func DefaultRAGConfig() RAGConfig {
 // NewRAGService creates a new RAG service with configuration
 func NewRAGService(client *ent.Client, vectors *VectorStore, embedder Embedder, logger *zap.SugaredLogger, cfg RAGConfig) *RAGService {
 	useVector := cfg.UseVector && vectors != nil && embedder != nil
-	return &RAGService{
+	svc := &RAGService{
 		client:     client,
 		vectors:    vectors,
 		embedder:   embedder,
@@ -80,6 +89,12 @@ func NewRAGService(client *ent.Client, vectors *VectorStore, embedder Embedder, 
 		// hybridSearch only makes sense if vector search is available
 		hybridSearch: cfg.HybridSearch && useVector,
 	}
+	// 默认装配守卫：只要持有 ent client 就启用分类级可见性管控。
+	// 未注入 Viewer 的调用方会按匿名处理（仅放行未纳管分类），属 fail-closed。
+	if client != nil {
+		svc.knowledgeGuard = knowledgeaccess.NewGuard(client, logger)
+	}
+	return svc
 }
 
 // NewRAGServiceWithAutoConfig creates a RAG service with automatic configuration detection
@@ -209,6 +224,13 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 				if err != nil {
 					continue
 				}
+				// 知识分类可见性（L0）：向量索引里可能残留受限分类文章，
+				// 必须在这里拦截，否则会绕过 keywordSearch 的 SQL 层过滤。
+				if !r.articleReadable(ctx, tenantID, a) {
+					r.logger.Debugw("RAG: skip connector vector result, category not readable",
+						"article_id", objID, "category", a.Category)
+					continue
+				}
 				results = append(results, map[string]any{"object_type": "kb", "id": objID, "title": a.Title, "category": a.Category, "snippet": snippet(hit.Content, 200), "score": hit.Score, "search_type": response.Backend})
 			}
 			return results, nil
@@ -268,6 +290,13 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 				r.logger.Debugw("RAGService: skip vector result, article not visible", "article_id", objID, "error", err)
 				continue
 			}
+			// 知识分类可见性（L0）：向量索引里可能残留受限分类文章，
+			// 必须在这里拦截，否则会绕过 keywordSearch 的 SQL 层过滤。
+			if !r.articleReadable(ctx, tenantID, a) {
+				r.logger.Debugw("RAGService: skip vector result, category not readable",
+					"article_id", objID, "category", a.Category)
+				continue
+			}
 			item["title"] = a.Title
 			item["category"] = a.Category
 		}
@@ -279,6 +308,66 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 }
 
 // keywordSearch performs full-text search using LIKE
+// articleReadable 判定单篇文章对当前访问者是否可读（分类可见性 L0）。
+// 用于向量检索结果的后置过滤：向量索引是异步构建的，可能残留受限分类文章
+// 或权限变更前的快照，无法依赖 SQL 层过滤兜底。
+//
+// 守卫未装配时恒为 true（保持旧行为）。
+func (r *RAGService) articleReadable(ctx context.Context, tenantID int, a *ent.KnowledgeArticle) bool {
+	if r.knowledgeGuard == nil || a == nil {
+		return true
+	}
+	viewer, hasViewer := knowledgeaccess.ViewerFrom(ctx)
+	if !hasViewer {
+		r.logger.Debugw("RAG: 未注入 Viewer，按匿名处理", "tenant_id", tenantID, "article_id", a.ID)
+		viewer = knowledgeaccess.Viewer{}
+	}
+	return r.knowledgeGuard.CanReadCategory(ctx, tenantID, viewer, a.Category, a.AuthorID)
+}
+
+// deniedCategories 返回当前访问者无权读取的知识分类。
+//
+// 知识可引用性 L0：RAG 检索此前只按 tenant_id + is_published + deleted_at 过滤，
+// 同租户内任何用户都能通过 AI 助手问出受限分类（财务/HR/高管）的知识。
+// 这里按 Viewer（userID + role）逐分类判定，返回应被排除的分类名。
+//
+// 守卫未装配时返回 nil（不做额外限制，保持旧行为）。
+// Viewer 缺失时按匿名处理：所有已纳管分类一律排除（fail-closed）。
+func (r *RAGService) deniedCategories(ctx context.Context, tenantID int) []string {
+	if r.knowledgeGuard == nil {
+		return nil
+	}
+	viewer, hasViewer := knowledgeaccess.ViewerFrom(ctx)
+	if !hasViewer {
+		r.logger.Debugw("RAG: 未注入 Viewer，按匿名处理，受限分类一律排除", "tenant_id", tenantID)
+		viewer = knowledgeaccess.Viewer{}
+	}
+
+	restricted, err := r.knowledgeGuard.RestrictedCategories(ctx, tenantID)
+	if err != nil {
+		// 查询失败按最严处理：排除所有受限分类，绝不放行未知权限状态的内容
+		r.logger.Warnw("RAG: 受限分类查询失败，按 fail-closed 排除全部受限分类",
+			"tenant_id", tenantID, "error", err)
+		restricted = nil
+		if r.knowledgeGuard != nil {
+			// 缓存失效场景下无法拿到集合，直接走保守策略：拒绝全部（返回哨兵）
+			return []string{denyAllSentinel}
+		}
+	}
+
+	denied := make([]string, 0, len(restricted))
+	for cat := range restricted {
+		// authorID 传 0：SQL 层无法逐条判断作者，作者豁免在 FilterArticles 里处理
+		if !r.knowledgeGuard.CanReadCategory(ctx, tenantID, viewer, cat, 0) {
+			denied = append(denied, cat)
+		}
+	}
+	return denied
+}
+
+// denyAllSentinel 受限分类集合不可得时的拒绝哨兵，配合 CategoryNotIn 使用。
+const denyAllSentinel = "\x00__deny_all__"
+
 func (r *RAGService) keywordSearch(ctx context.Context, tenantID int, query string, limit int) ([]map[string]any, error) {
 	if !r.useKeyword {
 		return nil, fmt.Errorf("keyword search not available")
@@ -287,6 +376,29 @@ func (r *RAGService) keywordSearch(ctx context.Context, tenantID int, query stri
 	q := r.client.KnowledgeArticle.Query().
 		// 可见性过滤：仅检索本租户、未软删除且已发布的文章，草稿不得进入 RAG 结果。
 		Where(ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil(), ka.IsPublished(true))
+
+	// 知识分类可见性（L0 权限边界）：在 SQL 层排除无权访问的分类，
+	// 保证 limit 语义准确（后置过滤会让召回数不足）。
+	// 作者本人的文章即便落在受限分类也放行。
+	viewer, _ := knowledgeaccess.ViewerFrom(ctx)
+	if denied := r.deniedCategories(ctx, tenantID); len(denied) > 0 {
+		if len(denied) == 1 && denied[0] == denyAllSentinel {
+			// 权限状态未知，最保守：仅允许本分类体系外的空分类文章
+			q = q.Where(ka.CategoryEQ(""))
+		} else if viewer.UserID > 0 {
+			// 作者豁免：自己写的文章即便落在受限分类也可见
+			q = q.Where(ka.Or(
+				ka.CategoryNotIn(denied...),
+				ka.AuthorIDEQ(viewer.UserID),
+			))
+			r.logger.Debugw("RAG: 已按分类可见性过滤", "tenant_id", tenantID, "denied", denied, "user_id", viewer.UserID)
+		} else {
+			// 匿名/无用户上下文：不做作者豁免
+			q = q.Where(ka.CategoryNotIn(denied...))
+			r.logger.Debugw("RAG: 已按分类可见性过滤（匿名）", "tenant_id", tenantID, "denied", denied)
+		}
+	}
+
 	if qq := strings.TrimSpace(query); qq != "" {
 		// Use OR for broader search
 		q = q.Where(ka.Or(
