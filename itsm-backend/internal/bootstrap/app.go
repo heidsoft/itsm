@@ -428,6 +428,10 @@ func NewApplication() *Application {
 
 	vectorStore := service.NewVectorStore(database.GetRawDB())
 	ragService := service.NewRAGServiceWithAutoConfig(client, vectorStore, embedder, sugar)
+	// 本体增强检索：识别 query 中的业务实体（TKT-/INC-/REL- 编号、CI 名称），
+	// 沿 CMDB/工单关系做 1 跳扩展，注入 AI 回答的上下文与引用源。
+	ontologyService := service.NewOntologyService(client, sugar)
+	ragService.SetOntologyService(ontologyService)
 	vectorCtx, vectorCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	pluggableVectorStore, vectorErr := connectorVector.NewFromEnvironment(vectorCtx)
 	vectorCancel()
@@ -451,6 +455,9 @@ func NewApplication() *Application {
 		sugar.Infow("pgvector 扩展初始化成功")
 	}
 	initCancel()
+
+	// 向量存储管理台：只读状态视图 + 连通性测试（配置本身仍由 VECTOR_STORE_CONFIG 部署级管理）
+	vectorStoreController := controller.NewVectorStoreController(database.GetRawDB(), sugar)
 
 	// 控制器依赖
 	incidentRuleEngine := service.NewIncidentRuleEngine(client, sugar)
@@ -946,6 +953,7 @@ func NewApplication() *Application {
 		KnowledgeHandler:               knowledgeHandler,
 		SLAHandler:                     slaHandler,
 		SLATemplateController:          slaTemplateController,
+		VectorStoreController:          vectorStoreController,
 		AIHandler:                      aiHandler, // Added AI domain handler
 		EmailIntakeHandler:             emailIntakeHandler,
 		CommonHandler:                  commonHandler,

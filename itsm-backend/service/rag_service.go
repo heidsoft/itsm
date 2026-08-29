@@ -25,6 +25,7 @@ type RAGService struct {
 	useVector    bool // Whether to use vector search
 	useKeyword   bool // Whether to use keyword fallback
 	hybridSearch bool // Whether to use hybrid (vector + keyword) search
+	ontology     *OntologyService // 本体图检索：实体识别 + 关系扩展（可选注入）
 }
 
 // SetVectorStore installs the pluggable connector-backed store. The legacy
@@ -35,6 +36,14 @@ func (r *RAGService) SetVectorStore(store connectorVector.VectorStore) {
 		r.useVector = true
 		r.hybridSearch = true
 	}
+}
+
+// SetOntologyService installs the ontology graph service. When installed,
+// AskWithLLMStream recognizes business entities (tickets/incidents/CIs/...)
+// in the user query and injects their 1-hop relation neighborhood into the
+// LLM context and the UI sources list. nil-safe: absent means legacy behavior.
+func (r *RAGService) SetOntologyService(svc *OntologyService) {
+	r.ontology = svc
 }
 
 // RAGConfig holds RAG service configuration
@@ -331,6 +340,16 @@ func (r *RAGService) AskWithLLM(ctx context.Context, tenantID int, query string,
 	}
 
 	if len(docs) == 0 {
+		// 知识库无匹配时仍尝试用 LLM 通用知识回答；仅当无网关时才退回模板。
+		if gateway != nil {
+			messages := []LLMMessage{
+				{Role: "system", Content: "你是IT服务管理(ITSM)智能助手。当前问题在知识库中未检索到相关文章。请基于你的通用IT服务管理/IT运维知识直接回答用户；如合适，可简要说明你还能提供的帮助。回答需简洁专业，使用中文。"},
+				{Role: "user", Content: query},
+			}
+			if resp, err := gateway.Chat(ctx, "", messages); err == nil {
+				return strings.TrimSpace(resp), nil
+			}
+		}
 		return "知识库中暂无相关内容。请尝试更换关键词或补充上下文，或联系知识管理员补充相关文章。", nil
 	}
 
@@ -395,10 +414,36 @@ func (r *RAGService) AskWithLLMStream(
 		return fmt.Errorf("retrieval failed: %w", err)
 	}
 
+	// 本体增强：识别 query 中的业务实体（工单号/事件号/CI 名等），
+	// 做 1 跳关系扩展，实体卡注入 sources、图谱事实注入 prompt。
+	// 查询失败仅降级（不注入），不影响 KB 主链路。
+	var ontologyBlock string
+	if r.ontology != nil {
+		oc := r.ontology.ExtractAndExpand(ctx, tenantID, query)
+		if !oc.Empty() {
+			ontologyBlock = oc.PromptBlock()
+			docs = append(oc.Sources(), docs...)
+		}
+	}
+
 	// Emit sources first so the UI can show citations while the answer streams.
 	onSources(docs)
 
 	if len(docs) == 0 {
+		// 知识库无匹配文章时：若已配置 LLM 网关，仍调用大模型用通用 ITSM 知识回答，
+		// 而不是直接返回"无内容"模板——否则助手对通用问题（如"你能做什么"）完全失效。
+		if gateway != nil {
+			generalMessages := []LLMMessage{
+				{Role: "system", Content: "你是IT服务管理(ITSM)智能助手。当前问题在知识库中未检索到相关文章。请基于你的通用IT服务管理/IT运维知识直接回答用户；如合适，可简要说明你还能提供的帮助（如协助创建或查询工单、检索知识库、解释SLA/变更/事件/CMDB等ITSM概念）。回答需简洁专业，使用中文。"},
+				{Role: "user", Content: query},
+			}
+			if err := gateway.ChatStream(ctx, "", generalMessages, onDelta); err != nil {
+				r.logger.Warnw("RAGService: general LLM answer failed, falling back to KB-empty template", "error", err)
+			} else {
+				return nil
+			}
+		}
+		// 无 LLM 网关或 LLM 调用失败：给出静态引导模板
 		onDelta("知识库中暂无相关内容。以下为可能的原因与建议：\n\n")
 		onDelta("1. 知识库尚未录入相关文章——请联系知识管理员补充运维手册或FAQ；\n")
 		onDelta("2. 您的问题关键词与文章标题不匹配——请尝试更换关键词或补充上下文，如产品名、错误码、症状等；\n")
@@ -429,18 +474,23 @@ func (r *RAGService) AskWithLLMStream(
 		contextBuilder.WriteString(fmt.Sprintf("【文档%d】%v\n", i+1, doc["title"]))
 		contextBuilder.WriteString(fmt.Sprintf("内容：%v\n\n", doc["snippet"]))
 	}
+	// 本体图谱块：业务实体及其关系邻居（若有）
+	if ontologyBlock != "" {
+		contextBuilder.WriteString(ontologyBlock)
+	}
 
 	prompt := fmt.Sprintf(`%s
 用户问题：%s
 
-请根据以上知识库内容，用简洁专业的中文回答用户问题。
+请根据以上知识库内容与业务实体图谱（如有），用简洁专业的中文回答用户问题。
+回答涉及具体业务对象（工单/事件/CI/问题/发布）时，优先依据图谱上下文中的事实，给出对象编号、状态与关联关系。
 如果知识库内容没有直接相关的信息，请说明"未在知识库中找到相关答案"。
 可以在回答末尾用【文档X】形式引用来源，但不要重复输出文档全文。
 
 回答：`, contextBuilder.String(), query)
 
 	messages := []LLMMessage{
-		{Role: "system", Content: "你是IT服务管理知识库助手，基于检索到的知识回答用户问题。"},
+		{Role: "system", Content: "你是IT服务管理知识库助手，基于检索到的知识内容与CMDB/工单图谱事实回答用户问题。图谱中的对象编号、状态、关联关系是系统实时数据，可信度高于推测。"},
 		{Role: "user", Content: prompt},
 	}
 
