@@ -78,6 +78,7 @@ make dev-start-docker
 # 前端：http://localhost:3000
 # 后端：http://localhost:8090
 # 默认账号：admin / admin123（仅开发环境）
+# 生产环境管理员密码由 .env.prod 的 ADMIN_PASSWORD 决定（itsm-init 首次启动写入），不要使用示例密码
 ```
 
 ### 方式二：本地开发

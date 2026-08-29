@@ -56,7 +56,7 @@ make dev-health
 - バックエンド：`http://localhost:8090`
 - Swagger：`http://localhost:8090/swagger/index.html`
 
-開発環境専用の初期アカウントは `admin / admin123` です。
+開発環境専用の初期アカウントは `admin / admin123` です。本番環境の管理者パスワードは `.env.prod` の `ADMIN_PASSWORD`（初回起動時に `itsm-init` コンテナが書き込み）で決まります。ドキュメント内のサンプルパスワードを本番で使用しないでください。
 
 停止：
 

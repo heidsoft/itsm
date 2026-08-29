@@ -56,7 +56,7 @@ Open:
 - Backend: `http://localhost:8090`
 - Swagger: `http://localhost:8090/swagger/index.html`
 
-The development-only initial account is `admin / admin123`.
+The development-only initial account is `admin / admin123`. For production deployments, the admin password is set by `ADMIN_PASSWORD` in your `.env.prod` (applied by the one-shot `itsm-init` container on first start) — never use documentation example passwords there.
 
 Stop the environment:
 
