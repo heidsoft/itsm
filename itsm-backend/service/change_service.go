@@ -55,12 +55,16 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 	relatedTickets := uniqueNonEmptyStrings(req.RelatedTickets)
 	initialStatus := dto.ChangeStatusDraft
 
-	// 标准变更自动免审配置：环境变量 ENABLE_STANDARD_CHANGE_AUTO_APPROVE（默认 true）
-	// 当为 true 时，低风险标准变更（有实施计划和回滚计划）可直接跳过审批
+	// 标准变更自动免审配置：环境变量 ENABLE_STANDARD_CHANGE_AUTO_APPROVE（默认 false）
+	// 安全基线变更：默认关闭自动免审。
+	// 原实现默认开启且风险等级由创建人自报（填 low 即可绕过审批），对政务/医疗等
+	// 合规要求行业是硬伤（变更必须留审批痕）。需要该提速特性的部署方须显式开启，
+	// 并自行承担自报风险等级的评估责任；生产合规部署应保持关闭。
 	enableAutoApprove := os.Getenv("ENABLE_STANDARD_CHANGE_AUTO_APPROVE")
-	if enableAutoApprove == "" || enableAutoApprove == "true" {
+	if enableAutoApprove == "true" {
 		if req.Type == string(dto.ChangeTypeStandard) && req.RiskLevel == string(dto.ChangeRiskLow) &&
 			strings.TrimSpace(req.ImplementationPlan) != "" && strings.TrimSpace(req.RollbackPlan) != "" {
+			// 自动通过必须留痕：记录系统审批轨迹，防止审计断链
 			initialStatus = dto.ChangeStatusApproved
 		}
 	}
