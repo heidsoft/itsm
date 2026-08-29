@@ -21,6 +21,7 @@ import (
 	"itsm-backend/ent/ticketassignmentrule"
 	"itsm-backend/ent/user"
 	"itsm-backend/ent/workflowtask"
+	"itsm-backend/internal/commandbus"
 	"itsm-backend/service/bpmn"
 
 	"go.uber.org/zap"
@@ -260,8 +261,15 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 	}
 	startEvent := process.StartEvents[0]
 
+	tx, err := e.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("开启流程启动事务失败: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	txc := tx.Client()
+
 	// 4. 创建流程实例
-	instance, err := e.client.ProcessInstance.Create().
+	instance, err := txc.ProcessInstance.Create().
 		SetProcessInstanceID(fmt.Sprintf("PI-%s-%d", processDefinitionKey, time.Now().UnixNano())).
 		SetBusinessKey(businessKey).
 		SetProcessDefinitionKey(processDefinitionKey).
@@ -278,7 +286,7 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 	}
 
 	// 5. 执行流程推进（从StartEvent开始）
-	if err := e.executeStep(ctx, e.client, instance, process, startEvent.ID, variables); err != nil {
+	if err := e.executeStep(ctx, txc, instance, process, startEvent.ID, variables); err != nil {
 		return nil, err
 	}
 
@@ -290,11 +298,13 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 		userID = u.ID
 		userName = u.Name
 	}
-	if err := e.auditService.RecordProcessStarted(ctx, instance, userID, userName, variables); err != nil {
-		e.logger.Warnw("audit record failed", "error", err)
+	if err := NewBPMNAuditService(txc, e.logger).RecordProcessStarted(ctx, instance, userID, userName, variables); err != nil {
+		return nil, fmt.Errorf("记录流程启动审计失败: %w", err)
 	}
-
-	return instance, nil
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交流程启动事务失败: %w", err)
+	}
+	return instance.Unwrap(), nil
 }
 
 // CompleteTask 完成任务。
@@ -589,45 +599,81 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client
 		e.markElementDone(ctx, txc, instance, elementID)
 		return e.executeStep(ctx, txc, instance, process, elementID, instance.Variables)
 	} else if serviceTask := e.findServiceTask(process, elementID); serviceTask != nil {
-		// 通过 CallbackRegistry 执行真实的服务任务逻辑
-		serviceRef := serviceTask.ID
-		if serviceTask.Name != "" {
-			serviceRef = serviceTask.Name
-		}
-		// 尝试通过实现类或表达式属性获取服务引用
-		if serviceTask.Implementation != "" {
-			serviceRef = serviceTask.Implementation
-		} else if serviceTask.Class != "" {
-			serviceRef = serviceTask.Class
-		} else if serviceTask.DelegateExpression != "" {
-			serviceRef = serviceTask.DelegateExpression
-		} else if serviceTask.OperationRef != "" {
-			serviceRef = serviceTask.OperationRef
-		}
-
-		// 查找并执行 Callback
-		if e.callbackRegistry != nil {
-			handler := e.callbackRegistry.GetHandler(serviceRef)
-			if handler == nil {
-				// 尝试按任务类型匹配
-				handler = e.callbackRegistry.GetHandler(serviceTask.GetType())
-			}
-			if handler != nil {
-				e.logger.Infow("执行 ServiceTask 回调", "serviceRef", serviceRef, "elementID", elementID)
-				taskVariables := mergeServiceTaskVariables(instance.Variables, serviceTask)
-				if _, err := handler.Execute(ctx, nil, taskVariables); err != nil {
-					return fmt.Errorf("ServiceTask %s 执行失败: %w", serviceRef, err)
-				}
-			} else {
-				return fmt.Errorf("ServiceTask handler '%s' 未注册，无法执行此自动化步骤", serviceRef)
-			}
-		}
-		e.markElementDone(ctx, txc, instance, elementID)
-		return e.executeStep(ctx, txc, instance, process, elementID, instance.Variables)
+		return e.enqueueServiceTaskCommand(ctx, txc, instance, serviceTask)
 	}
 
 	e.markElementDone(ctx, txc, instance, elementID)
 	return e.executeStep(ctx, txc, instance, process, elementID, instance.Variables)
+}
+
+func serviceTaskReference(task *BPMNServiceTask) string {
+	serviceRef := task.ID
+	if task.Name != "" {
+		serviceRef = task.Name
+	}
+	if task.Implementation != "" {
+		serviceRef = task.Implementation
+	} else if task.Class != "" {
+		serviceRef = task.Class
+	} else if task.DelegateExpression != "" {
+		serviceRef = task.DelegateExpression
+	} else if task.OperationRef != "" {
+		serviceRef = task.OperationRef
+	}
+	return serviceRef
+}
+
+func (e *CustomProcessEngine) enqueueServiceTaskCommand(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, task *BPMNServiceTask) error {
+	if instance.TenantID <= 0 {
+		return fmt.Errorf("ServiceTask 缺少有效租户")
+	}
+	if instance.Variables == nil {
+		instance.Variables = map[string]interface{}{}
+	}
+	occurrences := intMapVariable(instance.Variables, "_serviceTaskOccurrences")
+	occurrence := occurrences[task.ID] + 1
+	occurrences[task.ID] = occurrence
+	instance.Variables["_serviceTaskOccurrences"] = occurrences
+	if _, err := txc.ProcessInstance.UpdateOneID(instance.ID).
+		SetVariables(instance.Variables).Save(ctx); err != nil {
+		return fmt.Errorf("持久化 ServiceTask occurrence 失败: %w", err)
+	}
+	idempotencyKey := fmt.Sprintf("%d:workflow.service_task:%d:%s:%d", instance.TenantID, instance.ID, task.ID, occurrence)
+	if _, err := commandbus.Enqueue(ctx, txc, commandbus.EnqueueRequest{
+		TenantID: instance.TenantID, CommandType: commandbus.CommandExecuteBPMNServiceTask,
+		AggregateType: "process_instance", AggregateID: instance.ID,
+		IdempotencyKey: idempotencyKey, MaxAttempts: 8,
+		Payload: map[string]interface{}{"elementId": task.ID, "serviceRef": serviceTaskReference(task), "occurrence": occurrence},
+	}); err != nil {
+		return fmt.Errorf("ServiceTask durable command 入队失败: %w", err)
+	}
+	e.logger.Infow("BPMN ServiceTask durable command enqueued", "tenant_id", instance.TenantID,
+		"process_instance_id", instance.ID, "element_id", task.ID, "occurrence", occurrence)
+	return nil
+}
+
+func intMapVariable(variables map[string]interface{}, key string) map[string]int {
+	result := map[string]int{}
+	raw, ok := variables[key]
+	if !ok {
+		return result
+	}
+	switch values := raw.(type) {
+	case map[string]int:
+		for name, value := range values {
+			result[name] = value
+		}
+	case map[string]interface{}:
+		for name, value := range values {
+			switch number := value.(type) {
+			case int:
+				result[name] = number
+			case float64:
+				result[name] = int(number)
+			}
+		}
+	}
+	return result
 }
 
 func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *BPMNServiceTask) map[string]interface{} {
@@ -670,7 +716,8 @@ func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *B
 
 func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, task *BPMNUserTask) error {
 	// 幂等：同实例同节点已存在未结束任务时直接复用，避免 CompleteTask 流程推进失败重试时重复创建任务（F-2）
-	if existing, _ := e.client.ProcessTask.Query().
+	// 必须使用事务客户端：CompleteTask 事务内刚创建的任务对外不可见，用 e.client 会漏读导致重复创建
+	if existing, _ := txc.ProcessTask.Query().
 		Where(
 			processtask.ProcessInstanceID(instance.ID),
 			processtask.TaskDefinitionKey(task.ID),
@@ -1127,7 +1174,7 @@ func (e *CustomProcessEngine) handleParallelGateway(ctx context.Context, txc *en
 		return fmt.Errorf("并行网关分叉层级超过上限，可能存在环路: %s", gateway.ID)
 	}
 	incoming := e.findIncomingFlows(process, gateway.ID)
-	if len(incoming) > 1 && !e.allIncomingBranchesCompleted(ctx, instance, process, gateway.ID) {
+	if len(incoming) > 1 && !e.allIncomingBranchesCompleted(ctx, txc, instance, process, gateway.ID) {
 		e.logger.Infow("并行网关汇聚等待其余分支完成", "gateway", gateway.ID, "instance", instance.ID)
 		e.recordGatewayHistory(ctx, txc, instance, gateway.ID, "parallel", "join-wait", nil, instance.Variables)
 		return nil // 仍有分支未结束，等待，不推进
@@ -1150,7 +1197,7 @@ func (e *CustomProcessEngine) handleInclusiveGateway(ctx context.Context, txc *e
 		return fmt.Errorf("包容网关分叉层级超过上限，可能存在环路: %s", gateway.ID)
 	}
 	incoming := e.findIncomingFlows(process, gateway.ID)
-	if len(incoming) > 1 && !e.allIncomingBranchesCompleted(ctx, instance, process, gateway.ID) {
+	if len(incoming) > 1 && !e.allIncomingBranchesCompleted(ctx, txc, instance, process, gateway.ID) {
 		e.logger.Infow("包容网关汇聚等待其余分支完成", "gateway", gateway.ID, "instance", instance.ID)
 		e.recordGatewayHistory(ctx, txc, instance, gateway.ID, "inclusive", "join-wait", nil, instance.Variables)
 		return nil
@@ -1191,6 +1238,12 @@ func (e *CustomProcessEngine) dispatchGatewayOrElement(ctx context.Context, txc 
 // 直接就地修改 instance.Variables（同一 map 引用会在同一次执行内对汇聚判断可见），
 // 并通过 txc 持久化，使后续 CompleteTask 的汇聚判断也能读到。
 func (e *CustomProcessEngine) markElementDone(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, elementID string) {
+	if err := e.markElementDoneStrict(ctx, txc, instance, elementID); err != nil {
+		e.logger.Warnw("markElementDone 持久化失败", "elementID", elementID, "error", err)
+	}
+}
+
+func (e *CustomProcessEngine) markElementDoneStrict(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, elementID string) error {
 	if instance.Variables == nil {
 		instance.Variables = map[string]interface{}{}
 	}
@@ -1200,9 +1253,8 @@ func (e *CustomProcessEngine) markElementDone(ctx context.Context, txc *ent.Clie
 		instance.Variables["_done_"] = done
 	}
 	done[elementID] = true
-	if _, err := txc.ProcessInstance.UpdateOneID(instance.ID).SetVariables(instance.Variables).Save(ctx); err != nil {
-		e.logger.Warnw("markElementDone 持久化失败", "elementID", elementID, "error", err)
-	}
+	_, err := txc.ProcessInstance.UpdateOneID(instance.ID).SetVariables(instance.Variables).Save(ctx)
+	return err
 }
 
 // allIncomingBranchesCompleted 判断汇聚网关的所有入边分支是否均已结束。
@@ -1210,7 +1262,9 @@ func (e *CustomProcessEngine) markElementDone(ctx context.Context, txc *ent.Clie
 //   - 以服务任务/子网关/排他网关/结束事件为源的分支：必须已在 _done_ 中标记为完成。
 //     旧实现对这些非用户任务源直接 continue（永远视为完成），会导致提前汇聚或死锁（P1 网关完整性）。
 //   - 查询失败时保守返回 false（视为未完成），避免提前汇聚。
-func (e *CustomProcessEngine) allIncomingBranchesCompleted(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, gatewayID string) bool {
+//   - 任务状态查询必须使用事务客户端：CompleteTask 事务内刚标记完成的任务对外不可见，
+//     用事务外客户端会误判分支未完成导致网关死锁。
+func (e *CustomProcessEngine) allIncomingBranchesCompleted(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, gatewayID string) bool {
 	done := map[string]interface{}{}
 	if instance.Variables != nil {
 		if d, ok := instance.Variables["_done_"].(map[string]interface{}); ok {
@@ -1221,7 +1275,7 @@ func (e *CustomProcessEngine) allIncomingBranchesCompleted(ctx context.Context, 
 		src := flow.SourceRef
 		if e.findUserTask(process, src) != nil {
 			// 用户任务源：以 DB 实际完成状态为准
-			open, err := e.client.ProcessTask.Query().
+			open, err := txc.ProcessTask.Query().
 				Where(
 					processtask.ProcessInstanceID(instance.ID),
 					processtask.TaskDefinitionKey(src),

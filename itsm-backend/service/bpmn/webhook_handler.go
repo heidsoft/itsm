@@ -160,6 +160,9 @@ func (h *WebhookHandler) callWebhook(ctx context.Context, variables map[string]i
 
 	// 设置请求头
 	req.Header.Set("Content-Type", "application/json")
+	if idempotencyKey := GetStringFromVars(variables, "_idempotencyKey"); idempotencyKey != "" {
+		req.Header.Set("Idempotency-Key", idempotencyKey)
+	}
 	if headers != "" {
 		// 解析自定义Headers (JSON格式)
 		var headerMap map[string]string
