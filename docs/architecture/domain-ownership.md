@@ -3,12 +3,13 @@
 | 领域 | 当前生产入口 | 目标所有者 | 事务所有者 | 当前策略 |
 |---|---|---|---|---|
 | Ticket | legacy controller/service | Ticket application service | Ticket service | 首版保留，不并入通用 Ticket 抽象 |
-| Incident | legacy + `handlers/incident` | `handlers/incident` | Incident application service | 保持 API，逐端点迁移后一次切路由 |
+| Incident | 全部在 legacy（`/incidents` 30+ 端点） | `handlers/incident` | Incident application service | **延后至 v1.7**（2026-08-29 决策）：新层已实现约六成但零路由，生产化前不做切换；`handlers/incident` 实现保留，待补齐 9 个生命周期端点后一次切路由 |
 | Change | legacy + `handlers/change` | `handlers/change` | Change application service | BPMN 启动只写 command |
-| Problem / Known Error | `handlers/problem`、`handlers/known_error` | 对应领域切片 | 对应 application service | 补齐知识发布闭环 |
+| Problem / Known Error | `handlers/problem`、`handlers/known_error` | 对应领域切片 | 对应 application service | `/problems` 已在新层；调查子域 `/problem-investigation` 为独立互补功能，暂留旧层 |
 | Service Request | legacy + `handlers/service_request` | `handlers/service_request` | Request application service | 审批、通知和 provisioning 使用 command |
-| CMDB | `handlers/cmdb` + cloud service | `handlers/cmdb` | CMDB service / Job | 发现长任务使用 Job，command 只调度 |
-| SLA | legacy + `handlers/sla` | `handlers/sla` | SLA service | 仅 Worker 执行计时与升级 |
+| CMDB | `handlers/cmdb`（主体 21 端点） | `handlers/cmdb` | CMDB service / Job | 已切新层；仅剩弃用别名 `/configuration-items` 与 `/incidents/configuration-items`，禁止新增端点，待移除 |
+| SLA | `handlers/sla`（`/sla` 全套） | `handlers/sla` | SLA service | 已切新层；仅模板留 `SLATemplateController`；仅 Worker 执行计时与升级 |
+| Knowledge | `handlers/knowledge` | `handlers/knowledge` | Knowledge application service | **迁移完成**（2026-08-29）：零接线的旧控制器已删除 |
 | Workflow | BPMN services | Workflow application service | 发起领域事务 + command | BPMN 是唯一编排层 |
 | Notification | notification services | Notification delivery handler | 生产领域事务 + command | 所有渠道统一 `notification.deliver` |
 | Connector | connector framework | Connector application service | Connector service | 飞书先行，Marketplace 暂只读 Pilot |
