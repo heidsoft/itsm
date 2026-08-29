@@ -16,13 +16,18 @@ import (
 
 // Runner 负责三层架构的调度：Discover → Transform → Reconcile
 type Runner struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client   *ent.Client
+	logger   *zap.SugaredLogger
+	registry *Registry
 }
 
 // NewRunner 构造 Runner
 func NewRunner(client *ent.Client, logger *zap.SugaredLogger) *Runner {
-	return &Runner{client: client, logger: logger}
+	return NewRunnerWithRegistry(client, logger, GlobalRegistry())
+}
+
+func NewRunnerWithRegistry(client *ent.Client, logger *zap.SugaredLogger, registry *Registry) *Runner {
+	return &Runner{client: client, logger: logger, registry: registry}
 }
 
 // RunAll 执行全量云资源发现
@@ -60,7 +65,10 @@ func (r *Runner) RunAll(ctx context.Context, tenantID int, opts ...Option) error
 }
 
 func (r *Runner) runAccount(ctx context.Context, account *ent.CloudAccount, cfg *Config) error {
-	adapters := GlobalRegistry().GetByAccount(account)
+	if r.registry == nil {
+		return fmt.Errorf("cloud adapter registry is not configured")
+	}
+	adapters := r.registry.GetByAccount(account)
 	if len(adapters) == 0 {
 		return fmt.Errorf("no adapters for provider=%s", account.Provider)
 	}

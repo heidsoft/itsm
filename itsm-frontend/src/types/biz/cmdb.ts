@@ -87,6 +87,17 @@ export interface CloudResource {
   cloudAccountId: number;
   serviceId: number;
   resourceId: string;
+  identityVersion: number;
+  provider?: string;
+  partition?: string;
+  canonicalAccountId?: string;
+  resourceScope?: string;
+  serviceCode?: string;
+  resourceType?: string;
+  identityHash?: string;
+  sourceId?: string;
+  sourceFingerprint?: string;
+  missingCount: number;
   resourceName?: string;
   region?: string;
   zone?: string;
@@ -115,6 +126,13 @@ export interface DiscoverySource {
   provider?: string;
   isActive: boolean;
   description?: string;
+  cloudAccountId?: number;
+  serviceCodes?: string[];
+  regions?: string[];
+  schedule?: string;
+  reconcilePolicy: 'manual' | 'discovered_wins' | 'cmdb_wins';
+  staleThreshold: number;
+  lastSuccessAt?: string;
   tenantId: number;
 }
 
@@ -135,8 +153,15 @@ export interface DiscoveryResult {
   action: string;
   resourceType?: string;
   resourceId?: string;
+  resourceIdentity?: string;
+  identityVersion: number;
+  resourceSnapshot?: Record<string, unknown>;
+  beforeHash?: string;
+  afterHash?: string;
   diff?: Record<string, any>;
   status: string;
+  errorCode?: string;
+  errorMessage?: string;
   tenantId: number;
 }
 

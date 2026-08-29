@@ -159,6 +159,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	role := c.GetString("role")
 	if tenantID == 0 {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
@@ -202,7 +203,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		writeEvent("delta", map[string]string{"content": delta})
 	}
 
-	convID, _, err := h.svc.ChatStream(c.Request.Context(), tenantID, userID, req.Query, req.Limit, req.ConversationID, onSources, onDelta)
+	convID, _, err := h.svc.ChatStream(c.Request.Context(), tenantID, userID, role, req.Query, req.Limit, req.ConversationID, onSources, onDelta)
 	if err != nil {
 		h.svc.logger.Warnw("AI ChatStream 失败", "error", err, "tenantID", tenantID)
 		writeEvent("error", map[string]string{"message": err.Error()})

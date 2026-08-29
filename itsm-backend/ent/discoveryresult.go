@@ -29,10 +29,24 @@ type DiscoveryResult struct {
 	ResourceType string `json:"resource_type,omitempty"`
 	// 资源ID
 	ResourceID string `json:"resource_id,omitempty"`
+	// 规范资源身份哈希
+	ResourceIdentity string `json:"resource_identity,omitempty"`
+	// 身份算法版本
+	IdentityVersion int `json:"identity_version,omitempty"`
+	// 标准化资源事实快照
+	ResourceSnapshot map[string]interface{} `json:"resource_snapshot,omitempty"`
+	// 应用前内容哈希
+	BeforeHash string `json:"before_hash,omitempty"`
+	// 发现后内容哈希
+	AfterHash string `json:"after_hash,omitempty"`
 	// 差异信息
 	Diff map[string]interface{} `json:"diff,omitempty"`
-	// 处理状态（pending/confirmed/ignored）
+	// 处理状态（pending/applying/applied/rejected/apply_failed）
 	Status string `json:"status,omitempty"`
+	// 稳定错误码
+	ErrorCode string `json:"error_code,omitempty"`
+	// 净化后的错误摘要
+	ErrorMessage string `json:"error_message,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
@@ -70,11 +84,11 @@ func (*DiscoveryResult) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case discoveryresult.FieldDiff:
+		case discoveryresult.FieldResourceSnapshot, discoveryresult.FieldDiff:
 			values[i] = new([]byte)
-		case discoveryresult.FieldID, discoveryresult.FieldJobID, discoveryresult.FieldCiID, discoveryresult.FieldTenantID:
+		case discoveryresult.FieldID, discoveryresult.FieldJobID, discoveryresult.FieldCiID, discoveryresult.FieldIdentityVersion, discoveryresult.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case discoveryresult.FieldAction, discoveryresult.FieldResourceType, discoveryresult.FieldResourceID, discoveryresult.FieldStatus:
+		case discoveryresult.FieldAction, discoveryresult.FieldResourceType, discoveryresult.FieldResourceID, discoveryresult.FieldResourceIdentity, discoveryresult.FieldBeforeHash, discoveryresult.FieldAfterHash, discoveryresult.FieldStatus, discoveryresult.FieldErrorCode, discoveryresult.FieldErrorMessage:
 			values[i] = new(sql.NullString)
 		case discoveryresult.FieldCreatedAt, discoveryresult.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -129,6 +143,38 @@ func (_m *DiscoveryResult) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ResourceID = value.String
 			}
+		case discoveryresult.FieldResourceIdentity:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_identity", values[i])
+			} else if value.Valid {
+				_m.ResourceIdentity = value.String
+			}
+		case discoveryresult.FieldIdentityVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field identity_version", values[i])
+			} else if value.Valid {
+				_m.IdentityVersion = int(value.Int64)
+			}
+		case discoveryresult.FieldResourceSnapshot:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_snapshot", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.ResourceSnapshot); err != nil {
+					return fmt.Errorf("unmarshal field resource_snapshot: %w", err)
+				}
+			}
+		case discoveryresult.FieldBeforeHash:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field before_hash", values[i])
+			} else if value.Valid {
+				_m.BeforeHash = value.String
+			}
+		case discoveryresult.FieldAfterHash:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field after_hash", values[i])
+			} else if value.Valid {
+				_m.AfterHash = value.String
+			}
 		case discoveryresult.FieldDiff:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field diff", values[i])
@@ -142,6 +188,18 @@ func (_m *DiscoveryResult) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				_m.Status = value.String
+			}
+		case discoveryresult.FieldErrorCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field error_code", values[i])
+			} else if value.Valid {
+				_m.ErrorCode = value.String
+			}
+		case discoveryresult.FieldErrorMessage:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field error_message", values[i])
+			} else if value.Valid {
+				_m.ErrorMessage = value.String
 			}
 		case discoveryresult.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -217,11 +275,32 @@ func (_m *DiscoveryResult) String() string {
 	builder.WriteString("resource_id=")
 	builder.WriteString(_m.ResourceID)
 	builder.WriteString(", ")
+	builder.WriteString("resource_identity=")
+	builder.WriteString(_m.ResourceIdentity)
+	builder.WriteString(", ")
+	builder.WriteString("identity_version=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IdentityVersion))
+	builder.WriteString(", ")
+	builder.WriteString("resource_snapshot=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ResourceSnapshot))
+	builder.WriteString(", ")
+	builder.WriteString("before_hash=")
+	builder.WriteString(_m.BeforeHash)
+	builder.WriteString(", ")
+	builder.WriteString("after_hash=")
+	builder.WriteString(_m.AfterHash)
+	builder.WriteString(", ")
 	builder.WriteString("diff=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Diff))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(_m.Status)
+	builder.WriteString(", ")
+	builder.WriteString("error_code=")
+	builder.WriteString(_m.ErrorCode)
+	builder.WriteString(", ")
+	builder.WriteString("error_message=")
+	builder.WriteString(_m.ErrorMessage)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))

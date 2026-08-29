@@ -47,6 +47,88 @@ func (_c *DiscoverySourceCreate) SetNillableProvider(v *string) *DiscoverySource
 	return _c
 }
 
+// SetCloudAccountID sets the "cloud_account_id" field.
+func (_c *DiscoverySourceCreate) SetCloudAccountID(v int) *DiscoverySourceCreate {
+	_c.mutation.SetCloudAccountID(v)
+	return _c
+}
+
+// SetNillableCloudAccountID sets the "cloud_account_id" field if the given value is not nil.
+func (_c *DiscoverySourceCreate) SetNillableCloudAccountID(v *int) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetCloudAccountID(*v)
+	}
+	return _c
+}
+
+// SetServiceCodes sets the "service_codes" field.
+func (_c *DiscoverySourceCreate) SetServiceCodes(v []string) *DiscoverySourceCreate {
+	_c.mutation.SetServiceCodes(v)
+	return _c
+}
+
+// SetRegions sets the "regions" field.
+func (_c *DiscoverySourceCreate) SetRegions(v []string) *DiscoverySourceCreate {
+	_c.mutation.SetRegions(v)
+	return _c
+}
+
+// SetSchedule sets the "schedule" field.
+func (_c *DiscoverySourceCreate) SetSchedule(v string) *DiscoverySourceCreate {
+	_c.mutation.SetSchedule(v)
+	return _c
+}
+
+// SetNillableSchedule sets the "schedule" field if the given value is not nil.
+func (_c *DiscoverySourceCreate) SetNillableSchedule(v *string) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetSchedule(*v)
+	}
+	return _c
+}
+
+// SetReconcilePolicy sets the "reconcile_policy" field.
+func (_c *DiscoverySourceCreate) SetReconcilePolicy(v string) *DiscoverySourceCreate {
+	_c.mutation.SetReconcilePolicy(v)
+	return _c
+}
+
+// SetNillableReconcilePolicy sets the "reconcile_policy" field if the given value is not nil.
+func (_c *DiscoverySourceCreate) SetNillableReconcilePolicy(v *string) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetReconcilePolicy(*v)
+	}
+	return _c
+}
+
+// SetStaleThreshold sets the "stale_threshold" field.
+func (_c *DiscoverySourceCreate) SetStaleThreshold(v int) *DiscoverySourceCreate {
+	_c.mutation.SetStaleThreshold(v)
+	return _c
+}
+
+// SetNillableStaleThreshold sets the "stale_threshold" field if the given value is not nil.
+func (_c *DiscoverySourceCreate) SetNillableStaleThreshold(v *int) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetStaleThreshold(*v)
+	}
+	return _c
+}
+
+// SetLastSuccessAt sets the "last_success_at" field.
+func (_c *DiscoverySourceCreate) SetLastSuccessAt(v time.Time) *DiscoverySourceCreate {
+	_c.mutation.SetLastSuccessAt(v)
+	return _c
+}
+
+// SetNillableLastSuccessAt sets the "last_success_at" field if the given value is not nil.
+func (_c *DiscoverySourceCreate) SetNillableLastSuccessAt(v *time.Time) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetLastSuccessAt(*v)
+	}
+	return _c
+}
+
 // SetEnabled sets the "enabled" field.
 func (_c *DiscoverySourceCreate) SetEnabled(v bool) *DiscoverySourceCreate {
 	_c.mutation.SetEnabled(v)
@@ -165,6 +247,14 @@ func (_c *DiscoverySourceCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *DiscoverySourceCreate) defaults() {
+	if _, ok := _c.mutation.ReconcilePolicy(); !ok {
+		v := discoverysource.DefaultReconcilePolicy
+		_c.mutation.SetReconcilePolicy(v)
+	}
+	if _, ok := _c.mutation.StaleThreshold(); !ok {
+		v := discoverysource.DefaultStaleThreshold
+		_c.mutation.SetStaleThreshold(v)
+	}
 	if _, ok := _c.mutation.Enabled(); !ok {
 		v := discoverysource.DefaultEnabled
 		_c.mutation.SetEnabled(v)
@@ -195,6 +285,17 @@ func (_c *DiscoverySourceCreate) check() error {
 	if v, ok := _c.mutation.SourceType(); ok {
 		if err := discoverysource.SourceTypeValidator(v); err != nil {
 			return &ValidationError{Name: "source_type", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.source_type": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.ReconcilePolicy(); !ok {
+		return &ValidationError{Name: "reconcile_policy", err: errors.New(`ent: missing required field "DiscoverySource.reconcile_policy"`)}
+	}
+	if _, ok := _c.mutation.StaleThreshold(); !ok {
+		return &ValidationError{Name: "stale_threshold", err: errors.New(`ent: missing required field "DiscoverySource.stale_threshold"`)}
+	}
+	if v, ok := _c.mutation.StaleThreshold(); ok {
+		if err := discoverysource.StaleThresholdValidator(v); err != nil {
+			return &ValidationError{Name: "stale_threshold", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.stale_threshold": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Enabled(); !ok {
@@ -265,6 +366,34 @@ func (_c *DiscoverySourceCreate) createSpec() (*DiscoverySource, *sqlgraph.Creat
 	if value, ok := _c.mutation.Provider(); ok {
 		_spec.SetField(discoverysource.FieldProvider, field.TypeString, value)
 		_node.Provider = value
+	}
+	if value, ok := _c.mutation.CloudAccountID(); ok {
+		_spec.SetField(discoverysource.FieldCloudAccountID, field.TypeInt, value)
+		_node.CloudAccountID = value
+	}
+	if value, ok := _c.mutation.ServiceCodes(); ok {
+		_spec.SetField(discoverysource.FieldServiceCodes, field.TypeJSON, value)
+		_node.ServiceCodes = value
+	}
+	if value, ok := _c.mutation.Regions(); ok {
+		_spec.SetField(discoverysource.FieldRegions, field.TypeJSON, value)
+		_node.Regions = value
+	}
+	if value, ok := _c.mutation.Schedule(); ok {
+		_spec.SetField(discoverysource.FieldSchedule, field.TypeString, value)
+		_node.Schedule = value
+	}
+	if value, ok := _c.mutation.ReconcilePolicy(); ok {
+		_spec.SetField(discoverysource.FieldReconcilePolicy, field.TypeString, value)
+		_node.ReconcilePolicy = value
+	}
+	if value, ok := _c.mutation.StaleThreshold(); ok {
+		_spec.SetField(discoverysource.FieldStaleThreshold, field.TypeInt, value)
+		_node.StaleThreshold = value
+	}
+	if value, ok := _c.mutation.LastSuccessAt(); ok {
+		_spec.SetField(discoverysource.FieldLastSuccessAt, field.TypeTime, value)
+		_node.LastSuccessAt = value
 	}
 	if value, ok := _c.mutation.Enabled(); ok {
 		_spec.SetField(discoverysource.FieldEnabled, field.TypeBool, value)

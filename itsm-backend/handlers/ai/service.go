@@ -257,19 +257,52 @@ func (s *Service) Chat(ctx context.Context, tenantID, userID int, query string, 
 // ChatStream streams a RAG answer through onDelta while emitting sources
 // separately via onSources. It also persists the resulting conversation and
 // messages after the stream completes so history is preserved.
+//
+// P1-B: 注入按权限过滤后的只读工具。只有当前角色拥有 resource:action 权限的只读工具
+// 才会进入聊天路径；写工具（!ReadOnly）绝不注入。模型发起的工具调用经由 execTool
+// 复用 ExecuteTool 的 RBAC Gate 2 校验 + 审计记录，执行结果回填后继续流式生成。
 func (s *Service) ChatStream(
 	ctx context.Context,
 	tenantID, userID int,
+	role string,
 	query string,
 	limit int,
 	convID int,
 	onSources func([]map[string]any),
 	onDelta func(string),
 ) (int, string, error) {
-	s.logger.Infow("AI ChatStream", "query", query, "tenantID", tenantID, "convID", convID)
+	s.logger.Infow("AI ChatStream", "query", query, "tenantID", tenantID, "convID", convID, "role", role)
 
 	if s.rag == nil {
 		return 0, "", fmt.Errorf("RAG service not initialized")
+	}
+
+	// 按权限过滤只读工具，注入聊天路径；写工具绝不进入聊天路径。
+	var tools []service.LLMTool
+	if s.tools != nil {
+		for _, td := range s.tools.ListTools() {
+			if !td.ReadOnly {
+				continue // 写工具不注入，聊天路径只读
+			}
+			if IsToolRBACEnabled() && s.entClient != nil && role != "" && role != "super_admin" {
+				if !middleware.HasResourcePermission(ctx, s.entClient, role, td.Resource, td.Action, tenantID) {
+					s.logger.Debugw("AI ChatStream: read-only tool filtered by RBAC",
+						"tool", td.Name, "resource", td.Resource, "action", td.Action, "role", role, "tenantID", tenantID)
+					continue
+				}
+			}
+			tools = append(tools, service.LLMTool{
+				Name:        td.Name,
+				Description: td.Description,
+				Parameters:  td.ArgsSchema,
+			})
+		}
+	}
+
+	// 工具执行回调：复用 ExecuteTool 的 RBAC Gate 2 + 审计，与 agent 执行路径一致。
+	execTool := func(name string, args map[string]any) (any, error) {
+		res, _, err := s.ExecuteTool(ctx, userID, tenantID, role, name, args)
+		return res, err
 	}
 
 	var (
@@ -290,7 +323,7 @@ func (s *Service) ChatStream(
 		}
 	}
 
-	if err := s.rag.AskWithLLMStream(ctx, tenantID, query, s.llmGateway, limit, wrappedSources, wrappedDelta); err != nil {
+	if err := s.rag.AskWithLLMStreamWithTools(ctx, tenantID, query, s.llmGateway, limit, tools, wrappedSources, wrappedDelta, execTool); err != nil {
 		return 0, "", err
 	}
 

@@ -65,6 +65,91 @@ func Status(v string) predicate.DiscoveryJob {
 	return predicate.DiscoveryJob(sql.FieldEQ(FieldStatus, v))
 }
 
+// Operation applies equality check predicate on the "operation" field. It's identical to OperationEQ.
+func Operation(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldOperation, v))
+}
+
+// IdempotencyKey applies equality check predicate on the "idempotency_key" field. It's identical to IdempotencyKeyEQ.
+func IdempotencyKey(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldIdempotencyKey, v))
+}
+
+// RequestFingerprint applies equality check predicate on the "request_fingerprint" field. It's identical to RequestFingerprintEQ.
+func RequestFingerprint(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldRequestFingerprint, v))
+}
+
+// SnapshotGeneration applies equality check predicate on the "snapshot_generation" field. It's identical to SnapshotGenerationEQ.
+func SnapshotGeneration(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldSnapshotGeneration, v))
+}
+
+// RequestedBy applies equality check predicate on the "requested_by" field. It's identical to RequestedByEQ.
+func RequestedBy(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldRequestedBy, v))
+}
+
+// QueuedAt applies equality check predicate on the "queued_at" field. It's identical to QueuedAtEQ.
+func QueuedAt(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldQueuedAt, v))
+}
+
+// HeartbeatAt applies equality check predicate on the "heartbeat_at" field. It's identical to HeartbeatAtEQ.
+func HeartbeatAt(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldHeartbeatAt, v))
+}
+
+// LeaseOwner applies equality check predicate on the "lease_owner" field. It's identical to LeaseOwnerEQ.
+func LeaseOwner(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldLeaseOwner, v))
+}
+
+// LeaseExpiresAt applies equality check predicate on the "lease_expires_at" field. It's identical to LeaseExpiresAtEQ.
+func LeaseExpiresAt(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldLeaseExpiresAt, v))
+}
+
+// FencingToken applies equality check predicate on the "fencing_token" field. It's identical to FencingTokenEQ.
+func FencingToken(v int64) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldFencingToken, v))
+}
+
+// Attempt applies equality check predicate on the "attempt" field. It's identical to AttemptEQ.
+func Attempt(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldAttempt, v))
+}
+
+// ParentJobID applies equality check predicate on the "parent_job_id" field. It's identical to ParentJobIDEQ.
+func ParentJobID(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldParentJobID, v))
+}
+
+// MaxAttempts applies equality check predicate on the "max_attempts" field. It's identical to MaxAttemptsEQ.
+func MaxAttempts(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldMaxAttempts, v))
+}
+
+// Progress applies equality check predicate on the "progress" field. It's identical to ProgressEQ.
+func Progress(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldProgress, v))
+}
+
+// ErrorCode applies equality check predicate on the "error_code" field. It's identical to ErrorCodeEQ.
+func ErrorCode(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldErrorCode, v))
+}
+
+// ErrorMessage applies equality check predicate on the "error_message" field. It's identical to ErrorMessageEQ.
+func ErrorMessage(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldErrorMessage, v))
+}
+
+// CancelRequestedAt applies equality check predicate on the "cancel_requested_at" field. It's identical to CancelRequestedAtEQ.
+func CancelRequestedAt(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldCancelRequestedAt, v))
+}
+
 // StartedAt applies equality check predicate on the "started_at" field. It's identical to StartedAtEQ.
 func StartedAt(v time.Time) predicate.DiscoveryJob {
 	return predicate.DiscoveryJob(sql.FieldEQ(FieldStartedAt, v))
@@ -218,6 +303,1021 @@ func StatusEqualFold(v string) predicate.DiscoveryJob {
 // StatusContainsFold applies the ContainsFold predicate on the "status" field.
 func StatusContainsFold(v string) predicate.DiscoveryJob {
 	return predicate.DiscoveryJob(sql.FieldContainsFold(FieldStatus, v))
+}
+
+// OperationEQ applies the EQ predicate on the "operation" field.
+func OperationEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldOperation, v))
+}
+
+// OperationNEQ applies the NEQ predicate on the "operation" field.
+func OperationNEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldOperation, v))
+}
+
+// OperationIn applies the In predicate on the "operation" field.
+func OperationIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldOperation, vs...))
+}
+
+// OperationNotIn applies the NotIn predicate on the "operation" field.
+func OperationNotIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldOperation, vs...))
+}
+
+// OperationGT applies the GT predicate on the "operation" field.
+func OperationGT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldOperation, v))
+}
+
+// OperationGTE applies the GTE predicate on the "operation" field.
+func OperationGTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldOperation, v))
+}
+
+// OperationLT applies the LT predicate on the "operation" field.
+func OperationLT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldOperation, v))
+}
+
+// OperationLTE applies the LTE predicate on the "operation" field.
+func OperationLTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldOperation, v))
+}
+
+// OperationContains applies the Contains predicate on the "operation" field.
+func OperationContains(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContains(FieldOperation, v))
+}
+
+// OperationHasPrefix applies the HasPrefix predicate on the "operation" field.
+func OperationHasPrefix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasPrefix(FieldOperation, v))
+}
+
+// OperationHasSuffix applies the HasSuffix predicate on the "operation" field.
+func OperationHasSuffix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasSuffix(FieldOperation, v))
+}
+
+// OperationEqualFold applies the EqualFold predicate on the "operation" field.
+func OperationEqualFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEqualFold(FieldOperation, v))
+}
+
+// OperationContainsFold applies the ContainsFold predicate on the "operation" field.
+func OperationContainsFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContainsFold(FieldOperation, v))
+}
+
+// IdempotencyKeyEQ applies the EQ predicate on the "idempotency_key" field.
+func IdempotencyKeyEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyNEQ applies the NEQ predicate on the "idempotency_key" field.
+func IdempotencyKeyNEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyIn applies the In predicate on the "idempotency_key" field.
+func IdempotencyKeyIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldIdempotencyKey, vs...))
+}
+
+// IdempotencyKeyNotIn applies the NotIn predicate on the "idempotency_key" field.
+func IdempotencyKeyNotIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldIdempotencyKey, vs...))
+}
+
+// IdempotencyKeyGT applies the GT predicate on the "idempotency_key" field.
+func IdempotencyKeyGT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyGTE applies the GTE predicate on the "idempotency_key" field.
+func IdempotencyKeyGTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyLT applies the LT predicate on the "idempotency_key" field.
+func IdempotencyKeyLT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyLTE applies the LTE predicate on the "idempotency_key" field.
+func IdempotencyKeyLTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyContains applies the Contains predicate on the "idempotency_key" field.
+func IdempotencyKeyContains(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContains(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyHasPrefix applies the HasPrefix predicate on the "idempotency_key" field.
+func IdempotencyKeyHasPrefix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasPrefix(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyHasSuffix applies the HasSuffix predicate on the "idempotency_key" field.
+func IdempotencyKeyHasSuffix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasSuffix(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyIsNil applies the IsNil predicate on the "idempotency_key" field.
+func IdempotencyKeyIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldIdempotencyKey))
+}
+
+// IdempotencyKeyNotNil applies the NotNil predicate on the "idempotency_key" field.
+func IdempotencyKeyNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldIdempotencyKey))
+}
+
+// IdempotencyKeyEqualFold applies the EqualFold predicate on the "idempotency_key" field.
+func IdempotencyKeyEqualFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEqualFold(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyContainsFold applies the ContainsFold predicate on the "idempotency_key" field.
+func IdempotencyKeyContainsFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContainsFold(FieldIdempotencyKey, v))
+}
+
+// RequestFingerprintEQ applies the EQ predicate on the "request_fingerprint" field.
+func RequestFingerprintEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldRequestFingerprint, v))
+}
+
+// RequestFingerprintNEQ applies the NEQ predicate on the "request_fingerprint" field.
+func RequestFingerprintNEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldRequestFingerprint, v))
+}
+
+// RequestFingerprintIn applies the In predicate on the "request_fingerprint" field.
+func RequestFingerprintIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldRequestFingerprint, vs...))
+}
+
+// RequestFingerprintNotIn applies the NotIn predicate on the "request_fingerprint" field.
+func RequestFingerprintNotIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldRequestFingerprint, vs...))
+}
+
+// RequestFingerprintGT applies the GT predicate on the "request_fingerprint" field.
+func RequestFingerprintGT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldRequestFingerprint, v))
+}
+
+// RequestFingerprintGTE applies the GTE predicate on the "request_fingerprint" field.
+func RequestFingerprintGTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldRequestFingerprint, v))
+}
+
+// RequestFingerprintLT applies the LT predicate on the "request_fingerprint" field.
+func RequestFingerprintLT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldRequestFingerprint, v))
+}
+
+// RequestFingerprintLTE applies the LTE predicate on the "request_fingerprint" field.
+func RequestFingerprintLTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldRequestFingerprint, v))
+}
+
+// RequestFingerprintContains applies the Contains predicate on the "request_fingerprint" field.
+func RequestFingerprintContains(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContains(FieldRequestFingerprint, v))
+}
+
+// RequestFingerprintHasPrefix applies the HasPrefix predicate on the "request_fingerprint" field.
+func RequestFingerprintHasPrefix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasPrefix(FieldRequestFingerprint, v))
+}
+
+// RequestFingerprintHasSuffix applies the HasSuffix predicate on the "request_fingerprint" field.
+func RequestFingerprintHasSuffix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasSuffix(FieldRequestFingerprint, v))
+}
+
+// RequestFingerprintIsNil applies the IsNil predicate on the "request_fingerprint" field.
+func RequestFingerprintIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldRequestFingerprint))
+}
+
+// RequestFingerprintNotNil applies the NotNil predicate on the "request_fingerprint" field.
+func RequestFingerprintNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldRequestFingerprint))
+}
+
+// RequestFingerprintEqualFold applies the EqualFold predicate on the "request_fingerprint" field.
+func RequestFingerprintEqualFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEqualFold(FieldRequestFingerprint, v))
+}
+
+// RequestFingerprintContainsFold applies the ContainsFold predicate on the "request_fingerprint" field.
+func RequestFingerprintContainsFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContainsFold(FieldRequestFingerprint, v))
+}
+
+// SourceSnapshotIsNil applies the IsNil predicate on the "source_snapshot" field.
+func SourceSnapshotIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldSourceSnapshot))
+}
+
+// SourceSnapshotNotNil applies the NotNil predicate on the "source_snapshot" field.
+func SourceSnapshotNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldSourceSnapshot))
+}
+
+// ScopeSnapshotIsNil applies the IsNil predicate on the "scope_snapshot" field.
+func ScopeSnapshotIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldScopeSnapshot))
+}
+
+// ScopeSnapshotNotNil applies the NotNil predicate on the "scope_snapshot" field.
+func ScopeSnapshotNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldScopeSnapshot))
+}
+
+// CompletedScopesIsNil applies the IsNil predicate on the "completed_scopes" field.
+func CompletedScopesIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldCompletedScopes))
+}
+
+// CompletedScopesNotNil applies the NotNil predicate on the "completed_scopes" field.
+func CompletedScopesNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldCompletedScopes))
+}
+
+// FailedScopesIsNil applies the IsNil predicate on the "failed_scopes" field.
+func FailedScopesIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldFailedScopes))
+}
+
+// FailedScopesNotNil applies the NotNil predicate on the "failed_scopes" field.
+func FailedScopesNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldFailedScopes))
+}
+
+// SnapshotGenerationEQ applies the EQ predicate on the "snapshot_generation" field.
+func SnapshotGenerationEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldSnapshotGeneration, v))
+}
+
+// SnapshotGenerationNEQ applies the NEQ predicate on the "snapshot_generation" field.
+func SnapshotGenerationNEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldSnapshotGeneration, v))
+}
+
+// SnapshotGenerationIn applies the In predicate on the "snapshot_generation" field.
+func SnapshotGenerationIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldSnapshotGeneration, vs...))
+}
+
+// SnapshotGenerationNotIn applies the NotIn predicate on the "snapshot_generation" field.
+func SnapshotGenerationNotIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldSnapshotGeneration, vs...))
+}
+
+// SnapshotGenerationGT applies the GT predicate on the "snapshot_generation" field.
+func SnapshotGenerationGT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldSnapshotGeneration, v))
+}
+
+// SnapshotGenerationGTE applies the GTE predicate on the "snapshot_generation" field.
+func SnapshotGenerationGTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldSnapshotGeneration, v))
+}
+
+// SnapshotGenerationLT applies the LT predicate on the "snapshot_generation" field.
+func SnapshotGenerationLT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldSnapshotGeneration, v))
+}
+
+// SnapshotGenerationLTE applies the LTE predicate on the "snapshot_generation" field.
+func SnapshotGenerationLTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldSnapshotGeneration, v))
+}
+
+// SnapshotGenerationContains applies the Contains predicate on the "snapshot_generation" field.
+func SnapshotGenerationContains(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContains(FieldSnapshotGeneration, v))
+}
+
+// SnapshotGenerationHasPrefix applies the HasPrefix predicate on the "snapshot_generation" field.
+func SnapshotGenerationHasPrefix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasPrefix(FieldSnapshotGeneration, v))
+}
+
+// SnapshotGenerationHasSuffix applies the HasSuffix predicate on the "snapshot_generation" field.
+func SnapshotGenerationHasSuffix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasSuffix(FieldSnapshotGeneration, v))
+}
+
+// SnapshotGenerationIsNil applies the IsNil predicate on the "snapshot_generation" field.
+func SnapshotGenerationIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldSnapshotGeneration))
+}
+
+// SnapshotGenerationNotNil applies the NotNil predicate on the "snapshot_generation" field.
+func SnapshotGenerationNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldSnapshotGeneration))
+}
+
+// SnapshotGenerationEqualFold applies the EqualFold predicate on the "snapshot_generation" field.
+func SnapshotGenerationEqualFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEqualFold(FieldSnapshotGeneration, v))
+}
+
+// SnapshotGenerationContainsFold applies the ContainsFold predicate on the "snapshot_generation" field.
+func SnapshotGenerationContainsFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContainsFold(FieldSnapshotGeneration, v))
+}
+
+// RequestedByEQ applies the EQ predicate on the "requested_by" field.
+func RequestedByEQ(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldRequestedBy, v))
+}
+
+// RequestedByNEQ applies the NEQ predicate on the "requested_by" field.
+func RequestedByNEQ(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldRequestedBy, v))
+}
+
+// RequestedByIn applies the In predicate on the "requested_by" field.
+func RequestedByIn(vs ...int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldRequestedBy, vs...))
+}
+
+// RequestedByNotIn applies the NotIn predicate on the "requested_by" field.
+func RequestedByNotIn(vs ...int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldRequestedBy, vs...))
+}
+
+// RequestedByGT applies the GT predicate on the "requested_by" field.
+func RequestedByGT(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldRequestedBy, v))
+}
+
+// RequestedByGTE applies the GTE predicate on the "requested_by" field.
+func RequestedByGTE(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldRequestedBy, v))
+}
+
+// RequestedByLT applies the LT predicate on the "requested_by" field.
+func RequestedByLT(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldRequestedBy, v))
+}
+
+// RequestedByLTE applies the LTE predicate on the "requested_by" field.
+func RequestedByLTE(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldRequestedBy, v))
+}
+
+// RequestedByIsNil applies the IsNil predicate on the "requested_by" field.
+func RequestedByIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldRequestedBy))
+}
+
+// RequestedByNotNil applies the NotNil predicate on the "requested_by" field.
+func RequestedByNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldRequestedBy))
+}
+
+// QueuedAtEQ applies the EQ predicate on the "queued_at" field.
+func QueuedAtEQ(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldQueuedAt, v))
+}
+
+// QueuedAtNEQ applies the NEQ predicate on the "queued_at" field.
+func QueuedAtNEQ(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldQueuedAt, v))
+}
+
+// QueuedAtIn applies the In predicate on the "queued_at" field.
+func QueuedAtIn(vs ...time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldQueuedAt, vs...))
+}
+
+// QueuedAtNotIn applies the NotIn predicate on the "queued_at" field.
+func QueuedAtNotIn(vs ...time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldQueuedAt, vs...))
+}
+
+// QueuedAtGT applies the GT predicate on the "queued_at" field.
+func QueuedAtGT(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldQueuedAt, v))
+}
+
+// QueuedAtGTE applies the GTE predicate on the "queued_at" field.
+func QueuedAtGTE(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldQueuedAt, v))
+}
+
+// QueuedAtLT applies the LT predicate on the "queued_at" field.
+func QueuedAtLT(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldQueuedAt, v))
+}
+
+// QueuedAtLTE applies the LTE predicate on the "queued_at" field.
+func QueuedAtLTE(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldQueuedAt, v))
+}
+
+// QueuedAtIsNil applies the IsNil predicate on the "queued_at" field.
+func QueuedAtIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldQueuedAt))
+}
+
+// QueuedAtNotNil applies the NotNil predicate on the "queued_at" field.
+func QueuedAtNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldQueuedAt))
+}
+
+// HeartbeatAtEQ applies the EQ predicate on the "heartbeat_at" field.
+func HeartbeatAtEQ(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldHeartbeatAt, v))
+}
+
+// HeartbeatAtNEQ applies the NEQ predicate on the "heartbeat_at" field.
+func HeartbeatAtNEQ(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldHeartbeatAt, v))
+}
+
+// HeartbeatAtIn applies the In predicate on the "heartbeat_at" field.
+func HeartbeatAtIn(vs ...time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldHeartbeatAt, vs...))
+}
+
+// HeartbeatAtNotIn applies the NotIn predicate on the "heartbeat_at" field.
+func HeartbeatAtNotIn(vs ...time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldHeartbeatAt, vs...))
+}
+
+// HeartbeatAtGT applies the GT predicate on the "heartbeat_at" field.
+func HeartbeatAtGT(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldHeartbeatAt, v))
+}
+
+// HeartbeatAtGTE applies the GTE predicate on the "heartbeat_at" field.
+func HeartbeatAtGTE(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldHeartbeatAt, v))
+}
+
+// HeartbeatAtLT applies the LT predicate on the "heartbeat_at" field.
+func HeartbeatAtLT(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldHeartbeatAt, v))
+}
+
+// HeartbeatAtLTE applies the LTE predicate on the "heartbeat_at" field.
+func HeartbeatAtLTE(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldHeartbeatAt, v))
+}
+
+// HeartbeatAtIsNil applies the IsNil predicate on the "heartbeat_at" field.
+func HeartbeatAtIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldHeartbeatAt))
+}
+
+// HeartbeatAtNotNil applies the NotNil predicate on the "heartbeat_at" field.
+func HeartbeatAtNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldHeartbeatAt))
+}
+
+// LeaseOwnerEQ applies the EQ predicate on the "lease_owner" field.
+func LeaseOwnerEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldLeaseOwner, v))
+}
+
+// LeaseOwnerNEQ applies the NEQ predicate on the "lease_owner" field.
+func LeaseOwnerNEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldLeaseOwner, v))
+}
+
+// LeaseOwnerIn applies the In predicate on the "lease_owner" field.
+func LeaseOwnerIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldLeaseOwner, vs...))
+}
+
+// LeaseOwnerNotIn applies the NotIn predicate on the "lease_owner" field.
+func LeaseOwnerNotIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldLeaseOwner, vs...))
+}
+
+// LeaseOwnerGT applies the GT predicate on the "lease_owner" field.
+func LeaseOwnerGT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldLeaseOwner, v))
+}
+
+// LeaseOwnerGTE applies the GTE predicate on the "lease_owner" field.
+func LeaseOwnerGTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldLeaseOwner, v))
+}
+
+// LeaseOwnerLT applies the LT predicate on the "lease_owner" field.
+func LeaseOwnerLT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldLeaseOwner, v))
+}
+
+// LeaseOwnerLTE applies the LTE predicate on the "lease_owner" field.
+func LeaseOwnerLTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldLeaseOwner, v))
+}
+
+// LeaseOwnerContains applies the Contains predicate on the "lease_owner" field.
+func LeaseOwnerContains(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContains(FieldLeaseOwner, v))
+}
+
+// LeaseOwnerHasPrefix applies the HasPrefix predicate on the "lease_owner" field.
+func LeaseOwnerHasPrefix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasPrefix(FieldLeaseOwner, v))
+}
+
+// LeaseOwnerHasSuffix applies the HasSuffix predicate on the "lease_owner" field.
+func LeaseOwnerHasSuffix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasSuffix(FieldLeaseOwner, v))
+}
+
+// LeaseOwnerIsNil applies the IsNil predicate on the "lease_owner" field.
+func LeaseOwnerIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldLeaseOwner))
+}
+
+// LeaseOwnerNotNil applies the NotNil predicate on the "lease_owner" field.
+func LeaseOwnerNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldLeaseOwner))
+}
+
+// LeaseOwnerEqualFold applies the EqualFold predicate on the "lease_owner" field.
+func LeaseOwnerEqualFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEqualFold(FieldLeaseOwner, v))
+}
+
+// LeaseOwnerContainsFold applies the ContainsFold predicate on the "lease_owner" field.
+func LeaseOwnerContainsFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContainsFold(FieldLeaseOwner, v))
+}
+
+// LeaseExpiresAtEQ applies the EQ predicate on the "lease_expires_at" field.
+func LeaseExpiresAtEQ(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldLeaseExpiresAt, v))
+}
+
+// LeaseExpiresAtNEQ applies the NEQ predicate on the "lease_expires_at" field.
+func LeaseExpiresAtNEQ(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldLeaseExpiresAt, v))
+}
+
+// LeaseExpiresAtIn applies the In predicate on the "lease_expires_at" field.
+func LeaseExpiresAtIn(vs ...time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldLeaseExpiresAt, vs...))
+}
+
+// LeaseExpiresAtNotIn applies the NotIn predicate on the "lease_expires_at" field.
+func LeaseExpiresAtNotIn(vs ...time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldLeaseExpiresAt, vs...))
+}
+
+// LeaseExpiresAtGT applies the GT predicate on the "lease_expires_at" field.
+func LeaseExpiresAtGT(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldLeaseExpiresAt, v))
+}
+
+// LeaseExpiresAtGTE applies the GTE predicate on the "lease_expires_at" field.
+func LeaseExpiresAtGTE(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldLeaseExpiresAt, v))
+}
+
+// LeaseExpiresAtLT applies the LT predicate on the "lease_expires_at" field.
+func LeaseExpiresAtLT(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldLeaseExpiresAt, v))
+}
+
+// LeaseExpiresAtLTE applies the LTE predicate on the "lease_expires_at" field.
+func LeaseExpiresAtLTE(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldLeaseExpiresAt, v))
+}
+
+// LeaseExpiresAtIsNil applies the IsNil predicate on the "lease_expires_at" field.
+func LeaseExpiresAtIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldLeaseExpiresAt))
+}
+
+// LeaseExpiresAtNotNil applies the NotNil predicate on the "lease_expires_at" field.
+func LeaseExpiresAtNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldLeaseExpiresAt))
+}
+
+// FencingTokenEQ applies the EQ predicate on the "fencing_token" field.
+func FencingTokenEQ(v int64) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldFencingToken, v))
+}
+
+// FencingTokenNEQ applies the NEQ predicate on the "fencing_token" field.
+func FencingTokenNEQ(v int64) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldFencingToken, v))
+}
+
+// FencingTokenIn applies the In predicate on the "fencing_token" field.
+func FencingTokenIn(vs ...int64) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldFencingToken, vs...))
+}
+
+// FencingTokenNotIn applies the NotIn predicate on the "fencing_token" field.
+func FencingTokenNotIn(vs ...int64) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldFencingToken, vs...))
+}
+
+// FencingTokenGT applies the GT predicate on the "fencing_token" field.
+func FencingTokenGT(v int64) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldFencingToken, v))
+}
+
+// FencingTokenGTE applies the GTE predicate on the "fencing_token" field.
+func FencingTokenGTE(v int64) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldFencingToken, v))
+}
+
+// FencingTokenLT applies the LT predicate on the "fencing_token" field.
+func FencingTokenLT(v int64) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldFencingToken, v))
+}
+
+// FencingTokenLTE applies the LTE predicate on the "fencing_token" field.
+func FencingTokenLTE(v int64) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldFencingToken, v))
+}
+
+// AttemptEQ applies the EQ predicate on the "attempt" field.
+func AttemptEQ(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldAttempt, v))
+}
+
+// AttemptNEQ applies the NEQ predicate on the "attempt" field.
+func AttemptNEQ(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldAttempt, v))
+}
+
+// AttemptIn applies the In predicate on the "attempt" field.
+func AttemptIn(vs ...int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldAttempt, vs...))
+}
+
+// AttemptNotIn applies the NotIn predicate on the "attempt" field.
+func AttemptNotIn(vs ...int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldAttempt, vs...))
+}
+
+// AttemptGT applies the GT predicate on the "attempt" field.
+func AttemptGT(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldAttempt, v))
+}
+
+// AttemptGTE applies the GTE predicate on the "attempt" field.
+func AttemptGTE(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldAttempt, v))
+}
+
+// AttemptLT applies the LT predicate on the "attempt" field.
+func AttemptLT(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldAttempt, v))
+}
+
+// AttemptLTE applies the LTE predicate on the "attempt" field.
+func AttemptLTE(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldAttempt, v))
+}
+
+// ParentJobIDEQ applies the EQ predicate on the "parent_job_id" field.
+func ParentJobIDEQ(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldParentJobID, v))
+}
+
+// ParentJobIDNEQ applies the NEQ predicate on the "parent_job_id" field.
+func ParentJobIDNEQ(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldParentJobID, v))
+}
+
+// ParentJobIDIn applies the In predicate on the "parent_job_id" field.
+func ParentJobIDIn(vs ...int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldParentJobID, vs...))
+}
+
+// ParentJobIDNotIn applies the NotIn predicate on the "parent_job_id" field.
+func ParentJobIDNotIn(vs ...int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldParentJobID, vs...))
+}
+
+// ParentJobIDGT applies the GT predicate on the "parent_job_id" field.
+func ParentJobIDGT(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldParentJobID, v))
+}
+
+// ParentJobIDGTE applies the GTE predicate on the "parent_job_id" field.
+func ParentJobIDGTE(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldParentJobID, v))
+}
+
+// ParentJobIDLT applies the LT predicate on the "parent_job_id" field.
+func ParentJobIDLT(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldParentJobID, v))
+}
+
+// ParentJobIDLTE applies the LTE predicate on the "parent_job_id" field.
+func ParentJobIDLTE(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldParentJobID, v))
+}
+
+// ParentJobIDIsNil applies the IsNil predicate on the "parent_job_id" field.
+func ParentJobIDIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldParentJobID))
+}
+
+// ParentJobIDNotNil applies the NotNil predicate on the "parent_job_id" field.
+func ParentJobIDNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldParentJobID))
+}
+
+// MaxAttemptsEQ applies the EQ predicate on the "max_attempts" field.
+func MaxAttemptsEQ(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldMaxAttempts, v))
+}
+
+// MaxAttemptsNEQ applies the NEQ predicate on the "max_attempts" field.
+func MaxAttemptsNEQ(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldMaxAttempts, v))
+}
+
+// MaxAttemptsIn applies the In predicate on the "max_attempts" field.
+func MaxAttemptsIn(vs ...int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldMaxAttempts, vs...))
+}
+
+// MaxAttemptsNotIn applies the NotIn predicate on the "max_attempts" field.
+func MaxAttemptsNotIn(vs ...int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldMaxAttempts, vs...))
+}
+
+// MaxAttemptsGT applies the GT predicate on the "max_attempts" field.
+func MaxAttemptsGT(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldMaxAttempts, v))
+}
+
+// MaxAttemptsGTE applies the GTE predicate on the "max_attempts" field.
+func MaxAttemptsGTE(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldMaxAttempts, v))
+}
+
+// MaxAttemptsLT applies the LT predicate on the "max_attempts" field.
+func MaxAttemptsLT(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldMaxAttempts, v))
+}
+
+// MaxAttemptsLTE applies the LTE predicate on the "max_attempts" field.
+func MaxAttemptsLTE(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldMaxAttempts, v))
+}
+
+// ProgressEQ applies the EQ predicate on the "progress" field.
+func ProgressEQ(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldProgress, v))
+}
+
+// ProgressNEQ applies the NEQ predicate on the "progress" field.
+func ProgressNEQ(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldProgress, v))
+}
+
+// ProgressIn applies the In predicate on the "progress" field.
+func ProgressIn(vs ...int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldProgress, vs...))
+}
+
+// ProgressNotIn applies the NotIn predicate on the "progress" field.
+func ProgressNotIn(vs ...int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldProgress, vs...))
+}
+
+// ProgressGT applies the GT predicate on the "progress" field.
+func ProgressGT(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldProgress, v))
+}
+
+// ProgressGTE applies the GTE predicate on the "progress" field.
+func ProgressGTE(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldProgress, v))
+}
+
+// ProgressLT applies the LT predicate on the "progress" field.
+func ProgressLT(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldProgress, v))
+}
+
+// ProgressLTE applies the LTE predicate on the "progress" field.
+func ProgressLTE(v int) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldProgress, v))
+}
+
+// ErrorCodeEQ applies the EQ predicate on the "error_code" field.
+func ErrorCodeEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldErrorCode, v))
+}
+
+// ErrorCodeNEQ applies the NEQ predicate on the "error_code" field.
+func ErrorCodeNEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldErrorCode, v))
+}
+
+// ErrorCodeIn applies the In predicate on the "error_code" field.
+func ErrorCodeIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldErrorCode, vs...))
+}
+
+// ErrorCodeNotIn applies the NotIn predicate on the "error_code" field.
+func ErrorCodeNotIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldErrorCode, vs...))
+}
+
+// ErrorCodeGT applies the GT predicate on the "error_code" field.
+func ErrorCodeGT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldErrorCode, v))
+}
+
+// ErrorCodeGTE applies the GTE predicate on the "error_code" field.
+func ErrorCodeGTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldErrorCode, v))
+}
+
+// ErrorCodeLT applies the LT predicate on the "error_code" field.
+func ErrorCodeLT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldErrorCode, v))
+}
+
+// ErrorCodeLTE applies the LTE predicate on the "error_code" field.
+func ErrorCodeLTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldErrorCode, v))
+}
+
+// ErrorCodeContains applies the Contains predicate on the "error_code" field.
+func ErrorCodeContains(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContains(FieldErrorCode, v))
+}
+
+// ErrorCodeHasPrefix applies the HasPrefix predicate on the "error_code" field.
+func ErrorCodeHasPrefix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasPrefix(FieldErrorCode, v))
+}
+
+// ErrorCodeHasSuffix applies the HasSuffix predicate on the "error_code" field.
+func ErrorCodeHasSuffix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasSuffix(FieldErrorCode, v))
+}
+
+// ErrorCodeIsNil applies the IsNil predicate on the "error_code" field.
+func ErrorCodeIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldErrorCode))
+}
+
+// ErrorCodeNotNil applies the NotNil predicate on the "error_code" field.
+func ErrorCodeNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldErrorCode))
+}
+
+// ErrorCodeEqualFold applies the EqualFold predicate on the "error_code" field.
+func ErrorCodeEqualFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEqualFold(FieldErrorCode, v))
+}
+
+// ErrorCodeContainsFold applies the ContainsFold predicate on the "error_code" field.
+func ErrorCodeContainsFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContainsFold(FieldErrorCode, v))
+}
+
+// ErrorMessageEQ applies the EQ predicate on the "error_message" field.
+func ErrorMessageEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldErrorMessage, v))
+}
+
+// ErrorMessageNEQ applies the NEQ predicate on the "error_message" field.
+func ErrorMessageNEQ(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldErrorMessage, v))
+}
+
+// ErrorMessageIn applies the In predicate on the "error_message" field.
+func ErrorMessageIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldErrorMessage, vs...))
+}
+
+// ErrorMessageNotIn applies the NotIn predicate on the "error_message" field.
+func ErrorMessageNotIn(vs ...string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldErrorMessage, vs...))
+}
+
+// ErrorMessageGT applies the GT predicate on the "error_message" field.
+func ErrorMessageGT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldErrorMessage, v))
+}
+
+// ErrorMessageGTE applies the GTE predicate on the "error_message" field.
+func ErrorMessageGTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldErrorMessage, v))
+}
+
+// ErrorMessageLT applies the LT predicate on the "error_message" field.
+func ErrorMessageLT(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldErrorMessage, v))
+}
+
+// ErrorMessageLTE applies the LTE predicate on the "error_message" field.
+func ErrorMessageLTE(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldErrorMessage, v))
+}
+
+// ErrorMessageContains applies the Contains predicate on the "error_message" field.
+func ErrorMessageContains(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContains(FieldErrorMessage, v))
+}
+
+// ErrorMessageHasPrefix applies the HasPrefix predicate on the "error_message" field.
+func ErrorMessageHasPrefix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasPrefix(FieldErrorMessage, v))
+}
+
+// ErrorMessageHasSuffix applies the HasSuffix predicate on the "error_message" field.
+func ErrorMessageHasSuffix(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldHasSuffix(FieldErrorMessage, v))
+}
+
+// ErrorMessageIsNil applies the IsNil predicate on the "error_message" field.
+func ErrorMessageIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldErrorMessage))
+}
+
+// ErrorMessageNotNil applies the NotNil predicate on the "error_message" field.
+func ErrorMessageNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldErrorMessage))
+}
+
+// ErrorMessageEqualFold applies the EqualFold predicate on the "error_message" field.
+func ErrorMessageEqualFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEqualFold(FieldErrorMessage, v))
+}
+
+// ErrorMessageContainsFold applies the ContainsFold predicate on the "error_message" field.
+func ErrorMessageContainsFold(v string) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldContainsFold(FieldErrorMessage, v))
+}
+
+// CancelRequestedAtEQ applies the EQ predicate on the "cancel_requested_at" field.
+func CancelRequestedAtEQ(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldEQ(FieldCancelRequestedAt, v))
+}
+
+// CancelRequestedAtNEQ applies the NEQ predicate on the "cancel_requested_at" field.
+func CancelRequestedAtNEQ(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNEQ(FieldCancelRequestedAt, v))
+}
+
+// CancelRequestedAtIn applies the In predicate on the "cancel_requested_at" field.
+func CancelRequestedAtIn(vs ...time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIn(FieldCancelRequestedAt, vs...))
+}
+
+// CancelRequestedAtNotIn applies the NotIn predicate on the "cancel_requested_at" field.
+func CancelRequestedAtNotIn(vs ...time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotIn(FieldCancelRequestedAt, vs...))
+}
+
+// CancelRequestedAtGT applies the GT predicate on the "cancel_requested_at" field.
+func CancelRequestedAtGT(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGT(FieldCancelRequestedAt, v))
+}
+
+// CancelRequestedAtGTE applies the GTE predicate on the "cancel_requested_at" field.
+func CancelRequestedAtGTE(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldGTE(FieldCancelRequestedAt, v))
+}
+
+// CancelRequestedAtLT applies the LT predicate on the "cancel_requested_at" field.
+func CancelRequestedAtLT(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLT(FieldCancelRequestedAt, v))
+}
+
+// CancelRequestedAtLTE applies the LTE predicate on the "cancel_requested_at" field.
+func CancelRequestedAtLTE(v time.Time) predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldLTE(FieldCancelRequestedAt, v))
+}
+
+// CancelRequestedAtIsNil applies the IsNil predicate on the "cancel_requested_at" field.
+func CancelRequestedAtIsNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldIsNull(FieldCancelRequestedAt))
+}
+
+// CancelRequestedAtNotNil applies the NotNil predicate on the "cancel_requested_at" field.
+func CancelRequestedAtNotNil() predicate.DiscoveryJob {
+	return predicate.DiscoveryJob(sql.FieldNotNull(FieldCancelRequestedAt))
 }
 
 // StartedAtEQ applies the EQ predicate on the "started_at" field.

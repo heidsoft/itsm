@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { App, Badge, Button, Card, Col, Row, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { Alert, App, Badge, Button, Card, Col, Row, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { Cloud, Database, RefreshCw, Server, Sparkles } from 'lucide-react';
 
-import { CMDBApi } from '@/lib/api/cmdb-api';
+import { CMDBApi, type CMDBRuntimeCapability } from '@/lib/api/cmdb-api';
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview, type StatsOverviewItem } from '@/components/ui/StatsOverview';
 
@@ -27,22 +27,25 @@ export default function ServiceGraphRegistryPage() {
   const [cloudServices, setCloudServices] = React.useState<any[]>([]);
   const [cloudAccounts, setCloudAccounts] = React.useState<any[]>([]);
   const [discoveryHistory, setDiscoveryHistory] = React.useState<any[]>([]);
+  const [discoveryCapability, setDiscoveryCapability] = React.useState<CMDBRuntimeCapability | null>(null);
   const [refreshAt, setRefreshAt] = React.useState<string | null>(null);
 
   const load = React.useCallback(async () => {
     setLoading(true);
     try {
-      const [sources, services, accounts, history] = await Promise.all([
+      const [sources, services, accounts, history, runtimeCapabilities] = await Promise.all([
         CMDBApi.getDiscoverySources(),
         CMDBApi.getCloudServices(),
         CMDBApi.getCloudAccounts(),
         CMDBApi.getDiscoveryHistory(),
+        CMDBApi.getCapabilities(),
       ]);
 
       setDiscoverySources(normalizeList(sources));
       setCloudServices(normalizeList(services));
       setCloudAccounts(normalizeList(accounts));
       setDiscoveryHistory(normalizeList(history));
+      setDiscoveryCapability(runtimeCapabilities.items.find(item => item.key === 'cmdbDiscovery') ?? null);
       setRefreshAt(new Date().toISOString());
     } catch (error) {
       message.error('加载图谱注册中心失败');
@@ -218,6 +221,19 @@ export default function ServiceGraphRegistryPage() {
           </Space>
         }
       />
+
+      {discoveryCapability?.state !== 'ready' ? (
+        <Alert
+          type="warning"
+          showIcon
+          message="云资源自动发现尚未就绪"
+          description={
+            discoveryCapability
+              ? `当前状态：${discoveryCapability.state}；缺失条件：${discoveryCapability.missingRequirements.join('、') || '租户配置'}`
+              : '无法读取后端能力状态；后端将按未就绪状态拒绝自动发现请求。'
+          }
+        />
+      ) : null}
 
       <StatsOverview items={statsItems} />
 

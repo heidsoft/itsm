@@ -24,10 +24,24 @@ const (
 	FieldResourceType = "resource_type"
 	// FieldResourceID holds the string denoting the resource_id field in the database.
 	FieldResourceID = "resource_id"
+	// FieldResourceIdentity holds the string denoting the resource_identity field in the database.
+	FieldResourceIdentity = "resource_identity"
+	// FieldIdentityVersion holds the string denoting the identity_version field in the database.
+	FieldIdentityVersion = "identity_version"
+	// FieldResourceSnapshot holds the string denoting the resource_snapshot field in the database.
+	FieldResourceSnapshot = "resource_snapshot"
+	// FieldBeforeHash holds the string denoting the before_hash field in the database.
+	FieldBeforeHash = "before_hash"
+	// FieldAfterHash holds the string denoting the after_hash field in the database.
+	FieldAfterHash = "after_hash"
 	// FieldDiff holds the string denoting the diff field in the database.
 	FieldDiff = "diff"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldErrorCode holds the string denoting the error_code field in the database.
+	FieldErrorCode = "error_code"
+	// FieldErrorMessage holds the string denoting the error_message field in the database.
+	FieldErrorMessage = "error_message"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -55,8 +69,15 @@ var Columns = []string{
 	FieldAction,
 	FieldResourceType,
 	FieldResourceID,
+	FieldResourceIdentity,
+	FieldIdentityVersion,
+	FieldResourceSnapshot,
+	FieldBeforeHash,
+	FieldAfterHash,
 	FieldDiff,
 	FieldStatus,
+	FieldErrorCode,
+	FieldErrorMessage,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -77,6 +98,10 @@ var (
 	JobIDValidator func(int) error
 	// ActionValidator is a validator for the "action" field. It is called by the builders before save.
 	ActionValidator func(string) error
+	// DefaultIdentityVersion holds the default value on creation for the "identity_version" field.
+	DefaultIdentityVersion int
+	// IdentityVersionValidator is a validator for the "identity_version" field. It is called by the builders before save.
+	IdentityVersionValidator func(int) error
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
@@ -122,9 +147,39 @@ func ByResourceID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResourceID, opts...).ToFunc()
 }
 
+// ByResourceIdentity orders the results by the resource_identity field.
+func ByResourceIdentity(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResourceIdentity, opts...).ToFunc()
+}
+
+// ByIdentityVersion orders the results by the identity_version field.
+func ByIdentityVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIdentityVersion, opts...).ToFunc()
+}
+
+// ByBeforeHash orders the results by the before_hash field.
+func ByBeforeHash(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBeforeHash, opts...).ToFunc()
+}
+
+// ByAfterHash orders the results by the after_hash field.
+func ByAfterHash(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAfterHash, opts...).ToFunc()
+}
+
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByErrorCode orders the results by the error_code field.
+func ByErrorCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldErrorCode, opts...).ToFunc()
+}
+
+// ByErrorMessage orders the results by the error_message field.
+func ByErrorMessage(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldErrorMessage, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.

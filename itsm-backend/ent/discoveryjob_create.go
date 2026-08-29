@@ -42,6 +42,268 @@ func (_c *DiscoveryJobCreate) SetNillableStatus(v *string) *DiscoveryJobCreate {
 	return _c
 }
 
+// SetOperation sets the "operation" field.
+func (_c *DiscoveryJobCreate) SetOperation(v string) *DiscoveryJobCreate {
+	_c.mutation.SetOperation(v)
+	return _c
+}
+
+// SetNillableOperation sets the "operation" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableOperation(v *string) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetOperation(*v)
+	}
+	return _c
+}
+
+// SetIdempotencyKey sets the "idempotency_key" field.
+func (_c *DiscoveryJobCreate) SetIdempotencyKey(v string) *DiscoveryJobCreate {
+	_c.mutation.SetIdempotencyKey(v)
+	return _c
+}
+
+// SetNillableIdempotencyKey sets the "idempotency_key" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableIdempotencyKey(v *string) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetIdempotencyKey(*v)
+	}
+	return _c
+}
+
+// SetRequestFingerprint sets the "request_fingerprint" field.
+func (_c *DiscoveryJobCreate) SetRequestFingerprint(v string) *DiscoveryJobCreate {
+	_c.mutation.SetRequestFingerprint(v)
+	return _c
+}
+
+// SetNillableRequestFingerprint sets the "request_fingerprint" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableRequestFingerprint(v *string) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetRequestFingerprint(*v)
+	}
+	return _c
+}
+
+// SetSourceSnapshot sets the "source_snapshot" field.
+func (_c *DiscoveryJobCreate) SetSourceSnapshot(v map[string]interface{}) *DiscoveryJobCreate {
+	_c.mutation.SetSourceSnapshot(v)
+	return _c
+}
+
+// SetScopeSnapshot sets the "scope_snapshot" field.
+func (_c *DiscoveryJobCreate) SetScopeSnapshot(v map[string]interface{}) *DiscoveryJobCreate {
+	_c.mutation.SetScopeSnapshot(v)
+	return _c
+}
+
+// SetCompletedScopes sets the "completed_scopes" field.
+func (_c *DiscoveryJobCreate) SetCompletedScopes(v []string) *DiscoveryJobCreate {
+	_c.mutation.SetCompletedScopes(v)
+	return _c
+}
+
+// SetFailedScopes sets the "failed_scopes" field.
+func (_c *DiscoveryJobCreate) SetFailedScopes(v []string) *DiscoveryJobCreate {
+	_c.mutation.SetFailedScopes(v)
+	return _c
+}
+
+// SetSnapshotGeneration sets the "snapshot_generation" field.
+func (_c *DiscoveryJobCreate) SetSnapshotGeneration(v string) *DiscoveryJobCreate {
+	_c.mutation.SetSnapshotGeneration(v)
+	return _c
+}
+
+// SetNillableSnapshotGeneration sets the "snapshot_generation" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableSnapshotGeneration(v *string) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetSnapshotGeneration(*v)
+	}
+	return _c
+}
+
+// SetRequestedBy sets the "requested_by" field.
+func (_c *DiscoveryJobCreate) SetRequestedBy(v int) *DiscoveryJobCreate {
+	_c.mutation.SetRequestedBy(v)
+	return _c
+}
+
+// SetNillableRequestedBy sets the "requested_by" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableRequestedBy(v *int) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetRequestedBy(*v)
+	}
+	return _c
+}
+
+// SetQueuedAt sets the "queued_at" field.
+func (_c *DiscoveryJobCreate) SetQueuedAt(v time.Time) *DiscoveryJobCreate {
+	_c.mutation.SetQueuedAt(v)
+	return _c
+}
+
+// SetNillableQueuedAt sets the "queued_at" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableQueuedAt(v *time.Time) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetQueuedAt(*v)
+	}
+	return _c
+}
+
+// SetHeartbeatAt sets the "heartbeat_at" field.
+func (_c *DiscoveryJobCreate) SetHeartbeatAt(v time.Time) *DiscoveryJobCreate {
+	_c.mutation.SetHeartbeatAt(v)
+	return _c
+}
+
+// SetNillableHeartbeatAt sets the "heartbeat_at" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableHeartbeatAt(v *time.Time) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetHeartbeatAt(*v)
+	}
+	return _c
+}
+
+// SetLeaseOwner sets the "lease_owner" field.
+func (_c *DiscoveryJobCreate) SetLeaseOwner(v string) *DiscoveryJobCreate {
+	_c.mutation.SetLeaseOwner(v)
+	return _c
+}
+
+// SetNillableLeaseOwner sets the "lease_owner" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableLeaseOwner(v *string) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetLeaseOwner(*v)
+	}
+	return _c
+}
+
+// SetLeaseExpiresAt sets the "lease_expires_at" field.
+func (_c *DiscoveryJobCreate) SetLeaseExpiresAt(v time.Time) *DiscoveryJobCreate {
+	_c.mutation.SetLeaseExpiresAt(v)
+	return _c
+}
+
+// SetNillableLeaseExpiresAt sets the "lease_expires_at" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableLeaseExpiresAt(v *time.Time) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetLeaseExpiresAt(*v)
+	}
+	return _c
+}
+
+// SetFencingToken sets the "fencing_token" field.
+func (_c *DiscoveryJobCreate) SetFencingToken(v int64) *DiscoveryJobCreate {
+	_c.mutation.SetFencingToken(v)
+	return _c
+}
+
+// SetNillableFencingToken sets the "fencing_token" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableFencingToken(v *int64) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetFencingToken(*v)
+	}
+	return _c
+}
+
+// SetAttempt sets the "attempt" field.
+func (_c *DiscoveryJobCreate) SetAttempt(v int) *DiscoveryJobCreate {
+	_c.mutation.SetAttempt(v)
+	return _c
+}
+
+// SetNillableAttempt sets the "attempt" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableAttempt(v *int) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetAttempt(*v)
+	}
+	return _c
+}
+
+// SetParentJobID sets the "parent_job_id" field.
+func (_c *DiscoveryJobCreate) SetParentJobID(v int) *DiscoveryJobCreate {
+	_c.mutation.SetParentJobID(v)
+	return _c
+}
+
+// SetNillableParentJobID sets the "parent_job_id" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableParentJobID(v *int) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetParentJobID(*v)
+	}
+	return _c
+}
+
+// SetMaxAttempts sets the "max_attempts" field.
+func (_c *DiscoveryJobCreate) SetMaxAttempts(v int) *DiscoveryJobCreate {
+	_c.mutation.SetMaxAttempts(v)
+	return _c
+}
+
+// SetNillableMaxAttempts sets the "max_attempts" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableMaxAttempts(v *int) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetMaxAttempts(*v)
+	}
+	return _c
+}
+
+// SetProgress sets the "progress" field.
+func (_c *DiscoveryJobCreate) SetProgress(v int) *DiscoveryJobCreate {
+	_c.mutation.SetProgress(v)
+	return _c
+}
+
+// SetNillableProgress sets the "progress" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableProgress(v *int) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetProgress(*v)
+	}
+	return _c
+}
+
+// SetErrorCode sets the "error_code" field.
+func (_c *DiscoveryJobCreate) SetErrorCode(v string) *DiscoveryJobCreate {
+	_c.mutation.SetErrorCode(v)
+	return _c
+}
+
+// SetNillableErrorCode sets the "error_code" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableErrorCode(v *string) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetErrorCode(*v)
+	}
+	return _c
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (_c *DiscoveryJobCreate) SetErrorMessage(v string) *DiscoveryJobCreate {
+	_c.mutation.SetErrorMessage(v)
+	return _c
+}
+
+// SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableErrorMessage(v *string) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetErrorMessage(*v)
+	}
+	return _c
+}
+
+// SetCancelRequestedAt sets the "cancel_requested_at" field.
+func (_c *DiscoveryJobCreate) SetCancelRequestedAt(v time.Time) *DiscoveryJobCreate {
+	_c.mutation.SetCancelRequestedAt(v)
+	return _c
+}
+
+// SetNillableCancelRequestedAt sets the "cancel_requested_at" field if the given value is not nil.
+func (_c *DiscoveryJobCreate) SetNillableCancelRequestedAt(v *time.Time) *DiscoveryJobCreate {
+	if v != nil {
+		_c.SetCancelRequestedAt(*v)
+	}
+	return _c
+}
+
 // SetStartedAt sets the "started_at" field.
 func (_c *DiscoveryJobCreate) SetStartedAt(v time.Time) *DiscoveryJobCreate {
 	_c.mutation.SetStartedAt(v)
@@ -169,6 +431,26 @@ func (_c *DiscoveryJobCreate) defaults() {
 		v := discoveryjob.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.Operation(); !ok {
+		v := discoveryjob.DefaultOperation
+		_c.mutation.SetOperation(v)
+	}
+	if _, ok := _c.mutation.FencingToken(); !ok {
+		v := discoveryjob.DefaultFencingToken
+		_c.mutation.SetFencingToken(v)
+	}
+	if _, ok := _c.mutation.Attempt(); !ok {
+		v := discoveryjob.DefaultAttempt
+		_c.mutation.SetAttempt(v)
+	}
+	if _, ok := _c.mutation.MaxAttempts(); !ok {
+		v := discoveryjob.DefaultMaxAttempts
+		_c.mutation.SetMaxAttempts(v)
+	}
+	if _, ok := _c.mutation.Progress(); !ok {
+		v := discoveryjob.DefaultProgress
+		_c.mutation.SetProgress(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := discoveryjob.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -191,6 +473,41 @@ func (_c *DiscoveryJobCreate) check() error {
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "DiscoveryJob.status"`)}
+	}
+	if _, ok := _c.mutation.Operation(); !ok {
+		return &ValidationError{Name: "operation", err: errors.New(`ent: missing required field "DiscoveryJob.operation"`)}
+	}
+	if _, ok := _c.mutation.FencingToken(); !ok {
+		return &ValidationError{Name: "fencing_token", err: errors.New(`ent: missing required field "DiscoveryJob.fencing_token"`)}
+	}
+	if v, ok := _c.mutation.FencingToken(); ok {
+		if err := discoveryjob.FencingTokenValidator(v); err != nil {
+			return &ValidationError{Name: "fencing_token", err: fmt.Errorf(`ent: validator failed for field "DiscoveryJob.fencing_token": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Attempt(); !ok {
+		return &ValidationError{Name: "attempt", err: errors.New(`ent: missing required field "DiscoveryJob.attempt"`)}
+	}
+	if v, ok := _c.mutation.Attempt(); ok {
+		if err := discoveryjob.AttemptValidator(v); err != nil {
+			return &ValidationError{Name: "attempt", err: fmt.Errorf(`ent: validator failed for field "DiscoveryJob.attempt": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.MaxAttempts(); !ok {
+		return &ValidationError{Name: "max_attempts", err: errors.New(`ent: missing required field "DiscoveryJob.max_attempts"`)}
+	}
+	if v, ok := _c.mutation.MaxAttempts(); ok {
+		if err := discoveryjob.MaxAttemptsValidator(v); err != nil {
+			return &ValidationError{Name: "max_attempts", err: fmt.Errorf(`ent: validator failed for field "DiscoveryJob.max_attempts": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Progress(); !ok {
+		return &ValidationError{Name: "progress", err: errors.New(`ent: missing required field "DiscoveryJob.progress"`)}
+	}
+	if v, ok := _c.mutation.Progress(); ok {
+		if err := discoveryjob.ProgressValidator(v); err != nil {
+			return &ValidationError{Name: "progress", err: fmt.Errorf(`ent: validator failed for field "DiscoveryJob.progress": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "DiscoveryJob.tenant_id"`)}
@@ -238,6 +555,90 @@ func (_c *DiscoveryJobCreate) createSpec() (*DiscoveryJob, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(discoveryjob.FieldStatus, field.TypeString, value)
 		_node.Status = value
+	}
+	if value, ok := _c.mutation.Operation(); ok {
+		_spec.SetField(discoveryjob.FieldOperation, field.TypeString, value)
+		_node.Operation = value
+	}
+	if value, ok := _c.mutation.IdempotencyKey(); ok {
+		_spec.SetField(discoveryjob.FieldIdempotencyKey, field.TypeString, value)
+		_node.IdempotencyKey = value
+	}
+	if value, ok := _c.mutation.RequestFingerprint(); ok {
+		_spec.SetField(discoveryjob.FieldRequestFingerprint, field.TypeString, value)
+		_node.RequestFingerprint = value
+	}
+	if value, ok := _c.mutation.SourceSnapshot(); ok {
+		_spec.SetField(discoveryjob.FieldSourceSnapshot, field.TypeJSON, value)
+		_node.SourceSnapshot = value
+	}
+	if value, ok := _c.mutation.ScopeSnapshot(); ok {
+		_spec.SetField(discoveryjob.FieldScopeSnapshot, field.TypeJSON, value)
+		_node.ScopeSnapshot = value
+	}
+	if value, ok := _c.mutation.CompletedScopes(); ok {
+		_spec.SetField(discoveryjob.FieldCompletedScopes, field.TypeJSON, value)
+		_node.CompletedScopes = value
+	}
+	if value, ok := _c.mutation.FailedScopes(); ok {
+		_spec.SetField(discoveryjob.FieldFailedScopes, field.TypeJSON, value)
+		_node.FailedScopes = value
+	}
+	if value, ok := _c.mutation.SnapshotGeneration(); ok {
+		_spec.SetField(discoveryjob.FieldSnapshotGeneration, field.TypeString, value)
+		_node.SnapshotGeneration = value
+	}
+	if value, ok := _c.mutation.RequestedBy(); ok {
+		_spec.SetField(discoveryjob.FieldRequestedBy, field.TypeInt, value)
+		_node.RequestedBy = value
+	}
+	if value, ok := _c.mutation.QueuedAt(); ok {
+		_spec.SetField(discoveryjob.FieldQueuedAt, field.TypeTime, value)
+		_node.QueuedAt = value
+	}
+	if value, ok := _c.mutation.HeartbeatAt(); ok {
+		_spec.SetField(discoveryjob.FieldHeartbeatAt, field.TypeTime, value)
+		_node.HeartbeatAt = value
+	}
+	if value, ok := _c.mutation.LeaseOwner(); ok {
+		_spec.SetField(discoveryjob.FieldLeaseOwner, field.TypeString, value)
+		_node.LeaseOwner = value
+	}
+	if value, ok := _c.mutation.LeaseExpiresAt(); ok {
+		_spec.SetField(discoveryjob.FieldLeaseExpiresAt, field.TypeTime, value)
+		_node.LeaseExpiresAt = value
+	}
+	if value, ok := _c.mutation.FencingToken(); ok {
+		_spec.SetField(discoveryjob.FieldFencingToken, field.TypeInt64, value)
+		_node.FencingToken = value
+	}
+	if value, ok := _c.mutation.Attempt(); ok {
+		_spec.SetField(discoveryjob.FieldAttempt, field.TypeInt, value)
+		_node.Attempt = value
+	}
+	if value, ok := _c.mutation.ParentJobID(); ok {
+		_spec.SetField(discoveryjob.FieldParentJobID, field.TypeInt, value)
+		_node.ParentJobID = value
+	}
+	if value, ok := _c.mutation.MaxAttempts(); ok {
+		_spec.SetField(discoveryjob.FieldMaxAttempts, field.TypeInt, value)
+		_node.MaxAttempts = value
+	}
+	if value, ok := _c.mutation.Progress(); ok {
+		_spec.SetField(discoveryjob.FieldProgress, field.TypeInt, value)
+		_node.Progress = value
+	}
+	if value, ok := _c.mutation.ErrorCode(); ok {
+		_spec.SetField(discoveryjob.FieldErrorCode, field.TypeString, value)
+		_node.ErrorCode = value
+	}
+	if value, ok := _c.mutation.ErrorMessage(); ok {
+		_spec.SetField(discoveryjob.FieldErrorMessage, field.TypeString, value)
+		_node.ErrorMessage = value
+	}
+	if value, ok := _c.mutation.CancelRequestedAt(); ok {
+		_spec.SetField(discoveryjob.FieldCancelRequestedAt, field.TypeTime, value)
+		_node.CancelRequestedAt = value
 	}
 	if value, ok := _c.mutation.StartedAt(); ok {
 		_spec.SetField(discoveryjob.FieldStartedAt, field.TypeTime, value)

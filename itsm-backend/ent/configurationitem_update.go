@@ -373,6 +373,107 @@ func (_u *ConfigurationItemUpdate) ClearSource() *ConfigurationItemUpdate {
 	return _u
 }
 
+// SetSourceID sets the "source_id" field.
+func (_u *ConfigurationItemUpdate) SetSourceID(v string) *ConfigurationItemUpdate {
+	_u.mutation.SetSourceID(v)
+	return _u
+}
+
+// SetNillableSourceID sets the "source_id" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableSourceID(v *string) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetSourceID(*v)
+	}
+	return _u
+}
+
+// ClearSourceID clears the value of the "source_id" field.
+func (_u *ConfigurationItemUpdate) ClearSourceID() *ConfigurationItemUpdate {
+	_u.mutation.ClearSourceID()
+	return _u
+}
+
+// SetCanonicalCloudAccountID sets the "canonical_cloud_account_id" field.
+func (_u *ConfigurationItemUpdate) SetCanonicalCloudAccountID(v string) *ConfigurationItemUpdate {
+	_u.mutation.SetCanonicalCloudAccountID(v)
+	return _u
+}
+
+// SetNillableCanonicalCloudAccountID sets the "canonical_cloud_account_id" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableCanonicalCloudAccountID(v *string) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetCanonicalCloudAccountID(*v)
+	}
+	return _u
+}
+
+// ClearCanonicalCloudAccountID clears the value of the "canonical_cloud_account_id" field.
+func (_u *ConfigurationItemUpdate) ClearCanonicalCloudAccountID() *ConfigurationItemUpdate {
+	_u.mutation.ClearCanonicalCloudAccountID()
+	return _u
+}
+
+// SetSourceLastSeenAt sets the "source_last_seen_at" field.
+func (_u *ConfigurationItemUpdate) SetSourceLastSeenAt(v time.Time) *ConfigurationItemUpdate {
+	_u.mutation.SetSourceLastSeenAt(v)
+	return _u
+}
+
+// SetNillableSourceLastSeenAt sets the "source_last_seen_at" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableSourceLastSeenAt(v *time.Time) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetSourceLastSeenAt(*v)
+	}
+	return _u
+}
+
+// ClearSourceLastSeenAt clears the value of the "source_last_seen_at" field.
+func (_u *ConfigurationItemUpdate) ClearSourceLastSeenAt() *ConfigurationItemUpdate {
+	_u.mutation.ClearSourceLastSeenAt()
+	return _u
+}
+
+// SetSourceMissingCount sets the "source_missing_count" field.
+func (_u *ConfigurationItemUpdate) SetSourceMissingCount(v int) *ConfigurationItemUpdate {
+	_u.mutation.ResetSourceMissingCount()
+	_u.mutation.SetSourceMissingCount(v)
+	return _u
+}
+
+// SetNillableSourceMissingCount sets the "source_missing_count" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableSourceMissingCount(v *int) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetSourceMissingCount(*v)
+	}
+	return _u
+}
+
+// AddSourceMissingCount adds value to the "source_missing_count" field.
+func (_u *ConfigurationItemUpdate) AddSourceMissingCount(v int) *ConfigurationItemUpdate {
+	_u.mutation.AddSourceMissingCount(v)
+	return _u
+}
+
+// SetSourceFingerprint sets the "source_fingerprint" field.
+func (_u *ConfigurationItemUpdate) SetSourceFingerprint(v string) *ConfigurationItemUpdate {
+	_u.mutation.SetSourceFingerprint(v)
+	return _u
+}
+
+// SetNillableSourceFingerprint sets the "source_fingerprint" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableSourceFingerprint(v *string) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetSourceFingerprint(*v)
+	}
+	return _u
+}
+
+// ClearSourceFingerprint clears the value of the "source_fingerprint" field.
+func (_u *ConfigurationItemUpdate) ClearSourceFingerprint() *ConfigurationItemUpdate {
+	_u.mutation.ClearSourceFingerprint()
+	return _u
+}
+
 // SetAttributes sets the "attributes" field.
 func (_u *ConfigurationItemUpdate) SetAttributes(v map[string]interface{}) *ConfigurationItemUpdate {
 	_u.mutation.SetAttributes(v)
@@ -1014,6 +1115,11 @@ func (_u *ConfigurationItemUpdate) check() error {
 			return &ValidationError{Name: "ci_type_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.ci_type_id": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.SourceMissingCount(); ok {
+		if err := configurationitem.SourceMissingCountValidator(v); err != nil {
+			return &ValidationError{Name: "source_missing_count", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.source_missing_count": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.TenantID(); ok {
 		if err := configurationitem.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.tenant_id": %w`, err)}
@@ -1126,6 +1232,36 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if _u.mutation.SourceCleared() {
 		_spec.ClearField(configurationitem.FieldSource, field.TypeString)
+	}
+	if value, ok := _u.mutation.SourceID(); ok {
+		_spec.SetField(configurationitem.FieldSourceID, field.TypeString, value)
+	}
+	if _u.mutation.SourceIDCleared() {
+		_spec.ClearField(configurationitem.FieldSourceID, field.TypeString)
+	}
+	if value, ok := _u.mutation.CanonicalCloudAccountID(); ok {
+		_spec.SetField(configurationitem.FieldCanonicalCloudAccountID, field.TypeString, value)
+	}
+	if _u.mutation.CanonicalCloudAccountIDCleared() {
+		_spec.ClearField(configurationitem.FieldCanonicalCloudAccountID, field.TypeString)
+	}
+	if value, ok := _u.mutation.SourceLastSeenAt(); ok {
+		_spec.SetField(configurationitem.FieldSourceLastSeenAt, field.TypeTime, value)
+	}
+	if _u.mutation.SourceLastSeenAtCleared() {
+		_spec.ClearField(configurationitem.FieldSourceLastSeenAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SourceMissingCount(); ok {
+		_spec.SetField(configurationitem.FieldSourceMissingCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSourceMissingCount(); ok {
+		_spec.AddField(configurationitem.FieldSourceMissingCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.SourceFingerprint(); ok {
+		_spec.SetField(configurationitem.FieldSourceFingerprint, field.TypeString, value)
+	}
+	if _u.mutation.SourceFingerprintCleared() {
+		_spec.ClearField(configurationitem.FieldSourceFingerprint, field.TypeString)
 	}
 	if value, ok := _u.mutation.Attributes(); ok {
 		_spec.SetField(configurationitem.FieldAttributes, field.TypeJSON, value)
@@ -1918,6 +2054,107 @@ func (_u *ConfigurationItemUpdateOne) ClearSource() *ConfigurationItemUpdateOne 
 	return _u
 }
 
+// SetSourceID sets the "source_id" field.
+func (_u *ConfigurationItemUpdateOne) SetSourceID(v string) *ConfigurationItemUpdateOne {
+	_u.mutation.SetSourceID(v)
+	return _u
+}
+
+// SetNillableSourceID sets the "source_id" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableSourceID(v *string) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetSourceID(*v)
+	}
+	return _u
+}
+
+// ClearSourceID clears the value of the "source_id" field.
+func (_u *ConfigurationItemUpdateOne) ClearSourceID() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearSourceID()
+	return _u
+}
+
+// SetCanonicalCloudAccountID sets the "canonical_cloud_account_id" field.
+func (_u *ConfigurationItemUpdateOne) SetCanonicalCloudAccountID(v string) *ConfigurationItemUpdateOne {
+	_u.mutation.SetCanonicalCloudAccountID(v)
+	return _u
+}
+
+// SetNillableCanonicalCloudAccountID sets the "canonical_cloud_account_id" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableCanonicalCloudAccountID(v *string) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetCanonicalCloudAccountID(*v)
+	}
+	return _u
+}
+
+// ClearCanonicalCloudAccountID clears the value of the "canonical_cloud_account_id" field.
+func (_u *ConfigurationItemUpdateOne) ClearCanonicalCloudAccountID() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearCanonicalCloudAccountID()
+	return _u
+}
+
+// SetSourceLastSeenAt sets the "source_last_seen_at" field.
+func (_u *ConfigurationItemUpdateOne) SetSourceLastSeenAt(v time.Time) *ConfigurationItemUpdateOne {
+	_u.mutation.SetSourceLastSeenAt(v)
+	return _u
+}
+
+// SetNillableSourceLastSeenAt sets the "source_last_seen_at" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableSourceLastSeenAt(v *time.Time) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetSourceLastSeenAt(*v)
+	}
+	return _u
+}
+
+// ClearSourceLastSeenAt clears the value of the "source_last_seen_at" field.
+func (_u *ConfigurationItemUpdateOne) ClearSourceLastSeenAt() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearSourceLastSeenAt()
+	return _u
+}
+
+// SetSourceMissingCount sets the "source_missing_count" field.
+func (_u *ConfigurationItemUpdateOne) SetSourceMissingCount(v int) *ConfigurationItemUpdateOne {
+	_u.mutation.ResetSourceMissingCount()
+	_u.mutation.SetSourceMissingCount(v)
+	return _u
+}
+
+// SetNillableSourceMissingCount sets the "source_missing_count" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableSourceMissingCount(v *int) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetSourceMissingCount(*v)
+	}
+	return _u
+}
+
+// AddSourceMissingCount adds value to the "source_missing_count" field.
+func (_u *ConfigurationItemUpdateOne) AddSourceMissingCount(v int) *ConfigurationItemUpdateOne {
+	_u.mutation.AddSourceMissingCount(v)
+	return _u
+}
+
+// SetSourceFingerprint sets the "source_fingerprint" field.
+func (_u *ConfigurationItemUpdateOne) SetSourceFingerprint(v string) *ConfigurationItemUpdateOne {
+	_u.mutation.SetSourceFingerprint(v)
+	return _u
+}
+
+// SetNillableSourceFingerprint sets the "source_fingerprint" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableSourceFingerprint(v *string) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetSourceFingerprint(*v)
+	}
+	return _u
+}
+
+// ClearSourceFingerprint clears the value of the "source_fingerprint" field.
+func (_u *ConfigurationItemUpdateOne) ClearSourceFingerprint() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearSourceFingerprint()
+	return _u
+}
+
 // SetAttributes sets the "attributes" field.
 func (_u *ConfigurationItemUpdateOne) SetAttributes(v map[string]interface{}) *ConfigurationItemUpdateOne {
 	_u.mutation.SetAttributes(v)
@@ -2572,6 +2809,11 @@ func (_u *ConfigurationItemUpdateOne) check() error {
 			return &ValidationError{Name: "ci_type_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.ci_type_id": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.SourceMissingCount(); ok {
+		if err := configurationitem.SourceMissingCountValidator(v); err != nil {
+			return &ValidationError{Name: "source_missing_count", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.source_missing_count": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.TenantID(); ok {
 		if err := configurationitem.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.tenant_id": %w`, err)}
@@ -2701,6 +2943,36 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 	}
 	if _u.mutation.SourceCleared() {
 		_spec.ClearField(configurationitem.FieldSource, field.TypeString)
+	}
+	if value, ok := _u.mutation.SourceID(); ok {
+		_spec.SetField(configurationitem.FieldSourceID, field.TypeString, value)
+	}
+	if _u.mutation.SourceIDCleared() {
+		_spec.ClearField(configurationitem.FieldSourceID, field.TypeString)
+	}
+	if value, ok := _u.mutation.CanonicalCloudAccountID(); ok {
+		_spec.SetField(configurationitem.FieldCanonicalCloudAccountID, field.TypeString, value)
+	}
+	if _u.mutation.CanonicalCloudAccountIDCleared() {
+		_spec.ClearField(configurationitem.FieldCanonicalCloudAccountID, field.TypeString)
+	}
+	if value, ok := _u.mutation.SourceLastSeenAt(); ok {
+		_spec.SetField(configurationitem.FieldSourceLastSeenAt, field.TypeTime, value)
+	}
+	if _u.mutation.SourceLastSeenAtCleared() {
+		_spec.ClearField(configurationitem.FieldSourceLastSeenAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.SourceMissingCount(); ok {
+		_spec.SetField(configurationitem.FieldSourceMissingCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSourceMissingCount(); ok {
+		_spec.AddField(configurationitem.FieldSourceMissingCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.SourceFingerprint(); ok {
+		_spec.SetField(configurationitem.FieldSourceFingerprint, field.TypeString, value)
+	}
+	if _u.mutation.SourceFingerprintCleared() {
+		_spec.ClearField(configurationitem.FieldSourceFingerprint, field.TypeString)
 	}
 	if value, ok := _u.mutation.Attributes(); ok {
 		_spec.SetField(configurationitem.FieldAttributes, field.TypeJSON, value)

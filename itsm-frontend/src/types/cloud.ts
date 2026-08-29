@@ -131,6 +131,17 @@ export interface CloudResource {
   cloudAccountId: number;
   serviceId: number;
   resourceId: string;
+  identityVersion: number;
+  provider?: string;
+  partition?: string;
+  canonicalAccountId?: string;
+  resourceScope?: string;
+  serviceCode?: string;
+  resourceType?: string;
+  identityHash?: string;
+  sourceId?: string;
+  sourceFingerprint?: string;
+  missingCount: number;
   resourceName?: string;
   region?: string;
   zone?: string;

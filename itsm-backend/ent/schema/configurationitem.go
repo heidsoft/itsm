@@ -78,6 +78,11 @@ func (ConfigurationItem) Fields() []ent.Field {
 		field.String("source").
 			Comment("数据来源（manual/discovery/import）").
 			Optional(),
+		field.String("source_id").Comment("规范发现来源ID").Optional(),
+		field.String("canonical_cloud_account_id").Comment("云厂商不可变账号ID").Optional(),
+		field.Time("source_last_seen_at").Comment("来源最近确认时间").Optional(),
+		field.Int("source_missing_count").Comment("连续完整快照缺失次数").Default(0).NonNegative(),
+		field.String("source_fingerprint").Comment("来源内容指纹").Optional(),
 
 		// 扩展属性
 		field.JSON("attributes", map[string]interface{}{}).
@@ -187,6 +192,7 @@ func (ConfigurationItem) Indexes() []ent.Index {
 		index.Fields("cloud_account_id"),
 		index.Fields("cloud_region"),
 		index.Fields("cloud_resource_id"),
+		index.Fields("tenant_id", "source_id"),
 		index.Fields("tenant_id", "serial_number").Unique(),
 		index.Fields("ownership_mode"),
 	}

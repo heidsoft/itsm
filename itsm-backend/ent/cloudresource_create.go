@@ -41,6 +41,160 @@ func (_c *CloudResourceCreate) SetResourceID(v string) *CloudResourceCreate {
 	return _c
 }
 
+// SetIdentityVersion sets the "identity_version" field.
+func (_c *CloudResourceCreate) SetIdentityVersion(v int) *CloudResourceCreate {
+	_c.mutation.SetIdentityVersion(v)
+	return _c
+}
+
+// SetNillableIdentityVersion sets the "identity_version" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillableIdentityVersion(v *int) *CloudResourceCreate {
+	if v != nil {
+		_c.SetIdentityVersion(*v)
+	}
+	return _c
+}
+
+// SetProvider sets the "provider" field.
+func (_c *CloudResourceCreate) SetProvider(v string) *CloudResourceCreate {
+	_c.mutation.SetProvider(v)
+	return _c
+}
+
+// SetNillableProvider sets the "provider" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillableProvider(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetProvider(*v)
+	}
+	return _c
+}
+
+// SetPartition sets the "partition" field.
+func (_c *CloudResourceCreate) SetPartition(v string) *CloudResourceCreate {
+	_c.mutation.SetPartition(v)
+	return _c
+}
+
+// SetNillablePartition sets the "partition" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillablePartition(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetPartition(*v)
+	}
+	return _c
+}
+
+// SetCanonicalAccountID sets the "canonical_account_id" field.
+func (_c *CloudResourceCreate) SetCanonicalAccountID(v string) *CloudResourceCreate {
+	_c.mutation.SetCanonicalAccountID(v)
+	return _c
+}
+
+// SetNillableCanonicalAccountID sets the "canonical_account_id" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillableCanonicalAccountID(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetCanonicalAccountID(*v)
+	}
+	return _c
+}
+
+// SetResourceScope sets the "resource_scope" field.
+func (_c *CloudResourceCreate) SetResourceScope(v string) *CloudResourceCreate {
+	_c.mutation.SetResourceScope(v)
+	return _c
+}
+
+// SetNillableResourceScope sets the "resource_scope" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillableResourceScope(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetResourceScope(*v)
+	}
+	return _c
+}
+
+// SetServiceCode sets the "service_code" field.
+func (_c *CloudResourceCreate) SetServiceCode(v string) *CloudResourceCreate {
+	_c.mutation.SetServiceCode(v)
+	return _c
+}
+
+// SetNillableServiceCode sets the "service_code" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillableServiceCode(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetServiceCode(*v)
+	}
+	return _c
+}
+
+// SetResourceType sets the "resource_type" field.
+func (_c *CloudResourceCreate) SetResourceType(v string) *CloudResourceCreate {
+	_c.mutation.SetResourceType(v)
+	return _c
+}
+
+// SetNillableResourceType sets the "resource_type" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillableResourceType(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetResourceType(*v)
+	}
+	return _c
+}
+
+// SetIdentityHash sets the "identity_hash" field.
+func (_c *CloudResourceCreate) SetIdentityHash(v string) *CloudResourceCreate {
+	_c.mutation.SetIdentityHash(v)
+	return _c
+}
+
+// SetNillableIdentityHash sets the "identity_hash" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillableIdentityHash(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetIdentityHash(*v)
+	}
+	return _c
+}
+
+// SetSourceID sets the "source_id" field.
+func (_c *CloudResourceCreate) SetSourceID(v string) *CloudResourceCreate {
+	_c.mutation.SetSourceID(v)
+	return _c
+}
+
+// SetNillableSourceID sets the "source_id" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillableSourceID(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetSourceID(*v)
+	}
+	return _c
+}
+
+// SetSourceFingerprint sets the "source_fingerprint" field.
+func (_c *CloudResourceCreate) SetSourceFingerprint(v string) *CloudResourceCreate {
+	_c.mutation.SetSourceFingerprint(v)
+	return _c
+}
+
+// SetNillableSourceFingerprint sets the "source_fingerprint" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillableSourceFingerprint(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetSourceFingerprint(*v)
+	}
+	return _c
+}
+
+// SetMissingCount sets the "missing_count" field.
+func (_c *CloudResourceCreate) SetMissingCount(v int) *CloudResourceCreate {
+	_c.mutation.SetMissingCount(v)
+	return _c
+}
+
+// SetNillableMissingCount sets the "missing_count" field if the given value is not nil.
+func (_c *CloudResourceCreate) SetNillableMissingCount(v *int) *CloudResourceCreate {
+	if v != nil {
+		_c.SetMissingCount(*v)
+	}
+	return _c
+}
+
 // SetResourceName sets the "resource_name" field.
 func (_c *CloudResourceCreate) SetResourceName(v string) *CloudResourceCreate {
 	_c.mutation.SetResourceName(v)
@@ -251,6 +405,22 @@ func (_c *CloudResourceCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *CloudResourceCreate) defaults() {
+	if _, ok := _c.mutation.IdentityVersion(); !ok {
+		v := cloudresource.DefaultIdentityVersion
+		_c.mutation.SetIdentityVersion(v)
+	}
+	if _, ok := _c.mutation.Partition(); !ok {
+		v := cloudresource.DefaultPartition
+		_c.mutation.SetPartition(v)
+	}
+	if _, ok := _c.mutation.ResourceScope(); !ok {
+		v := cloudresource.DefaultResourceScope
+		_c.mutation.SetResourceScope(v)
+	}
+	if _, ok := _c.mutation.MissingCount(); !ok {
+		v := cloudresource.DefaultMissingCount
+		_c.mutation.SetMissingCount(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := cloudresource.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -285,6 +455,28 @@ func (_c *CloudResourceCreate) check() error {
 	if v, ok := _c.mutation.ResourceID(); ok {
 		if err := cloudresource.ResourceIDValidator(v); err != nil {
 			return &ValidationError{Name: "resource_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.resource_id": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.IdentityVersion(); !ok {
+		return &ValidationError{Name: "identity_version", err: errors.New(`ent: missing required field "CloudResource.identity_version"`)}
+	}
+	if v, ok := _c.mutation.IdentityVersion(); ok {
+		if err := cloudresource.IdentityVersionValidator(v); err != nil {
+			return &ValidationError{Name: "identity_version", err: fmt.Errorf(`ent: validator failed for field "CloudResource.identity_version": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Partition(); !ok {
+		return &ValidationError{Name: "partition", err: errors.New(`ent: missing required field "CloudResource.partition"`)}
+	}
+	if _, ok := _c.mutation.ResourceScope(); !ok {
+		return &ValidationError{Name: "resource_scope", err: errors.New(`ent: missing required field "CloudResource.resource_scope"`)}
+	}
+	if _, ok := _c.mutation.MissingCount(); !ok {
+		return &ValidationError{Name: "missing_count", err: errors.New(`ent: missing required field "CloudResource.missing_count"`)}
+	}
+	if v, ok := _c.mutation.MissingCount(); ok {
+		if err := cloudresource.MissingCountValidator(v); err != nil {
+			return &ValidationError{Name: "missing_count", err: fmt.Errorf(`ent: validator failed for field "CloudResource.missing_count": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.TenantID(); !ok {
@@ -336,6 +528,50 @@ func (_c *CloudResourceCreate) createSpec() (*CloudResource, *sqlgraph.CreateSpe
 	if value, ok := _c.mutation.ResourceID(); ok {
 		_spec.SetField(cloudresource.FieldResourceID, field.TypeString, value)
 		_node.ResourceID = value
+	}
+	if value, ok := _c.mutation.IdentityVersion(); ok {
+		_spec.SetField(cloudresource.FieldIdentityVersion, field.TypeInt, value)
+		_node.IdentityVersion = value
+	}
+	if value, ok := _c.mutation.Provider(); ok {
+		_spec.SetField(cloudresource.FieldProvider, field.TypeString, value)
+		_node.Provider = value
+	}
+	if value, ok := _c.mutation.Partition(); ok {
+		_spec.SetField(cloudresource.FieldPartition, field.TypeString, value)
+		_node.Partition = value
+	}
+	if value, ok := _c.mutation.CanonicalAccountID(); ok {
+		_spec.SetField(cloudresource.FieldCanonicalAccountID, field.TypeString, value)
+		_node.CanonicalAccountID = value
+	}
+	if value, ok := _c.mutation.ResourceScope(); ok {
+		_spec.SetField(cloudresource.FieldResourceScope, field.TypeString, value)
+		_node.ResourceScope = value
+	}
+	if value, ok := _c.mutation.ServiceCode(); ok {
+		_spec.SetField(cloudresource.FieldServiceCode, field.TypeString, value)
+		_node.ServiceCode = value
+	}
+	if value, ok := _c.mutation.ResourceType(); ok {
+		_spec.SetField(cloudresource.FieldResourceType, field.TypeString, value)
+		_node.ResourceType = value
+	}
+	if value, ok := _c.mutation.IdentityHash(); ok {
+		_spec.SetField(cloudresource.FieldIdentityHash, field.TypeString, value)
+		_node.IdentityHash = value
+	}
+	if value, ok := _c.mutation.SourceID(); ok {
+		_spec.SetField(cloudresource.FieldSourceID, field.TypeString, value)
+		_node.SourceID = value
+	}
+	if value, ok := _c.mutation.SourceFingerprint(); ok {
+		_spec.SetField(cloudresource.FieldSourceFingerprint, field.TypeString, value)
+		_node.SourceFingerprint = value
+	}
+	if value, ok := _c.mutation.MissingCount(); ok {
+		_spec.SetField(cloudresource.FieldMissingCount, field.TypeInt, value)
+		_node.MissingCount = value
 	}
 	if value, ok := _c.mutation.ResourceName(); ok {
 		_spec.SetField(cloudresource.FieldResourceName, field.TypeString, value)

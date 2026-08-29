@@ -18,6 +18,48 @@ const (
 	FieldSourceID = "source_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldOperation holds the string denoting the operation field in the database.
+	FieldOperation = "operation"
+	// FieldIdempotencyKey holds the string denoting the idempotency_key field in the database.
+	FieldIdempotencyKey = "idempotency_key"
+	// FieldRequestFingerprint holds the string denoting the request_fingerprint field in the database.
+	FieldRequestFingerprint = "request_fingerprint"
+	// FieldSourceSnapshot holds the string denoting the source_snapshot field in the database.
+	FieldSourceSnapshot = "source_snapshot"
+	// FieldScopeSnapshot holds the string denoting the scope_snapshot field in the database.
+	FieldScopeSnapshot = "scope_snapshot"
+	// FieldCompletedScopes holds the string denoting the completed_scopes field in the database.
+	FieldCompletedScopes = "completed_scopes"
+	// FieldFailedScopes holds the string denoting the failed_scopes field in the database.
+	FieldFailedScopes = "failed_scopes"
+	// FieldSnapshotGeneration holds the string denoting the snapshot_generation field in the database.
+	FieldSnapshotGeneration = "snapshot_generation"
+	// FieldRequestedBy holds the string denoting the requested_by field in the database.
+	FieldRequestedBy = "requested_by"
+	// FieldQueuedAt holds the string denoting the queued_at field in the database.
+	FieldQueuedAt = "queued_at"
+	// FieldHeartbeatAt holds the string denoting the heartbeat_at field in the database.
+	FieldHeartbeatAt = "heartbeat_at"
+	// FieldLeaseOwner holds the string denoting the lease_owner field in the database.
+	FieldLeaseOwner = "lease_owner"
+	// FieldLeaseExpiresAt holds the string denoting the lease_expires_at field in the database.
+	FieldLeaseExpiresAt = "lease_expires_at"
+	// FieldFencingToken holds the string denoting the fencing_token field in the database.
+	FieldFencingToken = "fencing_token"
+	// FieldAttempt holds the string denoting the attempt field in the database.
+	FieldAttempt = "attempt"
+	// FieldParentJobID holds the string denoting the parent_job_id field in the database.
+	FieldParentJobID = "parent_job_id"
+	// FieldMaxAttempts holds the string denoting the max_attempts field in the database.
+	FieldMaxAttempts = "max_attempts"
+	// FieldProgress holds the string denoting the progress field in the database.
+	FieldProgress = "progress"
+	// FieldErrorCode holds the string denoting the error_code field in the database.
+	FieldErrorCode = "error_code"
+	// FieldErrorMessage holds the string denoting the error_message field in the database.
+	FieldErrorMessage = "error_message"
+	// FieldCancelRequestedAt holds the string denoting the cancel_requested_at field in the database.
+	FieldCancelRequestedAt = "cancel_requested_at"
 	// FieldStartedAt holds the string denoting the started_at field in the database.
 	FieldStartedAt = "started_at"
 	// FieldFinishedAt holds the string denoting the finished_at field in the database.
@@ -57,6 +99,27 @@ var Columns = []string{
 	FieldID,
 	FieldSourceID,
 	FieldStatus,
+	FieldOperation,
+	FieldIdempotencyKey,
+	FieldRequestFingerprint,
+	FieldSourceSnapshot,
+	FieldScopeSnapshot,
+	FieldCompletedScopes,
+	FieldFailedScopes,
+	FieldSnapshotGeneration,
+	FieldRequestedBy,
+	FieldQueuedAt,
+	FieldHeartbeatAt,
+	FieldLeaseOwner,
+	FieldLeaseExpiresAt,
+	FieldFencingToken,
+	FieldAttempt,
+	FieldParentJobID,
+	FieldMaxAttempts,
+	FieldProgress,
+	FieldErrorCode,
+	FieldErrorMessage,
+	FieldCancelRequestedAt,
 	FieldStartedAt,
 	FieldFinishedAt,
 	FieldSummary,
@@ -80,6 +143,24 @@ var (
 	SourceIDValidator func(string) error
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
+	// DefaultOperation holds the default value on creation for the "operation" field.
+	DefaultOperation string
+	// DefaultFencingToken holds the default value on creation for the "fencing_token" field.
+	DefaultFencingToken int64
+	// FencingTokenValidator is a validator for the "fencing_token" field. It is called by the builders before save.
+	FencingTokenValidator func(int64) error
+	// DefaultAttempt holds the default value on creation for the "attempt" field.
+	DefaultAttempt int
+	// AttemptValidator is a validator for the "attempt" field. It is called by the builders before save.
+	AttemptValidator func(int) error
+	// DefaultMaxAttempts holds the default value on creation for the "max_attempts" field.
+	DefaultMaxAttempts int
+	// MaxAttemptsValidator is a validator for the "max_attempts" field. It is called by the builders before save.
+	MaxAttemptsValidator func(int) error
+	// DefaultProgress holds the default value on creation for the "progress" field.
+	DefaultProgress int
+	// ProgressValidator is a validator for the "progress" field. It is called by the builders before save.
+	ProgressValidator func(int) error
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -106,6 +187,91 @@ func BySourceID(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByOperation orders the results by the operation field.
+func ByOperation(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOperation, opts...).ToFunc()
+}
+
+// ByIdempotencyKey orders the results by the idempotency_key field.
+func ByIdempotencyKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIdempotencyKey, opts...).ToFunc()
+}
+
+// ByRequestFingerprint orders the results by the request_fingerprint field.
+func ByRequestFingerprint(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRequestFingerprint, opts...).ToFunc()
+}
+
+// BySnapshotGeneration orders the results by the snapshot_generation field.
+func BySnapshotGeneration(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSnapshotGeneration, opts...).ToFunc()
+}
+
+// ByRequestedBy orders the results by the requested_by field.
+func ByRequestedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRequestedBy, opts...).ToFunc()
+}
+
+// ByQueuedAt orders the results by the queued_at field.
+func ByQueuedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldQueuedAt, opts...).ToFunc()
+}
+
+// ByHeartbeatAt orders the results by the heartbeat_at field.
+func ByHeartbeatAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldHeartbeatAt, opts...).ToFunc()
+}
+
+// ByLeaseOwner orders the results by the lease_owner field.
+func ByLeaseOwner(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLeaseOwner, opts...).ToFunc()
+}
+
+// ByLeaseExpiresAt orders the results by the lease_expires_at field.
+func ByLeaseExpiresAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLeaseExpiresAt, opts...).ToFunc()
+}
+
+// ByFencingToken orders the results by the fencing_token field.
+func ByFencingToken(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFencingToken, opts...).ToFunc()
+}
+
+// ByAttempt orders the results by the attempt field.
+func ByAttempt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAttempt, opts...).ToFunc()
+}
+
+// ByParentJobID orders the results by the parent_job_id field.
+func ByParentJobID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldParentJobID, opts...).ToFunc()
+}
+
+// ByMaxAttempts orders the results by the max_attempts field.
+func ByMaxAttempts(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMaxAttempts, opts...).ToFunc()
+}
+
+// ByProgress orders the results by the progress field.
+func ByProgress(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProgress, opts...).ToFunc()
+}
+
+// ByErrorCode orders the results by the error_code field.
+func ByErrorCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldErrorCode, opts...).ToFunc()
+}
+
+// ByErrorMessage orders the results by the error_message field.
+func ByErrorMessage(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldErrorMessage, opts...).ToFunc()
+}
+
+// ByCancelRequestedAt orders the results by the cancel_requested_at field.
+func ByCancelRequestedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCancelRequestedAt, opts...).ToFunc()
 }
 
 // ByStartedAt orders the results by the started_at field.

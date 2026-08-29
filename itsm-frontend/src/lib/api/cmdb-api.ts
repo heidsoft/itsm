@@ -71,11 +71,31 @@ export interface GetCIListResponse {
   total: number;
 }
 
+export type CMDBCapabilityState = 'disabled' | 'unconfigured' | 'unready' | 'ready';
+
+export interface CMDBRuntimeCapability {
+  key: string;
+  state: CMDBCapabilityState;
+  buildCapability: boolean;
+  deploymentReadiness: boolean;
+  tenantReadiness: boolean;
+  actorPermission: boolean;
+  missingRequirements: string[];
+}
+
+export interface CMDBCapabilitiesResponse {
+  items: CMDBRuntimeCapability[];
+}
+
 const BASE = '/api/v1/configuration-items';
 // CI 资源以外的子模块（云资源、云服务、云账号、发现、对账）后端挂在 `/api/v1/cmdb/*` 下
 const CMDB_BASE = '/api/v1/cmdb';
 
 export class CMDBApi {
+  static async getCapabilities(): Promise<CMDBCapabilitiesResponse> {
+    return httpClient.get(`${CMDB_BASE}/capabilities`);
+  }
+
   // ==================== CI CRUD ====================
 
   static async getCIs(query?: GetCIListRequest): Promise<GetCIListResponse> {

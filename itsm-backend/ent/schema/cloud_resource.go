@@ -26,6 +26,17 @@ func (CloudResource) Fields() []ent.Field {
 		field.String("resource_id").
 			Comment("云资源唯一ID").
 			NotEmpty(),
+		field.Int("identity_version").Comment("身份算法版本").Default(1).Positive(),
+		field.String("provider").Comment("规范化云厂商").Optional(),
+		field.String("partition").Comment("云分区").Default("public"),
+		field.String("canonical_account_id").Comment("云厂商不可变账号ID").Optional(),
+		field.String("resource_scope").Comment("global/regional/zonal").Default("regional"),
+		field.String("service_code").Comment("规范化服务代码").Optional(),
+		field.String("resource_type").Comment("规范化资源类型").Optional(),
+		field.String("identity_hash").Comment("规范资源身份哈希").Optional(),
+		field.String("source_id").Comment("最近发现来源ID").Optional(),
+		field.String("source_fingerprint").Comment("最近来源内容指纹").Optional(),
+		field.Int("missing_count").Comment("连续完整快照缺失次数").Default(0).NonNegative(),
 		field.String("resource_name").
 			Comment("云资源名称").
 			Optional(),
@@ -87,9 +98,9 @@ func (CloudResource) Edges() []ent.Edge {
 func (CloudResource) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("tenant_id"),
-		index.Fields("cloud_account_id", "resource_id").
-			Unique(),
+		index.Fields("cloud_account_id", "resource_id"),
 		index.Fields("service_id"),
 		index.Fields("region"),
+		index.Fields("tenant_id", "identity_hash"),
 	}
 }

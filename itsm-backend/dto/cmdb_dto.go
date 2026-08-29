@@ -302,22 +302,47 @@ type CloudAccountResponse struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+type CMDBCapabilityResponse struct {
+	Key                 string   `json:"key"`
+	State               string   `json:"state"`
+	BuildCapability     bool     `json:"buildCapability"`
+	DeploymentReadiness bool     `json:"deploymentReadiness"`
+	TenantReadiness     bool     `json:"tenantReadiness"`
+	ActorPermission     bool     `json:"actorPermission"`
+	MissingRequirements []string `json:"missingRequirements"`
+}
+
+type CMDBCapabilitiesResponse struct {
+	Items []CMDBCapabilityResponse `json:"items"`
+}
+
 // CloudResource DTOs
 type CloudResourceResponse struct {
-	ID             int                    `json:"id"`
-	CloudAccountID int                    `json:"cloudAccountId"`
-	ServiceID      int                    `json:"serviceId"`
-	ResourceID     string                 `json:"resourceId"`
-	ResourceName   string                 `json:"resourceName,omitempty"`
-	Region         string                 `json:"region,omitempty"`
-	Zone           string                 `json:"zone,omitempty"`
-	Status         string                 `json:"status,omitempty"`
-	Tags           map[string]string      `json:"tags,omitempty"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
-	FirstSeenAt    *time.Time             `json:"firstSeenAt,omitempty"`
-	LastSeenAt     *time.Time             `json:"lastSeenAt,omitempty"`
-	LifecycleState string                 `json:"lifecycleState,omitempty"`
-	TenantID       int                    `json:"tenantId,omitempty"`
+	ID                 int                    `json:"id"`
+	CloudAccountID     int                    `json:"cloudAccountId"`
+	ServiceID          int                    `json:"serviceId"`
+	ResourceID         string                 `json:"resourceId"`
+	IdentityVersion    int                    `json:"identityVersion"`
+	Provider           string                 `json:"provider,omitempty"`
+	Partition          string                 `json:"partition,omitempty"`
+	CanonicalAccountID string                 `json:"canonicalAccountId,omitempty"`
+	ResourceScope      string                 `json:"resourceScope,omitempty"`
+	ServiceCode        string                 `json:"serviceCode,omitempty"`
+	ResourceType       string                 `json:"resourceType,omitempty"`
+	IdentityHash       string                 `json:"identityHash,omitempty"`
+	SourceID           string                 `json:"sourceId,omitempty"`
+	SourceFingerprint  string                 `json:"sourceFingerprint,omitempty"`
+	MissingCount       int                    `json:"missingCount"`
+	ResourceName       string                 `json:"resourceName,omitempty"`
+	Region             string                 `json:"region,omitempty"`
+	Zone               string                 `json:"zone,omitempty"`
+	Status             string                 `json:"status,omitempty"`
+	Tags               map[string]string      `json:"tags,omitempty"`
+	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	FirstSeenAt        *time.Time             `json:"firstSeenAt,omitempty"`
+	LastSeenAt         *time.Time             `json:"lastSeenAt,omitempty"`
+	LifecycleState     string                 `json:"lifecycleState,omitempty"`
+	TenantID           int                    `json:"tenantId,omitempty"`
 	// 生命周期管理
 	LifecycleStatus string     `json:"lifecycleStatus,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
 	EffectiveAt     *time.Time `json:"effectiveAt,omitempty"`
@@ -348,21 +373,34 @@ type RelationshipTypeResponse struct {
 
 // Discovery DTOs
 type DiscoverySourceRequest struct {
-	Name        string `json:"name" binding:"required"`
-	SourceType  string `json:"sourceType" binding:"required"`
-	Provider    string `json:"provider,omitempty"`
-	IsActive    *bool  `json:"isActive,omitempty"`
-	Description string `json:"description,omitempty"`
+	Name            string   `json:"name" binding:"required"`
+	SourceType      string   `json:"sourceType" binding:"required"`
+	Provider        string   `json:"provider,omitempty"`
+	IsActive        *bool    `json:"isActive,omitempty"`
+	Description     string   `json:"description,omitempty"`
+	CloudAccountID  int      `json:"cloudAccountId,omitempty"`
+	ServiceCodes    []string `json:"serviceCodes,omitempty"`
+	Regions         []string `json:"regions,omitempty"`
+	Schedule        string   `json:"schedule,omitempty"`
+	ReconcilePolicy string   `json:"reconcilePolicy,omitempty" binding:"omitempty,oneof=manual discovered_wins cmdb_wins"`
+	StaleThreshold  int      `json:"staleThreshold,omitempty" binding:"omitempty,min=1"`
 }
 
 type DiscoverySourceResponse struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	SourceType  string `json:"sourceType"`
-	Provider    string `json:"provider,omitempty"`
-	IsActive    bool   `json:"isActive"`
-	Description string `json:"description,omitempty"`
-	TenantID    int    `json:"tenantId,omitempty"`
+	ID              string     `json:"id"`
+	Name            string     `json:"name"`
+	SourceType      string     `json:"sourceType"`
+	Provider        string     `json:"provider,omitempty"`
+	IsActive        bool       `json:"isActive"`
+	Description     string     `json:"description,omitempty"`
+	CloudAccountID  int        `json:"cloudAccountId,omitempty"`
+	ServiceCodes    []string   `json:"serviceCodes,omitempty"`
+	Regions         []string   `json:"regions,omitempty"`
+	Schedule        string     `json:"schedule,omitempty"`
+	ReconcilePolicy string     `json:"reconcilePolicy"`
+	StaleThreshold  int        `json:"staleThreshold"`
+	LastSuccessAt   *time.Time `json:"lastSuccessAt,omitempty"`
+	TenantID        int        `json:"tenantId,omitempty"`
 	// 生命周期管理
 	LifecycleStatus string     `json:"lifecycleStatus,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
 	EffectiveAt     *time.Time `json:"effectiveAt,omitempty"`
@@ -396,15 +434,22 @@ type DiscoveryJobResponse struct {
 }
 
 type DiscoveryResultResponse struct {
-	ID           int                    `json:"id"`
-	JobID        int                    `json:"jobId"`
-	CIID         int                    `json:"ciId,omitempty"`
-	Action       string                 `json:"action"`
-	ResourceType string                 `json:"resourceType,omitempty"`
-	ResourceID   string                 `json:"resourceId,omitempty"`
-	Diff         map[string]interface{} `json:"diff,omitempty"`
-	Status       string                 `json:"status"`
-	TenantID     int                    `json:"tenantId,omitempty"`
+	ID               int                    `json:"id"`
+	JobID            int                    `json:"jobId"`
+	CIID             int                    `json:"ciId,omitempty"`
+	Action           string                 `json:"action"`
+	ResourceType     string                 `json:"resourceType,omitempty"`
+	ResourceID       string                 `json:"resourceId,omitempty"`
+	ResourceIdentity string                 `json:"resourceIdentity,omitempty"`
+	IdentityVersion  int                    `json:"identityVersion"`
+	ResourceSnapshot map[string]interface{} `json:"resourceSnapshot,omitempty"`
+	BeforeHash       string                 `json:"beforeHash,omitempty"`
+	AfterHash        string                 `json:"afterHash,omitempty"`
+	Diff             map[string]interface{} `json:"diff,omitempty"`
+	Status           string                 `json:"status"`
+	ErrorCode        string                 `json:"errorCode,omitempty"`
+	ErrorMessage     string                 `json:"errorMessage,omitempty"`
+	TenantID         int                    `json:"tenantId,omitempty"`
 	// 生命周期管理
 	LifecycleStatus string     `json:"lifecycleStatus,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
 	EffectiveAt     *time.Time `json:"effectiveAt,omitempty"`

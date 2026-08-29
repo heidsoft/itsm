@@ -2,20 +2,99 @@ package cmdb
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"strings"
+
+	"itsm-backend/common"
+	"itsm-backend/ent"
 
 	"go.uber.org/zap"
 )
 
 type Service struct {
-	repo   Repository
-	logger *zap.SugaredLogger
+	repo             Repository
+	logger           *zap.SugaredLogger
+	discoveryRuntime DiscoveryRuntime
+}
+
+type DiscoveryAdapterInspector interface {
+	HasAdapter(provider, serviceCode string) bool
+}
+
+type DiscoveryRuntime struct {
+	Adapters                DiscoveryAdapterInspector
+	CredentialResolverReady bool
+	WorkerReady             bool
 }
 
 func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
+	return NewServiceWithDiscoveryRuntime(repo, logger, DiscoveryRuntime{})
+}
+
+func NewServiceWithDiscoveryRuntime(repo Repository, logger *zap.SugaredLogger, runtime DiscoveryRuntime) *Service {
 	return &Service{
-		repo:   repo,
-		logger: logger,
+		repo:             repo,
+		logger:           logger,
+		discoveryRuntime: runtime,
 	}
+}
+
+type CapabilityStatus struct {
+	Key                 string
+	State               string
+	BuildCapability     bool
+	DeploymentReadiness bool
+	TenantReadiness     bool
+	ActorPermission     bool
+	MissingRequirements []string
+}
+
+func (s *Service) GetDiscoveryCapability(ctx context.Context, tenantID int) (*CapabilityStatus, error) {
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("tenant ID is required")
+	}
+	missing := make([]string, 0, 4)
+	adapterReady := s.discoveryRuntime.Adapters != nil && s.discoveryRuntime.Adapters.HasAdapter("aliyun", "ecs")
+	if !adapterReady {
+		missing = append(missing, "aliyunEcsAdapter")
+	}
+	if !s.discoveryRuntime.CredentialResolverReady {
+		missing = append(missing, "tenantSecretResolver")
+	}
+	if !s.discoveryRuntime.WorkerReady {
+		missing = append(missing, "discoveryWorker")
+	}
+	accounts, err := s.repo.ListCloudAccounts(ctx, tenantID, "aliyun")
+	if err != nil {
+		return nil, err
+	}
+	tenantReady := false
+	for _, account := range accounts {
+		if account.IsActive && account.CredentialRef != "" {
+			tenantReady = true
+			break
+		}
+	}
+	if !tenantReady {
+		missing = append(missing, "tenantCloudAccount")
+	}
+	deploymentReady := adapterReady && s.discoveryRuntime.CredentialResolverReady && s.discoveryRuntime.WorkerReady
+	state := "ready"
+	switch {
+	case !adapterReady:
+		state = "disabled"
+	case !deploymentReady:
+		state = "unready"
+	case !tenantReady:
+		state = "unconfigured"
+	}
+	return &CapabilityStatus{
+		Key: "cmdbDiscovery", State: state, BuildCapability: true,
+		DeploymentReadiness: deploymentReady, TenantReadiness: tenantReady,
+		ActorPermission: true, MissingRequirements: missing,
+	}, nil
 }
 
 // 未注册路由的 CI / CIType / 关系相关方法属死代码，已删除；
@@ -158,6 +237,9 @@ func (s *Service) GetCloudResource(ctx context.Context, tenantID int, id int) (*
 
 func (s *Service) CreateCloudResource(ctx context.Context, cr *CloudResource) (*CloudResource, error) {
 	s.logger.Infow("Creating cloud resource", "resource_id", cr.ResourceID, "service_id", cr.ServiceID, "tenant_id", cr.TenantID)
+	if err := s.prepareCloudResourceIdentity(ctx, cr); err != nil {
+		return nil, err
+	}
 	result, err := s.repo.CreateCloudResource(ctx, cr)
 	if err != nil {
 		s.logger.Errorw("Failed to create cloud resource", "error", err, "resource_id", cr.ResourceID, "service_id", cr.ServiceID)
@@ -169,6 +251,9 @@ func (s *Service) CreateCloudResource(ctx context.Context, cr *CloudResource) (*
 
 func (s *Service) UpdateCloudResource(ctx context.Context, cr *CloudResource) (*CloudResource, error) {
 	s.logger.Infow("Updating cloud resource", "id", cr.ID, "resource_id", cr.ResourceID, "tenant_id", cr.TenantID)
+	if err := s.prepareCloudResourceIdentity(ctx, cr); err != nil {
+		return nil, err
+	}
 	result, err := s.repo.UpdateCloudResource(ctx, cr)
 	if err != nil {
 		s.logger.Errorw("Failed to update cloud resource", "error", err, "id", cr.ID, "resource_id", cr.ResourceID)
@@ -176,6 +261,59 @@ func (s *Service) UpdateCloudResource(ctx context.Context, cr *CloudResource) (*
 	}
 	s.logger.Infow("Cloud resource updated successfully", "id", result.ID, "resource_id", result.ResourceID)
 	return result, nil
+}
+
+func (s *Service) prepareCloudResourceIdentity(ctx context.Context, resource *CloudResource) error {
+	if resource == nil || resource.TenantID <= 0 || resource.CloudAccountID <= 0 || resource.ServiceID <= 0 || strings.TrimSpace(resource.ResourceID) == "" {
+		return fmt.Errorf("cloud resource identity fields are required")
+	}
+	account, err := s.repo.GetCloudAccount(ctx, resource.TenantID, resource.CloudAccountID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return common.NewNotFoundError("cloud account")
+		}
+		return fmt.Errorf("load tenant cloud account: %w", err)
+	}
+	service, err := s.repo.GetCloudService(ctx, resource.TenantID, resource.ServiceID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return common.NewNotFoundError("cloud service")
+		}
+		return fmt.Errorf("load tenant cloud service: %w", err)
+	}
+	if account == nil || service == nil || account.TenantID != resource.TenantID || service.TenantID != resource.TenantID {
+		return common.NewForbiddenError("cloud resource references must belong to the authenticated tenant")
+	}
+	provider := strings.ToLower(strings.TrimSpace(account.Provider))
+	if provider == "" || provider != strings.ToLower(strings.TrimSpace(service.Provider)) {
+		return fmt.Errorf("cloud account and service provider mismatch")
+	}
+	region := strings.ToLower(strings.TrimSpace(resource.Region))
+	zone := strings.ToLower(strings.TrimSpace(resource.Zone))
+	scope := "global"
+	if zone != "" {
+		scope = "zonal"
+	} else if region != "" {
+		scope = "regional"
+	}
+	resource.IdentityVersion = 1
+	resource.Provider = provider
+	resource.Partition = "public"
+	resource.CanonicalAccountID = strings.TrimSpace(account.AccountID)
+	resource.ResourceScope = scope
+	resource.Region = region
+	resource.Zone = zone
+	resource.ServiceCode = strings.ToLower(strings.TrimSpace(service.ServiceCode))
+	resource.ResourceType = strings.ToLower(strings.TrimSpace(service.ResourceTypeCode))
+	resource.ResourceID = strings.TrimSpace(resource.ResourceID)
+	identity := strings.Join([]string{
+		"v1", fmt.Sprint(resource.TenantID), resource.Provider, resource.Partition,
+		resource.CanonicalAccountID, resource.ResourceScope, resource.Region,
+		resource.ServiceCode, resource.ResourceType, resource.ResourceID,
+	}, "|")
+	hash := sha256.Sum256([]byte(identity))
+	resource.IdentityHash = hex.EncodeToString(hash[:])
+	return nil
 }
 
 func (s *Service) DeleteCloudResource(ctx context.Context, id int, tenantID int) error {
@@ -244,7 +382,32 @@ func (s *Service) GetReconciliation(ctx context.Context, tenantID int) (*Reconci
 
 // Discovery
 func (s *Service) CreateDiscoverySource(ctx context.Context, ds *DiscoverySource) (*DiscoverySource, error) {
+	if ds == nil || ds.TenantID <= 0 {
+		return nil, fmt.Errorf("tenant-scoped discovery source is required")
+	}
 	s.logger.Infow("Creating discovery source", "name", ds.Name, "source_type", ds.SourceType, "tenant_id", ds.TenantID)
+	if ds.ReconcilePolicy == "" {
+		ds.ReconcilePolicy = "manual"
+	}
+	if ds.StaleThreshold == 0 {
+		ds.StaleThreshold = 3
+	}
+	if ds.CloudAccountID > 0 {
+		account, err := s.repo.GetCloudAccount(ctx, ds.TenantID, ds.CloudAccountID)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return nil, common.NewNotFoundError("cloud account")
+			}
+			return nil, fmt.Errorf("load tenant cloud account: %w", err)
+		}
+		if account == nil || account.TenantID != ds.TenantID || !account.IsActive || account.CredentialRef == "" {
+			return nil, common.NewForbiddenError("cloud account must belong to the tenant and be configured and active")
+		}
+		if ds.Provider != "" && strings.ToLower(strings.TrimSpace(ds.Provider)) != strings.ToLower(strings.TrimSpace(account.Provider)) {
+			return nil, fmt.Errorf("discovery source provider does not match cloud account")
+		}
+		ds.Provider = strings.ToLower(strings.TrimSpace(account.Provider))
+	}
 	result, err := s.repo.CreateDiscoverySource(ctx, ds)
 	if err != nil {
 		s.logger.Errorw("Failed to create discovery source", "error", err, "name", ds.Name, "source_type", ds.SourceType)

@@ -76,63 +76,109 @@ type CloudAccount struct {
 
 // CloudResource represents a discovered cloud resource.
 type CloudResource struct {
-	ID             int                    `json:"id"`
-	CloudAccountID int                    `json:"cloudAccountId"`
-	ServiceID      int                    `json:"serviceId"`
-	ResourceID     string                 `json:"resourceId"`
-	ResourceName   string                 `json:"resourceName,omitempty"`
-	Region         string                 `json:"region,omitempty"`
-	Zone           string                 `json:"zone,omitempty"`
-	Status         string                 `json:"status,omitempty"`
-	Tags           map[string]string      `json:"tags,omitempty"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
-	FirstSeenAt    *time.Time             `json:"firstSeenAt,omitempty"`
-	LastSeenAt     *time.Time             `json:"lastSeenAt,omitempty"`
-	LifecycleState string                 `json:"lifecycleState,omitempty"`
-	TenantID       int                    `json:"tenantId"`
-	CreatedAt      time.Time              `json:"createdAt"`
-	UpdatedAt      time.Time              `json:"updatedAt"`
+	ID                 int                    `json:"id"`
+	CloudAccountID     int                    `json:"cloudAccountId"`
+	ServiceID          int                    `json:"serviceId"`
+	ResourceID         string                 `json:"resourceId"`
+	IdentityVersion    int                    `json:"identityVersion"`
+	Provider           string                 `json:"provider,omitempty"`
+	Partition          string                 `json:"partition,omitempty"`
+	CanonicalAccountID string                 `json:"canonicalAccountId,omitempty"`
+	ResourceScope      string                 `json:"resourceScope,omitempty"`
+	ServiceCode        string                 `json:"serviceCode,omitempty"`
+	ResourceType       string                 `json:"resourceType,omitempty"`
+	IdentityHash       string                 `json:"identityHash,omitempty"`
+	SourceID           string                 `json:"sourceId,omitempty"`
+	SourceFingerprint  string                 `json:"sourceFingerprint,omitempty"`
+	MissingCount       int                    `json:"missingCount"`
+	ResourceName       string                 `json:"resourceName,omitempty"`
+	Region             string                 `json:"region,omitempty"`
+	Zone               string                 `json:"zone,omitempty"`
+	Status             string                 `json:"status,omitempty"`
+	Tags               map[string]string      `json:"tags,omitempty"`
+	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	FirstSeenAt        *time.Time             `json:"firstSeenAt,omitempty"`
+	LastSeenAt         *time.Time             `json:"lastSeenAt,omitempty"`
+	LifecycleState     string                 `json:"lifecycleState,omitempty"`
+	TenantID           int                    `json:"tenantId"`
+	CreatedAt          time.Time              `json:"createdAt"`
+	UpdatedAt          time.Time              `json:"updatedAt"`
 }
 
 // DiscoverySource represents a CMDB discovery source.
 type DiscoverySource struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	SourceType  string    `json:"sourceType"`
-	Provider    string    `json:"provider,omitempty"`
-	IsActive    bool      `json:"isActive"`
-	Description string    `json:"description,omitempty"`
-	TenantID    int       `json:"tenantId"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID              string     `json:"id"`
+	Name            string     `json:"name"`
+	SourceType      string     `json:"sourceType"`
+	Provider        string     `json:"provider,omitempty"`
+	CloudAccountID  int        `json:"cloudAccountId,omitempty"`
+	ServiceCodes    []string   `json:"serviceCodes,omitempty"`
+	Regions         []string   `json:"regions,omitempty"`
+	Schedule        string     `json:"schedule,omitempty"`
+	ReconcilePolicy string     `json:"reconcilePolicy"`
+	StaleThreshold  int        `json:"staleThreshold"`
+	LastSuccessAt   *time.Time `json:"lastSuccessAt,omitempty"`
+	IsActive        bool       `json:"isActive"`
+	Description     string     `json:"description,omitempty"`
+	TenantID        int        `json:"tenantId"`
+	CreatedAt       time.Time  `json:"createdAt"`
+	UpdatedAt       time.Time  `json:"updatedAt"`
 }
 
 // DiscoveryJob represents a discovery run.
 type DiscoveryJob struct {
-	ID         int                    `json:"id"`
-	SourceID   string                 `json:"sourceId"`
-	Status     string                 `json:"status"`
-	StartedAt  *time.Time             `json:"startedAt,omitempty"`
-	FinishedAt *time.Time             `json:"finishedAt,omitempty"`
-	Summary    map[string]interface{} `json:"summary,omitempty"`
-	TenantID   int                    `json:"tenantId"`
-	CreatedAt  time.Time              `json:"createdAt"`
-	UpdatedAt  time.Time              `json:"updatedAt"`
+	ID                 int                    `json:"id"`
+	SourceID           string                 `json:"sourceId"`
+	Status             string                 `json:"status"`
+	Operation          string                 `json:"operation"`
+	IdempotencyKey     string                 `json:"idempotencyKey,omitempty"`
+	RequestFingerprint string                 `json:"requestFingerprint,omitempty"`
+	SourceSnapshot     map[string]interface{} `json:"sourceSnapshot,omitempty"`
+	ScopeSnapshot      map[string]interface{} `json:"scopeSnapshot,omitempty"`
+	CompletedScopes    []string               `json:"completedScopes,omitempty"`
+	FailedScopes       []string               `json:"failedScopes,omitempty"`
+	SnapshotGeneration string                 `json:"snapshotGeneration,omitempty"`
+	RequestedBy        int                    `json:"requestedBy,omitempty"`
+	QueuedAt           *time.Time             `json:"queuedAt,omitempty"`
+	HeartbeatAt        *time.Time             `json:"heartbeatAt,omitempty"`
+	LeaseOwner         string                 `json:"leaseOwner,omitempty"`
+	LeaseExpiresAt     *time.Time             `json:"leaseExpiresAt,omitempty"`
+	FencingToken       int64                  `json:"fencingToken"`
+	Attempt            int                    `json:"attempt"`
+	ParentJobID        int                    `json:"parentJobId,omitempty"`
+	MaxAttempts        int                    `json:"maxAttempts"`
+	Progress           int                    `json:"progress"`
+	ErrorCode          string                 `json:"errorCode,omitempty"`
+	ErrorMessage       string                 `json:"errorMessage,omitempty"`
+	CancelRequestedAt  *time.Time             `json:"cancelRequestedAt,omitempty"`
+	StartedAt          *time.Time             `json:"startedAt,omitempty"`
+	FinishedAt         *time.Time             `json:"finishedAt,omitempty"`
+	Summary            map[string]interface{} `json:"summary,omitempty"`
+	TenantID           int                    `json:"tenantId"`
+	CreatedAt          time.Time              `json:"createdAt"`
+	UpdatedAt          time.Time              `json:"updatedAt"`
 }
 
 // DiscoveryResult represents a discovery diff item.
 type DiscoveryResult struct {
-	ID           int                    `json:"id"`
-	JobID        int                    `json:"jobId"`
-	CIID         int                    `json:"ciId,omitempty"`
-	Action       string                 `json:"action"`
-	ResourceType string                 `json:"resourceType,omitempty"`
-	ResourceID   string                 `json:"resourceId,omitempty"`
-	Diff         map[string]interface{} `json:"diff,omitempty"`
-	Status       string                 `json:"status"`
-	TenantID     int                    `json:"tenantId"`
-	CreatedAt    time.Time              `json:"createdAt"`
-	UpdatedAt    time.Time              `json:"updatedAt"`
+	ID               int                    `json:"id"`
+	JobID            int                    `json:"jobId"`
+	CIID             int                    `json:"ciId,omitempty"`
+	Action           string                 `json:"action"`
+	ResourceType     string                 `json:"resourceType,omitempty"`
+	ResourceID       string                 `json:"resourceId,omitempty"`
+	ResourceIdentity string                 `json:"resourceIdentity,omitempty"`
+	IdentityVersion  int                    `json:"identityVersion"`
+	ResourceSnapshot map[string]interface{} `json:"resourceSnapshot,omitempty"`
+	BeforeHash       string                 `json:"beforeHash,omitempty"`
+	AfterHash        string                 `json:"afterHash,omitempty"`
+	Diff             map[string]interface{} `json:"diff,omitempty"`
+	Status           string                 `json:"status"`
+	ErrorCode        string                 `json:"errorCode,omitempty"`
+	ErrorMessage     string                 `json:"errorMessage,omitempty"`
+	TenantID         int                    `json:"tenantId"`
+	CreatedAt        time.Time              `json:"createdAt"`
+	UpdatedAt        time.Time              `json:"updatedAt"`
 }
 
 // ReconciliationSummary represents CMDB reconciliation summary.

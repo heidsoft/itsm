@@ -16,26 +16,26 @@ import (
 // 每个测试可以预设函数字段来改变行为；未预设的方法会返回 nil/空 slice。
 type mockRepository struct {
 	// Cloud services
-	createCloudServiceFn   func(ctx context.Context, cs *CloudService) (*CloudService, error)
-	listCloudServicesFn    func(ctx context.Context, tenantID int, provider string) ([]*CloudService, error)
-	getCloudServiceFn      func(ctx context.Context, tenantID int, id int) (*CloudService, error)
-	updateCloudServiceFn   func(ctx context.Context, cs *CloudService) (*CloudService, error)
-	deleteCloudServiceFn   func(ctx context.Context, id int, tenantID int) error
+	createCloudServiceFn func(ctx context.Context, cs *CloudService) (*CloudService, error)
+	listCloudServicesFn  func(ctx context.Context, tenantID int, provider string) ([]*CloudService, error)
+	getCloudServiceFn    func(ctx context.Context, tenantID int, id int) (*CloudService, error)
+	updateCloudServiceFn func(ctx context.Context, cs *CloudService) (*CloudService, error)
+	deleteCloudServiceFn func(ctx context.Context, id int, tenantID int) error
 
 	// Cloud accounts
-	createCloudAccountFn   func(ctx context.Context, ca *CloudAccount) (*CloudAccount, error)
-	listCloudAccountsFn    func(ctx context.Context, tenantID int, provider string) ([]*CloudAccount, error)
-	getCloudAccountFn      func(ctx context.Context, tenantID int, id int) (*CloudAccount, error)
-	updateCloudAccountFn   func(ctx context.Context, ca *CloudAccount) (*CloudAccount, error)
-	deleteCloudAccountFn   func(ctx context.Context, id int, tenantID int) error
+	createCloudAccountFn func(ctx context.Context, ca *CloudAccount) (*CloudAccount, error)
+	listCloudAccountsFn  func(ctx context.Context, tenantID int, provider string) ([]*CloudAccount, error)
+	getCloudAccountFn    func(ctx context.Context, tenantID int, id int) (*CloudAccount, error)
+	updateCloudAccountFn func(ctx context.Context, ca *CloudAccount) (*CloudAccount, error)
+	deleteCloudAccountFn func(ctx context.Context, id int, tenantID int) error
 
 	// Cloud resources
-	listCloudResourcesFn   func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error)
-	getCloudResourceFn     func(ctx context.Context, tenantID int, id int) (*CloudResource, error)
-	createCloudResourceFn  func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
-	updateCloudResourceFn  func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
-	deleteCloudResourceFn  func(ctx context.Context, id int, tenantID int) error
-	listCIsForReconciliationFn func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
+	listCloudResourcesFn        func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error)
+	getCloudResourceFn          func(ctx context.Context, tenantID int, id int) (*CloudResource, error)
+	createCloudResourceFn       func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
+	updateCloudResourceFn       func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
+	deleteCloudResourceFn       func(ctx context.Context, id int, tenantID int) error
+	listCIsForReconciliationFn  func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
 	getCIByCloudResourceRefIDFn func(ctx context.Context, tenantID int, cloudResourceRefID int) (*ConfigurationItem, error)
 
 	// Discovery
@@ -452,31 +452,66 @@ func TestService_CloudResource_CRUD(t *testing.T) {
 		require.Equal(t, len("cn-hangzhou"), vars.regionLen)
 	})
 
-	t.Run("Create 透传", func(t *testing.T) {
+	t.Run("Create 生成稳定身份", func(t *testing.T) {
 		repo := &mockRepository{
+			getCloudAccountFn: func(context.Context, int, int) (*CloudAccount, error) {
+				return &CloudAccount{ID: 7, TenantID: 5, Provider: "Aliyun", AccountID: "123456"}, nil
+			},
+			getCloudServiceFn: func(context.Context, int, int) (*CloudService, error) {
+				return &CloudService{ID: 11, TenantID: 5, Provider: "aliyun", ServiceCode: "ECS", ResourceTypeCode: "Instance"}, nil
+			},
 			createCloudResourceFn: func(ctx context.Context, cr *CloudResource) (*CloudResource, error) {
 				cr.ID = 99
 				return cr, nil
 			},
 		}
 		svc := newTestService(repo)
-		got, err := svc.CreateCloudResource(context.Background(), &CloudResource{ResourceID: "i-abc"})
+		got, err := svc.CreateCloudResource(context.Background(), &CloudResource{
+			TenantID: 5, CloudAccountID: 7, ServiceID: 11, ResourceID: " i-abc ", Region: "CN-Hangzhou",
+		})
 		require.NoError(t, err)
 		require.Equal(t, 99, got.ID)
+		require.Equal(t, "123456", got.CanonicalAccountID)
+		require.Equal(t, "cn-hangzhou", got.Region)
+		require.Equal(t, "regional", got.ResourceScope)
+		require.Len(t, got.IdentityHash, 64)
 	})
 
-	t.Run("Update 透传", func(t *testing.T) {
+	t.Run("Update 重新计算稳定身份", func(t *testing.T) {
 		var gotID int
 		repo := &mockRepository{
+			getCloudAccountFn: func(context.Context, int, int) (*CloudAccount, error) {
+				return &CloudAccount{ID: 7, TenantID: 5, Provider: "aliyun", AccountID: "123456"}, nil
+			},
+			getCloudServiceFn: func(context.Context, int, int) (*CloudService, error) {
+				return &CloudService{ID: 11, TenantID: 5, Provider: "aliyun", ServiceCode: "ecs", ResourceTypeCode: "instance"}, nil
+			},
 			updateCloudResourceFn: func(ctx context.Context, cr *CloudResource) (*CloudResource, error) {
 				gotID = cr.ID
 				return cr, nil
 			},
 		}
 		svc := newTestService(repo)
-		_, err := svc.UpdateCloudResource(context.Background(), &CloudResource{ID: 42})
+		_, err := svc.UpdateCloudResource(context.Background(), &CloudResource{
+			ID: 42, TenantID: 5, CloudAccountID: 7, ServiceID: 11, ResourceID: "i-abc",
+		})
 		require.NoError(t, err)
 		require.Equal(t, 42, gotID)
+	})
+
+	t.Run("Create 拒绝跨租户引用", func(t *testing.T) {
+		repo := &mockRepository{
+			getCloudAccountFn: func(context.Context, int, int) (*CloudAccount, error) {
+				return &CloudAccount{ID: 7, TenantID: 6, Provider: "aliyun", AccountID: "other"}, nil
+			},
+			getCloudServiceFn: func(context.Context, int, int) (*CloudService, error) {
+				return &CloudService{ID: 11, TenantID: 5, Provider: "aliyun"}, nil
+			},
+		}
+		_, err := newTestService(repo).CreateCloudResource(context.Background(), &CloudResource{
+			TenantID: 5, CloudAccountID: 7, ServiceID: 11, ResourceID: "i-cross-tenant",
+		})
+		require.ErrorContains(t, err, "authenticated tenant")
 	})
 
 	t.Run("Delete 错误透传", func(t *testing.T) {
@@ -615,9 +650,9 @@ func TestService_GetReconciliation(t *testing.T) {
 			},
 			listCIsForReconciliationFn: func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {
 				return []*ConfigurationItem{
-					{ID: 1, TenantID: 1, CloudResourceRefID: 500},                            // 绑定
-					{ID: 2, TenantID: 1, CloudResourceRefID: 9999},                           // 孤儿
-					{ID: 3, TenantID: 1, CloudResourceID: "i-lost"},                          // 未关联
+					{ID: 1, TenantID: 1, CloudResourceRefID: 500},   // 绑定
+					{ID: 2, TenantID: 1, CloudResourceRefID: 9999},  // 孤儿
+					{ID: 3, TenantID: 1, CloudResourceID: "i-lost"}, // 未关联
 				}, nil
 			},
 		}
@@ -668,9 +703,11 @@ func TestService_Discovery(t *testing.T) {
 			},
 		}
 		svc := newTestService(repo)
-		got, err := svc.CreateDiscoverySource(context.Background(), &DiscoverySource{SourceType: "alibaba-cloud"})
+		got, err := svc.CreateDiscoverySource(context.Background(), &DiscoverySource{SourceType: "alibaba-cloud", TenantID: 1})
 		require.NoError(t, err)
 		require.Equal(t, "alibaba-cloud", got.SourceType)
+		require.Equal(t, "manual", got.ReconcilePolicy)
+		require.Equal(t, 3, got.StaleThreshold)
 	})
 
 	t.Run("ListDiscoverySources 透传", func(t *testing.T) {

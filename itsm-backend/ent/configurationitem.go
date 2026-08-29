@@ -58,6 +58,16 @@ type ConfigurationItem struct {
 	LastDiscovered time.Time `json:"last_discovered,omitempty"`
 	// 数据来源（manual/discovery/import）
 	Source string `json:"source,omitempty"`
+	// 规范发现来源ID
+	SourceID string `json:"source_id,omitempty"`
+	// 云厂商不可变账号ID
+	CanonicalCloudAccountID string `json:"canonical_cloud_account_id,omitempty"`
+	// 来源最近确认时间
+	SourceLastSeenAt time.Time `json:"source_last_seen_at,omitempty"`
+	// 连续完整快照缺失次数
+	SourceMissingCount int `json:"source_missing_count,omitempty"`
+	// 来源内容指纹
+	SourceFingerprint string `json:"source_fingerprint,omitempty"`
 	// 扩展属性
 	Attributes map[string]interface{} `json:"attributes,omitempty"`
 	// 云厂商
@@ -211,11 +221,11 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case configurationitem.FieldAttributes, configurationitem.FieldCloudMetadata, configurationitem.FieldCloudTags, configurationitem.FieldCloudMetrics:
 			values[i] = new([]byte)
-		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID, configurationitem.FieldVersion:
+		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldSourceMissingCount, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID, configurationitem.FieldVersion:
 			values[i] = new(sql.NullInt64)
-		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldOwnershipMode, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus, configurationitem.FieldLifecycleStatus:
+		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldOwnershipMode, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldSourceID, configurationitem.FieldCanonicalCloudAccountID, configurationitem.FieldSourceFingerprint, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus, configurationitem.FieldLifecycleStatus:
 			values[i] = new(sql.NullString)
-		case configurationitem.FieldLocalModifiedAt, configurationitem.FieldLastDiscovered, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt, configurationitem.FieldEffectiveAt, configurationitem.FieldExpireAt:
+		case configurationitem.FieldLocalModifiedAt, configurationitem.FieldLastDiscovered, configurationitem.FieldSourceLastSeenAt, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt, configurationitem.FieldEffectiveAt, configurationitem.FieldExpireAt:
 			values[i] = new(sql.NullTime)
 		case configurationitem.ForeignKeys[0]: // asset_configuration_item
 			values[i] = new(sql.NullInt64)
@@ -353,6 +363,36 @@ func (_m *ConfigurationItem) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field source", values[i])
 			} else if value.Valid {
 				_m.Source = value.String
+			}
+		case configurationitem.FieldSourceID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field source_id", values[i])
+			} else if value.Valid {
+				_m.SourceID = value.String
+			}
+		case configurationitem.FieldCanonicalCloudAccountID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field canonical_cloud_account_id", values[i])
+			} else if value.Valid {
+				_m.CanonicalCloudAccountID = value.String
+			}
+		case configurationitem.FieldSourceLastSeenAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field source_last_seen_at", values[i])
+			} else if value.Valid {
+				_m.SourceLastSeenAt = value.Time
+			}
+		case configurationitem.FieldSourceMissingCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field source_missing_count", values[i])
+			} else if value.Valid {
+				_m.SourceMissingCount = int(value.Int64)
+			}
+		case configurationitem.FieldSourceFingerprint:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field source_fingerprint", values[i])
+			} else if value.Valid {
+				_m.SourceFingerprint = value.String
 			}
 		case configurationitem.FieldAttributes:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -621,6 +661,21 @@ func (_m *ConfigurationItem) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("source=")
 	builder.WriteString(_m.Source)
+	builder.WriteString(", ")
+	builder.WriteString("source_id=")
+	builder.WriteString(_m.SourceID)
+	builder.WriteString(", ")
+	builder.WriteString("canonical_cloud_account_id=")
+	builder.WriteString(_m.CanonicalCloudAccountID)
+	builder.WriteString(", ")
+	builder.WriteString("source_last_seen_at=")
+	builder.WriteString(_m.SourceLastSeenAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("source_missing_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SourceMissingCount))
+	builder.WriteString(", ")
+	builder.WriteString("source_fingerprint=")
+	builder.WriteString(_m.SourceFingerprint)
 	builder.WriteString(", ")
 	builder.WriteString("attributes=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Attributes))

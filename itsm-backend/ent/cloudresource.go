@@ -26,6 +26,28 @@ type CloudResource struct {
 	ServiceID int `json:"service_id,omitempty"`
 	// 云资源唯一ID
 	ResourceID string `json:"resource_id,omitempty"`
+	// 身份算法版本
+	IdentityVersion int `json:"identity_version,omitempty"`
+	// 规范化云厂商
+	Provider string `json:"provider,omitempty"`
+	// 云分区
+	Partition string `json:"partition,omitempty"`
+	// 云厂商不可变账号ID
+	CanonicalAccountID string `json:"canonical_account_id,omitempty"`
+	// global/regional/zonal
+	ResourceScope string `json:"resource_scope,omitempty"`
+	// 规范化服务代码
+	ServiceCode string `json:"service_code,omitempty"`
+	// 规范化资源类型
+	ResourceType string `json:"resource_type,omitempty"`
+	// 规范资源身份哈希
+	IdentityHash string `json:"identity_hash,omitempty"`
+	// 最近发现来源ID
+	SourceID string `json:"source_id,omitempty"`
+	// 最近来源内容指纹
+	SourceFingerprint string `json:"source_fingerprint,omitempty"`
+	// 连续完整快照缺失次数
+	MissingCount int `json:"missing_count,omitempty"`
 	// 云资源名称
 	ResourceName string `json:"resource_name,omitempty"`
 	// Region
@@ -107,9 +129,9 @@ func (*CloudResource) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case cloudresource.FieldTags, cloudresource.FieldMetadata:
 			values[i] = new([]byte)
-		case cloudresource.FieldID, cloudresource.FieldCloudAccountID, cloudresource.FieldServiceID, cloudresource.FieldTenantID:
+		case cloudresource.FieldID, cloudresource.FieldCloudAccountID, cloudresource.FieldServiceID, cloudresource.FieldIdentityVersion, cloudresource.FieldMissingCount, cloudresource.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case cloudresource.FieldResourceID, cloudresource.FieldResourceName, cloudresource.FieldRegion, cloudresource.FieldZone, cloudresource.FieldStatus, cloudresource.FieldLifecycleState:
+		case cloudresource.FieldResourceID, cloudresource.FieldProvider, cloudresource.FieldPartition, cloudresource.FieldCanonicalAccountID, cloudresource.FieldResourceScope, cloudresource.FieldServiceCode, cloudresource.FieldResourceType, cloudresource.FieldIdentityHash, cloudresource.FieldSourceID, cloudresource.FieldSourceFingerprint, cloudresource.FieldResourceName, cloudresource.FieldRegion, cloudresource.FieldZone, cloudresource.FieldStatus, cloudresource.FieldLifecycleState:
 			values[i] = new(sql.NullString)
 		case cloudresource.FieldFirstSeenAt, cloudresource.FieldLastSeenAt, cloudresource.FieldCreatedAt, cloudresource.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -151,6 +173,72 @@ func (_m *CloudResource) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field resource_id", values[i])
 			} else if value.Valid {
 				_m.ResourceID = value.String
+			}
+		case cloudresource.FieldIdentityVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field identity_version", values[i])
+			} else if value.Valid {
+				_m.IdentityVersion = int(value.Int64)
+			}
+		case cloudresource.FieldProvider:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field provider", values[i])
+			} else if value.Valid {
+				_m.Provider = value.String
+			}
+		case cloudresource.FieldPartition:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field partition", values[i])
+			} else if value.Valid {
+				_m.Partition = value.String
+			}
+		case cloudresource.FieldCanonicalAccountID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field canonical_account_id", values[i])
+			} else if value.Valid {
+				_m.CanonicalAccountID = value.String
+			}
+		case cloudresource.FieldResourceScope:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_scope", values[i])
+			} else if value.Valid {
+				_m.ResourceScope = value.String
+			}
+		case cloudresource.FieldServiceCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field service_code", values[i])
+			} else if value.Valid {
+				_m.ServiceCode = value.String
+			}
+		case cloudresource.FieldResourceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_type", values[i])
+			} else if value.Valid {
+				_m.ResourceType = value.String
+			}
+		case cloudresource.FieldIdentityHash:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field identity_hash", values[i])
+			} else if value.Valid {
+				_m.IdentityHash = value.String
+			}
+		case cloudresource.FieldSourceID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field source_id", values[i])
+			} else if value.Valid {
+				_m.SourceID = value.String
+			}
+		case cloudresource.FieldSourceFingerprint:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field source_fingerprint", values[i])
+			} else if value.Valid {
+				_m.SourceFingerprint = value.String
+			}
+		case cloudresource.FieldMissingCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field missing_count", values[i])
+			} else if value.Valid {
+				_m.MissingCount = int(value.Int64)
 			}
 		case cloudresource.FieldResourceName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -287,6 +375,39 @@ func (_m *CloudResource) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("resource_id=")
 	builder.WriteString(_m.ResourceID)
+	builder.WriteString(", ")
+	builder.WriteString("identity_version=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IdentityVersion))
+	builder.WriteString(", ")
+	builder.WriteString("provider=")
+	builder.WriteString(_m.Provider)
+	builder.WriteString(", ")
+	builder.WriteString("partition=")
+	builder.WriteString(_m.Partition)
+	builder.WriteString(", ")
+	builder.WriteString("canonical_account_id=")
+	builder.WriteString(_m.CanonicalAccountID)
+	builder.WriteString(", ")
+	builder.WriteString("resource_scope=")
+	builder.WriteString(_m.ResourceScope)
+	builder.WriteString(", ")
+	builder.WriteString("service_code=")
+	builder.WriteString(_m.ServiceCode)
+	builder.WriteString(", ")
+	builder.WriteString("resource_type=")
+	builder.WriteString(_m.ResourceType)
+	builder.WriteString(", ")
+	builder.WriteString("identity_hash=")
+	builder.WriteString(_m.IdentityHash)
+	builder.WriteString(", ")
+	builder.WriteString("source_id=")
+	builder.WriteString(_m.SourceID)
+	builder.WriteString(", ")
+	builder.WriteString("source_fingerprint=")
+	builder.WriteString(_m.SourceFingerprint)
+	builder.WriteString(", ")
+	builder.WriteString("missing_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MissingCount))
 	builder.WriteString(", ")
 	builder.WriteString("resource_name=")
 	builder.WriteString(_m.ResourceName)

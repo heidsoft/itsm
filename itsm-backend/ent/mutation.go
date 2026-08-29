@@ -27887,34 +27887,47 @@ func (m *CloudAccountMutation) ResetEdge(name string) error {
 // CloudResourceMutation represents an operation that mutates the CloudResource nodes in the graph.
 type CloudResourceMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	resource_id     *string
-	resource_name   *string
-	region          *string
-	zone            *string
-	status          *string
-	tags            *map[string]string
-	metadata        *map[string]interface{}
-	first_seen_at   *time.Time
-	last_seen_at    *time.Time
-	lifecycle_state *string
-	tenant_id       *int
-	addtenant_id    *int
-	created_at      *time.Time
-	updated_at      *time.Time
-	clearedFields   map[string]struct{}
-	account         *int
-	clearedaccount  bool
-	service         *int
-	clearedservice  bool
-	cis             map[int]struct{}
-	removedcis      map[int]struct{}
-	clearedcis      bool
-	done            bool
-	oldValue        func(context.Context) (*CloudResource, error)
-	predicates      []predicate.CloudResource
+	op                   Op
+	typ                  string
+	id                   *int
+	resource_id          *string
+	identity_version     *int
+	addidentity_version  *int
+	provider             *string
+	partition            *string
+	canonical_account_id *string
+	resource_scope       *string
+	service_code         *string
+	resource_type        *string
+	identity_hash        *string
+	source_id            *string
+	source_fingerprint   *string
+	missing_count        *int
+	addmissing_count     *int
+	resource_name        *string
+	region               *string
+	zone                 *string
+	status               *string
+	tags                 *map[string]string
+	metadata             *map[string]interface{}
+	first_seen_at        *time.Time
+	last_seen_at         *time.Time
+	lifecycle_state      *string
+	tenant_id            *int
+	addtenant_id         *int
+	created_at           *time.Time
+	updated_at           *time.Time
+	clearedFields        map[string]struct{}
+	account              *int
+	clearedaccount       bool
+	service              *int
+	clearedservice       bool
+	cis                  map[int]struct{}
+	removedcis           map[int]struct{}
+	clearedcis           bool
+	done                 bool
+	oldValue             func(context.Context) (*CloudResource, error)
+	predicates           []predicate.CloudResource
 }
 
 var _ ent.Mutation = (*CloudResourceMutation)(nil)
@@ -28121,6 +28134,533 @@ func (m *CloudResourceMutation) OldResourceID(ctx context.Context) (v string, er
 // ResetResourceID resets all changes to the "resource_id" field.
 func (m *CloudResourceMutation) ResetResourceID() {
 	m.resource_id = nil
+}
+
+// SetIdentityVersion sets the "identity_version" field.
+func (m *CloudResourceMutation) SetIdentityVersion(i int) {
+	m.identity_version = &i
+	m.addidentity_version = nil
+}
+
+// IdentityVersion returns the value of the "identity_version" field in the mutation.
+func (m *CloudResourceMutation) IdentityVersion() (r int, exists bool) {
+	v := m.identity_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdentityVersion returns the old "identity_version" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldIdentityVersion(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdentityVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdentityVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdentityVersion: %w", err)
+	}
+	return oldValue.IdentityVersion, nil
+}
+
+// AddIdentityVersion adds i to the "identity_version" field.
+func (m *CloudResourceMutation) AddIdentityVersion(i int) {
+	if m.addidentity_version != nil {
+		*m.addidentity_version += i
+	} else {
+		m.addidentity_version = &i
+	}
+}
+
+// AddedIdentityVersion returns the value that was added to the "identity_version" field in this mutation.
+func (m *CloudResourceMutation) AddedIdentityVersion() (r int, exists bool) {
+	v := m.addidentity_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetIdentityVersion resets all changes to the "identity_version" field.
+func (m *CloudResourceMutation) ResetIdentityVersion() {
+	m.identity_version = nil
+	m.addidentity_version = nil
+}
+
+// SetProvider sets the "provider" field.
+func (m *CloudResourceMutation) SetProvider(s string) {
+	m.provider = &s
+}
+
+// Provider returns the value of the "provider" field in the mutation.
+func (m *CloudResourceMutation) Provider() (r string, exists bool) {
+	v := m.provider
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProvider returns the old "provider" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldProvider(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProvider is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProvider requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProvider: %w", err)
+	}
+	return oldValue.Provider, nil
+}
+
+// ClearProvider clears the value of the "provider" field.
+func (m *CloudResourceMutation) ClearProvider() {
+	m.provider = nil
+	m.clearedFields[cloudresource.FieldProvider] = struct{}{}
+}
+
+// ProviderCleared returns if the "provider" field was cleared in this mutation.
+func (m *CloudResourceMutation) ProviderCleared() bool {
+	_, ok := m.clearedFields[cloudresource.FieldProvider]
+	return ok
+}
+
+// ResetProvider resets all changes to the "provider" field.
+func (m *CloudResourceMutation) ResetProvider() {
+	m.provider = nil
+	delete(m.clearedFields, cloudresource.FieldProvider)
+}
+
+// SetPartition sets the "partition" field.
+func (m *CloudResourceMutation) SetPartition(s string) {
+	m.partition = &s
+}
+
+// Partition returns the value of the "partition" field in the mutation.
+func (m *CloudResourceMutation) Partition() (r string, exists bool) {
+	v := m.partition
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartition returns the old "partition" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldPartition(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartition is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartition requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartition: %w", err)
+	}
+	return oldValue.Partition, nil
+}
+
+// ResetPartition resets all changes to the "partition" field.
+func (m *CloudResourceMutation) ResetPartition() {
+	m.partition = nil
+}
+
+// SetCanonicalAccountID sets the "canonical_account_id" field.
+func (m *CloudResourceMutation) SetCanonicalAccountID(s string) {
+	m.canonical_account_id = &s
+}
+
+// CanonicalAccountID returns the value of the "canonical_account_id" field in the mutation.
+func (m *CloudResourceMutation) CanonicalAccountID() (r string, exists bool) {
+	v := m.canonical_account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCanonicalAccountID returns the old "canonical_account_id" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldCanonicalAccountID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCanonicalAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCanonicalAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCanonicalAccountID: %w", err)
+	}
+	return oldValue.CanonicalAccountID, nil
+}
+
+// ClearCanonicalAccountID clears the value of the "canonical_account_id" field.
+func (m *CloudResourceMutation) ClearCanonicalAccountID() {
+	m.canonical_account_id = nil
+	m.clearedFields[cloudresource.FieldCanonicalAccountID] = struct{}{}
+}
+
+// CanonicalAccountIDCleared returns if the "canonical_account_id" field was cleared in this mutation.
+func (m *CloudResourceMutation) CanonicalAccountIDCleared() bool {
+	_, ok := m.clearedFields[cloudresource.FieldCanonicalAccountID]
+	return ok
+}
+
+// ResetCanonicalAccountID resets all changes to the "canonical_account_id" field.
+func (m *CloudResourceMutation) ResetCanonicalAccountID() {
+	m.canonical_account_id = nil
+	delete(m.clearedFields, cloudresource.FieldCanonicalAccountID)
+}
+
+// SetResourceScope sets the "resource_scope" field.
+func (m *CloudResourceMutation) SetResourceScope(s string) {
+	m.resource_scope = &s
+}
+
+// ResourceScope returns the value of the "resource_scope" field in the mutation.
+func (m *CloudResourceMutation) ResourceScope() (r string, exists bool) {
+	v := m.resource_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceScope returns the old "resource_scope" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldResourceScope(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResourceScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResourceScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceScope: %w", err)
+	}
+	return oldValue.ResourceScope, nil
+}
+
+// ResetResourceScope resets all changes to the "resource_scope" field.
+func (m *CloudResourceMutation) ResetResourceScope() {
+	m.resource_scope = nil
+}
+
+// SetServiceCode sets the "service_code" field.
+func (m *CloudResourceMutation) SetServiceCode(s string) {
+	m.service_code = &s
+}
+
+// ServiceCode returns the value of the "service_code" field in the mutation.
+func (m *CloudResourceMutation) ServiceCode() (r string, exists bool) {
+	v := m.service_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldServiceCode returns the old "service_code" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldServiceCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldServiceCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldServiceCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldServiceCode: %w", err)
+	}
+	return oldValue.ServiceCode, nil
+}
+
+// ClearServiceCode clears the value of the "service_code" field.
+func (m *CloudResourceMutation) ClearServiceCode() {
+	m.service_code = nil
+	m.clearedFields[cloudresource.FieldServiceCode] = struct{}{}
+}
+
+// ServiceCodeCleared returns if the "service_code" field was cleared in this mutation.
+func (m *CloudResourceMutation) ServiceCodeCleared() bool {
+	_, ok := m.clearedFields[cloudresource.FieldServiceCode]
+	return ok
+}
+
+// ResetServiceCode resets all changes to the "service_code" field.
+func (m *CloudResourceMutation) ResetServiceCode() {
+	m.service_code = nil
+	delete(m.clearedFields, cloudresource.FieldServiceCode)
+}
+
+// SetResourceType sets the "resource_type" field.
+func (m *CloudResourceMutation) SetResourceType(s string) {
+	m.resource_type = &s
+}
+
+// ResourceType returns the value of the "resource_type" field in the mutation.
+func (m *CloudResourceMutation) ResourceType() (r string, exists bool) {
+	v := m.resource_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceType returns the old "resource_type" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldResourceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResourceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResourceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceType: %w", err)
+	}
+	return oldValue.ResourceType, nil
+}
+
+// ClearResourceType clears the value of the "resource_type" field.
+func (m *CloudResourceMutation) ClearResourceType() {
+	m.resource_type = nil
+	m.clearedFields[cloudresource.FieldResourceType] = struct{}{}
+}
+
+// ResourceTypeCleared returns if the "resource_type" field was cleared in this mutation.
+func (m *CloudResourceMutation) ResourceTypeCleared() bool {
+	_, ok := m.clearedFields[cloudresource.FieldResourceType]
+	return ok
+}
+
+// ResetResourceType resets all changes to the "resource_type" field.
+func (m *CloudResourceMutation) ResetResourceType() {
+	m.resource_type = nil
+	delete(m.clearedFields, cloudresource.FieldResourceType)
+}
+
+// SetIdentityHash sets the "identity_hash" field.
+func (m *CloudResourceMutation) SetIdentityHash(s string) {
+	m.identity_hash = &s
+}
+
+// IdentityHash returns the value of the "identity_hash" field in the mutation.
+func (m *CloudResourceMutation) IdentityHash() (r string, exists bool) {
+	v := m.identity_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdentityHash returns the old "identity_hash" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldIdentityHash(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdentityHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdentityHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdentityHash: %w", err)
+	}
+	return oldValue.IdentityHash, nil
+}
+
+// ClearIdentityHash clears the value of the "identity_hash" field.
+func (m *CloudResourceMutation) ClearIdentityHash() {
+	m.identity_hash = nil
+	m.clearedFields[cloudresource.FieldIdentityHash] = struct{}{}
+}
+
+// IdentityHashCleared returns if the "identity_hash" field was cleared in this mutation.
+func (m *CloudResourceMutation) IdentityHashCleared() bool {
+	_, ok := m.clearedFields[cloudresource.FieldIdentityHash]
+	return ok
+}
+
+// ResetIdentityHash resets all changes to the "identity_hash" field.
+func (m *CloudResourceMutation) ResetIdentityHash() {
+	m.identity_hash = nil
+	delete(m.clearedFields, cloudresource.FieldIdentityHash)
+}
+
+// SetSourceID sets the "source_id" field.
+func (m *CloudResourceMutation) SetSourceID(s string) {
+	m.source_id = &s
+}
+
+// SourceID returns the value of the "source_id" field in the mutation.
+func (m *CloudResourceMutation) SourceID() (r string, exists bool) {
+	v := m.source_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceID returns the old "source_id" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldSourceID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceID: %w", err)
+	}
+	return oldValue.SourceID, nil
+}
+
+// ClearSourceID clears the value of the "source_id" field.
+func (m *CloudResourceMutation) ClearSourceID() {
+	m.source_id = nil
+	m.clearedFields[cloudresource.FieldSourceID] = struct{}{}
+}
+
+// SourceIDCleared returns if the "source_id" field was cleared in this mutation.
+func (m *CloudResourceMutation) SourceIDCleared() bool {
+	_, ok := m.clearedFields[cloudresource.FieldSourceID]
+	return ok
+}
+
+// ResetSourceID resets all changes to the "source_id" field.
+func (m *CloudResourceMutation) ResetSourceID() {
+	m.source_id = nil
+	delete(m.clearedFields, cloudresource.FieldSourceID)
+}
+
+// SetSourceFingerprint sets the "source_fingerprint" field.
+func (m *CloudResourceMutation) SetSourceFingerprint(s string) {
+	m.source_fingerprint = &s
+}
+
+// SourceFingerprint returns the value of the "source_fingerprint" field in the mutation.
+func (m *CloudResourceMutation) SourceFingerprint() (r string, exists bool) {
+	v := m.source_fingerprint
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceFingerprint returns the old "source_fingerprint" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldSourceFingerprint(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceFingerprint is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceFingerprint requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceFingerprint: %w", err)
+	}
+	return oldValue.SourceFingerprint, nil
+}
+
+// ClearSourceFingerprint clears the value of the "source_fingerprint" field.
+func (m *CloudResourceMutation) ClearSourceFingerprint() {
+	m.source_fingerprint = nil
+	m.clearedFields[cloudresource.FieldSourceFingerprint] = struct{}{}
+}
+
+// SourceFingerprintCleared returns if the "source_fingerprint" field was cleared in this mutation.
+func (m *CloudResourceMutation) SourceFingerprintCleared() bool {
+	_, ok := m.clearedFields[cloudresource.FieldSourceFingerprint]
+	return ok
+}
+
+// ResetSourceFingerprint resets all changes to the "source_fingerprint" field.
+func (m *CloudResourceMutation) ResetSourceFingerprint() {
+	m.source_fingerprint = nil
+	delete(m.clearedFields, cloudresource.FieldSourceFingerprint)
+}
+
+// SetMissingCount sets the "missing_count" field.
+func (m *CloudResourceMutation) SetMissingCount(i int) {
+	m.missing_count = &i
+	m.addmissing_count = nil
+}
+
+// MissingCount returns the value of the "missing_count" field in the mutation.
+func (m *CloudResourceMutation) MissingCount() (r int, exists bool) {
+	v := m.missing_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMissingCount returns the old "missing_count" field's value of the CloudResource entity.
+// If the CloudResource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CloudResourceMutation) OldMissingCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMissingCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMissingCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMissingCount: %w", err)
+	}
+	return oldValue.MissingCount, nil
+}
+
+// AddMissingCount adds i to the "missing_count" field.
+func (m *CloudResourceMutation) AddMissingCount(i int) {
+	if m.addmissing_count != nil {
+		*m.addmissing_count += i
+	} else {
+		m.addmissing_count = &i
+	}
+}
+
+// AddedMissingCount returns the value that was added to the "missing_count" field in this mutation.
+func (m *CloudResourceMutation) AddedMissingCount() (r int, exists bool) {
+	v := m.addmissing_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMissingCount resets all changes to the "missing_count" field.
+func (m *CloudResourceMutation) ResetMissingCount() {
+	m.missing_count = nil
+	m.addmissing_count = nil
 }
 
 // SetResourceName sets the "resource_name" field.
@@ -28847,7 +29387,7 @@ func (m *CloudResourceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CloudResourceMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 26)
 	if m.account != nil {
 		fields = append(fields, cloudresource.FieldCloudAccountID)
 	}
@@ -28856,6 +29396,39 @@ func (m *CloudResourceMutation) Fields() []string {
 	}
 	if m.resource_id != nil {
 		fields = append(fields, cloudresource.FieldResourceID)
+	}
+	if m.identity_version != nil {
+		fields = append(fields, cloudresource.FieldIdentityVersion)
+	}
+	if m.provider != nil {
+		fields = append(fields, cloudresource.FieldProvider)
+	}
+	if m.partition != nil {
+		fields = append(fields, cloudresource.FieldPartition)
+	}
+	if m.canonical_account_id != nil {
+		fields = append(fields, cloudresource.FieldCanonicalAccountID)
+	}
+	if m.resource_scope != nil {
+		fields = append(fields, cloudresource.FieldResourceScope)
+	}
+	if m.service_code != nil {
+		fields = append(fields, cloudresource.FieldServiceCode)
+	}
+	if m.resource_type != nil {
+		fields = append(fields, cloudresource.FieldResourceType)
+	}
+	if m.identity_hash != nil {
+		fields = append(fields, cloudresource.FieldIdentityHash)
+	}
+	if m.source_id != nil {
+		fields = append(fields, cloudresource.FieldSourceID)
+	}
+	if m.source_fingerprint != nil {
+		fields = append(fields, cloudresource.FieldSourceFingerprint)
+	}
+	if m.missing_count != nil {
+		fields = append(fields, cloudresource.FieldMissingCount)
 	}
 	if m.resource_name != nil {
 		fields = append(fields, cloudresource.FieldResourceName)
@@ -28907,6 +29480,28 @@ func (m *CloudResourceMutation) Field(name string) (ent.Value, bool) {
 		return m.ServiceID()
 	case cloudresource.FieldResourceID:
 		return m.ResourceID()
+	case cloudresource.FieldIdentityVersion:
+		return m.IdentityVersion()
+	case cloudresource.FieldProvider:
+		return m.Provider()
+	case cloudresource.FieldPartition:
+		return m.Partition()
+	case cloudresource.FieldCanonicalAccountID:
+		return m.CanonicalAccountID()
+	case cloudresource.FieldResourceScope:
+		return m.ResourceScope()
+	case cloudresource.FieldServiceCode:
+		return m.ServiceCode()
+	case cloudresource.FieldResourceType:
+		return m.ResourceType()
+	case cloudresource.FieldIdentityHash:
+		return m.IdentityHash()
+	case cloudresource.FieldSourceID:
+		return m.SourceID()
+	case cloudresource.FieldSourceFingerprint:
+		return m.SourceFingerprint()
+	case cloudresource.FieldMissingCount:
+		return m.MissingCount()
 	case cloudresource.FieldResourceName:
 		return m.ResourceName()
 	case cloudresource.FieldRegion:
@@ -28946,6 +29541,28 @@ func (m *CloudResourceMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldServiceID(ctx)
 	case cloudresource.FieldResourceID:
 		return m.OldResourceID(ctx)
+	case cloudresource.FieldIdentityVersion:
+		return m.OldIdentityVersion(ctx)
+	case cloudresource.FieldProvider:
+		return m.OldProvider(ctx)
+	case cloudresource.FieldPartition:
+		return m.OldPartition(ctx)
+	case cloudresource.FieldCanonicalAccountID:
+		return m.OldCanonicalAccountID(ctx)
+	case cloudresource.FieldResourceScope:
+		return m.OldResourceScope(ctx)
+	case cloudresource.FieldServiceCode:
+		return m.OldServiceCode(ctx)
+	case cloudresource.FieldResourceType:
+		return m.OldResourceType(ctx)
+	case cloudresource.FieldIdentityHash:
+		return m.OldIdentityHash(ctx)
+	case cloudresource.FieldSourceID:
+		return m.OldSourceID(ctx)
+	case cloudresource.FieldSourceFingerprint:
+		return m.OldSourceFingerprint(ctx)
+	case cloudresource.FieldMissingCount:
+		return m.OldMissingCount(ctx)
 	case cloudresource.FieldResourceName:
 		return m.OldResourceName(ctx)
 	case cloudresource.FieldRegion:
@@ -28999,6 +29616,83 @@ func (m *CloudResourceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetResourceID(v)
+		return nil
+	case cloudresource.FieldIdentityVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdentityVersion(v)
+		return nil
+	case cloudresource.FieldProvider:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProvider(v)
+		return nil
+	case cloudresource.FieldPartition:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartition(v)
+		return nil
+	case cloudresource.FieldCanonicalAccountID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCanonicalAccountID(v)
+		return nil
+	case cloudresource.FieldResourceScope:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceScope(v)
+		return nil
+	case cloudresource.FieldServiceCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetServiceCode(v)
+		return nil
+	case cloudresource.FieldResourceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceType(v)
+		return nil
+	case cloudresource.FieldIdentityHash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdentityHash(v)
+		return nil
+	case cloudresource.FieldSourceID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceID(v)
+		return nil
+	case cloudresource.FieldSourceFingerprint:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceFingerprint(v)
+		return nil
+	case cloudresource.FieldMissingCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMissingCount(v)
 		return nil
 	case cloudresource.FieldResourceName:
 		v, ok := value.(string)
@@ -29092,6 +29786,12 @@ func (m *CloudResourceMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *CloudResourceMutation) AddedFields() []string {
 	var fields []string
+	if m.addidentity_version != nil {
+		fields = append(fields, cloudresource.FieldIdentityVersion)
+	}
+	if m.addmissing_count != nil {
+		fields = append(fields, cloudresource.FieldMissingCount)
+	}
 	if m.addtenant_id != nil {
 		fields = append(fields, cloudresource.FieldTenantID)
 	}
@@ -29103,6 +29803,10 @@ func (m *CloudResourceMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *CloudResourceMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case cloudresource.FieldIdentityVersion:
+		return m.AddedIdentityVersion()
+	case cloudresource.FieldMissingCount:
+		return m.AddedMissingCount()
 	case cloudresource.FieldTenantID:
 		return m.AddedTenantID()
 	}
@@ -29114,6 +29818,20 @@ func (m *CloudResourceMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *CloudResourceMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case cloudresource.FieldIdentityVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddIdentityVersion(v)
+		return nil
+	case cloudresource.FieldMissingCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMissingCount(v)
+		return nil
 	case cloudresource.FieldTenantID:
 		v, ok := value.(int)
 		if !ok {
@@ -29129,6 +29847,27 @@ func (m *CloudResourceMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *CloudResourceMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(cloudresource.FieldProvider) {
+		fields = append(fields, cloudresource.FieldProvider)
+	}
+	if m.FieldCleared(cloudresource.FieldCanonicalAccountID) {
+		fields = append(fields, cloudresource.FieldCanonicalAccountID)
+	}
+	if m.FieldCleared(cloudresource.FieldServiceCode) {
+		fields = append(fields, cloudresource.FieldServiceCode)
+	}
+	if m.FieldCleared(cloudresource.FieldResourceType) {
+		fields = append(fields, cloudresource.FieldResourceType)
+	}
+	if m.FieldCleared(cloudresource.FieldIdentityHash) {
+		fields = append(fields, cloudresource.FieldIdentityHash)
+	}
+	if m.FieldCleared(cloudresource.FieldSourceID) {
+		fields = append(fields, cloudresource.FieldSourceID)
+	}
+	if m.FieldCleared(cloudresource.FieldSourceFingerprint) {
+		fields = append(fields, cloudresource.FieldSourceFingerprint)
+	}
 	if m.FieldCleared(cloudresource.FieldResourceName) {
 		fields = append(fields, cloudresource.FieldResourceName)
 	}
@@ -29170,6 +29909,27 @@ func (m *CloudResourceMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *CloudResourceMutation) ClearField(name string) error {
 	switch name {
+	case cloudresource.FieldProvider:
+		m.ClearProvider()
+		return nil
+	case cloudresource.FieldCanonicalAccountID:
+		m.ClearCanonicalAccountID()
+		return nil
+	case cloudresource.FieldServiceCode:
+		m.ClearServiceCode()
+		return nil
+	case cloudresource.FieldResourceType:
+		m.ClearResourceType()
+		return nil
+	case cloudresource.FieldIdentityHash:
+		m.ClearIdentityHash()
+		return nil
+	case cloudresource.FieldSourceID:
+		m.ClearSourceID()
+		return nil
+	case cloudresource.FieldSourceFingerprint:
+		m.ClearSourceFingerprint()
+		return nil
 	case cloudresource.FieldResourceName:
 		m.ClearResourceName()
 		return nil
@@ -29213,6 +29973,39 @@ func (m *CloudResourceMutation) ResetField(name string) error {
 		return nil
 	case cloudresource.FieldResourceID:
 		m.ResetResourceID()
+		return nil
+	case cloudresource.FieldIdentityVersion:
+		m.ResetIdentityVersion()
+		return nil
+	case cloudresource.FieldProvider:
+		m.ResetProvider()
+		return nil
+	case cloudresource.FieldPartition:
+		m.ResetPartition()
+		return nil
+	case cloudresource.FieldCanonicalAccountID:
+		m.ResetCanonicalAccountID()
+		return nil
+	case cloudresource.FieldResourceScope:
+		m.ResetResourceScope()
+		return nil
+	case cloudresource.FieldServiceCode:
+		m.ResetServiceCode()
+		return nil
+	case cloudresource.FieldResourceType:
+		m.ResetResourceType()
+		return nil
+	case cloudresource.FieldIdentityHash:
+		m.ResetIdentityHash()
+		return nil
+	case cloudresource.FieldSourceID:
+		m.ResetSourceID()
+		return nil
+	case cloudresource.FieldSourceFingerprint:
+		m.ResetSourceFingerprint()
+		return nil
+	case cloudresource.FieldMissingCount:
+		m.ResetMissingCount()
 		return nil
 	case cloudresource.FieldResourceName:
 		m.ResetResourceName()
@@ -30742,74 +31535,80 @@ func (m *CloudServiceMutation) ResetEdge(name string) error {
 // ConfigurationItemMutation represents an operation that mutates the ConfigurationItem nodes in the graph.
 type ConfigurationItemMutation struct {
 	config
-	op                        Op
-	typ                       string
-	id                        *int
-	name                      *string
-	description               *string
-	ci_type                   *string
-	status                    *string
-	environment               *string
-	criticality               *string
-	asset_tag                 *string
-	serial_number             *string
-	model                     *string
-	vendor                    *string
-	location                  *string
-	assigned_to               *string
-	owned_by                  *string
-	ownership_mode            *string
-	local_modified_at         *time.Time
-	discovery_source          *string
-	last_discovered           *time.Time
-	source                    *string
-	attributes                *map[string]interface{}
-	cloud_provider            *string
-	cloud_account_id          *string
-	cloud_region              *string
-	cloud_zone                *string
-	cloud_resource_id         *string
-	cloud_resource_type       *string
-	cloud_metadata            *map[string]interface{}
-	cloud_tags                *map[string]interface{}
-	cloud_metrics             *map[string]interface{}
-	cloud_sync_time           *time.Time
-	cloud_sync_status         *string
-	tenant_id                 *int
-	addtenant_id              *int
-	version                   *int
-	addversion                *int
-	created_at                *time.Time
-	updated_at                *time.Time
-	lifecycle_status          *string
-	effective_at              *time.Time
-	expire_at                 *time.Time
-	clearedFields             map[string]struct{}
-	ci_type_ref               *int
-	clearedci_type_ref        bool
-	cloud_resource_ref        *int
-	clearedcloud_resource_ref bool
-	tickets                   map[int]struct{}
-	removedtickets            map[int]struct{}
-	clearedtickets            bool
-	incidents                 map[int]struct{}
-	removedincidents          map[int]struct{}
-	clearedincidents          bool
-	outgoing_relations        map[int]struct{}
-	removedoutgoing_relations map[int]struct{}
-	clearedoutgoing_relations bool
-	history                   map[int]struct{}
-	removedhistory            map[int]struct{}
-	clearedhistory            bool
-	tags                      map[int]struct{}
-	removedtags               map[int]struct{}
-	clearedtags               bool
-	incoming_relations        map[int]struct{}
-	removedincoming_relations map[int]struct{}
-	clearedincoming_relations bool
-	done                      bool
-	oldValue                  func(context.Context) (*ConfigurationItem, error)
-	predicates                []predicate.ConfigurationItem
+	op                         Op
+	typ                        string
+	id                         *int
+	name                       *string
+	description                *string
+	ci_type                    *string
+	status                     *string
+	environment                *string
+	criticality                *string
+	asset_tag                  *string
+	serial_number              *string
+	model                      *string
+	vendor                     *string
+	location                   *string
+	assigned_to                *string
+	owned_by                   *string
+	ownership_mode             *string
+	local_modified_at          *time.Time
+	discovery_source           *string
+	last_discovered            *time.Time
+	source                     *string
+	source_id                  *string
+	canonical_cloud_account_id *string
+	source_last_seen_at        *time.Time
+	source_missing_count       *int
+	addsource_missing_count    *int
+	source_fingerprint         *string
+	attributes                 *map[string]interface{}
+	cloud_provider             *string
+	cloud_account_id           *string
+	cloud_region               *string
+	cloud_zone                 *string
+	cloud_resource_id          *string
+	cloud_resource_type        *string
+	cloud_metadata             *map[string]interface{}
+	cloud_tags                 *map[string]interface{}
+	cloud_metrics              *map[string]interface{}
+	cloud_sync_time            *time.Time
+	cloud_sync_status          *string
+	tenant_id                  *int
+	addtenant_id               *int
+	version                    *int
+	addversion                 *int
+	created_at                 *time.Time
+	updated_at                 *time.Time
+	lifecycle_status           *string
+	effective_at               *time.Time
+	expire_at                  *time.Time
+	clearedFields              map[string]struct{}
+	ci_type_ref                *int
+	clearedci_type_ref         bool
+	cloud_resource_ref         *int
+	clearedcloud_resource_ref  bool
+	tickets                    map[int]struct{}
+	removedtickets             map[int]struct{}
+	clearedtickets             bool
+	incidents                  map[int]struct{}
+	removedincidents           map[int]struct{}
+	clearedincidents           bool
+	outgoing_relations         map[int]struct{}
+	removedoutgoing_relations  map[int]struct{}
+	clearedoutgoing_relations  bool
+	history                    map[int]struct{}
+	removedhistory             map[int]struct{}
+	clearedhistory             bool
+	tags                       map[int]struct{}
+	removedtags                map[int]struct{}
+	clearedtags                bool
+	incoming_relations         map[int]struct{}
+	removedincoming_relations  map[int]struct{}
+	clearedincoming_relations  bool
+	done                       bool
+	oldValue                   func(context.Context) (*ConfigurationItem, error)
+	predicates                 []predicate.ConfigurationItem
 }
 
 var _ ent.Mutation = (*ConfigurationItemMutation)(nil)
@@ -31748,6 +32547,258 @@ func (m *ConfigurationItemMutation) SourceCleared() bool {
 func (m *ConfigurationItemMutation) ResetSource() {
 	m.source = nil
 	delete(m.clearedFields, configurationitem.FieldSource)
+}
+
+// SetSourceID sets the "source_id" field.
+func (m *ConfigurationItemMutation) SetSourceID(s string) {
+	m.source_id = &s
+}
+
+// SourceID returns the value of the "source_id" field in the mutation.
+func (m *ConfigurationItemMutation) SourceID() (r string, exists bool) {
+	v := m.source_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceID returns the old "source_id" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldSourceID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceID: %w", err)
+	}
+	return oldValue.SourceID, nil
+}
+
+// ClearSourceID clears the value of the "source_id" field.
+func (m *ConfigurationItemMutation) ClearSourceID() {
+	m.source_id = nil
+	m.clearedFields[configurationitem.FieldSourceID] = struct{}{}
+}
+
+// SourceIDCleared returns if the "source_id" field was cleared in this mutation.
+func (m *ConfigurationItemMutation) SourceIDCleared() bool {
+	_, ok := m.clearedFields[configurationitem.FieldSourceID]
+	return ok
+}
+
+// ResetSourceID resets all changes to the "source_id" field.
+func (m *ConfigurationItemMutation) ResetSourceID() {
+	m.source_id = nil
+	delete(m.clearedFields, configurationitem.FieldSourceID)
+}
+
+// SetCanonicalCloudAccountID sets the "canonical_cloud_account_id" field.
+func (m *ConfigurationItemMutation) SetCanonicalCloudAccountID(s string) {
+	m.canonical_cloud_account_id = &s
+}
+
+// CanonicalCloudAccountID returns the value of the "canonical_cloud_account_id" field in the mutation.
+func (m *ConfigurationItemMutation) CanonicalCloudAccountID() (r string, exists bool) {
+	v := m.canonical_cloud_account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCanonicalCloudAccountID returns the old "canonical_cloud_account_id" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldCanonicalCloudAccountID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCanonicalCloudAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCanonicalCloudAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCanonicalCloudAccountID: %w", err)
+	}
+	return oldValue.CanonicalCloudAccountID, nil
+}
+
+// ClearCanonicalCloudAccountID clears the value of the "canonical_cloud_account_id" field.
+func (m *ConfigurationItemMutation) ClearCanonicalCloudAccountID() {
+	m.canonical_cloud_account_id = nil
+	m.clearedFields[configurationitem.FieldCanonicalCloudAccountID] = struct{}{}
+}
+
+// CanonicalCloudAccountIDCleared returns if the "canonical_cloud_account_id" field was cleared in this mutation.
+func (m *ConfigurationItemMutation) CanonicalCloudAccountIDCleared() bool {
+	_, ok := m.clearedFields[configurationitem.FieldCanonicalCloudAccountID]
+	return ok
+}
+
+// ResetCanonicalCloudAccountID resets all changes to the "canonical_cloud_account_id" field.
+func (m *ConfigurationItemMutation) ResetCanonicalCloudAccountID() {
+	m.canonical_cloud_account_id = nil
+	delete(m.clearedFields, configurationitem.FieldCanonicalCloudAccountID)
+}
+
+// SetSourceLastSeenAt sets the "source_last_seen_at" field.
+func (m *ConfigurationItemMutation) SetSourceLastSeenAt(t time.Time) {
+	m.source_last_seen_at = &t
+}
+
+// SourceLastSeenAt returns the value of the "source_last_seen_at" field in the mutation.
+func (m *ConfigurationItemMutation) SourceLastSeenAt() (r time.Time, exists bool) {
+	v := m.source_last_seen_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceLastSeenAt returns the old "source_last_seen_at" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldSourceLastSeenAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceLastSeenAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceLastSeenAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceLastSeenAt: %w", err)
+	}
+	return oldValue.SourceLastSeenAt, nil
+}
+
+// ClearSourceLastSeenAt clears the value of the "source_last_seen_at" field.
+func (m *ConfigurationItemMutation) ClearSourceLastSeenAt() {
+	m.source_last_seen_at = nil
+	m.clearedFields[configurationitem.FieldSourceLastSeenAt] = struct{}{}
+}
+
+// SourceLastSeenAtCleared returns if the "source_last_seen_at" field was cleared in this mutation.
+func (m *ConfigurationItemMutation) SourceLastSeenAtCleared() bool {
+	_, ok := m.clearedFields[configurationitem.FieldSourceLastSeenAt]
+	return ok
+}
+
+// ResetSourceLastSeenAt resets all changes to the "source_last_seen_at" field.
+func (m *ConfigurationItemMutation) ResetSourceLastSeenAt() {
+	m.source_last_seen_at = nil
+	delete(m.clearedFields, configurationitem.FieldSourceLastSeenAt)
+}
+
+// SetSourceMissingCount sets the "source_missing_count" field.
+func (m *ConfigurationItemMutation) SetSourceMissingCount(i int) {
+	m.source_missing_count = &i
+	m.addsource_missing_count = nil
+}
+
+// SourceMissingCount returns the value of the "source_missing_count" field in the mutation.
+func (m *ConfigurationItemMutation) SourceMissingCount() (r int, exists bool) {
+	v := m.source_missing_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceMissingCount returns the old "source_missing_count" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldSourceMissingCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceMissingCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceMissingCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceMissingCount: %w", err)
+	}
+	return oldValue.SourceMissingCount, nil
+}
+
+// AddSourceMissingCount adds i to the "source_missing_count" field.
+func (m *ConfigurationItemMutation) AddSourceMissingCount(i int) {
+	if m.addsource_missing_count != nil {
+		*m.addsource_missing_count += i
+	} else {
+		m.addsource_missing_count = &i
+	}
+}
+
+// AddedSourceMissingCount returns the value that was added to the "source_missing_count" field in this mutation.
+func (m *ConfigurationItemMutation) AddedSourceMissingCount() (r int, exists bool) {
+	v := m.addsource_missing_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSourceMissingCount resets all changes to the "source_missing_count" field.
+func (m *ConfigurationItemMutation) ResetSourceMissingCount() {
+	m.source_missing_count = nil
+	m.addsource_missing_count = nil
+}
+
+// SetSourceFingerprint sets the "source_fingerprint" field.
+func (m *ConfigurationItemMutation) SetSourceFingerprint(s string) {
+	m.source_fingerprint = &s
+}
+
+// SourceFingerprint returns the value of the "source_fingerprint" field in the mutation.
+func (m *ConfigurationItemMutation) SourceFingerprint() (r string, exists bool) {
+	v := m.source_fingerprint
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceFingerprint returns the old "source_fingerprint" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldSourceFingerprint(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceFingerprint is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceFingerprint requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceFingerprint: %w", err)
+	}
+	return oldValue.SourceFingerprint, nil
+}
+
+// ClearSourceFingerprint clears the value of the "source_fingerprint" field.
+func (m *ConfigurationItemMutation) ClearSourceFingerprint() {
+	m.source_fingerprint = nil
+	m.clearedFields[configurationitem.FieldSourceFingerprint] = struct{}{}
+}
+
+// SourceFingerprintCleared returns if the "source_fingerprint" field was cleared in this mutation.
+func (m *ConfigurationItemMutation) SourceFingerprintCleared() bool {
+	_, ok := m.clearedFields[configurationitem.FieldSourceFingerprint]
+	return ok
+}
+
+// ResetSourceFingerprint resets all changes to the "source_fingerprint" field.
+func (m *ConfigurationItemMutation) ResetSourceFingerprint() {
+	m.source_fingerprint = nil
+	delete(m.clearedFields, configurationitem.FieldSourceFingerprint)
 }
 
 // SetAttributes sets the "attributes" field.
@@ -33130,7 +34181,7 @@ func (m *ConfigurationItemMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ConfigurationItemMutation) Fields() []string {
-	fields := make([]string, 0, 39)
+	fields := make([]string, 0, 44)
 	if m.name != nil {
 		fields = append(fields, configurationitem.FieldName)
 	}
@@ -33187,6 +34238,21 @@ func (m *ConfigurationItemMutation) Fields() []string {
 	}
 	if m.source != nil {
 		fields = append(fields, configurationitem.FieldSource)
+	}
+	if m.source_id != nil {
+		fields = append(fields, configurationitem.FieldSourceID)
+	}
+	if m.canonical_cloud_account_id != nil {
+		fields = append(fields, configurationitem.FieldCanonicalCloudAccountID)
+	}
+	if m.source_last_seen_at != nil {
+		fields = append(fields, configurationitem.FieldSourceLastSeenAt)
+	}
+	if m.source_missing_count != nil {
+		fields = append(fields, configurationitem.FieldSourceMissingCount)
+	}
+	if m.source_fingerprint != nil {
+		fields = append(fields, configurationitem.FieldSourceFingerprint)
 	}
 	if m.attributes != nil {
 		fields = append(fields, configurationitem.FieldAttributes)
@@ -33294,6 +34360,16 @@ func (m *ConfigurationItemMutation) Field(name string) (ent.Value, bool) {
 		return m.LastDiscovered()
 	case configurationitem.FieldSource:
 		return m.Source()
+	case configurationitem.FieldSourceID:
+		return m.SourceID()
+	case configurationitem.FieldCanonicalCloudAccountID:
+		return m.CanonicalCloudAccountID()
+	case configurationitem.FieldSourceLastSeenAt:
+		return m.SourceLastSeenAt()
+	case configurationitem.FieldSourceMissingCount:
+		return m.SourceMissingCount()
+	case configurationitem.FieldSourceFingerprint:
+		return m.SourceFingerprint()
 	case configurationitem.FieldAttributes:
 		return m.Attributes()
 	case configurationitem.FieldCloudProvider:
@@ -33381,6 +34457,16 @@ func (m *ConfigurationItemMutation) OldField(ctx context.Context, name string) (
 		return m.OldLastDiscovered(ctx)
 	case configurationitem.FieldSource:
 		return m.OldSource(ctx)
+	case configurationitem.FieldSourceID:
+		return m.OldSourceID(ctx)
+	case configurationitem.FieldCanonicalCloudAccountID:
+		return m.OldCanonicalCloudAccountID(ctx)
+	case configurationitem.FieldSourceLastSeenAt:
+		return m.OldSourceLastSeenAt(ctx)
+	case configurationitem.FieldSourceMissingCount:
+		return m.OldSourceMissingCount(ctx)
+	case configurationitem.FieldSourceFingerprint:
+		return m.OldSourceFingerprint(ctx)
 	case configurationitem.FieldAttributes:
 		return m.OldAttributes(ctx)
 	case configurationitem.FieldCloudProvider:
@@ -33563,6 +34649,41 @@ func (m *ConfigurationItemMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetSource(v)
 		return nil
+	case configurationitem.FieldSourceID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceID(v)
+		return nil
+	case configurationitem.FieldCanonicalCloudAccountID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCanonicalCloudAccountID(v)
+		return nil
+	case configurationitem.FieldSourceLastSeenAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceLastSeenAt(v)
+		return nil
+	case configurationitem.FieldSourceMissingCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceMissingCount(v)
+		return nil
+	case configurationitem.FieldSourceFingerprint:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceFingerprint(v)
+		return nil
 	case configurationitem.FieldAttributes:
 		v, ok := value.(map[string]interface{})
 		if !ok {
@@ -33711,6 +34832,9 @@ func (m *ConfigurationItemMutation) SetField(name string, value ent.Value) error
 // this mutation.
 func (m *ConfigurationItemMutation) AddedFields() []string {
 	var fields []string
+	if m.addsource_missing_count != nil {
+		fields = append(fields, configurationitem.FieldSourceMissingCount)
+	}
 	if m.addtenant_id != nil {
 		fields = append(fields, configurationitem.FieldTenantID)
 	}
@@ -33725,6 +34849,8 @@ func (m *ConfigurationItemMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ConfigurationItemMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case configurationitem.FieldSourceMissingCount:
+		return m.AddedSourceMissingCount()
 	case configurationitem.FieldTenantID:
 		return m.AddedTenantID()
 	case configurationitem.FieldVersion:
@@ -33738,6 +34864,13 @@ func (m *ConfigurationItemMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ConfigurationItemMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case configurationitem.FieldSourceMissingCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSourceMissingCount(v)
+		return nil
 	case configurationitem.FieldTenantID:
 		v, ok := value.(int)
 		if !ok {
@@ -33795,6 +34928,18 @@ func (m *ConfigurationItemMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(configurationitem.FieldSource) {
 		fields = append(fields, configurationitem.FieldSource)
+	}
+	if m.FieldCleared(configurationitem.FieldSourceID) {
+		fields = append(fields, configurationitem.FieldSourceID)
+	}
+	if m.FieldCleared(configurationitem.FieldCanonicalCloudAccountID) {
+		fields = append(fields, configurationitem.FieldCanonicalCloudAccountID)
+	}
+	if m.FieldCleared(configurationitem.FieldSourceLastSeenAt) {
+		fields = append(fields, configurationitem.FieldSourceLastSeenAt)
+	}
+	if m.FieldCleared(configurationitem.FieldSourceFingerprint) {
+		fields = append(fields, configurationitem.FieldSourceFingerprint)
 	}
 	if m.FieldCleared(configurationitem.FieldAttributes) {
 		fields = append(fields, configurationitem.FieldAttributes)
@@ -33890,6 +35035,18 @@ func (m *ConfigurationItemMutation) ClearField(name string) error {
 		return nil
 	case configurationitem.FieldSource:
 		m.ClearSource()
+		return nil
+	case configurationitem.FieldSourceID:
+		m.ClearSourceID()
+		return nil
+	case configurationitem.FieldCanonicalCloudAccountID:
+		m.ClearCanonicalCloudAccountID()
+		return nil
+	case configurationitem.FieldSourceLastSeenAt:
+		m.ClearSourceLastSeenAt()
+		return nil
+	case configurationitem.FieldSourceFingerprint:
+		m.ClearSourceFingerprint()
 		return nil
 	case configurationitem.FieldAttributes:
 		m.ClearAttributes()
@@ -34000,6 +35157,21 @@ func (m *ConfigurationItemMutation) ResetField(name string) error {
 		return nil
 	case configurationitem.FieldSource:
 		m.ResetSource()
+		return nil
+	case configurationitem.FieldSourceID:
+		m.ResetSourceID()
+		return nil
+	case configurationitem.FieldCanonicalCloudAccountID:
+		m.ResetCanonicalCloudAccountID()
+		return nil
+	case configurationitem.FieldSourceLastSeenAt:
+		m.ResetSourceLastSeenAt()
+		return nil
+	case configurationitem.FieldSourceMissingCount:
+		m.ResetSourceMissingCount()
+		return nil
+	case configurationitem.FieldSourceFingerprint:
+		m.ResetSourceFingerprint()
 		return nil
 	case configurationitem.FieldAttributes:
 		m.ResetAttributes()
@@ -40968,26 +42140,55 @@ func (m *DepartmentMutation) ResetEdge(name string) error {
 // DiscoveryJobMutation represents an operation that mutates the DiscoveryJob nodes in the graph.
 type DiscoveryJobMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *int
-	status         *string
-	started_at     *time.Time
-	finished_at    *time.Time
-	summary        *map[string]interface{}
-	tenant_id      *int
-	addtenant_id   *int
-	created_at     *time.Time
-	updated_at     *time.Time
-	clearedFields  map[string]struct{}
-	source         *string
-	clearedsource  bool
-	results        map[int]struct{}
-	removedresults map[int]struct{}
-	clearedresults bool
-	done           bool
-	oldValue       func(context.Context) (*DiscoveryJob, error)
-	predicates     []predicate.DiscoveryJob
+	op                     Op
+	typ                    string
+	id                     *int
+	status                 *string
+	operation              *string
+	idempotency_key        *string
+	request_fingerprint    *string
+	source_snapshot        *map[string]interface{}
+	scope_snapshot         *map[string]interface{}
+	completed_scopes       *[]string
+	appendcompleted_scopes []string
+	failed_scopes          *[]string
+	appendfailed_scopes    []string
+	snapshot_generation    *string
+	requested_by           *int
+	addrequested_by        *int
+	queued_at              *time.Time
+	heartbeat_at           *time.Time
+	lease_owner            *string
+	lease_expires_at       *time.Time
+	fencing_token          *int64
+	addfencing_token       *int64
+	attempt                *int
+	addattempt             *int
+	parent_job_id          *int
+	addparent_job_id       *int
+	max_attempts           *int
+	addmax_attempts        *int
+	progress               *int
+	addprogress            *int
+	error_code             *string
+	error_message          *string
+	cancel_requested_at    *time.Time
+	started_at             *time.Time
+	finished_at            *time.Time
+	summary                *map[string]interface{}
+	tenant_id              *int
+	addtenant_id           *int
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	source                 *string
+	clearedsource          bool
+	results                map[int]struct{}
+	removedresults         map[int]struct{}
+	clearedresults         bool
+	done                   bool
+	oldValue               func(context.Context) (*DiscoveryJob, error)
+	predicates             []predicate.DiscoveryJob
 }
 
 var _ ent.Mutation = (*DiscoveryJobMutation)(nil)
@@ -41158,6 +42359,1124 @@ func (m *DiscoveryJobMutation) OldStatus(ctx context.Context) (v string, err err
 // ResetStatus resets all changes to the "status" field.
 func (m *DiscoveryJobMutation) ResetStatus() {
 	m.status = nil
+}
+
+// SetOperation sets the "operation" field.
+func (m *DiscoveryJobMutation) SetOperation(s string) {
+	m.operation = &s
+}
+
+// Operation returns the value of the "operation" field in the mutation.
+func (m *DiscoveryJobMutation) Operation() (r string, exists bool) {
+	v := m.operation
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOperation returns the old "operation" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldOperation(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOperation is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOperation requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOperation: %w", err)
+	}
+	return oldValue.Operation, nil
+}
+
+// ResetOperation resets all changes to the "operation" field.
+func (m *DiscoveryJobMutation) ResetOperation() {
+	m.operation = nil
+}
+
+// SetIdempotencyKey sets the "idempotency_key" field.
+func (m *DiscoveryJobMutation) SetIdempotencyKey(s string) {
+	m.idempotency_key = &s
+}
+
+// IdempotencyKey returns the value of the "idempotency_key" field in the mutation.
+func (m *DiscoveryJobMutation) IdempotencyKey() (r string, exists bool) {
+	v := m.idempotency_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdempotencyKey returns the old "idempotency_key" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldIdempotencyKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdempotencyKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdempotencyKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdempotencyKey: %w", err)
+	}
+	return oldValue.IdempotencyKey, nil
+}
+
+// ClearIdempotencyKey clears the value of the "idempotency_key" field.
+func (m *DiscoveryJobMutation) ClearIdempotencyKey() {
+	m.idempotency_key = nil
+	m.clearedFields[discoveryjob.FieldIdempotencyKey] = struct{}{}
+}
+
+// IdempotencyKeyCleared returns if the "idempotency_key" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) IdempotencyKeyCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldIdempotencyKey]
+	return ok
+}
+
+// ResetIdempotencyKey resets all changes to the "idempotency_key" field.
+func (m *DiscoveryJobMutation) ResetIdempotencyKey() {
+	m.idempotency_key = nil
+	delete(m.clearedFields, discoveryjob.FieldIdempotencyKey)
+}
+
+// SetRequestFingerprint sets the "request_fingerprint" field.
+func (m *DiscoveryJobMutation) SetRequestFingerprint(s string) {
+	m.request_fingerprint = &s
+}
+
+// RequestFingerprint returns the value of the "request_fingerprint" field in the mutation.
+func (m *DiscoveryJobMutation) RequestFingerprint() (r string, exists bool) {
+	v := m.request_fingerprint
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestFingerprint returns the old "request_fingerprint" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldRequestFingerprint(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestFingerprint is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestFingerprint requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestFingerprint: %w", err)
+	}
+	return oldValue.RequestFingerprint, nil
+}
+
+// ClearRequestFingerprint clears the value of the "request_fingerprint" field.
+func (m *DiscoveryJobMutation) ClearRequestFingerprint() {
+	m.request_fingerprint = nil
+	m.clearedFields[discoveryjob.FieldRequestFingerprint] = struct{}{}
+}
+
+// RequestFingerprintCleared returns if the "request_fingerprint" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) RequestFingerprintCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldRequestFingerprint]
+	return ok
+}
+
+// ResetRequestFingerprint resets all changes to the "request_fingerprint" field.
+func (m *DiscoveryJobMutation) ResetRequestFingerprint() {
+	m.request_fingerprint = nil
+	delete(m.clearedFields, discoveryjob.FieldRequestFingerprint)
+}
+
+// SetSourceSnapshot sets the "source_snapshot" field.
+func (m *DiscoveryJobMutation) SetSourceSnapshot(value map[string]interface{}) {
+	m.source_snapshot = &value
+}
+
+// SourceSnapshot returns the value of the "source_snapshot" field in the mutation.
+func (m *DiscoveryJobMutation) SourceSnapshot() (r map[string]interface{}, exists bool) {
+	v := m.source_snapshot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceSnapshot returns the old "source_snapshot" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldSourceSnapshot(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceSnapshot is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceSnapshot requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceSnapshot: %w", err)
+	}
+	return oldValue.SourceSnapshot, nil
+}
+
+// ClearSourceSnapshot clears the value of the "source_snapshot" field.
+func (m *DiscoveryJobMutation) ClearSourceSnapshot() {
+	m.source_snapshot = nil
+	m.clearedFields[discoveryjob.FieldSourceSnapshot] = struct{}{}
+}
+
+// SourceSnapshotCleared returns if the "source_snapshot" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) SourceSnapshotCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldSourceSnapshot]
+	return ok
+}
+
+// ResetSourceSnapshot resets all changes to the "source_snapshot" field.
+func (m *DiscoveryJobMutation) ResetSourceSnapshot() {
+	m.source_snapshot = nil
+	delete(m.clearedFields, discoveryjob.FieldSourceSnapshot)
+}
+
+// SetScopeSnapshot sets the "scope_snapshot" field.
+func (m *DiscoveryJobMutation) SetScopeSnapshot(value map[string]interface{}) {
+	m.scope_snapshot = &value
+}
+
+// ScopeSnapshot returns the value of the "scope_snapshot" field in the mutation.
+func (m *DiscoveryJobMutation) ScopeSnapshot() (r map[string]interface{}, exists bool) {
+	v := m.scope_snapshot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScopeSnapshot returns the old "scope_snapshot" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldScopeSnapshot(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScopeSnapshot is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScopeSnapshot requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScopeSnapshot: %w", err)
+	}
+	return oldValue.ScopeSnapshot, nil
+}
+
+// ClearScopeSnapshot clears the value of the "scope_snapshot" field.
+func (m *DiscoveryJobMutation) ClearScopeSnapshot() {
+	m.scope_snapshot = nil
+	m.clearedFields[discoveryjob.FieldScopeSnapshot] = struct{}{}
+}
+
+// ScopeSnapshotCleared returns if the "scope_snapshot" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) ScopeSnapshotCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldScopeSnapshot]
+	return ok
+}
+
+// ResetScopeSnapshot resets all changes to the "scope_snapshot" field.
+func (m *DiscoveryJobMutation) ResetScopeSnapshot() {
+	m.scope_snapshot = nil
+	delete(m.clearedFields, discoveryjob.FieldScopeSnapshot)
+}
+
+// SetCompletedScopes sets the "completed_scopes" field.
+func (m *DiscoveryJobMutation) SetCompletedScopes(s []string) {
+	m.completed_scopes = &s
+	m.appendcompleted_scopes = nil
+}
+
+// CompletedScopes returns the value of the "completed_scopes" field in the mutation.
+func (m *DiscoveryJobMutation) CompletedScopes() (r []string, exists bool) {
+	v := m.completed_scopes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompletedScopes returns the old "completed_scopes" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldCompletedScopes(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompletedScopes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompletedScopes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompletedScopes: %w", err)
+	}
+	return oldValue.CompletedScopes, nil
+}
+
+// AppendCompletedScopes adds s to the "completed_scopes" field.
+func (m *DiscoveryJobMutation) AppendCompletedScopes(s []string) {
+	m.appendcompleted_scopes = append(m.appendcompleted_scopes, s...)
+}
+
+// AppendedCompletedScopes returns the list of values that were appended to the "completed_scopes" field in this mutation.
+func (m *DiscoveryJobMutation) AppendedCompletedScopes() ([]string, bool) {
+	if len(m.appendcompleted_scopes) == 0 {
+		return nil, false
+	}
+	return m.appendcompleted_scopes, true
+}
+
+// ClearCompletedScopes clears the value of the "completed_scopes" field.
+func (m *DiscoveryJobMutation) ClearCompletedScopes() {
+	m.completed_scopes = nil
+	m.appendcompleted_scopes = nil
+	m.clearedFields[discoveryjob.FieldCompletedScopes] = struct{}{}
+}
+
+// CompletedScopesCleared returns if the "completed_scopes" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) CompletedScopesCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldCompletedScopes]
+	return ok
+}
+
+// ResetCompletedScopes resets all changes to the "completed_scopes" field.
+func (m *DiscoveryJobMutation) ResetCompletedScopes() {
+	m.completed_scopes = nil
+	m.appendcompleted_scopes = nil
+	delete(m.clearedFields, discoveryjob.FieldCompletedScopes)
+}
+
+// SetFailedScopes sets the "failed_scopes" field.
+func (m *DiscoveryJobMutation) SetFailedScopes(s []string) {
+	m.failed_scopes = &s
+	m.appendfailed_scopes = nil
+}
+
+// FailedScopes returns the value of the "failed_scopes" field in the mutation.
+func (m *DiscoveryJobMutation) FailedScopes() (r []string, exists bool) {
+	v := m.failed_scopes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFailedScopes returns the old "failed_scopes" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldFailedScopes(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFailedScopes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFailedScopes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFailedScopes: %w", err)
+	}
+	return oldValue.FailedScopes, nil
+}
+
+// AppendFailedScopes adds s to the "failed_scopes" field.
+func (m *DiscoveryJobMutation) AppendFailedScopes(s []string) {
+	m.appendfailed_scopes = append(m.appendfailed_scopes, s...)
+}
+
+// AppendedFailedScopes returns the list of values that were appended to the "failed_scopes" field in this mutation.
+func (m *DiscoveryJobMutation) AppendedFailedScopes() ([]string, bool) {
+	if len(m.appendfailed_scopes) == 0 {
+		return nil, false
+	}
+	return m.appendfailed_scopes, true
+}
+
+// ClearFailedScopes clears the value of the "failed_scopes" field.
+func (m *DiscoveryJobMutation) ClearFailedScopes() {
+	m.failed_scopes = nil
+	m.appendfailed_scopes = nil
+	m.clearedFields[discoveryjob.FieldFailedScopes] = struct{}{}
+}
+
+// FailedScopesCleared returns if the "failed_scopes" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) FailedScopesCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldFailedScopes]
+	return ok
+}
+
+// ResetFailedScopes resets all changes to the "failed_scopes" field.
+func (m *DiscoveryJobMutation) ResetFailedScopes() {
+	m.failed_scopes = nil
+	m.appendfailed_scopes = nil
+	delete(m.clearedFields, discoveryjob.FieldFailedScopes)
+}
+
+// SetSnapshotGeneration sets the "snapshot_generation" field.
+func (m *DiscoveryJobMutation) SetSnapshotGeneration(s string) {
+	m.snapshot_generation = &s
+}
+
+// SnapshotGeneration returns the value of the "snapshot_generation" field in the mutation.
+func (m *DiscoveryJobMutation) SnapshotGeneration() (r string, exists bool) {
+	v := m.snapshot_generation
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSnapshotGeneration returns the old "snapshot_generation" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldSnapshotGeneration(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSnapshotGeneration is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSnapshotGeneration requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSnapshotGeneration: %w", err)
+	}
+	return oldValue.SnapshotGeneration, nil
+}
+
+// ClearSnapshotGeneration clears the value of the "snapshot_generation" field.
+func (m *DiscoveryJobMutation) ClearSnapshotGeneration() {
+	m.snapshot_generation = nil
+	m.clearedFields[discoveryjob.FieldSnapshotGeneration] = struct{}{}
+}
+
+// SnapshotGenerationCleared returns if the "snapshot_generation" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) SnapshotGenerationCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldSnapshotGeneration]
+	return ok
+}
+
+// ResetSnapshotGeneration resets all changes to the "snapshot_generation" field.
+func (m *DiscoveryJobMutation) ResetSnapshotGeneration() {
+	m.snapshot_generation = nil
+	delete(m.clearedFields, discoveryjob.FieldSnapshotGeneration)
+}
+
+// SetRequestedBy sets the "requested_by" field.
+func (m *DiscoveryJobMutation) SetRequestedBy(i int) {
+	m.requested_by = &i
+	m.addrequested_by = nil
+}
+
+// RequestedBy returns the value of the "requested_by" field in the mutation.
+func (m *DiscoveryJobMutation) RequestedBy() (r int, exists bool) {
+	v := m.requested_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestedBy returns the old "requested_by" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldRequestedBy(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestedBy: %w", err)
+	}
+	return oldValue.RequestedBy, nil
+}
+
+// AddRequestedBy adds i to the "requested_by" field.
+func (m *DiscoveryJobMutation) AddRequestedBy(i int) {
+	if m.addrequested_by != nil {
+		*m.addrequested_by += i
+	} else {
+		m.addrequested_by = &i
+	}
+}
+
+// AddedRequestedBy returns the value that was added to the "requested_by" field in this mutation.
+func (m *DiscoveryJobMutation) AddedRequestedBy() (r int, exists bool) {
+	v := m.addrequested_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearRequestedBy clears the value of the "requested_by" field.
+func (m *DiscoveryJobMutation) ClearRequestedBy() {
+	m.requested_by = nil
+	m.addrequested_by = nil
+	m.clearedFields[discoveryjob.FieldRequestedBy] = struct{}{}
+}
+
+// RequestedByCleared returns if the "requested_by" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) RequestedByCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldRequestedBy]
+	return ok
+}
+
+// ResetRequestedBy resets all changes to the "requested_by" field.
+func (m *DiscoveryJobMutation) ResetRequestedBy() {
+	m.requested_by = nil
+	m.addrequested_by = nil
+	delete(m.clearedFields, discoveryjob.FieldRequestedBy)
+}
+
+// SetQueuedAt sets the "queued_at" field.
+func (m *DiscoveryJobMutation) SetQueuedAt(t time.Time) {
+	m.queued_at = &t
+}
+
+// QueuedAt returns the value of the "queued_at" field in the mutation.
+func (m *DiscoveryJobMutation) QueuedAt() (r time.Time, exists bool) {
+	v := m.queued_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQueuedAt returns the old "queued_at" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldQueuedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQueuedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQueuedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQueuedAt: %w", err)
+	}
+	return oldValue.QueuedAt, nil
+}
+
+// ClearQueuedAt clears the value of the "queued_at" field.
+func (m *DiscoveryJobMutation) ClearQueuedAt() {
+	m.queued_at = nil
+	m.clearedFields[discoveryjob.FieldQueuedAt] = struct{}{}
+}
+
+// QueuedAtCleared returns if the "queued_at" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) QueuedAtCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldQueuedAt]
+	return ok
+}
+
+// ResetQueuedAt resets all changes to the "queued_at" field.
+func (m *DiscoveryJobMutation) ResetQueuedAt() {
+	m.queued_at = nil
+	delete(m.clearedFields, discoveryjob.FieldQueuedAt)
+}
+
+// SetHeartbeatAt sets the "heartbeat_at" field.
+func (m *DiscoveryJobMutation) SetHeartbeatAt(t time.Time) {
+	m.heartbeat_at = &t
+}
+
+// HeartbeatAt returns the value of the "heartbeat_at" field in the mutation.
+func (m *DiscoveryJobMutation) HeartbeatAt() (r time.Time, exists bool) {
+	v := m.heartbeat_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHeartbeatAt returns the old "heartbeat_at" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldHeartbeatAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHeartbeatAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHeartbeatAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHeartbeatAt: %w", err)
+	}
+	return oldValue.HeartbeatAt, nil
+}
+
+// ClearHeartbeatAt clears the value of the "heartbeat_at" field.
+func (m *DiscoveryJobMutation) ClearHeartbeatAt() {
+	m.heartbeat_at = nil
+	m.clearedFields[discoveryjob.FieldHeartbeatAt] = struct{}{}
+}
+
+// HeartbeatAtCleared returns if the "heartbeat_at" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) HeartbeatAtCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldHeartbeatAt]
+	return ok
+}
+
+// ResetHeartbeatAt resets all changes to the "heartbeat_at" field.
+func (m *DiscoveryJobMutation) ResetHeartbeatAt() {
+	m.heartbeat_at = nil
+	delete(m.clearedFields, discoveryjob.FieldHeartbeatAt)
+}
+
+// SetLeaseOwner sets the "lease_owner" field.
+func (m *DiscoveryJobMutation) SetLeaseOwner(s string) {
+	m.lease_owner = &s
+}
+
+// LeaseOwner returns the value of the "lease_owner" field in the mutation.
+func (m *DiscoveryJobMutation) LeaseOwner() (r string, exists bool) {
+	v := m.lease_owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaseOwner returns the old "lease_owner" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldLeaseOwner(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaseOwner is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaseOwner requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaseOwner: %w", err)
+	}
+	return oldValue.LeaseOwner, nil
+}
+
+// ClearLeaseOwner clears the value of the "lease_owner" field.
+func (m *DiscoveryJobMutation) ClearLeaseOwner() {
+	m.lease_owner = nil
+	m.clearedFields[discoveryjob.FieldLeaseOwner] = struct{}{}
+}
+
+// LeaseOwnerCleared returns if the "lease_owner" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) LeaseOwnerCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldLeaseOwner]
+	return ok
+}
+
+// ResetLeaseOwner resets all changes to the "lease_owner" field.
+func (m *DiscoveryJobMutation) ResetLeaseOwner() {
+	m.lease_owner = nil
+	delete(m.clearedFields, discoveryjob.FieldLeaseOwner)
+}
+
+// SetLeaseExpiresAt sets the "lease_expires_at" field.
+func (m *DiscoveryJobMutation) SetLeaseExpiresAt(t time.Time) {
+	m.lease_expires_at = &t
+}
+
+// LeaseExpiresAt returns the value of the "lease_expires_at" field in the mutation.
+func (m *DiscoveryJobMutation) LeaseExpiresAt() (r time.Time, exists bool) {
+	v := m.lease_expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaseExpiresAt returns the old "lease_expires_at" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldLeaseExpiresAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaseExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaseExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaseExpiresAt: %w", err)
+	}
+	return oldValue.LeaseExpiresAt, nil
+}
+
+// ClearLeaseExpiresAt clears the value of the "lease_expires_at" field.
+func (m *DiscoveryJobMutation) ClearLeaseExpiresAt() {
+	m.lease_expires_at = nil
+	m.clearedFields[discoveryjob.FieldLeaseExpiresAt] = struct{}{}
+}
+
+// LeaseExpiresAtCleared returns if the "lease_expires_at" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) LeaseExpiresAtCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldLeaseExpiresAt]
+	return ok
+}
+
+// ResetLeaseExpiresAt resets all changes to the "lease_expires_at" field.
+func (m *DiscoveryJobMutation) ResetLeaseExpiresAt() {
+	m.lease_expires_at = nil
+	delete(m.clearedFields, discoveryjob.FieldLeaseExpiresAt)
+}
+
+// SetFencingToken sets the "fencing_token" field.
+func (m *DiscoveryJobMutation) SetFencingToken(i int64) {
+	m.fencing_token = &i
+	m.addfencing_token = nil
+}
+
+// FencingToken returns the value of the "fencing_token" field in the mutation.
+func (m *DiscoveryJobMutation) FencingToken() (r int64, exists bool) {
+	v := m.fencing_token
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFencingToken returns the old "fencing_token" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldFencingToken(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFencingToken is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFencingToken requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFencingToken: %w", err)
+	}
+	return oldValue.FencingToken, nil
+}
+
+// AddFencingToken adds i to the "fencing_token" field.
+func (m *DiscoveryJobMutation) AddFencingToken(i int64) {
+	if m.addfencing_token != nil {
+		*m.addfencing_token += i
+	} else {
+		m.addfencing_token = &i
+	}
+}
+
+// AddedFencingToken returns the value that was added to the "fencing_token" field in this mutation.
+func (m *DiscoveryJobMutation) AddedFencingToken() (r int64, exists bool) {
+	v := m.addfencing_token
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetFencingToken resets all changes to the "fencing_token" field.
+func (m *DiscoveryJobMutation) ResetFencingToken() {
+	m.fencing_token = nil
+	m.addfencing_token = nil
+}
+
+// SetAttempt sets the "attempt" field.
+func (m *DiscoveryJobMutation) SetAttempt(i int) {
+	m.attempt = &i
+	m.addattempt = nil
+}
+
+// Attempt returns the value of the "attempt" field in the mutation.
+func (m *DiscoveryJobMutation) Attempt() (r int, exists bool) {
+	v := m.attempt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttempt returns the old "attempt" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldAttempt(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttempt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttempt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttempt: %w", err)
+	}
+	return oldValue.Attempt, nil
+}
+
+// AddAttempt adds i to the "attempt" field.
+func (m *DiscoveryJobMutation) AddAttempt(i int) {
+	if m.addattempt != nil {
+		*m.addattempt += i
+	} else {
+		m.addattempt = &i
+	}
+}
+
+// AddedAttempt returns the value that was added to the "attempt" field in this mutation.
+func (m *DiscoveryJobMutation) AddedAttempt() (r int, exists bool) {
+	v := m.addattempt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttempt resets all changes to the "attempt" field.
+func (m *DiscoveryJobMutation) ResetAttempt() {
+	m.attempt = nil
+	m.addattempt = nil
+}
+
+// SetParentJobID sets the "parent_job_id" field.
+func (m *DiscoveryJobMutation) SetParentJobID(i int) {
+	m.parent_job_id = &i
+	m.addparent_job_id = nil
+}
+
+// ParentJobID returns the value of the "parent_job_id" field in the mutation.
+func (m *DiscoveryJobMutation) ParentJobID() (r int, exists bool) {
+	v := m.parent_job_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParentJobID returns the old "parent_job_id" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldParentJobID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParentJobID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParentJobID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParentJobID: %w", err)
+	}
+	return oldValue.ParentJobID, nil
+}
+
+// AddParentJobID adds i to the "parent_job_id" field.
+func (m *DiscoveryJobMutation) AddParentJobID(i int) {
+	if m.addparent_job_id != nil {
+		*m.addparent_job_id += i
+	} else {
+		m.addparent_job_id = &i
+	}
+}
+
+// AddedParentJobID returns the value that was added to the "parent_job_id" field in this mutation.
+func (m *DiscoveryJobMutation) AddedParentJobID() (r int, exists bool) {
+	v := m.addparent_job_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearParentJobID clears the value of the "parent_job_id" field.
+func (m *DiscoveryJobMutation) ClearParentJobID() {
+	m.parent_job_id = nil
+	m.addparent_job_id = nil
+	m.clearedFields[discoveryjob.FieldParentJobID] = struct{}{}
+}
+
+// ParentJobIDCleared returns if the "parent_job_id" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) ParentJobIDCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldParentJobID]
+	return ok
+}
+
+// ResetParentJobID resets all changes to the "parent_job_id" field.
+func (m *DiscoveryJobMutation) ResetParentJobID() {
+	m.parent_job_id = nil
+	m.addparent_job_id = nil
+	delete(m.clearedFields, discoveryjob.FieldParentJobID)
+}
+
+// SetMaxAttempts sets the "max_attempts" field.
+func (m *DiscoveryJobMutation) SetMaxAttempts(i int) {
+	m.max_attempts = &i
+	m.addmax_attempts = nil
+}
+
+// MaxAttempts returns the value of the "max_attempts" field in the mutation.
+func (m *DiscoveryJobMutation) MaxAttempts() (r int, exists bool) {
+	v := m.max_attempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxAttempts returns the old "max_attempts" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldMaxAttempts(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxAttempts is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxAttempts requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxAttempts: %w", err)
+	}
+	return oldValue.MaxAttempts, nil
+}
+
+// AddMaxAttempts adds i to the "max_attempts" field.
+func (m *DiscoveryJobMutation) AddMaxAttempts(i int) {
+	if m.addmax_attempts != nil {
+		*m.addmax_attempts += i
+	} else {
+		m.addmax_attempts = &i
+	}
+}
+
+// AddedMaxAttempts returns the value that was added to the "max_attempts" field in this mutation.
+func (m *DiscoveryJobMutation) AddedMaxAttempts() (r int, exists bool) {
+	v := m.addmax_attempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxAttempts resets all changes to the "max_attempts" field.
+func (m *DiscoveryJobMutation) ResetMaxAttempts() {
+	m.max_attempts = nil
+	m.addmax_attempts = nil
+}
+
+// SetProgress sets the "progress" field.
+func (m *DiscoveryJobMutation) SetProgress(i int) {
+	m.progress = &i
+	m.addprogress = nil
+}
+
+// Progress returns the value of the "progress" field in the mutation.
+func (m *DiscoveryJobMutation) Progress() (r int, exists bool) {
+	v := m.progress
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProgress returns the old "progress" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldProgress(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProgress is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProgress requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProgress: %w", err)
+	}
+	return oldValue.Progress, nil
+}
+
+// AddProgress adds i to the "progress" field.
+func (m *DiscoveryJobMutation) AddProgress(i int) {
+	if m.addprogress != nil {
+		*m.addprogress += i
+	} else {
+		m.addprogress = &i
+	}
+}
+
+// AddedProgress returns the value that was added to the "progress" field in this mutation.
+func (m *DiscoveryJobMutation) AddedProgress() (r int, exists bool) {
+	v := m.addprogress
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetProgress resets all changes to the "progress" field.
+func (m *DiscoveryJobMutation) ResetProgress() {
+	m.progress = nil
+	m.addprogress = nil
+}
+
+// SetErrorCode sets the "error_code" field.
+func (m *DiscoveryJobMutation) SetErrorCode(s string) {
+	m.error_code = &s
+}
+
+// ErrorCode returns the value of the "error_code" field in the mutation.
+func (m *DiscoveryJobMutation) ErrorCode() (r string, exists bool) {
+	v := m.error_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorCode returns the old "error_code" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldErrorCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorCode: %w", err)
+	}
+	return oldValue.ErrorCode, nil
+}
+
+// ClearErrorCode clears the value of the "error_code" field.
+func (m *DiscoveryJobMutation) ClearErrorCode() {
+	m.error_code = nil
+	m.clearedFields[discoveryjob.FieldErrorCode] = struct{}{}
+}
+
+// ErrorCodeCleared returns if the "error_code" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) ErrorCodeCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldErrorCode]
+	return ok
+}
+
+// ResetErrorCode resets all changes to the "error_code" field.
+func (m *DiscoveryJobMutation) ResetErrorCode() {
+	m.error_code = nil
+	delete(m.clearedFields, discoveryjob.FieldErrorCode)
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (m *DiscoveryJobMutation) SetErrorMessage(s string) {
+	m.error_message = &s
+}
+
+// ErrorMessage returns the value of the "error_message" field in the mutation.
+func (m *DiscoveryJobMutation) ErrorMessage() (r string, exists bool) {
+	v := m.error_message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorMessage returns the old "error_message" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldErrorMessage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorMessage: %w", err)
+	}
+	return oldValue.ErrorMessage, nil
+}
+
+// ClearErrorMessage clears the value of the "error_message" field.
+func (m *DiscoveryJobMutation) ClearErrorMessage() {
+	m.error_message = nil
+	m.clearedFields[discoveryjob.FieldErrorMessage] = struct{}{}
+}
+
+// ErrorMessageCleared returns if the "error_message" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) ErrorMessageCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldErrorMessage]
+	return ok
+}
+
+// ResetErrorMessage resets all changes to the "error_message" field.
+func (m *DiscoveryJobMutation) ResetErrorMessage() {
+	m.error_message = nil
+	delete(m.clearedFields, discoveryjob.FieldErrorMessage)
+}
+
+// SetCancelRequestedAt sets the "cancel_requested_at" field.
+func (m *DiscoveryJobMutation) SetCancelRequestedAt(t time.Time) {
+	m.cancel_requested_at = &t
+}
+
+// CancelRequestedAt returns the value of the "cancel_requested_at" field in the mutation.
+func (m *DiscoveryJobMutation) CancelRequestedAt() (r time.Time, exists bool) {
+	v := m.cancel_requested_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCancelRequestedAt returns the old "cancel_requested_at" field's value of the DiscoveryJob entity.
+// If the DiscoveryJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryJobMutation) OldCancelRequestedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCancelRequestedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCancelRequestedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCancelRequestedAt: %w", err)
+	}
+	return oldValue.CancelRequestedAt, nil
+}
+
+// ClearCancelRequestedAt clears the value of the "cancel_requested_at" field.
+func (m *DiscoveryJobMutation) ClearCancelRequestedAt() {
+	m.cancel_requested_at = nil
+	m.clearedFields[discoveryjob.FieldCancelRequestedAt] = struct{}{}
+}
+
+// CancelRequestedAtCleared returns if the "cancel_requested_at" field was cleared in this mutation.
+func (m *DiscoveryJobMutation) CancelRequestedAtCleared() bool {
+	_, ok := m.clearedFields[discoveryjob.FieldCancelRequestedAt]
+	return ok
+}
+
+// ResetCancelRequestedAt resets all changes to the "cancel_requested_at" field.
+func (m *DiscoveryJobMutation) ResetCancelRequestedAt() {
+	m.cancel_requested_at = nil
+	delete(m.clearedFields, discoveryjob.FieldCancelRequestedAt)
 }
 
 // SetStartedAt sets the "started_at" field.
@@ -41550,12 +43869,75 @@ func (m *DiscoveryJobMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *DiscoveryJobMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 29)
 	if m.source != nil {
 		fields = append(fields, discoveryjob.FieldSourceID)
 	}
 	if m.status != nil {
 		fields = append(fields, discoveryjob.FieldStatus)
+	}
+	if m.operation != nil {
+		fields = append(fields, discoveryjob.FieldOperation)
+	}
+	if m.idempotency_key != nil {
+		fields = append(fields, discoveryjob.FieldIdempotencyKey)
+	}
+	if m.request_fingerprint != nil {
+		fields = append(fields, discoveryjob.FieldRequestFingerprint)
+	}
+	if m.source_snapshot != nil {
+		fields = append(fields, discoveryjob.FieldSourceSnapshot)
+	}
+	if m.scope_snapshot != nil {
+		fields = append(fields, discoveryjob.FieldScopeSnapshot)
+	}
+	if m.completed_scopes != nil {
+		fields = append(fields, discoveryjob.FieldCompletedScopes)
+	}
+	if m.failed_scopes != nil {
+		fields = append(fields, discoveryjob.FieldFailedScopes)
+	}
+	if m.snapshot_generation != nil {
+		fields = append(fields, discoveryjob.FieldSnapshotGeneration)
+	}
+	if m.requested_by != nil {
+		fields = append(fields, discoveryjob.FieldRequestedBy)
+	}
+	if m.queued_at != nil {
+		fields = append(fields, discoveryjob.FieldQueuedAt)
+	}
+	if m.heartbeat_at != nil {
+		fields = append(fields, discoveryjob.FieldHeartbeatAt)
+	}
+	if m.lease_owner != nil {
+		fields = append(fields, discoveryjob.FieldLeaseOwner)
+	}
+	if m.lease_expires_at != nil {
+		fields = append(fields, discoveryjob.FieldLeaseExpiresAt)
+	}
+	if m.fencing_token != nil {
+		fields = append(fields, discoveryjob.FieldFencingToken)
+	}
+	if m.attempt != nil {
+		fields = append(fields, discoveryjob.FieldAttempt)
+	}
+	if m.parent_job_id != nil {
+		fields = append(fields, discoveryjob.FieldParentJobID)
+	}
+	if m.max_attempts != nil {
+		fields = append(fields, discoveryjob.FieldMaxAttempts)
+	}
+	if m.progress != nil {
+		fields = append(fields, discoveryjob.FieldProgress)
+	}
+	if m.error_code != nil {
+		fields = append(fields, discoveryjob.FieldErrorCode)
+	}
+	if m.error_message != nil {
+		fields = append(fields, discoveryjob.FieldErrorMessage)
+	}
+	if m.cancel_requested_at != nil {
+		fields = append(fields, discoveryjob.FieldCancelRequestedAt)
 	}
 	if m.started_at != nil {
 		fields = append(fields, discoveryjob.FieldStartedAt)
@@ -41587,6 +43969,48 @@ func (m *DiscoveryJobMutation) Field(name string) (ent.Value, bool) {
 		return m.SourceID()
 	case discoveryjob.FieldStatus:
 		return m.Status()
+	case discoveryjob.FieldOperation:
+		return m.Operation()
+	case discoveryjob.FieldIdempotencyKey:
+		return m.IdempotencyKey()
+	case discoveryjob.FieldRequestFingerprint:
+		return m.RequestFingerprint()
+	case discoveryjob.FieldSourceSnapshot:
+		return m.SourceSnapshot()
+	case discoveryjob.FieldScopeSnapshot:
+		return m.ScopeSnapshot()
+	case discoveryjob.FieldCompletedScopes:
+		return m.CompletedScopes()
+	case discoveryjob.FieldFailedScopes:
+		return m.FailedScopes()
+	case discoveryjob.FieldSnapshotGeneration:
+		return m.SnapshotGeneration()
+	case discoveryjob.FieldRequestedBy:
+		return m.RequestedBy()
+	case discoveryjob.FieldQueuedAt:
+		return m.QueuedAt()
+	case discoveryjob.FieldHeartbeatAt:
+		return m.HeartbeatAt()
+	case discoveryjob.FieldLeaseOwner:
+		return m.LeaseOwner()
+	case discoveryjob.FieldLeaseExpiresAt:
+		return m.LeaseExpiresAt()
+	case discoveryjob.FieldFencingToken:
+		return m.FencingToken()
+	case discoveryjob.FieldAttempt:
+		return m.Attempt()
+	case discoveryjob.FieldParentJobID:
+		return m.ParentJobID()
+	case discoveryjob.FieldMaxAttempts:
+		return m.MaxAttempts()
+	case discoveryjob.FieldProgress:
+		return m.Progress()
+	case discoveryjob.FieldErrorCode:
+		return m.ErrorCode()
+	case discoveryjob.FieldErrorMessage:
+		return m.ErrorMessage()
+	case discoveryjob.FieldCancelRequestedAt:
+		return m.CancelRequestedAt()
 	case discoveryjob.FieldStartedAt:
 		return m.StartedAt()
 	case discoveryjob.FieldFinishedAt:
@@ -41612,6 +44036,48 @@ func (m *DiscoveryJobMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldSourceID(ctx)
 	case discoveryjob.FieldStatus:
 		return m.OldStatus(ctx)
+	case discoveryjob.FieldOperation:
+		return m.OldOperation(ctx)
+	case discoveryjob.FieldIdempotencyKey:
+		return m.OldIdempotencyKey(ctx)
+	case discoveryjob.FieldRequestFingerprint:
+		return m.OldRequestFingerprint(ctx)
+	case discoveryjob.FieldSourceSnapshot:
+		return m.OldSourceSnapshot(ctx)
+	case discoveryjob.FieldScopeSnapshot:
+		return m.OldScopeSnapshot(ctx)
+	case discoveryjob.FieldCompletedScopes:
+		return m.OldCompletedScopes(ctx)
+	case discoveryjob.FieldFailedScopes:
+		return m.OldFailedScopes(ctx)
+	case discoveryjob.FieldSnapshotGeneration:
+		return m.OldSnapshotGeneration(ctx)
+	case discoveryjob.FieldRequestedBy:
+		return m.OldRequestedBy(ctx)
+	case discoveryjob.FieldQueuedAt:
+		return m.OldQueuedAt(ctx)
+	case discoveryjob.FieldHeartbeatAt:
+		return m.OldHeartbeatAt(ctx)
+	case discoveryjob.FieldLeaseOwner:
+		return m.OldLeaseOwner(ctx)
+	case discoveryjob.FieldLeaseExpiresAt:
+		return m.OldLeaseExpiresAt(ctx)
+	case discoveryjob.FieldFencingToken:
+		return m.OldFencingToken(ctx)
+	case discoveryjob.FieldAttempt:
+		return m.OldAttempt(ctx)
+	case discoveryjob.FieldParentJobID:
+		return m.OldParentJobID(ctx)
+	case discoveryjob.FieldMaxAttempts:
+		return m.OldMaxAttempts(ctx)
+	case discoveryjob.FieldProgress:
+		return m.OldProgress(ctx)
+	case discoveryjob.FieldErrorCode:
+		return m.OldErrorCode(ctx)
+	case discoveryjob.FieldErrorMessage:
+		return m.OldErrorMessage(ctx)
+	case discoveryjob.FieldCancelRequestedAt:
+		return m.OldCancelRequestedAt(ctx)
 	case discoveryjob.FieldStartedAt:
 		return m.OldStartedAt(ctx)
 	case discoveryjob.FieldFinishedAt:
@@ -41646,6 +44112,153 @@ func (m *DiscoveryJobMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case discoveryjob.FieldOperation:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOperation(v)
+		return nil
+	case discoveryjob.FieldIdempotencyKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdempotencyKey(v)
+		return nil
+	case discoveryjob.FieldRequestFingerprint:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestFingerprint(v)
+		return nil
+	case discoveryjob.FieldSourceSnapshot:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceSnapshot(v)
+		return nil
+	case discoveryjob.FieldScopeSnapshot:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScopeSnapshot(v)
+		return nil
+	case discoveryjob.FieldCompletedScopes:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompletedScopes(v)
+		return nil
+	case discoveryjob.FieldFailedScopes:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFailedScopes(v)
+		return nil
+	case discoveryjob.FieldSnapshotGeneration:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSnapshotGeneration(v)
+		return nil
+	case discoveryjob.FieldRequestedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestedBy(v)
+		return nil
+	case discoveryjob.FieldQueuedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQueuedAt(v)
+		return nil
+	case discoveryjob.FieldHeartbeatAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHeartbeatAt(v)
+		return nil
+	case discoveryjob.FieldLeaseOwner:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaseOwner(v)
+		return nil
+	case discoveryjob.FieldLeaseExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaseExpiresAt(v)
+		return nil
+	case discoveryjob.FieldFencingToken:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFencingToken(v)
+		return nil
+	case discoveryjob.FieldAttempt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttempt(v)
+		return nil
+	case discoveryjob.FieldParentJobID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParentJobID(v)
+		return nil
+	case discoveryjob.FieldMaxAttempts:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxAttempts(v)
+		return nil
+	case discoveryjob.FieldProgress:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProgress(v)
+		return nil
+	case discoveryjob.FieldErrorCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorCode(v)
+		return nil
+	case discoveryjob.FieldErrorMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorMessage(v)
+		return nil
+	case discoveryjob.FieldCancelRequestedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCancelRequestedAt(v)
 		return nil
 	case discoveryjob.FieldStartedAt:
 		v, ok := value.(time.Time)
@@ -41697,6 +44310,24 @@ func (m *DiscoveryJobMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *DiscoveryJobMutation) AddedFields() []string {
 	var fields []string
+	if m.addrequested_by != nil {
+		fields = append(fields, discoveryjob.FieldRequestedBy)
+	}
+	if m.addfencing_token != nil {
+		fields = append(fields, discoveryjob.FieldFencingToken)
+	}
+	if m.addattempt != nil {
+		fields = append(fields, discoveryjob.FieldAttempt)
+	}
+	if m.addparent_job_id != nil {
+		fields = append(fields, discoveryjob.FieldParentJobID)
+	}
+	if m.addmax_attempts != nil {
+		fields = append(fields, discoveryjob.FieldMaxAttempts)
+	}
+	if m.addprogress != nil {
+		fields = append(fields, discoveryjob.FieldProgress)
+	}
 	if m.addtenant_id != nil {
 		fields = append(fields, discoveryjob.FieldTenantID)
 	}
@@ -41708,6 +44339,18 @@ func (m *DiscoveryJobMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *DiscoveryJobMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case discoveryjob.FieldRequestedBy:
+		return m.AddedRequestedBy()
+	case discoveryjob.FieldFencingToken:
+		return m.AddedFencingToken()
+	case discoveryjob.FieldAttempt:
+		return m.AddedAttempt()
+	case discoveryjob.FieldParentJobID:
+		return m.AddedParentJobID()
+	case discoveryjob.FieldMaxAttempts:
+		return m.AddedMaxAttempts()
+	case discoveryjob.FieldProgress:
+		return m.AddedProgress()
 	case discoveryjob.FieldTenantID:
 		return m.AddedTenantID()
 	}
@@ -41719,6 +44362,48 @@ func (m *DiscoveryJobMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *DiscoveryJobMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case discoveryjob.FieldRequestedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRequestedBy(v)
+		return nil
+	case discoveryjob.FieldFencingToken:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddFencingToken(v)
+		return nil
+	case discoveryjob.FieldAttempt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttempt(v)
+		return nil
+	case discoveryjob.FieldParentJobID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddParentJobID(v)
+		return nil
+	case discoveryjob.FieldMaxAttempts:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxAttempts(v)
+		return nil
+	case discoveryjob.FieldProgress:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddProgress(v)
+		return nil
 	case discoveryjob.FieldTenantID:
 		v, ok := value.(int)
 		if !ok {
@@ -41734,6 +44419,54 @@ func (m *DiscoveryJobMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *DiscoveryJobMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(discoveryjob.FieldIdempotencyKey) {
+		fields = append(fields, discoveryjob.FieldIdempotencyKey)
+	}
+	if m.FieldCleared(discoveryjob.FieldRequestFingerprint) {
+		fields = append(fields, discoveryjob.FieldRequestFingerprint)
+	}
+	if m.FieldCleared(discoveryjob.FieldSourceSnapshot) {
+		fields = append(fields, discoveryjob.FieldSourceSnapshot)
+	}
+	if m.FieldCleared(discoveryjob.FieldScopeSnapshot) {
+		fields = append(fields, discoveryjob.FieldScopeSnapshot)
+	}
+	if m.FieldCleared(discoveryjob.FieldCompletedScopes) {
+		fields = append(fields, discoveryjob.FieldCompletedScopes)
+	}
+	if m.FieldCleared(discoveryjob.FieldFailedScopes) {
+		fields = append(fields, discoveryjob.FieldFailedScopes)
+	}
+	if m.FieldCleared(discoveryjob.FieldSnapshotGeneration) {
+		fields = append(fields, discoveryjob.FieldSnapshotGeneration)
+	}
+	if m.FieldCleared(discoveryjob.FieldRequestedBy) {
+		fields = append(fields, discoveryjob.FieldRequestedBy)
+	}
+	if m.FieldCleared(discoveryjob.FieldQueuedAt) {
+		fields = append(fields, discoveryjob.FieldQueuedAt)
+	}
+	if m.FieldCleared(discoveryjob.FieldHeartbeatAt) {
+		fields = append(fields, discoveryjob.FieldHeartbeatAt)
+	}
+	if m.FieldCleared(discoveryjob.FieldLeaseOwner) {
+		fields = append(fields, discoveryjob.FieldLeaseOwner)
+	}
+	if m.FieldCleared(discoveryjob.FieldLeaseExpiresAt) {
+		fields = append(fields, discoveryjob.FieldLeaseExpiresAt)
+	}
+	if m.FieldCleared(discoveryjob.FieldParentJobID) {
+		fields = append(fields, discoveryjob.FieldParentJobID)
+	}
+	if m.FieldCleared(discoveryjob.FieldErrorCode) {
+		fields = append(fields, discoveryjob.FieldErrorCode)
+	}
+	if m.FieldCleared(discoveryjob.FieldErrorMessage) {
+		fields = append(fields, discoveryjob.FieldErrorMessage)
+	}
+	if m.FieldCleared(discoveryjob.FieldCancelRequestedAt) {
+		fields = append(fields, discoveryjob.FieldCancelRequestedAt)
+	}
 	if m.FieldCleared(discoveryjob.FieldStartedAt) {
 		fields = append(fields, discoveryjob.FieldStartedAt)
 	}
@@ -41757,6 +44490,54 @@ func (m *DiscoveryJobMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *DiscoveryJobMutation) ClearField(name string) error {
 	switch name {
+	case discoveryjob.FieldIdempotencyKey:
+		m.ClearIdempotencyKey()
+		return nil
+	case discoveryjob.FieldRequestFingerprint:
+		m.ClearRequestFingerprint()
+		return nil
+	case discoveryjob.FieldSourceSnapshot:
+		m.ClearSourceSnapshot()
+		return nil
+	case discoveryjob.FieldScopeSnapshot:
+		m.ClearScopeSnapshot()
+		return nil
+	case discoveryjob.FieldCompletedScopes:
+		m.ClearCompletedScopes()
+		return nil
+	case discoveryjob.FieldFailedScopes:
+		m.ClearFailedScopes()
+		return nil
+	case discoveryjob.FieldSnapshotGeneration:
+		m.ClearSnapshotGeneration()
+		return nil
+	case discoveryjob.FieldRequestedBy:
+		m.ClearRequestedBy()
+		return nil
+	case discoveryjob.FieldQueuedAt:
+		m.ClearQueuedAt()
+		return nil
+	case discoveryjob.FieldHeartbeatAt:
+		m.ClearHeartbeatAt()
+		return nil
+	case discoveryjob.FieldLeaseOwner:
+		m.ClearLeaseOwner()
+		return nil
+	case discoveryjob.FieldLeaseExpiresAt:
+		m.ClearLeaseExpiresAt()
+		return nil
+	case discoveryjob.FieldParentJobID:
+		m.ClearParentJobID()
+		return nil
+	case discoveryjob.FieldErrorCode:
+		m.ClearErrorCode()
+		return nil
+	case discoveryjob.FieldErrorMessage:
+		m.ClearErrorMessage()
+		return nil
+	case discoveryjob.FieldCancelRequestedAt:
+		m.ClearCancelRequestedAt()
+		return nil
 	case discoveryjob.FieldStartedAt:
 		m.ClearStartedAt()
 		return nil
@@ -41779,6 +44560,69 @@ func (m *DiscoveryJobMutation) ResetField(name string) error {
 		return nil
 	case discoveryjob.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case discoveryjob.FieldOperation:
+		m.ResetOperation()
+		return nil
+	case discoveryjob.FieldIdempotencyKey:
+		m.ResetIdempotencyKey()
+		return nil
+	case discoveryjob.FieldRequestFingerprint:
+		m.ResetRequestFingerprint()
+		return nil
+	case discoveryjob.FieldSourceSnapshot:
+		m.ResetSourceSnapshot()
+		return nil
+	case discoveryjob.FieldScopeSnapshot:
+		m.ResetScopeSnapshot()
+		return nil
+	case discoveryjob.FieldCompletedScopes:
+		m.ResetCompletedScopes()
+		return nil
+	case discoveryjob.FieldFailedScopes:
+		m.ResetFailedScopes()
+		return nil
+	case discoveryjob.FieldSnapshotGeneration:
+		m.ResetSnapshotGeneration()
+		return nil
+	case discoveryjob.FieldRequestedBy:
+		m.ResetRequestedBy()
+		return nil
+	case discoveryjob.FieldQueuedAt:
+		m.ResetQueuedAt()
+		return nil
+	case discoveryjob.FieldHeartbeatAt:
+		m.ResetHeartbeatAt()
+		return nil
+	case discoveryjob.FieldLeaseOwner:
+		m.ResetLeaseOwner()
+		return nil
+	case discoveryjob.FieldLeaseExpiresAt:
+		m.ResetLeaseExpiresAt()
+		return nil
+	case discoveryjob.FieldFencingToken:
+		m.ResetFencingToken()
+		return nil
+	case discoveryjob.FieldAttempt:
+		m.ResetAttempt()
+		return nil
+	case discoveryjob.FieldParentJobID:
+		m.ResetParentJobID()
+		return nil
+	case discoveryjob.FieldMaxAttempts:
+		m.ResetMaxAttempts()
+		return nil
+	case discoveryjob.FieldProgress:
+		m.ResetProgress()
+		return nil
+	case discoveryjob.FieldErrorCode:
+		m.ResetErrorCode()
+		return nil
+	case discoveryjob.FieldErrorMessage:
+		m.ResetErrorMessage()
+		return nil
+	case discoveryjob.FieldCancelRequestedAt:
+		m.ResetCancelRequestedAt()
 		return nil
 	case discoveryjob.FieldStartedAt:
 		m.ResetStartedAt()
@@ -41907,26 +44751,34 @@ func (m *DiscoveryJobMutation) ResetEdge(name string) error {
 // DiscoveryResultMutation represents an operation that mutates the DiscoveryResult nodes in the graph.
 type DiscoveryResultMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	ci_id         *int
-	addci_id      *int
-	action        *string
-	resource_type *string
-	resource_id   *string
-	diff          *map[string]interface{}
-	status        *string
-	tenant_id     *int
-	addtenant_id  *int
-	created_at    *time.Time
-	updated_at    *time.Time
-	clearedFields map[string]struct{}
-	job           *int
-	clearedjob    bool
-	done          bool
-	oldValue      func(context.Context) (*DiscoveryResult, error)
-	predicates    []predicate.DiscoveryResult
+	op                  Op
+	typ                 string
+	id                  *int
+	ci_id               *int
+	addci_id            *int
+	action              *string
+	resource_type       *string
+	resource_id         *string
+	resource_identity   *string
+	identity_version    *int
+	addidentity_version *int
+	resource_snapshot   *map[string]interface{}
+	before_hash         *string
+	after_hash          *string
+	diff                *map[string]interface{}
+	status              *string
+	error_code          *string
+	error_message       *string
+	tenant_id           *int
+	addtenant_id        *int
+	created_at          *time.Time
+	updated_at          *time.Time
+	clearedFields       map[string]struct{}
+	job                 *int
+	clearedjob          bool
+	done                bool
+	oldValue            func(context.Context) (*DiscoveryResult, error)
+	predicates          []predicate.DiscoveryResult
 }
 
 var _ ent.Mutation = (*DiscoveryResultMutation)(nil)
@@ -42267,6 +45119,258 @@ func (m *DiscoveryResultMutation) ResetResourceID() {
 	delete(m.clearedFields, discoveryresult.FieldResourceID)
 }
 
+// SetResourceIdentity sets the "resource_identity" field.
+func (m *DiscoveryResultMutation) SetResourceIdentity(s string) {
+	m.resource_identity = &s
+}
+
+// ResourceIdentity returns the value of the "resource_identity" field in the mutation.
+func (m *DiscoveryResultMutation) ResourceIdentity() (r string, exists bool) {
+	v := m.resource_identity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceIdentity returns the old "resource_identity" field's value of the DiscoveryResult entity.
+// If the DiscoveryResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryResultMutation) OldResourceIdentity(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResourceIdentity is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResourceIdentity requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceIdentity: %w", err)
+	}
+	return oldValue.ResourceIdentity, nil
+}
+
+// ClearResourceIdentity clears the value of the "resource_identity" field.
+func (m *DiscoveryResultMutation) ClearResourceIdentity() {
+	m.resource_identity = nil
+	m.clearedFields[discoveryresult.FieldResourceIdentity] = struct{}{}
+}
+
+// ResourceIdentityCleared returns if the "resource_identity" field was cleared in this mutation.
+func (m *DiscoveryResultMutation) ResourceIdentityCleared() bool {
+	_, ok := m.clearedFields[discoveryresult.FieldResourceIdentity]
+	return ok
+}
+
+// ResetResourceIdentity resets all changes to the "resource_identity" field.
+func (m *DiscoveryResultMutation) ResetResourceIdentity() {
+	m.resource_identity = nil
+	delete(m.clearedFields, discoveryresult.FieldResourceIdentity)
+}
+
+// SetIdentityVersion sets the "identity_version" field.
+func (m *DiscoveryResultMutation) SetIdentityVersion(i int) {
+	m.identity_version = &i
+	m.addidentity_version = nil
+}
+
+// IdentityVersion returns the value of the "identity_version" field in the mutation.
+func (m *DiscoveryResultMutation) IdentityVersion() (r int, exists bool) {
+	v := m.identity_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdentityVersion returns the old "identity_version" field's value of the DiscoveryResult entity.
+// If the DiscoveryResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryResultMutation) OldIdentityVersion(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdentityVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdentityVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdentityVersion: %w", err)
+	}
+	return oldValue.IdentityVersion, nil
+}
+
+// AddIdentityVersion adds i to the "identity_version" field.
+func (m *DiscoveryResultMutation) AddIdentityVersion(i int) {
+	if m.addidentity_version != nil {
+		*m.addidentity_version += i
+	} else {
+		m.addidentity_version = &i
+	}
+}
+
+// AddedIdentityVersion returns the value that was added to the "identity_version" field in this mutation.
+func (m *DiscoveryResultMutation) AddedIdentityVersion() (r int, exists bool) {
+	v := m.addidentity_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetIdentityVersion resets all changes to the "identity_version" field.
+func (m *DiscoveryResultMutation) ResetIdentityVersion() {
+	m.identity_version = nil
+	m.addidentity_version = nil
+}
+
+// SetResourceSnapshot sets the "resource_snapshot" field.
+func (m *DiscoveryResultMutation) SetResourceSnapshot(value map[string]interface{}) {
+	m.resource_snapshot = &value
+}
+
+// ResourceSnapshot returns the value of the "resource_snapshot" field in the mutation.
+func (m *DiscoveryResultMutation) ResourceSnapshot() (r map[string]interface{}, exists bool) {
+	v := m.resource_snapshot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceSnapshot returns the old "resource_snapshot" field's value of the DiscoveryResult entity.
+// If the DiscoveryResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryResultMutation) OldResourceSnapshot(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResourceSnapshot is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResourceSnapshot requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceSnapshot: %w", err)
+	}
+	return oldValue.ResourceSnapshot, nil
+}
+
+// ClearResourceSnapshot clears the value of the "resource_snapshot" field.
+func (m *DiscoveryResultMutation) ClearResourceSnapshot() {
+	m.resource_snapshot = nil
+	m.clearedFields[discoveryresult.FieldResourceSnapshot] = struct{}{}
+}
+
+// ResourceSnapshotCleared returns if the "resource_snapshot" field was cleared in this mutation.
+func (m *DiscoveryResultMutation) ResourceSnapshotCleared() bool {
+	_, ok := m.clearedFields[discoveryresult.FieldResourceSnapshot]
+	return ok
+}
+
+// ResetResourceSnapshot resets all changes to the "resource_snapshot" field.
+func (m *DiscoveryResultMutation) ResetResourceSnapshot() {
+	m.resource_snapshot = nil
+	delete(m.clearedFields, discoveryresult.FieldResourceSnapshot)
+}
+
+// SetBeforeHash sets the "before_hash" field.
+func (m *DiscoveryResultMutation) SetBeforeHash(s string) {
+	m.before_hash = &s
+}
+
+// BeforeHash returns the value of the "before_hash" field in the mutation.
+func (m *DiscoveryResultMutation) BeforeHash() (r string, exists bool) {
+	v := m.before_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBeforeHash returns the old "before_hash" field's value of the DiscoveryResult entity.
+// If the DiscoveryResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryResultMutation) OldBeforeHash(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBeforeHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBeforeHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBeforeHash: %w", err)
+	}
+	return oldValue.BeforeHash, nil
+}
+
+// ClearBeforeHash clears the value of the "before_hash" field.
+func (m *DiscoveryResultMutation) ClearBeforeHash() {
+	m.before_hash = nil
+	m.clearedFields[discoveryresult.FieldBeforeHash] = struct{}{}
+}
+
+// BeforeHashCleared returns if the "before_hash" field was cleared in this mutation.
+func (m *DiscoveryResultMutation) BeforeHashCleared() bool {
+	_, ok := m.clearedFields[discoveryresult.FieldBeforeHash]
+	return ok
+}
+
+// ResetBeforeHash resets all changes to the "before_hash" field.
+func (m *DiscoveryResultMutation) ResetBeforeHash() {
+	m.before_hash = nil
+	delete(m.clearedFields, discoveryresult.FieldBeforeHash)
+}
+
+// SetAfterHash sets the "after_hash" field.
+func (m *DiscoveryResultMutation) SetAfterHash(s string) {
+	m.after_hash = &s
+}
+
+// AfterHash returns the value of the "after_hash" field in the mutation.
+func (m *DiscoveryResultMutation) AfterHash() (r string, exists bool) {
+	v := m.after_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAfterHash returns the old "after_hash" field's value of the DiscoveryResult entity.
+// If the DiscoveryResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryResultMutation) OldAfterHash(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAfterHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAfterHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAfterHash: %w", err)
+	}
+	return oldValue.AfterHash, nil
+}
+
+// ClearAfterHash clears the value of the "after_hash" field.
+func (m *DiscoveryResultMutation) ClearAfterHash() {
+	m.after_hash = nil
+	m.clearedFields[discoveryresult.FieldAfterHash] = struct{}{}
+}
+
+// AfterHashCleared returns if the "after_hash" field was cleared in this mutation.
+func (m *DiscoveryResultMutation) AfterHashCleared() bool {
+	_, ok := m.clearedFields[discoveryresult.FieldAfterHash]
+	return ok
+}
+
+// ResetAfterHash resets all changes to the "after_hash" field.
+func (m *DiscoveryResultMutation) ResetAfterHash() {
+	m.after_hash = nil
+	delete(m.clearedFields, discoveryresult.FieldAfterHash)
+}
+
 // SetDiff sets the "diff" field.
 func (m *DiscoveryResultMutation) SetDiff(value map[string]interface{}) {
 	m.diff = &value
@@ -42350,6 +45454,104 @@ func (m *DiscoveryResultMutation) OldStatus(ctx context.Context) (v string, err 
 // ResetStatus resets all changes to the "status" field.
 func (m *DiscoveryResultMutation) ResetStatus() {
 	m.status = nil
+}
+
+// SetErrorCode sets the "error_code" field.
+func (m *DiscoveryResultMutation) SetErrorCode(s string) {
+	m.error_code = &s
+}
+
+// ErrorCode returns the value of the "error_code" field in the mutation.
+func (m *DiscoveryResultMutation) ErrorCode() (r string, exists bool) {
+	v := m.error_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorCode returns the old "error_code" field's value of the DiscoveryResult entity.
+// If the DiscoveryResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryResultMutation) OldErrorCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorCode: %w", err)
+	}
+	return oldValue.ErrorCode, nil
+}
+
+// ClearErrorCode clears the value of the "error_code" field.
+func (m *DiscoveryResultMutation) ClearErrorCode() {
+	m.error_code = nil
+	m.clearedFields[discoveryresult.FieldErrorCode] = struct{}{}
+}
+
+// ErrorCodeCleared returns if the "error_code" field was cleared in this mutation.
+func (m *DiscoveryResultMutation) ErrorCodeCleared() bool {
+	_, ok := m.clearedFields[discoveryresult.FieldErrorCode]
+	return ok
+}
+
+// ResetErrorCode resets all changes to the "error_code" field.
+func (m *DiscoveryResultMutation) ResetErrorCode() {
+	m.error_code = nil
+	delete(m.clearedFields, discoveryresult.FieldErrorCode)
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (m *DiscoveryResultMutation) SetErrorMessage(s string) {
+	m.error_message = &s
+}
+
+// ErrorMessage returns the value of the "error_message" field in the mutation.
+func (m *DiscoveryResultMutation) ErrorMessage() (r string, exists bool) {
+	v := m.error_message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorMessage returns the old "error_message" field's value of the DiscoveryResult entity.
+// If the DiscoveryResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoveryResultMutation) OldErrorMessage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorMessage: %w", err)
+	}
+	return oldValue.ErrorMessage, nil
+}
+
+// ClearErrorMessage clears the value of the "error_message" field.
+func (m *DiscoveryResultMutation) ClearErrorMessage() {
+	m.error_message = nil
+	m.clearedFields[discoveryresult.FieldErrorMessage] = struct{}{}
+}
+
+// ErrorMessageCleared returns if the "error_message" field was cleared in this mutation.
+func (m *DiscoveryResultMutation) ErrorMessageCleared() bool {
+	_, ok := m.clearedFields[discoveryresult.FieldErrorMessage]
+	return ok
+}
+
+// ResetErrorMessage resets all changes to the "error_message" field.
+func (m *DiscoveryResultMutation) ResetErrorMessage() {
+	m.error_message = nil
+	delete(m.clearedFields, discoveryresult.FieldErrorMessage)
 }
 
 // SetTenantID sets the "tenant_id" field.
@@ -42541,7 +45743,7 @@ func (m *DiscoveryResultMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *DiscoveryResultMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 17)
 	if m.job != nil {
 		fields = append(fields, discoveryresult.FieldJobID)
 	}
@@ -42557,11 +45759,32 @@ func (m *DiscoveryResultMutation) Fields() []string {
 	if m.resource_id != nil {
 		fields = append(fields, discoveryresult.FieldResourceID)
 	}
+	if m.resource_identity != nil {
+		fields = append(fields, discoveryresult.FieldResourceIdentity)
+	}
+	if m.identity_version != nil {
+		fields = append(fields, discoveryresult.FieldIdentityVersion)
+	}
+	if m.resource_snapshot != nil {
+		fields = append(fields, discoveryresult.FieldResourceSnapshot)
+	}
+	if m.before_hash != nil {
+		fields = append(fields, discoveryresult.FieldBeforeHash)
+	}
+	if m.after_hash != nil {
+		fields = append(fields, discoveryresult.FieldAfterHash)
+	}
 	if m.diff != nil {
 		fields = append(fields, discoveryresult.FieldDiff)
 	}
 	if m.status != nil {
 		fields = append(fields, discoveryresult.FieldStatus)
+	}
+	if m.error_code != nil {
+		fields = append(fields, discoveryresult.FieldErrorCode)
+	}
+	if m.error_message != nil {
+		fields = append(fields, discoveryresult.FieldErrorMessage)
 	}
 	if m.tenant_id != nil {
 		fields = append(fields, discoveryresult.FieldTenantID)
@@ -42590,10 +45813,24 @@ func (m *DiscoveryResultMutation) Field(name string) (ent.Value, bool) {
 		return m.ResourceType()
 	case discoveryresult.FieldResourceID:
 		return m.ResourceID()
+	case discoveryresult.FieldResourceIdentity:
+		return m.ResourceIdentity()
+	case discoveryresult.FieldIdentityVersion:
+		return m.IdentityVersion()
+	case discoveryresult.FieldResourceSnapshot:
+		return m.ResourceSnapshot()
+	case discoveryresult.FieldBeforeHash:
+		return m.BeforeHash()
+	case discoveryresult.FieldAfterHash:
+		return m.AfterHash()
 	case discoveryresult.FieldDiff:
 		return m.Diff()
 	case discoveryresult.FieldStatus:
 		return m.Status()
+	case discoveryresult.FieldErrorCode:
+		return m.ErrorCode()
+	case discoveryresult.FieldErrorMessage:
+		return m.ErrorMessage()
 	case discoveryresult.FieldTenantID:
 		return m.TenantID()
 	case discoveryresult.FieldCreatedAt:
@@ -42619,10 +45856,24 @@ func (m *DiscoveryResultMutation) OldField(ctx context.Context, name string) (en
 		return m.OldResourceType(ctx)
 	case discoveryresult.FieldResourceID:
 		return m.OldResourceID(ctx)
+	case discoveryresult.FieldResourceIdentity:
+		return m.OldResourceIdentity(ctx)
+	case discoveryresult.FieldIdentityVersion:
+		return m.OldIdentityVersion(ctx)
+	case discoveryresult.FieldResourceSnapshot:
+		return m.OldResourceSnapshot(ctx)
+	case discoveryresult.FieldBeforeHash:
+		return m.OldBeforeHash(ctx)
+	case discoveryresult.FieldAfterHash:
+		return m.OldAfterHash(ctx)
 	case discoveryresult.FieldDiff:
 		return m.OldDiff(ctx)
 	case discoveryresult.FieldStatus:
 		return m.OldStatus(ctx)
+	case discoveryresult.FieldErrorCode:
+		return m.OldErrorCode(ctx)
+	case discoveryresult.FieldErrorMessage:
+		return m.OldErrorMessage(ctx)
 	case discoveryresult.FieldTenantID:
 		return m.OldTenantID(ctx)
 	case discoveryresult.FieldCreatedAt:
@@ -42673,6 +45924,41 @@ func (m *DiscoveryResultMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetResourceID(v)
 		return nil
+	case discoveryresult.FieldResourceIdentity:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceIdentity(v)
+		return nil
+	case discoveryresult.FieldIdentityVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdentityVersion(v)
+		return nil
+	case discoveryresult.FieldResourceSnapshot:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceSnapshot(v)
+		return nil
+	case discoveryresult.FieldBeforeHash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBeforeHash(v)
+		return nil
+	case discoveryresult.FieldAfterHash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAfterHash(v)
+		return nil
 	case discoveryresult.FieldDiff:
 		v, ok := value.(map[string]interface{})
 		if !ok {
@@ -42686,6 +45972,20 @@ func (m *DiscoveryResultMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case discoveryresult.FieldErrorCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorCode(v)
+		return nil
+	case discoveryresult.FieldErrorMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorMessage(v)
 		return nil
 	case discoveryresult.FieldTenantID:
 		v, ok := value.(int)
@@ -42719,6 +46019,9 @@ func (m *DiscoveryResultMutation) AddedFields() []string {
 	if m.addci_id != nil {
 		fields = append(fields, discoveryresult.FieldCiID)
 	}
+	if m.addidentity_version != nil {
+		fields = append(fields, discoveryresult.FieldIdentityVersion)
+	}
 	if m.addtenant_id != nil {
 		fields = append(fields, discoveryresult.FieldTenantID)
 	}
@@ -42732,6 +46035,8 @@ func (m *DiscoveryResultMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case discoveryresult.FieldCiID:
 		return m.AddedCiID()
+	case discoveryresult.FieldIdentityVersion:
+		return m.AddedIdentityVersion()
 	case discoveryresult.FieldTenantID:
 		return m.AddedTenantID()
 	}
@@ -42749,6 +46054,13 @@ func (m *DiscoveryResultMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddCiID(v)
+		return nil
+	case discoveryresult.FieldIdentityVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddIdentityVersion(v)
 		return nil
 	case discoveryresult.FieldTenantID:
 		v, ok := value.(int)
@@ -42774,8 +46086,26 @@ func (m *DiscoveryResultMutation) ClearedFields() []string {
 	if m.FieldCleared(discoveryresult.FieldResourceID) {
 		fields = append(fields, discoveryresult.FieldResourceID)
 	}
+	if m.FieldCleared(discoveryresult.FieldResourceIdentity) {
+		fields = append(fields, discoveryresult.FieldResourceIdentity)
+	}
+	if m.FieldCleared(discoveryresult.FieldResourceSnapshot) {
+		fields = append(fields, discoveryresult.FieldResourceSnapshot)
+	}
+	if m.FieldCleared(discoveryresult.FieldBeforeHash) {
+		fields = append(fields, discoveryresult.FieldBeforeHash)
+	}
+	if m.FieldCleared(discoveryresult.FieldAfterHash) {
+		fields = append(fields, discoveryresult.FieldAfterHash)
+	}
 	if m.FieldCleared(discoveryresult.FieldDiff) {
 		fields = append(fields, discoveryresult.FieldDiff)
+	}
+	if m.FieldCleared(discoveryresult.FieldErrorCode) {
+		fields = append(fields, discoveryresult.FieldErrorCode)
+	}
+	if m.FieldCleared(discoveryresult.FieldErrorMessage) {
+		fields = append(fields, discoveryresult.FieldErrorMessage)
 	}
 	return fields
 }
@@ -42800,8 +46130,26 @@ func (m *DiscoveryResultMutation) ClearField(name string) error {
 	case discoveryresult.FieldResourceID:
 		m.ClearResourceID()
 		return nil
+	case discoveryresult.FieldResourceIdentity:
+		m.ClearResourceIdentity()
+		return nil
+	case discoveryresult.FieldResourceSnapshot:
+		m.ClearResourceSnapshot()
+		return nil
+	case discoveryresult.FieldBeforeHash:
+		m.ClearBeforeHash()
+		return nil
+	case discoveryresult.FieldAfterHash:
+		m.ClearAfterHash()
+		return nil
 	case discoveryresult.FieldDiff:
 		m.ClearDiff()
+		return nil
+	case discoveryresult.FieldErrorCode:
+		m.ClearErrorCode()
+		return nil
+	case discoveryresult.FieldErrorMessage:
+		m.ClearErrorMessage()
 		return nil
 	}
 	return fmt.Errorf("unknown DiscoveryResult nullable field %s", name)
@@ -42826,11 +46174,32 @@ func (m *DiscoveryResultMutation) ResetField(name string) error {
 	case discoveryresult.FieldResourceID:
 		m.ResetResourceID()
 		return nil
+	case discoveryresult.FieldResourceIdentity:
+		m.ResetResourceIdentity()
+		return nil
+	case discoveryresult.FieldIdentityVersion:
+		m.ResetIdentityVersion()
+		return nil
+	case discoveryresult.FieldResourceSnapshot:
+		m.ResetResourceSnapshot()
+		return nil
+	case discoveryresult.FieldBeforeHash:
+		m.ResetBeforeHash()
+		return nil
+	case discoveryresult.FieldAfterHash:
+		m.ResetAfterHash()
+		return nil
 	case discoveryresult.FieldDiff:
 		m.ResetDiff()
 		return nil
 	case discoveryresult.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case discoveryresult.FieldErrorCode:
+		m.ResetErrorCode()
+		return nil
+	case discoveryresult.FieldErrorMessage:
+		m.ResetErrorMessage()
 		return nil
 	case discoveryresult.FieldTenantID:
 		m.ResetTenantID()
@@ -42922,25 +46291,36 @@ func (m *DiscoveryResultMutation) ResetEdge(name string) error {
 // DiscoverySourceMutation represents an operation that mutates the DiscoverySource nodes in the graph.
 type DiscoverySourceMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *string
-	name          *string
-	source_type   *string
-	provider      *string
-	enabled       *bool
-	description   *string
-	tenant_id     *int
-	addtenant_id  *int
-	created_at    *time.Time
-	updated_at    *time.Time
-	clearedFields map[string]struct{}
-	jobs          map[int]struct{}
-	removedjobs   map[int]struct{}
-	clearedjobs   bool
-	done          bool
-	oldValue      func(context.Context) (*DiscoverySource, error)
-	predicates    []predicate.DiscoverySource
+	op                  Op
+	typ                 string
+	id                  *string
+	name                *string
+	source_type         *string
+	provider            *string
+	cloud_account_id    *int
+	addcloud_account_id *int
+	service_codes       *[]string
+	appendservice_codes []string
+	regions             *[]string
+	appendregions       []string
+	schedule            *string
+	reconcile_policy    *string
+	stale_threshold     *int
+	addstale_threshold  *int
+	last_success_at     *time.Time
+	enabled             *bool
+	description         *string
+	tenant_id           *int
+	addtenant_id        *int
+	created_at          *time.Time
+	updated_at          *time.Time
+	clearedFields       map[string]struct{}
+	jobs                map[int]struct{}
+	removedjobs         map[int]struct{}
+	clearedjobs         bool
+	done                bool
+	oldValue            func(context.Context) (*DiscoverySource, error)
+	predicates          []predicate.DiscoverySource
 }
 
 var _ ent.Mutation = (*DiscoverySourceMutation)(nil)
@@ -43166,6 +46546,396 @@ func (m *DiscoverySourceMutation) ProviderCleared() bool {
 func (m *DiscoverySourceMutation) ResetProvider() {
 	m.provider = nil
 	delete(m.clearedFields, discoverysource.FieldProvider)
+}
+
+// SetCloudAccountID sets the "cloud_account_id" field.
+func (m *DiscoverySourceMutation) SetCloudAccountID(i int) {
+	m.cloud_account_id = &i
+	m.addcloud_account_id = nil
+}
+
+// CloudAccountID returns the value of the "cloud_account_id" field in the mutation.
+func (m *DiscoverySourceMutation) CloudAccountID() (r int, exists bool) {
+	v := m.cloud_account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCloudAccountID returns the old "cloud_account_id" field's value of the DiscoverySource entity.
+// If the DiscoverySource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoverySourceMutation) OldCloudAccountID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCloudAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCloudAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCloudAccountID: %w", err)
+	}
+	return oldValue.CloudAccountID, nil
+}
+
+// AddCloudAccountID adds i to the "cloud_account_id" field.
+func (m *DiscoverySourceMutation) AddCloudAccountID(i int) {
+	if m.addcloud_account_id != nil {
+		*m.addcloud_account_id += i
+	} else {
+		m.addcloud_account_id = &i
+	}
+}
+
+// AddedCloudAccountID returns the value that was added to the "cloud_account_id" field in this mutation.
+func (m *DiscoverySourceMutation) AddedCloudAccountID() (r int, exists bool) {
+	v := m.addcloud_account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearCloudAccountID clears the value of the "cloud_account_id" field.
+func (m *DiscoverySourceMutation) ClearCloudAccountID() {
+	m.cloud_account_id = nil
+	m.addcloud_account_id = nil
+	m.clearedFields[discoverysource.FieldCloudAccountID] = struct{}{}
+}
+
+// CloudAccountIDCleared returns if the "cloud_account_id" field was cleared in this mutation.
+func (m *DiscoverySourceMutation) CloudAccountIDCleared() bool {
+	_, ok := m.clearedFields[discoverysource.FieldCloudAccountID]
+	return ok
+}
+
+// ResetCloudAccountID resets all changes to the "cloud_account_id" field.
+func (m *DiscoverySourceMutation) ResetCloudAccountID() {
+	m.cloud_account_id = nil
+	m.addcloud_account_id = nil
+	delete(m.clearedFields, discoverysource.FieldCloudAccountID)
+}
+
+// SetServiceCodes sets the "service_codes" field.
+func (m *DiscoverySourceMutation) SetServiceCodes(s []string) {
+	m.service_codes = &s
+	m.appendservice_codes = nil
+}
+
+// ServiceCodes returns the value of the "service_codes" field in the mutation.
+func (m *DiscoverySourceMutation) ServiceCodes() (r []string, exists bool) {
+	v := m.service_codes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldServiceCodes returns the old "service_codes" field's value of the DiscoverySource entity.
+// If the DiscoverySource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoverySourceMutation) OldServiceCodes(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldServiceCodes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldServiceCodes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldServiceCodes: %w", err)
+	}
+	return oldValue.ServiceCodes, nil
+}
+
+// AppendServiceCodes adds s to the "service_codes" field.
+func (m *DiscoverySourceMutation) AppendServiceCodes(s []string) {
+	m.appendservice_codes = append(m.appendservice_codes, s...)
+}
+
+// AppendedServiceCodes returns the list of values that were appended to the "service_codes" field in this mutation.
+func (m *DiscoverySourceMutation) AppendedServiceCodes() ([]string, bool) {
+	if len(m.appendservice_codes) == 0 {
+		return nil, false
+	}
+	return m.appendservice_codes, true
+}
+
+// ClearServiceCodes clears the value of the "service_codes" field.
+func (m *DiscoverySourceMutation) ClearServiceCodes() {
+	m.service_codes = nil
+	m.appendservice_codes = nil
+	m.clearedFields[discoverysource.FieldServiceCodes] = struct{}{}
+}
+
+// ServiceCodesCleared returns if the "service_codes" field was cleared in this mutation.
+func (m *DiscoverySourceMutation) ServiceCodesCleared() bool {
+	_, ok := m.clearedFields[discoverysource.FieldServiceCodes]
+	return ok
+}
+
+// ResetServiceCodes resets all changes to the "service_codes" field.
+func (m *DiscoverySourceMutation) ResetServiceCodes() {
+	m.service_codes = nil
+	m.appendservice_codes = nil
+	delete(m.clearedFields, discoverysource.FieldServiceCodes)
+}
+
+// SetRegions sets the "regions" field.
+func (m *DiscoverySourceMutation) SetRegions(s []string) {
+	m.regions = &s
+	m.appendregions = nil
+}
+
+// Regions returns the value of the "regions" field in the mutation.
+func (m *DiscoverySourceMutation) Regions() (r []string, exists bool) {
+	v := m.regions
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRegions returns the old "regions" field's value of the DiscoverySource entity.
+// If the DiscoverySource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoverySourceMutation) OldRegions(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRegions is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRegions requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRegions: %w", err)
+	}
+	return oldValue.Regions, nil
+}
+
+// AppendRegions adds s to the "regions" field.
+func (m *DiscoverySourceMutation) AppendRegions(s []string) {
+	m.appendregions = append(m.appendregions, s...)
+}
+
+// AppendedRegions returns the list of values that were appended to the "regions" field in this mutation.
+func (m *DiscoverySourceMutation) AppendedRegions() ([]string, bool) {
+	if len(m.appendregions) == 0 {
+		return nil, false
+	}
+	return m.appendregions, true
+}
+
+// ClearRegions clears the value of the "regions" field.
+func (m *DiscoverySourceMutation) ClearRegions() {
+	m.regions = nil
+	m.appendregions = nil
+	m.clearedFields[discoverysource.FieldRegions] = struct{}{}
+}
+
+// RegionsCleared returns if the "regions" field was cleared in this mutation.
+func (m *DiscoverySourceMutation) RegionsCleared() bool {
+	_, ok := m.clearedFields[discoverysource.FieldRegions]
+	return ok
+}
+
+// ResetRegions resets all changes to the "regions" field.
+func (m *DiscoverySourceMutation) ResetRegions() {
+	m.regions = nil
+	m.appendregions = nil
+	delete(m.clearedFields, discoverysource.FieldRegions)
+}
+
+// SetSchedule sets the "schedule" field.
+func (m *DiscoverySourceMutation) SetSchedule(s string) {
+	m.schedule = &s
+}
+
+// Schedule returns the value of the "schedule" field in the mutation.
+func (m *DiscoverySourceMutation) Schedule() (r string, exists bool) {
+	v := m.schedule
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchedule returns the old "schedule" field's value of the DiscoverySource entity.
+// If the DiscoverySource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoverySourceMutation) OldSchedule(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchedule is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchedule requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchedule: %w", err)
+	}
+	return oldValue.Schedule, nil
+}
+
+// ClearSchedule clears the value of the "schedule" field.
+func (m *DiscoverySourceMutation) ClearSchedule() {
+	m.schedule = nil
+	m.clearedFields[discoverysource.FieldSchedule] = struct{}{}
+}
+
+// ScheduleCleared returns if the "schedule" field was cleared in this mutation.
+func (m *DiscoverySourceMutation) ScheduleCleared() bool {
+	_, ok := m.clearedFields[discoverysource.FieldSchedule]
+	return ok
+}
+
+// ResetSchedule resets all changes to the "schedule" field.
+func (m *DiscoverySourceMutation) ResetSchedule() {
+	m.schedule = nil
+	delete(m.clearedFields, discoverysource.FieldSchedule)
+}
+
+// SetReconcilePolicy sets the "reconcile_policy" field.
+func (m *DiscoverySourceMutation) SetReconcilePolicy(s string) {
+	m.reconcile_policy = &s
+}
+
+// ReconcilePolicy returns the value of the "reconcile_policy" field in the mutation.
+func (m *DiscoverySourceMutation) ReconcilePolicy() (r string, exists bool) {
+	v := m.reconcile_policy
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReconcilePolicy returns the old "reconcile_policy" field's value of the DiscoverySource entity.
+// If the DiscoverySource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoverySourceMutation) OldReconcilePolicy(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReconcilePolicy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReconcilePolicy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReconcilePolicy: %w", err)
+	}
+	return oldValue.ReconcilePolicy, nil
+}
+
+// ResetReconcilePolicy resets all changes to the "reconcile_policy" field.
+func (m *DiscoverySourceMutation) ResetReconcilePolicy() {
+	m.reconcile_policy = nil
+}
+
+// SetStaleThreshold sets the "stale_threshold" field.
+func (m *DiscoverySourceMutation) SetStaleThreshold(i int) {
+	m.stale_threshold = &i
+	m.addstale_threshold = nil
+}
+
+// StaleThreshold returns the value of the "stale_threshold" field in the mutation.
+func (m *DiscoverySourceMutation) StaleThreshold() (r int, exists bool) {
+	v := m.stale_threshold
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStaleThreshold returns the old "stale_threshold" field's value of the DiscoverySource entity.
+// If the DiscoverySource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoverySourceMutation) OldStaleThreshold(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStaleThreshold is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStaleThreshold requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStaleThreshold: %w", err)
+	}
+	return oldValue.StaleThreshold, nil
+}
+
+// AddStaleThreshold adds i to the "stale_threshold" field.
+func (m *DiscoverySourceMutation) AddStaleThreshold(i int) {
+	if m.addstale_threshold != nil {
+		*m.addstale_threshold += i
+	} else {
+		m.addstale_threshold = &i
+	}
+}
+
+// AddedStaleThreshold returns the value that was added to the "stale_threshold" field in this mutation.
+func (m *DiscoverySourceMutation) AddedStaleThreshold() (r int, exists bool) {
+	v := m.addstale_threshold
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStaleThreshold resets all changes to the "stale_threshold" field.
+func (m *DiscoverySourceMutation) ResetStaleThreshold() {
+	m.stale_threshold = nil
+	m.addstale_threshold = nil
+}
+
+// SetLastSuccessAt sets the "last_success_at" field.
+func (m *DiscoverySourceMutation) SetLastSuccessAt(t time.Time) {
+	m.last_success_at = &t
+}
+
+// LastSuccessAt returns the value of the "last_success_at" field in the mutation.
+func (m *DiscoverySourceMutation) LastSuccessAt() (r time.Time, exists bool) {
+	v := m.last_success_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastSuccessAt returns the old "last_success_at" field's value of the DiscoverySource entity.
+// If the DiscoverySource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DiscoverySourceMutation) OldLastSuccessAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastSuccessAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastSuccessAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastSuccessAt: %w", err)
+	}
+	return oldValue.LastSuccessAt, nil
+}
+
+// ClearLastSuccessAt clears the value of the "last_success_at" field.
+func (m *DiscoverySourceMutation) ClearLastSuccessAt() {
+	m.last_success_at = nil
+	m.clearedFields[discoverysource.FieldLastSuccessAt] = struct{}{}
+}
+
+// LastSuccessAtCleared returns if the "last_success_at" field was cleared in this mutation.
+func (m *DiscoverySourceMutation) LastSuccessAtCleared() bool {
+	_, ok := m.clearedFields[discoverysource.FieldLastSuccessAt]
+	return ok
+}
+
+// ResetLastSuccessAt resets all changes to the "last_success_at" field.
+func (m *DiscoverySourceMutation) ResetLastSuccessAt() {
+	m.last_success_at = nil
+	delete(m.clearedFields, discoverysource.FieldLastSuccessAt)
 }
 
 // SetEnabled sets the "enabled" field.
@@ -43469,7 +47239,7 @@ func (m *DiscoverySourceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *DiscoverySourceMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 15)
 	if m.name != nil {
 		fields = append(fields, discoverysource.FieldName)
 	}
@@ -43478,6 +47248,27 @@ func (m *DiscoverySourceMutation) Fields() []string {
 	}
 	if m.provider != nil {
 		fields = append(fields, discoverysource.FieldProvider)
+	}
+	if m.cloud_account_id != nil {
+		fields = append(fields, discoverysource.FieldCloudAccountID)
+	}
+	if m.service_codes != nil {
+		fields = append(fields, discoverysource.FieldServiceCodes)
+	}
+	if m.regions != nil {
+		fields = append(fields, discoverysource.FieldRegions)
+	}
+	if m.schedule != nil {
+		fields = append(fields, discoverysource.FieldSchedule)
+	}
+	if m.reconcile_policy != nil {
+		fields = append(fields, discoverysource.FieldReconcilePolicy)
+	}
+	if m.stale_threshold != nil {
+		fields = append(fields, discoverysource.FieldStaleThreshold)
+	}
+	if m.last_success_at != nil {
+		fields = append(fields, discoverysource.FieldLastSuccessAt)
 	}
 	if m.enabled != nil {
 		fields = append(fields, discoverysource.FieldEnabled)
@@ -43508,6 +47299,20 @@ func (m *DiscoverySourceMutation) Field(name string) (ent.Value, bool) {
 		return m.SourceType()
 	case discoverysource.FieldProvider:
 		return m.Provider()
+	case discoverysource.FieldCloudAccountID:
+		return m.CloudAccountID()
+	case discoverysource.FieldServiceCodes:
+		return m.ServiceCodes()
+	case discoverysource.FieldRegions:
+		return m.Regions()
+	case discoverysource.FieldSchedule:
+		return m.Schedule()
+	case discoverysource.FieldReconcilePolicy:
+		return m.ReconcilePolicy()
+	case discoverysource.FieldStaleThreshold:
+		return m.StaleThreshold()
+	case discoverysource.FieldLastSuccessAt:
+		return m.LastSuccessAt()
 	case discoverysource.FieldEnabled:
 		return m.Enabled()
 	case discoverysource.FieldDescription:
@@ -43533,6 +47338,20 @@ func (m *DiscoverySourceMutation) OldField(ctx context.Context, name string) (en
 		return m.OldSourceType(ctx)
 	case discoverysource.FieldProvider:
 		return m.OldProvider(ctx)
+	case discoverysource.FieldCloudAccountID:
+		return m.OldCloudAccountID(ctx)
+	case discoverysource.FieldServiceCodes:
+		return m.OldServiceCodes(ctx)
+	case discoverysource.FieldRegions:
+		return m.OldRegions(ctx)
+	case discoverysource.FieldSchedule:
+		return m.OldSchedule(ctx)
+	case discoverysource.FieldReconcilePolicy:
+		return m.OldReconcilePolicy(ctx)
+	case discoverysource.FieldStaleThreshold:
+		return m.OldStaleThreshold(ctx)
+	case discoverysource.FieldLastSuccessAt:
+		return m.OldLastSuccessAt(ctx)
 	case discoverysource.FieldEnabled:
 		return m.OldEnabled(ctx)
 	case discoverysource.FieldDescription:
@@ -43572,6 +47391,55 @@ func (m *DiscoverySourceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetProvider(v)
+		return nil
+	case discoverysource.FieldCloudAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCloudAccountID(v)
+		return nil
+	case discoverysource.FieldServiceCodes:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetServiceCodes(v)
+		return nil
+	case discoverysource.FieldRegions:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRegions(v)
+		return nil
+	case discoverysource.FieldSchedule:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchedule(v)
+		return nil
+	case discoverysource.FieldReconcilePolicy:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReconcilePolicy(v)
+		return nil
+	case discoverysource.FieldStaleThreshold:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStaleThreshold(v)
+		return nil
+	case discoverysource.FieldLastSuccessAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastSuccessAt(v)
 		return nil
 	case discoverysource.FieldEnabled:
 		v, ok := value.(bool)
@@ -43616,6 +47484,12 @@ func (m *DiscoverySourceMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *DiscoverySourceMutation) AddedFields() []string {
 	var fields []string
+	if m.addcloud_account_id != nil {
+		fields = append(fields, discoverysource.FieldCloudAccountID)
+	}
+	if m.addstale_threshold != nil {
+		fields = append(fields, discoverysource.FieldStaleThreshold)
+	}
 	if m.addtenant_id != nil {
 		fields = append(fields, discoverysource.FieldTenantID)
 	}
@@ -43627,6 +47501,10 @@ func (m *DiscoverySourceMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *DiscoverySourceMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case discoverysource.FieldCloudAccountID:
+		return m.AddedCloudAccountID()
+	case discoverysource.FieldStaleThreshold:
+		return m.AddedStaleThreshold()
 	case discoverysource.FieldTenantID:
 		return m.AddedTenantID()
 	}
@@ -43638,6 +47516,20 @@ func (m *DiscoverySourceMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *DiscoverySourceMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case discoverysource.FieldCloudAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCloudAccountID(v)
+		return nil
+	case discoverysource.FieldStaleThreshold:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStaleThreshold(v)
+		return nil
 	case discoverysource.FieldTenantID:
 		v, ok := value.(int)
 		if !ok {
@@ -43655,6 +47547,21 @@ func (m *DiscoverySourceMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(discoverysource.FieldProvider) {
 		fields = append(fields, discoverysource.FieldProvider)
+	}
+	if m.FieldCleared(discoverysource.FieldCloudAccountID) {
+		fields = append(fields, discoverysource.FieldCloudAccountID)
+	}
+	if m.FieldCleared(discoverysource.FieldServiceCodes) {
+		fields = append(fields, discoverysource.FieldServiceCodes)
+	}
+	if m.FieldCleared(discoverysource.FieldRegions) {
+		fields = append(fields, discoverysource.FieldRegions)
+	}
+	if m.FieldCleared(discoverysource.FieldSchedule) {
+		fields = append(fields, discoverysource.FieldSchedule)
+	}
+	if m.FieldCleared(discoverysource.FieldLastSuccessAt) {
+		fields = append(fields, discoverysource.FieldLastSuccessAt)
 	}
 	if m.FieldCleared(discoverysource.FieldDescription) {
 		fields = append(fields, discoverysource.FieldDescription)
@@ -43676,6 +47583,21 @@ func (m *DiscoverySourceMutation) ClearField(name string) error {
 	case discoverysource.FieldProvider:
 		m.ClearProvider()
 		return nil
+	case discoverysource.FieldCloudAccountID:
+		m.ClearCloudAccountID()
+		return nil
+	case discoverysource.FieldServiceCodes:
+		m.ClearServiceCodes()
+		return nil
+	case discoverysource.FieldRegions:
+		m.ClearRegions()
+		return nil
+	case discoverysource.FieldSchedule:
+		m.ClearSchedule()
+		return nil
+	case discoverysource.FieldLastSuccessAt:
+		m.ClearLastSuccessAt()
+		return nil
 	case discoverysource.FieldDescription:
 		m.ClearDescription()
 		return nil
@@ -43695,6 +47617,27 @@ func (m *DiscoverySourceMutation) ResetField(name string) error {
 		return nil
 	case discoverysource.FieldProvider:
 		m.ResetProvider()
+		return nil
+	case discoverysource.FieldCloudAccountID:
+		m.ResetCloudAccountID()
+		return nil
+	case discoverysource.FieldServiceCodes:
+		m.ResetServiceCodes()
+		return nil
+	case discoverysource.FieldRegions:
+		m.ResetRegions()
+		return nil
+	case discoverysource.FieldSchedule:
+		m.ResetSchedule()
+		return nil
+	case discoverysource.FieldReconcilePolicy:
+		m.ResetReconcilePolicy()
+		return nil
+	case discoverysource.FieldStaleThreshold:
+		m.ResetStaleThreshold()
+		return nil
+	case discoverysource.FieldLastSuccessAt:
+		m.ResetLastSuccessAt()
 		return nil
 	case discoverysource.FieldEnabled:
 		m.ResetEnabled()

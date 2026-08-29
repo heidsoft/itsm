@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/ticket"
 )
 
 type ToolDefinition struct {
@@ -75,6 +76,23 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 					"limit": map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 20},
 				},
 				"required": []string{"q"},
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "array",
+			},
+		},
+		{
+			Name:        "list_tickets",
+			Description: "列出当前租户的工单（分页，按创建时间倒序）",
+			ReadOnly:    true,
+			Resource:    "ticket",
+			Action:      "read",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"page":     map[string]interface{}{"type": "integer", "minimum": 1},
+					"pageSize": map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 100},
+				},
 			},
 			ResultSchema: map[string]interface{}{
 				"type": "array",
@@ -161,6 +179,37 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			limit = int(v)
 		}
 		return t.rag.Ask(ctx, tenantID, q, limit)
+	case "list_tickets":
+		page := 1
+		if v, ok := args["page"].(float64); ok {
+			page = int(v)
+		}
+		if page < 1 {
+			page = 1
+		}
+		pageSize := 20
+		if v, ok := args["pageSize"].(float64); ok {
+			pageSize = int(v)
+		}
+		// pageSize clamp [1,100]，防止模型传入超大分页拖垮查询
+		if pageSize < 1 {
+			pageSize = 1
+		}
+		if pageSize > 100 {
+			pageSize = 100
+		}
+		// 显式 TenantID 过滤 + DeletedAtIsNil 软删除过滤，绝不跨租户/含软删工单
+		tickets, err := t.client.Ticket.Query().
+			Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
+			Order(ent.Desc(ticket.FieldCreatedAt)).
+			Offset((page - 1) * pageSize).
+			Limit(pageSize).
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		// 返回 DTO，不直接暴露 ent 模型
+		return dto.ToTicketResponseList(tickets), nil
 	case "list_cis":
 		limit := 10
 		offset := 0

@@ -21,8 +21,50 @@ type DiscoveryJob struct {
 	ID int `json:"id,omitempty"`
 	// 发现源ID
 	SourceID string `json:"source_id,omitempty"`
-	// 任务状态（pending/running/success/failed）
+	// 任务状态（queued/discovering/discovered/reconciling/succeeded/partial_failed/failed/cancelled）
 	Status string `json:"status,omitempty"`
+	// 作业类型
+	Operation string `json:"operation,omitempty"`
+	// 客户端幂等键
+	IdempotencyKey string `json:"idempotency_key,omitempty"`
+	// 规范化请求指纹
+	RequestFingerprint string `json:"request_fingerprint,omitempty"`
+	// 不可变来源快照
+	SourceSnapshot map[string]interface{} `json:"source_snapshot,omitempty"`
+	// 不可变发现范围快照
+	ScopeSnapshot map[string]interface{} `json:"scope_snapshot,omitempty"`
+	// 完整覆盖范围
+	CompletedScopes []string `json:"completed_scopes,omitempty"`
+	// 失败范围
+	FailedScopes []string `json:"failed_scopes,omitempty"`
+	// 快照代次
+	SnapshotGeneration string `json:"snapshot_generation,omitempty"`
+	// 请求人ID
+	RequestedBy int `json:"requested_by,omitempty"`
+	// 入队时间
+	QueuedAt time.Time `json:"queued_at,omitempty"`
+	// 最近心跳
+	HeartbeatAt time.Time `json:"heartbeat_at,omitempty"`
+	// 租约所有者
+	LeaseOwner string `json:"lease_owner,omitempty"`
+	// 租约过期时间
+	LeaseExpiresAt time.Time `json:"lease_expires_at,omitempty"`
+	// 租约隔离令牌
+	FencingToken int64 `json:"fencing_token,omitempty"`
+	// 当前尝试次数
+	Attempt int `json:"attempt,omitempty"`
+	// 重试来源作业ID
+	ParentJobID int `json:"parent_job_id,omitempty"`
+	// 最大尝试次数
+	MaxAttempts int `json:"max_attempts,omitempty"`
+	// 进度百分比
+	Progress int `json:"progress,omitempty"`
+	// 稳定错误码
+	ErrorCode string `json:"error_code,omitempty"`
+	// 净化后的错误摘要
+	ErrorMessage string `json:"error_message,omitempty"`
+	// 取消请求时间
+	CancelRequestedAt time.Time `json:"cancel_requested_at,omitempty"`
 	// 开始时间
 	StartedAt time.Time `json:"started_at,omitempty"`
 	// 结束时间
@@ -77,13 +119,13 @@ func (*DiscoveryJob) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case discoveryjob.FieldSummary:
+		case discoveryjob.FieldSourceSnapshot, discoveryjob.FieldScopeSnapshot, discoveryjob.FieldCompletedScopes, discoveryjob.FieldFailedScopes, discoveryjob.FieldSummary:
 			values[i] = new([]byte)
-		case discoveryjob.FieldID, discoveryjob.FieldTenantID:
+		case discoveryjob.FieldID, discoveryjob.FieldRequestedBy, discoveryjob.FieldFencingToken, discoveryjob.FieldAttempt, discoveryjob.FieldParentJobID, discoveryjob.FieldMaxAttempts, discoveryjob.FieldProgress, discoveryjob.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case discoveryjob.FieldSourceID, discoveryjob.FieldStatus:
+		case discoveryjob.FieldSourceID, discoveryjob.FieldStatus, discoveryjob.FieldOperation, discoveryjob.FieldIdempotencyKey, discoveryjob.FieldRequestFingerprint, discoveryjob.FieldSnapshotGeneration, discoveryjob.FieldLeaseOwner, discoveryjob.FieldErrorCode, discoveryjob.FieldErrorMessage:
 			values[i] = new(sql.NullString)
-		case discoveryjob.FieldStartedAt, discoveryjob.FieldFinishedAt, discoveryjob.FieldCreatedAt, discoveryjob.FieldUpdatedAt:
+		case discoveryjob.FieldQueuedAt, discoveryjob.FieldHeartbeatAt, discoveryjob.FieldLeaseExpiresAt, discoveryjob.FieldCancelRequestedAt, discoveryjob.FieldStartedAt, discoveryjob.FieldFinishedAt, discoveryjob.FieldCreatedAt, discoveryjob.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -117,6 +159,140 @@ func (_m *DiscoveryJob) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				_m.Status = value.String
+			}
+		case discoveryjob.FieldOperation:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field operation", values[i])
+			} else if value.Valid {
+				_m.Operation = value.String
+			}
+		case discoveryjob.FieldIdempotencyKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field idempotency_key", values[i])
+			} else if value.Valid {
+				_m.IdempotencyKey = value.String
+			}
+		case discoveryjob.FieldRequestFingerprint:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field request_fingerprint", values[i])
+			} else if value.Valid {
+				_m.RequestFingerprint = value.String
+			}
+		case discoveryjob.FieldSourceSnapshot:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field source_snapshot", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.SourceSnapshot); err != nil {
+					return fmt.Errorf("unmarshal field source_snapshot: %w", err)
+				}
+			}
+		case discoveryjob.FieldScopeSnapshot:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field scope_snapshot", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.ScopeSnapshot); err != nil {
+					return fmt.Errorf("unmarshal field scope_snapshot: %w", err)
+				}
+			}
+		case discoveryjob.FieldCompletedScopes:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field completed_scopes", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.CompletedScopes); err != nil {
+					return fmt.Errorf("unmarshal field completed_scopes: %w", err)
+				}
+			}
+		case discoveryjob.FieldFailedScopes:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field failed_scopes", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.FailedScopes); err != nil {
+					return fmt.Errorf("unmarshal field failed_scopes: %w", err)
+				}
+			}
+		case discoveryjob.FieldSnapshotGeneration:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field snapshot_generation", values[i])
+			} else if value.Valid {
+				_m.SnapshotGeneration = value.String
+			}
+		case discoveryjob.FieldRequestedBy:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field requested_by", values[i])
+			} else if value.Valid {
+				_m.RequestedBy = int(value.Int64)
+			}
+		case discoveryjob.FieldQueuedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field queued_at", values[i])
+			} else if value.Valid {
+				_m.QueuedAt = value.Time
+			}
+		case discoveryjob.FieldHeartbeatAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field heartbeat_at", values[i])
+			} else if value.Valid {
+				_m.HeartbeatAt = value.Time
+			}
+		case discoveryjob.FieldLeaseOwner:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field lease_owner", values[i])
+			} else if value.Valid {
+				_m.LeaseOwner = value.String
+			}
+		case discoveryjob.FieldLeaseExpiresAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field lease_expires_at", values[i])
+			} else if value.Valid {
+				_m.LeaseExpiresAt = value.Time
+			}
+		case discoveryjob.FieldFencingToken:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field fencing_token", values[i])
+			} else if value.Valid {
+				_m.FencingToken = value.Int64
+			}
+		case discoveryjob.FieldAttempt:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field attempt", values[i])
+			} else if value.Valid {
+				_m.Attempt = int(value.Int64)
+			}
+		case discoveryjob.FieldParentJobID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field parent_job_id", values[i])
+			} else if value.Valid {
+				_m.ParentJobID = int(value.Int64)
+			}
+		case discoveryjob.FieldMaxAttempts:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field max_attempts", values[i])
+			} else if value.Valid {
+				_m.MaxAttempts = int(value.Int64)
+			}
+		case discoveryjob.FieldProgress:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field progress", values[i])
+			} else if value.Valid {
+				_m.Progress = int(value.Int64)
+			}
+		case discoveryjob.FieldErrorCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field error_code", values[i])
+			} else if value.Valid {
+				_m.ErrorCode = value.String
+			}
+		case discoveryjob.FieldErrorMessage:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field error_message", values[i])
+			} else if value.Valid {
+				_m.ErrorMessage = value.String
+			}
+		case discoveryjob.FieldCancelRequestedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field cancel_requested_at", values[i])
+			} else if value.Valid {
+				_m.CancelRequestedAt = value.Time
 			}
 		case discoveryjob.FieldStartedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -207,6 +383,69 @@ func (_m *DiscoveryJob) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(_m.Status)
+	builder.WriteString(", ")
+	builder.WriteString("operation=")
+	builder.WriteString(_m.Operation)
+	builder.WriteString(", ")
+	builder.WriteString("idempotency_key=")
+	builder.WriteString(_m.IdempotencyKey)
+	builder.WriteString(", ")
+	builder.WriteString("request_fingerprint=")
+	builder.WriteString(_m.RequestFingerprint)
+	builder.WriteString(", ")
+	builder.WriteString("source_snapshot=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SourceSnapshot))
+	builder.WriteString(", ")
+	builder.WriteString("scope_snapshot=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ScopeSnapshot))
+	builder.WriteString(", ")
+	builder.WriteString("completed_scopes=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CompletedScopes))
+	builder.WriteString(", ")
+	builder.WriteString("failed_scopes=")
+	builder.WriteString(fmt.Sprintf("%v", _m.FailedScopes))
+	builder.WriteString(", ")
+	builder.WriteString("snapshot_generation=")
+	builder.WriteString(_m.SnapshotGeneration)
+	builder.WriteString(", ")
+	builder.WriteString("requested_by=")
+	builder.WriteString(fmt.Sprintf("%v", _m.RequestedBy))
+	builder.WriteString(", ")
+	builder.WriteString("queued_at=")
+	builder.WriteString(_m.QueuedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("heartbeat_at=")
+	builder.WriteString(_m.HeartbeatAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("lease_owner=")
+	builder.WriteString(_m.LeaseOwner)
+	builder.WriteString(", ")
+	builder.WriteString("lease_expires_at=")
+	builder.WriteString(_m.LeaseExpiresAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("fencing_token=")
+	builder.WriteString(fmt.Sprintf("%v", _m.FencingToken))
+	builder.WriteString(", ")
+	builder.WriteString("attempt=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Attempt))
+	builder.WriteString(", ")
+	builder.WriteString("parent_job_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ParentJobID))
+	builder.WriteString(", ")
+	builder.WriteString("max_attempts=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MaxAttempts))
+	builder.WriteString(", ")
+	builder.WriteString("progress=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Progress))
+	builder.WriteString(", ")
+	builder.WriteString("error_code=")
+	builder.WriteString(_m.ErrorCode)
+	builder.WriteString(", ")
+	builder.WriteString("error_message=")
+	builder.WriteString(_m.ErrorMessage)
+	builder.WriteString(", ")
+	builder.WriteString("cancel_requested_at=")
+	builder.WriteString(_m.CancelRequestedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("started_at=")
 	builder.WriteString(_m.StartedAt.Format(time.ANSIC))

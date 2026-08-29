@@ -355,10 +355,14 @@ func (r *EntRepository) ListCloudResources(ctx context.Context, tenantID int, pr
 			lastSeenAt = &e.LastSeenAt
 		}
 		results = append(results, &CloudResource{
-			ID:             e.ID,
-			CloudAccountID: e.CloudAccountID,
-			ServiceID:      e.ServiceID,
-			ResourceID:     e.ResourceID,
+			ID:              e.ID,
+			CloudAccountID:  e.CloudAccountID,
+			ServiceID:       e.ServiceID,
+			ResourceID:      e.ResourceID,
+			IdentityVersion: e.IdentityVersion, Provider: e.Provider, Partition: e.Partition,
+			CanonicalAccountID: e.CanonicalAccountID, ResourceScope: e.ResourceScope,
+			ServiceCode: e.ServiceCode, ResourceType: e.ResourceType, IdentityHash: e.IdentityHash,
+			SourceID: e.SourceID, SourceFingerprint: e.SourceFingerprint, MissingCount: e.MissingCount,
 			ResourceName:   e.ResourceName,
 			Region:         e.Region,
 			Zone:           e.Zone,
@@ -392,10 +396,14 @@ func (r *EntRepository) GetCloudResource(ctx context.Context, tenantID int, id i
 		lastSeenAt = &e.LastSeenAt
 	}
 	return &CloudResource{
-		ID:             e.ID,
-		CloudAccountID: e.CloudAccountID,
-		ServiceID:      e.ServiceID,
-		ResourceID:     e.ResourceID,
+		ID:              e.ID,
+		CloudAccountID:  e.CloudAccountID,
+		ServiceID:       e.ServiceID,
+		ResourceID:      e.ResourceID,
+		IdentityVersion: e.IdentityVersion, Provider: e.Provider, Partition: e.Partition,
+		CanonicalAccountID: e.CanonicalAccountID, ResourceScope: e.ResourceScope,
+		ServiceCode: e.ServiceCode, ResourceType: e.ResourceType, IdentityHash: e.IdentityHash,
+		SourceID: e.SourceID, SourceFingerprint: e.SourceFingerprint, MissingCount: e.MissingCount,
 		ResourceName:   e.ResourceName,
 		Region:         e.Region,
 		Zone:           e.Zone,
@@ -416,6 +424,17 @@ func (r *EntRepository) CreateCloudResource(ctx context.Context, cr *CloudResour
 		SetCloudAccountID(cr.CloudAccountID).
 		SetServiceID(cr.ServiceID).
 		SetResourceID(cr.ResourceID).
+		SetIdentityVersion(cr.IdentityVersion).
+		SetProvider(cr.Provider).
+		SetPartition(cr.Partition).
+		SetCanonicalAccountID(cr.CanonicalAccountID).
+		SetResourceScope(cr.ResourceScope).
+		SetServiceCode(cr.ServiceCode).
+		SetResourceType(cr.ResourceType).
+		SetIdentityHash(cr.IdentityHash).
+		SetSourceID(cr.SourceID).
+		SetSourceFingerprint(cr.SourceFingerprint).
+		SetMissingCount(cr.MissingCount).
 		SetResourceName(cr.ResourceName).
 		SetRegion(cr.Region).
 		SetZone(cr.Zone).
@@ -440,10 +459,14 @@ func (r *EntRepository) CreateCloudResource(ctx context.Context, cr *CloudResour
 		lastSeenAt = &e.LastSeenAt
 	}
 	return &CloudResource{
-		ID:             e.ID,
-		CloudAccountID: e.CloudAccountID,
-		ServiceID:      e.ServiceID,
-		ResourceID:     e.ResourceID,
+		ID:              e.ID,
+		CloudAccountID:  e.CloudAccountID,
+		ServiceID:       e.ServiceID,
+		ResourceID:      e.ResourceID,
+		IdentityVersion: e.IdentityVersion, Provider: e.Provider, Partition: e.Partition,
+		CanonicalAccountID: e.CanonicalAccountID, ResourceScope: e.ResourceScope,
+		ServiceCode: e.ServiceCode, ResourceType: e.ResourceType, IdentityHash: e.IdentityHash,
+		SourceID: e.SourceID, SourceFingerprint: e.SourceFingerprint, MissingCount: e.MissingCount,
 		ResourceName:   e.ResourceName,
 		Region:         e.Region,
 		Zone:           e.Zone,
@@ -465,6 +488,17 @@ func (r *EntRepository) UpdateCloudResource(ctx context.Context, cr *CloudResour
 		SetCloudAccountID(cr.CloudAccountID).
 		SetServiceID(cr.ServiceID).
 		SetResourceID(cr.ResourceID).
+		SetIdentityVersion(cr.IdentityVersion).
+		SetProvider(cr.Provider).
+		SetPartition(cr.Partition).
+		SetCanonicalAccountID(cr.CanonicalAccountID).
+		SetResourceScope(cr.ResourceScope).
+		SetServiceCode(cr.ServiceCode).
+		SetResourceType(cr.ResourceType).
+		SetIdentityHash(cr.IdentityHash).
+		SetSourceID(cr.SourceID).
+		SetSourceFingerprint(cr.SourceFingerprint).
+		SetMissingCount(cr.MissingCount).
 		SetResourceName(cr.ResourceName).
 		SetRegion(cr.Region).
 		SetZone(cr.Zone).
@@ -485,10 +519,14 @@ func (r *EntRepository) UpdateCloudResource(ctx context.Context, cr *CloudResour
 		lastSeenAt = &e.LastSeenAt
 	}
 	return &CloudResource{
-		ID:             e.ID,
-		CloudAccountID: e.CloudAccountID,
-		ServiceID:      e.ServiceID,
-		ResourceID:     e.ResourceID,
+		ID:              e.ID,
+		CloudAccountID:  e.CloudAccountID,
+		ServiceID:       e.ServiceID,
+		ResourceID:      e.ResourceID,
+		IdentityVersion: e.IdentityVersion, Provider: e.Provider, Partition: e.Partition,
+		CanonicalAccountID: e.CanonicalAccountID, ResourceScope: e.ResourceScope,
+		ServiceCode: e.ServiceCode, ResourceType: e.ResourceType, IdentityHash: e.IdentityHash,
+		SourceID: e.SourceID, SourceFingerprint: e.SourceFingerprint, MissingCount: e.MissingCount,
 		ResourceName:   e.ResourceName,
 		Region:         e.Region,
 		Zone:           e.Zone,
@@ -550,23 +588,39 @@ func (r *EntRepository) CreateDiscoverySource(ctx context.Context, ds *Discovery
 		SetName(ds.Name).
 		SetSourceType(ds.SourceType).
 		SetProvider(ds.Provider).
+		SetServiceCodes(ds.ServiceCodes).
+		SetRegions(ds.Regions).
+		SetSchedule(ds.Schedule).
+		SetReconcilePolicy(ds.ReconcilePolicy).
 		SetEnabled(ds.IsActive).
 		SetDescription(ds.Description).
 		SetTenantID(ds.TenantID)
+	if ds.CloudAccountID > 0 {
+		create = create.SetCloudAccountID(ds.CloudAccountID)
+	}
+	if ds.StaleThreshold > 0 {
+		create = create.SetStaleThreshold(ds.StaleThreshold)
+	}
+	if ds.LastSuccessAt != nil {
+		create = create.SetLastSuccessAt(*ds.LastSuccessAt)
+	}
 	e, err := create.Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return &DiscoverySource{
-		ID:          e.ID,
-		Name:        e.Name,
-		SourceType:  e.SourceType,
-		Provider:    e.Provider,
-		IsActive:    e.Enabled,
-		Description: e.Description,
-		TenantID:    e.TenantID,
-		CreatedAt:   e.CreatedAt,
-		UpdatedAt:   e.UpdatedAt,
+		ID:             e.ID,
+		Name:           e.Name,
+		SourceType:     e.SourceType,
+		Provider:       e.Provider,
+		CloudAccountID: e.CloudAccountID, ServiceCodes: e.ServiceCodes, Regions: e.Regions,
+		Schedule: e.Schedule, ReconcilePolicy: e.ReconcilePolicy, StaleThreshold: e.StaleThreshold,
+		LastSuccessAt: optionalTime(e.LastSuccessAt),
+		IsActive:      e.Enabled,
+		Description:   e.Description,
+		TenantID:      e.TenantID,
+		CreatedAt:     e.CreatedAt,
+		UpdatedAt:     e.UpdatedAt,
 	}, nil
 }
 
@@ -580,15 +634,18 @@ func (r *EntRepository) ListDiscoverySources(ctx context.Context, tenantID int) 
 	results := make([]*DiscoverySource, 0, len(es))
 	for _, e := range es {
 		results = append(results, &DiscoverySource{
-			ID:          e.ID,
-			Name:        e.Name,
-			SourceType:  e.SourceType,
-			Provider:    e.Provider,
-			IsActive:    e.Enabled,
-			Description: e.Description,
-			TenantID:    e.TenantID,
-			CreatedAt:   e.CreatedAt,
-			UpdatedAt:   e.UpdatedAt,
+			ID:             e.ID,
+			Name:           e.Name,
+			SourceType:     e.SourceType,
+			Provider:       e.Provider,
+			CloudAccountID: e.CloudAccountID, ServiceCodes: e.ServiceCodes, Regions: e.Regions,
+			Schedule: e.Schedule, ReconcilePolicy: e.ReconcilePolicy, StaleThreshold: e.StaleThreshold,
+			LastSuccessAt: optionalTime(e.LastSuccessAt),
+			IsActive:      e.Enabled,
+			Description:   e.Description,
+			TenantID:      e.TenantID,
+			CreatedAt:     e.CreatedAt,
+			UpdatedAt:     e.UpdatedAt,
 		})
 	}
 	return results, nil
@@ -597,8 +654,47 @@ func (r *EntRepository) ListDiscoverySources(ctx context.Context, tenantID int) 
 func (r *EntRepository) CreateDiscoveryJob(ctx context.Context, job *DiscoveryJob) (*DiscoveryJob, error) {
 	create := r.client.DiscoveryJob.Create().
 		SetSourceID(job.SourceID).
-		SetStatus(job.Status).
+		SetIdempotencyKey(job.IdempotencyKey).
+		SetRequestFingerprint(job.RequestFingerprint).
+		SetSourceSnapshot(job.SourceSnapshot).
+		SetScopeSnapshot(job.ScopeSnapshot).
+		SetCompletedScopes(job.CompletedScopes).
+		SetFailedScopes(job.FailedScopes).
+		SetSnapshotGeneration(job.SnapshotGeneration).
+		SetLeaseOwner(job.LeaseOwner).
+		SetFencingToken(job.FencingToken).
+		SetAttempt(job.Attempt).
+		SetProgress(job.Progress).
+		SetErrorCode(job.ErrorCode).
+		SetErrorMessage(job.ErrorMessage).
 		SetTenantID(job.TenantID)
+	if job.Status != "" {
+		create = create.SetStatus(job.Status)
+	}
+	if job.Operation != "" {
+		create = create.SetOperation(job.Operation)
+	}
+	if job.MaxAttempts > 0 {
+		create = create.SetMaxAttempts(job.MaxAttempts)
+	}
+	if job.RequestedBy > 0 {
+		create = create.SetRequestedBy(job.RequestedBy)
+	}
+	if job.ParentJobID > 0 {
+		create = create.SetParentJobID(job.ParentJobID)
+	}
+	if job.QueuedAt != nil {
+		create = create.SetQueuedAt(*job.QueuedAt)
+	}
+	if job.HeartbeatAt != nil {
+		create = create.SetHeartbeatAt(*job.HeartbeatAt)
+	}
+	if job.LeaseExpiresAt != nil {
+		create = create.SetLeaseExpiresAt(*job.LeaseExpiresAt)
+	}
+	if job.CancelRequestedAt != nil {
+		create = create.SetCancelRequestedAt(*job.CancelRequestedAt)
+	}
 	if job.StartedAt != nil {
 		create = create.SetStartedAt(*job.StartedAt)
 	}
@@ -621,9 +717,18 @@ func (r *EntRepository) CreateDiscoveryJob(ctx context.Context, job *DiscoveryJo
 		finishedAt = &e.FinishedAt
 	}
 	return &DiscoveryJob{
-		ID:         e.ID,
-		SourceID:   e.SourceID,
-		Status:     e.Status,
+		ID:        e.ID,
+		SourceID:  e.SourceID,
+		Status:    e.Status,
+		Operation: e.Operation, IdempotencyKey: e.IdempotencyKey, RequestFingerprint: e.RequestFingerprint,
+		SourceSnapshot: e.SourceSnapshot, ScopeSnapshot: e.ScopeSnapshot,
+		CompletedScopes: e.CompletedScopes, FailedScopes: e.FailedScopes,
+		SnapshotGeneration: e.SnapshotGeneration, RequestedBy: e.RequestedBy,
+		QueuedAt: optionalTime(e.QueuedAt), HeartbeatAt: optionalTime(e.HeartbeatAt),
+		LeaseOwner: e.LeaseOwner, LeaseExpiresAt: optionalTime(e.LeaseExpiresAt),
+		FencingToken: e.FencingToken, Attempt: e.Attempt, ParentJobID: e.ParentJobID,
+		MaxAttempts: e.MaxAttempts, Progress: e.Progress, ErrorCode: e.ErrorCode,
+		ErrorMessage: e.ErrorMessage, CancelRequestedAt: optionalTime(e.CancelRequestedAt),
 		StartedAt:  startedAt,
 		FinishedAt: finishedAt,
 		Summary:    e.Summary,
@@ -645,18 +750,28 @@ func (r *EntRepository) ListDiscoveryResults(ctx context.Context, tenantID int, 
 	results := make([]*DiscoveryResult, 0, len(es))
 	for _, e := range es {
 		results = append(results, &DiscoveryResult{
-			ID:           e.ID,
-			JobID:        e.JobID,
-			CIID:         e.CiID,
-			Action:       e.Action,
-			ResourceType: e.ResourceType,
-			ResourceID:   e.ResourceID,
-			Diff:         e.Diff,
-			Status:       e.Status,
-			TenantID:     e.TenantID,
-			CreatedAt:    e.CreatedAt,
-			UpdatedAt:    e.UpdatedAt,
+			ID:               e.ID,
+			JobID:            e.JobID,
+			CIID:             e.CiID,
+			Action:           e.Action,
+			ResourceType:     e.ResourceType,
+			ResourceID:       e.ResourceID,
+			ResourceIdentity: e.ResourceIdentity, IdentityVersion: e.IdentityVersion,
+			ResourceSnapshot: e.ResourceSnapshot, BeforeHash: e.BeforeHash, AfterHash: e.AfterHash,
+			Diff:      e.Diff,
+			Status:    e.Status,
+			ErrorCode: e.ErrorCode, ErrorMessage: e.ErrorMessage,
+			TenantID:  e.TenantID,
+			CreatedAt: e.CreatedAt,
+			UpdatedAt: e.UpdatedAt,
 		})
 	}
 	return results, nil
+}
+
+func optionalTime(value time.Time) *time.Time {
+	if value.IsZero() {
+		return nil
+	}
+	return &value
 }

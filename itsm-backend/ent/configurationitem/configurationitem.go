@@ -52,6 +52,16 @@ const (
 	FieldLastDiscovered = "last_discovered"
 	// FieldSource holds the string denoting the source field in the database.
 	FieldSource = "source"
+	// FieldSourceID holds the string denoting the source_id field in the database.
+	FieldSourceID = "source_id"
+	// FieldCanonicalCloudAccountID holds the string denoting the canonical_cloud_account_id field in the database.
+	FieldCanonicalCloudAccountID = "canonical_cloud_account_id"
+	// FieldSourceLastSeenAt holds the string denoting the source_last_seen_at field in the database.
+	FieldSourceLastSeenAt = "source_last_seen_at"
+	// FieldSourceMissingCount holds the string denoting the source_missing_count field in the database.
+	FieldSourceMissingCount = "source_missing_count"
+	// FieldSourceFingerprint holds the string denoting the source_fingerprint field in the database.
+	FieldSourceFingerprint = "source_fingerprint"
 	// FieldAttributes holds the string denoting the attributes field in the database.
 	FieldAttributes = "attributes"
 	// FieldCloudProvider holds the string denoting the cloud_provider field in the database.
@@ -186,6 +196,11 @@ var Columns = []string{
 	FieldDiscoverySource,
 	FieldLastDiscovered,
 	FieldSource,
+	FieldSourceID,
+	FieldCanonicalCloudAccountID,
+	FieldSourceLastSeenAt,
+	FieldSourceMissingCount,
+	FieldSourceFingerprint,
 	FieldAttributes,
 	FieldCloudProvider,
 	FieldCloudAccountID,
@@ -253,6 +268,10 @@ var (
 	DefaultCriticality string
 	// DefaultOwnershipMode holds the default value on creation for the "ownership_mode" field.
 	DefaultOwnershipMode string
+	// DefaultSourceMissingCount holds the default value on creation for the "source_missing_count" field.
+	DefaultSourceMissingCount int
+	// SourceMissingCountValidator is a validator for the "source_missing_count" field. It is called by the builders before save.
+	SourceMissingCountValidator func(int) error
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultVersion holds the default value on creation for the "version" field.
@@ -368,6 +387,31 @@ func ByLastDiscovered(opts ...sql.OrderTermOption) OrderOption {
 // BySource orders the results by the source field.
 func BySource(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSource, opts...).ToFunc()
+}
+
+// BySourceID orders the results by the source_id field.
+func BySourceID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSourceID, opts...).ToFunc()
+}
+
+// ByCanonicalCloudAccountID orders the results by the canonical_cloud_account_id field.
+func ByCanonicalCloudAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCanonicalCloudAccountID, opts...).ToFunc()
+}
+
+// BySourceLastSeenAt orders the results by the source_last_seen_at field.
+func BySourceLastSeenAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSourceLastSeenAt, opts...).ToFunc()
+}
+
+// BySourceMissingCount orders the results by the source_missing_count field.
+func BySourceMissingCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSourceMissingCount, opts...).ToFunc()
+}
+
+// BySourceFingerprint orders the results by the source_fingerprint field.
+func BySourceFingerprint(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSourceFingerprint, opts...).ToFunc()
 }
 
 // ByCloudProvider orders the results by the cloud_provider field.

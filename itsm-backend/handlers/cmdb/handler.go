@@ -1,6 +1,7 @@
 package cmdb
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -17,6 +18,45 @@ type Handler struct {
 
 func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
+}
+
+func failCMDBError(c *gin.Context, err error, publicMessage string) {
+	var appErr *common.AppError
+	if errors.As(err, &appErr) {
+		switch appErr.Code {
+		case common.ErrCodeForbidden:
+			common.Forbidden(c, appErr.Message)
+		case common.ErrCodeNotFound:
+			common.NotFound(c, appErr.Message)
+		case common.ErrCodeConflict:
+			common.Fail(c, common.ConflictCode, appErr.Message)
+		case common.ErrCodeValidation, common.ErrCodeBadRequest:
+			common.ParamError(c, appErr.Message)
+		default:
+			common.FailWithErr(c, err, publicMessage)
+		}
+		return
+	}
+	common.FailWithErr(c, err, publicMessage)
+}
+
+func (h *Handler) GetCapabilities(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID <= 0 {
+		common.Fail(c, common.UnauthorizedCode, "缺少租户认证上下文")
+		return
+	}
+	capability, err := h.svc.GetDiscoveryCapability(c.Request.Context(), tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "获取 CMDB 能力状态失败")
+		return
+	}
+	common.Success(c, &dto.CMDBCapabilitiesResponse{Items: []dto.CMDBCapabilityResponse{{
+		Key: capability.Key, State: capability.State,
+		BuildCapability: capability.BuildCapability, DeploymentReadiness: capability.DeploymentReadiness,
+		TenantReadiness: capability.TenantReadiness, ActorPermission: capability.ActorPermission,
+		MissingRequirements: capability.MissingRequirements,
+	}}})
 }
 
 // toCIDTO maps domain CI to DTO
@@ -66,10 +106,14 @@ func toCloudResourceDTO(resource *CloudResource) *dto.CloudResourceResponse {
 		return nil
 	}
 	return &dto.CloudResourceResponse{
-		ID:             resource.ID,
-		CloudAccountID: resource.CloudAccountID,
-		ServiceID:      resource.ServiceID,
-		ResourceID:     resource.ResourceID,
+		ID:              resource.ID,
+		CloudAccountID:  resource.CloudAccountID,
+		ServiceID:       resource.ServiceID,
+		ResourceID:      resource.ResourceID,
+		IdentityVersion: resource.IdentityVersion, Provider: resource.Provider, Partition: resource.Partition,
+		CanonicalAccountID: resource.CanonicalAccountID, ResourceScope: resource.ResourceScope,
+		ServiceCode: resource.ServiceCode, ResourceType: resource.ResourceType, IdentityHash: resource.IdentityHash,
+		SourceID: resource.SourceID, SourceFingerprint: resource.SourceFingerprint, MissingCount: resource.MissingCount,
 		ResourceName:   resource.ResourceName,
 		Region:         resource.Region,
 		Zone:           resource.Zone,
@@ -352,24 +396,7 @@ func (h *Handler) ListCloudResources(c *gin.Context) {
 	}
 	resp := make([]*dto.CloudResourceResponse, 0, len(list))
 	for _, item := range list {
-		resp = append(resp, &dto.CloudResourceResponse{
-			ID:             item.ID,
-			CloudAccountID: item.CloudAccountID,
-			ServiceID:      item.ServiceID,
-			ResourceID:     item.ResourceID,
-			ResourceName:   item.ResourceName,
-			Region:         item.Region,
-			Zone:           item.Zone,
-			Status:         item.Status,
-			Tags:           item.Tags,
-			Metadata:       item.Metadata,
-			FirstSeenAt:    item.FirstSeenAt,
-			LastSeenAt:     item.LastSeenAt,
-			LifecycleState: item.LifecycleState,
-			TenantID:       item.TenantID,
-			CreatedAt:      item.CreatedAt,
-			UpdatedAt:      item.UpdatedAt,
-		})
+		resp = append(resp, toCloudResourceDTO(item))
 	}
 	common.Success(c, resp)
 }
@@ -635,7 +662,7 @@ func (h *Handler) CreateCloudResource(c *gin.Context) {
 	}
 	result, err := h.svc.CreateCloudResource(c.Request.Context(), cr)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		failCMDBError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
@@ -681,7 +708,7 @@ func (h *Handler) UpdateCloudResource(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateCloudResource(c.Request.Context(), cr)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		failCMDBError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
@@ -714,15 +741,18 @@ func (h *Handler) ListDiscoverySources(c *gin.Context) {
 	resp := make([]*dto.DiscoverySourceResponse, 0, len(list))
 	for _, item := range list {
 		resp = append(resp, &dto.DiscoverySourceResponse{
-			ID:          item.ID,
-			Name:        item.Name,
-			SourceType:  item.SourceType,
-			Provider:    item.Provider,
-			IsActive:    item.IsActive,
-			Description: item.Description,
-			TenantID:    item.TenantID,
-			CreatedAt:   item.CreatedAt,
-			UpdatedAt:   item.UpdatedAt,
+			ID:             item.ID,
+			Name:           item.Name,
+			SourceType:     item.SourceType,
+			Provider:       item.Provider,
+			IsActive:       item.IsActive,
+			Description:    item.Description,
+			CloudAccountID: item.CloudAccountID, ServiceCodes: item.ServiceCodes, Regions: item.Regions,
+			Schedule: item.Schedule, ReconcilePolicy: item.ReconcilePolicy, StaleThreshold: item.StaleThreshold,
+			LastSuccessAt: item.LastSuccessAt,
+			TenantID:      item.TenantID,
+			CreatedAt:     item.CreatedAt,
+			UpdatedAt:     item.UpdatedAt,
 		})
 	}
 	common.Success(c, resp)
@@ -740,29 +770,34 @@ func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 		isActive = *req.IsActive
 	}
 	ds := &DiscoverySource{
-		ID:          fmt.Sprintf("ds_%d", time.Now().UnixNano()),
-		Name:        req.Name,
-		SourceType:  req.SourceType,
-		Provider:    req.Provider,
-		IsActive:    isActive,
-		Description: req.Description,
-		TenantID:    tenantID,
+		ID:             fmt.Sprintf("ds_%d", time.Now().UnixNano()),
+		Name:           req.Name,
+		SourceType:     req.SourceType,
+		Provider:       req.Provider,
+		IsActive:       isActive,
+		Description:    req.Description,
+		CloudAccountID: req.CloudAccountID, ServiceCodes: req.ServiceCodes, Regions: req.Regions,
+		Schedule: req.Schedule, ReconcilePolicy: req.ReconcilePolicy, StaleThreshold: req.StaleThreshold,
+		TenantID: tenantID,
 	}
 	res, err := h.svc.CreateDiscoverySource(c.Request.Context(), ds)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		failCMDBError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.DiscoverySourceResponse{
-		ID:          res.ID,
-		Name:        res.Name,
-		SourceType:  res.SourceType,
-		Provider:    res.Provider,
-		IsActive:    res.IsActive,
-		Description: res.Description,
-		TenantID:    res.TenantID,
-		CreatedAt:   res.CreatedAt,
-		UpdatedAt:   res.UpdatedAt,
+		ID:             res.ID,
+		Name:           res.Name,
+		SourceType:     res.SourceType,
+		Provider:       res.Provider,
+		IsActive:       res.IsActive,
+		Description:    res.Description,
+		CloudAccountID: res.CloudAccountID, ServiceCodes: res.ServiceCodes, Regions: res.Regions,
+		Schedule: res.Schedule, ReconcilePolicy: res.ReconcilePolicy, StaleThreshold: res.StaleThreshold,
+		LastSuccessAt: res.LastSuccessAt,
+		TenantID:      res.TenantID,
+		CreatedAt:     res.CreatedAt,
+		UpdatedAt:     res.UpdatedAt,
 	})
 }
 
@@ -789,17 +824,20 @@ func (h *Handler) ListDiscoveryResults(c *gin.Context) {
 	resp := make([]*dto.DiscoveryResultResponse, 0, len(list))
 	for _, item := range list {
 		resp = append(resp, &dto.DiscoveryResultResponse{
-			ID:           item.ID,
-			JobID:        item.JobID,
-			CIID:         item.CIID,
-			Action:       item.Action,
-			ResourceType: item.ResourceType,
-			ResourceID:   item.ResourceID,
-			Diff:         item.Diff,
-			Status:       item.Status,
-			TenantID:     item.TenantID,
-			CreatedAt:    item.CreatedAt,
-			UpdatedAt:    item.UpdatedAt,
+			ID:               item.ID,
+			JobID:            item.JobID,
+			CIID:             item.CIID,
+			Action:           item.Action,
+			ResourceType:     item.ResourceType,
+			ResourceID:       item.ResourceID,
+			ResourceIdentity: item.ResourceIdentity, IdentityVersion: item.IdentityVersion,
+			ResourceSnapshot: item.ResourceSnapshot, BeforeHash: item.BeforeHash, AfterHash: item.AfterHash,
+			Diff:      item.Diff,
+			Status:    item.Status,
+			ErrorCode: item.ErrorCode, ErrorMessage: item.ErrorMessage,
+			TenantID:  item.TenantID,
+			CreatedAt: item.CreatedAt,
+			UpdatedAt: item.UpdatedAt,
 		})
 	}
 	common.Success(c, resp)

@@ -18,9 +18,12 @@ type Registry struct {
 var globalRegistry *Registry
 
 func init() {
-	globalRegistry = &Registry{
-		adapters: make(map[string]map[string]CloudDiscoveryAdapter),
-	}
+	globalRegistry = NewRegistry()
+}
+
+// NewRegistry creates an isolated adapter registry for dependency injection.
+func NewRegistry() *Registry {
+	return &Registry{adapters: make(map[string]map[string]CloudDiscoveryAdapter)}
 }
 
 // GlobalRegistry 获取全局注册表
@@ -54,6 +57,15 @@ func (r *Registry) Get(provider, serviceCode string) (CloudDiscoveryAdapter, boo
 		}
 	}
 	return nil, false
+}
+
+// HasAdapter reports whether a provider/service adapter is installed.
+func (r *Registry) HasAdapter(provider, serviceCode string) bool {
+	if r == nil {
+		return false
+	}
+	_, ok := r.Get(NormalizeProvider(provider), strings.ToLower(strings.TrimSpace(serviceCode)))
+	return ok
 }
 
 // GetByAccount 根据账号获取该厂商所有已注册的 adapter

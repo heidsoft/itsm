@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -22,9 +23,9 @@ type RAGService struct {
 	vectorStore  connectorVector.VectorStore
 	embedder     Embedder
 	logger       *zap.SugaredLogger
-	useVector    bool // Whether to use vector search
-	useKeyword   bool // Whether to use keyword fallback
-	hybridSearch bool // Whether to use hybrid (vector + keyword) search
+	useVector    bool             // Whether to use vector search
+	useKeyword   bool             // Whether to use keyword fallback
+	hybridSearch bool             // Whether to use hybrid (vector + keyword) search
 	ontology     *OntologyService // 本体图检索：实体识别 + 关系扩展（可选注入）
 }
 
@@ -498,6 +499,137 @@ func (r *RAGService) AskWithLLMStream(
 		return fmt.Errorf("LLM stream failed: %w", err)
 	}
 	return nil
+}
+
+// maxToolRounds 工具循环上限，防止模型无限循环调用工具。
+const maxToolRounds = 5
+
+// AskWithLLMStreamWithTools 是 AskWithLLMStream 的工具增强版本：除检索知识库与本体图谱外，
+// 还向 LLM 声明一组只读工具。模型若发起工具调用，通过 execTool 执行（由调用方负责
+// RBAC 校验与审计），结果回填对话后继续生成，最终答案经 onDelta 流式下发。
+//
+// 不改动原 AskWithLLMStream 签名；当 gateway 为 nil 或 tools 为空时完全退化为原方法行为，
+// 保证既有调用方零回归。execTool 返回的 error 会被序列化为工具结果（{"error": ...}），
+// 让模型感知执行失败而不中断整条流。
+func (r *RAGService) AskWithLLMStreamWithTools(
+	ctx context.Context,
+	tenantID int,
+	query string,
+	gateway *LLMGateway,
+	maxResults int,
+	tools []LLMTool,
+	onSources func(sources []map[string]any),
+	onDelta func(delta string),
+	execTool func(name string, args map[string]any) (any, error),
+) error {
+	if gateway == nil || len(tools) == 0 {
+		return r.AskWithLLMStream(ctx, tenantID, query, gateway, maxResults, onSources, onDelta)
+	}
+	if maxResults <= 0 {
+		maxResults = 5
+	}
+	if onDelta == nil {
+		onDelta = func(string) {}
+	}
+	if onSources == nil {
+		onSources = func([]map[string]any) {}
+	}
+
+	// 检索（与 AskWithLLMStream 一致：KB + 本体增强）
+	docs, err := r.Ask(ctx, tenantID, query, maxResults)
+	if err != nil {
+		return fmt.Errorf("retrieval failed: %w", err)
+	}
+	var ontologyBlock string
+	if r.ontology != nil {
+		oc := r.ontology.ExtractAndExpand(ctx, tenantID, query)
+		if !oc.Empty() {
+			ontologyBlock = oc.PromptBlock()
+			docs = append(oc.Sources(), docs...)
+		}
+	}
+	// 先发 sources，让前端在答案流式期间渲染引用/实体卡
+	onSources(docs)
+
+	var contextBuilder strings.Builder
+	if len(docs) > 0 {
+		contextBuilder.WriteString("基于以下知识库内容回答用户问题：\n\n")
+		for i, doc := range docs {
+			contextBuilder.WriteString(fmt.Sprintf("【文档%d】%v\n", i+1, doc["title"]))
+			contextBuilder.WriteString(fmt.Sprintf("内容：%v\n\n", doc["snippet"]))
+		}
+	} else {
+		contextBuilder.WriteString("知识库未检索到相关内容。如用户需要实时业务数据（工单/事件/CI 等），请优先使用工具查询。\n\n")
+	}
+	if ontologyBlock != "" {
+		contextBuilder.WriteString(ontologyBlock)
+	}
+
+	prompt := fmt.Sprintf(`%s
+用户问题：%s
+
+请根据以上知识库内容与业务实体图谱（如有），用简洁专业的中文回答用户问题。
+回答涉及具体业务对象（工单/事件/CI/问题/发布）时，优先依据图谱上下文中的事实，给出对象编号、状态与关联关系。
+如用户需要实时业务数据（例如当前有哪些工单），请调用提供的工具查询后再回答，不要臆造数据。
+如果知识库内容没有直接相关的信息，请说明"未在知识库中找到相关答案"。
+可以在回答末尾用【文档X】形式引用来源，但不要重复输出文档全文。
+
+回答：`, contextBuilder.String(), query)
+
+	messages := []LLMMessage{
+		{Role: "system", Content: "你是IT服务管理知识库助手，基于检索到的知识内容与CMDB/工单图谱事实回答用户问题。图谱中的对象编号、状态、关联关系是系统实时数据，可信度高于推测。当需要实时数据时，优先调用已提供的工具获取，严禁编造数据。"},
+		{Role: "user", Content: prompt},
+	}
+
+	// 工具循环：模型发起调用 → 执行 → 结果回填 → 再请求，直到模型给出最终回答
+	for round := 0; round < maxToolRounds; round++ {
+		var toolCalls []LLMToolCall
+		if err := gateway.ChatStreamWithTools(ctx, "", messages, tools, onDelta, func(tcs []LLMToolCall) {
+			toolCalls = tcs
+		}); err != nil {
+			return fmt.Errorf("LLM stream failed: %w", err)
+		}
+		if len(toolCalls) == 0 {
+			// 无工具调用：本轮已流式输出最终答案
+			return nil
+		}
+
+		// 回填 assistant 的工具调用消息与各工具的执行结果
+		messages = append(messages, LLMMessage{Role: "assistant", ToolCalls: toolCalls})
+		for _, tc := range toolCalls {
+			var result any
+			var execErr error
+			if execTool != nil {
+				result, execErr = execTool(tc.Name, parseToolArgs(tc.Arguments))
+			} else {
+				execErr = fmt.Errorf("no tool executor provided")
+			}
+			if execErr != nil {
+				result = map[string]any{"error": execErr.Error()}
+			}
+			b, marshalErr := json.Marshal(result)
+			if marshalErr != nil {
+				b = []byte(`{"error":"failed to serialize tool result"}`)
+			}
+			messages = append(messages, LLMMessage{Role: "tool", ToolCallID: tc.ID, Content: string(b)})
+		}
+		// 继续下一轮，让模型基于工具结果生成最终回答
+	}
+	return fmt.Errorf("tool loop exceeded max rounds (%d)", maxToolRounds)
+}
+
+// parseToolArgs 解析模型返回的工具参数 JSON；空串/非法 JSON 时返回空 map 或降级兜底，
+// 保证工具执行不会因参数解析失败而 panic。
+func parseToolArgs(s string) map[string]any {
+	args := map[string]any{}
+	if strings.TrimSpace(s) == "" {
+		return args
+	}
+	if err := json.Unmarshal([]byte(s), &args); err != nil {
+		// 非 JSON 对象：整段作为 value 传给工具，工具内部自行容错
+		args["value"] = s
+	}
+	return args
 }
 
 // IndexArticle adds a knowledge article to all available vector stores.

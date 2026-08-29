@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"reflect"
+	"strconv"
 	"testing"
+	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -134,6 +136,7 @@ func TestToolRegistry_ListToolsCatalog(t *testing.T) {
 	assert.True(t, names["list_cis"], "list_cis tool must remain registered")
 	assert.True(t, names["get_incident_stats"], "get_incident_stats tool must remain registered")
 	assert.True(t, names["list_kb"], "list_kb tool must remain registered")
+	assert.True(t, names["list_tickets"], "list_tickets tool must remain registered")
 	assert.True(t, names["create_ticket"], "create_ticket tool must remain registered")
 	assert.True(t, names["update_ticket"], "update_ticket tool must remain registered")
 }
@@ -153,6 +156,111 @@ func TestToolRegistry_UnknownTool(t *testing.T) {
 	_, err := registry.Execute(context.Background(), 1, "does_not_exist", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unknown tool")
+}
+
+// TestToolRegistry_ListTickets verifies the list_tickets tool:
+//   - returns dto.TicketResponse DTOs (never raw ent models)
+//   - enforces explicit tenant filtering (no cross-tenant leakage)
+//   - excludes soft-deleted tickets via DeletedAtIsNil
+//   - clamps pageSize to [1,100]
+func TestToolRegistry_ListTickets(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:tool_registry_tickets?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+
+	mkTenant := func(code string) *ent.Tenant {
+		t.Helper()
+		tn, err := client.Tenant.Create().
+			SetName("Tenant " + code).SetCode(code).SetDomain(code + ".test").SetStatus("active").
+			Save(ctx)
+		require.NoError(t, err)
+		return tn
+	}
+	t1 := mkTenant("t1")
+	t2 := mkTenant("t2")
+
+	mkUser := func(tenantID int, suffix string) *ent.User {
+		t.Helper()
+		u, err := client.User.Create().
+			SetUsername("req-" + suffix).
+			SetEmail(suffix + "@test.com").
+			SetName("Requester " + suffix).
+			SetPasswordHash("hashed").
+			SetRole("agent").
+			SetActive(true).
+			SetTenantID(tenantID).
+			Save(ctx)
+		require.NoError(t, err)
+		return u
+	}
+	u1 := mkUser(t1.ID, "t1")
+	u2 := mkUser(t2.ID, "t2")
+
+	mkTicket := func(tenantID int, requesterID int, title string) *ent.Ticket {
+		t.Helper()
+		tk, err := client.Ticket.Create().
+			SetTitle(title).
+			SetTicketNumber("TKT-" + strconv.Itoa(tenantID) + "-" + title).
+			SetRequesterID(requesterID).
+			SetTenantID(tenantID).
+			Save(ctx)
+		require.NoError(t, err)
+		return tk
+	}
+
+	// tenant 1: 3 条正常 + 1 条软删除
+	mkTicket(1, u1.ID, "t1-a")
+	mkTicket(1, u1.ID, "t1-b")
+	mkTicket(1, u1.ID, "t1-c")
+	deleted := mkTicket(1, u1.ID, "t1-deleted")
+	err := client.Ticket.UpdateOneID(deleted.ID).SetDeletedAt(time.Now()).Exec(ctx)
+	require.NoError(t, err)
+	// tenant 2: 1 条，绝不能泄漏进租户 1 的查询
+	mkTicket(2, u2.ID, "t2-a")
+
+	registry := NewToolRegistry(nil, nil, nil, client)
+
+	t.Run("returns DTO list filtered by tenant and excluding soft-deleted", func(t *testing.T) {
+		result, err := registry.Execute(ctx, 1, "list_tickets", map[string]interface{}{})
+		require.NoError(t, err)
+		items, ok := result.([]*dto.TicketResponse)
+		require.True(t, ok, "list_tickets result must be []*dto.TicketResponse, got %T", result)
+		assert.Len(t, items, 3, "tenant 1 has 3 non-deleted tickets")
+		for _, it := range items {
+			assert.Equal(t, 1, it.TenantID, "result must stay within tenant 1")
+			assert.NotEqual(t, "t1-deleted", it.Title, "soft-deleted tickets must be excluded")
+			assert.NotEmpty(t, it.TicketNumber)
+		}
+	})
+
+	t.Run("clamps pageSize to [1,100]", func(t *testing.T) {
+		// pageSize=0 -> clamp 到 1，只返回最新 1 条
+		result, err := registry.Execute(ctx, 1, "list_tickets", map[string]interface{}{"pageSize": float64(0)})
+		require.NoError(t, err)
+		items := result.([]*dto.TicketResponse)
+		assert.Len(t, items, 1, "pageSize clamped to 1")
+
+		// pageSize=1000 -> clamp 到 100，但租户 1 只有 3 条
+		result, err = registry.Execute(ctx, 1, "list_tickets", map[string]interface{}{"pageSize": float64(1000)})
+		require.NoError(t, err)
+		items = result.([]*dto.TicketResponse)
+		assert.Len(t, items, 3, "pageSize clamped to 100, only 3 exist")
+	})
+
+	t.Run("isolates other tenants", func(t *testing.T) {
+		result, err := registry.Execute(ctx, 2, "list_tickets", map[string]interface{}{})
+		require.NoError(t, err)
+		items := result.([]*dto.TicketResponse)
+		assert.Len(t, items, 1)
+		assert.Equal(t, "t2-a", items[0].Title)
+	})
+
+	t.Run("empty tenant yields empty slice", func(t *testing.T) {
+		result, err := registry.Execute(ctx, 99, "list_tickets", map[string]interface{}{})
+		require.NoError(t, err)
+		items := result.([]*dto.TicketResponse)
+		assert.Empty(t, items)
+	})
 }
 
 // Compile-time guard that the test file references ent (otherwise the unused

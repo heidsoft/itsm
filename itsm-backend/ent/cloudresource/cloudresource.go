@@ -20,6 +20,28 @@ const (
 	FieldServiceID = "service_id"
 	// FieldResourceID holds the string denoting the resource_id field in the database.
 	FieldResourceID = "resource_id"
+	// FieldIdentityVersion holds the string denoting the identity_version field in the database.
+	FieldIdentityVersion = "identity_version"
+	// FieldProvider holds the string denoting the provider field in the database.
+	FieldProvider = "provider"
+	// FieldPartition holds the string denoting the partition field in the database.
+	FieldPartition = "partition"
+	// FieldCanonicalAccountID holds the string denoting the canonical_account_id field in the database.
+	FieldCanonicalAccountID = "canonical_account_id"
+	// FieldResourceScope holds the string denoting the resource_scope field in the database.
+	FieldResourceScope = "resource_scope"
+	// FieldServiceCode holds the string denoting the service_code field in the database.
+	FieldServiceCode = "service_code"
+	// FieldResourceType holds the string denoting the resource_type field in the database.
+	FieldResourceType = "resource_type"
+	// FieldIdentityHash holds the string denoting the identity_hash field in the database.
+	FieldIdentityHash = "identity_hash"
+	// FieldSourceID holds the string denoting the source_id field in the database.
+	FieldSourceID = "source_id"
+	// FieldSourceFingerprint holds the string denoting the source_fingerprint field in the database.
+	FieldSourceFingerprint = "source_fingerprint"
+	// FieldMissingCount holds the string denoting the missing_count field in the database.
+	FieldMissingCount = "missing_count"
 	// FieldResourceName holds the string denoting the resource_name field in the database.
 	FieldResourceName = "resource_name"
 	// FieldRegion holds the string denoting the region field in the database.
@@ -81,6 +103,17 @@ var Columns = []string{
 	FieldCloudAccountID,
 	FieldServiceID,
 	FieldResourceID,
+	FieldIdentityVersion,
+	FieldProvider,
+	FieldPartition,
+	FieldCanonicalAccountID,
+	FieldResourceScope,
+	FieldServiceCode,
+	FieldResourceType,
+	FieldIdentityHash,
+	FieldSourceID,
+	FieldSourceFingerprint,
+	FieldMissingCount,
 	FieldResourceName,
 	FieldRegion,
 	FieldZone,
@@ -112,6 +145,18 @@ var (
 	ServiceIDValidator func(int) error
 	// ResourceIDValidator is a validator for the "resource_id" field. It is called by the builders before save.
 	ResourceIDValidator func(string) error
+	// DefaultIdentityVersion holds the default value on creation for the "identity_version" field.
+	DefaultIdentityVersion int
+	// IdentityVersionValidator is a validator for the "identity_version" field. It is called by the builders before save.
+	IdentityVersionValidator func(int) error
+	// DefaultPartition holds the default value on creation for the "partition" field.
+	DefaultPartition string
+	// DefaultResourceScope holds the default value on creation for the "resource_scope" field.
+	DefaultResourceScope string
+	// DefaultMissingCount holds the default value on creation for the "missing_count" field.
+	DefaultMissingCount int
+	// MissingCountValidator is a validator for the "missing_count" field. It is called by the builders before save.
+	MissingCountValidator func(int) error
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -143,6 +188,61 @@ func ByServiceID(opts ...sql.OrderTermOption) OrderOption {
 // ByResourceID orders the results by the resource_id field.
 func ByResourceID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResourceID, opts...).ToFunc()
+}
+
+// ByIdentityVersion orders the results by the identity_version field.
+func ByIdentityVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIdentityVersion, opts...).ToFunc()
+}
+
+// ByProvider orders the results by the provider field.
+func ByProvider(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProvider, opts...).ToFunc()
+}
+
+// ByPartition orders the results by the partition field.
+func ByPartition(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPartition, opts...).ToFunc()
+}
+
+// ByCanonicalAccountID orders the results by the canonical_account_id field.
+func ByCanonicalAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCanonicalAccountID, opts...).ToFunc()
+}
+
+// ByResourceScope orders the results by the resource_scope field.
+func ByResourceScope(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResourceScope, opts...).ToFunc()
+}
+
+// ByServiceCode orders the results by the service_code field.
+func ByServiceCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldServiceCode, opts...).ToFunc()
+}
+
+// ByResourceType orders the results by the resource_type field.
+func ByResourceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResourceType, opts...).ToFunc()
+}
+
+// ByIdentityHash orders the results by the identity_hash field.
+func ByIdentityHash(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIdentityHash, opts...).ToFunc()
+}
+
+// BySourceID orders the results by the source_id field.
+func BySourceID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSourceID, opts...).ToFunc()
+}
+
+// BySourceFingerprint orders the results by the source_fingerprint field.
+func BySourceFingerprint(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSourceFingerprint, opts...).ToFunc()
+}
+
+// ByMissingCount orders the results by the missing_count field.
+func ByMissingCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMissingCount, opts...).ToFunc()
 }
 
 // ByResourceName orders the results by the resource_name field.

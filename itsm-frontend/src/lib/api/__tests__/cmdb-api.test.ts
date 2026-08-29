@@ -19,6 +19,16 @@ const mockPut = httpClient.put as jest.Mock;
 const mockDelete = httpClient.delete as jest.Mock;
 
 describe('CMDBApi', () => {
+  describe('getCapabilities', () => {
+    it('gets the backend CMDB runtime readiness contract', async () => {
+      mockGet.mockResolvedValue({ items: [] });
+
+      await CMDBApi.getCapabilities();
+
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/capabilities');
+    });
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
   });

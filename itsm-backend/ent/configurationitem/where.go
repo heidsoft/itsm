@@ -150,6 +150,31 @@ func Source(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldSource, v))
 }
 
+// SourceID applies equality check predicate on the "source_id" field. It's identical to SourceIDEQ.
+func SourceID(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldSourceID, v))
+}
+
+// CanonicalCloudAccountID applies equality check predicate on the "canonical_cloud_account_id" field. It's identical to CanonicalCloudAccountIDEQ.
+func CanonicalCloudAccountID(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldCanonicalCloudAccountID, v))
+}
+
+// SourceLastSeenAt applies equality check predicate on the "source_last_seen_at" field. It's identical to SourceLastSeenAtEQ.
+func SourceLastSeenAt(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldSourceLastSeenAt, v))
+}
+
+// SourceMissingCount applies equality check predicate on the "source_missing_count" field. It's identical to SourceMissingCountEQ.
+func SourceMissingCount(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldSourceMissingCount, v))
+}
+
+// SourceFingerprint applies equality check predicate on the "source_fingerprint" field. It's identical to SourceFingerprintEQ.
+func SourceFingerprint(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldSourceFingerprint, v))
+}
+
 // CloudProvider applies equality check predicate on the "cloud_provider" field. It's identical to CloudProviderEQ.
 func CloudProvider(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldCloudProvider, v))
@@ -1488,6 +1513,321 @@ func SourceEqualFold(v string) predicate.ConfigurationItem {
 // SourceContainsFold applies the ContainsFold predicate on the "source" field.
 func SourceContainsFold(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldSource, v))
+}
+
+// SourceIDEQ applies the EQ predicate on the "source_id" field.
+func SourceIDEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldSourceID, v))
+}
+
+// SourceIDNEQ applies the NEQ predicate on the "source_id" field.
+func SourceIDNEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldSourceID, v))
+}
+
+// SourceIDIn applies the In predicate on the "source_id" field.
+func SourceIDIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldSourceID, vs...))
+}
+
+// SourceIDNotIn applies the NotIn predicate on the "source_id" field.
+func SourceIDNotIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldSourceID, vs...))
+}
+
+// SourceIDGT applies the GT predicate on the "source_id" field.
+func SourceIDGT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldSourceID, v))
+}
+
+// SourceIDGTE applies the GTE predicate on the "source_id" field.
+func SourceIDGTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldSourceID, v))
+}
+
+// SourceIDLT applies the LT predicate on the "source_id" field.
+func SourceIDLT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldSourceID, v))
+}
+
+// SourceIDLTE applies the LTE predicate on the "source_id" field.
+func SourceIDLTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldSourceID, v))
+}
+
+// SourceIDContains applies the Contains predicate on the "source_id" field.
+func SourceIDContains(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContains(FieldSourceID, v))
+}
+
+// SourceIDHasPrefix applies the HasPrefix predicate on the "source_id" field.
+func SourceIDHasPrefix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldSourceID, v))
+}
+
+// SourceIDHasSuffix applies the HasSuffix predicate on the "source_id" field.
+func SourceIDHasSuffix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldSourceID, v))
+}
+
+// SourceIDIsNil applies the IsNil predicate on the "source_id" field.
+func SourceIDIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldSourceID))
+}
+
+// SourceIDNotNil applies the NotNil predicate on the "source_id" field.
+func SourceIDNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldSourceID))
+}
+
+// SourceIDEqualFold applies the EqualFold predicate on the "source_id" field.
+func SourceIDEqualFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldSourceID, v))
+}
+
+// SourceIDContainsFold applies the ContainsFold predicate on the "source_id" field.
+func SourceIDContainsFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldSourceID, v))
+}
+
+// CanonicalCloudAccountIDEQ applies the EQ predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldCanonicalCloudAccountID, v))
+}
+
+// CanonicalCloudAccountIDNEQ applies the NEQ predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDNEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldCanonicalCloudAccountID, v))
+}
+
+// CanonicalCloudAccountIDIn applies the In predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldCanonicalCloudAccountID, vs...))
+}
+
+// CanonicalCloudAccountIDNotIn applies the NotIn predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDNotIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldCanonicalCloudAccountID, vs...))
+}
+
+// CanonicalCloudAccountIDGT applies the GT predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDGT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldCanonicalCloudAccountID, v))
+}
+
+// CanonicalCloudAccountIDGTE applies the GTE predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDGTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldCanonicalCloudAccountID, v))
+}
+
+// CanonicalCloudAccountIDLT applies the LT predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDLT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldCanonicalCloudAccountID, v))
+}
+
+// CanonicalCloudAccountIDLTE applies the LTE predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDLTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldCanonicalCloudAccountID, v))
+}
+
+// CanonicalCloudAccountIDContains applies the Contains predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDContains(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContains(FieldCanonicalCloudAccountID, v))
+}
+
+// CanonicalCloudAccountIDHasPrefix applies the HasPrefix predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDHasPrefix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldCanonicalCloudAccountID, v))
+}
+
+// CanonicalCloudAccountIDHasSuffix applies the HasSuffix predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDHasSuffix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldCanonicalCloudAccountID, v))
+}
+
+// CanonicalCloudAccountIDIsNil applies the IsNil predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldCanonicalCloudAccountID))
+}
+
+// CanonicalCloudAccountIDNotNil applies the NotNil predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldCanonicalCloudAccountID))
+}
+
+// CanonicalCloudAccountIDEqualFold applies the EqualFold predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDEqualFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldCanonicalCloudAccountID, v))
+}
+
+// CanonicalCloudAccountIDContainsFold applies the ContainsFold predicate on the "canonical_cloud_account_id" field.
+func CanonicalCloudAccountIDContainsFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldCanonicalCloudAccountID, v))
+}
+
+// SourceLastSeenAtEQ applies the EQ predicate on the "source_last_seen_at" field.
+func SourceLastSeenAtEQ(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldSourceLastSeenAt, v))
+}
+
+// SourceLastSeenAtNEQ applies the NEQ predicate on the "source_last_seen_at" field.
+func SourceLastSeenAtNEQ(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldSourceLastSeenAt, v))
+}
+
+// SourceLastSeenAtIn applies the In predicate on the "source_last_seen_at" field.
+func SourceLastSeenAtIn(vs ...time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldSourceLastSeenAt, vs...))
+}
+
+// SourceLastSeenAtNotIn applies the NotIn predicate on the "source_last_seen_at" field.
+func SourceLastSeenAtNotIn(vs ...time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldSourceLastSeenAt, vs...))
+}
+
+// SourceLastSeenAtGT applies the GT predicate on the "source_last_seen_at" field.
+func SourceLastSeenAtGT(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldSourceLastSeenAt, v))
+}
+
+// SourceLastSeenAtGTE applies the GTE predicate on the "source_last_seen_at" field.
+func SourceLastSeenAtGTE(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldSourceLastSeenAt, v))
+}
+
+// SourceLastSeenAtLT applies the LT predicate on the "source_last_seen_at" field.
+func SourceLastSeenAtLT(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldSourceLastSeenAt, v))
+}
+
+// SourceLastSeenAtLTE applies the LTE predicate on the "source_last_seen_at" field.
+func SourceLastSeenAtLTE(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldSourceLastSeenAt, v))
+}
+
+// SourceLastSeenAtIsNil applies the IsNil predicate on the "source_last_seen_at" field.
+func SourceLastSeenAtIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldSourceLastSeenAt))
+}
+
+// SourceLastSeenAtNotNil applies the NotNil predicate on the "source_last_seen_at" field.
+func SourceLastSeenAtNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldSourceLastSeenAt))
+}
+
+// SourceMissingCountEQ applies the EQ predicate on the "source_missing_count" field.
+func SourceMissingCountEQ(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldSourceMissingCount, v))
+}
+
+// SourceMissingCountNEQ applies the NEQ predicate on the "source_missing_count" field.
+func SourceMissingCountNEQ(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldSourceMissingCount, v))
+}
+
+// SourceMissingCountIn applies the In predicate on the "source_missing_count" field.
+func SourceMissingCountIn(vs ...int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldSourceMissingCount, vs...))
+}
+
+// SourceMissingCountNotIn applies the NotIn predicate on the "source_missing_count" field.
+func SourceMissingCountNotIn(vs ...int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldSourceMissingCount, vs...))
+}
+
+// SourceMissingCountGT applies the GT predicate on the "source_missing_count" field.
+func SourceMissingCountGT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldSourceMissingCount, v))
+}
+
+// SourceMissingCountGTE applies the GTE predicate on the "source_missing_count" field.
+func SourceMissingCountGTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldSourceMissingCount, v))
+}
+
+// SourceMissingCountLT applies the LT predicate on the "source_missing_count" field.
+func SourceMissingCountLT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldSourceMissingCount, v))
+}
+
+// SourceMissingCountLTE applies the LTE predicate on the "source_missing_count" field.
+func SourceMissingCountLTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldSourceMissingCount, v))
+}
+
+// SourceFingerprintEQ applies the EQ predicate on the "source_fingerprint" field.
+func SourceFingerprintEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintNEQ applies the NEQ predicate on the "source_fingerprint" field.
+func SourceFingerprintNEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintIn applies the In predicate on the "source_fingerprint" field.
+func SourceFingerprintIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldSourceFingerprint, vs...))
+}
+
+// SourceFingerprintNotIn applies the NotIn predicate on the "source_fingerprint" field.
+func SourceFingerprintNotIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldSourceFingerprint, vs...))
+}
+
+// SourceFingerprintGT applies the GT predicate on the "source_fingerprint" field.
+func SourceFingerprintGT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintGTE applies the GTE predicate on the "source_fingerprint" field.
+func SourceFingerprintGTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintLT applies the LT predicate on the "source_fingerprint" field.
+func SourceFingerprintLT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintLTE applies the LTE predicate on the "source_fingerprint" field.
+func SourceFingerprintLTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintContains applies the Contains predicate on the "source_fingerprint" field.
+func SourceFingerprintContains(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContains(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintHasPrefix applies the HasPrefix predicate on the "source_fingerprint" field.
+func SourceFingerprintHasPrefix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintHasSuffix applies the HasSuffix predicate on the "source_fingerprint" field.
+func SourceFingerprintHasSuffix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintIsNil applies the IsNil predicate on the "source_fingerprint" field.
+func SourceFingerprintIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldSourceFingerprint))
+}
+
+// SourceFingerprintNotNil applies the NotNil predicate on the "source_fingerprint" field.
+func SourceFingerprintNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldSourceFingerprint))
+}
+
+// SourceFingerprintEqualFold applies the EqualFold predicate on the "source_fingerprint" field.
+func SourceFingerprintEqualFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintContainsFold applies the ContainsFold predicate on the "source_fingerprint" field.
+func SourceFingerprintContainsFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldSourceFingerprint, v))
 }
 
 // AttributesIsNil applies the IsNil predicate on the "attributes" field.

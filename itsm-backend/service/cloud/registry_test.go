@@ -196,6 +196,16 @@ func TestGlobalRegistry(t *testing.T) {
 	assert.NotNil(t, reg)
 }
 
+func TestRegistryHasAdapterNormalizesProviderAndService(t *testing.T) {
+	registry := NewRegistry()
+	registry.Register(&mockAdapter{provider: "aliyun", serviceCode: "ecs"})
+
+	assert.True(t, registry.HasAdapter("alicloud", " ECS "))
+	assert.False(t, registry.HasAdapter("aliyun", "rds"))
+	var nilRegistry *Registry
+	assert.False(t, nilRegistry.HasAdapter("aliyun", "ecs"))
+}
+
 func TestMockAdapter(t *testing.T) {
 	adapter := &mockAdapter{provider: "aws", serviceCode: "ec2"}
 	ctx := context.Background()

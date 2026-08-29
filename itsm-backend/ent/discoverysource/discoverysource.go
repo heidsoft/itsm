@@ -20,6 +20,20 @@ const (
 	FieldSourceType = "source_type"
 	// FieldProvider holds the string denoting the provider field in the database.
 	FieldProvider = "provider"
+	// FieldCloudAccountID holds the string denoting the cloud_account_id field in the database.
+	FieldCloudAccountID = "cloud_account_id"
+	// FieldServiceCodes holds the string denoting the service_codes field in the database.
+	FieldServiceCodes = "service_codes"
+	// FieldRegions holds the string denoting the regions field in the database.
+	FieldRegions = "regions"
+	// FieldSchedule holds the string denoting the schedule field in the database.
+	FieldSchedule = "schedule"
+	// FieldReconcilePolicy holds the string denoting the reconcile_policy field in the database.
+	FieldReconcilePolicy = "reconcile_policy"
+	// FieldStaleThreshold holds the string denoting the stale_threshold field in the database.
+	FieldStaleThreshold = "stale_threshold"
+	// FieldLastSuccessAt holds the string denoting the last_success_at field in the database.
+	FieldLastSuccessAt = "last_success_at"
 	// FieldEnabled holds the string denoting the enabled field in the database.
 	FieldEnabled = "enabled"
 	// FieldDescription holds the string denoting the description field in the database.
@@ -49,6 +63,13 @@ var Columns = []string{
 	FieldName,
 	FieldSourceType,
 	FieldProvider,
+	FieldCloudAccountID,
+	FieldServiceCodes,
+	FieldRegions,
+	FieldSchedule,
+	FieldReconcilePolicy,
+	FieldStaleThreshold,
+	FieldLastSuccessAt,
 	FieldEnabled,
 	FieldDescription,
 	FieldTenantID,
@@ -71,6 +92,12 @@ var (
 	NameValidator func(string) error
 	// SourceTypeValidator is a validator for the "source_type" field. It is called by the builders before save.
 	SourceTypeValidator func(string) error
+	// DefaultReconcilePolicy holds the default value on creation for the "reconcile_policy" field.
+	DefaultReconcilePolicy string
+	// DefaultStaleThreshold holds the default value on creation for the "stale_threshold" field.
+	DefaultStaleThreshold int
+	// StaleThresholdValidator is a validator for the "stale_threshold" field. It is called by the builders before save.
+	StaleThresholdValidator func(int) error
 	// DefaultEnabled holds the default value on creation for the "enabled" field.
 	DefaultEnabled bool
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
@@ -106,6 +133,31 @@ func BySourceType(opts ...sql.OrderTermOption) OrderOption {
 // ByProvider orders the results by the provider field.
 func ByProvider(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProvider, opts...).ToFunc()
+}
+
+// ByCloudAccountID orders the results by the cloud_account_id field.
+func ByCloudAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudAccountID, opts...).ToFunc()
+}
+
+// BySchedule orders the results by the schedule field.
+func BySchedule(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSchedule, opts...).ToFunc()
+}
+
+// ByReconcilePolicy orders the results by the reconcile_policy field.
+func ByReconcilePolicy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReconcilePolicy, opts...).ToFunc()
+}
+
+// ByStaleThreshold orders the results by the stale_threshold field.
+func ByStaleThreshold(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStaleThreshold, opts...).ToFunc()
+}
+
+// ByLastSuccessAt orders the results by the last_success_at field.
+func ByLastSuccessAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastSuccessAt, opts...).ToFunc()
 }
 
 // ByEnabled orders the results by the enabled field.

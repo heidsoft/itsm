@@ -62,6 +62,8 @@ import (
 	repository_ticket "itsm-backend/repository/ticket"
 	"itsm-backend/router"
 	"itsm-backend/service"
+	cloudruntime "itsm-backend/service/cloud"
+	cloudaliyun "itsm-backend/service/cloud/aliyun"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -647,7 +649,14 @@ func NewApplication() *Application {
 
 	// Domain: CMDB (DDD)
 	cmdbRepo := cmdb.NewEntRepository(client)
-	cmdbServiceDomain := cmdb.NewService(cmdbRepo, sugar)
+	cloudAdapterRegistry := cloudruntime.NewRegistry()
+	cloudAdapterRegistry.Register(cloudaliyun.NewAliyunECSAdapter(sugar))
+	cmdbServiceDomain := cmdb.NewServiceWithDiscoveryRuntime(cmdbRepo, sugar, cmdb.DiscoveryRuntime{
+		Adapters: cloudAdapterRegistry,
+		// secret:// resolution and the durable worker land in later phases.
+		CredentialResolverReady: false,
+		WorkerReady:             false,
+	})
 	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
 
 	// Approval Chain Service（供服务请求审批链求值引擎消费）

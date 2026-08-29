@@ -70,6 +70,61 @@ func ResourceID(v string) predicate.CloudResource {
 	return predicate.CloudResource(sql.FieldEQ(FieldResourceID, v))
 }
 
+// IdentityVersion applies equality check predicate on the "identity_version" field. It's identical to IdentityVersionEQ.
+func IdentityVersion(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldIdentityVersion, v))
+}
+
+// Provider applies equality check predicate on the "provider" field. It's identical to ProviderEQ.
+func Provider(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldProvider, v))
+}
+
+// Partition applies equality check predicate on the "partition" field. It's identical to PartitionEQ.
+func Partition(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldPartition, v))
+}
+
+// CanonicalAccountID applies equality check predicate on the "canonical_account_id" field. It's identical to CanonicalAccountIDEQ.
+func CanonicalAccountID(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldCanonicalAccountID, v))
+}
+
+// ResourceScope applies equality check predicate on the "resource_scope" field. It's identical to ResourceScopeEQ.
+func ResourceScope(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldResourceScope, v))
+}
+
+// ServiceCode applies equality check predicate on the "service_code" field. It's identical to ServiceCodeEQ.
+func ServiceCode(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldServiceCode, v))
+}
+
+// ResourceType applies equality check predicate on the "resource_type" field. It's identical to ResourceTypeEQ.
+func ResourceType(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldResourceType, v))
+}
+
+// IdentityHash applies equality check predicate on the "identity_hash" field. It's identical to IdentityHashEQ.
+func IdentityHash(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldIdentityHash, v))
+}
+
+// SourceID applies equality check predicate on the "source_id" field. It's identical to SourceIDEQ.
+func SourceID(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldSourceID, v))
+}
+
+// SourceFingerprint applies equality check predicate on the "source_fingerprint" field. It's identical to SourceFingerprintEQ.
+func SourceFingerprint(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldSourceFingerprint, v))
+}
+
+// MissingCount applies equality check predicate on the "missing_count" field. It's identical to MissingCountEQ.
+func MissingCount(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldMissingCount, v))
+}
+
 // ResourceName applies equality check predicate on the "resource_name" field. It's identical to ResourceNameEQ.
 func ResourceName(v string) predicate.CloudResource {
 	return predicate.CloudResource(sql.FieldEQ(FieldResourceName, v))
@@ -223,6 +278,741 @@ func ResourceIDEqualFold(v string) predicate.CloudResource {
 // ResourceIDContainsFold applies the ContainsFold predicate on the "resource_id" field.
 func ResourceIDContainsFold(v string) predicate.CloudResource {
 	return predicate.CloudResource(sql.FieldContainsFold(FieldResourceID, v))
+}
+
+// IdentityVersionEQ applies the EQ predicate on the "identity_version" field.
+func IdentityVersionEQ(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldIdentityVersion, v))
+}
+
+// IdentityVersionNEQ applies the NEQ predicate on the "identity_version" field.
+func IdentityVersionNEQ(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldIdentityVersion, v))
+}
+
+// IdentityVersionIn applies the In predicate on the "identity_version" field.
+func IdentityVersionIn(vs ...int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldIdentityVersion, vs...))
+}
+
+// IdentityVersionNotIn applies the NotIn predicate on the "identity_version" field.
+func IdentityVersionNotIn(vs ...int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldIdentityVersion, vs...))
+}
+
+// IdentityVersionGT applies the GT predicate on the "identity_version" field.
+func IdentityVersionGT(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldIdentityVersion, v))
+}
+
+// IdentityVersionGTE applies the GTE predicate on the "identity_version" field.
+func IdentityVersionGTE(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldIdentityVersion, v))
+}
+
+// IdentityVersionLT applies the LT predicate on the "identity_version" field.
+func IdentityVersionLT(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldIdentityVersion, v))
+}
+
+// IdentityVersionLTE applies the LTE predicate on the "identity_version" field.
+func IdentityVersionLTE(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldIdentityVersion, v))
+}
+
+// ProviderEQ applies the EQ predicate on the "provider" field.
+func ProviderEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldProvider, v))
+}
+
+// ProviderNEQ applies the NEQ predicate on the "provider" field.
+func ProviderNEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldProvider, v))
+}
+
+// ProviderIn applies the In predicate on the "provider" field.
+func ProviderIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldProvider, vs...))
+}
+
+// ProviderNotIn applies the NotIn predicate on the "provider" field.
+func ProviderNotIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldProvider, vs...))
+}
+
+// ProviderGT applies the GT predicate on the "provider" field.
+func ProviderGT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldProvider, v))
+}
+
+// ProviderGTE applies the GTE predicate on the "provider" field.
+func ProviderGTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldProvider, v))
+}
+
+// ProviderLT applies the LT predicate on the "provider" field.
+func ProviderLT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldProvider, v))
+}
+
+// ProviderLTE applies the LTE predicate on the "provider" field.
+func ProviderLTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldProvider, v))
+}
+
+// ProviderContains applies the Contains predicate on the "provider" field.
+func ProviderContains(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContains(FieldProvider, v))
+}
+
+// ProviderHasPrefix applies the HasPrefix predicate on the "provider" field.
+func ProviderHasPrefix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasPrefix(FieldProvider, v))
+}
+
+// ProviderHasSuffix applies the HasSuffix predicate on the "provider" field.
+func ProviderHasSuffix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasSuffix(FieldProvider, v))
+}
+
+// ProviderIsNil applies the IsNil predicate on the "provider" field.
+func ProviderIsNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIsNull(FieldProvider))
+}
+
+// ProviderNotNil applies the NotNil predicate on the "provider" field.
+func ProviderNotNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotNull(FieldProvider))
+}
+
+// ProviderEqualFold applies the EqualFold predicate on the "provider" field.
+func ProviderEqualFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEqualFold(FieldProvider, v))
+}
+
+// ProviderContainsFold applies the ContainsFold predicate on the "provider" field.
+func ProviderContainsFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContainsFold(FieldProvider, v))
+}
+
+// PartitionEQ applies the EQ predicate on the "partition" field.
+func PartitionEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldPartition, v))
+}
+
+// PartitionNEQ applies the NEQ predicate on the "partition" field.
+func PartitionNEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldPartition, v))
+}
+
+// PartitionIn applies the In predicate on the "partition" field.
+func PartitionIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldPartition, vs...))
+}
+
+// PartitionNotIn applies the NotIn predicate on the "partition" field.
+func PartitionNotIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldPartition, vs...))
+}
+
+// PartitionGT applies the GT predicate on the "partition" field.
+func PartitionGT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldPartition, v))
+}
+
+// PartitionGTE applies the GTE predicate on the "partition" field.
+func PartitionGTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldPartition, v))
+}
+
+// PartitionLT applies the LT predicate on the "partition" field.
+func PartitionLT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldPartition, v))
+}
+
+// PartitionLTE applies the LTE predicate on the "partition" field.
+func PartitionLTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldPartition, v))
+}
+
+// PartitionContains applies the Contains predicate on the "partition" field.
+func PartitionContains(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContains(FieldPartition, v))
+}
+
+// PartitionHasPrefix applies the HasPrefix predicate on the "partition" field.
+func PartitionHasPrefix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasPrefix(FieldPartition, v))
+}
+
+// PartitionHasSuffix applies the HasSuffix predicate on the "partition" field.
+func PartitionHasSuffix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasSuffix(FieldPartition, v))
+}
+
+// PartitionEqualFold applies the EqualFold predicate on the "partition" field.
+func PartitionEqualFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEqualFold(FieldPartition, v))
+}
+
+// PartitionContainsFold applies the ContainsFold predicate on the "partition" field.
+func PartitionContainsFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContainsFold(FieldPartition, v))
+}
+
+// CanonicalAccountIDEQ applies the EQ predicate on the "canonical_account_id" field.
+func CanonicalAccountIDEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldCanonicalAccountID, v))
+}
+
+// CanonicalAccountIDNEQ applies the NEQ predicate on the "canonical_account_id" field.
+func CanonicalAccountIDNEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldCanonicalAccountID, v))
+}
+
+// CanonicalAccountIDIn applies the In predicate on the "canonical_account_id" field.
+func CanonicalAccountIDIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldCanonicalAccountID, vs...))
+}
+
+// CanonicalAccountIDNotIn applies the NotIn predicate on the "canonical_account_id" field.
+func CanonicalAccountIDNotIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldCanonicalAccountID, vs...))
+}
+
+// CanonicalAccountIDGT applies the GT predicate on the "canonical_account_id" field.
+func CanonicalAccountIDGT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldCanonicalAccountID, v))
+}
+
+// CanonicalAccountIDGTE applies the GTE predicate on the "canonical_account_id" field.
+func CanonicalAccountIDGTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldCanonicalAccountID, v))
+}
+
+// CanonicalAccountIDLT applies the LT predicate on the "canonical_account_id" field.
+func CanonicalAccountIDLT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldCanonicalAccountID, v))
+}
+
+// CanonicalAccountIDLTE applies the LTE predicate on the "canonical_account_id" field.
+func CanonicalAccountIDLTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldCanonicalAccountID, v))
+}
+
+// CanonicalAccountIDContains applies the Contains predicate on the "canonical_account_id" field.
+func CanonicalAccountIDContains(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContains(FieldCanonicalAccountID, v))
+}
+
+// CanonicalAccountIDHasPrefix applies the HasPrefix predicate on the "canonical_account_id" field.
+func CanonicalAccountIDHasPrefix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasPrefix(FieldCanonicalAccountID, v))
+}
+
+// CanonicalAccountIDHasSuffix applies the HasSuffix predicate on the "canonical_account_id" field.
+func CanonicalAccountIDHasSuffix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasSuffix(FieldCanonicalAccountID, v))
+}
+
+// CanonicalAccountIDIsNil applies the IsNil predicate on the "canonical_account_id" field.
+func CanonicalAccountIDIsNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIsNull(FieldCanonicalAccountID))
+}
+
+// CanonicalAccountIDNotNil applies the NotNil predicate on the "canonical_account_id" field.
+func CanonicalAccountIDNotNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotNull(FieldCanonicalAccountID))
+}
+
+// CanonicalAccountIDEqualFold applies the EqualFold predicate on the "canonical_account_id" field.
+func CanonicalAccountIDEqualFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEqualFold(FieldCanonicalAccountID, v))
+}
+
+// CanonicalAccountIDContainsFold applies the ContainsFold predicate on the "canonical_account_id" field.
+func CanonicalAccountIDContainsFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContainsFold(FieldCanonicalAccountID, v))
+}
+
+// ResourceScopeEQ applies the EQ predicate on the "resource_scope" field.
+func ResourceScopeEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldResourceScope, v))
+}
+
+// ResourceScopeNEQ applies the NEQ predicate on the "resource_scope" field.
+func ResourceScopeNEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldResourceScope, v))
+}
+
+// ResourceScopeIn applies the In predicate on the "resource_scope" field.
+func ResourceScopeIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldResourceScope, vs...))
+}
+
+// ResourceScopeNotIn applies the NotIn predicate on the "resource_scope" field.
+func ResourceScopeNotIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldResourceScope, vs...))
+}
+
+// ResourceScopeGT applies the GT predicate on the "resource_scope" field.
+func ResourceScopeGT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldResourceScope, v))
+}
+
+// ResourceScopeGTE applies the GTE predicate on the "resource_scope" field.
+func ResourceScopeGTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldResourceScope, v))
+}
+
+// ResourceScopeLT applies the LT predicate on the "resource_scope" field.
+func ResourceScopeLT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldResourceScope, v))
+}
+
+// ResourceScopeLTE applies the LTE predicate on the "resource_scope" field.
+func ResourceScopeLTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldResourceScope, v))
+}
+
+// ResourceScopeContains applies the Contains predicate on the "resource_scope" field.
+func ResourceScopeContains(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContains(FieldResourceScope, v))
+}
+
+// ResourceScopeHasPrefix applies the HasPrefix predicate on the "resource_scope" field.
+func ResourceScopeHasPrefix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasPrefix(FieldResourceScope, v))
+}
+
+// ResourceScopeHasSuffix applies the HasSuffix predicate on the "resource_scope" field.
+func ResourceScopeHasSuffix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasSuffix(FieldResourceScope, v))
+}
+
+// ResourceScopeEqualFold applies the EqualFold predicate on the "resource_scope" field.
+func ResourceScopeEqualFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEqualFold(FieldResourceScope, v))
+}
+
+// ResourceScopeContainsFold applies the ContainsFold predicate on the "resource_scope" field.
+func ResourceScopeContainsFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContainsFold(FieldResourceScope, v))
+}
+
+// ServiceCodeEQ applies the EQ predicate on the "service_code" field.
+func ServiceCodeEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldServiceCode, v))
+}
+
+// ServiceCodeNEQ applies the NEQ predicate on the "service_code" field.
+func ServiceCodeNEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldServiceCode, v))
+}
+
+// ServiceCodeIn applies the In predicate on the "service_code" field.
+func ServiceCodeIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldServiceCode, vs...))
+}
+
+// ServiceCodeNotIn applies the NotIn predicate on the "service_code" field.
+func ServiceCodeNotIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldServiceCode, vs...))
+}
+
+// ServiceCodeGT applies the GT predicate on the "service_code" field.
+func ServiceCodeGT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldServiceCode, v))
+}
+
+// ServiceCodeGTE applies the GTE predicate on the "service_code" field.
+func ServiceCodeGTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldServiceCode, v))
+}
+
+// ServiceCodeLT applies the LT predicate on the "service_code" field.
+func ServiceCodeLT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldServiceCode, v))
+}
+
+// ServiceCodeLTE applies the LTE predicate on the "service_code" field.
+func ServiceCodeLTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldServiceCode, v))
+}
+
+// ServiceCodeContains applies the Contains predicate on the "service_code" field.
+func ServiceCodeContains(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContains(FieldServiceCode, v))
+}
+
+// ServiceCodeHasPrefix applies the HasPrefix predicate on the "service_code" field.
+func ServiceCodeHasPrefix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasPrefix(FieldServiceCode, v))
+}
+
+// ServiceCodeHasSuffix applies the HasSuffix predicate on the "service_code" field.
+func ServiceCodeHasSuffix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasSuffix(FieldServiceCode, v))
+}
+
+// ServiceCodeIsNil applies the IsNil predicate on the "service_code" field.
+func ServiceCodeIsNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIsNull(FieldServiceCode))
+}
+
+// ServiceCodeNotNil applies the NotNil predicate on the "service_code" field.
+func ServiceCodeNotNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotNull(FieldServiceCode))
+}
+
+// ServiceCodeEqualFold applies the EqualFold predicate on the "service_code" field.
+func ServiceCodeEqualFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEqualFold(FieldServiceCode, v))
+}
+
+// ServiceCodeContainsFold applies the ContainsFold predicate on the "service_code" field.
+func ServiceCodeContainsFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContainsFold(FieldServiceCode, v))
+}
+
+// ResourceTypeEQ applies the EQ predicate on the "resource_type" field.
+func ResourceTypeEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldResourceType, v))
+}
+
+// ResourceTypeNEQ applies the NEQ predicate on the "resource_type" field.
+func ResourceTypeNEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldResourceType, v))
+}
+
+// ResourceTypeIn applies the In predicate on the "resource_type" field.
+func ResourceTypeIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldResourceType, vs...))
+}
+
+// ResourceTypeNotIn applies the NotIn predicate on the "resource_type" field.
+func ResourceTypeNotIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldResourceType, vs...))
+}
+
+// ResourceTypeGT applies the GT predicate on the "resource_type" field.
+func ResourceTypeGT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldResourceType, v))
+}
+
+// ResourceTypeGTE applies the GTE predicate on the "resource_type" field.
+func ResourceTypeGTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldResourceType, v))
+}
+
+// ResourceTypeLT applies the LT predicate on the "resource_type" field.
+func ResourceTypeLT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldResourceType, v))
+}
+
+// ResourceTypeLTE applies the LTE predicate on the "resource_type" field.
+func ResourceTypeLTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldResourceType, v))
+}
+
+// ResourceTypeContains applies the Contains predicate on the "resource_type" field.
+func ResourceTypeContains(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContains(FieldResourceType, v))
+}
+
+// ResourceTypeHasPrefix applies the HasPrefix predicate on the "resource_type" field.
+func ResourceTypeHasPrefix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasPrefix(FieldResourceType, v))
+}
+
+// ResourceTypeHasSuffix applies the HasSuffix predicate on the "resource_type" field.
+func ResourceTypeHasSuffix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasSuffix(FieldResourceType, v))
+}
+
+// ResourceTypeIsNil applies the IsNil predicate on the "resource_type" field.
+func ResourceTypeIsNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIsNull(FieldResourceType))
+}
+
+// ResourceTypeNotNil applies the NotNil predicate on the "resource_type" field.
+func ResourceTypeNotNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotNull(FieldResourceType))
+}
+
+// ResourceTypeEqualFold applies the EqualFold predicate on the "resource_type" field.
+func ResourceTypeEqualFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEqualFold(FieldResourceType, v))
+}
+
+// ResourceTypeContainsFold applies the ContainsFold predicate on the "resource_type" field.
+func ResourceTypeContainsFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContainsFold(FieldResourceType, v))
+}
+
+// IdentityHashEQ applies the EQ predicate on the "identity_hash" field.
+func IdentityHashEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldIdentityHash, v))
+}
+
+// IdentityHashNEQ applies the NEQ predicate on the "identity_hash" field.
+func IdentityHashNEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldIdentityHash, v))
+}
+
+// IdentityHashIn applies the In predicate on the "identity_hash" field.
+func IdentityHashIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldIdentityHash, vs...))
+}
+
+// IdentityHashNotIn applies the NotIn predicate on the "identity_hash" field.
+func IdentityHashNotIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldIdentityHash, vs...))
+}
+
+// IdentityHashGT applies the GT predicate on the "identity_hash" field.
+func IdentityHashGT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldIdentityHash, v))
+}
+
+// IdentityHashGTE applies the GTE predicate on the "identity_hash" field.
+func IdentityHashGTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldIdentityHash, v))
+}
+
+// IdentityHashLT applies the LT predicate on the "identity_hash" field.
+func IdentityHashLT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldIdentityHash, v))
+}
+
+// IdentityHashLTE applies the LTE predicate on the "identity_hash" field.
+func IdentityHashLTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldIdentityHash, v))
+}
+
+// IdentityHashContains applies the Contains predicate on the "identity_hash" field.
+func IdentityHashContains(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContains(FieldIdentityHash, v))
+}
+
+// IdentityHashHasPrefix applies the HasPrefix predicate on the "identity_hash" field.
+func IdentityHashHasPrefix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasPrefix(FieldIdentityHash, v))
+}
+
+// IdentityHashHasSuffix applies the HasSuffix predicate on the "identity_hash" field.
+func IdentityHashHasSuffix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasSuffix(FieldIdentityHash, v))
+}
+
+// IdentityHashIsNil applies the IsNil predicate on the "identity_hash" field.
+func IdentityHashIsNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIsNull(FieldIdentityHash))
+}
+
+// IdentityHashNotNil applies the NotNil predicate on the "identity_hash" field.
+func IdentityHashNotNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotNull(FieldIdentityHash))
+}
+
+// IdentityHashEqualFold applies the EqualFold predicate on the "identity_hash" field.
+func IdentityHashEqualFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEqualFold(FieldIdentityHash, v))
+}
+
+// IdentityHashContainsFold applies the ContainsFold predicate on the "identity_hash" field.
+func IdentityHashContainsFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContainsFold(FieldIdentityHash, v))
+}
+
+// SourceIDEQ applies the EQ predicate on the "source_id" field.
+func SourceIDEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldSourceID, v))
+}
+
+// SourceIDNEQ applies the NEQ predicate on the "source_id" field.
+func SourceIDNEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldSourceID, v))
+}
+
+// SourceIDIn applies the In predicate on the "source_id" field.
+func SourceIDIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldSourceID, vs...))
+}
+
+// SourceIDNotIn applies the NotIn predicate on the "source_id" field.
+func SourceIDNotIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldSourceID, vs...))
+}
+
+// SourceIDGT applies the GT predicate on the "source_id" field.
+func SourceIDGT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldSourceID, v))
+}
+
+// SourceIDGTE applies the GTE predicate on the "source_id" field.
+func SourceIDGTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldSourceID, v))
+}
+
+// SourceIDLT applies the LT predicate on the "source_id" field.
+func SourceIDLT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldSourceID, v))
+}
+
+// SourceIDLTE applies the LTE predicate on the "source_id" field.
+func SourceIDLTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldSourceID, v))
+}
+
+// SourceIDContains applies the Contains predicate on the "source_id" field.
+func SourceIDContains(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContains(FieldSourceID, v))
+}
+
+// SourceIDHasPrefix applies the HasPrefix predicate on the "source_id" field.
+func SourceIDHasPrefix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasPrefix(FieldSourceID, v))
+}
+
+// SourceIDHasSuffix applies the HasSuffix predicate on the "source_id" field.
+func SourceIDHasSuffix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasSuffix(FieldSourceID, v))
+}
+
+// SourceIDIsNil applies the IsNil predicate on the "source_id" field.
+func SourceIDIsNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIsNull(FieldSourceID))
+}
+
+// SourceIDNotNil applies the NotNil predicate on the "source_id" field.
+func SourceIDNotNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotNull(FieldSourceID))
+}
+
+// SourceIDEqualFold applies the EqualFold predicate on the "source_id" field.
+func SourceIDEqualFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEqualFold(FieldSourceID, v))
+}
+
+// SourceIDContainsFold applies the ContainsFold predicate on the "source_id" field.
+func SourceIDContainsFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContainsFold(FieldSourceID, v))
+}
+
+// SourceFingerprintEQ applies the EQ predicate on the "source_fingerprint" field.
+func SourceFingerprintEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintNEQ applies the NEQ predicate on the "source_fingerprint" field.
+func SourceFingerprintNEQ(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintIn applies the In predicate on the "source_fingerprint" field.
+func SourceFingerprintIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldSourceFingerprint, vs...))
+}
+
+// SourceFingerprintNotIn applies the NotIn predicate on the "source_fingerprint" field.
+func SourceFingerprintNotIn(vs ...string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldSourceFingerprint, vs...))
+}
+
+// SourceFingerprintGT applies the GT predicate on the "source_fingerprint" field.
+func SourceFingerprintGT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintGTE applies the GTE predicate on the "source_fingerprint" field.
+func SourceFingerprintGTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintLT applies the LT predicate on the "source_fingerprint" field.
+func SourceFingerprintLT(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintLTE applies the LTE predicate on the "source_fingerprint" field.
+func SourceFingerprintLTE(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintContains applies the Contains predicate on the "source_fingerprint" field.
+func SourceFingerprintContains(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContains(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintHasPrefix applies the HasPrefix predicate on the "source_fingerprint" field.
+func SourceFingerprintHasPrefix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasPrefix(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintHasSuffix applies the HasSuffix predicate on the "source_fingerprint" field.
+func SourceFingerprintHasSuffix(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldHasSuffix(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintIsNil applies the IsNil predicate on the "source_fingerprint" field.
+func SourceFingerprintIsNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIsNull(FieldSourceFingerprint))
+}
+
+// SourceFingerprintNotNil applies the NotNil predicate on the "source_fingerprint" field.
+func SourceFingerprintNotNil() predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotNull(FieldSourceFingerprint))
+}
+
+// SourceFingerprintEqualFold applies the EqualFold predicate on the "source_fingerprint" field.
+func SourceFingerprintEqualFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEqualFold(FieldSourceFingerprint, v))
+}
+
+// SourceFingerprintContainsFold applies the ContainsFold predicate on the "source_fingerprint" field.
+func SourceFingerprintContainsFold(v string) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldContainsFold(FieldSourceFingerprint, v))
+}
+
+// MissingCountEQ applies the EQ predicate on the "missing_count" field.
+func MissingCountEQ(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldEQ(FieldMissingCount, v))
+}
+
+// MissingCountNEQ applies the NEQ predicate on the "missing_count" field.
+func MissingCountNEQ(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNEQ(FieldMissingCount, v))
+}
+
+// MissingCountIn applies the In predicate on the "missing_count" field.
+func MissingCountIn(vs ...int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldIn(FieldMissingCount, vs...))
+}
+
+// MissingCountNotIn applies the NotIn predicate on the "missing_count" field.
+func MissingCountNotIn(vs ...int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldNotIn(FieldMissingCount, vs...))
+}
+
+// MissingCountGT applies the GT predicate on the "missing_count" field.
+func MissingCountGT(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGT(FieldMissingCount, v))
+}
+
+// MissingCountGTE applies the GTE predicate on the "missing_count" field.
+func MissingCountGTE(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldGTE(FieldMissingCount, v))
+}
+
+// MissingCountLT applies the LT predicate on the "missing_count" field.
+func MissingCountLT(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLT(FieldMissingCount, v))
+}
+
+// MissingCountLTE applies the LTE predicate on the "missing_count" field.
+func MissingCountLTE(v int) predicate.CloudResource {
+	return predicate.CloudResource(sql.FieldLTE(FieldMissingCount, v))
 }
 
 // ResourceNameEQ applies the EQ predicate on the "resource_name" field.

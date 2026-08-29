@@ -4,6 +4,8 @@
 
 本蓝图将当前“页面很多、真实发现链路断裂、两套同步实现并存”的 CMDB，收敛为可在企业生产环境验收的 MVP。首个商业版本只承诺：CI 类型与实例、关系与拓扑、阿里云 ECS 发现、来源可追溯的幂等对账、作业治理、租户隔离和审计闭环。
 
+本蓝图同时吸收仓库内 `easycloud/` 的企业云管理实践。EasyCloud 已验证的价值不在旧 Java/Struts 技术栈，而在其业务闭环：基础设施资源层级、云资源操作状态机、服务目录与订单、BPM 交付、异步任务、容量配额、监控告警和计费。当前项目只复用这些领域经验，不复制其静态工厂、内存任务队列、反射执行、明文凭据参数/日志、字符串拼接查询或厂商 SDK 侵入业务层等实现。
+
 在以下门禁全部通过前，云发现保持 `pilot`，不得标记为 GA：
 
 - 同一阿里云账号连续执行两次不会产生重复 CI；
@@ -38,6 +40,22 @@
 ### 2.3 产品边界失真
 
 尚未闭环的云服务目录、云资源、发现、对账页面曾与 GA 功能并列，用户无法区分“可生产使用”和“代码占位”。商业版本必须由后端能力状态驱动导航和操作权限，而不是只隐藏菜单。
+
+### 2.4 EasyCloud 经验与当前缺口映射
+
+| EasyCloud 中真实出现并被业务使用的需求 | 当前项目现状 | 本蓝图吸收方式 |
+|---|---|---|
+| `Datacenter → Zone/Pod → Cluster → Host → VM` 基础设施层级 | CI 关系通用，但云 Adapter 只输出扁平资源 | 用标准资源类型与关系语义表达 provider/account/region/zone/vpc/subnet/cluster/host/vm/disk，不为每个厂商复制表 |
+| VM、磁盘、快照、IP、网络的独立生命周期 | CloudResource 只有宽泛 status/lifecycleState | 引入 observed state、desired state、operation state、retirement state，禁止用一个字段混合表达 |
+| 服务目录 → 订单 → BPM → 资源交付 | 已有 Service Catalog、Service Request、BPMN，但云资源未接入 | 以受控 CloudOperation command 连接服务请求和云 Adapter，CMDB 保存结果，不把供应逻辑塞进 CI Controller |
+| 异步 `TJobTask` 与订单状态联动 | 已有可靠 command bus；发现仍未接线 | 沿用 durable command、lease/fencing/retry/dead-letter，禁止复刻 EasyCloud 的进程内静态队列 |
+| 租户 → 应用系统 → 环境的资源归属 | CI 有 tenant/environment，缺业务服务归属闭环 | 增加 Business/Application Service 与云资源的 owned-by/serves/runs-on 关系，作为事件、变更、SLA 和成本归集主线 |
+| 容量、配额、套餐和资源池 | 当前 CMDB 没有容量/配额领域 | 将 Capacity/Quota 作为 CMDB 只读聚合与独立策略领域，不塞入 CI attributes 作为不可治理 JSON |
+| Zabbix 监控与告警联动资源 | 已有事件/告警入口，但资源身份关联较弱 | 监控事件先解析 canonical resource identity，再关联 CI；无法唯一识别时进入待匹配队列 |
+| 日/月账单和租户/系统成本归集 | 当前不承诺 FinOps | 预留 CostObservation/Allocation 端口；首个 MVP 不实现计费，但资源身份和业务归属必须支持未来成本分摊 |
+| CloudStack/OpenStack/VMware 等多平台适配 | 当前只有实验性阿里云 ECS Adapter | Adapter 按 capability 注册，不以 provider switch 或静态工厂分派；公有云、私有云和虚拟化共用端口 |
+
+EasyCloud 还暴露了必须避免的反模式：资源操作请求携带并记录 AK/SK、Adapter 返回 `Object`、未支持操作返回 `null`、任务使用静态内存 List、反射执行任务类、状态使用魔法字符串、资源表直接混合订单/计费/基础设施细节。新架构必须使用类型化 capability、SecretProvider、稳定错误分类、持久化命令、显式状态机和领域边界。
 
 ## 3. 目标架构
 
@@ -76,6 +94,38 @@ flowchart LR
 7. 未发现资源按连续缺失次数和宽限期转为 `retirement_candidate`，需要策略或人工确认后退役。
 8. 只有覆盖范围完整成功的全量快照才能增加缺失计数；失败、取消、分页不完整或区域级失败绝不能触发该范围的退役判断。
 9. CI 属性需记录来源与 ownership；人工维护字段默认不被云发现覆盖，冲突进入结果供治理策略处理。
+10. 资源事实、配置治理和执行意图分离：Observation 描述云端事实，CI 描述治理状态，CloudOperation 描述受控变更；任何 Adapter 不得直接把 desired state 写成 observed state。
+11. 资源操作必须声明 capability、风险等级、前置状态、目标状态和 compensating action；创建、启停、扩缩容、挂载、快照和销毁不能复用一个无类型 command。
+12. 基础设施层级和业务服务关系均使用规范化关系类型；provider-specific 字段可以保留在受控 metadata，但不能决定跨 Provider 的拓扑语义。
+13. 监控、告警、成本和订单只能通过 canonical resource identity/CI ID 关联资源，不得分别维护另一套云资源主键。
+14. 发现是只读能力，资源操作是单独授权的高风险能力；启用发现不得隐式获得启动、停止、扩容或销毁权限。
+15. MSP 上下文必须显式区分 customer/owner tenant、operator tenant 和 delegation；作业保存不可变授权快照，执行前重新校验 delegation 未过期或撤销。
+16. 关系发现必须先形成 `RelationshipObservation`；治理后的关系保留 source、generation、lastSeenAt、missingCount、confidence 和 active state，自动关系不得覆盖或删除人工关系。
+17. 每个 scope 独立保存 coverage start/end、分页完成证明和 provider watermark；失败 scope 的补采可以属于同一 logical job，但不能伪装成同一时间快照或触发全局退役。
+
+### 3.3 多云控制面与 CMDB 的边界
+
+```mermaid
+flowchart TB
+    SC[Service Catalog / Service Request] --> BPM[BPMN Approval & Fulfillment]
+    BPM --> OP[Cloud Operation Service]
+    OP --> CMD[Durable Operational Command]
+    CMD --> ADP[Capability-based Cloud Adapter]
+    ADP --> PROVIDER[Public Cloud / VMware / OpenStack / CloudStack / K8s]
+    PROVIDER --> OBS[Discovery Observation]
+    OBS --> RECON[Identification & Reconciliation]
+    RECON --> CR[Cloud Resource Fact]
+    RECON --> CI[CI / Relations / History]
+    CI --> IMPACT[Incident / Change / SLA / Impact]
+    CR --> CAP[Capacity / Quota Projection]
+    CR --> COST[Cost Observation / Allocation]
+    CI --> MON[Monitoring & Alert Correlation]
+```
+
+- Provider 是运行时 observed state 的权威来源；CMDB 是规范身份、关系、治理属性和历史的记录系统；BPMN/Service Request 是 desired intent 与审批权威；Operation Ledger 是执行状态权威；Monitoring 是遥测权威；Billing Source 是账单金额权威。
+- Cloud Operation Service 是写操作唯一业务所有者，负责状态机、审批要求、幂等、审计和补偿；Adapter 只是执行端口。
+- Service Catalog 定义用户可申请的产品，BPMN 决定审批和交付步骤，Capacity/Quota 决定能否分配，CMDB 接收最终资源事实。
+- Monitoring 和 Cost 作为观察源接入同一资源身份，不反向覆盖 CMDB 人工治理字段。
 
 ## 4. 数据与接口契约
 
@@ -131,6 +181,8 @@ Result 保存标准化资源快照或受控 diff、资源身份、before/after h
 - 增加状态机、租约、心跳、重试和取消的服务层单元测试；
 - 迁移采用 expand/backfill/contract，旧字段至少保留一个兼容发布周期。
 
+状态：当前工作区已实现 expand/backfill/contract 脚本、规范资源身份双写、来源治理字段、作业状态机与租约/fencing 领域规则；contract 必须等待 expand 上线至少一个兼容版本并在目标环境完成 dry-run 后执行。
+
 回滚：应用回滚仍能读取 expand 后字段；contract 迁移只在稳定版本执行。
 
 ### PR 4：阿里云 ECS 真实采集
@@ -185,13 +237,102 @@ Result 保存标准化资源快照或受控 diff、资源身份、before/after h
 - 完成 1k/10k/100k 资源规模基准、故障注入和恢复演练后，才将 `aliyunEcsDiscovery` 升为 GA。
 - 首版只承诺 ECS CI 发现，不承诺自动云拓扑；如要宣称云拓扑，必须另行纳入 VPC、VSwitch、安全组和磁盘关系的来源、幂等与退役规则。
 
+### PR 8.5：多云控制面安全与权威来源 ADR
+
+PR9–PR14 开始前必须批准 ADR，冻结以下跨领域契约：
+
+- `identityVersion`、provider-native full ID/ARN、immutable external account ID、scope locator、incarnation/tombstone 和 identity alias/redirect 迁移协议；
+- `CloudDiscoveryAdapter` 与 `CloudOperationAdapter` 分离，分别使用只读/写凭据和 capability grant；
+- 市场 Connector 默认独立进程/容器，通过受限 RPC、secret broker 和短期凭据运行，并具备签名来源校验、网络出口 allowlist、资源/超时限额、版本握手和单 Connector 熔断；
+- owner/customer tenant、operator tenant、delegationId、requestedBy、executedBy、system reason 的统一身份模型；
+- Provider、CMDB、Workflow、Operation、Monitoring、Billing 的权威来源矩阵；
+- capability version/rollout epoch、drain/cancel/quarantine/read-only 停机模式，以及在途命令、不可取消请求和 schema downgrade 的处置协议；
+- Observation 大载荷只在关系库存索引、hash、状态和引用；内容寻址对象存储负责压缩、加密、脱敏、保留、归档、legal hold 和删除。
+
+回滚：ADR 不引入运行时变更；未批准时 PR9–PR14 不得开始。
+
+### PR 9：规范资源模型与基础设施拓扑（GA 后第二阶段）
+
+- 定义稳定 core kind + 可版本化 discovery profile/schema + capability；account、region、zone、network、subnet、cluster、host、vm、disk、snapshot、ip、load-balancer、database 是首批 profile，不固化为不可扩展枚举；
+- 定义 contains、located-in、runs-on、attached-to、connected-to、serves、owned-by 等规范关系和方向，不沿用厂商 API 名称作为关系类型；
+- 阿里云补齐 VPC、VSwitch、ECS、磁盘、安全组关系；覆盖关系重复、关系消失、环路和部分 scope 失败；
+- 建立业务服务/Application Service 到云资源的归属关系，为事件、变更、SLA 和成本归集提供稳定入口；
+- 引入 RelationshipObservation；关系约束按类型定义允许的 source/target kind、方向、基数、对称性和 acyclic 规则，不能笼统禁止网络关系成环；
+- 对拓扑规模增加 node budget、关系类型过滤和异步大图导出。
+
+回滚：关闭 topology discovery capability，并按 source/generation 停用自动关系，使其退出拓扑和影响分析；保留 observation 和人工关系。
+
+### PR 10：受控云资源操作端口
+
+- 定义 capability manifest 和类型化操作：start/stop/reboot/resize/attach/detach/snapshot/retire；首批可以实现 start/stop/reboot，但 stop/reboot 默认仍按生产高风险变更评估；
+- 每个操作具有 source state、target state、operation state、version、idempotency key、approval requirement、timeout 和补偿策略；
+- Operation 状态机至少为 `accepted → approved → dispatching → providerAccepted → verifying → succeeded | failed | outcomeUnknown | manualReview`；远程调用前读取 Provider 实时状态并验证 precondition，不能信任可能过期的 CI 状态；
+- Service Request/BPMN 在事务中 enqueue CloudOperation command，Worker 重新加载 tenant、actor delegated scope、CI、账号和 connector；
+- Provider 支持 request token 时透传幂等键并持久化 provider request ID、请求/响应摘要与 postcondition；Provider 不支持幂等或结果不确定时禁止盲重试，进入 outcomeUnknown 并核验；
+- 风险由操作类型、环境、CI 关键度、业务服务影响、变更窗口和 delegated scope 共同计算；compensation 是可选 capability，并区分 compensatable/non-compensatable/irreversible；
+- 销毁、网络和权限类操作继续 disabled，直到单独安全评审。
+
+回滚：提升 rollout epoch，阻止旧命令继续 claim/dispatch，按 drain/cancel/quarantine 协议处理在途任务和 outcomeUnknown；不影响只读发现。
+
+### PR 11：容量、资源池与配额投影
+
+- 借鉴 EasyCloud 的 pool/zone/cluster/host 层级，但明确拆分 CapacityObservation（CPU/内存/存储/IP）、ProviderQuotaObservation（厂商限额）、TenantEntitlement（租户申请上限）和 Budget/Credit（FinOps 金额预算）；不把瞬时指标写入 CI 主表；
+- Capacity service 按 tenant/account/region/zone/pool/resourceType 聚合 total/allocated/used/reserved/available；
+- 服务目录申请在 BPMN 交付前执行 quota/capacity reservation，失败必须释放预留；
+- 配额变更、预留、消耗和释放全部记录 ledger 与审计，使用版本或条件更新防超卖；
+- reservation 具有 TTL、幂等释放、超时回收和账实核对；硬预留依赖 PR10 operation saga 完成；
+- 初期只做容量可视化与软门禁，硬门禁需完成并发和恢复演练后启用。
+
+回滚：关闭配额门禁，保留只读容量投影和 ledger。
+
+### PR 12：监控告警与资源关联闭环
+
+- Zabbix、云监控和 Connector 告警统一映射 canonical resource identity；
+- 唯一匹配时关联 CI 并执行影响分析，零匹配/多匹配进入待治理队列，不猜测 CI；
+- 告警去重、恢复、抑制和事件创建分别保留 provider event ID、规则版本和资源快照摘要；
+- 事件关闭不得修改云资源 observed state，状态恢复由监控 observation 更新；
+- 建立账号、Region、服务和业务服务维度的可用性视图。
+
+回滚：停止自动事件创建，保留告警观察和人工关联。
+
+### PR 13：成本观察与业务归集基础
+
+- 定义只读 CostObservation 和 AllocationRule，不实现 EasyCloud 式平台余额/扣费；
+- 成本记录关联 canonical resource identity、billing account、period、currency、charge type 和 provider invoice line；
+- 通过 CI owned-by/serves 关系归集到 tenant、部门、应用系统、环境和业务服务；
+- 未分配成本、共享成本和规则变更必须可追踪，历史账期不可因当前关系变化而重写；
+- 保存 effective period、billing timezone、invoice version/correction、currency precision、税费/折扣和分摊规则快照；关账后只允许更正记录，不原地改写；
+- 对外定位为成本可见性/Showback，计费和 Chargeback 另立产品评审。
+
+回滚：隐藏成本页面，保留原始成本观察用于重新归集。
+
+### PR 14：多 Provider 与连接器市场化
+
+- 依次接入腾讯云 CVM、华为云 ECS、AWS EC2、Azure VM，再扩展 VMware/OpenStack/CloudStack/Kubernetes；
+- Adapter 包提供 manifest、capabilities、resource schemas、permission requirements、rate limits、health check、版本和兼容矩阵；只读 Discovery 与写 Operation 分别认证；
+- 市场 Connector 通过 ADR 定义的隔离运行时执行，不加载进核心 API/Worker 进程；Connector 只能通过 secret broker 获取 tenant/capability scoped 短期凭据；
+- Connector 安装、配置、启用、健康检查、升级、禁用和卸载均走市场生命周期与审计；
+- 每个 Provider 必须通过同一 contract test suite：分页、限流、partial failure、identity、关系、退役、凭据轮换和敏感信息测试；
+- 禁止 Adapter 自建表、直接访问其他领域 repository 或绕过 command/reconciliation。
+
+回滚：按 connector capability 禁用单个 Provider，不影响核心 CMDB 和其他 Provider。
+
 ## 6. 依赖关系与执行顺序
 
 ```text
-PR1 → PR2 → PR3 → PR4 → PR5 → PR6 → PR7 → PR8
+商业 MVP：PR1 → PR2 → PR3 → PR4 → PR5 → PR6 → PR7 → PR8
+
+第二阶段：PR8 → PR8.5 → PR9 ─┬→ PR10 → PR11
+                              ├→ PR12
+                              └→ PR13
+
+只读 Provider 扩展：PR3–PR9 + Discovery Contract Suite → PR14 Discovery
+写操作 Provider 扩展：PR10 + Operation Security Suite → PR14 Operation
 ```
 
 PR4 的 Adapter 可与 PR3 后半并行开发，但不得在 PR5 Worker 落地前接入 HTTP 入口。PR7 不得通过前端本地常量越过后端 capability。
+
+PR10、PR12、PR13 可以在 PR9 的资源身份和关系契约稳定后并行开发；PR11 的硬预留依赖 PR10 operation saga。它们不得分别创建资源主数据。PR14 必须继承 PR3–PR9 的 Job/Result/Reconciliation/Audit，并建立统一 Adapter contract test suite，不能以复制阿里云实现的方式扩展厂商。
 
 ## 7. 生产验收门禁
 
@@ -220,3 +361,27 @@ PR4 的 Adapter 可与 PR3 后半并行开发，但不得在 PR5 Worker 落地�
 - 连接器市场安装云 Adapter（首版使用内置、可审计 Adapter）。
 
 这些能力必须复用同一 Adapter、Job、Result、Reconciliation 和 Audit 扩展点，不再创建平行同步机制。
+
+## 9. EasyCloud 经验验收清单
+
+第二阶段能力只有满足以下条件才可宣称“多云管理”，否则仍应称为“云资源发现”：
+
+1. 能从账号下钻到 Region/Zone/网络/集群/主机/实例/磁盘，并保留来源和关系历史；
+2. 资源同时具备租户、业务系统/业务服务、环境和技术所有者归属，未知归属可治理；
+3. 服务目录申请经过 BPMN、容量/配额判断、可靠命令执行和结果回写，不由页面直接调用云 API；
+4. 启停、扩缩容、挂载、快照和退役具有显式状态机、幂等、超时、审计和失败恢复；
+5. 云告警能够通过稳定身份关联 CI 和影响范围，不能唯一匹配时不会错误建单；
+6. 容量数据与 CI 配置数据分离，瞬时指标不会制造海量 CI 历史；
+7. 成本能够按历史归属规则汇总，规则变化不重写已结算账期；
+8. 公有云、私有云、虚拟化和 Kubernetes Adapter 通过同一能力与安全契约；
+9. 任一 Provider 下线、限流或凭据撤销不会阻断其他 Provider，也不会将缺失资源误退役；
+10. 所有高风险写操作均可按 tenant、actor、request、workflow、operation、provider request ID 和 CI 追溯。
+
+## 10. 第二阶段工程门禁
+
+- PR9：连续三次关系同步不重复；部分 scope 失败不退役边；人工关系不受自动发现影响；10 万节点/50 万边满足查询和异步导出预算。
+- PR10：重复 dispatch、无 provider idempotency token、授权撤销、实时 precondition、kill switch、进程终止和 outcomeUnknown 均有真实 Worker 测试；停止/重启生产 CI 必须经过变更策略。
+- PR11：并发 reservation 零超卖；TTL 自动回收；重放不重复扣减；失败路径释放预留；ledger 与资源账实一致。
+- PR12：告警风暴、乱序恢复、重复事件、零匹配、多匹配和跨租户拒绝均有真实入口测试。
+- PR13：重复账单、更正账单、分配金额守恒、规则版本、关账不可变、币种精度和账期时区通过测试。
+- PR14：Connector 越权访问、secret 外传、崩溃/超时、升级/降级和单 Provider 熔断通过隔离测试；卸载必须先 revoke capability/secret，再 drain 在途调用。

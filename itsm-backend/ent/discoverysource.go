@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/discoverysource"
 	"strings"
@@ -24,6 +25,20 @@ type DiscoverySource struct {
 	SourceType string `json:"source_type,omitempty"`
 	// 云厂商或私有云标识
 	Provider string `json:"provider,omitempty"`
+	// 租户内云账号记录ID
+	CloudAccountID int `json:"cloud_account_id,omitempty"`
+	// 发现服务范围
+	ServiceCodes []string `json:"service_codes,omitempty"`
+	// 发现地域范围
+	Regions []string `json:"regions,omitempty"`
+	// 调度表达式
+	Schedule string `json:"schedule,omitempty"`
+	// 对账策略
+	ReconcilePolicy string `json:"reconcile_policy,omitempty"`
+	// 连续缺失多少次后进入退役候选
+	StaleThreshold int `json:"stale_threshold,omitempty"`
+	// 最近一次完整成功发现时间
+	LastSuccessAt time.Time `json:"last_success_at,omitempty"`
 	// 是否启用
 	Enabled bool `json:"enabled,omitempty"`
 	// 描述
@@ -63,13 +78,15 @@ func (*DiscoverySource) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case discoverysource.FieldServiceCodes, discoverysource.FieldRegions:
+			values[i] = new([]byte)
 		case discoverysource.FieldEnabled:
 			values[i] = new(sql.NullBool)
-		case discoverysource.FieldTenantID:
+		case discoverysource.FieldCloudAccountID, discoverysource.FieldStaleThreshold, discoverysource.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case discoverysource.FieldID, discoverysource.FieldName, discoverysource.FieldSourceType, discoverysource.FieldProvider, discoverysource.FieldDescription:
+		case discoverysource.FieldID, discoverysource.FieldName, discoverysource.FieldSourceType, discoverysource.FieldProvider, discoverysource.FieldSchedule, discoverysource.FieldReconcilePolicy, discoverysource.FieldDescription:
 			values[i] = new(sql.NullString)
-		case discoverysource.FieldCreatedAt, discoverysource.FieldUpdatedAt:
+		case discoverysource.FieldLastSuccessAt, discoverysource.FieldCreatedAt, discoverysource.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -109,6 +126,52 @@ func (_m *DiscoverySource) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field provider", values[i])
 			} else if value.Valid {
 				_m.Provider = value.String
+			}
+		case discoverysource.FieldCloudAccountID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_account_id", values[i])
+			} else if value.Valid {
+				_m.CloudAccountID = int(value.Int64)
+			}
+		case discoverysource.FieldServiceCodes:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field service_codes", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.ServiceCodes); err != nil {
+					return fmt.Errorf("unmarshal field service_codes: %w", err)
+				}
+			}
+		case discoverysource.FieldRegions:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field regions", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Regions); err != nil {
+					return fmt.Errorf("unmarshal field regions: %w", err)
+				}
+			}
+		case discoverysource.FieldSchedule:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field schedule", values[i])
+			} else if value.Valid {
+				_m.Schedule = value.String
+			}
+		case discoverysource.FieldReconcilePolicy:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field reconcile_policy", values[i])
+			} else if value.Valid {
+				_m.ReconcilePolicy = value.String
+			}
+		case discoverysource.FieldStaleThreshold:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field stale_threshold", values[i])
+			} else if value.Valid {
+				_m.StaleThreshold = int(value.Int64)
+			}
+		case discoverysource.FieldLastSuccessAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_success_at", values[i])
+			} else if value.Valid {
+				_m.LastSuccessAt = value.Time
 			}
 		case discoverysource.FieldEnabled:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -189,6 +252,27 @@ func (_m *DiscoverySource) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("provider=")
 	builder.WriteString(_m.Provider)
+	builder.WriteString(", ")
+	builder.WriteString("cloud_account_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CloudAccountID))
+	builder.WriteString(", ")
+	builder.WriteString("service_codes=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ServiceCodes))
+	builder.WriteString(", ")
+	builder.WriteString("regions=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Regions))
+	builder.WriteString(", ")
+	builder.WriteString("schedule=")
+	builder.WriteString(_m.Schedule)
+	builder.WriteString(", ")
+	builder.WriteString("reconcile_policy=")
+	builder.WriteString(_m.ReconcilePolicy)
+	builder.WriteString(", ")
+	builder.WriteString("stale_threshold=")
+	builder.WriteString(fmt.Sprintf("%v", _m.StaleThreshold))
+	builder.WriteString(", ")
+	builder.WriteString("last_success_at=")
+	builder.WriteString(_m.LastSuccessAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("enabled=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Enabled))

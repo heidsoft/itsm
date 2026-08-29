@@ -958,16 +958,36 @@ func init() {
 	cloudresourceDescResourceID := cloudresourceFields[2].Descriptor()
 	// cloudresource.ResourceIDValidator is a validator for the "resource_id" field. It is called by the builders before save.
 	cloudresource.ResourceIDValidator = cloudresourceDescResourceID.Validators[0].(func(string) error)
+	// cloudresourceDescIdentityVersion is the schema descriptor for identity_version field.
+	cloudresourceDescIdentityVersion := cloudresourceFields[3].Descriptor()
+	// cloudresource.DefaultIdentityVersion holds the default value on creation for the identity_version field.
+	cloudresource.DefaultIdentityVersion = cloudresourceDescIdentityVersion.Default.(int)
+	// cloudresource.IdentityVersionValidator is a validator for the "identity_version" field. It is called by the builders before save.
+	cloudresource.IdentityVersionValidator = cloudresourceDescIdentityVersion.Validators[0].(func(int) error)
+	// cloudresourceDescPartition is the schema descriptor for partition field.
+	cloudresourceDescPartition := cloudresourceFields[5].Descriptor()
+	// cloudresource.DefaultPartition holds the default value on creation for the partition field.
+	cloudresource.DefaultPartition = cloudresourceDescPartition.Default.(string)
+	// cloudresourceDescResourceScope is the schema descriptor for resource_scope field.
+	cloudresourceDescResourceScope := cloudresourceFields[7].Descriptor()
+	// cloudresource.DefaultResourceScope holds the default value on creation for the resource_scope field.
+	cloudresource.DefaultResourceScope = cloudresourceDescResourceScope.Default.(string)
+	// cloudresourceDescMissingCount is the schema descriptor for missing_count field.
+	cloudresourceDescMissingCount := cloudresourceFields[13].Descriptor()
+	// cloudresource.DefaultMissingCount holds the default value on creation for the missing_count field.
+	cloudresource.DefaultMissingCount = cloudresourceDescMissingCount.Default.(int)
+	// cloudresource.MissingCountValidator is a validator for the "missing_count" field. It is called by the builders before save.
+	cloudresource.MissingCountValidator = cloudresourceDescMissingCount.Validators[0].(func(int) error)
 	// cloudresourceDescTenantID is the schema descriptor for tenant_id field.
-	cloudresourceDescTenantID := cloudresourceFields[12].Descriptor()
+	cloudresourceDescTenantID := cloudresourceFields[23].Descriptor()
 	// cloudresource.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	cloudresource.TenantIDValidator = cloudresourceDescTenantID.Validators[0].(func(int) error)
 	// cloudresourceDescCreatedAt is the schema descriptor for created_at field.
-	cloudresourceDescCreatedAt := cloudresourceFields[13].Descriptor()
+	cloudresourceDescCreatedAt := cloudresourceFields[24].Descriptor()
 	// cloudresource.DefaultCreatedAt holds the default value on creation for the created_at field.
 	cloudresource.DefaultCreatedAt = cloudresourceDescCreatedAt.Default.(func() time.Time)
 	// cloudresourceDescUpdatedAt is the schema descriptor for updated_at field.
-	cloudresourceDescUpdatedAt := cloudresourceFields[14].Descriptor()
+	cloudresourceDescUpdatedAt := cloudresourceFields[25].Descriptor()
 	// cloudresource.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	cloudresource.DefaultUpdatedAt = cloudresourceDescUpdatedAt.Default.(func() time.Time)
 	// cloudresource.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -1046,26 +1066,32 @@ func init() {
 	configurationitemDescOwnershipMode := configurationitemFields[14].Descriptor()
 	// configurationitem.DefaultOwnershipMode holds the default value on creation for the ownership_mode field.
 	configurationitem.DefaultOwnershipMode = configurationitemDescOwnershipMode.Default.(string)
+	// configurationitemDescSourceMissingCount is the schema descriptor for source_missing_count field.
+	configurationitemDescSourceMissingCount := configurationitemFields[22].Descriptor()
+	// configurationitem.DefaultSourceMissingCount holds the default value on creation for the source_missing_count field.
+	configurationitem.DefaultSourceMissingCount = configurationitemDescSourceMissingCount.Default.(int)
+	// configurationitem.SourceMissingCountValidator is a validator for the "source_missing_count" field. It is called by the builders before save.
+	configurationitem.SourceMissingCountValidator = configurationitemDescSourceMissingCount.Validators[0].(func(int) error)
 	// configurationitemDescTenantID is the schema descriptor for tenant_id field.
-	configurationitemDescTenantID := configurationitemFields[32].Descriptor()
+	configurationitemDescTenantID := configurationitemFields[37].Descriptor()
 	// configurationitem.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	configurationitem.TenantIDValidator = configurationitemDescTenantID.Validators[0].(func(int) error)
 	// configurationitemDescVersion is the schema descriptor for version field.
-	configurationitemDescVersion := configurationitemFields[33].Descriptor()
+	configurationitemDescVersion := configurationitemFields[38].Descriptor()
 	// configurationitem.DefaultVersion holds the default value on creation for the version field.
 	configurationitem.DefaultVersion = configurationitemDescVersion.Default.(int)
 	// configurationitemDescCreatedAt is the schema descriptor for created_at field.
-	configurationitemDescCreatedAt := configurationitemFields[34].Descriptor()
+	configurationitemDescCreatedAt := configurationitemFields[39].Descriptor()
 	// configurationitem.DefaultCreatedAt holds the default value on creation for the created_at field.
 	configurationitem.DefaultCreatedAt = configurationitemDescCreatedAt.Default.(func() time.Time)
 	// configurationitemDescUpdatedAt is the schema descriptor for updated_at field.
-	configurationitemDescUpdatedAt := configurationitemFields[35].Descriptor()
+	configurationitemDescUpdatedAt := configurationitemFields[40].Descriptor()
 	// configurationitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	configurationitem.DefaultUpdatedAt = configurationitemDescUpdatedAt.Default.(func() time.Time)
 	// configurationitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	configurationitem.UpdateDefaultUpdatedAt = configurationitemDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// configurationitemDescLifecycleStatus is the schema descriptor for lifecycle_status field.
-	configurationitemDescLifecycleStatus := configurationitemFields[36].Descriptor()
+	configurationitemDescLifecycleStatus := configurationitemFields[41].Descriptor()
 	// configurationitem.DefaultLifecycleStatus holds the default value on creation for the lifecycle_status field.
 	configurationitem.DefaultLifecycleStatus = configurationitemDescLifecycleStatus.Default.(string)
 	configurationitemhistoryFields := schema.ConfigurationItemHistory{}.Fields()
@@ -1292,16 +1318,44 @@ func init() {
 	discoveryjobDescStatus := discoveryjobFields[1].Descriptor()
 	// discoveryjob.DefaultStatus holds the default value on creation for the status field.
 	discoveryjob.DefaultStatus = discoveryjobDescStatus.Default.(string)
+	// discoveryjobDescOperation is the schema descriptor for operation field.
+	discoveryjobDescOperation := discoveryjobFields[2].Descriptor()
+	// discoveryjob.DefaultOperation holds the default value on creation for the operation field.
+	discoveryjob.DefaultOperation = discoveryjobDescOperation.Default.(string)
+	// discoveryjobDescFencingToken is the schema descriptor for fencing_token field.
+	discoveryjobDescFencingToken := discoveryjobFields[15].Descriptor()
+	// discoveryjob.DefaultFencingToken holds the default value on creation for the fencing_token field.
+	discoveryjob.DefaultFencingToken = discoveryjobDescFencingToken.Default.(int64)
+	// discoveryjob.FencingTokenValidator is a validator for the "fencing_token" field. It is called by the builders before save.
+	discoveryjob.FencingTokenValidator = discoveryjobDescFencingToken.Validators[0].(func(int64) error)
+	// discoveryjobDescAttempt is the schema descriptor for attempt field.
+	discoveryjobDescAttempt := discoveryjobFields[16].Descriptor()
+	// discoveryjob.DefaultAttempt holds the default value on creation for the attempt field.
+	discoveryjob.DefaultAttempt = discoveryjobDescAttempt.Default.(int)
+	// discoveryjob.AttemptValidator is a validator for the "attempt" field. It is called by the builders before save.
+	discoveryjob.AttemptValidator = discoveryjobDescAttempt.Validators[0].(func(int) error)
+	// discoveryjobDescMaxAttempts is the schema descriptor for max_attempts field.
+	discoveryjobDescMaxAttempts := discoveryjobFields[18].Descriptor()
+	// discoveryjob.DefaultMaxAttempts holds the default value on creation for the max_attempts field.
+	discoveryjob.DefaultMaxAttempts = discoveryjobDescMaxAttempts.Default.(int)
+	// discoveryjob.MaxAttemptsValidator is a validator for the "max_attempts" field. It is called by the builders before save.
+	discoveryjob.MaxAttemptsValidator = discoveryjobDescMaxAttempts.Validators[0].(func(int) error)
+	// discoveryjobDescProgress is the schema descriptor for progress field.
+	discoveryjobDescProgress := discoveryjobFields[19].Descriptor()
+	// discoveryjob.DefaultProgress holds the default value on creation for the progress field.
+	discoveryjob.DefaultProgress = discoveryjobDescProgress.Default.(int)
+	// discoveryjob.ProgressValidator is a validator for the "progress" field. It is called by the builders before save.
+	discoveryjob.ProgressValidator = discoveryjobDescProgress.Validators[0].(func(int) error)
 	// discoveryjobDescTenantID is the schema descriptor for tenant_id field.
-	discoveryjobDescTenantID := discoveryjobFields[5].Descriptor()
+	discoveryjobDescTenantID := discoveryjobFields[26].Descriptor()
 	// discoveryjob.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	discoveryjob.TenantIDValidator = discoveryjobDescTenantID.Validators[0].(func(int) error)
 	// discoveryjobDescCreatedAt is the schema descriptor for created_at field.
-	discoveryjobDescCreatedAt := discoveryjobFields[6].Descriptor()
+	discoveryjobDescCreatedAt := discoveryjobFields[27].Descriptor()
 	// discoveryjob.DefaultCreatedAt holds the default value on creation for the created_at field.
 	discoveryjob.DefaultCreatedAt = discoveryjobDescCreatedAt.Default.(func() time.Time)
 	// discoveryjobDescUpdatedAt is the schema descriptor for updated_at field.
-	discoveryjobDescUpdatedAt := discoveryjobFields[7].Descriptor()
+	discoveryjobDescUpdatedAt := discoveryjobFields[28].Descriptor()
 	// discoveryjob.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	discoveryjob.DefaultUpdatedAt = discoveryjobDescUpdatedAt.Default.(func() time.Time)
 	// discoveryjob.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -1316,20 +1370,26 @@ func init() {
 	discoveryresultDescAction := discoveryresultFields[2].Descriptor()
 	// discoveryresult.ActionValidator is a validator for the "action" field. It is called by the builders before save.
 	discoveryresult.ActionValidator = discoveryresultDescAction.Validators[0].(func(string) error)
+	// discoveryresultDescIdentityVersion is the schema descriptor for identity_version field.
+	discoveryresultDescIdentityVersion := discoveryresultFields[6].Descriptor()
+	// discoveryresult.DefaultIdentityVersion holds the default value on creation for the identity_version field.
+	discoveryresult.DefaultIdentityVersion = discoveryresultDescIdentityVersion.Default.(int)
+	// discoveryresult.IdentityVersionValidator is a validator for the "identity_version" field. It is called by the builders before save.
+	discoveryresult.IdentityVersionValidator = discoveryresultDescIdentityVersion.Validators[0].(func(int) error)
 	// discoveryresultDescStatus is the schema descriptor for status field.
-	discoveryresultDescStatus := discoveryresultFields[6].Descriptor()
+	discoveryresultDescStatus := discoveryresultFields[11].Descriptor()
 	// discoveryresult.DefaultStatus holds the default value on creation for the status field.
 	discoveryresult.DefaultStatus = discoveryresultDescStatus.Default.(string)
 	// discoveryresultDescTenantID is the schema descriptor for tenant_id field.
-	discoveryresultDescTenantID := discoveryresultFields[7].Descriptor()
+	discoveryresultDescTenantID := discoveryresultFields[14].Descriptor()
 	// discoveryresult.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	discoveryresult.TenantIDValidator = discoveryresultDescTenantID.Validators[0].(func(int) error)
 	// discoveryresultDescCreatedAt is the schema descriptor for created_at field.
-	discoveryresultDescCreatedAt := discoveryresultFields[8].Descriptor()
+	discoveryresultDescCreatedAt := discoveryresultFields[15].Descriptor()
 	// discoveryresult.DefaultCreatedAt holds the default value on creation for the created_at field.
 	discoveryresult.DefaultCreatedAt = discoveryresultDescCreatedAt.Default.(func() time.Time)
 	// discoveryresultDescUpdatedAt is the schema descriptor for updated_at field.
-	discoveryresultDescUpdatedAt := discoveryresultFields[9].Descriptor()
+	discoveryresultDescUpdatedAt := discoveryresultFields[16].Descriptor()
 	// discoveryresult.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	discoveryresult.DefaultUpdatedAt = discoveryresultDescUpdatedAt.Default.(func() time.Time)
 	// discoveryresult.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -1344,20 +1404,30 @@ func init() {
 	discoverysourceDescSourceType := discoverysourceFields[2].Descriptor()
 	// discoverysource.SourceTypeValidator is a validator for the "source_type" field. It is called by the builders before save.
 	discoverysource.SourceTypeValidator = discoverysourceDescSourceType.Validators[0].(func(string) error)
+	// discoverysourceDescReconcilePolicy is the schema descriptor for reconcile_policy field.
+	discoverysourceDescReconcilePolicy := discoverysourceFields[8].Descriptor()
+	// discoverysource.DefaultReconcilePolicy holds the default value on creation for the reconcile_policy field.
+	discoverysource.DefaultReconcilePolicy = discoverysourceDescReconcilePolicy.Default.(string)
+	// discoverysourceDescStaleThreshold is the schema descriptor for stale_threshold field.
+	discoverysourceDescStaleThreshold := discoverysourceFields[9].Descriptor()
+	// discoverysource.DefaultStaleThreshold holds the default value on creation for the stale_threshold field.
+	discoverysource.DefaultStaleThreshold = discoverysourceDescStaleThreshold.Default.(int)
+	// discoverysource.StaleThresholdValidator is a validator for the "stale_threshold" field. It is called by the builders before save.
+	discoverysource.StaleThresholdValidator = discoverysourceDescStaleThreshold.Validators[0].(func(int) error)
 	// discoverysourceDescEnabled is the schema descriptor for enabled field.
-	discoverysourceDescEnabled := discoverysourceFields[4].Descriptor()
+	discoverysourceDescEnabled := discoverysourceFields[11].Descriptor()
 	// discoverysource.DefaultEnabled holds the default value on creation for the enabled field.
 	discoverysource.DefaultEnabled = discoverysourceDescEnabled.Default.(bool)
 	// discoverysourceDescTenantID is the schema descriptor for tenant_id field.
-	discoverysourceDescTenantID := discoverysourceFields[6].Descriptor()
+	discoverysourceDescTenantID := discoverysourceFields[13].Descriptor()
 	// discoverysource.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	discoverysource.TenantIDValidator = discoverysourceDescTenantID.Validators[0].(func(int) error)
 	// discoverysourceDescCreatedAt is the schema descriptor for created_at field.
-	discoverysourceDescCreatedAt := discoverysourceFields[7].Descriptor()
+	discoverysourceDescCreatedAt := discoverysourceFields[14].Descriptor()
 	// discoverysource.DefaultCreatedAt holds the default value on creation for the created_at field.
 	discoverysource.DefaultCreatedAt = discoverysourceDescCreatedAt.Default.(func() time.Time)
 	// discoverysourceDescUpdatedAt is the schema descriptor for updated_at field.
-	discoverysourceDescUpdatedAt := discoverysourceFields[8].Descriptor()
+	discoverysourceDescUpdatedAt := discoverysourceFields[15].Descriptor()
 	// discoverysource.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	discoverysource.DefaultUpdatedAt = discoverysourceDescUpdatedAt.Default.(func() time.Time)
 	// discoverysource.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

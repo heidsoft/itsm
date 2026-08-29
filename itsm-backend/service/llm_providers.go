@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/sashabaranov/go-openai"
@@ -34,25 +35,60 @@ func NewOpenAIProvider(apiKey, endpoint, model string) *OpenAIProvider {
 	}
 }
 
+// toOpenAIMessages 把内部 LLMMessage 映射为 OpenAI 消息，并收集声明的工具定义。
+// 支持：Tools（请求侧工具声明）、ToolCalls（assistant 工具调用）、ToolCallID（tool 结果消息）。
+func toOpenAIMessages(messages []LLMMessage) ([]openai.ChatCompletionMessage, []openai.Tool) {
+	msgs := make([]openai.ChatCompletionMessage, 0, len(messages))
+	var tools []openai.Tool
+	for _, m := range messages {
+		cm := openai.ChatCompletionMessage{Role: m.Role, Content: m.Content}
+		if m.ToolCallID != "" {
+			cm.ToolCallID = m.ToolCallID
+		}
+		if len(m.ToolCalls) > 0 {
+			cm.ToolCalls = make([]openai.ToolCall, 0, len(m.ToolCalls))
+			for _, tc := range m.ToolCalls {
+				cm.ToolCalls = append(cm.ToolCalls, openai.ToolCall{
+					Type:     openai.ToolTypeFunction,
+					ID:       tc.ID,
+					Function: openai.FunctionCall{Name: tc.Name, Arguments: tc.Arguments},
+				})
+			}
+		}
+		if len(m.Tools) > 0 {
+			for _, td := range m.Tools {
+				tools = append(tools, openai.Tool{
+					Type: openai.ToolTypeFunction,
+					Function: &openai.FunctionDefinition{
+						Name:        td.Name,
+						Description: td.Description,
+						Parameters:  td.Parameters,
+					},
+				})
+			}
+		}
+		msgs = append(msgs, cm)
+	}
+	return msgs, tools
+}
+
 func (p *OpenAIProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
 	if model != "" {
 		p.model = model
 	}
 
-	msgs := make([]openai.ChatCompletionMessage, len(messages))
-	for i, m := range messages {
-		msgs[i] = openai.ChatCompletionMessage{
-			Role:    m.Role,
-			Content: m.Content,
-		}
-	}
-
-	resp, err := p.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+	msgs, tools := toOpenAIMessages(messages)
+	req := openai.ChatCompletionRequest{
 		Model:       p.model,
 		Messages:    msgs,
 		MaxTokens:   p.maxTokens,
 		Temperature: 0.3,
-	})
+	}
+	if len(tools) > 0 {
+		req.Tools = tools
+	}
+
+	resp, err := p.client.CreateChatCompletion(ctx, req)
 	if err != nil {
 		return "", fmt.Errorf("OpenAI API error: %w", err)
 	}
@@ -74,20 +110,18 @@ func (p *OpenAIProvider) ChatStream(ctx context.Context, model string, messages 
 		callback = func(string) {}
 	}
 
-	msgs := make([]openai.ChatCompletionMessage, len(messages))
-	for i, m := range messages {
-		msgs[i] = openai.ChatCompletionMessage{
-			Role:    m.Role,
-			Content: m.Content,
-		}
-	}
-
-	stream, err := p.client.CreateChatCompletionStream(ctx, openai.ChatCompletionRequest{
+	msgs, tools := toOpenAIMessages(messages)
+	req := openai.ChatCompletionRequest{
 		Model:       p.model,
 		Messages:    msgs,
 		MaxTokens:   p.maxTokens,
 		Temperature: 0.3,
-	})
+	}
+	if len(tools) > 0 {
+		req.Tools = tools
+	}
+
+	stream, err := p.client.CreateChatCompletionStream(ctx, req)
 	if err != nil {
 		return fmt.Errorf("OpenAI stream error: %w", err)
 	}
@@ -108,6 +142,110 @@ func (p *OpenAIProvider) ChatStream(ctx context.Context, model string, messages 
 			}
 		}
 	}
+}
+
+// ChatStreamWithTools 声明工具并流式调用（ToolCallingStreamProvider）。
+// 文本增量经 callback 下发；模型发起的工具调用在流结束后通过 onToolCalls 一次性返回。
+// 若流中途断开，尽力返回已累积的工具调用。
+func (p *OpenAIProvider) ChatStreamWithTools(ctx context.Context, model string, messages []LLMMessage, tools []LLMTool, callback func(string), onToolCalls func([]LLMToolCall)) error {
+	if model != "" {
+		p.model = model
+	}
+	if callback == nil {
+		callback = func(string) {}
+	}
+	if onToolCalls == nil {
+		onToolCalls = func([]LLMToolCall) {}
+	}
+
+	msgs, declared := toOpenAIMessages(messages)
+	req := openai.ChatCompletionRequest{
+		Model:       p.model,
+		Messages:    msgs,
+		MaxTokens:   p.maxTokens,
+		Temperature: 0.3,
+	}
+	// 合并网关传入的工具声明
+	for _, td := range tools {
+		declared = append(declared, openai.Tool{
+			Type: openai.ToolTypeFunction,
+			Function: &openai.FunctionDefinition{
+				Name:        td.Name,
+				Description: td.Description,
+				Parameters:  td.Parameters,
+			},
+		})
+	}
+	if len(declared) > 0 {
+		req.Tools = declared
+	}
+
+	stream, err := p.client.CreateChatCompletionStream(ctx, req)
+	if err != nil {
+		return fmt.Errorf("OpenAI stream error: %w", err)
+	}
+	defer stream.Close()
+
+	type toolCallAcc struct {
+		id   string
+		name string
+		args strings.Builder
+	}
+	calls := map[int]*toolCallAcc{}
+	var order []int
+
+	for {
+		chunk, err := stream.Recv()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			// 流中断：尽力返回已累积的工具调用
+			break
+		}
+		if len(chunk.Choices) == 0 {
+			continue
+		}
+		delta := chunk.Choices[0].Delta
+		if delta.Content != "" {
+			callback(delta.Content)
+		}
+		for _, tc := range delta.ToolCalls {
+			idx := 0
+			if tc.Index != nil {
+				idx = *tc.Index
+			}
+			acc := calls[idx]
+			if acc == nil {
+				acc = &toolCallAcc{}
+				calls[idx] = acc
+				order = append(order, idx)
+			}
+			if tc.ID != "" {
+				acc.id = tc.ID
+			}
+			if tc.Function.Name != "" {
+				acc.name = tc.Function.Name
+			}
+			if tc.Function.Arguments != "" {
+				acc.args.WriteString(tc.Function.Arguments)
+			}
+		}
+	}
+
+	if len(order) > 0 {
+		result := make([]LLMToolCall, 0, len(order))
+		for _, idx := range order {
+			acc := calls[idx]
+			result = append(result, LLMToolCall{
+				ID:        acc.id,
+				Name:      acc.name,
+				Arguments: acc.args.String(),
+			})
+		}
+		onToolCalls(result)
+	}
+	return nil
 }
 
 // StreamingOpenAIProvider supports streaming responses
@@ -298,7 +436,7 @@ func (p *MiniMaxProvider) Chat(ctx context.Context, model string, messages []LLM
 		if m.Role == "system" {
 			systemPrompt = m.Content
 		} else {
-			anthropicMessages = append(anthropicMessages, MiniMaxAnthropicMessage(m))
+			anthropicMessages = append(anthropicMessages, MiniMaxAnthropicMessage{Role: m.Role, Content: m.Content})
 		}
 	}
 

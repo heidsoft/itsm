@@ -277,6 +277,76 @@ func (_c *ConfigurationItemCreate) SetNillableSource(v *string) *ConfigurationIt
 	return _c
 }
 
+// SetSourceID sets the "source_id" field.
+func (_c *ConfigurationItemCreate) SetSourceID(v string) *ConfigurationItemCreate {
+	_c.mutation.SetSourceID(v)
+	return _c
+}
+
+// SetNillableSourceID sets the "source_id" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableSourceID(v *string) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetSourceID(*v)
+	}
+	return _c
+}
+
+// SetCanonicalCloudAccountID sets the "canonical_cloud_account_id" field.
+func (_c *ConfigurationItemCreate) SetCanonicalCloudAccountID(v string) *ConfigurationItemCreate {
+	_c.mutation.SetCanonicalCloudAccountID(v)
+	return _c
+}
+
+// SetNillableCanonicalCloudAccountID sets the "canonical_cloud_account_id" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableCanonicalCloudAccountID(v *string) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetCanonicalCloudAccountID(*v)
+	}
+	return _c
+}
+
+// SetSourceLastSeenAt sets the "source_last_seen_at" field.
+func (_c *ConfigurationItemCreate) SetSourceLastSeenAt(v time.Time) *ConfigurationItemCreate {
+	_c.mutation.SetSourceLastSeenAt(v)
+	return _c
+}
+
+// SetNillableSourceLastSeenAt sets the "source_last_seen_at" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableSourceLastSeenAt(v *time.Time) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetSourceLastSeenAt(*v)
+	}
+	return _c
+}
+
+// SetSourceMissingCount sets the "source_missing_count" field.
+func (_c *ConfigurationItemCreate) SetSourceMissingCount(v int) *ConfigurationItemCreate {
+	_c.mutation.SetSourceMissingCount(v)
+	return _c
+}
+
+// SetNillableSourceMissingCount sets the "source_missing_count" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableSourceMissingCount(v *int) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetSourceMissingCount(*v)
+	}
+	return _c
+}
+
+// SetSourceFingerprint sets the "source_fingerprint" field.
+func (_c *ConfigurationItemCreate) SetSourceFingerprint(v string) *ConfigurationItemCreate {
+	_c.mutation.SetSourceFingerprint(v)
+	return _c
+}
+
+// SetNillableSourceFingerprint sets the "source_fingerprint" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableSourceFingerprint(v *string) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetSourceFingerprint(*v)
+	}
+	return _c
+}
+
 // SetAttributes sets the "attributes" field.
 func (_c *ConfigurationItemCreate) SetAttributes(v map[string]interface{}) *ConfigurationItemCreate {
 	_c.mutation.SetAttributes(v)
@@ -678,6 +748,10 @@ func (_c *ConfigurationItemCreate) defaults() {
 		v := configurationitem.DefaultOwnershipMode
 		_c.mutation.SetOwnershipMode(v)
 	}
+	if _, ok := _c.mutation.SourceMissingCount(); !ok {
+		v := configurationitem.DefaultSourceMissingCount
+		_c.mutation.SetSourceMissingCount(v)
+	}
 	if _, ok := _c.mutation.Version(); !ok {
 		v := configurationitem.DefaultVersion
 		_c.mutation.SetVersion(v)
@@ -728,6 +802,14 @@ func (_c *ConfigurationItemCreate) check() error {
 	}
 	if _, ok := _c.mutation.OwnershipMode(); !ok {
 		return &ValidationError{Name: "ownership_mode", err: errors.New(`ent: missing required field "ConfigurationItem.ownership_mode"`)}
+	}
+	if _, ok := _c.mutation.SourceMissingCount(); !ok {
+		return &ValidationError{Name: "source_missing_count", err: errors.New(`ent: missing required field "ConfigurationItem.source_missing_count"`)}
+	}
+	if v, ok := _c.mutation.SourceMissingCount(); ok {
+		if err := configurationitem.SourceMissingCountValidator(v); err != nil {
+			return &ValidationError{Name: "source_missing_count", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.source_missing_count": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ConfigurationItem.tenant_id"`)}
@@ -849,6 +931,26 @@ func (_c *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.C
 	if value, ok := _c.mutation.Source(); ok {
 		_spec.SetField(configurationitem.FieldSource, field.TypeString, value)
 		_node.Source = value
+	}
+	if value, ok := _c.mutation.SourceID(); ok {
+		_spec.SetField(configurationitem.FieldSourceID, field.TypeString, value)
+		_node.SourceID = value
+	}
+	if value, ok := _c.mutation.CanonicalCloudAccountID(); ok {
+		_spec.SetField(configurationitem.FieldCanonicalCloudAccountID, field.TypeString, value)
+		_node.CanonicalCloudAccountID = value
+	}
+	if value, ok := _c.mutation.SourceLastSeenAt(); ok {
+		_spec.SetField(configurationitem.FieldSourceLastSeenAt, field.TypeTime, value)
+		_node.SourceLastSeenAt = value
+	}
+	if value, ok := _c.mutation.SourceMissingCount(); ok {
+		_spec.SetField(configurationitem.FieldSourceMissingCount, field.TypeInt, value)
+		_node.SourceMissingCount = value
+	}
+	if value, ok := _c.mutation.SourceFingerprint(); ok {
+		_spec.SetField(configurationitem.FieldSourceFingerprint, field.TypeString, value)
+		_node.SourceFingerprint = value
 	}
 	if value, ok := _c.mutation.Attributes(); ok {
 		_spec.SetField(configurationitem.FieldAttributes, field.TypeJSON, value)

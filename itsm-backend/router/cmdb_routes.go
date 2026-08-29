@@ -49,6 +49,8 @@ func SetupCMDBRoutes(
 	// CMDB管理路由（规范前缀）
 	cmdb := auth.Group("/cmdb")
 	{
+		cmdb.GET("/capabilities", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetCapabilities)
+
 		// 关系类型元数据
 		cmdb.GET("/relationship-types", middleware.RequirePermission("cmdb_relationship", "read"), cmdbController.ListRelationshipTypes)
 

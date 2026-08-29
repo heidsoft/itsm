@@ -80,6 +80,31 @@ func Provider(v string) predicate.DiscoverySource {
 	return predicate.DiscoverySource(sql.FieldEQ(FieldProvider, v))
 }
 
+// CloudAccountID applies equality check predicate on the "cloud_account_id" field. It's identical to CloudAccountIDEQ.
+func CloudAccountID(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEQ(FieldCloudAccountID, v))
+}
+
+// Schedule applies equality check predicate on the "schedule" field. It's identical to ScheduleEQ.
+func Schedule(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEQ(FieldSchedule, v))
+}
+
+// ReconcilePolicy applies equality check predicate on the "reconcile_policy" field. It's identical to ReconcilePolicyEQ.
+func ReconcilePolicy(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEQ(FieldReconcilePolicy, v))
+}
+
+// StaleThreshold applies equality check predicate on the "stale_threshold" field. It's identical to StaleThresholdEQ.
+func StaleThreshold(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEQ(FieldStaleThreshold, v))
+}
+
+// LastSuccessAt applies equality check predicate on the "last_success_at" field. It's identical to LastSuccessAtEQ.
+func LastSuccessAt(v time.Time) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEQ(FieldLastSuccessAt, v))
+}
+
 // Enabled applies equality check predicate on the "enabled" field. It's identical to EnabledEQ.
 func Enabled(v bool) predicate.DiscoverySource {
 	return predicate.DiscoverySource(sql.FieldEQ(FieldEnabled, v))
@@ -308,6 +333,306 @@ func ProviderEqualFold(v string) predicate.DiscoverySource {
 // ProviderContainsFold applies the ContainsFold predicate on the "provider" field.
 func ProviderContainsFold(v string) predicate.DiscoverySource {
 	return predicate.DiscoverySource(sql.FieldContainsFold(FieldProvider, v))
+}
+
+// CloudAccountIDEQ applies the EQ predicate on the "cloud_account_id" field.
+func CloudAccountIDEQ(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEQ(FieldCloudAccountID, v))
+}
+
+// CloudAccountIDNEQ applies the NEQ predicate on the "cloud_account_id" field.
+func CloudAccountIDNEQ(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNEQ(FieldCloudAccountID, v))
+}
+
+// CloudAccountIDIn applies the In predicate on the "cloud_account_id" field.
+func CloudAccountIDIn(vs ...int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldIn(FieldCloudAccountID, vs...))
+}
+
+// CloudAccountIDNotIn applies the NotIn predicate on the "cloud_account_id" field.
+func CloudAccountIDNotIn(vs ...int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNotIn(FieldCloudAccountID, vs...))
+}
+
+// CloudAccountIDGT applies the GT predicate on the "cloud_account_id" field.
+func CloudAccountIDGT(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldGT(FieldCloudAccountID, v))
+}
+
+// CloudAccountIDGTE applies the GTE predicate on the "cloud_account_id" field.
+func CloudAccountIDGTE(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldGTE(FieldCloudAccountID, v))
+}
+
+// CloudAccountIDLT applies the LT predicate on the "cloud_account_id" field.
+func CloudAccountIDLT(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldLT(FieldCloudAccountID, v))
+}
+
+// CloudAccountIDLTE applies the LTE predicate on the "cloud_account_id" field.
+func CloudAccountIDLTE(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldLTE(FieldCloudAccountID, v))
+}
+
+// CloudAccountIDIsNil applies the IsNil predicate on the "cloud_account_id" field.
+func CloudAccountIDIsNil() predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldIsNull(FieldCloudAccountID))
+}
+
+// CloudAccountIDNotNil applies the NotNil predicate on the "cloud_account_id" field.
+func CloudAccountIDNotNil() predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNotNull(FieldCloudAccountID))
+}
+
+// ServiceCodesIsNil applies the IsNil predicate on the "service_codes" field.
+func ServiceCodesIsNil() predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldIsNull(FieldServiceCodes))
+}
+
+// ServiceCodesNotNil applies the NotNil predicate on the "service_codes" field.
+func ServiceCodesNotNil() predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNotNull(FieldServiceCodes))
+}
+
+// RegionsIsNil applies the IsNil predicate on the "regions" field.
+func RegionsIsNil() predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldIsNull(FieldRegions))
+}
+
+// RegionsNotNil applies the NotNil predicate on the "regions" field.
+func RegionsNotNil() predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNotNull(FieldRegions))
+}
+
+// ScheduleEQ applies the EQ predicate on the "schedule" field.
+func ScheduleEQ(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEQ(FieldSchedule, v))
+}
+
+// ScheduleNEQ applies the NEQ predicate on the "schedule" field.
+func ScheduleNEQ(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNEQ(FieldSchedule, v))
+}
+
+// ScheduleIn applies the In predicate on the "schedule" field.
+func ScheduleIn(vs ...string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldIn(FieldSchedule, vs...))
+}
+
+// ScheduleNotIn applies the NotIn predicate on the "schedule" field.
+func ScheduleNotIn(vs ...string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNotIn(FieldSchedule, vs...))
+}
+
+// ScheduleGT applies the GT predicate on the "schedule" field.
+func ScheduleGT(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldGT(FieldSchedule, v))
+}
+
+// ScheduleGTE applies the GTE predicate on the "schedule" field.
+func ScheduleGTE(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldGTE(FieldSchedule, v))
+}
+
+// ScheduleLT applies the LT predicate on the "schedule" field.
+func ScheduleLT(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldLT(FieldSchedule, v))
+}
+
+// ScheduleLTE applies the LTE predicate on the "schedule" field.
+func ScheduleLTE(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldLTE(FieldSchedule, v))
+}
+
+// ScheduleContains applies the Contains predicate on the "schedule" field.
+func ScheduleContains(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldContains(FieldSchedule, v))
+}
+
+// ScheduleHasPrefix applies the HasPrefix predicate on the "schedule" field.
+func ScheduleHasPrefix(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldHasPrefix(FieldSchedule, v))
+}
+
+// ScheduleHasSuffix applies the HasSuffix predicate on the "schedule" field.
+func ScheduleHasSuffix(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldHasSuffix(FieldSchedule, v))
+}
+
+// ScheduleIsNil applies the IsNil predicate on the "schedule" field.
+func ScheduleIsNil() predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldIsNull(FieldSchedule))
+}
+
+// ScheduleNotNil applies the NotNil predicate on the "schedule" field.
+func ScheduleNotNil() predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNotNull(FieldSchedule))
+}
+
+// ScheduleEqualFold applies the EqualFold predicate on the "schedule" field.
+func ScheduleEqualFold(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEqualFold(FieldSchedule, v))
+}
+
+// ScheduleContainsFold applies the ContainsFold predicate on the "schedule" field.
+func ScheduleContainsFold(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldContainsFold(FieldSchedule, v))
+}
+
+// ReconcilePolicyEQ applies the EQ predicate on the "reconcile_policy" field.
+func ReconcilePolicyEQ(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEQ(FieldReconcilePolicy, v))
+}
+
+// ReconcilePolicyNEQ applies the NEQ predicate on the "reconcile_policy" field.
+func ReconcilePolicyNEQ(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNEQ(FieldReconcilePolicy, v))
+}
+
+// ReconcilePolicyIn applies the In predicate on the "reconcile_policy" field.
+func ReconcilePolicyIn(vs ...string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldIn(FieldReconcilePolicy, vs...))
+}
+
+// ReconcilePolicyNotIn applies the NotIn predicate on the "reconcile_policy" field.
+func ReconcilePolicyNotIn(vs ...string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNotIn(FieldReconcilePolicy, vs...))
+}
+
+// ReconcilePolicyGT applies the GT predicate on the "reconcile_policy" field.
+func ReconcilePolicyGT(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldGT(FieldReconcilePolicy, v))
+}
+
+// ReconcilePolicyGTE applies the GTE predicate on the "reconcile_policy" field.
+func ReconcilePolicyGTE(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldGTE(FieldReconcilePolicy, v))
+}
+
+// ReconcilePolicyLT applies the LT predicate on the "reconcile_policy" field.
+func ReconcilePolicyLT(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldLT(FieldReconcilePolicy, v))
+}
+
+// ReconcilePolicyLTE applies the LTE predicate on the "reconcile_policy" field.
+func ReconcilePolicyLTE(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldLTE(FieldReconcilePolicy, v))
+}
+
+// ReconcilePolicyContains applies the Contains predicate on the "reconcile_policy" field.
+func ReconcilePolicyContains(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldContains(FieldReconcilePolicy, v))
+}
+
+// ReconcilePolicyHasPrefix applies the HasPrefix predicate on the "reconcile_policy" field.
+func ReconcilePolicyHasPrefix(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldHasPrefix(FieldReconcilePolicy, v))
+}
+
+// ReconcilePolicyHasSuffix applies the HasSuffix predicate on the "reconcile_policy" field.
+func ReconcilePolicyHasSuffix(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldHasSuffix(FieldReconcilePolicy, v))
+}
+
+// ReconcilePolicyEqualFold applies the EqualFold predicate on the "reconcile_policy" field.
+func ReconcilePolicyEqualFold(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEqualFold(FieldReconcilePolicy, v))
+}
+
+// ReconcilePolicyContainsFold applies the ContainsFold predicate on the "reconcile_policy" field.
+func ReconcilePolicyContainsFold(v string) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldContainsFold(FieldReconcilePolicy, v))
+}
+
+// StaleThresholdEQ applies the EQ predicate on the "stale_threshold" field.
+func StaleThresholdEQ(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEQ(FieldStaleThreshold, v))
+}
+
+// StaleThresholdNEQ applies the NEQ predicate on the "stale_threshold" field.
+func StaleThresholdNEQ(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNEQ(FieldStaleThreshold, v))
+}
+
+// StaleThresholdIn applies the In predicate on the "stale_threshold" field.
+func StaleThresholdIn(vs ...int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldIn(FieldStaleThreshold, vs...))
+}
+
+// StaleThresholdNotIn applies the NotIn predicate on the "stale_threshold" field.
+func StaleThresholdNotIn(vs ...int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNotIn(FieldStaleThreshold, vs...))
+}
+
+// StaleThresholdGT applies the GT predicate on the "stale_threshold" field.
+func StaleThresholdGT(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldGT(FieldStaleThreshold, v))
+}
+
+// StaleThresholdGTE applies the GTE predicate on the "stale_threshold" field.
+func StaleThresholdGTE(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldGTE(FieldStaleThreshold, v))
+}
+
+// StaleThresholdLT applies the LT predicate on the "stale_threshold" field.
+func StaleThresholdLT(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldLT(FieldStaleThreshold, v))
+}
+
+// StaleThresholdLTE applies the LTE predicate on the "stale_threshold" field.
+func StaleThresholdLTE(v int) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldLTE(FieldStaleThreshold, v))
+}
+
+// LastSuccessAtEQ applies the EQ predicate on the "last_success_at" field.
+func LastSuccessAtEQ(v time.Time) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldEQ(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtNEQ applies the NEQ predicate on the "last_success_at" field.
+func LastSuccessAtNEQ(v time.Time) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNEQ(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtIn applies the In predicate on the "last_success_at" field.
+func LastSuccessAtIn(vs ...time.Time) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldIn(FieldLastSuccessAt, vs...))
+}
+
+// LastSuccessAtNotIn applies the NotIn predicate on the "last_success_at" field.
+func LastSuccessAtNotIn(vs ...time.Time) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNotIn(FieldLastSuccessAt, vs...))
+}
+
+// LastSuccessAtGT applies the GT predicate on the "last_success_at" field.
+func LastSuccessAtGT(v time.Time) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldGT(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtGTE applies the GTE predicate on the "last_success_at" field.
+func LastSuccessAtGTE(v time.Time) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldGTE(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtLT applies the LT predicate on the "last_success_at" field.
+func LastSuccessAtLT(v time.Time) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldLT(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtLTE applies the LTE predicate on the "last_success_at" field.
+func LastSuccessAtLTE(v time.Time) predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldLTE(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtIsNil applies the IsNil predicate on the "last_success_at" field.
+func LastSuccessAtIsNil() predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldIsNull(FieldLastSuccessAt))
+}
+
+// LastSuccessAtNotNil applies the NotNil predicate on the "last_success_at" field.
+func LastSuccessAtNotNil() predicate.DiscoverySource {
+	return predicate.DiscoverySource(sql.FieldNotNull(FieldLastSuccessAt))
 }
 
 // EnabledEQ applies the EQ predicate on the "enabled" field.

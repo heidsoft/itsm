@@ -24,9 +24,39 @@ type StreamingLLMProvider interface {
 	ChatStream(ctx context.Context, model string, messages []LLMMessage, callback func(string)) error
 }
 
+// ToolCallingStreamProvider is an optional capability: providers that support
+// declaring tools (function calling) AND streaming. The provider receives the
+// declared tools, streams text deltas through callback, and reports any tool
+// calls the model requested through onToolCalls. Providers that do not
+// implement this interface degrade gracefully: the gateway's
+// ChatStreamWithTools falls back to a plain ChatStream with no tools declared.
+type ToolCallingStreamProvider interface {
+	ChatStreamWithTools(ctx context.Context, model string, messages []LLMMessage, tools []LLMTool, callback func(string), onToolCalls func([]LLMToolCall)) error
+}
+
+// LLMTool 声明可供模型调用的工具（OpenAI function calling 风格）。
+type LLMTool struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Parameters  map[string]any `json:"parameters,omitempty"`
+}
+
+// LLMToolCall 模型发起的一次工具调用。
+type LLMToolCall struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Arguments string `json:"arguments"` // JSON 编码的参数
+}
+
 type LLMMessage struct {
 	Role    string
 	Content string
+	// Tools 请求侧：本消息声明可用工具（通常挂载在 user/system 消息上）。
+	Tools []LLMTool
+	// ToolCalls 响应侧：assistant 消息携带模型请求调用的工具列表。
+	ToolCalls []LLMToolCall
+	// ToolCallID 工具结果消息：对应被执行的 LLMToolCall.ID（OpenAI "tool" role）。
+	ToolCallID string
 }
 
 type TokenLimiter interface {
@@ -101,6 +131,20 @@ func (g *LLMGateway) ChatStream(ctx context.Context, model string, messages []LL
 		callback(out)
 	}
 	return nil
+}
+
+// ChatStreamWithTools declares tools and streams the reply. Text deltas are
+// delivered through callback; if the model requests tool calls they are
+// reported through onToolCalls (so the caller can execute them and continue
+// the conversation). Providers without tool-calling support degrade to a plain
+// ChatStream with no tools declared. Token limiting/observability behave the
+// same as ChatStream.
+func (g *LLMGateway) ChatStreamWithTools(ctx context.Context, model string, messages []LLMMessage, tools []LLMTool, callback func(string), onToolCalls func([]LLMToolCall)) error {
+	if p, ok := g.provider.(ToolCallingStreamProvider); ok {
+		return p.ChatStreamWithTools(ctx, model, messages, tools, callback, onToolCalls)
+	}
+	// 退化：忽略工具声明，走普通流式；模型不会返回工具调用。
+	return g.ChatStream(ctx, model, messages, callback)
 }
 
 // Simple implementations

@@ -124,6 +124,99 @@ func (_u *DiscoveryResultUpdate) ClearResourceID() *DiscoveryResultUpdate {
 	return _u
 }
 
+// SetResourceIdentity sets the "resource_identity" field.
+func (_u *DiscoveryResultUpdate) SetResourceIdentity(v string) *DiscoveryResultUpdate {
+	_u.mutation.SetResourceIdentity(v)
+	return _u
+}
+
+// SetNillableResourceIdentity sets the "resource_identity" field if the given value is not nil.
+func (_u *DiscoveryResultUpdate) SetNillableResourceIdentity(v *string) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetResourceIdentity(*v)
+	}
+	return _u
+}
+
+// ClearResourceIdentity clears the value of the "resource_identity" field.
+func (_u *DiscoveryResultUpdate) ClearResourceIdentity() *DiscoveryResultUpdate {
+	_u.mutation.ClearResourceIdentity()
+	return _u
+}
+
+// SetIdentityVersion sets the "identity_version" field.
+func (_u *DiscoveryResultUpdate) SetIdentityVersion(v int) *DiscoveryResultUpdate {
+	_u.mutation.ResetIdentityVersion()
+	_u.mutation.SetIdentityVersion(v)
+	return _u
+}
+
+// SetNillableIdentityVersion sets the "identity_version" field if the given value is not nil.
+func (_u *DiscoveryResultUpdate) SetNillableIdentityVersion(v *int) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetIdentityVersion(*v)
+	}
+	return _u
+}
+
+// AddIdentityVersion adds value to the "identity_version" field.
+func (_u *DiscoveryResultUpdate) AddIdentityVersion(v int) *DiscoveryResultUpdate {
+	_u.mutation.AddIdentityVersion(v)
+	return _u
+}
+
+// SetResourceSnapshot sets the "resource_snapshot" field.
+func (_u *DiscoveryResultUpdate) SetResourceSnapshot(v map[string]interface{}) *DiscoveryResultUpdate {
+	_u.mutation.SetResourceSnapshot(v)
+	return _u
+}
+
+// ClearResourceSnapshot clears the value of the "resource_snapshot" field.
+func (_u *DiscoveryResultUpdate) ClearResourceSnapshot() *DiscoveryResultUpdate {
+	_u.mutation.ClearResourceSnapshot()
+	return _u
+}
+
+// SetBeforeHash sets the "before_hash" field.
+func (_u *DiscoveryResultUpdate) SetBeforeHash(v string) *DiscoveryResultUpdate {
+	_u.mutation.SetBeforeHash(v)
+	return _u
+}
+
+// SetNillableBeforeHash sets the "before_hash" field if the given value is not nil.
+func (_u *DiscoveryResultUpdate) SetNillableBeforeHash(v *string) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetBeforeHash(*v)
+	}
+	return _u
+}
+
+// ClearBeforeHash clears the value of the "before_hash" field.
+func (_u *DiscoveryResultUpdate) ClearBeforeHash() *DiscoveryResultUpdate {
+	_u.mutation.ClearBeforeHash()
+	return _u
+}
+
+// SetAfterHash sets the "after_hash" field.
+func (_u *DiscoveryResultUpdate) SetAfterHash(v string) *DiscoveryResultUpdate {
+	_u.mutation.SetAfterHash(v)
+	return _u
+}
+
+// SetNillableAfterHash sets the "after_hash" field if the given value is not nil.
+func (_u *DiscoveryResultUpdate) SetNillableAfterHash(v *string) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetAfterHash(*v)
+	}
+	return _u
+}
+
+// ClearAfterHash clears the value of the "after_hash" field.
+func (_u *DiscoveryResultUpdate) ClearAfterHash() *DiscoveryResultUpdate {
+	_u.mutation.ClearAfterHash()
+	return _u
+}
+
 // SetDiff sets the "diff" field.
 func (_u *DiscoveryResultUpdate) SetDiff(v map[string]interface{}) *DiscoveryResultUpdate {
 	_u.mutation.SetDiff(v)
@@ -147,6 +240,46 @@ func (_u *DiscoveryResultUpdate) SetNillableStatus(v *string) *DiscoveryResultUp
 	if v != nil {
 		_u.SetStatus(*v)
 	}
+	return _u
+}
+
+// SetErrorCode sets the "error_code" field.
+func (_u *DiscoveryResultUpdate) SetErrorCode(v string) *DiscoveryResultUpdate {
+	_u.mutation.SetErrorCode(v)
+	return _u
+}
+
+// SetNillableErrorCode sets the "error_code" field if the given value is not nil.
+func (_u *DiscoveryResultUpdate) SetNillableErrorCode(v *string) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetErrorCode(*v)
+	}
+	return _u
+}
+
+// ClearErrorCode clears the value of the "error_code" field.
+func (_u *DiscoveryResultUpdate) ClearErrorCode() *DiscoveryResultUpdate {
+	_u.mutation.ClearErrorCode()
+	return _u
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (_u *DiscoveryResultUpdate) SetErrorMessage(v string) *DiscoveryResultUpdate {
+	_u.mutation.SetErrorMessage(v)
+	return _u
+}
+
+// SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
+func (_u *DiscoveryResultUpdate) SetNillableErrorMessage(v *string) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetErrorMessage(*v)
+	}
+	return _u
+}
+
+// ClearErrorMessage clears the value of the "error_message" field.
+func (_u *DiscoveryResultUpdate) ClearErrorMessage() *DiscoveryResultUpdate {
+	_u.mutation.ClearErrorMessage()
 	return _u
 }
 
@@ -255,6 +388,11 @@ func (_u *DiscoveryResultUpdate) check() error {
 			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.action": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.IdentityVersion(); ok {
+		if err := discoveryresult.IdentityVersionValidator(v); err != nil {
+			return &ValidationError{Name: "identity_version", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.identity_version": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.TenantID(); ok {
 		if err := discoveryresult.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.tenant_id": %w`, err)}
@@ -302,6 +440,36 @@ func (_u *DiscoveryResultUpdate) sqlSave(ctx context.Context) (_node int, err er
 	if _u.mutation.ResourceIDCleared() {
 		_spec.ClearField(discoveryresult.FieldResourceID, field.TypeString)
 	}
+	if value, ok := _u.mutation.ResourceIdentity(); ok {
+		_spec.SetField(discoveryresult.FieldResourceIdentity, field.TypeString, value)
+	}
+	if _u.mutation.ResourceIdentityCleared() {
+		_spec.ClearField(discoveryresult.FieldResourceIdentity, field.TypeString)
+	}
+	if value, ok := _u.mutation.IdentityVersion(); ok {
+		_spec.SetField(discoveryresult.FieldIdentityVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedIdentityVersion(); ok {
+		_spec.AddField(discoveryresult.FieldIdentityVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.ResourceSnapshot(); ok {
+		_spec.SetField(discoveryresult.FieldResourceSnapshot, field.TypeJSON, value)
+	}
+	if _u.mutation.ResourceSnapshotCleared() {
+		_spec.ClearField(discoveryresult.FieldResourceSnapshot, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.BeforeHash(); ok {
+		_spec.SetField(discoveryresult.FieldBeforeHash, field.TypeString, value)
+	}
+	if _u.mutation.BeforeHashCleared() {
+		_spec.ClearField(discoveryresult.FieldBeforeHash, field.TypeString)
+	}
+	if value, ok := _u.mutation.AfterHash(); ok {
+		_spec.SetField(discoveryresult.FieldAfterHash, field.TypeString, value)
+	}
+	if _u.mutation.AfterHashCleared() {
+		_spec.ClearField(discoveryresult.FieldAfterHash, field.TypeString)
+	}
 	if value, ok := _u.mutation.Diff(); ok {
 		_spec.SetField(discoveryresult.FieldDiff, field.TypeJSON, value)
 	}
@@ -310,6 +478,18 @@ func (_u *DiscoveryResultUpdate) sqlSave(ctx context.Context) (_node int, err er
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(discoveryresult.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ErrorCode(); ok {
+		_spec.SetField(discoveryresult.FieldErrorCode, field.TypeString, value)
+	}
+	if _u.mutation.ErrorCodeCleared() {
+		_spec.ClearField(discoveryresult.FieldErrorCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.ErrorMessage(); ok {
+		_spec.SetField(discoveryresult.FieldErrorMessage, field.TypeString, value)
+	}
+	if _u.mutation.ErrorMessageCleared() {
+		_spec.ClearField(discoveryresult.FieldErrorMessage, field.TypeString)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(discoveryresult.FieldTenantID, field.TypeInt, value)
@@ -467,6 +647,99 @@ func (_u *DiscoveryResultUpdateOne) ClearResourceID() *DiscoveryResultUpdateOne 
 	return _u
 }
 
+// SetResourceIdentity sets the "resource_identity" field.
+func (_u *DiscoveryResultUpdateOne) SetResourceIdentity(v string) *DiscoveryResultUpdateOne {
+	_u.mutation.SetResourceIdentity(v)
+	return _u
+}
+
+// SetNillableResourceIdentity sets the "resource_identity" field if the given value is not nil.
+func (_u *DiscoveryResultUpdateOne) SetNillableResourceIdentity(v *string) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetResourceIdentity(*v)
+	}
+	return _u
+}
+
+// ClearResourceIdentity clears the value of the "resource_identity" field.
+func (_u *DiscoveryResultUpdateOne) ClearResourceIdentity() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearResourceIdentity()
+	return _u
+}
+
+// SetIdentityVersion sets the "identity_version" field.
+func (_u *DiscoveryResultUpdateOne) SetIdentityVersion(v int) *DiscoveryResultUpdateOne {
+	_u.mutation.ResetIdentityVersion()
+	_u.mutation.SetIdentityVersion(v)
+	return _u
+}
+
+// SetNillableIdentityVersion sets the "identity_version" field if the given value is not nil.
+func (_u *DiscoveryResultUpdateOne) SetNillableIdentityVersion(v *int) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetIdentityVersion(*v)
+	}
+	return _u
+}
+
+// AddIdentityVersion adds value to the "identity_version" field.
+func (_u *DiscoveryResultUpdateOne) AddIdentityVersion(v int) *DiscoveryResultUpdateOne {
+	_u.mutation.AddIdentityVersion(v)
+	return _u
+}
+
+// SetResourceSnapshot sets the "resource_snapshot" field.
+func (_u *DiscoveryResultUpdateOne) SetResourceSnapshot(v map[string]interface{}) *DiscoveryResultUpdateOne {
+	_u.mutation.SetResourceSnapshot(v)
+	return _u
+}
+
+// ClearResourceSnapshot clears the value of the "resource_snapshot" field.
+func (_u *DiscoveryResultUpdateOne) ClearResourceSnapshot() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearResourceSnapshot()
+	return _u
+}
+
+// SetBeforeHash sets the "before_hash" field.
+func (_u *DiscoveryResultUpdateOne) SetBeforeHash(v string) *DiscoveryResultUpdateOne {
+	_u.mutation.SetBeforeHash(v)
+	return _u
+}
+
+// SetNillableBeforeHash sets the "before_hash" field if the given value is not nil.
+func (_u *DiscoveryResultUpdateOne) SetNillableBeforeHash(v *string) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetBeforeHash(*v)
+	}
+	return _u
+}
+
+// ClearBeforeHash clears the value of the "before_hash" field.
+func (_u *DiscoveryResultUpdateOne) ClearBeforeHash() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearBeforeHash()
+	return _u
+}
+
+// SetAfterHash sets the "after_hash" field.
+func (_u *DiscoveryResultUpdateOne) SetAfterHash(v string) *DiscoveryResultUpdateOne {
+	_u.mutation.SetAfterHash(v)
+	return _u
+}
+
+// SetNillableAfterHash sets the "after_hash" field if the given value is not nil.
+func (_u *DiscoveryResultUpdateOne) SetNillableAfterHash(v *string) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetAfterHash(*v)
+	}
+	return _u
+}
+
+// ClearAfterHash clears the value of the "after_hash" field.
+func (_u *DiscoveryResultUpdateOne) ClearAfterHash() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearAfterHash()
+	return _u
+}
+
 // SetDiff sets the "diff" field.
 func (_u *DiscoveryResultUpdateOne) SetDiff(v map[string]interface{}) *DiscoveryResultUpdateOne {
 	_u.mutation.SetDiff(v)
@@ -490,6 +763,46 @@ func (_u *DiscoveryResultUpdateOne) SetNillableStatus(v *string) *DiscoveryResul
 	if v != nil {
 		_u.SetStatus(*v)
 	}
+	return _u
+}
+
+// SetErrorCode sets the "error_code" field.
+func (_u *DiscoveryResultUpdateOne) SetErrorCode(v string) *DiscoveryResultUpdateOne {
+	_u.mutation.SetErrorCode(v)
+	return _u
+}
+
+// SetNillableErrorCode sets the "error_code" field if the given value is not nil.
+func (_u *DiscoveryResultUpdateOne) SetNillableErrorCode(v *string) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetErrorCode(*v)
+	}
+	return _u
+}
+
+// ClearErrorCode clears the value of the "error_code" field.
+func (_u *DiscoveryResultUpdateOne) ClearErrorCode() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearErrorCode()
+	return _u
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (_u *DiscoveryResultUpdateOne) SetErrorMessage(v string) *DiscoveryResultUpdateOne {
+	_u.mutation.SetErrorMessage(v)
+	return _u
+}
+
+// SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
+func (_u *DiscoveryResultUpdateOne) SetNillableErrorMessage(v *string) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetErrorMessage(*v)
+	}
+	return _u
+}
+
+// ClearErrorMessage clears the value of the "error_message" field.
+func (_u *DiscoveryResultUpdateOne) ClearErrorMessage() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearErrorMessage()
 	return _u
 }
 
@@ -611,6 +924,11 @@ func (_u *DiscoveryResultUpdateOne) check() error {
 			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.action": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.IdentityVersion(); ok {
+		if err := discoveryresult.IdentityVersionValidator(v); err != nil {
+			return &ValidationError{Name: "identity_version", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.identity_version": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.TenantID(); ok {
 		if err := discoveryresult.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.tenant_id": %w`, err)}
@@ -675,6 +993,36 @@ func (_u *DiscoveryResultUpdateOne) sqlSave(ctx context.Context) (_node *Discove
 	if _u.mutation.ResourceIDCleared() {
 		_spec.ClearField(discoveryresult.FieldResourceID, field.TypeString)
 	}
+	if value, ok := _u.mutation.ResourceIdentity(); ok {
+		_spec.SetField(discoveryresult.FieldResourceIdentity, field.TypeString, value)
+	}
+	if _u.mutation.ResourceIdentityCleared() {
+		_spec.ClearField(discoveryresult.FieldResourceIdentity, field.TypeString)
+	}
+	if value, ok := _u.mutation.IdentityVersion(); ok {
+		_spec.SetField(discoveryresult.FieldIdentityVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedIdentityVersion(); ok {
+		_spec.AddField(discoveryresult.FieldIdentityVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.ResourceSnapshot(); ok {
+		_spec.SetField(discoveryresult.FieldResourceSnapshot, field.TypeJSON, value)
+	}
+	if _u.mutation.ResourceSnapshotCleared() {
+		_spec.ClearField(discoveryresult.FieldResourceSnapshot, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.BeforeHash(); ok {
+		_spec.SetField(discoveryresult.FieldBeforeHash, field.TypeString, value)
+	}
+	if _u.mutation.BeforeHashCleared() {
+		_spec.ClearField(discoveryresult.FieldBeforeHash, field.TypeString)
+	}
+	if value, ok := _u.mutation.AfterHash(); ok {
+		_spec.SetField(discoveryresult.FieldAfterHash, field.TypeString, value)
+	}
+	if _u.mutation.AfterHashCleared() {
+		_spec.ClearField(discoveryresult.FieldAfterHash, field.TypeString)
+	}
 	if value, ok := _u.mutation.Diff(); ok {
 		_spec.SetField(discoveryresult.FieldDiff, field.TypeJSON, value)
 	}
@@ -683,6 +1031,18 @@ func (_u *DiscoveryResultUpdateOne) sqlSave(ctx context.Context) (_node *Discove
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(discoveryresult.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ErrorCode(); ok {
+		_spec.SetField(discoveryresult.FieldErrorCode, field.TypeString, value)
+	}
+	if _u.mutation.ErrorCodeCleared() {
+		_spec.ClearField(discoveryresult.FieldErrorCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.ErrorMessage(); ok {
+		_spec.SetField(discoveryresult.FieldErrorMessage, field.TypeString, value)
+	}
+	if _u.mutation.ErrorMessageCleared() {
+		_spec.ClearField(discoveryresult.FieldErrorMessage, field.TypeString)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(discoveryresult.FieldTenantID, field.TypeInt, value)

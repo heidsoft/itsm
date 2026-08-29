@@ -30,6 +30,28 @@ func (DiscoverySource) Fields() []ent.Field {
 		field.String("provider").
 			Comment("云厂商或私有云标识").
 			Optional(),
+		field.Int("cloud_account_id").
+			Comment("租户内云账号记录ID").
+			Optional(),
+		field.JSON("service_codes", []string{}).
+			Comment("发现服务范围").
+			Optional(),
+		field.JSON("regions", []string{}).
+			Comment("发现地域范围").
+			Optional(),
+		field.String("schedule").
+			Comment("调度表达式").
+			Optional(),
+		field.String("reconcile_policy").
+			Comment("对账策略").
+			Default("manual"),
+		field.Int("stale_threshold").
+			Comment("连续缺失多少次后进入退役候选").
+			Default(3).
+			NonNegative(),
+		field.Time("last_success_at").
+			Comment("最近一次完整成功发现时间").
+			Optional(),
 		field.Bool("enabled").
 			Comment("是否启用").
 			Default(true),
@@ -60,6 +82,7 @@ func (DiscoverySource) Edges() []ent.Edge {
 func (DiscoverySource) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("tenant_id"),
+		index.Fields("tenant_id", "cloud_account_id"),
 		index.Fields("tenant_id", "name").Unique(),
 	}
 }

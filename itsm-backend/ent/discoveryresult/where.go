@@ -80,9 +80,39 @@ func ResourceID(v string) predicate.DiscoveryResult {
 	return predicate.DiscoveryResult(sql.FieldEQ(FieldResourceID, v))
 }
 
+// ResourceIdentity applies equality check predicate on the "resource_identity" field. It's identical to ResourceIdentityEQ.
+func ResourceIdentity(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldResourceIdentity, v))
+}
+
+// IdentityVersion applies equality check predicate on the "identity_version" field. It's identical to IdentityVersionEQ.
+func IdentityVersion(v int) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldIdentityVersion, v))
+}
+
+// BeforeHash applies equality check predicate on the "before_hash" field. It's identical to BeforeHashEQ.
+func BeforeHash(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldBeforeHash, v))
+}
+
+// AfterHash applies equality check predicate on the "after_hash" field. It's identical to AfterHashEQ.
+func AfterHash(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldAfterHash, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.DiscoveryResult {
 	return predicate.DiscoveryResult(sql.FieldEQ(FieldStatus, v))
+}
+
+// ErrorCode applies equality check predicate on the "error_code" field. It's identical to ErrorCodeEQ.
+func ErrorCode(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldErrorCode, v))
+}
+
+// ErrorMessage applies equality check predicate on the "error_message" field. It's identical to ErrorMessageEQ.
+func ErrorMessage(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldErrorMessage, v))
 }
 
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
@@ -385,6 +415,281 @@ func ResourceIDContainsFold(v string) predicate.DiscoveryResult {
 	return predicate.DiscoveryResult(sql.FieldContainsFold(FieldResourceID, v))
 }
 
+// ResourceIdentityEQ applies the EQ predicate on the "resource_identity" field.
+func ResourceIdentityEQ(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldResourceIdentity, v))
+}
+
+// ResourceIdentityNEQ applies the NEQ predicate on the "resource_identity" field.
+func ResourceIdentityNEQ(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNEQ(FieldResourceIdentity, v))
+}
+
+// ResourceIdentityIn applies the In predicate on the "resource_identity" field.
+func ResourceIdentityIn(vs ...string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIn(FieldResourceIdentity, vs...))
+}
+
+// ResourceIdentityNotIn applies the NotIn predicate on the "resource_identity" field.
+func ResourceIdentityNotIn(vs ...string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotIn(FieldResourceIdentity, vs...))
+}
+
+// ResourceIdentityGT applies the GT predicate on the "resource_identity" field.
+func ResourceIdentityGT(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGT(FieldResourceIdentity, v))
+}
+
+// ResourceIdentityGTE applies the GTE predicate on the "resource_identity" field.
+func ResourceIdentityGTE(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGTE(FieldResourceIdentity, v))
+}
+
+// ResourceIdentityLT applies the LT predicate on the "resource_identity" field.
+func ResourceIdentityLT(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLT(FieldResourceIdentity, v))
+}
+
+// ResourceIdentityLTE applies the LTE predicate on the "resource_identity" field.
+func ResourceIdentityLTE(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLTE(FieldResourceIdentity, v))
+}
+
+// ResourceIdentityContains applies the Contains predicate on the "resource_identity" field.
+func ResourceIdentityContains(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldContains(FieldResourceIdentity, v))
+}
+
+// ResourceIdentityHasPrefix applies the HasPrefix predicate on the "resource_identity" field.
+func ResourceIdentityHasPrefix(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldHasPrefix(FieldResourceIdentity, v))
+}
+
+// ResourceIdentityHasSuffix applies the HasSuffix predicate on the "resource_identity" field.
+func ResourceIdentityHasSuffix(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldHasSuffix(FieldResourceIdentity, v))
+}
+
+// ResourceIdentityIsNil applies the IsNil predicate on the "resource_identity" field.
+func ResourceIdentityIsNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIsNull(FieldResourceIdentity))
+}
+
+// ResourceIdentityNotNil applies the NotNil predicate on the "resource_identity" field.
+func ResourceIdentityNotNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotNull(FieldResourceIdentity))
+}
+
+// ResourceIdentityEqualFold applies the EqualFold predicate on the "resource_identity" field.
+func ResourceIdentityEqualFold(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEqualFold(FieldResourceIdentity, v))
+}
+
+// ResourceIdentityContainsFold applies the ContainsFold predicate on the "resource_identity" field.
+func ResourceIdentityContainsFold(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldContainsFold(FieldResourceIdentity, v))
+}
+
+// IdentityVersionEQ applies the EQ predicate on the "identity_version" field.
+func IdentityVersionEQ(v int) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldIdentityVersion, v))
+}
+
+// IdentityVersionNEQ applies the NEQ predicate on the "identity_version" field.
+func IdentityVersionNEQ(v int) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNEQ(FieldIdentityVersion, v))
+}
+
+// IdentityVersionIn applies the In predicate on the "identity_version" field.
+func IdentityVersionIn(vs ...int) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIn(FieldIdentityVersion, vs...))
+}
+
+// IdentityVersionNotIn applies the NotIn predicate on the "identity_version" field.
+func IdentityVersionNotIn(vs ...int) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotIn(FieldIdentityVersion, vs...))
+}
+
+// IdentityVersionGT applies the GT predicate on the "identity_version" field.
+func IdentityVersionGT(v int) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGT(FieldIdentityVersion, v))
+}
+
+// IdentityVersionGTE applies the GTE predicate on the "identity_version" field.
+func IdentityVersionGTE(v int) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGTE(FieldIdentityVersion, v))
+}
+
+// IdentityVersionLT applies the LT predicate on the "identity_version" field.
+func IdentityVersionLT(v int) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLT(FieldIdentityVersion, v))
+}
+
+// IdentityVersionLTE applies the LTE predicate on the "identity_version" field.
+func IdentityVersionLTE(v int) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLTE(FieldIdentityVersion, v))
+}
+
+// ResourceSnapshotIsNil applies the IsNil predicate on the "resource_snapshot" field.
+func ResourceSnapshotIsNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIsNull(FieldResourceSnapshot))
+}
+
+// ResourceSnapshotNotNil applies the NotNil predicate on the "resource_snapshot" field.
+func ResourceSnapshotNotNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotNull(FieldResourceSnapshot))
+}
+
+// BeforeHashEQ applies the EQ predicate on the "before_hash" field.
+func BeforeHashEQ(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldBeforeHash, v))
+}
+
+// BeforeHashNEQ applies the NEQ predicate on the "before_hash" field.
+func BeforeHashNEQ(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNEQ(FieldBeforeHash, v))
+}
+
+// BeforeHashIn applies the In predicate on the "before_hash" field.
+func BeforeHashIn(vs ...string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIn(FieldBeforeHash, vs...))
+}
+
+// BeforeHashNotIn applies the NotIn predicate on the "before_hash" field.
+func BeforeHashNotIn(vs ...string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotIn(FieldBeforeHash, vs...))
+}
+
+// BeforeHashGT applies the GT predicate on the "before_hash" field.
+func BeforeHashGT(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGT(FieldBeforeHash, v))
+}
+
+// BeforeHashGTE applies the GTE predicate on the "before_hash" field.
+func BeforeHashGTE(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGTE(FieldBeforeHash, v))
+}
+
+// BeforeHashLT applies the LT predicate on the "before_hash" field.
+func BeforeHashLT(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLT(FieldBeforeHash, v))
+}
+
+// BeforeHashLTE applies the LTE predicate on the "before_hash" field.
+func BeforeHashLTE(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLTE(FieldBeforeHash, v))
+}
+
+// BeforeHashContains applies the Contains predicate on the "before_hash" field.
+func BeforeHashContains(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldContains(FieldBeforeHash, v))
+}
+
+// BeforeHashHasPrefix applies the HasPrefix predicate on the "before_hash" field.
+func BeforeHashHasPrefix(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldHasPrefix(FieldBeforeHash, v))
+}
+
+// BeforeHashHasSuffix applies the HasSuffix predicate on the "before_hash" field.
+func BeforeHashHasSuffix(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldHasSuffix(FieldBeforeHash, v))
+}
+
+// BeforeHashIsNil applies the IsNil predicate on the "before_hash" field.
+func BeforeHashIsNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIsNull(FieldBeforeHash))
+}
+
+// BeforeHashNotNil applies the NotNil predicate on the "before_hash" field.
+func BeforeHashNotNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotNull(FieldBeforeHash))
+}
+
+// BeforeHashEqualFold applies the EqualFold predicate on the "before_hash" field.
+func BeforeHashEqualFold(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEqualFold(FieldBeforeHash, v))
+}
+
+// BeforeHashContainsFold applies the ContainsFold predicate on the "before_hash" field.
+func BeforeHashContainsFold(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldContainsFold(FieldBeforeHash, v))
+}
+
+// AfterHashEQ applies the EQ predicate on the "after_hash" field.
+func AfterHashEQ(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldAfterHash, v))
+}
+
+// AfterHashNEQ applies the NEQ predicate on the "after_hash" field.
+func AfterHashNEQ(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNEQ(FieldAfterHash, v))
+}
+
+// AfterHashIn applies the In predicate on the "after_hash" field.
+func AfterHashIn(vs ...string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIn(FieldAfterHash, vs...))
+}
+
+// AfterHashNotIn applies the NotIn predicate on the "after_hash" field.
+func AfterHashNotIn(vs ...string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotIn(FieldAfterHash, vs...))
+}
+
+// AfterHashGT applies the GT predicate on the "after_hash" field.
+func AfterHashGT(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGT(FieldAfterHash, v))
+}
+
+// AfterHashGTE applies the GTE predicate on the "after_hash" field.
+func AfterHashGTE(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGTE(FieldAfterHash, v))
+}
+
+// AfterHashLT applies the LT predicate on the "after_hash" field.
+func AfterHashLT(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLT(FieldAfterHash, v))
+}
+
+// AfterHashLTE applies the LTE predicate on the "after_hash" field.
+func AfterHashLTE(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLTE(FieldAfterHash, v))
+}
+
+// AfterHashContains applies the Contains predicate on the "after_hash" field.
+func AfterHashContains(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldContains(FieldAfterHash, v))
+}
+
+// AfterHashHasPrefix applies the HasPrefix predicate on the "after_hash" field.
+func AfterHashHasPrefix(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldHasPrefix(FieldAfterHash, v))
+}
+
+// AfterHashHasSuffix applies the HasSuffix predicate on the "after_hash" field.
+func AfterHashHasSuffix(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldHasSuffix(FieldAfterHash, v))
+}
+
+// AfterHashIsNil applies the IsNil predicate on the "after_hash" field.
+func AfterHashIsNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIsNull(FieldAfterHash))
+}
+
+// AfterHashNotNil applies the NotNil predicate on the "after_hash" field.
+func AfterHashNotNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotNull(FieldAfterHash))
+}
+
+// AfterHashEqualFold applies the EqualFold predicate on the "after_hash" field.
+func AfterHashEqualFold(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEqualFold(FieldAfterHash, v))
+}
+
+// AfterHashContainsFold applies the ContainsFold predicate on the "after_hash" field.
+func AfterHashContainsFold(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldContainsFold(FieldAfterHash, v))
+}
+
 // DiffIsNil applies the IsNil predicate on the "diff" field.
 func DiffIsNil() predicate.DiscoveryResult {
 	return predicate.DiscoveryResult(sql.FieldIsNull(FieldDiff))
@@ -458,6 +763,156 @@ func StatusEqualFold(v string) predicate.DiscoveryResult {
 // StatusContainsFold applies the ContainsFold predicate on the "status" field.
 func StatusContainsFold(v string) predicate.DiscoveryResult {
 	return predicate.DiscoveryResult(sql.FieldContainsFold(FieldStatus, v))
+}
+
+// ErrorCodeEQ applies the EQ predicate on the "error_code" field.
+func ErrorCodeEQ(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldErrorCode, v))
+}
+
+// ErrorCodeNEQ applies the NEQ predicate on the "error_code" field.
+func ErrorCodeNEQ(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNEQ(FieldErrorCode, v))
+}
+
+// ErrorCodeIn applies the In predicate on the "error_code" field.
+func ErrorCodeIn(vs ...string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIn(FieldErrorCode, vs...))
+}
+
+// ErrorCodeNotIn applies the NotIn predicate on the "error_code" field.
+func ErrorCodeNotIn(vs ...string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotIn(FieldErrorCode, vs...))
+}
+
+// ErrorCodeGT applies the GT predicate on the "error_code" field.
+func ErrorCodeGT(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGT(FieldErrorCode, v))
+}
+
+// ErrorCodeGTE applies the GTE predicate on the "error_code" field.
+func ErrorCodeGTE(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGTE(FieldErrorCode, v))
+}
+
+// ErrorCodeLT applies the LT predicate on the "error_code" field.
+func ErrorCodeLT(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLT(FieldErrorCode, v))
+}
+
+// ErrorCodeLTE applies the LTE predicate on the "error_code" field.
+func ErrorCodeLTE(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLTE(FieldErrorCode, v))
+}
+
+// ErrorCodeContains applies the Contains predicate on the "error_code" field.
+func ErrorCodeContains(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldContains(FieldErrorCode, v))
+}
+
+// ErrorCodeHasPrefix applies the HasPrefix predicate on the "error_code" field.
+func ErrorCodeHasPrefix(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldHasPrefix(FieldErrorCode, v))
+}
+
+// ErrorCodeHasSuffix applies the HasSuffix predicate on the "error_code" field.
+func ErrorCodeHasSuffix(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldHasSuffix(FieldErrorCode, v))
+}
+
+// ErrorCodeIsNil applies the IsNil predicate on the "error_code" field.
+func ErrorCodeIsNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIsNull(FieldErrorCode))
+}
+
+// ErrorCodeNotNil applies the NotNil predicate on the "error_code" field.
+func ErrorCodeNotNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotNull(FieldErrorCode))
+}
+
+// ErrorCodeEqualFold applies the EqualFold predicate on the "error_code" field.
+func ErrorCodeEqualFold(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEqualFold(FieldErrorCode, v))
+}
+
+// ErrorCodeContainsFold applies the ContainsFold predicate on the "error_code" field.
+func ErrorCodeContainsFold(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldContainsFold(FieldErrorCode, v))
+}
+
+// ErrorMessageEQ applies the EQ predicate on the "error_message" field.
+func ErrorMessageEQ(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEQ(FieldErrorMessage, v))
+}
+
+// ErrorMessageNEQ applies the NEQ predicate on the "error_message" field.
+func ErrorMessageNEQ(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNEQ(FieldErrorMessage, v))
+}
+
+// ErrorMessageIn applies the In predicate on the "error_message" field.
+func ErrorMessageIn(vs ...string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIn(FieldErrorMessage, vs...))
+}
+
+// ErrorMessageNotIn applies the NotIn predicate on the "error_message" field.
+func ErrorMessageNotIn(vs ...string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotIn(FieldErrorMessage, vs...))
+}
+
+// ErrorMessageGT applies the GT predicate on the "error_message" field.
+func ErrorMessageGT(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGT(FieldErrorMessage, v))
+}
+
+// ErrorMessageGTE applies the GTE predicate on the "error_message" field.
+func ErrorMessageGTE(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldGTE(FieldErrorMessage, v))
+}
+
+// ErrorMessageLT applies the LT predicate on the "error_message" field.
+func ErrorMessageLT(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLT(FieldErrorMessage, v))
+}
+
+// ErrorMessageLTE applies the LTE predicate on the "error_message" field.
+func ErrorMessageLTE(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldLTE(FieldErrorMessage, v))
+}
+
+// ErrorMessageContains applies the Contains predicate on the "error_message" field.
+func ErrorMessageContains(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldContains(FieldErrorMessage, v))
+}
+
+// ErrorMessageHasPrefix applies the HasPrefix predicate on the "error_message" field.
+func ErrorMessageHasPrefix(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldHasPrefix(FieldErrorMessage, v))
+}
+
+// ErrorMessageHasSuffix applies the HasSuffix predicate on the "error_message" field.
+func ErrorMessageHasSuffix(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldHasSuffix(FieldErrorMessage, v))
+}
+
+// ErrorMessageIsNil applies the IsNil predicate on the "error_message" field.
+func ErrorMessageIsNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldIsNull(FieldErrorMessage))
+}
+
+// ErrorMessageNotNil applies the NotNil predicate on the "error_message" field.
+func ErrorMessageNotNil() predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldNotNull(FieldErrorMessage))
+}
+
+// ErrorMessageEqualFold applies the EqualFold predicate on the "error_message" field.
+func ErrorMessageEqualFold(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldEqualFold(FieldErrorMessage, v))
+}
+
+// ErrorMessageContainsFold applies the ContainsFold predicate on the "error_message" field.
+func ErrorMessageContainsFold(v string) predicate.DiscoveryResult {
+	return predicate.DiscoveryResult(sql.FieldContainsFold(FieldErrorMessage, v))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.

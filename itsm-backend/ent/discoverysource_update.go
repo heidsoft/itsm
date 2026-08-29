@@ -13,6 +13,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -74,6 +75,144 @@ func (_u *DiscoverySourceUpdate) SetNillableProvider(v *string) *DiscoverySource
 // ClearProvider clears the value of the "provider" field.
 func (_u *DiscoverySourceUpdate) ClearProvider() *DiscoverySourceUpdate {
 	_u.mutation.ClearProvider()
+	return _u
+}
+
+// SetCloudAccountID sets the "cloud_account_id" field.
+func (_u *DiscoverySourceUpdate) SetCloudAccountID(v int) *DiscoverySourceUpdate {
+	_u.mutation.ResetCloudAccountID()
+	_u.mutation.SetCloudAccountID(v)
+	return _u
+}
+
+// SetNillableCloudAccountID sets the "cloud_account_id" field if the given value is not nil.
+func (_u *DiscoverySourceUpdate) SetNillableCloudAccountID(v *int) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetCloudAccountID(*v)
+	}
+	return _u
+}
+
+// AddCloudAccountID adds value to the "cloud_account_id" field.
+func (_u *DiscoverySourceUpdate) AddCloudAccountID(v int) *DiscoverySourceUpdate {
+	_u.mutation.AddCloudAccountID(v)
+	return _u
+}
+
+// ClearCloudAccountID clears the value of the "cloud_account_id" field.
+func (_u *DiscoverySourceUpdate) ClearCloudAccountID() *DiscoverySourceUpdate {
+	_u.mutation.ClearCloudAccountID()
+	return _u
+}
+
+// SetServiceCodes sets the "service_codes" field.
+func (_u *DiscoverySourceUpdate) SetServiceCodes(v []string) *DiscoverySourceUpdate {
+	_u.mutation.SetServiceCodes(v)
+	return _u
+}
+
+// AppendServiceCodes appends value to the "service_codes" field.
+func (_u *DiscoverySourceUpdate) AppendServiceCodes(v []string) *DiscoverySourceUpdate {
+	_u.mutation.AppendServiceCodes(v)
+	return _u
+}
+
+// ClearServiceCodes clears the value of the "service_codes" field.
+func (_u *DiscoverySourceUpdate) ClearServiceCodes() *DiscoverySourceUpdate {
+	_u.mutation.ClearServiceCodes()
+	return _u
+}
+
+// SetRegions sets the "regions" field.
+func (_u *DiscoverySourceUpdate) SetRegions(v []string) *DiscoverySourceUpdate {
+	_u.mutation.SetRegions(v)
+	return _u
+}
+
+// AppendRegions appends value to the "regions" field.
+func (_u *DiscoverySourceUpdate) AppendRegions(v []string) *DiscoverySourceUpdate {
+	_u.mutation.AppendRegions(v)
+	return _u
+}
+
+// ClearRegions clears the value of the "regions" field.
+func (_u *DiscoverySourceUpdate) ClearRegions() *DiscoverySourceUpdate {
+	_u.mutation.ClearRegions()
+	return _u
+}
+
+// SetSchedule sets the "schedule" field.
+func (_u *DiscoverySourceUpdate) SetSchedule(v string) *DiscoverySourceUpdate {
+	_u.mutation.SetSchedule(v)
+	return _u
+}
+
+// SetNillableSchedule sets the "schedule" field if the given value is not nil.
+func (_u *DiscoverySourceUpdate) SetNillableSchedule(v *string) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetSchedule(*v)
+	}
+	return _u
+}
+
+// ClearSchedule clears the value of the "schedule" field.
+func (_u *DiscoverySourceUpdate) ClearSchedule() *DiscoverySourceUpdate {
+	_u.mutation.ClearSchedule()
+	return _u
+}
+
+// SetReconcilePolicy sets the "reconcile_policy" field.
+func (_u *DiscoverySourceUpdate) SetReconcilePolicy(v string) *DiscoverySourceUpdate {
+	_u.mutation.SetReconcilePolicy(v)
+	return _u
+}
+
+// SetNillableReconcilePolicy sets the "reconcile_policy" field if the given value is not nil.
+func (_u *DiscoverySourceUpdate) SetNillableReconcilePolicy(v *string) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetReconcilePolicy(*v)
+	}
+	return _u
+}
+
+// SetStaleThreshold sets the "stale_threshold" field.
+func (_u *DiscoverySourceUpdate) SetStaleThreshold(v int) *DiscoverySourceUpdate {
+	_u.mutation.ResetStaleThreshold()
+	_u.mutation.SetStaleThreshold(v)
+	return _u
+}
+
+// SetNillableStaleThreshold sets the "stale_threshold" field if the given value is not nil.
+func (_u *DiscoverySourceUpdate) SetNillableStaleThreshold(v *int) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetStaleThreshold(*v)
+	}
+	return _u
+}
+
+// AddStaleThreshold adds value to the "stale_threshold" field.
+func (_u *DiscoverySourceUpdate) AddStaleThreshold(v int) *DiscoverySourceUpdate {
+	_u.mutation.AddStaleThreshold(v)
+	return _u
+}
+
+// SetLastSuccessAt sets the "last_success_at" field.
+func (_u *DiscoverySourceUpdate) SetLastSuccessAt(v time.Time) *DiscoverySourceUpdate {
+	_u.mutation.SetLastSuccessAt(v)
+	return _u
+}
+
+// SetNillableLastSuccessAt sets the "last_success_at" field if the given value is not nil.
+func (_u *DiscoverySourceUpdate) SetNillableLastSuccessAt(v *time.Time) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetLastSuccessAt(*v)
+	}
+	return _u
+}
+
+// ClearLastSuccessAt clears the value of the "last_success_at" field.
+func (_u *DiscoverySourceUpdate) ClearLastSuccessAt() *DiscoverySourceUpdate {
+	_u.mutation.ClearLastSuccessAt()
 	return _u
 }
 
@@ -241,6 +380,11 @@ func (_u *DiscoverySourceUpdate) check() error {
 			return &ValidationError{Name: "source_type", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.source_type": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.StaleThreshold(); ok {
+		if err := discoverysource.StaleThresholdValidator(v); err != nil {
+			return &ValidationError{Name: "stale_threshold", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.stale_threshold": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.TenantID(); ok {
 		if err := discoverysource.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.tenant_id": %w`, err)}
@@ -272,6 +416,58 @@ func (_u *DiscoverySourceUpdate) sqlSave(ctx context.Context) (_node int, err er
 	}
 	if _u.mutation.ProviderCleared() {
 		_spec.ClearField(discoverysource.FieldProvider, field.TypeString)
+	}
+	if value, ok := _u.mutation.CloudAccountID(); ok {
+		_spec.SetField(discoverysource.FieldCloudAccountID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCloudAccountID(); ok {
+		_spec.AddField(discoverysource.FieldCloudAccountID, field.TypeInt, value)
+	}
+	if _u.mutation.CloudAccountIDCleared() {
+		_spec.ClearField(discoverysource.FieldCloudAccountID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.ServiceCodes(); ok {
+		_spec.SetField(discoverysource.FieldServiceCodes, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedServiceCodes(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, discoverysource.FieldServiceCodes, value)
+		})
+	}
+	if _u.mutation.ServiceCodesCleared() {
+		_spec.ClearField(discoverysource.FieldServiceCodes, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.Regions(); ok {
+		_spec.SetField(discoverysource.FieldRegions, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedRegions(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, discoverysource.FieldRegions, value)
+		})
+	}
+	if _u.mutation.RegionsCleared() {
+		_spec.ClearField(discoverysource.FieldRegions, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.Schedule(); ok {
+		_spec.SetField(discoverysource.FieldSchedule, field.TypeString, value)
+	}
+	if _u.mutation.ScheduleCleared() {
+		_spec.ClearField(discoverysource.FieldSchedule, field.TypeString)
+	}
+	if value, ok := _u.mutation.ReconcilePolicy(); ok {
+		_spec.SetField(discoverysource.FieldReconcilePolicy, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.StaleThreshold(); ok {
+		_spec.SetField(discoverysource.FieldStaleThreshold, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedStaleThreshold(); ok {
+		_spec.AddField(discoverysource.FieldStaleThreshold, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.LastSuccessAt(); ok {
+		_spec.SetField(discoverysource.FieldLastSuccessAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastSuccessAtCleared() {
+		_spec.ClearField(discoverysource.FieldLastSuccessAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Enabled(); ok {
 		_spec.SetField(discoverysource.FieldEnabled, field.TypeBool, value)
@@ -404,6 +600,144 @@ func (_u *DiscoverySourceUpdateOne) SetNillableProvider(v *string) *DiscoverySou
 // ClearProvider clears the value of the "provider" field.
 func (_u *DiscoverySourceUpdateOne) ClearProvider() *DiscoverySourceUpdateOne {
 	_u.mutation.ClearProvider()
+	return _u
+}
+
+// SetCloudAccountID sets the "cloud_account_id" field.
+func (_u *DiscoverySourceUpdateOne) SetCloudAccountID(v int) *DiscoverySourceUpdateOne {
+	_u.mutation.ResetCloudAccountID()
+	_u.mutation.SetCloudAccountID(v)
+	return _u
+}
+
+// SetNillableCloudAccountID sets the "cloud_account_id" field if the given value is not nil.
+func (_u *DiscoverySourceUpdateOne) SetNillableCloudAccountID(v *int) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetCloudAccountID(*v)
+	}
+	return _u
+}
+
+// AddCloudAccountID adds value to the "cloud_account_id" field.
+func (_u *DiscoverySourceUpdateOne) AddCloudAccountID(v int) *DiscoverySourceUpdateOne {
+	_u.mutation.AddCloudAccountID(v)
+	return _u
+}
+
+// ClearCloudAccountID clears the value of the "cloud_account_id" field.
+func (_u *DiscoverySourceUpdateOne) ClearCloudAccountID() *DiscoverySourceUpdateOne {
+	_u.mutation.ClearCloudAccountID()
+	return _u
+}
+
+// SetServiceCodes sets the "service_codes" field.
+func (_u *DiscoverySourceUpdateOne) SetServiceCodes(v []string) *DiscoverySourceUpdateOne {
+	_u.mutation.SetServiceCodes(v)
+	return _u
+}
+
+// AppendServiceCodes appends value to the "service_codes" field.
+func (_u *DiscoverySourceUpdateOne) AppendServiceCodes(v []string) *DiscoverySourceUpdateOne {
+	_u.mutation.AppendServiceCodes(v)
+	return _u
+}
+
+// ClearServiceCodes clears the value of the "service_codes" field.
+func (_u *DiscoverySourceUpdateOne) ClearServiceCodes() *DiscoverySourceUpdateOne {
+	_u.mutation.ClearServiceCodes()
+	return _u
+}
+
+// SetRegions sets the "regions" field.
+func (_u *DiscoverySourceUpdateOne) SetRegions(v []string) *DiscoverySourceUpdateOne {
+	_u.mutation.SetRegions(v)
+	return _u
+}
+
+// AppendRegions appends value to the "regions" field.
+func (_u *DiscoverySourceUpdateOne) AppendRegions(v []string) *DiscoverySourceUpdateOne {
+	_u.mutation.AppendRegions(v)
+	return _u
+}
+
+// ClearRegions clears the value of the "regions" field.
+func (_u *DiscoverySourceUpdateOne) ClearRegions() *DiscoverySourceUpdateOne {
+	_u.mutation.ClearRegions()
+	return _u
+}
+
+// SetSchedule sets the "schedule" field.
+func (_u *DiscoverySourceUpdateOne) SetSchedule(v string) *DiscoverySourceUpdateOne {
+	_u.mutation.SetSchedule(v)
+	return _u
+}
+
+// SetNillableSchedule sets the "schedule" field if the given value is not nil.
+func (_u *DiscoverySourceUpdateOne) SetNillableSchedule(v *string) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetSchedule(*v)
+	}
+	return _u
+}
+
+// ClearSchedule clears the value of the "schedule" field.
+func (_u *DiscoverySourceUpdateOne) ClearSchedule() *DiscoverySourceUpdateOne {
+	_u.mutation.ClearSchedule()
+	return _u
+}
+
+// SetReconcilePolicy sets the "reconcile_policy" field.
+func (_u *DiscoverySourceUpdateOne) SetReconcilePolicy(v string) *DiscoverySourceUpdateOne {
+	_u.mutation.SetReconcilePolicy(v)
+	return _u
+}
+
+// SetNillableReconcilePolicy sets the "reconcile_policy" field if the given value is not nil.
+func (_u *DiscoverySourceUpdateOne) SetNillableReconcilePolicy(v *string) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetReconcilePolicy(*v)
+	}
+	return _u
+}
+
+// SetStaleThreshold sets the "stale_threshold" field.
+func (_u *DiscoverySourceUpdateOne) SetStaleThreshold(v int) *DiscoverySourceUpdateOne {
+	_u.mutation.ResetStaleThreshold()
+	_u.mutation.SetStaleThreshold(v)
+	return _u
+}
+
+// SetNillableStaleThreshold sets the "stale_threshold" field if the given value is not nil.
+func (_u *DiscoverySourceUpdateOne) SetNillableStaleThreshold(v *int) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetStaleThreshold(*v)
+	}
+	return _u
+}
+
+// AddStaleThreshold adds value to the "stale_threshold" field.
+func (_u *DiscoverySourceUpdateOne) AddStaleThreshold(v int) *DiscoverySourceUpdateOne {
+	_u.mutation.AddStaleThreshold(v)
+	return _u
+}
+
+// SetLastSuccessAt sets the "last_success_at" field.
+func (_u *DiscoverySourceUpdateOne) SetLastSuccessAt(v time.Time) *DiscoverySourceUpdateOne {
+	_u.mutation.SetLastSuccessAt(v)
+	return _u
+}
+
+// SetNillableLastSuccessAt sets the "last_success_at" field if the given value is not nil.
+func (_u *DiscoverySourceUpdateOne) SetNillableLastSuccessAt(v *time.Time) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetLastSuccessAt(*v)
+	}
+	return _u
+}
+
+// ClearLastSuccessAt clears the value of the "last_success_at" field.
+func (_u *DiscoverySourceUpdateOne) ClearLastSuccessAt() *DiscoverySourceUpdateOne {
+	_u.mutation.ClearLastSuccessAt()
 	return _u
 }
 
@@ -584,6 +918,11 @@ func (_u *DiscoverySourceUpdateOne) check() error {
 			return &ValidationError{Name: "source_type", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.source_type": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.StaleThreshold(); ok {
+		if err := discoverysource.StaleThresholdValidator(v); err != nil {
+			return &ValidationError{Name: "stale_threshold", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.stale_threshold": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.TenantID(); ok {
 		if err := discoverysource.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.tenant_id": %w`, err)}
@@ -632,6 +971,58 @@ func (_u *DiscoverySourceUpdateOne) sqlSave(ctx context.Context) (_node *Discove
 	}
 	if _u.mutation.ProviderCleared() {
 		_spec.ClearField(discoverysource.FieldProvider, field.TypeString)
+	}
+	if value, ok := _u.mutation.CloudAccountID(); ok {
+		_spec.SetField(discoverysource.FieldCloudAccountID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCloudAccountID(); ok {
+		_spec.AddField(discoverysource.FieldCloudAccountID, field.TypeInt, value)
+	}
+	if _u.mutation.CloudAccountIDCleared() {
+		_spec.ClearField(discoverysource.FieldCloudAccountID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.ServiceCodes(); ok {
+		_spec.SetField(discoverysource.FieldServiceCodes, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedServiceCodes(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, discoverysource.FieldServiceCodes, value)
+		})
+	}
+	if _u.mutation.ServiceCodesCleared() {
+		_spec.ClearField(discoverysource.FieldServiceCodes, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.Regions(); ok {
+		_spec.SetField(discoverysource.FieldRegions, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedRegions(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, discoverysource.FieldRegions, value)
+		})
+	}
+	if _u.mutation.RegionsCleared() {
+		_spec.ClearField(discoverysource.FieldRegions, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.Schedule(); ok {
+		_spec.SetField(discoverysource.FieldSchedule, field.TypeString, value)
+	}
+	if _u.mutation.ScheduleCleared() {
+		_spec.ClearField(discoverysource.FieldSchedule, field.TypeString)
+	}
+	if value, ok := _u.mutation.ReconcilePolicy(); ok {
+		_spec.SetField(discoverysource.FieldReconcilePolicy, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.StaleThreshold(); ok {
+		_spec.SetField(discoverysource.FieldStaleThreshold, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedStaleThreshold(); ok {
+		_spec.AddField(discoverysource.FieldStaleThreshold, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.LastSuccessAt(); ok {
+		_spec.SetField(discoverysource.FieldLastSuccessAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastSuccessAtCleared() {
+		_spec.ClearField(discoverysource.FieldLastSuccessAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Enabled(); ok {
 		_spec.SetField(discoverysource.FieldEnabled, field.TypeBool, value)
