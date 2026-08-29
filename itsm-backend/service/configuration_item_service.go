@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/cirelationship"
@@ -12,6 +14,7 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/configurationitemhistory"
+	entticket "itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
 )
@@ -163,13 +166,13 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 // GetCIByID 根据ID获取配置项
 func (s *ConfigurationItemService) GetCIByID(ctx context.Context, id, tenantID int, withRelations bool) (*dto.CIResponse, error) {
 	query := s.client.ConfigurationItem.Query().
-		Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID))
+		Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 
 	if withRelations {
 		query = query.WithOutgoingRelations(func(q *ent.CIRelationshipQuery) {
-			q.WithTargetCi()
+			q.Where(cirelationship.IsActiveEQ(true)).WithTargetCi()
 		}).WithIncomingRelations(func(q *ent.CIRelationshipQuery) {
-			q.WithSourceCi()
+			q.Where(cirelationship.IsActiveEQ(true)).WithSourceCi()
 		})
 	}
 
@@ -188,7 +191,7 @@ func (s *ConfigurationItemService) GetCIByID(ctx context.Context, id, tenantID i
 // ListCIs 获取配置项列表
 func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, req *dto.ListCIRequest) (*dto.CIListResponse, error) {
 	query := s.client.ConfigurationItem.Query().
-		Where(configurationitem.TenantIDEQ(tenantID))
+		Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 
 	// 筛选条件
 	if req.CITypeID != 0 {
@@ -217,6 +220,9 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 	}
 	if req.OwnedBy != "" {
 		query = query.Where(configurationitem.OwnedByEQ(req.OwnedBy))
+	}
+	if req.CIType != "" {
+		query = query.Where(configurationitem.CiTypeEQ(req.CIType))
 	}
 
 	// 搜索
@@ -264,7 +270,7 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID int, req *dto.UpdateCIRequest) (*dto.CIResponse, error) {
 	// 查询更新前的CI数据
 	oldCI, err := s.client.ConfigurationItem.Query().
-		Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID)).
+		Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped)).
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -282,6 +288,7 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	update := s.client.ConfigurationItem.UpdateOneID(id).
 		Where(
 			configurationitem.TenantIDEQ(tenantID),
+			configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
 			configurationitem.VersionEQ(oldCI.Version),
 		).
 		SetVersion(oldCI.Version + 1)
@@ -410,11 +417,15 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 
 // DeleteCI 删除配置项
 func (s *ConfigurationItemService) DeleteCI(ctx context.Context, id, tenantID int) error {
-	// 检查是否有关联的关系
-	// 查询要删除的CI数据
-	ci, err := s.client.ConfigurationItem.Query().
-		Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID)).
-		First(ctx)
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin CI retirement transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	ci, err := tx.ConfigurationItem.Query().Where(
+		configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID),
+		configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
+	).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return fmt.Errorf("CI not found")
@@ -423,58 +434,50 @@ func (s *ConfigurationItemService) DeleteCI(ctx context.Context, id, tenantID in
 		return fmt.Errorf("failed to get CI: %w", err)
 	}
 
-	outgoingCount, err := s.client.CIRelationship.Query().
-		Where(cirelationship.SourceCiIDEQ(id), cirelationship.TenantIDEQ(tenantID)).
-		Count(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to check outgoing relations", "error", err, "ci_id", id)
-		return fmt.Errorf("failed to check outgoing relations: %w", err)
+	if err := s.retireCIInTx(ctx, tx, ci, tenantID, "Deleted through CMDB API"); err != nil {
+		return err
 	}
-
-	incomingCount, err := s.client.CIRelationship.Query().
-		Where(cirelationship.TargetCiIDEQ(id), cirelationship.TenantIDEQ(tenantID)).
-		Count(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to check incoming relations", "error", err, "ci_id", id)
-		return fmt.Errorf("failed to check incoming relations: %w", err)
-	}
-
-	if outgoingCount+incomingCount > 0 {
-		// 删除所有关联的关系
-		_, err := s.client.CIRelationship.Delete().
-			Where(
-				cirelationship.Or(
-					cirelationship.SourceCiIDEQ(id),
-					cirelationship.TargetCiIDEQ(id),
-				),
-				cirelationship.TenantIDEQ(tenantID),
-			).
-			Exec(ctx)
-		if err != nil {
-			s.logger.Errorw("Failed to delete related relations", "error", err, "ci_id", id)
-			return fmt.Errorf("failed to delete related relations: %w", err)
-		}
-		s.logger.Infow("Deleted related relations for CI", "ci_id", id, "count", outgoingCount+incomingCount)
-	}
-
-	// 删除配置项
-	err = s.client.ConfigurationItem.DeleteOneID(id).
-		Where(configurationitem.TenantIDEQ(tenantID)).
-		Exec(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to delete configuration item", "error", err, "ci_id", id)
-		return fmt.Errorf("failed to delete configuration item: %w", err)
-	}
-
-	if err == nil {
-		// 记录删除历史
-		operatorID, operatorName := OperatorFromContext(ctx)
-		if historyErr := s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "delete", "", ci, nil); historyErr != nil {
-			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", id, "operation", "delete")
-		}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit CI retirement: %w", err)
 	}
 
 	s.logger.Infow("Configuration item deleted successfully", "ci_id", id, "tenant_id", tenantID)
+	return nil
+}
+
+func (s *ConfigurationItemService) retireCIInTx(ctx context.Context, tx *ent.Tx, ci *ent.ConfigurationItem, tenantID int, remark string) error {
+	now := time.Now()
+	if _, err := tx.CIRelationship.Update().Where(
+		cirelationship.TenantIDEQ(tenantID), cirelationship.IsActiveEQ(true),
+		cirelationship.Or(cirelationship.SourceCiIDEQ(ci.ID), cirelationship.TargetCiIDEQ(ci.ID)),
+	).SetIsActive(false).SetUpdatedAt(now).Save(ctx); err != nil {
+		return fmt.Errorf("deactivate CI relationships: %w", err)
+	}
+
+	after := *ci
+	after.Status = common.CIStatusRetired
+	after.LifecycleStatus = common.CILifecycleStatusScrapped
+	after.ExpireAt = now
+	after.UpdatedAt = now
+	after.Version = ci.Version + 1
+	operatorID, operatorName := OperatorFromContext(ctx)
+	if err := NewCIHistoryService(tx.Client(), s.logger).RecordCIHistory(
+		ctx, ci.ID, tenantID, operatorID, operatorName, "delete", remark, ci, &after,
+	); err != nil {
+		return fmt.Errorf("record CI retirement history: %w", err)
+	}
+	if _, err := tx.ConfigurationItem.UpdateOneID(ci.ID).Where(
+		configurationitem.TenantIDEQ(tenantID),
+		configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
+		configurationitem.VersionEQ(ci.Version),
+	).SetStatus(common.CIStatusRetired).
+		SetLifecycleStatus(common.CILifecycleStatusScrapped).
+		SetExpireAt(now).SetUpdatedAt(now).AddVersion(1).Save(ctx); err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("CI retirement conflict")
+		}
+		return fmt.Errorf("retire CI: %w", err)
+	}
 	return nil
 }
 
@@ -482,7 +485,7 @@ func (s *ConfigurationItemService) DeleteCI(ctx context.Context, id, tenantID in
 func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int) (*dto.CIStatsResponse, error) {
 	// 总数量
 	total, err := s.client.ConfigurationItem.Query().
-		Where(configurationitem.TenantIDEQ(tenantID)).
+		Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped)).
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to count total CIs", "error", err)
@@ -883,6 +886,7 @@ func (s *ConfigurationItemService) BatchUpdateCI(ctx context.Context, req *dto.B
 		Where(
 			configurationitem.IDIn(req.IDs...),
 			configurationitem.TenantIDEQ(tenantID),
+			configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
 		).
 		All(ctx)
 	if err != nil {
@@ -944,7 +948,7 @@ func (s *ConfigurationItemService) BatchUpdateCI(ctx context.Context, req *dto.B
 			continue
 		}
 
-		update := tx.ConfigurationItem.UpdateOneID(id)
+		update := tx.ConfigurationItem.UpdateOneID(id).Where(configurationitem.TenantIDEQ(tenantID))
 
 		if req.Updates.Name != "" {
 			update.SetName(req.Updates.Name)
@@ -1132,36 +1136,10 @@ func (s *ConfigurationItemService) BatchDeleteCI(ctx context.Context, req *dto.B
 	for _, id := range req.IDs {
 		ci := ciMap[id]
 
-		// 删除关联的关系
-		_, err := tx.CIRelationship.Delete().
-			Where(
-				cirelationship.Or(
-					cirelationship.SourceCiIDEQ(id),
-					cirelationship.TargetCiIDEQ(id),
-				),
-				cirelationship.TenantIDEQ(tenantID),
-			).
-			Exec(ctx)
-		if err != nil {
+		if err := s.retireCIInTx(ctx, tx, ci, tenantID, "Batch deleted"); err != nil {
 			failedIDs = append(failedIDs, id)
-			errors = append(errors, fmt.Sprintf("CI %d: failed to delete relations: %v", id, err))
+			errors = append(errors, fmt.Sprintf("CI %d: failed to retire: %v", id, err))
 			continue
-		}
-
-		// 删除CI
-		err = tx.ConfigurationItem.DeleteOneID(id).
-			Where(configurationitem.TenantIDEQ(tenantID)).
-			Exec(ctx)
-		if err != nil {
-			failedIDs = append(failedIDs, id)
-			errors = append(errors, fmt.Sprintf("CI %d: failed to delete: %v", id, err))
-			continue
-		}
-
-		// 记录历史
-		operatorID, operatorName := OperatorFromContext(ctx)
-		if historyErr := s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "delete", "Batch deleted", ci, nil); historyErr != nil {
-			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", id, "operation", "delete")
 		}
 
 		successCount++
@@ -1193,7 +1171,7 @@ func (s *ConfigurationItemService) BatchDeleteCI(ctx context.Context, req *dto.B
 // SearchCI 高级搜索CI
 func (s *ConfigurationItemService) SearchCI(ctx context.Context, tenantID int, req *dto.CISearchRequest) (*dto.ListResponse[dto.CIResponse], error) {
 	query := s.client.ConfigurationItem.Query().
-		Where(configurationitem.TenantID(tenantID))
+		Where(configurationitem.TenantID(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 
 	// 应用过滤条件
 	query = s.applySearchFilters(query, &req.Filters)
@@ -1525,6 +1503,143 @@ func (s *ConfigurationItemService) GetLifecycleHistory(ctx context.Context, id i
 			"operatorName": history.OperatorName,
 			"remark":       history.Remark,
 			"createdAt":    history.CreatedAt,
+		})
+	}
+	return result, nil
+}
+
+// ===== ITSM ↔ CMDB 本体链路：工单 ↔ 配置项绑定 =====
+//
+// 复用 ent 已生成的 ConfigurationItem.tickets 边（tickets 表上的
+// configuration_item_tickets 外键列），因此无需任何 schema 变更/代码生成。
+// 该边是真实外键，具备引用完整性；相较把 ci_id 塞进 form_fields JSON 更可靠
+// （form_fields 会被 validateConfiguredTicketType 的「未定义字段」校验拒绝）。
+
+// LinkTicketToCI 将工单绑定到配置项，形成「故障 → 配置项 → 工单」本体闭环。
+// 双向租户校验：CI 与工单都必须属于同一租户且未被软删除，防止跨租户注入。
+func (s *ConfigurationItemService) LinkTicketToCI(ctx context.Context, tenantID, ciID, ticketID int) error {
+	if s.client == nil {
+		return fmt.Errorf("configuration item service not initialized")
+	}
+	if ciID <= 0 || ticketID <= 0 {
+		return common.NewBusinessError(common.ParamErrorCode, "ci_id 与 ticket_id 必须为正整数", "")
+	}
+
+	// 1) 校验 CI 归属当前租户且未软删除
+	ciExists, err := s.client.ConfigurationItem.Query().
+		Where(
+			configurationitem.IDEQ(ciID),
+			configurationitem.TenantIDEQ(tenantID),
+			configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
+		).Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("校验配置项失败: %w", err)
+	}
+	if !ciExists {
+		return common.NewBusinessError(common.NotFoundCode, "配置项不存在或无权访问", "")
+	}
+
+	// 2) 校验工单归属当前租户且未软删除
+	ticketExists, err := s.client.Ticket.Query().
+		Where(
+			entticket.IDEQ(ticketID),
+			entticket.TenantIDEQ(tenantID),
+			entticket.DeletedAtIsNil(),
+		).Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("校验工单失败: %w", err)
+	}
+	if !ticketExists {
+		return common.NewBusinessError(common.NotFoundCode, "工单不存在或无权访问", "")
+	}
+
+	// 3) 写入外键关联
+	if err := s.client.ConfigurationItem.UpdateOneID(ciID).
+		AddTicketIDs(ticketID).
+		Exec(ctx); err != nil {
+		return fmt.Errorf("关联工单到配置项失败: %w", err)
+	}
+
+	s.logger.Infow("Ticket linked to CI (ontology)", "tenant_id", tenantID, "ci_id", ciID, "ticket_id", ticketID)
+	return nil
+}
+
+// UnlinkTicketFromCI 解除工单与配置项的关联。
+func (s *ConfigurationItemService) UnlinkTicketFromCI(ctx context.Context, tenantID, ciID, ticketID int) error {
+	if s.client == nil {
+		return fmt.Errorf("configuration item service not initialized")
+	}
+	if ciID <= 0 || ticketID <= 0 {
+		return common.NewBusinessError(common.ParamErrorCode, "ci_id 与 ticket_id 必须为正整数", "")
+	}
+	ciExists, err := s.client.ConfigurationItem.Query().
+		Where(
+			configurationitem.IDEQ(ciID),
+			configurationitem.TenantIDEQ(tenantID),
+			configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
+		).Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("校验配置项失败: %w", err)
+	}
+	if !ciExists {
+		return common.NewBusinessError(common.NotFoundCode, "配置项不存在或无权访问", "")
+	}
+	if err := s.client.ConfigurationItem.UpdateOneID(ciID).
+		RemoveTicketIDs(ticketID).
+		Exec(ctx); err != nil {
+		return fmt.Errorf("解除工单关联失败: %w", err)
+	}
+	return nil
+}
+
+// ListCITickets 反查某配置项上关联的工单，用于 AI 影响面分析
+// （「这台服务器上还有哪些未关闭的工单」/「历史故障」）。
+func (s *ConfigurationItemService) ListCITickets(ctx context.Context, tenantID, ciID, limit int) ([]map[string]interface{}, error) {
+	if s.client == nil {
+		return nil, fmt.Errorf("configuration item service not initialized")
+	}
+	if ciID <= 0 {
+		return nil, common.NewBusinessError(common.ParamErrorCode, "ci_id 必须为正整数", "")
+	}
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+
+	ci, err := s.client.ConfigurationItem.Query().
+		Where(
+			configurationitem.IDEQ(ciID),
+			configurationitem.TenantIDEQ(tenantID),
+			configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
+		).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewBusinessError(common.NotFoundCode, "配置项不存在或无权访问", "")
+		}
+		return nil, fmt.Errorf("查询配置项失败: %w", err)
+	}
+
+	// 关联工单同样按租户 + 软删除过滤，避免越权读取
+	tickets, err := ci.QueryTickets().
+		Where(
+			entticket.TenantIDEQ(tenantID),
+			entticket.DeletedAtIsNil(),
+		).
+		Order(ent.Desc(entticket.FieldCreatedAt)).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("查询配置项关联工单失败: %w", err)
+	}
+
+	result := make([]map[string]interface{}, 0, len(tickets))
+	for _, t := range tickets {
+		result = append(result, map[string]interface{}{
+			"id":           t.ID,
+			"ticketNumber": t.TicketNumber,
+			"title":        t.Title,
+			"status":       t.Status,
+			"priority":     t.Priority,
+			"createdAt":    t.CreatedAt,
 		})
 	}
 	return result, nil

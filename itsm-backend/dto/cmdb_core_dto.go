@@ -63,6 +63,7 @@ type ListCIRequest struct {
 	AssignedTo     string `form:"assignedTo"`
 	OwnedBy        string `form:"ownedBy"`
 	Search         string `form:"search"`
+	CIType         string `form:"ciType"`
 }
 
 // CIListResponse 配置项列表响应。
