@@ -22,6 +22,20 @@ type ChangeCreate struct {
 	hooks    []Hook
 }
 
+// SetChangeNumber sets the "change_number" field.
+func (_c *ChangeCreate) SetChangeNumber(v string) *ChangeCreate {
+	_c.mutation.SetChangeNumber(v)
+	return _c
+}
+
+// SetNillableChangeNumber sets the "change_number" field if the given value is not nil.
+func (_c *ChangeCreate) SetNillableChangeNumber(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetChangeNumber(*v)
+	}
+	return _c
+}
+
 // SetTitle sets the "title" field.
 func (_c *ChangeCreate) SetTitle(v string) *ChangeCreate {
 	_c.mutation.SetTitle(v)
@@ -373,6 +387,11 @@ func (_c *ChangeCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *ChangeCreate) check() error {
+	if v, ok := _c.mutation.ChangeNumber(); ok {
+		if err := change.ChangeNumberValidator(v); err != nil {
+			return &ValidationError{Name: "change_number", err: fmt.Errorf(`ent: validator failed for field "Change.change_number": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Change.title"`)}
 	}
@@ -444,6 +463,10 @@ func (_c *ChangeCreate) createSpec() (*Change, *sqlgraph.CreateSpec) {
 		_node = &Change{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(change.Table, sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt))
 	)
+	if value, ok := _c.mutation.ChangeNumber(); ok {
+		_spec.SetField(change.FieldChangeNumber, field.TypeString, value)
+		_node.ChangeNumber = value
+	}
 	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(change.FieldTitle, field.TypeString, value)
 		_node.Title = value

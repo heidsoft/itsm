@@ -17,6 +17,8 @@ type Problem struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// 问题编号 PRB-YYYYMMDD-XXXX
+	ProblemNumber string `json:"problem_number,omitempty"`
 	// 问题标题
 	Title string `json:"title,omitempty"`
 	// 问题描述
@@ -105,7 +107,7 @@ func (*Problem) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case problem.FieldID, problem.FieldAssigneeID, problem.FieldCreatedBy, problem.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case problem.FieldTitle, problem.FieldDescription, problem.FieldStatus, problem.FieldPriority, problem.FieldCategory, problem.FieldRootCause, problem.FieldWorkaround, problem.FieldResolution, problem.FieldImpact:
+		case problem.FieldProblemNumber, problem.FieldTitle, problem.FieldDescription, problem.FieldStatus, problem.FieldPriority, problem.FieldCategory, problem.FieldRootCause, problem.FieldWorkaround, problem.FieldResolution, problem.FieldImpact:
 			values[i] = new(sql.NullString)
 		case problem.FieldCreatedAt, problem.FieldUpdatedAt, problem.FieldResolvedAt, problem.FieldClosedAt, problem.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -132,6 +134,12 @@ func (_m *Problem) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
+		case problem.FieldProblemNumber:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field problem_number", values[i])
+			} else if value.Valid {
+				_m.ProblemNumber = value.String
+			}
 		case problem.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
@@ -295,6 +303,9 @@ func (_m *Problem) String() string {
 	var builder strings.Builder
 	builder.WriteString("Problem(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
+	builder.WriteString("problem_number=")
+	builder.WriteString(_m.ProblemNumber)
+	builder.WriteString(", ")
 	builder.WriteString("title=")
 	builder.WriteString(_m.Title)
 	builder.WriteString(", ")

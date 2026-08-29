@@ -164,10 +164,16 @@ func (s *Service) GetCalendarView(ctx context.Context, tenantID int, startDate, 
 			plannedEnd = *c.PlannedEndDate
 		}
 
+		changeNumber := c.ChangeNumber
+		if changeNumber == "" {
+			// 存量数据无编号时回退展示 ID
+			changeNumber = fmt.Sprintf("C-%d", c.ID)
+		}
+
 		items = append(items, dto.ChangeCalendarItem{
 			ID:           c.ID,
 			Title:        c.Title,
-			ChangeNumber: fmt.Sprintf("C-%d", c.ID),
+			ChangeNumber: changeNumber,
 			Status:       c.Status,
 			RiskLevel:    c.RiskLevel,
 			Category:     c.Type,

@@ -6,23 +6,24 @@ import (
 
 // Problem domain entity
 type Problem struct {
-	ID          int
-	Title       string
-	Description string
-	Status      string
-	Priority    string
-	Category    string
-	RootCause   string
-	Workaround  string
-	Resolution  string
-	Impact      string
-	AssigneeID  *int
-	CreatedBy   int
-	TenantID    int
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	ResolvedAt  *time.Time
-	ClosedAt    *time.Time
+	ID            int
+	ProblemNumber string
+	Title         string
+	Description   string
+	Status        string
+	Priority      string
+	Category      string
+	RootCause     string
+	Workaround    string
+	Resolution    string
+	Impact        string
+	AssigneeID    *int
+	CreatedBy     int
+	TenantID      int
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	ResolvedAt    *time.Time
+	ClosedAt      *time.Time
 	// 关联数据 (eager-loaded)
 	Tickets   []*AssociatedItem
 	Incidents []*AssociatedItem
@@ -64,25 +65,25 @@ type MonthlyCount struct {
 
 // ProblemTrendData holds trend analytics data.
 type ProblemTrendData struct {
-	Period                  string
-	TotalProblems           int
-	ResolvedProblems         int
-	OpenProblems             int
-	ResolutionRate          float64
-	AvgResolutionTimeHours  float64
-	CategoryBreakdown       map[string]int
-	PriorityBreakdown       map[string]int
-	TrendDirection          string
-	TopCategories           []CategoryCount
-	MonthlyTrend            []MonthlyCount
+	Period                 string
+	TotalProblems          int
+	ResolvedProblems       int
+	OpenProblems           int
+	ResolutionRate         float64
+	AvgResolutionTimeHours float64
+	CategoryBreakdown      map[string]int
+	PriorityBreakdown      map[string]int
+	TrendDirection         string
+	TopCategories          []CategoryCount
+	MonthlyTrend           []MonthlyCount
 }
 
 // ProblemHotspotData holds hotspot analytics data.
 type ProblemHotspotData struct {
-	PeriodStart        string
-	PeriodEnd          string
-	CategoryBreakdown  map[string]int
-	PriorityBreakdown  map[string]int
-	Hotspots           []string
-	AvgPerCategory     float64
+	PeriodStart       string
+	PeriodEnd         string
+	CategoryBreakdown map[string]int
+	PriorityBreakdown map[string]int
+	Hotspots          []string
+	AvgPerCategory    float64
 }

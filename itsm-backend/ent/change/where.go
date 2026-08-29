@@ -55,6 +55,11 @@ func IDLTE(id int) predicate.Change {
 	return predicate.Change(sql.FieldLTE(FieldID, id))
 }
 
+// ChangeNumber applies equality check predicate on the "change_number" field. It's identical to ChangeNumberEQ.
+func ChangeNumber(v string) predicate.Change {
+	return predicate.Change(sql.FieldEQ(FieldChangeNumber, v))
+}
+
 // Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
 func Title(v string) predicate.Change {
 	return predicate.Change(sql.FieldEQ(FieldTitle, v))
@@ -148,6 +153,81 @@ func CreatedAt(v time.Time) predicate.Change {
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Change {
 	return predicate.Change(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// ChangeNumberEQ applies the EQ predicate on the "change_number" field.
+func ChangeNumberEQ(v string) predicate.Change {
+	return predicate.Change(sql.FieldEQ(FieldChangeNumber, v))
+}
+
+// ChangeNumberNEQ applies the NEQ predicate on the "change_number" field.
+func ChangeNumberNEQ(v string) predicate.Change {
+	return predicate.Change(sql.FieldNEQ(FieldChangeNumber, v))
+}
+
+// ChangeNumberIn applies the In predicate on the "change_number" field.
+func ChangeNumberIn(vs ...string) predicate.Change {
+	return predicate.Change(sql.FieldIn(FieldChangeNumber, vs...))
+}
+
+// ChangeNumberNotIn applies the NotIn predicate on the "change_number" field.
+func ChangeNumberNotIn(vs ...string) predicate.Change {
+	return predicate.Change(sql.FieldNotIn(FieldChangeNumber, vs...))
+}
+
+// ChangeNumberGT applies the GT predicate on the "change_number" field.
+func ChangeNumberGT(v string) predicate.Change {
+	return predicate.Change(sql.FieldGT(FieldChangeNumber, v))
+}
+
+// ChangeNumberGTE applies the GTE predicate on the "change_number" field.
+func ChangeNumberGTE(v string) predicate.Change {
+	return predicate.Change(sql.FieldGTE(FieldChangeNumber, v))
+}
+
+// ChangeNumberLT applies the LT predicate on the "change_number" field.
+func ChangeNumberLT(v string) predicate.Change {
+	return predicate.Change(sql.FieldLT(FieldChangeNumber, v))
+}
+
+// ChangeNumberLTE applies the LTE predicate on the "change_number" field.
+func ChangeNumberLTE(v string) predicate.Change {
+	return predicate.Change(sql.FieldLTE(FieldChangeNumber, v))
+}
+
+// ChangeNumberContains applies the Contains predicate on the "change_number" field.
+func ChangeNumberContains(v string) predicate.Change {
+	return predicate.Change(sql.FieldContains(FieldChangeNumber, v))
+}
+
+// ChangeNumberHasPrefix applies the HasPrefix predicate on the "change_number" field.
+func ChangeNumberHasPrefix(v string) predicate.Change {
+	return predicate.Change(sql.FieldHasPrefix(FieldChangeNumber, v))
+}
+
+// ChangeNumberHasSuffix applies the HasSuffix predicate on the "change_number" field.
+func ChangeNumberHasSuffix(v string) predicate.Change {
+	return predicate.Change(sql.FieldHasSuffix(FieldChangeNumber, v))
+}
+
+// ChangeNumberIsNil applies the IsNil predicate on the "change_number" field.
+func ChangeNumberIsNil() predicate.Change {
+	return predicate.Change(sql.FieldIsNull(FieldChangeNumber))
+}
+
+// ChangeNumberNotNil applies the NotNil predicate on the "change_number" field.
+func ChangeNumberNotNil() predicate.Change {
+	return predicate.Change(sql.FieldNotNull(FieldChangeNumber))
+}
+
+// ChangeNumberEqualFold applies the EqualFold predicate on the "change_number" field.
+func ChangeNumberEqualFold(v string) predicate.Change {
+	return predicate.Change(sql.FieldEqualFold(FieldChangeNumber, v))
+}
+
+// ChangeNumberContainsFold applies the ContainsFold predicate on the "change_number" field.
+func ChangeNumberContainsFold(v string) predicate.Change {
+	return predicate.Change(sql.FieldContainsFold(FieldChangeNumber, v))
 }
 
 // TitleEQ applies the EQ predicate on the "title" field.

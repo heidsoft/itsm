@@ -18,6 +18,8 @@ type Change struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// 变更编号 CHG-YYYYMMDD-XXXX
+	ChangeNumber string `json:"change_number,omitempty"`
 	// 变更标题
 	Title string `json:"title,omitempty"`
 	// 变更描述
@@ -105,7 +107,7 @@ func (*Change) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case change.FieldID, change.FieldAssigneeID, change.FieldCreatedBy, change.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case change.FieldTitle, change.FieldDescription, change.FieldJustification, change.FieldType, change.FieldStatus, change.FieldPriority, change.FieldImpactScope, change.FieldRiskLevel, change.FieldImplementationPlan, change.FieldRollbackPlan:
+		case change.FieldChangeNumber, change.FieldTitle, change.FieldDescription, change.FieldJustification, change.FieldType, change.FieldStatus, change.FieldPriority, change.FieldImpactScope, change.FieldRiskLevel, change.FieldImplementationPlan, change.FieldRollbackPlan:
 			values[i] = new(sql.NullString)
 		case change.FieldPlannedStartDate, change.FieldPlannedEndDate, change.FieldActualStartDate, change.FieldActualEndDate, change.FieldCreatedAt, change.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -132,6 +134,12 @@ func (_m *Change) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
+		case change.FieldChangeNumber:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field change_number", values[i])
+			} else if value.Valid {
+				_m.ChangeNumber = value.String
+			}
 		case change.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
@@ -315,6 +323,9 @@ func (_m *Change) String() string {
 	var builder strings.Builder
 	builder.WriteString("Change(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
+	builder.WriteString("change_number=")
+	builder.WriteString(_m.ChangeNumber)
+	builder.WriteString(", ")
 	builder.WriteString("title=")
 	builder.WriteString(_m.Title)
 	builder.WriteString(", ")

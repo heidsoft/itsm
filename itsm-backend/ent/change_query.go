@@ -336,12 +336,12 @@ func (_q *ChangeQuery) WithPir(opts ...func(*ChangePIRQuery)) *ChangeQuery {
 // Example:
 //
 //	var v []struct {
-//		Title string `json:"title,omitempty"`
+//		ChangeNumber string `json:"change_number,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Change.Query().
-//		GroupBy(change.FieldTitle).
+//		GroupBy(change.FieldChangeNumber).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *ChangeQuery) GroupBy(field string, fields ...string) *ChangeGroupBy {
@@ -359,11 +359,11 @@ func (_q *ChangeQuery) GroupBy(field string, fields ...string) *ChangeGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Title string `json:"title,omitempty"`
+//		ChangeNumber string `json:"change_number,omitempty"`
 //	}
 //
 //	client.Change.Query().
-//		Select(change.FieldTitle).
+//		Select(change.FieldChangeNumber).
 //		Scan(ctx, &v)
 func (_q *ChangeQuery) Select(fields ...string) *ChangeSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)

@@ -16,6 +16,10 @@ type Problem struct {
 // Fields of the Problem.
 func (Problem) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("problem_number").
+			Comment("问题编号 PRB-YYYYMMDD-XXXX").
+			Optional().
+			NotEmpty(),
 		field.String("title").
 			Comment("问题标题").
 			NotEmpty(),

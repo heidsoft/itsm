@@ -830,44 +830,48 @@ func init() {
 	cmdbsavedview.UpdateDefaultUpdatedAt = cmdbsavedviewDescUpdatedAt.UpdateDefault.(func() time.Time)
 	changeFields := schema.Change{}.Fields()
 	_ = changeFields
+	// changeDescChangeNumber is the schema descriptor for change_number field.
+	changeDescChangeNumber := changeFields[0].Descriptor()
+	// change.ChangeNumberValidator is a validator for the "change_number" field. It is called by the builders before save.
+	change.ChangeNumberValidator = changeDescChangeNumber.Validators[0].(func(string) error)
 	// changeDescTitle is the schema descriptor for title field.
-	changeDescTitle := changeFields[0].Descriptor()
+	changeDescTitle := changeFields[1].Descriptor()
 	// change.TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	change.TitleValidator = changeDescTitle.Validators[0].(func(string) error)
 	// changeDescType is the schema descriptor for type field.
-	changeDescType := changeFields[3].Descriptor()
+	changeDescType := changeFields[4].Descriptor()
 	// change.DefaultType holds the default value on creation for the type field.
 	change.DefaultType = changeDescType.Default.(string)
 	// changeDescStatus is the schema descriptor for status field.
-	changeDescStatus := changeFields[4].Descriptor()
+	changeDescStatus := changeFields[5].Descriptor()
 	// change.DefaultStatus holds the default value on creation for the status field.
 	change.DefaultStatus = changeDescStatus.Default.(string)
 	// changeDescPriority is the schema descriptor for priority field.
-	changeDescPriority := changeFields[5].Descriptor()
+	changeDescPriority := changeFields[6].Descriptor()
 	// change.DefaultPriority holds the default value on creation for the priority field.
 	change.DefaultPriority = changeDescPriority.Default.(string)
 	// changeDescImpactScope is the schema descriptor for impact_scope field.
-	changeDescImpactScope := changeFields[6].Descriptor()
+	changeDescImpactScope := changeFields[7].Descriptor()
 	// change.DefaultImpactScope holds the default value on creation for the impact_scope field.
 	change.DefaultImpactScope = changeDescImpactScope.Default.(string)
 	// changeDescRiskLevel is the schema descriptor for risk_level field.
-	changeDescRiskLevel := changeFields[7].Descriptor()
+	changeDescRiskLevel := changeFields[8].Descriptor()
 	// change.DefaultRiskLevel holds the default value on creation for the risk_level field.
 	change.DefaultRiskLevel = changeDescRiskLevel.Default.(string)
 	// changeDescCreatedBy is the schema descriptor for created_by field.
-	changeDescCreatedBy := changeFields[9].Descriptor()
+	changeDescCreatedBy := changeFields[10].Descriptor()
 	// change.CreatedByValidator is a validator for the "created_by" field. It is called by the builders before save.
 	change.CreatedByValidator = changeDescCreatedBy.Validators[0].(func(int) error)
 	// changeDescTenantID is the schema descriptor for tenant_id field.
-	changeDescTenantID := changeFields[10].Descriptor()
+	changeDescTenantID := changeFields[11].Descriptor()
 	// change.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	change.TenantIDValidator = changeDescTenantID.Validators[0].(func(int) error)
 	// changeDescCreatedAt is the schema descriptor for created_at field.
-	changeDescCreatedAt := changeFields[19].Descriptor()
+	changeDescCreatedAt := changeFields[20].Descriptor()
 	// change.DefaultCreatedAt holds the default value on creation for the created_at field.
 	change.DefaultCreatedAt = changeDescCreatedAt.Default.(func() time.Time)
 	// changeDescUpdatedAt is the schema descriptor for updated_at field.
-	changeDescUpdatedAt := changeFields[20].Descriptor()
+	changeDescUpdatedAt := changeFields[21].Descriptor()
 	// change.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	change.DefaultUpdatedAt = changeDescUpdatedAt.Default.(func() time.Time)
 	// change.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -2954,32 +2958,36 @@ func init() {
 	permissiondefinition.ActionValidator = permissiondefinitionDescAction.Validators[0].(func(string) error)
 	problemFields := schema.Problem{}.Fields()
 	_ = problemFields
+	// problemDescProblemNumber is the schema descriptor for problem_number field.
+	problemDescProblemNumber := problemFields[0].Descriptor()
+	// problem.ProblemNumberValidator is a validator for the "problem_number" field. It is called by the builders before save.
+	problem.ProblemNumberValidator = problemDescProblemNumber.Validators[0].(func(string) error)
 	// problemDescTitle is the schema descriptor for title field.
-	problemDescTitle := problemFields[0].Descriptor()
+	problemDescTitle := problemFields[1].Descriptor()
 	// problem.TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	problem.TitleValidator = problemDescTitle.Validators[0].(func(string) error)
 	// problemDescStatus is the schema descriptor for status field.
-	problemDescStatus := problemFields[2].Descriptor()
+	problemDescStatus := problemFields[3].Descriptor()
 	// problem.DefaultStatus holds the default value on creation for the status field.
 	problem.DefaultStatus = problemDescStatus.Default.(string)
 	// problemDescPriority is the schema descriptor for priority field.
-	problemDescPriority := problemFields[3].Descriptor()
+	problemDescPriority := problemFields[4].Descriptor()
 	// problem.DefaultPriority holds the default value on creation for the priority field.
 	problem.DefaultPriority = problemDescPriority.Default.(string)
 	// problemDescCreatedBy is the schema descriptor for created_by field.
-	problemDescCreatedBy := problemFields[10].Descriptor()
+	problemDescCreatedBy := problemFields[11].Descriptor()
 	// problem.CreatedByValidator is a validator for the "created_by" field. It is called by the builders before save.
 	problem.CreatedByValidator = problemDescCreatedBy.Validators[0].(func(int) error)
 	// problemDescTenantID is the schema descriptor for tenant_id field.
-	problemDescTenantID := problemFields[11].Descriptor()
+	problemDescTenantID := problemFields[12].Descriptor()
 	// problem.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	problem.TenantIDValidator = problemDescTenantID.Validators[0].(func(int) error)
 	// problemDescCreatedAt is the schema descriptor for created_at field.
-	problemDescCreatedAt := problemFields[12].Descriptor()
+	problemDescCreatedAt := problemFields[13].Descriptor()
 	// problem.DefaultCreatedAt holds the default value on creation for the created_at field.
 	problem.DefaultCreatedAt = problemDescCreatedAt.Default.(func() time.Time)
 	// problemDescUpdatedAt is the schema descriptor for updated_at field.
-	problemDescUpdatedAt := problemFields[13].Descriptor()
+	problemDescUpdatedAt := problemFields[14].Descriptor()
 	// problem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	problem.DefaultUpdatedAt = problemDescUpdatedAt.Default.(func() time.Time)
 	// problem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

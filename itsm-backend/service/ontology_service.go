@@ -9,8 +9,9 @@ import (
 	"go.uber.org/zap"
 
 	"itsm-backend/ent"
-	ciPred "itsm-backend/ent/configurationitem"
+	changePred "itsm-backend/ent/change"
 	"itsm-backend/ent/cirelationship"
+	ciPred "itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/problem"
@@ -46,13 +47,15 @@ var (
 	ticketNumberRe   = regexp.MustCompile(`TKT-\d{4,6}-\d+`)
 	incidentNumberRe = regexp.MustCompile(`INC-\d{4,6}-\d+`)
 	releaseNumberRe  = regexp.MustCompile(`REL-\d{8}-\w+`)
+	problemNumberRe  = regexp.MustCompile(`PRB-\d{8}-\d+`)
+	changeNumberRe   = regexp.MustCompile(`CHG-\d{8}-\d+`)
 )
 
 // OntologyEntity 识别并扩展出的一个业务实体卡
 type OntologyEntity struct {
-	ObjectType string            // ticket / incident / problem / change / release / ci
+	ObjectType string // ticket / incident / problem / change / release / ci
 	ID         int
-	Number     string            // 工单号/事件号/发布号；CI 与无编号实体为空
+	Number     string // 工单号/事件号/发布号；CI 与无编号实体为空
 	Title      string
 	Status     string
 	Snippet    string            // 实体摘要（邻居关系的人话描述）
@@ -172,6 +175,37 @@ func (s *OntologyService) ExtractAndExpand(ctx context.Context, tenantID int, qu
 		}
 		oc.Entities = append(oc.Entities, s.expandRelease(ctx, tenantID, rel))
 	}
+	for _, num := range dedupeStringsLocal(matchAll(problemNumberRe, query)) {
+		p, err := s.client.Problem.Query().
+			Where(
+				problem.TenantIDEQ(tenantID),
+				problem.ProblemNumberEQ(num),
+				problem.DeletedAtIsNil(),
+			).
+			Only(ctx)
+		if err != nil {
+			if !ent.IsNotFound(err) {
+				s.logger.Warnw("ontology: problem lookup failed", "number", num, "error", err)
+			}
+			continue
+		}
+		oc.Entities = append(oc.Entities, s.expandProblem(ctx, tenantID, p))
+	}
+	for _, num := range dedupeStringsLocal(matchAll(changeNumberRe, query)) {
+		c, err := s.client.Change.Query().
+			Where(
+				changePred.TenantIDEQ(tenantID),
+				changePred.ChangeNumberEQ(num),
+			).
+			Only(ctx)
+		if err != nil {
+			if !ent.IsNotFound(err) {
+				s.logger.Warnw("ontology: change lookup failed", "number", num, "error", err)
+			}
+			continue
+		}
+		oc.Entities = append(oc.Entities, s.expandChange(ctx, tenantID, c))
+	}
 
 	// 2. CI 实体：抽取 query 中的引号词与中文/字母词组，做 name 精确→前缀匹配
 	ciNames := extractCandidateCINames(query)
@@ -183,7 +217,87 @@ func (s *OntologyService) ExtractAndExpand(ctx context.Context, tenantID int, qu
 		oc.Entities = append(oc.Entities, s.expandCI(ctx, tenantID, ci))
 	}
 
+	// 3. Problem 标题模糊匹配（兜底识别：用户未带编号时按标题关键词命中）
+	seenProblem := map[int]bool{}
+	for _, e := range oc.Entities {
+		if e.ObjectType == "problem" {
+			seenProblem[e.ID] = true
+		}
+	}
+	for _, kw := range ciNames {
+		probs, err := s.client.Problem.Query().
+			Where(
+				problem.TenantIDEQ(tenantID),
+				problem.TitleContainsFold(kw),
+				problem.DeletedAtIsNil(),
+			).
+			Order(ent.Desc(problem.FieldCreatedAt)).
+			Limit(2).
+			All(ctx)
+		if err != nil {
+			s.logger.Warnw("ontology: problem title fuzzy lookup failed", "keyword", kw, "error", err)
+			continue
+		}
+		for _, p := range probs {
+			if seenProblem[p.ID] {
+				continue
+			}
+			seenProblem[p.ID] = true
+			oc.Entities = append(oc.Entities, s.expandProblem(ctx, tenantID, p))
+		}
+	}
+
+	// 3b. 反向兜底：中文 query 无分词边界时（整句 CJK 连续段），
+	// 拉取近期问题用标题片段反向匹配 query，只取最新一个命中避免噪声。
+	if len(seenProblem) == 0 {
+		probs, err := s.client.Problem.Query().
+			Where(
+				problem.TenantIDEQ(tenantID),
+				problem.DeletedAtIsNil(),
+			).
+			Order(ent.Desc(problem.FieldUpdatedAt)).
+			Limit(50).
+			All(ctx)
+		if err != nil {
+			s.logger.Warnw("ontology: problem reverse title lookup failed", "error", err)
+		} else {
+			lowerQuery := strings.ToLower(query)
+			for _, p := range probs {
+				if problemTitleMatchesQuery(p.Title, lowerQuery) {
+					oc.Entities = append(oc.Entities, s.expandProblem(ctx, tenantID, p))
+					break
+				}
+			}
+		}
+	}
+
 	return oc
+}
+
+// problemTitleMatchesQuery 判断问题标题的任一关键词片段（CJK 段/字母数字段，≥3 字符）
+// 是否出现在 query 中（大小写不敏感）。用于无分词边界的中文 query 反向兜底匹配。
+func problemTitleMatchesQuery(title, lowerQuery string) bool {
+	if title == "" || lowerQuery == "" {
+		return false
+	}
+	for _, seg := range titleSegments(title) {
+		if strings.Contains(lowerQuery, strings.ToLower(seg)) {
+			return true
+		}
+	}
+	return false
+}
+
+// titleSegments 把标题切分为 CJK 连续段与字母数字段（各 ≥3 字符），供模糊匹配使用。
+func titleSegments(title string) []string {
+	re := regexp.MustCompile(`[\p{Han}]+|[A-Za-z][A-Za-z0-9_-]{2,}`)
+	out := make([]string, 0, 4)
+	for _, w := range re.FindAllString(title, -1) {
+		if len([]rune(w)) >= 3 {
+			out = append(out, w)
+		}
+	}
+	return out
 }
 
 // ---- 实体扩展（1 跳邻居） ----
@@ -295,6 +409,80 @@ func (s *OntologyService) expandRelease(ctx context.Context, tenantID int, rel *
 		Status:     rel.Status,
 		Snippet:    truncate(rel.Description, 160),
 		Neighbors:  make([]string, 0, 4),
+	}
+	return e
+}
+
+func (s *OntologyService) expandProblem(ctx context.Context, tenantID int, p *ent.Problem) *OntologyEntity {
+	e := &OntologyEntity{
+		ObjectType: "problem",
+		ID:         p.ID,
+		Number:     p.ProblemNumber,
+		Title:      p.Title,
+		Status:     p.Status,
+		Snippet:    truncate(p.Description, 160),
+		Neighbors:  make([]string, 0, 8),
+	}
+
+	// 汇聚的事件（M2M：RCA 主线，问题为汇聚点）
+	incidents, err := p.QueryIncidents().
+		Where(incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
+		Limit(s.maxNeighbors).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("ontology: expand problem incidents failed", "problem_id", p.ID, "error", err)
+	}
+	for _, in := range incidents {
+		e.Neighbors = append(e.Neighbors, fmt.Sprintf("%s「%s」[%s]（关联事件）", in.IncidentNumber, in.Title, in.Status))
+	}
+
+	// 衍生变更（问题修复的实施载体）
+	changes, err := p.QueryChanges().
+		Where(changePred.TenantIDEQ(tenantID)).
+		Limit(s.maxNeighbors).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("ontology: expand problem changes failed", "problem_id", p.ID, "error", err)
+	}
+	for _, c := range changes {
+		e.Neighbors = append(e.Neighbors, fmt.Sprintf("%s「%s」[%s]（修复变更）", c.ChangeNumber, c.Title, c.Status))
+	}
+
+	// 关联工单
+	tickets, err := p.QueryTickets().
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
+		Limit(s.maxNeighbors).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("ontology: expand problem tickets failed", "problem_id", p.ID, "error", err)
+	}
+	for _, t := range tickets {
+		e.Neighbors = append(e.Neighbors, fmt.Sprintf("%s「%s」[%s]（关联工单）", t.TicketNumber, t.Title, t.Status))
+	}
+	return e
+}
+
+func (s *OntologyService) expandChange(ctx context.Context, tenantID int, c *ent.Change) *OntologyEntity {
+	e := &OntologyEntity{
+		ObjectType: "change",
+		ID:         c.ID,
+		Number:     c.ChangeNumber,
+		Title:      c.Title,
+		Status:     c.Status,
+		Snippet:    truncate(c.Description, 160),
+		Neighbors:  make([]string, 0, 8),
+	}
+
+	// 溯源问题（变更的实施动因）
+	problems, err := c.QueryProblems().
+		Where(problem.TenantIDEQ(tenantID), problem.DeletedAtIsNil()).
+		Limit(s.maxNeighbors).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("ontology: expand change problems failed", "change_id", c.ID, "error", err)
+	}
+	for _, p := range problems {
+		e.Neighbors = append(e.Neighbors, fmt.Sprintf("%s「%s」[%s]（溯源问题）", p.ProblemNumber, p.Title, p.Status))
 	}
 	return e
 }
@@ -411,7 +599,7 @@ func dedupeStringsLocal(in []string) []string {
 }
 
 // extractCandidateCINames 从 query 中抽取候选 CI 名称：
-// 优先「」『』"" '' 引号内内容；否则抽取 ≥3 字符的连续 CJK/字母数字词组。
+// 优先「」『』"" ” 引号内内容；否则抽取 ≥3 字符的连续 CJK/字母数字词组。
 func extractCandidateCINames(query string) []string {
 	var candidates []string
 	quotePairs := [][2]string{{"「", "」"}, {"『", "』"}, {"\"", "\""}, {"“", "”"}, {"'", "'"}}
@@ -490,7 +678,6 @@ func userDisplayName(u *ent.User) string {
 	}
 	return u.Username
 }
-
 
 func truncate(s string, n int) string {
 	r := []rune(s)

@@ -31,6 +31,26 @@ func (_u *ProblemUpdate) Where(ps ...predicate.Problem) *ProblemUpdate {
 	return _u
 }
 
+// SetProblemNumber sets the "problem_number" field.
+func (_u *ProblemUpdate) SetProblemNumber(v string) *ProblemUpdate {
+	_u.mutation.SetProblemNumber(v)
+	return _u
+}
+
+// SetNillableProblemNumber sets the "problem_number" field if the given value is not nil.
+func (_u *ProblemUpdate) SetNillableProblemNumber(v *string) *ProblemUpdate {
+	if v != nil {
+		_u.SetProblemNumber(*v)
+	}
+	return _u
+}
+
+// ClearProblemNumber clears the value of the "problem_number" field.
+func (_u *ProblemUpdate) ClearProblemNumber() *ProblemUpdate {
+	_u.mutation.ClearProblemNumber()
+	return _u
+}
+
 // SetTitle sets the "title" field.
 func (_u *ProblemUpdate) SetTitle(v string) *ProblemUpdate {
 	_u.mutation.SetTitle(v)
@@ -493,6 +513,11 @@ func (_u *ProblemUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *ProblemUpdate) check() error {
+	if v, ok := _u.mutation.ProblemNumber(); ok {
+		if err := problem.ProblemNumberValidator(v); err != nil {
+			return &ValidationError{Name: "problem_number", err: fmt.Errorf(`ent: validator failed for field "Problem.problem_number": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Title(); ok {
 		if err := problem.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Problem.title": %w`, err)}
@@ -522,6 +547,12 @@ func (_u *ProblemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.ProblemNumber(); ok {
+		_spec.SetField(problem.FieldProblemNumber, field.TypeString, value)
+	}
+	if _u.mutation.ProblemNumberCleared() {
+		_spec.ClearField(problem.FieldProblemNumber, field.TypeString)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(problem.FieldTitle, field.TypeString, value)
@@ -766,6 +797,26 @@ type ProblemUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *ProblemMutation
+}
+
+// SetProblemNumber sets the "problem_number" field.
+func (_u *ProblemUpdateOne) SetProblemNumber(v string) *ProblemUpdateOne {
+	_u.mutation.SetProblemNumber(v)
+	return _u
+}
+
+// SetNillableProblemNumber sets the "problem_number" field if the given value is not nil.
+func (_u *ProblemUpdateOne) SetNillableProblemNumber(v *string) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetProblemNumber(*v)
+	}
+	return _u
+}
+
+// ClearProblemNumber clears the value of the "problem_number" field.
+func (_u *ProblemUpdateOne) ClearProblemNumber() *ProblemUpdateOne {
+	_u.mutation.ClearProblemNumber()
+	return _u
 }
 
 // SetTitle sets the "title" field.
@@ -1243,6 +1294,11 @@ func (_u *ProblemUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *ProblemUpdateOne) check() error {
+	if v, ok := _u.mutation.ProblemNumber(); ok {
+		if err := problem.ProblemNumberValidator(v); err != nil {
+			return &ValidationError{Name: "problem_number", err: fmt.Errorf(`ent: validator failed for field "Problem.problem_number": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Title(); ok {
 		if err := problem.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Problem.title": %w`, err)}
@@ -1289,6 +1345,12 @@ func (_u *ProblemUpdateOne) sqlSave(ctx context.Context) (_node *Problem, err er
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.ProblemNumber(); ok {
+		_spec.SetField(problem.FieldProblemNumber, field.TypeString, value)
+	}
+	if _u.mutation.ProblemNumberCleared() {
+		_spec.ClearField(problem.FieldProblemNumber, field.TypeString)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(problem.FieldTitle, field.TypeString, value)

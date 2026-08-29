@@ -14,6 +14,8 @@ const (
 	Label = "change"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldChangeNumber holds the string denoting the change_number field in the database.
+	FieldChangeNumber = "change_number"
 	// FieldTitle holds the string denoting the title field in the database.
 	FieldTitle = "title"
 	// FieldDescription holds the string denoting the description field in the database.
@@ -79,6 +81,7 @@ const (
 // Columns holds all SQL columns for change fields.
 var Columns = []string{
 	FieldID,
+	FieldChangeNumber,
 	FieldTitle,
 	FieldDescription,
 	FieldJustification,
@@ -130,6 +133,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// ChangeNumberValidator is a validator for the "change_number" field. It is called by the builders before save.
+	ChangeNumberValidator func(string) error
 	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	TitleValidator func(string) error
 	// DefaultType holds the default value on creation for the "type" field.
@@ -160,6 +165,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByChangeNumber orders the results by the change_number field.
+func ByChangeNumber(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldChangeNumber, opts...).ToFunc()
 }
 
 // ByTitle orders the results by the title field.

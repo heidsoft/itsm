@@ -31,6 +31,26 @@ func (_u *ChangeUpdate) Where(ps ...predicate.Change) *ChangeUpdate {
 	return _u
 }
 
+// SetChangeNumber sets the "change_number" field.
+func (_u *ChangeUpdate) SetChangeNumber(v string) *ChangeUpdate {
+	_u.mutation.SetChangeNumber(v)
+	return _u
+}
+
+// SetNillableChangeNumber sets the "change_number" field if the given value is not nil.
+func (_u *ChangeUpdate) SetNillableChangeNumber(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetChangeNumber(*v)
+	}
+	return _u
+}
+
+// ClearChangeNumber clears the value of the "change_number" field.
+func (_u *ChangeUpdate) ClearChangeNumber() *ChangeUpdate {
+	_u.mutation.ClearChangeNumber()
+	return _u
+}
+
 // SetTitle sets the "title" field.
 func (_u *ChangeUpdate) SetTitle(v string) *ChangeUpdate {
 	_u.mutation.SetTitle(v)
@@ -515,6 +535,11 @@ func (_u *ChangeUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *ChangeUpdate) check() error {
+	if v, ok := _u.mutation.ChangeNumber(); ok {
+		if err := change.ChangeNumberValidator(v); err != nil {
+			return &ValidationError{Name: "change_number", err: fmt.Errorf(`ent: validator failed for field "Change.change_number": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Title(); ok {
 		if err := change.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Change.title": %w`, err)}
@@ -544,6 +569,12 @@ func (_u *ChangeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.ChangeNumber(); ok {
+		_spec.SetField(change.FieldChangeNumber, field.TypeString, value)
+	}
+	if _u.mutation.ChangeNumberCleared() {
+		_spec.ClearField(change.FieldChangeNumber, field.TypeString)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(change.FieldTitle, field.TypeString, value)
@@ -768,6 +799,26 @@ type ChangeUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *ChangeMutation
+}
+
+// SetChangeNumber sets the "change_number" field.
+func (_u *ChangeUpdateOne) SetChangeNumber(v string) *ChangeUpdateOne {
+	_u.mutation.SetChangeNumber(v)
+	return _u
+}
+
+// SetNillableChangeNumber sets the "change_number" field if the given value is not nil.
+func (_u *ChangeUpdateOne) SetNillableChangeNumber(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetChangeNumber(*v)
+	}
+	return _u
+}
+
+// ClearChangeNumber clears the value of the "change_number" field.
+func (_u *ChangeUpdateOne) ClearChangeNumber() *ChangeUpdateOne {
+	_u.mutation.ClearChangeNumber()
+	return _u
 }
 
 // SetTitle sets the "title" field.
@@ -1267,6 +1318,11 @@ func (_u *ChangeUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *ChangeUpdateOne) check() error {
+	if v, ok := _u.mutation.ChangeNumber(); ok {
+		if err := change.ChangeNumberValidator(v); err != nil {
+			return &ValidationError{Name: "change_number", err: fmt.Errorf(`ent: validator failed for field "Change.change_number": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Title(); ok {
 		if err := change.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Change.title": %w`, err)}
@@ -1313,6 +1369,12 @@ func (_u *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err erro
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.ChangeNumber(); ok {
+		_spec.SetField(change.FieldChangeNumber, field.TypeString, value)
+	}
+	if _u.mutation.ChangeNumberCleared() {
+		_spec.ClearField(change.FieldChangeNumber, field.TypeString)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(change.FieldTitle, field.TypeString, value)

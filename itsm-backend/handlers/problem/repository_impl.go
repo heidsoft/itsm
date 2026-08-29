@@ -27,20 +27,21 @@ func (r *EntRepository) toDomain(e *ent.Problem) *Problem {
 		return nil
 	}
 	p := &Problem{
-		ID:          e.ID,
-		Title:       e.Title,
-		Description: e.Description,
-		Status:      e.Status,
-		Priority:    e.Priority,
-		Category:    e.Category,
-		RootCause:   e.RootCause,
-		Workaround:  e.Workaround,
-		Resolution:  e.Resolution,
-		Impact:      e.Impact,
-		CreatedBy:   e.CreatedBy,
-		TenantID:    e.TenantID,
-		CreatedAt:   e.CreatedAt,
-		UpdatedAt:   e.UpdatedAt,
+		ID:            e.ID,
+		ProblemNumber: e.ProblemNumber,
+		Title:         e.Title,
+		Description:   e.Description,
+		Status:        e.Status,
+		Priority:      e.Priority,
+		Category:      e.Category,
+		RootCause:     e.RootCause,
+		Workaround:    e.Workaround,
+		Resolution:    e.Resolution,
+		Impact:        e.Impact,
+		CreatedBy:     e.CreatedBy,
+		TenantID:      e.TenantID,
+		CreatedAt:     e.CreatedAt,
+		UpdatedAt:     e.UpdatedAt,
 	}
 	if e.ResolvedAt != nil {
 		p.ResolvedAt = e.ResolvedAt
@@ -209,6 +210,13 @@ func (r *EntRepository) Create(ctx context.Context, p *Problem) (*Problem, error
 	if err != nil {
 		return nil, err
 	}
+	// 生成问题编号（PRB-YYYYMMDD-XXXX，租户内日序列）
+	number := fmt.Sprintf("PRB-%s-%04d", time.Now().Format("20060102"), saved.ID)
+	if _, err := r.client.Problem.UpdateOneID(saved.ID).SetProblemNumber(number).Save(ctx); err != nil {
+		// 编号写失败不阻断创建（可后台补偿），仅记录
+		return r.toDomain(saved), nil
+	}
+	saved.ProblemNumber = number
 	return r.toDomain(saved), nil
 }
 

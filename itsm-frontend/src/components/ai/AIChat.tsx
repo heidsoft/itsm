@@ -10,6 +10,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Avatar,
   Button,
@@ -24,7 +25,7 @@ import {
   Typography,
   message as antdMessage,
 } from 'antd';
-import { Bot, Eraser, LoaderCircle, Send, StopCircle, User } from 'lucide-react';
+import { Bot, Eraser, FileText, LoaderCircle, Send, StopCircle, User } from 'lucide-react';
 
 import { AIApi, aiChatStream, type RagAnswer } from '@/lib/api/ai-api';
 
@@ -43,6 +44,7 @@ interface ChatMessage {
 const nextId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const AIChat: React.FC = () => {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [convId, setConvId] = useState<number | undefined>(undefined);
@@ -273,6 +275,37 @@ const AIChat: React.FC = () => {
                       {item.sources && item.sources.length > 0 ? (
                         <SourceList sources={item.sources} />
                       ) : null}
+                      {/* 知识库空命中闭环：当回答未引用任何知识文章时，提供「沉淀为知识」入口 */}
+                      {item.role === 'assistant' &&
+                      !item.streaming &&
+                      !item.error &&
+                      item.content &&
+                      (!item.sources || item.sources.length === 0) ? (
+                        <div
+                          style={{
+                            marginTop: 10,
+                            paddingTop: 10,
+                            borderTop: '1px dashed #d9d9d9',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            未引用知识库文章 · 若本回答有价值，可沉淀为知识
+                          </Text>
+                          <Button
+                            size="small"
+                            type="link"
+                            icon={<FileText size={12} />}
+                            style={{ padding: 0, height: 'auto' }}
+                            onClick={() => router.push('/knowledge/articles/create')}
+                          >
+                            补充为知识文章
+                          </Button>
+                        </div>
+                      ) : null}
                     </div>
                   }
                 />
@@ -309,6 +342,21 @@ const AIChat: React.FC = () => {
   );
 };
 
+// objectType → Tag 颜色映射（业务实体类型着色，未识别类型回退蓝色）
+const OBJECT_TYPE_TAG_COLORS: Record<string, string> = {
+  ticket: 'orange',
+  incident: 'red',
+  problem: 'purple',
+  change: 'geekblue',
+  release: 'cyan',
+  ci: 'magenta',
+  kb: 'blue',
+  knowledge: 'blue',
+};
+
+const objectTypeTagColor = (objectType?: string): string =>
+  (objectType && OBJECT_TYPE_TAG_COLORS[objectType.toLowerCase()]) || 'blue';
+
 const SourceList: React.FC<{ sources: RagAnswer[] }> = ({ sources }) => {
   return (
     <div style={{ marginTop: 6 }}>
@@ -323,7 +371,7 @@ const SourceList: React.FC<{ sources: RagAnswer[] }> = ({ sources }) => {
           return (
             <li key={`${s.objectType}-${s.id}-${idx}`} style={{ marginBottom: 6 }}>
               <Space size={6} wrap>
-                <Tag color="blue">{s.objectType || 'source'}</Tag>
+                <Tag color={objectTypeTagColor(s.objectType)}>{s.objectType || 'source'}</Tag>
                 <Text strong style={{ fontSize: 13 }}>
                   {title}
                 </Text>

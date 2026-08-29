@@ -16,6 +16,10 @@ type Change struct {
 // Fields of the Change.
 func (Change) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("change_number").
+			Comment("变更编号 CHG-YYYYMMDD-XXXX").
+			Optional().
+			NotEmpty(),
 		field.String("title").
 			Comment("变更标题").
 			NotEmpty(),

@@ -7,6 +7,7 @@ import (
 // Change domain entity
 type Change struct {
 	ID                 int
+	ChangeNumber       string
 	Title              string
 	Description        string
 	Justification      string

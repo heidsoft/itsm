@@ -23480,6 +23480,7 @@ type ChangeMutation struct {
 	op                    Op
 	typ                   string
 	id                    *int
+	change_number         *string
 	title                 *string
 	description           *string
 	justification         *string
@@ -23614,6 +23615,55 @@ func (m *ChangeMutation) IDs(ctx context.Context) ([]int, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetChangeNumber sets the "change_number" field.
+func (m *ChangeMutation) SetChangeNumber(s string) {
+	m.change_number = &s
+}
+
+// ChangeNumber returns the value of the "change_number" field in the mutation.
+func (m *ChangeMutation) ChangeNumber() (r string, exists bool) {
+	v := m.change_number
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeNumber returns the old "change_number" field's value of the Change entity.
+// If the Change object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangeMutation) OldChangeNumber(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeNumber is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeNumber requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeNumber: %w", err)
+	}
+	return oldValue.ChangeNumber, nil
+}
+
+// ClearChangeNumber clears the value of the "change_number" field.
+func (m *ChangeMutation) ClearChangeNumber() {
+	m.change_number = nil
+	m.clearedFields[change.FieldChangeNumber] = struct{}{}
+}
+
+// ChangeNumberCleared returns if the "change_number" field was cleared in this mutation.
+func (m *ChangeMutation) ChangeNumberCleared() bool {
+	_, ok := m.clearedFields[change.FieldChangeNumber]
+	return ok
+}
+
+// ResetChangeNumber resets all changes to the "change_number" field.
+func (m *ChangeMutation) ResetChangeNumber() {
+	m.change_number = nil
+	delete(m.clearedFields, change.FieldChangeNumber)
 }
 
 // SetTitle sets the "title" field.
@@ -24750,7 +24800,10 @@ func (m *ChangeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChangeMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 22)
+	if m.change_number != nil {
+		fields = append(fields, change.FieldChangeNumber)
+	}
 	if m.title != nil {
 		fields = append(fields, change.FieldTitle)
 	}
@@ -24822,6 +24875,8 @@ func (m *ChangeMutation) Fields() []string {
 // schema.
 func (m *ChangeMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case change.FieldChangeNumber:
+		return m.ChangeNumber()
 	case change.FieldTitle:
 		return m.Title()
 	case change.FieldDescription:
@@ -24873,6 +24928,8 @@ func (m *ChangeMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *ChangeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case change.FieldChangeNumber:
+		return m.OldChangeNumber(ctx)
 	case change.FieldTitle:
 		return m.OldTitle(ctx)
 	case change.FieldDescription:
@@ -24924,6 +24981,13 @@ func (m *ChangeMutation) OldField(ctx context.Context, name string) (ent.Value, 
 // type.
 func (m *ChangeMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case change.FieldChangeNumber:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeNumber(v)
+		return nil
 	case change.FieldTitle:
 		v, ok := value.(string)
 		if !ok {
@@ -25140,6 +25204,9 @@ func (m *ChangeMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *ChangeMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(change.FieldChangeNumber) {
+		fields = append(fields, change.FieldChangeNumber)
+	}
 	if m.FieldCleared(change.FieldDescription) {
 		fields = append(fields, change.FieldDescription)
 	}
@@ -25187,6 +25254,9 @@ func (m *ChangeMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *ChangeMutation) ClearField(name string) error {
 	switch name {
+	case change.FieldChangeNumber:
+		m.ClearChangeNumber()
+		return nil
 	case change.FieldDescription:
 		m.ClearDescription()
 		return nil
@@ -25228,6 +25298,9 @@ func (m *ChangeMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *ChangeMutation) ResetField(name string) error {
 	switch name {
+	case change.FieldChangeNumber:
+		m.ResetChangeNumber()
+		return nil
 	case change.FieldTitle:
 		m.ResetTitle()
 		return nil
@@ -91328,6 +91401,7 @@ type ProblemMutation struct {
 	op               Op
 	typ              string
 	id               *int
+	problem_number   *string
 	title            *string
 	description      *string
 	status           *string
@@ -91459,6 +91533,55 @@ func (m *ProblemMutation) IDs(ctx context.Context) ([]int, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetProblemNumber sets the "problem_number" field.
+func (m *ProblemMutation) SetProblemNumber(s string) {
+	m.problem_number = &s
+}
+
+// ProblemNumber returns the value of the "problem_number" field in the mutation.
+func (m *ProblemMutation) ProblemNumber() (r string, exists bool) {
+	v := m.problem_number
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProblemNumber returns the old "problem_number" field's value of the Problem entity.
+// If the Problem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemMutation) OldProblemNumber(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProblemNumber is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProblemNumber requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProblemNumber: %w", err)
+	}
+	return oldValue.ProblemNumber, nil
+}
+
+// ClearProblemNumber clears the value of the "problem_number" field.
+func (m *ProblemMutation) ClearProblemNumber() {
+	m.problem_number = nil
+	m.clearedFields[problem.FieldProblemNumber] = struct{}{}
+}
+
+// ProblemNumberCleared returns if the "problem_number" field was cleared in this mutation.
+func (m *ProblemMutation) ProblemNumberCleared() bool {
+	_, ok := m.clearedFields[problem.FieldProblemNumber]
+	return ok
+}
+
+// ResetProblemNumber resets all changes to the "problem_number" field.
+func (m *ProblemMutation) ResetProblemNumber() {
+	m.problem_number = nil
+	delete(m.clearedFields, problem.FieldProblemNumber)
 }
 
 // SetTitle sets the "title" field.
@@ -92460,7 +92583,10 @@ func (m *ProblemMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProblemMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 18)
+	if m.problem_number != nil {
+		fields = append(fields, problem.FieldProblemNumber)
+	}
 	if m.title != nil {
 		fields = append(fields, problem.FieldTitle)
 	}
@@ -92520,6 +92646,8 @@ func (m *ProblemMutation) Fields() []string {
 // schema.
 func (m *ProblemMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case problem.FieldProblemNumber:
+		return m.ProblemNumber()
 	case problem.FieldTitle:
 		return m.Title()
 	case problem.FieldDescription:
@@ -92563,6 +92691,8 @@ func (m *ProblemMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *ProblemMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case problem.FieldProblemNumber:
+		return m.OldProblemNumber(ctx)
 	case problem.FieldTitle:
 		return m.OldTitle(ctx)
 	case problem.FieldDescription:
@@ -92606,6 +92736,13 @@ func (m *ProblemMutation) OldField(ctx context.Context, name string) (ent.Value,
 // type.
 func (m *ProblemMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case problem.FieldProblemNumber:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProblemNumber(v)
+		return nil
 	case problem.FieldTitle:
 		v, ok := value.(string)
 		if !ok {
@@ -92794,6 +92931,9 @@ func (m *ProblemMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *ProblemMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(problem.FieldProblemNumber) {
+		fields = append(fields, problem.FieldProblemNumber)
+	}
 	if m.FieldCleared(problem.FieldDescription) {
 		fields = append(fields, problem.FieldDescription)
 	}
@@ -92838,6 +92978,9 @@ func (m *ProblemMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *ProblemMutation) ClearField(name string) error {
 	switch name {
+	case problem.FieldProblemNumber:
+		m.ClearProblemNumber()
+		return nil
 	case problem.FieldDescription:
 		m.ClearDescription()
 		return nil
@@ -92876,6 +93019,9 @@ func (m *ProblemMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *ProblemMutation) ResetField(name string) error {
 	switch name {
+	case problem.FieldProblemNumber:
+		m.ResetProblemNumber()
+		return nil
 	case problem.FieldTitle:
 		m.ResetTitle()
 		return nil

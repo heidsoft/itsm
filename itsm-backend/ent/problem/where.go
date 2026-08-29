@@ -55,6 +55,11 @@ func IDLTE(id int) predicate.Problem {
 	return predicate.Problem(sql.FieldLTE(FieldID, id))
 }
 
+// ProblemNumber applies equality check predicate on the "problem_number" field. It's identical to ProblemNumberEQ.
+func ProblemNumber(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldProblemNumber, v))
+}
+
 // Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
 func Title(v string) predicate.Problem {
 	return predicate.Problem(sql.FieldEQ(FieldTitle, v))
@@ -138,6 +143,81 @@ func ClosedAt(v time.Time) predicate.Problem {
 // DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
 func DeletedAt(v time.Time) predicate.Problem {
 	return predicate.Problem(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// ProblemNumberEQ applies the EQ predicate on the "problem_number" field.
+func ProblemNumberEQ(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldProblemNumber, v))
+}
+
+// ProblemNumberNEQ applies the NEQ predicate on the "problem_number" field.
+func ProblemNumberNEQ(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldNEQ(FieldProblemNumber, v))
+}
+
+// ProblemNumberIn applies the In predicate on the "problem_number" field.
+func ProblemNumberIn(vs ...string) predicate.Problem {
+	return predicate.Problem(sql.FieldIn(FieldProblemNumber, vs...))
+}
+
+// ProblemNumberNotIn applies the NotIn predicate on the "problem_number" field.
+func ProblemNumberNotIn(vs ...string) predicate.Problem {
+	return predicate.Problem(sql.FieldNotIn(FieldProblemNumber, vs...))
+}
+
+// ProblemNumberGT applies the GT predicate on the "problem_number" field.
+func ProblemNumberGT(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldGT(FieldProblemNumber, v))
+}
+
+// ProblemNumberGTE applies the GTE predicate on the "problem_number" field.
+func ProblemNumberGTE(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldGTE(FieldProblemNumber, v))
+}
+
+// ProblemNumberLT applies the LT predicate on the "problem_number" field.
+func ProblemNumberLT(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldLT(FieldProblemNumber, v))
+}
+
+// ProblemNumberLTE applies the LTE predicate on the "problem_number" field.
+func ProblemNumberLTE(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldLTE(FieldProblemNumber, v))
+}
+
+// ProblemNumberContains applies the Contains predicate on the "problem_number" field.
+func ProblemNumberContains(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldContains(FieldProblemNumber, v))
+}
+
+// ProblemNumberHasPrefix applies the HasPrefix predicate on the "problem_number" field.
+func ProblemNumberHasPrefix(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldHasPrefix(FieldProblemNumber, v))
+}
+
+// ProblemNumberHasSuffix applies the HasSuffix predicate on the "problem_number" field.
+func ProblemNumberHasSuffix(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldHasSuffix(FieldProblemNumber, v))
+}
+
+// ProblemNumberIsNil applies the IsNil predicate on the "problem_number" field.
+func ProblemNumberIsNil() predicate.Problem {
+	return predicate.Problem(sql.FieldIsNull(FieldProblemNumber))
+}
+
+// ProblemNumberNotNil applies the NotNil predicate on the "problem_number" field.
+func ProblemNumberNotNil() predicate.Problem {
+	return predicate.Problem(sql.FieldNotNull(FieldProblemNumber))
+}
+
+// ProblemNumberEqualFold applies the EqualFold predicate on the "problem_number" field.
+func ProblemNumberEqualFold(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldEqualFold(FieldProblemNumber, v))
+}
+
+// ProblemNumberContainsFold applies the ContainsFold predicate on the "problem_number" field.
+func ProblemNumberContainsFold(v string) predicate.Problem {
+	return predicate.Problem(sql.FieldContainsFold(FieldProblemNumber, v))
 }
 
 // TitleEQ applies the EQ predicate on the "title" field.

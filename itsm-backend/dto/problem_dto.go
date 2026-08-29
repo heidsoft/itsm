@@ -57,21 +57,22 @@ type ListProblemsRequest struct {
 
 // ProblemResponse 问题响应
 type ProblemResponse struct {
-	ID          int       `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Status      string    `json:"status"`
-	Priority    string    `json:"priority"`
-	Category    string    `json:"category"`
-	RootCause   string    `json:"rootCause"`
-	Workaround  string    `json:"workaround"`
-	Resolution  string    `json:"resolution"`
-	Impact      string    `json:"impact"`
-	AssigneeID  *int      `json:"assigneeId,omitempty"`
-	CreatedBy   int       `json:"createdBy"`
-	TenantID    int       `json:"tenantId"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID            int       `json:"id"`
+	ProblemNumber string    `json:"problemNumber,omitempty"`
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	Status        string    `json:"status"`
+	Priority      string    `json:"priority"`
+	Category      string    `json:"category"`
+	RootCause     string    `json:"rootCause"`
+	Workaround    string    `json:"workaround"`
+	Resolution    string    `json:"resolution"`
+	Impact        string    `json:"impact"`
+	AssigneeID    *int      `json:"assigneeId,omitempty"`
+	CreatedBy     int       `json:"createdBy"`
+	TenantID      int       `json:"tenantId"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 	// 关联数据
 	AssociatedTickets   []*AssociatedItemResponse `json:"associatedTickets,omitempty"`
 	AssociatedIncidents []*AssociatedItemResponse `json:"associatedIncidents,omitempty"`

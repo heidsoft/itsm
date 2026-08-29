@@ -23,6 +23,20 @@ type ProblemCreate struct {
 	hooks    []Hook
 }
 
+// SetProblemNumber sets the "problem_number" field.
+func (_c *ProblemCreate) SetProblemNumber(v string) *ProblemCreate {
+	_c.mutation.SetProblemNumber(v)
+	return _c
+}
+
+// SetNillableProblemNumber sets the "problem_number" field if the given value is not nil.
+func (_c *ProblemCreate) SetNillableProblemNumber(v *string) *ProblemCreate {
+	if v != nil {
+		_c.SetProblemNumber(*v)
+	}
+	return _c
+}
+
 // SetTitle sets the "title" field.
 func (_c *ProblemCreate) SetTitle(v string) *ProblemCreate {
 	_c.mutation.SetTitle(v)
@@ -337,6 +351,11 @@ func (_c *ProblemCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *ProblemCreate) check() error {
+	if v, ok := _c.mutation.ProblemNumber(); ok {
+		if err := problem.ProblemNumberValidator(v); err != nil {
+			return &ValidationError{Name: "problem_number", err: fmt.Errorf(`ent: validator failed for field "Problem.problem_number": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Problem.title"`)}
 	}
@@ -399,6 +418,10 @@ func (_c *ProblemCreate) createSpec() (*Problem, *sqlgraph.CreateSpec) {
 		_node = &Problem{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(problem.Table, sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt))
 	)
+	if value, ok := _c.mutation.ProblemNumber(); ok {
+		_spec.SetField(problem.FieldProblemNumber, field.TypeString, value)
+		_node.ProblemNumber = value
+	}
 	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(problem.FieldTitle, field.TypeString, value)
 		_node.Title = value

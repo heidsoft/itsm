@@ -14,6 +14,8 @@ const (
 	Label = "problem"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldProblemNumber holds the string denoting the problem_number field in the database.
+	FieldProblemNumber = "problem_number"
 	// FieldTitle holds the string denoting the title field in the database.
 	FieldTitle = "title"
 	// FieldDescription holds the string denoting the description field in the database.
@@ -78,6 +80,7 @@ const (
 // Columns holds all SQL columns for problem fields.
 var Columns = []string{
 	FieldID,
+	FieldProblemNumber,
 	FieldTitle,
 	FieldDescription,
 	FieldStatus,
@@ -128,6 +131,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// ProblemNumberValidator is a validator for the "problem_number" field. It is called by the builders before save.
+	ProblemNumberValidator func(string) error
 	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	TitleValidator func(string) error
 	// DefaultStatus holds the default value on creation for the "status" field.
@@ -152,6 +157,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByProblemNumber orders the results by the problem_number field.
+func ByProblemNumber(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProblemNumber, opts...).ToFunc()
 }
 
 // ByTitle orders the results by the title field.

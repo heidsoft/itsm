@@ -36,6 +36,7 @@ func toDomain(ec *ent.Change) *Change {
 	}
 	return &Change{
 		ID:                 ec.ID,
+		ChangeNumber:       ec.ChangeNumber,
 		Title:              ec.Title,
 		Description:        ec.Description,
 		Justification:      ec.Justification,
@@ -58,6 +59,19 @@ func toDomain(ec *ent.Change) *Change {
 		CreatedAt:          ec.CreatedAt,
 		UpdatedAt:          ec.UpdatedAt,
 	}
+}
+
+// assignChangeNumber best-effort 生成变更编号（CHG-YYYYMMDD-XXXX，租户内日序列）。
+// 编号写入失败不阻断创建流程，可由后台任务补偿。
+func (r *EntRepository) assignChangeNumber(ctx context.Context, ec *ent.Change) {
+	if ec == nil || ec.ChangeNumber != "" {
+		return
+	}
+	number := fmt.Sprintf("CHG-%s-%04d", time.Now().Format("20060102"), ec.ID)
+	if _, err := r.client.Change.UpdateOneID(ec.ID).SetChangeNumber(number).Save(ctx); err != nil {
+		return
+	}
+	ec.ChangeNumber = number
 }
 
 // hydrateUsers loads all users referenced by the supplied changes in one
@@ -129,6 +143,7 @@ func (r *EntRepository) Create(ctx context.Context, c *Change) (*Change, error) 
 	if err != nil {
 		return nil, err
 	}
+	r.assignChangeNumber(ctx, ec)
 	result := toDomain(ec)
 	if err := r.hydrateUsers(ctx, []*Change{result}, c.TenantID); err != nil {
 		return nil, err
@@ -170,6 +185,7 @@ func (r *EntRepository) CreateWithWorkflowCommand(ctx context.Context, c *Change
 	if err := tx.Commit(); err != nil {
 		return rollback(err)
 	}
+	r.assignChangeNumber(ctx, ec)
 	result := toDomain(ec)
 	if err := r.hydrateUsers(ctx, []*Change{result}, c.TenantID); err != nil {
 		return nil, err

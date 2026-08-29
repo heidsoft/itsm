@@ -26,20 +26,21 @@ func (h *Handler) toDTO(p *Problem) *dto.ProblemResponse {
 	}
 
 	resp := dto.ProblemResponse{
-		ID:          p.ID,
-		Title:       p.Title,
-		Description: p.Description,
-		Status:      p.Status,
-		Priority:    p.Priority,
-		Category:    p.Category,
-		RootCause:   p.RootCause,
-		Workaround:  p.Workaround,
-		Resolution:  p.Resolution,
-		Impact:      p.Impact,
-		CreatedBy:   p.CreatedBy,
-		TenantID:    p.TenantID,
-		CreatedAt:   p.CreatedAt,
-		UpdatedAt:   p.UpdatedAt,
+		ID:            p.ID,
+		ProblemNumber: p.ProblemNumber,
+		Title:         p.Title,
+		Description:   p.Description,
+		Status:        p.Status,
+		Priority:      p.Priority,
+		Category:      p.Category,
+		RootCause:     p.RootCause,
+		Workaround:    p.Workaround,
+		Resolution:    p.Resolution,
+		Impact:        p.Impact,
+		CreatedBy:     p.CreatedBy,
+		TenantID:      p.TenantID,
+		CreatedAt:     p.CreatedAt,
+		UpdatedAt:     p.UpdatedAt,
 	}
 	if p.AssigneeID != nil {
 		resp.AssigneeID = p.AssigneeID
@@ -572,10 +573,10 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 	// Problems don't have SLA tracking in the current schema;
 	// return a sensible default indicating no SLA configured.
 	common.Success(c, gin.H{
-		"slaStatus":         "none",
-		"responseTimeUsed":  0,
+		"slaStatus":          "none",
+		"responseTimeUsed":   0,
 		"resolutionTimeUsed": 0,
-		"responseBreached":  false,
+		"responseBreached":   false,
 		"resolutionBreached": false,
 	})
 }

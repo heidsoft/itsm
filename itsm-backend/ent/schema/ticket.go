@@ -68,7 +68,7 @@ func (Ticket) Fields() []ent.Field {
 			Comment("SLA响应截止时间").
 			Optional(),
 
-  		field.Time("sla_resolution_deadline").
+		field.Time("sla_resolution_deadline").
 			Comment("SLA解决截止时间").
 			Optional(),
 		field.String("sla_status").

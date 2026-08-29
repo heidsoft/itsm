@@ -26,6 +26,7 @@ func toDTO(c *Change) *dto.ChangeResponse {
 	}
 	res := &dto.ChangeResponse{
 		ID:                 c.ID,
+		ChangeNumber:       c.ChangeNumber,
 		Title:              c.Title,
 		Description:        c.Description,
 		Justification:      c.Justification,
@@ -260,7 +261,8 @@ func (h *Handler) ListChanges(c *gin.Context) {
 		return
 	}
 
-	var dtos []dto.ChangeResponse
+	// 空列表必须序列化为 [] 而非 null，否则前端列表页渲染失败
+	dtos := make([]dto.ChangeResponse, 0, len(list))
 	for _, item := range list {
 		dtos = append(dtos, *toDTO(item))
 	}
