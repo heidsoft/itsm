@@ -1818,6 +1818,11 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 		return nil, err
 	}
 
+	// 状态机校验：升级会强制置为 in_progress，终态（已解决/已关闭/已取消）不允许被拉回
+	if !IsValidTicketStatusTransition(string(current.Status), string(ticket.StatusInProgress)) {
+		return nil, fmt.Errorf("invalid status transition for escalation: %s -> %s", current.Status, ticket.StatusInProgress)
+	}
+
 	newPriority := s.getEscalatedPriority(string(current.Priority))
 	newAssignee := s.getEscalationAssignee(newPriority, tenantID)
 

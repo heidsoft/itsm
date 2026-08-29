@@ -111,7 +111,7 @@ func (r *Runner) reconcile(ctx context.Context, account *ent.CloudAccount, adapt
 
 	// 查询 CloudService 定义（用于获取 attribute_schema）
 	_, err := r.client.CloudService.Query().
-		Where(cloudservice.Provider(provider), cloudservice.ServiceCode(serviceCode)).
+		Where(cloudservice.TenantID(account.TenantID), cloudservice.Provider(provider), cloudservice.ServiceCode(serviceCode)).
 		Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return fmt.Errorf("查询 CloudService 失败: %w", err)

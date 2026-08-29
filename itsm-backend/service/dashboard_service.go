@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/database"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -26,6 +28,24 @@ type DashboardService struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
 }
+
+// 工单状态聚合统一口径（与 common.TicketStatus* 状态机保持一致）。
+// 2026-08-29 生产就绪评估 P0-2：此前统计使用不存在的 "submitted"、完成口径只计
+// "closed"，导致仪表盘"待处理/已完成/超时"与实际数据严重背离。
+var (
+	// 待处理：新建/打开/挂起/已分配未开工
+	ticketPendingStatuses = []string{
+		common.TicketStatusNew,
+		common.TicketStatusOpen,
+		common.TicketStatusPending,
+		common.TicketStatusAssigned,
+	}
+	// 已完成：已解决/已关闭
+	ticketCompletedStatuses = []string{
+		common.TicketStatusResolved,
+		common.TicketStatusClosed,
+	}
+)
 
 // DashboardOverviewStats Dashboard概览统计（扁平结构）
 type DashboardOverviewStats struct {
@@ -152,11 +172,11 @@ func (s *DashboardService) GetDashboardOverviewStats(ctx context.Context, tenant
 		return nil, err
 	}
 
-	// pending: TenantID + StatusIn("submitted","in_progress") + DeletedAtIsNil
+	// pending: 统一口径（新建/打开/挂起/已分配未开工）
 	pendingTickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.StatusIn("submitted", "in_progress"),
+			ticket.StatusIn(ticketPendingStatuses...),
 			ticket.DeletedAtIsNil(),
 		).
 		Count(ctx)
@@ -168,7 +188,7 @@ func (s *DashboardService) GetDashboardOverviewStats(ctx context.Context, tenant
 	inProgressTickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.StatusEQ("in_progress"),
+			ticket.StatusEQ(common.TicketStatusInProgress),
 			ticket.DeletedAtIsNil(),
 		).
 		Count(ctx)
@@ -176,13 +196,13 @@ func (s *DashboardService) GetDashboardOverviewStats(ctx context.Context, tenant
 		return nil, err
 	}
 
-	// resolved_today: TenantID + StatusEQ("closed") + DeletedAtIsNil (今天关闭的)
+	// resolved_today: 今天解决或关闭的工单
 	today := time.Now()
 	todayStart := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.Local)
 	resolvedToday, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.StatusEQ("closed"),
+			ticket.StatusIn(ticketCompletedStatuses...),
 			ticket.DeletedAtIsNil(),
 			ticket.UpdatedAtGTE(todayStart),
 		).
@@ -682,11 +702,11 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 		lastMonthTotal = 0
 	}
 
-	// 待处理工单（状态为 submitted, in_progress）
+	// 待处理工单（统一口径）
 	pendingTickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.StatusIn("submitted", "in_progress"),
+			ticket.StatusIn(ticketPendingStatuses...),
 			ticket.DeletedAtIsNil(),
 		).
 		Count(ctx)
@@ -698,7 +718,7 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 	lastMonthPending, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.StatusIn("submitted", "in_progress"),
+			ticket.StatusIn(ticketPendingStatuses...),
 			ticket.CreatedAtGTE(lastMonthStart),
 			ticket.CreatedAtLTE(lastMonthEnd),
 			ticket.DeletedAtIsNil(),
@@ -712,7 +732,7 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 	inProgressTickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.StatusEQ("in_progress"),
+			ticket.StatusEQ(common.TicketStatusInProgress),
 			ticket.DeletedAtIsNil(),
 		).
 		Count(ctx)
@@ -724,7 +744,7 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 	lastMonthInProgress, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.StatusEQ("in_progress"),
+			ticket.StatusEQ(common.TicketStatusInProgress),
 			ticket.CreatedAtGTE(lastMonthStart),
 			ticket.CreatedAtLTE(lastMonthEnd),
 			ticket.DeletedAtIsNil(),
@@ -739,7 +759,7 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 	completedTickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.StatusEQ("closed"),
+			ticket.StatusIn(ticketCompletedStatuses...),
 			ticket.CreatedAtGTE(thisMonthStart),
 			ticket.DeletedAtIsNil(),
 		).
@@ -752,7 +772,7 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 	lastMonthCompleted, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.StatusEQ("closed"),
+			ticket.StatusIn(ticketCompletedStatuses...),
 			ticket.CreatedAtGTE(lastMonthStart),
 			ticket.CreatedAtLTE(lastMonthEnd),
 			ticket.DeletedAtIsNil(),
@@ -873,12 +893,26 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 
 	slaComplianceChange := math.Round((slaCompliance-slaCompliancePrev)*10) / 10
 
-	// 超时工单
+	// 超时工单：未完结，且（尚未首次响应且已过响应时限）或（尚未解决且已过解决时限）
 	overdueTickets, _ := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.StatusIn("submitted", "in_progress"),
 			ticket.DeletedAtIsNil(),
+			ticket.StatusNotIn(
+				common.TicketStatusResolved,
+				common.TicketStatusClosed,
+				common.TicketStatusCancelled,
+			),
+			ticket.Or(
+				ticket.And(
+					ticket.FirstResponseAtIsNil(),
+					ticket.SLAResponseDeadlineLT(now),
+				),
+				ticket.And(
+					ticket.ResolvedAtIsNil(),
+					ticket.SLAResolutionDeadlineLT(now),
+				),
+			),
 		).
 		Count(ctx)
 
@@ -1005,11 +1039,11 @@ func (s *DashboardService) getTicketTrend(ctx context.Context, tenantID int, day
 		dateStart := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.Local)
 		dateEnd := dateStart.Add(24*time.Hour - time.Second)
 
-		// 该日期的工单统计
+		// 该日期的工单统计（统一状态口径）
 		openCount, _ := s.client.Ticket.Query().
 			Where(
 				ticket.TenantID(tenantID),
-				ticket.StatusEQ("submitted"),
+				ticket.StatusIn(ticketPendingStatuses...),
 				ticket.CreatedAtGTE(dateStart),
 				ticket.CreatedAtLTE(dateEnd),
 			).
@@ -1018,7 +1052,7 @@ func (s *DashboardService) getTicketTrend(ctx context.Context, tenantID int, day
 		inProgressCount, _ := s.client.Ticket.Query().
 			Where(
 				ticket.TenantID(tenantID),
-				ticket.StatusEQ("in_progress"),
+				ticket.StatusEQ(common.TicketStatusInProgress),
 				ticket.CreatedAtGTE(dateStart),
 				ticket.CreatedAtLTE(dateEnd),
 			).
@@ -1027,7 +1061,7 @@ func (s *DashboardService) getTicketTrend(ctx context.Context, tenantID int, day
 		resolvedCount, _ := s.client.Ticket.Query().
 			Where(
 				ticket.TenantID(tenantID),
-				ticket.StatusEQ("closed"),
+				ticket.StatusIn(ticketCompletedStatuses...),
 				ticket.UpdatedAtGTE(dateStart),
 				ticket.UpdatedAtLTE(dateEnd),
 			).
@@ -1036,7 +1070,7 @@ func (s *DashboardService) getTicketTrend(ctx context.Context, tenantID int, day
 		closedCount, _ := s.client.Ticket.Query().
 			Where(
 				ticket.TenantID(tenantID),
-				ticket.StatusEQ("closed"),
+				ticket.StatusEQ(common.TicketStatusClosed),
 				ticket.UpdatedAtGTE(dateStart),
 				ticket.UpdatedAtLTE(dateEnd),
 			).
@@ -1445,9 +1479,9 @@ func (s *DashboardService) getTeamWorkload(ctx context.Context, tenantID int) ([
 		}
 
 		// 统计完成和进行中的工单
-		if t.Status == "closed" || t.Status == "resolved" {
+		if slices.Contains(ticketCompletedStatuses, t.Status) {
 			stats.completedCount++
-		} else if t.Status == "in_progress" || t.Status == "submitted" {
+		} else if t.Status == common.TicketStatusInProgress || slices.Contains(ticketPendingStatuses, t.Status) {
 			stats.activeCount++
 		}
 	}
