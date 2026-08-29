@@ -492,6 +492,7 @@ export interface CreateWorkflowRequest {
   settings?: Partial<WorkflowSettings>;
   departmentId?: number;
   bpmnXml?: string;
+  publish?: boolean;
 }
 
 /**

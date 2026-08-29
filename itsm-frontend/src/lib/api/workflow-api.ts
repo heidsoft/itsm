@@ -281,6 +281,10 @@ export class WorkflowApi {
     return WorkflowApi.createWorkflow(request);
   }
 
+  static async createAndPublishProcessDefinition(request: CreateWorkflowRequest): Promise<WorkflowDefinition> {
+    return WorkflowApi.createWorkflow({ ...request, publish: true });
+  }
+
   static async updateProcessDefinition(
     key: string,
     request: UpdateWorkflowRequest,
@@ -499,6 +503,7 @@ export class WorkflowApi {
       description: request.description,
       category: request.category ?? request.type,
       bpmnXml: request.bpmnXml,
+      publish: request.publish ?? false,
     };
     return httpClient.post('/api/v1/bpmn/process-definitions', payload);
   }

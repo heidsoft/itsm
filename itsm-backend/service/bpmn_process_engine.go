@@ -1440,6 +1440,7 @@ type CreateProcessDefinitionRequest struct {
 	BPMNXML          string                 `json:"bpmnXml" binding:"required"`
 	ProcessVariables map[string]interface{} `json:"processVariables"`
 	TenantID         int                    `json:"tenantId" binding:"required"`
+	Publish          bool                   `json:"publish"`
 }
 
 type UpdateProcessDefinitionRequest struct {
@@ -1556,9 +1557,18 @@ type bpmnProcessDefinitionService struct {
 }
 
 func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Context, req *CreateProcessDefinitionRequest) (*ent.ProcessDefinition, error) {
+	if _, err := NewBPMNParser().ParseXML([]byte(req.BPMNXML)); err != nil {
+		return nil, fmt.Errorf("BPMN XML 校验失败: %w", err)
+	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("开始流程定义事务失败: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	client := tx.Client()
 	// 首先检查或创建 ProcessDeployment
 	var deployment *ent.ProcessDeployment
-	existingDeployments, err := s.client.ProcessDeployment.Query().
+	existingDeployments, err := client.ProcessDeployment.Query().
 		Where(processdeployment.TenantID(req.TenantID)).
 		Order(ent.Desc("created_at")).
 		Limit(1).
@@ -1568,7 +1578,7 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		deployment = existingDeployments[0]
 	} else {
 		// 创建新的部署记录
-		deployment, err = s.client.ProcessDeployment.Create().
+		deployment, err = client.ProcessDeployment.Create().
 			SetDeploymentID(fmt.Sprintf("deploy-%d", time.Now().UnixNano())).
 			SetDeploymentName(req.Name + "-deployment").
 			SetDeploymentSource("api").
@@ -1580,17 +1590,17 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 	}
 
 	// 获取当前最高版本号
-	nextVersion := s.getNextVersion(ctx, req.Key, req.TenantID)
+	nextVersion := s.getNextVersionWithClient(ctx, client, req.Key, req.TenantID)
 
 	// 将旧版本标记为非最新
-	existing, err := s.client.ProcessDefinition.Query().
+	existing, err := client.ProcessDefinition.Query().
 		Where(processdefinition.Key(req.Key)).
 		Where(processdefinition.IsLatest(true)).
 		Where(processdefinition.TenantID(req.TenantID)).
 		First(ctx)
 
 	if err == nil && existing != nil {
-		_, err = s.client.ProcessDefinition.UpdateOne(existing).
+		_, err = client.ProcessDefinition.UpdateOne(existing).
 			SetIsLatest(false).
 			Save(ctx)
 		if err != nil {
@@ -1598,7 +1608,7 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		}
 	}
 
-	definition, err := s.client.ProcessDefinition.Create().
+	definition, err := client.ProcessDefinition.Create().
 		SetKey(req.Key).
 		SetName(req.Name).
 		SetDescription(req.Description).
@@ -1606,7 +1616,7 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		SetBpmnXML([]byte(req.BPMNXML)).
 		SetProcessVariables(req.ProcessVariables).
 		SetVersion(nextVersion).
-		SetIsActive(true).
+		SetIsActive(req.Publish).
 		SetIsLatest(true).
 		SetTenantID(req.TenantID).
 		SetDeploymentID(deployment.ID).
@@ -1615,7 +1625,9 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 	if err != nil {
 		return nil, fmt.Errorf("创建流程定义失败: %w", err)
 	}
-
+	if err = tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交流程定义事务失败: %w", err)
+	}
 	return definition, nil
 }
 
@@ -1623,7 +1635,11 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 // 旧实现用 Order(Desc("version")) 对字符串版本号做字典序排序，多位数版本（如 1.10.0 vs 1.9.0）会被误判大小；
 // 此处改为在 Go 侧解析取最大 minor 后递增，避免字典序陷阱。
 func (s *bpmnProcessDefinitionService) getNextVersion(ctx context.Context, key string, tenantID int) string {
-	defs, err := s.client.ProcessDefinition.Query().
+	return s.getNextVersionWithClient(ctx, s.client, key, tenantID)
+}
+
+func (s *bpmnProcessDefinitionService) getNextVersionWithClient(ctx context.Context, client *ent.Client, key string, tenantID int) string {
+	defs, err := client.ProcessDefinition.Query().
 		Where(processdefinition.Key(key)).
 		Where(processdefinition.TenantID(tenantID)).
 		All(ctx)
@@ -2966,7 +2982,7 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 
 	// 根据会签类型和阈值判断是否需要终止其他任务
 	parentTask, err := s.client.ProcessTask.Query().
-		Where(processtask.TaskID(parentTaskID)).
+		Where(processtask.TaskID(parentTaskID), processtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
 		return nil
@@ -2986,32 +3002,56 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 	}
 
 	if approvalType == "serial" && req.Approved && status.Status == "pending" {
-		next, err := s.client.ProcessTask.Query().Where(processtask.ParentTaskID(parentTaskID), processtask.Status("created")).Order(ent.Asc(processtask.FieldID)).First(ctx)
+		next, err := s.client.ProcessTask.Query().Where(
+			processtask.ParentTaskID(parentTaskID),
+			processtask.TenantID(tenantID),
+			processtask.Status("created"),
+		).Order(ent.Asc(processtask.FieldID)).First(ctx)
 		if err == nil {
-			_ = s.client.ProcessTask.UpdateOneID(next.ID).SetStatus(common.ProcessTaskStatusAssigned).Exec(ctx)
+			_, _ = s.client.ProcessTask.Update().Where(
+				processtask.ID(next.ID),
+				processtask.TenantID(tenantID),
+				processtask.Status("created"),
+			).SetStatus(common.ProcessTaskStatusAssigned).Save(ctx)
 		}
 	}
 
 	// 检查是否达到阈值
 	if status.Status == "approved" || status.Status == "rejected" {
+		finalVariables := map[string]interface{}{
+			"approval_type": approvalType,
+			"threshold":     threshold,
+			"total":         status.Total,
+			"completed":     status.Completed,
+			"approved":      status.Approved,
+			"rejected":      status.Rejected,
+			"final_status":  status.Status,
+		}
+		// Only one concurrent voter may claim and advance the parent task. Other
+		// voters observe the finalizing/completed state and return successfully.
+		claimed, claimErr := s.client.ProcessTask.Update().Where(
+			processtask.ID(parentTask.ID),
+			processtask.TenantID(tenantID),
+			processtask.StatusNEQ("completed"),
+			processtask.StatusNEQ("cancelled"),
+			processtask.StatusNEQ("finalizing"),
+		).SetStatus("finalizing").SetTaskVariables(finalVariables).Save(ctx)
+		if claimErr != nil {
+			return fmt.Errorf("抢占会签父任务失败: %w", claimErr)
+		}
+		if claimed == 0 {
+			return nil
+		}
 		_, _ = s.client.ProcessTask.Update().
-			Where(processtask.ParentTaskID(parentTaskID), processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled")).
+			Where(
+				processtask.ParentTaskID(parentTaskID),
+				processtask.TenantID(tenantID),
+				processtask.StatusNEQ("completed"),
+				processtask.StatusNEQ("cancelled"),
+			).
 			SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx)
-		// 更新父任务
-		s.client.ProcessTask.UpdateOneID(parentTask.ID).
-			SetTaskVariables(map[string]interface{}{
-				"approval_type": approvalType,
-				"threshold":     threshold,
-				"total":         status.Total,
-				"completed":     status.Completed,
-				"approved":      status.Approved,
-				"rejected":      status.Rejected,
-				"final_status":  status.Status,
-			}).
-			Exec(ctx)
-		workflowCtx := context.WithValue(context.Background(), bpmn.BPMNTenantIDContextKey, parentTask.TenantID)
 		engine := NewCustomProcessEngine(s.client, s.logger)
-		if err := engine.CompleteTask(workflowCtx, parentTask.TaskID, map[string]interface{}{"approvalResult": status.Status, "approved": status.Status == "approved"}); err != nil {
+		if err := engine.CompleteTask(ctx, parentTask.TaskID, map[string]interface{}{"approvalResult": status.Status, "approved": status.Status == "approved"}); err != nil {
 			return fmt.Errorf("推进会签父任务失败: %w", err)
 		}
 	}

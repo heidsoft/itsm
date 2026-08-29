@@ -122,8 +122,8 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
       expect(screen.getByText('单人审批')).toBeInTheDocument();
       expect(screen.getByText(/^仅提醒/)).toBeInTheDocument();
       expect(screen.getByText('终止流程')).toBeInTheDocument();
-      expect(screen.getByText('委托')).toBeInTheDocument();
-      expect(screen.getByText('加签')).toBeInTheDocument();
+      expect(screen.getByText('委托（未就绪）')).toBeInTheDocument();
+      expect(screen.getByText('加签（未就绪）')).toBeInTheDocument();
       expect(screen.getByText('拒绝意见必填')).toBeInTheDocument();
     });
   });
@@ -183,17 +183,19 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
     fireEvent.click(commentSwitch);
     expect(onUpdateProperties).toHaveBeenCalledWith('Task_Approve', { commentRequiredOnReject: false });
 
-    // The 委托 switch is wired to allowDelegate.
+    // 未接线能力必须禁用，不能生成看似有效、运行时却被忽略的配置。
+    onUpdateProperties.mockClear();
     const delegateSwitch = switches[0];
     expect(delegateSwitch).not.toBeChecked();
+    expect(delegateSwitch).toBeDisabled();
     fireEvent.click(delegateSwitch);
-    expect(onUpdateProperties).toHaveBeenCalledWith('Task_Approve', { allowDelegate: true });
+    expect(onUpdateProperties).not.toHaveBeenCalled();
 
-    // The 加签 switch is wired to allowAddApprover.
     const addApproverSwitch = switches[1];
     expect(addApproverSwitch).not.toBeChecked();
+    expect(addApproverSwitch).toBeDisabled();
     fireEvent.click(addApproverSwitch);
-    expect(onUpdateProperties).toHaveBeenCalledWith('Task_Approve', { allowAddApprover: true });
+    expect(onUpdateProperties).not.toHaveBeenCalled();
   });
 
   it('does not render the 审批语义 panel for non-UserTask nodes', () => {

@@ -234,7 +234,7 @@ func (c *BPMNWorkflowController) CreateProcessDefinition(ctx *gin.Context) {
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程定义创建成功", definition)
+	common.SuccessWithMessage(ctx, "流程定义创建成功", dto.ToBPMNProcessDefinitionResponse(definition))
 }
 
 // ListProcessDefinitions 获取流程定义列表
@@ -325,7 +325,7 @@ func (c *BPMNWorkflowController) UpdateProcessDefinition(ctx *gin.Context) {
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程定义更新成功", definition)
+	common.SuccessWithMessage(ctx, "流程定义更新成功", dto.ToBPMNProcessDefinitionResponse(definition))
 }
 
 // DeleteProcessDefinition 删除流程定义

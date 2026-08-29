@@ -670,8 +670,8 @@ export default function WorkflowNodeInspector({
                     options={[{ label: '仅提醒（超时调度未就绪）', value: 'notify' }, { label: '升级审批（未就绪）', value: 'escalate' }, { label: '自动拒绝（未就绪）', value: 'auto_reject' }]}
                     className="w-full" size="small" />
                   <Space wrap>
-                    <Switch size="small" checked={currentAllowDelegate} onChange={v => apply({ allowDelegate: v })} />委托
-                    <Switch size="small" checked={currentAllowAddApprover} onChange={v => apply({ allowAddApprover: v })} />加签
+                    <Switch size="small" checked={currentAllowDelegate} disabled />委托（未就绪）
+                    <Switch size="small" checked={currentAllowAddApprover} disabled />加签（未就绪）
                     <Switch size="small" checked={currentCommentRequiredOnReject} onChange={v => apply({ commentRequiredOnReject: v })} />拒绝意见必填
                   </Space>
                 </Space>
@@ -692,16 +692,16 @@ export default function WorkflowNodeInspector({
                 <Button
                   size="small"
                   type="text"
-                  onClick={() => apply({ priority: '50' })}
+                  disabled
                 >
-                  普通优先级
+                  普通优先级（未就绪）
                 </Button>
                 <Button
                   size="small"
                   type="text"
-                  onClick={() => apply({ dueDate: 'PT24H' })}
+                  disabled
                 >
-                  24小时超时
+                  24小时超时（未就绪）
                 </Button>
               </Space>
             </div>
@@ -846,9 +846,10 @@ export default function WorkflowNodeInspector({
               </Text>
               <DebouncedInput
                 type="number"
-                placeholder="例如：50（数值越高越优先）"
+                placeholder="运行时优先级尚未接线"
                 value={currentPriority}
                 onCommit={value => apply({ priority: value })}
+                disabled
                 allowClear
                 size="small"
                 min={0}
@@ -862,9 +863,10 @@ export default function WorkflowNodeInspector({
                 截止时间 (dueDate)
               </Text>
               <DebouncedInput
-                placeholder="ISO 8601 或 P0Y0M0DT2H0M0S 格式"
+                placeholder="截止时间调度尚未接线"
                 value={currentDueDate}
                 onCommit={value => apply({ dueDate: value })}
+                disabled
                 allowClear
                 size="small"
               />
@@ -876,9 +878,10 @@ export default function WorkflowNodeInspector({
                 提醒时间 (followUpDate)
               </Text>
               <DebouncedInput
-                placeholder="ISO 8601 或 P0Y0M0DT1H0M0S 格式"
+                placeholder="提醒时间调度尚未接线"
                 value={currentFollowUpDate}
                 onCommit={value => apply({ followUpDate: value })}
+                disabled
                 allowClear
                 size="small"
               />

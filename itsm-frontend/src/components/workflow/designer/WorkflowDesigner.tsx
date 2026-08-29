@@ -598,7 +598,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           type: workflow.category || 'general',
         };
 
-        const response = (await WorkflowAPI.createProcessDefinition(createData as any)) as any;
+        const response = (await WorkflowAPI.createAndPublishProcessDefinition(createData as any)) as any;
 
         if (!response) {
           throw new Error(t('workflow.designer.createEmptyResponse'));
@@ -610,9 +610,6 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         if (!newKey) {
           throw new Error(t('workflow.designer.createMissingId'));
         }
-
-        await new Promise(resolve => setTimeout(resolve, 500));
-        await WorkflowAPI.deployProcessDefinition(newKey, newVersion);
 
         updateWorkflow({
           id: newKey,
