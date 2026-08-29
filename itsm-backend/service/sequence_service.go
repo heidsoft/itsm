@@ -61,56 +61,46 @@ func (s *SequenceService) GetNextSequence(ctx context.Context, key string) (int6
 // GetNextSequenceWithExpiry 获取下一个序列号并设置过期时间
 // 方案B：Redis初始化时从DB同步起点，避免Redis重置后编号碰撞
 // expiredAt: 序列过期时间（用于按月重置等场景）
+//
+// 并发安全修复：原实现 GET->判断->SET 存在 check-then-act 竞态--并发时某协程
+// 可能在 current==0 分支用 SET 直接覆盖已被其他协程 INCR 推进的计数器（回拨），
+// 导致多个请求拿到同一序列号。现改为：① 仅当 key 不存在/为0时用 SETNX 播种
+// 起点（绝不覆盖既有值）；② 统一走 INCR 原子递增，保证单调不回拨。
 func (s *SequenceService) GetNextSequenceWithExpiry(ctx context.Context, key string, expiredAt time.Time) (int64, error) {
-	// 尝试获取当前值
+	// 检查 key 是否已初始化
 	current, err := s.client.Get(ctx, key).Int64()
 	if err != nil && err != redis.Nil {
 		return 0, fmt.Errorf("failed to get sequence: %w", err)
 	}
 
-	// 如果序列不存在或为0，从DB同步起点（仅当dbQueryMaxSeqFn存在时）
-	if (err == redis.Nil || current == 0) && s.dbQueryMaxSeqFn != nil {
-		// 从DB获取当前最大序列号
-		dbMax, dbErr := s.dbQueryMaxSeqFn(key)
-		if dbErr == nil && dbMax > 0 {
-			// 用SetArgs+NX确保只有第一个请求设置成功（其他请求会失败并重读）
-			set, setErr := s.client.SetArgs(ctx, key, dbMax, redis.SetArgs{Mode: "NX", TTL: time.Until(expiredAt)}).Result()
-			if setErr != nil && setErr != redis.Nil {
-				s.logger.Warnw("SetArgs NX failed, will retry read", "key", key, "error", setErr)
+	// 仅当 key 不存在或为0时播种起点；SETNX 保证只有第一个请求写入成功，
+	// 后来者写入失败也无妨--直接走 INCR 即可，绝不会回拨计数器
+	if err == redis.Nil || current == 0 {
+		start := int64(1)
+		if s.dbQueryMaxSeqFn != nil {
+			if dbMax, dbErr := s.dbQueryMaxSeqFn(key); dbErr == nil && dbMax > 0 {
+				start = dbMax
+				s.logger.Infow("Redis sequence seeded from DB", "key", key, "dbMax", dbMax)
 			}
-			if set != "OK" {
-				// 其他协程已初始化，重新读取
-				current, _ = s.client.Get(ctx, key).Int64()
-			} else {
-				// 自己成功设置了DB最大值
-				current = dbMax
-				s.logger.Infow("Redis sequence synced from DB", "key", key, "dbMax", dbMax)
-			}
+		}
+		if setErr := s.client.SetArgs(ctx, key, start, redis.SetArgs{
+			Mode: "NX",
+			TTL:  time.Until(expiredAt),
+		}).Err(); setErr != nil && setErr != redis.Nil {
+			s.logger.Warnw("SETNX seed failed, will rely on INCR", "key", key, "error", setErr)
 		}
 	}
 
-	// 如果仍然是0（无DB同步或DB也无数据），初始化为1
-	if current == 0 {
-		current = 1
-		err := s.client.Set(ctx, key, current, time.Until(expiredAt)).Err()
-		if err != nil {
-			return 0, fmt.Errorf("failed to init sequence: %w", err)
-		}
-		return current, nil
-	}
-
-	// 递增
+	// 原子递增：无论播种成败都安全（未播种成功时从 0 -> 1）
 	seq, err := s.client.Incr(ctx, key).Result()
 	if err != nil {
 		return 0, fmt.Errorf("failed to increment sequence: %w", err)
 	}
 
-	// 检查是否需要更新过期时间
-	ttl, err := s.client.TTL(ctx, key).Result()
-	if err == nil && ttl <= 0 {
+	// 补充过期时间（SETNX 写入时已带 TTL，此处兜底无 TTL 的旧 key）
+	if ttl, terr := s.client.TTL(ctx, key).Result(); terr == nil && ttl <= 0 {
 		s.client.Expire(ctx, key, time.Until(expiredAt))
 	}
-
 	return seq, nil
 }
 

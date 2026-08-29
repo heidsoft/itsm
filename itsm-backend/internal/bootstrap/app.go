@@ -88,6 +88,90 @@ type Application struct {
 	backgroundWG sync.WaitGroup
 }
 
+// makeSequenceDBSyncFn 构造 Redis 序列的 DB 播种函数。
+// 支持 key 格式：
+//   - sequence:ticket:<tenantID>:<YYYYMM>   -> 当月最大 ticket_number 按租户
+//   - sequence:incident:<YYYYMM>            -> 当月最大 incident_number 全局（唯一约束不含租户）
+//
+// 必须使用原生 SQL：
+//  1. Ent 全局软删拦截器 (database/softdelete.go) 会给所有 Query 附加
+//     DeletedAtIsNil()，但已软删记录的编号仍占用物理唯一约束，播种若忽略
+//     它们会撞号（实测复现）；
+//  2. 原生 SQL 与唯一约束视角完全一致（含软删记录）。
+//
+// 返回 DB 当前最大尾号；SequenceService 用 SETNX 播种该值后首次 INCR 即 max+1。
+func makeSequenceDBSyncFn(db *sql.DB, logger *zap.SugaredLogger) func(key string) (int64, error) {
+	// 尾号解析：取末段 "-" 之后的数字
+	parseSeq := func(number string) int64 {
+		if idx := strings.LastIndex(number, "-"); idx >= 0 && idx+1 < len(number) {
+			var seq int64
+			if _, err := fmt.Sscanf(number[idx+1:], "%d", &seq); err == nil {
+				return seq
+			}
+		}
+		return 0
+	}
+
+	queryMax := func(query string, args ...interface{}) (int64, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		var maxNum string
+		err := db.QueryRowContext(ctx, query, args...).Scan(&maxNum)
+		if err != nil {
+			if sql.ErrNoRows == err {
+				return 0, nil
+			}
+			return 0, err
+		}
+		if maxNum == "" {
+			return 0, nil
+		}
+		return parseSeq(maxNum), nil
+	}
+
+	return func(key string) (int64, error) {
+		// 注意：fmt.Sscanf 不支持 %04d 宽度语义（%d 会贪婪吞掉整个 202608），
+		// 必须按固定长度手动切分
+		if strings.HasPrefix(key, "sequence:incident:") {
+			ym := strings.TrimPrefix(key, "sequence:incident:")
+			if len(ym) != 6 {
+				return 0, fmt.Errorf("invalid incident sequence key: %s", key)
+			}
+			year, month := ym[:4], ym[4:]
+			prefix := fmt.Sprintf("INC-%s%s-", year, month)
+			// incident_number 为全局唯一约束，跨租户取最大；原生 SQL 含软删记录
+			return queryMax(
+				`SELECT incident_number FROM incidents `+
+					`WHERE incident_number LIKE $1 AND incident_number IS NOT NULL AND incident_number != '' `+
+					`ORDER BY incident_number DESC LIMIT 1`,
+				prefix+"%",
+			)
+		}
+
+		// sequence:ticket:<tenantID>:<YYYYMM>
+		if parts := strings.Split(key, ":"); len(parts) == 4 && parts[0] == "sequence" && parts[1] == "ticket" {
+			tenantID, ym := parts[2], parts[3]
+			if len(ym) != 6 {
+				return 0, fmt.Errorf("invalid ticket sequence key: %s", key)
+			}
+			prefix := fmt.Sprintf("TKT-%s%s-", ym[:4], ym[4:])
+			tid, err := strconv.Atoi(tenantID)
+			if err != nil {
+				return 0, fmt.Errorf("invalid tenant id in sequence key: %s", key)
+			}
+			return queryMax(
+				`SELECT ticket_number FROM tickets `+
+					`WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' `+
+					`ORDER BY ticket_number DESC LIMIT 1`,
+				tid, prefix+"%",
+			)
+		}
+
+		logger.Warnw("Unsupported sequence key, skip DB sync", "key", key)
+		return 0, fmt.Errorf("unsupported sequence key: %s", key)
+	}
+}
+
 // prepareRolePermissionTenantMigration upgrades installations created before
 // role_permissions became tenant-scoped. Ent cannot add a required column to a
 // populated table directly, so the compatibility step adds it as nullable and
@@ -223,7 +307,16 @@ func NewApplication() *Application {
 	)
 	if ss != nil {
 		sequenceService = ss
-		sugar.Infow("Redis sequence service initialized successfully")
+		// 注册 DB 同步函数：Redis 序列被清空（重启/淘汰）后从 DB 最大编号播种，
+		// 避免从 1 重新计数撞上历史唯一编号（S-4 事件编号复用 P0 的装配缺口）。
+		// 用独立 *sql.DB + 原生 SQL：需读取含软删记录的物理最大编号，与唯一
+		// 约束视角一致，绕过 Ent 软删拦截器
+		if seqDB, derr := database.InitDB(&cfg.Database); derr == nil {
+			ss.SetDBQueryFunc(makeSequenceDBSyncFn(seqDB, sugar))
+			sugar.Infow("Redis sequence service initialized successfully with DB sync")
+		} else {
+			sugar.Warnw("Sequence DB sync unavailable, will start from 1 on Redis reset", "error", derr)
+		}
 	} else {
 		sugar.Warnw("Redis sequence service not available, will use database fallback for ticket number")
 	}
