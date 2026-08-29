@@ -793,6 +793,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	if targetStatus == "approved" || targetStatus == "rejected" {
 		history, err := s.repo.GetApprovalHistory(ctx, id, tenantID)
 		if err != nil {
+			s.logger.Errorw("TransitionStatus: failed to get approval history", "error", err, "change_id", id, "tenant_id", tenantID)
 			return nil, fmt.Errorf("failed to get approval history")
 		}
 		// Find if this user has a pending approval

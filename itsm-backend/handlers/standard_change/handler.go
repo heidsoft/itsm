@@ -337,7 +337,7 @@ func (h *Handler) DeleteStandardChange(c *gin.Context) {
 
 	// Soft delete - just deactivate
 	_, err = h.client.StandardChange.Update().
-		Where(entstandardchange.ID(id)).
+		Where(entstandardchange.ID(id), entstandardchange.TenantID(tenantID)).
 		SetIsActive(false).
 		Save(ctx)
 	if err != nil {

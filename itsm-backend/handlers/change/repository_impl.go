@@ -6,8 +6,6 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -501,21 +499,14 @@ func (r *EntRepository) UpdateApprovalRecord(ctx context.Context, rec *ApprovalR
 }
 
 func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
-	// P1 修复：同时派生该审批人在审批链中所属层级（levels，逗号分隔），供 service 层按
-	// (approverID, level) 双重匹配，避免跨层互相串。level 不存在于 change_approvals，
-	// 由 change_approval_chains 子查询派生（不产生行扇出，保持历史记录条数不变）。
+	// P1 修复：同时派生该审批人在审批链中所属层级（levels），供 service 层按
+	// (approverID, level) 双重匹配，避免跨层互相串。
 	//
-	// SQL 跨方言兼容性：PostgreSQL `string_agg(int_value, sep)` 接受 int 入参并自动隐式转 text，
-	// 因此 `::text` 显式 cast 在 SQLite 上不被识别（`unrecognized token: ":"`）。
-	// 去除 `::text` 后双方言均可运行（PG 仍走 string_agg；SQLite 把它识别为自定义聚合，
-	// SQLite ≥ 3.39 起对 `string_agg` 提供兼容别名）。
+	// 方言兼容性：PG 的 string_agg 对 aggregate 参数不做隐式 int->text 转换
+	// （string_agg(integer, unknown) does not exist），SQLite 又不识别 ::text，
+	// 因此 levels 改由独立查询派生并在 Go 侧拼接，双方言均可运行。
 	query := `
-		SELECT a.id, a.approver_id, u.name as approver_name, a.status, a.comment, a.approved_at, a.created_at,
-		       COALESCE((
-				   SELECT string_agg(c.level, ',' ORDER BY c.level)
-				   FROM change_approval_chains c
-				   WHERE c.change_id = a.change_id AND c.tenant_id = a.tenant_id AND c.approver_id = a.approver_id
-			   ), '') AS levels
+		SELECT a.id, a.approver_id, u.name as approver_name, a.status, a.comment, a.approved_at, a.created_at
 		FROM change_approvals a
 		LEFT JOIN users u ON a.approver_id = u.id
 		LEFT JOIN changes c ON a.change_id = c.id
@@ -533,40 +524,53 @@ func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, te
 	for rows.Next() {
 		var rec ApprovalRecord
 		var approvedAt sql.NullTime
-		var levelsCSV string
-		err := rows.Scan(&rec.ID, &rec.ApproverID, &rec.ApproverName, &rec.Status, &rec.Comment, &approvedAt, &rec.CreatedAt, &levelsCSV)
+		err := rows.Scan(&rec.ID, &rec.ApproverID, &rec.ApproverName, &rec.Status, &rec.Comment, &approvedAt, &rec.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
 		if approvedAt.Valid {
 			rec.ApprovedAt = &approvedAt.Time
 		}
-		rec.Levels = parseLevelCSV(levelsCSV)
 		rec.ChangeID = changeID
 		rec.TenantID = tenantID
 		records = append(records, &rec)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	levelsByApprover, err := r.getApprovalChainLevels(ctx, changeID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	for _, rec := range records {
+		rec.Levels = levelsByApprover[rec.ApproverID]
+	}
 	return records, nil
 }
 
-// parseLevelCSV 将 "1,2,3" 解析为 []int{1,2,3}；空串返回 nil。
-func parseLevelCSV(s string) []int {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
+// getApprovalChainLevels 返回审批链中每位审批人的层级列表（按 level 升序）。
+func (r *EntRepository) getApprovalChainLevels(ctx context.Context, changeID int, tenantID int) (map[int][]int, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT approver_id, level
+		FROM change_approval_chains
+		WHERE change_id = $1 AND tenant_id = $2
+		ORDER BY approver_id, level
+	`, changeID, tenantID)
+	if err != nil {
+		return nil, err
 	}
-	parts := strings.Split(s, ",")
-	out := make([]int, 0, len(parts))
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		if p == "" {
-			continue
+	defer rows.Close()
+
+	levels := make(map[int][]int)
+	for rows.Next() {
+		var approverID, level int
+		if err := rows.Scan(&approverID, &level); err != nil {
+			return nil, err
 		}
-		if v, err := strconv.Atoi(p); err == nil {
-			out = append(out, v)
-		}
+		levels[approverID] = append(levels[approverID], level)
 	}
-	return out
+	return levels, rows.Err()
 }
 
 // Approval Chain (Raw SQL)
