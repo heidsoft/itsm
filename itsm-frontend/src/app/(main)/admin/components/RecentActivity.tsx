@@ -1,63 +1,70 @@
 'use client';
 
-import React from 'react';
-import { Card, List, Space, Typography, Avatar, Button, Tag, theme } from 'antd';
-import { Activity, Users, Workflow, Shield, BookOpen, Bell, Clock } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, List, Space, Typography, Avatar, Button, Tag, theme, Empty, Skeleton } from 'antd';
+import {
+  Activity,
+  Clock,
+  Ticket,
+  AlertCircle,
+  RefreshCw,
+  Wrench,
+} from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { DashboardAPI } from '@/lib/api/dashboard-api';
+import type { RecentActivity as RecentActivityData } from '@/app/(main)/dashboard/types/dashboard.types';
 
 const { Text } = Typography;
 
-const recentActivities = [
-  {
-    id: 1,
-    type: 'user_created',
-    title: '新用户注册',
-    description: '张三 加入了系统',
-    time: '2分钟前',
-    icon: Users,
-    color: 'bg-blue-100 text-blue-600',
-  },
-  {
-    id: 2,
-    type: 'workflow_updated',
-    title: '工作流更新',
-    description: '事件管理流程已更新',
-    time: '1小时前',
-    icon: Workflow,
-    color: 'bg-green-100 text-green-600',
-  },
-  {
-    id: 3,
-    type: 'role_assigned',
-    title: '角色分配',
-    description: '为李四分配了管理员角色',
-    time: '3小时前',
-    icon: Shield,
-    color: 'bg-purple-100 text-purple-600',
-  },
-  {
-    id: 4,
-    type: 'service_added',
-    title: '服务目录更新',
-    description: '新增云存储服务项',
-    time: '5小时前',
-    icon: BookOpen,
-    color: 'bg-orange-100 text-orange-600',
-  },
-  {
-    id: 5,
-    type: 'notification_sent',
-    title: '通知发送',
-    description: '系统维护通知已发送',
-    time: '1天前',
-    icon: Bell,
-    color: 'bg-yellow-100 text-yellow-600',
-  },
-];
+// 将 ISO 时间格式化为相对时间（例如：2分钟前）
+const formatRelativeTime = (iso: string): string => {
+  const ts = new Date(iso).getTime();
+  if (Number.isNaN(ts)) return iso;
+  const diffSec = Math.floor((Date.now() - ts) / 1000);
+  if (diffSec < 60) return '刚刚';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}分钟前`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour}小时前`;
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffDay < 30) return `${diffDay}天前`;
+  return new Date(ts).toLocaleDateString('zh-CN');
+};
+
+// 活动类型 → 图标与配色
+const ACTIVITY_META: Record<
+  string,
+  { icon: React.ComponentType<{ className?: string; size?: number }>; color: string; tokenColor: string }
+> = {
+  ticket: { icon: Ticket, color: 'bg-blue-100 text-blue-600', tokenColor: 'colorPrimary' },
+  incident: { icon: AlertCircle, color: 'bg-red-100 text-red-600', tokenColor: 'colorError' },
+  change: { icon: RefreshCw, color: 'bg-green-100 text-green-600', tokenColor: 'colorSuccess' },
+  problem: { icon: Wrench, color: 'bg-purple-100 text-purple-600', tokenColor: '#722ed1' },
+  default: { icon: Activity, color: 'bg-gray-100 text-gray-600', tokenColor: 'colorTextSecondary' },
+};
 
 export const RecentActivity: React.FC = () => {
   const { token } = theme.useToken();
   const { t } = useI18n();
+  const [loading, setLoading] = useState(true);
+  const [activities, setActivities] = useState<RecentActivityData[]>([]);
+
+  const loadActivities = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await DashboardAPI.getRecentActivities(8);
+      setActivities(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to load recent activities:', error);
+      setActivities([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadActivities();
+  }, [loadActivities]);
 
   return (
     <Card
@@ -65,72 +72,92 @@ export const RecentActivity: React.FC = () => {
         <Space>
           <Activity className="w-5 h-5" />
           {t('admin.recentActivity')}
-          <Tag color="gold">示例数据</Tag>
+          <Tag color="blue">实时</Tag>
         </Space>
       }
       extra={
-        <Button type="link" size="small">
-          {t('admin.viewAll')}
+        <Button type="link" size="small" onClick={() => void loadActivities()} loading={loading}>
+          {t('admin.refresh')}
         </Button>
       }
       style={{ height: '100%' }}
     >
-      <List
-        dataSource={recentActivities}
-        renderItem={activity => {
-          const Icon = activity.icon;
-          const getActivityColor = (colorClass: string) => {
-            if (colorClass.includes('blue')) return token.colorPrimary;
-            if (colorClass.includes('green')) return token.colorSuccess;
-            if (colorClass.includes('purple')) return '#722ed1';
-            if (colorClass.includes('orange')) return '#f97316';
-            if (colorClass.includes('yellow')) return token.colorWarning;
-            return token.colorPrimary;
-          };
+      {loading ? (
+        <Skeleton active paragraph={{ rows: 5 }} />
+      ) : activities.length === 0 ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={t('admin.noRecentActivity')}
+          style={{ padding: '24px 0' }}
+        />
+      ) : (
+        <List
+          dataSource={activities}
+          renderItem={activity => {
+            const meta = ACTIVITY_META[activity.type] || ACTIVITY_META.default;
+            const Icon = meta.icon;
+            const color =
+              meta.tokenColor === 'colorPrimary'
+                ? token.colorPrimary
+                : meta.tokenColor === 'colorSuccess'
+                  ? token.colorSuccess
+                  : meta.tokenColor === 'colorError'
+                    ? token.colorError
+                    : meta.tokenColor === 'colorTextSecondary'
+                      ? token.colorTextSecondary
+                      : meta.tokenColor;
 
-          return (
-            <List.Item
-              style={{
-                padding: `${token.paddingSM}px 0`,
-                borderBottom: `1px solid ${token.colorBorder}`,
-              }}
-            >
-              <List.Item.Meta
-                avatar={
-                  <Avatar
-                    style={{
-                      backgroundColor: getActivityColor(activity.color),
-                    }}
-                    icon={<Icon className="w-4 h-4" />}
-                  />
-                }
-                title={
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text strong>{activity.title}</Text>
-                    <Space
-                      align="center"
+            return (
+              <List.Item
+                style={{
+                  padding: `${token.paddingSM}px 0`,
+                  borderBottom: `1px solid ${token.colorBorder}`,
+                }}
+              >
+                <List.Item.Meta
+                  avatar={
+                    <Avatar style={{ backgroundColor: color }}>
+                      <Icon className="w-4 h-4" />
+                    </Avatar>
+                  }
+                  title={
+                    <div
                       style={{
-                        color: token.colorTextSecondary,
-                        fontSize: token.fontSizeSM,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
                       }}
                     >
-                      <Clock className="w-3 h-3" />
-                      {activity.time}
-                    </Space>
-                  </div>
-                }
-                description={activity.description}
-              />
-            </List.Item>
-          );
-        }}
-      />
+                      <Text strong>{activity.title}</Text>
+                      <Space
+                        align="center"
+                        style={{ color: token.colorTextSecondary, fontSize: token.fontSizeSM }}
+                      >
+                        <Clock className="w-3 h-3" />
+                        {formatRelativeTime(activity.timestamp)}
+                      </Space>
+                    </div>
+                  }
+                  description={
+                    <span>
+                      {activity.description}
+                      {activity.user ? ` · ${activity.user}` : ''}
+                      {activity.status ? (
+                        <Tag
+                          color="default"
+                          style={{ marginLeft: 8, fontSize: 12 }}
+                        >
+                          {activity.status}
+                        </Tag>
+                      ) : null}
+                    </span>
+                  }
+                />
+              </List.Item>
+            );
+          }}
+        />
+      )}
     </Card>
   );
 };

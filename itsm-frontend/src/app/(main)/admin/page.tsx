@@ -17,10 +17,10 @@ const AdminDashboardSkeleton: React.FC = () => {
       <Skeleton.Input className="w-full h-32" active />
       <Skeleton active paragraph={{ rows: 4 }} />
       <Row gutter={[24, 24]}>
-        <Col xs={24} lg={8}>
+        <Col xs={24} lg={12}>
           <Skeleton active paragraph={{ rows: 6 }} />
         </Col>
-        <Col xs={24} lg={16}>
+        <Col xs={24} lg={12}>
           <Skeleton active paragraph={{ rows: 8 }} />
         </Col>
       </Row>
@@ -43,10 +43,10 @@ const AdminDashboard = () => {
         <SystemOverview stats={stats} loading={loading} />
       </div>
       <Row gutter={[24, 24]}>
-        <Col xs={24} lg={8}>
+        <Col xs={24} lg={12}>
           <SystemHealth />
         </Col>
-        <Col xs={24} lg={16}>
+        <Col xs={24} lg={12}>
           <RecentActivity />
         </Col>
       </Row>

@@ -523,6 +523,7 @@ func (s *PermissionService) InitDefaultPermissions(ctx context.Context, tenantID
 		"dashboard":       {"read", "view"},
 		"ticket":          {"create", "read", "write", "update", "delete", "assign", "export"},
 		"ticket_category": {"create", "read", "write", "update", "delete"},
+		"ticket_type":     {"create", "read", "write", "update", "delete", "manage", "archive"},
 		"incident":        {"create", "read", "write", "update", "delete", "assign", "export"},
 		"problem":         {"create", "read", "write", "update", "delete", "export"},
 		"change":          {"create", "read", "write", "update", "delete", "approve", "export"},

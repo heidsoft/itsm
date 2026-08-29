@@ -158,6 +158,14 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "report", Action: "read"},
 		// MSP 权限
 		{Resource: "msp", Action: "read"},
+		// 工单类型管理权限（创建/编辑工单类型入口依赖 ticket_type:manage）
+		{Resource: "ticket_type", Action: "read"},
+		{Resource: "ticket_type", Action: "write"},
+		{Resource: "ticket_type", Action: "create"},
+		{Resource: "ticket_type", Action: "update"},
+		{Resource: "ticket_type", Action: "delete"},
+		{Resource: "ticket_type", Action: "manage"},
+		{Resource: "ticket_type", Action: "archive"},
 	},
 	"manager": {
 		{Resource: "ticket", Action: "read"},

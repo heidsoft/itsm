@@ -12,6 +12,23 @@ import {
   CheckCircle,
   Shield,
   Search,
+  Ticket,
+  AlertCircle,
+  Wrench,
+  BookOpen,
+  FileText,
+  Book,
+  Database,
+  Monitor,
+  Rocket,
+  LineChart,
+  Users,
+  Building,
+  GitMerge,
+  SlidersHorizontal,
+  Bot,
+  Tag as TagIcon,
+  KeyRound,
 } from 'lucide-react';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -44,6 +61,7 @@ const { Title, Text } = Typography;
 const PERMISSION_MODULES = {
   DASHBOARD: 'dashboard',
   TICKETS: 'ticket',
+  TICKET_CATEGORY: 'ticket_category',
   INCIDENTS: 'incident',
   PROBLEMS: 'problem',
   CHANGES: 'change',
@@ -52,6 +70,8 @@ const PERMISSION_MODULES = {
   KNOWLEDGE_BASE: 'knowledge',
   CMDB: 'cmdb',
   ASSETS: 'asset',
+  LICENSE: 'license',
+  TICKET_TYPE: 'ticket_type',
   RELEASES: 'release',
   REPORTS: 'report',
   ADMIN: 'admin',
@@ -149,27 +169,31 @@ function buildPermissionStringsFromState(state: PermissionState): string[] {
 }
 
 // 模块图标与分类映射（静态部分）
-const MODULE_META: Record<string, { icon: string; categoryKey: 'core' | 'service' | 'analysis' | 'system' }> = {
-  [PERMISSION_MODULES.DASHBOARD]: { icon: '📊', categoryKey: 'core' },
-  [PERMISSION_MODULES.TICKETS]: { icon: '🎫', categoryKey: 'core' },
-  [PERMISSION_MODULES.INCIDENTS]: { icon: '🚨', categoryKey: 'core' },
-  [PERMISSION_MODULES.PROBLEMS]: { icon: '🔧', categoryKey: 'core' },
-  [PERMISSION_MODULES.CHANGES]: { icon: '🔄', categoryKey: 'core' },
-  [PERMISSION_MODULES.SERVICE_CATALOG]: { icon: '📋', categoryKey: 'service' },
-  [PERMISSION_MODULES.SERVICE_REQUEST]: { icon: '🧾', categoryKey: 'service' },
-  [PERMISSION_MODULES.KNOWLEDGE_BASE]: { icon: '📚', categoryKey: 'service' },
-  [PERMISSION_MODULES.CMDB]: { icon: '🧩', categoryKey: 'core' },
-  [PERMISSION_MODULES.ASSETS]: { icon: '💻', categoryKey: 'core' },
-  [PERMISSION_MODULES.RELEASES]: { icon: '🚀', categoryKey: 'core' },
-  [PERMISSION_MODULES.REPORTS]: { icon: '📈', categoryKey: 'analysis' },
-  [PERMISSION_MODULES.ADMIN]: { icon: '⚙️', categoryKey: 'system' },
-  [PERMISSION_MODULES.USERS]: { icon: '👥', categoryKey: 'system' },
-  [PERMISSION_MODULES.ROLES]: { icon: '🛡️', categoryKey: 'system' },
-  [PERMISSION_MODULES.GROUPS]: { icon: '👪', categoryKey: 'system' },
-  [PERMISSION_MODULES.ORG]: { icon: '🏢', categoryKey: 'system' },
-  [PERMISSION_MODULES.WORKFLOWS]: { icon: '🔀', categoryKey: 'system' },
-  [PERMISSION_MODULES.SYSTEM_CONFIG]: { icon: '🔧', categoryKey: 'system' },
-  [PERMISSION_MODULES.AI]: { icon: '🤖', categoryKey: 'system' },
+// 使用 lucide 图标组件，保证在所有环境下稳定渲染（避免 emoji 在部分字体下显示为占位符/文本）
+const MODULE_META: Record<string, { icon: React.ComponentType<{ className?: string; size?: number }>; categoryKey: 'core' | 'service' | 'analysis' | 'system' }> = {
+  [PERMISSION_MODULES.DASHBOARD]: { icon: BarChart3, categoryKey: 'core' },
+  [PERMISSION_MODULES.TICKETS]: { icon: Ticket, categoryKey: 'core' },
+  [PERMISSION_MODULES.INCIDENTS]: { icon: AlertCircle, categoryKey: 'core' },
+  [PERMISSION_MODULES.PROBLEMS]: { icon: Wrench, categoryKey: 'core' },
+  [PERMISSION_MODULES.CHANGES]: { icon: RefreshCw, categoryKey: 'core' },
+  [PERMISSION_MODULES.SERVICE_CATALOG]: { icon: BookOpen, categoryKey: 'service' },
+  [PERMISSION_MODULES.SERVICE_REQUEST]: { icon: FileText, categoryKey: 'service' },
+  [PERMISSION_MODULES.KNOWLEDGE_BASE]: { icon: Book, categoryKey: 'service' },
+  [PERMISSION_MODULES.CMDB]: { icon: Database, categoryKey: 'core' },
+  [PERMISSION_MODULES.ASSETS]: { icon: Monitor, categoryKey: 'core' },
+  [PERMISSION_MODULES.LICENSE]: { icon: KeyRound, categoryKey: 'core' },
+  [PERMISSION_MODULES.TICKET_CATEGORY]: { icon: TagIcon, categoryKey: 'core' },
+  [PERMISSION_MODULES.TICKET_TYPE]: { icon: Layers, categoryKey: 'core' },
+  [PERMISSION_MODULES.RELEASES]: { icon: Rocket, categoryKey: 'core' },
+  [PERMISSION_MODULES.REPORTS]: { icon: LineChart, categoryKey: 'analysis' },
+  [PERMISSION_MODULES.ADMIN]: { icon: Settings, categoryKey: 'system' },
+  [PERMISSION_MODULES.USERS]: { icon: Users, categoryKey: 'system' },
+  [PERMISSION_MODULES.ROLES]: { icon: Shield, categoryKey: 'system' },
+  [PERMISSION_MODULES.GROUPS]: { icon: Users, categoryKey: 'system' },
+  [PERMISSION_MODULES.ORG]: { icon: Building, categoryKey: 'system' },
+  [PERMISSION_MODULES.WORKFLOWS]: { icon: GitMerge, categoryKey: 'system' },
+  [PERMISSION_MODULES.SYSTEM_CONFIG]: { icon: SlidersHorizontal, categoryKey: 'system' },
+  [PERMISSION_MODULES.AI]: { icon: Bot, categoryKey: 'system' },
 };
 
 const ACTION_COLOR: Record<string, string> = {
@@ -214,7 +238,7 @@ const PermissionConfiguration = () => {
 
   // 模块配置（运行时国际化）
   const moduleConfig = useMemo(() => {
-    const result: Record<string, { label: string; icon: string; description: string; category: string; categoryKey: string }> = {};
+    const result: Record<string, { label: string; icon: React.ComponentType<{ className?: string; size?: number }>; description: string; category: string; categoryKey: string }> = {};
     for (const moduleKey of Object.values(PERMISSION_MODULES)) {
       const meta = MODULE_META[moduleKey];
       const categoryName = t(`permissions.categories.${meta.categoryKey}`);
@@ -433,7 +457,7 @@ const PermissionConfiguration = () => {
             title: (
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2">
-                  <span>{modConf.icon}</span>
+                  <modConf.icon className="w-4 h-4" />
                   <span>{modConf.label}</span>
                   <Switch
                     size="small"
@@ -505,7 +529,7 @@ const PermissionConfiguration = () => {
                       title={
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span>{modConf.icon}</span>
+                            <modConf.icon className="w-4 h-4" />
                             <span className="text-sm">{modConf.label}</span>
                           </div>
                           <Switch
