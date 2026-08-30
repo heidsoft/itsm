@@ -100,7 +100,7 @@ func authorityBoost(level int) float64 {
 const authorityBoostCap = 0.2
 
 // freshnessTiebreak 计算时间新鲜度平局分。
-// 以 30 天为 1 分、封顶 12 分（一年），再折算进最终分（除以 10000），
+// 每 30 天扣 1 分、满分 12 分（一年前的文章归零），再折算进最终分（除以 10000），
 // 保证量级只够打破平局，不足以影响任何有实际分差的排序。
 func freshnessTiebreak(t time.Time, now time.Time) float64 {
 	if t.IsZero() {
@@ -108,14 +108,16 @@ func freshnessTiebreak(t time.Time, now time.Time) float64 {
 	}
 	days := now.Sub(t).Hours() / 24
 	if days < 0 {
-		days = 0
+		days = 0 // 时钟偏移容错：未来时间按最新处理
 	}
-	score := clamp(365-days/30*1, 0, 12)
+	score := clamp(12-days/30, 0, 12)
 	return score / 10000
 }
 
-// fusionScore 计算融合分：相关性为主 + 权威受控加成 + 时间平局微调。
-func fusionScore(in RankInput, now time.Time) float64 {
+// FusionScore 计算融合分：相关性为主 + 权威受控加成 + 时间平局微调。
+// 导出供调用方在自带排序容器（如需携带原始下标）时复用同一套打分口径，
+// 避免包内外出现两套不一致的权威性权重。
+func FusionScore(in RankInput, now time.Time) float64 {
 	relevance := clamp(in.Relevance, 0, 1)
 	return relevance + authorityBoost(in.AuthorityLevel) + freshnessTiebreak(in.UpdatedAt, now)
 }
@@ -142,15 +144,13 @@ type RankedResult struct {
 func RankRanking(inputs []RankInput, now time.Time) []RankedResult {
 	results := make([]RankedResult, len(inputs))
 	for i, in := range inputs {
-		results[i] = RankedResult{Input: in, Score: fusionScore(in, now)}
+		results[i] = RankedResult{Input: in, Score: FusionScore(in, now)}
 	}
 	sort.SliceStable(results, func(i, j int) bool {
-		if results[i].Score != results[j].Score {
-			return results[i].Score > results[j].Score
-		}
-		// 融合分已含时间微调，这里理论上到不了；
-		// 保留 ID 比较是为了在时间也相同的极端情况下仍有确定序。
-		return results[i].Input.ArticleID < results[j].Input.ArticleID
+		// 只按融合分比较。分毫必究的 ID 兜底比较会破坏稳定排序承诺：
+		// 同分条目应保持输入序（上游召回顺序的确定性），
+		// 引入 ID 强排序会让结果随主键分配顺序抖动，与文档语义矛盾。
+		return results[i].Score > results[j].Score
 	})
 	return results
 }

@@ -165,26 +165,26 @@ func TestAuthority_FreshnessTiebreakMagnitude(t *testing.T) {
 
 func TestAuthority_FusionScoreMonotonic(t *testing.T) {
 	base := RankInput{ArticleID: 1, Relevance: 0.6, AuthorityLevel: AuthorityNormal, UpdatedAt: rankNow}
-	baseScore := fusionScore(base, rankNow)
+	baseScore := FusionScore(base, rankNow)
 
 	// 提升相关性 -> 分数上升
 	higherRel := base
 	higherRel.Relevance = 0.7
-	if fusionScore(higherRel, rankNow) <= baseScore {
+	if FusionScore(higherRel, rankNow) <= baseScore {
 		t.Fatal("相关性上升应提升融合分")
 	}
 
 	// 提升权威 -> 分数上升
 	higherAuth := base
 	higherAuth.AuthorityLevel = AuthorityOfficial
-	if fusionScore(higherAuth, rankNow) <= baseScore {
+	if FusionScore(higherAuth, rankNow) <= baseScore {
 		t.Fatal("权威上升应提升融合分")
 	}
 
 	// 更新时间变新 -> 分数不降
 	fresher := base
 	fresher.UpdatedAt = rankNow.Add(time.Hour)
-	if fusionScore(fresher, rankNow) < baseScore {
+	if FusionScore(fresher, rankNow) < baseScore {
 		t.Fatal("更新时间变新不应降低融合分")
 	}
 }

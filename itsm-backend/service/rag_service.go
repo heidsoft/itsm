@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -201,13 +202,91 @@ func (r *RAGService) Ask(ctx context.Context, tenantID int, query string, limit 
 			r.logger.Warnw("RAGService: vector search failed, falling back to keyword", "error", err)
 			return r.keywordSearch(ctx, tenantID, query, limit)
 		}
-		return results, nil
+		return r.rankByAuthority(ctx, tenantID, results), nil
 	} else if r.useKeyword {
 		// Keyword-only search
-		return r.keywordSearch(ctx, tenantID, query, limit)
+		kwResults, err := r.keywordSearch(ctx, tenantID, query, limit)
+		if err != nil {
+			return nil, err
+		}
+		return r.rankByAuthority(ctx, tenantID, kwResults), nil
 	}
 
-	return results, nil
+	return r.rankByAuthority(ctx, tenantID, results), nil
+}
+
+// rankByAuthority 按 L2 权威性融合分对检索结果重排（仅调序，不增删条目）。
+//
+// 融合分 = 相关性为主 + 权威等级受控加成（≤0.2）+ 更新时间平局微调（≤0.0012）。
+// 调用在 L0/L1 准入过滤之后：走到这里的结果都已通过权限与时效校验，
+// 本函数只回答「排第几」，不回答「能不能出现」。
+// 非知识条目（object_type != "kb"）原样保持相对位置，不参与重排。
+func (r *RAGService) rankByAuthority(ctx context.Context, tenantID int, results []map[string]any) []map[string]any {
+	if len(results) < 2 {
+		return results
+	}
+
+	// 需要权威等级与更新时间：从 DB 补齐一次元数据。
+	// keyword 路径拿到的 map 里没有这两个字段，逐条查会放大查询次数，
+	// 这里批量查一次。查不到的条目按普通权威处理，不因元数据缺失而丢弃--
+	// 准入已在 L0/L1 完成，排序层缺数据只降级为不加成，不删结果。
+	ids := make([]int, 0, len(results))
+	for _, item := range results {
+		if item["object_type"] == "kb" {
+			if id, ok := item["id"].(int); ok {
+				ids = append(ids, id)
+			}
+		}
+	}
+	meta := map[int]*ent.KnowledgeArticle{}
+	if len(ids) > 0 {
+		articles, err := r.client.KnowledgeArticle.Query().
+			Where(ka.IDIn(ids...), ka.TenantIDEQ(tenantID)).
+			All(ctx)
+		if err != nil {
+			r.logger.Debugw("RAG: 权威性元数据查询失败，退化为相关性序", "error", err)
+			return results
+		}
+		for _, a := range articles {
+			meta[a.ID] = a
+		}
+	}
+
+	now := time.Now()
+	// inputs 与 results 按下标一一对应；OriginIdx 记录融合排序前的下标，
+	// 因为 RankInput 本身不携带原切片位置，非 kb 条目的 ArticleID 都是 0，
+	// 靠 ID 反查会互相踩。用包装结构把「输入是第几条」带进排序、随结果带出来。
+	type indexed struct {
+		knowledgeaccess.RankInput
+		origin int
+	}
+	inputs := make([]indexed, len(results))
+	for i, item := range results {
+		in := knowledgeaccess.RankInput{}
+		if score, ok := item["score"].(float64); ok {
+			in.Relevance = score
+		}
+		if item["object_type"] == "kb" {
+			if id, ok := item["id"].(int); ok {
+				in.ArticleID = id
+				if a, ok := meta[id]; ok {
+					in.AuthorityLevel = a.AuthorityLevel
+					in.UpdatedAt = a.UpdatedAt
+				}
+			}
+		}
+		inputs[i] = indexed{RankInput: in, origin: i}
+	}
+
+	sort.SliceStable(inputs, func(i, j int) bool {
+		return knowledgeaccess.FusionScore(inputs[i].RankInput, now) > knowledgeaccess.FusionScore(inputs[j].RankInput, now)
+	})
+
+	out := make([]map[string]any, len(results))
+	for i, in := range inputs {
+		out[i] = results[in.origin]
+	}
+	return out
 }
 
 // vectorSearch performs similarity search using vectors
