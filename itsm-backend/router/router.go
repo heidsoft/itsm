@@ -1219,6 +1219,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					articles.DELETE("/:id", middleware.RequirePermission("knowledge", "delete"), config.KnowledgeHandler.DeleteArticle)
 					articles.POST("/:id/publish", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.PublishArticle)
 					articles.POST("/:id/unpublish", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.UnpublishArticle)
+					// 内容复核（L1 时效闭环）：确认内容仍然适用，解除「逾期未复核」过滤
+					articles.POST("/:id/review", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.MarkArticleReviewed)
 
 					// Comments
 					articles.GET("/:id/comments", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticleComments)
@@ -1227,6 +1229,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 				// Categories
 				knowledgeGrp.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
+
+				// 知识分类可见性纳管（L0 权限边界）：控制哪些分类的知识仅授权角色可读
+				knowledgeGrp.GET("/categories/restricted", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.ListRestrictedCategories)
+				knowledgeGrp.POST("/categories/restricted", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.SetCategoryRestriction)
 
 				// Search
 				knowledgeGrp.POST("/search", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.SearchArticles)

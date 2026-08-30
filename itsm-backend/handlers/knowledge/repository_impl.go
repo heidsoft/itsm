@@ -53,6 +53,12 @@ func toDomain(e *ent.KnowledgeArticle) *Article {
 		IsPublished: e.IsPublished,
 		CreatedAt:   e.CreatedAt,
 		UpdatedAt:   e.UpdatedAt,
+
+		ValidFrom:          e.ValidFrom,
+		ValidUntil:         e.ValidUntil,
+		LastReviewedAt:     e.LastReviewedAt,
+		ReviewIntervalDays: e.ReviewIntervalDays,
+		AuthorityLevel:     e.AuthorityLevel,
 	}
 }
 
@@ -66,6 +72,13 @@ func (r *EntRepository) Create(ctx context.Context, a *Article) (*Article, error
 		SetAuthorID(a.AuthorID).
 		SetTenantID(a.TenantID).
 		SetIsPublished(a.IsPublished).
+		// 时效性（L1）与权威性（L2）：三个时间字段用 Nillable setter，
+		// nil 表示不设时效/不设复核，与数据库默认值语义一致。
+		SetNillableValidFrom(a.ValidFrom).
+		SetNillableValidUntil(a.ValidUntil).
+		SetNillableLastReviewedAt(a.LastReviewedAt).
+		SetReviewIntervalDays(a.ReviewIntervalDays).
+		SetAuthorityLevel(a.AuthorityLevel).
 		Save(ctx)
 	if err != nil {
 		return nil, err
@@ -124,13 +137,50 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 
 func (r *EntRepository) Update(ctx context.Context, a *Article) (*Article, error) {
 	tagsStr := strings.Join(a.Tags, ",")
-	e, err := r.client.KnowledgeArticle.UpdateOneID(a.ID).
+	u := r.client.KnowledgeArticle.UpdateOneID(a.ID).
 		Where(knowledgearticle.TenantID(a.TenantID), knowledgearticle.DeletedAtIsNil()).
 		SetTitle(a.Title).
 		SetContent(a.Content).
 		SetCategory(a.Category).
 		SetTags(tagsStr).
 		SetIsPublished(a.IsPublished).
+		SetReviewIntervalDays(a.ReviewIntervalDays).
+		SetAuthorityLevel(a.AuthorityLevel)
+
+	// 时效字段传 nil 表示「解除时效设置」，必须显式 Clear。
+	// 注意 SetNillableXxx(nil) 在 ent 里是 no-op（不清除既有值），
+	// 若这里偷懒用它，管理员将无法撤销误设的失效时间——
+	// 知识会一直被 L1 过滤掉，且界面上看不出原因。
+	if a.ValidFrom != nil {
+		u = u.SetValidFrom(*a.ValidFrom)
+	} else {
+		u = u.ClearValidFrom()
+	}
+	if a.ValidUntil != nil {
+		u = u.SetValidUntil(*a.ValidUntil)
+	} else {
+		u = u.ClearValidUntil()
+	}
+	if a.LastReviewedAt != nil {
+		u = u.SetLastReviewedAt(*a.LastReviewedAt)
+	} else {
+		u = u.ClearLastReviewedAt()
+	}
+
+	e, err := u.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toDomain(e), nil
+}
+
+// MarkReviewed 记录一次内容复核。
+// 只更新 last_reviewed_at，不触碰正文——复核是对内容「仍然适用」的确认，
+// 若与内容更新混在一个入口，复核动作就可能夹带未审校的正文改动。
+func (r *EntRepository) MarkReviewed(ctx context.Context, id int, tenantID int) (*Article, error) {
+	e, err := r.client.KnowledgeArticle.UpdateOneID(id).
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
+		SetLastReviewedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		return nil, err

@@ -157,7 +157,7 @@ func (c *SlackChannel) Send(ctx context.Context, alert *dto.IncidentAlertRespons
 		}
 		if err := connectorSendFn(ctx, alert.TenantID, "slack", msg); err != nil {
 			c.logger.Errorw("Slack connector delivery failed", "error", err)
-			return fmt.Errorf("Slack delivery failed: %w", err)
+			return fmt.Errorf("slack delivery failed: %w", err)
 		}
 		c.logger.Infow("Slack delivered via connector", "alert_id", alert.ID)
 		return nil
@@ -194,7 +194,7 @@ func (c *WebhookChannel) Send(ctx context.Context, alert *dto.IncidentAlertRespo
 		}
 		if err := connectorSendFn(ctx, alert.TenantID, "webhook", msg); err != nil {
 			c.logger.Errorw("Webhook connector delivery failed", "error", err)
-			return fmt.Errorf("Webhook delivery failed: %w", err)
+			return fmt.Errorf("webhook delivery failed: %w", err)
 		}
 		c.logger.Infow("Webhook delivered via connector", "alert_id", alert.ID)
 		return nil

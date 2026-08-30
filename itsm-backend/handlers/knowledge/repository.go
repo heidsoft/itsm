@@ -11,6 +11,10 @@ type Repository interface {
 	List(ctx context.Context, tenantID int, page, size int, category, search, status string) ([]*Article, int, error)
 	Update(ctx context.Context, a *Article) (*Article, error)
 	Delete(ctx context.Context, id int, tenantID int) error
+	// MarkReviewed 记录一次内容复核：把 last_reviewed_at 置为当前时间。
+	// 这是 L1 时效管控的闭环动作——声明了复核周期的知识逾期后会被 RAG 过滤，
+	// 复核是把它恢复回检索结果的唯一途径。只改复核时间，不触碰正文。
+	MarkReviewed(ctx context.Context, id int, tenantID int) (*Article, error)
 	GetCategories(ctx context.Context, tenantID int) ([]string, error)
 	GetStats(ctx context.Context, tenantID int) (*Stats, error)
 	// GetByIDs returns articles by a list of IDs, preserving the order of IDs.

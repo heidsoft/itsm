@@ -50,10 +50,7 @@ func (w *WebhookAlertSource) Manifest() AlertSourceManifest {
 // Returns true if the payload appears to be a valid JSON object.
 // For configuration-driven sources this is a shallow check — Normalize does the real work.
 func (w *WebhookAlertSource) ValidatePayload(rawPayload map[string]interface{}) bool {
-	if rawPayload == nil {
-		return false
-	}
-	return true
+	return rawPayload != nil
 }
 
 // Normalize converts a raw webhook payload into a StandardAlert using the YAML config.

@@ -2396,12 +2396,20 @@ func init() {
 	knowledgearticleDescLikeCount := knowledgearticleFields[8].Descriptor()
 	// knowledgearticle.DefaultLikeCount holds the default value on creation for the like_count field.
 	knowledgearticle.DefaultLikeCount = knowledgearticleDescLikeCount.Default.(int)
+	// knowledgearticleDescReviewIntervalDays is the schema descriptor for review_interval_days field.
+	knowledgearticleDescReviewIntervalDays := knowledgearticleFields[12].Descriptor()
+	// knowledgearticle.DefaultReviewIntervalDays holds the default value on creation for the review_interval_days field.
+	knowledgearticle.DefaultReviewIntervalDays = knowledgearticleDescReviewIntervalDays.Default.(int)
+	// knowledgearticleDescAuthorityLevel is the schema descriptor for authority_level field.
+	knowledgearticleDescAuthorityLevel := knowledgearticleFields[13].Descriptor()
+	// knowledgearticle.DefaultAuthorityLevel holds the default value on creation for the authority_level field.
+	knowledgearticle.DefaultAuthorityLevel = knowledgearticleDescAuthorityLevel.Default.(int)
 	// knowledgearticleDescCreatedAt is the schema descriptor for created_at field.
-	knowledgearticleDescCreatedAt := knowledgearticleFields[9].Descriptor()
+	knowledgearticleDescCreatedAt := knowledgearticleFields[14].Descriptor()
 	// knowledgearticle.DefaultCreatedAt holds the default value on creation for the created_at field.
 	knowledgearticle.DefaultCreatedAt = knowledgearticleDescCreatedAt.Default.(func() time.Time)
 	// knowledgearticleDescUpdatedAt is the schema descriptor for updated_at field.
-	knowledgearticleDescUpdatedAt := knowledgearticleFields[10].Descriptor()
+	knowledgearticleDescUpdatedAt := knowledgearticleFields[15].Descriptor()
 	// knowledgearticle.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	knowledgearticle.DefaultUpdatedAt = knowledgearticleDescUpdatedAt.Default.(func() time.Time)
 	// knowledgearticle.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

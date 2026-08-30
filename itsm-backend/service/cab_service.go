@@ -74,6 +74,7 @@ func (s *CABService) AddCABMember(ctx context.Context, req *dto.AddCABMemberRequ
 	// user 已在上面查询时获取，此处仅做安全检查
 	if user == nil {
 		s.logger.Warnw("User is nil after tenant check", "user_id", req.UserID)
+		return nil, fmt.Errorf("user not found")
 	}
 
 	s.logger.Infow("CAB member added", "member_id", member.ID, "user_id", req.UserID, "type", req.Type)

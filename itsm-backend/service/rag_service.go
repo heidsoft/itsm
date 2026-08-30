@@ -33,10 +33,23 @@ type RAGService struct {
 	// 阻断「同租户内任何用户都能通过 AI 助手问出受限知识」的越权路径。
 	// nil 时守卫不生效（仅本地/测试环境允许），生产装配必须注入。
 	knowledgeGuard *knowledgeaccess.Guard
+
+	// freshness 时效性判定器（知识可引用性 L1 正确性边界）。
+	// 拦截「已失效 / 未生效 / 逾期未复核」的知识进入 RAG 上下文，
+	// 避免模型引用过期制度给出带来源的错误答案。
+	// nil 时不做时效过滤（保持旧行为），生产装配必须注入。
+	freshness *knowledgeaccess.FreshnessJudger
 }
 
 // SetKnowledgeGuard 注入知识分类可见性守卫。
 func (r *RAGService) SetKnowledgeGuard(g *knowledgeaccess.Guard) { r.knowledgeGuard = g }
+
+// SetFreshnessJudger 注入时效性判定器（L1）。
+// 传 nil 表示关闭时效过滤；需要宽松语义时注入 PermissiveFreshnessPolicy 的判定器。
+func (r *RAGService) SetFreshnessJudger(j *knowledgeaccess.FreshnessJudger) { r.freshness = j }
+
+// FreshnessJudger 返回当前时效判定器，未装配时返回 nil。
+func (r *RAGService) FreshnessJudger() *knowledgeaccess.FreshnessJudger { return r.freshness }
 
 // SetVectorStore installs the pluggable connector-backed store. The legacy
 // PGVector store remains available during migration of existing installations.
@@ -94,6 +107,9 @@ func NewRAGService(client *ent.Client, vectors *VectorStore, embedder Embedder, 
 	if client != nil {
 		svc.knowledgeGuard = knowledgeaccess.NewGuard(client, logger)
 	}
+	// 默认装配时效判定器（L1）：与 L0 一样默认严格，
+	// 需要宽松语义的租户显式注入 PermissiveFreshnessPolicy。
+	svc.freshness = knowledgeaccess.NewFreshnessJudger(knowledgeaccess.DefaultFreshnessPolicy(), nil)
 	return svc
 }
 
@@ -224,10 +240,11 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 				if err != nil {
 					continue
 				}
-				// 知识分类可见性（L0）：向量索引里可能残留受限分类文章，
-				// 必须在这里拦截，否则会绕过 keywordSearch 的 SQL 层过滤。
-				if !r.articleReadable(ctx, tenantID, a) {
-					r.logger.Debugw("RAG: skip connector vector result, category not readable",
+				// 可引用性（L0 权限 + L1 时效）：向量索引里可能残留受限分类文章
+				// 或已失效/逾期未复核的旧快照，必须在这里拦截，
+				// 否则会绕过 keywordSearch 的 SQL 层过滤。
+				if !r.articleCitable(ctx, tenantID, a) {
+					r.logger.Debugw("RAG: skip connector vector result, article not citable",
 						"article_id", objID, "category", a.Category)
 					continue
 				}
@@ -290,10 +307,11 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 				r.logger.Debugw("RAGService: skip vector result, article not visible", "article_id", objID, "error", err)
 				continue
 			}
-			// 知识分类可见性（L0）：向量索引里可能残留受限分类文章，
-			// 必须在这里拦截，否则会绕过 keywordSearch 的 SQL 层过滤。
-			if !r.articleReadable(ctx, tenantID, a) {
-				r.logger.Debugw("RAGService: skip vector result, category not readable",
+			// 可引用性（L0 权限 + L1 时效）：向量索引里可能残留受限分类文章
+			// 或已失效/逾期未复核的旧快照，必须在这里拦截，
+			// 否则会绕过 keywordSearch 的 SQL 层过滤。
+			if !r.articleCitable(ctx, tenantID, a) {
+				r.logger.Debugw("RAGService: skip vector result, article not citable",
 					"article_id", objID, "category", a.Category)
 				continue
 			}
@@ -323,6 +341,32 @@ func (r *RAGService) articleReadable(ctx context.Context, tenantID int, a *ent.K
 		viewer = knowledgeaccess.Viewer{}
 	}
 	return r.knowledgeGuard.CanReadCategory(ctx, tenantID, viewer, a.Category, a.AuthorID)
+}
+
+// articleCitable 综合判定一篇文章是否可被 RAG 引用：L0 分类可见性 + L1 时效性。
+//
+// 两个维度正交，必须同时通过：
+//   - L0：这个人能不能看这篇（权限边界，越权即安全事故）
+//   - L1：这篇现在还能不能被引用（正确性边界，引用过期内容即错误答案）
+//
+// 向量检索路径统一走这里：向量索引异步构建，索引里可能残留已失效、
+// 已过复核期或权限变更前的文章快照，无法依赖 SQL 层兜底。
+func (r *RAGService) articleCitable(ctx context.Context, tenantID int, a *ent.KnowledgeArticle) bool {
+	if a == nil {
+		return false
+	}
+	if !r.articleReadable(ctx, tenantID, a) {
+		return false
+	}
+	if r.freshness == nil {
+		return true
+	}
+	if !r.freshness.CitableArticle(a) {
+		r.logger.Debugw("RAG: 跳过不可引用结果（时效逾期）",
+			"article_id", a.ID, "verdict", r.freshness.Judge(knowledgeaccess.FieldsOf(a)).String())
+		return false
+	}
+	return true
 }
 
 // deniedCategories 返回当前访问者无权读取的知识分类。
@@ -368,6 +412,12 @@ func (r *RAGService) deniedCategories(ctx context.Context, tenantID int) []strin
 // denyAllSentinel 受限分类集合不可得时的拒绝哨兵，配合 CategoryNotIn 使用。
 const denyAllSentinel = "\x00__deny_all__"
 
+// maxKeywordFetch 关键字检索的最大候选抓取量。
+// 复核逾期判定涉及「当前时间 - 上次复核时间 > 复核周期」的列间运算，
+// ent 谓词无法表达，只能在 Go 侧逐条过滤，因此需先多取候选再截断，
+// 否则过滤后召回数会低于 limit。上限用于防止极端 limit 拖垮查询。
+const maxKeywordFetch = 200
+
 func (r *RAGService) keywordSearch(ctx context.Context, tenantID int, query string, limit int) ([]map[string]any, error) {
 	if !r.useKeyword {
 		return nil, fmt.Errorf("keyword search not available")
@@ -376,6 +426,12 @@ func (r *RAGService) keywordSearch(ctx context.Context, tenantID int, query stri
 	q := r.client.KnowledgeArticle.Query().
 		// 可见性过滤：仅检索本租户、未软删除且已发布的文章，草稿不得进入 RAG 结果。
 		Where(ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil(), ka.IsPublished(true))
+
+	// 时效性（L1 正确性边界）：未生效/已失效的文章在 SQL 层直接排除。
+	// 复核逾期无法在此表达，由下面的后置过滤处理。
+	if r.freshness != nil {
+		q = q.Where(r.freshness.SQLPredicate())
+	}
 
 	// 知识分类可见性（L0 权限边界）：在 SQL 层排除无权访问的分类，
 	// 保证 limit 语义准确（后置过滤会让召回数不足）。
@@ -407,9 +463,30 @@ func (r *RAGService) keywordSearch(ctx context.Context, tenantID int, query stri
 		))
 	}
 
-	articles, err := q.Limit(limit).All(ctx)
+	// 复核逾期需后置过滤，先多取候选以保证过滤后仍能凑够 limit。
+	fetchLimit := limit
+	if r.freshness != nil && r.freshness.Policy().NeedsPostFilter() {
+		fetchLimit = limit * 3
+		if fetchLimit > maxKeywordFetch {
+			fetchLimit = maxKeywordFetch
+		}
+	}
+
+	articles, err := q.Limit(fetchLimit).All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("keyword search failed: %w", err)
+	}
+
+	if r.freshness != nil {
+		var dropped int
+		articles, dropped = r.freshness.FilterArticles(articles)
+		if dropped > 0 {
+			r.logger.Debugw("RAG: 按时效性剔除了不可引用的文章",
+				"tenant_id", tenantID, "dropped", dropped)
+		}
+		if len(articles) > limit {
+			articles = articles[:limit]
+		}
 	}
 
 	results := []map[string]any{}

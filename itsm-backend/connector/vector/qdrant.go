@@ -49,6 +49,7 @@ func (s *qdrantStore) Search(ctx context.Context, req SearchRequest) (SearchResp
 	if err != nil {
 		return SearchResponse{}, err
 	}
+	//lint:ignore SA1019 qdrant-go-client v2 still uses deprecated Search method, migration to QueryPoints pending
 	resp, err := s.client.GetPointsClient().Search(ctx, &q.SearchPoints{CollectionName: s.collection, Vector: req.Vector, Filter: filter, Limit: uint64(topK(req.TopK, DefaultTopK)), WithPayload: q.NewWithPayload(true)})
 	if err != nil {
 		return SearchResponse{}, fmt.Errorf("qdrant search: %w", err)

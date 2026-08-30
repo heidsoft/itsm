@@ -32,6 +32,16 @@ const (
 	FieldViewCount = "view_count"
 	// FieldLikeCount holds the string denoting the like_count field in the database.
 	FieldLikeCount = "like_count"
+	// FieldValidFrom holds the string denoting the valid_from field in the database.
+	FieldValidFrom = "valid_from"
+	// FieldValidUntil holds the string denoting the valid_until field in the database.
+	FieldValidUntil = "valid_until"
+	// FieldLastReviewedAt holds the string denoting the last_reviewed_at field in the database.
+	FieldLastReviewedAt = "last_reviewed_at"
+	// FieldReviewIntervalDays holds the string denoting the review_interval_days field in the database.
+	FieldReviewIntervalDays = "review_interval_days"
+	// FieldAuthorityLevel holds the string denoting the authority_level field in the database.
+	FieldAuthorityLevel = "authority_level"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -81,6 +91,11 @@ var Columns = []string{
 	FieldIsPublished,
 	FieldViewCount,
 	FieldLikeCount,
+	FieldValidFrom,
+	FieldValidUntil,
+	FieldLastReviewedAt,
+	FieldReviewIntervalDays,
+	FieldAuthorityLevel,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
@@ -120,6 +135,10 @@ var (
 	DefaultViewCount int
 	// DefaultLikeCount holds the default value on creation for the "like_count" field.
 	DefaultLikeCount int
+	// DefaultReviewIntervalDays holds the default value on creation for the "review_interval_days" field.
+	DefaultReviewIntervalDays int
+	// DefaultAuthorityLevel holds the default value on creation for the "authority_level" field.
+	DefaultAuthorityLevel int
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -179,6 +198,31 @@ func ByViewCount(opts ...sql.OrderTermOption) OrderOption {
 // ByLikeCount orders the results by the like_count field.
 func ByLikeCount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLikeCount, opts...).ToFunc()
+}
+
+// ByValidFrom orders the results by the valid_from field.
+func ByValidFrom(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldValidFrom, opts...).ToFunc()
+}
+
+// ByValidUntil orders the results by the valid_until field.
+func ByValidUntil(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldValidUntil, opts...).ToFunc()
+}
+
+// ByLastReviewedAt orders the results by the last_reviewed_at field.
+func ByLastReviewedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastReviewedAt, opts...).ToFunc()
+}
+
+// ByReviewIntervalDays orders the results by the review_interval_days field.
+func ByReviewIntervalDays(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReviewIntervalDays, opts...).ToFunc()
+}
+
+// ByAuthorityLevel orders the results by the authority_level field.
+func ByAuthorityLevel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAuthorityLevel, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

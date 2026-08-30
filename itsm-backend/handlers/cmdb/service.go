@@ -403,7 +403,7 @@ func (s *Service) CreateDiscoverySource(ctx context.Context, ds *DiscoverySource
 		if account == nil || account.TenantID != ds.TenantID || !account.IsActive || account.CredentialRef == "" {
 			return nil, common.NewForbiddenError("cloud account must belong to the tenant and be configured and active")
 		}
-		if ds.Provider != "" && strings.ToLower(strings.TrimSpace(ds.Provider)) != strings.ToLower(strings.TrimSpace(account.Provider)) {
+		if ds.Provider != "" && !strings.EqualFold(strings.TrimSpace(ds.Provider), strings.TrimSpace(account.Provider)) {
 			return nil, fmt.Errorf("discovery source provider does not match cloud account")
 		}
 		ds.Provider = strings.ToLower(strings.TrimSpace(account.Provider))

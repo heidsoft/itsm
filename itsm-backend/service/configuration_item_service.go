@@ -845,6 +845,7 @@ func (s *ConfigurationItemService) BatchCreateCI(ctx context.Context, req *dto.B
 			s.logger.Errorw("Failed to rollback transaction for batch create", "error", err)
 			return nil, fmt.Errorf("failed to rollback: %w", err)
 		}
+		successCount = 0
 	} else {
 		// 全部成功，提交事务
 		if err := tx.Commit(); err != nil {

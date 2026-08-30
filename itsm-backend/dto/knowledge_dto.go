@@ -8,6 +8,14 @@ type CreateKnowledgeArticleRequest struct {
 	Content  string   `json:"content" binding:"required,min=1,max=10000"`
 	Category string   `json:"category" binding:"required,max=50"`
 	Tags     []string `json:"tags"`
+
+	// 知识可引用性 L1：时效性。均为可选，留空表示「长期有效、不设复核」。
+	ValidFrom          *time.Time `json:"validFrom"`
+	ValidUntil         *time.Time `json:"validUntil"`
+	ReviewIntervalDays *int       `json:"reviewIntervalDays" binding:"omitempty,min=0,max=3650"`
+
+	// 知识可引用性 L2：权威性。0=普通 10=部门推荐 20=官方标准 30=唯一真相源。
+	AuthorityLevel *int `json:"authorityLevel" binding:"omitempty,min=0,max=30"`
 }
 
 // 更新知识库文章请求
@@ -17,6 +25,31 @@ type UpdateKnowledgeArticleRequest struct {
 	Category *string  `json:"category"`
 	Status   *string  `json:"status"`
 	Tags     []string `json:"tags"`
+
+	// 知识可引用性 L1：时效性。指针语义即「不传=保持不变」。
+	// 传 nil 指针本身在部分更新里就是「不改」，要解除时效需显式传空字符串等哨兵，
+	// 当前版本请通过复核接口与创建时的声明管理时效，暂不支持把已设时效改回永久。
+	ValidFrom          *time.Time `json:"validFrom"`
+	ValidUntil         *time.Time `json:"validUntil"`
+	ReviewIntervalDays *int       `json:"reviewIntervalDays" binding:"omitempty,min=0,max=3650"`
+
+	// 知识可引用性 L2：权威性。
+	AuthorityLevel *int `json:"authorityLevel" binding:"omitempty,min=0,max=30"`
+
+	// 注意：这里刻意不暴露 LastReviewedAt。
+	// 复核时间是可引用性的判定依据，一旦允许客户端直接写入，
+	// 就能随便把时间改成未来值来消除逾期提醒，L1 会形同虚设。
+	// 复核请走 POST /api/v1/knowledge/articles/:id/review。
+}
+
+// KnowledgeFreshness 时效状态，随文章响应返回，供前端提示「内容可能已过期」。
+type KnowledgeFreshness struct {
+	// Verdict 时效判定结果：ok / not_yet_effective / expired / review_overdue
+	Verdict string `json:"verdict"`
+	// Citable 当前是否可被 RAG 引用
+	Citable bool `json:"citable"`
+	// ReviewDueAt 下次复核到期时间，未设复核周期时为空
+	ReviewDueAt *time.Time `json:"reviewDueAt,omitempty"`
 }
 
 // 知识库文章响应
@@ -32,6 +65,16 @@ type KnowledgeArticleResponse struct {
 	TenantID  int       `json:"tenantId"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+
+	// 知识可引用性 L1：时效性
+	ValidFrom          *time.Time          `json:"validFrom,omitempty"`
+	ValidUntil         *time.Time          `json:"validUntil,omitempty"`
+	LastReviewedAt     *time.Time          `json:"lastReviewedAt,omitempty"`
+	ReviewIntervalDays int                 `json:"reviewIntervalDays"`
+	Freshness          *KnowledgeFreshness `json:"freshness,omitempty"`
+
+	// 知识可引用性 L2：权威性
+	AuthorityLevel int `json:"authorityLevel"`
 }
 
 // 知识库文章列表请求

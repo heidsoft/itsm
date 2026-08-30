@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/handlers/common/knowledgeaccess"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -117,8 +118,13 @@ func (h *Handler) Chat(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	role := c.GetString("role")
 
-	answers, convID, err := h.svc.Chat(c.Request.Context(), tenantID, userID, req.Query, req.Limit, req.ConversationID)
+	// 注入知识访问者身份：RAG 检索据此做分类级可见性过滤（L0 权限边界）。
+	// 不注入则按匿名处理，已纳管的受限分类一律不可见（fail-closed）。
+	chatCtx := knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{UserID: userID, Role: role})
+
+	answers, convID, err := h.svc.Chat(chatCtx, tenantID, userID, req.Query, req.Limit, req.ConversationID)
 	if err != nil {
 		// RAG 失败时降级处理：返回空结果而非 500 错误，避免前端崩溃
 		h.svc.logger.Warnw("AI Chat RAG 检索失败，返回降级响应", "error", err, "tenantID", tenantID)
@@ -173,7 +179,9 @@ func (h *Handler) ChatStream(c *gin.Context) {
 	if !ok {
 		// Streaming not supported: fall back to a normal chat response so the
 		// client still gets an answer.
-		answers, convID, err := h.svc.Chat(c.Request.Context(), tenantID, userID, req.Query, req.Limit, req.ConversationID)
+		answers, convID, err := h.svc.Chat(
+			knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{UserID: userID, Role: role}),
+			tenantID, userID, req.Query, req.Limit, req.ConversationID)
 		if err != nil {
 			common.FailWithErr(c, err, "操作失败")
 			return
@@ -200,7 +208,10 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		writeEvent("delta", map[string]string{"content": delta})
 	}
 
-	convID, _, err := h.svc.ChatStream(c.Request.Context(), tenantID, userID, role, req.Query, req.Limit, req.ConversationID, onSources, onDelta)
+	// 注入访问者身份：AI 助手主链路，RAG 据此做知识分类可见性过滤（L0 权限边界）
+	convID, _, err := h.svc.ChatStream(
+		knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{UserID: userID, Role: role}),
+		tenantID, userID, role, req.Query, req.Limit, req.ConversationID, onSources, onDelta)
 	if err != nil {
 		h.svc.logger.Warnw("AI ChatStream 失败", "error", err, "tenantID", tenantID)
 		writeEvent("error", map[string]string{"message": err.Error()})
@@ -495,6 +506,8 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
+	userID := c.GetInt("user_id")
+	role := c.GetString("role")
 
 	limit := req.Limit
 	if limit <= 0 {
@@ -502,7 +515,10 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 	}
 
 	// Use the service's RAG search capability
-	result, err := h.svc.SearchKnowledge(c.Request.Context(), tenantID, req.Query, req.Type, limit)
+	// 注入访问者身份，使知识分类可见性过滤生效（L0 权限边界）
+	result, err := h.svc.SearchKnowledge(
+		knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{UserID: userID, Role: role}),
+		tenantID, req.Query, req.Type, limit)
 	if err != nil {
 		h.svc.logger.Warnw("AI知识搜索失败，返回降级响应", "error", err, "tenantID", tenantID)
 		common.Success(c, gin.H{

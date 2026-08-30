@@ -73820,38 +73820,45 @@ func (m *ItemVersionMutation) ResetEdge(name string) error {
 // KnowledgeArticleMutation represents an operation that mutates the KnowledgeArticle nodes in the graph.
 type KnowledgeArticleMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *int
-	title             *string
-	content           *string
-	category          *string
-	tags              *string
-	author_id         *int
-	addauthor_id      *int
-	tenant_id         *int
-	addtenant_id      *int
-	is_published      *bool
-	view_count        *int
-	addview_count     *int
-	like_count        *int
-	addlike_count     *int
-	created_at        *time.Time
-	updated_at        *time.Time
-	deleted_at        *time.Time
-	clearedFields     map[string]struct{}
-	user_likes        map[int]struct{}
-	removeduser_likes map[int]struct{}
-	cleareduser_likes bool
-	versions          map[int]struct{}
-	removedversions   map[int]struct{}
-	clearedversions   bool
-	sessions          map[int]struct{}
-	removedsessions   map[int]struct{}
-	clearedsessions   bool
-	done              bool
-	oldValue          func(context.Context) (*KnowledgeArticle, error)
-	predicates        []predicate.KnowledgeArticle
+	op                      Op
+	typ                     string
+	id                      *int
+	title                   *string
+	content                 *string
+	category                *string
+	tags                    *string
+	author_id               *int
+	addauthor_id            *int
+	tenant_id               *int
+	addtenant_id            *int
+	is_published            *bool
+	view_count              *int
+	addview_count           *int
+	like_count              *int
+	addlike_count           *int
+	valid_from              *time.Time
+	valid_until             *time.Time
+	last_reviewed_at        *time.Time
+	review_interval_days    *int
+	addreview_interval_days *int
+	authority_level         *int
+	addauthority_level      *int
+	created_at              *time.Time
+	updated_at              *time.Time
+	deleted_at              *time.Time
+	clearedFields           map[string]struct{}
+	user_likes              map[int]struct{}
+	removeduser_likes       map[int]struct{}
+	cleareduser_likes       bool
+	versions                map[int]struct{}
+	removedversions         map[int]struct{}
+	clearedversions         bool
+	sessions                map[int]struct{}
+	removedsessions         map[int]struct{}
+	clearedsessions         bool
+	done                    bool
+	oldValue                func(context.Context) (*KnowledgeArticle, error)
+	predicates              []predicate.KnowledgeArticle
 }
 
 var _ ent.Mutation = (*KnowledgeArticleMutation)(nil)
@@ -74395,6 +74402,265 @@ func (m *KnowledgeArticleMutation) ResetLikeCount() {
 	m.addlike_count = nil
 }
 
+// SetValidFrom sets the "valid_from" field.
+func (m *KnowledgeArticleMutation) SetValidFrom(t time.Time) {
+	m.valid_from = &t
+}
+
+// ValidFrom returns the value of the "valid_from" field in the mutation.
+func (m *KnowledgeArticleMutation) ValidFrom() (r time.Time, exists bool) {
+	v := m.valid_from
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValidFrom returns the old "valid_from" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldValidFrom(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValidFrom is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValidFrom requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValidFrom: %w", err)
+	}
+	return oldValue.ValidFrom, nil
+}
+
+// ClearValidFrom clears the value of the "valid_from" field.
+func (m *KnowledgeArticleMutation) ClearValidFrom() {
+	m.valid_from = nil
+	m.clearedFields[knowledgearticle.FieldValidFrom] = struct{}{}
+}
+
+// ValidFromCleared returns if the "valid_from" field was cleared in this mutation.
+func (m *KnowledgeArticleMutation) ValidFromCleared() bool {
+	_, ok := m.clearedFields[knowledgearticle.FieldValidFrom]
+	return ok
+}
+
+// ResetValidFrom resets all changes to the "valid_from" field.
+func (m *KnowledgeArticleMutation) ResetValidFrom() {
+	m.valid_from = nil
+	delete(m.clearedFields, knowledgearticle.FieldValidFrom)
+}
+
+// SetValidUntil sets the "valid_until" field.
+func (m *KnowledgeArticleMutation) SetValidUntil(t time.Time) {
+	m.valid_until = &t
+}
+
+// ValidUntil returns the value of the "valid_until" field in the mutation.
+func (m *KnowledgeArticleMutation) ValidUntil() (r time.Time, exists bool) {
+	v := m.valid_until
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValidUntil returns the old "valid_until" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldValidUntil(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValidUntil is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValidUntil requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValidUntil: %w", err)
+	}
+	return oldValue.ValidUntil, nil
+}
+
+// ClearValidUntil clears the value of the "valid_until" field.
+func (m *KnowledgeArticleMutation) ClearValidUntil() {
+	m.valid_until = nil
+	m.clearedFields[knowledgearticle.FieldValidUntil] = struct{}{}
+}
+
+// ValidUntilCleared returns if the "valid_until" field was cleared in this mutation.
+func (m *KnowledgeArticleMutation) ValidUntilCleared() bool {
+	_, ok := m.clearedFields[knowledgearticle.FieldValidUntil]
+	return ok
+}
+
+// ResetValidUntil resets all changes to the "valid_until" field.
+func (m *KnowledgeArticleMutation) ResetValidUntil() {
+	m.valid_until = nil
+	delete(m.clearedFields, knowledgearticle.FieldValidUntil)
+}
+
+// SetLastReviewedAt sets the "last_reviewed_at" field.
+func (m *KnowledgeArticleMutation) SetLastReviewedAt(t time.Time) {
+	m.last_reviewed_at = &t
+}
+
+// LastReviewedAt returns the value of the "last_reviewed_at" field in the mutation.
+func (m *KnowledgeArticleMutation) LastReviewedAt() (r time.Time, exists bool) {
+	v := m.last_reviewed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastReviewedAt returns the old "last_reviewed_at" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldLastReviewedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastReviewedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastReviewedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastReviewedAt: %w", err)
+	}
+	return oldValue.LastReviewedAt, nil
+}
+
+// ClearLastReviewedAt clears the value of the "last_reviewed_at" field.
+func (m *KnowledgeArticleMutation) ClearLastReviewedAt() {
+	m.last_reviewed_at = nil
+	m.clearedFields[knowledgearticle.FieldLastReviewedAt] = struct{}{}
+}
+
+// LastReviewedAtCleared returns if the "last_reviewed_at" field was cleared in this mutation.
+func (m *KnowledgeArticleMutation) LastReviewedAtCleared() bool {
+	_, ok := m.clearedFields[knowledgearticle.FieldLastReviewedAt]
+	return ok
+}
+
+// ResetLastReviewedAt resets all changes to the "last_reviewed_at" field.
+func (m *KnowledgeArticleMutation) ResetLastReviewedAt() {
+	m.last_reviewed_at = nil
+	delete(m.clearedFields, knowledgearticle.FieldLastReviewedAt)
+}
+
+// SetReviewIntervalDays sets the "review_interval_days" field.
+func (m *KnowledgeArticleMutation) SetReviewIntervalDays(i int) {
+	m.review_interval_days = &i
+	m.addreview_interval_days = nil
+}
+
+// ReviewIntervalDays returns the value of the "review_interval_days" field in the mutation.
+func (m *KnowledgeArticleMutation) ReviewIntervalDays() (r int, exists bool) {
+	v := m.review_interval_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewIntervalDays returns the old "review_interval_days" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldReviewIntervalDays(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewIntervalDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewIntervalDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewIntervalDays: %w", err)
+	}
+	return oldValue.ReviewIntervalDays, nil
+}
+
+// AddReviewIntervalDays adds i to the "review_interval_days" field.
+func (m *KnowledgeArticleMutation) AddReviewIntervalDays(i int) {
+	if m.addreview_interval_days != nil {
+		*m.addreview_interval_days += i
+	} else {
+		m.addreview_interval_days = &i
+	}
+}
+
+// AddedReviewIntervalDays returns the value that was added to the "review_interval_days" field in this mutation.
+func (m *KnowledgeArticleMutation) AddedReviewIntervalDays() (r int, exists bool) {
+	v := m.addreview_interval_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetReviewIntervalDays resets all changes to the "review_interval_days" field.
+func (m *KnowledgeArticleMutation) ResetReviewIntervalDays() {
+	m.review_interval_days = nil
+	m.addreview_interval_days = nil
+}
+
+// SetAuthorityLevel sets the "authority_level" field.
+func (m *KnowledgeArticleMutation) SetAuthorityLevel(i int) {
+	m.authority_level = &i
+	m.addauthority_level = nil
+}
+
+// AuthorityLevel returns the value of the "authority_level" field in the mutation.
+func (m *KnowledgeArticleMutation) AuthorityLevel() (r int, exists bool) {
+	v := m.authority_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAuthorityLevel returns the old "authority_level" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldAuthorityLevel(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAuthorityLevel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAuthorityLevel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAuthorityLevel: %w", err)
+	}
+	return oldValue.AuthorityLevel, nil
+}
+
+// AddAuthorityLevel adds i to the "authority_level" field.
+func (m *KnowledgeArticleMutation) AddAuthorityLevel(i int) {
+	if m.addauthority_level != nil {
+		*m.addauthority_level += i
+	} else {
+		m.addauthority_level = &i
+	}
+}
+
+// AddedAuthorityLevel returns the value that was added to the "authority_level" field in this mutation.
+func (m *KnowledgeArticleMutation) AddedAuthorityLevel() (r int, exists bool) {
+	v := m.addauthority_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAuthorityLevel resets all changes to the "authority_level" field.
+func (m *KnowledgeArticleMutation) ResetAuthorityLevel() {
+	m.authority_level = nil
+	m.addauthority_level = nil
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *KnowledgeArticleMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -74712,7 +74978,7 @@ func (m *KnowledgeArticleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *KnowledgeArticleMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 17)
 	if m.title != nil {
 		fields = append(fields, knowledgearticle.FieldTitle)
 	}
@@ -74739,6 +75005,21 @@ func (m *KnowledgeArticleMutation) Fields() []string {
 	}
 	if m.like_count != nil {
 		fields = append(fields, knowledgearticle.FieldLikeCount)
+	}
+	if m.valid_from != nil {
+		fields = append(fields, knowledgearticle.FieldValidFrom)
+	}
+	if m.valid_until != nil {
+		fields = append(fields, knowledgearticle.FieldValidUntil)
+	}
+	if m.last_reviewed_at != nil {
+		fields = append(fields, knowledgearticle.FieldLastReviewedAt)
+	}
+	if m.review_interval_days != nil {
+		fields = append(fields, knowledgearticle.FieldReviewIntervalDays)
+	}
+	if m.authority_level != nil {
+		fields = append(fields, knowledgearticle.FieldAuthorityLevel)
 	}
 	if m.created_at != nil {
 		fields = append(fields, knowledgearticle.FieldCreatedAt)
@@ -74775,6 +75056,16 @@ func (m *KnowledgeArticleMutation) Field(name string) (ent.Value, bool) {
 		return m.ViewCount()
 	case knowledgearticle.FieldLikeCount:
 		return m.LikeCount()
+	case knowledgearticle.FieldValidFrom:
+		return m.ValidFrom()
+	case knowledgearticle.FieldValidUntil:
+		return m.ValidUntil()
+	case knowledgearticle.FieldLastReviewedAt:
+		return m.LastReviewedAt()
+	case knowledgearticle.FieldReviewIntervalDays:
+		return m.ReviewIntervalDays()
+	case knowledgearticle.FieldAuthorityLevel:
+		return m.AuthorityLevel()
 	case knowledgearticle.FieldCreatedAt:
 		return m.CreatedAt()
 	case knowledgearticle.FieldUpdatedAt:
@@ -74808,6 +75099,16 @@ func (m *KnowledgeArticleMutation) OldField(ctx context.Context, name string) (e
 		return m.OldViewCount(ctx)
 	case knowledgearticle.FieldLikeCount:
 		return m.OldLikeCount(ctx)
+	case knowledgearticle.FieldValidFrom:
+		return m.OldValidFrom(ctx)
+	case knowledgearticle.FieldValidUntil:
+		return m.OldValidUntil(ctx)
+	case knowledgearticle.FieldLastReviewedAt:
+		return m.OldLastReviewedAt(ctx)
+	case knowledgearticle.FieldReviewIntervalDays:
+		return m.OldReviewIntervalDays(ctx)
+	case knowledgearticle.FieldAuthorityLevel:
+		return m.OldAuthorityLevel(ctx)
 	case knowledgearticle.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case knowledgearticle.FieldUpdatedAt:
@@ -74886,6 +75187,41 @@ func (m *KnowledgeArticleMutation) SetField(name string, value ent.Value) error 
 		}
 		m.SetLikeCount(v)
 		return nil
+	case knowledgearticle.FieldValidFrom:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValidFrom(v)
+		return nil
+	case knowledgearticle.FieldValidUntil:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValidUntil(v)
+		return nil
+	case knowledgearticle.FieldLastReviewedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastReviewedAt(v)
+		return nil
+	case knowledgearticle.FieldReviewIntervalDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewIntervalDays(v)
+		return nil
+	case knowledgearticle.FieldAuthorityLevel:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAuthorityLevel(v)
+		return nil
 	case knowledgearticle.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -74927,6 +75263,12 @@ func (m *KnowledgeArticleMutation) AddedFields() []string {
 	if m.addlike_count != nil {
 		fields = append(fields, knowledgearticle.FieldLikeCount)
 	}
+	if m.addreview_interval_days != nil {
+		fields = append(fields, knowledgearticle.FieldReviewIntervalDays)
+	}
+	if m.addauthority_level != nil {
+		fields = append(fields, knowledgearticle.FieldAuthorityLevel)
+	}
 	return fields
 }
 
@@ -74943,6 +75285,10 @@ func (m *KnowledgeArticleMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedViewCount()
 	case knowledgearticle.FieldLikeCount:
 		return m.AddedLikeCount()
+	case knowledgearticle.FieldReviewIntervalDays:
+		return m.AddedReviewIntervalDays()
+	case knowledgearticle.FieldAuthorityLevel:
+		return m.AddedAuthorityLevel()
 	}
 	return nil, false
 }
@@ -74980,6 +75326,20 @@ func (m *KnowledgeArticleMutation) AddField(name string, value ent.Value) error 
 		}
 		m.AddLikeCount(v)
 		return nil
+	case knowledgearticle.FieldReviewIntervalDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReviewIntervalDays(v)
+		return nil
+	case knowledgearticle.FieldAuthorityLevel:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAuthorityLevel(v)
+		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticle numeric field %s", name)
 }
@@ -74996,6 +75356,15 @@ func (m *KnowledgeArticleMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(knowledgearticle.FieldTags) {
 		fields = append(fields, knowledgearticle.FieldTags)
+	}
+	if m.FieldCleared(knowledgearticle.FieldValidFrom) {
+		fields = append(fields, knowledgearticle.FieldValidFrom)
+	}
+	if m.FieldCleared(knowledgearticle.FieldValidUntil) {
+		fields = append(fields, knowledgearticle.FieldValidUntil)
+	}
+	if m.FieldCleared(knowledgearticle.FieldLastReviewedAt) {
+		fields = append(fields, knowledgearticle.FieldLastReviewedAt)
 	}
 	if m.FieldCleared(knowledgearticle.FieldDeletedAt) {
 		fields = append(fields, knowledgearticle.FieldDeletedAt)
@@ -75022,6 +75391,15 @@ func (m *KnowledgeArticleMutation) ClearField(name string) error {
 		return nil
 	case knowledgearticle.FieldTags:
 		m.ClearTags()
+		return nil
+	case knowledgearticle.FieldValidFrom:
+		m.ClearValidFrom()
+		return nil
+	case knowledgearticle.FieldValidUntil:
+		m.ClearValidUntil()
+		return nil
+	case knowledgearticle.FieldLastReviewedAt:
+		m.ClearLastReviewedAt()
 		return nil
 	case knowledgearticle.FieldDeletedAt:
 		m.ClearDeletedAt()
@@ -75060,6 +75438,21 @@ func (m *KnowledgeArticleMutation) ResetField(name string) error {
 		return nil
 	case knowledgearticle.FieldLikeCount:
 		m.ResetLikeCount()
+		return nil
+	case knowledgearticle.FieldValidFrom:
+		m.ResetValidFrom()
+		return nil
+	case knowledgearticle.FieldValidUntil:
+		m.ResetValidUntil()
+		return nil
+	case knowledgearticle.FieldLastReviewedAt:
+		m.ResetLastReviewedAt()
+		return nil
+	case knowledgearticle.FieldReviewIntervalDays:
+		m.ResetReviewIntervalDays()
+		return nil
+	case knowledgearticle.FieldAuthorityLevel:
+		m.ResetAuthorityLevel()
 		return nil
 	case knowledgearticle.FieldCreatedAt:
 		m.ResetCreatedAt()

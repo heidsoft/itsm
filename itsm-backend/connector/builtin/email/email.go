@@ -224,7 +224,7 @@ func (c *Connector) poll(ctx context.Context) {
 			_ = client.UidStore(one, imap.AddFlags, []interface{}{imap.SeenFlag}, nil)
 		}
 	}
-	_ = <-done
+	<-done
 }
 
 func (c *Connector) Send(ctx context.Context, msg *connector.Message) error {

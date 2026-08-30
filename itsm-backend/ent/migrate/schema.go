@@ -2266,6 +2266,11 @@ var (
 		{Name: "is_published", Type: field.TypeBool, Default: false},
 		{Name: "view_count", Type: field.TypeInt, Default: 0},
 		{Name: "like_count", Type: field.TypeInt, Default: 0},
+		{Name: "valid_from", Type: field.TypeTime, Nullable: true},
+		{Name: "valid_until", Type: field.TypeTime, Nullable: true},
+		{Name: "last_reviewed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "review_interval_days", Type: field.TypeInt, Default: 0},
+		{Name: "authority_level", Type: field.TypeInt, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
@@ -2279,7 +2284,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "knowledge_articles_known_errors_knowledge_articles",
-				Columns:    []*schema.Column{KnowledgeArticlesColumns[13]},
+				Columns:    []*schema.Column{KnowledgeArticlesColumns[18]},
 				RefColumns: []*schema.Column{KnownErrorsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

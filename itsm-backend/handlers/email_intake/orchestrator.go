@@ -497,6 +497,7 @@ func (o *EmailIntakeOrchestrator) updateConversation(ctx context.Context, conver
 	return updated, nil
 }
 
+//lint:ignore U1000 Deprecated: see function comment
 func (o *EmailIntakeOrchestrator) findOrCreateConversation(ctx context.Context, tenantID int, email ReceivedEmail) (*ent.EmailConversation, error) {
 	for _, reference := range append([]string{email.InReplyTo}, email.References...) {
 		if reference == "" {
@@ -598,6 +599,7 @@ func sameMailbox(a, b string) bool {
 	return ea == nil && eb == nil && strings.EqualFold(pa.Address, pb.Address)
 }
 
+//lint:ignore U1000 Deprecated: see function comment
 func (o *EmailIntakeOrchestrator) conversationHasSender(ctx context.Context, tenantID, conversationID int, sender string) bool {
 	messages, err := o.client.InboundEmailMessage.Query().Where(inboundemailmessage.TenantIDEQ(tenantID), inboundemailmessage.ConversationIDEQ(conversationID)).All(ctx)
 	if err != nil {

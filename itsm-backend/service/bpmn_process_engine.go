@@ -1688,6 +1688,8 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 // getNextVersion 获取下一个版本号（major.minor.0）。约定与部署服务一致：递增 minor、patch 归零、minor 不封顶。
 // 旧实现用 Order(Desc("version")) 对字符串版本号做字典序排序，多位数版本（如 1.10.0 vs 1.9.0）会被误判大小；
 // 此处改为在 Go 侧解析取最大 minor 后递增，避免字典序陷阱。
+//
+//lint:ignore U1000 Deprecated: see function comment
 func (s *bpmnProcessDefinitionService) getNextVersion(ctx context.Context, key string, tenantID int) string {
 	return s.getNextVersionWithClient(ctx, s.client, key, tenantID)
 }

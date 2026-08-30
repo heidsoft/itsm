@@ -125,6 +125,76 @@ func (_c *KnowledgeArticleCreate) SetNillableLikeCount(v *int) *KnowledgeArticle
 	return _c
 }
 
+// SetValidFrom sets the "valid_from" field.
+func (_c *KnowledgeArticleCreate) SetValidFrom(v time.Time) *KnowledgeArticleCreate {
+	_c.mutation.SetValidFrom(v)
+	return _c
+}
+
+// SetNillableValidFrom sets the "valid_from" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableValidFrom(v *time.Time) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetValidFrom(*v)
+	}
+	return _c
+}
+
+// SetValidUntil sets the "valid_until" field.
+func (_c *KnowledgeArticleCreate) SetValidUntil(v time.Time) *KnowledgeArticleCreate {
+	_c.mutation.SetValidUntil(v)
+	return _c
+}
+
+// SetNillableValidUntil sets the "valid_until" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableValidUntil(v *time.Time) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetValidUntil(*v)
+	}
+	return _c
+}
+
+// SetLastReviewedAt sets the "last_reviewed_at" field.
+func (_c *KnowledgeArticleCreate) SetLastReviewedAt(v time.Time) *KnowledgeArticleCreate {
+	_c.mutation.SetLastReviewedAt(v)
+	return _c
+}
+
+// SetNillableLastReviewedAt sets the "last_reviewed_at" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableLastReviewedAt(v *time.Time) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetLastReviewedAt(*v)
+	}
+	return _c
+}
+
+// SetReviewIntervalDays sets the "review_interval_days" field.
+func (_c *KnowledgeArticleCreate) SetReviewIntervalDays(v int) *KnowledgeArticleCreate {
+	_c.mutation.SetReviewIntervalDays(v)
+	return _c
+}
+
+// SetNillableReviewIntervalDays sets the "review_interval_days" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableReviewIntervalDays(v *int) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetReviewIntervalDays(*v)
+	}
+	return _c
+}
+
+// SetAuthorityLevel sets the "authority_level" field.
+func (_c *KnowledgeArticleCreate) SetAuthorityLevel(v int) *KnowledgeArticleCreate {
+	_c.mutation.SetAuthorityLevel(v)
+	return _c
+}
+
+// SetNillableAuthorityLevel sets the "authority_level" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableAuthorityLevel(v *int) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetAuthorityLevel(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *KnowledgeArticleCreate) SetCreatedAt(v time.Time) *KnowledgeArticleCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -259,6 +329,14 @@ func (_c *KnowledgeArticleCreate) defaults() {
 		v := knowledgearticle.DefaultLikeCount
 		_c.mutation.SetLikeCount(v)
 	}
+	if _, ok := _c.mutation.ReviewIntervalDays(); !ok {
+		v := knowledgearticle.DefaultReviewIntervalDays
+		_c.mutation.SetReviewIntervalDays(v)
+	}
+	if _, ok := _c.mutation.AuthorityLevel(); !ok {
+		v := knowledgearticle.DefaultAuthorityLevel
+		_c.mutation.SetAuthorityLevel(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := knowledgearticle.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -303,6 +381,12 @@ func (_c *KnowledgeArticleCreate) check() error {
 	}
 	if _, ok := _c.mutation.LikeCount(); !ok {
 		return &ValidationError{Name: "like_count", err: errors.New(`ent: missing required field "KnowledgeArticle.like_count"`)}
+	}
+	if _, ok := _c.mutation.ReviewIntervalDays(); !ok {
+		return &ValidationError{Name: "review_interval_days", err: errors.New(`ent: missing required field "KnowledgeArticle.review_interval_days"`)}
+	}
+	if _, ok := _c.mutation.AuthorityLevel(); !ok {
+		return &ValidationError{Name: "authority_level", err: errors.New(`ent: missing required field "KnowledgeArticle.authority_level"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "KnowledgeArticle.created_at"`)}
@@ -371,6 +455,26 @@ func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cre
 	if value, ok := _c.mutation.LikeCount(); ok {
 		_spec.SetField(knowledgearticle.FieldLikeCount, field.TypeInt, value)
 		_node.LikeCount = value
+	}
+	if value, ok := _c.mutation.ValidFrom(); ok {
+		_spec.SetField(knowledgearticle.FieldValidFrom, field.TypeTime, value)
+		_node.ValidFrom = &value
+	}
+	if value, ok := _c.mutation.ValidUntil(); ok {
+		_spec.SetField(knowledgearticle.FieldValidUntil, field.TypeTime, value)
+		_node.ValidUntil = &value
+	}
+	if value, ok := _c.mutation.LastReviewedAt(); ok {
+		_spec.SetField(knowledgearticle.FieldLastReviewedAt, field.TypeTime, value)
+		_node.LastReviewedAt = &value
+	}
+	if value, ok := _c.mutation.ReviewIntervalDays(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewIntervalDays, field.TypeInt, value)
+		_node.ReviewIntervalDays = value
+	}
+	if value, ok := _c.mutation.AuthorityLevel(); ok {
+		_spec.SetField(knowledgearticle.FieldAuthorityLevel, field.TypeInt, value)
+		_node.AuthorityLevel = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)

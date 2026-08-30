@@ -100,6 +100,31 @@ func LikeCount(v int) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEQ(FieldLikeCount, v))
 }
 
+// ValidFrom applies equality check predicate on the "valid_from" field. It's identical to ValidFromEQ.
+func ValidFrom(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldValidFrom, v))
+}
+
+// ValidUntil applies equality check predicate on the "valid_until" field. It's identical to ValidUntilEQ.
+func ValidUntil(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldValidUntil, v))
+}
+
+// LastReviewedAt applies equality check predicate on the "last_reviewed_at" field. It's identical to LastReviewedAtEQ.
+func LastReviewedAt(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldLastReviewedAt, v))
+}
+
+// ReviewIntervalDays applies equality check predicate on the "review_interval_days" field. It's identical to ReviewIntervalDaysEQ.
+func ReviewIntervalDays(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldReviewIntervalDays, v))
+}
+
+// AuthorityLevel applies equality check predicate on the "authority_level" field. It's identical to AuthorityLevelEQ.
+func AuthorityLevel(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldAuthorityLevel, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEQ(FieldCreatedAt, v))
@@ -573,6 +598,236 @@ func LikeCountLT(v int) predicate.KnowledgeArticle {
 // LikeCountLTE applies the LTE predicate on the "like_count" field.
 func LikeCountLTE(v int) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldLTE(FieldLikeCount, v))
+}
+
+// ValidFromEQ applies the EQ predicate on the "valid_from" field.
+func ValidFromEQ(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldValidFrom, v))
+}
+
+// ValidFromNEQ applies the NEQ predicate on the "valid_from" field.
+func ValidFromNEQ(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldValidFrom, v))
+}
+
+// ValidFromIn applies the In predicate on the "valid_from" field.
+func ValidFromIn(vs ...time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldValidFrom, vs...))
+}
+
+// ValidFromNotIn applies the NotIn predicate on the "valid_from" field.
+func ValidFromNotIn(vs ...time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldValidFrom, vs...))
+}
+
+// ValidFromGT applies the GT predicate on the "valid_from" field.
+func ValidFromGT(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldValidFrom, v))
+}
+
+// ValidFromGTE applies the GTE predicate on the "valid_from" field.
+func ValidFromGTE(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldValidFrom, v))
+}
+
+// ValidFromLT applies the LT predicate on the "valid_from" field.
+func ValidFromLT(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldValidFrom, v))
+}
+
+// ValidFromLTE applies the LTE predicate on the "valid_from" field.
+func ValidFromLTE(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldValidFrom, v))
+}
+
+// ValidFromIsNil applies the IsNil predicate on the "valid_from" field.
+func ValidFromIsNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIsNull(FieldValidFrom))
+}
+
+// ValidFromNotNil applies the NotNil predicate on the "valid_from" field.
+func ValidFromNotNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotNull(FieldValidFrom))
+}
+
+// ValidUntilEQ applies the EQ predicate on the "valid_until" field.
+func ValidUntilEQ(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldValidUntil, v))
+}
+
+// ValidUntilNEQ applies the NEQ predicate on the "valid_until" field.
+func ValidUntilNEQ(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldValidUntil, v))
+}
+
+// ValidUntilIn applies the In predicate on the "valid_until" field.
+func ValidUntilIn(vs ...time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldValidUntil, vs...))
+}
+
+// ValidUntilNotIn applies the NotIn predicate on the "valid_until" field.
+func ValidUntilNotIn(vs ...time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldValidUntil, vs...))
+}
+
+// ValidUntilGT applies the GT predicate on the "valid_until" field.
+func ValidUntilGT(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldValidUntil, v))
+}
+
+// ValidUntilGTE applies the GTE predicate on the "valid_until" field.
+func ValidUntilGTE(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldValidUntil, v))
+}
+
+// ValidUntilLT applies the LT predicate on the "valid_until" field.
+func ValidUntilLT(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldValidUntil, v))
+}
+
+// ValidUntilLTE applies the LTE predicate on the "valid_until" field.
+func ValidUntilLTE(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldValidUntil, v))
+}
+
+// ValidUntilIsNil applies the IsNil predicate on the "valid_until" field.
+func ValidUntilIsNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIsNull(FieldValidUntil))
+}
+
+// ValidUntilNotNil applies the NotNil predicate on the "valid_until" field.
+func ValidUntilNotNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotNull(FieldValidUntil))
+}
+
+// LastReviewedAtEQ applies the EQ predicate on the "last_reviewed_at" field.
+func LastReviewedAtEQ(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldLastReviewedAt, v))
+}
+
+// LastReviewedAtNEQ applies the NEQ predicate on the "last_reviewed_at" field.
+func LastReviewedAtNEQ(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldLastReviewedAt, v))
+}
+
+// LastReviewedAtIn applies the In predicate on the "last_reviewed_at" field.
+func LastReviewedAtIn(vs ...time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldLastReviewedAt, vs...))
+}
+
+// LastReviewedAtNotIn applies the NotIn predicate on the "last_reviewed_at" field.
+func LastReviewedAtNotIn(vs ...time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldLastReviewedAt, vs...))
+}
+
+// LastReviewedAtGT applies the GT predicate on the "last_reviewed_at" field.
+func LastReviewedAtGT(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldLastReviewedAt, v))
+}
+
+// LastReviewedAtGTE applies the GTE predicate on the "last_reviewed_at" field.
+func LastReviewedAtGTE(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldLastReviewedAt, v))
+}
+
+// LastReviewedAtLT applies the LT predicate on the "last_reviewed_at" field.
+func LastReviewedAtLT(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldLastReviewedAt, v))
+}
+
+// LastReviewedAtLTE applies the LTE predicate on the "last_reviewed_at" field.
+func LastReviewedAtLTE(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldLastReviewedAt, v))
+}
+
+// LastReviewedAtIsNil applies the IsNil predicate on the "last_reviewed_at" field.
+func LastReviewedAtIsNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIsNull(FieldLastReviewedAt))
+}
+
+// LastReviewedAtNotNil applies the NotNil predicate on the "last_reviewed_at" field.
+func LastReviewedAtNotNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotNull(FieldLastReviewedAt))
+}
+
+// ReviewIntervalDaysEQ applies the EQ predicate on the "review_interval_days" field.
+func ReviewIntervalDaysEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldReviewIntervalDays, v))
+}
+
+// ReviewIntervalDaysNEQ applies the NEQ predicate on the "review_interval_days" field.
+func ReviewIntervalDaysNEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldReviewIntervalDays, v))
+}
+
+// ReviewIntervalDaysIn applies the In predicate on the "review_interval_days" field.
+func ReviewIntervalDaysIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldReviewIntervalDays, vs...))
+}
+
+// ReviewIntervalDaysNotIn applies the NotIn predicate on the "review_interval_days" field.
+func ReviewIntervalDaysNotIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldReviewIntervalDays, vs...))
+}
+
+// ReviewIntervalDaysGT applies the GT predicate on the "review_interval_days" field.
+func ReviewIntervalDaysGT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldReviewIntervalDays, v))
+}
+
+// ReviewIntervalDaysGTE applies the GTE predicate on the "review_interval_days" field.
+func ReviewIntervalDaysGTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldReviewIntervalDays, v))
+}
+
+// ReviewIntervalDaysLT applies the LT predicate on the "review_interval_days" field.
+func ReviewIntervalDaysLT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldReviewIntervalDays, v))
+}
+
+// ReviewIntervalDaysLTE applies the LTE predicate on the "review_interval_days" field.
+func ReviewIntervalDaysLTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldReviewIntervalDays, v))
+}
+
+// AuthorityLevelEQ applies the EQ predicate on the "authority_level" field.
+func AuthorityLevelEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldAuthorityLevel, v))
+}
+
+// AuthorityLevelNEQ applies the NEQ predicate on the "authority_level" field.
+func AuthorityLevelNEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldAuthorityLevel, v))
+}
+
+// AuthorityLevelIn applies the In predicate on the "authority_level" field.
+func AuthorityLevelIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldAuthorityLevel, vs...))
+}
+
+// AuthorityLevelNotIn applies the NotIn predicate on the "authority_level" field.
+func AuthorityLevelNotIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldAuthorityLevel, vs...))
+}
+
+// AuthorityLevelGT applies the GT predicate on the "authority_level" field.
+func AuthorityLevelGT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldAuthorityLevel, v))
+}
+
+// AuthorityLevelGTE applies the GTE predicate on the "authority_level" field.
+func AuthorityLevelGTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldAuthorityLevel, v))
+}
+
+// AuthorityLevelLT applies the LT predicate on the "authority_level" field.
+func AuthorityLevelLT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldAuthorityLevel, v))
+}
+
+// AuthorityLevelLTE applies the LTE predicate on the "authority_level" field.
+func AuthorityLevelLTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldAuthorityLevel, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

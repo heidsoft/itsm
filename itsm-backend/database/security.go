@@ -28,6 +28,7 @@ import (
 	"context"
 	"fmt"
 
+	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 
@@ -74,7 +75,8 @@ func registerSoftDeleteInterceptor(client *ent.Client) {
 			case *ent.ApplicationQuery:
 				q.Where(application.DeletedAtIsNil())
 			case *ent.ConfigurationItemQuery:
-				q.Where(configurationitem.LifecycleStatusNEQ("scrapped"))
+				// CI 无 deleted_at 列，退役语义为 lifecycle_status = scrapped
+				q.Where(configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 			case *ent.DepartmentQuery:
 				q.Where(department.DeletedAtIsNil())
 			case *ent.KnowledgeArticleQuery:

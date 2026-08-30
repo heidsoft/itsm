@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/internal/commandbus"
@@ -35,6 +37,9 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	if completed[elementID] >= occurrence {
 		return nil
 	}
+	if err := e.verifyServiceTaskCommandLease(workflowCtx, e.client, cmd); err != nil {
+		return err
+	}
 	occurrences := intMapVariable(instance.Variables, "_serviceTaskOccurrences")
 	if occurrences[elementID] != occurrence || instance.CurrentActivityID != elementID {
 		return fmt.Errorf("stale BPMN ServiceTask command for element %s occurrence %d", elementID, occurrence)
@@ -64,6 +69,11 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	}
 	defer func() { _ = tx.Rollback() }()
 	txc := tx.Client()
+	// 在同一事务中用条件更新锁定并复核当前 fencing 身份。该行锁会阻止
+	// lease 接管与流程推进并发提交；旧 worker 失去 lease 后不得推进流程。
+	if err := e.lockServiceTaskCommandLease(workflowCtx, txc, cmd); err != nil {
+		return err
+	}
 	current, err := txc.ProcessInstance.Query().Where(
 		processinstance.IDEQ(instance.ID), processinstance.TenantIDEQ(cmd.TenantID),
 	).Only(workflowCtx)
@@ -103,6 +113,47 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	e.logger.Infow("BPMN ServiceTask command completed", "command_id", cmd.ID, "tenant_id", cmd.TenantID,
 		"process_instance_id", instance.ID, "element_id", elementID, "occurrence", occurrence,
 		"process_definition_id", definition.ID)
+	return nil
+}
+
+func (e *CustomProcessEngine) lockServiceTaskCommandLease(ctx context.Context, client *ent.Client, cmd *ent.OperationalCommand) error {
+	if cmd.LeaseOwner == "" || cmd.FencingToken <= 0 || cmd.LeaseExpiresAt == nil {
+		return commandbus.ErrLeaseLost
+	}
+	_, err := client.OperationalCommand.UpdateOneID(cmd.ID).Where(
+		operationalcommand.TenantIDEQ(cmd.TenantID),
+		operationalcommand.StatusEQ(commandbus.StatusProcessing),
+		operationalcommand.LeaseOwnerEQ(cmd.LeaseOwner),
+		operationalcommand.FencingTokenEQ(cmd.FencingToken),
+		operationalcommand.LeaseExpiresAtGT(time.Now()),
+	).SetUpdatedAt(time.Now()).Save(ctx)
+	if ent.IsNotFound(err) {
+		return commandbus.ErrLeaseLost
+	}
+	if err != nil {
+		return fmt.Errorf("lock BPMN ServiceTask command lease: %w", err)
+	}
+	return nil
+}
+
+func (e *CustomProcessEngine) verifyServiceTaskCommandLease(ctx context.Context, client *ent.Client, cmd *ent.OperationalCommand) error {
+	if cmd.LeaseOwner == "" || cmd.FencingToken <= 0 || cmd.LeaseExpiresAt == nil {
+		return commandbus.ErrLeaseLost
+	}
+	_, err := client.OperationalCommand.Query().Where(
+		operationalcommand.IDEQ(cmd.ID),
+		operationalcommand.TenantIDEQ(cmd.TenantID),
+		operationalcommand.StatusEQ(commandbus.StatusProcessing),
+		operationalcommand.LeaseOwnerEQ(cmd.LeaseOwner),
+		operationalcommand.FencingTokenEQ(cmd.FencingToken),
+		operationalcommand.LeaseExpiresAtGT(time.Now()),
+	).Only(ctx)
+	if ent.IsNotFound(err) {
+		return commandbus.ErrLeaseLost
+	}
+	if err != nil {
+		return fmt.Errorf("verify BPMN ServiceTask command lease: %w", err)
+	}
 	return nil
 }
 

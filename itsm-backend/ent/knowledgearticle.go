@@ -35,6 +35,16 @@ type KnowledgeArticle struct {
 	ViewCount int `json:"view_count,omitempty"`
 	// 点赞次数
 	LikeCount int `json:"like_count,omitempty"`
+	// 生效时间（早于该时间不得被 RAG 引用；空=立即生效）
+	ValidFrom *time.Time `json:"valid_from,omitempty"`
+	// 失效时间（达到该时间后不得被 RAG 引用；空=长期有效）
+	ValidUntil *time.Time `json:"valid_until,omitempty"`
+	// 最近一次内容复核时间；空=从未复核
+	LastReviewedAt *time.Time `json:"last_reviewed_at,omitempty"`
+	// 复核周期（天）；0=不设复核要求
+	ReviewIntervalDays int `json:"review_interval_days,omitempty"`
+	// 权威等级：0 普通 / 10 部门推荐 / 20 官方标准 / 30 唯一真相源
+	AuthorityLevel int `json:"authority_level,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -95,11 +105,11 @@ func (*KnowledgeArticle) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case knowledgearticle.FieldIsPublished:
 			values[i] = new(sql.NullBool)
-		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID, knowledgearticle.FieldViewCount, knowledgearticle.FieldLikeCount:
+		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID, knowledgearticle.FieldViewCount, knowledgearticle.FieldLikeCount, knowledgearticle.FieldReviewIntervalDays, knowledgearticle.FieldAuthorityLevel:
 			values[i] = new(sql.NullInt64)
 		case knowledgearticle.FieldTitle, knowledgearticle.FieldContent, knowledgearticle.FieldCategory, knowledgearticle.FieldTags:
 			values[i] = new(sql.NullString)
-		case knowledgearticle.FieldCreatedAt, knowledgearticle.FieldUpdatedAt, knowledgearticle.FieldDeletedAt:
+		case knowledgearticle.FieldValidFrom, knowledgearticle.FieldValidUntil, knowledgearticle.FieldLastReviewedAt, knowledgearticle.FieldCreatedAt, knowledgearticle.FieldUpdatedAt, knowledgearticle.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case knowledgearticle.ForeignKeys[0]: // known_error_knowledge_articles
 			values[i] = new(sql.NullInt64)
@@ -177,6 +187,39 @@ func (_m *KnowledgeArticle) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field like_count", values[i])
 			} else if value.Valid {
 				_m.LikeCount = int(value.Int64)
+			}
+		case knowledgearticle.FieldValidFrom:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field valid_from", values[i])
+			} else if value.Valid {
+				_m.ValidFrom = new(time.Time)
+				*_m.ValidFrom = value.Time
+			}
+		case knowledgearticle.FieldValidUntil:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field valid_until", values[i])
+			} else if value.Valid {
+				_m.ValidUntil = new(time.Time)
+				*_m.ValidUntil = value.Time
+			}
+		case knowledgearticle.FieldLastReviewedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_reviewed_at", values[i])
+			} else if value.Valid {
+				_m.LastReviewedAt = new(time.Time)
+				*_m.LastReviewedAt = value.Time
+			}
+		case knowledgearticle.FieldReviewIntervalDays:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field review_interval_days", values[i])
+			} else if value.Valid {
+				_m.ReviewIntervalDays = int(value.Int64)
+			}
+		case knowledgearticle.FieldAuthorityLevel:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field authority_level", values[i])
+			} else if value.Valid {
+				_m.AuthorityLevel = int(value.Int64)
 			}
 		case knowledgearticle.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -281,6 +324,27 @@ func (_m *KnowledgeArticle) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("like_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.LikeCount))
+	builder.WriteString(", ")
+	if v := _m.ValidFrom; v != nil {
+		builder.WriteString("valid_from=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.ValidUntil; v != nil {
+		builder.WriteString("valid_until=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.LastReviewedAt; v != nil {
+		builder.WriteString("last_reviewed_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("review_interval_days=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ReviewIntervalDays))
+	builder.WriteString(", ")
+	builder.WriteString("authority_level=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AuthorityLevel))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

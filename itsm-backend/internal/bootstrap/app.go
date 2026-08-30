@@ -44,6 +44,7 @@ import (
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
+	"itsm-backend/handlers/common/knowledgeaccess"
 	"itsm-backend/handlers/email_intake"
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
@@ -801,6 +802,12 @@ func NewApplication() *Application {
 	knowledgeServiceDomain := knowledge.NewService(knowledgeRepo, sugar)
 	// 向量索引同步：发布→索引，取消发布/软删除→移除向量（RemoveArticle 真实删除）。
 	knowledgeServiceDomain.SetRAG(ragService)
+	// 知识分类可见性（L0 权限边界）：纳管能力 + AI 检索分类过滤共用同一守卫实例，
+	// 保证纳管变更后缓存立即失效，不会出现「改了配置但检索仍放行」的窗口。
+	knowledgeGuard := knowledgeaccess.NewGuard(client, sugar)
+	knowledgeServiceDomain.SetEntClient(client)
+	knowledgeServiceDomain.SetKnowledgeGuard(knowledgeGuard)
+	ragService.SetKnowledgeGuard(knowledgeGuard)
 	knowledgeHandler := knowledge.NewHandler(knowledgeServiceDomain)
 
 	// Domain: SLA (DDD)
