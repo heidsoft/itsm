@@ -46,7 +46,7 @@
 |---|---|---|---|
 | M1 | `service/configuration_item_service.go:947` | `BatchUpdateCI` update 缺租户谓词与乐观锁 | ✅已修 |
 | M2 | `service/cloud/runner.go:113-114` | reconcile 查询 CloudService 缺租户过滤 | ✅已修 |
-| M3 | `service/configuration_item_service.go:412-478` | `DeleteCI` 关系清理与 CI 删除非原子,失败致拓扑损坏 | 🔴(需先设计可审计软删除/历史保留模型) |
+| M3 | `service/configuration_item_service.go` | `DeleteCI` 关系清理与 CI 删除非原子,失败致拓扑损坏 | ✅ 已改为同事务可审计软删除：关系失活、删除历史、CI 退役原子提交；历史强外键继续保留 |
 
 ## P1 风险(20)
 
@@ -66,7 +66,7 @@
 | 变更 | `handlers/change` 治理字段 | 已提审变更可经 PUT 静默换处理人 | 🔴 |
 | 变更 | `handlers/change/repository_impl.go:726-760` | `ListByDateRange` 全表加载内存过滤 | 🔴 |
 | 变更 | `handlers/standard_change/handler.go:339-341` | `DeleteStandardChange` Update 缺租户条件 | ✅已修 |
-| 工作流 | `bpmn_process_engine.go:226-298` | `StartProcess` 无事务,失败留僵尸实例 | 🔴(ServiceTask 外部副作用需先改 durable command) |
+| 工作流 | `bpmn_process_engine.go` | `StartProcess` 无事务,失败留僵尸实例 | 🟡 启动、首步、审计与 command 已原子提交，外部执行已迁 worker；仍需完成全部内置 ServiceTask 的强制幂等执行记录与模糊失败测试 |
 | 工作流 | `bpmn_process_engine.go:2635-2658` | `DelegateTask` 无事务、受托人校验缺失、原审批人仍可完成 | 🔴 |
 | 工作流 | `bpmn_process_engine.go:1973-1984` | `SetProcessInstanceVariables` 覆盖式写入,可丢引擎保留变量 | 🔴 |
 | 工作流 | `bpmn_process_engine.go:536-546` | 排他网关不支持 default flow | 🔴 |
@@ -84,5 +84,5 @@ CMDB:CI upsert OR 匹配可能误命中;`wouldCreateCycle` 全量加载边。
 ## 修复批次规划
 
 - **本批(小切口外科修复,2026-08-29 已完成并验证)**:W1、W2、I1、M1、M2、T1、事件 AssignIncident 乐观锁、standard_change 删除租户条件 — 编译通过,`service`/`controller`/`handlers/standard_change`/`service/cloud` 测试全绿
-- **事务包裹批次(2026-08-29 部分完成并验证)**:I2、I3 已修。M3 需先解决 CI 历史强外键与硬删除冲突；StartProcess 需先将 ServiceTask 外部副作用改为 durable command，禁止在数据库事务内直接执行远程回调。
+- **事务包裹批次(2026-08-30 持续验证)**:I2、I3 已修；M3 使用独立 `deleted_at/deleted_by/delete_reason` 的“软删除 + 历史保留”模型解决强外键与业务生命周期冲突。`StartProcess` 已将 ServiceTask 外部副作用迁移到 durable command，数据库事务内不再执行远程回调，并将 lease/fencing 校验贯穿流程推进；在全部内置领域 Handler 用同一幂等身份原子记录执行结果、补齐“副作用成功但推进失败”测试前，不标记为生产完成。
 - **第三批(语义类,需设计评审)**:C1 标准变更走 workflow、C2 审批竞态条件更新、DelegateTask 语义、审计落库、编号降级路径
