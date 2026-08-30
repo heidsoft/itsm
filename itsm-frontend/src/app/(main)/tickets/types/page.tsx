@@ -86,7 +86,7 @@ export default function TicketTypesPage() {
     <Input.Search className="mb-4 max-w-sm" allowClear placeholder="搜索名称或编码" onSearch={setKeyword} />
     <div className="mb-3"><label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={includeArchived} onChange={e => setIncludeArchived(e.target.checked)} />显示已归档类型</label></div>
     <Table rowKey="id" loading={loading} dataSource={items} columns={[
-      { title: '名称', dataIndex: 'name', render: (value: string) => <Text strong>{value}</Text> },
+      { title: '名称', dataIndex: 'name', width: 180, ellipsis: true, render: (value: string) => <Text strong>{value}</Text> },
       { title: '编码', dataIndex: 'code', render: (value: string) => <Tag color="blue">{value}</Tag> },
       { title: '动态字段', dataIndex: 'customFields', render: (value: unknown[]) => `${value?.length ?? 0} 个` },
 	  { title: '默认优先级', dataIndex: 'defaultPriority', render: (value: string) => <Tag>{value}</Tag> },

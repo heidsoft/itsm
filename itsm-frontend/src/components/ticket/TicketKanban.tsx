@@ -222,9 +222,11 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
         <div className="space-y-2">
           {/* 工单标题 */}
           <div className="flex items-start justify-between">
-            <Text strong className="text-sm flex-1 mr-2">
-              {ticket.title}
-            </Text>
+            <Tooltip title={ticket.title}>
+              <Text strong className="text-sm flex-1 mr-2 overflow-hidden text-ellipsis whitespace-nowrap" style={{ display: 'block' }}>
+                {ticket.title}
+              </Text>
+            </Tooltip>
             <Badge
               count={priorityConfig.icon}
               style={{

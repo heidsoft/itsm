@@ -69,11 +69,11 @@ export function buildTicketListColumns(actions: TicketListColumnActions): Column
       title: '工单号',
       dataIndex: 'ticketNumber',
       key: 'ticketNumber',
-      width: 150,
+      width: 200,
       fixed: 'left',
       ellipsis: true,
       render: (ticketNumber: string, record: Ticket) => (
-        <Button type='link' onClick={() => onOpen(record)}>
+        <Button type='link' size='small' onClick={() => onOpen(record)}>
           {ticketNumber || '-'}
         </Button>
       ),
