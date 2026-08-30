@@ -223,6 +223,27 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				return
 			}
 
+			// P1-2 修复：用户角色变更/停用/改密后，其存量 access token 需立即失效。
+			// 比对 token 签发时间与该用户的最低可接受签发时间（MinIssuedAt）。
+			store := currentAccessTokenRevocationStore()
+			minIAT, minIATErr := store.MinIssuedAt(c.Request.Context(), claims.UserID)
+			if minIATErr != nil {
+				// 查询失败按安全默认拒绝（fail-closed），与吊销检查语义一致。
+				zap.S().Errorw("AuthMiddleware: user token min issued-at check failed",
+					"path", c.Request.URL.Path, "user_id", claims.UserID, "error", minIATErr)
+				common.Fail(c, common.AuthFailedCode, "token状态验证失败")
+				c.Abort()
+				return
+			}
+			if !minIAT.IsZero() && claims.IssuedAt != nil && claims.IssuedAt.Time.Before(minIAT) {
+				zap.S().Warnw("AuthMiddleware: token issued before user permission change, rejected",
+					"path", c.Request.URL.Path, "user_id", claims.UserID,
+					"issued_at", claims.IssuedAt.Time, "min_issued_at", minIAT)
+				common.Fail(c, common.AuthFailedCode, "账号权限已变更，请重新登录")
+				c.Abort()
+				return
+			}
+
 			c.Set("user_id", claims.UserID)
 			c.Set("username", claims.Username)
 			c.Set("role", claims.Role)

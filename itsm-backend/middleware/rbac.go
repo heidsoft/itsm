@@ -503,8 +503,12 @@ func InvalidateAllPermissionCaches() {
 	permissionCacheLock.Unlock()
 }
 
-// loadPermissionsFromDB 从新的permission_definition和role_permission表加载权限
-// 如果新表没有数据，则fallback到旧的Permission表
+// loadPermissionsFromDB 从 role_permission + permission（旧表）加载角色权限。
+// 注意：权限定义的权威表是 Permission（ent/schema/permission.go）；
+// permission_definition 表（ent/schema/permission_definition.go）目前
+// 尚无任何消费方（2026-08-30 审计确认），如需启用须同步改造本函数与
+// AssignPermissions 的写入侧。若 role_permission 无数据，则 fallback 到
+// loadRolePermissionsFromDB（旧 Permission 表直查）。
 // P0-4：ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()
 func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName string, tenantID int) []Permission {
 	// 如果 client 为 nil，直接返回空权限（将使用默认权限）
@@ -524,7 +528,7 @@ func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName str
 	}
 	permissionCacheLock.RUnlock()
 
-	// 从新的permission_definition + role_permission表加载
+	// 从 role_permission 关联 + permission 权威表加载（见函数头注释）
 	var perms []Permission
 
 	// 首先查找角色ID
@@ -1023,9 +1027,10 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 // hasPermission 检查用户是否有权限访问指定资源
 // Uses Smart Permission Checker (4-layer fallback architecture)
 func hasPermission(client *ent.Client, role, method, path string, userID, tenantID int, c *gin.Context) bool {
-	// 超级管理员与系统管理员拥有所有权限（H-16 修复：sysadmin 与 super_admin
-	// 白名单一致性，避免 DBOnly 模式下 sysadmin 因缺 */* 行而被错误拒绝）。
-	if role == "super_admin" || role == "sysadmin" {
+	// 仅 super_admin 硬编码直通（与 smart_permission.go checkRolePermissionFromDB 语义统一）。
+	// sysadmin 不再短路：DBOnly 模式下其权限来自 role_permissions 播种数据
+	// （seeder.go allPermissionCodes() 全量授权），权限收回/降级因此可生效。
+	if role == "super_admin" {
 		return true
 	}
 
@@ -1056,8 +1061,9 @@ func HasResourcePermission(ctx context.Context, client *ent.Client, role, resour
 
 // hasResourcePermission 检查角色是否有指定资源的操作权限（支持多种配置模式）
 func hasResourcePermission(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
-	// 超级管理员与系统管理员拥有所有权限（H-16 修复：与 super_admin 白名单一致）。
-	if role == "super_admin" || role == "sysadmin" {
+	// 仅 super_admin 硬编码直通（与 smart_permission.go checkRolePermissionFromDB 语义统一）。
+	// sysadmin 必须走数据库权限（seeder 已播种全量），任何权限收回/降级才能生效。
+	if role == "super_admin" {
 		return true
 	}
 
@@ -1109,7 +1115,7 @@ func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string,
 	case PermissionConfigModeFallback:
 		fallthrough
 	default:
-		// 默认：先数据库（新的permission_definition+role_permission表，fallback到旧的Permission表），失败则使用硬编码
+		// 默认（仅 dev/test 环境）：先数据库（role_permission+permission 表），为空则使用硬编码默认
 		dbPerms := loadPermissionsFromDB(ctx, client, role, tenantID)
 		if len(dbPerms) > 0 {
 			return dbPerms
