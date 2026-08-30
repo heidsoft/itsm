@@ -161,8 +161,10 @@ func (tc *TicketController) UpdateTicket(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	req.UserID = c.GetInt("user_id")
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 
-	ticket, err := tc.ticketService.UpdateTicket(c.Request.Context(), ticketID, &req, tenantID)
+	ticket, err := tc.ticketService.UpdateTicket(c.Request.Context(), ticketID, &req, tenantID, currentUserID, currentRole)
 	if err != nil {
 		// 处理版本冲突错误
 		if common.IsVersionConflictError(err) {
@@ -1046,7 +1048,10 @@ func (tc *TicketController) UpdateSubtask(c *gin.Context) {
 		return
 	}
 
-	updatedTicket, err := tc.ticketService.UpdateTicket(c.Request.Context(), subtaskID, &req, tenantID)
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
+
+	updatedTicket, err := tc.ticketService.UpdateTicket(c.Request.Context(), subtaskID, &req, tenantID, currentUserID, currentRole)
 	if err != nil {
 		tc.logger.Errorw("Failed to update subtask", "error", err, "subtask_id", subtaskID, "tenant_id", tenantID)
 		common.FailWithErr(c, err, "操作失败")

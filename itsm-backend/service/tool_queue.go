@@ -118,7 +118,7 @@ func (q *ToolQueue) worker() {
 				assigneeID = int(v)
 			}
 			r := &dto.UpdateTicketRequest{Status: status, AssigneeID: assigneeID}
-			res, err = q.tickets.UpdateTicket(ctx, ticketID, r, job.TenantID)
+			res, err = q.tickets.UpdateTicket(ctx, ticketID, r, job.TenantID, 0, "") // 0=系统操作，跳过 DataScope
 		case "create_ticket_type":
 			if q.ticketTypes == nil {
 				q.ticketTypes = NewTicketTypeService(q.client, zap.NewNop().Sugar())

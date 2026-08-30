@@ -777,7 +777,12 @@ func isTicketDataScopeAllRole(role string) bool {
 // (assignee)的工单；全量角色放行。越权时返回 common.ForbiddenError，使上层
 // 映射为 HTTP 403 而非 500。这是安全关键路径：即使调用方忘记传归属过滤，
 // 这里仍会兜底拒绝跨 Owner 删除。
+// Phase 2.2: currentUserID <= 0 时跳过校验（系统操作/AI 工具调用）。
 func (s *TicketService) enforceTicketRowScope(ctx context.Context, id, tenantID, currentUserID int, currentRole string) error {
+	// 系统操作跳过校验
+	if currentUserID <= 0 {
+		return nil
+	}
 	if isTicketDataScopeAllRole(currentRole) {
 		return nil
 	}
@@ -1021,8 +1026,14 @@ func (s *TicketService) GetTicketByNumber(ctx context.Context, ticketNumber stri
 }
 
 // UpdateTicket 更新工单
-func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.UpdateTicketRequest, tenantID int) (*ticket.Ticket, error) {
+// Phase 2.2: 增加 currentUserID 和 currentRole 参数，用于行级权限校验
+func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.UpdateTicketRequest, tenantID int, currentUserID int, currentRole string) (*ticket.Ticket, error) {
 	s.logger.Infow("Updating ticket", "ticket_id", id, "tenant_id", tenantID)
+
+	// Phase 2.2: 行级权限校验
+	if err := s.enforceTicketRowScope(ctx, id, tenantID, currentUserID, currentRole); err != nil {
+		return nil, err
+	}
 
 	// 获取当前工单
 	current, err := s.repo.GetByID(ctx, id, tenantID)

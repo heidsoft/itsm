@@ -446,7 +446,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			Resolution: resolution,
 			AssigneeID: assigneeID,
 		}
-		updated, err := t.ticket.UpdateTicket(ctx, ticketID, req, tenantID)
+		updated, err := t.ticket.UpdateTicket(ctx, ticketID, req, tenantID, 0, "") // 0=系统操作，跳过 DataScope
 		if err != nil {
 			return nil, err
 		}
