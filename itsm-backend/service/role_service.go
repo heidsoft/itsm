@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"itsm-backend/dto"
@@ -401,6 +403,14 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 		return fmt.Errorf("角色不存在: %w", err)
 	}
 
+	// P1-3 权限变更审计：事务前快照旧权限（code 列表），用于 after 提交后写 diff。
+	beforeCodes, err := s.rolePermissionCodes(ctx, roleID, tenantID)
+	if err != nil {
+		// 快照失败不阻断授权，但记录（审计降级而非业务失败）
+		s.logger.Warnw("权限变更前快照失败，审计diff将缺失before", "role_id", roleID, "error", err)
+		beforeCodes = nil
+	}
+
 	if len(permissionIDs) > 0 {
 		// R1 修复：权限是租户级实体，绑定角色时必须按本租户过滤。
 		// 否则可传入他租户 permission ID 通过 len 校验，造成跨租户提权。
@@ -458,7 +468,79 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 
 	middleware.InvalidateRolePermissionCache(roleEntity.Code, tenantID)
 
+	// P1-3 权限变更审计：提交后快照新权限并写 diff（before/after code 列表）。
+	s.writePermissionChangeAudit(ctx, roleEntity, tenantID, beforeCodes, permissionIDs)
+
 	return nil
+}
+
+// rolePermissionCodes 返回角色当前权限的 code 列表（排序后，供审计 diff）。
+func (s *RoleService) rolePermissionCodes(ctx context.Context, roleID, tenantID int) ([]string, error) {
+	// RolePermission 无 ent 边（schema Edges 为 nil），按既有模式两步查询：
+	// 先取 role_permissions 的 permission_id，再按租户过滤查 permission.code。
+	rolePerms, err := s.client.RolePermission.Query().
+		Where(rolepermission.RoleIDEQ(roleID), rolepermission.TenantID(tenantID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(rolePerms) == 0 {
+		return []string{}, nil
+	}
+	permIDs := make([]int, 0, len(rolePerms))
+	for _, rp := range rolePerms {
+		permIDs = append(permIDs, rp.PermissionID)
+	}
+	permEntities, err := s.client.Permission.Query().
+		Where(permission.IDIn(permIDs...), permission.TenantID(tenantID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	codes := make([]string, 0, len(permEntities))
+	for _, p := range permEntities {
+		codes = append(codes, p.Code)
+	}
+	sort.Strings(codes)
+	return codes, nil
+}
+
+// writePermissionChangeAudit 写权限变更 diff 审计（P1-3）。
+// after 由提交后的重新快照获得（而非信任入参），确保审计与库内终态一致。
+func (s *RoleService) writePermissionChangeAudit(ctx context.Context, roleEntity *ent.Role, tenantID int, before []string, _ []int) {
+	after, err := s.rolePermissionCodes(ctx, roleEntity.ID, tenantID)
+	if err != nil {
+		s.logger.Warnw("权限变更后快照失败，审计diff缺失after", "role_id", roleEntity.ID, "error", err)
+		return
+	}
+	sort.Strings(before)
+
+	diff := map[string]any{
+		"role_id":   roleEntity.ID,
+		"role_code": roleEntity.Code,
+		"before":    before,
+		"after":     after,
+	}
+	payload, err := json.Marshal(diff)
+	if err != nil {
+		s.logger.Warnw("权限变更diff序列化失败", "role_id", roleEntity.ID, "error", err)
+		return
+	}
+
+	if _, err := s.client.AuditLog.Create().
+		SetTenantID(tenantID).
+		SetResource("role_permissions").
+		SetAction("assign").
+		SetPath(fmt.Sprintf("/api/v1/roles/%d/permissions", roleEntity.ID)).
+		SetMethod("POST").
+		SetStatusCode(200).
+		SetRequestBody(string(payload)).
+		Save(ctx); err != nil {
+		// 审计写失败不回滚业务（权限已生效），但必须告警。
+		s.logger.Errorw("权限变更审计写入失败", "role_id", roleEntity.ID, "error", err)
+		return
+	}
+	s.logger.Infow("权限变更审计已记录", "role_id", roleEntity.ID, "before_count", len(before), "after_count", len(after))
 }
 
 // PermissionService 权限服务

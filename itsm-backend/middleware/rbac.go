@@ -856,8 +856,10 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		// 从数据库获取用户最新角色信息
 		// P0-4：使用请求 ctx，随请求超时/取消传播
+		// Phase 1 多角色：附带加载 user.roles（m2m 附加角色），权限判定取并集。
 		userEntity, err := client.User.Query().
 			Where(user.ID(userID)).
+			WithRoles().
 			Only(c.Request.Context())
 		if err != nil {
 			zap.S().Warnw(
@@ -869,6 +871,20 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 			common.Fail(c, common.AuthFailedCode, "用户不存在")
 			c.Abort()
 			return
+		}
+
+		// 物化全部生效角色（角色 code 列表）到上下文，供 RequirePermission/
+		// SmartCheckPermission 统一按并集判定。附加角色仅取启用且同租户的。
+		if extraRoles := userEntity.Edges.Roles; len(extraRoles) > 0 {
+			roleCodes := make([]string, 0, len(extraRoles))
+			for _, r := range extraRoles {
+				if r != nil && r.IsActive && r.TenantID == tenantID {
+					roleCodes = append(roleCodes, r.Code)
+				}
+			}
+			if len(roleCodes) > 0 {
+				c.Set("roles", roleCodes)
+			}
 		}
 
 		// 检查用户是否被禁用
@@ -986,7 +1002,9 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 			return
 		}
 
-		if !hasResourcePermission(c.Request.Context(), client, roleStr, resource, action, tenantID) {
+		// Phase 1 多角色：判定取全部生效角色（主角色 + m2m 附加角色）并集。
+		// 无 "roles" 键时退化为仅主角色（兼容未物化角色的旧链路）。
+		if !AuthorizeResource(c.Request.Context(), client, GetContextRoles(c), resource, action, tenantID) {
 			common.Fail(c, common.ForbiddenCode, "权限不足")
 			c.Abort()
 			return
@@ -1060,18 +1078,9 @@ func HasResourcePermission(ctx context.Context, client *ent.Client, role, resour
 }
 
 // hasResourcePermission 检查角色是否有指定资源的操作权限（支持多种配置模式）
+// Phase 1 统一判定：委托 AuthorizeResourceForRole，单一真源。
 func hasResourcePermission(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
-	// 仅 super_admin 硬编码直通（与 smart_permission.go checkRolePermissionFromDB 语义统一）。
-	// sysadmin 必须走数据库权限（seeder 已播种全量），任何权限收回/降级才能生效。
-	if role == "super_admin" {
-		return true
-	}
-
-	// 根据配置模式加载权限
-	permissions := loadPermissionsByMode(ctx, client, role, tenantID)
-
-	// 检查权限
-	return checkPermissionMatch(permissions, resource, action)
+	return AuthorizeResourceForRole(ctx, client, role, resource, action, tenantID)
 }
 
 // loadPermissionsByMode 根据配置模式加载权限
@@ -1157,9 +1166,11 @@ func checkPermissionMatch(permissions []Permission, resource, action string) boo
 }
 
 // InvalidateRolePermissionCache 使指定角色-租户的权限缓存失效（导出供外部调用）
+// Phase 1 P1-4：本地失效后向 Redis 广播，多副本部署下其它实例同步失效。
 func InvalidateRolePermissionCache(roleName string, tenantID int) {
 	if PermissionConfig.EnableCache {
 		invalidatePermissionCache(roleName, tenantID)
+		broadcastPermissionInvalidation(roleName, tenantID)
 	}
 }
 
@@ -1168,6 +1179,76 @@ func InvalidateAllPermissionCachesEx() {
 	if PermissionConfig.EnableCache {
 		InvalidateAllPermissionCaches()
 	}
+}
+
+// =============================================================================
+// 统一权限判定核心（Phase 1：UnifiedAuthorizer）
+//
+// 所有权限判定的单一真源。此前 rbac.go hasResourcePermission 与
+// smart_permission.go checkRolePermissionFromDB 双头并存、语义分叉
+// （sysadmin 直通不一致）；现统一委托本函数，并支持多角色并集。
+// =============================================================================
+
+// AuthorizeResource 统一判定：一组角色（并集语义）在指定租户内是否拥有 resource:action 权限。
+// roles 为该用户的全部生效角色（主角色 + m2m 附加角色）；任一角色命中即授权。
+// 语义与既有单角色判定完全一致：
+//   - super_admin 任一角色命中即直通；
+//   - 其余角色按 PermissionConfig.Mode 加载权限（生产 DBOnly fail-closed）。
+func AuthorizeResource(ctx context.Context, client *ent.Client, roles []string, resource, action string, tenantID int) bool {
+	if len(roles) == 0 {
+		return false
+	}
+	for _, r := range roles {
+		if r == "super_admin" {
+			return true
+		}
+	}
+	for _, r := range roles {
+		permissions := loadPermissionsByMode(ctx, client, r, tenantID)
+		if checkPermissionMatch(permissions, resource, action) {
+			return true
+		}
+	}
+	return false
+}
+
+// AuthorizeResourceForRole 单角色便捷入口（兼容旧调用方）。
+func AuthorizeResourceForRole(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
+	if role == "super_admin" {
+		return true
+	}
+	return AuthorizeResource(ctx, client, []string{role}, resource, action, tenantID)
+}
+
+// GetContextRoles 从 gin 上下文提取用户全部生效角色（主角色 + 附加角色）。
+// RBACMiddleware 会物化 "roles" 键；未注入时退化为仅主角色（兼容旧链路）。
+func GetContextRoles(c *gin.Context) []string {
+	primary := ""
+	if v, ok := c.Get("role"); ok {
+		if s, ok := v.(string); ok {
+			primary = s
+		}
+	}
+	var extra []string
+	if v, ok := c.Get("roles"); ok {
+		if list, ok := v.([]string); ok {
+			extra = list
+		}
+	}
+	// 去重：附加角色不得与主角色重复
+	seen := make(map[string]bool, len(extra)+1)
+	roles := make([]string, 0, len(extra)+1)
+	if primary != "" && !seen[primary] {
+		seen[primary] = true
+		roles = append(roles, primary)
+	}
+	for _, r := range extra {
+		if r != "" && !seen[r] {
+			seen[r] = true
+			roles = append(roles, r)
+		}
+	}
+	return roles
 }
 
 // getPermissionFromPath 从路径获取权限信息

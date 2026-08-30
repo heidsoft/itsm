@@ -879,6 +879,8 @@ func NewApplication() *Application {
 		} else {
 			commonServiceDomain.SetRedis(commonRedis)
 			middleware.ConfigureAccessTokenRevocationRedis(commonRedis)
+			// Phase 1 P1-4：权限缓存失效跨实例广播（多副本一致性）。
+			middleware.ConfigurePermissionCacheBroadcast(commonRedis)
 			sugar.Info("refresh token blacklist enabled via redis")
 		}
 		pingCancel()

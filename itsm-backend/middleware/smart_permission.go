@@ -107,6 +107,20 @@ func InvalidateTenantACLCache(tenantID int) {
 func SmartCheckPermission(c *gin.Context, client *ent.Client, role string, method, path string, tenantID int) bool {
 	ctx := c.Request.Context()
 
+	// Phase 1 多角色：优先取 gin 上下文中物化的全部生效角色（主角色+m2m附加角色），
+	// 未注入时退化为单角色（兼容旧链路与单测）。
+	roles := GetContextRoles(c)
+	if len(roles) == 0 && role != "" {
+		roles = []string{role}
+	}
+
+	// super_admin 任一角色命中即直通（与 AuthorizeResource 语义一致）。
+	for _, r := range roles {
+		if r == "super_admin" {
+			return true
+		}
+	}
+
 	// L1: Check auth whitelist (public endpoints)
 	if isAuthWhitelist(path, method) {
 		zap.S().Debugw("Auth whitelist match", "path", path, "method", method)
@@ -114,17 +128,32 @@ func SmartCheckPermission(c *gin.Context, client *ent.Client, role string, metho
 	}
 
 	// L2: Check database ACL (dynamic configuration)
-	if checkDatabaseACL(ctx, client, role, method, path, tenantID) {
-		return true
+	for _, r := range roles {
+		if checkDatabaseACL(ctx, client, r, method, path, tenantID) {
+			return true
+		}
 	}
 
 	// L3: Check URL auto-inference (REST endpoints)
-	if checkURLInference(ctx, client, role, method, path, tenantID) {
-		return true
+	for _, r := range roles {
+		if checkURLInference(ctx, client, r, method, path, tenantID) {
+			return true
+		}
 	}
 
 	// L4: Fallback to role-based hardcoded permissions
-	return checkRoleBasedPermission(role, method, path)
+	// Phase 1 修复：L4 直接读编译期 RolePermissions map，不感知 PermissionConfig.Mode，
+	// 生产（DBOnly fail-closed）下无 DB 权限的角色仍可能经 L4 拿到权限，违反 fail-closed 语义。
+	// 现按模式分流：DBOnly 下硬编码完全不参与授权，未命中 L1-L3 即拒绝。
+	if PermissionConfig.Mode == PermissionConfigModeDBOnly {
+		return false
+	}
+	for _, r := range roles {
+		if checkRoleBasedPermission(r, method, path) {
+			return true
+		}
+	}
+	return false
 }
 
 // =============================================================================
@@ -404,27 +433,9 @@ func checkRoleBasedPermission(role, method, path string) bool {
 // SEC-005 修复：真正查询数据库获取角色权限，而非仅使用硬编码权限
 // P0-4：透传请求 ctx，替代 loadACLsFromDB/loadPermissions 链路中的 context.Background()
 func checkRolePermissionFromDB(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
-	// 修复：统一超管白名单——仅 super_admin 直接放行。
-	// sysadmin 不再硬编码短路，必须走数据库权限校验，
-	// 否则 DBOnly 模式下对 sysadmin 的任何权限收回/降级完全失效。
-	if role == "super_admin" {
-		return true
-	}
-
-	// SEC-005: 通过 loadPermissionsByMode 从数据库加载权限
-	// 该函数根据 PermissionConfig.Mode 决定查询策略：
-	//   - DBOnly: 仅数据库，数据库为空时 fallback 硬编码
-	//   - HardcodeOnly: 仅硬编码
-	//   - Merge: 数据库 + 硬编码并集
-	//   - Fallback: 先数据库，失败则硬编码
-	permissions := loadPermissionsByMode(ctx, client, role, tenantID)
-
-	// 使用统一的权限匹配逻辑检查
-	if checkPermissionMatch(permissions, resource, action) {
-		return true
-	}
-
-	return false
+	// Phase 1 统一判定：委托 rbac.go 的单一真源 AuthorizeResourceForRole，
+	// 消除与 hasResourcePermission 的双头语义分叉（sysadmin 直通不一致等）。
+	return AuthorizeResourceForRole(ctx, client, role, resource, action, tenantID)
 }
 
 // GetResourceAndActionFromPath extracts resource and action from a URL path
