@@ -2,6 +2,15 @@ import { httpClient } from './http-client';
 import { handleApiRequest } from './base-api-handler';
 import type { Ticket, TicketListResponse, CreateTicketRequest, GetTicketsParams } from './api-config';
 
+// AI-Native：工单关联的配置项（受影响配置项区块使用）
+export interface TicketConfigurationItem {
+  id: number;
+  name: string;
+  ciType: string;
+  status: string;
+  serialNumber?: string;
+}
+
 export class TicketApi {
   // Get ticket list
   static async getTickets(
@@ -30,6 +39,15 @@ export class TicketApi {
   static async getTicket(id: number): Promise<Ticket> {
     return handleApiRequest(httpClient.get<Ticket>(`/api/v1/tickets/${id}`), {
       errorMessage: 'Failed to fetch ticket details',
+    });
+  }
+
+  // AI-Native：工单→配置项反向查询（受影响配置项）
+  // 对应后端 GET /api/v1/tickets/:id/configuration-items
+  static async getTicketConfigurationItems(id: number): Promise<TicketConfigurationItem[]> {
+    return handleApiRequest(httpClient.get<TicketConfigurationItem[]>(`/api/v1/tickets/${id}/configuration-items`), {
+      errorMessage: 'Failed to fetch ticket configuration items',
+      silent: true,
     });
   }
 

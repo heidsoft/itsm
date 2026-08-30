@@ -37,6 +37,28 @@ import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 
+// 可信 RAG：权威等级 → 文案
+const authorityLabel = (level: number): string => {
+  if (level >= 30) return '唯一真相源';
+  if (level >= 20) return '官方标准';
+  if (level >= 10) return '部门推荐';
+  return '普通';
+};
+
+// 可信 RAG：时效窗口 → 文案（后端 L1 已过滤失效/未生效/逾期复核条目）
+const freshnessLabel = (result: {
+  validFrom?: string;
+  validUntil?: string;
+}): string => {
+  if (result.validUntil) {
+    const until = new Date(result.validUntil);
+    if (!isNaN(until.getTime())) {
+      return `有效至 ${until.toLocaleDateString('zh-CN')}`;
+    }
+  }
+  return '长期有效';
+};
+
 export default function KnowledgePage() {
   const router = useRouter();
   const { t } = useI18n();
@@ -383,19 +405,39 @@ export default function KnowledgePage() {
                     <div>
                       <Text strong>{result.title || t('knowledgeBase.aiSearchUnnamed')}</Text>
                       {result.category && <Tag className="ml-2">{result.category}</Tag>}
+                      {/* 可信 RAG：权威等级标签 */}
+                      {typeof result.authorityLevel === 'number' && result.authorityLevel > 0 && (
+                        <Tag color="gold" className="ml-1">
+                          {authorityLabel(result.authorityLevel)}
+                        </Tag>
+                      )}
                     </div>
-                    <Tag
-                      color={result.score > 0.8 ? 'green' : result.score > 0.5 ? 'blue' : 'default'}
-                    >
-                      {t('knowledgeBase.aiSearchMatchScore', {
-                        score: Math.round((result.score || 0) * 100),
-                      })}
-                    </Tag>
+                    <div className="flex items-center gap-1 flex-wrap justify-end">
+                      {/* 可信 RAG：权限标签（分类级可见性守卫 L0） */}
+                      {typeof result.isRestricted === 'boolean' && (
+                        <Tag color={result.isRestricted ? 'red' : 'green'}>
+                          {result.isRestricted ? '受限' : '公开'}
+                        </Tag>
+                      )}
+                      <Tag
+                        color={result.score > 0.8 ? 'green' : result.score > 0.5 ? 'blue' : 'default'}
+                      >
+                        {t('knowledgeBase.aiSearchMatchScore', {
+                          score: Math.round((result.score || 0) * 100),
+                        })}
+                      </Tag>
+                    </div>
                   </div>
                   {result.snippet && (
                     <Text type="secondary" className="block mt-2">
                       {result.snippet}
                     </Text>
+                  )}
+                  {/* 可信 RAG：时效标签（L1 已过滤失效/未生效/逾期复核，此处展示有效期窗口） */}
+                  {freshnessLabel(result) && (
+                    <div className="mt-2">
+                      <Tag color="cyan">{freshnessLabel(result)}</Tag>
+                    </div>
                   )}
                 </Card>
               ))}

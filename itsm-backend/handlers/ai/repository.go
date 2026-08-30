@@ -19,6 +19,7 @@ type Repository interface {
 	CreateToolInvocation(ctx context.Context, i *ToolInvocation) (*ToolInvocation, error)
 	GetToolInvocation(ctx context.Context, id int, tenantID int) (*ToolInvocation, error)
 	UpdateToolInvocation(ctx context.Context, i *ToolInvocation) (*ToolInvocation, error)
+	ListToolInvocations(ctx context.Context, tenantID int, state string) ([]*ToolInvocation, error)
 
 	// Root Cause Analysis
 	CreateRCA(ctx context.Context, r *RootCauseAnalysis) (*RootCauseAnalysis, error)

@@ -629,6 +629,47 @@ func (h *Handler) GetToolInvocation(c *gin.Context) {
 	})
 }
 
+// ListToolInvocations handles GET /api/v1/agent/tools/invocations
+// 列出工具调用审批记录，供审批人查看待办。默认返回 pending（待审批），
+// 支持 ?state=approved|rejected|auto 查看其它状态。跨租户隔离由 tenant_id 强制。
+func (h *Handler) ListToolInvocations(c *gin.Context) {
+	state := c.Query("state")
+	if state == "" {
+		state = "pending"
+	}
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	invs, err := h.svc.repo.ListToolInvocations(c.Request.Context(), tenantID, state)
+	if err != nil {
+		h.svc.logger.Warnw("查询工具调用列表失败", "error", err, "tenantID", tenantID)
+		common.Fail(c, common.InternalErrorCode, "查询工具调用失败")
+		return
+	}
+
+	items := make([]gin.H, 0, len(invs))
+	for _, inv := range invs {
+		items = append(items, gin.H{
+			"id":             inv.ID,
+			"toolName":       inv.ToolName,
+			"arguments":      inv.Arguments,
+			"status":         inv.Status,
+			"needsApproval":  inv.NeedsApproval,
+			"approvalState":  inv.ApprovalState,
+			"approvalReason": inv.ApprovalReason,
+			"permissionCheck": inv.PermissionCheck,
+			"permissionReason": inv.PermissionReason,
+			"createdAt":      inv.CreatedAt,
+			"conversationId": inv.ConversationID,
+			"userId":         inv.UserID,
+		})
+	}
+	common.Success(c, gin.H{"items": items, "state": state})
+}
+
 // ApproveTool handles POST /api/v1/agent/tools/:id/approve
 // 审批危险工具执行请求（RBAC 由路由中间件强制）
 func (h *Handler) ApproveTool(c *gin.Context) {

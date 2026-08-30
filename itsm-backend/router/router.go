@@ -676,6 +676,21 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 						"duplicateCount":  0,
 					})
 				})
+				// 工单→配置项反向查询：复用 TicketAssociationService.GetConfigurationItems
+				// （AI 本体链路落地后，工单详情页可展示其影响的配置项）
+				tickets.GET("/:id/configuration-items", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
+					ticketID := c.GetInt("id")
+					if ticketID == 0 {
+						common.Fail(c, common.ParamErrorCode, "invalid ticket id")
+						return
+					}
+					items, err := config.TicketAssociationService.GetConfigurationItems(c.Request.Context(), ticketID)
+					if err != nil {
+						common.Fail(c, common.InternalErrorCode, err.Error())
+						return
+					}
+					common.Success(c, items)
+				})
 			} else {
 				// 兼容：服务未初始化时返回空
 				tickets.GET("/:id/relations", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
@@ -1349,6 +1364,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				agentGrp.GET("/tools", middleware.RequirePermission("ai", "read"), config.AIHandler.ListTools)
 				agentGrp.POST("/tools/execute", middleware.RequirePermission("ai", "read"), config.AIHandler.ExecuteTool)
 				agentGrp.GET("/tools/:id", middleware.RequirePermission("ai", "read"), config.AIHandler.GetToolInvocation)
+				// 审批人待办列表：GET /api/v1/agent/tools/invocations?state=pending
+				agentGrp.GET("/tools/invocations", middleware.RequirePermission("ai", "read"), config.AIHandler.ListToolInvocations)
 				agentGrp.POST("/tools/:id/approve", middleware.RequirePermission("ai", "write"), config.AIHandler.ApproveTool)
 			}
 		}

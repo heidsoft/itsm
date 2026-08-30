@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { TicketApi } from '@/lib/api/ticket-api';
+import { TicketApi, type TicketConfigurationItem } from '@/lib/api/ticket-api';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
 import { useUserListQuery } from '@/lib/hooks/useUserListQuery';
@@ -42,6 +42,8 @@ import {
   Input,
   Tabs,
   Skeleton,
+  List,
+  Empty,
 } from 'antd';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
@@ -166,6 +168,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [ccing, setCCing] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+
+  // AI-Native：受影响配置项（工单→CI 反向查询）
+  const [cis, setCis] = useState<TicketConfigurationItem[]>([]);
+  const [cisLoading, setCisLoading] = useState(false);
   // users / loadingUsers 由 useUserListQuery 提供（带缓存）
   const [slaInfo, setSlaInfo] = useState<{
     slaName: string;
@@ -225,6 +231,21 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     }
   }, [ticketId]);
 
+  // AI-Native：工单→配置项反向查询（受影响配置项）
+  const fetchCIs = useCallback(async () => {
+    if (!ticketId || isNaN(ticketId) || ticketId <= 0) return;
+    setCisLoading(true);
+    try {
+      const data = await TicketApi.getTicketConfigurationItems(ticketId);
+      setCis(Array.isArray(data) ? data : []);
+    } catch {
+      // CI 查询失败不阻塞工单详情展示
+      setCis([]);
+    } finally {
+      setCisLoading(false);
+    }
+  }, [ticketId]);
+
   useEffect(() => {
     if (ticketId) {
       fetchTicket();
@@ -234,6 +255,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   useEffect(() => {
     if (ticketId) {
       fetchSLAInfo();
+      fetchCIs();
     }
   }, [ticketId]);
 
@@ -532,6 +554,57 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           }}
         />
       )}
+
+      {/* AI-Native：受影响配置项（工单→CI 反向查询，复用本体链路外键） */}
+      <Card
+        className="rounded-lg shadow-sm border border-gray-200"
+        title={
+          <Space>
+            <Tag color="purple">AI-Native</Tag>
+            <span>受影响配置项</span>
+            {cis.length > 0 && <Tag>{cis.length}</Tag>}
+          </Space>
+        }
+      >
+        {cisLoading ? (
+          <Skeleton active paragraph={{ rows: 2 }} />
+        ) : cis.length === 0 ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="该工单尚未关联配置项"
+          />
+        ) : (
+          <List
+            size="small"
+            dataSource={cis}
+            renderItem={(ci) => (
+              <List.Item
+                actions={[
+                  <Link key="open" href={`/cmdb/cis/${ci.id}`}>
+                    查看
+                  </Link>,
+                ]}
+              >
+                <List.Item.Meta
+                  title={
+                    <Space>
+                      <Link href={`/cmdb/cis/${ci.id}`}>{ci.name}</Link>
+                      <Tag color="blue">{ci.ciType}</Tag>
+                    </Space>
+                  }
+                  description={
+                    <Space size={4} wrap>
+                      <Text type="secondary">#{ci.id}</Text>
+                      {ci.serialNumber ? <Text type="secondary">SN: {ci.serialNumber}</Text> : null}
+                      <Tag color={ci.status === 'active' ? 'green' : 'default'}>{ci.status}</Tag>
+                    </Space>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        )}
+      </Card>
 
       <Card className="rounded-lg shadow-sm border border-gray-200">
         <Space orientation="vertical" size={16} style={{ width: '100%' }}>

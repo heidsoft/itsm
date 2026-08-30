@@ -252,6 +252,15 @@ func (r *RAGService) rankByAuthority(ctx context.Context, tenantID int, results 
 		}
 	}
 
+	// 受限分类集合：供结果透出「权限」标签（分类级可见性守卫 L0）。
+	// 仅读取一次并降级处理——守卫未装配或查询失败时不影响排序与返回。
+	var restrictedSet map[string]bool
+	if r.knowledgeGuard != nil {
+		if rc, gerr := r.knowledgeGuard.RestrictedCategories(ctx, tenantID); gerr == nil {
+			restrictedSet = rc
+		}
+	}
+
 	now := time.Now()
 	// inputs 与 results 按下标一一对应；OriginIdx 记录融合排序前的下标，
 	// 因为 RankInput 本身不携带原切片位置，非 kb 条目的 ArticleID 都是 0，
@@ -284,7 +293,28 @@ func (r *RAGService) rankByAuthority(ctx context.Context, tenantID int, results 
 
 	out := make([]map[string]any, len(results))
 	for i, in := range inputs {
-		out[i] = results[in.origin]
+		item := results[in.origin]
+		// 在排序结果上附加权威/时效/权限可观测字段，供前端"可信 RAG"标签呈现。
+		// 这些字段不参与排序（排序只依赖 FusionScore），仅作为展示元数据。
+		if in.ArticleID != 0 {
+			if a, ok := meta[in.ArticleID]; ok {
+				item["authorityLevel"] = a.AuthorityLevel
+				if a.ValidFrom != nil {
+					item["validFrom"] = a.ValidFrom.Format(time.RFC3339)
+				}
+				if a.ValidUntil != nil {
+					item["validUntil"] = a.ValidUntil.Format(time.RFC3339)
+				}
+				if a.LastReviewedAt != nil {
+					item["lastReviewedAt"] = a.LastReviewedAt.Format(time.RFC3339)
+				}
+				item["reviewIntervalDays"] = a.ReviewIntervalDays
+				if restrictedSet != nil {
+					item["isRestricted"] = restrictedSet[a.Category]
+				}
+			}
+		}
+		out[i] = item
 	}
 	return out
 }

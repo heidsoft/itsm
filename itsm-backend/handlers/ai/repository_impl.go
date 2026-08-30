@@ -179,6 +179,27 @@ func (r *EntRepository) GetToolInvocation(ctx context.Context, id int, tenantID 
 	return toToolInvocationDomain(e), nil
 }
 
+// ListToolInvocations 按租户 + 审批状态列出工具调用记录，按创建时间倒序。
+// state 为空时返回该租户全部调用；传 "pending" 即审批人待办。
+func (r *EntRepository) ListToolInvocations(ctx context.Context, tenantID int, state string) ([]*ToolInvocation, error) {
+	q := r.client.ToolInvocation.Query().
+		Where(toolinvocation.TenantID(tenantID))
+	if state != "" {
+		q = q.Where(toolinvocation.ApprovalStateEQ(state))
+	}
+	invocations, err := q.
+		Order(ent.Desc(toolinvocation.FieldCreatedAt)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*ToolInvocation, 0, len(invocations))
+	for _, e := range invocations {
+		out = append(out, toToolInvocationDomain(e))
+	}
+	return out, nil
+}
+
 func (r *EntRepository) UpdateToolInvocation(ctx context.Context, i *ToolInvocation) (*ToolInvocation, error) {
 	update := r.client.ToolInvocation.UpdateOneID(i.ID).
 		SetStatus(i.Status).

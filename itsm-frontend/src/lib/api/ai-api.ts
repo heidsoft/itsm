@@ -18,6 +18,13 @@ export interface RagAnswer {
   snippet: string;
   source?: string;
   score?: number;
+  // 可信 RAG 可观测字段（后端 L0/L1/L2 已生效，前端透出标签）
+  authorityLevel?: number; // 0 普通 / 10 部门推荐 / 20 官方标准 / 30 唯一真相源
+  validFrom?: string; // 生效时间 RFC3339，空=立即生效
+  validUntil?: string; // 失效时间 RFC3339，空=长期有效
+  lastReviewedAt?: string; // 最近复核时间 RFC3339
+  reviewIntervalDays?: number; // 复核周期（天）
+  isRestricted?: boolean; // 所属分类是否处于受限可见性（分类级守卫 L0）
 }
 
 export interface AIFeedbackRequest {
@@ -191,6 +198,50 @@ export async function aiGetAuditLogs(params: {
   // 字面量路径 + 拼接，避免模板内三元表达式，保证 api-contract 测试可静态解析路径
   const url = '/api/v1/ai/audit-logs' + (qs ? `?${qs}` : '');
   return httpClient.get<AIAuditLogsResponse>(url);
+}
+
+// ==================== AI 工具调用审批队列（P0：打通人工审批闭环） ====================
+
+export interface ToolApproval {
+  id: number;
+  toolName: string;
+  arguments: string; // JSON 字符串
+  status: string;
+  needsApproval: boolean;
+  approvalState: string; // pending | approved | rejected | auto
+  approvalReason?: string;
+  permissionCheck?: string;
+  permissionReason?: string;
+  createdAt: string;
+  conversationId: number;
+  userId: number;
+}
+
+export interface ToolApprovalListResponse {
+  items: ToolApproval[];
+  state: string;
+}
+
+export interface ToolApproveRequest {
+  approve: boolean;
+  reason?: string;
+}
+
+// 列出 AI 工具调用审批记录（默认待审批）
+// 对应后端 GET /api/v1/agent/tools/invocations?state=pending
+export async function aiGetToolApprovals(state = 'pending'): Promise<ToolApprovalListResponse> {
+  // 字面量路径 + 拼接，避免模板内三元表达式，保证 api-contract 测试可静态解析路径
+  const url = '/api/v1/agent/tools/invocations?state=' + encodeURIComponent(state);
+  return httpClient.get<ToolApprovalListResponse>(url);
+}
+
+// 通过 / 驳回某条工具调用审批
+// 对应后端 POST /api/v1/agent/tools/:id/approve
+export async function aiApproveTool(
+  id: number,
+  req: ToolApproveRequest
+): Promise<{ invocationId: number; approvalState: string }> {
+  return httpClient.post(`/api/v1/agent/tools/${id}/approve`, req);
 }
 
 // ==================== 合并自 legacy AIService（src/lib/services/ai-service.ts） ====================
@@ -616,6 +667,16 @@ export class AIApi {
 
   static async getMetrics(days = 7): Promise<AIMetrics> {
     return aiGetMetrics(days);
+  }
+
+  /** 列出 AI 工具调用审批记录（默认待审批）。对应 GET /api/v1/agent/tools/invocations */
+  static async getToolApprovals(state = 'pending'): Promise<ToolApprovalListResponse> {
+    return aiGetToolApprovals(state);
+  }
+
+  /** 通过 / 驳回工具调用审批。对应 POST /api/v1/agent/tools/:id/approve */
+  static async approveTool(id: number, req: ToolApproveRequest): Promise<{ invocationId: number; approvalState: string }> {
+    return aiApproveTool(id, req);
   }
 
   static chatStream(

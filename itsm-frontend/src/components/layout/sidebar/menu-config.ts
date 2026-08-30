@@ -475,6 +475,15 @@ export function getMenuConfig(): MenuConfig {
             path: '/ai/audit',
             permission: 'ai:read',
           },
+          {
+            // AI-Native P0：AI 工具调用审批队列（人工审批闭环），
+            // 对应 src/app/(main)/ai/approval/page.tsx，后端 GET /agent/tools/invocations?state=pending。
+            key: '/ai/approval',
+            icon: getIconByName('ShieldAlert')!,
+            label: 'AI审批',
+            path: '/ai/approval',
+            permission: 'ai:read',
+          },
         ],
       },
       // ===== 扩展模块 =====
