@@ -518,7 +518,8 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedDepartments(ctx)
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
-	s.seedPermissions(ctx) // 新增：初始化权限
+	s.MigrateUserRolesBackfill(ctx) // Phase 1 迁移：回填 user_roles 边
+	s.seedPermissions(ctx)          // 新增：初始化权限
 	s.seedMenus(ctx)       // 新增：初始化菜单
 	s.seedAdmin(ctx)
 	s.seedCloudServiceTemplates(ctx)
@@ -914,6 +915,56 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("roles seeded", "count", len(s.config.Roles))
+}
+
+// MigrateUserRolesBackfill 回填 user_roles 边（Phase 1 迁移）。
+// 问题：user.role 字段是单角色主角色，user_roles m2m 边用于多角色并集。
+// 现网存量用户仅有 user.role，无 user_roles 记录，导致 RBACMiddleware
+// 加载 WithRoles() 时 Edge.Roles 为空，多角色并集判定失效。
+// 迁移：对所有 user.role 非空的用户，将对应 Role 实体写入 user_roles 边。
+// 调用时机：在 seedRoles 之后、seedUsers 之前（或单独调用）。
+func (s *Seeder) MigrateUserRolesBackfill(ctx context.Context) {
+	// 查询所有用户及其 roles 边
+	users, err := s.client.User.Query().
+		WithRoles(). // 加载现有 roles 边
+		All(ctx)
+	if err != nil {
+		s.sugar.Warnw("回填 user_roles 失败：查询用户错误", "error", err)
+		return
+	}
+
+	backfilled := 0
+	for _, u := range users {
+		// 已有关联的 roles 边则跳过（避免覆盖）
+		if len(u.Edges.Roles) > 0 {
+			continue
+		}
+		// user.Role 为空则跳过（无需回填）
+		if u.Role == "" {
+			continue
+		}
+
+		// 根据 user.role 字段查找对应 Role 实体
+		roleEntity, err := s.client.Role.Query().
+			Where(role.CodeEQ(string(u.Role)), role.TenantIDEQ(u.TenantID)).
+			Only(ctx)
+		if err != nil {
+			s.sugar.Warnw("回填 user_roles 失败：找不到角色实体",
+				"user_id", u.ID, "role", u.Role, "tenant_id", u.TenantID, "error", err)
+			continue
+		}
+
+		// 写入 user_roles 边（追加模式）
+		if _, err := s.client.User.UpdateOne(u).
+			AddRoles(roleEntity).
+			Save(ctx); err != nil {
+			s.sugar.Warnw("回填 user_roles 失败：写入错误",
+				"user_id", u.ID, "role", u.Role, "error", err)
+			continue
+		}
+		backfilled++
+	}
+	s.sugar.Infow("user_roles 边回填完成", "backfilled_count", backfilled)
 }
 
 // seedCloudServiceTemplates 保留云服务模板种子入口（历史演示数据 seeder 已移除：
@@ -1786,7 +1837,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			"ticket:assign", "ticket:escalate", "ticket:export", "ticket:delete",
 			"incident:read", "incident:write",
-			"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
+			"ticket_type:read", "ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 			"problem:read", "problem:write", "change:read", "change:write",
 			"asset:read", "asset:write", "cmdb:read", "cmdb:write",
 			"sla:read", "workflow:read", "report:read",
@@ -1815,7 +1866,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			"ticket:assign", "ticket:escalate", "ticket:export",
 			"incident:read", "incident:write",
-			"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
+			"ticket_type:read", "ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 			"problem:read", "change:read", "sla:read", "sla:write",
 			"knowledge:read", "knowledge:write", "report:read",
 			"user:read", "team:read", "ai:read",
@@ -1839,7 +1890,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"service_request:read", "service_request:write", "service_request:delete",
 			"ticket_template:read", "ticket_template:create", "ticket_template:update", "ticket_template:delete",
 			"ticket_category:read", "ticket_category:create", "ticket_category:update",
-			"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
+			"ticket_type:read", "ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 			"workflow:read",
 			"approval:read",
 			"sla:read",
@@ -1849,6 +1900,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		"l1_support": {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			"ticket:assign", "ticket:escalate", "ticket:export",
+			"ticket_type:read",
 			"incident:read", "incident:write",
 			"knowledge:read", "user:read", "sla:read", "notification:read", "ai:read",
 		},
@@ -1856,6 +1908,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		"l2_support": {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			"ticket:assign", "ticket:escalate", "ticket:export",
+			"ticket_type:read",
 			"incident:read", "incident:write",
 			"problem:read", "change:read", "asset:read",
 			"knowledge:read", "knowledge:write", "user:read", "sla:read", "notification:read", "ai:read",
@@ -1864,6 +1917,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		"l3_expert": {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			"ticket:assign", "ticket:escalate", "ticket:export",
+			"ticket_type:read",
 			"incident:read", "incident:write",
 			"problem:read", "problem:write", "change:read", "change:write",
 			"asset:read", "cmdb:read", "knowledge:read", "knowledge:write",
@@ -1871,41 +1925,41 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		},
 		// 研发经理
 		"rd_manager": {
-			"ticket:read", "problem:read", "change:read", "change:write",
+			"ticket:read", "ticket_type:read", "problem:read", "change:read", "change:write",
 			"release:read", "release:write", "workflow:read", "workflow:write",
 			"knowledge:read", "knowledge:write", "report:read",
 		},
 		// 开发工程师
 		"developer": {
-			"ticket:read", "problem:read", "change:read",
+			"ticket:read", "ticket_type:read", "problem:read", "change:read",
 			"release:read", "knowledge:read", "knowledge:write",
 		},
 		// 测试工程师
 		"qa_engineer": {
-			"ticket:read", "problem:read", "change:read",
+			"ticket:read", "ticket_type:read", "problem:read", "change:read",
 			"release:read", "knowledge:read", "knowledge:write", "report:read",
 		},
 		// 安全管理员
 		"security_admin": {
-			"ticket:read", "incident:read", "problem:read",
+			"ticket:read", "ticket_type:read", "incident:read", "problem:read",
 			"system:read", "user:read", "role:read",
 			"knowledge:read", "report:read",
 		},
 		// 审计管理员
 		"audit_admin": {
-			"ticket:read", "incident:read", "problem:read", "change:read",
+			"ticket:read", "ticket_type:read", "incident:read", "problem:read", "change:read",
 			"system:read", "user:read", "role:read", "report:read",
 		},
 		// 部门经理
 		"dept_manager": {
-			"ticket:read", "ticket:write", "incident:read",
+			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",
 			"problem:read", "change:read", "report:read",
 			"user:read", "department:read", "team:read",
 			"knowledge:read",
 		},
 		// 团队主管
 		"team_lead": {
-			"ticket:read", "ticket:write", "incident:read",
+			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",
 			"problem:read", "change:read", "team:read",
 			"user:read", "knowledge:read",
 		},
@@ -2014,7 +2068,7 @@ func allPermissionCodes() []string {
 		"ticket:read", "ticket:write", "ticket:create", "ticket:update", "ticket:assign",
 		"ticket:escalate", "ticket:resolve", "ticket:close", "ticket:export", "ticket:import",
 		"ticket:admin", "ticket:delete",
-		"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
+		"ticket_type:read", "ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 		"ticket_category:read", "ticket_category:create", "ticket_category:update", "ticket_category:delete",
 		"ticket_tag:read", "ticket_tag:create", "ticket_tag:update", "ticket_tag:delete",
 		"ticket_template:read", "ticket_template:create", "ticket_template:update", "ticket_template:delete",
