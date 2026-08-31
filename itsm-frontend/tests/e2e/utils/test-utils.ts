@@ -11,12 +11,12 @@ import { loginAndReturn } from '../auth-utils';
 export const TEST_USERS = {
   admin: {
     username: 'admin',
-    password: 'admin123',
+    password: 'AdminProd2026!',
     role: 'admin',
   },
   end_user: {
     username: 'user1',
-    password: 'user123',
+    password: 'user123456',
     role: 'end_user',
   },
   security: {
@@ -109,7 +109,7 @@ export async function createTicketViaApi(
     category?: string;
   }
 ): Promise<{ id: number }> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost';
 
   // Get current auth token
   const token = await page.evaluate(() => localStorage.getItem('access_token'));

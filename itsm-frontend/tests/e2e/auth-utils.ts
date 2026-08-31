@@ -12,7 +12,7 @@ import { test as base, expect } from '@playwright/test';
 export async function loginAndReturn(
   page: Page,
   username: string = 'admin',
-  password: string = 'admin123',
+  password: string = 'AdminProd2026!',
   landingPath: string = '/dashboard'
 ) {
   const appURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
@@ -21,7 +21,7 @@ export async function loginAndReturn(
 
   // Ant Design v5 inputs can miss React form updates in browser automation.
   // Use the real login API, then seed the same browser auth state the app uses.
-  const loginResponse = await page.request.post('http://localhost:8090/api/v1/auth/login', {
+  const loginResponse = await page.request.post('http://localhost/api/v1/auth/login', {
     data: { username, password },
     timeout: 30_000,
   });
