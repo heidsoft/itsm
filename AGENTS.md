@@ -91,16 +91,22 @@ ADMIN_PASSWORD=admin123
 
 ### Backend Structure
 
-- **controller/** - HTTP handlers, receive requests, call services (legacy horizontal layering)
-- **service/** - Business logic, orchestrate operations (legacy horizontal layering)
-- **handlers/<domain>/** - Domain-sliced modules (ai, change, cmdb, incident, knowledge, problem, service_catalog, service_request, sla, standard_change, ticket, etc.). Each domain package owns its own vertical slice: `handler.go` (HTTP layer), `service.go` (business logic), `repository.go` + `repository_impl.go` (data access), `entity.go` (domain entities/DTOs). Shared helpers live in `handlers/common/` and `handlers/shared/`.
+- **handlers/<domain>/** - **Target architecture.** Domain-sliced vertical slices. Each package owns: `handler.go` (HTTP), `service.go` (business logic), `repository.go` + `repository_impl.go` (data access), `entity.go` (domain entities/DTOs). Existing domains: ai, cab, capability, change, cmdb, dashboard, email_intake, incident, knowledge, known_error, operations, problem, service_catalog, service_request, skill, sla, standard_change. Shared helpers live in `handlers/common/` and `handlers/shared/`.
+- **service/** - Business logic used by both legacy `controller/` and `handlers/<domain>/`. Do not add new business logic here without a clear owner.
+- **controller/** - **Legacy horizontal layering.** Hosts thin HTTP facades that delegate to `service/`. This directory is frozen for new code. Existing controllers are gradually migrated to `handlers/<domain>/` as part of normal development.
 - **ent/schema/** - Database schema definitions (Ent ORM)
 - **middleware/** - Auth, logging, CORS, tenant isolation
 - **dto/** - Request/response DTOs
 - **cache/** - Redis integration
 - **router/** - Route registration
 
-Boundary between the two backend layerings: `handlers/<domain>/` is the newer domain-sliced style; `controller/` + `service/` is the older horizontal style and still hosts most existing endpoints. When extending a domain, follow the layering that domain already uses — do not implement the same domain endpoint in both places, and do not call a domain's `repository_impl` from outside its `handlers/<domain>/` package.
+### Backend Layering Rules
+
+1. **New code goes to `handlers/<domain>/`.** If the domain does not yet have a `handlers/<domain>/` package, create one. Do not add new files to `controller/`.
+2. **Follow the existing pattern.** When extending a domain that already uses `controller/` + `service/` (e.g., analytics, department), continue that pattern only for that domain — do not introduce a new `handlers/<domain>/` package alongside it.
+3. **No dual implementation.** Do not implement the same domain endpoint in both `controller/` and `handlers/<domain>/`. Pick one and migrate if needed.
+4. **Migration is opportunistic.** When working on a domain that lives in `controller/` and the change is more than trivial, evaluate migrating it to `handlers/<domain>/` as part of the same change. Use `git mv` to preserve history.
+5. **Rationale.** `handlers/<domain>/` is the long-term target because it aligns with product goals (MSP multi-tenant, marketplace, skill registry, team autonomy) and does not scale with horizontal layering as the domain count grows.
 
 ### Frontend Structure
 
