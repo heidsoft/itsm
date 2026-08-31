@@ -32,15 +32,9 @@ describe('listAuditLogs', () => {
       from: '2024-01-01T00:00:00Z',
       to: '2024-01-31T23:59:59Z',
     });
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('/api/v1/audit-logs?'));
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('page=1'));
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('page_size=20'));
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('user_id=5'));
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('resource=ticket'));
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('action=create'));
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('method=POST'));
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('status_code=200'));
-    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('request_id=req-123'));
+    expect(mockGet).toHaveBeenCalledWith(
+      '/api/v1/audit-logs?page=1&pageSize=20&userId=5&resource=ticket&action=create&method=POST&statusCode=200&path=%2Fapi%2Fv1%2Ftickets&requestId=req-123&from=2024-01-01T00%3A00%3A00Z&to=2024-01-31T23%3A59%3A59Z'
+    );
     expect(res).toEqual(expected);
   });
 

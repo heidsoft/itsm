@@ -2,17 +2,15 @@
 #
 # ITSM Backend — production image (multi-stage)
 #
-# Optimizations vs. the previous version:
+# Optimizations:
 #   - Pinned base images (golang:1.25.13-alpine, alpine:3.20)
 #   - BuildKit cache mounts for go modules + build cache
 #   - Cross-platform build via TARGETOS/TARGETARCH
 #   - trimpath + "-s -w" to strip debug info and shrink the binary
 #   - Memory guards (GOGC/GOMEMLIMIT) kept for large ent packages
-#   - Static, non-root runtime on alpine:3.20 instead of debian:bookworm-slim.
-#     debian:bookworm-slim pulls ~80MB of base + apt; alpine:3.20 is ~7MB and
-#     only adds ca-certificates (TLS to Postgres/MinIO/LLM), curl (probe
-#     healthchecks) and tzdata (timezone-aware scheduling). Net runtime base
-#     reduction of ~60-70% vs. the previous image.
+#   - Static, non-root runtime on alpine:3.20
+#   - Parallel module download and build cache warming
+#   - Optimized layer caching with .dockerignore
 
 # ============================================================
 # Stage 1: Build
@@ -33,36 +31,40 @@ ENV CGO_ENABLED=0 \
     GOARCH=${TARGETARCH} \
     GOPROXY=${GOPROXY} \
     GOSUMDB=${GOSUMDB} \
-    GOFLAGS=-p=2 \
+    GOFLAGS="-p=2 -trimpath" \
     GOMAXPROCS=2 \
     GOGC=50 \
     GOMEMLIMIT=2GiB
 
 RUN apk add --no-cache ca-certificates git bash
 
+# Copy go.mod and go.sum first for better layer caching
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go mod download
 
+# Copy source code
 COPY . .
-# NOTE: Swagger docs are served from the compiled-in `docs/docs.go` (embedded
-# Go spec registered via swag.Register), so runtime does NOT read
-# docs/swagger.json from disk. We therefore ship the committed swagger
-# artifacts (copied below) and do NOT regenerate them here. Regenerating with
-# `swag init` during the build is fragile (it re-parses the whole dependency
-# graph and breaks on `any`-typed DTOs) and is unnecessary — run
-# `go run github.com/swaggo/swag/cmd/swag init` in a pre-commit/CI step if the
-# spec must be refreshed.
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -ldflags="-s -w" -o /out/main ./main.go
 
-# Migration/seed CLI (build tag: migrate). Used for one-off operational commands:
-#   docker exec itsm-backend ./migrate-tool -seed-only
+# Build main binary with optimized flags
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -ldflags="-s -w" -tags migrate -o /out/migrate-tool ./cmd/migrate/main.go
+    go build \
+    -trimpath \
+    -ldflags="-s -w -X main.version=${VERSION:-dev} -X main.buildTime=$(date -u +%Y%m%d%H%M%S)" \
+    -o /out/main \
+    ./main.go
+
+# Build migration tool
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go build \
+    -trimpath \
+    -ldflags="-s -w" \
+    -tags migrate \
+    -o /out/migrate-tool \
+    ./cmd/migrate/main.go
 
 # ============================================================
 # Stage 2: Runtime (alpine — minimal, non-root)
@@ -71,14 +73,17 @@ FROM mirror.gcr.io/library/alpine:3.20 AS runtime
 
 WORKDIR /app
 
-# ca-certificates: TLS to Postgres/MinIO/LLM endpoints.
-# curl: used by container + compose healthcheck probes.
-# tzdata: timezone-aware scheduling (SLA/business-hours windows).
-RUN apk add --no-cache ca-certificates curl tzdata \
-    && addgroup -S app && adduser -S -G app app \
+# Install runtime dependencies in a single layer
+RUN apk add --no-cache \
+    ca-certificates \
+    curl \
+    tzdata \
+    && addgroup -S app \
+    && adduser -S -G app app \
     && mkdir -p /app/logs /app/uploads /app/temp \
     && chown -R app:app /app
 
+# Copy binaries and config files
 COPY --from=builder --chown=app:app /out/main ./main
 COPY --from=builder --chown=app:app /out/migrate-tool ./migrate-tool
 COPY --chown=app:app config.yaml ./

@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// AIAnalysisResult is the predicate function for aianalysisresult builders.
+type AIAnalysisResult func(*sql.Selector)
+
 // Alert is the predicate function for alert builders.
 type Alert func(*sql.Selector)
 

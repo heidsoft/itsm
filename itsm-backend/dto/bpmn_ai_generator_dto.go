@@ -40,6 +40,8 @@ type GenerateBPMNResponse struct {
 	DeploymentID string `json:"deploymentId,omitempty"`
 	// 流程定义ID
 	ProcessDefinitionID int `json:"processDefinitionId,omitempty"`
+	// 生成后自动 Lint 的结果（结构/连通性/网关语义检查；HasErrors 时不应部署）
+	LintResult *BPMNLintResult `json:"lintResult,omitempty"`
 }
 
 // PreviewBPMNRequest 预览生成的BPMN流程请求

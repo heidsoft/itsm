@@ -1,13 +1,17 @@
 /**
  * 面包屑自动生成工具
- * 基于 usePathname 的路由段，优先匹配菜单配置中的 label，
+ *
+ * 基于 usePathname 的路由段，优先匹配动态菜单中的 label（后端 /api/v1/auth/menus 提供），
  * 其次匹配通用路由段语义映射，动态 ID 段显示为「详情 #id」。
- * 替代原先仅覆盖 9 条路由的硬编码映射表。
+ *
+ * 菜单数据完全由后端 seedMenus 提供，前端不再依赖 menu-config.ts。
+ * 通过 useUserMenusQuery 与 Sidebar 共享 React Query 缓存，避免重复请求。
  */
 
 import type { BreadcrumbProps } from 'antd';
 
-import { getMenuConfig, type MenuItem } from '../sidebar/menu-config';
+import { useUserMenusQuery } from '@/lib/hooks/useUserMenusQuery';
+import type { MenuItem as ApiMenuItem } from '@/lib/api/menu-api';
 
 export type BreadcrumbItem = NonNullable<BreadcrumbProps['items']>[number];
 
@@ -94,29 +98,16 @@ const SEGMENT_LABELS: Record<string, string> = {
   list: '列表',
 };
 
-let cachedPathLabelMap: Map<string, string> | null = null;
-
 // 递归收集菜单配置中 path → label 的映射（label 为字符串时）
-function collectMenuLabels(items: MenuItem[], map: Map<string, string>) {
+function collectMenuLabels(items: ApiMenuItem[], map: Map<string, string>) {
   for (const item of items) {
-    if (item.path && typeof item.label === 'string') {
-      map.set(item.path, item.label);
+    if (item.path && item.name) {
+      map.set(item.path, item.name);
     }
     if (item.children) {
       collectMenuLabels(item.children, map);
     }
   }
-}
-
-function getPathLabelMap(): Map<string, string> {
-  if (!cachedPathLabelMap) {
-    const map = new Map<string, string>();
-    const config = getMenuConfig();
-    collectMenuLabels(config.main, map);
-    collectMenuLabels(config.admin, map);
-    cachedPathLabelMap = map;
-  }
-  return cachedPathLabelMap;
 }
 
 /**
@@ -129,7 +120,6 @@ export function buildBreadcrumb(pathname: string): BreadcrumbItem[] {
     return items;
   }
 
-  const labelMap = getPathLabelMap();
   const segments = pathname.split('/').filter(Boolean);
   let acc = '';
 
@@ -139,9 +129,46 @@ export function buildBreadcrumb(pathname: string): BreadcrumbItem[] {
     if (acc === '/dashboard') return;
 
     const isLast = index === segments.length - 1;
-    let title = labelMap.get(acc) || SEGMENT_LABELS[segment];
+    let title = SEGMENT_LABELS[segment];
     if (!title) {
       // 动态段：纯数字 ID 显示为详情，其余（uuid/slug）原样展示
+      title = /^\d+$/.test(segment) ? `详情 #${segment}` : segment;
+    }
+
+    items.push(isLast ? { title } : { title, href: acc });
+  });
+
+  return items;
+}
+
+/**
+ * Hook 版本：基于动态菜单（后端 /api/v1/auth/menus）生成面包屑。
+ * 用于顶部 Header 等需要结合菜单 label 渲染面包屑的场景，
+ * 内部与 Sidebar 共享 useUserMenusQuery 的 React Query 缓存。
+ */
+export function useBuildBreadcrumb(pathname: string): BreadcrumbItem[] {
+  const { data: menus } = useUserMenusQuery();
+  const items: BreadcrumbItem[] = [{ title: '首页', href: '/dashboard' }];
+  if (!pathname || pathname === '/' || pathname === '/dashboard') {
+    return items;
+  }
+
+  const labelMap = new Map<string, string>();
+  if (menus) {
+    collectMenuLabels(menus.main, labelMap);
+    collectMenuLabels(menus.admin, labelMap);
+  }
+
+  const segments = pathname.split('/').filter(Boolean);
+  let acc = '';
+
+  segments.forEach((segment, index) => {
+    acc += `/${segment}`;
+    if (acc === '/dashboard') return;
+
+    const isLast = index === segments.length - 1;
+    let title = labelMap.get(acc) || SEGMENT_LABELS[segment];
+    if (!title) {
       title = /^\d+$/.test(segment) ? `详情 #${segment}` : segment;
     }
 

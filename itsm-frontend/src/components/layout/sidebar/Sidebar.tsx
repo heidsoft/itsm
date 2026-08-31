@@ -5,22 +5,18 @@
  * 负责展示主导航菜单
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { App, Layout, theme } from 'antd';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import styles from './Sidebar.module.css';
-import { getMenuConfig, type MenuItem } from './menu-config';
+import type { MenuItem } from './menu-config';
 import { getIconByName } from './icons';
-import { MenuItems, renderMenuItems } from './MenuItems';
-import {
-  getUserMenus,
-  MENUS_UPDATED_EVENT,
-  type MenuItem as MenuItemType,
-  type MenuTreeResponse,
-} from '@/lib/api/menu-api';
+import { MenuItems } from './MenuItems';
+import { useUserMenusQuery } from '@/lib/hooks/useUserMenusQuery';
 import { useCapabilities } from '@/lib/hooks/useCapabilities';
+import type { MenuItem as MenuItemType } from '@/lib/api/menu-api';
 
 const { Sider } = Layout;
 
@@ -72,6 +68,45 @@ function capabilityForPath(path?: string): string | undefined {
 }
 
 /**
+ * 菜单路径规范化：修正历史遗留路径，避免导航到 404
+ * - xxx/list 后缀：在 App Router 下通常等价于 /xxx（列表页即首页）
+ * - 其他明确命名错误：create→new、index→overview 等
+ * - 该映射在前端 Sidebar 点击时立即生效，无需等待后端菜单数据订正
+ */
+const MENU_PATH_NORMALIZATIONS: Record<string, string> = {
+  // /list 后缀 → 对应基础路由（App Router 下 xxx/page.tsx 即列表首页）
+  '/service-requests/list': '/service-requests',
+  '/incidents/list': '/incidents',
+  '/problems/list': '/problems',
+  '/changes/list': '/changes',
+  '/knowledge/list': '/knowledge',
+  '/service-catalog/list': '/service-catalog',
+  '/assets/list': '/assets',
+  '/workflow/list': '/workflow',
+  '/ai/chat/list': '/ai/chat',
+  '/msp/list': '/msp',
+  '/releases/list': '/releases',
+  // 明确的路径命名错误：/admin/overview 页面加载后会客户端跳转到 /admin（系统管理首页），直接指向 /admin 避免两跳
+  '/admin/index': '/admin',
+  '/knowledge/articles/create': '/knowledge/articles/new',
+  // 缺少独立路由页面的概览入口 → 跳转到模块主页面（主页面本身就是概览）
+  '/sla/overview': '/sla',
+  '/email-intake/conversations': '/email-intake',
+  '/knowledge/articles': '/knowledge',
+};
+
+function normalizeMenuPath(raw: string): string {
+  if (!raw) return raw;
+  const direct = MENU_PATH_NORMALIZATIONS[raw];
+  if (direct) return direct;
+  // 兜底：若目标路径形如 /xxx/list 且存在精确匹配规则以外的 /list，也尝试剥离 /list
+  if (raw.endsWith('/list') && raw.length > 6) {
+    return raw.slice(0, -5);
+  }
+  return raw;
+}
+
+/**
  * 侧边栏组件
  */
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile = false }) => {
@@ -85,75 +120,46 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
   // 触发 auth store 的 hydration
   useAuthStoreHydration();
 
-  // 动态菜单状态
-  const [dynamicMenus, setDynamicMenus] = useState<MenuTreeResponse | null>(null);
-  const [menuLoading, setMenuLoading] = useState(false);
-  const [menuError, setMenuError] = useState<string | null>(null);
-
-  // 加载用户菜单（并监听菜单管理变更事件即时刷新）
-  useEffect(() => {
-    const loadMenus = async () => {
-      if (!user) return;
-
-      try {
-        setMenuLoading(true);
-        setMenuError(null);
-        const menus = await getUserMenus();
-        if (menus && (menus.main?.length > 0 || menus.admin?.length > 0)) {
-          setDynamicMenus(menus);
-        } else {
-          setMenuError('菜单加载失败，请刷新页面重试');
-        }
-      } catch (error) {
-        console.error('Failed to load dynamic menus:', error);
-        setMenuError('菜单加载失败，请刷新页面重试');
-      } finally {
-        setMenuLoading(false);
-      }
-    };
-
-    loadMenus();
-
-    const handleMenusUpdated = () => {
-      loadMenus();
-    };
-    window.addEventListener(MENUS_UPDATED_EVENT, handleMenusUpdated);
-    return () => {
-      window.removeEventListener(MENUS_UPDATED_EVENT, handleMenusUpdated);
-    };
-  }, [user]);
+  // 动态菜单状态：完全来自后端 /api/v1/auth/menus（seedMenus 写入 DB），
+  // 通过 React Query 共享缓存，避免与面包屑、菜单管理端重复请求。
+  const menusQuery = useUserMenusQuery({ enabled: !!user });
+  const dynamicMenus = menusQuery.data;
+  const menuLoading = menusQuery.isLoading;
+  const menuError =
+    menusQuery.error ||
+    (menusQuery.data && menusQuery.data.main.length === 0 && menusQuery.data.admin.length === 0
+      ? new Error('菜单为空，请检查角色权限或刷新页面重试')
+      : null);
 
   // 显示错误提示
   useEffect(() => {
     if (menuError) {
-      message.error(menuError);
+      message.error(menuError.message || '菜单加载失败，请刷新页面重试');
     }
-  }, [menuError]);
+  }, [menuError, message]);
 
-  // 菜单点击处理
+  // 菜单点击处理：先做路径规范化，再执行路由跳转
   const handleMenuClick = (key: string) => {
     if (!key) {
       console.warn('Menu item has no path:', key);
       return;
     }
+    const normalizedPath = normalizeMenuPath(key);
+    if (normalizedPath !== key) {
+      console.debug('[Sidebar] 菜单路径已规范化', { from: key, to: normalizedPath });
+    }
     try {
-      router.push(key);
+      router.push(normalizedPath);
     } catch (error) {
       console.error('Menu navigation error:', error);
       message.error('导航失败，请稍后重试');
     }
   };
 
-  // 转换动态菜单（当 API 返回空时使用静态配置作为 fallback）
-  const FORCE_STATIC_MENU = false;
-  const rawMainMenus =
-    dynamicMenus && !FORCE_STATIC_MENU
-      ? convertApiMenuToSidebar(dynamicMenus.main)
-      : getMenuConfig().main;
-  const rawAdminMenus =
-    dynamicMenus && !FORCE_STATIC_MENU
-      ? convertApiMenuToSidebar(dynamicMenus.admin)
-      : getMenuConfig().admin;
+  // 菜单全部来源于后端 /api/v1/auth/menus（seedMenus 写入 DB），不再使用前端静态 fallback。
+  // /api/v1/auth/menus 返回空时会通过 menuError 提示用户刷新，避免静默吃失败。
+  const rawMainMenus = dynamicMenus ? convertApiMenuToSidebar(dynamicMenus.main) : [];
+  const rawAdminMenus = dynamicMenus ? convertApiMenuToSidebar(dynamicMenus.admin) : [];
 
   // 菜单 key 去重逻辑 — 避免后端返回重复 key 导致 React 警告
   const deduplicateMenus = (menus: MenuItem[]): MenuItem[] => {
@@ -192,7 +198,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
   const mainMenus = deduplicateMenus(filterByCapability(rawMainMenus));
   const adminMenus = deduplicateMenus(filterByCapability(rawAdminMenus));
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const { hasPermission } = useAuthStore.getState();
+  const isAdmin =
+    hasPermission('user:write') ||
+    hasPermission('role:write') ||
+    hasPermission('system_config:write') ||
+    hasPermission('ticket_type:manage');
 
   return (
     <Sider

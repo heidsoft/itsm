@@ -155,6 +155,53 @@ func (s *TicketService) enqueueTicketFeishuSync(ctx context.Context, tkt *ticket
 	return nil
 }
 
+// syncTicketToFeishuLegacyAsync 把 5 处完全相同的"goroutine + 飞书 connector +
+// 嵌套事务"样板提取为一个 helper。原有调用点保留以下形状：
+//
+//	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
+//	    s.syncTicketToFeishuLegacyAsync(tkt, tenantID)
+//	}
+//
+// 已知技术债（不要在本提交里同时修，先把重复解决）：
+//
+//   - fire-and-forget goroutine 违反 AGENTS.md "事务、Outbox 与可靠副作用" 的
+//     强制规则
+//   - 嵌套 s.client.Tx(ctx2) 会在主事务提交后打开新事务，主从之间没有一致性
+//   - 后续应该统一走 operational_commands outbox，由独立 worker 消费；
+//     EnableSideEffectOutbox() 已经为这条路径留好入口
+//
+// 本次重构只是把 5 处重复合并到 1 处，行为完全等价。
+func (s *TicketService) syncTicketToFeishuLegacyAsync(tkt *ticket.Ticket, tenantID int) {
+	go func() {
+		ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		conn, ok := s.connectorManager.Get(tenantID, "feishu")
+		if !ok {
+			// 飞书连接器未配置，忽略
+			return
+		}
+		feishuConn, ok := conn.(*feishuConnector.Feishu)
+		if !ok {
+			return
+		}
+		tx, err := s.client.Tx(ctx2)
+		if err != nil {
+			s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", tkt.ID)
+			return
+		}
+		defer tx.Rollback()
+		_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(tkt))
+		if err != nil {
+			s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", tkt.ID)
+			return
+		}
+		if err := tx.Commit(); err != nil {
+			s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", tkt.ID)
+			return
+		}
+	}()
+}
+
 func (s *TicketService) updateTicketWithFeishuCommand(ctx context.Context, id int, params *ticket.UpdateParams, tenantID int, event string) (*ticket.Ticket, error) {
 	if !s.sideEffectOutboxEnabled {
 		return s.repo.Update(ctx, id, params, tenantID)
@@ -428,38 +475,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 异步同步工单到飞书
 	// 必须使用独立 ctx，否则飞书同步在响应返回后立即失败。
 	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			// 获取Feishu连接器
-			conn, ok := s.connectorManager.Get(tenantID, "feishu")
-			if !ok {
-				// 飞书连接器未配置，忽略
-				return
-			}
-			feishuConn, ok := conn.(*feishuConnector.Feishu)
-			if !ok {
-				return
-			}
-			// 开启事务
-			tx, err := s.client.Tx(ctx2)
-			if err != nil {
-				s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", tkt.ID)
-				return
-			}
-			defer tx.Rollback()
-			// 同步工单到飞书
-			_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(tkt))
-			if err != nil {
-				s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", tkt.ID)
-				return
-			}
-			// 提交事务
-			if err := tx.Commit(); err != nil {
-				s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", tkt.ID)
-				return
-			}
-		}()
+		s.syncTicketToFeishuLegacyAsync(tkt, tenantID)
 	}
 
 	return tkt, nil
@@ -983,38 +999,7 @@ func (s *TicketService) GetTicket(ctx context.Context, id int, tenantID int) (*t
 
 	// 异步同步工单到飞书
 	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			// 获取Feishu连接器
-			conn, ok := s.connectorManager.Get(tenantID, "feishu")
-			if !ok {
-				// 飞书连接器未配置，忽略
-				return
-			}
-			feishuConn, ok := conn.(*feishuConnector.Feishu)
-			if !ok {
-				return
-			}
-			// 开启事务
-			tx, err := s.client.Tx(ctx2)
-			if err != nil {
-				s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			defer tx.Rollback()
-			// 同步工单到飞书
-			_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(updated))
-			if err != nil {
-				s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			// 提交事务
-			if err := tx.Commit(); err != nil {
-				s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-		}()
+		s.syncTicketToFeishuLegacyAsync(updated, tenantID)
 	}
 
 	return updated, nil
@@ -1171,38 +1156,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 
 	// 异步同步工单到飞书
 	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			// 获取Feishu连接器
-			conn, ok := s.connectorManager.Get(tenantID, "feishu")
-			if !ok {
-				// 飞书连接器未配置，忽略
-				return
-			}
-			feishuConn, ok := conn.(*feishuConnector.Feishu)
-			if !ok {
-				return
-			}
-			// 开启事务
-			tx, err := s.client.Tx(ctx2)
-			if err != nil {
-				s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			defer tx.Rollback()
-			// 同步工单到飞书
-			_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(updated))
-			if err != nil {
-				s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			// 提交事务
-			if err := tx.Commit(); err != nil {
-				s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-		}()
+		s.syncTicketToFeishuLegacyAsync(updated, tenantID)
 	}
 
 	return updated, nil
@@ -1340,38 +1294,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 
 	// 异步同步工单到飞书
 	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			// 获取Feishu连接器
-			conn, ok := s.connectorManager.Get(tenantID, "feishu")
-			if !ok {
-				// 飞书连接器未配置，忽略
-				return
-			}
-			feishuConn, ok := conn.(*feishuConnector.Feishu)
-			if !ok {
-				return
-			}
-			// 开启事务
-			tx, err := s.client.Tx(ctx2)
-			if err != nil {
-				s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			defer tx.Rollback()
-			// 同步工单到飞书
-			_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(updated))
-			if err != nil {
-				s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			// 提交事务
-			if err := tx.Commit(); err != nil {
-				s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-		}()
+		s.syncTicketToFeishuLegacyAsync(updated, tenantID)
 	}
 
 	return updated, nil
@@ -1413,38 +1336,7 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 
 	// 异步同步工单到飞书
 	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			// 获取Feishu连接器
-			conn, ok := s.connectorManager.Get(tenantID, "feishu")
-			if !ok {
-				// 飞书连接器未配置，忽略
-				return
-			}
-			feishuConn, ok := conn.(*feishuConnector.Feishu)
-			if !ok {
-				return
-			}
-			// 开启事务
-			tx, err := s.client.Tx(ctx2)
-			if err != nil {
-				s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			defer tx.Rollback()
-			// 同步工单到飞书
-			_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(updated))
-			if err != nil {
-				s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			// 提交事务
-			if err := tx.Commit(); err != nil {
-				s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-		}()
+		s.syncTicketToFeishuLegacyAsync(updated, tenantID)
 	}
 
 	return updated, nil
@@ -1483,38 +1375,7 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, tenantID 
 
 	// 异步同步工单到飞书
 	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			// 获取Feishu连接器
-			conn, ok := s.connectorManager.Get(tenantID, "feishu")
-			if !ok {
-				// 飞书连接器未配置，忽略
-				return
-			}
-			feishuConn, ok := conn.(*feishuConnector.Feishu)
-			if !ok {
-				return
-			}
-			// 开启事务
-			tx, err := s.client.Tx(ctx2)
-			if err != nil {
-				s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			defer tx.Rollback()
-			// 同步工单到飞书
-			_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(updated))
-			if err != nil {
-				s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			// 提交事务
-			if err := tx.Commit(); err != nil {
-				s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-		}()
+		s.syncTicketToFeishuLegacyAsync(updated, tenantID)
 	}
 
 	return updated, nil
@@ -1678,38 +1539,7 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 
 	// 异步同步工单到飞书
 	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			// 获取Feishu连接器
-			conn, ok := s.connectorManager.Get(tenantID, "feishu")
-			if !ok {
-				// 飞书连接器未配置，忽略
-				return
-			}
-			feishuConn, ok := conn.(*feishuConnector.Feishu)
-			if !ok {
-				return
-			}
-			// 开启事务
-			tx, err := s.client.Tx(ctx2)
-			if err != nil {
-				s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			defer tx.Rollback()
-			// 同步工单到飞书
-			_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(updated))
-			if err != nil {
-				s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			// 提交事务
-			if err := tx.Commit(); err != nil {
-				s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-		}()
+		s.syncTicketToFeishuLegacyAsync(updated, tenantID)
 	}
 
 	return updated, nil
@@ -1866,38 +1696,7 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 
 	// 异步同步工单到飞书
 	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			// 获取Feishu连接器
-			conn, ok := s.connectorManager.Get(tenantID, "feishu")
-			if !ok {
-				// 飞书连接器未配置，忽略
-				return
-			}
-			feishuConn, ok := conn.(*feishuConnector.Feishu)
-			if !ok {
-				return
-			}
-			// 开启事务
-			tx, err := s.client.Tx(ctx2)
-			if err != nil {
-				s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			defer tx.Rollback()
-			// 同步工单到飞书
-			_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(updated))
-			if err != nil {
-				s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			// 提交事务
-			if err := tx.Commit(); err != nil {
-				s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-		}()
+		s.syncTicketToFeishuLegacyAsync(updated, tenantID)
 	}
 
 	return updated, nil

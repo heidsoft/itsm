@@ -821,7 +821,7 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			updatedTicket, err := ticketService.UpdateTicket(ctx, tt.ticketID, tt.request, tt.tenantID)
+			updatedTicket, err := ticketService.UpdateTicket(ctx, tt.ticketID, tt.request, tt.tenantID, testUser.ID, "end_user")
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -866,7 +866,7 @@ func TestTicketService_UpdateTicketPersistsTypeCategoryAndTags(t *testing.T) {
 
 	updated, err := service.UpdateTicket(ctx, created.ID, &dto.UpdateTicketRequest{
 		Type: "problem", CategoryID: &category.ID, Tags: []string{"backend", "backend", "customer"}, Version: created.Version,
-	}, tenant.ID)
+	}, tenant.ID, user.ID, "end_user")
 	require.NoError(t, err)
 	assert.Equal(t, "problem", string(updated.Type))
 	entity, err := client.Ticket.Query().Where(entTicket.IDEQ(created.ID)).WithTags().Only(ctx)
@@ -877,7 +877,7 @@ func TestTicketService_UpdateTicketPersistsTypeCategoryAndTags(t *testing.T) {
 	zero := 0
 	cleared, err := service.UpdateTicket(ctx, created.ID, &dto.UpdateTicketRequest{
 		CategoryID: &zero, Tags: []string{}, Version: updated.Version,
-	}, tenant.ID)
+	}, tenant.ID, user.ID, "end_user")
 	require.NoError(t, err)
 	assert.Nil(t, cleared.CategoryID)
 	entity, err = client.Ticket.Query().Where(entTicket.IDEQ(created.ID)).WithTags().Only(ctx)
@@ -886,7 +886,7 @@ func TestTicketService_UpdateTicketPersistsTypeCategoryAndTags(t *testing.T) {
 
 	_, err = service.UpdateTicket(ctx, created.ID, &dto.UpdateTicketRequest{
 		CategoryID: &foreignCategory.ID, Version: cleared.Version,
-	}, tenant.ID)
+	}, tenant.ID, user.ID, "end_user")
 	require.ErrorContains(t, err, "工单分类不存在")
 }
 

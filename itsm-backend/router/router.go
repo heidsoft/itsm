@@ -221,6 +221,7 @@ type RouterConfig struct {
 	BPMNDashboardController         *controller.BPMNDashboardController
 	BPMNMonitoringController        *controller.BPMNMonitoringController
 	BPMNAIGeneratorController       *controller.BPMNAIGeneratorController
+	BPMNLintController              *controller.BPMNLintController
 
 	A2UITicketController *controller.A2UITicketController
 	DashboardHandler     *handlers.DashboardHandler
@@ -775,6 +776,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/workflow/reopen", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.ReopenTicket)
 				tickets.GET("/:id/cc", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.ListTicketCCRecords)
 				tickets.GET("/:id/workflow/state", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowState)
+				// 工单详情体验增强：V2 聚合 BPMN 真实节点状态（当前/下一/历史）。
+				tickets.GET("/:id/workflow/state-v2", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowStateV2)
 				tickets.GET("/:id/workflow-history", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowHistory)
 				tickets.GET("/:id/workflow_records", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowHistory)
 			}
@@ -1332,6 +1335,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			{
 				aiGrp.POST("/chat", middleware.RequirePermission("ai", "read"), config.AIHandler.Chat)
 				aiGrp.POST("/chat/stream", middleware.RequirePermission("ai", "read"), config.AIHandler.ChatStream)
+				aiGrp.GET("/conversations", middleware.RequirePermission("ai", "read"), config.AIHandler.ListConversations)
+				aiGrp.GET("/conversations/:id", middleware.RequirePermission("ai", "read"), config.AIHandler.GetConversation)
+				aiGrp.DELETE("/conversations/:id", middleware.RequirePermission("ai", "write"), config.AIHandler.DeleteConversation)
+				aiGrp.GET("/analysis-results", middleware.RequirePermission("ai", "read"), config.AIHandler.ListAIAnalysisResults)
+				aiGrp.GET("/analysis-results/:id", middleware.RequirePermission("ai", "read"), config.AIHandler.GetAIAnalysisResult)
+				aiGrp.DELETE("/analysis-results/:id", middleware.RequirePermission("ai", "write"), config.AIHandler.DeleteAIAnalysisResult)
 				aiGrp.POST("/analytics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetDeepAnalytics)
 				aiGrp.POST("/predictions", middleware.RequirePermission("ai", "read"), config.AIHandler.GetTrendPrediction)
 				aiGrp.POST("/tickets/:id/analyze", middleware.RequirePermission("ai", "read"), config.AIHandler.AnalyzeTicket)
@@ -1694,6 +1703,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// BPMN AI Generator (AI驱动的流程生成)
 		if config.BPMNAIGeneratorController != nil {
 			config.BPMNAIGeneratorController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
+		// BPMN Lint（流程校验真源：设计器校验按钮与 AI 生成后自动 Lint 共用）
+		if config.BPMNLintController != nil {
+			config.BPMNLintController.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		if config.BPMNMonitoringController != nil {

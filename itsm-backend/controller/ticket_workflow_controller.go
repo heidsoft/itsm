@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/service"
 
@@ -32,7 +33,10 @@ func NewTicketWorkflowController(workflowService *service.TicketWorkflowService,
 // Returns (userID, tenantID, ok). If either is missing, responds with auth error and returns ok=false.
 func getAuthContext(c *gin.Context) (int, int, bool) {
 	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.RequireTenantID(c)
+	if !ok {
+		return 0, 0, false
+	}
 	if userID == 0 || tenantID == 0 {
 		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
 		return 0, 0, false
@@ -410,6 +414,38 @@ func (tc *TicketWorkflowController) GetTicketWorkflowState(c *gin.Context) {
 	state, err := tc.workflowService.GetTicketWorkflowState(c.Request.Context(), ticketID, userID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to get ticket workflow state", "error", err, "ticket_id", ticketID)
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+
+	common.Success(c, state)
+}
+
+// GetTicketWorkflowStateV2 获取工单流转状态（V2：含 BPMN 真实节点详情）
+// @Summary 获取工单流转状态V2
+// @Description 返回工单当前流转状态、当前/下一 BPMN 节点、历史轨迹；
+// @Description 未配置 BPMN 流程时 bpmnProcessState.bpmnStatus=not_started，前端按降级路径展示。
+// @Tags 工单流转
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Success 200 {object} common.Response{data=dto.TicketWorkflowState}
+// @Router /api/v1/tickets/:id/workflow/state-v2 [get]
+func (tc *TicketWorkflowController) GetTicketWorkflowStateV2(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
+
+	state, err := tc.workflowService.GetTicketWorkflowStateV2(c.Request.Context(), ticketID, userID, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to get ticket workflow state v2", "error", err, "ticket_id", ticketID)
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}

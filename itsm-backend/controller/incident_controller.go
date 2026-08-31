@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
@@ -64,18 +65,7 @@ func (ic *IncidentController) SetSLAMonitorService(svc *service.SLAMonitorServic
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents [post]
 
-func (c *IncidentController) resolveTenantID(ctx *gin.Context) (int, bool) {
-	tenantID, err := middleware.ResolveRequestTenantID(ctx)
-	if err == nil {
-		return tenantID, true
-	}
-	c.logger.Errorw("Failed to resolve tenant ID", "error", err)
-	if middleware.AbortIfTenantError(ctx, err) {
-		return 0, false
-	}
-	common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
-	return 0, false
-}
+
 
 func (c *IncidentController) writeLifecycleError(ctx *gin.Context, err error) {
 	switch {
@@ -99,7 +89,7 @@ func (c *IncidentController) CreateIncident(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -133,14 +123,7 @@ func (c *IncidentController) CreateIncident(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id} [get]
 func (c *IncidentController) GetIncident(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
@@ -236,7 +219,7 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 		filters["assignee_id"] = assigneeID
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -278,10 +261,8 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id} [put]
 func (c *IncidentController) UpdateIncident(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, ok := common.ParseResourceID(ctx, "id", "事件")
+	if !ok {
 		return
 	}
 
@@ -292,7 +273,7 @@ func (c *IncidentController) UpdateIncident(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -333,18 +314,11 @@ func (c *IncidentController) UpdateIncident(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id} [delete]
 func (c *IncidentController) DeleteIncident(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
-	err = c.incidentService.DeleteIncident(ctx.Request.Context(), id, tenantID)
+	err := c.incidentService.DeleteIncident(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		if errors.Is(err, service.ErrIncidentNotFound) {
 			common.Fail(ctx, common.ParamErrorCode, "事件不存在")
@@ -378,7 +352,7 @@ func (c *IncidentController) EscalateIncident(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -428,7 +402,7 @@ func (c *IncidentController) GetIncidentMonitoring(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -454,14 +428,7 @@ func (c *IncidentController) GetIncidentMonitoring(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/impact [get]
 func (c *IncidentController) AnalyzeIncidentImpact(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
@@ -491,14 +458,7 @@ func (c *IncidentController) AnalyzeIncidentImpact(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/events [get]
 func (c *IncidentController) GetIncidentEvents(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
@@ -525,14 +485,7 @@ func (c *IncidentController) GetIncidentEvents(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/alerts [get]
 func (c *IncidentController) GetIncidentAlerts(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
@@ -559,14 +512,7 @@ func (c *IncidentController) GetIncidentAlerts(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/metrics [get]
 func (c *IncidentController) GetIncidentMetrics(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
@@ -589,7 +535,7 @@ func (c *IncidentController) GetIncidentMetrics(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/stats [get]
 func (c *IncidentController) GetIncidentStats(ctx *gin.Context) {
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -623,7 +569,7 @@ func (c *IncidentController) CreateIncidentEvent(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -656,7 +602,7 @@ func (c *IncidentController) CreateIncidentAlert(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -680,13 +626,7 @@ func (c *IncidentController) CreateIncidentAlert(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/incidents/:id/acknowledge [post]
 func (c *IncidentController) AcknowledgeIncident(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-	userID := ctx.GetInt("user_id")
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, userID, tenantID, ok := handlerctx.ResolveResourceIDUserAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
@@ -708,9 +648,8 @@ func (c *IncidentController) AcknowledgeIncident(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/incidents/:id/resolve [post]
 func (c *IncidentController) ResolveIncident(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, userID, tenantID, ok := handlerctx.ResolveResourceIDUserAndTenant(ctx, "事件")
+	if !ok {
 		return
 	}
 	var body struct {
@@ -719,11 +658,6 @@ func (c *IncidentController) ResolveIncident(ctx *gin.Context) {
 	}
 	if err := ctx.ShouldBindJSON(&body); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数无效")
-		return
-	}
-	userID := ctx.GetInt("user_id")
-	tenantID, ok := c.resolveTenantID(ctx)
-	if !ok {
 		return
 	}
 	if err := c.incidentService.ResolveIncident(ctx.Request.Context(), id, userID, tenantID, body.Resolution, body.RootCause); err != nil {
@@ -744,9 +678,8 @@ func (c *IncidentController) ResolveIncident(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/incidents/:id/close [post]
 func (c *IncidentController) CloseIncident(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, userID, tenantID, ok := handlerctx.ResolveResourceIDUserAndTenant(ctx, "事件")
+	if !ok {
 		return
 	}
 	var body struct {
@@ -754,11 +687,6 @@ func (c *IncidentController) CloseIncident(ctx *gin.Context) {
 	}
 	if err := ctx.ShouldBindJSON(&body); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数无效")
-		return
-	}
-	userID := ctx.GetInt("user_id")
-	tenantID, ok := c.resolveTenantID(ctx)
-	if !ok {
 		return
 	}
 	if err := c.incidentService.CloseIncident(ctx.Request.Context(), id, userID, tenantID, body.CloseNotes); err != nil {
@@ -777,13 +705,7 @@ func (c *IncidentController) CloseIncident(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/incidents/:id/reopen [post]
 func (c *IncidentController) ReopenIncident(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-	userID := ctx.GetInt("user_id")
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, userID, tenantID, ok := handlerctx.ResolveResourceIDUserAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
@@ -807,19 +729,13 @@ func (c *IncidentController) ReopenIncident(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/:id/major-incident [post]
 func (c *IncidentController) EscalateMajorIncident(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, userID, tenantID, ok := handlerctx.ResolveResourceIDUserAndTenant(ctx, "事件")
+	if !ok {
 		return
 	}
 	var req dto.EscalateMajorIncidentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
-		return
-	}
-	userID := ctx.GetInt("user_id")
-	tenantID, ok := c.resolveTenantID(ctx)
-	if !ok {
 		return
 	}
 	if err := c.incidentService.EscalateToMajorIncident(ctx.Request.Context(), id, userID, tenantID, &req); err != nil {
@@ -842,9 +758,8 @@ func (c *IncidentController) EscalateMajorIncident(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/assign [post]
 func (c *IncidentController) AssignIncident(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, ok := common.ParseResourceID(ctx, "id", "事件")
+	if !ok {
 		return
 	}
 
@@ -859,7 +774,7 @@ func (c *IncidentController) AssignIncident(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -884,26 +799,12 @@ func (c *IncidentController) AssignIncident(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/alerts/{id}/acknowledge [post]
 func (c *IncidentController) AcknowledgeAlert(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的告警ID")
-		return
-	}
-
-	userID, err := middleware.GetUserID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get user ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取用户ID失败")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, userID, tenantID, ok := handlerctx.ResolveResourceIDUserAndTenant(ctx, "告警")
 	if !ok {
 		return
 	}
 
-	err = c.alertingService.AcknowledgeAlert(ctx.Request.Context(), id, userID, tenantID)
+	err := c.alertingService.AcknowledgeAlert(ctx.Request.Context(), id, userID, tenantID)
 	if err != nil {
 		if err.Error() == "alert not found" {
 			common.Fail(ctx, common.NotFoundErrorCode, "告警不存在")
@@ -929,25 +830,11 @@ func (c *IncidentController) AcknowledgeAlert(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/alerts/{id}/resolve [post]
 func (c *IncidentController) ResolveAlert(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的告警ID")
-		return
-	}
-
-	userID, err := middleware.GetUserID(ctx)
-	if err != nil {
-		c.logger.Errorw("Failed to get user ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取用户ID失败")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, userID, tenantID, ok := handlerctx.ResolveResourceIDUserAndTenant(ctx, "告警")
 	if !ok {
 		return
 	}
-	err = c.alertingService.ResolveAlert(ctx.Request.Context(), id, userID, tenantID)
+	err := c.alertingService.ResolveAlert(ctx.Request.Context(), id, userID, tenantID)
 	if err != nil {
 		if err.Error() == "alert not found" {
 			common.Fail(ctx, common.NotFoundErrorCode, "告警不存在")
@@ -985,7 +872,7 @@ func (c *IncidentController) GetActiveAlerts(ctx *gin.Context) {
 		size = 100
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -1040,7 +927,7 @@ func (c *IncidentController) GetAlertStatistics(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -1067,9 +954,8 @@ func (c *IncidentController) GetAlertStatistics(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/convert-to-problem [post]
 func (c *IncidentController) ConvertToProblem(ctx *gin.Context) {
-	incidentID, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, ok := common.ParseResourceID(ctx, "id", "事件")
+	if !ok {
 		return
 	}
 
@@ -1085,15 +971,15 @@ func (c *IncidentController) ConvertToProblem(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
 	problem, err := c.rootCauseAnalysisService.CreateProblemFromIncident(
-		ctx.Request.Context(), incidentID, userID, tenantID, &req,
+		ctx.Request.Context(), id, userID, tenantID, &req,
 	)
 	if err != nil {
-		c.logger.Errorw("Failed to convert incident to problem", "error", err, "incident_id", incidentID)
+		c.logger.Errorw("Failed to convert incident to problem", "error", err, "incident_id", id)
 		common.Fail(ctx, common.InternalErrorCode, "转换失败: "+err.Error())
 		return
 	}
@@ -1113,14 +999,7 @@ func (c *IncidentController) ConvertToProblem(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/root-cause [get]
 func (c *IncidentController) GetRootCause(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
@@ -1164,10 +1043,8 @@ func (c *IncidentController) GetRootCause(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/root-cause [put]
 func (c *IncidentController) UpdateRootCause(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, ok := common.ParseResourceID(ctx, "id", "事件")
+	if !ok {
 		return
 	}
 
@@ -1178,12 +1055,12 @@ func (c *IncidentController) UpdateRootCause(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
 
-	_, err = c.incidentService.UpdateIncident(ctx.Request.Context(), id, &dto.UpdateIncidentRequest{
+	_, err := c.incidentService.UpdateIncident(ctx.Request.Context(), id, &dto.UpdateIncidentRequest{
 		RootCause: &req,
 	}, tenantID)
 	if err != nil {
@@ -1211,14 +1088,7 @@ func (c *IncidentController) UpdateRootCause(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/impact-assessment [get]
 func (c *IncidentController) GetImpactAssessment(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
@@ -1254,10 +1124,8 @@ func (c *IncidentController) GetImpactAssessment(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/impact-assessment [put]
 func (c *IncidentController) UpdateImpactAssessment(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, ok := common.ParseResourceID(ctx, "id", "事件")
+	if !ok {
 		return
 	}
 
@@ -1268,12 +1136,12 @@ func (c *IncidentController) UpdateImpactAssessment(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
 
-	_, err = c.incidentService.UpdateIncident(ctx.Request.Context(), id, &dto.UpdateIncidentRequest{
+	_, err := c.incidentService.UpdateIncident(ctx.Request.Context(), id, &dto.UpdateIncidentRequest{
 		ImpactAnalysis: &req,
 	}, tenantID)
 	if err != nil {
@@ -1301,14 +1169,7 @@ func (c *IncidentController) UpdateImpactAssessment(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/classification [get]
 func (c *IncidentController) GetClassification(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
@@ -1345,10 +1206,8 @@ func (c *IncidentController) GetClassification(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/classification [put]
 func (c *IncidentController) UpdateClassification(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, ok := common.ParseResourceID(ctx, "id", "事件")
+	if !ok {
 		return
 	}
 
@@ -1362,14 +1221,14 @@ func (c *IncidentController) UpdateClassification(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
 
 	cat := req.Category
 	sub := req.Subcategory
-	_, err = c.incidentService.UpdateIncident(ctx.Request.Context(), id, &dto.UpdateIncidentRequest{
+	_, err := c.incidentService.UpdateIncident(ctx.Request.Context(), id, &dto.UpdateIncidentRequest{
 		Category:    &cat,
 		Subcategory: &sub,
 	}, tenantID)
@@ -1398,32 +1257,18 @@ func (c *IncidentController) UpdateClassification(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/comments [get]
 func (c *IncidentController) GetIncidentComments(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	tenantID, ok := c.resolveTenantID(ctx)
+	id, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(ctx, "事件")
 	if !ok {
 		return
 	}
 
-	client, exists := ctx.Get("client")
-	if !exists {
-		common.Fail(ctx, common.InternalErrorCode, "数据库客户端未找到")
-		return
-	}
-	entClient, ok := client.(*ent.Client)
-	if !ok || entClient == nil {
-		c.logger.Errorw("Invalid database client in request context")
-		common.Fail(ctx, common.InternalErrorCode, "数据库客户端无效")
+	entClient, ok := handlerctx.GetEntClient(ctx)
+	if !ok {
 		return
 	}
 
 	// 验证事件存在且属于该租户
-	_, err = entClient.Incident.Query().
+	_, err := entClient.Incident.Query().
 		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 		Only(ctx.Request.Context())
 	if err != nil {
@@ -1493,10 +1338,8 @@ func (c *IncidentController) GetIncidentComments(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/comments [post]
 func (c *IncidentController) CreateIncidentComment(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, ok := common.ParseResourceID(ctx, "id", "事件")
+	if !ok {
 		return
 	}
 
@@ -1507,7 +1350,7 @@ func (c *IncidentController) CreateIncidentComment(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -1519,15 +1362,8 @@ func (c *IncidentController) CreateIncidentComment(ctx *gin.Context) {
 		return
 	}
 
-	client, exists := ctx.Get("client")
-	if !exists {
-		common.Fail(ctx, common.InternalErrorCode, "数据库客户端未找到")
-		return
-	}
-	entClient, ok := client.(*ent.Client)
-	if !ok || entClient == nil {
-		c.logger.Errorw("Invalid database client in request context")
-		common.Fail(ctx, common.InternalErrorCode, "数据库客户端无效")
+	entClient, ok := handlerctx.GetEntClient(ctx)
+	if !ok {
 		return
 	}
 
@@ -1593,10 +1429,8 @@ func (c *IncidentController) CreateIncidentComment(ctx *gin.Context) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/{id}/comments/{commentId} [delete]
 func (c *IncidentController) DeleteIncidentComment(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+	id, ok := common.ParseResourceID(ctx, "id", "事件")
+	if !ok {
 		return
 	}
 
@@ -1607,7 +1441,7 @@ func (c *IncidentController) DeleteIncidentComment(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := c.resolveTenantID(ctx)
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
@@ -1619,15 +1453,8 @@ func (c *IncidentController) DeleteIncidentComment(ctx *gin.Context) {
 		return
 	}
 
-	client, exists := ctx.Get("client")
-	if !exists {
-		common.Fail(ctx, common.InternalErrorCode, "数据库客户端未找到")
-		return
-	}
-	entClient, ok := client.(*ent.Client)
-	if !ok || entClient == nil {
-		c.logger.Errorw("Invalid database client in request context")
-		common.Fail(ctx, common.InternalErrorCode, "数据库客户端无效")
+	entClient, ok := handlerctx.GetEntClient(ctx)
+	if !ok {
 		return
 	}
 
@@ -1676,9 +1503,8 @@ func (c *IncidentController) DeleteIncidentComment(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/incidents/{id}/sla/pause [put]
 func (ic *IncidentController) PauseSLA(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		common.ParamError(c, "无效的事件ID")
+	id, ok := common.ParseResourceID(c, "id", "事件")
+	if !ok {
 		return
 	}
 
@@ -1690,7 +1516,7 @@ func (ic *IncidentController) PauseSLA(c *gin.Context) {
 		return
 	}
 
-	tenantID, ok := ic.resolveTenantID(c)
+	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}
@@ -1717,13 +1543,12 @@ func (ic *IncidentController) PauseSLA(c *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/incidents/{id}/sla/resume [put]
 func (ic *IncidentController) ResumeSLA(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		common.ParamError(c, "无效的事件ID")
+	id, ok := common.ParseResourceID(c, "id", "事件")
+	if !ok {
 		return
 	}
 
-	tenantID, ok := ic.resolveTenantID(c)
+	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}

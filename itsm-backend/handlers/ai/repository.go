@@ -10,6 +10,7 @@ type Repository interface {
 	CreateConversation(ctx context.Context, c *Conversation) (*Conversation, error)
 	GetConversation(ctx context.Context, id int, tenantID int) (*Conversation, error)
 	ListConversations(ctx context.Context, tenantID int, userID int) ([]*Conversation, error)
+	DeleteConversation(ctx context.Context, id int, tenantID int) error
 
 	// Messages
 	CreateMessage(ctx context.Context, m *Message) (*Message, error)
@@ -25,4 +26,10 @@ type Repository interface {
 	CreateRCA(ctx context.Context, r *RootCauseAnalysis) (*RootCauseAnalysis, error)
 	GetRCAByTicket(ctx context.Context, ticketID int, tenantID int) (*RootCauseAnalysis, error)
 	UpdateRCA(ctx context.Context, r *RootCauseAnalysis) (*RootCauseAnalysis, error)
+
+	// AI Analysis Results
+	SaveAIAnalysisResult(ctx context.Context, r *AIAnalysisResult) (*AIAnalysisResult, error)
+	ListAIAnalysisResults(ctx context.Context, tenantID int, analysisType string, limit int) ([]*AIAnalysisResult, error)
+	GetAIAnalysisResult(ctx context.Context, id int, tenantID int) (*AIAnalysisResult, error)
+	DeleteAIAnalysisResult(ctx context.Context, id int, tenantID int) error
 }

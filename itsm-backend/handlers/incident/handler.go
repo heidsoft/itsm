@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
@@ -32,9 +33,8 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
-		common.Fail(c, common.AuthErrorCode, "Tenant ID missing")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
 		return
 	}
 	userID := c.GetInt("user_id")
@@ -484,12 +484,10 @@ func (h *Handler) GetIncidentEvents(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	client, exists := c.Get("client")
-	if !exists {
-		common.Fail(c, common.InternalErrorCode, "Database client not found")
+	entClient, ok := handlerctx.GetEntClient(c)
+	if !ok {
 		return
 	}
-	entClient := client.(*ent.Client)
 
 	// 使用 Edge 查询事件活动记录
 	inc, err := entClient.Incident.Query().
@@ -527,12 +525,10 @@ func (h *Handler) GetIncidentAlerts(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	client, exists := c.Get("client")
-	if !exists {
-		common.Fail(c, common.InternalErrorCode, "Database client not found")
+	entClient, ok := handlerctx.GetEntClient(c)
+	if !ok {
 		return
 	}
-	entClient := client.(*ent.Client)
 
 	// 使用 Edge 查询事件告警
 	inc, err := entClient.Incident.Query().
@@ -570,12 +566,10 @@ func (h *Handler) GetIncidentMetrics(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	client, exists := c.Get("client")
-	if !exists {
-		common.Fail(c, common.InternalErrorCode, "Database client not found")
+	entClient, ok := handlerctx.GetEntClient(c)
+	if !ok {
 		return
 	}
-	entClient := client.(*ent.Client)
 
 	// 获取事件信息及指标
 	inc, err := entClient.Incident.Query().
@@ -627,12 +621,10 @@ func (h *Handler) GetIncidentComments(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	client, exists := c.Get("client")
-	if !exists {
-		common.Fail(c, common.InternalErrorCode, "Database client not found")
+	entClient, ok := handlerctx.GetEntClient(c)
+	if !ok {
 		return
 	}
-	entClient := client.(*ent.Client)
 
 	// 验证事件存在且属于该租户
 	_, err = entClient.Incident.Query().
@@ -703,12 +695,10 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
-	client, exists := c.Get("client")
-	if !exists {
-		common.Fail(c, common.InternalErrorCode, "Database client not found")
+	entClient, ok := handlerctx.GetEntClient(c)
+	if !ok {
 		return
 	}
-	entClient := client.(*ent.Client)
 
 	// 验证事件存在且属于该租户
 	_, err = entClient.Incident.Query().

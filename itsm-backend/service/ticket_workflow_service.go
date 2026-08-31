@@ -2,12 +2,19 @@ package service
 
 import (
 	"context"
+	"encoding/xml"
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/connector"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketapproval"
 	"itsm-backend/ent/ticketautomationrule"
@@ -837,7 +844,26 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 		}
 	}
 
+	// P0-1 / 工单详情体验：聚合 BPMN 真实节点状态，便于详情页直接展示当前/下一节点。
+	// enrich 内部对 BPMN 查询失败 / 无实例 均有降级路径，不会影响 V1 调用方。
+	bpmnState, bpmnErr := s.enrichBpmnProcessState(ctx, tk, tenantID)
+	if bpmnErr != nil {
+		s.logger.Warnw("Failed to enrich BPMN process state for ticket workflow state",
+			"error", bpmnErr, "ticket_id", ticketID, "tenant_id", tenantID)
+	} else {
+		state.BpmnProcessState = bpmnState
+	}
+
 	return state, nil
+}
+
+// GetTicketWorkflowStateV2 与 GetTicketWorkflowState 等价，但额外把 BPMN 节点详情铺平
+// 到顶层，便于前端不需额外调用即可拿到当前节点、下一节点、历史。
+//
+// 当前与 V1 行为一致：底层调用 GetTicketWorkflowState 并复用 BpmnProcessState 字段。
+// 保留 V2 入口以便后续添加 BPMN 专属字段（如网关分支、变量快照）时能保持向下兼容。
+func (s *TicketWorkflowService) GetTicketWorkflowStateV2(ctx context.Context, ticketID, userID, tenantID int) (*dto.TicketWorkflowState, error) {
+	return s.GetTicketWorkflowState(ctx, ticketID, userID, tenantID)
 }
 
 // GetAvailableActions 返回当前用户在该工单上可执行的流转动作列表。
@@ -960,6 +986,413 @@ func workflowUserInfoFromEnt(u *ent.User) dto.WorkflowUserInfo {
 		Role:       string(u.Role),
 		Department: u.Department,
 	}
+}
+
+// enrichBpmnProcessState 按 businessKey="ticket:{id}" 查找 BPMN 流程实例并聚合节点状态。
+//
+// 返回语义：
+//   - *dto.BpmnProcessState 始终返回有效结构体（即使未启动）；失败仅发生于 BPMN 服务不可用等异常。
+//   - BpmnStatus 区分：not_started / running / completed / suspended / terminated。
+//   - 业务指标错误不会被吞：所有 error 返回到调用方记录日志，不影响 V1 调用。
+func (s *TicketWorkflowService) enrichBpmnProcessState(ctx context.Context, tk *ent.Ticket, tenantID int) (*dto.BpmnProcessState, error) {
+	if tk == nil || tenantID <= 0 {
+		return &dto.BpmnProcessState{BpmnStatus: "not_started"}, nil
+	}
+
+	businessKey := fmt.Sprintf("ticket:%d", tk.ID)
+
+	// 查找关联流程实例（优先 running，其次任意状态）。不存在 → not_started。
+	instance, err := s.client.ProcessInstance.Query().
+		Where(
+			processinstance.BusinessKey(businessKey),
+			processinstance.TenantID(tenantID),
+		).
+		Order(ent.Desc(processinstance.FieldStartTime)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return &dto.BpmnProcessState{
+				ProcessInstanceID: "",
+				BpmnStatus:        "not_started",
+			}, nil
+		}
+		return nil, fmt.Errorf("查询工单关联流程实例失败: %w", err)
+	}
+
+	// 查流程定义，补全 name。定义可能不存在（数据补全滞后），失败不影响主流程。
+	var defName string
+	if instance.ProcessDefinitionID > 0 {
+		def, defErr := s.client.ProcessDefinition.Query().
+			Where(
+				processdefinition.IDEQ(instance.ProcessDefinitionID),
+				processdefinition.TenantIDEQ(tenantID),
+			).
+			First(ctx)
+		if defErr == nil && def != nil {
+			defName = def.Name
+		}
+	}
+
+	state := &dto.BpmnProcessState{
+		ProcessInstanceID:     instance.ProcessInstanceID,
+		ProcessDefinitionKey:  instance.ProcessDefinitionKey,
+		ProcessDefinitionName: defName,
+		BpmnStatus:            normalizeBpmnStatus(instance.Status),
+		StartedAt:             nullableTimePtr(instance.StartTime),
+		EndedAt:               nullableTimePtr(instance.EndTime),
+	}
+
+	// 终态不计算 current/next，仅返回实例元信息。
+	if state.BpmnStatus != "running" && state.BpmnStatus != "suspended" {
+		// 即使是终态，仍拉历史供详情页回溯。
+		history, histErr := s.buildBpmnHistory(ctx, instance, tenantID)
+		if histErr != nil {
+			s.logger.Warnw("Failed to build BPMN history for terminal instance",
+				"error", histErr, "processInstanceID", instance.ProcessInstanceID)
+		} else {
+			state.History = history
+		}
+		return state, nil
+	}
+
+	// 拉所有 process_tasks 计算 currentAssignees / history。
+	tasks, taskErr := s.client.ProcessTask.Query().
+		Where(
+			processtask.ProcessInstanceID(instance.ID),
+			processtask.TenantID(tenantID),
+		).
+		Order(ent.Asc(processtask.FieldCreatedTime)).
+		All(ctx)
+	if taskErr != nil {
+		return nil, fmt.Errorf("查询流程任务失败: %w", taskErr)
+	}
+
+	// 当前节点基本信息
+	if instance.CurrentActivityID != "" {
+		state.CurrentActivityID = instance.CurrentActivityID
+	}
+	if instance.CurrentActivityName != "" {
+		state.CurrentActivityName = instance.CurrentActivityName
+	}
+
+	// 解析当前任务、提取 assignee / candidate users / candidate groups
+	currentAssigneeIDs := map[int]struct{}{}
+	currentActivityType := ""
+	for _, t := range tasks {
+		if t.Status != "created" && t.Status != "assigned" && t.Status != "started" && t.Status != "delegated" {
+			continue
+		}
+		// task_definition_key 与 process_instance.current_activity_id 匹配视为当前任务
+		if state.CurrentActivityID != "" && t.TaskDefinitionKey != state.CurrentActivityID {
+			continue
+		}
+		currentActivityType = t.TaskType
+		if t.Assignee != "" {
+			if uid, perr := strconv.Atoi(t.Assignee); perr == nil && uid > 0 {
+				currentAssigneeIDs[uid] = struct{}{}
+			}
+		}
+		// candidate_users / candidate_groups 留作后续扩展；V1 仅取 assignee。
+	}
+	state.CurrentActivityType = currentActivityType
+	if userMap := s.usersByIDs(ctx, currentAssigneeIDs, tenantID); len(userMap) > 0 {
+		state.CurrentAssignees = userMapToSortedSlice(userMap)
+	}
+
+	// 解析 BPMN 定义 XML 计算下一节点（仅 running 时计算，suspended 直接置空）
+	if state.BpmnStatus == "running" && instance.ProcessDefinitionID > 0 && state.CurrentActivityID != "" {
+		nextActs, nextErr := s.computeNextActivities(ctx, instance, state.CurrentActivityID, tenantID)
+		if nextErr != nil {
+			s.logger.Warnw("Failed to compute next activities from BPMN XML",
+				"error", nextErr, "processInstanceID", instance.ProcessInstanceID,
+				"currentActivityID", state.CurrentActivityID)
+		} else {
+			state.NextActivities = nextActs
+		}
+	}
+
+	// 构造历史（已完成节点）
+	history, histErr := s.buildBpmnHistory(ctx, instance, tenantID)
+	if histErr != nil {
+		s.logger.Warnw("Failed to build BPMN history",
+			"error", histErr, "processInstanceID", instance.ProcessInstanceID)
+	} else {
+		state.History = history
+	}
+
+	return state, nil
+}
+
+// buildBpmnHistory 从 process_tasks 聚合已完成节点历史，按完成时间升序排序。
+func (s *TicketWorkflowService) buildBpmnHistory(ctx context.Context, instance *ent.ProcessInstance, tenantID int) ([]dto.BpmnHistoryItem, error) {
+	tasks, err := s.client.ProcessTask.Query().
+		Where(
+			processtask.ProcessInstanceID(instance.ID),
+			processtask.TenantID(tenantID),
+			processtask.StatusIn("completed", "cancelled"),
+		).
+		Order(ent.Asc(processtask.FieldCompletedTime)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("查询流程历史任务失败: %w", err)
+	}
+
+	userIDs := map[int]struct{}{}
+	for _, t := range tasks {
+		if t.Assignee != "" {
+			if uid, perr := strconv.Atoi(t.Assignee); perr == nil && uid > 0 {
+				userIDs[uid] = struct{}{}
+			}
+		}
+	}
+	users := s.usersByIDs(ctx, userIDs, tenantID)
+	if users == nil {
+		users = map[int]dto.WorkflowUserInfo{}
+	}
+
+	items := make([]dto.BpmnHistoryItem, 0, len(tasks))
+	for _, t := range tasks {
+		item := dto.BpmnHistoryItem{
+			ActivityID:   t.TaskDefinitionKey,
+			ActivityName: t.TaskName,
+			ActivityType: t.TaskType,
+		}
+		if !t.CreatedTime.IsZero() {
+			item.StartTime = t.CreatedTime
+		}
+		if !t.CompletedTime.IsZero() {
+			item.EndTime = &t.CompletedTime
+		}
+		if t.Assignee != "" {
+			if uid, perr := strconv.Atoi(t.Assignee); perr == nil {
+				if u, ok := users[uid]; ok {
+					item.Assignee = &u
+				}
+			}
+		}
+		item.Outcome = mapBpmnTaskOutcome(t)
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+// computeNextActivities 从 BPMN 定义 XML 解析 currentActivityID 的所有出向 sequence flows，
+// 返回候选下一节点信息。网关节点标记 IsGateway=true，由前端决定是否展开分支说明。
+func (s *TicketWorkflowService) computeNextActivities(ctx context.Context, instance *ent.ProcessInstance, currentActivityID string, tenantID int) ([]dto.NextActivityInfo, error) {
+	if currentActivityID == "" {
+		return nil, nil
+	}
+
+	def, err := s.client.ProcessDefinition.Query().
+		Where(
+			processdefinition.IDEQ(instance.ProcessDefinitionID),
+			processdefinition.TenantIDEQ(tenantID),
+		).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("查询流程定义失败: %w", err)
+	}
+	if len(def.BpmnXML) == 0 {
+		return nil, nil
+	}
+
+	g, err := parseBpmnProcessGraph(def.BpmnXML)
+	if err != nil {
+		return nil, fmt.Errorf("解析 BPMN XML 失败: %w", err)
+	}
+
+	nextIDs := g.outgoing[currentActivityID]
+	if len(nextIDs) == 0 {
+		return nil, nil
+	}
+
+	// 收集下一节点的 assignee 候选 ID
+	userIDs := map[int]struct{}{}
+	for _, nid := range nextIDs {
+		for _, uid := range g.nodeAssignees[nid] {
+			userIDs[uid] = struct{}{}
+		}
+	}
+	users := s.usersByIDs(ctx, userIDs, tenantID)
+	if users == nil {
+		users = map[int]dto.WorkflowUserInfo{}
+	}
+
+	out := make([]dto.NextActivityInfo, 0, len(nextIDs))
+	for _, nid := range nextIDs {
+		ni := dto.NextActivityInfo{
+			ActivityID:   nid,
+			ActivityName: g.nodeNames[nid],
+			ActivityType: g.nodeTypes[nid],
+			IsGateway:    g.gatewayIDs[nid],
+		}
+		for _, uid := range g.nodeAssignees[nid] {
+			if u, ok := users[uid]; ok {
+				ni.Assignees = append(ni.Assignees, u)
+			}
+		}
+		out = append(out, ni)
+	}
+	return out, nil
+}
+
+// usersByIDs 批量查询用户并按 id 索引。返回 map[int]WorkflowUserInfo，便于调用方按 ID 查找。
+// ids 为空集合时返回 nil，由调用方在循环中跳过；不为 nil 时返回有效 map，避免 nil 检查。
+func (s *TicketWorkflowService) usersByIDs(ctx context.Context, ids map[int]struct{}, tenantID int) map[int]dto.WorkflowUserInfo {
+	if len(ids) == 0 {
+		return nil
+	}
+	idList := make([]int, 0, len(ids))
+	for id := range ids {
+		idList = append(idList, id)
+	}
+	users, err := s.client.User.Query().
+		Where(user.IDIn(idList...), user.TenantID(tenantID)).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to batch query users for BPMN state", "error", err)
+		return nil
+	}
+	out := make(map[int]dto.WorkflowUserInfo, len(users))
+	for _, u := range users {
+		out[u.ID] = workflowUserInfoFromEnt(u)
+	}
+	return out
+}
+
+// normalizeBpmnStatus 把 DB 存储的 BPMN 状态统一为前端约定的字符串。
+func normalizeBpmnStatus(s string) string {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "running":
+		return "running"
+	case "suspended":
+		return "suspended"
+	case "completed":
+		return "completed"
+	case "terminated":
+		return "terminated"
+	default:
+		return "not_started"
+	}
+}
+
+// userMapToSortedSlice 把 user map 转成按 ID 升序的 slice，供前端列表稳定渲染。
+func userMapToSortedSlice(m map[int]dto.WorkflowUserInfo) []dto.WorkflowUserInfo {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make([]dto.WorkflowUserInfo, 0, len(m))
+	for _, u := range m {
+		out = append(out, u)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	return out
+}
+
+// nullableTimePtr 将 time.Time 包装为 *time.Time；零值返回 nil。
+func nullableTimePtr(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
+// mapBpmnTaskOutcome 把 process_task 的 status 映射为前端约定 outcome 字符串。
+func mapBpmnTaskOutcome(t *ent.ProcessTask) string {
+	if t == nil {
+		return ""
+	}
+	switch t.Status {
+	case "completed":
+		return "completed"
+	case "cancelled":
+		return "cancelled"
+	default:
+		return t.Status
+	}
+}
+
+// bpmnProcessGraph BPMN 定义的轻量索引，仅保留工单详情页需要的字段。
+type bpmnProcessGraph struct {
+	outgoing      map[string][]string // source activity ID → target activity IDs
+	nodeNames     map[string]string   // activity ID → display name
+	nodeTypes     map[string]string   // activity ID → activity type (userTask / ...)
+	nodeAssignees map[string][]int    // activity ID → 关联 assignee user IDs（候选解析）
+	gatewayIDs    map[string]bool     // activity ID → 是否为网关节点
+}
+
+// bpmnXMLModel 仅含 sequenceFlow 与 flowNode 的最小 XML 模型。
+//
+// BPMN 2.0 元素均带有命名空间（如 <bpmn:userTask>），但同时也允许无命名空间。
+// 为兼容两种风格，使用 ",any" 通配收集所有子元素，由 Local 名识别类型。
+type bpmnXMLModel struct {
+	XMLName   xml.Name      `xml:"definitions"`
+	Processes []bpmnProcess `xml:"process"`
+}
+
+type bpmnProcess struct {
+	Children []bpmnAnyNode `xml:",any"`
+}
+
+type bpmnAnyNode struct {
+	XMLName   xml.Name
+	ID        string `xml:"id,attr"`
+	Name      string `xml:"name,attr"`
+	SourceRef string `xml:"sourceRef,attr,omitempty"`
+	TargetRef string `xml:"targetRef,attr,omitempty"`
+}
+
+// parseBpmnProcessGraph 解析 BPMN XML，提取所有 sequence flow 与节点元信息。
+// 不依赖 nitram509/bpmn-engine，仅做最小解析以满足"下一节点"展示需求。
+func parseBpmnProcessGraph(xmlBytes []byte) (*bpmnProcessGraph, error) {
+	if len(xmlBytes) == 0 {
+		return &bpmnProcessGraph{
+			outgoing:      map[string][]string{},
+			nodeNames:     map[string]string{},
+			nodeTypes:     map[string]string{},
+			nodeAssignees: map[string][]int{},
+			gatewayIDs:    map[string]bool{},
+		}, nil
+	}
+
+	var model bpmnXMLModel
+	dec := xml.NewDecoder(strings.NewReader(string(xmlBytes)))
+	dec.Strict = false
+	if err := dec.Decode(&model); err != nil {
+		return nil, err
+	}
+
+	g := &bpmnProcessGraph{
+		outgoing:      map[string][]string{},
+		nodeNames:     map[string]string{},
+		nodeTypes:     map[string]string{},
+		nodeAssignees: map[string][]int{},
+		gatewayIDs:    map[string]bool{},
+	}
+
+	for _, p := range model.Processes {
+		for _, n := range p.Children {
+			switch n.XMLName.Local {
+			case "sequenceFlow":
+				if n.SourceRef == "" || n.TargetRef == "" {
+					continue
+				}
+				g.outgoing[n.SourceRef] = append(g.outgoing[n.SourceRef], n.TargetRef)
+			default:
+				g.nodeNames[n.ID] = n.Name
+				g.nodeTypes[n.ID] = n.XMLName.Local
+				switch n.XMLName.Local {
+				case "exclusiveGateway", "parallelGateway", "inclusiveGateway", "eventBasedGateway":
+					g.gatewayIDs[n.ID] = true
+				}
+			}
+		}
+	}
+
+	return g, nil
 }
 
 func (s *TicketWorkflowService) ensureCanCCTicket(ctx context.Context, tk *ent.Ticket, userID, tenantID int) error {

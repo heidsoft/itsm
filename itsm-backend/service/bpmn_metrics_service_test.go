@@ -50,8 +50,9 @@ func metricsDef(t *testing.T, client *ent.Client, tenant *ent.Tenant, deployment
 		SetBpmnXML([]byte(testBPMNXML)).
 		SetProcessVariables(map[string]interface{}{
 			"sla": map[string]interface{}{
-				"deadline_minutes": deadlineMinutes,
-				"warning_minutes":  warningMinutes,
+				"deadline_minutes":  deadlineMinutes,
+				"warning_minutes":   warningMinutes,
+				"business_hours_only": false,
 			},
 		}).
 		Save(context.Background())

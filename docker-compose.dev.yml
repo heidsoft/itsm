@@ -192,6 +192,9 @@ services:
       # 或者使用本地运行的 Ollama 容器:
       # - OLLAMA_BASE_URL=http://ollama:11434
 
+      # Guidance sidecar 地址：开发指向 itsm-ai-service 的受限分诊端点 /triage
+      - GUIDANCE_URL=${GUIDANCE_URL:-http://itsm-ai-service:8000}
+
       # 其他
       - ENABLE_SWAGGER=true
       - ENABLE_CORS=true
@@ -233,6 +236,37 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  # Guidance sidecar（受限 JSON 生成）。复用 itsm-ai-service：POST /triage 提供
+  # 与后端 GuidanceClient 兼容的分类响应。开发环境直连 ollama 本地模型。
+  itsm-ai-service:
+    build:
+      context: ./itsm-ai-service
+      dockerfile: Dockerfile
+    container_name: itsm-ai-service-dev
+    hostname: ai-service
+    environment:
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8000
+      - LOG_LEVEL=info
+      - CORS_ORIGINS=http://localhost:3000,http://itsm-frontend:3000
+      - LLM_PROVIDER=ollama
+      - LLM_MODEL=llama2
+      - LLM_BASE_URL=http://ollama:11434/v1
+      - LLM_API_KEY=not-needed
+      - LLM_TIMEOUT=120
+    expose:
+      - "8000"
+    networks:
+      - itsm-dev-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
   # ITSM 前端服务（开发环境）
   itsm-frontend:
     build:

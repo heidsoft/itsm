@@ -3,6 +3,7 @@
  */
 
 import type { TicketStatus, TicketUser } from './ticket';
+import type { BpmnProcessState } from './ticket-workflow-state';
 
 /**
  * 工单流转操作类型
@@ -66,6 +67,7 @@ export interface TicketWorkflowState {
   canResolve: boolean;
   canClose: boolean;
   availableActions: TicketWorkflowAction[];
+  bpmnProcessState?: BpmnProcessState;
 }
 
 /**

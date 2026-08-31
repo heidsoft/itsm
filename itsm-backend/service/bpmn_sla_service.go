@@ -79,12 +79,17 @@ func (s *BPMNSLAService) GetProcessSLA(ctx context.Context, processDefinitionKey
 		warningMinutes = int(v)
 	}
 
+	businessHoursOnly := true
+	if v, ok := slaConfig["business_hours_only"].(bool); ok {
+		businessHoursOnly = v
+	}
+
 	return &ProcessSLA{
 		ProcessDefinitionKey: processDefinitionKey,
 		MilestoneName:        "process_completion",
 		DeadlineMinutes:      deadlineMinutes,
 		WarningMinutes:       warningMinutes,
-		BusinessHoursOnly:    true,
+		BusinessHoursOnly:    businessHoursOnly,
 	}, nil
 }
 

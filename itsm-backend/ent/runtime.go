@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"itsm-backend/ent/aianalysisresult"
 	"itsm-backend/ent/alert"
 	"itsm-backend/ent/application"
 	"itsm-backend/ent/approvalchain"
@@ -142,6 +143,16 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	aianalysisresultFields := schema.AIAnalysisResult{}.Fields()
+	_ = aianalysisresultFields
+	// aianalysisresultDescDegraded is the schema descriptor for degraded field.
+	aianalysisresultDescDegraded := aianalysisresultFields[14].Descriptor()
+	// aianalysisresult.DefaultDegraded holds the default value on creation for the degraded field.
+	aianalysisresult.DefaultDegraded = aianalysisresultDescDegraded.Default.(bool)
+	// aianalysisresultDescCreatedAt is the schema descriptor for created_at field.
+	aianalysisresultDescCreatedAt := aianalysisresultFields[15].Descriptor()
+	// aianalysisresult.DefaultCreatedAt holds the default value on creation for the created_at field.
+	aianalysisresult.DefaultCreatedAt = aianalysisresultDescCreatedAt.Default.(func() time.Time)
 	alertFields := schema.Alert{}.Fields()
 	_ = alertFields
 	// alertDescTenantID is the schema descriptor for tenant_id field.

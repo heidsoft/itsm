@@ -52,11 +52,22 @@ WORKDIR /app
 ARG ITSM_BACKEND_URL=http://itsm-backend:8090
 ARG NPM_REGISTRY
 ARG NEXT_PUBLIC_ENABLE_AI=true
+# NEXT_PUBLIC_* vars are baked at build time by Next.js. Declaring them as ARG
+# (and re-exporting them as ENV) is the only way to make them visible to the
+# inlined bundle. Default to empty so production traffic routes through nginx
+# (browser → nginx:80 → backend:8090) instead of hitting the backend container
+# directly. See Fix #5: audit log Docker IP leak.
+ARG NEXT_PUBLIC_API_URL=
+ARG NEXT_PUBLIC_API_VERSION=v1
+ARG NEXT_PUBLIC_API_TIMEOUT=30000
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     ITSM_BACKEND_URL=${ITSM_BACKEND_URL} \
-    NEXT_PUBLIC_ENABLE_AI=${NEXT_PUBLIC_ENABLE_AI}
+    NEXT_PUBLIC_ENABLE_AI=${NEXT_PUBLIC_ENABLE_AI} \
+    NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
+    NEXT_PUBLIC_API_VERSION=${NEXT_PUBLIC_API_VERSION} \
+    NEXT_PUBLIC_API_TIMEOUT=${NEXT_PUBLIC_API_TIMEOUT}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

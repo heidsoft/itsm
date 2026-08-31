@@ -5,9 +5,8 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Tag, Space, Button, App } from 'antd';
 import { User as UserIcon, Users } from 'lucide-react';
-import { CommonApi } from '@/lib/api/';
 import { UserRoleLabels } from '@/constants/common';
-import type { User } from '@/types/biz/common';
+import { UserApi, type User } from '@/lib/api/user-api';
 
 const UserList: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -17,8 +16,12 @@ const UserList: React.FC = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const data = await CommonApi.listUsers();
-      setUsers(data);
+      // 后端 /api/v1/users 返回 {users, pagination} 包装响应，
+      // 必须解包 .users 后再赋给表格 dataSource，否则 Ant Design Table
+      // 的内部 useMemo 调用 dataSource.some(...) 会抛
+      // "ed.some is not a function" TypeError，由 error.tsx 渲染 500 页面。
+      const response = await UserApi.getUsers();
+      setUsers(response.users || []);
     } catch (error) {
       message.error('获取用户列表失败');
     } finally {

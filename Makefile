@@ -1,180 +1,158 @@
-# ITSM Makefile
+# ITSM Makefile - 构建和部署自动化
+.PHONY: help build build-backend build-frontend deploy test clean
 
-SHELL := /bin/bash
-VERSION ?= latest
-REGISTRY ?=
+# 默认版本
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "latest")
+ENV_FILE ?= .env.prod
+COMPOSE_FILE ?= docker-compose.prod.yml
 
-# Development
-dev-init:           ## First-time development setup
-	./scripts/deploy-dev.sh init
+# 颜色
+BLUE = \033[0;34m
+GREEN = \033[0;32m
+NC = \033[0m
 
-dev-start:          ## Start development environment
-	./scripts/deploy-dev.sh up
-
-dev-start-local:    ## Start local Go/Next.js processes with Docker infrastructure
-	./scripts/deploy-dev.sh up --local
-
-dev-start-docker:   ## Start the Docker Compose development environment
-	./scripts/deploy-dev.sh up --docker
-
-dev-stop:           ## Stop development environment
-	./scripts/deploy-dev.sh down
-
-dev-stop-local:     ## Stop local Go/Next.js development processes
-	./scripts/deploy-dev.sh down --local
-
-dev-stop-docker:    ## Stop the Docker Compose development environment
-	./scripts/deploy-dev.sh down --docker
-
-dev-logs:           ## View development logs
-	./scripts/deploy-dev.sh logs
-
-dev-restart:        ## Restart development environment
-	./scripts/deploy-dev.sh restart
-
-dev-status:         ## Show service status
-	./scripts/deploy-dev.sh status
-
-dev-health:         ## Run development health checks
-	./scripts/deploy-dev.sh health
-
-dev-doctor:         ## Diagnose local development environment
-	./scripts/deploy-dev.sh doctor
-
-dev-clean:          ## Clean up dev environment (remove containers and volumes)
-	./scripts/deploy-dev.sh reset
-
-# Production
-prod-init:          ## Create .env.prod with generated secrets
-	./scripts/deploy-prod.sh init
-
-prod-deploy:        ## Full production deploy (validate → backup → build → deploy → verify)
-	./scripts/deploy-prod.sh deploy
-
-prod-start:         ## Start production environment with existing images
-	./scripts/deploy-prod.sh deploy --skip-build --skip-backup
-
-prod-stop:          ## Stop production environment
-	./scripts/deploy-prod.sh down
-
-prod-restart:       ## Restart production environment
-	./scripts/deploy-prod.sh down && ./scripts/deploy-prod.sh deploy
-
-prod-status:        ## Show production service status
-	./scripts/deploy-prod.sh status
-
-prod-health:        ## Run production health checks
-	./scripts/deploy-prod.sh health
-
-prod-logs:          ## View production logs
-	./scripts/deploy-prod.sh logs
-
-prod-rollback:      ## Rollback to previous deployment
-	./scripts/deploy-prod.sh rollback
-
-prod-backup:       ## Backup production database
-	./scripts/deploy-prod.sh backup
-
-prod-down:          ## Stop all production services
-	./scripts/deploy-prod.sh down
-
-# Release
-release:            ## Create release artifacts (VERSION=v1.0.0 make release)
-ifndef VERSION
-	@echo "Usage: VERSION=v1.0.0 make release"
-	@echo "Example: VERSION=v1.0.0 make release"
-	@exit 1
-endif
-	./scripts/release.sh $(VERSION)
-
-# Build images
-build-images:      ## Build all service images (VERSION=... REGISTRY=... make build-images)
-	./scripts/build-images.sh "$(VERSION)" "$(REGISTRY)"
-
-build-backend:     ## Build the backend image only
-	./scripts/build-images.sh "$(VERSION)" "$(REGISTRY)" backend
-
-build-frontend:    ## Build the frontend image only
-	./scripts/build-images.sh "$(VERSION)" "$(REGISTRY)" frontend
-
-verify-scripts:    ## Validate build/start scripts without starting services
-	bash -n scripts/build-images.sh scripts/deploy-dev.sh scripts/deploy-prod.sh scripts/lib/common.sh
-	node --test scripts/__tests__/build-start-scripts.test.js
-
-# Database
-db-migrate:         ## Show how schema changes are applied (safe, read-only)
-	@echo "Schema is applied automatically when the backend starts (ITSM_AUTO_MIGRATE=true)."
+help: ## 显示帮助信息
+	@echo "$(BLUE)ITSM 构建系统$(NC)"
 	@echo ""
-	@echo "  Apply schema normally :  make dev-start-docker"
-	@echo "  Rebuild empty database:  make db-reset   (DESTRUCTIVE)"
-
-db-reset:           ## DESTRUCTIVE: drop and recreate the database (was db-migrate)
+	@echo "用法: make [target]"
 	@echo ""
-	@echo "  #############################################################"
-	@echo "  #  WARNING: This DROPS the database and recreates it empty.  #"
-	@echo "  #  ALL DATA WILL BE PERMANENTLY LOST.                        #"
-	@echo "  #############################################################"
-	@echo ""
-	@if [ "$${DB_RESET_CONFIRM:-}" != "reset" ]; then \
-		printf "Type 'reset' to continue: "; \
-		read ans; \
-		if [ "$$ans" != "reset" ]; then echo "Aborted."; exit 1; fi; \
-	fi
-	cd itsm-backend && $(MAKE) build && GOTOOLCHAIN="${GOTOOLCHAIN:-auto}" go run -tags migrate main.go
+	@echo "目标:"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(GREEN)%-20s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-db-seed:            ## Seed database with test data
-	cd itsm-backend && GOTOOLCHAIN="${GOTOOLCHAIN:-auto}" go run -tags create_user main.go
+build: build-backend build-frontend ## 构建所有镜像
+	@echo "$(GREEN)构建完成！$(NC)"
 
-# Backend Go wrappers (delegates to itsm-backend/Makefile, keeps GOTOOLCHAIN=auto)
-backend-test:       ## Run Go tests with toolchain auto (delegates to itsm-backend/Makefile)
-	cd itsm-backend && $(MAKE) test
+build-backend: ## 构建后端镜像
+	@echo "$(BLUE)构建后端镜像...$(NC)"
+	DOCKER_BUILDKIT=1 docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) \
+		build --build-arg "VERSION=$(VERSION)" itsm-backend
 
-backend-test-ci:    ## Run Go tests with coverage (mirrors backend-ci.yml)
-	cd itsm-backend && $(MAKE) test-ci
+build-frontend: ## 构建前端镜像
+	@echo "$(BLUE)构建前端镜像...$(NC)"
+	DOCKER_BUILDKIT=1 docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) \
+		build --build-arg "VERSION=$(VERSION)" itsm-frontend
 
-backend-vet:        ## Run `go vet ./...`
-	cd itsm-backend && $(MAKE) vet
+build-parallel: ## 并行构建前后端
+	@echo "$(BLUE)并行构建前后端...$(NC)"
+	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 \
+		docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) \
+		build --parallel --build-arg "VERSION=$(VERSION)"
 
-backend-build:      ## Build backend binary into itsm-backend/itsm
-	cd itsm-backend && $(MAKE) build
+build-no-cache: ## 不使用缓存构建
+	@echo "$(BLUE)无缓存构建...$(NC)"
+	DOCKER_BUILDKIT=1 docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) \
+		build --no-cache --build-arg "VERSION=$(VERSION)"
 
-backend-cover:      ## Generate coverage profile (itsm-backend/coverage.out)
-	cd itsm-backend && $(MAKE) cover
+deploy: ## 部署到生产环境
+	@echo "$(BLUE)部署到生产环境...$(NC)"
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) down
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) up -d
+	@echo "$(GREEN)部署完成！$(NC)"
 
-backend-cover-html: ## Render coverage as HTML (itsm-backend/coverage.html)
-	cd itsm-backend && $(MAKE) cover-html
+deploy-backend: ## 只部署后端
+	@echo "$(BLUE)部署后端...$(NC)"
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) up -d itsm-backend itsm-worker
 
-backend-lint:       ## Run staticcheck locally (matches CI)
-	cd itsm-backend && $(MAKE) lint
+deploy-frontend: ## 只部署前端
+	@echo "$(BLUE)部署前端...$(NC)"
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) up -d itsm-frontend
 
-backend-tidy:       ## Run `go mod tidy` in itsm-backend/
-	cd itsm-backend && $(MAKE) tidy
+restart: ## 重启所有服务
+	@echo "$(BLUE)重启服务...$(NC)"
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) restart
 
-# Utility
-logs-backend:       ## View backend logs
-	./scripts/deploy-dev.sh logs itsm-backend
+restart-backend: ## 重启后端
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) restart itsm-backend itsm-worker
 
-logs-frontend:     ## View frontend logs
-	./scripts/deploy-dev.sh logs itsm-frontend
+restart-frontend: ## 重启前端
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) restart itsm-frontend
 
-logs-postgres:      ## View postgres logs
-	./scripts/deploy-dev.sh logs postgres
+logs: ## 查看所有日志
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) logs -f
 
-check-contracts:    ## Validate cross-file API, deployment, Docker, and docs contracts
-	node scripts/check-engineering-contracts.js
-	node scripts/check-api-paths.js
+logs-backend: ## 查看后端日志
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) logs -f itsm-backend
 
-coverage-report:    ## Unified coverage report (Go + Jest) → coverage-summary.md
-	./scripts/coverage-report.sh
+logs-frontend: ## 查看前端日志
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) logs -f itsm-frontend
 
-coverage-baseline:  ## Snapshot current coverage to docs/testing/coverage-baseline.json
-	mkdir -p docs/testing
-	node -e "const fs=require('fs');const o={go:0,jest:0,ts:new Date().toISOString()};fs.writeFileSync('docs/testing/coverage-baseline.json',JSON.stringify(o,null,2));console.log('baseline (0,0) written; will be overwritten on next run')"
+test: test-backend test-frontend ## 运行所有测试
+	@echo "$(GREEN)测试完成！$(NC)"
 
-.PHONY: dev-init dev-start dev-start-local dev-start-docker dev-stop dev-stop-local dev-stop-docker dev-logs dev-restart dev-status dev-health dev-doctor dev-clean \
-        prod-init prod-start prod-stop prod-deploy prod-status prod-health prod-logs \
-        prod-restart prod-rollback prod-backup prod-down \
-        db-migrate db-reset db-seed \
-        backend-test backend-test-ci backend-vet backend-build backend-cover backend-cover-html backend-lint backend-tidy \
-        release build-images build-backend build-frontend verify-scripts \
-        logs-backend logs-frontend logs-postgres check-contracts coverage-report coverage-baseline
+test-backend: ## 运行后端测试
+	@echo "$(BLUE)运行后端测试...$(NC)"
+	cd itsm-backend && go test ./...
+
+test-frontend: ## 运行前端测试
+	@echo "$(BLUE)运行前端测试...$(NC)"
+	cd itsm-frontend && npm test
+
+test-unit: ## 运行单元测试
+	cd itsm-backend && go test ./...
+	cd itsm-frontend && npm run test:unit
+
+test-e2e: ## 运行E2E测试
+	cd itsm-frontend && npm run test:e2e
+
+lint: lint-backend lint-frontend ## 运行所有lint
+	@echo "$(GREEN)Lint完成！$(NC)"
+
+lint-backend: ## 运行后端lint
+	@echo "$(BLUE)运行后端lint...$(NC)"
+	cd itsm-backend && golangci-lint run
+
+lint-frontend: ## 运行前端lint
+	@echo "$(BLUE)运行前端lint...$(NC)"
+	cd itsm-frontend && npm run lint
+
+type-check: ## TypeScript类型检查
+	cd itsm-frontend && npm run type-check
+
+health: ## 健康检查
+	@echo "$(BLUE)检查服务状态...$(NC)"
+	@curl -s http://localhost/api/v1/health | jq . || echo "后端不健康"
+	@curl -s http://localhost | head -1 || echo "前端不健康"
+
+status: ## 显示服务状态
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) ps
+
+clean: ## 清理构建缓存
+	@echo "$(BLUE)清理构建缓存...$(NC)"
+	docker system prune -f
+	docker volume prune -f
+	rm -rf .build-cache
+	@echo "$(GREEN)清理完成！$(NC)"
+
+clean-all: ## 清理所有（包括数据）
+	@echo "$(BLUE)清理所有数据...$(NC)"
+	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) down -v
+	docker system prune -af
+	@echo "$(GREEN)清理完成！$(NC)"
+
+db-shell: ## 连接数据库
+	docker exec -it itsm-postgres-prod psql -U itsm -d itsm_prod
+
+redis-shell: ## 连接Redis
+	docker exec -it itsm-redis-prod redis-cli -a $(REDIS_PASSWORD)
+
+backend-shell: ## 进入后端容器
+	docker exec -it itsm-backend-prod sh
+
+frontend-shell: ## 进入前端容器
+	docker exec -it itsm-frontend-prod sh
+
+backup: ## 备份数据库
+	@echo "$(BLUE)备份数据库...$(NC)"
+	docker exec itsm-postgres-prod pg_dump -U itsm itsm_prod > backup_$(shell date +%Y%m%d_%H%M%S).sql
+	@echo "$(GREEN)备份完成！$(NC)"
+
+restore: ## 恢复数据库（需要指定BACKUP_FILE）
+	@if [ -z "$(BACKUP_FILE)" ]; then echo "用法: make restore BACKUP_FILE=backup.sql"; exit 1; fi
+	@echo "$(BLUE)恢复数据库...$(NC)"
+	docker exec -i itsm-postgres-prod psql -U itsm itsm_prod < $(BACKUP_FILE)
+	@echo "$(GREEN)恢复完成！$(NC)"
+
+version: ## 显示版本信息
+	@echo "版本: $(VERSION)"
+	@echo "环境文件: $(ENV_FILE)"
+	@echo "Compose文件: $(COMPOSE_FILE)"

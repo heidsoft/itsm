@@ -11,12 +11,20 @@ import (
 	"itsm-backend/ent/workflowinstance"
 )
 
-// WorkflowEngine 工作流执行引擎
+// WorkflowEngine 工作流执行引擎（旧引擎）。
+//
+// Deprecated: 双引擎收敛（v1.7）。本引擎为 JSON 定义驱动的早期实现，
+// 新能力一律使用 BPMN 引擎（CustomProcessEngine / bpmn_process_engine.go）：
+// 三类网关、事务化 CompleteTask、租户 fail-closed、版本管理均只在 BPMN 引擎实现。
+// 既有调用方（workflow_controller / workflow_monitor / workflow_approval / workflow_task）
+// 按 plans/engine-convergence-v1.7.md 的批次逐步迁移，迁移完成前本文件只修缺陷、不加新能力。
 type WorkflowEngine struct {
 	client *ent.Client
 }
 
-// NewWorkflowEngine 创建工作流引擎实例
+// NewWorkflowEngine 创建工作流引擎实例。
+//
+// Deprecated: 双引擎收敛（v1.7）。新代码请使用 NewCustomProcessEngine（BPMN 引擎）。
 func NewWorkflowEngine(client *ent.Client) *WorkflowEngine {
 	return &WorkflowEngine{client: client}
 }

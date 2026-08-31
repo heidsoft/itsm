@@ -257,6 +257,19 @@ type SLAPolicySeed struct {
 	PriorityScore         int    `json:"priority_score"`
 }
 
+// menuSpec 菜单种子规格：ParentPath 为父菜单的 Path（用于第二轮反查父菜单 ID），
+// 仅作种子数据使用，不属于运行期菜单获取链路。
+// 真正的运行时入口是 MenuController.GetUserMenus → /api/v1/auth/menus。
+type menuSpec struct {
+	Name           string
+	Path           string
+	Icon           string
+	ParentPath     string
+	PermissionCode string
+	SortOrder      int
+	Description    string
+}
+
 // Seeder manages database seeding operations
 type Seeder struct {
 	client                  *ent.Client
@@ -520,7 +533,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedRoles(ctx)
 	s.MigrateUserRolesBackfill(ctx) // Phase 1 迁移：回填 user_roles 边
 	s.seedPermissions(ctx)          // 新增：初始化权限
-	s.seedMenus(ctx)       // 新增：初始化菜单
+	s.seedMenus(ctx)                // 新增：初始化菜单
 	s.seedAdmin(ctx)
 	s.seedCloudServiceTemplates(ctx)
 	// 使用配置的初始化数据
@@ -1375,6 +1388,7 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		{"ticket:import", "导入工单", "ticket", "import", "导入工单"},
 		{"ticket:admin", "工单管理配置", "ticket", "admin", "管理工单自动化和配置"},
 		{"ticket:delete", "删除工单", "ticket", "delete", "删除工单"},
+		{"ticket_type:read", "查看工单类型", "ticket_type", "read", "查看工单类型和预设"},
 		{"ticket_type:manage", "管理工单类型", "ticket_type", "manage", "创建、编辑、启停、克隆和恢复工单类型"},
 		{"ticket_type:install_preset", "安装工单类型预设", "ticket_type", "install_preset", "从预设库安装工单类型"},
 		{"ticket_type:archive", "归档工单类型", "ticket_type", "archive", "归档租户工单类型"},
@@ -1548,7 +1562,11 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 	s.sugar.Infow("permissions ensured", "total", len(permissions), "created", created, "updated", updated)
 }
 
-// seedMenus 初始化系统菜单
+// seedMenus 初始化系统菜单（层级化：父菜单在前，子菜单通过 parent_path 关联）
+//
+// 菜单来源必须与前端 menu-config.ts（getMenuConfig 的旧实现）保持字段一致，
+// 保证切到动态菜单后业务模块入口不丢失。后端 seed 仅为初始化兜底，
+// 真正的运行时入口是 MenuController.GetUserMenus → /api/v1/auth/menus。
 func (s *Seeder) seedMenus(ctx context.Context) {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
@@ -1556,95 +1574,230 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		return
 	}
 
-	// 定义所有菜单
-	menus := []struct {
-		Name           string
-		Path           string
-		Icon           string
-		ParentID       *int
-		PermissionCode string
-		SortOrder      int
-	}{
-		// 主菜单
-		{Name: "仪表盘", Path: "/dashboard", Icon: "LayoutDashboard", PermissionCode: "", SortOrder: 10},
-		{Name: "工单管理", Path: "/tickets", Icon: "FileText", PermissionCode: "ticket:read", SortOrder: 20},
-		{Name: "事件管理", Path: "/incidents", Icon: "AlertCircle", PermissionCode: "incident:read", SortOrder: 30},
-		{Name: "NOC工作台", Path: "/noc", Icon: "Activity", PermissionCode: "incident:read", SortOrder: 35},
-		{Name: "问题管理", Path: "/problems", Icon: "HelpCircle", PermissionCode: "problem:read", SortOrder: 40},
-		{Name: "变更管理", Path: "/changes", Icon: "BarChart3", PermissionCode: "change:read", SortOrder: 50},
-		{Name: "CMDB", Path: "/cmdb", Icon: "Database", PermissionCode: "cmdb:read", SortOrder: 60},
-		{Name: "服务目录", Path: "/service-catalog", Icon: "Book", PermissionCode: "service:read", SortOrder: 70},
-		{Name: "知识库", Path: "/knowledge", Icon: "HelpCircle", PermissionCode: "knowledge:read", SortOrder: 80},
-		{Name: "SLA监控", Path: "/sla-monitor", Icon: "Calendar", PermissionCode: "sla:read", SortOrder: 90},
-		{Name: "报表", Path: "/reports", Icon: "TrendingUp", PermissionCode: "report:read", SortOrder: 100},
-		{Name: "发布管理", Path: "/releases", Icon: "Rocket", PermissionCode: "release:read", SortOrder: 110},
-		{Name: "资产管理", Path: "/assets", Icon: "Monitor", PermissionCode: "asset:read", SortOrder: 120},
-		{Name: "MSP管理", Path: "/msp", Icon: "Shield", PermissionCode: "msp:read", SortOrder: 130},
+	// 菜单规格（与前端 menu-config.ts 的 getMenuConfig() 保持一致：
+	// - 服务运营 / 服务保障 / 报告分析 / 自动化 / AI / 扩展模块 / MSP与发布
+	// - 系统管理（admin 域，路径以 /admin 开头由 buildMenuTree 归到 admin 域）
+	specs := []menuSpec{
+		// ===== 顶级主菜单（parent_path 为空） =====
+		{Name: "服务台", Path: "/dashboard", Icon: "LayoutDashboard", PermissionCode: "", SortOrder: 10, Description: "服务台概览"},
+		{Name: "服务请求", Path: "/service-requests", Icon: "FileText", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 20, Description: "服务请求管理"},
+		// 工单管理：2026-08-30 归位新增顶级菜单（原本 /tickets 通过子菜单隐式创建，seeder 化以保证 fresh install 一致）
+		{Name: "工单管理", Path: "/tickets", Icon: "FileText", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 23, Description: "工单管理"},
+		{Name: "我的请求", Path: "/my-requests", Icon: "User", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 25, Description: "我的服务请求"},
+		{Name: "事件管理", Path: "/incidents", Icon: "AlertCircle", ParentPath: "", PermissionCode: "incident:read", SortOrder: 30, Description: "事件管理"},
+		{Name: "NOC工作台", Path: "/noc", Icon: "Activity", ParentPath: "", PermissionCode: "incident:read", SortOrder: 35, Description: "重大事件作战室"},
+		{Name: "问题管理", Path: "/problems", Icon: "HelpCircle", ParentPath: "", PermissionCode: "problem:read", SortOrder: 40, Description: "问题管理"},
+		{Name: "变更管理", Path: "/changes", Icon: "BarChart3", ParentPath: "", PermissionCode: "change:read", SortOrder: 50, Description: "变更管理"},
+		{Name: "知识库", Path: "/knowledge", Icon: "Book", ParentPath: "", PermissionCode: "knowledge:read", SortOrder: 60, Description: "知识库管理"},
+		{Name: "邮件报障", Path: "/email-intake", Icon: "Inbox", ParentPath: "", PermissionCode: "email_intake:read", SortOrder: 65, Description: "AI 邮件智能报障"},
+		{Name: "服务目录", Path: "/service-catalog", Icon: "BookOpen", ParentPath: "", PermissionCode: "service:read", SortOrder: 70, Description: "服务目录"},
+		{Name: "CMDB", Path: "/cmdb", Icon: "Database", ParentPath: "", PermissionCode: "cmdb:read", SortOrder: 75, Description: "配置管理数据库"},
+		{Name: "资产管理", Path: "/assets", Icon: "Monitor", ParentPath: "", PermissionCode: "asset:read", SortOrder: 80, Description: "IT 资产管理"},
+		{Name: "SLA 管理", Path: "/sla", Icon: "Calendar", ParentPath: "", PermissionCode: "sla:read", SortOrder: 90, Description: "SLA 监控与配置"},
+		{Name: "工作流", Path: "/workflow", Icon: "GitMerge", ParentPath: "", PermissionCode: "workflow:read", SortOrder: 100, Description: "工作流自动化"},
+		{Name: "AI 助手", Path: "/ai/chat", Icon: "Bot", ParentPath: "", PermissionCode: "ai:read", SortOrder: 110, Description: "AI 助手"},
+		{Name: "待我审批", Path: "/approvals/pending", Icon: "CheckCircle", ParentPath: "", PermissionCode: "approval:read", SortOrder: 115, Description: "待我审批"},
+		{Name: "客户管理", Path: "/msp", Icon: "Building", ParentPath: "", PermissionCode: "msp:read", SortOrder: 120, Description: "客户管理 (MSP)"},
+		{Name: "发布管理", Path: "/releases", Icon: "Rocket", ParentPath: "", PermissionCode: "release:read", SortOrder: 130, Description: "发布管理"},
 
-		// 管理菜单
-		{Name: "工作流", Path: "/workflow", Icon: "Workflow", PermissionCode: "workflow:read", SortOrder: 200},
-		{Name: "用户管理", Path: "/admin/users", Icon: "Users", PermissionCode: "user:read", SortOrder: 210},
-		{Name: "角色管理", Path: "/admin/roles", Icon: "Shield", PermissionCode: "role:read", SortOrder: 220},
-		{Name: "组管理", Path: "/admin/groups", Icon: "Users", PermissionCode: "groups:read", SortOrder: 230},
-		{Name: "部门管理", Path: "/admin/departments", Icon: "Activity", PermissionCode: "department:read", SortOrder: 240},
-		{Name: "团队管理", Path: "/admin/teams", Icon: "Users", PermissionCode: "team:read", SortOrder: 250},
-		{Name: "审批管理", Path: "/admin/approvals", Icon: "ClipboardList", PermissionCode: "approval:read", SortOrder: 260},
-		{Name: "SLA配置", Path: "/admin/sla-definitions", Icon: "Calendar", PermissionCode: "sla:write", SortOrder: 270},
-		{Name: "系统配置", Path: "/admin/system-config", Icon: "Settings", PermissionCode: "system:write", SortOrder: 280},
-		{Name: "连接器市场", Path: "/admin/connectors", Icon: "Plug", PermissionCode: "connector:read", SortOrder: 282},
-		{Name: "向量存储配置", Path: "/admin/vector-store", Icon: "Database", PermissionCode: "system:read", SortOrder: 284},
+		// ===== 顶级独立业务条线菜单（2026-08-30 归位新增） =====
+		// 审计与通知是独立业务条线，不应埋在系统管理 /admin 下，否则运营/审计专员找不到入口。
+		{Name: "审计日志", Path: "/audit-logs", Icon: "Shield", ParentPath: "", PermissionCode: "audit:read", SortOrder: 210, Description: "审计日志"},
+		{Name: "通知配置", Path: "/notifications", Icon: "Bell", ParentPath: "", PermissionCode: "notification:read", SortOrder: 212, Description: "通知配置"},
+
+		// ===== 子菜单：服务请求 =====
+		// 工单统计：2026-08-30 从 /service-requests 归位到 /tickets；服务请求下的副本已迁移。
+		// 注意：此处故意保留空注释以保留原有"子菜单：服务请求"区段以利于后续扩充。
+
+		// ===== 子菜单：工单管理 =====
+		// 工单类型与工单统计都挂到 /tickets，与 /tickets/types 和 /tickets/analytics 页面所属业务范畴一致；
+		// 历史 seed 把它俩放在 /service-requests 下导致用户找不到入口（2026-08-30 归位）。
+		{Name: "工单类型", Path: "/tickets/types", Icon: "ClipboardList", ParentPath: "/tickets", PermissionCode: "ticket_type:read", SortOrder: 21},
+		{Name: "工单统计", Path: "/tickets/analytics", Icon: "BarChart3", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 22, Description: "工单统计视图"},
+
+		// ===== 子菜单：事件管理 =====
+		{Name: "新建事件", Path: "/incidents/create", Icon: "Plus", ParentPath: "/incidents", PermissionCode: "incident:write", SortOrder: 32},
+
+		// ===== 子菜单：问题管理 =====
+		{Name: "已知错误", Path: "/problems/known-errors", Icon: "AlertCircle", ParentPath: "/problems", PermissionCode: "problem:read", SortOrder: 42},
+
+		// ===== 子菜单：变更管理 =====
+		{Name: "新建变更", Path: "/changes/new", Icon: "Plus", ParentPath: "/changes", PermissionCode: "change:write", SortOrder: 52},
+
+		// ===== 子菜单：知识库 =====
+		{Name: "新建文章", Path: "/knowledge/articles/new", Icon: "Plus", ParentPath: "/knowledge", PermissionCode: "knowledge:write", SortOrder: 63},
+
+		// ===== 子菜单：邮件报障 =====
+		{Name: "客户资料", Path: "/email-intake/customers", Icon: "Users", ParentPath: "/email-intake", PermissionCode: "customer_master:read", SortOrder: 652},
+		{Name: "支持合同", Path: "/email-intake/contracts", Icon: "FileText", ParentPath: "/email-intake", PermissionCode: "support_contract:read", SortOrder: 653},
+		{Name: "来源组织", Path: "/email-intake/sources", Icon: "Globe", ParentPath: "/email-intake", PermissionCode: "customer_master:read", SortOrder: 654},
+		{Name: "值班排班", Path: "/email-intake/on-call", Icon: "Clock", ParentPath: "/email-intake", PermissionCode: "on_call:read", SortOrder: 655},
+
+		// ===== 子菜单：服务目录 =====
+		{Name: "待我审批-目录", Path: "/service-catalog/approvals", Icon: "CheckCircle", ParentPath: "/service-catalog", PermissionCode: "service:read", SortOrder: 72},
+
+		// ===== 子菜单：CMDB =====
+		{Name: "配置项列表", Path: "/cmdb/cis", Icon: "Server", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 751},
+		{Name: "新建CI", Path: "/cmdb/cis/create", Icon: "Plus", ParentPath: "/cmdb", PermissionCode: "cmdb:write", SortOrder: 752},
+		{Name: "关系管理", Path: "/cmdb/relationships", Icon: "GitBranch", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 753},
+		{Name: "拓扑图", Path: "/cmdb/topology", Icon: "Share2", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 754},
+
+		// ===== 子菜单：资产管理 =====
+		{Name: "新建资产", Path: "/assets/new", Icon: "Plus", ParentPath: "/assets", PermissionCode: "asset:write", SortOrder: 82},
+		{Name: "软件许可证", Path: "/licenses", Icon: "Key", ParentPath: "/assets", PermissionCode: "license:read", SortOrder: 83},
+
+		// ===== 子菜单：SLA =====
+		{Name: "SLA 监控", Path: "/sla-monitor", Icon: "Activity", ParentPath: "/sla", PermissionCode: "sla:read", SortOrder: 92},
+		{Name: "SLA 配置", Path: "/workflow/sla", Icon: "Clock", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 93},
+
+		// ===== 子菜单：工作流 =====
+		{Name: "流程设计器", Path: "/workflow/designer", Icon: "Edit", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 102},
+		{Name: "流程实例", Path: "/workflow/instances", Icon: "Play", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 103},
+		{Name: "版本管理", Path: "/workflow/versions", Icon: "History", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 104},
+		{Name: "监控仪表盘", Path: "/workflow/dashboard", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 105},
+		{Name: "节点瓶颈分析", Path: "/workflow/bottlenecks", Icon: "BarChart3", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 106},
+		{Name: "自动化规则", Path: "/workflow/automation", Icon: "Zap", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 107},
+		{Name: "审批中心", Path: "/workflow/ticket-approval", Icon: "CheckSquare", ParentPath: "/workflow", PermissionCode: "approval:read", SortOrder: 108},
+		// 操作日志：2026-08-30 从 /admin 移到 /workflow，与工作流专属审计入口一致。
+		{Name: "操作日志", Path: "/workflow/audit", Icon: "ClipboardList", ParentPath: "/workflow", PermissionCode: "audit:read", SortOrder: 109},
+
+		// ===== 子菜单：AI 助手 =====
+		{Name: "AI 创建工单", Path: "/tickets/ai-create", Icon: "Sparkles", ParentPath: "/ai/chat", PermissionCode: "ai:read", SortOrder: 112},
+		{Name: "AI 评估与审计", Path: "/ai/audit", Icon: "ShieldCheck", ParentPath: "/ai/chat", PermissionCode: "ai:read", SortOrder: 113},
+		{Name: "AI 审批", Path: "/ai/approval", Icon: "ShieldAlert", ParentPath: "/ai/chat", PermissionCode: "ai:read", SortOrder: 114},
+
+		// ===== 子菜单：MSP 客户管理 =====
+		{Name: "客户管理子页", Path: "/msp/management", Icon: "Settings", ParentPath: "/msp", PermissionCode: "msp:write", SortOrder: 122},
+
+		// ===== 子菜单：发布管理 =====
+		{Name: "新建发布", Path: "/releases/new", Icon: "Plus", ParentPath: "/releases", PermissionCode: "release:write", SortOrder: 132},
+
+		// ===== 顶级管理菜单 =====
+		{Name: "系统管理", Path: "/admin", Icon: "Settings", ParentPath: "", PermissionCode: "system:write", SortOrder: 200, Description: "系统管理"},
+
+		// ===== 子菜单：系统管理 =====
+		{Name: "系统概览", Path: "/admin/overview", Icon: "LayoutDashboard", ParentPath: "/admin", PermissionCode: "system:write", SortOrder: 201},
+		{Name: "用户管理", Path: "/admin/users", Icon: "Users", ParentPath: "/admin", PermissionCode: "user:read", SortOrder: 210},
+		{Name: "角色管理", Path: "/admin/roles", Icon: "Shield", ParentPath: "/admin", PermissionCode: "role:read", SortOrder: 220},
+		{Name: "组管理", Path: "/admin/groups", Icon: "Users", ParentPath: "/admin", PermissionCode: "group:read", SortOrder: 230},
+		{Name: "租户管理", Path: "/admin/tenants", Icon: "Building", ParentPath: "/admin", PermissionCode: "system:write", SortOrder: 235},
+		{Name: "部门管理", Path: "/admin/departments", Icon: "Building", ParentPath: "/admin", PermissionCode: "department:read", SortOrder: 240},
+		{Name: "团队管理", Path: "/admin/teams", Icon: "Users", ParentPath: "/admin", PermissionCode: "team:read", SortOrder: 250},
+		{Name: "CAB 成员管理", Path: "/admin/cab", Icon: "Users", ParentPath: "/admin", PermissionCode: "change:read", SortOrder: 255},
+		{Name: "工单分类", Path: "/admin/ticket-categories", Icon: "Tag", ParentPath: "/admin", PermissionCode: "ticket_category:update", SortOrder: 260},
+		{Name: "工单分配规则", Path: "/admin/tickets/assignment-rules", Icon: "GitBranch", ParentPath: "/admin", PermissionCode: "ticket:read", SortOrder: 265},
+		{Name: "自动化规则", Path: "/admin/tickets/automation-rules", Icon: "Zap", ParentPath: "/admin", PermissionCode: "ticket:read", SortOrder: 270},
+		{Name: "审批链", Path: "/admin/approval-chains", Icon: "Link", ParentPath: "/admin", PermissionCode: "approval:write", SortOrder: 275},
+		{Name: "权限管理", Path: "/admin/permissions", Icon: "Lock", ParentPath: "/admin", PermissionCode: "role:write", SortOrder: 280},
+		{Name: "连接器/插件市场", Path: "/admin/connectors", Icon: "Plug", ParentPath: "/admin", PermissionCode: "connector:write", SortOrder: 285},
+		{Name: "向量存储配置", Path: "/admin/vector-store", Icon: "Database", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 290},
+		{Name: "系统配置", Path: "/admin/system-config", Icon: "Settings", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 295},
+		// 通知配置 / 审计日志 / 操作日志：2026-08-30 归位后已移出 /admin，详见顶级菜单与 /workflow 子菜单。
+		{Name: "CMDB 类型", Path: "/admin/cmdb-types", Icon: "Database", ParentPath: "/admin", PermissionCode: "cmdb:write", SortOrder: 315},
+		{Name: "升级规则", Path: "/admin/escalation-rules", Icon: "AlertTriangle", ParentPath: "/admin", PermissionCode: "sla:write", SortOrder: 320},
+		{Name: "升级矩阵", Path: "/admin/escalation-matrices", Icon: "TrendingUp", ParentPath: "/admin", PermissionCode: "sla:read", SortOrder: 325},
+		{Name: "SLA 模板", Path: "/admin/sla-templates", Icon: "Layers", ParentPath: "/admin", PermissionCode: "sla:write", SortOrder: 330},
+		{Name: "服务目录管理", Path: "/admin/service-catalogs", Icon: "Boxes", ParentPath: "/admin", PermissionCode: "service_catalog:read", SortOrder: 335},
+		{Name: "SLA 定义", Path: "/admin/sla-definitions", Icon: "Clock", ParentPath: "/admin", PermissionCode: "sla:write", SortOrder: 340},
+		{Name: "菜单管理", Path: "/admin/menus", Icon: "Menu", ParentPath: "/admin", PermissionCode: "system:write", SortOrder: 345},
+		{Name: "工作流配置", Path: "/admin/workflows", Icon: "GitBranch", ParentPath: "/admin", PermissionCode: "workflow:write", SortOrder: 350},
 	}
-	s.expectedMenus = make([]string, 0, len(menus))
-	for _, item := range menus {
+
+	// 收集所有菜单路径，便于运行时排错 & 兼容性回归
+	s.expectedMenus = make([]string, 0, len(specs))
+	for _, item := range specs {
 		s.expectedMenus = append(s.expectedMenus, item.Path)
 	}
 
-	for _, m := range menus {
-		existing, err := s.client.Menu.Query().
-			Where(menu.PathEQ(m.Path), menu.TenantIDEQ(t.ID)).
+	// 第一遍：创建所有顶级菜单（ParentPath 为空）
+	// 必须先保证父菜单有 ID，才能在第二遍反查创建子菜单
+	for _, m := range specs {
+		if m.ParentPath != "" {
+			continue
+		}
+		s.upsertMenu(ctx, t.ID, m, nil)
+	}
+
+	// 第二遍：创建所有子菜单，按 ParentPath 在数据库中反查父菜单 ID
+	for _, m := range specs {
+		if m.ParentPath == "" {
+			continue
+		}
+		parent, perr := s.client.Menu.Query().
+			Where(menu.Path(m.ParentPath), menu.TenantIDEQ(t.ID)).
 			Only(ctx)
-		if err == nil {
-			if _, err := existing.Update().
-				SetName(m.Name).
-				SetIcon(m.Icon).
-				SetSortOrder(m.SortOrder).
-				SetIsVisible(true).
-				SetIsEnabled(true).
-				SetPermissionCode(m.PermissionCode).
-				Save(ctx); err != nil {
-				s.sugar.Warnw("update menu failed", "error", err, "path", m.Path)
-			}
+		if perr != nil {
+			s.sugar.Warnw("parent menu not found, skip child menu",
+				"parent_path", m.ParentPath, "child_path", m.Path, "error", perr)
 			continue
 		}
-		if !ent.IsNotFound(err) {
-			s.sugar.Warnw("query menu failed", "error", err, "path", m.Path)
-			continue
-		}
-		builder := s.client.Menu.Create().
+		s.upsertMenu(ctx, t.ID, m, &parent.ID)
+	}
+
+	s.sugar.Infow("menus seeded (hierarchical)", "count", len(specs))
+}
+
+// upsertMenu 按 (tenant, path) 创建或更新菜单。
+// 当 parentID 不为 nil 时写入父菜单关联。description 为空时更新不会清空数据库原值。
+func (s *Seeder) upsertMenu(ctx context.Context, tenantID int, m menuSpec, parentID *int) {
+	existing, err := s.client.Menu.Query().
+		Where(menu.PathEQ(m.Path), menu.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err == nil {
+		updateBuilder := existing.Update().
 			SetName(m.Name).
-			SetPath(m.Path).
 			SetIcon(m.Icon).
-			SetTenantID(t.ID).
 			SetSortOrder(m.SortOrder).
 			SetIsVisible(true).
 			SetIsEnabled(true).
 			SetPermissionCode(m.PermissionCode)
-
-		// 设置父菜单ID
-		if m.ParentID != nil {
-			builder = builder.SetParentID(*m.ParentID)
+		if parentID != nil {
+			updateBuilder = updateBuilder.SetParentID(*parentID)
 		} else {
-			builder = builder.SetNillableParentID(nil)
+			updateBuilder = updateBuilder.ClearParentID()
 		}
-
-		if _, err := builder.Save(ctx); err != nil {
-			s.sugar.Warnw("seed menu failed", "error", err, "name", m.Name)
+		if m.Description != "" {
+			updateBuilder = updateBuilder.SetDescription(m.Description)
 		}
+		if _, uerr := updateBuilder.Save(ctx); uerr != nil {
+			s.sugar.Warnw("update menu failed", "error", uerr, "path", m.Path)
+		}
+		return
 	}
-	s.sugar.Infow("menus seeded", "count", len(menus))
+	if !ent.IsNotFound(err) {
+		s.sugar.Warnw("query menu failed", "error", err, "path", m.Path)
+		return
+	}
+
+	createBuilder := s.client.Menu.Create().
+		SetName(m.Name).
+		SetPath(m.Path).
+		SetIcon(m.Icon).
+		SetTenantID(tenantID).
+		SetSortOrder(m.SortOrder).
+		SetIsVisible(true).
+		SetIsEnabled(true).
+		SetPermissionCode(m.PermissionCode)
+	if parentID != nil {
+		createBuilder = createBuilder.SetParentID(*parentID)
+	}
+	if m.Description != "" {
+		createBuilder = createBuilder.SetDescription(m.Description)
+	}
+	if _, cerr := createBuilder.Save(ctx); cerr != nil {
+		s.sugar.Warnw("seed menu failed", "error", cerr, "name", m.Name)
+	}
 }
 
-// seedMenuAndPermissionFixes 修复菜单路径和补充缺失的权限
+// seedMenuAndPermissionFixes 兼容历史菜单路径 & 补充缺失权限
+//
+// 仅保留两类职责：
+//  1. 历史菜单路径迁移（/admin/sla → /admin/sla-definitions 等），避免旧租户升级后
+//     出现重复 path 冲突。新的菜单种子已经包含正确路径，这里只负责把遗留数据迁移过去。
+//  2. 补充标准权限列表之外的少量辅助权限（group/email intake 等），供 RBAC 兜底。
+//
+// 不再补录菜单本身：seedMenus 现在覆盖完整菜单树（含子菜单、parent_id 层级），
+// 不需要在此处再追加缺失菜单条目。
 func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
@@ -1652,64 +1805,74 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		return
 	}
 
-	// 1. 修复菜单路径
+	// 1. 修复菜单路径：迁移历史租户可能遗留的旧 path。
+	//
+	// 策略：所有列出的「旧路径」在当前的 seedMenus 规范中都不复存在。
+	// 迁移采用 UPDATE 优先；若目标路径已被 seedMenus 新条目占位（说明 fresh seed 已在），
+	// 则删除旧条目，避免 (tenant_id, path) 唯一键冲突。
 	menuPathFixes := map[string]string{
+		// —— 历史兼容（v1.0 → v1.1 早期重命名）——
 		"/admin/sla":                "/admin/sla-definitions",
 		"/admin/system":             "/admin/system-config",
-		"/admin/workflows":          "/workflow",
 		"/admin/tickets/assignment": "/admin/tickets/assignment-rules",
 		"/admin/tickets/automation": "/admin/tickets/automation-rules",
-		// P0 路由漂移修复：与前端 src/app/(main)/ 真实目录对齐
-		"/admin/ticket-types":      "/admin/ticket-categories",
-		"/admin/sla-config":        "/workflow/sla",
-		"/admin/escalation-matrix": "/admin/escalation-matrices",
-		"/sla-dashboard":           "/sla-monitor",
+		"/admin/ticket-types":       "/admin/ticket-categories",
+		"/admin/sla-config":         "/workflow/sla",
+		"/admin/escalation-matrix":  "/admin/escalation-matrices",
+		"/sla-dashboard":            "/sla-monitor",
+		// —— 2026-08 v1.1 菜单路径与 Next.js App Router 对齐（修正 404）——
+		// 以下 16 条在旧部署中会以错误的 DB path 存在：
+		//   a) 11 条 xxx/list 子菜单：新版 specs 已删除这些冗余条目（顶级菜单点击即进入列表首页），
+		//      因此把它们的 path UPDATE 到对应的模块根路径；若根路径已被顶级菜单占用，
+		//      迁移循环会命中 dupCount>0 分支，直接删除旧条目。
+		//   b) 5 条命名错误或独立路由缺失的子菜单项：UPDATE 到正确的、已在新版 specs 中存在的 path。
+		"/service-requests/list":      "/service-requests",
+		"/incidents/list":             "/incidents",
+		"/problems/list":              "/problems",
+		"/changes/list":               "/changes",
+		"/knowledge/list":             "/knowledge",
+		"/service-catalog/list":       "/service-catalog",
+		"/assets/list":                "/assets",
+		"/workflow/list":              "/workflow",
+		"/ai/chat/list":               "/ai/chat",
+		"/msp/list":                   "/msp",
+		"/releases/list":              "/releases",
+		"/admin/index":                "/admin",
+		"/knowledge/articles/create":  "/knowledge/articles/new",
+		"/sla/overview":               "/sla",
+		"/email-intake/conversations": "/email-intake",
+		"/knowledge/articles":         "/knowledge",
 	}
 
 	for oldPath, newPath := range menuPathFixes {
-		_, err := s.client.Menu.Update().
+		// 目标 path 若已被 seedMenus 占位，直接删除旧条目，避免 unique 冲突
+		dupCount, qerr := s.client.Menu.Query().
+			Where(menu.Path(newPath), menu.TenantIDEQ(t.ID)).
+			Count(ctx)
+		if qerr != nil {
+			s.sugar.Warnw("check menu path collision failed", "error", qerr, "new_path", newPath)
+			continue
+		}
+		if dupCount > 0 {
+			if _, derr := s.client.Menu.Delete().
+				Where(menu.Path(oldPath), menu.TenantIDEQ(t.ID)).
+				Exec(ctx); derr != nil {
+				s.sugar.Warnw("remove legacy menu path failed", "error", derr, "old_path", oldPath)
+			}
+			continue
+		}
+		_, uerr := s.client.Menu.Update().
 			Where(menu.Path(oldPath), menu.TenantIDEQ(t.ID)).
 			SetPath(newPath).
 			Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("fix menu path failed", "error", err, "old_path", oldPath, "new_path", newPath)
+		if uerr != nil {
+			s.sugar.Warnw("fix menu path failed", "error", uerr, "old_path", oldPath, "new_path", newPath)
 		} else {
 			s.sugar.Debugw("menu path fixed", "old_path", oldPath, "new_path", newPath)
 		}
 	}
 
-	// 1b. 修正系统菜单的名称与图标（历史数据可能以路径作为名称或缺图标）
-	menuMetaFixes := []struct {
-		Path string
-		Name string
-		Icon string
-	}{
-		{"/admin/sla-templates", "SLA 模板", "Layers"},
-		{"/admin/escalation-matrices", "升级矩阵", "TrendingUp"},
-	}
-
-	for _, f := range menuMetaFixes {
-		_, err := s.client.Menu.Update().
-			Where(menu.Path(f.Path), menu.TenantIDEQ(t.ID)).
-			SetName(f.Name).
-			SetIcon(f.Icon).
-			Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("fix menu metadata failed", "error", err, "path", f.Path)
-		} else {
-			s.sugar.Debugw("menu metadata fixed", "path", f.Path, "name", f.Name)
-		}
-	}
-
-	_, err = s.client.Menu.Update().
-		Where(menu.Path("/admin/groups"), menu.TenantIDEQ(t.ID)).
-		SetPermissionCode("groups:read").
-		Save(ctx)
-	if err != nil {
-		s.sugar.Warnw("fix group menu permission failed", "error", err)
-	}
-
-	// 2. 补充缺失的权限
+	// 2. 补充缺失的权限（标准 RBAC 列表之外的兜底）
 	missingPermissions := []struct {
 		Code        string
 		Name        string
@@ -1746,56 +1909,6 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 			s.sugar.Warnw("create missing permission failed", "error", err, "code", p.Code)
 		} else {
 			s.sugar.Infow("missing permission created", "code", p.Code)
-		}
-	}
-
-	// 3. 补充缺失的菜单
-	missingMenus := []struct {
-		Name           string
-		Path           string
-		Icon           string
-		PermissionCode string
-		SortOrder      int
-	}{
-		{"工单分类", "/admin/ticket-categories", "Tag", "ticket:write", 275},
-		{"CI类型管理", "/admin/cmdb-types", "Database", "cmdb:write", 290},
-		{"许可证管理", "/licenses", "Key", "license:read", 125},
-		{"SLA模板", "/admin/sla-templates", "Layers", "sla:write", 272},
-		{"升级矩阵", "/admin/escalation-matrices", "TrendingUp", "sla:read", 273},
-		{"BPMN节点分析", "/workflow/bottlenecks", "BarChart3", "workflow:read", 205},
-		{"菜单管理", "/admin/menus", "List", "system:write", 285},
-		{"审计日志", "/audit-logs", "Shield", "audit:read", 295},
-		// NOC/连接器市场/向量存储：存量租户补齐菜单入口（页面与后端路由均已就绪）
-		{"NOC工作台", "/noc", "Activity", "incident:read", 35},
-		{"连接器市场", "/admin/connectors", "Plug", "connector:read", 282},
-		{"向量存储配置", "/admin/vector-store", "Database", "system:read", 284},
-	}
-
-	for _, m := range missingMenus {
-		existing, err := s.client.Menu.Query().
-			Where(menu.Path(m.Path), menu.TenantIDEQ(t.ID)).
-			Count(ctx)
-		if err != nil {
-			s.sugar.Warnw("check menu failed", "error", err, "path", m.Path)
-			continue
-		}
-		if existing > 0 {
-			continue
-		}
-		_, err = s.client.Menu.Create().
-			SetName(m.Name).
-			SetPath(m.Path).
-			SetIcon(m.Icon).
-			SetPermissionCode(m.PermissionCode).
-			SetSortOrder(m.SortOrder).
-			SetIsVisible(true).
-			SetIsEnabled(true).
-			SetTenantID(t.ID).
-			Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("create missing menu failed", "error", err, "path", m.Path)
-		} else {
-			s.sugar.Infow("missing menu created", "path", m.Path)
 		}
 	}
 }
@@ -2156,7 +2269,7 @@ func (s *Seeder) seedServiceCatalog(ctx context.Context) {
 			SetServiceType(svc.ServiceType).
 			SetRequiresApproval(svc.RequiresApproval).
 			SetDeliveryTime(svc.DeliveryTime).
-			SetStatus("active").
+			SetStatus("enabled").
 			SetIsActive(true).
 			SetTenantID(t.ID).
 			Save(ctx)

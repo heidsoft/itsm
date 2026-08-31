@@ -392,10 +392,40 @@ func (s *Service) ChatStream(
 	return convID, captured.String(), nil
 }
 
+func (s *Service) ListConversations(ctx context.Context, tenantID, userID int) ([]*Conversation, error) {
+	return s.repo.ListConversations(ctx, tenantID, userID)
+}
+
+func (s *Service) GetConversation(ctx context.Context, id, tenantID int) (*Conversation, error) {
+	return s.repo.GetConversation(ctx, id, tenantID)
+}
+
+func (s *Service) GetConversationMessages(ctx context.Context, convID, tenantID int) ([]*Message, error) {
+	_, err := s.repo.GetConversation(ctx, convID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.GetMessages(ctx, convID)
+}
+
+func (s *Service) DeleteConversation(ctx context.Context, id, tenantID int) error {
+	return s.repo.DeleteConversation(ctx, id, tenantID)
+}
+
 // Root Cause Analysis
 
 func (s *Service) AnalyzeTicket(ctx context.Context, ticketID int, tenantID int) (interface{}, error) {
 	return s.rca.AnalyzeTicket(ctx, ticketID, tenantID)
+}
+
+func (s *Service) AnalyzeTicketWithAudit(ctx context.Context, ticketID int, tenantID int, userID int) (interface{}, error) {
+	result, err := s.rca.AnalyzeTicket(ctx, ticketID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	prompt := fmt.Sprintf("AnalyzeTicket ticketID=%d", ticketID)
+	s.persistAIResult(ctx, "rca", tenantID, userID, prompt, result, "", 0, 0, nil)
+	return result, nil
 }
 
 func (s *Service) AnalyzeIncident(ctx context.Context, incidentID int, tenantID int) (interface{}, error) {
@@ -403,6 +433,16 @@ func (s *Service) AnalyzeIncident(ctx context.Context, incidentID int, tenantID 
 		return nil, service.ErrAIAnalysisUnavailable
 	}
 	return s.rca.AnalyzeIncident(ctx, incidentID, tenantID)
+}
+
+func (s *Service) AnalyzeIncidentWithAudit(ctx context.Context, incidentID int, tenantID int, userID int) (interface{}, error) {
+	result, err := s.AnalyzeIncident(ctx, incidentID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	prompt := fmt.Sprintf("AnalyzeIncident incidentID=%d", incidentID)
+	s.persistAIResult(ctx, "incident_impact", tenantID, userID, prompt, result, "", 0, 0, nil)
+	return result, nil
 }
 
 // CreateTicketByAI 通过 AI 解析自然语言描述，智能分析并返回工单创建建议
@@ -674,4 +714,52 @@ func parseDate(s string) time.Time {
 		return time.Now()
 	}
 	return t
+}
+
+// persistAIResult serializes and saves an AI analysis result to the database.
+// Errors are logged but not propagated — analysis results should still be returned
+// to the caller even if persistence fails.
+func (s *Service) persistAIResult(ctx context.Context, analysisType string, tenantID, userID int, prompt string, result interface{}, model string, latencyMs, totalTokens int, confidenceScore *float64) {
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		s.logger.Warnw("persistAIResult: marshal failed", "error", err)
+		return
+	}
+	record := &AIAnalysisResult{
+		TenantID:      tenantID,
+		UserID:        userID,
+		AnalysisType:  analysisType,
+		RequestPrompt: prompt,
+		ResultJSON:   string(resultJSON),
+		Model:        model,
+		Degraded:     false,
+	}
+	if latencyMs > 0 {
+		record.LatencyMs = latencyMs
+	}
+	if totalTokens > 0 {
+		record.TotalTokens = totalTokens
+	}
+	if confidenceScore != nil {
+		record.ConfidenceScore = *confidenceScore
+	}
+	_, err = s.repo.SaveAIAnalysisResult(ctx, record)
+	if err != nil {
+		s.logger.Warnw("persistAIResult: save failed", "error", err)
+	}
+}
+
+// ListAIAnalysisResults returns analysis history for the tenant.
+func (s *Service) ListAIAnalysisResults(ctx context.Context, tenantID int, analysisType string, limit int) ([]*AIAnalysisResult, error) {
+	return s.repo.ListAIAnalysisResults(ctx, tenantID, analysisType, limit)
+}
+
+// GetAIAnalysisResult returns a single analysis result by ID.
+func (s *Service) GetAIAnalysisResult(ctx context.Context, id int, tenantID int) (*AIAnalysisResult, error) {
+	return s.repo.GetAIAnalysisResult(ctx, id, tenantID)
+}
+
+// DeleteAIAnalysisResult deletes an analysis result record.
+func (s *Service) DeleteAIAnalysisResult(ctx context.Context, id int, tenantID int) error {
+	return s.repo.DeleteAIAnalysisResult(ctx, id, tenantID)
 }

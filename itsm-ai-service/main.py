@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 import logging
 
 from config_loader import get_config
-from api import triage, rca, risk
+from api import triage, rca, risk, guidance
 
 # 配置日志
 cfg = get_config()
@@ -65,6 +65,12 @@ app.include_router(
     risk.router,
     prefix="/api/v1/risk",
     tags=["risk"]
+)
+
+# Guidance sidecar 兼容端点（后端 GuidanceClient 调用）: POST /triage
+app.include_router(
+    guidance.router,
+    tags=["guidance"]
 )
 
 

@@ -3,193 +3,25 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import type { RoutePermission } from '../router/route-config';
 
 /**
- * 根据角色获取权限列表
- * #6修复: 添加缺失的角色映射，对齐后端角色
- */
-const getRolePermissions = (role: string): RoutePermission[] => {
-  // 角色名称规范化（支持多种格式）
-  const normalizedRole = role?.toLowerCase?.() || role || '';
-
-  // 基础权限 - 所有人都有的基本权限
-  const basePermissions: RoutePermission[] = [
-    { resource: 'ticket', action: 'read' },
-    { resource: 'incident', action: 'read' },
-    { resource: 'knowledge', action: 'read' },
-    { resource: 'cmdb', action: 'read' },
-  ];
-
-  // 超级管理员权限 - 拥有所有权限
-  const superAdminPermissions: RoutePermission[] = [
-    { resource: 'ticket', action: 'read' },
-    { resource: 'ticket', action: 'create' },
-    { resource: 'ticket', action: 'update' },
-    { resource: 'ticket', action: 'delete' },
-    { resource: 'ticket', action: 'assign' },
-    { resource: 'ticket', action: 'escalate' },
-    { resource: 'ticket', action: 'resolve' },
-    { resource: 'ticket', action: 'close' },
-    { resource: 'ticket', action: 'reopen' },
-    { resource: 'ticket', action: 'export' },
-    { resource: 'incident', action: 'read' },
-    { resource: 'incident', action: 'create' },
-    { resource: 'incident', action: 'update' },
-    { resource: 'incident', action: 'delete' },
-    { resource: 'incident', action: 'assign' },
-    { resource: 'incident', action: 'escalate' },
-    { resource: 'incident', action: 'resolve' },
-    { resource: 'incident', action: 'close' },
-    { resource: 'incident', action: 'declare_major' },
-    { resource: 'problem', action: 'read' },
-    { resource: 'problem', action: 'create' },
-    { resource: 'problem', action: 'update' },
-    { resource: 'problem', action: 'delete' },
-    { resource: 'change', action: 'read' },
-    { resource: 'change', action: 'create' },
-    { resource: 'change', action: 'update' },
-    { resource: 'change', action: 'delete' },
-    { resource: 'change', action: 'approve' },
-    { resource: 'change', action: 'reject' },
-    { resource: 'change', action: 'review' },
-    { resource: 'knowledge', action: 'read' },
-    { resource: 'knowledge', action: 'create' },
-    { resource: 'knowledge', action: 'update' },
-    { resource: 'knowledge', action: 'delete' },
-    { resource: 'cmdb', action: 'read' },
-    { resource: 'cmdb', action: 'create' },
-    { resource: 'cmdb', action: 'update' },
-    { resource: 'cmdb', action: 'delete' },
-    { resource: 'user', action: 'read' },
-    { resource: 'user', action: 'create' },
-    { resource: 'user', action: 'update' },
-    { resource: 'user', action: 'delete' },
-    { resource: 'user', action: 'manage' },
-    { resource: 'report', action: 'read' },
-    { resource: 'report', action: 'create' },
-    { resource: 'report', action: 'export' },
-  ];
-
-  const rolePermissionMap: Record<string, RoutePermission[]> = {
-    // 兼容各种角色命名格式
-    super_admin: superAdminPermissions,
-    superadmin: superAdminPermissions,
-    superAdmin: superAdminPermissions,
-    sysadmin: superAdminPermissions,
-    system_admin: superAdminPermissions,
-
-    admin: [
-      { resource: 'ticket', action: 'read' },
-      { resource: 'ticket', action: 'create' },
-      { resource: 'ticket', action: 'update' },
-      { resource: 'ticket', action: 'delete' },
-      { resource: 'ticket', action: 'assign' },
-      { resource: 'ticket', action: 'escalate' },
-      { resource: 'ticket', action: 'resolve' },
-      { resource: 'ticket', action: 'close' },
-      { resource: 'ticket', action: 'reopen' },
-      { resource: 'ticket', action: 'export' },
-      { resource: 'incident', action: 'read' },
-      { resource: 'incident', action: 'create' },
-      { resource: 'incident', action: 'update' },
-      { resource: 'incident', action: 'assign' },
-      { resource: 'incident', action: 'escalate' },
-      { resource: 'incident', action: 'resolve' },
-      { resource: 'incident', action: 'close' },
-      { resource: 'incident', action: 'declare_major' },
-      { resource: 'problem', action: 'read' },
-      { resource: 'problem', action: 'create' },
-      { resource: 'problem', action: 'update' },
-      { resource: 'problem', action: 'assign' },
-      { resource: 'problem', action: 'resolve' },
-      { resource: 'problem', action: 'close' },
-      { resource: 'change', action: 'read' },
-      { resource: 'change', action: 'create' },
-      { resource: 'change', action: 'update' },
-      { resource: 'change', action: 'approve' },
-      { resource: 'change', action: 'reject' },
-      { resource: 'change', action: 'implement' },
-      { resource: 'change', action: 'review' },
-      { resource: 'knowledge', action: 'read' },
-      { resource: 'knowledge', action: 'create' },
-      { resource: 'knowledge', action: 'update' },
-      { resource: 'knowledge', action: 'publish' },
-      { resource: 'cmdb', action: 'read' },
-      { resource: 'cmdb', action: 'create' },
-      { resource: 'cmdb', action: 'update' },
-      { resource: 'cmdb', action: 'manage' },
-      { resource: 'user', action: 'read' },
-      { resource: 'user', action: 'create' },
-      { resource: 'user', action: 'update' },
-      { resource: 'user', action: 'manage' },
-      { resource: 'report', action: 'read' },
-      { resource: 'report', action: 'export' },
-      { resource: 'report', action: 'create' },
-    ],
-
-    // technician角色 - 相当于agent但更专业
-    technician: [
-      { resource: 'ticket', action: 'read' },
-      { resource: 'ticket', action: 'create' },
-      { resource: 'ticket', action: 'update' },
-      { resource: 'ticket', action: 'resolve' },
-      { resource: 'ticket', action: 'close' },
-      { resource: 'ticket', action: 'assign' },
-      { resource: 'incident', action: 'read' },
-      { resource: 'incident', action: 'create' },
-      { resource: 'incident', action: 'update' },
-      { resource: 'incident', action: 'resolve' },
-      { resource: 'incident', action: 'close' },
-      { resource: 'incident', action: 'assign' },
-      { resource: 'problem', action: 'read' },
-      { resource: 'problem', action: 'create' },
-      { resource: 'problem', action: 'update' },
-      { resource: 'change', action: 'read' },
-      { resource: 'change', action: 'create' },
-      { resource: 'change', action: 'update' },
-      { resource: 'knowledge', action: 'read' },
-      { resource: 'knowledge', action: 'create' },
-      { resource: 'knowledge', action: 'update' },
-      { resource: 'cmdb', action: 'read' },
-    ],
-
-    // end_user - 普通用户权限
-    end_user: [
-      { resource: 'ticket', action: 'read' },
-      { resource: 'ticket', action: 'create' },
-      { resource: 'incident', action: 'read' },
-      { resource: 'incident', action: 'create' },
-      { resource: 'knowledge', action: 'read' },
-      { resource: 'cmdb', action: 'read' },
-    ],
-
-    // 未知角色返回基础权限，避免锁死
-    _default: basePermissions,
-  };
-
-  // 查找匹配的权限配置
-  const permissions = rolePermissionMap[normalizedRole] || rolePermissionMap[normalizedRole.replace('_', '')];
-
-  // 如果没有匹配的权限配置，返回基础权限（避免锁死）
-  if (!permissions) {
-    return basePermissions;
-  }
-
-  return permissions;
-};
-
-/**
  * 权限管理Hook
  */
 export const usePermissions = () => {
   const { user } = useAuthStore();
 
-  // 用户权限列表 - 基于角色获取权限
+  // 后端返回的权限是唯一事实来源；无用户或无权限时保持 fail-closed。
   const userPermissions = useMemo<RoutePermission[]>(() => {
-    if (!user?.role) return [];
+    if (!user?.permissions?.length) return [];
 
-    // 根据角色返回对应的权限
-    const rolePermissions = getRolePermissions(user.role);
-    return rolePermissions;
-  }, [user?.role]);
+    return user.permissions.flatMap(permission => {
+      const separatorIndex = permission.indexOf(':');
+      if (separatorIndex <= 0 || separatorIndex === permission.length - 1) return [];
+
+      return [{
+        resource: permission.slice(0, separatorIndex),
+        action: permission.slice(separatorIndex + 1),
+      }];
+    });
+  }, [user?.permissions]);
 
   // 用户角色列表
   const userRoles = useMemo<string[]>(() => {
@@ -201,9 +33,7 @@ export const usePermissions = () => {
    * 检查是否有指定权限
    */
   const hasPermission = (resource: string, action: string): boolean => {
-    return userPermissions.some(
-      permission => permission.resource === resource && permission.action === action
-    );
+    return useAuthStore.getState().hasPermission(`${resource}:${action}`);
   };
 
   /**
@@ -269,9 +99,12 @@ export const usePermissions = () => {
    * 获取用户可执行的操作列表
    */
   const getAvailableActions = (resource: string): string[] => {
-    return userPermissions
-      .filter(permission => permission.resource === resource)
-      .map(permission => permission.action);
+    if (!user?.permissions?.length) return [];
+
+    const prefix = `${resource}:`;
+    return user.permissions
+      .filter(permission => permission.startsWith(prefix) && permission.length > prefix.length)
+      .map(permission => permission.slice(prefix.length));
   };
 
   /**
@@ -327,7 +160,7 @@ export const useRoutePermissions = () => {
  * 操作权限Hook
  */
 export const useOperationPermissions = () => {
-  const { hasPermission, isAdmin } = usePermissions();
+  const { hasPermission } = usePermissions();
 
   // 工单操作权限
   const ticketPermissions = {
@@ -403,30 +236,30 @@ export const useOperationPermissions = () => {
 
   // 用户管理权限
   const userPermissions = {
-    canView: () => hasPermission('user', 'read') || isAdmin(),
-    canCreate: () => hasPermission('user', 'create') || isAdmin(),
-    canUpdate: () => hasPermission('user', 'update') || isAdmin(),
-    canDelete: () => hasPermission('user', 'delete') || isAdmin(),
-    canManage: () => hasPermission('user', 'manage') || isAdmin(),
-    canResetPassword: () => hasPermission('user', 'reset_password') || isAdmin(),
+    canView: () => hasPermission('user', 'read'),
+    canCreate: () => hasPermission('user', 'create'),
+    canUpdate: () => hasPermission('user', 'update'),
+    canDelete: () => hasPermission('user', 'delete'),
+    canManage: () => hasPermission('user', 'manage'),
+    canResetPassword: () => hasPermission('user', 'reset_password'),
   };
 
   // 角色管理权限
   const rolePermissions = {
-    canView: () => hasPermission('role', 'read') || isAdmin(),
-    canCreate: () => hasPermission('role', 'create') || isAdmin(),
-    canUpdate: () => hasPermission('role', 'update') || isAdmin(),
-    canDelete: () => hasPermission('role', 'delete') || isAdmin(),
-    canManage: () => hasPermission('role', 'manage') || isAdmin(),
+    canView: () => hasPermission('role', 'read'),
+    canCreate: () => hasPermission('role', 'create'),
+    canUpdate: () => hasPermission('role', 'update'),
+    canDelete: () => hasPermission('role', 'delete'),
+    canManage: () => hasPermission('role', 'manage'),
   };
 
   // 系统管理权限
   const systemPermissions = {
-    canViewSettings: () => hasPermission('system', 'read') || isAdmin(),
-    canUpdateSettings: () => hasPermission('system', 'update') || isAdmin(),
-    canManage: () => hasPermission('system', 'manage') || isAdmin(),
-    canViewLogs: () => hasPermission('system', 'view_logs') || isAdmin(),
-    canBackup: () => hasPermission('system', 'backup') || isAdmin(),
+    canViewSettings: () => hasPermission('system', 'read'),
+    canUpdateSettings: () => hasPermission('system', 'update'),
+    canManage: () => hasPermission('system', 'manage'),
+    canViewLogs: () => hasPermission('system', 'view_logs'),
+    canBackup: () => hasPermission('system', 'backup'),
   };
 
   // 报表权限

@@ -82,8 +82,26 @@ func (s *BPMNAIGeneratorService) GenerateBPMN(ctx context.Context, req *dto.Gene
 		Explanation:        metadata.Explanation,
 	}
 
-	// 如果需要自动部署
-	if autoDeploy {
+	// 生成后自动 Lint：语义层检查（连通性/网关/任务配置），
+	// 结果随响应返回给调用方；error 级问题阻断自动部署。
+	lintResult, err := NewBPMNLintService().LintBPMNXML([]byte(bpmnXML))
+	if err != nil {
+		// Lint 解析失败不影响返回（前面 ValidateBPMNXML 已通过），记录为解析级问题
+		resp.LintResult = &dto.BPMNLintResult{
+			HasErrors: true,
+			Issues: []*dto.BPMNLintIssue{{
+				Severity: "error",
+				Category: "structure",
+				Message:  "Lint 校验失败: " + err.Error(),
+			}},
+		}
+		resp.LintResult.ErrorCount = 1
+	} else {
+		resp.LintResult = lintResult
+	}
+
+	// 如果需要自动部署（error 级 Lint 问题时拒绝，防止部署引擎无法正确执行的流程）
+	if autoDeploy && !resp.LintResult.HasErrors {
 		deployReq := &DeployProcessDefinitionRequest{
 			Name:        resp.ProcessName,
 			Description: resp.ProcessDescription,

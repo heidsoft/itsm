@@ -11,6 +11,7 @@ import (
 
 	"itsm-backend/ent/migrate"
 
+	"itsm-backend/ent/aianalysisresult"
 	"itsm-backend/ent/alert"
 	"itsm-backend/ent/application"
 	"itsm-backend/ent/approvalchain"
@@ -155,6 +156,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// AIAnalysisResult is the client for interacting with the AIAnalysisResult builders.
+	AIAnalysisResult *AIAnalysisResultClient
 	// Alert is the client for interacting with the Alert builders.
 	Alert *AlertClient
 	// Application is the client for interacting with the Application builders.
@@ -430,6 +433,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.AIAnalysisResult = NewAIAnalysisResultClient(c.config)
 	c.Alert = NewAlertClient(c.config)
 	c.Application = NewApplicationClient(c.config)
 	c.ApprovalChain = NewApprovalChainClient(c.config)
@@ -654,6 +658,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:                         ctx,
 		config:                      cfg,
+		AIAnalysisResult:            NewAIAnalysisResultClient(cfg),
 		Alert:                       NewAlertClient(cfg),
 		Application:                 NewApplicationClient(cfg),
 		ApprovalChain:               NewApprovalChainClient(cfg),
@@ -805,6 +810,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:                         ctx,
 		config:                      cfg,
+		AIAnalysisResult:            NewAIAnalysisResultClient(cfg),
 		Alert:                       NewAlertClient(cfg),
 		Application:                 NewApplicationClient(cfg),
 		ApprovalChain:               NewApprovalChainClient(cfg),
@@ -943,7 +949,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Alert.
+//		AIAnalysisResult.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -966,15 +972,15 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Alert, c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow,
-		c.Asset, c.AssetLicense, c.AuditLog, c.BPMNPermission, c.BootstrapToken,
-		c.CABMember, c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType,
-		c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR,
-		c.CloudAccount, c.CloudResource, c.CloudService, c.ConfigurationItem,
-		c.ConfigurationItemHistory, c.ConnectorConfig, c.Contract, c.Conversation,
-		c.CustomerBranch, c.Department, c.DiscoveryJob, c.DiscoveryResult,
-		c.DiscoverySource, c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
-		c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
+		c.AIAnalysisResult, c.Alert, c.Application, c.ApprovalChain, c.ApprovalRecord,
+		c.ApprovalWorkflow, c.Asset, c.AssetLicense, c.AuditLog, c.BPMNPermission,
+		c.BootstrapToken, c.CABMember, c.CIAttributeDefinition, c.CIRelationship,
+		c.CITag, c.CIType, c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView,
+		c.Change, c.ChangePIR, c.CloudAccount, c.CloudResource, c.CloudService,
+		c.ConfigurationItem, c.ConfigurationItemHistory, c.ConnectorConfig, c.Contract,
+		c.Conversation, c.CustomerBranch, c.Department, c.DiscoveryJob,
+		c.DiscoveryResult, c.DiscoverySource, c.DomainConfig, c.EmailConversation,
+		c.EmailIntakeAnalysis, c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
 		c.ExternalContractReference, c.FeishuTicketSync, c.Group,
 		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
 		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
@@ -1008,15 +1014,15 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Alert, c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow,
-		c.Asset, c.AssetLicense, c.AuditLog, c.BPMNPermission, c.BootstrapToken,
-		c.CABMember, c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType,
-		c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR,
-		c.CloudAccount, c.CloudResource, c.CloudService, c.ConfigurationItem,
-		c.ConfigurationItemHistory, c.ConnectorConfig, c.Contract, c.Conversation,
-		c.CustomerBranch, c.Department, c.DiscoveryJob, c.DiscoveryResult,
-		c.DiscoverySource, c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
-		c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
+		c.AIAnalysisResult, c.Alert, c.Application, c.ApprovalChain, c.ApprovalRecord,
+		c.ApprovalWorkflow, c.Asset, c.AssetLicense, c.AuditLog, c.BPMNPermission,
+		c.BootstrapToken, c.CABMember, c.CIAttributeDefinition, c.CIRelationship,
+		c.CITag, c.CIType, c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView,
+		c.Change, c.ChangePIR, c.CloudAccount, c.CloudResource, c.CloudService,
+		c.ConfigurationItem, c.ConfigurationItemHistory, c.ConnectorConfig, c.Contract,
+		c.Conversation, c.CustomerBranch, c.Department, c.DiscoveryJob,
+		c.DiscoveryResult, c.DiscoverySource, c.DomainConfig, c.EmailConversation,
+		c.EmailIntakeAnalysis, c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
 		c.ExternalContractReference, c.FeishuTicketSync, c.Group,
 		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
 		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
@@ -1049,6 +1055,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *AIAnalysisResultMutation:
+		return c.AIAnalysisResult.mutate(ctx, m)
 	case *AlertMutation:
 		return c.Alert.mutate(ctx, m)
 	case *ApplicationMutation:
@@ -1315,6 +1323,139 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.WorkflowVersion.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// AIAnalysisResultClient is a client for the AIAnalysisResult schema.
+type AIAnalysisResultClient struct {
+	config
+}
+
+// NewAIAnalysisResultClient returns a client for the AIAnalysisResult from the given config.
+func NewAIAnalysisResultClient(c config) *AIAnalysisResultClient {
+	return &AIAnalysisResultClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `aianalysisresult.Hooks(f(g(h())))`.
+func (c *AIAnalysisResultClient) Use(hooks ...Hook) {
+	c.hooks.AIAnalysisResult = append(c.hooks.AIAnalysisResult, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `aianalysisresult.Intercept(f(g(h())))`.
+func (c *AIAnalysisResultClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AIAnalysisResult = append(c.inters.AIAnalysisResult, interceptors...)
+}
+
+// Create returns a builder for creating a AIAnalysisResult entity.
+func (c *AIAnalysisResultClient) Create() *AIAnalysisResultCreate {
+	mutation := newAIAnalysisResultMutation(c.config, OpCreate)
+	return &AIAnalysisResultCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AIAnalysisResult entities.
+func (c *AIAnalysisResultClient) CreateBulk(builders ...*AIAnalysisResultCreate) *AIAnalysisResultCreateBulk {
+	return &AIAnalysisResultCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AIAnalysisResultClient) MapCreateBulk(slice any, setFunc func(*AIAnalysisResultCreate, int)) *AIAnalysisResultCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AIAnalysisResultCreateBulk{err: fmt.Errorf("calling to AIAnalysisResultClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AIAnalysisResultCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AIAnalysisResultCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AIAnalysisResult.
+func (c *AIAnalysisResultClient) Update() *AIAnalysisResultUpdate {
+	mutation := newAIAnalysisResultMutation(c.config, OpUpdate)
+	return &AIAnalysisResultUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AIAnalysisResultClient) UpdateOne(_m *AIAnalysisResult) *AIAnalysisResultUpdateOne {
+	mutation := newAIAnalysisResultMutation(c.config, OpUpdateOne, withAIAnalysisResult(_m))
+	return &AIAnalysisResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AIAnalysisResultClient) UpdateOneID(id int) *AIAnalysisResultUpdateOne {
+	mutation := newAIAnalysisResultMutation(c.config, OpUpdateOne, withAIAnalysisResultID(id))
+	return &AIAnalysisResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AIAnalysisResult.
+func (c *AIAnalysisResultClient) Delete() *AIAnalysisResultDelete {
+	mutation := newAIAnalysisResultMutation(c.config, OpDelete)
+	return &AIAnalysisResultDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AIAnalysisResultClient) DeleteOne(_m *AIAnalysisResult) *AIAnalysisResultDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AIAnalysisResultClient) DeleteOneID(id int) *AIAnalysisResultDeleteOne {
+	builder := c.Delete().Where(aianalysisresult.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AIAnalysisResultDeleteOne{builder}
+}
+
+// Query returns a query builder for AIAnalysisResult.
+func (c *AIAnalysisResultClient) Query() *AIAnalysisResultQuery {
+	return &AIAnalysisResultQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAIAnalysisResult},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AIAnalysisResult entity by its id.
+func (c *AIAnalysisResultClient) Get(ctx context.Context, id int) (*AIAnalysisResult, error) {
+	return c.Query().Where(aianalysisresult.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AIAnalysisResultClient) GetX(ctx context.Context, id int) *AIAnalysisResult {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AIAnalysisResultClient) Hooks() []Hook {
+	return c.hooks.AIAnalysisResult
+}
+
+// Interceptors returns the client interceptors.
+func (c *AIAnalysisResultClient) Interceptors() []Interceptor {
+	return c.inters.AIAnalysisResult
+}
+
+func (c *AIAnalysisResultClient) mutate(ctx context.Context, m *AIAnalysisResultMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AIAnalysisResultCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AIAnalysisResultUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AIAnalysisResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AIAnalysisResultDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AIAnalysisResult mutation op: %q", m.Op())
 	}
 }
 
@@ -22781,65 +22922,65 @@ func (c *WorkflowVersionClient) mutate(ctx context.Context, m *WorkflowVersionMu
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Alert, Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
-		AssetLicense, AuditLog, BPMNPermission, BootstrapToken, CABMember,
-		CIAttributeDefinition, CIRelationship, CITag, CIType, CMDBExportTask,
-		CMDBImportTask, CMDBSavedView, Change, ChangePIR, CloudAccount, CloudResource,
-		CloudService, ConfigurationItem, ConfigurationItemHistory, ConnectorConfig,
-		Contract, Conversation, CustomerBranch, Department, DiscoveryJob,
-		DiscoveryResult, DiscoverySource, DomainConfig, EmailConversation,
-		EmailIntakeAnalysis, EmailOutboundMessage, EndpointACL, EngineerSkill,
-		ExternalContractReference, FeishuTicketSync, Group, InboundEmailMessage,
-		Incident, IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
-		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
-		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
-		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
-		Message, Microservice, Notification, NotificationDelivery,
-		NotificationPreference, OnCallSchedule, OnCallShift, OperationalCommand,
-		PasswordResetToken, Permission, PermissionDefinition, Problem,
-		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
-		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
-		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
-		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
-		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
-		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
-		ServiceRequest, ServiceRequestApproval, SourceOrganization, StandardChange,
-		SupportContract, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
-		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCC, TicketCategory,
-		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketType,
-		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
-		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
+		AIAnalysisResult, Alert, Application, ApprovalChain, ApprovalRecord,
+		ApprovalWorkflow, Asset, AssetLicense, AuditLog, BPMNPermission,
+		BootstrapToken, CABMember, CIAttributeDefinition, CIRelationship, CITag,
+		CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView, Change, ChangePIR,
+		CloudAccount, CloudResource, CloudService, ConfigurationItem,
+		ConfigurationItemHistory, ConnectorConfig, Contract, Conversation,
+		CustomerBranch, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
+		DomainConfig, EmailConversation, EmailIntakeAnalysis, EmailOutboundMessage,
+		EndpointACL, EngineerSkill, ExternalContractReference, FeishuTicketSync, Group,
+		InboundEmailMessage, Incident, IncidentAlert, IncidentEscalationRule,
+		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
+		ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
+		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
+		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
+		Notification, NotificationDelivery, NotificationPreference, OnCallSchedule,
+		OnCallShift, OperationalCommand, PasswordResetToken, Permission,
+		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
+		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
+		ServiceCatalogItem, ServiceCustomer, ServiceRequest, ServiceRequestApproval,
+		SourceOrganization, StandardChange, SupportContract, Survey, SurveyResponse,
+		SystemConfig, Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
+		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketType, TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor,
+		Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
-		Alert, Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
-		AssetLicense, AuditLog, BPMNPermission, BootstrapToken, CABMember,
-		CIAttributeDefinition, CIRelationship, CITag, CIType, CMDBExportTask,
-		CMDBImportTask, CMDBSavedView, Change, ChangePIR, CloudAccount, CloudResource,
-		CloudService, ConfigurationItem, ConfigurationItemHistory, ConnectorConfig,
-		Contract, Conversation, CustomerBranch, Department, DiscoveryJob,
-		DiscoveryResult, DiscoverySource, DomainConfig, EmailConversation,
-		EmailIntakeAnalysis, EmailOutboundMessage, EndpointACL, EngineerSkill,
-		ExternalContractReference, FeishuTicketSync, Group, InboundEmailMessage,
-		Incident, IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
-		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
-		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
-		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
-		Message, Microservice, Notification, NotificationDelivery,
-		NotificationPreference, OnCallSchedule, OnCallShift, OperationalCommand,
-		PasswordResetToken, Permission, PermissionDefinition, Problem,
-		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
-		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
-		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
-		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
-		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
-		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
-		ServiceRequest, ServiceRequestApproval, SourceOrganization, StandardChange,
-		SupportContract, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
-		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCC, TicketCategory,
-		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketType,
-		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
-		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
+		AIAnalysisResult, Alert, Application, ApprovalChain, ApprovalRecord,
+		ApprovalWorkflow, Asset, AssetLicense, AuditLog, BPMNPermission,
+		BootstrapToken, CABMember, CIAttributeDefinition, CIRelationship, CITag,
+		CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView, Change, ChangePIR,
+		CloudAccount, CloudResource, CloudService, ConfigurationItem,
+		ConfigurationItemHistory, ConnectorConfig, Contract, Conversation,
+		CustomerBranch, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
+		DomainConfig, EmailConversation, EmailIntakeAnalysis, EmailOutboundMessage,
+		EndpointACL, EngineerSkill, ExternalContractReference, FeishuTicketSync, Group,
+		InboundEmailMessage, Incident, IncidentAlert, IncidentEscalationRule,
+		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
+		ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
+		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
+		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
+		Notification, NotificationDelivery, NotificationPreference, OnCallSchedule,
+		OnCallShift, OperationalCommand, PasswordResetToken, Permission,
+		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
+		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
+		ServiceCatalogItem, ServiceCustomer, ServiceRequest, ServiceRequestApproval,
+		SourceOrganization, StandardChange, SupportContract, Survey, SurveyResponse,
+		SystemConfig, Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
+		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketType, TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor,
+		Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )

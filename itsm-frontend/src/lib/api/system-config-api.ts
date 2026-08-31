@@ -7,9 +7,15 @@ import type {
 } from './api-config';
 
 export class SystemConfigAPI {
-  // 获取系统配置列表
+  // 获取系统配置列表。
+  // 后端 ListConfigs 默认 page_size=20，系统配置全部键不到 30 条，一次拉完更安全。
+  // 必须用 snake_case query 参数（后端 controller 读 page_size）；
+  // http-client 不会自动转换 params 的 key。
   static async getConfigs(params?: GetSystemConfigsParams): Promise<SystemConfigListResponse> {
-    return httpClient.get<SystemConfigListResponse>('/api/v1/system-configs', params);
+    return httpClient.get<SystemConfigListResponse>('/api/v1/system-configs', {
+      page_size: 1000,
+      ...params,
+    });
   }
 
   // 获取单个配置项

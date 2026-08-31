@@ -65,6 +65,26 @@ func (m *rbacMockRepo) ListConversations(_ context.Context, _ int, _ int) ([]*ai
 	return nil, nil
 }
 
+func (m *rbacMockRepo) DeleteConversation(_ context.Context, _ int, _ int) error {
+	return nil
+}
+
+func (m *rbacMockRepo) SaveAIAnalysisResult(_ context.Context, r *ai.AIAnalysisResult) (*ai.AIAnalysisResult, error) {
+	return r, nil
+}
+
+func (m *rbacMockRepo) ListAIAnalysisResults(_ context.Context, _ int, _ string, _ int) ([]*ai.AIAnalysisResult, error) {
+	return nil, nil
+}
+
+func (m *rbacMockRepo) GetAIAnalysisResult(_ context.Context, _ int, _ int) (*ai.AIAnalysisResult, error) {
+	return nil, nil
+}
+
+func (m *rbacMockRepo) DeleteAIAnalysisResult(_ context.Context, _ int, _ int) error {
+	return nil
+}
+
 func (m *rbacMockRepo) CreateMessage(_ context.Context, msg *ai.Message) (*ai.Message, error) {
 	return msg, nil
 }
@@ -91,6 +111,12 @@ func (m *rbacMockRepo) GetRCAByTicket(_ context.Context, _ int, _ int) (*ai.Root
 
 func (m *rbacMockRepo) UpdateRCA(_ context.Context, r *ai.RootCauseAnalysis) (*ai.RootCauseAnalysis, error) {
 	return r, nil
+}
+
+func (m *rbacMockRepo) ListToolInvocations(_ context.Context, _ int, _ string) ([]*ai.ToolInvocation, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.toolInvocations, nil
 }
 
 // rbacTestEnv 统一构造 Service + mock repo，开启硬编码权限模式以便无 DB 测试。

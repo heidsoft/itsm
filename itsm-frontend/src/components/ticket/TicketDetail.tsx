@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { TicketApi, type TicketConfigurationItem } from '@/lib/api/ticket-api';
+import { TicketApprovalApi } from '@/lib/api/ticket-approval-api';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
 import { useUserListQuery } from '@/lib/hooks/useUserListQuery';
@@ -50,6 +51,7 @@ import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { formatDateTime } from '@/lib/formatters';
 import { SafeTextBlock } from '@/components/common/SafeContent';
 import { AISuggestionPanel } from '@/components/business/AISuggestionPanel';
+import { WorkflowProgressCard } from '@/components/business/WorkflowProgressCard';
 import {
   isValidTransition,
   getAllowedTransitions,
@@ -168,6 +170,11 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [ccing, setCCing] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  // 审批/驳回走 BPMN bridge：保留原 handleApprove/handleReject 触点，但改为打开评论 modal
+  // 并改调 TicketApprovalApi.submitApproval（其底层即 /api/v1/tickets/workflow/approve），
+  // 避免旧 updateTicketStatus(ticketId,'approved') 直接改 ticket.status 造成的双轨分叉。
+  const [approvalModalVisible, setApprovalModalVisible] = useState(false);
+  const [approvalAction, setApprovalAction] = useState<'approve' | 'reject'>('approve');
 
   // AI-Native：受影响配置项（工单→CI 反向查询）
   const [cis, setCis] = useState<TicketConfigurationItem[]>([]);
@@ -184,6 +191,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [assignForm] = Form.useForm();
   const [editForm] = Form.useForm();
   const [ccForm] = Form.useForm();
+  const [approvalForm] = Form.useForm();
 
   // 支持通过 props 传入 id，或通过 useParams 获取
   const ticketId = parseInt((propId ?? (params?.ticketId as string)) || '');
@@ -261,18 +269,65 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
   // 用户列表由 useUserListQuery 内部处理挂载与缓存。
 
-  // Handle approval (轻量版：仅改状态)
-  const handleApprove = async () => {
+  // 真正提交审批/驳回：通过 TicketApprovalApi 找到当前用户的待审批记录，
+  // 调 /api/v1/tickets/workflow/approve（其内部触发 BPMN bridge）。
+  // 找不到 pending approval 时回退到旧 updateTicketStatus（简化模式兜底）。
+  const handleApprovalSubmit = async (values: { comment?: string }) => {
+    const isApprove = approvalAction === 'approve';
+    const setBusy = isApprove ? setApproving : setRejecting;
+    setBusy(true);
     try {
-      setApproving(true);
-      await TicketApi.updateTicketStatus(ticketId, 'approved');
-      antMessage.success(t('ticketDetail.approveSuccess'));
+      let submitted = false;
+      try {
+        const recRes = await TicketApprovalApi.getApprovalRecords({
+          ticketId,
+          page: 1,
+          pageSize: 100,
+        });
+        const myPending = (recRes.items || []).find(
+          (r) =>
+            r.status === 'pending' &&
+            currentUser?.id != null &&
+            r.approverId === currentUser.id,
+        );
+        if (myPending) {
+          await TicketApprovalApi.submitApproval({
+            ticketId,
+            approvalId: myPending.id,
+            action: approvalAction,
+            comment: values.comment || '',
+          });
+          submitted = true;
+        }
+      } catch (e) {
+        console.warn('approval submit via bridge failed, fallback to status update', e);
+      }
+      if (!submitted) {
+        // 兜底：未发现审批链（例如简单审批工单），保留旧行为以不阻塞用户。
+        await TicketApi.updateTicketStatus(ticketId, isApprove ? 'approved' : 'rejected');
+      }
+      antMessage.success(
+        isApprove ? t('ticketDetail.approveSuccess') : t('ticketDetail.rejectSuccess'),
+      );
+      setApprovalModalVisible(false);
+      approvalForm.resetFields();
       fetchTicket();
     } catch (error) {
-      handleError(error, 'approveTicket', t('ticketDetail.approveFailed'));
+      handleError(
+        error,
+        isApprove ? 'approveTicket' : 'rejectTicket',
+        isApprove ? t('ticketDetail.approveFailed') : t('ticketDetail.rejectFailed'),
+      );
     } finally {
-      setApproving(false);
+      setBusy(false);
     }
+  };
+
+  // 打开审批 modal：实际提交走 handleApprovalSubmit -> TicketApprovalApi.submitApproval
+  // 走 BPMN bridge 后由后端更新 ticket.status，避免与流程分叉。
+  const handleApprove = () => {
+    setApprovalAction('approve');
+    setApprovalModalVisible(true);
   };
 
   const handleCCSubmit = async (values: {
@@ -299,18 +354,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     }
   };
 
-  // Handle rejection (轻量版：仅改状态)
-  const handleReject = async () => {
-    try {
-      setRejecting(true);
-      await TicketApi.updateTicketStatus(ticketId, 'rejected');
-      antMessage.success(t('ticketDetail.rejectSuccess'));
-      fetchTicket();
-    } catch (error) {
-      handleError(error, 'rejectTicket', t('ticketDetail.rejectFailed'));
-    } finally {
-      setRejecting(false);
-    }
+  // 打开驳回 modal：实际提交走 handleApprovalSubmit -> TicketApprovalApi.submitApproval
+  const handleReject = () => {
+    setApprovalAction('reject');
+    setApprovalModalVisible(true);
   };
 
   // Handle assignment
@@ -926,6 +973,80 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           </Form>
         </Modal>
 
+        {/* Approval / Reject Modal — 走 BPMN bridge */}
+        <Modal
+          title={
+            <Space>
+              {approvalAction === 'approve' ? (
+                <UserCheck className="w-5 h-5 text-green-600" />
+              ) : (
+                <XCircle className="w-5 h-5 text-red-600" />
+              )}
+              {approvalAction === 'approve'
+                ? t('ticketDetail.approveTitle') || '审批通过'
+                : t('ticketDetail.rejectTitle') || '审批驳回'}
+            </Space>
+          }
+          open={approvalModalVisible}
+          onCancel={() => {
+            setApprovalModalVisible(false);
+            approvalForm.resetFields();
+          }}
+          footer={null}
+          width={480}
+        >
+          <Form form={approvalForm} layout="vertical" onFinish={handleApprovalSubmit}>
+            <Form.Item
+              label={t('ticketDetail.remark') || '备注'}
+              name="comment"
+              rules={[
+                {
+                  required: approvalAction === 'reject',
+                  message:
+                    approvalAction === 'reject'
+                      ? t('ticketDetail.rejectReasonRequired') || '请填写驳回原因'
+                      : undefined,
+                },
+              ]}
+            >
+              <TextArea
+                rows={3}
+                placeholder={
+                  approvalAction === 'approve'
+                    ? t('ticketDetail.approveRemarkPlaceholder') || '请输入审批意见（可选）'
+                    : t('ticketDetail.rejectRemarkPlaceholder') || '请输入驳回原因'
+                }
+                maxLength={500}
+                showCount
+              />
+            </Form.Item>
+            <Form.Item className="mb-0">
+              <Space className="w-full justify-end">
+                <Button
+                  icon={<X />}
+                  onClick={() => {
+                    setApprovalModalVisible(false);
+                    approvalForm.resetFields();
+                  }}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  type="primary"
+                  danger={approvalAction === 'reject'}
+                  htmlType="submit"
+                  icon={approvalAction === 'approve' ? <Check /> : <XIcon />}
+                  loading={approvalAction === 'approve' ? approving : rejecting}
+                >
+                  {approvalAction === 'approve'
+                    ? t('ticketDetail.confirmApprove') || '确认通过'
+                    : t('ticketDetail.confirmReject') || '确认驳回'}
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
+
         {/* CC Modal */}
         <Modal
           title={
@@ -1052,6 +1173,14 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           </Space>
         </Modal>
       </Card>
+
+      {/* 流转进度卡片（工单三件套改造）：详情页头部下方、详情 Tabs 上方。
+          hidden 在 isTicketFinal 时折叠，避免无效请求。 */}
+      <WorkflowProgressCard
+        ticketId={ticketId}
+        hidden={isTicketFinal}
+        onRefresh={fetchTicket}
+      />
 
       {/* 详情 Tabs（评论/附件/审批/历史/关联） */}
       <TicketDetailTabs

@@ -46,6 +46,37 @@ export interface AIMetrics {
   avgResponseTimeSeconds: number;
 }
 
+export interface AIAuditEntry {
+  id: number;
+  tenantId: number;
+  scenario: string;
+  prompt: string;
+  model: string;
+  latencyMs: number;
+  totalTokens: number;
+  totalCost: number;
+  score: number;
+  feedback: string;
+  createdAt: string;
+}
+
+export interface ConversationSummary {
+  id: number;
+  title: string;
+  userId: number;
+  tenantId: number;
+  createdAt: string;
+}
+
+export interface AIMessage {
+  id: number;
+  conversationId: number;
+  role: string;
+  content: string;
+  requestId?: string;
+  createdAt: string;
+}
+
 export async function aiTriage(title: string, description: string): Promise<TriageResult> {
   const res = await httpClient.post<{
     title: string;
@@ -603,6 +634,68 @@ export async function aiChatStream(
   const message = lastError?.message || 'AI chat stream failed: no candidate succeeded';
   callbacks.onError?.(message);
   throw lastError || new Error(message);
+}
+
+/** 列出当前用户的 AI 会话历史 */
+export async function listConversations(): Promise<ConversationSummary[]> {
+  const res = await httpClient.get<{ conversations: ConversationSummary[] }>('/api/v1/ai/conversations');
+  return Array.isArray(res?.conversations) ? res.conversations : [];
+}
+
+/** 获取指定会话的所有消息 */
+export async function getConversationMessages(conversationId: number): Promise<AIMessage[]> {
+  const res = await httpClient.get<{ messages: AIMessage[] }>(`/api/v1/ai/conversations/${conversationId}`);
+  return Array.isArray(res?.messages) ? res.messages : [];
+}
+
+/** 删除指定会话 */
+export async function deleteConversation(conversationId: number): Promise<void> {
+  await httpClient.delete(`/api/v1/ai/conversations/${conversationId}`);
+}
+
+// ==================== AI 分析结果持久化 ====================
+
+export interface AIAnalysisResultDTO {
+  id: number;
+  tenantId: number;
+  userId: number;
+  analysisType: string; // triage | summary | rca | deep_analytics | trend_prediction | incident_impact
+  ticketId?: number;
+  incidentId?: number;
+  ticketNumber?: string;
+  ticketTitle?: string;
+  requestPrompt: string;
+  resultJson: string;
+  model?: string;
+  latencyMs?: number;
+  totalTokens?: number;
+  costUsd?: number;
+  confidenceScore?: number;
+  degraded: boolean;
+  createdAt: string;
+}
+
+export interface AIAnalysisResultListResponse {
+  results: AIAnalysisResultDTO[];
+}
+
+/** 列出分析历史（可按 type 过滤） */
+export async function listAnalysisResults(params?: {
+  type?: string;
+  limit?: number;
+}): Promise<AIAnalysisResultDTO[]> {
+  const res = await httpClient.get<AIAnalysisResultListResponse>('/api/v1/ai/analysis-results', { params });
+  return res?.results ?? [];
+}
+
+/** 获取单条分析结果 */
+export async function getAnalysisResult(id: number): Promise<AIAnalysisResultDTO> {
+  return httpClient.get<AIAnalysisResultDTO>(`/api/v1/ai/analysis-results/${id}`);
+}
+
+/** 删除分析结果记录 */
+export async function deleteAnalysisResult(id: number): Promise<void> {
+  await httpClient.delete(`/api/v1/ai/analysis-results/${id}`);
 }
 
 // ==================== 兼容类包装器 ====================

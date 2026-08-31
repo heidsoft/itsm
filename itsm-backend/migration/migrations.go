@@ -89,6 +89,11 @@ var RegisteredMigrations = []Migration{
 		Description: "Add tenant-scoped TicketType management permissions and backfill administrative role grants",
 		RollbackSQL: "",
 	},
+	{
+		Version:     "017_normalize_service_catalog_status",
+		Description: "Normalize service_catalogs.status from legacy 'active'/'inactive' to API contract 'enabled'/'disabled' (fixes /service-catalog showing all services as 已停用)",
+		RollbackSQL: "UPDATE service_catalogs SET status = 'active' WHERE status = 'enabled'; UPDATE service_catalogs SET status = 'inactive' WHERE status = 'disabled';",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -704,6 +709,21 @@ WHERE role.code IN ('sysadmin', 'it_director', 'ops_director', 'ops_manager', 's
     SELECT 1 FROM role_permissions existing
     WHERE existing.role_id = role.id AND existing.permission_id = permission.id AND existing.tenant_id = role.tenant_id
   );
+`
+	case "017_normalize_service_catalog_status":
+		return `
+-- 修复服务目录状态词汇不一致：
+-- 背景：ent schema 默认写入 'active'，后端 API 契约及前端 service-catalog-api.ts
+-- 都使用 'enabled'/'disabled'。结果所有服务被前端显示为“已停用”（retired），
+-- 因为 toFrontendStatus 只识别 'enabled'。
+-- 修复：把所有 'active' → 'enabled'，'inactive' → 'disabled'。
+-- 1）active -> enabled
+UPDATE service_catalogs SET status = 'enabled' WHERE status = 'active';
+-- 2）inactive -> disabled
+UPDATE service_catalogs SET status = 'disabled' WHERE status = 'inactive';
+-- 3）保持 is_active 与 status 一致：
+--    enabled/active => is_active=true；disabled/inactive => is_active=false。
+UPDATE service_catalogs SET is_active = (status = 'enabled');
 `
 	default:
 		return ""

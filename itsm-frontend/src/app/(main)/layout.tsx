@@ -9,6 +9,7 @@ import { httpClient } from '@/lib/api/http-client';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { NetworkStatus } from '@/components/common/NetworkStatus';
+import { AdminRouteGuard } from '@/components/common/AdminRouteGuard';
 import { useLayoutStore } from '@/lib/store/layout-store';
 import PageTransition from '@/components/common/PageTransition';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -190,7 +191,9 @@ export default function MainLayout({
       isMobile={isMobile}
       handleContentClick={handleContentClick}
     >
-      <PageTransition>{children}</PageTransition>
+      <AdminRouteGuard>
+        <PageTransition>{children}</PageTransition>
+      </AdminRouteGuard>
     </ThemedMainLayout>
   );
 }

@@ -15,14 +15,39 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Card, Steps, Tag, Space, Typography, App, Empty, Divider, Skeleton, Alert } from 'antd';
-import { CheckCircle, Timer, Users, User as UserIcon, GitBranch } from 'lucide-react';
+import {
+  Card,
+  Steps,
+  Tag,
+  Space,
+  Typography,
+  App,
+  Empty,
+  Divider,
+  Skeleton,
+  Alert,
+  Button,
+  Tooltip,
+} from 'antd';
+import {
+  CheckCircle,
+  Timer,
+  Users,
+  User as UserIcon,
+  GitBranch,
+  ArrowRight,
+  CircleAlert,
+  Workflow as WorkflowIcon,
+  ExternalLink,
+} from 'lucide-react';
 import {
   TicketApprovalApi,
   type ApprovalWorkflow,
   type ApprovalNode,
   type ApprovalRecord,
 } from '@/lib/api/ticket-approval-api';
+import { TicketWorkflowStateApi } from '@/lib/api/ticket-workflow-state-api';
+import type { BpmnProcessState, NextActivityInfo } from '@/types/ticket-workflow-state';
 import { ApprovalTimeline } from './ApprovalTimeline';
 import type { ApprovalStep, ApprovalStepStatus } from './types';
 import { useI18n } from '@/lib/i18n/useI18n';
@@ -78,6 +103,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
   const [loading, setLoading] = useState(false);
   const [workflow, setWorkflow] = useState<ApprovalWorkflow | null>(null);
   const [records, setRecords] = useState<ApprovalRecord[]>([]);
+  const [bpmnState, setBpmnState] = useState<BpmnProcessState | null>(null);
 
   const modeLabels = useMemo(
     () =>
@@ -114,7 +140,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [wfRes, recRes] = await Promise.all([
+      const [wfRes, recRes, bpmn] = await Promise.all([
         TicketApprovalApi.getWorkflows({
           ticketType,
           priority,
@@ -128,9 +154,12 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
           page: 1,
           pageSize: 100,
         })),
+        // BPMN 状态拉取：失败静默返回 null，调用方继续走原有 V1 逻辑。
+        TicketWorkflowStateApi.tryGetStateV2(ticketId),
       ]);
 
       setRecords(recRes.items || []);
+      setBpmnState(bpmn);
 
       const wfIdFromRecord = (recRes.items || [])[0]?.workflowId;
       let matched: ApprovalWorkflow | null = null;
@@ -259,6 +288,47 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
     return undefined;
   };
 
+  // BPMN 节点类型 -> 中文 / 颜色，仅展示用，不参与逻辑。
+  const bpmnTypeLabels = useMemo(
+    () =>
+      ({
+        startEvent: t('detailTabs.bpmnTypeStartEvent') || '开始',
+        endEvent: t('detailTabs.bpmnTypeEndEvent') || '结束',
+        userTask: t('detailTabs.bpmnTypeUserTask') || '用户任务',
+        serviceTask: t('detailTabs.bpmnTypeServiceTask') || '服务任务',
+        exclusiveGateway: t('detailTabs.bpmnTypeExclusiveGateway') || '排他网关',
+        parallelGateway: t('detailTabs.bpmnTypeParallelGateway') || '并行网关',
+        inclusiveGateway: t('detailTabs.bpmnTypeInclusiveGateway') || '包容网关',
+      }) as Record<string, string>,
+    [t],
+  );
+
+  const bpmnTypeColors: Record<string, string> = useMemo(
+    () => ({
+      startEvent: 'green',
+      endEvent: 'default',
+      userTask: 'blue',
+      serviceTask: 'purple',
+      exclusiveGateway: 'orange',
+      parallelGateway: 'cyan',
+      inclusiveGateway: 'gold',
+    }),
+    [],
+  );
+
+  // "查看完整流程图" 跳转地址：与后端 ProcessTriggerService 约定的 businessKey 协议一致。
+  const openProcessDiagramUrl = useCallback(
+    (processInstanceId: string) => {
+      const url = `/workflow/instances?businessKey=ticket:${ticketId}&instanceId=${encodeURIComponent(
+        processInstanceId,
+      )}`;
+      if (typeof window !== 'undefined') {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    },
+    [ticketId],
+  );
+
   if (loading) {
     return (
       <div className="p-6">
@@ -272,6 +342,140 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
 
   return (
     <div className="p-6 space-y-4">
+      {/* === BPMN 状态叠加层（工单三件套改造）===
+         - 优先级高于原 V1 Steps；不可用时（null / not_started）退化到下方原逻辑。
+         - 不影响原有 approve/reject 提交路径（仍然走 submitApproval -> BPMN bridge）。 */}
+      {bpmnState && bpmnState.bpmnStatus === 'running' && bpmnState.currentActivityId && (
+        <Card
+          size="small"
+          data-testid="bpmn-running-card"
+          title={
+            <Space size={6}>
+              <WorkflowIcon size={14} />
+              <Text strong>{bpmnState.processDefinitionName || bpmnState.processDefinitionKey}</Text>
+              <Tag color="processing">
+                {t('detailTabs.bpmnStatusRunning') || '进行中'}
+              </Tag>
+            </Space>
+          }
+          extra={
+            <Button
+              type="link"
+              size="small"
+              icon={<ExternalLink size={12} />}
+              onClick={() => openProcessDiagramUrl(bpmnState.processInstanceId)}
+            >
+              {t('detailTabs.viewProcessDiagram') || '查看完整流程图'}
+            </Button>
+          }
+        >
+          <Space orientation="vertical" size={8} className="w-full">
+            <div>
+              <Text type="secondary" className="text-xs">
+                {t('detailTabs.bpmnCurrentNode') || '当前节点'}
+              </Text>
+              <div className="flex items-center gap-2 mt-1">
+                <Tag
+                  color={bpmnTypeColors[bpmnState.currentActivityType || ''] || 'blue'}
+                  className="mr-0"
+                >
+                  {bpmnTypeLabels[bpmnState.currentActivityType || ''] ||
+                    bpmnState.currentActivityType}
+                </Tag>
+                <Text strong>{bpmnState.currentActivityName}</Text>
+              </div>
+              {bpmnState.currentAssignees && bpmnState.currentAssignees.length > 0 && (
+                <Space size={4} className="mt-2" wrap>
+                  <Text type="secondary" className="text-xs">
+                    {t('detailTabs.bpmnAssignees') || '处理人'}
+                  </Text>
+                  {bpmnState.currentAssignees.map((u) => (
+                    <Tooltip key={u.id} title={u.fullName || u.username}>
+                      <Tag color="geekblue" icon={<UserIcon size={10} />}>
+                        {u.fullName || u.username}
+                      </Tag>
+                    </Tooltip>
+                  ))}
+                </Space>
+              )}
+            </div>
+            {bpmnState.nextActivities && bpmnState.nextActivities.length > 0 && (
+              <div>
+                <Text type="secondary" className="text-xs">
+                  {t('detailTabs.bpmnNextNode') || '下一步'}
+                </Text>
+                <Space orientation="vertical" size={4} className="mt-1 w-full">
+                  {bpmnState.nextActivities.map((nx: NextActivityInfo) => (
+                    <Space key={nx.activityId} size={6} className="text-xs">
+                      <ArrowRight size={12} className="text-gray-400" />
+                      <Tag
+                        color={bpmnTypeColors[nx.activityType] || 'blue'}
+                        className="mr-0"
+                      >
+                        {bpmnTypeLabels[nx.activityType] || nx.activityType}
+                      </Tag>
+                      <Text>{nx.activityName}</Text>
+                      {nx.isGateway && (
+                        <Tag color="orange" className="ml-1">
+                          {t('detailTabs.bpmnIsGateway') || '网关分支'}
+                        </Tag>
+                      )}
+                    </Space>
+                  ))}
+                </Space>
+              </div>
+            )}
+          </Space>
+        </Card>
+      )}
+
+      {bpmnState && bpmnState.bpmnStatus === 'completed' && (
+        <Alert
+          type="success"
+          showIcon
+          icon={<CheckCircle size={16} />}
+          message={
+            <Text>
+              <Tag color="success" className="mr-2">
+                {t('detailTabs.bpmnStatusCompleted') || '流程已完成'}
+              </Tag>
+              {bpmnState.processDefinitionName || bpmnState.processDefinitionKey}
+            </Text>
+          }
+          action={
+            <Button
+              type="link"
+              size="small"
+              icon={<ExternalLink size={12} />}
+              onClick={() => openProcessDiagramUrl(bpmnState.processInstanceId)}
+            >
+              {t('detailTabs.viewProcessDiagram') || '查看完整流程图'}
+            </Button>
+          }
+        />
+      )}
+
+      {bpmnState && bpmnState.bpmnStatus === 'terminated' && (
+        <Alert
+          type="error"
+          showIcon
+          icon={<CircleAlert size={16} />}
+          message={t('detailTabs.bpmnStatusTerminated') || '流程已终止'}
+        />
+      )}
+
+      {bpmnState && bpmnState.bpmnStatus === 'not_started' && (
+        <Alert
+          type="info"
+          showIcon
+          message={
+            t('detailTabs.bpmnNotStartedHint') ||
+            '该工单未绑定 BPMN 流程，使用简化审批模式。'
+          }
+          className="text-xs"
+        />
+      )}
+
       {hasWorkflowMeta && workflow && (
         <Card
           size="small"

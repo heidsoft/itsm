@@ -33,6 +33,12 @@ import {
 } from '@/constants/knowledge';
 import type { KnowledgeArticle } from '@/types/biz/knowledge';
 import ArticleVersionControl from './ArticleVersionControl';
+// 使用 react-markdown 渲染文章内容，并走 rehype-sanitize 防 XSS。
+// 详见 https://github.com/remarkjs/react-markdown ；与上方 split('\n') + <br/>
+// 相比可以保留 # 标题、**加粗**、`代码`、- 列表、表格等完整 Markdown 语义。
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeSanitize from 'rehype-sanitize';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -265,14 +271,23 @@ const ArticleDetail: React.FC = () => {
               label: '文章内容',
               children: (
                 <div className="article-content" style={{ minHeight: 400 }}>
-                  <Paragraph>
-                    {article.content.split('\n').map((line, i) => (
-                      <React.Fragment key={i}>
-                        {line}
-                        <br />
-                      </React.Fragment>
-                    ))}
-                  </Paragraph>
+                  {/*
+                    文章内容采用 Markdown 格式。渲染走 react-markdown + remark-gfm（表格/任务列表/删除线）
+                    + rehype-sanitize（默认白名单剥离 <script>/<iframe>/onerror 等危险元素与属性），
+                    这样既保留原始语义，又避免 XSS。原文逐行 <br/> 拆分不能呈现标题、列表、代码块。
+                  */}
+                  {article.content ? (
+                    <div className="prose max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeSanitize]}
+                      >
+                        {article.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <Paragraph type="secondary">本文暂无内容。</Paragraph>
+                  )}
                   {/* Helpfulness Feedback */}
                   <Divider />
                   <div style={{ padding: '16px 0', background: '#f9f9f9', borderRadius: 8, textAlign: 'center' }}>

@@ -101,6 +101,55 @@ type TicketWorkflowState struct {
 	CanResolve           bool                   `json:"canResolve"`
 	CanClose             bool                   `json:"canClose"`
 	AvailableActions     []TicketWorkflowAction `json:"availableActions"`
+	// BpmnProcessState 聚合 BPMN 真实节点状态；未启动 / 终态时仍返回结构体，
+	// 由 bpmnStatus 区分（not_started / running / completed / suspended / terminated）。
+	BpmnProcessState *BpmnProcessState `json:"bpmnProcessState,omitempty"`
+}
+
+// BpmnProcessState 聚合 BPMN 流程实例的当前/下一/历史节点，供工单详情页直接渲染。
+//
+// 设计要点：
+//   - 单结构体覆盖全部状态，调用方按 bpmnStatus 分支；不引入二级 data 嵌套。
+//   - currentActivity* 在 running 时有值；completed/terminated 时省略，调用方按空态处理。
+//   - nextActivities 由 outgoing sequence flows 解析得到，对网关节点按 isGateway=true 标记。
+//   - history 按 BPMN 引擎 process_tasks 排序输出，包含人/服务节点的实际处理结果。
+type BpmnProcessState struct {
+	ProcessInstanceID     string             `json:"processInstanceId"`
+	ProcessDefinitionKey  string             `json:"processDefinitionKey"`
+	ProcessDefinitionName string             `json:"processDefinitionName"`
+	BpmnStatus            string             `json:"bpmnStatus"`
+	CurrentActivityID     string             `json:"currentActivityId,omitempty"`
+	CurrentActivityName   string             `json:"currentActivityName,omitempty"`
+	CurrentActivityType   string             `json:"currentActivityType,omitempty"`
+	CurrentAssignees      []WorkflowUserInfo `json:"currentAssignees,omitempty"`
+	NextActivities        []NextActivityInfo `json:"nextActivities,omitempty"`
+	History               []BpmnHistoryItem  `json:"history,omitempty"`
+	StartedAt             *time.Time         `json:"startedAt,omitempty"`
+	EndedAt               *time.Time         `json:"endedAt,omitempty"`
+}
+
+// NextActivityInfo 描述当前节点的下一步候选活动。
+// IsGateway=true 表示该活动为网关节点（exclusive/parallel/inclusive），
+// 调用方应根据此标志决定是否展开分支说明。
+type NextActivityInfo struct {
+	ActivityID   string             `json:"activityId"`
+	ActivityName string             `json:"activityName"`
+	ActivityType string             `json:"activityType"`
+	Assignees    []WorkflowUserInfo `json:"assignees,omitempty"`
+	IsGateway    bool               `json:"isGateway"`
+}
+
+// BpmnHistoryItem 描述单个节点的历史快照。
+// Outcome 字段取自 process_tasks 的 status 与业务变量（approvalResult/approvalAction），
+// 例如 approved / rejected / completed / skipped。
+type BpmnHistoryItem struct {
+	ActivityID   string            `json:"activityId"`
+	ActivityName string            `json:"activityName"`
+	ActivityType string            `json:"activityType"`
+	StartTime    time.Time         `json:"startTime"`
+	EndTime      *time.Time        `json:"endTime,omitempty"`
+	Assignee     *WorkflowUserInfo `json:"assignee,omitempty"`
+	Outcome      string            `json:"outcome,omitempty"`
 }
 
 // AcceptTicketRequest 接单请求

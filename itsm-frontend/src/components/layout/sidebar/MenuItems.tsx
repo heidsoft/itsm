@@ -58,9 +58,8 @@ export function renderMenuItems(
                   ? item.label
                   : undefined
             }
-            onClick={e => {
+            onClick={() => {
               if (item.path) {
-                e.stopPropagation();
                 onMenuClick(item.path);
               }
             }}

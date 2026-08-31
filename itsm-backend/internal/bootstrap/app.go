@@ -695,6 +695,9 @@ func NewApplication() *Application {
 	bpmnAIGeneratorService := service.NewBPMNAIGeneratorService(llmGateway, bpmnDeploymentService)
 	bpmnAIGeneratorController := controller.NewBPMNAIGeneratorController(bpmnAIGeneratorService)
 
+	// BPMN Lint Controller（流程校验真源：设计器校验按钮与 AI 生成后自动 Lint 共用）
+	bpmnLintController := controller.NewBPMNLintController()
+
 	// A2UI Ticket Controller (AI-driven UI表单)
 	a2uiTicketService := service.NewA2UITicketService(nil)
 	a2uiTicketController := controller.NewA2UITicketController(a2uiTicketService)
@@ -970,10 +973,30 @@ func NewApplication() *Application {
 	} else if cfg.Server.Mode == "test" {
 		gin.SetMode(gin.TestMode)
 	}
+	// 配置 Trusted Proxies：
+	// 1. 默认包含 localhost 与 RFC1918 私有 CIDR，避免 Docker bridge 网段（172.x）
+	//    被识别成客户端 IP 而把 nginx 转发链上的容器内网（172.28.0.x）写入审计日志。
+	// 2. 通过 TRUSTED_PROXIES 环境变量（逗号分隔 CIDR/IP）可追加额外代理网段，
+	//    例如 k8s ingress / 企业 NAT 网关等。空值表示只使用默认值。
+	defaultTrustedProxies := []string{
+		"127.0.0.1",
+		"::1",
+		"10.0.0.0/8",
+		"172.16.0.0/12", // RFC1918 私有网段，覆盖 docker-compose 默认 bridge 与 k8s pod CIDR
+		"192.168.0.0/16",
+	}
+	if extra := strings.TrimSpace(os.Getenv("TRUSTED_PROXIES")); extra != "" {
+		for _, item := range strings.Split(extra, ",") {
+			if cidr := strings.TrimSpace(item); cidr != "" {
+				defaultTrustedProxies = append(defaultTrustedProxies, cidr)
+			}
+		}
+	}
 	r := gin.Default()
-	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
+	if err := r.SetTrustedProxies(defaultTrustedProxies); err != nil {
 		sugar.Warnw("failed to set trusted proxies, falling back to default", "error", err)
 	}
+	sugar.Infow("gin trusted proxies configured", "cidrs", defaultTrustedProxies)
 
 	// 初始化 Redis 限流器（分布式环境使用）
 	var redisRateLimiter router.RateLimiterInterface
@@ -1024,6 +1047,7 @@ func NewApplication() *Application {
 		BPMNDashboardController:         bpmnDashboardController,
 		BPMNMonitoringController:        bpmnMonitoringController,
 		BPMNAIGeneratorController:       bpmnAIGeneratorController,
+		BPMNLintController:              bpmnLintController,
 		A2UITicketController:            a2uiTicketController,
 		CMDBController:                  cmdbController,
 

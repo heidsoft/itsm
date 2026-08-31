@@ -232,7 +232,7 @@ Description:
 %s
 
 IMPORTANT: Respond with ONLY valid JSON in this exact format, no other text:
-{"category": "EXACT_CATEGORY_FROM_LIST", "priority": "EXACT_PRIORITY_FROM_LIST", "confidence": 0.0-1.0, "explanation": "brief reason", "suggested_fix": "brief solution or null"}`, title, description)
+{"category": "EXACT_CATEGORY_FROM_LIST", "priority": "EXACT_PRIORITY_FROM_LIST", "confidence": 0.0-1.0, "explanation": "brief reason", "suggestedFix": "brief solution or null"}`, title, description)
 
 	messages := []LLMMessage{
 		{Role: "system", Content: "You are an IT service management triage assistant. Always output valid JSON."},
@@ -266,6 +266,17 @@ IMPORTANT: Respond with ONLY valid JSON in this exact format, no other text:
 
 	// LLM assignee IDs are not trustworthy — always reset to category default
 	classification.AssigneeID = 0
+
+	// P1-1 fix: Go's case-insensitive JSON decoder does not ignore underscores, so an
+	// LLM that emits the snake_case key `suggested_fix` would lose the field. Backfill
+	// from the snake_case key when the camelCase field is empty.
+	if classification.SuggestedFix == "" {
+		var snake struct {
+			SuggestedFix string `json:"suggested_fix"`
+		}
+		_ = json.Unmarshal([]byte(resp), &snake)
+		classification.SuggestedFix = snake.SuggestedFix
+	}
 
 	// Normalize and validate enum values using shared helper
 	return t.normalizeResult(classification), nil

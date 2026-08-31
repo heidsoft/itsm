@@ -8,6 +8,32 @@ import (
 )
 
 var (
+	// AiAnalysisResultsColumns holds the columns for the "ai_analysis_results" table.
+	AiAnalysisResultsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "analysis_type", Type: field.TypeString},
+		{Name: "ticket_id", Type: field.TypeInt, Nullable: true},
+		{Name: "incident_id", Type: field.TypeInt, Nullable: true},
+		{Name: "ticket_number", Type: field.TypeString, Nullable: true},
+		{Name: "ticket_title", Type: field.TypeString, Nullable: true},
+		{Name: "request_prompt", Type: field.TypeString, Size: 2147483647},
+		{Name: "result_json", Type: field.TypeString, Size: 2147483647},
+		{Name: "model", Type: field.TypeString, Nullable: true},
+		{Name: "latency_ms", Type: field.TypeInt, Nullable: true},
+		{Name: "total_tokens", Type: field.TypeInt, Nullable: true},
+		{Name: "cost_usd", Type: field.TypeFloat64, Nullable: true},
+		{Name: "confidence_score", Type: field.TypeFloat64, Nullable: true},
+		{Name: "degraded", Type: field.TypeBool, Default: false},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// AiAnalysisResultsTable holds the schema information for the "ai_analysis_results" table.
+	AiAnalysisResultsTable = &schema.Table{
+		Name:       "ai_analysis_results",
+		Columns:    AiAnalysisResultsColumns,
+		PrimaryKey: []*schema.Column{AiAnalysisResultsColumns[0]},
+	}
 	// AlertsColumns holds the columns for the "alerts" table.
 	AlertsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -5944,6 +5970,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AiAnalysisResultsTable,
 		AlertsTable,
 		ApplicationsTable,
 		ApprovalChainsTable,

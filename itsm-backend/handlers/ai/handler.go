@@ -220,6 +220,122 @@ func (h *Handler) ChatStream(c *gin.Context) {
 	writeEvent("done", map[string]int{"conversationId": convID})
 }
 
+// ListConversations handles GET /api/v1/ai/conversations
+func (h *Handler) ListConversations(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	userID := c.GetInt("user_id")
+	convs, err := h.svc.ListConversations(c.Request.Context(), tenantID, userID)
+	if err != nil {
+		common.FailWithErr(c, err, "获取会话列表失败")
+		return
+	}
+	common.Success(c, gin.H{"conversations": convs})
+}
+
+// GetConversation handles GET /api/v1/ai/conversations/:id
+func (h *Handler) GetConversation(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的会话ID")
+		return
+	}
+	messages, err := h.svc.GetConversationMessages(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "获取会话详情失败")
+		return
+	}
+	common.Success(c, gin.H{"messages": messages})
+}
+
+// DeleteConversation handles DELETE /api/v1/ai/conversations/:id
+func (h *Handler) DeleteConversation(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的会话ID")
+		return
+	}
+	if err := h.svc.DeleteConversation(c.Request.Context(), id, tenantID); err != nil {
+		common.FailWithErr(c, err, "删除会话失败")
+		return
+	}
+	common.Success(c, nil)
+}
+
+// ListAIAnalysisResults handles GET /api/v1/ai/analysis-results
+func (h *Handler) ListAIAnalysisResults(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	analysisType := c.Query("type")
+	limit := 20
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 {
+			limit = parsed
+		}
+	}
+	results, err := h.svc.ListAIAnalysisResults(c.Request.Context(), tenantID, analysisType, limit)
+	if err != nil {
+		common.FailWithErr(c, err, "获取分析历史失败")
+		return
+	}
+	common.Success(c, gin.H{"results": results})
+}
+
+// GetAIAnalysisResult handles GET /api/v1/ai/analysis-results/:id
+func (h *Handler) GetAIAnalysisResult(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的记录ID")
+		return
+	}
+	result, err := h.svc.GetAIAnalysisResult(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "获取分析结果失败")
+		return
+	}
+	common.Success(c, result)
+}
+
+// DeleteAIAnalysisResult handles DELETE /api/v1/ai/analysis-results/:id
+func (h *Handler) DeleteAIAnalysisResult(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的记录ID")
+		return
+	}
+	if err := h.svc.DeleteAIAnalysisResult(c.Request.Context(), id, tenantID); err != nil {
+		common.FailWithErr(c, err, "删除分析结果失败")
+		return
+	}
+	common.Success(c, nil)
+}
+
 // GetDeepAnalytics handles POST /api/v1/ai/analytics
 func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 	var req dto.DeepAnalyticsRequest
@@ -265,8 +381,9 @@ func (h *Handler) AnalyzeTicket(c *gin.Context) {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
+	userID := c.GetInt("user_id")
 
-	res, err := h.svc.AnalyzeTicket(c.Request.Context(), id, tenantID)
+	res, err := h.svc.AnalyzeTicketWithAudit(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -286,7 +403,8 @@ func (h *Handler) AnalyzeIncident(c *gin.Context) {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
-	res, err := h.svc.AnalyzeIncident(c.Request.Context(), id, tenantID)
+	userID := c.GetInt("user_id")
+	res, err := h.svc.AnalyzeIncidentWithAudit(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
 		if errors.Is(err, service.ErrIncidentNotFound) {
 			common.NotFoundWithErr(c, err, "事件不存在")

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/aianalysisresult"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/rootcauseanalysis"
@@ -69,6 +70,12 @@ func (r *EntRepository) ListConversations(ctx context.Context, tenantID int, use
 		res = append(res, toConversationDomain(e))
 	}
 	return res, nil
+}
+
+func (r *EntRepository) DeleteConversation(ctx context.Context, id int, tenantID int) error {
+	return r.client.Conversation.DeleteOneID(id).
+		Where(conversation.TenantID(tenantID)).
+		Exec(ctx)
 }
 
 // Messages
@@ -287,4 +294,104 @@ func (r *EntRepository) UpdateRCA(ctx context.Context, rca *RootCauseAnalysis) (
 		return nil, err
 	}
 	return toRCADomain(e), nil
+}
+
+// AI Analysis Results
+
+func toAIAnalysisResultDomain(e *ent.AIAnalysisResult) *AIAnalysisResult {
+	return &AIAnalysisResult{
+		ID:              e.ID,
+		TenantID:        e.TenantID,
+		UserID:          e.UserID,
+		AnalysisType:    e.AnalysisType,
+		TicketID:        e.TicketID,
+		IncidentID:      e.IncidentID,
+		TicketNumber:    e.TicketNumber,
+		TicketTitle:     e.TicketTitle,
+		RequestPrompt:   e.RequestPrompt,
+		ResultJSON:      e.ResultJSON,
+		Model:           e.Model,
+		LatencyMs:       e.LatencyMs,
+		TotalTokens:     e.TotalTokens,
+		CostUSD:         e.CostUsd,
+		ConfidenceScore: e.ConfidenceScore,
+		Degraded:        e.Degraded,
+		CreatedAt:       e.CreatedAt,
+	}
+}
+
+func (r *EntRepository) SaveAIAnalysisResult(ctx context.Context, a *AIAnalysisResult) (*AIAnalysisResult, error) {
+	create := r.client.AIAnalysisResult.Create().
+		SetTenantID(a.TenantID).
+		SetUserID(a.UserID).
+		SetAnalysisType(a.AnalysisType).
+		SetRequestPrompt(a.RequestPrompt).
+		SetResultJSON(a.ResultJSON).
+		SetModel(a.Model).
+		SetDegraded(a.Degraded)
+	if a.TicketID > 0 {
+		create.SetTicketID(a.TicketID)
+	}
+	if a.IncidentID > 0 {
+		create.SetIncidentID(a.IncidentID)
+	}
+	if a.TicketNumber != "" {
+		create.SetTicketNumber(a.TicketNumber)
+	}
+	if a.TicketTitle != "" {
+		create.SetTicketTitle(a.TicketTitle)
+	}
+	if a.LatencyMs > 0 {
+		create.SetLatencyMs(a.LatencyMs)
+	}
+	if a.TotalTokens > 0 {
+		create.SetTotalTokens(a.TotalTokens)
+	}
+	if a.CostUSD > 0 {
+		create.SetCostUsd(a.CostUSD)
+	}
+	if a.ConfidenceScore > 0 {
+		create.SetConfidenceScore(a.ConfidenceScore)
+	}
+	e, err := create.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toAIAnalysisResultDomain(e), nil
+}
+
+func (r *EntRepository) ListAIAnalysisResults(ctx context.Context, tenantID int, analysisType string, limit int) ([]*AIAnalysisResult, error) {
+	q := r.client.AIAnalysisResult.Query().
+		Where(aianalysisresult.TenantID(tenantID))
+	if analysisType != "" {
+		q = q.Where(aianalysisresult.AnalysisType(analysisType))
+	}
+	if limit <= 0 {
+		limit = 20
+	}
+	es, err := q.Order(ent.Desc(aianalysisresult.FieldCreatedAt)).Limit(limit).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*AIAnalysisResult, 0, len(es))
+	for _, e := range es {
+		res = append(res, toAIAnalysisResultDomain(e))
+	}
+	return res, nil
+}
+
+func (r *EntRepository) GetAIAnalysisResult(ctx context.Context, id int, tenantID int) (*AIAnalysisResult, error) {
+	e, err := r.client.AIAnalysisResult.Query().
+		Where(aianalysisresult.ID(id), aianalysisresult.TenantID(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toAIAnalysisResultDomain(e), nil
+}
+
+func (r *EntRepository) DeleteAIAnalysisResult(ctx context.Context, id int, tenantID int) error {
+	return r.client.AIAnalysisResult.DeleteOneID(id).
+		Where(aianalysisresult.TenantID(tenantID)).
+		Exec(ctx)
 }

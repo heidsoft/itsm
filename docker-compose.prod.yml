@@ -207,6 +207,10 @@ services:
       # AI 能力就绪标记（/api/v1/capabilities 中 ai 的 deploymentReady）
       - ITSM_AI_READY=${ITSM_AI_READY:-}
 
+      # Guidance sidecar 地址：指向 itsm-ai-service 的受限分诊端点 /triage
+      # （默认 localhost:8091；生产由该服务接管，triage 走受限生成路径）
+      - GUIDANCE_URL=${GUIDANCE_URL:-http://itsm-ai-service:8000}
+
       # 告警通知
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
@@ -247,6 +251,39 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    restart: always
+
+  # Guidance sidecar（受限 JSON 生成）。复用 itsm-ai-service：POST /triage 提供
+  # 与后端 GuidanceClient 兼容的分类响应，GET /health 提供健康检查。
+  # triage 由此获得独立于 LLM gateway 的受限生成路径；sidecar 不可用时后端自动降级。
+  itsm-ai-service:
+    image: itsm-ai-service:${VERSION:-latest}
+    build:
+      context: ./itsm-ai-service
+      dockerfile: Dockerfile
+    container_name: itsm-ai-service-prod
+    hostname: ai-service
+    environment:
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8000
+      - LOG_LEVEL=${AI_LOG_LEVEL:-info}
+      - CORS_ORIGINS=http://itsm-frontend:3000,http://nginx
+      # 直连 LLM provider（OpenAI 兼容）。与后端共用同一套 LLM 凭据。
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_BASE_URL=${LLM_ENDPOINT:-${OPENAI_BASE_URL:-https://api.openai.com/v1}}
+      - LLM_TIMEOUT=120
+    expose:
+      - "8000"
+    networks:
+      - itsm-prod-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     restart: always
 
   # 可靠命令、SLA、升级和索引调度器。与 API 使用同一镜像但不监听 HTTP。
@@ -319,6 +356,12 @@ services:
         - NODE_ENV=production
         - ITSM_BACKEND_URL=http://itsm-backend:8090
         - NEXT_PUBLIC_ENABLE_AI=${NEXT_PUBLIC_ENABLE_AI:-true}
+        # NEXT_PUBLIC_* are baked at build time. Leave empty so the bundle
+        # routes API traffic through nginx (browser → nginx:80 → backend:8090)
+        # instead of calling the backend container directly. See Fix #5.
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-}
+        - NEXT_PUBLIC_API_VERSION=${NEXT_PUBLIC_API_VERSION:-v1}
+        - NEXT_PUBLIC_API_TIMEOUT=${NEXT_PUBLIC_API_TIMEOUT:-30000}
     container_name: itsm-frontend-prod
     hostname: frontend
     environment:

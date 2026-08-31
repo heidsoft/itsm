@@ -38,8 +38,12 @@ export class ServiceCatalogApi {
   }
 
   private static toFrontendStatus(status?: unknown) {
+    // 后端 /api/v1/service-catalogs 契约枚举：enabled/disabled。
+    // 旧 schema 默认曾为 'active'，迁移 017_normalize_service_catalog_status 后
+    // 只会出现 enabled/disabled，但保留 'active' 别名兼容在途事务中的快照。
     const s = String(status || '');
-    return (s === 'enabled' ? 'published' : 'retired') as ServiceStatus;
+    if (s === 'enabled' || s === 'active') return 'published' as ServiceStatus;
+    return 'retired' as ServiceStatus;
   }
 
   private static escapeCSV(value: unknown): string {

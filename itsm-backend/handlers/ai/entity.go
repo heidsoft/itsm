@@ -62,3 +62,24 @@ type RootCauseAnalysis struct {
 	CreatedAt       time.Time                `json:"createdAt"`
 	UpdatedAt       time.Time                `json:"updatedAt"`
 }
+
+// AIAnalysisResult stores AI analysis outputs for tickets/incidents.
+type AIAnalysisResult struct {
+	ID              int      `json:"id"`
+	TenantID        int      `json:"tenantId"`
+	UserID          int      `json:"userId"`
+	AnalysisType    string   `json:"analysisType"` // triage|summary|rca|deep_analytics|trend_prediction|incident_impact
+	TicketID        int      `json:"ticketId,omitempty"`
+	IncidentID      int      `json:"incidentId,omitempty"`
+	TicketNumber    string   `json:"ticketNumber,omitempty"`
+	TicketTitle     string   `json:"ticketTitle,omitempty"`
+	RequestPrompt   string   `json:"requestPrompt"`
+	ResultJSON      string   `json:"resultJson"`
+	Model           string   `json:"model,omitempty"`
+	LatencyMs       int      `json:"latencyMs,omitempty"`
+	TotalTokens     int      `json:"totalTokens,omitempty"`
+	CostUSD         float64  `json:"costUsd,omitempty"`
+	ConfidenceScore float64  `json:"confidenceScore,omitempty"`
+	Degraded        bool     `json:"degraded"`
+	CreatedAt       time.Time `json:"createdAt"`
+}

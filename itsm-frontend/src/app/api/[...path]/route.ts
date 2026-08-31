@@ -93,8 +93,32 @@ async function proxyRequest(request: NextRequest, params: Promise<{ path: string
   backendURL.search = request.nextUrl.search;
 
   const headers = new Headers(request.headers);
+  // host/content-length are connection-specific and must be recomputed by the
+  // backend's HTTP client.
   headers.delete('host');
   headers.delete('content-length');
+
+  // Preserve client IP across the Next.js → backend hop so backend audit logs
+  // (Fix #5) can record the real browser IP instead of the frontend container IP.
+  // Without this, requests that hit `localhost:3000` (frontend) instead of
+  // `localhost:80` (nginx) leak itsm-frontend's 172.28.0.7 into audit logs.
+  // Priority: X-Forwarded-For (from upstream proxy like nginx) > X-Real-IP > empty.
+  // The backend's trusted-proxies list includes the frontend container's CIDR
+  // (RFC1918), so the chain is honored end-to-end.
+  const clientIP =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    '';
+  if (clientIP) {
+    const existingXFF = request.headers.get('x-forwarded-for');
+    const newXFF = existingXFF ? `${existingXFF}, ${clientIP}` : clientIP;
+    headers.set('x-forwarded-for', newXFF);
+    if (!headers.has('x-real-ip')) {
+      headers.set('x-real-ip', clientIP);
+    }
+  }
+  headers.set('x-forwarded-proto', request.headers.get('x-forwarded-proto') || request.nextUrl.protocol.replace(':', ''));
+  headers.set('x-forwarded-host', request.headers.get('host') || '');
 
   const init: RequestInit = {
     method: request.method,

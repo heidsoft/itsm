@@ -15,7 +15,7 @@ import { notificationWS } from '@/lib/services/notification-ws';
 import { UserMenuDropdown } from './UserMenuDropdown';
 import { NotificationDrawer } from './NotificationDrawer';
 import { GlobalSearch, SearchInput } from './GlobalSearch';
-import { buildBreadcrumb } from './breadcrumb-utils';
+import { buildBreadcrumb, useBuildBreadcrumb } from './breadcrumb-utils';
 import styles from './Header.module.css';
 
 const { Header: AntHeader } = Layout;
@@ -53,6 +53,10 @@ export const Header: React.FC<HeaderProps> = ({
   const { isDark, toggleTheme } = useTheme();
   const { language, changeLanguage } = useI18n();
   useAuthStoreHydration();
+
+  // 动态菜单驱动的面包屑：与 Sidebar 共享 useUserMenusQuery 缓存，
+  // 未传入自定义 breadcrumb 时优先用 hook 版（带菜单 label），失败时回退到 segment 兜底
+  const dynamicBreadcrumb = useBuildBreadcrumb(pathname || '');
 
   // UI 状态
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -231,7 +235,7 @@ export const Header: React.FC<HeaderProps> = ({
           {showBreadcrumb && (
             <div className={styles.breadcrumb} role="navigation" aria-label="面包屑导航">
               <Breadcrumb
-                items={breadcrumb || buildBreadcrumb(pathname)}
+                items={breadcrumb || (dynamicBreadcrumb.length > 1 ? dynamicBreadcrumb : buildBreadcrumb(pathname))}
                 separator="/"
               />
             </div>

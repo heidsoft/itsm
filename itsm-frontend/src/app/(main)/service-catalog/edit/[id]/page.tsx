@@ -29,7 +29,8 @@ export default function EditServicePage() {
           category: data.category,
           description: data.shortDescription || data.fullDescription,
           deliveryTime: data.availability?.responseTime,
-          status: data.status === 'published' ? 'enabled' : 'disabled',
+          // Switch valuePropName="checked" 需要 boolean：'published' 为启用，其他（retired）为禁用。
+          status: data.status === 'published',
         });
       } catch (error) {
         appMessage.error(t('common.getFailed'));

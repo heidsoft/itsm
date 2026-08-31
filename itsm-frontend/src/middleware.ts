@@ -54,6 +54,45 @@ const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-passwor
 const apiRoutes = ['/api'];
 
 /**
+ * 历史遗留菜单路径 → 正确路由的映射表
+ * 用于覆盖以下场景（Sidebar 客户端点击不会触发 middleware，只在这些场景触发）：
+ * - 用户手动输入 URL / 直接访问书签
+ * - 硬刷新页面（此时 Next.js 走服务端路由匹配）
+ * - 其他站内链接通过 <a href> 的原生导航
+ * 顺序：先做路径重定向，再做 auth 保护 —— 这样未登录用户会被先 307 到正确路径，
+ * 然后在下一轮中间件检查后再跳 /login（redirect 参数会指向正确 URL）。
+ */
+const LEGACY_MENU_REDIRECTS: Record<string, string> = {
+  // /list 后缀 → 模块根路径（App Router 下 xxx/page.tsx 即列表首页）
+  '/service-requests/list': '/service-requests',
+  '/incidents/list': '/incidents',
+  '/problems/list': '/problems',
+  '/changes/list': '/changes',
+  '/knowledge/list': '/knowledge',
+  '/service-catalog/list': '/service-catalog',
+  '/assets/list': '/assets',
+  '/workflow/list': '/workflow',
+  '/ai/chat/list': '/ai/chat',
+  '/msp/list': '/msp',
+  '/releases/list': '/releases',
+  // 命名错误：/admin/overview 页面加载后会客户端跳转到 /admin（系统管理首页），直接指向 /admin 避免两跳
+  '/admin/index': '/admin',
+  '/knowledge/articles/create': '/knowledge/articles/new',
+  // 缺少独立页面的入口（模块主页本身就是概览/会话首页）
+  '/sla/overview': '/sla',
+  '/email-intake/conversations': '/email-intake',
+  '/knowledge/articles': '/knowledge',
+};
+
+// 兜底：对任意 /xxx/list 路径（且不在显式映射中）也尝试剥离 /list
+function tryStripListSuffix(pathname: string): string | null {
+  if (pathname.endsWith('/list') && pathname.length > 6) {
+    return pathname.slice(0, -5) || '/';
+  }
+  return null;
+}
+
+/**
  * 从请求中获取认证 Token
  * 支持多种方式：Cookie、Authorization Header
  */
@@ -104,13 +143,26 @@ const isValidToken = isValidJwtToken;
  * 处理路由保护和认证检查
  */
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
   const token = getAuthToken(request);
 
   // 检查是否为API路由
   if (apiRoutes.some(route => pathname.startsWith(route))) {
     // API路由的认证检查由后端处理
     return NextResponse.next();
+  }
+
+  // ============== 第一层：历史遗留路径 307 重定向 ==============
+  // 先做路径修正，再做 auth 保护，保证 bookmark/refresh/direct-URL 也能到达正确页面
+  const exactRedirect = LEGACY_MENU_REDIRECTS[pathname];
+  let correctedPath: string | null = exactRedirect ?? null;
+  if (!correctedPath) {
+    correctedPath = tryStripListSuffix(pathname);
+  }
+  if (correctedPath && correctedPath !== pathname) {
+    // 保留原始 query string（例如 token / redirect / filter 等）
+    const dest = new URL(correctedPath + search, request.url);
+    return NextResponse.redirect(dest, 307);
   }
 
   // 检查是否为受保护的路由

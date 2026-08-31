@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/aianalysisresult"
 	"itsm-backend/ent/alert"
 	"itsm-backend/ent/application"
 	"itsm-backend/ent/approvalchain"
@@ -204,6 +205,7 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			aianalysisresult.Table:            aianalysisresult.ValidColumn,
 			alert.Table:                       alert.ValidColumn,
 			application.Table:                 application.ValidColumn,
 			approvalchain.Table:               approvalchain.ValidColumn,

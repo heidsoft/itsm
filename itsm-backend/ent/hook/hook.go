@@ -8,6 +8,18 @@ import (
 	"itsm-backend/ent"
 )
 
+// The AIAnalysisResultFunc type is an adapter to allow the use of ordinary
+// function as AIAnalysisResult mutator.
+type AIAnalysisResultFunc func(context.Context, *ent.AIAnalysisResultMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AIAnalysisResultFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AIAnalysisResultMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AIAnalysisResultMutation", m)
+}
+
 // The AlertFunc type is an adapter to allow the use of ordinary
 // function as Alert mutator.
 type AlertFunc func(context.Context, *ent.AlertMutation) (ent.Value, error)

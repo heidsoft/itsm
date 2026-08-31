@@ -89,19 +89,37 @@ func (s *SystemConfigService) GetSystemConfigByKey(ctx context.Context, key stri
 	return config, nil
 }
 
-// ListSystemConfigs 获取系统配置列表
+// ListSystemConfigs 获取系统配置列表。
+// 额外保证：当前租户没有任何配置时，自动补齐全部默认配置键（懒加载）
+// 后再返回，避免前端首次进入 /admin/system-config 看到空表单。
 func (s *SystemConfigService) ListSystemConfigs(ctx context.Context, tenantID int, category string, page, pageSize int) ([]*ent.SystemConfig, int, error) {
+	total, err := s.client.SystemConfig.Query().
+		Where(systemconfig.TenantIDEQ(tenantID), systemconfig.DeletedAtIsNil()).
+		Count(ctx)
+	if err != nil {
+		s.logger.Errorf("获取配置总数失败: %v", err)
+		return nil, 0, fmt.Errorf("获取配置总数失败: %w", err)
+	}
+
+	// 懒加载首次默认配置（与 InitDefaultConfigs 端点等价，但不要求 UI 手动触发）
+	if total == 0 {
+		if err := s.InitDefaultConfigs(ctx, tenantID); err != nil {
+			s.logger.Warnf("懒加载默认配置失败: %v", err)
+		}
+		total, err = s.client.SystemConfig.Query().
+			Where(systemconfig.TenantIDEQ(tenantID), systemconfig.DeletedAtIsNil()).
+			Count(ctx)
+		if err != nil {
+			s.logger.Errorf("重新统计配置总数失败: %v", err)
+			return nil, 0, fmt.Errorf("重新统计配置总数失败: %w", err)
+		}
+	}
+
 	query := s.client.SystemConfig.Query().
 		Where(systemconfig.TenantIDEQ(tenantID), systemconfig.DeletedAtIsNil())
 
 	if category != "" {
 		query = query.Where(systemconfig.CategoryEQ(category))
-	}
-
-	total, err := query.Count(ctx)
-	if err != nil {
-		s.logger.Errorf("获取配置总数失败: %v", err)
-		return nil, 0, fmt.Errorf("获取配置总数失败: %w", err)
 	}
 
 	configs, err := query.
@@ -228,18 +246,42 @@ func (s *SystemConfigService) DeleteSystemConfig(ctx context.Context, id int, te
 	return nil
 }
 
-// InitDefaultConfigs 初始化默认配置
+// InitDefaultConfigs 初始化默认配置。
+// 覆盖前端 /admin/system-config 表单的 24 个键，避免首次进入页面看到空表单。
+// 新增配置键必须同时在本表与前端 SystemConfiguration 表单中声明。
 func (s *SystemConfigService) InitDefaultConfigs(ctx context.Context, tenantID int) error {
 	defaultConfigs := []dto.SystemConfigRequest{
+		// —— 通用设置 ——
 		{Key: "systemName", Value: "ITSM系统", ValueType: "string", Category: "general", Description: "系统名称"},
 		{Key: "systemUrl", Value: "http://localhost:3000", ValueType: "string", Category: "general", Description: "系统URL"},
 		{Key: "timezone", Value: "Asia/Shanghai", ValueType: "string", Category: "general", Description: "时区"},
 		{Key: "language", Value: "zh-CN", ValueType: "string", Category: "general", Description: "语言"},
 		{Key: "dateFormat", Value: "YYYY-MM-DD", ValueType: "string", Category: "general", Description: "日期格式"},
+		{Key: "timeFormat", Value: "24h", ValueType: "string", Category: "general", Description: "时间格式"},
+		// —— 会话设置 ——
 		{Key: "sessionTimeout", Value: "30", ValueType: "number", Category: "session", Description: "会话超时时间(分钟)"},
+		// —— 上传设置 ——
 		{Key: "maxFileSize", Value: "10", ValueType: "number", Category: "upload", Description: "最大文件大小(MB)"},
-		{Key: "passwordMinLength", Value: "6", ValueType: "number", Category: "security", Description: "密码最小长度"},
+		{Key: "allowedFileTypes", Value: ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png,.gif", ValueType: "string", Category: "upload", Description: "允许的文件类型"},
+		// —— 安全设置：密码策略 ——
+		{Key: "passwordMinLength", Value: "8", ValueType: "number", Category: "security", Description: "密码最小长度"},
+		{Key: "passwordRequireUppercase", Value: "true", ValueType: "boolean", Category: "security", Description: "需要大写字母"},
+		{Key: "passwordRequireLowercase", Value: "true", ValueType: "boolean", Category: "security", Description: "需要小写字母"},
+		{Key: "passwordRequireNumbers", Value: "true", ValueType: "boolean", Category: "security", Description: "需要数字"},
+		{Key: "passwordRequireSpecialChars", Value: "false", ValueType: "boolean", Category: "security", Description: "需要特殊字符"},
+		// —— 安全设置：账户安全 ——
 		{Key: "loginMaxAttempts", Value: "5", ValueType: "number", Category: "security", Description: "登录失败次数限制"},
+		{Key: "accountLockoutDuration", Value: "30", ValueType: "number", Category: "security", Description: "账户锁定时间(分钟)"},
+		{Key: "enable2FA", Value: "false", ValueType: "boolean", Category: "security", Description: "启用双因素认证"},
+		// —— 邮件设置：SMTP ——
+		{Key: "smtpHost", Value: "smtp.example.com", ValueType: "string", Category: "email", Description: "SMTP服务器"},
+		{Key: "smtpPort", Value: "465", ValueType: "number", Category: "email", Description: "SMTP端口"},
+		{Key: "smtpUsername", Value: "noreply@example.com", ValueType: "string", Category: "email", Description: "SMTP用户名"},
+		{Key: "smtpPassword", Value: "", ValueType: "string", Category: "email", Description: "SMTP密码"},
+		{Key: "smtpEnableSSL", Value: "true", ValueType: "boolean", Category: "email", Description: "启用SSL/TLS"},
+		// —— 邮件设置：模板 ——
+		{Key: "emailFrom", Value: "noreply@example.com", ValueType: "string", Category: "email", Description: "发件人邮箱"},
+		{Key: "systemNotificationTemplate", Value: "您好 {username}：\n您有一条新的系统通知：{message}\n— ITSM 团队", ValueType: "string", Category: "email", Description: "系统通知模板"},
 	}
 
 	for _, cfg := range defaultConfigs {

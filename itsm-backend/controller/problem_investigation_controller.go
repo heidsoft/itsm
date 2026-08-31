@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
@@ -406,12 +407,10 @@ func (pc *ProblemInvestigationController) CreateKnowledgeArticle(c *gin.Context)
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
-	client, exists := c.Get("client")
-	if !exists {
-		common.Fail(c, common.InternalErrorCode, "Database client not found")
+	entClient, ok := handlerctx.GetEntClient(c)
+	if !ok {
 		return
 	}
-	entClient := client.(*ent.Client)
 
 	// 转换 tags 为字符串
 	tagsStr := ""
@@ -459,12 +458,10 @@ func (pc *ProblemInvestigationController) GetProblemKnowledgeArticles(c *gin.Con
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	client, exists := c.Get("client")
-	if !exists {
-		common.Fail(c, common.InternalErrorCode, "Database client not found")
+	entClient, ok := handlerctx.GetEntClient(c)
+	if !ok {
 		return
 	}
-	entClient := client.(*ent.Client)
 
 	// 获取知识库文章列表 (按创建时间倒序)
 	articles, err := entClient.KnowledgeArticle.Query().
