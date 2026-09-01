@@ -720,6 +720,9 @@ func parseDate(s string) time.Time {
 // Errors are logged but not propagated — analysis results should still be returned
 // to the caller even if persistence fails.
 func (s *Service) persistAIResult(ctx context.Context, analysisType string, tenantID, userID int, prompt string, result interface{}, model string, latencyMs, totalTokens int, confidenceScore *float64) {
+	if s.repo == nil {
+		return
+	}
 	resultJSON, err := json.Marshal(result)
 	if err != nil {
 		s.logger.Warnw("persistAIResult: marshal failed", "error", err)

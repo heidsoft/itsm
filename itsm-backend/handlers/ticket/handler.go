@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 
 	"github.com/gin-gonic/gin"
@@ -74,7 +75,10 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	if tenantID == 0 {
 		common.Fail(c, common.AuthErrorCode, "Tenant ID missing")
 		return
@@ -133,7 +137,10 @@ func (h *Handler) GetTicket(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	ticket, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundCode, "工单不存在")
@@ -151,7 +158,10 @@ func (h *Handler) ListTickets(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	currentUserID := c.GetInt("user_id")
 	currentRole := c.GetString("role")
 
@@ -192,7 +202,10 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	params := &UpdateParams{Version: req.Version}
 	if req.Title != "" {
@@ -257,7 +270,10 @@ func (h *Handler) DeleteTicket(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	if err := h.service.Delete(c.Request.Context(), id, tenantID); err != nil {
 		if isForbiddenErr(err) {
@@ -287,7 +303,10 @@ func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	userID := c.GetInt("user_id")
 
 	ticket, err := h.service.UpdateStatus(c.Request.Context(), id, req.Status, tenantID, userID)
@@ -307,7 +326,10 @@ func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	if err := h.service.BatchDelete(c.Request.Context(), req.TicketIDs, tenantID); err != nil {
 		if isForbiddenErr(err) {
@@ -326,7 +348,10 @@ func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 
 // GetStats handles GET /api/v1/tickets/stats
 func (h *Handler) GetTicketStats(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	stats, err := h.service.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
@@ -355,7 +380,10 @@ func (h *Handler) AssignTicket(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	ticket, err := h.service.AssignTicket(c.Request.Context(), id, req.AssigneeID, tenantID)
 	if err != nil {
@@ -380,7 +408,10 @@ func (h *Handler) EscalateTicket(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	escalatedBy := c.GetInt("user_id")
 
 	ticket, err := h.service.EscalateTicket(c.Request.Context(), id, req.Reason, tenantID, escalatedBy)
@@ -411,7 +442,10 @@ func (h *Handler) ResolveTicket(c *gin.Context) {
 		resolution = req.Solution
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	ticket, err := h.service.ResolveTicket(c.Request.Context(), id, resolution, tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -435,7 +469,10 @@ func (h *Handler) CloseTicket(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	ticket, err := h.service.CloseTicket(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.BadRequestCode, "当前状态不允许关闭: "+err.Error())
@@ -453,7 +490,10 @@ func (h *Handler) SearchTickets(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	tickets, err := h.service.Search(c.Request.Context(), keyword, tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -465,7 +505,10 @@ func (h *Handler) SearchTickets(c *gin.Context) {
 
 // GetOverdueTickets handles GET /api/v1/tickets/overdue
 func (h *Handler) GetOverdueTickets(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	tickets, err := h.service.GetOverdueTickets(c.Request.Context(), tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -483,7 +526,10 @@ func (h *Handler) GetTicketsByAssignee(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	tickets, err := h.service.GetTicketsByAssignee(c.Request.Context(), assigneeID, tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -501,7 +547,10 @@ func (h *Handler) GetTicketSLAInfo(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	slaInfo, err := h.service.GetTicketSLAInfo(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundCode, "工单不存在")
@@ -519,7 +568,10 @@ func (h *Handler) ExportTickets(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	filters := map[string]interface{}{
 		"status":   req.Filters.Status,
 		"priority": req.Filters.Priority,
@@ -543,7 +595,10 @@ func (h *Handler) ImportTickets(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	fileData := []byte(req.File)
 	if err := h.service.ImportTickets(c.Request.Context(), tenantID, fileData, req.Format); err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -561,7 +616,10 @@ func (h *Handler) AssignTickets(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	if err := h.service.AssignTickets(c.Request.Context(), tenantID, req.TicketIDs, req.AssigneeID); err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -581,7 +639,10 @@ func (h *Handler) GetTicketAnalytics(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	analytics, err := h.service.GetTicketAnalytics(c.Request.Context(), tenantID, req.DateFrom.Format("2006-01-02"), req.DateTo.Format("2006-01-02"))
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -593,7 +654,10 @@ func (h *Handler) GetTicketAnalytics(c *gin.Context) {
 
 // GetTicketTemplates handles GET /api/v1/tickets/templates
 func (h *Handler) GetTicketTemplates(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	templates, err := h.service.GetTicketTemplates(c.Request.Context(), tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -620,7 +684,10 @@ func (h *Handler) GetTicketTemplate(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	tmpl, err := h.service.GetTicketTemplate(c.Request.Context(), tenantID, templateID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -638,7 +705,10 @@ func (h *Handler) CreateTicketTemplate(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	created, err := h.service.CreateTicketTemplate(c.Request.Context(), tenantID, &TicketTemplate{
 		Name:        tmpl.Name,
 		Description: tmpl.Description,
@@ -669,7 +739,10 @@ func (h *Handler) UpdateTicketTemplate(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	updated, err := h.service.UpdateTicketTemplate(c.Request.Context(), tenantID, templateID, &TicketTemplate{
 		Name:        tmpl.Name,
 		Description: tmpl.Description,
@@ -694,7 +767,10 @@ func (h *Handler) DeleteTicketTemplate(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	if err := h.service.DeleteTicketTemplate(c.Request.Context(), tenantID, templateID); err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -723,7 +799,10 @@ func (h *Handler) UpdateTicketTemplateStatus(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	tmpl, err := h.service.UpdateTicketTemplateStatus(c.Request.Context(), tenantID, templateID, *req.IsActive)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -746,7 +825,10 @@ func (h *Handler) CopyTicketTemplate(c *gin.Context) {
 	}
 	c.ShouldBindJSON(&req)
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	tmpl, err := h.service.CopyTicketTemplate(c.Request.Context(), tenantID, templateID, req.Name)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -758,7 +840,10 @@ func (h *Handler) CopyTicketTemplate(c *gin.Context) {
 
 // GetTicketTemplateCategories handles GET /api/v1/tickets/templates/categories
 func (h *Handler) GetTicketTemplateCategories(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	categories, err := h.service.GetTicketTemplateCategories(c.Request.Context(), tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -776,7 +861,10 @@ func (h *Handler) GetSubtasks(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	currentUserID := c.GetInt("user_id")
 	currentRole := c.GetString("role")
 
@@ -803,7 +891,10 @@ func (h *Handler) CreateSubtask(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	userID := c.GetInt("user_id")
 
 	params := &CreateParams{
@@ -850,7 +941,10 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	// Verify subtask belongs to parent
 	current, err := h.service.Get(c.Request.Context(), subtaskID, tenantID)
@@ -896,7 +990,10 @@ func (h *Handler) DeleteSubtask(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	// Verify subtask belongs to parent
 	current, err := h.service.Get(c.Request.Context(), subtaskID, tenantID)
@@ -936,7 +1033,10 @@ func (h *Handler) PauseSLA(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	if tenantID == 0 {
 		common.AuthFailed(c, "缺少租户上下文")
 		return
@@ -955,7 +1055,10 @@ func (h *Handler) ResumeSLA(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	if tenantID == 0 {
 		common.AuthFailed(c, "缺少租户上下文")
 		return
@@ -1029,7 +1132,10 @@ func (h *Handler) GetTicketActivity(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "invalid id")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	result, err := h.service.GetTicketActivity(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "获取活动日志失败")

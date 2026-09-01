@@ -7,15 +7,18 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
 
-	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 // -----------------------------------------------------------------------------
@@ -110,7 +113,7 @@ func (m *mockRepository) Delete(ctx context.Context, id int, tenantID int) error
 	return nil
 }
 
-func (m *mockRepository) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, _ interface{}, currentUserID int) ([]*Ticket, int, error) {
+func (m *mockRepository) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, ds datascope.DataScope, currentUserID int) ([]*Ticket, int, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	var out []*Ticket
@@ -284,40 +287,36 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	repo := newMockRepository()
-	svc := NewService(repo, nil)
+	svc := NewService(repo, nil, zap.NewNop().Sugar())
 	h := NewHandler(svc)
 	r := gin.New()
 
 	auth := func(c *gin.Context) {
-		tenantID := 0
-		userID := 0
 		if v := c.GetHeader("X-Test-TenantID"); v != "" {
 			if n, err := strconv.Atoi(v); err == nil {
-				tenantID = n
+				c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: n})
 			}
 		}
 		if v := c.GetHeader("X-Test-UserID"); v != "" {
 			if n, err := strconv.Atoi(v); err == nil {
-				userID = n
+				c.Set("user_id", n)
 			}
 		}
-		c.Set("tenant_id", tenantID)
-		c.Set("user_id", userID)
 		c.Set("role", "agent")
 		c.Next()
 	}
 
 	api := r.Group("/api/v1", auth)
-	api.POST("/tickets", h.Create)
-	api.GET("/tickets", h.List)
-	api.GET("/tickets/:id", h.Get)
-	api.PUT("/tickets/:id", h.Update)
-	api.DELETE("/tickets/:id", h.Delete)
+	api.POST("/tickets", h.CreateTicket)
+	api.GET("/tickets", h.ListTickets)
+	api.GET("/tickets/:id", h.GetTicket)
+	api.PUT("/tickets/:id", h.UpdateTicket)
+	api.DELETE("/tickets/:id", h.DeleteTicket)
 	api.POST("/tickets/:id/assign", h.AssignTicket)
 	api.POST("/tickets/:id/escalate", h.EscalateTicket)
 	api.POST("/tickets/:id/resolve", h.ResolveTicket)
 	api.POST("/tickets/:id/close", h.CloseTicket)
-	api.GET("/tickets/stats", h.GetStats)
+	api.GET("/tickets/stats", h.GetTicketStats)
 	api.GET("/tickets/search", h.SearchTickets)
 
 	return r, repo
