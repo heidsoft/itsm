@@ -50,6 +50,7 @@ import (
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
+	probleminvestigation "itsm-backend/handlers/problem_investigation"
 	"itsm-backend/handlers/problem"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
@@ -788,10 +789,11 @@ func NewApplication() *Application {
 	problemServiceDomain := problem.NewService(problemRepo, sugar)
 	problemHandler := problem.NewHandler(problemServiceDomain)
 
-	// Problem Investigation Service & Controller（问题调查/RCA/解决方案/知识沉淀）
+	// Problem Investigation Service & Handler（问题调查/RCA/解决方案/知识沉淀）
 	// 修复：此前该 controller 从未在 bootstrap 装配，导致 /problem-investigation 路由组整体未注册（404）
+	// 2026-09-02 迁移至 handlers/problem_investigation（域切片架构）
 	problemInvestigationService := service.NewProblemInvestigationService(database.GetRawDB(), sugar)
-	problemInvestigationController := controller.NewProblemInvestigationController(sugar, problemInvestigationService)
+	problemInvestigationHandler := probleminvestigation.NewHandler(sugar, problemInvestigationService, client)
 
 	// Domain: Change (DDD)
 	changeRepo := change.NewEntRepository(client, database.GetRawDB())
@@ -1096,7 +1098,7 @@ func NewApplication() *Application {
 		ServiceCatalogHandler:          scHandler,
 		ServiceRequestHandler:          srHandler,
 		ProblemHandler:                 problemHandler,
-		ProblemInvestigationController: problemInvestigationController,
+		ProblemInvestigationHandler:     problemInvestigationHandler,
 		ChangeHandler:                  changeHandler,
 		CABHandler:                     cabHandler,
 		KnowledgeHandler:               knowledgeHandler,

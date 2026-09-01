@@ -29,6 +29,7 @@ import (
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
 	"itsm-backend/handlers/operations"
+	problemInvestigationHandler "itsm-backend/handlers/problem_investigation"
 	"itsm-backend/handlers/problem"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
@@ -206,7 +207,7 @@ type RouterConfig struct {
 	AppStartTime time.Time
 
 	// Controllers
-	ProblemInvestigationController  *controller.ProblemInvestigationController
+	ProblemInvestigationHandler     *problemInvestigationHandler.Handler
 	TicketHandler                   *ticketHandler.Handler
 	TicketDependencyController      *controller.TicketDependencyController
 	TicketCommentController         *controller.TicketCommentController
@@ -1103,8 +1104,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				problems.POST("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddAssociation)
 				problems.DELETE("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.RemoveAssociation)
 				// 问题调查关联列表（前端契约：GET /api/v1/problems/:id/relationships）
-				if config.ProblemInvestigationController != nil {
-					problems.GET("/:id/relationships", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemRelationships)
+			if config.ProblemInvestigationHandler != nil {
+				problems.GET("/:id/relationships", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemRelationships)
 				}
 			}
 		}
@@ -1634,39 +1635,39 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Problem Investigation ====================
 		// 权限说明：investigation/step/root_cause/solution 等资源未在 seeder 中定义，
 		// 统一复用已 seeded 且已赋权运营角色的 problem 权限，避免注册后全员 403。
-		if config.ProblemInvestigationController != nil {
+		if config.ProblemInvestigationHandler != nil {
 			problemInvestigation := tenant.(*gin.RouterGroup).Group("/problem-investigation")
 			{
 				// 问题调查管理
-				problemInvestigation.POST("/investigations", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateProblemInvestigation)
-				problemInvestigation.GET("/investigations/:id", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemInvestigation)
-				problemInvestigation.PUT("/investigations/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.UpdateProblemInvestigation)
+				problemInvestigation.POST("/investigations", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateProblemInvestigation)
+				problemInvestigation.GET("/investigations/:id", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemInvestigation)
+				problemInvestigation.PUT("/investigations/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.UpdateProblemInvestigation)
 
 				// 调查步骤管理
-				problemInvestigation.POST("/steps", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateInvestigationStep)
-				problemInvestigation.PUT("/steps/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.UpdateInvestigationStep)
+				problemInvestigation.POST("/steps", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateInvestigationStep)
+				problemInvestigation.PUT("/steps/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.UpdateInvestigationStep)
 				// Gin 路由树不允许同一位置出现不同参数名（:id vs :investigation_id 会 panic），
 				// 统一使用 :id，与上方 /investigations/:id 保持一致。
-				problemInvestigation.GET("/investigations/:id/steps", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetInvestigationSteps)
+				problemInvestigation.GET("/investigations/:id/steps", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetInvestigationSteps)
 
 				// 根本原因分析
-				problemInvestigation.POST("/root-cause-analysis", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateRootCauseAnalysis)
-				problemInvestigation.PUT("/root-cause-analysis/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.UpdateRootCauseAnalysis)
+				problemInvestigation.POST("/root-cause-analysis", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateRootCauseAnalysis)
+				problemInvestigation.PUT("/root-cause-analysis/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.UpdateRootCauseAnalysis)
 
 				// 解决方案管理
-				problemInvestigation.POST("/solutions", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateProblemSolution)
-				problemInvestigation.PUT("/solutions/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.UpdateProblemSolution)
-				problemInvestigation.GET("/problems/:id/solutions", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemSolutions)
+				problemInvestigation.POST("/solutions", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateProblemSolution)
+				problemInvestigation.PUT("/solutions/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.UpdateProblemSolution)
+				problemInvestigation.GET("/problems/:id/solutions", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemSolutions)
 
 				// 问题调查摘要
-				problemInvestigation.GET("/problems/:id/summary", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemInvestigationSummary)
+				problemInvestigation.GET("/problems/:id/summary", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemInvestigationSummary)
 			}
 
 			// 关联管理与知识沉淀（前端契约：/api/v1/problem-relationships、/api/v1/problem-knowledge-articles）
 			problemInvestigationExtra := tenant.(*gin.RouterGroup)
-			problemInvestigationExtra.POST("/problem-relationships", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateProblemRelationship)
-			problemInvestigationExtra.POST("/problem-knowledge-articles", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationController.CreateKnowledgeArticle)
-			problemInvestigationExtra.GET("/problem-knowledge-articles/problems/:id", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationController.GetProblemKnowledgeArticles)
+			problemInvestigationExtra.POST("/problem-relationships", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateProblemRelationship)
+			problemInvestigationExtra.POST("/problem-knowledge-articles", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateKnowledgeArticle)
+			problemInvestigationExtra.GET("/problem-knowledge-articles/problems/:id", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemKnowledgeArticles)
 		}
 
 		// ==================== BPMN Workflow ====================
