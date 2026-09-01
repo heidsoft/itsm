@@ -369,8 +369,14 @@ services:
       - ITSM_BACKEND_URL=http://itsm-backend:8090
       - no_proxy=localhost,127.0.0.1
       - NO_PROXY=localhost,127.0.0.1
-    ports:
-      - "3000:3000"
+    # NOTE: port 3000 is intentionally NOT published to the host in production.
+    # All browser traffic MUST go through nginx on 80/443 so that X-Real-IP /
+    # X-Forwarded-For are populated and audit logs (Fix #5) record the real
+    # client IP instead of leaking the frontend container's bridge IP
+    # (172.28.0.7). The internal port 3000 is still reachable from nginx via
+    # the itsm-prod-network bridge.
+    expose:
+      - "3000"
     volumes:
       - ./uploads:/app/public/uploads:ro
     networks:

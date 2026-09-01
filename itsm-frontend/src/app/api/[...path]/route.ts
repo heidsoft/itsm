@@ -102,17 +102,49 @@ async function proxyRequest(request: NextRequest, params: Promise<{ path: string
   // (Fix #5) can record the real browser IP instead of the frontend container IP.
   // Without this, requests that hit `localhost:3000` (frontend) instead of
   // `localhost:80` (nginx) leak itsm-frontend's 172.28.0.7 into audit logs.
-  // Priority: X-Forwarded-For (from upstream proxy like nginx) > X-Real-IP > empty.
+  // Priority chain (most specific wins):
+  //   1. X-Forwarded-For from upstream proxy (e.g. nginx) — trusted
+  //   2. X-Real-IP from upstream proxy — trusted
+  //   3. request.ip / request.socket.remoteAddress — direct TCP source
   // The backend's trusted-proxies list includes the frontend container's CIDR
   // (RFC1918), so the chain is honored end-to-end.
-  const clientIP =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    request.headers.get('x-real-ip') ||
-    '';
+  const upstreamXFF = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const upstreamRealIP = request.headers.get('x-real-ip')?.trim();
+  // Try multiple paths to the real TCP source IP. Next.js's NextRequest may
+  // expose it as `.ip` (Edge runtime), or we may need to reach into the
+  // underlying Node IncomingMessage via the request meta store.
+  const reqAny = request as unknown as Record<string, unknown>;
+  const tcpIP =
+    (typeof reqAny.ip === 'string' && reqAny.ip) ||
+    (typeof (reqAny as { socket?: { remoteAddress?: string } }).socket?.remoteAddress === 'string'
+      ? (reqAny as { socket?: { remoteAddress?: string } }).socket?.remoteAddress
+      : undefined) ||
+    // Underlying Node IncomingMessage is exposed by Next.js as `originalRequest`
+    // (internal; may be renamed across versions). Walk all string-typed props
+    // that look like IPs to be robust against renames.
+    (() => {
+      for (const k of Object.keys(reqAny)) {
+        const v = (reqAny as Record<string, unknown>)[k];
+        if (typeof v === 'string' && /^\d+\.\d+\.\d+\.\d+$/.test(v)) return v;
+        if (v && typeof v === 'object') {
+          const sock = (v as { remoteAddress?: unknown }).remoteAddress;
+          if (typeof sock === 'string') return sock;
+        }
+      }
+      return undefined;
+    })();
+  const clientIP = upstreamXFF || upstreamRealIP || tcpIP || '';
   if (clientIP) {
     const existingXFF = request.headers.get('x-forwarded-for');
-    const newXFF = existingXFF ? `${existingXFF}, ${clientIP}` : clientIP;
-    headers.set('x-forwarded-for', newXFF);
+    // Append tcpIP if it's not already in the chain (dedupe by exact match).
+    const ips = existingXFF
+      ? existingXFF.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+    if (tcpIP && !ips.includes(tcpIP) && clientIP === tcpIP) {
+      ips.push(tcpIP);
+    }
+    if (ips.length === 0) ips.push(clientIP);
+    headers.set('x-forwarded-for', ips.join(', '));
     if (!headers.has('x-real-ip')) {
       headers.set('x-real-ip', clientIP);
     }
