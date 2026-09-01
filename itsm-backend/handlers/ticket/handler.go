@@ -66,8 +66,8 @@ func ticketListToResponse(ts []*Ticket) []*dto.TicketResponse {
 	return result
 }
 
-// Create handles POST /api/v1/tickets
-func (h *Handler) Create(c *gin.Context) {
+// CreateTicket handles POST /api/v1/tickets
+func (h *Handler) CreateTicket(c *gin.Context) {
 	var req dto.CreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
@@ -86,12 +86,12 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	params := &CreateParams{
-		Title:        req.Title,
-		Description:  req.Description,
-		Type:         req.Type,
-		Priority:     req.Priority,
-		RequesterID:  userID,
-		FormFields:   req.FormFields,
+		Title:       req.Title,
+		Description: req.Description,
+		Type:        req.Type,
+		Priority:    req.Priority,
+		RequesterID: userID,
+		FormFields:  req.FormFields,
 	}
 	if req.AssigneeID > 0 {
 		params.AssigneeID = &req.AssigneeID
@@ -125,8 +125,8 @@ func (h *Handler) Create(c *gin.Context) {
 	common.Success(c, ticketToResponse(ticket))
 }
 
-// Get handles GET /api/v1/tickets/:id
-func (h *Handler) Get(c *gin.Context) {
+// GetTicket handles GET /api/v1/tickets/:id
+func (h *Handler) GetTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
@@ -143,8 +143,8 @@ func (h *Handler) Get(c *gin.Context) {
 	common.Success(c, ticketToResponse(ticket))
 }
 
-// List handles GET /api/v1/tickets
-func (h *Handler) List(c *gin.Context) {
+// ListTickets handles GET /api/v1/tickets
+func (h *Handler) ListTickets(c *gin.Context) {
 	var req dto.ListTicketsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
@@ -178,8 +178,8 @@ func (h *Handler) List(c *gin.Context) {
 	})
 }
 
-// Update handles PUT /api/v1/tickets/:id
-func (h *Handler) Update(c *gin.Context) {
+// UpdateTicket handles PUT /api/v1/tickets/:id
+func (h *Handler) UpdateTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
@@ -249,8 +249,8 @@ func (h *Handler) Update(c *gin.Context) {
 	common.Success(c, ticketToResponse(updated))
 }
 
-// Delete handles DELETE /api/v1/tickets/:id
-func (h *Handler) Delete(c *gin.Context) {
+// DeleteTicket handles DELETE /api/v1/tickets/:id
+func (h *Handler) DeleteTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
@@ -272,7 +272,7 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 // UpdateStatus handles PUT /api/v1/tickets/:id/status
-func (h *Handler) UpdateStatus(c *gin.Context) {
+func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
@@ -300,7 +300,7 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 }
 
 // BatchDelete handles POST /api/v1/tickets/batch-delete
-func (h *Handler) BatchDelete(c *gin.Context) {
+func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 	var req dto.BatchDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
@@ -325,7 +325,7 @@ func (h *Handler) BatchDelete(c *gin.Context) {
 }
 
 // GetStats handles GET /api/v1/tickets/stats
-func (h *Handler) GetStats(c *gin.Context) {
+func (h *Handler) GetTicketStats(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 
 	stats, err := h.service.GetStats(c.Request.Context(), tenantID)
