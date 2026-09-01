@@ -40,6 +40,7 @@ import (
 	"itsm-backend/ent/user"
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
+	"itsm-backend/handlers/approval"
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
@@ -655,7 +656,7 @@ func NewApplication() *Application {
 
 	rootCauseAnalysisService.SetGateway(llmGateway)
 	rootCauseAnalysisService.SetLogger(sugar)
-	approvalController := controller.NewApprovalController(approvalService)
+	approvalHandler := approval.NewHandler(approvalService)
 
 	serviceController := controller.NewServiceController(serviceCatalogService, serviceRequestService)
 	provisioningService := service.NewProvisioningService(client, sugar)
@@ -1042,7 +1043,7 @@ func NewApplication() *Application {
 		TicketWorkflowController:        ticketWorkflowController,
 		TicketAutomationRuleController:  ticketAutomationRuleController,
 		IncidentHandler:                 incidentHandler,
-		ApprovalController:              approvalController,
+		ApprovalHandler:                 approvalHandler,
 		BPMNWorkflowController:          bpmnWorkflowController,
 		BPMNProcessTriggerController:    bpmnProcessTriggerController,
 		BPMNDashboardController:         bpmnDashboardController,

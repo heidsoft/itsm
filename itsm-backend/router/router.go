@@ -18,6 +18,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
+	approvalHandler "itsm-backend/handlers/approval"
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/capability"
 	"itsm-backend/handlers/change"
@@ -217,7 +218,7 @@ type RouterConfig struct {
 	TicketWorkflowController        *controller.TicketWorkflowController
 	TicketAutomationRuleController  *controller.TicketAutomationRuleController
 	IncidentHandler                 *incidentHandler.IncidentHandler
-	ApprovalController              *controller.ApprovalController
+	ApprovalHandler                *approvalHandler.Handler
 	BPMNWorkflowController          *controller.BPMNWorkflowController
 	BPMNProcessTriggerController    *controller.BPMNProcessTriggerController
 	BPMNDashboardController         *controller.BPMNDashboardController
@@ -731,35 +732,35 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 
 			// 审批流程管理
-			if config.ApprovalController != nil {
-				tickets.POST("/approval/submit", middleware.RequirePermission("approval", "write"), config.ApprovalController.SubmitApproval)
-				tickets.GET("/approval/records", middleware.RequirePermission("approval", "read"), config.ApprovalController.GetApprovalRecords)
+			if config.ApprovalHandler != nil {
+				tickets.POST("/approval/submit", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.SubmitApproval)
+				tickets.GET("/approval/records", middleware.RequirePermission("approval", "read"), config.ApprovalHandler.GetApprovalRecords)
 
 				// 审批工作流CRUD
 				approvalWorkflows := tenant.(*gin.RouterGroup).Group("/approval-workflows")
 				{
-					approvalWorkflows.GET("", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.ListWorkflows)
-					approvalWorkflows.POST("", middleware.RequirePermission("approval_workflow", "create"), config.ApprovalController.CreateWorkflow)
-					approvalWorkflows.GET("/:id", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetWorkflow)
-					approvalWorkflows.PUT("/:id", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalController.UpdateWorkflow)
-					approvalWorkflows.POST("/:id/migrate-to-bpmn", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalController.MigrateWorkflowToBPMN)
-					approvalWorkflows.PATCH("/:id", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalController.PatchWorkflow)
-					approvalWorkflows.DELETE("/:id", middleware.RequirePermission("approval_workflow", "delete"), config.ApprovalController.DeleteWorkflow)
+					approvalWorkflows.GET("", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.ListWorkflows)
+					approvalWorkflows.POST("", middleware.RequirePermission("approval_workflow", "create"), config.ApprovalHandler.CreateWorkflow)
+					approvalWorkflows.GET("/:id", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.GetWorkflow)
+					approvalWorkflows.PUT("/:id", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalHandler.UpdateWorkflow)
+					approvalWorkflows.POST("/:id/migrate-to-bpmn", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalHandler.MigrateWorkflowToBPMN)
+					approvalWorkflows.PATCH("/:id", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalHandler.PatchWorkflow)
+					approvalWorkflows.DELETE("/:id", middleware.RequirePermission("approval_workflow", "delete"), config.ApprovalHandler.DeleteWorkflow)
 				}
 				// 兼容旧路径 /approvals
 				approvals := tenant.(*gin.RouterGroup).Group("/approvals")
 				{
-					approvals.GET("", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.ListWorkflows)
-					approvals.POST("", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalController.CreateWorkflow)
-					approvals.GET("/:id", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetWorkflow)
-					approvals.PUT("/:id", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalController.UpdateWorkflow)
-					approvals.PATCH("/:id", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalController.PatchWorkflow)
-					approvals.DELETE("/:id", middleware.RequirePermission("approval_workflow", "delete"), config.ApprovalController.DeleteWorkflow)
-					approvals.GET("/records", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetApprovalRecords)
-					approvals.POST("/submit", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalController.SubmitApproval)
+					approvals.GET("", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.ListWorkflows)
+					approvals.POST("", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalHandler.CreateWorkflow)
+					approvals.GET("/:id", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.GetWorkflow)
+					approvals.PUT("/:id", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalHandler.UpdateWorkflow)
+					approvals.PATCH("/:id", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalHandler.PatchWorkflow)
+					approvals.DELETE("/:id", middleware.RequirePermission("approval_workflow", "delete"), config.ApprovalHandler.DeleteWorkflow)
+					approvals.GET("/records", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.GetApprovalRecords)
+					approvals.POST("/submit", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalHandler.SubmitApproval)
 					// 兼容旧路径：/approval-records 和 /my-approvals
-					tenant.GET("/approval-records", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetApprovalRecords)
-					tenant.GET("/my-approvals", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetApprovalRecords)
+					tenant.GET("/approval-records", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.GetApprovalRecords)
+					tenant.GET("/my-approvals", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.GetApprovalRecords)
 
 				}
 
